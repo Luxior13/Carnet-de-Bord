@@ -41,6 +41,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: 'Tableau de bord',
         requiredPermissions: [PERMISSIONS.DASHBOARD.VIEW],
       },
+      {
+        href: '/test',
+        icon: 'FlaskConical',
+        label: 'Test',
+        requiredPermissions: [PERMISSIONS.DASHBOARD.VIEW],
+      },
     ],
     label: '',
     position: 'top',

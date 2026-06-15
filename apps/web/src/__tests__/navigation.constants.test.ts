@@ -32,7 +32,7 @@ describe('navigation visibility', () => {
   it('shows default user navigation to authenticated users', () => {
     const hrefs = getVisibleHrefs();
 
-    expect(hrefs).toEqual(['/']);
+    expect(hrefs).toEqual(['/', '/test']);
   });
 
   it('hides the dashboard when the dashboard permission is explicitly revoked', () => {
@@ -43,7 +43,7 @@ describe('navigation visibility', () => {
     expect(hrefs).toEqual([]);
   });
 
-  it('keeps the desktop header empty and the dashboard in the desktop sidebar', () => {
+  it('keeps the desktop header empty and pages in the desktop sidebar', () => {
     const user = buildUser();
 
     const headerHrefs = getHeaderNavItems(user).map((item) => item.href);
@@ -52,7 +52,7 @@ describe('navigation visibility', () => {
     );
 
     expect(headerHrefs).toEqual([]);
-    expect(sidebarHrefs).toEqual(['/']);
+    expect(sidebarHrefs).toEqual(['/', '/test']);
   });
 
   it('shows the full navigation to protected users', () => {

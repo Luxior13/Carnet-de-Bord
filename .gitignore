@@ -68,7 +68,7 @@ pnpm-debug.log*
 package-lock.json
 
 # Specific App/Project Files
-test/
+/test/
 test.*
 next-env.d.ts
 .astro

@@ -2,6 +2,7 @@
 
 import {
   ChevronRight,
+  FlaskConical,
   LayoutDashboard,
   LogOut,
   type LucideIcon,
@@ -45,6 +46,7 @@ import {
 import { cn } from '$utils/css.utils';
 
 const iconMap: Record<string, LucideIcon> = {
+  FlaskConical,
   LayoutDashboard,
   Settings,
 };
