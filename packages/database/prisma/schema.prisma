@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+model User {
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  passwordHash        String
+  firstName           String
+  lastName            String
+  role                UserRole  @default(USER)
+  permissions         Json?
+  isActive            Boolean   @default(true)
+  isProtected         Boolean   @default(false)
+  mustChangePassword  Boolean   @default(false)
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+  passwordChangedAt   DateTime?
+  deletedAt           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  sessions  Session[]
+  auditLogs AuditLog[]
+
+  @@index([email])
+  @@index([role])
+  @@index([deletedAt])
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  userId     String
+  token      String   @unique
+  expiresAt  DateTime
+  rememberMe Boolean  @default(false)
+  userAgent  String?
+  ipAddress  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([token])
+}
+
+enum AuditAction {
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  LOGOUT
+  PASSWORD_CHANGE
+  PASSWORD_RESET
+  ACCOUNT_LOCKED
+  SESSION_INVALIDATE
+  USER_CREATE
+  USER_UPDATE
+  USER_DELETE
+  USER_ACTIVATE
+  USER_DEACTIVATE
+  PERMISSION_UPDATE
+}
+
+enum AuditCategory {
+  AUTH
+  USER
+  PERMISSION
+  SYSTEM
+}
+
+model AuditLog {
+  id          String        @id @default(cuid())
+  userId      String?
+  user        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action      AuditAction
+  category    AuditCategory
+  description String
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime      @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model RateLimit {
+  id           String    @id @default(cuid())
+  key          String    @unique
+  count        Int       @default(0)
+  firstAttempt DateTime  @default(now())
+  blockedUntil DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([key])
+  @@index([blockedUntil])
+}

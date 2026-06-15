@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "docs": "https://bun.sh/docs/typescript",
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "moduleDetection": "force",
+    "target": "ESNext",
+    "module": "Preserve",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true
+  },
+  "include": ["src/**/*", "*.ts", "test"],
+  "exclude": ["node_modules", "dist", "generated"]
+}

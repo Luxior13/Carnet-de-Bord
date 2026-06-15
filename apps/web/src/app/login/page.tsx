@@ -1,0 +1,289 @@
+'use client';
+
+import {
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  Mail,
+  ShieldCheck,
+} from 'lucide-react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+
+import { SITE_CONFIG } from '$constants/app.constants';
+import { useUser } from '$context/UserContext';
+import { Button } from '$ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '$ui/card';
+import { Checkbox } from '$ui/checkbox';
+import { Input } from '$ui/input';
+import { Label } from '$ui/label';
+
+const LAST_LOGIN_EMAIL_STORAGE_KEY = 'carnet-pro:last-login-email';
+const LEGACY_LOGIN_EMAILS_STORAGE_KEY = 'carnet-pro:login-emails';
+
+function LoginPage(): React.ReactNode {
+  const router = useRouter();
+  const { isLoading: authLoading, login, userData } = useUser();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (userData && !authLoading) {
+      router.push('/');
+    }
+  }, [userData, authLoading, router]);
+
+  useEffect(() => {
+    const lastSavedEmail = window.localStorage.getItem(
+      LAST_LOGIN_EMAIL_STORAGE_KEY,
+    );
+    window.localStorage.removeItem(LEGACY_LOGIN_EMAILS_STORAGE_KEY);
+
+    if (lastSavedEmail) {
+      setEmail(lastSavedEmail.trim().toLowerCase());
+    }
+  }, []);
+
+  const saveLoginEmail = (emailToSave: string): void => {
+    const normalizedEmail = emailToSave.trim().toLowerCase();
+    if (!normalizedEmail) return;
+
+    window.localStorage.setItem(LAST_LOGIN_EMAIL_STORAGE_KEY, normalizedEmail);
+  };
+
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const normalizedEmail = email.trim().toLowerCase();
+      const success = await login({
+        email: normalizedEmail,
+        password,
+        rememberMe,
+      });
+
+      if (success) {
+        saveLoginEmail(normalizedEmail);
+        router.push('/');
+      }
+    } catch {
+      setError('Une erreur est survenue');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (authLoading) {
+    return (
+      <div className="bg-background flex min-h-svh items-center justify-center">
+        <Loader2 className="text-primary size-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (userData) {
+    return null;
+  }
+
+  return (
+    <main className="bg-background flex min-h-svh items-center justify-center p-4">
+      <div className="bg-card/70 grid w-full max-w-5xl overflow-hidden rounded-lg border shadow-sm md:grid-cols-[0.9fr_1fr]">
+        <section className="bg-sidebar hidden border-r p-6 md:flex md:flex-col md:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="bg-primary flex size-10 items-center justify-center rounded-lg shadow-sm">
+              <Image
+                src="/assets/noc.png"
+                alt=""
+                width={28}
+                height={28}
+                className="object-contain"
+                priority
+              />
+            </span>
+            <div>
+              <p className="text-sm font-semibold">{SITE_CONFIG.name}</p>
+              <p className="text-muted-foreground text-xs">
+                {SITE_CONFIG.subtitle}
+              </p>
+            </div>
+          </div>
+          <div className="space-y-5">
+            <div className="bg-background/35 text-muted-foreground inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
+              <ShieldCheck className="text-primary size-4" />
+              Acces securise
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-semibold tracking-tight">
+                Carnet Pro
+              </h1>
+              <p className="text-muted-foreground max-w-sm text-sm leading-6">
+                Un espace protege pour gerer les acces et garder la main sur tes
+                donnees.
+              </p>
+            </div>
+          </div>
+          <div className="grid gap-2">
+            {['Tableau de bord', 'Comptes', 'Acces securise'].map((item) => (
+              <div
+                key={item}
+                className="bg-background/35 flex items-center gap-3 rounded-md border px-3 py-2"
+              >
+                <CheckCircle2 className="text-primary size-4" />
+                <span className="text-muted-foreground text-sm">{item}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+        <section className="p-5 sm:p-8">
+          <div className="mb-8 flex items-center gap-3 md:hidden">
+            <span className="bg-primary flex size-10 items-center justify-center rounded-lg">
+              <Image
+                src="/assets/noc.png"
+                alt=""
+                width={28}
+                height={28}
+                className="object-contain"
+                priority
+              />
+            </span>
+            <div>
+              <p className="text-sm font-semibold">{SITE_CONFIG.name}</p>
+              <p className="text-muted-foreground text-xs">
+                {SITE_CONFIG.description}
+              </p>
+            </div>
+          </div>
+          <Card className="border-0 bg-transparent py-0 shadow-none">
+            <CardHeader className="px-0">
+              <CardTitle className="text-2xl">Connexion</CardTitle>
+              <CardDescription>
+                Utilisez vos identifiants de connexion.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-0">
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-5"
+                autoComplete="on"
+              >
+                {error && (
+                  <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
+                    {error}
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="email" required>
+                    Email
+                  </Label>
+                  <div className="relative">
+                    <Mail className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                    <Input
+                      id="email"
+                      name="username"
+                      type="email"
+                      autoComplete="username"
+                      inputMode="email"
+                      placeholder="email@exemple.fr"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="h-10 pl-10"
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password" required>
+                    Mot de passe
+                  </Label>
+                  <div className="relative">
+                    <Lock className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      placeholder="Votre mot de passe"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="h-10 px-10"
+                      required
+                      disabled={isSubmitting}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 size-8 -translate-y-1/2"
+                      onClick={() => setShowPassword((value) => !value)}
+                      disabled={isSubmitting}
+                      aria-label={
+                        showPassword
+                          ? 'Masquer le mot de passe'
+                          : 'Afficher le mot de passe'
+                      }
+                    >
+                      {showPassword ? (
+                        <EyeOff className="size-4" />
+                      ) : (
+                        <Eye className="size-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) =>
+                      setRememberMe(checked === true)
+                    }
+                    disabled={isSubmitting}
+                  />
+                  <Label
+                    htmlFor="rememberMe"
+                    className="text-muted-foreground cursor-pointer text-sm font-normal"
+                  >
+                    Rester connecte
+                  </Label>
+                </div>
+                <Button
+                  type="submit"
+                  className="h-10 w-full"
+                  disabled={isSubmitting || !email || !password}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Connexion...
+                    </>
+                  ) : (
+                    'Se connecter'
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+export default LoginPage;
