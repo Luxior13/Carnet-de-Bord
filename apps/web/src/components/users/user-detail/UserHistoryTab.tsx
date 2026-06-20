@@ -30,6 +30,7 @@ import { toast } from 'sonner';
 import type { AuditLogEntry } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
+import { Card, CardContent, CardFooter } from '$ui/card';
 import {
   Select,
   SelectContent,
@@ -294,7 +295,7 @@ const formatChangeValue = (key: string, value: unknown): string => {
   }
 
   if (key === 'amount') {
-    return `${Number(value).toFixed(2)} €`;
+    return `${Number(value).toFixed(2)} EUR`;
   }
 
   if (key === 'permissions') {
@@ -328,31 +329,33 @@ const StatCard: FC<{
   label: string;
   value: number;
 }> = ({ color, icon: Icon, label, value }) => (
-  <div className="group border-border bg-card relative overflow-hidden rounded-lg border p-4 transition-all hover:shadow-md">
-    <div className="flex items-center justify-between">
-      <div>
-        <p
+  <Card className="group border-border/70 bg-card/70 relative overflow-hidden rounded-lg py-0 transition-all hover:shadow-md">
+    <CardContent className="p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p
+            className={cn(
+              'text-2xl font-bold tracking-tight',
+              color || 'text-foreground',
+            )}
+          >
+            {value}
+          </p>
+          <p className="text-muted-foreground mt-1 text-xs font-medium">
+            {label}
+          </p>
+        </div>
+        <div
           className={cn(
-            'text-2xl font-bold tracking-tight',
-            color || 'text-foreground',
+            'flex h-10 w-10 items-center justify-center rounded-lg',
+            color ? `${color.replace('text-', 'bg-')}/10` : 'bg-secondary',
           )}
         >
-          {value}
-        </p>
-        <p className="text-muted-foreground mt-1 text-xs font-medium">
-          {label}
-        </p>
+          <Icon size={20} className={color || 'text-muted-foreground'} />
+        </div>
       </div>
-      <div
-        className={cn(
-          'flex h-10 w-10 items-center justify-center rounded-lg',
-          color ? `${color.replace('text-', 'bg-')}/10` : 'bg-secondary',
-        )}
-      >
-        <Icon size={20} className={color || 'text-muted-foreground'} />
-      </div>
-    </div>
-  </div>
+    </CardContent>
+  </Card>
 );
 
 // Component to display a single change (before → after)
@@ -623,7 +626,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   // Loading
   if (isLoading) {
     return (
-      <div className="space-y-6 p-6">
+      <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-lg" />
@@ -645,25 +648,27 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   // Empty
   if (auditLogs.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center p-8">
-        <div className="bg-secondary flex h-20 w-20 items-center justify-center rounded-lg">
-          <History className="text-muted-foreground h-10 w-10" />
-        </div>
-        <h3 className="text-foreground mt-6 text-lg font-semibold">
-          Aucune activite
-        </h3>
-        <p className="text-muted-foreground mt-2 max-w-xs text-center text-sm">
-          Les connexions, changements de securite et actions administratives
-          apparaitront ici.
-        </p>
-      </div>
+      <Card className="border-border/70 bg-card/70 min-h-[360px] items-center justify-center rounded-lg py-0">
+        <CardContent className="flex flex-col items-center p-8">
+          <div className="bg-secondary flex size-20 items-center justify-center rounded-lg">
+            <History className="text-muted-foreground size-10" />
+          </div>
+          <h3 className="text-foreground mt-6 text-lg font-semibold">
+            Aucune activite
+          </h3>
+          <p className="text-muted-foreground mt-2 max-w-xs text-center text-sm">
+            Les connexions, changements de securite et actions administratives
+            apparaitront ici.
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col gap-4">
       {/* Stats */}
-      <div className="shrink-0 p-6 pb-4">
+      <div className="shrink-0">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatCard label="Total" value={stats.total} icon={History} />
           <StatCard
@@ -687,151 +692,161 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
         </div>
       </div>
       {/* Filters */}
-      <div className="shrink-0 px-6 pb-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="border-border h-9 w-[160px] rounded-lg text-sm">
-              <SelectValue placeholder="Categorie" />
-            </SelectTrigger>
-            <SelectContent>
-              {CATEGORY_FILTERS.map((filter) => {
-                const FilterIcon = filter.icon;
+      <Card className="border-border/70 bg-card/70 shrink-0 overflow-hidden rounded-lg py-0">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="border-border h-9 w-[160px] rounded-lg text-sm">
+                <SelectValue placeholder="Categorie" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORY_FILTERS.map((filter) => {
+                  const FilterIcon = filter.icon;
 
-                return (
-                  <SelectItem key={filter.value} value={filter.value}>
-                    <div className="flex items-center gap-2">
-                      <FilterIcon size={14} className="text-muted-foreground" />
-                      <span>{filter.label}</span>
-                    </div>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-          <Select value={sourceFilter} onValueChange={setSourceFilter}>
-            <SelectTrigger className="border-border h-9 w-[150px] rounded-lg text-sm">
-              <SelectValue placeholder="Source" />
-            </SelectTrigger>
-            <SelectContent>
-              {SOURCE_FILTERS.map((filter) => (
-                <SelectItem key={filter.value} value={filter.value}>
-                  {filter.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger className="border-border h-9 w-[150px] rounded-lg text-sm">
-              <SelectValue placeholder="Periode" />
-            </SelectTrigger>
-            <SelectContent>
-              {DATE_FILTERS.map((filter) => (
-                <SelectItem key={filter.value} value={filter.value}>
-                  {filter.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {(categoryFilter !== 'all' ||
-            sourceFilter !== 'all' ||
-            dateFilter !== 'all') && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground h-9 rounded-lg"
-              onClick={() => {
-                setCategoryFilter('all');
-                setSourceFilter('all');
-                setDateFilter('all');
-              }}
-            >
-              <RefreshCw size={14} className="mr-1.5" />
-              Reset
-            </Button>
-          )}
-          <div className="flex-1" />
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 rounded-lg"
-            onClick={handleExport}
-            disabled={filteredLogs.length === 0}
-          >
-            <Download size={14} className="mr-1.5" />
-            <span className="hidden sm:inline">Exporter</span>
-          </Button>
-        </div>
-      </div>
-      {/* Timeline */}
-      <div className="flex-1 overflow-y-auto px-3">
-        {filteredLogs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <div className="bg-secondary flex h-16 w-16 items-center justify-center rounded-lg">
-              <Filter className="text-muted-foreground h-8 w-8" />
-            </div>
-            <p className="text-muted-foreground mt-4 text-sm">
-              Aucun resultat pour ces filtres
-            </p>
-          </div>
-        ) : (
-          <div className="pb-4">
-            {((): React.ReactNode => {
-              let lastCategory: DateCategory | null = null;
-
-              return displayedLogs.map((log) => {
-                const config = ACTION_CONFIG[log.action] || DEFAULT_CONFIG;
-                const isTargetedAction = log.userId !== userId;
-                const category = getDateCategory(log.createdAt);
-                const showSeparator = category !== lastCategory;
-                lastCategory = category;
-
-                return (
-                  <div key={log.id}>
-                    {showSeparator && (
-                      <div className="bg-card/95 bg-background/95 sticky top-0 z-10 flex items-center gap-3 px-1 py-2 backdrop-blur-sm">
-                        <div className="bg-secondary h-px flex-1" />
-                        <span className="text-muted-foreground text-xs font-medium">
-                          {DATE_CATEGORY_LABELS.get(category) || 'Plus ancien'}
-                        </span>
-                        <div className="bg-secondary h-px flex-1" />
+                  return (
+                    <SelectItem key={filter.value} value={filter.value}>
+                      <div className="flex items-center gap-2">
+                        <FilterIcon
+                          size={14}
+                          className="text-muted-foreground"
+                        />
+                        <span>{filter.label}</span>
                       </div>
-                    )}
-                    <TimelineItem
-                      log={log}
-                      config={config}
-                      isTargetedAction={isTargetedAction}
-                      isOpen={openLogId === log.id}
-                      onToggle={() =>
-                        setOpenLogId(openLogId === log.id ? null : log.id)
-                      }
-                    />
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <SelectTrigger className="border-border h-9 w-[150px] rounded-lg text-sm">
+                <SelectValue placeholder="Source" />
+              </SelectTrigger>
+              <SelectContent>
+                {SOURCE_FILTERS.map((filter) => (
+                  <SelectItem key={filter.value} value={filter.value}>
+                    {filter.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="border-border h-9 w-[150px] rounded-lg text-sm">
+                <SelectValue placeholder="Periode" />
+              </SelectTrigger>
+              <SelectContent>
+                {DATE_FILTERS.map((filter) => (
+                  <SelectItem key={filter.value} value={filter.value}>
+                    {filter.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(categoryFilter !== 'all' ||
+              sourceFilter !== 'all' ||
+              dateFilter !== 'all') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground h-9 rounded-lg"
+                onClick={() => {
+                  setCategoryFilter('all');
+                  setSourceFilter('all');
+                  setDateFilter('all');
+                }}
+              >
+                <RefreshCw size={14} className="mr-1.5" />
+                Reset
+              </Button>
+            )}
+            <div className="flex-1" />
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 rounded-lg"
+              onClick={handleExport}
+              disabled={filteredLogs.length === 0}
+            >
+              <Download size={14} className="mr-1.5" />
+              <span className="hidden sm:inline">Exporter</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      {/* Timeline */}
+      <Card className="border-border/70 bg-card/70 min-h-0 flex-1 gap-0 overflow-hidden rounded-lg py-0">
+        <CardContent className="min-h-0 flex-1 p-0">
+          <div className="h-full min-h-0 overflow-y-auto px-3 sm:px-4">
+            {filteredLogs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <div className="bg-secondary flex h-16 w-16 items-center justify-center rounded-lg">
+                  <Filter className="text-muted-foreground h-8 w-8" />
+                </div>
+                <p className="text-muted-foreground mt-4 text-sm">
+                  Aucun resultat pour ces filtres
+                </p>
+              </div>
+            ) : (
+              <div className="pb-4">
+                {((): React.ReactNode => {
+                  let lastCategory: DateCategory | null = null;
+
+                  return displayedLogs.map((log) => {
+                    const config = ACTION_CONFIG[log.action] || DEFAULT_CONFIG;
+                    const isTargetedAction = log.userId !== userId;
+                    const category = getDateCategory(log.createdAt);
+                    const showSeparator = category !== lastCategory;
+                    lastCategory = category;
+
+                    return (
+                      <div key={log.id}>
+                        {showSeparator && (
+                          <div className="bg-card/95 sticky top-0 z-10 flex items-center gap-3 px-1 py-2 backdrop-blur-sm">
+                            <div className="bg-secondary h-px flex-1" />
+                            <span className="text-muted-foreground text-xs font-medium">
+                              {DATE_CATEGORY_LABELS.get(category) ||
+                                'Plus ancien'}
+                            </span>
+                            <div className="bg-secondary h-px flex-1" />
+                          </div>
+                        )}
+                        <TimelineItem
+                          log={log}
+                          config={config}
+                          isTargetedAction={isTargetedAction}
+                          isOpen={openLogId === log.id}
+                          onToggle={() =>
+                            setOpenLogId(openLogId === log.id ? null : log.id)
+                          }
+                        />
+                      </div>
+                    );
+                  });
+                })()}
+                {hasMore && (
+                  <div className="pt-4 text-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-border rounded-lg"
+                      onClick={() => setShowCount((c) => c + 20)}
+                    >
+                      Charger plus ({filteredLogs.length - showCount} restants)
+                    </Button>
                   </div>
-                );
-              });
-            })()}
-            {hasMore && (
-              <div className="pt-4 text-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-border rounded-lg"
-                  onClick={() => setShowCount((c) => c + 20)}
-                >
-                  Charger plus ({filteredLogs.length - showCount} restants)
-                </Button>
+                )}
               </div>
             )}
           </div>
-        )}
-      </div>
-      {/* Footer */}
-      <div className="border-border text-muted-foreground shrink-0 border-t px-6 py-3 text-center text-xs">
-        {filteredLogs.length} evenement{filteredLogs.length > 1 ? 's' : ''}
-        {(categoryFilter !== 'all' ||
-          sourceFilter !== 'all' ||
-          dateFilter !== 'all') &&
-          ' (filtre)'}
-      </div>
+        </CardContent>
+        {/* Footer */}
+        <CardFooter className="border-border/60 text-muted-foreground bg-background/20 shrink-0 justify-center border-t px-4 py-3 text-center text-xs">
+          {filteredLogs.length} evenement{filteredLogs.length > 1 ? 's' : ''}
+          {(categoryFilter !== 'all' ||
+            sourceFilter !== 'all' ||
+            dateFilter !== 'all') &&
+            ' (filtre)'}
+        </CardFooter>
+      </Card>
     </div>
   );
 };

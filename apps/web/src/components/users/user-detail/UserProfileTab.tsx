@@ -4,8 +4,10 @@ import { Loader2, Mail, Save, User } from 'lucide-react';
 import React, { type FC } from 'react';
 
 import { Button } from '$ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
+import { Separator } from '$ui/separator';
 
 type ProfileForm = {
   email: string;
@@ -21,12 +23,12 @@ type UserProfileTabProps = {
   setForm: (form: ProfileForm) => void;
 };
 
-const SectionHeader: FC<{
+const SectionTitle: FC<{
   children: React.ReactNode;
   icon: React.ReactNode;
 }> = ({ children, icon }) => (
-  <h3 className="text-foreground flex items-center gap-2 text-sm font-medium">
-    <span className="bg-primary/20 text-primary flex h-6 w-6 items-center justify-center rounded-md">
+  <h3 className="text-foreground flex items-center gap-2 text-sm font-semibold">
+    <span className="bg-primary/10 text-primary flex size-7 items-center justify-center rounded-md">
       {icon}
     </span>
     {children}
@@ -41,12 +43,15 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   setForm,
 }) => {
   return (
-    <div className="space-y-6">
-      <section className="border-border bg-card/70 rounded-lg border p-4 shadow-sm">
+    <Card className="border-border/70 bg-card/70 overflow-hidden rounded-lg py-0">
+      <CardHeader className="border-border/60 border-b p-4">
+        <CardTitle className="text-base">Profil utilisateur</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5 p-4">
         <div className="space-y-4">
-          <SectionHeader icon={<User className="h-3.5 w-3.5" />}>
+          <SectionTitle icon={<User className="size-3.5" />}>
             Identite
-          </SectionHeader>
+          </SectionTitle>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label className="text-muted-foreground text-xs" required>
@@ -76,12 +81,11 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
             </div>
           </div>
         </div>
-      </section>
-      <section className="border-border bg-card/70 rounded-lg border p-4 shadow-sm">
+        <Separator />
         <div className="space-y-4">
-          <SectionHeader icon={<Mail className="h-3.5 w-3.5" />}>
+          <SectionTitle icon={<Mail className="size-3.5" />}>
             Contact
-          </SectionHeader>
+          </SectionTitle>
           <div className="space-y-1.5">
             <Label className="text-muted-foreground text-xs" required>
               Email
@@ -97,8 +101,8 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
             />
           </div>
         </div>
-      </section>
-      <div className="flex justify-end">
+      </CardContent>
+      <CardFooter className="border-border/60 bg-background/20 justify-end border-t p-4">
         <Button
           size="sm"
           onClick={onSave}
@@ -112,7 +116,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
           )}
           Enregistrer
         </Button>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 };

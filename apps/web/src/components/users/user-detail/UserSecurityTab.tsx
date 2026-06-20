@@ -6,6 +6,7 @@ import React, { type FC } from 'react';
 import type { UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$ui/card';
 import { Label } from '$ui/label';
 import { Separator } from '$ui/separator';
 import { Switch } from '$ui/switch';
@@ -50,28 +51,34 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   const isSelf = currentUserId === user.id;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {tempPassword && (
-        <section className="overflow-hidden rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4 shadow-sm">
-          <p className="mb-2 font-medium text-emerald-400">
-            Nouveau mot de passe temporaire
-          </p>
-          <code className="bg-card text-foreground block rounded-md border px-3 py-2 font-mono text-sm">
-            {tempPassword}
-          </code>
-          <p className="text-muted-foreground mt-2 text-xs">
-            Communiquez ce mot de passe a l&apos;utilisateur.
-          </p>
-        </section>
+        <Card className="overflow-hidden rounded-lg border-emerald-500/20 bg-emerald-500/10 py-0">
+          <CardHeader className="border-b border-emerald-500/20 p-4">
+            <CardTitle className="text-sm text-emerald-400">
+              Nouveau mot de passe temporaire
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 p-4">
+            <code className="bg-card text-foreground block rounded-md border px-3 py-2 font-mono text-sm">
+              {tempPassword}
+            </code>
+            <p className="text-muted-foreground text-xs">
+              Communiquez ce mot de passe a l&apos;utilisateur.
+            </p>
+          </CardContent>
+        </Card>
       )}
-      <section className="border-border bg-card/70 rounded-lg border p-4 shadow-sm">
-        <div className="space-y-4">
-          <h3 className="text-foreground flex items-center gap-2 text-sm font-medium">
-            <span className="bg-primary/20 text-primary flex h-6 w-6 items-center justify-center rounded-md">
-              <Power className="h-3.5 w-3.5" />
+      <Card className="border-border/70 bg-card/70 overflow-hidden rounded-lg py-0">
+        <CardHeader className="border-border/60 border-b p-4">
+          <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
+            <span className="bg-primary/10 text-primary flex size-7 items-center justify-center rounded-md">
+              <Power className="size-3.5" />
             </span>
             Etat du compte
-          </h3>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
           <div className="flex items-center justify-between gap-4">
             <div>
               <Label className="text-foreground text-sm font-medium">
@@ -87,31 +94,33 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               disabled={!canEditStatus || isSelf}
             />
           </div>
-          <div className="flex justify-end">
-            <Button
-              size="sm"
-              onClick={onSaveStatus}
-              disabled={isSaving || !canEditStatus || isSelf}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              {isSaving ? (
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="mr-1.5 h-4 w-4" />
-              )}
-              Enregistrer
-            </Button>
-          </div>
-        </div>
-      </section>
-      <section className="border-border bg-card/70 rounded-lg border p-4 shadow-sm">
-        <div className="space-y-4">
-          <h3 className="text-foreground flex items-center gap-2 text-sm font-medium">
-            <span className="bg-primary/20 text-primary flex h-6 w-6 items-center justify-center rounded-md">
-              <ShieldCheck className="h-3.5 w-3.5" />
+        </CardContent>
+        <CardFooter className="border-border/60 bg-background/20 justify-end border-t p-4">
+          <Button
+            size="sm"
+            onClick={onSaveStatus}
+            disabled={isSaving || !canEditStatus || isSelf}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            {isSaving ? (
+              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-1.5 h-4 w-4" />
+            )}
+            Enregistrer
+          </Button>
+        </CardFooter>
+      </Card>
+      <Card className="border-border/70 bg-card/70 overflow-hidden rounded-lg py-0">
+        <CardHeader className="border-border/60 border-b p-4">
+          <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
+            <span className="bg-primary/10 text-primary flex size-7 items-center justify-center rounded-md">
+              <ShieldCheck className="size-3.5" />
             </span>
             Mot de passe
-          </h3>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 p-4">
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-4">
               <span className="text-muted-foreground text-sm">Etat</span>
@@ -135,25 +144,22 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                 {formatDate(user.passwordChangedAt)}
               </span>
             </div>
-            {canResetPassword && (
-              <>
-                <Separator />
-                <div className="flex justify-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={onResetPassword}
-                    className="gap-2"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Reset mot de passe
-                  </Button>
-                </div>
-              </>
-            )}
           </div>
-        </div>
-      </section>
+        </CardContent>
+        {canResetPassword && (
+          <CardFooter className="border-border/60 bg-background/20 justify-end border-t p-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onResetPassword}
+              className="gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reset mot de passe
+            </Button>
+          </CardFooter>
+        )}
+      </Card>
     </div>
   );
 };

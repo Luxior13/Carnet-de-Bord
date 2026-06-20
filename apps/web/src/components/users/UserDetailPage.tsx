@@ -2,8 +2,11 @@
 
 import { UserRole } from '@repo/database';
 import {
+  Activity,
   AlertTriangle,
   ArrowLeft,
+  Calendar,
+  Clock,
   Key,
   Loader2,
   Shield,
@@ -29,6 +32,8 @@ import { UserProfileTab } from '$components/users/user-detail/UserProfileTab';
 import { UserResumeTab } from '$components/users/user-detail/UserResumeTab';
 import { UserSecurityTab } from '$components/users/user-detail/UserSecurityTab';
 import {
+  getAccessLabel,
+  getRoleColor,
   hasPermission,
   PERMISSIONS,
   type PermissionsData,
@@ -49,7 +54,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '$ui/alert-dialog';
+import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
+import { Card, CardContent } from '$ui/card';
 import { PageShell } from '$ui/page-shell';
 import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
@@ -59,15 +66,50 @@ type UserDetailPageProps = {
   userId: string;
 };
 
+const formatCompactDate = (date: Date | string | null): string => {
+  if (!date) return 'Jamais';
+
+  return new Date(date).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+
+const USER_DETAIL_SECTION_DESCRIPTIONS = new Map<UserDetailSectionId, string>([
+  ['access', 'Role administratif, droits effectifs et permissions avancees.'],
+  [
+    'history',
+    'Connexions, changements de securite et actions administratives.',
+  ],
+  ['profile', 'Identite, contact et informations visibles dans le staff.'],
+  ['resume', 'Vue rapide du compte, du statut et des derniers signaux.'],
+  ['security', 'Etat du compte, mot de passe et actions sensibles.'],
+]);
+
 const DetailSkeleton: FC = () => (
   <PageShell className="flex h-full max-w-5xl flex-col gap-5 py-0">
-    <div className="space-y-3 pt-4 lg:hidden">
-      <Skeleton className="h-24 w-full rounded-lg" />
-      <Skeleton className="h-12 w-full" />
-    </div>
+    <Skeleton className="mt-4 h-12 w-full lg:hidden" />
     <section className="border-border/70 bg-card/35 flex min-h-0 min-w-0 flex-1 flex-col border-x border-y-0 p-4 sm:p-5">
-      <div className="border-border/60 bg-background/25 rounded-lg border p-3 sm:p-4">
-        <Skeleton className="h-10 w-64 max-w-full" />
+      <Card className="border-border/70 bg-card/70 shrink-0 overflow-hidden rounded-lg py-0">
+        <div className="bg-primary h-1 w-full" />
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <Skeleton className="size-12 rounded-lg" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-5 w-52 max-w-full" />
+              <Skeleton className="h-4 w-72 max-w-full" />
+            </div>
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <Skeleton className="h-12 rounded-lg" />
+            <Skeleton className="h-12 rounded-lg" />
+            <Skeleton className="h-12 rounded-lg" />
+          </div>
+        </CardContent>
+      </Card>
+      <div className="border-border/60 bg-background/25 mt-4 rounded-lg border p-3 sm:p-4">
+        <Skeleton className="h-7 w-48 max-w-full" />
       </div>
       <div className="mt-4 min-h-0 flex-1">
         <Skeleton className="h-full w-full rounded-lg" />
@@ -78,26 +120,28 @@ const DetailSkeleton: FC = () => (
 
 const AccessDenied: FC = () => (
   <PageShell className="max-w-3xl">
-    <div className="bg-card/70 rounded-lg border p-6 shadow-sm">
-      <div className="flex items-start gap-4">
-        <ServiceIcon className="bg-destructive/10 text-destructive">
-          <ShieldAlert className="size-5" />
-        </ServiceIcon>
-        <div className="space-y-3">
-          <div>
-            <h1 className="text-xl font-semibold">Acces refuse</h1>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Vous n&apos;avez pas la permission de consulter cet utilisateur.
-            </p>
+    <Card className="bg-card/70 rounded-lg py-0 shadow-sm">
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          <ServiceIcon className="bg-destructive/10 text-destructive">
+            <ShieldAlert className="size-5" />
+          </ServiceIcon>
+          <div className="space-y-3">
+            <div>
+              <h1 className="text-xl font-semibold">Acces refuse</h1>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Vous n&apos;avez pas la permission de consulter cet utilisateur.
+              </p>
+            </div>
+            <Button asChild variant="outline">
+              <Link href="/administration/utilisateurs">
+                Retour aux utilisateurs
+              </Link>
+            </Button>
           </div>
-          <Button asChild variant="outline">
-            <Link href="/administration/utilisateurs">
-              Retour aux utilisateurs
-            </Link>
-          </Button>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   </PageShell>
 );
 
@@ -436,6 +480,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   };
 
   const activeSectionLabel = getUserDetailSectionLabel(activeSection);
+  const activeSectionDescription =
+    USER_DETAIL_SECTION_DESCRIPTIONS.get(activeSection) ?? '';
+  const trackedActionsLabel = isLoadingAudit
+    ? 'Chargement'
+    : String(auditStats?.totalActions ?? auditLogs.length);
 
   const renderContent = (): React.ReactNode => {
     if (!user) return null;
@@ -535,28 +584,30 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         ]}
       >
         <PageShell className="max-w-3xl">
-          <div className="bg-card/70 rounded-lg border p-6 shadow-sm">
-            <div className="flex items-start gap-4">
-              <ServiceIcon className="bg-destructive/10 text-destructive">
-                <ShieldAlert className="size-5" />
-              </ServiceIcon>
-              <div className="space-y-3">
-                <div>
-                  <h1 className="text-xl font-semibold">
-                    Utilisateur introuvable
-                  </h1>
-                  <p className="text-muted-foreground mt-1 text-sm">
-                    {errorMessage || "Impossible de charger l'utilisateur."}
-                  </p>
+          <Card className="bg-card/70 rounded-lg py-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <ServiceIcon className="bg-destructive/10 text-destructive">
+                  <ShieldAlert className="size-5" />
+                </ServiceIcon>
+                <div className="space-y-3">
+                  <div>
+                    <h1 className="text-xl font-semibold">
+                      Utilisateur introuvable
+                    </h1>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      {errorMessage || "Impossible de charger l'utilisateur."}
+                    </p>
+                  </div>
+                  <Button asChild variant="outline">
+                    <Link href="/administration/utilisateurs">
+                      Retour aux utilisateurs
+                    </Link>
+                  </Button>
                 </div>
-                <Button asChild variant="outline">
-                  <Link href="/administration/utilisateurs">
-                    Retour aux utilisateurs
-                  </Link>
-                </Button>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </PageShell>
       </AuthenticatedLayout>
     );
@@ -582,83 +633,149 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       ]}
     >
       <PageShell className="flex h-full max-w-5xl flex-col gap-5 py-0">
-        <div className="flex items-center gap-3 pt-4 lg:hidden">
-          <Button asChild variant="outline" size="icon" className="shrink-0">
-            <Link href="/administration/utilisateurs" aria-label="Retour">
-              <ArrowLeft className="size-4" />
-            </Link>
-          </Button>
-          <div className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-lg text-xs font-semibold">
-            {user.firstName.charAt(0)}
-            {user.lastName.charAt(0)}
-          </div>
-          <div className="min-w-0">
-            <div className="flex min-w-0 items-center gap-2">
-              <h1 className="truncate text-xl font-semibold tracking-tight">
-                {user.firstName} {user.lastName}
-              </h1>
-              {user.isProtected && (
-                <Shield size={15} className="shrink-0 text-amber-500" />
-              )}
-            </div>
-            <p className="text-muted-foreground truncate text-sm">
-              {user.email}
-            </p>
-          </div>
-        </div>
-        <div className="-mx-4 overflow-x-auto px-4 lg:hidden">
-          <div className="flex min-w-max gap-2 pb-1">
-            {availableSections.map((section) => (
-              <Button
-                type="button"
-                variant={activeSection === section.id ? 'secondary' : 'outline'}
-                key={section.id}
-                onClick={() => handleSectionChange(section.id)}
-                className="h-9 gap-2"
-              >
-                <span
-                  className={activeSection === section.id ? 'text-primary' : ''}
-                >
-                  {section.icon}
-                </span>
-                {section.label}
-              </Button>
-            ))}
-          </div>
-        </div>
         <section className="border-border/70 bg-card/35 flex min-h-0 min-w-0 flex-1 flex-col border-x border-y-0 p-4 sm:p-5">
-          <div className="border-border/60 bg-background/25 mb-4 flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
-            <div className="min-w-0">
-              <h2 className="text-lg font-semibold">{activeSectionLabel}</h2>
-              <p className="text-muted-foreground text-sm">
-                Fiche d&apos;administration utilisateur.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {canResetTargetPassword && (
+          <Card className="border-border/70 bg-card/70 shrink-0 overflow-hidden rounded-lg py-0">
+            <div className="bg-primary h-1 w-full" />
+            <CardContent className="p-4">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex min-w-0 items-start gap-3">
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0 lg:hidden"
+                  >
+                    <Link
+                      href="/administration/utilisateurs"
+                      aria-label="Retour"
+                    >
+                      <ArrowLeft className="size-4" />
+                    </Link>
+                  </Button>
+                  <div className="bg-primary text-primary-foreground flex size-12 shrink-0 items-center justify-center rounded-lg text-sm font-semibold shadow-sm">
+                    {user.firstName.charAt(0)}
+                    {user.lastName.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <h1 className="truncate text-xl font-semibold tracking-tight">
+                        {user.firstName} {user.lastName}
+                      </h1>
+                      {user.isProtected && (
+                        <Shield size={15} className="shrink-0 text-amber-500" />
+                      )}
+                    </div>
+                    <p className="text-muted-foreground truncate text-sm">
+                      {user.email}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <Badge variant={getRoleColor(user.role)}>
+                        {getAccessLabel(user)}
+                      </Badge>
+                      <Badge
+                        variant={user.isActive ? 'secondary' : 'destructive'}
+                      >
+                        {user.isActive ? 'Actif' : 'Inactif'}
+                      </Badge>
+                      {user.mustChangePassword && (
+                        <Badge
+                          variant="outline"
+                          className="border-amber-500 text-amber-500"
+                        >
+                          MDP temporaire
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 lg:justify-end">
+                  {canResetTargetPassword && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowResetConfirm(true)}
+                    >
+                      <Key className="h-4 w-4" />
+                      Reset MDP
+                    </Button>
+                  )}
+                  {canDeleteTargetUser && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setShowDeleteConfirm(true)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Supprimer
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                <div className="border-border/60 bg-background/30 rounded-lg border p-3">
+                  <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+                    <Clock className="size-3.5" />
+                    Derniere connexion
+                  </p>
+                  <p className="mt-1 truncate text-sm font-medium">
+                    {formatCompactDate(user.lastLoginAt)}
+                  </p>
+                </div>
+                <div className="border-border/60 bg-background/30 rounded-lg border p-3">
+                  <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+                    <Calendar className="size-3.5" />
+                    Cree le
+                  </p>
+                  <p className="mt-1 truncate text-sm font-medium">
+                    {formatCompactDate(user.createdAt)}
+                  </p>
+                </div>
+                <div className="border-border/60 bg-background/30 rounded-lg border p-3">
+                  <p className="text-muted-foreground text-xs font-medium">
+                    Actions journalisees
+                  </p>
+                  <p className="mt-1 truncate text-sm font-medium">
+                    <Activity className="text-muted-foreground mr-1.5 inline size-3.5 align-[-2px]" />
+                    {trackedActionsLabel}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <div className="-mx-4 mt-4 overflow-x-auto px-4 lg:hidden">
+            <div className="flex min-w-max gap-2 pb-1">
+              {availableSections.map((section) => (
                 <Button
                   type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowResetConfirm(true)}
+                  variant={
+                    activeSection === section.id ? 'secondary' : 'outline'
+                  }
+                  key={section.id}
+                  onClick={() => handleSectionChange(section.id)}
+                  className="h-9 gap-2"
                 >
-                  <Key className="h-4 w-4" />
-                  Reset MDP
+                  <span
+                    className={
+                      activeSection === section.id ? 'text-primary' : ''
+                    }
+                  >
+                    {section.icon}
+                  </span>
+                  {section.label}
                 </Button>
-              )}
-              {canDeleteTargetUser && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setShowDeleteConfirm(true)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Supprimer
-                </Button>
-              )}
+              ))}
             </div>
           </div>
+          <Card className="border-border/60 bg-background/25 my-4 rounded-lg py-0 shadow-none">
+            <CardContent className="p-3 sm:p-4">
+              <h2 className="text-base font-semibold">{activeSectionLabel}</h2>
+              <p className="text-muted-foreground text-sm">
+                {activeSectionDescription}
+              </p>
+            </CardContent>
+          </Card>
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
             {renderContent()}
           </div>

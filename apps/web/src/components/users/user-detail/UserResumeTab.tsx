@@ -13,7 +13,7 @@ import React, { type FC } from 'react';
 import { getAccessLabel, getRoleColor } from '$constants/permissions.constants';
 import type { UserAuditStats, UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
-import { Card, CardContent } from '$ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '$ui/card';
 import { Separator } from '$ui/separator';
 
 type UserResumeTabProps = {
@@ -39,7 +39,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
       {/* Quick Stats */}
       {auditStats && (
         <div className="grid gap-4 sm:grid-cols-3">
-          <Card className="border-border bg-card/70 overflow-hidden rounded-lg">
+          <Card className="border-border bg-card/70 overflow-hidden rounded-lg py-0">
             <CardContent className="p-4 text-center">
               <p className="text-foreground text-2xl font-bold">
                 {auditStats.totalActions}
@@ -47,7 +47,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
               <p className="text-muted-foreground text-sm">Actions totales</p>
             </CardContent>
           </Card>
-          <Card className="overflow-hidden rounded-lg border-emerald-500/20 bg-emerald-500/10">
+          <Card className="overflow-hidden rounded-lg border-emerald-500/20 bg-emerald-500/10 py-0">
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-emerald-400">
                 {auditStats.successfulLogins}
@@ -55,7 +55,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
               <p className="text-sm text-emerald-400/70">Connexions reussies</p>
             </CardContent>
           </Card>
-          <Card className="overflow-hidden rounded-lg border-red-500/20 bg-red-500/10">
+          <Card className="overflow-hidden rounded-lg border-red-500/20 bg-red-500/10 py-0">
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-red-400">
                 {auditStats.failedLogins}
@@ -66,17 +66,22 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
         </div>
       )}
       {/* User Details */}
-      <Card className="border-border overflow-hidden rounded-lg">
+      <Card className="border-border/70 bg-card/70 overflow-hidden rounded-lg py-0">
+        <CardHeader className="border-border/60 border-b p-4">
+          <CardTitle className="text-base">Informations compte</CardTitle>
+        </CardHeader>
         <CardContent className="space-y-4 p-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Mail size={16} className="text-muted-foreground" />
               <span className="text-muted-foreground">Email</span>
             </div>
-            <span className="text-foreground">{user.email}</span>
+            <span className="text-foreground min-w-0 text-right text-sm break-all">
+              {user.email}
+            </span>
           </div>
           <Separator className="bg-secondary" />
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Shield size={16} className="text-muted-foreground" />
               <span className="text-muted-foreground">Role</span>
@@ -86,17 +91,17 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
             </Badge>
           </div>
           <Separator className="bg-secondary" />
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Clock size={16} className="text-muted-foreground" />
               <span className="text-muted-foreground">Derniere connexion</span>
             </div>
-            <span className="text-foreground">
+            <span className="text-foreground text-right text-sm">
               {formatDate(user.lastLoginAt)}
             </span>
           </div>
           <Separator className="bg-secondary" />
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Key size={16} className="text-muted-foreground" />
               <span className="text-muted-foreground">Mot de passe</span>
@@ -115,7 +120,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
             )}
           </div>
           <Separator className="bg-secondary" />
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Activity size={16} className="text-muted-foreground" />
               <span className="text-muted-foreground">Statut</span>
@@ -133,12 +138,12 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
             )}
           </div>
           <Separator className="bg-secondary" />
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Calendar size={16} className="text-muted-foreground" />
               <span className="text-muted-foreground">Cree le</span>
             </div>
-            <span className="text-foreground">
+            <span className="text-foreground text-right text-sm">
               {formatDate(user.createdAt)}
             </span>
           </div>

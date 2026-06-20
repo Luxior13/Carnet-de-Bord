@@ -8,6 +8,7 @@ import { PermissionsEditor } from '$components/users/PermissionsEditor';
 import type { PermissionsData } from '$constants/permissions.constants';
 import type { UserType } from '$types/auth.types';
 import { Button } from '$ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import {
@@ -42,15 +43,17 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   user,
 }) => {
   return (
-    <div className="space-y-6">
-      <section className="border-border bg-card/70 rounded-lg border p-4 shadow-sm">
-        <div className="space-y-4">
-          <h3 className="text-foreground flex items-center gap-2 text-sm font-medium">
-            <span className="bg-primary/20 text-primary flex h-6 w-6 items-center justify-center rounded-md">
-              <Shield className="h-3.5 w-3.5" />
+    <div className="space-y-4">
+      <Card className="border-border/70 bg-card/70 overflow-hidden rounded-lg py-0">
+        <CardHeader className="border-border/60 border-b p-4">
+          <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
+            <span className="bg-primary/10 text-primary flex size-7 items-center justify-center rounded-md">
+              <Shield className="size-3.5" />
             </span>
             Role
-          </h3>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
           <div className="space-y-1.5">
             <Label className="text-muted-foreground text-xs" required>
               Role administratif
@@ -77,31 +80,33 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
               </Select>
             )}
           </div>
-        </div>
-      </section>
-      <section className="border-border bg-card/70 rounded-lg border p-4 shadow-sm">
-        <PermissionsEditor
-          role={role}
-          permissions={permissions}
-          onChange={setPermissions}
-          disabled={!canManagePermissions}
-        />
-      </section>
-      <div className="flex justify-end">
-        <Button
-          onClick={onSave}
-          disabled={isSaving || (!canEditRole && !canManagePermissions)}
-          size="sm"
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
-        >
-          {isSaving ? (
-            <Loader2 size={16} className="mr-2 animate-spin" />
-          ) : (
-            <Save size={16} className="mr-2" />
-          )}
-          Enregistrer
-        </Button>
-      </div>
+        </CardContent>
+      </Card>
+      <Card className="border-border/70 bg-card/70 overflow-hidden rounded-lg py-0">
+        <CardContent className="p-4">
+          <PermissionsEditor
+            role={role}
+            permissions={permissions}
+            onChange={setPermissions}
+            disabled={!canManagePermissions}
+          />
+        </CardContent>
+        <CardFooter className="border-border/60 bg-background/20 justify-end border-t p-4">
+          <Button
+            onClick={onSave}
+            disabled={isSaving || (!canEditRole && !canManagePermissions)}
+            size="sm"
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            {isSaving ? (
+              <Loader2 size={16} className="mr-2 animate-spin" />
+            ) : (
+              <Save size={16} className="mr-2" />
+            )}
+            Enregistrer
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 };
