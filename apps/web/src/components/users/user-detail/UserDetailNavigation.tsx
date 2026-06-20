@@ -4,6 +4,7 @@ import { ArrowLeft, History, Key, Shield, User } from 'lucide-react';
 import Link from 'next/link';
 import React, { type FC } from 'react';
 
+import { getAccessLabel } from '$constants/permissions.constants';
 import type { UserType } from '$types/auth.types';
 import {
   SidebarGroupLabel,
@@ -15,6 +16,7 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from '$ui/sidebar';
+import { cn } from '$utils/css.utils';
 
 export type UserDetailSectionId =
   | 'resume'
@@ -73,6 +75,9 @@ export const UserDetailSidebarPanel: FC<UserDetailSidebarPanelProps> = ({
   user,
 }) => {
   const { setOpenMobile } = useSidebar();
+  const accessLabel = getAccessLabel(user);
+  const displayName = `${user.firstName} ${user.lastName}`;
+  const initials = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;
 
   const closeMobileSidebar = (): void => {
     setOpenMobile(false);
@@ -103,11 +108,21 @@ export const UserDetailSidebarPanel: FC<UserDetailSidebarPanelProps> = ({
             <Link
               href={`/administration/utilisateurs/${user.id}`}
               onClick={closeMobileSidebar}
-              title={`${user.firstName} ${user.lastName}`}
+              title={displayName}
             >
-              <User className="size-4" />
-              <span>
-                {user.firstName} {user.lastName}
+              <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-md text-[11px] font-semibold">
+                {initials}
+              </div>
+              <span className="min-w-0">
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <span className="truncate">{displayName}</span>
+                  {user.isProtected && (
+                    <Shield className="size-3 shrink-0 text-amber-500" />
+                  )}
+                </span>
+                <span className="text-sidebar-foreground/65 mt-0.5 block truncate text-xs font-normal">
+                  {user.isActive ? accessLabel : `${accessLabel} - Inactif`}
+                </span>
               </span>
             </Link>
           </SidebarMenuButton>
@@ -125,6 +140,10 @@ export const UserDetailSidebarPanel: FC<UserDetailSidebarPanelProps> = ({
                     activeSection === section.id ? 'page' : undefined
                   }
                   title={section.label}
+                  className={cn(
+                    activeSection === section.id &&
+                      '[&>svg]:text-primary font-medium',
+                  )}
                 >
                   {section.icon}
                   <span>{section.label}</span>
