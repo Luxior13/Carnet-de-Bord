@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   Key,
   Loader2,
-  Mail,
   Shield,
   ShieldAlert,
   Trash2,
@@ -61,14 +60,18 @@ type UserDetailPageProps = {
 };
 
 const DetailSkeleton: FC = () => (
-  <PageShell className="max-w-5xl space-y-5">
-    <div className="space-y-3 lg:hidden">
+  <PageShell className="flex h-full max-w-5xl flex-col gap-5 py-0">
+    <div className="space-y-3 pt-4 lg:hidden">
       <Skeleton className="h-24 w-full rounded-lg" />
       <Skeleton className="h-12 w-full" />
     </div>
-    <section className="bg-muted/20 border-border/70 min-w-0 rounded-lg border p-3 shadow-sm sm:p-4">
-      <Skeleton className="h-10 w-64 max-w-full" />
-      <Skeleton className="mt-4 h-[520px] w-full" />
+    <section className="border-border/70 bg-card/35 flex min-h-0 min-w-0 flex-1 flex-col border-x border-y-0 p-4 sm:p-5">
+      <div className="border-border/60 bg-background/25 rounded-lg border p-3 sm:p-4">
+        <Skeleton className="h-10 w-64 max-w-full" />
+      </div>
+      <div className="mt-4 min-h-0 flex-1">
+        <Skeleton className="h-full w-full rounded-lg" />
+      </div>
     </section>
   </PageShell>
 );
@@ -512,6 +515,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   if (isLoading) {
     return (
       <AuthenticatedLayout
+        fullHeight
         breadcrumbs={[
           { label: 'Administration' },
           { href: '/administration/utilisateurs', label: 'Utilisateurs' },
@@ -560,6 +564,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   return (
     <AuthenticatedLayout
+      fullHeight
       sidebarContext={
         <UserDetailSidebarPanel
           user={user}
@@ -576,8 +581,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         },
       ]}
     >
-      <PageShell className="max-w-5xl space-y-5">
-        <div className="flex items-center gap-3 lg:hidden">
+      <PageShell className="flex h-full max-w-5xl flex-col gap-5 py-0">
+        <div className="flex items-center gap-3 pt-4 lg:hidden">
           <Button asChild variant="outline" size="icon" className="shrink-0">
             <Link href="/administration/utilisateurs" aria-label="Retour">
               <ArrowLeft className="size-4" />
@@ -621,8 +626,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             ))}
           </div>
         </div>
-        <section className="bg-muted/20 border-border/70 min-w-0 rounded-lg border p-3 shadow-sm sm:p-4">
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <section className="border-border/70 bg-card/35 flex min-h-0 min-w-0 flex-1 flex-col border-x border-y-0 p-4 sm:p-5">
+          <div className="border-border/60 bg-background/25 mb-4 flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
             <div className="min-w-0">
               <h2 className="text-lg font-semibold">{activeSectionLabel}</h2>
               <p className="text-muted-foreground text-sm">
@@ -630,14 +635,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              {user.email && (
-                <Button asChild variant="outline" size="sm">
-                  <a href={`mailto:${user.email}`}>
-                    <Mail className="h-4 w-4" />
-                    Email
-                  </a>
-                </Button>
-              )}
               {canResetTargetPassword && (
                 <Button
                   type="button"
@@ -662,7 +659,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               )}
             </div>
           </div>
-          <div className="min-h-[520px]">{renderContent()}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            {renderContent()}
+          </div>
         </section>
       </PageShell>
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>

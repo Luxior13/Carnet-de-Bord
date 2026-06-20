@@ -2,6 +2,8 @@
 
 import {
   ChevronRight,
+  Compass,
+  FileText,
   LayoutDashboard,
   LogOut,
   type LucideIcon,
@@ -63,6 +65,15 @@ type SidebarProps = {
 };
 
 type SidebarPanel = 'context' | 'site';
+
+const SIDEBAR_PANEL_OPTIONS: {
+  icon: LucideIcon;
+  id: SidebarPanel;
+  label: string;
+}[] = [
+  { icon: Compass, id: 'site', label: 'Site' },
+  { icon: FileText, id: 'context', label: 'Fiche' },
+];
 
 function isActivePath(pathname: string, href: string): boolean {
   return pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
@@ -130,6 +141,7 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
   }, [hasContextualContent, pathname]);
 
   const renderSubNavItem = (item: NavItem): React.ReactNode => {
+    const Icon = iconMap[item.icon] ?? Settings;
     const isActive = isActivePath(pathname, item.href);
 
     return (
@@ -142,6 +154,7 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
             onClick={() => setOpenMobile(false)}
             title={item.label}
           >
+            <Icon className="size-4" />
             <span>{item.label}</span>
           </Link>
         </SidebarMenuSubButton>
@@ -167,7 +180,15 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
           className="group/collapsible"
         >
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive && !hasActiveChild}>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive && !hasActiveChild}
+              className={
+                hasActiveChild
+                  ? 'bg-sidebar-accent/35 text-sidebar-accent-foreground [&>svg]:text-sidebar-ring'
+                  : undefined
+              }
+            >
               <CollapsibleTrigger
                 aria-label={item.label}
                 title={item.label}
@@ -206,16 +227,16 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
 
   return (
     <SidebarRoot collapsible="icon" variant="floating" className={className}>
-      <SidebarHeader className="border-b p-3 group-data-[collapsible=icon]/sidebar:px-0">
+      <SidebarHeader className="border-sidebar-border/70 border-b p-3 group-data-[collapsible=icon]/sidebar:px-0">
         <Link
           href="/"
           onClick={() => setOpenMobile(false)}
           className={cn(
-            'hover:bg-sidebar-accent flex h-12 w-full min-w-0 items-center gap-3 overflow-hidden rounded-lg px-2 transition-colors',
-            'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
+            'border-sidebar-border/60 bg-sidebar-accent/35 hover:bg-sidebar-accent/60 flex h-12 w-full min-w-0 items-center gap-3 overflow-hidden rounded-lg border px-2 shadow-sm transition-colors',
+            'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-2.5 group-data-[collapsible=icon]/sidebar:shadow-none',
           )}
         >
-          <span className="bg-primary flex size-9 shrink-0 items-center justify-center rounded-lg shadow-sm">
+          <span className="bg-sidebar-primary flex size-9 shrink-0 items-center justify-center rounded-lg shadow-sm">
             <Image
               src="/assets/noc.png"
               alt=""
@@ -237,38 +258,34 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
       </SidebarHeader>
       <SidebarContent>
         {hasContextualContent && (
-          <div className="px-2 pt-2 group-data-[collapsible=icon]/sidebar:hidden">
+          <div className="bg-sidebar/95 sticky top-0 z-10 px-2 pt-2 pb-1 group-data-[collapsible=icon]/sidebar:hidden">
             <div
-              className="bg-sidebar-accent/60 grid grid-cols-2 gap-1 rounded-md p-1"
+              className="border-sidebar-border/70 bg-sidebar-accent/35 grid grid-cols-2 gap-1 rounded-lg border p-1 shadow-sm"
               role="tablist"
               aria-label="Navigation"
             >
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activePanel === 'site'}
-                onClick={() => setActivePanel('site')}
-                className={cn(
-                  'text-sidebar-foreground/70 hover:text-sidebar-foreground h-7 rounded-sm px-2 text-xs font-medium transition-colors',
-                  activePanel === 'site' &&
-                    'bg-sidebar text-sidebar-foreground shadow-sm',
-                )}
-              >
-                Site
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activePanel === 'context'}
-                onClick={() => setActivePanel('context')}
-                className={cn(
-                  'text-sidebar-foreground/70 hover:text-sidebar-foreground h-7 rounded-sm px-2 text-xs font-medium transition-colors',
-                  activePanel === 'context' &&
-                    'bg-sidebar text-sidebar-foreground shadow-sm',
-                )}
-              >
-                Fiche
-              </button>
+              {SIDEBAR_PANEL_OPTIONS.map((option) => {
+                const Icon = option.icon;
+                const isSelected = activePanel === option.id;
+
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    onClick={() => setActivePanel(option.id)}
+                    className={cn(
+                      'text-sidebar-foreground/70 hover:text-sidebar-foreground focus-visible:ring-sidebar-ring flex h-8 items-center justify-center gap-1.5 rounded-md px-2 text-xs font-medium transition-[background-color,color,box-shadow] outline-none focus-visible:ring-2',
+                      isSelected &&
+                        'bg-sidebar text-sidebar-foreground border-sidebar-border ring-sidebar-border/70 shadow-sm ring-1',
+                    )}
+                  >
+                    <Icon className="size-3.5" />
+                    {option.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -278,7 +295,7 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
             className={cn(
               hasContextualContent &&
                 activePanel === 'context' &&
-                'group-data-[state=expanded]/sidebar:hidden',
+                'hidden group-data-[collapsible=icon]/sidebar:flex',
             )}
           >
             {section.label && (
@@ -295,7 +312,7 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
           </SidebarGroup>
         )}
       </SidebarContent>
-      <SidebarFooter className="border-t group-data-[collapsible=icon]/sidebar:px-0">
+      <SidebarFooter className="border-sidebar-border/70 border-t group-data-[collapsible=icon]/sidebar:px-0">
         {bottomSections.map((section) => (
           <SidebarGroup key={section.id} className="p-0">
             <SidebarGroupContent>
@@ -305,16 +322,17 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
         ))}
         {userData && (
           <div
+            title={`${userData.firstName} ${userData.lastName}`}
             className={cn(
-              'bg-sidebar-accent/70 flex min-w-0 items-center gap-3 overflow-hidden rounded-lg border p-3 shadow-sm transition-colors',
-              'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-0 group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:p-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
+              'border-sidebar-border/70 bg-sidebar-accent/45 hover:bg-sidebar-accent/60 flex min-w-0 items-center gap-3 overflow-hidden rounded-lg border p-2 shadow-sm transition-colors',
+              'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-0 group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:p-0 group-data-[collapsible=icon]/sidebar:pl-2.5 group-data-[collapsible=icon]/sidebar:shadow-none',
             )}
           >
-            <div className="bg-primary text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-md text-xs font-semibold shadow-sm">
               {userData.firstName.charAt(0)}
               {userData.lastName.charAt(0)}
             </div>
-            <div className="max-w-28 min-w-0 flex-1 overflow-hidden transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:max-w-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150">
+            <div className="min-w-0 flex-1 overflow-hidden transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:max-w-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150">
               <p className="truncate text-sm font-medium">
                 {userData.firstName} {userData.lastName}
               </p>
@@ -327,7 +345,7 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
               variant="ghost"
               size="icon"
               onClick={logout}
-              className="group-data-[collapsible=icon]/sidebar:hidden"
+              className="text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground size-8 shrink-0 group-data-[collapsible=icon]/sidebar:hidden"
               aria-label="Deconnexion"
             >
               <LogOut className="size-4" />

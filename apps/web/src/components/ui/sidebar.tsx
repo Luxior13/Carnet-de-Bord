@@ -490,7 +490,7 @@ function SidebarMenuButton({
       data-size={size}
       data-slot="sidebar-menu-button"
       className={cn(
-        'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:border-sidebar-ring/45 focus-visible:ring-sidebar-ring flex w-full items-center gap-2 overflow-hidden rounded-md border border-transparent px-2 text-left text-sm transition-colors outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
+        'text-sidebar-foreground/90 hover:bg-sidebar-accent/75 hover:text-sidebar-accent-foreground hover:border-sidebar-border data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:border-sidebar-ring/45 data-[active=true]:[&>svg]:text-sidebar-ring focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/70 flex w-full items-center gap-2 overflow-hidden rounded-md border border-transparent px-2 text-left text-sm font-medium transition-[background-color,border-color,color,box-shadow] outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 data-[active=true]:font-semibold data-[active=true]:shadow-[inset_2px_0_0_var(--sidebar-ring)] [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
         size === 'sm' && 'h-7 text-xs',
         size === 'default' && 'h-8',
         size === 'lg' && 'h-12',
@@ -605,7 +605,7 @@ function SidebarMenuSubButton({
       data-sidebar="menu-sub-button"
       data-slot="sidebar-menu-sub-button"
       className={cn(
-        'text-sidebar-foreground/75 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:border-sidebar-ring/45 focus-visible:ring-sidebar-ring flex h-8 min-w-0 items-center gap-2 overflow-hidden rounded-md border border-transparent px-2 text-sm transition-colors outline-none focus-visible:ring-2 [&>span]:truncate',
+        'text-sidebar-foreground/80 hover:bg-sidebar-accent/65 hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:border-sidebar-ring/45 data-[active=true]:[&>svg]:text-sidebar-ring focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/65 flex h-8 min-w-0 items-center gap-2 overflow-hidden rounded-md border border-transparent px-2 text-sm font-medium transition-[background-color,border-color,color,box-shadow] outline-none focus-visible:ring-2 data-[active=true]:font-semibold data-[active=true]:shadow-[inset_2px_0_0_var(--sidebar-ring)] [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
         className,
       )}
       {...props}

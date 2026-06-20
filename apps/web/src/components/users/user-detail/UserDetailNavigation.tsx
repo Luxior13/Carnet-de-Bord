@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, History, Key, Shield, User } from 'lucide-react';
+import { ArrowLeft, FileText, History, Key, Shield, User } from 'lucide-react';
 import Link from 'next/link';
 import React, { type FC } from 'react';
 
@@ -32,7 +32,7 @@ export type UserDetailSection = {
 };
 
 export const USER_DETAIL_SECTIONS: UserDetailSection[] = [
-  { icon: <User className="h-4 w-4" />, id: 'resume', label: 'Resume' },
+  { icon: <FileText className="h-4 w-4" />, id: 'resume', label: 'Resume' },
   { icon: <User className="h-4 w-4" />, id: 'profile', label: 'Profil' },
   {
     icon: <Shield className="h-4 w-4" />,
@@ -40,7 +40,7 @@ export const USER_DETAIL_SECTIONS: UserDetailSection[] = [
     label: 'Acces',
   },
   { icon: <Key className="h-4 w-4" />, id: 'security', label: 'Securite' },
-  { icon: <History className="h-4 w-4" />, id: 'history', label: 'Historique' },
+  { icon: <History className="h-4 w-4" />, id: 'history', label: 'Activite' },
 ];
 
 export const normalizeUserDetailSection = (
@@ -103,6 +103,7 @@ export const UserDetailSidebarPanel: FC<UserDetailSidebarPanelProps> = ({
           <SidebarMenuButton
             asChild
             isActive
+            size="lg"
             className="data-[active=true]:bg-sidebar-accent/70"
           >
             <Link
@@ -126,7 +127,7 @@ export const UserDetailSidebarPanel: FC<UserDetailSidebarPanelProps> = ({
               </span>
             </Link>
           </SidebarMenuButton>
-          <SidebarMenuSub>
+          <SidebarMenuSub className="mt-1">
             {USER_DETAIL_SECTIONS.map((section) => (
               <SidebarMenuSubItem key={section.id}>
                 <SidebarMenuSubButton
