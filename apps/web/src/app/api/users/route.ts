@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors } from '$server/api-response';
+import { apiErrors, parsePagination } from '$server/api-response';
 import {
   createAuditLogWithHeaders,
   createUser,
@@ -20,35 +20,26 @@ import {
 import type { UsersListResponse, UserType } from '$types/auth.types';
 import { emailSchema, trimmedStringMin } from '$utils/zod.utils';
 
-// ============================================
-// GET /api/users - List users with pagination
-// ============================================
 export async function GET(
   request: NextRequest,
 ): Promise<
   NextResponse<ApiSuccessResponse<UsersListResponse> | ApiErrorResponse>
 > {
   try {
-    // Check authentication
     const auth = await requireAuth();
     if (!auth.success) return auth.response;
 
-    // Check permission
     const permCheck = requirePermission(auth.user, PERMISSIONS.USERS.VIEW);
     if (!permCheck.success) return permCheck.response;
 
-    // Parse pagination params
     const { searchParams } = new URL(request.url);
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-    const limit = Math.min(
-      100,
-      Math.max(1, parseInt(searchParams.get('limit') || '25', 10)),
-    );
+    const { limit, page, skip } = parsePagination(searchParams, 25, {
+      maxLimit: 100,
+    });
     const search = searchParams.get('search')?.trim().toLowerCase() || '';
     const role = searchParams.get('role') as UserRole | null;
-    const status = searchParams.get('status'); // 'active' | 'inactive' | null
+    const status = searchParams.get('status');
 
-    // Build where clause
     const where: {
       deletedAt: null;
       email?: { contains: string; mode: 'insensitive' };
@@ -71,9 +62,11 @@ export async function GET(
         { lastName: { contains: search, mode: 'insensitive' } },
       ];
     }
+
     if (role && ['ADMIN', 'USER'].includes(role)) {
       where.role = role;
     }
+
     if (status === 'active') {
       where.isActive = true;
     } else if (status === 'inactive') {
@@ -82,18 +75,14 @@ export async function GET(
       where.mustChangePassword = true;
     }
 
-    // Get total count for pagination
     const total = await prisma.user.count({ where });
-
-    // Get paginated users
     const users = await prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * limit,
+      skip,
       take: limit,
       where,
     });
 
-    // Calculate statistics (on ALL users, not just paginated)
     const allUsers = await prisma.user.findMany({
       select: {
         createdAt: true,
@@ -119,8 +108,9 @@ export async function GET(
         if (!user.lastLoginAt) acc.neverLoggedIn++;
         if (user.createdAt >= oneWeekAgo) acc.newThisWeek++;
         if (user.mustChangePassword) acc.pendingPasswordChange++;
-        if (user.lastLoginAt && user.lastLoginAt >= oneDayAgo)
+        if (user.lastLoginAt && user.lastLoginAt >= oneDayAgo) {
           acc.recentLogins++;
+        }
 
         return acc;
       },
@@ -154,12 +144,9 @@ export async function GET(
   }
 }
 
-// ============================================
-// POST /api/users - Create a new user
-// ============================================
 const createUserSchema = z.object({
   email: emailSchema,
-  firstName: trimmedStringMin(1, 'Prénom requis'),
+  firstName: trimmedStringMin(1, 'Prenom requis'),
   lastName: trimmedStringMin(1, 'Nom requis'),
   role: z.enum(['ADMIN', 'USER']),
 });
@@ -173,11 +160,9 @@ export async function POST(
   >
 > {
   try {
-    // Check authentication
     const auth = await requireAuth();
     if (!auth.success) return auth.response;
 
-    // Check permission
     const permCheck = requirePermission(auth.user, PERMISSIONS.USERS.CREATE);
     if (!permCheck.success) return permCheck.response;
 
@@ -190,7 +175,7 @@ export async function POST(
           error: {
             code: ErrorCode.VALIDATION_ERROR,
             details: validation.error.flatten().fieldErrors,
-            message: 'Données invalides',
+            message: 'Donnees invalides',
           },
           success: false,
         },
@@ -200,14 +185,13 @@ export async function POST(
 
     const { email, firstName, lastName, role } = validation.data;
 
-    // Only protected users can create ADMIN accounts
     if (role === 'ADMIN' && !auth.user.isProtected) {
       return NextResponse.json(
         {
           error: {
             code: ErrorCode.FORBIDDEN,
             message:
-              "Vous n'êtes pas autorisé à créer des comptes administrateurs",
+              "Vous n'etes pas autorise a creer des comptes administrateurs",
           },
           success: false,
         },
@@ -215,7 +199,6 @@ export async function POST(
       );
     }
 
-    // Check if email already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase().trim() },
     });
@@ -225,7 +208,7 @@ export async function POST(
         {
           error: {
             code: ErrorCode.VALIDATION_ERROR,
-            message: 'Cet email est déjà utilisé',
+            message: 'Cet email est deja utilise',
           },
           success: false,
         },
@@ -233,9 +216,7 @@ export async function POST(
       );
     }
 
-    // Generate temporary password
     const temporaryPassword = generateTemporaryPassword();
-
     const newUser = await createUser({
       email,
       firstName,
@@ -244,11 +225,10 @@ export async function POST(
       role,
     });
 
-    // Log audit
     await createAuditLogWithHeaders({
       action: 'USER_CREATE',
       category: 'USER',
-      description: `Utilisateur créé: ${newUser.email}`,
+      description: `Utilisateur cree: ${newUser.email}`,
       metadata: {
         createdUserId: newUser.id,
         role: newUser.role,

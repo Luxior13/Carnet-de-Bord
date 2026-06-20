@@ -135,9 +135,10 @@ export const UsersTab: FC = () => {
           newParams.delete(key);
         }
       });
-      // Keep tab parameter
-      newParams.set('tab', 'utilisateurs');
-      router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+      const queryString = newParams.toString();
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+        scroll: false,
+      });
     },
     [router, pathname, searchParams],
   );
@@ -233,13 +234,13 @@ export const UsersTab: FC = () => {
       if (data.success) {
         setCreatedUserId(data.data.user.id);
         setTempPassword(data.data.temporaryPassword);
-        toast.success('Utilisateur créé avec succès');
+        toast.success('Utilisateur cree avec succes');
         fetchUsers();
       } else {
-        toast.error(data.error?.message || 'Erreur lors de la création');
+        toast.error(data.error?.message || 'Erreur lors de la creation');
       }
     } catch {
-      toast.error('Erreur lors de la création');
+      toast.error('Erreur lors de la creation');
     } finally {
       setIsCreating(false);
     }
@@ -257,7 +258,7 @@ export const UsersTab: FC = () => {
     setFilterStatus('all');
     setFilterRole('all');
     setSortBy('name');
-    router.replace(`${pathname}?tab=utilisateurs`, { scroll: false });
+    router.replace(pathname, { scroll: false });
   };
 
   const hasActiveFilters =
@@ -738,7 +739,7 @@ export const UsersTab: FC = () => {
                 Nouvel utilisateur
               </DialogTitle>
               <DialogDescription className="text-muted-foreground">
-                Un mot de passe temporaire sera généré automatiquement.
+                Un mot de passe temporaire sera genere automatiquement.
               </DialogDescription>
             </DialogHeader>
             {tempPassword ? (
@@ -751,16 +752,16 @@ export const UsersTab: FC = () => {
                     <p className="text-muted-foreground mb-2 text-xs">
                       Mot de passe temporaire :
                     </p>
-                    <code className="border-border bg-card text-foreground block rounded-lg border p-3 font-mono text-base">
+                    <code className="bg-card border-border text-foreground block rounded-md border px-3 py-2 font-mono text-sm">
                       {tempPassword}
                     </code>
                     <p className="text-muted-foreground mt-2 text-xs">
-                      A communiquer a l&apos;utilisateur. Il devra le changer a
-                      sa premiere connexion.
+                      Communiquez ce mot de passe a l&apos;utilisateur. Il devra
+                      le changer a sa premiere connexion.
                     </p>
                   </div>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="gap-2 sm:gap-0">
                   {createdUserId && (
                     <Button
                       variant="outline"
@@ -768,14 +769,14 @@ export const UsersTab: FC = () => {
                         setSelectedUserId(createdUserId);
                         handleCloseCreateDialog();
                       }}
-                      className="border-border w-full"
+                      className="border-border"
                     >
                       Ouvrir la fiche
                     </Button>
                   )}
                   <Button
                     onClick={handleCloseCreateDialog}
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 w-full"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     Fermer
                   </Button>

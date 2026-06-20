@@ -41,14 +41,29 @@ export const NAV_SECTIONS: NavSection[] = [
         label: 'Tableau de bord',
         requiredPermissions: [PERMISSIONS.DASHBOARD.VIEW],
       },
-      {
-        href: '/test',
-        icon: 'FlaskConical',
-        label: 'Test',
-        requiredPermissions: [PERMISSIONS.DASHBOARD.VIEW],
-      },
     ],
     label: '',
+    position: 'top',
+  },
+  {
+    id: 'administration',
+    items: [
+      {
+        children: [
+          {
+            href: '/administration/utilisateurs',
+            icon: 'Users',
+            label: 'Utilisateurs',
+            requiredPermissions: [PERMISSIONS.USERS.VIEW],
+          },
+        ],
+        href: '/administration',
+        icon: 'Settings',
+        label: 'Administration',
+        requiredPermissions: [PERMISSIONS.USERS.VIEW],
+      },
+    ],
+    label: 'Gestion',
     position: 'top',
   },
 ];

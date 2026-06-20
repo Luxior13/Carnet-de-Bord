@@ -406,7 +406,7 @@ export default function DashboardPage(): React.ReactNode {
                 </CardHeader>
                 <CardContent>
                   <Button asChild variant="outline" className="w-full">
-                    <Link href="/settings?tab=compte">Ouvrir mon compte</Link>
+                    <Link href="/mon-compte">Ouvrir mon compte</Link>
                   </Button>
                 </CardContent>
               </Card>

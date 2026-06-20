@@ -6,6 +6,8 @@ import { ErrorCode } from '$types/api.types';
 const mockRequireAuth = vi.fn();
 const mockRequirePermission = vi.fn();
 const mockCreateAuditLogWithHeaders = vi.fn();
+const mockCreateUser = vi.fn();
+const mockGenerateTemporaryPassword = vi.fn();
 const mockInvalidateAllUserSessions = vi.fn();
 
 const mockPrisma = {
@@ -15,6 +17,7 @@ const mockPrisma = {
   },
   user: {
     count: vi.fn(),
+    create: vi.fn(),
     findMany: vi.fn(),
     findUnique: vi.fn(),
     update: vi.fn(),
@@ -30,6 +33,8 @@ vi.mock('$server/api-auth', () => ({
 
 vi.mock('$server/auth', () => ({
   createAuditLogWithHeaders: mockCreateAuditLogWithHeaders,
+  createUser: mockCreateUser,
+  generateTemporaryPassword: mockGenerateTemporaryPassword,
   invalidateAllUserSessions: mockInvalidateAllUserSessions,
   mapUserToUserType: (user: unknown) => user,
 }));
@@ -138,6 +143,86 @@ describe('users access hardening', () => {
         where: { id: 'target-1' },
       }),
     );
+    expect(mockInvalidateAllUserSessions).toHaveBeenCalledWith('target-1');
+    expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'PERMISSION_UPDATE',
+        category: 'PERMISSION',
+        userId: 'viewer-1',
+      }),
+    );
+  });
+
+  it('rejects empty user patches before loading the target user', async () => {
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: JSON.stringify({}),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe(ErrorCode.VALIDATION_ERROR);
+    expect(mockRequirePermission).not.toHaveBeenCalled();
+    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('creates users with a temporary password that must be changed', async () => {
+    const newUser = buildUser({
+      email: 'new.user@example.com',
+      firstName: 'New',
+      id: 'new-user-1',
+      lastName: 'User',
+      mustChangePassword: true,
+      role: 'USER',
+    });
+
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    mockGenerateTemporaryPassword.mockReturnValue('TempPassword1!');
+    mockCreateUser.mockResolvedValue(newUser);
+
+    const route = await import('$app/api/users/route');
+    const response = await route.POST(
+      new Request('http://localhost/api/users', {
+        body: JSON.stringify({
+          email: 'New.User@example.com',
+          firstName: 'New',
+          lastName: 'User',
+          role: 'USER',
+        }),
+        method: 'POST',
+      }) as never,
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.temporaryPassword).toBe('TempPassword1!');
+    expect(body.data.user).toMatchObject({
+      email: 'new.user@example.com',
+      id: 'new-user-1',
+      mustChangePassword: true,
+      role: 'USER',
+    });
+    expect(mockCreateUser).toHaveBeenCalledWith({
+      email: 'new.user@example.com',
+      firstName: 'New',
+      lastName: 'User',
+      password: 'TempPassword1!',
+      role: 'USER',
+    });
+    expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'USER_CREATE',
+        category: 'USER',
+        metadata: expect.objectContaining({ createdUserId: 'new-user-1' }),
+        userId: 'viewer-1',
+      }),
+    );
   });
 
   it('blocks non-protected users from modifying protected accounts', async () => {
@@ -238,6 +323,68 @@ describe('users access hardening', () => {
       1,
       expect.objectContaining({
         where: expect.objectContaining({ mustChangePassword: true }),
+      }),
+    );
+  });
+
+  it('normalizes invalid users list pagination params', async () => {
+    mockPrisma.user.count.mockResolvedValue(0);
+    mockPrisma.user.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+
+    const route = await import('$app/api/users/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users?page=bad&limit=bad') as never,
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.pagination).toEqual({
+      limit: 25,
+      page: 1,
+      total: 0,
+      totalPages: 0,
+    });
+    expect(mockPrisma.user.findMany).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        skip: 0,
+        take: 25,
+      }),
+    );
+  });
+
+  it('normalizes invalid audit pagination params', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(buildUser({ id: 'target-1' }));
+    mockPrisma.auditLog.count.mockResolvedValue(0);
+    mockPrisma.auditLog.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+
+    const route = await import('$app/api/users/[id]/audit/route');
+    const response = await route.GET(
+      new Request(
+        'http://localhost/api/users/target-1/audit?page=bad&pageSize=bad',
+      ) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.pagination).toEqual({
+      page: 1,
+      pageSize: 50,
+      total: 0,
+      totalPages: 0,
+    });
+    expect(mockPrisma.auditLog.findMany).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        skip: 0,
+        take: 50,
       }),
     );
   });

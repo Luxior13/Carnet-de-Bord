@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PAGINATION } from '$constants/pagination.constants';
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors } from '$server/api-response';
+import { apiErrors, parsePagination } from '$server/api-response';
 import { prisma } from '$server/prisma';
 import {
   type ApiErrorResponse,
@@ -51,18 +51,13 @@ export async function GET(
 
     // Get pagination params
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const pageSize = Math.min(
-      Math.max(
-        PAGINATION.MIN_LIMIT,
-        parseInt(
-          searchParams.get('pageSize') || String(PAGINATION.DEFAULT_LIMIT),
-          10,
-        ),
-      ),
-      PAGINATION.MAX_LIMIT,
-    );
-    const skip = (page - 1) * pageSize;
+    const {
+      limit: pageSize,
+      page,
+      skip,
+    } = parsePagination(searchParams, PAGINATION.DEFAULT_LIMIT, {
+      limitParam: 'pageSize',
+    });
 
     // Check user exists
     const user = await prisma.user.findUnique({

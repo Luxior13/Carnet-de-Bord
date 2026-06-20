@@ -2,11 +2,11 @@
 
 import {
   ChevronRight,
-  FlaskConical,
   LayoutDashboard,
   LogOut,
   type LucideIcon,
   Settings,
+  Users,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -46,9 +46,9 @@ import {
 import { cn } from '$utils/css.utils';
 
 const iconMap: Record<string, LucideIcon> = {
-  FlaskConical,
   LayoutDashboard,
   Settings,
+  Users,
 };
 
 type SidebarProps = {

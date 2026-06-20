@@ -90,14 +90,25 @@ export const apiErrors = {
  */
 export function parsePagination(
   searchParams: URLSearchParams,
-  defaultLimit = PAGINATION.DEFAULT_LIMIT,
+  defaultLimit: number = PAGINATION.DEFAULT_LIMIT,
+  options: {
+    limitParam?: string;
+    maxLimit?: number;
+    pageParam?: string;
+  } = {},
 ): { limit: number; page: number; skip: number } {
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+  const pageParam = options.pageParam ?? 'page';
+  const limitParam = options.limitParam ?? 'limit';
+  const maxLimit = options.maxLimit ?? PAGINATION.MAX_LIMIT;
+  const page = Math.max(
+    1,
+    parseInt(searchParams.get(pageParam) || '1', 10) || 1,
+  );
   const limit = Math.min(
-    PAGINATION.MAX_LIMIT,
+    maxLimit,
     Math.max(
       PAGINATION.MIN_LIMIT,
-      parseInt(searchParams.get('limit') || String(defaultLimit), 10) ||
+      parseInt(searchParams.get(limitParam) || String(defaultLimit), 10) ||
         defaultLimit,
     ),
   );

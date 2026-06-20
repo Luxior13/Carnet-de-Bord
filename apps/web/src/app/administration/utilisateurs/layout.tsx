@@ -2,11 +2,11 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 export const metadata: Metadata = {
-  description: 'Gerez votre compte, votre securite et vos acces.',
-  title: 'Mon compte - Carnet Pro',
+  description: 'Gerez les comptes utilisateurs et leurs permissions.',
+  title: 'Utilisateurs - Carnet Pro',
 };
 
-export default function SettingsLayout({
+export default function AdministrationUsersLayout({
   children,
 }: {
   children: ReactNode;

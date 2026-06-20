@@ -114,6 +114,45 @@ export async function PATCH(
       );
     }
 
+    const { email, firstName, isActive, lastName, permissions, role } =
+      validation.data;
+    const isPermissionsUpdate = permissions !== undefined;
+    const isProfileUpdate =
+      email !== undefined ||
+      firstName !== undefined ||
+      typeof isActive === 'boolean' ||
+      lastName !== undefined ||
+      role !== undefined;
+
+    if (!isProfileUpdate && !isPermissionsUpdate) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.VALIDATION_ERROR,
+            message: 'Aucune modification fournie',
+          },
+          success: false,
+        },
+        { status: 400 },
+      );
+    }
+
+    if (isProfileUpdate) {
+      const updatePermCheck = requirePermission(
+        auth.user,
+        PERMISSIONS.USERS.UPDATE,
+      );
+      if (!updatePermCheck.success) return updatePermCheck.response;
+    }
+
+    if (isPermissionsUpdate) {
+      const editPermCheck = requirePermission(
+        auth.user,
+        PERMISSIONS.USERS.EDIT_PERMISSIONS,
+      );
+      if (!editPermCheck.success) return editPermCheck.response;
+    }
+
     // Get existing user
     const existingUser = await prisma.user.findUnique({
       where: { deletedAt: null, id },
@@ -130,32 +169,6 @@ export async function PATCH(
         },
         { status: 404 },
       );
-    }
-
-    const { email, firstName, isActive, lastName, permissions, role } =
-      validation.data;
-    const isPermissionsUpdate = permissions !== undefined;
-    const isProfileUpdate =
-      email !== undefined ||
-      firstName !== undefined ||
-      typeof isActive === 'boolean' ||
-      lastName !== undefined ||
-      role !== undefined;
-
-    if (isProfileUpdate) {
-      const updatePermCheck = requirePermission(
-        auth.user,
-        PERMISSIONS.USERS.UPDATE,
-      );
-      if (!updatePermCheck.success) return updatePermCheck.response;
-    }
-
-    if (isPermissionsUpdate) {
-      const editPermCheck = requirePermission(
-        auth.user,
-        PERMISSIONS.USERS.EDIT_PERMISSIONS,
-      );
-      if (!editPermCheck.success) return editPermCheck.response;
     }
 
     // Authorization checks
@@ -323,6 +336,9 @@ export async function PATCH(
       data: updateData,
       where: { id },
     });
+    const changedKeys = Object.keys(updateData);
+    const hasAccessChange =
+      changedKeys.includes('permissions') || changedKeys.includes('role');
 
     // Build target name for audit log
     const targetName =
@@ -346,6 +362,22 @@ export async function PATCH(
         },
         userId: auth.user.id,
       });
+    } else if (hasAccessChange) {
+      await invalidateAllUserSessions(id);
+
+      await createAuditLogWithHeaders({
+        action: 'PERMISSION_UPDATE',
+        category: 'PERMISSION',
+        description: `Permissions modifiees: ${updatedUser.email}`,
+        metadata: {
+          after: afterValues,
+          before: beforeValues,
+          changes: changedKeys,
+          targetName,
+          targetUserId: id,
+        },
+        userId: auth.user.id,
+      });
     } else {
       await createAuditLogWithHeaders({
         action: 'USER_UPDATE',
@@ -354,7 +386,7 @@ export async function PATCH(
         metadata: {
           after: afterValues,
           before: beforeValues,
-          changes: Object.keys(updateData),
+          changes: changedKeys,
           targetName,
           targetUserId: id,
         },
