@@ -22,7 +22,7 @@ type UserResumeTabProps = {
 };
 
 export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
-  const formatDate = (date: Date | string | null) => {
+  const formatDate = (date: Date | string | null): string => {
     if (!date) return 'Jamais';
 
     return new Date(date).toLocaleDateString('fr-FR', {
@@ -35,10 +35,10 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
   };
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4">
       {/* Quick Stats */}
       {auditStats && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid gap-4 sm:grid-cols-3">
           <Card className="border-border bg-card/70 overflow-hidden rounded-lg">
             <CardContent className="p-4 text-center">
               <p className="text-foreground text-2xl font-bold">
@@ -52,7 +52,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
               <p className="text-2xl font-bold text-emerald-400">
                 {auditStats.successfulLogins}
               </p>
-              <p className="text-sm text-emerald-400/70">Connexions réussies</p>
+              <p className="text-sm text-emerald-400/70">Connexions reussies</p>
             </CardContent>
           </Card>
           <Card className="overflow-hidden rounded-lg border-red-500/20 bg-red-500/10">
@@ -60,7 +60,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
               <p className="text-2xl font-bold text-red-400">
                 {auditStats.failedLogins}
               </p>
-              <p className="text-sm text-red-400/70">Tentatives échouées</p>
+              <p className="text-sm text-red-400/70">Tentatives echouees</p>
             </CardContent>
           </Card>
         </div>

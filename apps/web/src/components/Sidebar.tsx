@@ -11,7 +11,13 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import React, {
+  type FC,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import {
   getAccessLabel,
@@ -53,7 +59,10 @@ const iconMap: Record<string, LucideIcon> = {
 
 type SidebarProps = {
   className?: string;
+  contextualContent?: ReactNode;
 };
+
+type SidebarPanel = 'context' | 'site';
 
 function isActivePath(pathname: string, href: string): boolean {
   return pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
@@ -79,10 +88,11 @@ function getActiveGroupHref(
   return activeGroup?.href ?? null;
 }
 
-const Sidebar: FC<SidebarProps> = ({ className }) => {
+const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
   const pathname = usePathname();
   const { logout, userData } = useUser();
   const { setOpenMobile } = useSidebar();
+  const hasContextualContent = Boolean(contextualContent);
 
   const sections = useMemo(
     () => getDesktopSidebarSections(userData),
@@ -107,10 +117,17 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
   const [openGroupHref, setOpenGroupHref] = useState<string | null>(
     activeGroupHref,
   );
+  const [activePanel, setActivePanel] = useState<SidebarPanel>(
+    hasContextualContent ? 'context' : 'site',
+  );
 
   useEffect(() => {
     setOpenGroupHref(activeGroupHref);
   }, [activeGroupHref]);
+
+  useEffect(() => {
+    setActivePanel(hasContextualContent ? 'context' : 'site');
+  }, [hasContextualContent, pathname]);
 
   const renderSubNavItem = (item: NavItem): React.ReactNode => {
     const isActive = isActivePath(pathname, item.href);
@@ -219,8 +236,51 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
         </Link>
       </SidebarHeader>
       <SidebarContent>
+        {hasContextualContent && (
+          <div className="px-2 pt-2 group-data-[collapsible=icon]/sidebar:hidden">
+            <div
+              className="bg-sidebar-accent/60 grid grid-cols-2 gap-1 rounded-md p-1"
+              role="tablist"
+              aria-label="Navigation"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activePanel === 'site'}
+                onClick={() => setActivePanel('site')}
+                className={cn(
+                  'text-sidebar-foreground/70 hover:text-sidebar-foreground h-7 rounded-sm px-2 text-xs font-medium transition-colors',
+                  activePanel === 'site' &&
+                    'bg-sidebar text-sidebar-foreground shadow-sm',
+                )}
+              >
+                Site
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activePanel === 'context'}
+                onClick={() => setActivePanel('context')}
+                className={cn(
+                  'text-sidebar-foreground/70 hover:text-sidebar-foreground h-7 rounded-sm px-2 text-xs font-medium transition-colors',
+                  activePanel === 'context' &&
+                    'bg-sidebar text-sidebar-foreground shadow-sm',
+                )}
+              >
+                Fiche
+              </button>
+            </div>
+          </div>
+        )}
         {topSections.map((section) => (
-          <SidebarGroup key={section.id}>
+          <SidebarGroup
+            key={section.id}
+            className={cn(
+              hasContextualContent &&
+                activePanel === 'context' &&
+                'group-data-[state=expanded]/sidebar:hidden',
+            )}
+          >
             {section.label && (
               <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
             )}
@@ -229,6 +289,11 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
+        {contextualContent && activePanel === 'context' && (
+          <SidebarGroup className="pt-0 group-data-[collapsible=icon]/sidebar:hidden">
+            {contextualContent}
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter className="border-t group-data-[collapsible=icon]/sidebar:px-0">
         {bottomSections.map((section) => (

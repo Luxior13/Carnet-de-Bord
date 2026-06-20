@@ -19,8 +19,6 @@ import {
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, {
   type FC,
-  lazy,
-  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -28,7 +26,6 @@ import React, {
 } from 'react';
 import { toast } from 'sonner';
 
-const UserDetailModal = lazy(() => import('$components/users/UserDetailModal'));
 import {
   getAccessLabel,
   getRoleColor,
@@ -108,9 +105,6 @@ export const UsersTab: FC = () => {
   });
   const [tempPassword, setTempPassword] = useState<string | null>(null);
   const [createdUserId, setCreatedUserId] = useState<string | null>(null);
-
-  // Detail modal
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -259,6 +253,10 @@ export const UsersTab: FC = () => {
     setFilterRole('all');
     setSortBy('name');
     router.replace(pathname, { scroll: false });
+  };
+
+  const openUserDetail = (userId: string) => {
+    router.push(`/administration/utilisateurs/${userId}`);
   };
 
   const hasActiveFilters =
@@ -598,8 +596,8 @@ export const UsersTab: FC = () => {
               tabIndex={0}
               aria-label={`Voir ${user.firstName} ${user.lastName}`}
               className="group border-border bg-card/70 hover:border-primary/50 hover:bg-card focus:border-primary cursor-pointer rounded-lg border p-4 transition-all hover:shadow-md focus:outline-none"
-              onClick={() => setSelectedUserId(user.id)}
-              onKeyDown={(e) => e.key === 'Enter' && setSelectedUserId(user.id)}
+              onClick={() => openUserDetail(user.id)}
+              onKeyDown={(e) => e.key === 'Enter' && openUserDetail(user.id)}
             >
               <div className="flex items-center gap-3">
                 {/* Avatar with gradient */}
@@ -766,7 +764,9 @@ export const UsersTab: FC = () => {
                     <Button
                       variant="outline"
                       onClick={() => {
-                        setSelectedUserId(createdUserId);
+                        router.push(
+                          `/administration/utilisateurs/${createdUserId}`,
+                        );
                         handleCloseCreateDialog();
                       }}
                       className="border-border"
@@ -899,26 +899,6 @@ export const UsersTab: FC = () => {
           </div>
         </DialogContent>
       </Dialog>
-      {/* User Detail Modal */}
-      {selectedUserId && (
-        <Suspense
-          fallback={
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-              <div className="border-border bg-card flex items-center gap-3 rounded-lg border p-6 shadow-lg">
-                <Loader2 className="text-primary h-5 w-5 animate-spin" />
-                <span className="text-foreground">Chargement...</span>
-              </div>
-            </div>
-          }
-        >
-          <UserDetailModal
-            userId={selectedUserId}
-            open={!!selectedUserId}
-            onClose={() => setSelectedUserId(null)}
-            onUserUpdated={fetchUsers}
-          />
-        </Suspense>
-      )}
     </div>
   );
 };

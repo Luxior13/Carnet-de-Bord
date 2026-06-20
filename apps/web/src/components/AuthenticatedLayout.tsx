@@ -16,12 +16,14 @@ type AuthenticatedLayoutProps = {
   breadcrumbs?: BreadcrumbItem[];
   children: ReactNode;
   fullHeight?: boolean;
+  sidebarContext?: ReactNode;
 };
 
 const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
   breadcrumbs = [],
   children,
   fullHeight = false,
+  sidebarContext,
 }) => {
   const router = useRouter();
   const { isLoading, refreshUser, userData } = useUser();
@@ -74,7 +76,7 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
         open={showPasswordDialog}
         onSuccess={handlePasswordChanged}
       />
-      <Sidebar />
+      <Sidebar contextualContent={sidebarContext} />
       <SidebarInset className="bg-background h-full rounded-lg border shadow-sm max-md:rounded-none max-md:border-0">
         <Header breadcrumbs={breadcrumbs} />
         <main
