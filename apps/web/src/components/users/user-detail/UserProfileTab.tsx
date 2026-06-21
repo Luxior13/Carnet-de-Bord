@@ -59,7 +59,7 @@ type UserProfileTabProps = {
   setForm: (form: ProfileForm) => void;
 };
 
-const inputClassName = 'border-border/80 bg-background';
+const inputClassName = 'border-border/80 bg-input';
 
 const FieldError: FC<{ children: React.ReactNode; id: string }> = ({
   children,

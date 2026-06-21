@@ -170,7 +170,7 @@ function LoginPage(): React.ReactNode {
             </div>
           </div>
           <Card className="border-0 bg-transparent py-0 shadow-none">
-            <CardHeader className="px-0">
+            <CardHeader className="border-0 bg-transparent p-0">
               <CardTitle className="text-2xl">Connexion</CardTitle>
               <CardDescription>
                 Utilisez vos identifiants de connexion.

@@ -211,7 +211,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
     <div className="space-y-3">
       {tempPassword && (
         <Card className="overflow-hidden rounded-lg border-amber-500/25 bg-amber-500/10 py-0">
-          <CardHeader className="border-b border-amber-500/20 p-3 sm:p-4">
+          <CardHeader className="border-b border-amber-500/20 bg-amber-500/10 p-3 sm:p-4">
             <CardTitle className="text-sm text-amber-400">
               Nouveau mot de passe temporaire
             </CardTitle>
@@ -491,7 +491,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       </Card>
       {canDeleteUser && (
         <Card className="border-destructive/30 bg-destructive/5 overflow-hidden rounded-lg py-0">
-          <CardHeader className="border-destructive/20 border-b p-3 sm:p-4">
+          <CardHeader className="border-destructive/20 bg-destructive/10 border-b p-3 sm:p-4">
             <CardTitle className="text-destructive flex items-center gap-2 text-sm">
               <Trash2 className="size-4" />
               Zone danger

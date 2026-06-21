@@ -242,6 +242,7 @@ export default function DashboardPage(): React.ReactNode {
         <PageShell className="py-0">
           <PageCanvas>
             <Card className="overflow-hidden py-0">
+              <div className="bg-primary h-1 w-full" />
               <CardContent className="grid gap-6 p-6 md:grid-cols-[1.5fr_1fr] md:items-center">
                 <div>
                   <Badge variant="secondary" className="mb-4">

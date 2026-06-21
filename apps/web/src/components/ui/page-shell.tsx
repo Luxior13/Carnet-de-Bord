@@ -60,6 +60,7 @@ const PageHeader: FC<PageHeaderProps> = ({
 }) => {
   return (
     <Card className="overflow-hidden py-0">
+      <div className="bg-primary h-1 w-full" />
       <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
           {icon}

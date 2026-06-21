@@ -435,7 +435,7 @@ const TimelineItem: FC<{
       className={cn(
         'group w-full cursor-pointer overflow-hidden rounded-lg border p-2.5 text-left transition-all sm:p-3',
         isOpen
-          ? 'border-border bg-background/40'
+          ? 'border-border bg-popover'
           : 'hover:border-border hover:bg-accent/60 border-transparent',
       )}
       onClick={onToggle}
