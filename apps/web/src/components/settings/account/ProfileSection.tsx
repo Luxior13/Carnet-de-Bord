@@ -88,7 +88,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
   };
 
   return (
-    <Card className="bg-card/70">
+    <Card className="bg-card">
       <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
           <div className="bg-primary text-primary-foreground flex size-16 shrink-0 items-center justify-center rounded-lg text-xl font-semibold shadow-sm">
@@ -122,7 +122,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
       </CardHeader>
       {!isEditing ? (
         <CardContent className="grid gap-3 sm:grid-cols-2">
-          <div className="bg-background/35 flex items-center gap-3 rounded-lg border p-4">
+          <div className="bg-popover flex items-center gap-3 rounded-lg border p-4">
             <ServiceIcon>
               <Calendar className="size-5" />
             </ServiceIcon>
@@ -131,7 +131,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
               <p className="font-medium">{formatDate(userData.createdAt)}</p>
             </div>
           </div>
-          <div className="bg-background/35 flex items-center gap-3 rounded-lg border p-4">
+          <div className="bg-popover flex items-center gap-3 rounded-lg border p-4">
             <ServiceIcon>
               <Clock className="size-5" />
             </ServiceIcon>

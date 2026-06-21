@@ -9,7 +9,7 @@ const Card: FC<CardProps> = ({ className, ...props }) => {
     <div
       data-slot="card"
       className={cn(
-        'bg-card/80 text-card-foreground flex flex-col gap-6 rounded-lg border py-6 shadow-sm',
+        'border-border/70 bg-card text-card-foreground flex flex-col gap-6 rounded-lg border py-6 shadow-sm',
         className,
       )}
       {...props}

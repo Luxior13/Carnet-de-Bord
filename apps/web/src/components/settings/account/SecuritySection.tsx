@@ -172,7 +172,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
 
   return (
     <>
-      <Card className="bg-card/70">
+      <Card className="bg-card">
         <CardHeader>
           <div className="flex items-center gap-3">
             <ServiceIcon className="bg-amber-500/10 text-amber-300">
@@ -189,7 +189,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
             type="button"
             variant="ghost"
             onClick={() => setShowPasswordDialog(true)}
-            className="bg-background/35 hover:bg-background/50 h-auto w-full justify-between rounded-lg border p-4 text-left"
+            className="bg-popover hover:bg-accent h-auto w-full justify-between rounded-lg border p-4 text-left"
           >
             <div className="flex items-center gap-3">
               <ServiceIcon className="bg-amber-500/10 text-amber-300">
@@ -252,7 +252,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                       'flex items-center gap-3 rounded-lg border p-3',
                       session.isCurrent
                         ? 'border-primary/40 bg-primary/10'
-                        : 'bg-background/35',
+                        : 'bg-popover',
                     )}
                   >
                     <DeviceIcon className="text-primary size-5" />

@@ -48,24 +48,24 @@
 :root,
 .dark {
   color-scheme: dark;
-  --background: #080d16;
+  --background: #0d121b;
   --foreground: #e8eef8;
-  --card: #1b2638;
+  --card: #192132;
   --card-foreground: #e8eef8;
-  --popover: #172235;
+  --popover: #12171e;
   --popover-foreground: #e8eef8;
   --primary: #5f84c8;
   --primary-foreground: #f8fbff;
-  --secondary: #263856;
+  --secondary: #212a3a;
   --secondary-foreground: #dbe7fb;
-  --muted: #202b3d;
+  --muted: #12171e;
   --muted-foreground: #8795ad;
-  --accent: #2d4265;
+  --accent: #212a3a;
   --accent-foreground: #f2f6ff;
   --destructive: #d9546b;
   --destructive-foreground: #fff7f8;
-  --border: #2b3a50;
-  --input: #111824;
+  --border: #2b3445;
+  --input: #0d121b;
   --ring: #6c92d6;
   --chart-1: #6c92d6;
   --chart-2: #8f6fe8;
@@ -73,13 +73,13 @@
   --chart-4: #d9b75f;
   --chart-5: #d9546b;
   --radius: 0.625rem;
-  --sidebar: #172236;
+  --sidebar: #12171e;
   --sidebar-foreground: #dbe5f5;
   --sidebar-primary: #5f84c8;
   --sidebar-primary-foreground: #f8fbff;
-  --sidebar-accent: #263858;
+  --sidebar-accent: #192132;
   --sidebar-accent-foreground: #f1f6ff;
-  --sidebar-border: #29384f;
+  --sidebar-border: #2b3445;
   --sidebar-ring: #6c92d6;
 }
 

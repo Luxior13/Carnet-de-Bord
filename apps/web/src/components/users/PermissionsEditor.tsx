@@ -129,7 +129,7 @@ const getPermissionRowClassName = (
   isEnabled: boolean,
   tone: PermissionTone,
 ): string => {
-  if (!isEnabled) return 'border-border/70 bg-[#12171E]';
+  if (!isEnabled) return 'border-border/70 bg-popover';
   if (tone === 'critical') return 'border-destructive/30 bg-destructive/10';
   if (tone === 'sensitive') return 'border-amber-500/25 bg-amber-500/10';
 
@@ -314,7 +314,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
 
     return (
       <div className="space-y-3">
-        <div className="border-border/60 flex flex-col gap-3 rounded-md border bg-[#212A3A] p-3">
+        <div className="border-border/60 bg-accent flex flex-col gap-3 rounded-md border p-3">
           <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <h3 className="text-foreground font-semibold">Permissions</h3>
@@ -429,7 +429,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Rechercher une permission, un module ou une cle..."
-                className="h-9 bg-[#12171E] pl-9"
+                className="bg-popover h-9 pl-9"
               />
             </div>
             <div className="flex flex-wrap gap-1">
@@ -485,9 +485,9 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
               >
                 <div
                   className={cn(
-                    'border-border/70 overflow-hidden rounded-lg border bg-[#12171E] transition-all',
+                    'border-border/70 bg-popover overflow-hidden rounded-lg border transition-all',
                     isOpen &&
-                      'border-primary/30 ring-primary/20 bg-[#192132] ring-1',
+                      'border-primary/30 ring-primary/20 bg-card ring-1',
                   )}
                 >
                   {/* Category Header */}
@@ -677,7 +677,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
             );
           })}
           {visibleCategories.length === 0 && (
-            <div className="border-border/70 bg-background/35 flex flex-col items-center justify-center rounded-lg border p-8 text-center">
+            <div className="border-border/70 bg-popover flex flex-col items-center justify-center rounded-lg border p-8 text-center">
               <Search className="text-muted-foreground size-8" />
               <p className="text-foreground mt-3 text-sm font-medium">
                 Aucune permission trouvee

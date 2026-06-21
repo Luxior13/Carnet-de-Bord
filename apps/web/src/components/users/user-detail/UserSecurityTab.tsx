@@ -153,7 +153,7 @@ const SecurityMetric: FC<{
           : 'bg-secondary text-secondary-foreground';
 
   return (
-    <Card className="border-border/70 overflow-hidden rounded-lg bg-[#192132] py-0">
+    <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
       <CardContent className="p-3 sm:p-4">
         <div className="flex items-start gap-3">
           <span
@@ -217,7 +217,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 p-3 sm:p-4">
-            <code className="text-foreground block rounded-md border bg-[#12171E] px-3 py-2 font-mono text-sm">
+            <code className="text-foreground bg-popover block rounded-md border px-3 py-2 font-mono text-sm">
               {tempPassword}
             </code>
             <p className="text-muted-foreground text-xs">
@@ -279,14 +279,14 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           tone={sessions.length > 0 ? 'primary' : 'neutral'}
         />
       </div>
-      <Card className="border-border/70 overflow-hidden rounded-lg bg-[#192132] py-0">
-        <CardHeader className="border-border/60 border-b bg-[#212A3A] p-3 sm:p-4">
+      <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
+        <CardHeader className="border-border/60 bg-accent border-b p-3 sm:p-4">
           <SectionTitle icon={<Power className="size-3.5" />}>
             Etat du compte
           </SectionTitle>
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">
-          <div className="border-border/60 flex items-center justify-between gap-4 rounded-md border bg-[#12171E] p-3">
+          <div className="border-border/60 bg-popover flex items-center justify-between gap-4 rounded-md border p-3">
             <div>
               <Label className="text-foreground text-sm font-medium">
                 Compte actif
@@ -309,7 +309,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             </div>
           )}
         </CardContent>
-        <CardFooter className="border-border/60 justify-between gap-3 border-t bg-[#212A3A] p-3 sm:p-4">
+        <CardFooter className="border-border/60 bg-accent justify-between gap-3 border-t p-3 sm:p-4">
           <p className="text-muted-foreground text-xs">
             {hasStatusChanges ? 'Modification non enregistree' : 'A jour'}
           </p>
@@ -340,15 +340,15 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </div>
         </CardFooter>
       </Card>
-      <Card className="border-border/70 overflow-hidden rounded-lg bg-[#192132] py-0">
-        <CardHeader className="border-border/60 border-b bg-[#212A3A] p-3 sm:p-4">
+      <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
+        <CardHeader className="border-border/60 bg-accent border-b p-3 sm:p-4">
           <SectionTitle icon={<Monitor className="size-3.5" />}>
             Sessions actives
           </SectionTitle>
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">
           {!canManageSessions ? (
-            <div className="border-border/60 rounded-md border bg-[#12171E] p-3">
+            <div className="border-border/60 bg-popover rounded-md border p-3">
               <p className="text-muted-foreground text-sm">
                 Vous n&apos;avez pas la permission de consulter ou revoquer les
                 sessions de cet utilisateur.
@@ -360,7 +360,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               <Skeleton className="h-14 rounded-md" />
             </div>
           ) : sessions.length === 0 ? (
-            <div className="border-border/60 rounded-md border bg-[#12171E] p-3">
+            <div className="border-border/60 bg-popover rounded-md border p-3">
               <p className="text-muted-foreground text-sm">
                 Aucune session active.
               </p>
@@ -376,7 +376,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                 return (
                   <div
                     key={session.id}
-                    className="border-border/60 flex items-center gap-3 rounded-md border bg-[#12171E] p-3"
+                    className="border-border/60 bg-popover flex items-center gap-3 rounded-md border p-3"
                   >
                     <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-md">
                       <DeviceIcon className="size-4" />
@@ -403,7 +403,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           )}
         </CardContent>
         {canManageSessions && sessions.length > 0 && (
-          <CardFooter className="border-border/60 justify-end border-t bg-[#212A3A] p-3 sm:p-4">
+          <CardFooter className="border-border/60 bg-accent justify-end border-t p-3 sm:p-4">
             <Button
               type="button"
               variant="outline"
@@ -422,14 +422,14 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardFooter>
         )}
       </Card>
-      <Card className="border-border/70 overflow-hidden rounded-lg bg-[#192132] py-0">
-        <CardHeader className="border-border/60 border-b bg-[#212A3A] p-3 sm:p-4">
+      <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
+        <CardHeader className="border-border/60 bg-accent border-b p-3 sm:p-4">
           <SectionTitle icon={<KeyRound className="size-3.5" />}>
             Mot de passe
           </SectionTitle>
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">
-          <div className="border-border/60 space-y-3 rounded-md border bg-[#12171E] p-3">
+          <div className="border-border/60 bg-popover space-y-3 rounded-md border p-3">
             <div className="flex items-center justify-between gap-4">
               <span className="text-muted-foreground text-sm">Etat</span>
               {user.mustChangePassword ? (
@@ -475,7 +475,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </div>
         </CardContent>
         {canResetPassword && (
-          <CardFooter className="border-border/60 justify-end border-t bg-[#212A3A] p-3 sm:p-4">
+          <CardFooter className="border-border/60 bg-accent justify-end border-t p-3 sm:p-4">
             <Button
               type="button"
               variant="outline"

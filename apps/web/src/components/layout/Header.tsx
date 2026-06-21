@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React, { type FC, useMemo } from 'react';
 
-import { UserMenu } from '$components/layout/UserMenu';
 import { getHeaderNavItems, type NavItem } from '$constants/app.constants';
 import { useUser } from '$context/UserContext';
 import { Breadcrumb, type BreadcrumbItem } from '$ui/breadcrumb';
@@ -43,7 +42,7 @@ export const Header: FC<HeaderProps> = ({ breadcrumbs = [], title }) => {
       </div>
       {headerNavItems.length > 0 && (
         <nav className="hidden min-w-0 flex-1 items-center justify-center md:flex">
-          <div className="bg-card/80 flex max-w-full items-center gap-1 rounded-lg border p-1">
+          <div className="bg-card flex max-w-full items-center gap-1 rounded-lg border p-1">
             {headerNavItems.map((item) => {
               const isActive = isNavItemActive(pathname, item);
 
@@ -65,9 +64,6 @@ export const Header: FC<HeaderProps> = ({ breadcrumbs = [], title }) => {
           </div>
         </nav>
       )}
-      <div className="ml-auto shrink-0">
-        <UserMenu />
-      </div>
     </header>
   );
 };

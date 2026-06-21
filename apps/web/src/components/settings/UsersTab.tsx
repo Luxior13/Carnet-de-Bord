@@ -135,7 +135,7 @@ const UsersStatCard: FC<{
   const toneClassNames = getUsersStatToneClassNames(tone);
 
   return (
-    <Card className="border-border overflow-hidden rounded-lg bg-[#192132] py-0 shadow-sm">
+    <Card className="border-border bg-card overflow-hidden rounded-lg py-0 shadow-sm">
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div
@@ -634,7 +634,7 @@ export const UsersTab: FC = () => {
         {pagination && totalPages > 1 && ` - Page ${currentPage}/${totalPages}`}
       </div>
       {/* Users List */}
-      <Card className="border-border/70 hidden overflow-hidden rounded-lg bg-[#192132] py-0 md:block">
+      <Card className="border-border/70 bg-card hidden overflow-hidden rounded-lg py-0 md:block">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
@@ -754,7 +754,7 @@ export const UsersTab: FC = () => {
       </Card>
       <div className="space-y-2 md:hidden">
         {displayedUsers.length === 0 ? (
-          <div className="border-border bg-background/35 rounded-lg border py-12 text-center">
+          <div className="border-border bg-popover rounded-lg border py-12 text-center">
             <UserMinus
               size={40}
               className="text-muted-foreground mx-auto mb-3"
@@ -778,7 +778,7 @@ export const UsersTab: FC = () => {
               role="button"
               tabIndex={0}
               aria-label={`Voir ${user.firstName} ${user.lastName}`}
-              className="group border-border hover:border-primary/50 focus:border-primary cursor-pointer rounded-lg border bg-[#192132] p-4 transition-all hover:bg-[#212A3A] hover:shadow-md focus:outline-none"
+              className="group border-border hover:border-primary/50 focus:border-primary bg-card hover:bg-accent cursor-pointer rounded-lg border p-4 transition-all hover:shadow-md focus:outline-none"
               onClick={() => openUserDetail(user.id)}
               onKeyDown={(event) => handleOpenUserKeyDown(event, user.id)}
             >
@@ -856,7 +856,7 @@ export const UsersTab: FC = () => {
         total={totalFiltered}
         limit={USERS_PER_PAGE}
         onPageChange={setCurrentPage}
-        className="border-border rounded-lg border bg-[#192132]"
+        className="border-border bg-card rounded-lg border"
       />
       {/* Create User Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={handleCloseCreateDialog}>
@@ -884,7 +884,7 @@ export const UsersTab: FC = () => {
                     <p className="text-muted-foreground mb-2 text-xs">
                       Mot de passe temporaire :
                     </p>
-                    <code className="border-border text-foreground block rounded-md border bg-[#12171E] px-3 py-2 font-mono text-sm">
+                    <code className="border-border text-foreground bg-popover block rounded-md border px-3 py-2 font-mono text-sm">
                       {tempPassword}
                     </code>
                     <p className="text-muted-foreground mt-2 text-xs">

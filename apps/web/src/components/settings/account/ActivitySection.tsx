@@ -125,7 +125,7 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
   }, [fetchActivity]);
 
   return (
-    <Card className="bg-card/70">
+    <Card className="bg-card">
       <CardHeader>
         <div className="flex items-center gap-3">
           <ServiceIcon className="bg-emerald-500/10 text-emerald-400">
@@ -139,7 +139,7 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid grid-cols-3 gap-2">
-          <div className="bg-background/35 rounded-lg border px-3 py-3 text-center">
+          <div className="bg-popover rounded-lg border px-3 py-3 text-center">
             <p className="text-xl font-semibold">{stats.total}</p>
             <p className="text-muted-foreground text-xs">Actions</p>
           </div>
@@ -163,7 +163,7 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
             ))}
           </div>
         ) : recentActivity.length === 0 ? (
-          <div className="bg-background/35 flex flex-col items-center justify-center rounded-lg border border-dashed py-10 text-center">
+          <div className="bg-popover flex flex-col items-center justify-center rounded-lg border border-dashed py-10 text-center">
             <div className="bg-secondary text-primary mb-3 flex size-12 items-center justify-center rounded-lg">
               <Activity className="size-6" />
             </div>

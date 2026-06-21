@@ -26,7 +26,7 @@ import {
   CardHeader,
   CardTitle,
 } from '$ui/card';
-import { PageShell } from '$ui/page-shell';
+import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Separator } from '$ui/separator';
 import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
@@ -110,17 +110,19 @@ function getToneClass(tone: MetricTone): string {
 
 function LoadingSkeleton(): React.ReactNode {
   return (
-    <PageShell className="space-y-6">
-      <Skeleton className="h-36 rounded-lg" />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-28 rounded-lg" />
-        ))}
-      </div>
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Skeleton className="h-80 rounded-lg lg:col-span-2" />
-        <Skeleton className="h-80 rounded-lg" />
-      </div>
+    <PageShell className="py-0">
+      <PageCanvas>
+        <Skeleton className="h-36 rounded-lg" />
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-lg" />
+          ))}
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Skeleton className="h-80 rounded-lg lg:col-span-2" />
+          <Skeleton className="h-80 rounded-lg" />
+        </div>
+      </PageCanvas>
     </PageShell>
   );
 }
@@ -139,7 +141,7 @@ function MetricCard({
   value: string | number;
 }): React.ReactNode {
   return (
-    <Card className="bg-card/70">
+    <Card>
       <CardContent className="flex items-center gap-4 px-5">
         <ServiceIcon className={getToneClass(tone)}>{icon}</ServiceIcon>
         <div className="min-w-0">
@@ -164,7 +166,7 @@ function EmptyState({
   text: string;
 }): React.ReactNode {
   return (
-    <div className="bg-background/35 flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed px-6 py-10 text-center">
+    <div className="bg-popover flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed px-6 py-10 text-center">
       <ServiceIcon className="mb-3 size-11">{icon}</ServiceIcon>
       <p className="font-medium">{label}</p>
       <p className="text-muted-foreground mt-1 max-w-sm text-sm">{text}</p>
@@ -218,200 +220,211 @@ export default function DashboardPage(): React.ReactNode {
       {isUserLoading || isLoading ? (
         <LoadingSkeleton />
       ) : !canViewDashboard ? (
-        <PageShell>
-          <Card>
-            <CardContent className="flex items-start gap-4 px-5">
-              <ServiceIcon className="bg-amber-500/10 text-amber-300">
-                <AlertTriangle className="size-5" />
-              </ServiceIcon>
-              <div>
-                <p className="font-medium">Acces limite</p>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  Vous n&apos;avez pas la permission de voir le tableau de bord.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </PageShell>
-      ) : stats ? (
-        <PageShell className="space-y-6">
-          <Card className="bg-card/70 overflow-hidden">
-            <CardContent className="grid gap-6 px-6 md:grid-cols-[1.5fr_1fr] md:items-center">
-              <div>
-                <Badge variant="secondary" className="mb-4">
-                  {SITE_CONFIG.name}
-                </Badge>
-                <h1 className="text-3xl font-semibold tracking-tight">
-                  Bonjour {userData?.firstName}
-                </h1>
-                <p className="text-muted-foreground mt-2 max-w-2xl">
-                  Vue generale de ton carnet, de tes acces et de l&apos;activite
-                  recente.
-                </p>
-              </div>
-              <div className="bg-background/35 rounded-lg border p-4">
-                <div className="flex items-center gap-3">
-                  <ServiceIcon>
-                    <ShieldCheck className="size-5" />
-                  </ServiceIcon>
-                  <div>
-                    <p className="text-muted-foreground text-sm">Etat global</p>
-                    <p className="text-2xl font-semibold">
-                      {stats.security.lockedUsers > 0 ? 'A surveiller' : 'OK'}
-                    </p>
-                  </div>
+        <PageShell className="py-0">
+          <PageCanvas>
+            <Card>
+              <CardContent className="flex items-start gap-4 px-5">
+                <ServiceIcon className="bg-amber-500/10 text-amber-300">
+                  <AlertTriangle className="size-5" />
+                </ServiceIcon>
+                <div>
+                  <p className="font-medium">Acces limite</p>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    Vous n&apos;avez pas la permission de voir le tableau de
+                    bord.
+                  </p>
                 </div>
-                <Separator className="my-4" />
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">
-                    {stats.users.active} actif
-                    {stats.users.active > 1 ? 's' : ''}
-                  </Badge>
-                  <Badge
-                    variant={
-                      stats.security.pendingPassword > 0
-                        ? 'destructive'
-                        : 'secondary'
-                    }
-                  >
-                    {stats.security.pendingPassword} mot
-                    {stats.security.pendingPassword > 1 ? 's' : ''} de passe
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <MetricCard
-              label="Comptes"
-              value={stats.users.total}
-              detail={`${stats.users.active} actifs`}
-              icon={<Users className="size-5" />}
-            />
-            <MetricCard
-              label="Connexions 24h"
-              value={stats.users.recentLogins}
-              detail="Activite recente"
-              tone="success"
-              icon={<Clock className="size-5" />}
-            />
-            <MetricCard
-              label="Mots de passe"
-              value={stats.security.pendingPassword}
-              detail={
-                stats.security.pendingPassword > 0
-                  ? 'Action requise'
-                  : 'Aucune action'
-              }
-              tone={stats.security.pendingPassword > 0 ? 'warning' : 'primary'}
-              icon={<KeyRound className="size-5" />}
-            />
-            <MetricCard
-              label="Comptes verrouilles"
-              value={stats.security.lockedUsers}
-              detail={
-                stats.security.lockedUsers > 0
-                  ? 'Verification conseillee'
-                  : 'Aucun verrouillage'
-              }
-              tone={stats.security.lockedUsers > 0 ? 'danger' : 'primary'}
-              icon={<ShieldCheck className="size-5" />}
-            />
-          </div>
-          <div className="grid gap-4 lg:grid-cols-3">
-            <Card className="bg-card/70 lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="text-primary size-5" />
-                  Activite recente
-                </CardTitle>
-                <CardDescription>
-                  Connexions, modifications de comptes et changements
-                  d&apos;acces.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {stats.recentActivity.length > 0 ? (
-                  <div className="space-y-2">
-                    {stats.recentActivity.map((activity) => (
-                      <div
-                        key={activity.id}
-                        className="hover:bg-accent/60 flex items-start gap-3 rounded-lg p-2"
-                      >
-                        <span
-                          className={cn(
-                            'mt-2 size-2 shrink-0 rounded-full',
-                            getCategoryColor(activity.category),
-                          )}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">
-                            {getActionLabel(activity.action)}
-                          </p>
-                          <p className="text-muted-foreground truncate text-xs">
-                            {activity.userName || 'Systeme'}
-                          </p>
-                        </div>
-                        <span className="text-muted-foreground shrink-0 text-xs">
-                          {formatRelativeTime(activity.createdAt)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyState
-                    icon={<Activity className="size-5" />}
-                    label="Aucune activite"
-                    text="Les evenements importants apparaitront ici."
-                  />
-                )}
               </CardContent>
             </Card>
-            <div className="space-y-4">
-              <Card className="bg-card/70">
+          </PageCanvas>
+        </PageShell>
+      ) : stats ? (
+        <PageShell className="py-0">
+          <PageCanvas>
+            <Card className="overflow-hidden py-0">
+              <CardContent className="grid gap-6 p-6 md:grid-cols-[1.5fr_1fr] md:items-center">
+                <div>
+                  <Badge variant="secondary" className="mb-4">
+                    {SITE_CONFIG.name}
+                  </Badge>
+                  <h1 className="text-3xl font-semibold tracking-tight">
+                    Bonjour {userData?.firstName}
+                  </h1>
+                  <p className="text-muted-foreground mt-2 max-w-2xl">
+                    Vue generale de ton carnet, de tes acces et de
+                    l&apos;activite recente.
+                  </p>
+                </div>
+                <div className="bg-popover rounded-lg border p-4">
+                  <div className="flex items-center gap-3">
+                    <ServiceIcon>
+                      <ShieldCheck className="size-5" />
+                    </ServiceIcon>
+                    <div>
+                      <p className="text-muted-foreground text-sm">
+                        Etat global
+                      </p>
+                      <p className="text-2xl font-semibold">
+                        {stats.security.lockedUsers > 0 ? 'A surveiller' : 'OK'}
+                      </p>
+                    </div>
+                  </div>
+                  <Separator className="my-4" />
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary">
+                      {stats.users.active} actif
+                      {stats.users.active > 1 ? 's' : ''}
+                    </Badge>
+                    <Badge
+                      variant={
+                        stats.security.pendingPassword > 0
+                          ? 'destructive'
+                          : 'secondary'
+                      }
+                    >
+                      {stats.security.pendingPassword} mot
+                      {stats.security.pendingPassword > 1 ? 's' : ''} de passe
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <MetricCard
+                label="Comptes"
+                value={stats.users.total}
+                detail={`${stats.users.active} actifs`}
+                icon={<Users className="size-5" />}
+              />
+              <MetricCard
+                label="Connexions 24h"
+                value={stats.users.recentLogins}
+                detail="Activite recente"
+                tone="success"
+                icon={<Clock className="size-5" />}
+              />
+              <MetricCard
+                label="Mots de passe"
+                value={stats.security.pendingPassword}
+                detail={
+                  stats.security.pendingPassword > 0
+                    ? 'Action requise'
+                    : 'Aucune action'
+                }
+                tone={
+                  stats.security.pendingPassword > 0 ? 'warning' : 'primary'
+                }
+                icon={<KeyRound className="size-5" />}
+              />
+              <MetricCard
+                label="Comptes verrouilles"
+                value={stats.security.lockedUsers}
+                detail={
+                  stats.security.lockedUsers > 0
+                    ? 'Verification conseillee'
+                    : 'Aucun verrouillage'
+                }
+                tone={stats.security.lockedUsers > 0 ? 'danger' : 'primary'}
+                icon={<ShieldCheck className="size-5" />}
+              />
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+              <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <UserCheck className="text-primary size-5" />
-                    Synthese
+                    <Activity className="text-primary size-5" />
+                    Activite recente
                   </CardTitle>
-                  <CardDescription>Etat general des acces.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Actifs</span>
-                    <span className="font-medium">{stats.users.active}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Inactifs</span>
-                    <span className="font-medium">{stats.users.inactive}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      Mot de passe a changer
-                    </span>
-                    <span className="font-medium">
-                      {stats.security.pendingPassword}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-card/70">
-                <CardHeader>
-                  <CardTitle>Acces rapide</CardTitle>
                   <CardDescription>
-                    Gerer ton compte, ton mot de passe et tes sessions.
+                    Connexions, modifications de comptes et changements
+                    d&apos;acces.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild variant="outline" className="w-full">
-                    <Link href="/mon-compte">Ouvrir mon compte</Link>
-                  </Button>
+                  {stats.recentActivity.length > 0 ? (
+                    <div className="space-y-2">
+                      {stats.recentActivity.map((activity) => (
+                        <div
+                          key={activity.id}
+                          className="hover:bg-accent/60 flex items-start gap-3 rounded-lg p-2"
+                        >
+                          <span
+                            className={cn(
+                              'mt-2 size-2 shrink-0 rounded-full',
+                              getCategoryColor(activity.category),
+                            )}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">
+                              {getActionLabel(activity.action)}
+                            </p>
+                            <p className="text-muted-foreground truncate text-xs">
+                              {activity.userName || 'Systeme'}
+                            </p>
+                          </div>
+                          <span className="text-muted-foreground shrink-0 text-xs">
+                            {formatRelativeTime(activity.createdAt)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      icon={<Activity className="size-5" />}
+                      label="Aucune activite"
+                      text="Les evenements importants apparaitront ici."
+                    />
+                  )}
                 </CardContent>
               </Card>
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <UserCheck className="text-primary size-5" />
+                      Synthese
+                    </CardTitle>
+                    <CardDescription>Etat general des acces.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Actifs</span>
+                      <span className="font-medium">{stats.users.active}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Inactifs</span>
+                      <span className="font-medium">
+                        {stats.users.inactive}
+                      </span>
+                    </div>
+                    <Separator />
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Mot de passe a changer
+                      </span>
+                      <span className="font-medium">
+                        {stats.security.pendingPassword}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Acces rapide</CardTitle>
+                    <CardDescription>
+                      Gerer ton compte, ton mot de passe et tes sessions.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="outline" className="w-full">
+                      <Link href="/mon-compte">Ouvrir mon compte</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-          </div>
+          </PageCanvas>
         </PageShell>
       ) : null}
     </AuthenticatedLayout>

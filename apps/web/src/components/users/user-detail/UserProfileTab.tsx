@@ -59,7 +59,7 @@ type UserProfileTabProps = {
   setForm: (form: ProfileForm) => void;
 };
 
-const inputClassName = 'border-border/80 bg-[#0D121B]';
+const inputClassName = 'border-border/80 bg-background';
 
 const FieldError: FC<{ children: React.ReactNode; id: string }> = ({
   children,
@@ -87,7 +87,7 @@ const ProfilePanel: FC<{
   icon: React.ReactNode;
   title: string;
 }> = ({ children, icon, title }) => (
-  <section className="border-border/60 space-y-3 rounded-md border bg-[#12171E] p-3">
+  <section className="border-border/60 bg-popover space-y-3 rounded-md border p-3">
     <SectionTitle icon={icon}>{title}</SectionTitle>
     {children}
   </section>
@@ -124,8 +124,8 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
 
   return (
     <form onSubmit={handleSubmit}>
-      <Card className="border-border/70 overflow-hidden rounded-lg bg-[#192132] py-0">
-        <CardHeader className="border-border/60 flex-row items-center justify-between border-b bg-[#212A3A] p-3 sm:p-4">
+      <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
+        <CardHeader className="border-border/60 bg-accent flex-row items-center justify-between border-b p-3 sm:p-4">
           <div>
             <CardTitle className="text-sm">Profil staff</CardTitle>
           </div>
@@ -491,7 +491,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
             </div>
           </ProfilePanel>
         </CardContent>
-        <CardFooter className="border-border/60 justify-between gap-3 border-t bg-[#212A3A] p-3 sm:p-4">
+        <CardFooter className="border-border/60 bg-accent justify-between gap-3 border-t p-3 sm:p-4">
           <p className="text-muted-foreground text-xs">
             {hasChanges ? 'Modifications non enregistrees' : 'A jour'}
           </p>

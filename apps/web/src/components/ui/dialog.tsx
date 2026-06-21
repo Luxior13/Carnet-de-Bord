@@ -70,7 +70,7 @@ function DialogContent({
       >
         <DialogPrimitive.Content
           className={cn(
-            'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=open]:animate-in bg-popover text-popover-foreground pointer-events-auto relative grid w-full max-w-lg border p-6 shadow-xl duration-200 sm:rounded-lg',
+            'border-border/80 bg-popover text-popover-foreground data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=open]:animate-in pointer-events-auto relative grid w-full max-w-lg border p-6 shadow-xl duration-200 sm:rounded-lg',
             className,
           )}
           {...props}

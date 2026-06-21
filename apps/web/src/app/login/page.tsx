@@ -103,7 +103,7 @@ function LoginPage(): React.ReactNode {
 
   return (
     <main className="bg-background flex min-h-svh items-center justify-center p-4">
-      <div className="bg-card/70 grid w-full max-w-5xl overflow-hidden rounded-lg border shadow-sm md:grid-cols-[0.9fr_1fr]">
+      <div className="bg-card grid w-full max-w-6xl overflow-hidden rounded-lg border shadow-sm md:grid-cols-[0.9fr_1fr]">
         <section className="bg-sidebar hidden border-r p-6 md:flex md:flex-col md:justify-between">
           <div className="flex items-center gap-3">
             <span className="bg-primary flex size-10 items-center justify-center rounded-lg shadow-sm">
@@ -124,7 +124,7 @@ function LoginPage(): React.ReactNode {
             </div>
           </div>
           <div className="space-y-5">
-            <div className="bg-background/35 text-muted-foreground inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
+            <div className="bg-popover text-muted-foreground inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
               <ShieldCheck className="text-primary size-4" />
               Acces securise
             </div>
@@ -142,7 +142,7 @@ function LoginPage(): React.ReactNode {
             {['Tableau de bord', 'Comptes', 'Acces securise'].map((item) => (
               <div
                 key={item}
-                className="bg-background/35 flex items-center gap-3 rounded-md border px-3 py-2"
+                className="bg-popover flex items-center gap-3 rounded-md border px-3 py-2"
               >
                 <CheckCircle2 className="text-primary size-4" />
                 <span className="text-muted-foreground text-sm">{item}</span>

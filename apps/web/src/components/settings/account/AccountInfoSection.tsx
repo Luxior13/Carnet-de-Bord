@@ -36,7 +36,7 @@ export const AccountInfoSection: FC<AccountInfoSectionProps> = ({
   };
 
   return (
-    <div className="border-border bg-card/70 overflow-hidden rounded-lg border shadow-sm">
+    <div className="border-border bg-card overflow-hidden rounded-lg border shadow-sm">
       <div className="p-6">
         <h3 className="text-foreground mb-4 flex items-center gap-2 text-base font-semibold">
           <span className="bg-primary/10 flex h-7 w-7 items-center justify-center rounded-lg">

@@ -9,7 +9,8 @@ import { UsersTab } from '$components/settings/UsersTab';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import { Button } from '$ui/button';
-import { PageShell } from '$ui/page-shell';
+import { Card, CardContent } from '$ui/card';
+import { PageCanvas, PageHeader, PageShell } from '$ui/page-shell';
 import { ServiceIcon } from '$ui/service-icon';
 
 const UsersAdministrationContent: FC = () => {
@@ -21,48 +22,48 @@ const UsersAdministrationContent: FC = () => {
 
   if (!canViewUsers) {
     return (
-      <PageShell className="max-w-3xl">
-        <div className="bg-card/70 rounded-lg border p-6 shadow-sm">
-          <div className="flex items-start gap-4">
-            <ServiceIcon className="bg-destructive/10 text-destructive">
-              <ShieldAlert className="size-5" />
-            </ServiceIcon>
-            <div className="space-y-3">
-              <div>
-                <h1 className="text-xl font-semibold">Acces refuse</h1>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  Vous n&apos;avez pas la permission de consulter les
-                  utilisateurs.
-                </p>
+      <PageShell className="py-0">
+        <PageCanvas>
+          <Card className="max-w-3xl py-0">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <ServiceIcon className="bg-destructive/10 text-destructive">
+                  <ShieldAlert className="size-5" />
+                </ServiceIcon>
+                <div className="space-y-3">
+                  <div>
+                    <h1 className="text-xl font-semibold">Acces refuse</h1>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      Vous n&apos;avez pas la permission de consulter les
+                      utilisateurs.
+                    </p>
+                  </div>
+                  <Button asChild variant="outline">
+                    <Link href="/">Retour au tableau de bord</Link>
+                  </Button>
+                </div>
               </div>
-              <Button asChild variant="outline">
-                <Link href="/">Retour au tableau de bord</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
+            </CardContent>
+          </Card>
+        </PageCanvas>
       </PageShell>
     );
   }
 
   return (
-    <PageShell className="max-w-6xl space-y-6">
-      <div className="bg-card/70 flex flex-col gap-4 rounded-lg border p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <ServiceIcon className="bg-primary/10">
-            <Users className="size-5" />
-          </ServiceIcon>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Utilisateurs
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Comptes autorises et acces du carnet.
-            </p>
-          </div>
-        </div>
-      </div>
-      <UsersTab />
+    <PageShell className="py-0">
+      <PageCanvas>
+        <PageHeader
+          title="Utilisateurs"
+          description="Comptes autorises et acces du carnet."
+          icon={
+            <ServiceIcon className="bg-primary/10">
+              <Users className="size-5" />
+            </ServiceIcon>
+          }
+        />
+        <UsersTab />
+      </PageCanvas>
     </PageShell>
   );
 };

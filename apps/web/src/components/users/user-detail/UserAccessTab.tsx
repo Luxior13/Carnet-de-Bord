@@ -50,7 +50,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
 }) => {
   return (
     <div>
-      <Card className="border-border/70 overflow-hidden rounded-lg bg-[#192132] py-0">
+      <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
         <CardContent className="p-3 sm:p-4">
           <PermissionsEditor
             role={role}
@@ -58,7 +58,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             onChange={setPermissions}
             disabled={!canManagePermissions}
             headerControls={
-              <div className="border-border/70 flex items-center gap-2 rounded-md border bg-[#12171E] px-2 py-1">
+              <div className="border-border/70 bg-popover flex items-center gap-2 rounded-md border px-2 py-1">
                 <span className="bg-primary/10 text-primary flex size-7 shrink-0 items-center justify-center rounded-md">
                   <Shield className="size-3.5" />
                 </span>
@@ -70,7 +70,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                     id="user-role"
                     value="Superadmin"
                     disabled
-                    className="border-border h-8 min-w-0 bg-[#12171E]"
+                    className="border-border bg-popover h-8 min-w-0"
                   />
                 ) : (
                   <Select
@@ -80,7 +80,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                   >
                     <SelectTrigger
                       id="user-role"
-                      className="border-border h-8 min-w-36 bg-[#12171E]"
+                      className="border-border bg-popover h-8 min-w-36"
                     >
                       <SelectValue />
                     </SelectTrigger>
@@ -94,7 +94,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             }
           />
         </CardContent>
-        <CardFooter className="border-border/60 justify-between gap-3 border-t bg-[#212A3A] p-4">
+        <CardFooter className="border-border/60 bg-accent justify-between gap-3 border-t p-4">
           <p className="text-muted-foreground text-xs">
             {hasChanges ? 'Modifications non enregistrees' : 'A jour'}
           </p>

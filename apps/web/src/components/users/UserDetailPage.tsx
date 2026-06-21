@@ -65,7 +65,7 @@ import {
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent } from '$ui/card';
-import { PageShell } from '$ui/page-shell';
+import { PageCanvas, PageShell } from '$ui/page-shell';
 import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
 import { apiFetch } from '$utils/api.utils';
@@ -157,22 +157,12 @@ const arePermissionsEqual = (
   return true;
 };
 
-const DetailCanvas: FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="relative min-w-0">
-    <div
-      aria-hidden
-      className="border-border/70 pointer-events-none absolute inset-y-0 -right-3 -left-3 z-0 min-h-[calc(100svh-3.5rem)] border-x border-y-0 bg-[#12171E] sm:-right-6 sm:-left-6 md:min-h-[calc(100svh-4.5rem)] lg:-right-8 lg:-left-8"
-    />
-    <div className="relative z-10 py-4 sm:py-5 lg:py-6">{children}</div>
-  </div>
-);
-
 const DetailSkeleton: FC = () => (
-  <PageShell className="max-w-5xl py-0">
-    <DetailCanvas>
+  <PageShell className="py-0">
+    <PageCanvas contentClassName="space-y-4">
       <div className="space-y-4">
         <Skeleton className="h-12 w-full lg:hidden" />
-        <Card className="border-border/70 shrink-0 overflow-hidden rounded-lg bg-[#192132] py-0">
+        <Card className="shrink-0 overflow-hidden py-0">
           <div className="bg-primary h-1 w-full" />
           <CardContent className="p-3 sm:p-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -191,39 +181,42 @@ const DetailSkeleton: FC = () => (
             </div>
           </CardContent>
         </Card>
-        <div className="border-border/60 rounded-lg border bg-[#192132] p-3 sm:p-4">
+        <div className="border-border/60 bg-card rounded-lg border p-3 sm:p-4">
           <Skeleton className="h-7 w-48 max-w-full" />
         </div>
         <Skeleton className="min-h-96 w-full rounded-lg" />
       </div>
-    </DetailCanvas>
+    </PageCanvas>
   </PageShell>
 );
 
 const AccessDenied: FC = () => (
-  <PageShell className="max-w-3xl">
-    <Card className="rounded-lg bg-[#192132] py-0 shadow-sm">
-      <CardContent className="p-6">
-        <div className="flex items-start gap-4">
-          <ServiceIcon className="bg-destructive/10 text-destructive">
-            <ShieldAlert className="size-5" />
-          </ServiceIcon>
-          <div className="space-y-3">
-            <div>
-              <h1 className="text-xl font-semibold">Acces refuse</h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Vous n&apos;avez pas la permission de consulter cet utilisateur.
-              </p>
+  <PageShell className="py-0">
+    <PageCanvas>
+      <Card className="max-w-3xl py-0">
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
+            <ServiceIcon className="bg-destructive/10 text-destructive">
+              <ShieldAlert className="size-5" />
+            </ServiceIcon>
+            <div className="space-y-3">
+              <div>
+                <h1 className="text-xl font-semibold">Acces refuse</h1>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Vous n&apos;avez pas la permission de consulter cet
+                  utilisateur.
+                </p>
+              </div>
+              <Button asChild variant="outline">
+                <Link href="/administration/utilisateurs">
+                  Retour aux utilisateurs
+                </Link>
+              </Button>
             </div>
-            <Button asChild variant="outline">
-              <Link href="/administration/utilisateurs">
-                Retour aux utilisateurs
-              </Link>
-            </Button>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </PageCanvas>
   </PageShell>
 );
 
@@ -910,31 +903,33 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           { href: '/administration/utilisateurs', label: 'Utilisateurs' },
         ]}
       >
-        <PageShell className="max-w-3xl">
-          <Card className="rounded-lg bg-[#192132] py-0 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <ServiceIcon className="bg-destructive/10 text-destructive">
-                  <ShieldAlert className="size-5" />
-                </ServiceIcon>
-                <div className="space-y-3">
-                  <div>
-                    <h1 className="text-xl font-semibold">
-                      Utilisateur introuvable
-                    </h1>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      {errorMessage || "Impossible de charger l'utilisateur."}
-                    </p>
+        <PageShell className="py-0">
+          <PageCanvas>
+            <Card className="max-w-3xl py-0">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <ServiceIcon className="bg-destructive/10 text-destructive">
+                    <ShieldAlert className="size-5" />
+                  </ServiceIcon>
+                  <div className="space-y-3">
+                    <div>
+                      <h1 className="text-xl font-semibold">
+                        Utilisateur introuvable
+                      </h1>
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        {errorMessage || "Impossible de charger l'utilisateur."}
+                      </p>
+                    </div>
+                    <Button asChild variant="outline">
+                      <Link href="/administration/utilisateurs">
+                        Retour aux utilisateurs
+                      </Link>
+                    </Button>
                   </div>
-                  <Button asChild variant="outline">
-                    <Link href="/administration/utilisateurs">
-                      Retour aux utilisateurs
-                    </Link>
-                  </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </PageCanvas>
         </PageShell>
       </AuthenticatedLayout>
     );
@@ -958,10 +953,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         },
       ]}
     >
-      <PageShell className="max-w-5xl py-0">
-        <DetailCanvas>
+      <PageShell className="py-0">
+        <PageCanvas contentClassName="space-y-3">
           <div className="space-y-3">
-            <Card className="border-border/70 shrink-0 overflow-hidden rounded-lg bg-[#192132] py-0">
+            <Card className="shrink-0 overflow-hidden py-0">
               <div className="bg-primary h-1 w-full" />
               <CardContent className="p-3 sm:p-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -1024,21 +1019,21 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                     </div>
                   </div>
                   <div className="text-muted-foreground flex flex-wrap gap-2 text-xs">
-                    <span className="border-border/60 inline-flex h-7 items-center gap-1.5 rounded-md border bg-[#12171E] px-2">
+                    <span className="border-border/60 bg-popover inline-flex h-7 items-center gap-1.5 rounded-md border px-2">
                       <Clock className="size-3.5" />
                       Derniere connexion
                       <span className="text-foreground font-medium">
                         {formatCompactDate(user.lastLoginAt)}
                       </span>
                     </span>
-                    <span className="border-border/60 inline-flex h-7 items-center gap-1.5 rounded-md border bg-[#12171E] px-2">
+                    <span className="border-border/60 bg-popover inline-flex h-7 items-center gap-1.5 rounded-md border px-2">
                       <Calendar className="size-3.5" />
                       Cree
                       <span className="text-foreground font-medium">
                         {formatCompactDate(user.createdAt)}
                       </span>
                     </span>
-                    <span className="border-border/60 inline-flex h-7 items-center gap-1.5 rounded-md border bg-[#12171E] px-2">
+                    <span className="border-border/60 bg-popover inline-flex h-7 items-center gap-1.5 rounded-md border px-2">
                       <Activity className="size-3.5" />
                       Activite
                       <span className="text-foreground font-medium">
@@ -1075,7 +1070,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             </div>
             <div>{renderContent()}</div>
           </div>
-        </DetailCanvas>
+        </PageCanvas>
       </PageShell>
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
         <AlertDialogContent className="border-border overflow-hidden rounded-lg p-0">

@@ -352,7 +352,7 @@ const StatCard: FC<{
   label: string;
   value: number;
 }> = ({ color, icon: Icon, label, value }) => (
-  <Card className="group border-border/70 relative overflow-hidden rounded-lg bg-[#192132] py-0 transition-all hover:shadow-md">
+  <Card className="group border-border/70 bg-card relative overflow-hidden rounded-lg py-0 transition-all hover:shadow-md">
     <CardContent className="p-3 sm:p-4">
       <div className="flex items-center justify-between">
         <div>
@@ -513,7 +513,7 @@ const TimelineItem: FC<{
               </div>
               {/* Changes diff */}
               {hasChanges && (
-                <div className="border-border space-y-1.5 rounded-lg border bg-[#192132] p-2.5">
+                <div className="border-border bg-card space-y-1.5 rounded-lg border p-2.5">
                   {changes.map((change) => (
                     <ChangeItem
                       key={change.fieldKey}
@@ -668,7 +668,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   // Empty
   if (auditLogs.length === 0) {
     return (
-      <Card className="border-border/70 min-h-[360px] items-center justify-center rounded-lg bg-[#192132] py-0">
+      <Card className="border-border/70 bg-card min-h-[360px] items-center justify-center rounded-lg py-0">
         <CardContent className="flex flex-col items-center p-8">
           <div className="bg-secondary flex size-20 items-center justify-center rounded-lg">
             <History className="text-muted-foreground size-10" />
@@ -712,7 +712,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
         </div>
       </div>
       {/* Filters */}
-      <Card className="border-border/70 shrink-0 overflow-hidden rounded-lg bg-[#192132] py-0">
+      <Card className="border-border/70 bg-card shrink-0 overflow-hidden rounded-lg py-0">
         <CardContent className="p-3 sm:p-4">
           <div className="flex flex-wrap items-center gap-2">
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -793,7 +793,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
         </CardContent>
       </Card>
       {/* Timeline */}
-      <Card className="border-border/70 gap-0 overflow-hidden rounded-lg bg-[#192132] py-0">
+      <Card className="border-border/70 bg-card gap-0 overflow-hidden rounded-lg py-0">
         <CardContent className="p-0">
           <div className="px-3 sm:px-4">
             {filteredLogs.length === 0 ? (
@@ -820,7 +820,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                     return (
                       <div key={log.id}>
                         {showSeparator && (
-                          <div className="flex items-center gap-3 bg-[#192132] px-1 py-2">
+                          <div className="bg-card flex items-center gap-3 px-1 py-2">
                             <div className="bg-secondary h-px flex-1" />
                             <span className="text-muted-foreground text-xs font-medium">
                               {DATE_CATEGORY_LABELS.get(category) ||
@@ -859,7 +859,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
           </div>
         </CardContent>
         {/* Footer */}
-        <CardFooter className="border-border/60 text-muted-foreground shrink-0 justify-center border-t bg-[#212A3A] px-4 py-3 text-center text-xs">
+        <CardFooter className="border-border/60 text-muted-foreground bg-accent shrink-0 justify-center border-t px-4 py-3 text-center text-xs">
           {filteredLogs.length} evenement{filteredLogs.length > 1 ? 's' : ''}
           {(categoryFilter !== 'all' ||
             sourceFilter !== 'all' ||
