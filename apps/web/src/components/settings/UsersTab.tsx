@@ -7,6 +7,7 @@ import {
   Download,
   Key,
   Loader2,
+  type LucideIcon,
   Plus,
   Search,
   Shield,
@@ -40,6 +41,7 @@ import type {
 } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
+import { Card, CardContent } from '$ui/card';
 import {
   Dialog,
   DialogContent,
@@ -56,6 +58,7 @@ import {
 } from '$ui/dropdown-menu';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
+import { Pagination } from '$ui/pagination';
 import {
   Select,
   SelectContent,
@@ -64,6 +67,14 @@ import {
   SelectValue,
 } from '$ui/select';
 import { Skeleton } from '$ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '$ui/table';
 import { apiFetch } from '$utils/api.utils';
 
 type FilterStatus = 'all' | 'active' | 'inactive' | 'pending';
@@ -71,6 +82,78 @@ type FilterRole = 'all' | UserRole;
 type SortOption = 'name' | 'recent' | 'created';
 
 const USERS_PER_PAGE = 20;
+
+type UsersStatTone = 'neutral' | 'primary' | 'warning';
+
+type UsersStatToneClassNames = {
+  icon: string;
+  value: string;
+};
+
+const getUsersStatToneClassNames = (
+  tone: UsersStatTone,
+): UsersStatToneClassNames => {
+  if (tone === 'primary') {
+    return {
+      icon: 'bg-primary/10 text-primary',
+      value: 'text-foreground',
+    };
+  }
+
+  if (tone === 'warning') {
+    return {
+      icon: 'bg-amber-500/10 text-amber-400',
+      value: 'text-amber-400',
+    };
+  }
+
+  return {
+    icon: 'bg-secondary text-secondary-foreground',
+    value: 'text-foreground',
+  };
+};
+
+const UserStatusBadge: FC<{ isActive: boolean }> = ({ isActive }) => {
+  if (isActive) return <Badge variant="secondary">Actif</Badge>;
+
+  return (
+    <Badge
+      variant="outline"
+      className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
+    >
+      Inactif
+    </Badge>
+  );
+};
+
+const UsersStatCard: FC<{
+  icon: LucideIcon;
+  label: string;
+  tone?: UsersStatTone;
+  value: number;
+}> = ({ icon: Icon, label, tone = 'neutral', value }) => {
+  const toneClassNames = getUsersStatToneClassNames(tone);
+
+  return (
+    <Card className="border-border overflow-hidden rounded-lg bg-[#192132] py-0 shadow-sm">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-3">
+          <div
+            className={`${toneClassNames.icon} flex h-10 w-10 items-center justify-center rounded-lg`}
+          >
+            <Icon size={20} />
+          </div>
+          <div>
+            <p className={`${toneClassNames.value} text-2xl font-bold`}>
+              {value}
+            </p>
+            <p className="text-muted-foreground text-xs">{label}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export const UsersTab: FC = () => {
   const router = useRouter();
@@ -120,7 +203,7 @@ export const UsersTab: FC = () => {
 
   // Update URL when filters change
   const updateUrlParams = useCallback(
-    (params: Record<string, string>) => {
+    (params: Record<string, string>): void => {
       const newParams = new URLSearchParams(searchParams.toString());
       Object.entries(params).forEach(([key, value]) => {
         if (value && value !== 'all' && value !== 'name' && value !== '') {
@@ -138,7 +221,12 @@ export const UsersTab: FC = () => {
   );
 
   const fetchUsers = useCallback(
-    async (page = 1, search = '', status = 'all', role = 'all') => {
+    async (
+      page = 1,
+      search = '',
+      status = 'all',
+      role = 'all',
+    ): Promise<void> => {
       try {
         setIsLoading(true);
 
@@ -170,12 +258,12 @@ export const UsersTab: FC = () => {
   );
 
   // Fetch on mount and when filters change
-  useEffect(() => {
+  useEffect((): void => {
     fetchUsers(currentPage, debouncedSearch, filterStatus, filterRole);
   }, [fetchUsers, currentPage, debouncedSearch, filterStatus, filterRole]);
 
   // Handle search with debounce
-  useEffect(() => {
+  useEffect((): (() => void) => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
       setCurrentPage(1); // Reset to page 1 on search
@@ -189,7 +277,7 @@ export const UsersTab: FC = () => {
   const handleFilterChange = (
     type: 'status' | 'role' | 'sort',
     value: string,
-  ) => {
+  ): void => {
     setCurrentPage(1); // Reset to page 1 on filter change
     if (type === 'status') {
       setFilterStatus(value as FilterStatus);
@@ -203,7 +291,7 @@ export const UsersTab: FC = () => {
     }
   };
 
-  const handleCreateUser = async () => {
+  const handleCreateUser = async (): Promise<void> => {
     if (!canCreateUsers) {
       toast.error('Permission insuffisante pour creer un utilisateur');
 
@@ -240,14 +328,14 @@ export const UsersTab: FC = () => {
     }
   };
 
-  const handleCloseCreateDialog = () => {
+  const handleCloseCreateDialog = (): void => {
     setShowCreateDialog(false);
     setCreatedUserId(null);
     setNewUser({ email: '', firstName: '', lastName: '', role: 'USER' });
     setTempPassword(null);
   };
 
-  const clearFilters = () => {
+  const clearFilters = (): void => {
     setSearchQuery('');
     setFilterStatus('all');
     setFilterRole('all');
@@ -255,8 +343,18 @@ export const UsersTab: FC = () => {
     router.replace(pathname, { scroll: false });
   };
 
-  const openUserDetail = (userId: string) => {
+  const openUserDetail = (userId: string): void => {
     router.push(`/administration/utilisateurs/${userId}`);
+  };
+
+  const handleOpenUserKeyDown = (
+    event: React.KeyboardEvent,
+    userId: string,
+  ): void => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+
+    event.preventDefault();
+    openUserDetail(userId);
   };
 
   const hasActiveFilters =
@@ -291,7 +389,7 @@ export const UsersTab: FC = () => {
   const totalPages = pagination?.totalPages || 1;
   const totalFiltered = pagination?.total || users.length;
 
-  const formatRelativeTime = (date: Date | string | null) => {
+  const formatRelativeTime = (date: Date | string | null): string => {
     if (!date) return 'Jamais';
     const now = new Date();
     const then = new Date(date);
@@ -311,7 +409,7 @@ export const UsersTab: FC = () => {
     });
   };
 
-  const exportToCSV = () => {
+  const exportToCSV = (): void => {
     // Limit export to current page data (server already paginated)
     const maxExport = 500;
     const usersToExport = displayedUsers.slice(0, maxExport);
@@ -390,58 +488,25 @@ export const UsersTab: FC = () => {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <div className="border-border bg-card/70 overflow-hidden rounded-lg border p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                <Users size={20} className="text-primary" />
-              </div>
-              <div>
-                <p className="text-foreground text-2xl font-bold">
-                  {stats.total}
-                </p>
-                <p className="text-muted-foreground text-xs">Total</p>
-              </div>
-            </div>
-          </div>
-          <div className="border-border bg-card/70 overflow-hidden rounded-lg border p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10">
-                <UserCheck size={20} className="text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-emerald-400">
-                  {stats.active}
-                </p>
-                <p className="text-muted-foreground text-xs">Actifs</p>
-              </div>
-            </div>
-          </div>
-          <div className="border-border bg-card/70 overflow-hidden rounded-lg border p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
-                <Key size={20} className="text-amber-300" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-amber-300">
-                  {stats.pendingPasswordChange}
-                </p>
-                <p className="text-muted-foreground text-xs">MDP temp</p>
-              </div>
-            </div>
-          </div>
-          <div className="border-border bg-card/70 overflow-hidden rounded-lg border p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                <Clock size={20} className="text-primary" />
-              </div>
-              <div>
-                <p className="text-primary text-2xl font-bold">
-                  {stats.recentLogins}
-                </p>
-                <p className="text-muted-foreground text-xs">Cnx 24h</p>
-              </div>
-            </div>
-          </div>
+          <UsersStatCard
+            icon={Users}
+            label="Total"
+            value={stats.total}
+            tone="primary"
+          />
+          <UsersStatCard icon={UserCheck} label="Actifs" value={stats.active} />
+          <UsersStatCard
+            icon={Key}
+            label="MDP temp"
+            value={stats.pendingPasswordChange}
+            tone="warning"
+          />
+          <UsersStatCard
+            icon={Clock}
+            label="Cnx 24h"
+            value={stats.recentLogins}
+            tone="primary"
+          />
         </div>
       )}
       {/* Filters & Actions */}
@@ -566,10 +631,128 @@ export const UsersTab: FC = () => {
         {totalFiltered} utilisateur
         {totalFiltered !== 1 ? 's' : ''}
         {hasActiveFilters && stats && ` sur ${stats.total}`}
-        {pagination && totalPages > 1 && ` • Page ${currentPage}/${totalPages}`}
+        {pagination && totalPages > 1 && ` - Page ${currentPage}/${totalPages}`}
       </div>
       {/* Users List */}
-      <div className="space-y-2">
+      <Card className="border-border/70 hidden overflow-hidden rounded-lg bg-[#192132] py-0 md:block">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Utilisateur</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Mot de passe</TableHead>
+                <TableHead>Derniere connexion</TableHead>
+                <TableHead className="w-24 text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {displayedUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-40 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <UserMinus size={32} className="text-muted-foreground" />
+                      <p className="text-muted-foreground text-sm">
+                        Aucun utilisateur trouve
+                      </p>
+                      {hasActiveFilters && (
+                        <Button variant="link" size="sm" onClick={clearFilters}>
+                          Effacer les filtres
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                displayedUsers.map((user) => (
+                  <TableRow
+                    key={user.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Voir ${user.firstName} ${user.lastName}`}
+                    className="hover:bg-accent/50 focus:bg-accent/50 cursor-pointer focus:outline-none"
+                    onClick={() => openUserDetail(user.id)}
+                    onKeyDown={(event) => handleOpenUserKeyDown(event, user.id)}
+                  >
+                    <TableCell>
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="bg-primary text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-md text-xs font-semibold">
+                          {user.firstName.charAt(0)}
+                          {user.lastName.charAt(0)}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="text-foreground truncate font-medium">
+                              {user.firstName} {user.lastName}
+                            </span>
+                            {user.isProtected && (
+                              <Shield
+                                size={14}
+                                className="shrink-0 text-amber-500"
+                              />
+                            )}
+                          </div>
+                          <p className="text-muted-foreground truncate text-xs">
+                            {user.email}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={getRoleColor(user.role)}
+                        className="shrink-0"
+                      >
+                        {user.role === 'ADMIN' ? (
+                          <Shield size={10} className="mr-1" />
+                        ) : (
+                          <User size={10} className="mr-1" />
+                        )}
+                        {getAccessLabel(user)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <UserStatusBadge isActive={user.isActive} />
+                    </TableCell>
+                    <TableCell>
+                      {user.mustChangePassword ? (
+                        <Badge
+                          variant="outline"
+                          className="border-amber-500/40 text-amber-400"
+                        >
+                          <Key size={10} className="mr-1" />A changer
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">
+                          A jour
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
+                      {formatRelativeTime(user.lastLoginAt)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openUserDetail(user.id);
+                        }}
+                      >
+                        Ouvrir
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      <div className="space-y-2 md:hidden">
         {displayedUsers.length === 0 ? (
           <div className="border-border bg-background/35 rounded-lg border py-12 text-center">
             <UserMinus
@@ -595,9 +778,9 @@ export const UsersTab: FC = () => {
               role="button"
               tabIndex={0}
               aria-label={`Voir ${user.firstName} ${user.lastName}`}
-              className="group border-border bg-card/70 hover:border-primary/50 hover:bg-card focus:border-primary cursor-pointer rounded-lg border p-4 transition-all hover:shadow-md focus:outline-none"
+              className="group border-border hover:border-primary/50 focus:border-primary cursor-pointer rounded-lg border bg-[#192132] p-4 transition-all hover:bg-[#212A3A] hover:shadow-md focus:outline-none"
               onClick={() => openUserDetail(user.id)}
-              onKeyDown={(e) => e.key === 'Enter' && openUserDetail(user.id)}
+              onKeyDown={(event) => handleOpenUserKeyDown(event, user.id)}
             >
               <div className="flex items-center gap-3">
                 {/* Avatar with gradient */}
@@ -630,14 +813,12 @@ export const UsersTab: FC = () => {
                     {getAccessLabel(user)}
                   </Badge>
                   {!user.isActive && (
-                    <Badge variant="destructive" className="shrink-0">
-                      Inactif
-                    </Badge>
+                    <UserStatusBadge isActive={user.isActive} />
                   )}
                   {user.mustChangePassword && (
                     <Badge
                       variant="outline"
-                      className="shrink-0 border-amber-500 text-amber-500"
+                      className="shrink-0 border-amber-500/40 text-amber-400"
                     >
                       <Key size={10} className="mr-1" />
                       Temp
@@ -660,7 +841,7 @@ export const UsersTab: FC = () => {
                         : 'User'}
                   </Badge>
                   {!user.isActive && (
-                    <span className="h-2 w-2 rounded-full bg-red-500" />
+                    <span className="bg-muted-foreground h-2 w-2 rounded-full" />
                   )}
                 </div>
               </div>
@@ -669,61 +850,14 @@ export const UsersTab: FC = () => {
         )}
       </div>
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="border-border flex items-center justify-between border-t pt-4">
-          <p className="text-muted-foreground text-sm">
-            Page {currentPage} sur {totalPages} ({totalFiltered} utilisateur
-            {totalFiltered > 1 ? 's' : ''})
-          </p>
-          <div className="flex gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="h-8 px-3"
-            >
-              Precedent
-            </Button>
-            {/* Page numbers */}
-            <div className="hidden gap-1 sm:flex">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let page: number;
-                if (totalPages <= 5) {
-                  page = i + 1;
-                } else if (currentPage <= 3) {
-                  page = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  page = totalPages - 4 + i;
-                } else {
-                  page = currentPage - 2 + i;
-                }
-
-                return (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    className={`h-8 w-8 p-0 ${currentPage === page ? 'bg-primary hover:bg-primary/90 text-white' : ''}`}
-                  >
-                    {page}
-                  </Button>
-                );
-              })}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="h-8 px-3"
-            >
-              Suivant
-            </Button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        page={currentPage}
+        totalPages={totalPages}
+        total={totalFiltered}
+        limit={USERS_PER_PAGE}
+        onPageChange={setCurrentPage}
+        className="border-border rounded-lg border bg-[#192132]"
+      />
       {/* Create User Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={handleCloseCreateDialog}>
         <DialogContent className="border-border overflow-hidden rounded-lg p-0 sm:max-w-md">
@@ -742,15 +876,15 @@ export const UsersTab: FC = () => {
             </DialogHeader>
             {tempPassword ? (
               <div className="mt-4 space-y-4">
-                <div className="overflow-hidden rounded-lg border border-emerald-500/20 bg-emerald-500/10">
+                <div className="overflow-hidden rounded-lg border border-amber-500/25 bg-amber-500/10">
                   <div className="p-4">
-                    <p className="mb-2 text-sm font-medium text-emerald-400">
-                      Utilisateur ajoute avec succes
+                    <p className="mb-2 text-sm font-medium text-amber-400">
+                      Mot de passe temporaire genere
                     </p>
                     <p className="text-muted-foreground mb-2 text-xs">
                       Mot de passe temporaire :
                     </p>
-                    <code className="bg-card border-border text-foreground block rounded-md border px-3 py-2 font-mono text-sm">
+                    <code className="border-border text-foreground block rounded-md border bg-[#12171E] px-3 py-2 font-mono text-sm">
                       {tempPassword}
                     </code>
                     <p className="text-muted-foreground mt-2 text-xs">

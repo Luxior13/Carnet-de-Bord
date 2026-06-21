@@ -4,6 +4,7 @@ import {
   Check,
   Clock,
   Key,
+  type LucideIcon,
   Mail,
   Shield,
   X,
@@ -21,6 +22,40 @@ type UserResumeTabProps = {
   user: UserType;
 };
 
+type ResumeStatTone = 'neutral' | 'primary' | 'warning';
+
+const getResumeStatToneClassName = (tone: ResumeStatTone): string => {
+  if (tone === 'primary') return 'bg-primary/10 text-primary';
+  if (tone === 'warning') return 'bg-amber-500/10 text-amber-400';
+
+  return 'bg-secondary text-secondary-foreground';
+};
+
+const ResumeStatCard: FC<{
+  icon: LucideIcon;
+  label: string;
+  tone?: ResumeStatTone;
+  value: number;
+}> = ({ icon: Icon, label, tone = 'neutral', value }) => (
+  <Card className="border-border/70 overflow-hidden rounded-lg bg-[#192132] py-0">
+    <CardContent className="p-3 sm:p-4">
+      <div className="flex items-center gap-3">
+        <div
+          className={`${getResumeStatToneClassName(tone)} flex size-9 shrink-0 items-center justify-center rounded-md`}
+        >
+          <Icon className="size-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-foreground text-xl font-semibold tracking-tight">
+            {value}
+          </p>
+          <p className="text-muted-foreground truncate text-xs">{label}</p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
   const formatDate = (date: Date | string | null): string => {
     if (!date) return 'Jamais';
@@ -35,42 +70,35 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Quick Stats */}
       {auditStats && (
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Card className="border-border bg-card/70 overflow-hidden rounded-lg py-0">
-            <CardContent className="p-4 text-center">
-              <p className="text-foreground text-2xl font-bold">
-                {auditStats.totalActions}
-              </p>
-              <p className="text-muted-foreground text-sm">Actions totales</p>
-            </CardContent>
-          </Card>
-          <Card className="overflow-hidden rounded-lg border-emerald-500/20 bg-emerald-500/10 py-0">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-emerald-400">
-                {auditStats.successfulLogins}
-              </p>
-              <p className="text-sm text-emerald-400/70">Connexions reussies</p>
-            </CardContent>
-          </Card>
-          <Card className="overflow-hidden rounded-lg border-red-500/20 bg-red-500/10 py-0">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-red-400">
-                {auditStats.failedLogins}
-              </p>
-              <p className="text-sm text-red-400/70">Tentatives echouees</p>
-            </CardContent>
-          </Card>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <ResumeStatCard
+            icon={Activity}
+            label="Actions totales"
+            value={auditStats.totalActions}
+            tone="primary"
+          />
+          <ResumeStatCard
+            icon={Check}
+            label="Connexions reussies"
+            value={auditStats.successfulLogins}
+          />
+          <ResumeStatCard
+            icon={X}
+            label="Tentatives echouees"
+            value={auditStats.failedLogins}
+            tone="warning"
+          />
         </div>
       )}
       {/* User Details */}
-      <Card className="border-border/70 bg-card/70 overflow-hidden rounded-lg py-0">
-        <CardHeader className="border-border/60 border-b p-4">
-          <CardTitle className="text-base">Informations compte</CardTitle>
+      <Card className="border-border/70 overflow-hidden rounded-lg bg-[#192132] py-0">
+        <CardHeader className="border-border/60 border-b bg-[#212A3A] p-3 sm:p-4">
+          <CardTitle className="text-sm">Informations compte</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 p-4">
+        <CardContent className="space-y-3 p-3 sm:p-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Mail size={16} className="text-muted-foreground" />
@@ -80,7 +108,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
               {user.email}
             </span>
           </div>
-          <Separator className="bg-secondary" />
+          <Separator className="bg-border/60" />
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Shield size={16} className="text-muted-foreground" />
@@ -90,7 +118,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
               {getAccessLabel(user)}
             </Badge>
           </div>
-          <Separator className="bg-secondary" />
+          <Separator className="bg-border/60" />
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Clock size={16} className="text-muted-foreground" />
@@ -100,7 +128,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
               {formatDate(user.lastLoginAt)}
             </span>
           </div>
-          <Separator className="bg-secondary" />
+          <Separator className="bg-border/60" />
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Key size={16} className="text-muted-foreground" />
@@ -109,7 +137,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
             {user.mustChangePassword ? (
               <Badge
                 variant="outline"
-                className="border-amber-500 text-amber-500"
+                className="border-amber-500/40 text-amber-400"
               >
                 A changer
               </Badge>
@@ -119,25 +147,28 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
               </span>
             )}
           </div>
-          <Separator className="bg-secondary" />
+          <Separator className="bg-border/60" />
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Activity size={16} className="text-muted-foreground" />
               <span className="text-muted-foreground">Statut</span>
             </div>
             {user.isActive ? (
-              <Badge className="bg-emerald-500">
+              <Badge variant="secondary">
                 <Check size={12} className="mr-1" />
                 Actif
               </Badge>
             ) : (
-              <Badge className="bg-red-500">
+              <Badge
+                variant="outline"
+                className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
+              >
                 <X size={12} className="mr-1" />
                 Inactif
               </Badge>
             )}
           </div>
-          <Separator className="bg-secondary" />
+          <Separator className="bg-border/60" />
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Calendar size={16} className="text-muted-foreground" />

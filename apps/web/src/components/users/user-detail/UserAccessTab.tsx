@@ -5,10 +5,10 @@ import { Loader2, Save, Shield } from 'lucide-react';
 import React, { type FC } from 'react';
 
 import { PermissionsEditor } from '$components/users/PermissionsEditor';
-import type { PermissionsData } from '$constants/permissions.constants';
+import { type PermissionsData } from '$constants/permissions.constants';
 import type { UserType } from '$types/auth.types';
 import { Button } from '$ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$ui/card';
+import { Card, CardContent, CardFooter } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import {
@@ -22,7 +22,10 @@ import {
 type UserAccessTabProps = {
   canEditRole: boolean;
   canManagePermissions: boolean;
+  canSave: boolean;
+  hasChanges: boolean;
   isSaving: boolean;
+  onCancel: () => void;
   onSave: () => void;
   permissions: PermissionsData | null;
   role: UserRole;
@@ -34,7 +37,10 @@ type UserAccessTabProps = {
 export const UserAccessTab: FC<UserAccessTabProps> = ({
   canEditRole,
   canManagePermissions,
+  canSave,
+  hasChanges,
   isSaving,
+  onCancel,
   onSave,
   permissions,
   role,
@@ -43,68 +49,80 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   user,
 }) => {
   return (
-    <div className="space-y-4">
-      <Card className="border-border/70 bg-card/70 overflow-hidden rounded-lg py-0">
-        <CardHeader className="border-border/60 border-b p-4">
-          <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
-            <span className="bg-primary/10 text-primary flex size-7 items-center justify-center rounded-md">
-              <Shield className="size-3.5" />
-            </span>
-            Role
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <div className="space-y-1.5">
-            <Label className="text-muted-foreground text-xs" required>
-              Role administratif
-            </Label>
-            {user.isProtected ? (
-              <Input
-                value="Superadmin"
-                disabled
-                className="border-border bg-card"
-              />
-            ) : (
-              <Select
-                value={role}
-                onValueChange={(value) => setRole(value as UserRole)}
-                disabled={!canEditRole}
-              >
-                <SelectTrigger className="border-border bg-card">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USER">Utilisateur</SelectItem>
-                  <SelectItem value="ADMIN">Administrateur</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-      <Card className="border-border/70 bg-card/70 overflow-hidden rounded-lg py-0">
-        <CardContent className="p-4">
+    <div>
+      <Card className="border-border/70 overflow-hidden rounded-lg bg-[#192132] py-0">
+        <CardContent className="p-3 sm:p-4">
           <PermissionsEditor
             role={role}
             permissions={permissions}
             onChange={setPermissions}
             disabled={!canManagePermissions}
+            headerControls={
+              <div className="border-border/70 flex items-center gap-2 rounded-md border bg-[#12171E] px-2 py-1">
+                <span className="bg-primary/10 text-primary flex size-7 shrink-0 items-center justify-center rounded-md">
+                  <Shield className="size-3.5" />
+                </span>
+                <Label htmlFor="user-role" className="sr-only">
+                  Role
+                </Label>
+                {user.isProtected ? (
+                  <Input
+                    id="user-role"
+                    value="Superadmin"
+                    disabled
+                    className="border-border h-8 min-w-0 bg-[#12171E]"
+                  />
+                ) : (
+                  <Select
+                    value={role}
+                    onValueChange={(value) => setRole(value as UserRole)}
+                    disabled={!canEditRole}
+                  >
+                    <SelectTrigger
+                      id="user-role"
+                      className="border-border h-8 min-w-36 bg-[#12171E]"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USER">Utilisateur</SelectItem>
+                      <SelectItem value="ADMIN">Administrateur</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            }
           />
         </CardContent>
-        <CardFooter className="border-border/60 bg-background/20 justify-end border-t p-4">
-          <Button
-            onClick={onSave}
-            disabled={isSaving || (!canEditRole && !canManagePermissions)}
-            size="sm"
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            {isSaving ? (
-              <Loader2 size={16} className="mr-2 animate-spin" />
-            ) : (
-              <Save size={16} className="mr-2" />
-            )}
-            Enregistrer
-          </Button>
+        <CardFooter className="border-border/60 justify-between gap-3 border-t bg-[#212A3A] p-4">
+          <p className="text-muted-foreground text-xs">
+            {hasChanges ? 'Modifications non enregistrees' : 'A jour'}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onCancel}
+              disabled={!hasChanges || isSaving}
+            >
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              onClick={onSave}
+              disabled={isSaving || !canSave}
+              size="sm"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {isSaving ? (
+                <Loader2 size={16} className="mr-2 animate-spin" />
+              ) : (
+                <Save size={16} className="mr-2" />
+              )}
+              Enregistrer
+            </Button>
+          </div>
         </CardFooter>
       </Card>
     </div>

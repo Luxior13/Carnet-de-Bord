@@ -95,7 +95,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       {
         description: 'Reinitialiser les mots de passe',
         key: PERMISSIONS.USERS.RESET_PASSWORD,
-        label: 'Reinitialiser MDP',
+        label: 'Reinitialiser les mots de passe',
       },
       {
         description: 'Modifier les permissions des utilisateurs',
@@ -111,6 +111,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   USER: [PERMISSIONS.DASHBOARD.VIEW],
 };
 
+const ROLE_PERMISSIONS_MAP = new Map<UserRole, string[]>(
+  Object.entries(ROLE_PERMISSIONS) as [UserRole, string[]][],
+);
+
 export type PermissionsData = Record<string, boolean>;
 
 export const hasPermission = (
@@ -118,33 +122,30 @@ export const hasPermission = (
   permissionKey: string,
   customPermissions?: PermissionsData | null,
 ): boolean => {
-  if (customPermissions && permissionKey in customPermissions) {
-    return customPermissions[permissionKey] ?? false;
+  const customPermissionsMap = new Map(Object.entries(customPermissions ?? {}));
+
+  if (customPermissionsMap.has(permissionKey)) {
+    return customPermissionsMap.get(permissionKey) ?? false;
   }
 
-  return ROLE_PERMISSIONS[role]?.includes(permissionKey) ?? false;
+  return ROLE_PERMISSIONS_MAP.get(role)?.includes(permissionKey) ?? false;
 };
 
 export const getEffectivePermissions = (
   role: UserRole,
   customPermissions?: PermissionsData | null,
 ): Record<string, boolean> => {
-  const result: Record<string, boolean> = {};
-  const rolePermissions = ROLE_PERMISSIONS[role] ?? [];
+  const rolePermissions = ROLE_PERMISSIONS_MAP.get(role) ?? [];
 
-  for (const category of PERMISSION_CATEGORIES) {
-    for (const permission of category.permissions) {
-      result[permission.key] = rolePermissions.includes(permission.key);
-    }
-  }
-
-  if (customPermissions) {
-    for (const [key, value] of Object.entries(customPermissions)) {
-      result[key] = value;
-    }
-  }
-
-  return result;
+  return Object.fromEntries([
+    ...PERMISSION_CATEGORIES.flatMap((category) =>
+      category.permissions.map(
+        (permission) =>
+          [permission.key, rolePermissions.includes(permission.key)] as const,
+      ),
+    ),
+    ...Object.entries(customPermissions ?? {}),
+  ]);
 };
 
 export const getAllPermissionKeys = (): string[] => {
@@ -163,8 +164,9 @@ export const countCategoryPermissions = (
   if (!category) return { enabled: 0, total: 0 };
 
   const total = category.permissions.length;
-  const enabled = category.permissions.filter(
-    (permission) => effectivePermissions[permission.key],
+  const effectivePermissionsMap = new Map(Object.entries(effectivePermissions));
+  const enabled = category.permissions.filter((permission) =>
+    effectivePermissionsMap.get(permission.key),
   ).length;
 
   return { enabled, total };

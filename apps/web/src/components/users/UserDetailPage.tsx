@@ -7,21 +7,24 @@ import {
   ArrowLeft,
   Calendar,
   Clock,
-  Key,
   Loader2,
   Shield,
   ShieldAlert,
-  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import React, { type FC, useCallback, useEffect, useState } from 'react';
+import React, {
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { UserAccessTab } from '$components/users/user-detail/UserAccessTab';
 import {
-  getUserDetailSectionLabel,
   normalizeUserDetailSection,
   USER_DETAIL_SECTIONS,
   type UserDetailSectionId,
@@ -66,6 +69,8 @@ type UserDetailPageProps = {
   userId: string;
 };
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
+
 const formatCompactDate = (date: Date | string | null): string => {
   if (!date) return 'Jamais';
 
@@ -76,51 +81,71 @@ const formatCompactDate = (date: Date | string | null): string => {
   });
 };
 
-const USER_DETAIL_SECTION_DESCRIPTIONS = new Map<UserDetailSectionId, string>([
-  ['access', 'Role administratif, droits effectifs et permissions avancees.'],
-  [
-    'history',
-    'Connexions, changements de securite et actions administratives.',
-  ],
-  ['profile', 'Identite, contact et informations visibles dans le staff.'],
-  ['resume', 'Vue rapide du compte, du statut et des derniers signaux.'],
-  ['security', 'Etat du compte, mot de passe et actions sensibles.'],
-]);
+const arePermissionsEqual = (
+  first: PermissionsData | null,
+  second: PermissionsData | null,
+): boolean => {
+  const firstEntries = new Map(Object.entries(first ?? {}));
+  const secondEntries = new Map(Object.entries(second ?? {}));
+  const keys = new Set([...firstEntries.keys(), ...secondEntries.keys()]);
+
+  for (const key of keys) {
+    if (
+      (firstEntries.get(key) ?? false) !== (secondEntries.get(key) ?? false)
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const DetailCanvas: FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="relative min-w-0">
+    <div
+      aria-hidden
+      className="border-border/70 pointer-events-none absolute inset-y-0 -right-3 -left-3 z-0 min-h-[calc(100svh-3.5rem)] border-x border-y-0 bg-[#12171E] sm:-right-6 sm:-left-6 md:min-h-[calc(100svh-4.5rem)] lg:-right-8 lg:-left-8"
+    />
+    <div className="relative z-10 py-4 sm:py-5 lg:py-6">{children}</div>
+  </div>
+);
 
 const DetailSkeleton: FC = () => (
-  <PageShell className="flex h-full max-w-5xl flex-col gap-5 py-0">
-    <Skeleton className="mt-4 h-12 w-full lg:hidden" />
-    <section className="border-border/70 bg-card/35 flex min-h-0 min-w-0 flex-1 flex-col border-x border-y-0 p-4 sm:p-5">
-      <Card className="border-border/70 bg-card/70 shrink-0 overflow-hidden rounded-lg py-0">
-        <div className="bg-primary h-1 w-full" />
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <Skeleton className="size-12 rounded-lg" />
-            <div className="min-w-0 flex-1 space-y-2">
-              <Skeleton className="h-5 w-52 max-w-full" />
-              <Skeleton className="h-4 w-72 max-w-full" />
+  <PageShell className="max-w-5xl py-0">
+    <DetailCanvas>
+      <div className="space-y-4">
+        <Skeleton className="h-12 w-full lg:hidden" />
+        <Card className="border-border/70 shrink-0 overflow-hidden rounded-lg bg-[#192132] py-0">
+          <div className="bg-primary h-1 w-full" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <Skeleton className="size-10 rounded-lg" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Skeleton className="h-5 w-52 max-w-full" />
+                  <Skeleton className="h-4 w-72 max-w-full" />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Skeleton className="h-7 w-32 rounded-md" />
+                <Skeleton className="h-7 w-24 rounded-md" />
+                <Skeleton className="h-7 w-28 rounded-md" />
+              </div>
             </div>
-          </div>
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            <Skeleton className="h-12 rounded-lg" />
-            <Skeleton className="h-12 rounded-lg" />
-            <Skeleton className="h-12 rounded-lg" />
-          </div>
-        </CardContent>
-      </Card>
-      <div className="border-border/60 bg-background/25 mt-4 rounded-lg border p-3 sm:p-4">
-        <Skeleton className="h-7 w-48 max-w-full" />
+          </CardContent>
+        </Card>
+        <div className="border-border/60 rounded-lg border bg-[#192132] p-3 sm:p-4">
+          <Skeleton className="h-7 w-48 max-w-full" />
+        </div>
+        <Skeleton className="min-h-96 w-full rounded-lg" />
       </div>
-      <div className="mt-4 min-h-0 flex-1">
-        <Skeleton className="h-full w-full rounded-lg" />
-      </div>
-    </section>
+    </DetailCanvas>
   </PageShell>
 );
 
 const AccessDenied: FC = () => (
   <PageShell className="max-w-3xl">
-    <Card className="bg-card/70 rounded-lg py-0 shadow-sm">
+    <Card className="rounded-lg bg-[#192132] py-0 shadow-sm">
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <ServiceIcon className="bg-destructive/10 text-destructive">
@@ -236,6 +261,38 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const canEditTargetRole = !!user && isProtectedActor && !user.isProtected;
   const canEditTargetStatus = canEditTargetProfile;
   const availableSections = USER_DETAIL_SECTIONS;
+  const profileErrors = useMemo(
+    () => ({
+      email: !editForm.email.trim()
+        ? 'Email obligatoire'
+        : EMAIL_PATTERN.test(editForm.email.trim())
+          ? null
+          : 'Email invalide',
+      firstName: editForm.firstName.trim() ? null : 'Prenom obligatoire',
+      lastName: editForm.lastName.trim() ? null : 'Nom obligatoire',
+    }),
+    [editForm.email, editForm.firstName, editForm.lastName],
+  );
+  const hasProfileErrors = Object.values(profileErrors).some(Boolean);
+  const hasProfileChanges =
+    !!user &&
+    (editForm.email.trim() !== user.email ||
+      editForm.firstName.trim() !== user.firstName ||
+      editForm.lastName.trim() !== user.lastName);
+  const hasAccessChanges =
+    !!user &&
+    (editForm.role !== user.role ||
+      !arePermissionsEqual(permissions, user.permissions));
+  const hasSecurityChanges = !!user && editForm.isActive !== user.isActive;
+  const hasCurrentSectionChanges =
+    (activeSection === 'profile' && hasProfileChanges) ||
+    (activeSection === 'access' && hasAccessChanges) ||
+    (activeSection === 'security' && hasSecurityChanges);
+  const canSaveProfile =
+    canEditTargetProfile && hasProfileChanges && !hasProfileErrors;
+  const canSaveAccess =
+    hasAccessChanges && (canEditTargetRole || canManageTargetPermissions);
+  const canSaveSecurity = canEditTargetStatus && !isSelf && hasSecurityChanges;
 
   const fetchUser = useCallback(async (): Promise<void> => {
     if (!canViewUsers) return;
@@ -299,6 +356,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   const handleSectionChange = useCallback(
     (sectionId: UserDetailSectionId): void => {
+      if (sectionId === activeSection) return;
+
+      if (hasCurrentSectionChanges) {
+        toast.error(
+          'Enregistrez ou annulez les modifications avant de changer de section',
+        );
+
+        return;
+      }
+
       const nextParams = new URLSearchParams(searchParams.toString());
       nextParams.set('section', sectionId);
       setActiveSection(sectionId);
@@ -306,7 +373,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         scroll: false,
       });
     },
-    [pathname, router, searchParams],
+    [activeSection, hasCurrentSectionChanges, pathname, router, searchParams],
   );
 
   const syncUserState = (updatedUser: UserType): void => {
@@ -321,9 +388,51 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     setPermissions(updatedUser.permissions);
   };
 
+  const handleCancelProfile = (): void => {
+    if (!user) return;
+
+    setEditForm((currentForm) => ({
+      ...currentForm,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    }));
+  };
+
+  const handleCancelAccess = (): void => {
+    if (!user) return;
+
+    setEditForm((currentForm) => ({
+      ...currentForm,
+      role: user.role,
+    }));
+    setPermissions(user.permissions);
+  };
+
+  const handleCancelSecurity = (): void => {
+    if (!user) return;
+
+    setEditForm((currentForm) => ({
+      ...currentForm,
+      isActive: user.isActive,
+    }));
+  };
+
   const handleSaveProfile = async (): Promise<void> => {
     if (!canEditTargetProfile) {
       toast.error('Permission insuffisante pour modifier cet utilisateur');
+
+      return;
+    }
+
+    if (hasProfileErrors) {
+      toast.error('Corrigez les champs du profil avant de sauvegarder');
+
+      return;
+    }
+
+    if (!hasProfileChanges) {
+      toast.info('Aucune modification a enregistrer');
 
       return;
     }
@@ -332,9 +441,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     try {
       const response = await apiFetch(`/api/users/${userId}`, {
         body: JSON.stringify({
-          email: editForm.email,
-          firstName: editForm.firstName,
-          lastName: editForm.lastName,
+          email: editForm.email.trim(),
+          firstName: editForm.firstName.trim(),
+          lastName: editForm.lastName.trim(),
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'PATCH',
@@ -357,6 +466,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const handleSaveAccess = async (): Promise<void> => {
     if (!canEditTargetRole && !canManageTargetPermissions) {
       toast.error('Permission insuffisante pour modifier les acces');
+
+      return;
+    }
+
+    if (!hasAccessChanges) {
+      toast.info('Aucune modification a enregistrer');
 
       return;
     }
@@ -391,6 +506,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const handleSaveSecurity = async (): Promise<void> => {
     if (!canEditTargetStatus || isSelf) {
       toast.error('Permission insuffisante pour modifier cet etat');
+
+      return;
+    }
+
+    if (!hasSecurityChanges) {
+      toast.info('Aucune modification a enregistrer');
 
       return;
     }
@@ -479,9 +600,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     }
   };
 
-  const activeSectionLabel = getUserDetailSectionLabel(activeSection);
-  const activeSectionDescription =
-    USER_DETAIL_SECTION_DESCRIPTIONS.get(activeSection) ?? '';
   const trackedActionsLabel = isLoadingAudit
     ? 'Chargement'
     : String(auditStats?.totalActions ?? auditLogs.length);
@@ -504,6 +622,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             canEdit={canEditTargetProfile}
             isSaving={isSaving}
             onSave={handleSaveProfile}
+            onCancel={handleCancelProfile}
+            hasChanges={hasProfileChanges}
+            canSave={canSaveProfile}
+            errors={profileErrors}
           />
         );
       case 'access':
@@ -518,6 +640,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             canManagePermissions={canManageTargetPermissions}
             isSaving={isSavingPermissions}
             onSave={handleSaveAccess}
+            onCancel={handleCancelAccess}
+            hasChanges={hasAccessChanges}
+            canSave={canSaveAccess}
           />
         );
       case 'security':
@@ -533,6 +658,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             onResetPassword={() => setShowResetConfirm(true)}
             tempPassword={tempPassword}
             currentUserId={currentUser?.id}
+            canSaveStatus={canSaveSecurity}
+            hasStatusChanges={hasSecurityChanges}
+            onCancelStatus={handleCancelSecurity}
+            canDeleteUser={canDeleteTargetUser}
+            onDeleteUser={() => setShowDeleteConfirm(true)}
           />
         );
       case 'history':
@@ -564,7 +694,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   if (isLoading) {
     return (
       <AuthenticatedLayout
-        fullHeight
         breadcrumbs={[
           { label: 'Administration' },
           { href: '/administration/utilisateurs', label: 'Utilisateurs' },
@@ -584,7 +713,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         ]}
       >
         <PageShell className="max-w-3xl">
-          <Card className="bg-card/70 rounded-lg py-0 shadow-sm">
+          <Card className="rounded-lg bg-[#192132] py-0 shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
                 <ServiceIcon className="bg-destructive/10 text-destructive">
@@ -615,7 +744,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   return (
     <AuthenticatedLayout
-      fullHeight
       sidebarContext={
         <UserDetailSidebarPanel
           user={user}
@@ -632,154 +760,124 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         },
       ]}
     >
-      <PageShell className="flex h-full max-w-5xl flex-col gap-5 py-0">
-        <section className="border-border/70 bg-card/35 flex min-h-0 min-w-0 flex-1 flex-col border-x border-y-0 p-4 sm:p-5">
-          <Card className="border-border/70 bg-card/70 shrink-0 overflow-hidden rounded-lg py-0">
-            <div className="bg-primary h-1 w-full" />
-            <CardContent className="p-4">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="flex min-w-0 items-start gap-3">
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="icon"
-                    className="shrink-0 lg:hidden"
-                  >
-                    <Link
-                      href="/administration/utilisateurs"
-                      aria-label="Retour"
-                    >
-                      <ArrowLeft className="size-4" />
-                    </Link>
-                  </Button>
-                  <div className="bg-primary text-primary-foreground flex size-12 shrink-0 items-center justify-center rounded-lg text-sm font-semibold shadow-sm">
-                    {user.firstName.charAt(0)}
-                    {user.lastName.charAt(0)}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <h1 className="truncate text-xl font-semibold tracking-tight">
-                        {user.firstName} {user.lastName}
-                      </h1>
-                      {user.isProtected && (
-                        <Shield size={15} className="shrink-0 text-amber-500" />
-                      )}
-                    </div>
-                    <p className="text-muted-foreground truncate text-sm">
-                      {user.email}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      <Badge variant={getRoleColor(user.role)}>
-                        {getAccessLabel(user)}
-                      </Badge>
-                      <Badge
-                        variant={user.isActive ? 'secondary' : 'destructive'}
-                      >
-                        {user.isActive ? 'Actif' : 'Inactif'}
-                      </Badge>
-                      {user.mustChangePassword && (
-                        <Badge
-                          variant="outline"
-                          className="border-amber-500 text-amber-500"
-                        >
-                          MDP temporaire
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2 lg:justify-end">
-                  {canResetTargetPassword && (
+      <PageShell className="max-w-5xl py-0">
+        <DetailCanvas>
+          <div className="space-y-3">
+            <Card className="border-border/70 shrink-0 overflow-hidden rounded-lg bg-[#192132] py-0">
+              <div className="bg-primary h-1 w-full" />
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex min-w-0 items-center gap-3">
                     <Button
-                      type="button"
+                      asChild
                       variant="outline"
-                      size="sm"
-                      onClick={() => setShowResetConfirm(true)}
+                      size="icon"
+                      className="shrink-0 lg:hidden"
                     >
-                      <Key className="h-4 w-4" />
-                      Reset MDP
+                      <Link
+                        href="/administration/utilisateurs"
+                        aria-label="Retour"
+                      >
+                        <ArrowLeft className="size-4" />
+                      </Link>
                     </Button>
-                  )}
-                  {canDeleteTargetUser && (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setShowDeleteConfirm(true)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Supprimer
-                    </Button>
-                  )}
+                    <div className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-lg text-sm font-semibold shadow-sm">
+                      {user.firstName.charAt(0)}
+                      {user.lastName.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <h1 className="truncate text-lg font-semibold tracking-tight">
+                          {user.firstName} {user.lastName}
+                        </h1>
+                        {user.isProtected && (
+                          <Shield
+                            size={15}
+                            className="shrink-0 text-amber-500"
+                          />
+                        )}
+                      </div>
+                      <p className="text-muted-foreground truncate text-sm">
+                        {user.email}
+                      </p>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        <Badge variant={getRoleColor(user.role)}>
+                          {getAccessLabel(user)}
+                        </Badge>
+                        {user.isActive ? (
+                          <Badge variant="secondary">Actif</Badge>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
+                          >
+                            Inactif
+                          </Badge>
+                        )}
+                        {user.mustChangePassword && (
+                          <Badge
+                            variant="outline"
+                            className="border-amber-500/40 text-amber-400"
+                          >
+                            Mot de passe a changer
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-muted-foreground flex flex-wrap gap-2 text-xs">
+                    <span className="border-border/60 inline-flex h-7 items-center gap-1.5 rounded-md border bg-[#12171E] px-2">
+                      <Clock className="size-3.5" />
+                      Derniere connexion
+                      <span className="text-foreground font-medium">
+                        {formatCompactDate(user.lastLoginAt)}
+                      </span>
+                    </span>
+                    <span className="border-border/60 inline-flex h-7 items-center gap-1.5 rounded-md border bg-[#12171E] px-2">
+                      <Calendar className="size-3.5" />
+                      Cree
+                      <span className="text-foreground font-medium">
+                        {formatCompactDate(user.createdAt)}
+                      </span>
+                    </span>
+                    <span className="border-border/60 inline-flex h-7 items-center gap-1.5 rounded-md border bg-[#12171E] px-2">
+                      <Activity className="size-3.5" />
+                      Activite
+                      <span className="text-foreground font-medium">
+                        {trackedActionsLabel}
+                      </span>
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                <div className="border-border/60 bg-background/30 rounded-lg border p-3">
-                  <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
-                    <Clock className="size-3.5" />
-                    Derniere connexion
-                  </p>
-                  <p className="mt-1 truncate text-sm font-medium">
-                    {formatCompactDate(user.lastLoginAt)}
-                  </p>
-                </div>
-                <div className="border-border/60 bg-background/30 rounded-lg border p-3">
-                  <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
-                    <Calendar className="size-3.5" />
-                    Cree le
-                  </p>
-                  <p className="mt-1 truncate text-sm font-medium">
-                    {formatCompactDate(user.createdAt)}
-                  </p>
-                </div>
-                <div className="border-border/60 bg-background/30 rounded-lg border p-3">
-                  <p className="text-muted-foreground text-xs font-medium">
-                    Actions journalisees
-                  </p>
-                  <p className="mt-1 truncate text-sm font-medium">
-                    <Activity className="text-muted-foreground mr-1.5 inline size-3.5 align-[-2px]" />
-                    {trackedActionsLabel}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <div className="-mx-4 mt-4 overflow-x-auto px-4 lg:hidden">
-            <div className="flex min-w-max gap-2 pb-1">
-              {availableSections.map((section) => (
-                <Button
-                  type="button"
-                  variant={
-                    activeSection === section.id ? 'secondary' : 'outline'
-                  }
-                  key={section.id}
-                  onClick={() => handleSectionChange(section.id)}
-                  className="h-9 gap-2"
-                >
-                  <span
-                    className={
-                      activeSection === section.id ? 'text-primary' : ''
+              </CardContent>
+            </Card>
+            <div className="overflow-x-auto lg:hidden">
+              <div className="flex min-w-max gap-2 pb-1">
+                {availableSections.map((section) => (
+                  <Button
+                    type="button"
+                    variant={
+                      activeSection === section.id ? 'secondary' : 'outline'
                     }
+                    key={section.id}
+                    onClick={() => handleSectionChange(section.id)}
+                    className="h-9 gap-2"
                   >
-                    {section.icon}
-                  </span>
-                  {section.label}
-                </Button>
-              ))}
+                    <span
+                      className={
+                        activeSection === section.id ? 'text-primary' : ''
+                      }
+                    >
+                      {section.icon}
+                    </span>
+                    {section.label}
+                  </Button>
+                ))}
+              </div>
             </div>
+            <div>{renderContent()}</div>
           </div>
-          <Card className="border-border/60 bg-background/25 my-4 rounded-lg py-0 shadow-none">
-            <CardContent className="p-3 sm:p-4">
-              <h2 className="text-base font-semibold">{activeSectionLabel}</h2>
-              <p className="text-muted-foreground text-sm">
-                {activeSectionDescription}
-              </p>
-            </CardContent>
-          </Card>
-          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-            {renderContent()}
-          </div>
-        </section>
+        </DetailCanvas>
       </PageShell>
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
         <AlertDialogContent className="border-border overflow-hidden rounded-lg p-0">

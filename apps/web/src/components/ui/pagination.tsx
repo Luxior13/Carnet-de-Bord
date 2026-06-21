@@ -54,7 +54,7 @@ const Pagination: FC<PaginationProps> = ({
       )}
     >
       <p className="text-muted-foreground text-[10px] sm:text-xs">
-        {start}–{end} sur {total}
+        {start}-{end} sur {total}
       </p>
       <div className="flex items-center gap-0.5 sm:gap-1">
         <Button
@@ -63,7 +63,7 @@ const Pagination: FC<PaginationProps> = ({
           className="h-7 w-7 sm:h-8 sm:w-8"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          aria-label="Page précédente"
+          aria-label="Page precedente"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>

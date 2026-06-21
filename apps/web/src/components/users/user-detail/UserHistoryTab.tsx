@@ -88,37 +88,37 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   // Auth actions
   ACCOUNT_LOCKED: {
     category: 'security',
-    color: 'text-red-500 bg-red-500/10',
+    color: 'text-destructive bg-destructive/10',
     icon: Ban,
     label: 'Compte verrouille',
   },
   LOGIN_FAILED: {
     category: 'auth',
-    color: 'text-red-500 bg-red-500/10',
+    color: 'text-destructive bg-destructive/10',
     icon: XCircle,
     label: 'Echec connexion',
   },
   LOGIN_SUCCESS: {
     category: 'auth',
-    color: 'text-emerald-500 bg-emerald-500/10',
+    color: 'text-primary bg-primary/10',
     icon: CheckCircle,
     label: 'Connexion reussie',
   },
   LOGOUT: {
     category: 'auth',
-    color: 'text-muted-foreground bg-muted/10',
+    color: 'text-muted-foreground bg-muted',
     icon: LogOut,
     label: 'Deconnexion',
   },
   PASSWORD_CHANGE: {
     category: 'security',
-    color: 'text-amber-500 bg-amber-500/10',
+    color: 'text-amber-400 bg-amber-500/10',
     icon: Key,
     label: 'Mot de passe modifie',
   },
   PASSWORD_RESET: {
     category: 'security',
-    color: 'text-amber-500 bg-amber-500/10',
+    color: 'text-amber-400 bg-amber-500/10',
     icon: RefreshCw,
     label: 'Mot de passe reinitialise',
   },
@@ -131,13 +131,13 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   },
   SESSION_INVALIDATE: {
     category: 'security',
-    color: 'text-orange-500 bg-orange-500/10',
+    color: 'text-amber-400 bg-amber-500/10',
     icon: LogIn,
     label: 'Session invalidee',
   },
   USER_ACTIVATE: {
     category: 'admin',
-    color: 'text-emerald-500 bg-emerald-500/10',
+    color: 'text-primary bg-primary/10',
     icon: UserCheck,
     label: 'Utilisateur active',
   },
@@ -149,13 +149,13 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   },
   USER_DEACTIVATE: {
     category: 'admin',
-    color: 'text-orange-500 bg-orange-500/10',
+    color: 'text-amber-400 bg-amber-500/10',
     icon: UserMinus,
     label: 'Utilisateur desactive',
   },
   USER_DELETE: {
     category: 'admin',
-    color: 'text-red-500 bg-red-500/10',
+    color: 'text-destructive bg-destructive/10',
     icon: Trash2,
     label: 'Utilisateur supprime',
   },
@@ -169,7 +169,7 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
 
 const DEFAULT_CONFIG: ActionConfig = {
   category: 'other',
-  color: 'text-muted-foreground bg-muted/10',
+  color: 'text-muted-foreground bg-muted',
   icon: History,
   label: 'Action',
 };
@@ -319,6 +319,13 @@ const formatChangeValue = (key: string, value: unknown): string => {
   return String(value);
 };
 
+const escapeCsvCell = (value: string): string => {
+  const safeValue = /^[=+\-@]/.test(value) ? `'${value}` : value;
+  const escapedValue = safeValue.replaceAll('"', '""');
+
+  return `"${escapedValue}"`;
+};
+
 // ============================================
 // COMPONENTS
 // ============================================
@@ -329,16 +336,11 @@ const StatCard: FC<{
   label: string;
   value: number;
 }> = ({ color, icon: Icon, label, value }) => (
-  <Card className="group border-border/70 bg-card/70 relative overflow-hidden rounded-lg py-0 transition-all hover:shadow-md">
-    <CardContent className="p-4">
+  <Card className="group border-border/70 relative overflow-hidden rounded-lg bg-[#192132] py-0 transition-all hover:shadow-md">
+    <CardContent className="p-3 sm:p-4">
       <div className="flex items-center justify-between">
         <div>
-          <p
-            className={cn(
-              'text-2xl font-bold tracking-tight',
-              color || 'text-foreground',
-            )}
-          >
+          <p className="text-foreground text-xl font-semibold tracking-tight">
             {value}
           </p>
           <p className="text-muted-foreground mt-1 text-xs font-medium">
@@ -347,18 +349,18 @@ const StatCard: FC<{
         </div>
         <div
           className={cn(
-            'flex h-10 w-10 items-center justify-center rounded-lg',
+            'flex size-9 items-center justify-center rounded-lg',
             color ? `${color.replace('text-', 'bg-')}/10` : 'bg-secondary',
           )}
         >
-          <Icon size={20} className={color || 'text-muted-foreground'} />
+          <Icon className={cn('size-4', color || 'text-muted-foreground')} />
         </div>
       </div>
     </CardContent>
   </Card>
 );
 
-// Component to display a single change (before → after)
+// Component to display a single change (before -> after)
 const ChangeItem: FC<{
   after: unknown;
   before: unknown;
@@ -371,11 +373,11 @@ const ChangeItem: FC<{
   return (
     <div className="flex flex-wrap items-center gap-1.5 text-xs">
       <span className="text-muted-foreground font-medium">{label}:</span>
-      <span className="bg-destructive/10 text-destructive rounded px-1.5 py-0.5 line-through">
+      <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 line-through">
         {beforeStr}
       </span>
       <ArrowRight size={12} className="text-muted-foreground" />
-      <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-emerald-400">
+      <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5">
         {afterStr}
       </span>
     </div>
@@ -411,9 +413,11 @@ const TimelineItem: FC<{
   const hasChanges = changes.length > 0;
 
   return (
-    <div
+    <button
+      type="button"
+      aria-expanded={isOpen}
       className={cn(
-        'group cursor-pointer overflow-hidden rounded-lg border p-3 transition-all',
+        'group w-full cursor-pointer overflow-hidden rounded-lg border p-2.5 text-left transition-all sm:p-3',
         isOpen
           ? 'border-border bg-background/40'
           : 'hover:border-border hover:bg-accent/60 border-transparent',
@@ -424,7 +428,7 @@ const TimelineItem: FC<{
         {/* Icon */}
         <div
           className={cn(
-            'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-transform',
+            'flex size-8 shrink-0 items-center justify-center rounded-lg transition-transform',
             config.color,
             isOpen && 'scale-105',
           )}
@@ -493,7 +497,7 @@ const TimelineItem: FC<{
               </div>
               {/* Changes diff */}
               {hasChanges && (
-                <div className="border-border bg-card space-y-1.5 rounded-lg border p-2.5">
+                <div className="border-border space-y-1.5 rounded-lg border bg-[#192132] p-2.5">
                   {changes.map((change) => (
                     <ChangeItem
                       key={change.fieldKey}
@@ -508,7 +512,7 @@ const TimelineItem: FC<{
           )}
         </div>
       </div>
-    </div>
+    </button>
   );
 });
 
@@ -603,7 +607,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
 
     const csvContent = [
       headers.join(';'),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(';')),
+      ...rows.map((row) => row.map(escapeCsvCell).join(';')),
     ].join('\n');
 
     const blob = new Blob(['\ufeff' + csvContent], {
@@ -648,7 +652,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   // Empty
   if (auditLogs.length === 0) {
     return (
-      <Card className="border-border/70 bg-card/70 min-h-[360px] items-center justify-center rounded-lg py-0">
+      <Card className="border-border/70 min-h-[360px] items-center justify-center rounded-lg bg-[#192132] py-0">
         <CardContent className="flex flex-col items-center p-8">
           <div className="bg-secondary flex size-20 items-center justify-center rounded-lg">
             <History className="text-muted-foreground size-10" />
@@ -666,7 +670,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4">
+    <div className="space-y-3">
       {/* Stats */}
       <div className="shrink-0">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -674,13 +678,13 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
           <StatCard
             label="Connexions"
             value={stats.connections}
-            color="text-emerald-500"
+            color="text-primary"
             icon={LogIn}
           />
           <StatCard
             label="Securite"
             value={stats.security}
-            color="text-amber-500"
+            color="text-amber-400"
             icon={Shield}
           />
           <StatCard
@@ -692,7 +696,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
         </div>
       </div>
       {/* Filters */}
-      <Card className="border-border/70 bg-card/70 shrink-0 overflow-hidden rounded-lg py-0">
+      <Card className="border-border/70 shrink-0 overflow-hidden rounded-lg bg-[#192132] py-0">
         <CardContent className="p-3 sm:p-4">
           <div className="flex flex-wrap items-center gap-2">
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -773,9 +777,9 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
         </CardContent>
       </Card>
       {/* Timeline */}
-      <Card className="border-border/70 bg-card/70 min-h-0 flex-1 gap-0 overflow-hidden rounded-lg py-0">
-        <CardContent className="min-h-0 flex-1 p-0">
-          <div className="h-full min-h-0 overflow-y-auto px-3 sm:px-4">
+      <Card className="border-border/70 gap-0 overflow-hidden rounded-lg bg-[#192132] py-0">
+        <CardContent className="p-0">
+          <div className="px-3 sm:px-4">
             {filteredLogs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16">
                 <div className="bg-secondary flex h-16 w-16 items-center justify-center rounded-lg">
@@ -800,7 +804,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                     return (
                       <div key={log.id}>
                         {showSeparator && (
-                          <div className="bg-card/95 sticky top-0 z-10 flex items-center gap-3 px-1 py-2 backdrop-blur-sm">
+                          <div className="flex items-center gap-3 bg-[#192132] px-1 py-2">
                             <div className="bg-secondary h-px flex-1" />
                             <span className="text-muted-foreground text-xs font-medium">
                               {DATE_CATEGORY_LABELS.get(category) ||
@@ -839,7 +843,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
           </div>
         </CardContent>
         {/* Footer */}
-        <CardFooter className="border-border/60 text-muted-foreground bg-background/20 shrink-0 justify-center border-t px-4 py-3 text-center text-xs">
+        <CardFooter className="border-border/60 text-muted-foreground shrink-0 justify-center border-t bg-[#212A3A] px-4 py-3 text-center text-xs">
           {filteredLogs.length} evenement{filteredLogs.length > 1 ? 's' : ''}
           {(categoryFilter !== 'all' ||
             sourceFilter !== 'all' ||

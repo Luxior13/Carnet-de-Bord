@@ -7,6 +7,10 @@ import {
   LayoutDashboard,
   type LucideIcon,
   RotateCcw,
+  Search,
+  ShieldCheck,
+  ShieldOff,
+  SlidersHorizontal,
   Sparkles,
   Users,
   X,
@@ -17,6 +21,8 @@ import {
   countCategoryPermissions,
   getEffectivePermissions,
   PERMISSION_CATEGORIES,
+  type PermissionCategory,
+  type PermissionItem,
   type PermissionsData,
   ROLE_TEMPLATES,
 } from '$constants/permissions.constants';
@@ -33,7 +39,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '$ui/dropdown-menu';
+import { Input } from '$ui/input';
 import { Switch } from '$ui/switch';
+import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
 // Icon mapping for categories
@@ -53,14 +61,14 @@ type ColorConfig = {
 const defaultColorConfig: ColorConfig = {
   bg: 'bg-primary/10',
   icon: 'text-primary',
-  ring: 'ring-blue-500/20',
+  ring: 'ring-primary/20',
 };
 
 // Color classes for categories
 const colorClasses: Record<string, ColorConfig> = {
   amber: {
     bg: 'bg-amber-500/10',
-    icon: 'text-amber-500',
+    icon: 'text-amber-400',
     ring: 'ring-amber-500/20',
   },
   blue: defaultColorConfig,
@@ -73,28 +81,104 @@ const colorClasses: Record<string, ColorConfig> = {
 
 type PermissionsEditorProps = {
   disabled?: boolean;
+  headerControls?: React.ReactNode;
   onChange: (permissions: PermissionsData | null) => void;
   permissions: PermissionsData | null;
   role: UserRole;
 };
 
+type PermissionFilter = 'all' | 'custom' | 'disabled' | 'enabled';
+
+type VisiblePermissionCategory = PermissionCategory & {
+  permissions: PermissionItem[];
+};
+
+type PermissionTone = 'critical' | 'default' | 'sensitive';
+
+const FILTER_OPTIONS: Array<{
+  icon: LucideIcon;
+  label: string;
+  value: PermissionFilter;
+}> = [
+  { icon: SlidersHorizontal, label: 'Toutes', value: 'all' },
+  { icon: ShieldCheck, label: 'Actives', value: 'enabled' },
+  { icon: ShieldOff, label: 'Inactives', value: 'disabled' },
+  { icon: Sparkles, label: 'Personnalisees', value: 'custom' },
+];
+
+const getPermissionTone = (permissionKey: string): PermissionTone => {
+  if (permissionKey.includes(':delete')) return 'critical';
+  if (
+    permissionKey.includes('reset_password') ||
+    permissionKey.includes('edit_permissions')
+  ) {
+    return 'sensitive';
+  }
+
+  return 'default';
+};
+
+const getPermissionToneLabel = (tone: PermissionTone): string | null => {
+  if (tone === 'critical') return 'Critique';
+  if (tone === 'sensitive') return 'Sensible';
+
+  return null;
+};
+
+const getPermissionRowClassName = (
+  isEnabled: boolean,
+  tone: PermissionTone,
+): string => {
+  if (!isEnabled) return 'border-border/70 bg-[#12171E]';
+  if (tone === 'critical') return 'border-destructive/30 bg-destructive/10';
+  if (tone === 'sensitive') return 'border-amber-500/25 bg-amber-500/10';
+
+  return 'border-primary/25 bg-primary/10';
+};
+
+const getPermissionIconClassName = (
+  isEnabled: boolean,
+  tone: PermissionTone,
+): string => {
+  if (!isEnabled) return 'bg-muted text-muted-foreground';
+  if (tone === 'critical') return 'bg-destructive/10 text-destructive';
+  if (tone === 'sensitive') return 'bg-amber-500/10 text-amber-400';
+
+  return 'bg-primary/10 text-primary';
+};
+
 export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
-  ({ disabled = false, onChange, permissions, role }) => {
-    // Only one category open at a time (accordion behavior)
-    const [openCategory, setOpenCategory] = useState<string | null>(null);
+  ({ disabled = false, headerControls, onChange, permissions, role }) => {
+    const [openCategories, setOpenCategories] = useState<Set<string>>(
+      () => new Set(),
+    );
+    const [searchQuery, setSearchQuery] = useState('');
+    const [permissionFilter, setPermissionFilter] =
+      useState<PermissionFilter>('all');
 
     // Get effective permissions
     const effectivePermissions = useMemo(
       () => getEffectivePermissions(role, permissions),
       [role, permissions],
     );
+    const effectivePermissionsMap = useMemo(
+      () => new Map(Object.entries(effectivePermissions)),
+      [effectivePermissions],
+    );
+    const customPermissionKeys = useMemo(
+      () => new Set(Object.keys(permissions ?? {})),
+      [permissions],
+    );
 
     // Toggle a permission
     const handleToggle = useCallback(
       (permKey: string, checked: boolean) => {
-        const newPermissions = { ...(permissions || {}) };
-        newPermissions[permKey] = checked;
-        onChange(newPermissions);
+        onChange(
+          Object.fromEntries([
+            ...Object.entries(permissions || {}),
+            [permKey, checked],
+          ]) as PermissionsData,
+        );
       },
       [permissions, onChange],
     );
@@ -107,13 +191,12 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
         );
         if (!category) return;
 
-        const newPermissions = { ...(permissions || {}) };
-
-        for (const perm of category.permissions) {
-          newPermissions[perm.key] = enable;
-        }
-
-        onChange(newPermissions);
+        onChange(
+          Object.fromEntries([
+            ...Object.entries(permissions || {}),
+            ...category.permissions.map((perm) => [perm.key, enable] as const),
+          ]) as PermissionsData,
+        );
       },
       [permissions, onChange],
     );
@@ -121,15 +204,13 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
     // Toggle all permissions globally
     const handleToggleAll = useCallback(
       (enable: boolean) => {
-        const newPermissions: PermissionsData = {};
-
-        for (const category of PERMISSION_CATEGORIES) {
-          for (const perm of category.permissions) {
-            newPermissions[perm.key] = enable;
-          }
-        }
-
-        onChange(newPermissions);
+        onChange(
+          Object.fromEntries(
+            PERMISSION_CATEGORIES.flatMap((category) =>
+              category.permissions.map((perm) => [perm.key, enable] as const),
+            ),
+          ) as PermissionsData,
+        );
       },
       [onChange],
     );
@@ -137,22 +218,22 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
     // Apply a template
     const handleApplyTemplate = useCallback(
       (templateKey: keyof typeof ROLE_TEMPLATES) => {
-        const template = ROLE_TEMPLATES[templateKey];
-        const newPermissions: PermissionsData = {};
+        const template = Object.entries(ROLE_TEMPLATES).find(
+          ([key]) => key === templateKey,
+        )?.[1];
+        if (!template) return;
 
-        // First, set all to false
-        for (const category of PERMISSION_CATEGORIES) {
-          for (const perm of category.permissions) {
-            newPermissions[perm.key] = false;
-          }
-        }
+        const enabledKeys = new Set<string>(template.permissions);
 
-        // Then enable template permissions
-        for (const permKey of template.permissions) {
-          newPermissions[permKey] = true;
-        }
-
-        onChange(newPermissions);
+        onChange(
+          Object.fromEntries(
+            PERMISSION_CATEGORIES.flatMap((category) =>
+              category.permissions.map(
+                (perm) => [perm.key, enabledKeys.has(perm.key)] as const,
+              ),
+            ),
+          ) as PermissionsData,
+        );
       },
       [onChange],
     );
@@ -162,10 +243,22 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
       onChange(null);
     }, [onChange]);
 
-    // Toggle category open/close (accordion - only one at a time)
-    const toggleCategory = useCallback((key: string) => {
-      setOpenCategory((prev) => (prev === key ? null : key));
-    }, []);
+    const handleCategoryOpenChange = useCallback(
+      (key: string, open: boolean) => {
+        setOpenCategories((currentOpenCategories) => {
+          const nextOpenCategories = new Set(currentOpenCategories);
+
+          if (open) {
+            nextOpenCategories.add(key);
+          } else {
+            nextOpenCategories.delete(key);
+          }
+
+          return nextOpenCategories;
+        });
+      },
+      [],
+    );
 
     // Count total permissions
     const totalPermissions = PERMISSION_CATEGORIES.reduce(
@@ -174,118 +267,227 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
     );
     const enabledPermissions =
       Object.values(effectivePermissions).filter(Boolean).length;
+    const inactivePermissions = totalPermissions - enabledPermissions;
+    const customPermissionCount = customPermissionKeys.size;
     const allEnabled = enabledPermissions === totalPermissions;
     const noneEnabled = enabledPermissions === 0;
+    const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+    const hasActiveFilters =
+      normalizedSearchQuery.length > 0 || permissionFilter !== 'all';
+    const visibleCategories = useMemo<VisiblePermissionCategory[]>(() => {
+      return PERMISSION_CATEGORIES.map((category) => {
+        const categorySearchText =
+          `${category.label} ${category.description} ${category.key}`.toLowerCase();
+        const categoryMatchesSearch =
+          normalizedSearchQuery.length === 0 ||
+          categorySearchText.includes(normalizedSearchQuery);
+
+        const visiblePermissions = category.permissions.filter((permission) => {
+          const isEnabled =
+            effectivePermissionsMap.get(permission.key) ?? false;
+          const isCustom = customPermissionKeys.has(permission.key);
+          const permissionSearchText =
+            `${permission.label} ${permission.description} ${permission.key}`.toLowerCase();
+          const matchesSearch =
+            categoryMatchesSearch ||
+            permissionSearchText.includes(normalizedSearchQuery);
+
+          if (!matchesSearch) return false;
+          if (permissionFilter === 'enabled') return isEnabled;
+          if (permissionFilter === 'disabled') return !isEnabled;
+          if (permissionFilter === 'custom') return isCustom;
+
+          return true;
+        });
+
+        return {
+          ...category,
+          permissions: visiblePermissions,
+        };
+      }).filter((category) => category.permissions.length > 0);
+    }, [
+      customPermissionKeys,
+      effectivePermissionsMap,
+      normalizedSearchQuery,
+      permissionFilter,
+    ]);
 
     return (
-      <div className="space-y-4">
-        {/* Header with stats and actions */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
+      <div className="space-y-3">
+        <div className="border-border/60 flex flex-col gap-3 rounded-md border bg-[#212A3A] p-3">
+          <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <h3 className="text-foreground font-semibold">Permissions</h3>
               <Badge
                 variant="secondary"
                 className={cn(
                   'text-xs',
-                  allEnabled && 'bg-emerald-500/10 text-emerald-400',
-                  noneEnabled && 'bg-red-500/10 text-red-400',
+                  allEnabled && 'bg-primary/10 text-primary',
+                  noneEnabled && 'bg-muted text-muted-foreground',
                 )}
               >
                 {enabledPermissions}/{totalPermissions} actives
               </Badge>
+              <Badge variant="outline" className="text-xs">
+                {inactivePermissions} inactive
+                {inactivePermissions > 1 ? 's' : ''}
+              </Badge>
+              {customPermissionCount > 0 && (
+                <Badge
+                  variant="outline"
+                  className="border-amber-500/40 text-xs text-amber-400"
+                >
+                  {customPermissionCount} personnalisee
+                  {customPermissionCount > 1 ? 's' : ''}
+                </Badge>
+              )}
+              {disabled && (
+                <Badge variant="outline" className="text-xs">
+                  Lecture seule
+                </Badge>
+              )}
             </div>
-            <p className="text-muted-foreground mt-0.5 text-sm">
-              Definissez les droits d&apos;acces de l&apos;utilisateur
-            </p>
-          </div>
-          {/* Actions */}
-          <div className="flex flex-wrap gap-2">
-            {/* Template dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+              {headerControls && (
+                <div className="min-w-0 lg:min-w-56">{headerControls}</div>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={disabled}
+                      className="gap-2"
+                    >
+                      <Sparkles size={14} />
+                      Modeles
+                      <ChevronDown size={14} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {Object.entries(ROLE_TEMPLATES).map(([key, template]) => (
+                      <DropdownMenuItem
+                        key={key}
+                        onClick={() =>
+                          handleApplyTemplate(
+                            key as keyof typeof ROLE_TEMPLATES,
+                          )
+                        }
+                      >
+                        {template.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={disabled}
-                  className="gap-2"
+                  onClick={() => handleToggleAll(true)}
+                  disabled={disabled || allEnabled}
+                  className="gap-1.5"
                 >
-                  <Sparkles size={14} />
-                  Templates
-                  <ChevronDown size={14} />
+                  <Check size={14} />
+                  <span className="hidden sm:inline">Tout activer</span>
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {Object.entries(ROLE_TEMPLATES).map(([key, template]) => (
-                  <DropdownMenuItem
-                    key={key}
-                    onClick={() =>
-                      handleApplyTemplate(key as keyof typeof ROLE_TEMPLATES)
-                    }
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleToggleAll(false)}
+                  disabled={disabled || noneEnabled}
+                  className="gap-1.5"
+                >
+                  <X size={14} />
+                  <span className="hidden sm:inline">Tout desactiver</span>
+                </Button>
+                {permissions && Object.keys(permissions).length > 0 && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleResetAll}
+                        disabled={disabled}
+                        className="text-muted-foreground gap-1.5"
+                        aria-label="Reinitialiser les permissions"
+                      >
+                        <RotateCcw size={14} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent sideOffset={6}>
+                      Reinitialiser les permissions
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
+            <div className="relative min-w-0 flex-1">
+              <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+              <Input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Rechercher une permission, un module ou une cle..."
+                className="h-9 bg-[#12171E] pl-9"
+              />
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {FILTER_OPTIONS.map((filter) => {
+                const FilterIcon = filter.icon;
+                const isActive = permissionFilter === filter.value;
+
+                return (
+                  <Button
+                    key={filter.value}
+                    type="button"
+                    variant={isActive ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setPermissionFilter(filter.value)}
+                    className={cn(
+                      'h-8 gap-1.5',
+                      isActive && '[&>svg]:text-primary font-medium',
+                    )}
                   >
-                    {template.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {/* Global toggle buttons */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleToggleAll(true)}
-              disabled={disabled || allEnabled}
-              className="gap-1.5"
-            >
-              <Check size={14} />
-              <span className="hidden sm:inline">Tout activer</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleToggleAll(false)}
-              disabled={disabled || noneEnabled}
-              className="gap-1.5"
-            >
-              <X size={14} />
-              <span className="hidden sm:inline">Tout desactiver</span>
-            </Button>
-            {/* Reset button */}
-            {permissions && Object.keys(permissions).length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleResetAll}
-                disabled={disabled}
-                className="text-muted-foreground gap-1.5"
-              >
-                <RotateCcw size={14} />
-              </Button>
-            )}
+                    <FilterIcon className="size-3.5" />
+                    {filter.label}
+                  </Button>
+                );
+              })}
+            </div>
           </div>
         </div>
         {/* Permission Categories */}
         <div className="space-y-3">
-          {PERMISSION_CATEGORIES.map((category) => {
+          {visibleCategories.map((category) => {
             const Icon = iconMap[category.icon] || LayoutDashboard;
             const colors = colorClasses[category.color] ?? defaultColorConfig;
-            const isOpen = openCategory === category.key;
+            const isOpen = hasActiveFilters || openCategories.has(category.key);
             const { enabled, total } = countCategoryPermissions(
               category.key,
               effectivePermissions,
             );
             const categoryAllEnabled = enabled === total;
             const categoryNoneEnabled = enabled === 0;
+            const categoryIconClassName = categoryAllEnabled
+              ? 'bg-primary/10 text-primary'
+              : categoryNoneEnabled
+                ? 'bg-muted text-muted-foreground'
+                : `${colors.bg} ${colors.icon}`;
 
             return (
               <Collapsible
                 key={category.key}
                 open={isOpen}
-                onOpenChange={() => toggleCategory(category.key)}
+                onOpenChange={(open) =>
+                  handleCategoryOpenChange(category.key, open)
+                }
               >
                 <div
                   className={cn(
-                    'border-border overflow-hidden rounded-lg border transition-all',
-                    isOpen && `ring-1 ${colors.ring}`,
+                    'border-border/70 overflow-hidden rounded-lg border bg-[#12171E] transition-all',
+                    isOpen &&
+                      'border-primary/30 ring-primary/20 bg-[#192132] ring-1',
                   )}
                 >
                   {/* Category Header */}
@@ -293,39 +495,44 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                     <Button
                       type="button"
                       variant="ghost"
-                      disabled={disabled}
                       className={cn(
                         'h-auto w-full justify-between rounded-none p-3 text-left',
                         'hover:bg-accent/60',
-                        isOpen && 'border-border border-b',
+                        isOpen && 'border-primary/20 border-b',
                       )}
                     >
                       <div className="flex items-center gap-3">
                         <div
                           className={cn(
                             'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
-                            colors.bg,
+                            categoryIconClassName,
                           )}
                         >
-                          <Icon size={20} className={colors.icon} />
+                          <Icon size={20} />
                         </div>
-                        <div>
-                          <span className="text-foreground font-medium">
+                        <div className="min-w-0">
+                          <span className="text-foreground block truncate font-medium">
                             {category.label}
                           </span>
-                          <p className="text-muted-foreground text-xs">
+                          <p className="text-muted-foreground truncate text-xs">
                             {category.description}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex shrink-0 items-center gap-2">
+                        {hasActiveFilters && (
+                          <Badge variant="outline" className="text-xs">
+                            {category.permissions.length} affichee
+                            {category.permissions.length > 1 ? 's' : ''}
+                          </Badge>
+                        )}
                         <Badge
                           variant="secondary"
                           className={cn(
                             'text-xs',
-                            categoryAllEnabled &&
-                              'bg-emerald-500/10 text-emerald-400',
-                            categoryNoneEnabled && 'bg-red-500/10 text-red-400',
+                            categoryAllEnabled && 'bg-primary/10 text-primary',
+                            categoryNoneEnabled &&
+                              'bg-muted text-muted-foreground',
                           )}
                         >
                           {enabled}/{total}
@@ -346,7 +553,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                       {/* Quick toggle all in category */}
                       <div className="border-border mb-3 flex items-center justify-end gap-2 border-b pb-3">
                         <span className="text-muted-foreground text-xs">
-                          Tout :
+                          Module :
                         </span>
                         <Button
                           variant="ghost"
@@ -374,28 +581,82 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                         </Button>
                       </div>
                       {/* Permissions list */}
-                      <div className="space-y-2">
+                      <div className="grid gap-2 xl:grid-cols-2">
                         {category.permissions.map((perm) => {
                           const isEnabled =
-                            effectivePermissions[perm.key] ?? false;
+                            effectivePermissionsMap.get(perm.key) ?? false;
+                          const isCustom = customPermissionKeys.has(perm.key);
+                          const tone = getPermissionTone(perm.key);
+                          const toneLabel = getPermissionToneLabel(tone);
 
                           return (
                             <div
                               key={perm.key}
                               className={cn(
-                                'flex items-center justify-between rounded-lg border p-3 transition-all',
-                                isEnabled
-                                  ? 'border-emerald-500/20 bg-emerald-500/10'
-                                  : 'border-border bg-background/35',
+                                'flex items-center justify-between gap-3 rounded-lg border p-2.5 transition-all',
+                                getPermissionRowClassName(isEnabled, tone),
                               )}
                             >
-                              <div className="flex-1 pr-4">
-                                <span className="text-foreground text-sm font-medium">
-                                  {perm.label}
+                              <div className="flex min-w-0 flex-1 gap-2.5">
+                                <span
+                                  className={cn(
+                                    'flex size-7 shrink-0 items-center justify-center rounded-md',
+                                    getPermissionIconClassName(isEnabled, tone),
+                                  )}
+                                >
+                                  {isEnabled ? (
+                                    <Check className="size-4" />
+                                  ) : (
+                                    <X className="size-4" />
+                                  )}
                                 </span>
-                                <p className="text-muted-foreground text-xs">
-                                  {perm.description}
-                                </p>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    <span className="text-foreground text-sm font-medium">
+                                      {perm.label}
+                                    </span>
+                                    {toneLabel && (
+                                      <Badge
+                                        variant="outline"
+                                        className={cn(
+                                          'text-[10px]',
+                                          tone === 'sensitive' &&
+                                            'border-amber-500/40 text-amber-400',
+                                          tone === 'critical' &&
+                                            'border-destructive/40 text-destructive',
+                                        )}
+                                      >
+                                        {toneLabel}
+                                      </Badge>
+                                    )}
+                                    {isCustom && (
+                                      <Badge
+                                        variant="outline"
+                                        className="border-primary/40 text-primary text-[10px]"
+                                      >
+                                        Personnalisee
+                                      </Badge>
+                                    )}
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span
+                                          className="text-muted-foreground/80 border-border/70 inline-flex h-5 cursor-help items-center rounded border px-1.5 font-mono text-[10px]"
+                                          title={perm.key}
+                                        >
+                                          Cle
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent sideOffset={6}>
+                                        <span className="font-mono">
+                                          {perm.key}
+                                        </span>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </div>
+                                  <p className="text-muted-foreground mt-1 text-xs">
+                                    {perm.description}
+                                  </p>
+                                </div>
                               </div>
                               <Switch
                                 checked={isEnabled}
@@ -403,6 +664,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                                   handleToggle(perm.key, checked)
                                 }
                                 disabled={disabled}
+                                aria-label={`${isEnabled ? 'Desactiver' : 'Activer'} ${perm.label}`}
                               />
                             </div>
                           );
@@ -414,6 +676,18 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
               </Collapsible>
             );
           })}
+          {visibleCategories.length === 0 && (
+            <div className="border-border/70 bg-background/35 flex flex-col items-center justify-center rounded-lg border p-8 text-center">
+              <Search className="text-muted-foreground size-8" />
+              <p className="text-foreground mt-3 text-sm font-medium">
+                Aucune permission trouvee
+              </p>
+              <p className="text-muted-foreground mt-1 max-w-sm text-xs">
+                Ajustez la recherche ou changez de filtre pour afficher
+                d&apos;autres permissions.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
