@@ -1,27 +1,56 @@
 'use client';
 
-import { Loader2, Mail, Save, User } from 'lucide-react';
+import {
+  AlertTriangle,
+  Briefcase,
+  Building2,
+  CalendarDays,
+  Globe2,
+  Loader2,
+  Mail,
+  MessageCircle,
+  Phone,
+  Save,
+  User,
+} from 'lucide-react';
 import React, { type FC } from 'react';
 
+import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
+import { Textarea } from '$ui/textarea';
 
-type ProfileForm = {
+export type StaffProfileForm = {
+  department: string;
+  discordId: string;
+  displayName: string;
+  internalNote: string;
+  jobTitle: string;
+  joinedAt: string;
+  phone: string;
+  timezone: string;
+};
+
+export type ProfileForm = {
   email: string;
   firstName: string;
   lastName: string;
+  staffProfile: StaffProfileForm;
+};
+
+type ProfileErrors = {
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  staffProfile: Record<keyof StaffProfileForm, string | null>;
 };
 
 type UserProfileTabProps = {
   canEdit: boolean;
   canSave: boolean;
-  errors: {
-    email: string | null;
-    firstName: string | null;
-    lastName: string | null;
-  };
+  errors: ProfileErrors;
   form: ProfileForm;
   hasChanges: boolean;
   isSaving: boolean;
@@ -29,6 +58,17 @@ type UserProfileTabProps = {
   onSave: () => void;
   setForm: (form: ProfileForm) => void;
 };
+
+const inputClassName = 'border-border/80 bg-[#0D121B]';
+
+const FieldError: FC<{ children: React.ReactNode; id: string }> = ({
+  children,
+  id,
+}) => (
+  <p id={id} className="text-destructive text-xs">
+    {children}
+  </p>
+);
 
 const SectionTitle: FC<{
   children: React.ReactNode;
@@ -42,6 +82,17 @@ const SectionTitle: FC<{
   </h3>
 );
 
+const ProfilePanel: FC<{
+  children: React.ReactNode;
+  icon: React.ReactNode;
+  title: string;
+}> = ({ children, icon, title }) => (
+  <section className="border-border/60 space-y-3 rounded-md border bg-[#12171E] p-3">
+    <SectionTitle icon={icon}>{title}</SectionTitle>
+    {children}
+  </section>
+);
+
 export const UserProfileTab: FC<UserProfileTabProps> = ({
   canEdit,
   canSave,
@@ -53,129 +104,423 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   onSave,
   setForm,
 }) => {
+  const updateStaffProfile = (
+    field: keyof StaffProfileForm,
+    value: string,
+  ): void => {
+    setForm({
+      ...form,
+      staffProfile: {
+        ...form.staffProfile,
+        [field]: value,
+      },
+    });
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    onSave();
+  };
+
   return (
-    <Card className="border-border/70 overflow-hidden rounded-lg bg-[#192132] py-0">
-      <CardHeader className="border-border/60 border-b bg-[#212A3A] p-3 sm:p-4">
-        <CardTitle className="text-sm">Profil utilisateur</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 p-3 sm:p-4">
-        <div className="border-border/60 space-y-3 rounded-md border bg-[#12171E] p-3">
-          <SectionTitle icon={<User className="size-3.5" />}>
-            Identite
-          </SectionTitle>
-          <div className="grid gap-3 sm:grid-cols-2">
+    <form onSubmit={handleSubmit}>
+      <Card className="border-border/70 overflow-hidden rounded-lg bg-[#192132] py-0">
+        <CardHeader className="border-border/60 flex-row items-center justify-between border-b bg-[#212A3A] p-3 sm:p-4">
+          <div>
+            <CardTitle className="text-sm">Profil staff</CardTitle>
+          </div>
+          {!canEdit && (
+            <Badge
+              variant="outline"
+              className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
+            >
+              Lecture seule
+            </Badge>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-3 p-3 sm:p-4">
+          <div className="grid gap-3 xl:grid-cols-2">
+            <ProfilePanel icon={<User className="size-3.5" />} title="Identite">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-muted-foreground text-xs" required>
+                    Prenom
+                  </Label>
+                  <Input
+                    id="user-first-name"
+                    value={form.firstName}
+                    maxLength={50}
+                    autoComplete="given-name"
+                    placeholder="Jean"
+                    onChange={(event) =>
+                      setForm({ ...form, firstName: event.target.value })
+                    }
+                    disabled={!canEdit}
+                    aria-invalid={!!errors.firstName}
+                    aria-describedby={
+                      errors.firstName ? 'user-first-name-error' : undefined
+                    }
+                    className={inputClassName}
+                  />
+                  {errors.firstName && (
+                    <FieldError id="user-first-name-error">
+                      {errors.firstName}
+                    </FieldError>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-muted-foreground text-xs" required>
+                    Nom
+                  </Label>
+                  <Input
+                    id="user-last-name"
+                    value={form.lastName}
+                    maxLength={50}
+                    autoComplete="family-name"
+                    placeholder="Dupont"
+                    onChange={(event) =>
+                      setForm({ ...form, lastName: event.target.value })
+                    }
+                    disabled={!canEdit}
+                    aria-invalid={!!errors.lastName}
+                    aria-describedby={
+                      errors.lastName ? 'user-last-name-error' : undefined
+                    }
+                    className={inputClassName}
+                  />
+                  {errors.lastName && (
+                    <FieldError id="user-last-name-error">
+                      {errors.lastName}
+                    </FieldError>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs">
+                  Nom affiche
+                </Label>
+                <Input
+                  id="user-display-name"
+                  value={form.staffProfile.displayName}
+                  maxLength={80}
+                  placeholder="Coach Jean"
+                  onChange={(event) =>
+                    updateStaffProfile('displayName', event.target.value)
+                  }
+                  disabled={!canEdit}
+                  aria-invalid={!!errors.staffProfile.displayName}
+                  aria-describedby={
+                    errors.staffProfile.displayName
+                      ? 'user-display-name-error'
+                      : undefined
+                  }
+                  className={inputClassName}
+                />
+                {errors.staffProfile.displayName && (
+                  <FieldError id="user-display-name-error">
+                    {errors.staffProfile.displayName}
+                  </FieldError>
+                )}
+              </div>
+            </ProfilePanel>
+            <ProfilePanel icon={<Mail className="size-3.5" />} title="Contact">
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs" required>
+                  Email de connexion
+                </Label>
+                <Input
+                  id="user-email"
+                  type="email"
+                  value={form.email}
+                  maxLength={254}
+                  autoComplete="email"
+                  placeholder="jean.dupont@exemple.fr"
+                  onChange={(event) =>
+                    setForm({ ...form, email: event.target.value })
+                  }
+                  disabled={!canEdit}
+                  aria-invalid={!!errors.email}
+                  aria-describedby={
+                    errors.email ? 'user-email-error' : 'user-email-hint'
+                  }
+                  className={inputClassName}
+                />
+                {errors.email ? (
+                  <FieldError id="user-email-error">{errors.email}</FieldError>
+                ) : (
+                  <div
+                    id="user-email-hint"
+                    className="text-muted-foreground flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-2.5 py-2 text-xs"
+                  >
+                    <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-400" />
+                    <span>
+                      Modifier cet email change l&apos;identifiant utilise a la
+                      connexion.
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-muted-foreground text-xs">
+                    ID Discord
+                  </Label>
+                  <div className="relative">
+                    <MessageCircle className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+                    <Input
+                      id="user-discord"
+                      value={form.staffProfile.discordId}
+                      maxLength={20}
+                      inputMode="numeric"
+                      placeholder="123456789012345678"
+                      onChange={(event) =>
+                        updateStaffProfile('discordId', event.target.value)
+                      }
+                      disabled={!canEdit}
+                      aria-invalid={!!errors.staffProfile.discordId}
+                      aria-describedby={
+                        errors.staffProfile.discordId
+                          ? 'user-discord-error'
+                          : undefined
+                      }
+                      className={`${inputClassName} pl-9`}
+                    />
+                  </div>
+                  {errors.staffProfile.discordId && (
+                    <FieldError id="user-discord-error">
+                      {errors.staffProfile.discordId}
+                    </FieldError>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-muted-foreground text-xs">
+                    Telephone
+                  </Label>
+                  <div className="relative">
+                    <Phone className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+                    <Input
+                      id="user-phone"
+                      type="tel"
+                      value={form.staffProfile.phone}
+                      maxLength={32}
+                      autoComplete="tel"
+                      placeholder="+33 6 12 34 56 78"
+                      onChange={(event) =>
+                        updateStaffProfile('phone', event.target.value)
+                      }
+                      disabled={!canEdit}
+                      aria-invalid={!!errors.staffProfile.phone}
+                      aria-describedby={
+                        errors.staffProfile.phone
+                          ? 'user-phone-error'
+                          : undefined
+                      }
+                      className={`${inputClassName} pl-9`}
+                    />
+                  </div>
+                  {errors.staffProfile.phone && (
+                    <FieldError id="user-phone-error">
+                      {errors.staffProfile.phone}
+                    </FieldError>
+                  )}
+                </div>
+              </div>
+            </ProfilePanel>
+          </div>
+          <ProfilePanel
+            icon={<Briefcase className="size-3.5" />}
+            title="Organisation"
+          >
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs">Poste</Label>
+                <div className="relative">
+                  <Briefcase className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+                  <Input
+                    id="user-job-title"
+                    value={form.staffProfile.jobTitle}
+                    maxLength={80}
+                    placeholder="Responsable finances"
+                    onChange={(event) =>
+                      updateStaffProfile('jobTitle', event.target.value)
+                    }
+                    disabled={!canEdit}
+                    aria-invalid={!!errors.staffProfile.jobTitle}
+                    aria-describedby={
+                      errors.staffProfile.jobTitle
+                        ? 'user-job-title-error'
+                        : undefined
+                    }
+                    className={`${inputClassName} pl-9`}
+                  />
+                </div>
+                {errors.staffProfile.jobTitle && (
+                  <FieldError id="user-job-title-error">
+                    {errors.staffProfile.jobTitle}
+                  </FieldError>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs">Pole</Label>
+                <div className="relative">
+                  <Building2 className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+                  <Input
+                    id="user-department"
+                    value={form.staffProfile.department}
+                    maxLength={80}
+                    placeholder="Direction"
+                    onChange={(event) =>
+                      updateStaffProfile('department', event.target.value)
+                    }
+                    disabled={!canEdit}
+                    aria-invalid={!!errors.staffProfile.department}
+                    aria-describedby={
+                      errors.staffProfile.department
+                        ? 'user-department-error'
+                        : undefined
+                    }
+                    className={`${inputClassName} pl-9`}
+                  />
+                </div>
+                {errors.staffProfile.department && (
+                  <FieldError id="user-department-error">
+                    {errors.staffProfile.department}
+                  </FieldError>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs">
+                  Fuseau horaire
+                </Label>
+                <div className="relative">
+                  <Globe2 className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+                  <Input
+                    id="user-timezone"
+                    value={form.staffProfile.timezone}
+                    maxLength={64}
+                    placeholder="Europe/Paris"
+                    onChange={(event) =>
+                      updateStaffProfile('timezone', event.target.value)
+                    }
+                    disabled={!canEdit}
+                    aria-invalid={!!errors.staffProfile.timezone}
+                    aria-describedby={
+                      errors.staffProfile.timezone
+                        ? 'user-timezone-error'
+                        : undefined
+                    }
+                    className={`${inputClassName} pl-9`}
+                  />
+                </div>
+                {errors.staffProfile.timezone && (
+                  <FieldError id="user-timezone-error">
+                    {errors.staffProfile.timezone}
+                  </FieldError>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs">
+                  Arrivee staff
+                </Label>
+                <div className="relative">
+                  <CalendarDays className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+                  <Input
+                    id="user-joined-at"
+                    type="date"
+                    value={form.staffProfile.joinedAt}
+                    placeholder="2026-06-21"
+                    onChange={(event) =>
+                      updateStaffProfile('joinedAt', event.target.value)
+                    }
+                    disabled={!canEdit}
+                    aria-invalid={!!errors.staffProfile.joinedAt}
+                    aria-describedby={
+                      errors.staffProfile.joinedAt
+                        ? 'user-joined-at-error'
+                        : undefined
+                    }
+                    className={`${inputClassName} pl-9`}
+                  />
+                </div>
+                {errors.staffProfile.joinedAt && (
+                  <FieldError id="user-joined-at-error">
+                    {errors.staffProfile.joinedAt}
+                  </FieldError>
+                )}
+              </div>
+            </div>
+          </ProfilePanel>
+          <ProfilePanel
+            icon={<MessageCircle className="size-3.5" />}
+            title="Note interne"
+          >
             <div className="space-y-1.5">
-              <Label className="text-muted-foreground text-xs" required>
-                Prenom
-              </Label>
-              <Input
-                id="user-first-name"
-                value={form.firstName}
+              <Textarea
+                id="user-internal-note"
+                value={form.staffProfile.internalNote}
+                maxLength={1000}
+                rows={4}
+                placeholder="Informations utiles pour le staff, contexte interne, responsabilites ou remarques administratives."
                 onChange={(event) =>
-                  setForm({ ...form, firstName: event.target.value })
+                  updateStaffProfile('internalNote', event.target.value)
                 }
                 disabled={!canEdit}
-                aria-invalid={!!errors.firstName}
+                aria-invalid={!!errors.staffProfile.internalNote}
                 aria-describedby={
-                  errors.firstName ? 'user-first-name-error' : undefined
+                  errors.staffProfile.internalNote
+                    ? 'user-internal-note-error'
+                    : 'user-internal-note-count'
                 }
-                className="border-border bg-[#12171E]"
+                className={`${inputClassName} min-h-24 resize-y`}
               />
-              {errors.firstName && (
-                <p
-                  id="user-first-name-error"
-                  className="text-destructive text-xs"
+              <div className="flex items-center justify-between gap-3">
+                {errors.staffProfile.internalNote ? (
+                  <FieldError id="user-internal-note-error">
+                    {errors.staffProfile.internalNote}
+                  </FieldError>
+                ) : (
+                  <span />
+                )}
+                <span
+                  id="user-internal-note-count"
+                  className="text-muted-foreground ml-auto text-xs"
                 >
-                  {errors.firstName}
-                </p>
-              )}
+                  {form.staffProfile.internalNote.length}/1000
+                </span>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-muted-foreground text-xs" required>
-                Nom
-              </Label>
-              <Input
-                id="user-last-name"
-                value={form.lastName}
-                onChange={(event) =>
-                  setForm({ ...form, lastName: event.target.value })
-                }
-                disabled={!canEdit}
-                aria-invalid={!!errors.lastName}
-                aria-describedby={
-                  errors.lastName ? 'user-last-name-error' : undefined
-                }
-                className="border-border bg-[#12171E]"
-              />
-              {errors.lastName && (
-                <p
-                  id="user-last-name-error"
-                  className="text-destructive text-xs"
-                >
-                  {errors.lastName}
-                </p>
+          </ProfilePanel>
+        </CardContent>
+        <CardFooter className="border-border/60 justify-between gap-3 border-t bg-[#212A3A] p-3 sm:p-4">
+          <p className="text-muted-foreground text-xs">
+            {hasChanges ? 'Modifications non enregistrees' : 'A jour'}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onCancel}
+              disabled={!hasChanges || isSaving}
+            >
+              Annuler
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isSaving || !canSave}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {isSaving ? (
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-1.5 h-4 w-4" />
               )}
-            </div>
+              Enregistrer
+            </Button>
           </div>
-        </div>
-        <div className="border-border/60 space-y-3 rounded-md border bg-[#12171E] p-3">
-          <SectionTitle icon={<Mail className="size-3.5" />}>
-            Contact
-          </SectionTitle>
-          <div className="space-y-1.5">
-            <Label className="text-muted-foreground text-xs" required>
-              Email
-            </Label>
-            <Input
-              id="user-email"
-              type="email"
-              value={form.email}
-              onChange={(event) =>
-                setForm({ ...form, email: event.target.value })
-              }
-              disabled={!canEdit}
-              aria-invalid={!!errors.email}
-              aria-describedby={errors.email ? 'user-email-error' : undefined}
-              className="border-border bg-[#12171E]"
-            />
-            {errors.email && (
-              <p id="user-email-error" className="text-destructive text-xs">
-                {errors.email}
-              </p>
-            )}
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="border-border/60 justify-between gap-3 border-t bg-[#212A3A] p-3 sm:p-4">
-        <p className="text-muted-foreground text-xs">
-          {hasChanges ? 'Modifications non enregistrees' : 'A jour'}
-        </p>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onCancel}
-            disabled={!hasChanges || isSaving}
-          >
-            Annuler
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={onSave}
-            disabled={isSaving || !canSave}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            {isSaving ? (
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="mr-1.5 h-4 w-4" />
-            )}
-            Enregistrer
-          </Button>
-        </div>
-      </CardFooter>
-    </Card>
+        </CardFooter>
+      </Card>
+    </form>
   );
 };

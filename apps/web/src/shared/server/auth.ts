@@ -9,6 +9,7 @@ import type { Prisma } from '@prisma/client';
 import {
   type AuditAction,
   type AuditCategory,
+  type StaffProfile,
   type User,
   type UserRole,
 } from '@repo/database';
@@ -177,7 +178,9 @@ const validateSessionToken = async (
 
   const session = await prisma.session.findFirst({
     include: {
-      user: true,
+      user: {
+        include: { staffProfile: true },
+      },
     },
     where: {
       OR: [{ token: hashedToken }, { token }],
@@ -210,20 +213,7 @@ const validateSessionToken = async (
     });
   }
 
-  const user: UserType = {
-    createdAt: session.user.createdAt,
-    email: session.user.email,
-    firstName: session.user.firstName,
-    id: session.user.id,
-    isActive: session.user.isActive,
-    isProtected: session.user.isProtected,
-    lastLoginAt: session.user.lastLoginAt,
-    lastName: session.user.lastName,
-    mustChangePassword: session.user.mustChangePassword,
-    passwordChangedAt: session.user.passwordChangedAt,
-    permissions: session.user.permissions as PermissionsData | null,
-    role: session.user.role,
-  };
+  const user = mapUserToUserType(session.user);
 
   return {
     session: {
@@ -557,7 +547,42 @@ export const getUserById = async (id: string): Promise<User | null> => {
 /**
  * Map User to UserType (client-safe)
  */
-export const mapUserToUserType = (user: User): UserType => ({
+type UserWithOptionalStaffProfile = User & {
+  staffProfile?: StaffProfile | null;
+};
+
+type MapUserOptions = {
+  includeStaffInternalNote?: boolean;
+};
+
+const mapStaffProfileToClient = (
+  staffProfile: StaffProfile | null | undefined,
+  options: MapUserOptions = {},
+): UserType['staffProfile'] => {
+  if (!staffProfile) return null;
+
+  return {
+    createdAt: staffProfile.createdAt,
+    department: staffProfile.department,
+    discordId: staffProfile.discordId,
+    displayName: staffProfile.displayName,
+    id: staffProfile.id,
+    internalNote: options.includeStaffInternalNote
+      ? staffProfile.internalNote
+      : null,
+    jobTitle: staffProfile.jobTitle,
+    joinedAt: staffProfile.joinedAt,
+    phone: staffProfile.phone,
+    timezone: staffProfile.timezone,
+    updatedAt: staffProfile.updatedAt,
+    userId: staffProfile.userId,
+  };
+};
+
+export const mapUserToUserType = (
+  user: UserWithOptionalStaffProfile,
+  options: MapUserOptions = {},
+): UserType => ({
   createdAt: user.createdAt,
   email: user.email,
   firstName: user.firstName,
@@ -570,6 +595,7 @@ export const mapUserToUserType = (user: User): UserType => ({
   passwordChangedAt: user.passwordChangedAt,
   permissions: user.permissions as PermissionsData | null,
   role: user.role,
+  staffProfile: mapStaffProfileToClient(user.staffProfile, options),
 });
 
 // ============================================

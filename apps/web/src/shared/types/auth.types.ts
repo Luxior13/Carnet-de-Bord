@@ -14,6 +14,21 @@ export type SessionType = {
   userId: string;
 };
 
+export type StaffProfileType = {
+  createdAt: Date;
+  department: string | null;
+  discordId: string | null;
+  displayName: string | null;
+  id: string;
+  internalNote: string | null;
+  jobTitle: string | null;
+  joinedAt: Date | null;
+  phone: string | null;
+  timezone: string | null;
+  updatedAt: Date;
+  userId: string;
+};
+
 // User type for client (without sensitive data)
 export type UserType = {
   createdAt: Date;
@@ -28,6 +43,7 @@ export type UserType = {
   passwordChangedAt: Date | null;
   permissions: PermissionsData | null;
   role: UserRole;
+  staffProfile: StaffProfileType | null;
 };
 
 // Full user type (server-side)
@@ -74,6 +90,16 @@ export type UpdateUserRequest = {
   lastName?: string;
   permissions?: PermissionsData | null;
   role?: UserRole;
+  staffProfile?: {
+    department?: string | null;
+    discordId?: string | null;
+    displayName?: string | null;
+    internalNote?: string | null;
+    jobTitle?: string | null;
+    joinedAt?: Date | string | null;
+    phone?: string | null;
+    timezone?: string | null;
+  };
 };
 
 // User statistics

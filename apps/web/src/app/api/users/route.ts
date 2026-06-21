@@ -135,7 +135,7 @@ export async function GET(
           totalPages: Math.ceil(total / limit),
         },
         stats,
-        users: users.map(mapUserToUserType),
+        users: users.map((user) => mapUserToUserType(user)),
       },
       success: true,
     });

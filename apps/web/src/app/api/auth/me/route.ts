@@ -88,6 +88,7 @@ export async function PATCH(
         firstName: firstName.trim(),
         lastName: lastName.trim(),
       },
+      include: { staffProfile: true },
       where: { id: user.id },
     });
 

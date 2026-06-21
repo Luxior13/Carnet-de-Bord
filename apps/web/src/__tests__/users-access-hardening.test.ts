@@ -36,14 +36,16 @@ vi.mock('$server/auth', () => ({
   createUser: mockCreateUser,
   generateTemporaryPassword: mockGenerateTemporaryPassword,
   invalidateAllUserSessions: mockInvalidateAllUserSessions,
-  mapUserToUserType: (user: unknown) => user,
+  mapUserToUserType: (user: unknown): unknown => user,
 }));
 
 vi.mock('$server/prisma', () => ({
   prisma: mockPrisma,
 }));
 
-const buildUser = (overrides: Record<string, unknown> = {}) => ({
+const buildUser = (
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> => ({
   createdAt: new Date('2026-03-01T00:00:00.000Z'),
   deletedAt: null,
   email: 'user@example.com',
@@ -148,6 +150,81 @@ describe('users access hardening', () => {
       expect.objectContaining({
         action: 'PERMISSION_UPDATE',
         category: 'PERMISSION',
+        userId: 'viewer-1',
+      }),
+    );
+  });
+
+  it('updates staff profile fields with users:update only', async () => {
+    const existingUser = buildUser({ id: 'target-1', staffProfile: null });
+    const updatedUser = {
+      ...existingUser,
+      staffProfile: {
+        createdAt: new Date('2026-03-01T00:00:00.000Z'),
+        department: 'Staff',
+        discordId: null,
+        displayName: 'Coach Lux',
+        id: 'staff-profile-1',
+        internalNote: null,
+        jobTitle: null,
+        joinedAt: null,
+        phone: null,
+        timezone: null,
+        updatedAt: new Date('2026-03-01T00:00:00.000Z'),
+        userId: 'target-1',
+      },
+    };
+
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+    mockPrisma.user.update.mockResolvedValue(updatedUser);
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: JSON.stringify({
+          staffProfile: {
+            department: ' Staff ',
+            displayName: ' Coach Lux ',
+          },
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(mockRequirePermission.mock.calls.map(([, key]) => key)).toEqual([
+      PERMISSIONS.USERS.UPDATE,
+    ]);
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          staffProfile: {
+            upsert: {
+              create: {
+                department: 'Staff',
+                displayName: 'Coach Lux',
+              },
+              update: {
+                department: 'Staff',
+                displayName: 'Coach Lux',
+              },
+            },
+          },
+        }),
+        include: { staffProfile: true },
+        where: { id: 'target-1' },
+      }),
+    );
+    expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'USER_UPDATE',
+        category: 'USER',
+        metadata: expect.objectContaining({
+          changes: ['staffProfile.department', 'staffProfile.displayName'],
+        }),
         userId: 'viewer-1',
       }),
     );

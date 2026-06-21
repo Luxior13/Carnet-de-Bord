@@ -232,6 +232,7 @@ export async function POST(
       passwordChangedAt: result.user.passwordChangedAt,
       permissions: result.user.permissions as Record<string, boolean> | null,
       role: result.user.role,
+      staffProfile: null,
     };
 
     return NextResponse.json({

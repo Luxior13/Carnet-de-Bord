@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   emailSchema,
   optionalEmailSchema,
+  optionalProfileString,
   optionalTrimmedString,
+  optionalTrimmedStringMax,
   phoneSchema,
   trimmedString,
   trimmedStringMin,
@@ -144,6 +146,40 @@ describe('optionalTrimmedString', () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data).toBe(undefined);
+    }
+  });
+});
+
+describe('optionalTrimmedStringMax', () => {
+  it('accepts empty optional strings', () => {
+    const schema = optionalTrimmedStringMax(5);
+    const result = schema.safeParse(undefined);
+    expect(result.success).toBe(true);
+  });
+
+  it('trims and validates maximum length', () => {
+    const schema = optionalTrimmedStringMax(5);
+    const result = schema.safeParse('  abcde  ');
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toBe('abcde');
+    }
+  });
+
+  it('rejects values above maximum length', () => {
+    const schema = optionalTrimmedStringMax(5);
+    const result = schema.safeParse('abcdef');
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('optionalProfileString', () => {
+  it('stores blank strings as null', () => {
+    const schema = optionalProfileString(20);
+    const result = schema.safeParse('   ');
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toBe(null);
     }
   });
 });

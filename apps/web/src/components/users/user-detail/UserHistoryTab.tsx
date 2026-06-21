@@ -280,6 +280,14 @@ const FIELD_LABELS = new Map<string, string>([
   ['permissions', 'Permissions'],
   ['role', 'Role'],
   ['sortOrder', 'Ordre'],
+  ['staffProfile.department', 'Pole'],
+  ['staffProfile.discordId', 'ID Discord'],
+  ['staffProfile.displayName', 'Nom affiche'],
+  ['staffProfile.internalNote', 'Note interne'],
+  ['staffProfile.jobTitle', 'Poste'],
+  ['staffProfile.joinedAt', 'Arrivee staff'],
+  ['staffProfile.phone', 'Telephone'],
+  ['staffProfile.timezone', 'Fuseau horaire'],
 ]);
 
 // Format value for display
@@ -296,6 +304,14 @@ const formatChangeValue = (key: string, value: unknown): string => {
 
   if (key === 'amount') {
     return `${Number(value).toFixed(2)} EUR`;
+  }
+
+  if (key === 'staffProfile.joinedAt') {
+    return new Date(value as string).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
   }
 
   if (key === 'permissions') {

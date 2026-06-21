@@ -16,10 +16,80 @@ import {
   ErrorCode,
 } from '$types/api.types';
 import type { UserType } from '$types/auth.types';
-import { optionalEmailSchema, optionalTrimmedString } from '$utils/zod.utils';
+import {
+  optionalEmailSchema,
+  optionalProfileString,
+  optionalTrimmedStringMax,
+} from '$utils/zod.utils';
 
 type RouteParams = {
   params: Promise<{ id: string }>;
+};
+
+const optionalProfileDateSchema = z
+  .string()
+  .optional()
+  .nullable()
+  .transform((value) => {
+    if (value === undefined) return undefined;
+    if (value === null) return null;
+
+    const trimmedValue = value.trim();
+
+    return trimmedValue ? trimmedValue : null;
+  })
+  .refine(
+    (value) =>
+      value === undefined || value === null || !Number.isNaN(Date.parse(value)),
+    { message: 'Date invalide' },
+  )
+  .transform((value) =>
+    value === undefined || value === null
+      ? value
+      : new Date(`${value}T00:00:00.000Z`),
+  );
+
+const staffProfileSchema = z
+  .object({
+    department: optionalProfileString(80, 'Pole trop long'),
+    discordId: optionalProfileString(20, 'ID Discord trop long').refine(
+      (value) =>
+        value === undefined || value === null || /^\d{17,20}$/.test(value),
+      { message: 'ID Discord invalide' },
+    ),
+    displayName: optionalProfileString(80, 'Nom affiche trop long'),
+    internalNote: optionalProfileString(1000, 'Note interne trop longue'),
+    jobTitle: optionalProfileString(80, 'Poste trop long'),
+    joinedAt: optionalProfileDateSchema,
+    phone: optionalProfileString(32, 'Telephone trop long'),
+    timezone: optionalProfileString(64, 'Fuseau horaire trop long'),
+  })
+  .optional();
+
+const STAFF_PROFILE_FIELDS = [
+  'department',
+  'discordId',
+  'displayName',
+  'internalNote',
+  'jobTitle',
+  'joinedAt',
+  'phone',
+  'timezone',
+] as const;
+
+type StaffProfileField = (typeof STAFF_PROFILE_FIELDS)[number];
+
+const formatProfileAuditValue = (
+  field: StaffProfileField,
+  value: unknown,
+): string | null => {
+  if (value === undefined || value === null || value === '') return null;
+
+  if (field === 'joinedAt') {
+    return new Date(value as Date | string).toISOString().slice(0, 10);
+  }
+
+  return String(value);
 };
 
 // ============================================
@@ -43,6 +113,7 @@ export async function GET(
     if (!permCheck.success) return permCheck.response;
 
     const user = await prisma.user.findUnique({
+      include: { staffProfile: true },
       where: { deletedAt: null, id },
     });
 
@@ -60,7 +131,9 @@ export async function GET(
     }
 
     return NextResponse.json({
-      data: { user: mapUserToUserType(user) },
+      data: {
+        user: mapUserToUserType(user, { includeStaffInternalNote: true }),
+      },
       success: true,
     });
   } catch (error) {
@@ -73,15 +146,16 @@ export async function GET(
 // ============================================
 const updateUserSchema = z.object({
   email: optionalEmailSchema,
-  firstName: optionalTrimmedString.pipe(
+  firstName: optionalTrimmedStringMax(50, 'Prenom trop long').pipe(
     z.string().min(1, 'Prénom requis').optional().nullable(),
   ),
   isActive: z.boolean().optional(),
-  lastName: optionalTrimmedString.pipe(
+  lastName: optionalTrimmedStringMax(50, 'Nom trop long').pipe(
     z.string().min(1, 'Nom requis').optional().nullable(),
   ),
   permissions: z.record(z.string(), z.boolean()).nullable().optional(),
   role: z.enum(['ADMIN', 'USER']).optional(),
+  staffProfile: staffProfileSchema,
 });
 
 export async function PATCH(
@@ -114,15 +188,23 @@ export async function PATCH(
       );
     }
 
-    const { email, firstName, isActive, lastName, permissions, role } =
-      validation.data;
+    const {
+      email,
+      firstName,
+      isActive,
+      lastName,
+      permissions,
+      role,
+      staffProfile,
+    } = validation.data;
     const isPermissionsUpdate = permissions !== undefined;
     const isProfileUpdate =
       email !== undefined ||
       firstName !== undefined ||
       typeof isActive === 'boolean' ||
       lastName !== undefined ||
-      role !== undefined;
+      role !== undefined ||
+      staffProfile !== undefined;
 
     if (!isProfileUpdate && !isPermissionsUpdate) {
       return NextResponse.json(
@@ -155,6 +237,7 @@ export async function PATCH(
 
     // Get existing user
     const existingUser = await prisma.user.findUnique({
+      include: { staffProfile: true },
       where: { deletedAt: null, id },
     });
 
@@ -323,20 +406,57 @@ export async function PATCH(
         updateData.permissions = permissions;
       }
     }
+    if (staffProfile !== undefined) {
+      const staffProfileUpdateData: Record<string, Date | string | null> = {};
+
+      for (const field of STAFF_PROFILE_FIELDS) {
+        const nextValue = staffProfile[field];
+
+        if (nextValue === undefined) continue;
+
+        const previousValue = existingUser.staffProfile?.[field] ?? null;
+        const previousAuditValue = formatProfileAuditValue(
+          field,
+          previousValue,
+        );
+        const nextAuditValue = formatProfileAuditValue(field, nextValue);
+
+        if (previousAuditValue !== nextAuditValue) {
+          const auditKey = `staffProfile.${field}`;
+          beforeValues[auditKey] = previousAuditValue;
+          afterValues[auditKey] = nextAuditValue;
+          staffProfileUpdateData[field] = nextValue ?? null;
+        }
+      }
+
+      if (Object.keys(staffProfileUpdateData).length > 0) {
+        updateData.staffProfile = {
+          upsert: {
+            create: staffProfileUpdateData,
+            update: staffProfileUpdateData,
+          },
+        };
+      }
+    }
 
     // Only update if there are actual changes
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({
-        data: { user: mapUserToUserType(existingUser) },
+        data: {
+          user: mapUserToUserType(existingUser, {
+            includeStaffInternalNote: true,
+          }),
+        },
         success: true,
       });
     }
 
     const updatedUser = await prisma.user.update({
       data: updateData,
+      include: { staffProfile: true },
       where: { id },
     });
-    const changedKeys = Object.keys(updateData);
+    const changedKeys = Object.keys(afterValues);
     const hasAccessChange =
       changedKeys.includes('permissions') || changedKeys.includes('role');
 
@@ -395,7 +515,11 @@ export async function PATCH(
     }
 
     return NextResponse.json({
-      data: { user: mapUserToUserType(updatedUser) },
+      data: {
+        user: mapUserToUserType(updatedUser, {
+          includeStaffInternalNote: true,
+        }),
+      },
       success: true,
     });
   } catch (error) {

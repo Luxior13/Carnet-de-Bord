@@ -40,10 +40,40 @@ export const optionalTrimmedString = z
   .transform((val) => (val ? val.trim() : val));
 
 /**
+ * Optional/nullable trimmed string with maximum length validation.
+ */
+export function optionalTrimmedStringMax(
+  max: number,
+  message?: string,
+): z.ZodType<string | null | undefined> {
+  return optionalTrimmedString.refine(
+    (val) => val === undefined || val === null || val.length <= max,
+    {
+      message: message ?? `Maximum ${max} caracteres autorises`,
+    },
+  );
+}
+
+/**
+ * Optional profile field: trims values and stores empty strings as null.
+ */
+export function optionalProfileString(
+  max: number,
+  message?: string,
+): z.ZodType<string | null | undefined> {
+  return optionalTrimmedStringMax(max, message).transform((val) =>
+    val === '' ? null : val,
+  );
+}
+
+/**
  * Zod schema for required trimmed string with minimum length.
  * Validates after trimming.
  */
-export function trimmedStringMin(min: number, message?: string) {
+export function trimmedStringMin(
+  min: number,
+  message?: string,
+): z.ZodType<string> {
   return z
     .string()
     .transform((val) => val.trim())
@@ -60,7 +90,7 @@ export function trimmedStringMinMax(
   max: number,
   minMessage?: string,
   maxMessage?: string,
-) {
+): z.ZodType<string> {
   return z
     .string()
     .transform((val) => val.trim())
