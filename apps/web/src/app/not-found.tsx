@@ -18,7 +18,7 @@ const NotFoundPage: FC = () => {
             <h2 className="text-xl font-semibold">Page introuvable</h2>
           </div>
           <p className="text-muted-foreground">
-            La page que vous recherchez n&apos;existe pas ou a ete deplacee.
+            La page que vous recherchez n&apos;existe pas ou a été déplacée.
           </p>
           <Button asChild>
             <Link href="/">

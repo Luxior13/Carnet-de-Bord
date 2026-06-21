@@ -146,7 +146,7 @@ export async function GET(
 // ============================================
 const updateUserSchema = z.object({
   email: optionalEmailSchema,
-  firstName: optionalTrimmedStringMax(50, 'Prenom trop long').pipe(
+  firstName: optionalTrimmedStringMax(50, 'Prénom trop long').pipe(
     z.string().min(1, 'Prénom requis').optional().nullable(),
   ),
   isActive: z.boolean().optional(),
@@ -261,7 +261,7 @@ export async function PATCH(
         {
           error: {
             code: ErrorCode.FORBIDDEN,
-            message: 'Ce compte est protege et ne peut pas etre modifie',
+            message: 'Ce compte est protégé et ne peut pas être modifié',
           },
           success: false,
         },
@@ -488,7 +488,7 @@ export async function PATCH(
       await createAuditLogWithHeaders({
         action: 'PERMISSION_UPDATE',
         category: 'PERMISSION',
-        description: `Permissions modifiees: ${updatedUser.email}`,
+        description: `Permissions modifiées: ${updatedUser.email}`,
         metadata: {
           after: afterValues,
           before: beforeValues,

@@ -201,7 +201,7 @@ const AccessDenied: FC = () => (
             </ServiceIcon>
             <div className="space-y-3">
               <div>
-                <h1 className="text-xl font-semibold">Acces refuse</h1>
+                <h1 className="text-xl font-semibold">Accès refusé</h1>
                 <p className="text-muted-foreground mt-1 text-sm">
                   Vous n&apos;avez pas la permission de consulter cet
                   utilisateur.
@@ -340,9 +340,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           ? null
           : 'Email invalide',
       firstName: !editForm.firstName.trim()
-        ? 'Prenom obligatoire'
+        ? 'Prénom obligatoire'
         : editForm.firstName.trim().length > 50
-          ? 'Prenom trop long'
+          ? 'Prénom trop long'
           : null,
       lastName: !editForm.lastName.trim()
         ? 'Nom obligatoire'
@@ -356,7 +356,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           !/^\d{17,20}$/.test(editForm.staffProfile.discordId.trim())
             ? 'ID Discord invalide'
             : buildLengthError('discordId', 'ID Discord'),
-        displayName: buildLengthError('displayName', 'Nom affiche'),
+        displayName: buildLengthError('displayName', 'Nom affiché'),
         internalNote: buildLengthError('internalNote', 'Note interne'),
         jobTitle: buildLengthError('jobTitle', 'Poste'),
         joinedAt:
@@ -364,7 +364,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           Number.isNaN(Date.parse(editForm.staffProfile.joinedAt))
             ? 'Date invalide'
             : null,
-        phone: buildLengthError('phone', 'Telephone'),
+        phone: buildLengthError('phone', 'Téléphone'),
         timezone: buildLengthError('timezone', 'Fuseau horaire'),
       },
     };
@@ -573,7 +573,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     }
 
     if (!hasProfileChanges) {
-      toast.info('Aucune modification a enregistrer');
+      toast.info('Aucune modification à enregistrer');
 
       return;
     }
@@ -605,12 +605,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
       if (data.success) {
         syncUserState(data.data.user);
-        toast.success('Utilisateur mis a jour');
+        toast.success('Utilisateur mis à jour');
       } else {
-        toast.error(data.error?.message || 'Erreur lors de la mise a jour');
+        toast.error(data.error?.message || 'Erreur lors de la mise à jour');
       }
     } catch {
-      toast.error('Erreur lors de la mise a jour');
+      toast.error('Erreur lors de la mise à jour');
     } finally {
       setIsSaving(false);
     }
@@ -618,13 +618,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   const handleSaveAccess = async (): Promise<void> => {
     if (!canEditTargetRole && !canManageTargetPermissions) {
-      toast.error('Permission insuffisante pour modifier les acces');
+      toast.error('Permission insuffisante pour modifier les accès');
 
       return;
     }
 
     if (!hasAccessChanges) {
-      toast.info('Aucune modification a enregistrer');
+      toast.info('Aucune modification à enregistrer');
 
       return;
     }
@@ -645,12 +645,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
       if (data.success) {
         syncUserState(data.data.user);
-        toast.success('Acces mis a jour');
+        toast.success('Accès mis à jour');
       } else {
-        toast.error(data.error?.message || 'Erreur lors de la mise a jour');
+        toast.error(data.error?.message || 'Erreur lors de la mise à jour');
       }
     } catch {
-      toast.error('Erreur lors de la mise a jour');
+      toast.error('Erreur lors de la mise à jour');
     } finally {
       setIsSavingPermissions(false);
     }
@@ -658,13 +658,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   const handleSaveSecurity = async (): Promise<void> => {
     if (!canEditTargetStatus || isSelf) {
-      toast.error('Permission insuffisante pour modifier cet etat');
+      toast.error('Permission insuffisante pour modifier cet état');
 
       return;
     }
 
     if (!hasSecurityChanges) {
-      toast.info('Aucune modification a enregistrer');
+      toast.info('Aucune modification à enregistrer');
 
       return;
     }
@@ -681,12 +681,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       if (data.success) {
         syncUserState(data.data.user);
         void fetchSecuritySessions();
-        toast.success('Securite mise a jour');
+        toast.success('Sécurité mise à jour');
       } else {
-        toast.error(data.error?.message || 'Erreur lors de la mise a jour');
+        toast.error(data.error?.message || 'Erreur lors de la mise à jour');
       }
     } catch {
-      toast.error('Erreur lors de la mise a jour');
+      toast.error('Erreur lors de la mise à jour');
     } finally {
       setIsSaving(false);
     }
@@ -694,7 +694,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   const handleResetPassword = async (): Promise<void> => {
     if (!canResetTargetPassword) {
-      toast.error('Permission insuffisante pour reinitialiser ce mot de passe');
+      toast.error('Permission insuffisante pour réinitialiser ce mot de passe');
       setShowResetConfirm(false);
 
       return;
@@ -710,16 +710,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       if (data.success) {
         setTempPassword(data.data.temporaryPassword);
         handleSectionChange('security');
-        toast.success('Mot de passe reinitialise');
+        toast.success('Mot de passe réinitialisé');
         void fetchUser();
         void fetchSecuritySessions();
       } else {
         toast.error(
-          data.error?.message || 'Erreur lors de la reinitialisation',
+          data.error?.message || 'Erreur lors de la réinitialisation',
         );
       }
     } catch {
-      toast.error('Erreur lors de la reinitialisation');
+      toast.error('Erreur lors de la réinitialisation');
     } finally {
       setIsResetting(false);
       setShowResetConfirm(false);
@@ -728,7 +728,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   const handleRevokeSecuritySessions = async (): Promise<void> => {
     if (!canManageTargetSessions) {
-      toast.error('Permission insuffisante pour revoquer les sessions');
+      toast.error('Permission insuffisante pour révoquer les sessions');
 
       return;
     }
@@ -741,13 +741,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success('Sessions revoquees');
+        toast.success('Sessions révoquées');
         void fetchSecuritySessions();
       } else {
-        toast.error(data.error?.message || 'Erreur lors de la revocation');
+        toast.error(data.error?.message || 'Erreur lors de la révocation');
       }
     } catch {
-      toast.error('Erreur lors de la revocation');
+      toast.error('Erreur lors de la révocation');
     } finally {
       setIsRevokingSecuritySessions(false);
       setShowRevokeSessionsConfirm(false);
@@ -770,7 +770,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success('Utilisateur supprime');
+        toast.success('Utilisateur supprimé');
         router.push('/administration/utilisateurs');
       } else {
         toast.error(data.error?.message || 'Erreur lors de la suppression');
@@ -1012,7 +1012,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                             variant="outline"
                             className="border-amber-500/40 text-amber-400"
                           >
-                            Mot de passe a changer
+                            Mot de passe à changer
                           </Badge>
                         )}
                       </div>
@@ -1021,21 +1021,21 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                   <div className="text-muted-foreground flex flex-wrap gap-2 text-xs">
                     <span className="border-border/60 bg-popover inline-flex h-7 items-center gap-1.5 rounded-md border px-2">
                       <Clock className="size-3.5" />
-                      Derniere connexion
+                      Dernière connexion
                       <span className="text-foreground font-medium">
                         {formatCompactDate(user.lastLoginAt)}
                       </span>
                     </span>
                     <span className="border-border/60 bg-popover inline-flex h-7 items-center gap-1.5 rounded-md border px-2">
                       <Calendar className="size-3.5" />
-                      Cree
+                      Créé
                       <span className="text-foreground font-medium">
                         {formatCompactDate(user.createdAt)}
                       </span>
                     </span>
                     <span className="border-border/60 bg-popover inline-flex h-7 items-center gap-1.5 rounded-md border px-2">
                       <Activity className="size-3.5" />
-                      Activite
+                      Activité
                       <span className="text-foreground font-medium">
                         {trackedActionsLabel}
                       </span>
@@ -1080,12 +1080,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
                   <AlertTriangle size={16} className="text-amber-400" />
                 </div>
-                Reinitialiser le mot de passe ?
+                Réinitialiser le mot de passe ?
               </AlertDialogTitle>
               <AlertDialogDescription className="text-muted-foreground">
-                Un nouveau mot de passe temporaire sera genere.
-                L&apos;utilisateur devra le changer a sa prochaine connexion.
-                Toutes ses sessions actives seront invalidees.
+                Un nouveau mot de passe temporaire sera généré.
+                L&apos;utilisateur devra le changer à sa prochaine connexion.
+                Toutes ses sessions actives seront invalidées.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="mt-4">
@@ -1100,7 +1100,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 {isResetting && (
                   <Loader2 size={16} className="mr-2 animate-spin" />
                 )}
-                Reinitialiser
+                Réinitialiser
               </AlertDialogAction>
             </AlertDialogFooter>
           </div>
@@ -1117,11 +1117,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
                   <AlertTriangle size={16} className="text-amber-400" />
                 </div>
-                Revoquer les sessions ?
+                Révoquer les sessions ?
               </AlertDialogTitle>
               <AlertDialogDescription className="text-muted-foreground">
                 Toutes les sessions actives de cet utilisateur seront
-                deconnectees. Il devra se reconnecter.
+                déconnectées. Il devra se reconnecter.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="mt-4">
@@ -1136,7 +1136,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 {isRevokingSecuritySessions && (
                   <Loader2 size={16} className="mr-2 animate-spin" />
                 )}
-                Revoquer
+                Révoquer
               </AlertDialogAction>
             </AlertDialogFooter>
           </div>
@@ -1153,8 +1153,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 Supprimer cet utilisateur ?
               </AlertDialogTitle>
               <AlertDialogDescription className="text-muted-foreground">
-                Cette action est irreversible. L&apos;utilisateur sera supprime
-                definitivement et toutes ses sessions seront invalidees.
+                Cette action est irréversible. L&apos;utilisateur sera supprimé
+                définitivement et toutes ses sessions seront invalidées.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="mt-4">

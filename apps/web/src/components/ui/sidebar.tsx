@@ -280,7 +280,7 @@ function SidebarTrigger({
       {...props}
     >
       <PanelLeft className="size-4" />
-      <span className="sr-only">Basculer la barre laterale</span>
+      <span className="sr-only">Basculer la barre latérale</span>
     </Button>
   );
 }
@@ -298,7 +298,7 @@ function SidebarRail({
       data-sidebar="rail"
       data-slot="sidebar-rail"
       type="button"
-      aria-label="Basculer la barre laterale"
+      aria-label="Basculer la barre latérale"
       tabIndex={-1}
       onClick={toggleSidebar}
       className={cn(

@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  AlertTriangle,
   ChevronRight,
   Key,
   Loader2,
@@ -134,13 +135,13 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       const data = await response.json();
 
       if (data.success) {
-        toast.success('Toutes les autres sessions ont ete deconnectees');
+        toast.success('Toutes les autres sessions ont été déconnectées');
         fetchSessions();
       } else {
         toast.error(data.error?.message || 'Erreur');
       }
     } catch {
-      toast.error('Erreur lors de la deconnexion');
+      toast.error('Erreur lors de la déconnexion');
     } finally {
       setRevokingAll(false);
       setShowRevokeDialog(false);
@@ -156,13 +157,13 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       const data = await response.json();
 
       if (data.success) {
-        toast.success('Session deconnectee');
+        toast.success('Session déconnectée');
         fetchSessions();
       } else {
         toast.error(data.error?.message || 'Erreur');
       }
     } catch {
-      toast.error('Erreur lors de la deconnexion');
+      toast.error('Erreur lors de la déconnexion');
     } finally {
       setRevokingId(null);
     }
@@ -179,7 +180,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               <Shield className="size-5" />
             </ServiceIcon>
             <div>
-              <CardTitle>Securite</CardTitle>
+              <CardTitle>Sécurité</CardTitle>
               <CardDescription>Mot de passe et sessions</CardDescription>
             </div>
           </div>
@@ -199,8 +200,8 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 <p className="font-medium">Mot de passe</p>
                 <p className="text-muted-foreground text-sm">
                   {userData.passwordChangedAt
-                    ? `Modifie ${formatRelativeTime(userData.passwordChangedAt)}`
-                    : 'Jamais modifie'}
+                    ? `Modifié ${formatRelativeTime(userData.passwordChangedAt)}`
+                    : 'Jamais modifié'}
                 </p>
               </div>
             </div>
@@ -216,7 +217,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 <p className="font-medium">Sessions actives</p>
                 <p className="text-muted-foreground text-sm">
                   {sessions.length} appareil{sessions.length > 1 ? 's' : ''}{' '}
-                  connecte{sessions.length > 1 ? 's' : ''}
+                  connecté{sessions.length > 1 ? 's' : ''}
                 </p>
               </div>
             </div>
@@ -228,7 +229,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 disabled={revokingAll}
               >
                 <LogOut className="size-4" />
-                Deconnecter ({otherSessionsCount})
+                Déconnecter ({otherSessionsCount})
               </Button>
             )}
           </div>
@@ -280,7 +281,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                         size="icon"
                         onClick={() => handleRevokeSession(session.id)}
                         disabled={revokingId === session.id}
-                        aria-label="Deconnecter cette session"
+                        aria-label="Déconnecter cette session"
                       >
                         {revokingId === session.id ? (
                           <Loader2 className="size-4 animate-spin" />
@@ -302,33 +303,38 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         onSuccess={() => {
           setShowPasswordDialog(false);
           onUpdate();
-          toast.success('Mot de passe modifie avec succes');
+          toast.success('Mot de passe modifié avec succès');
         }}
       />
       <AlertDialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Deconnecter les autres sessions ?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Vous serez deconnecte de {otherSessionsCount} autre
-              {otherSessionsCount > 1 ? 's' : ''} appareil
-              {otherSessionsCount > 1 ? 's' : ''}. Seule cette session restera
-              active.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleRevokeAllSessions}
-              disabled={revokingAll}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {revokingAll && <Loader2 className="size-4 animate-spin" />}
-              Deconnecter
-            </AlertDialogAction>
-          </AlertDialogFooter>
+        <AlertDialogContent className="border-border overflow-hidden rounded-lg p-0">
+          <div className="p-6">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-foreground flex items-center gap-2">
+                <div className="bg-destructive/10 flex h-8 w-8 items-center justify-center rounded-lg">
+                  <AlertTriangle size={16} className="text-destructive" />
+                </div>
+                Déconnecter les autres sessions ?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Vous serez déconnecté de {otherSessionsCount} autre
+                {otherSessionsCount > 1 ? 's' : ''} appareil
+                {otherSessionsCount > 1 ? 's' : ''}. Seule cette session restera
+                active.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-4">
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleRevokeAllSessions}
+                disabled={revokingAll}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {revokingAll && <Loader2 className="size-4 animate-spin" />}
+                Déconnecter
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </>

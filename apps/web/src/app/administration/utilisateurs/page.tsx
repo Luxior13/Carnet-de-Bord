@@ -32,7 +32,7 @@ const UsersAdministrationContent: FC = () => {
                 </ServiceIcon>
                 <div className="space-y-3">
                   <div>
-                    <h1 className="text-xl font-semibold">Acces refuse</h1>
+                    <h1 className="text-xl font-semibold">Accès refusé</h1>
                     <p className="text-muted-foreground mt-1 text-sm">
                       Vous n&apos;avez pas la permission de consulter les
                       utilisateurs.
@@ -55,7 +55,7 @@ const UsersAdministrationContent: FC = () => {
       <PageCanvas>
         <PageHeader
           title="Utilisateurs"
-          description="Comptes autorises et acces du carnet."
+          description="Comptes autorisés et accès du carnet."
           icon={
             <ServiceIcon className="bg-primary/10">
               <Users className="size-5" />

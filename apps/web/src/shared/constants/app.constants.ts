@@ -1,17 +1,24 @@
 import {
+  DEFAULT_ROLE_LABEL,
+  getAccessLabel as getPermissionAccessLabel,
+  getRoleLabel as getPermissionRoleLabel,
   hasPermission,
   PERMISSIONS,
   type PermissionsData,
+  PROTECTED_ROLE_LABEL,
+  ROLE_LABELS,
 } from '$constants/permissions.constants';
 import type { UserType } from '$types/auth.types';
 
 export const SITE_CONFIG = {
-  description: 'Gestion des acces et du tableau de bord',
+  description: 'Gestion des accès et du tableau de bord',
   logo: '/assets/logo.svg',
   name: 'Carnet Pro',
   subtitle: 'Tableau de bord',
   tag: 'CP',
 };
+
+export { DEFAULT_ROLE_LABEL, PROTECTED_ROLE_LABEL, ROLE_LABELS };
 
 // Navigation items for sidebar
 export type NavItem = {
@@ -68,23 +75,12 @@ export const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-// Role labels in French
-export const ROLE_LABELS = {
-  ADMIN: 'Administrateur',
-  USER: 'Utilisateur',
-} as const;
-
-export const DEFAULT_ROLE_LABEL = 'Utilisateur';
-export const PROTECTED_ROLE_LABEL = 'Superadmin';
-
-export const getRoleLabel = (role: string): string => {
-  return ROLE_LABELS[role as keyof typeof ROLE_LABELS] || DEFAULT_ROLE_LABEL;
-};
+export const getRoleLabel = getPermissionRoleLabel;
 
 export const getAccessLabel = (
   user: Pick<UserType, 'isProtected' | 'role'>,
 ): string => {
-  return user.isProtected ? PROTECTED_ROLE_LABEL : getRoleLabel(user.role);
+  return getPermissionAccessLabel(user);
 };
 
 function canAccessNavItem(

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 export const metadata: Metadata = {
-  description: 'Gerez votre profil, votre securite et vos sessions.',
+  description: 'Gérez votre profil, votre sécurité et vos sessions.',
   title: 'Mon compte - Carnet Pro',
 };
 

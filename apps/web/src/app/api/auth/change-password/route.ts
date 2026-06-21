@@ -47,7 +47,7 @@ export async function POST(request: Request) {
           error: {
             code: ErrorCode.VALIDATION_ERROR,
             details: validation.error.flatten().fieldErrors,
-            message: 'Donnees invalides',
+            message: 'Données invalides',
           },
           success: false,
         },
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
         {
           error: {
             code: ErrorCode.NOT_FOUND,
-            message: 'Utilisateur non trouve',
+            message: 'Utilisateur non trouvé',
           },
           success: false,
         },
@@ -147,7 +147,7 @@ export async function POST(request: Request) {
         {
           error: {
             code: ErrorCode.VALIDATION_ERROR,
-            message: "Le nouveau mot de passe doit etre different de l'actuel",
+            message: "Le nouveau mot de passe doit être différent de l'actuel",
           },
           success: false,
         },
@@ -164,7 +164,7 @@ export async function POST(request: Request) {
     await createAuditLogWithHeaders({
       action: 'PASSWORD_CHANGE',
       category: 'AUTH',
-      description: 'Mot de passe modifie',
+      description: 'Mot de passe modifié',
       userId: user.id,
     });
 

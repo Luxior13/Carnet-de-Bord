@@ -60,12 +60,12 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
       ACCOUNT_LOCKED: {
         color: 'text-destructive',
         icon: Shield,
-        label: 'Compte verrouille',
+        label: 'Compte verrouillé',
       },
       LOGIN_FAILED: {
         color: 'text-destructive',
         icon: XCircle,
-        label: 'Echec connexion',
+        label: 'Échec connexion',
       },
       LOGIN_SUCCESS: {
         color: 'text-emerald-400',
@@ -75,17 +75,17 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
       LOGOUT: {
         color: 'text-muted-foreground',
         icon: LogIn,
-        label: 'Deconnexion',
+        label: 'Déconnexion',
       },
       PASSWORD_CHANGE: {
         color: 'text-amber-300',
         icon: Shield,
-        label: 'MDP modifie',
+        label: 'MDP modifié',
       },
       PASSWORD_RESET: {
         color: 'text-amber-300',
         icon: Shield,
-        label: 'MDP reinitialise',
+        label: 'MDP réinitialisé',
       },
     };
 
@@ -132,8 +132,8 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
             <Activity className="size-5" />
           </ServiceIcon>
           <div>
-            <CardTitle>Activite</CardTitle>
-            <CardDescription>Vos dernieres actions</CardDescription>
+            <CardTitle>Activité</CardTitle>
+            <CardDescription>Vos dernières actions</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -147,13 +147,13 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
             <p className="text-xl font-semibold text-emerald-400">
               {stats.success}
             </p>
-            <p className="text-muted-foreground text-xs">Succes</p>
+            <p className="text-muted-foreground text-xs">Succès</p>
           </div>
           <div className="bg-destructive/10 rounded-lg border px-3 py-3 text-center">
             <p className="text-destructive text-xl font-semibold">
               {stats.failed}
             </p>
-            <p className="text-muted-foreground text-xs">Echecs</p>
+            <p className="text-muted-foreground text-xs">Échecs</p>
           </div>
         </div>
         {loadingActivity ? (
@@ -167,9 +167,9 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
             <div className="bg-secondary text-primary mb-3 flex size-12 items-center justify-center rounded-lg">
               <Activity className="size-6" />
             </div>
-            <p className="font-medium">Aucune activite recente</p>
+            <p className="font-medium">Aucune activité récente</p>
             <p className="text-muted-foreground mt-1 max-w-[220px] text-xs">
-              Vos connexions et modifications apparaitront ici.
+              Vos connexions et modifications apparaîtront ici.
             </p>
           </div>
         ) : (

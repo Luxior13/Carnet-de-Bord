@@ -55,30 +55,34 @@ function formatRelativeTime(dateString: string): string {
 
 function getActionLabel(action: string): string {
   switch (action) {
+    case 'ACCOUNT_LOCKED':
+      return 'Compte verrouillé';
     case 'LOGIN_FAILED':
-      return 'Connexion echouee';
+      return 'Connexion échouée';
     case 'LOGIN_SUCCESS':
       return 'Connexion';
     case 'LOGOUT':
-      return 'Deconnexion';
+      return 'Déconnexion';
     case 'PASSWORD_CHANGE':
-      return 'Mot de passe change';
+      return 'Mot de passe changé';
     case 'PASSWORD_RESET':
-      return 'Mot de passe reinitialise';
+      return 'Mot de passe réinitialisé';
     case 'PERMISSION_UPDATE':
-      return 'Permissions modifiees';
+      return 'Permissions modifiées';
+    case 'SESSION_INVALIDATE':
+      return 'Session révoquée';
     case 'USER_ACTIVATE':
-      return 'Utilisateur active';
+      return 'Utilisateur activé';
     case 'USER_CREATE':
-      return 'Utilisateur cree';
+      return 'Utilisateur créé';
     case 'USER_DEACTIVATE':
-      return 'Utilisateur desactive';
+      return 'Utilisateur désactivé';
     case 'USER_DELETE':
-      return 'Utilisateur supprime';
+      return 'Utilisateur supprimé';
     case 'USER_UPDATE':
-      return 'Utilisateur modifie';
+      return 'Utilisateur modifié';
     default:
-      return 'Evenement systeme';
+      return 'Événement système';
   }
 }
 
@@ -177,6 +181,7 @@ function EmptyState({
 export default function DashboardPage(): React.ReactNode {
   const { isLoading: isUserLoading, userData } = useUser();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [hasDashboardError, setHasDashboardError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const canViewDashboard = userData
@@ -200,13 +205,18 @@ export default function DashboardPage(): React.ReactNode {
 
     async function fetchStats(): Promise<void> {
       try {
+        setHasDashboardError(false);
         const response = await fetch('/api/dashboard');
         const data = await response.json();
         if (data.success) {
           setStats(data.data);
+        } else {
+          setStats(null);
+          setHasDashboardError(true);
         }
       } catch {
-        // Dashboard data is optional for rendering the shell.
+        setStats(null);
+        setHasDashboardError(true);
       } finally {
         setIsLoading(false);
       }
@@ -228,11 +238,38 @@ export default function DashboardPage(): React.ReactNode {
                   <AlertTriangle className="size-5" />
                 </ServiceIcon>
                 <div>
-                  <p className="font-medium">Acces limite</p>
+                  <p className="font-medium">Accès limité</p>
                   <p className="text-muted-foreground mt-1 text-sm">
                     Vous n&apos;avez pas la permission de voir le tableau de
                     bord.
                   </p>
+                </div>
+              </CardContent>
+            </Card>
+          </PageCanvas>
+        </PageShell>
+      ) : hasDashboardError ? (
+        <PageShell className="py-0">
+          <PageCanvas>
+            <Card>
+              <CardContent className="flex items-start gap-4 px-5">
+                <ServiceIcon className="bg-destructive/10 text-destructive">
+                  <AlertTriangle className="size-5" />
+                </ServiceIcon>
+                <div className="space-y-3">
+                  <div>
+                    <p className="font-medium">Tableau de bord indisponible</p>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      Les statistiques n&apos;ont pas pu être chargées.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => window.location.reload()}
+                  >
+                    Recharger
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -252,8 +289,8 @@ export default function DashboardPage(): React.ReactNode {
                     Bonjour {userData?.firstName}
                   </h1>
                   <p className="text-muted-foreground mt-2 max-w-2xl">
-                    Vue generale de ton carnet, de tes acces et de
-                    l&apos;activite recente.
+                    Vue générale de votre carnet, de vos accès et de
+                    l&apos;activité récente.
                   </p>
                 </div>
                 <div className="bg-popover rounded-lg border p-4">
@@ -263,7 +300,7 @@ export default function DashboardPage(): React.ReactNode {
                     </ServiceIcon>
                     <div>
                       <p className="text-muted-foreground text-sm">
-                        Etat global
+                        État global
                       </p>
                       <p className="text-2xl font-semibold">
                         {stats.security.lockedUsers > 0 ? 'A surveiller' : 'OK'}
@@ -300,7 +337,7 @@ export default function DashboardPage(): React.ReactNode {
               <MetricCard
                 label="Connexions 24h"
                 value={stats.users.recentLogins}
-                detail="Activite recente"
+                detail="Activité récente"
                 tone="success"
                 icon={<Clock className="size-5" />}
               />
@@ -318,11 +355,11 @@ export default function DashboardPage(): React.ReactNode {
                 icon={<KeyRound className="size-5" />}
               />
               <MetricCard
-                label="Comptes verrouilles"
+                label="Comptes verrouillés"
                 value={stats.security.lockedUsers}
                 detail={
                   stats.security.lockedUsers > 0
-                    ? 'Verification conseillee'
+                    ? 'Vérification conseillée'
                     : 'Aucun verrouillage'
                 }
                 tone={stats.security.lockedUsers > 0 ? 'danger' : 'primary'}
@@ -334,11 +371,11 @@ export default function DashboardPage(): React.ReactNode {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="text-primary size-5" />
-                    Activite recente
+                    Activité récente
                   </CardTitle>
                   <CardDescription>
                     Connexions, modifications de comptes et changements
-                    d&apos;acces.
+                    d&apos;accès.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -360,7 +397,7 @@ export default function DashboardPage(): React.ReactNode {
                               {getActionLabel(activity.action)}
                             </p>
                             <p className="text-muted-foreground truncate text-xs">
-                              {activity.userName || 'Systeme'}
+                              {activity.userName || 'Système'}
                             </p>
                           </div>
                           <span className="text-muted-foreground shrink-0 text-xs">
@@ -372,8 +409,8 @@ export default function DashboardPage(): React.ReactNode {
                   ) : (
                     <EmptyState
                       icon={<Activity className="size-5" />}
-                      label="Aucune activite"
-                      text="Les evenements importants apparaitront ici."
+                      label="Aucune activité"
+                      text="Les événements importants apparaîtront ici."
                     />
                   )}
                 </CardContent>
@@ -383,9 +420,9 @@ export default function DashboardPage(): React.ReactNode {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <UserCheck className="text-primary size-5" />
-                      Synthese
+                      Synthèse
                     </CardTitle>
-                    <CardDescription>Etat general des acces.</CardDescription>
+                    <CardDescription>État général des accès.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
@@ -402,7 +439,7 @@ export default function DashboardPage(): React.ReactNode {
                     <Separator />
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">
-                        Mot de passe a changer
+                        Mot de passe à changer
                       </span>
                       <span className="font-medium">
                         {stats.security.pendingPassword}
@@ -412,9 +449,9 @@ export default function DashboardPage(): React.ReactNode {
                 </Card>
                 <Card>
                   <CardHeader>
-                    <CardTitle>Acces rapide</CardTitle>
+                    <CardTitle>Accès rapide</CardTitle>
                     <CardDescription>
-                      Gerer ton compte, ton mot de passe et tes sessions.
+                      Gérez votre compte, votre mot de passe et vos sessions.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>

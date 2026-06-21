@@ -133,7 +133,7 @@ export async function POST(
       await recordLoginAttempt(rateLimitKey, false);
       await recordLoginAudit({
         action: 'LOGIN_FAILED',
-        description: `Connexion echouee: ${email}`,
+        description: `Connexion échouée: ${email}`,
         email,
         reason: result.error,
         userId: result.userId,

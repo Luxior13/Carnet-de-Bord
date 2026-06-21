@@ -4,8 +4,7 @@ import { Calendar, Check, Clock, Edit, Loader2, Mail, X } from 'lucide-react';
 import React, { type FC, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { getAccessLabel } from '$constants/app.constants';
-import { getRoleColor } from '$constants/permissions.constants';
+import { getAccessLabel, getRoleColor } from '$constants/permissions.constants';
 import type { UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
@@ -42,7 +41,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
 
   const handleSaveProfile = async (): Promise<void> => {
     if (!firstName.trim() || !lastName.trim()) {
-      toast.error('Le prenom et le nom sont requis');
+      toast.error('Le prénom et le nom sont requis');
 
       return;
     }
@@ -60,14 +59,14 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
       const data = await response.json();
 
       if (data.success) {
-        toast.success('Profil mis a jour avec succes');
+        toast.success('Profil mis à jour avec succès');
         await onUpdate();
         setIsEditing(false);
       } else {
-        toast.error(data.error?.message || 'Erreur lors de la mise a jour');
+        toast.error(data.error?.message || 'Erreur lors de la mise à jour');
       }
     } catch {
-      toast.error('Erreur lors de la mise a jour');
+      toast.error('Erreur lors de la mise à jour');
     } finally {
       setIsSaving(false);
     }
@@ -137,7 +136,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
             </ServiceIcon>
             <div>
               <p className="text-muted-foreground text-xs">
-                Derniere connexion
+                Dernière connexion
               </p>
               <p className="font-medium">
                 {userData.lastLoginAt
@@ -152,14 +151,14 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="edit-firstName" required>
-                Prenom
+                Prénom
               </Label>
               <Input
                 id="edit-firstName"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 disabled={isSaving}
-                placeholder="Votre prenom"
+                placeholder="Votre prénom"
               />
             </div>
             <div className="space-y-2">
@@ -183,7 +182,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
               className="bg-secondary/50"
             />
             <p className="text-muted-foreground text-xs">
-              L&apos;adresse email ne peut pas etre modifiee.
+              L&apos;adresse email ne peut pas être modifiée.
             </p>
           </div>
           <div className="flex items-center justify-end gap-2 pt-2">

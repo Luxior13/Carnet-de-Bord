@@ -103,7 +103,7 @@ const FILTER_OPTIONS: Array<{
   { icon: SlidersHorizontal, label: 'Toutes', value: 'all' },
   { icon: ShieldCheck, label: 'Actives', value: 'enabled' },
   { icon: ShieldOff, label: 'Inactives', value: 'disabled' },
-  { icon: Sparkles, label: 'Personnalisees', value: 'custom' },
+  { icon: Sparkles, label: 'Personnalisées', value: 'custom' },
 ];
 
 const getPermissionTone = (permissionKey: string): PermissionTone => {
@@ -337,7 +337,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   variant="outline"
                   className="border-amber-500/40 text-xs text-amber-400"
                 >
-                  {customPermissionCount} personnalisee
+                  {customPermissionCount} personnalisée
                   {customPermissionCount > 1 ? 's' : ''}
                 </Badge>
               )}
@@ -361,7 +361,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                       className="gap-2"
                     >
                       <Sparkles size={14} />
-                      Modeles
+                      Modèles
                       <ChevronDown size={14} />
                     </Button>
                   </DropdownMenuTrigger>
@@ -398,7 +398,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   className="gap-1.5"
                 >
                   <X size={14} />
-                  <span className="hidden sm:inline">Tout desactiver</span>
+                  <span className="hidden sm:inline">Tout désactiver</span>
                 </Button>
                 {permissions && Object.keys(permissions).length > 0 && (
                   <Tooltip>
@@ -409,13 +409,13 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                         onClick={handleResetAll}
                         disabled={disabled}
                         className="text-muted-foreground gap-1.5"
-                        aria-label="Reinitialiser les permissions"
+                        aria-label="Réinitialiser les permissions"
                       >
                         <RotateCcw size={14} />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent sideOffset={6}>
-                      Reinitialiser les permissions
+                      Réinitialiser les permissions
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -428,7 +428,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
               <Input
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Rechercher une permission, un module ou une cle..."
+                placeholder="Rechercher une permission, un module ou une clé..."
                 className="bg-popover h-9 pl-9"
               />
             </div>
@@ -577,7 +577,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                           }
                         >
                           <X size={12} className="mr-1" />
-                          Desactiver
+                          Désactiver
                         </Button>
                       </div>
                       {/* Permissions list */}
@@ -634,7 +634,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                                         variant="outline"
                                         className="border-primary/40 text-primary text-[10px]"
                                       >
-                                        Personnalisee
+                                        Personnalisée
                                       </Badge>
                                     )}
                                     <Tooltip>
@@ -664,7 +664,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                                   handleToggle(perm.key, checked)
                                 }
                                 disabled={disabled}
-                                aria-label={`${isEnabled ? 'Desactiver' : 'Activer'} ${perm.label}`}
+                                aria-label={`${isEnabled ? 'Désactiver' : 'Activer'} ${perm.label}`}
                               />
                             </div>
                           );
@@ -680,7 +680,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
             <div className="border-border/70 bg-popover flex flex-col items-center justify-center rounded-lg border p-8 text-center">
               <Search className="text-muted-foreground size-8" />
               <p className="text-foreground mt-3 text-sm font-medium">
-                Aucune permission trouvee
+                Aucune permission trouvée
               </p>
               <p className="text-muted-foreground mt-1 max-w-sm text-xs">
                 Ajustez la recherche ou changez de filtre pour afficher

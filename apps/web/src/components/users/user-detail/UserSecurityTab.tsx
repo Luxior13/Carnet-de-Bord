@@ -221,8 +221,8 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               {tempPassword}
             </code>
             <p className="text-muted-foreground text-xs">
-              Communiquez ce mot de passe a l&apos;utilisateur. Ses sessions
-              actives ont ete invalidees.
+              Communiquez ce mot de passe à l&apos;utilisateur. Ses sessions
+              actives ont été invalidées.
             </p>
           </CardContent>
         </Card>
@@ -233,7 +233,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           label="Compte"
           value={isActive ? 'Actif' : 'Inactif'}
           description={
-            isActive ? 'Connexion autorisee' : 'Connexion impossible'
+            isActive ? 'Connexion autorisée' : 'Connexion impossible'
           }
           tone={isActive ? 'primary' : 'danger'}
         />
@@ -246,11 +246,11 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             )
           }
           label="Verrouillage"
-          value={isLocked ? 'Verrouille' : 'OK'}
+          value={isLocked ? 'Verrouillé' : 'OK'}
           description={
             isLocked
               ? `Jusqu'au ${formatDate(lockedUntil)}`
-              : `${user.failedLoginAttempts} tentative(s) echouee(s)`
+              : `${user.failedLoginAttempts} tentative(s) échouée(s)`
           }
           tone={
             isLocked
@@ -263,7 +263,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
         <SecurityMetric
           icon={<KeyRound className="size-4" />}
           label="Mot de passe"
-          value={user.mustChangePassword ? 'A changer' : 'A jour'}
+          value={user.mustChangePassword ? 'À changer' : 'À jour'}
           description={`Dernier changement : ${formatDate(user.passwordChangedAt)}`}
           tone={user.mustChangePassword ? 'warning' : 'primary'}
         />
@@ -273,8 +273,8 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           value={sessionCountLabel}
           description={
             canManageSessions
-              ? 'Sessions actives detectees'
-              : 'Gestion reservee aux roles autorises'
+              ? 'Sessions actives détectées'
+              : 'Gestion réservée aux rôles autorisés'
           }
           tone={sessions.length > 0 ? 'primary' : 'neutral'}
         />
@@ -282,7 +282,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
         <CardHeader className="border-border/60 bg-accent border-b p-3 sm:p-4">
           <SectionTitle icon={<Power className="size-3.5" />}>
-            Etat du compte
+            État du compte
           </SectionTitle>
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">
@@ -304,14 +304,14 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           {isSelf && (
             <div className="text-muted-foreground flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs">
               <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-400" />
-              Vous ne pouvez pas desactiver votre propre compte depuis cette
+              Vous ne pouvez pas désactiver votre propre compte depuis cette
               fiche.
             </div>
           )}
         </CardContent>
         <CardFooter className="border-border/60 bg-accent justify-between gap-3 border-t p-3 sm:p-4">
           <p className="text-muted-foreground text-xs">
-            {hasStatusChanges ? 'Modification non enregistree' : 'A jour'}
+            {hasStatusChanges ? 'Modification non enregistrée' : 'À jour'}
           </p>
           <div className="flex gap-2">
             <Button
@@ -350,7 +350,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           {!canManageSessions ? (
             <div className="border-border/60 bg-popover rounded-md border p-3">
               <p className="text-muted-foreground text-sm">
-                Vous n&apos;avez pas la permission de consulter ou revoquer les
+                Vous n&apos;avez pas la permission de consulter ou révoquer les
                 sessions de cet utilisateur.
               </p>
             </div>
@@ -417,7 +417,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               ) : (
                 <LogOut className="h-4 w-4" />
               )}
-              Revoquer les sessions
+              Révoquer les sessions
             </Button>
           </CardFooter>
         )}
@@ -431,16 +431,16 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
         <CardContent className="space-y-3 p-3 sm:p-4">
           <div className="border-border/60 bg-popover space-y-3 rounded-md border p-3">
             <div className="flex items-center justify-between gap-4">
-              <span className="text-muted-foreground text-sm">Etat</span>
+              <span className="text-muted-foreground text-sm">État</span>
               {user.mustChangePassword ? (
                 <Badge
                   variant="outline"
                   className="border-amber-500/40 text-amber-400"
                 >
-                  A changer
+                  À changer
                 </Badge>
               ) : (
-                <Badge variant="secondary">A jour</Badge>
+                <Badge variant="secondary">À jour</Badge>
               )}
             </div>
             <Separator className="bg-border/60" />
@@ -455,7 +455,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             <Separator className="bg-border/60" />
             <div className="flex items-center justify-between gap-4">
               <span className="text-muted-foreground text-sm">
-                Tentatives echouees
+                Tentatives échouées
               </span>
               <span className="text-sm">{user.failedLoginAttempts}</span>
             </div>
@@ -464,7 +464,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                 <Separator className="bg-border/60" />
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground text-sm">
-                    Verrouille jusqu&apos;a
+                    Verrouillé jusqu&apos;à
                   </span>
                   <span className="text-destructive text-sm">
                     {formatDate(lockedUntil)}
@@ -484,7 +484,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               className="gap-2"
             >
               <RotateCcw className="h-4 w-4" />
-              Reinitialiser le mot de passe
+              Réinitialiser le mot de passe
             </Button>
           </CardFooter>
         )}
@@ -501,7 +501,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             <div>
               <p className="text-sm font-medium">Supprimer cet utilisateur</p>
               <p className="text-muted-foreground text-xs">
-                Cette action est definitive et invalide les sessions associees.
+                Cette action est définitive et invalide les sessions associées.
               </p>
             </div>
             <Button

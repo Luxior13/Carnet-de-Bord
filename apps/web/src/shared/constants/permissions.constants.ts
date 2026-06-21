@@ -53,13 +53,13 @@ export type PermissionCategory = {
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   {
     color: 'blue',
-    description: 'Acces au tableau de bord',
+    description: 'Accès au tableau de bord',
     icon: 'LayoutDashboard',
     key: 'dashboard',
     label: 'Tableau de bord',
     permissions: [
       {
-        description: 'Acceder au tableau de bord et voir les statistiques',
+        description: 'Accéder au tableau de bord et voir les statistiques',
         key: PERMISSIONS.DASHBOARD.VIEW,
         label: 'Voir le tableau de bord',
       },
@@ -67,7 +67,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   },
   {
     color: 'violet',
-    description: 'Gestion des utilisateurs du systeme',
+    description: 'Gestion des utilisateurs du système',
     icon: 'Users',
     key: 'users',
     label: 'Utilisateurs',
@@ -78,9 +78,9 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Voir les utilisateurs',
       },
       {
-        description: 'Creer de nouveaux comptes utilisateur',
+        description: 'Créer de nouveaux comptes utilisateur',
         key: PERMISSIONS.USERS.CREATE,
-        label: 'Creer des utilisateurs',
+        label: 'Créer des utilisateurs',
       },
       {
         description: 'Modifier les informations des utilisateurs',
@@ -93,14 +93,14 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Supprimer des utilisateurs',
       },
       {
-        description: 'Reinitialiser les mots de passe',
+        description: 'Réinitialiser les mots de passe',
         key: PERMISSIONS.USERS.RESET_PASSWORD,
-        label: 'Reinitialiser les mots de passe',
+        label: 'Réinitialiser les mots de passe',
       },
       {
         description: 'Modifier les permissions des utilisateurs',
         key: PERMISSIONS.USERS.EDIT_PERMISSIONS,
-        label: 'Gerer les permissions',
+        label: 'Gérer les permissions',
       },
     ],
   },

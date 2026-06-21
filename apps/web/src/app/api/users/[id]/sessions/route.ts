@@ -59,7 +59,7 @@ export async function GET(
         {
           error: {
             code: ErrorCode.NOT_FOUND,
-            message: 'Utilisateur non trouve',
+            message: 'Utilisateur non trouvé',
           },
           success: false,
         },
@@ -72,7 +72,7 @@ export async function GET(
         {
           error: {
             code: ErrorCode.FORBIDDEN,
-            message: 'Gerez vos sessions depuis Mon compte',
+            message: 'Gérez vos sessions depuis Mon compte',
           },
           success: false,
         },
@@ -85,7 +85,7 @@ export async function GET(
         {
           error: {
             code: ErrorCode.FORBIDDEN,
-            message: 'Ce compte protege ne peut pas etre gere',
+            message: 'Ce compte protégé ne peut pas être géré',
           },
           success: false,
         },
@@ -145,7 +145,7 @@ export async function DELETE(
         {
           error: {
             code: ErrorCode.NOT_FOUND,
-            message: 'Utilisateur non trouve',
+            message: 'Utilisateur non trouvé',
           },
           success: false,
         },
@@ -158,7 +158,7 @@ export async function DELETE(
         {
           error: {
             code: ErrorCode.FORBIDDEN,
-            message: 'Utilisez Mon compte pour gerer vos sessions',
+            message: 'Utilisez Mon compte pour gérer vos sessions',
           },
           success: false,
         },
@@ -171,7 +171,7 @@ export async function DELETE(
         {
           error: {
             code: ErrorCode.FORBIDDEN,
-            message: 'Ce compte protege ne peut pas etre gere',
+            message: 'Ce compte protégé ne peut pas être géré',
           },
           success: false,
         },
@@ -186,7 +186,7 @@ export async function DELETE(
     await createAuditLogWithHeaders({
       action: 'SESSION_INVALIDATE',
       category: 'AUTH',
-      description: `Sessions revoquees pour: ${targetUser.email}`,
+      description: `Sessions révoquées pour: ${targetUser.email}`,
       metadata: {
         revokedSessions: result.count,
         targetUserId: targetUser.id,

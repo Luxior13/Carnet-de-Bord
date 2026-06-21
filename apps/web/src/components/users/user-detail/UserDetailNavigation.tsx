@@ -32,15 +32,15 @@ export type UserDetailSection = {
 };
 
 export const USER_DETAIL_SECTIONS: UserDetailSection[] = [
-  { icon: <FileText className="h-4 w-4" />, id: 'resume', label: 'Resume' },
+  { icon: <FileText className="h-4 w-4" />, id: 'resume', label: 'Résumé' },
   { icon: <User className="h-4 w-4" />, id: 'profile', label: 'Profil' },
   {
     icon: <Shield className="h-4 w-4" />,
     id: 'access',
-    label: 'Acces',
+    label: 'Accès',
   },
-  { icon: <Key className="h-4 w-4" />, id: 'security', label: 'Securite' },
-  { icon: <History className="h-4 w-4" />, id: 'history', label: 'Activite' },
+  { icon: <Key className="h-4 w-4" />, id: 'security', label: 'Sécurité' },
+  { icon: <History className="h-4 w-4" />, id: 'history', label: 'Activité' },
 ];
 
 export const normalizeUserDetailSection = (
@@ -59,7 +59,7 @@ export const getUserDetailSectionLabel = (
 ): string => {
   return (
     USER_DETAIL_SECTIONS.find((section) => section.id === sectionId)?.label ||
-    'Resume'
+    'Résumé'
   );
 };
 

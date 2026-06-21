@@ -63,7 +63,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                   <Shield className="size-3.5" />
                 </span>
                 <Label htmlFor="user-role" className="sr-only">
-                  Role
+                  Rôle
                 </Label>
                 {user.isProtected ? (
                   <Input
@@ -96,7 +96,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
         </CardContent>
         <CardFooter className="border-border/60 bg-accent justify-between gap-3 border-t p-4">
           <p className="text-muted-foreground text-xs">
-            {hasChanges ? 'Modifications non enregistrees' : 'A jour'}
+            {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
           </p>
           <div className="flex gap-2">
             <Button

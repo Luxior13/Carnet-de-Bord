@@ -150,7 +150,7 @@ describe('account security routes', () => {
       expect(response.status).toBe(400);
       expect(body.success).toBe(false);
       expect(body.error.message).toBe(
-        "Le nouveau mot de passe doit etre different de l'actuel",
+        "Le nouveau mot de passe doit être différent de l'actuel",
       );
       expect(mockUpdateUserPassword).not.toHaveBeenCalled();
     });

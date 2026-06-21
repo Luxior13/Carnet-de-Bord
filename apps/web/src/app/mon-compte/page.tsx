@@ -15,7 +15,7 @@ const MyAccountPage: FC = () => {
         <PageCanvas>
           <PageHeader
             title="Mon compte"
-            description="Profil, securite et sessions actives."
+            description="Profil, sécurité et sessions actives."
             icon={
               <ServiceIcon className="bg-primary/10">
                 <User className="size-5" />

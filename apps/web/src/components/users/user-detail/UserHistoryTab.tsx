@@ -90,80 +90,80 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
     category: 'security',
     color: 'text-destructive bg-destructive/10',
     icon: Ban,
-    label: 'Compte verrouille',
+    label: 'Compte verrouillé',
   },
   LOGIN_FAILED: {
     category: 'auth',
     color: 'text-destructive bg-destructive/10',
     icon: XCircle,
-    label: 'Echec connexion',
+    label: 'Échec connexion',
   },
   LOGIN_SUCCESS: {
     category: 'auth',
     color: 'text-primary bg-primary/10',
     icon: CheckCircle,
-    label: 'Connexion reussie',
+    label: 'Connexion réussie',
   },
   LOGOUT: {
     category: 'auth',
     color: 'text-muted-foreground bg-muted',
     icon: LogOut,
-    label: 'Deconnexion',
+    label: 'Déconnexion',
   },
   PASSWORD_CHANGE: {
     category: 'security',
     color: 'text-amber-400 bg-amber-500/10',
     icon: Key,
-    label: 'Mot de passe modifie',
+    label: 'Mot de passe modifié',
   },
   PASSWORD_RESET: {
     category: 'security',
     color: 'text-amber-400 bg-amber-500/10',
     icon: RefreshCw,
-    label: 'Mot de passe reinitialise',
+    label: 'Mot de passe réinitialisé',
   },
   // User actions
   PERMISSION_UPDATE: {
     category: 'admin',
     color: 'text-primary bg-primary/10',
     icon: Shield,
-    label: 'Permissions modifiees',
+    label: 'Permissions modifiées',
   },
   SESSION_INVALIDATE: {
     category: 'security',
     color: 'text-amber-400 bg-amber-500/10',
     icon: LogIn,
-    label: 'Session invalidee',
+    label: 'Session révoquée',
   },
   USER_ACTIVATE: {
     category: 'admin',
     color: 'text-primary bg-primary/10',
     icon: UserCheck,
-    label: 'Utilisateur active',
+    label: 'Utilisateur activé',
   },
   USER_CREATE: {
     category: 'admin',
     color: 'text-primary bg-primary/10',
     icon: UserPlus,
-    label: 'Utilisateur cree',
+    label: 'Utilisateur créé',
   },
   USER_DEACTIVATE: {
     category: 'admin',
     color: 'text-amber-400 bg-amber-500/10',
     icon: UserMinus,
-    label: 'Utilisateur desactive',
+    label: 'Utilisateur désactivé',
   },
   USER_DELETE: {
     category: 'admin',
     color: 'text-destructive bg-destructive/10',
     icon: Trash2,
-    label: 'Utilisateur supprime',
+    label: 'Utilisateur supprimé',
   },
   USER_UPDATE: {
     category: 'admin',
     color: 'text-primary bg-primary/10',
     icon: Pencil,
-    label: 'Utilisateur modifie',
+    label: 'Utilisateur modifié',
   },
 };
 
@@ -177,7 +177,7 @@ const DEFAULT_CONFIG: ActionConfig = {
 const CATEGORY_FILTERS = [
   { icon: Filter, label: 'Toutes', value: 'all' },
   { icon: LogIn, label: 'Connexions', value: 'auth' },
-  { icon: Shield, label: 'Securite', value: 'security' },
+  { icon: Shield, label: 'Sécurité', value: 'security' },
   { icon: Users, label: 'Administration', value: 'admin' },
 ];
 
@@ -273,20 +273,20 @@ const FIELD_LABELS = new Map<string, string>([
   ['amount', 'Montant'],
   ['description', 'Description'],
   ['email', 'Email'],
-  ['firstName', 'Prenom'],
+  ['firstName', 'Prénom'],
   ['isActive', 'Actif'],
   ['lastName', 'Nom'],
   ['name', 'Nom'],
   ['permissions', 'Permissions'],
-  ['role', 'Role'],
+  ['role', 'Rôle'],
   ['sortOrder', 'Ordre'],
-  ['staffProfile.department', 'Pole'],
+  ['staffProfile.department', 'Pôle'],
   ['staffProfile.discordId', 'ID Discord'],
-  ['staffProfile.displayName', 'Nom affiche'],
+  ['staffProfile.displayName', 'Nom affiché'],
   ['staffProfile.internalNote', 'Note interne'],
   ['staffProfile.jobTitle', 'Poste'],
-  ['staffProfile.joinedAt', 'Arrivee staff'],
-  ['staffProfile.phone', 'Telephone'],
+  ['staffProfile.joinedAt', 'Arrivée staff'],
+  ['staffProfile.phone', 'Téléphone'],
   ['staffProfile.timezone', 'Fuseau horaire'],
 ]);
 
@@ -340,6 +340,42 @@ const escapeCsvCell = (value: string): string => {
   const escapedValue = safeValue.replaceAll('"', '""');
 
   return `"${escapedValue}"`;
+};
+
+const getChangeDiffs = (
+  metadata: Record<string, unknown> | null,
+): ChangeDiff[] => {
+  const beforeValues = metadata?.before as Record<string, unknown> | undefined;
+  const afterValues = metadata?.after as Record<string, unknown> | undefined;
+
+  if (beforeValues && afterValues) {
+    const afterValuesByKey = new Map(Object.entries(afterValues));
+
+    return Object.entries(beforeValues).map(([fieldKey, before]) => ({
+      after: afterValuesByKey.get(fieldKey),
+      before,
+      fieldKey,
+    }));
+  }
+
+  const changeValues = metadata?.changes as Record<
+    string,
+    { from?: unknown; to?: unknown }
+  > | null;
+
+  if (!changeValues || typeof changeValues !== 'object') return [];
+
+  return Object.entries(changeValues)
+    .filter(([, value]) => {
+      return (
+        value && typeof value === 'object' && ('from' in value || 'to' in value)
+      );
+    })
+    .map(([fieldKey, value]) => ({
+      after: value.to,
+      before: value.from,
+      fieldKey,
+    }));
 };
 
 // ============================================
@@ -411,21 +447,8 @@ const TimelineItem: FC<{
 
   // Extract data from metadata
   const metadata = log.metadata as Record<string, unknown> | null;
-  const beforeValues = metadata?.before as Record<string, unknown> | undefined;
-  const afterValues = metadata?.after as Record<string, unknown> | undefined;
   const targetName = metadata?.targetName as string | undefined;
-  const changes: ChangeDiff[] =
-    beforeValues && afterValues
-      ? ((): ChangeDiff[] => {
-          const afterValuesByKey = new Map(Object.entries(afterValues));
-
-          return Object.entries(beforeValues).map(([fieldKey, before]) => ({
-            after: afterValuesByKey.get(fieldKey),
-            before,
-            fieldKey,
-          }));
-        })()
-      : [];
+  const changes = getChangeDiffs(metadata);
   const hasChanges = changes.length > 0;
 
   return (
@@ -632,14 +655,14 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `activite_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `activité_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
 
     const message =
       filteredLogs.length > maxExport
-        ? `${logsToExport.length} evenement(s) exporte(s) (limite atteinte)`
-        : `${logsToExport.length} evenement(s) exporte(s)`;
+        ? `${logsToExport.length} événement(s) exporté(s) (limite atteinte)`
+        : `${logsToExport.length} événement(s) exporté(s)`;
     toast.success(message);
   };
 
@@ -674,11 +697,11 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
             <History className="text-muted-foreground size-10" />
           </div>
           <h3 className="text-foreground mt-6 text-lg font-semibold">
-            Aucune activite
+            Aucune activité
           </h3>
           <p className="text-muted-foreground mt-2 max-w-xs text-center text-sm">
-            Les connexions, changements de securite et actions administratives
-            apparaitront ici.
+            Les connexions, changements de sécurité et actions administratives
+            apparaîtront ici.
           </p>
         </CardContent>
       </Card>
@@ -698,7 +721,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
             icon={LogIn}
           />
           <StatCard
-            label="Securite"
+            label="Sécurité"
             value={stats.security}
             color="text-amber-400"
             icon={Shield}
@@ -717,7 +740,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="border-border h-9 w-[160px] rounded-lg text-sm">
-                <SelectValue placeholder="Categorie" />
+                <SelectValue placeholder="Catégorie" />
               </SelectTrigger>
               <SelectContent>
                 {CATEGORY_FILTERS.map((filter) => {
@@ -751,7 +774,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
             </Select>
             <Select value={dateFilter} onValueChange={setDateFilter}>
               <SelectTrigger className="border-border h-9 w-[150px] rounded-lg text-sm">
-                <SelectValue placeholder="Periode" />
+                <SelectValue placeholder="Période" />
               </SelectTrigger>
               <SelectContent>
                 {DATE_FILTERS.map((filter) => (
@@ -775,7 +798,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                 }}
               >
                 <RefreshCw size={14} className="mr-1.5" />
-                Reset
+                Réinitialiser
               </Button>
             )}
             <div className="flex-1" />
@@ -802,7 +825,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                   <Filter className="text-muted-foreground h-8 w-8" />
                 </div>
                 <p className="text-muted-foreground mt-4 text-sm">
-                  Aucun resultat pour ces filtres
+                  Aucun résultat pour ces filtres
                 </p>
               </div>
             ) : (
@@ -860,7 +883,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
         </CardContent>
         {/* Footer */}
         <CardFooter className="border-border/60 text-muted-foreground bg-accent shrink-0 justify-center border-t px-4 py-3 text-center text-xs">
-          {filteredLogs.length} evenement{filteredLogs.length > 1 ? 's' : ''}
+          {filteredLogs.length} événement{filteredLogs.length > 1 ? 's' : ''}
           {(categoryFilter !== 'all' ||
             sourceFilter !== 'all' ||
             dateFilter !== 'all') &&

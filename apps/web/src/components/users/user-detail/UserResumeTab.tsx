@@ -87,7 +87,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
           />
           <ResumeStatCard
             icon={X}
-            label="Tentatives echouees"
+            label="Tentatives échouées"
             value={auditStats.failedLogins}
             tone="warning"
           />
@@ -112,7 +112,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Shield size={16} className="text-muted-foreground" />
-              <span className="text-muted-foreground">Role</span>
+              <span className="text-muted-foreground">Rôle</span>
             </div>
             <Badge variant={getRoleColor(user.role)}>
               {getAccessLabel(user)}
@@ -122,7 +122,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Clock size={16} className="text-muted-foreground" />
-              <span className="text-muted-foreground">Derniere connexion</span>
+              <span className="text-muted-foreground">Dernière connexion</span>
             </div>
             <span className="text-foreground text-right text-sm">
               {formatDate(user.lastLoginAt)}
@@ -139,11 +139,11 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
                 variant="outline"
                 className="border-amber-500/40 text-amber-400"
               >
-                A changer
+                À changer
               </Badge>
             ) : (
               <span className="text-muted-foreground text-sm">
-                Change le {formatDate(user.passwordChangedAt)}
+                Changé le {formatDate(user.passwordChangedAt)}
               </span>
             )}
           </div>
@@ -172,7 +172,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Calendar size={16} className="text-muted-foreground" />
-              <span className="text-muted-foreground">Cree le</span>
+              <span className="text-muted-foreground">Créé le</span>
             </div>
             <span className="text-foreground text-right text-sm">
               {formatDate(user.createdAt)}

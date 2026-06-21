@@ -63,7 +63,7 @@ const Pagination: FC<PaginationProps> = ({
           className="h-7 w-7 sm:h-8 sm:w-8"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          aria-label="Page precedente"
+          aria-label="Page précédente"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>

@@ -18,13 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import React, {
-  type FC,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -82,6 +76,11 @@ type FilterRole = 'all' | UserRole;
 type SortOption = 'name' | 'recent' | 'created';
 
 const USERS_PER_PAGE = 20;
+const SORT_LABELS: Record<SortOption, string> = {
+  created: 'Création',
+  name: 'Nom',
+  recent: 'Connexion',
+};
 
 type UsersStatTone = 'neutral' | 'primary' | 'warning';
 
@@ -226,6 +225,7 @@ export const UsersTab: FC = () => {
       search = '',
       status = 'all',
       role = 'all',
+      sort: SortOption = 'name',
     ): Promise<void> => {
       try {
         setIsLoading(true);
@@ -237,6 +237,7 @@ export const UsersTab: FC = () => {
         if (search) params.set('search', search);
         if (status !== 'all') params.set('status', status);
         if (role !== 'all') params.set('role', role);
+        if (sort !== 'name') params.set('sort', sort);
 
         const response = await fetch(`/api/users?${params.toString()}`);
         const data = await response.json();
@@ -259,8 +260,15 @@ export const UsersTab: FC = () => {
 
   // Fetch on mount and when filters change
   useEffect((): void => {
-    fetchUsers(currentPage, debouncedSearch, filterStatus, filterRole);
-  }, [fetchUsers, currentPage, debouncedSearch, filterStatus, filterRole]);
+    fetchUsers(currentPage, debouncedSearch, filterStatus, filterRole, sortBy);
+  }, [
+    fetchUsers,
+    currentPage,
+    debouncedSearch,
+    filterStatus,
+    filterRole,
+    sortBy,
+  ]);
 
   // Handle search with debounce
   useEffect((): (() => void) => {
@@ -293,7 +301,7 @@ export const UsersTab: FC = () => {
 
   const handleCreateUser = async (): Promise<void> => {
     if (!canCreateUsers) {
-      toast.error('Permission insuffisante pour creer un utilisateur');
+      toast.error('Permission insuffisante pour créer un utilisateur');
 
       return;
     }
@@ -316,13 +324,19 @@ export const UsersTab: FC = () => {
       if (data.success) {
         setCreatedUserId(data.data.user.id);
         setTempPassword(data.data.temporaryPassword);
-        toast.success('Utilisateur cree avec succes');
-        fetchUsers();
+        toast.success('Utilisateur créé avec succès');
+        await fetchUsers(
+          currentPage,
+          debouncedSearch,
+          filterStatus,
+          filterRole,
+          sortBy,
+        );
       } else {
-        toast.error(data.error?.message || 'Erreur lors de la creation');
+        toast.error(data.error?.message || 'Erreur lors de la création');
       }
     } catch {
-      toast.error('Erreur lors de la creation');
+      toast.error('Erreur lors de la création');
     } finally {
       setIsCreating(false);
     }
@@ -360,30 +374,7 @@ export const UsersTab: FC = () => {
   const hasActiveFilters =
     searchQuery || filterStatus !== 'all' || filterRole !== 'all';
 
-  // Sort current page client-side
-  const displayedUsers = useMemo(() => {
-    const result = [...users];
-
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case 'recent':
-          return (
-            new Date(b.lastLoginAt || 0).getTime() -
-            new Date(a.lastLoginAt || 0).getTime()
-          );
-        case 'created':
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-        default:
-          return `${a.firstName} ${a.lastName}`.localeCompare(
-            `${b.firstName} ${b.lastName}`,
-          );
-      }
-    });
-
-    return result;
-  }, [users, sortBy]);
+  const displayedUsers = users;
 
   // Total pages from server pagination
   const totalPages = pagination?.totalPages || 1;
@@ -415,13 +406,13 @@ export const UsersTab: FC = () => {
     const usersToExport = displayedUsers.slice(0, maxExport);
 
     const headers = [
-      'Prenom',
+      'Prénom',
       'Nom',
       'Email',
-      'Role',
+      'Rôle',
       'Statut',
-      'Derniere connexion',
-      'Date creation',
+      'Dernière connexion',
+      'Date création',
     ];
 
     const rows = usersToExport.map((user) => [
@@ -451,7 +442,7 @@ export const UsersTab: FC = () => {
     link.click();
     URL.revokeObjectURL(url);
 
-    toast.success(`${usersToExport.length} utilisateur(s) exporte(s)`);
+    toast.success(`${usersToExport.length} utilisateur(s) exporté(s)`);
   };
 
   if (isLoading) {
@@ -497,7 +488,7 @@ export const UsersTab: FC = () => {
           <UsersStatCard icon={UserCheck} label="Actifs" value={stats.active} />
           <UsersStatCard
             icon={Key}
-            label="MDP temp"
+            label="MDP temporaire"
             value={stats.pendingPasswordChange}
             tone="warning"
           />
@@ -548,7 +539,7 @@ export const UsersTab: FC = () => {
               <SelectItem value="all">Tous</SelectItem>
               <SelectItem value="active">Actifs</SelectItem>
               <SelectItem value="inactive">Inactifs</SelectItem>
-              <SelectItem value="pending">MDP temp</SelectItem>
+              <SelectItem value="pending">MDP temporaire</SelectItem>
             </SelectContent>
           </Select>
           {/* Role filter */}
@@ -557,7 +548,7 @@ export const UsersTab: FC = () => {
             onValueChange={(v) => handleFilterChange('role', v)}
           >
             <SelectTrigger className="h-9 w-[130px]">
-              <SelectValue placeholder="Role" />
+              <SelectValue placeholder="Rôle" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous</SelectItem>
@@ -570,7 +561,9 @@ export const UsersTab: FC = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-9 gap-1.5">
                 <ArrowUpDown size={14} />
-                <span className="hidden sm:inline">Trier</span>
+                <span className="hidden sm:inline">
+                  Trier: {SORT_LABELS[sortBy]}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
@@ -582,12 +575,12 @@ export const UsersTab: FC = () => {
               <DropdownMenuItem
                 onClick={() => handleFilterChange('sort', 'recent')}
               >
-                Derniere connexion
+                Dernière connexion
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => handleFilterChange('sort', 'created')}
               >
-                Date de creation
+                Date de création
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -640,10 +633,10 @@ export const UsersTab: FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Utilisateur</TableHead>
-                <TableHead>Role</TableHead>
+                <TableHead>Rôle</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>Mot de passe</TableHead>
-                <TableHead>Derniere connexion</TableHead>
+                <TableHead>Dernière connexion</TableHead>
                 <TableHead className="w-24 text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -654,7 +647,7 @@ export const UsersTab: FC = () => {
                     <div className="flex flex-col items-center gap-2">
                       <UserMinus size={32} className="text-muted-foreground" />
                       <p className="text-muted-foreground text-sm">
-                        Aucun utilisateur trouve
+                        Aucun utilisateur trouvé
                       </p>
                       {hasActiveFilters && (
                         <Button variant="link" size="sm" onClick={clearFilters}>
@@ -721,11 +714,11 @@ export const UsersTab: FC = () => {
                           variant="outline"
                           className="border-amber-500/40 text-amber-400"
                         >
-                          <Key size={10} className="mr-1" />A changer
+                          <Key size={10} className="mr-1" />À changer
                         </Badge>
                       ) : (
                         <span className="text-muted-foreground text-xs">
-                          A jour
+                          À jour
                         </span>
                       )}
                     </TableCell>
@@ -759,7 +752,7 @@ export const UsersTab: FC = () => {
               size={40}
               className="text-muted-foreground mx-auto mb-3"
             />
-            <p className="text-muted-foreground">Aucun utilisateur trouve</p>
+            <p className="text-muted-foreground">Aucun utilisateur trouvé</p>
             {hasActiveFilters && (
               <Button
                 variant="link"
@@ -821,7 +814,7 @@ export const UsersTab: FC = () => {
                       className="shrink-0 border-amber-500/40 text-amber-400"
                     >
                       <Key size={10} className="mr-1" />
-                      Temp
+                      MDP temporaire
                     </Badge>
                   )}
                   <span className="text-muted-foreground ml-2 shrink-0 text-xs">
@@ -834,14 +827,18 @@ export const UsersTab: FC = () => {
                     variant={getRoleColor(user.role)}
                     className="text-[10px]"
                   >
-                    {user.isProtected
-                      ? 'Superadmin'
-                      : user.role === 'ADMIN'
-                        ? 'Admin'
-                        : 'User'}
+                    {getAccessLabel(user)}
                   </Badge>
                   {!user.isActive && (
-                    <span className="bg-muted-foreground h-2 w-2 rounded-full" />
+                    <UserStatusBadge isActive={user.isActive} />
+                  )}
+                  {user.mustChangePassword && (
+                    <Badge
+                      variant="outline"
+                      className="border-amber-500/40 text-[10px] text-amber-400"
+                    >
+                      MDP
+                    </Badge>
                   )}
                 </div>
               </div>
@@ -871,7 +868,7 @@ export const UsersTab: FC = () => {
                 Nouvel utilisateur
               </DialogTitle>
               <DialogDescription className="text-muted-foreground">
-                Un mot de passe temporaire sera genere automatiquement.
+                Un mot de passe temporaire sera généré automatiquement.
               </DialogDescription>
             </DialogHeader>
             {tempPassword ? (
@@ -879,7 +876,7 @@ export const UsersTab: FC = () => {
                 <div className="overflow-hidden rounded-lg border border-amber-500/25 bg-amber-500/10">
                   <div className="p-4">
                     <p className="mb-2 text-sm font-medium text-amber-400">
-                      Mot de passe temporaire genere
+                      Mot de passe temporaire généré
                     </p>
                     <p className="text-muted-foreground mb-2 text-xs">
                       Mot de passe temporaire :
@@ -888,8 +885,8 @@ export const UsersTab: FC = () => {
                       {tempPassword}
                     </code>
                     <p className="text-muted-foreground mt-2 text-xs">
-                      Communiquez ce mot de passe a l&apos;utilisateur. Il devra
-                      le changer a sa premiere connexion.
+                      Communiquez ce mot de passe à l&apos;utilisateur. Il devra
+                      le changer à sa première connexion.
                     </p>
                   </div>
                 </div>
@@ -925,7 +922,7 @@ export const UsersTab: FC = () => {
                       className="text-foreground"
                       required
                     >
-                      Prenom
+                      Prénom
                     </Label>
                     <Input
                       id="newFirstName"
@@ -977,7 +974,7 @@ export const UsersTab: FC = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="newRole" className="text-foreground" required>
-                    Role
+                    Rôle
                   </Label>
                   <Select
                     value={newUser.role}
@@ -996,8 +993,8 @@ export const UsersTab: FC = () => {
                     </SelectContent>
                   </Select>
                   <p className="text-muted-foreground text-xs">
-                    Pour un acces simple, gardez Utilisateur. Le superadmin
-                    reste le compte technique protege.
+                    Pour un accès simple, gardez Utilisateur. Le superadmin
+                    reste le compte technique protégé.
                   </p>
                 </div>
                 <DialogFooter className="gap-2 sm:gap-0">
@@ -1021,10 +1018,10 @@ export const UsersTab: FC = () => {
                     {isCreating ? (
                       <>
                         <Loader2 size={16} className="mr-2 animate-spin" />
-                        Creation...
+                        Création...
                       </>
                     ) : (
-                      'Creer'
+                      'Créer'
                     )}
                   </Button>
                 </DialogFooter>

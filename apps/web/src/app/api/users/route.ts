@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { UserRole } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -20,6 +21,32 @@ import {
 import type { UsersListResponse, UserType } from '$types/auth.types';
 import { emailSchema, trimmedStringMin } from '$utils/zod.utils';
 
+const USER_SORT_OPTIONS = ['name', 'recent', 'created'] as const;
+type UserSortOption = (typeof USER_SORT_OPTIONS)[number];
+
+function normalizeUserSort(value: string | null): UserSortOption {
+  return USER_SORT_OPTIONS.includes(value as UserSortOption)
+    ? (value as UserSortOption)
+    : 'name';
+}
+
+function getUserOrderBy(
+  sort: UserSortOption,
+): Prisma.UserOrderByWithRelationInput[] {
+  if (sort === 'recent') {
+    return [
+      { lastLoginAt: { nulls: 'last', sort: 'desc' } },
+      { createdAt: 'desc' },
+    ];
+  }
+
+  if (sort === 'created') {
+    return [{ createdAt: 'desc' }];
+  }
+
+  return [{ lastName: 'asc' }, { firstName: 'asc' }, { createdAt: 'desc' }];
+}
+
 export async function GET(
   request: NextRequest,
 ): Promise<
@@ -38,6 +65,7 @@ export async function GET(
     });
     const search = searchParams.get('search')?.trim().toLowerCase() || '';
     const role = searchParams.get('role') as UserRole | null;
+    const sort = normalizeUserSort(searchParams.get('sort'));
     const status = searchParams.get('status');
 
     const where: {
@@ -77,7 +105,7 @@ export async function GET(
 
     const total = await prisma.user.count({ where });
     const users = await prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: getUserOrderBy(sort),
       skip,
       take: limit,
       where,
@@ -146,7 +174,7 @@ export async function GET(
 
 const createUserSchema = z.object({
   email: emailSchema,
-  firstName: trimmedStringMin(1, 'Prenom requis'),
+  firstName: trimmedStringMin(1, 'Prénom requis'),
   lastName: trimmedStringMin(1, 'Nom requis'),
   role: z.enum(['ADMIN', 'USER']),
 });
@@ -175,7 +203,7 @@ export async function POST(
           error: {
             code: ErrorCode.VALIDATION_ERROR,
             details: validation.error.flatten().fieldErrors,
-            message: 'Donnees invalides',
+            message: 'Données invalides',
           },
           success: false,
         },
@@ -191,7 +219,7 @@ export async function POST(
           error: {
             code: ErrorCode.FORBIDDEN,
             message:
-              "Vous n'etes pas autorise a creer des comptes administrateurs",
+              "Vous n'êtes pas autorisé à créer des comptes administrateurs",
           },
           success: false,
         },
@@ -208,7 +236,7 @@ export async function POST(
         {
           error: {
             code: ErrorCode.VALIDATION_ERROR,
-            message: 'Cet email est deja utilise',
+            message: 'Cet email est déjà utilisé',
           },
           success: false,
         },
@@ -228,7 +256,7 @@ export async function POST(
     await createAuditLogWithHeaders({
       action: 'USER_CREATE',
       category: 'USER',
-      description: `Utilisateur cree: ${newUser.email}`,
+      description: `Utilisateur créé: ${newUser.email}`,
       metadata: {
         createdUserId: newUser.id,
         role: newUser.role,

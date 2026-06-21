@@ -215,7 +215,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
 
       // Set logout timeout
       logoutTimeoutRef.current = setTimeout(() => {
-        toast.warning('Session expiree pour inactivite');
+        toast.warning('Session expirée pour inactivité');
         logout();
       }, INACTIVITY_TIMEOUT_MS);
     };
@@ -261,16 +261,16 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
       {children}
       {showSessionWarning && (
         <div className="bg-card fixed right-4 bottom-4 z-50 max-w-sm rounded-lg border p-4 shadow-lg">
-          <p className="mb-2 font-medium">Session bientot expiree</p>
+          <p className="mb-2 font-medium">Session bientôt expirée</p>
           <p className="text-muted-foreground mb-3 text-sm">
-            Votre session va expirer dans 5 minutes pour inactivite.
+            Votre session va expirer dans 5 minutes pour inactivité.
           </p>
           <div className="flex gap-2">
             <Button size="sm" onClick={extendSession}>
-              Rester connecte
+              Rester connecté
             </Button>
             <Button size="sm" variant="outline" onClick={logout}>
-              Se deconnecter
+              Se déconnecter
             </Button>
           </div>
         </div>

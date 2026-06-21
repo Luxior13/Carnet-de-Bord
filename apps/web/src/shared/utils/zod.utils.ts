@@ -49,7 +49,7 @@ export function optionalTrimmedStringMax(
   return optionalTrimmedString.refine(
     (val) => val === undefined || val === null || val.length <= max,
     {
-      message: message ?? `Maximum ${max} caracteres autorises`,
+      message: message ?? `Maximum ${max} caractères autorisés`,
     },
   );
 }

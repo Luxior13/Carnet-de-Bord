@@ -140,11 +140,11 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">
           <div className="grid gap-3 xl:grid-cols-2">
-            <ProfilePanel icon={<User className="size-3.5" />} title="Identite">
+            <ProfilePanel icon={<User className="size-3.5" />} title="Identité">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label className="text-muted-foreground text-xs" required>
-                    Prenom
+                    Prénom
                   </Label>
                   <Input
                     id="user-first-name"
@@ -197,7 +197,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
               </div>
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground text-xs">
-                  Nom affiche
+                  Nom affiché
                 </Label>
                 <Input
                   id="user-display-name"
@@ -254,7 +254,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                   >
                     <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-400" />
                     <span>
-                      Modifier cet email change l&apos;identifiant utilise a la
+                      Modifier cet email change l&apos;identifiant utilisé à la
                       connexion.
                     </span>
                   </div>
@@ -294,7 +294,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-muted-foreground text-xs">
-                    Telephone
+                    Téléphone
                   </Label>
                   <div className="relative">
                     <Phone className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
@@ -361,7 +361,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                 )}
               </div>
               <div className="space-y-1.5">
-                <Label className="text-muted-foreground text-xs">Pole</Label>
+                <Label className="text-muted-foreground text-xs">Pôle</Label>
                 <div className="relative">
                   <Building2 className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
                   <Input
@@ -420,7 +420,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
               </div>
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground text-xs">
-                  Arrivee staff
+                  Arrivée staff
                 </Label>
                 <div className="relative">
                   <CalendarDays className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
@@ -460,7 +460,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                 value={form.staffProfile.internalNote}
                 maxLength={1000}
                 rows={4}
-                placeholder="Informations utiles pour le staff, contexte interne, responsabilites ou remarques administratives."
+                placeholder="Informations utiles pour le staff, contexte interne, responsabilités ou remarques administratives."
                 onChange={(event) =>
                   updateStaffProfile('internalNote', event.target.value)
                 }
@@ -493,7 +493,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
         </CardContent>
         <CardFooter className="border-border/60 bg-accent justify-between gap-3 border-t p-3 sm:p-4">
           <p className="text-muted-foreground text-xs">
-            {hasChanges ? 'Modifications non enregistrees' : 'A jour'}
+            {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
           </p>
           <div className="flex gap-2">
             <Button

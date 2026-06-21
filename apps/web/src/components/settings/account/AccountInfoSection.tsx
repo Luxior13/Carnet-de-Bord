@@ -46,14 +46,14 @@ export const AccountInfoSection: FC<AccountInfoSectionProps> = ({
         </h3>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <div>
-            <p className="text-muted-foreground text-sm">Cree le</p>
+            <p className="text-muted-foreground text-sm">Créé le</p>
             <p className="text-foreground flex items-center gap-1 text-sm font-medium">
               <Calendar size={14} className="text-muted-foreground" />
               {new Date(userData.createdAt).toLocaleDateString('fr-FR')}
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground text-sm">Derniere connexion</p>
+            <p className="text-muted-foreground text-sm">Dernière connexion</p>
             <p className="text-foreground flex items-center gap-1 text-sm font-medium">
               <Clock size={14} className="text-muted-foreground" />
               {formatRelativeTime(userData.lastLoginAt)}

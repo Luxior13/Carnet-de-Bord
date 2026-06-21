@@ -126,20 +126,20 @@ function LoginPage(): React.ReactNode {
           <div className="space-y-5">
             <div className="bg-popover text-muted-foreground inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
               <ShieldCheck className="text-primary size-4" />
-              Acces securise
+              Accès sécurisé
             </div>
             <div className="space-y-2">
               <h1 className="text-3xl font-semibold tracking-tight">
                 Carnet Pro
               </h1>
               <p className="text-muted-foreground max-w-sm text-sm leading-6">
-                Un espace protege pour gerer les acces et garder la main sur tes
-                donnees.
+                Un espace protégé pour gérer les accès et garder la main sur vos
+                données.
               </p>
             </div>
           </div>
           <div className="grid gap-2">
-            {['Tableau de bord', 'Comptes', 'Acces securise'].map((item) => (
+            {['Tableau de bord', 'Comptes', 'Accès sécurisé'].map((item) => (
               <div
                 key={item}
                 className="bg-popover flex items-center gap-3 rounded-md border px-3 py-2"
@@ -260,7 +260,7 @@ function LoginPage(): React.ReactNode {
                     htmlFor="rememberMe"
                     className="text-muted-foreground cursor-pointer text-sm font-normal"
                   >
-                    Rester connecte
+                    Rester connecté
                   </Label>
                 </div>
                 <Button

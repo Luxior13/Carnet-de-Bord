@@ -22,8 +22,8 @@ const ErrorPage: FC<ErrorPageProps> = ({ error, reset }) => {
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold">Une erreur est survenue</h1>
             <p className="text-muted-foreground">
-              Quelque chose s&apos;est mal passe. Veuillez reessayer ou
-              contacter un administrateur si le probleme persiste.
+              Quelque chose s&apos;est mal passé. Veuillez réessayer ou
+              contacter un administrateur si le problème persiste.
             </p>
           </div>
           {error.digest && (
@@ -33,7 +33,7 @@ const ErrorPage: FC<ErrorPageProps> = ({ error, reset }) => {
           )}
           <Button onClick={reset} className="gap-2">
             <RefreshCw className="h-4 w-4" />
-            Reessayer
+            Réessayer
           </Button>
         </CardContent>
       </Card>

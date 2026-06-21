@@ -68,7 +68,7 @@ export const apiErrors = {
   badRequest: (message: string, details?: Record<string, string[]>) =>
     apiError(ErrorCode.VALIDATION_ERROR, message, 400, { details }),
 
-  forbidden: (message = 'Acces interdit') =>
+  forbidden: (message = 'Accès interdit') =>
     apiError(ErrorCode.FORBIDDEN, message, 403),
 
   internal: (action: string, error: unknown) =>
