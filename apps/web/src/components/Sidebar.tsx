@@ -3,15 +3,12 @@
 import {
   ChevronRight,
   ChevronsUpDown,
-  CircleCheck,
-  CircleX,
   Compass,
   FileText,
   LayoutDashboard,
   LogOut,
   type LucideIcon,
   Settings,
-  ShieldCheck,
   User,
   Users,
 } from 'lucide-react';
@@ -33,7 +30,6 @@ import {
   SITE_CONFIG,
 } from '$constants/app.constants';
 import { useUser } from '$context/UserContext';
-import { Badge } from '$ui/badge';
 import {
   Collapsible,
   CollapsibleContent,
@@ -115,7 +111,7 @@ function getActiveGroupHref(
 const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
   const pathname = usePathname();
   const { logout, userData } = useUser();
-  const { setOpenMobile } = useSidebar();
+  const { setOpenMobile, state: sidebarState } = useSidebar();
   const hasContextualContent = Boolean(contextualContent);
 
   const sections = useMemo(
@@ -367,14 +363,19 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              side="right"
-              align="end"
-              sideOffset={12}
-              className="border-sidebar-border/80 text-sidebar-foreground bg-popover w-72 overflow-hidden rounded-lg p-0 shadow-2xl shadow-black/30"
+              side={sidebarState === 'collapsed' ? 'right' : 'top'}
+              align={sidebarState === 'collapsed' ? 'end' : 'center'}
+              sideOffset={6}
+              className={cn(
+                'border-sidebar-border text-sidebar-foreground bg-card overflow-hidden rounded-lg p-0 shadow-2xl shadow-black/25',
+                sidebarState === 'collapsed'
+                  ? 'w-64'
+                  : 'w-[var(--radix-dropdown-menu-trigger-width)]',
+              )}
             >
-              <DropdownMenuLabel className="bg-accent p-3 font-normal">
-                <div className="flex min-w-0 gap-3">
-                  <span className="bg-sidebar-primary text-sidebar-primary-foreground flex size-11 shrink-0 items-center justify-center rounded-lg text-sm font-semibold shadow-sm">
+              <DropdownMenuLabel className="border-sidebar-border/60 bg-accent/60 border-b p-3 font-normal">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="bg-sidebar-primary text-sidebar-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-md text-sm font-semibold shadow-sm">
                     {userInitials}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -384,34 +385,13 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
                     <p className="text-sidebar-foreground/65 mt-0.5 truncate text-xs">
                       {userData.email}
                     </p>
-                    <div className="mt-2 flex min-w-0 items-center gap-1.5">
-                      <Badge className="border-sidebar-border/70 text-sidebar-foreground bg-card gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-medium">
-                        <ShieldCheck className="size-3" />
-                        <span className="truncate">{userAccessLabel}</span>
-                      </Badge>
-                      <Badge
-                        className={cn(
-                          'gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-medium',
-                          userData.isActive
-                            ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200'
-                            : 'border-red-400/20 bg-red-400/10 text-red-200',
-                        )}
-                      >
-                        {userData.isActive ? (
-                          <CircleCheck className="size-3" />
-                        ) : (
-                          <CircleX className="size-3" />
-                        )}
-                        {userData.isActive ? 'Actif' : 'Inactif'}
-                      </Badge>
-                    </div>
                   </div>
                 </div>
               </DropdownMenuLabel>
-              <div className="space-y-1 p-2">
+              <div className="p-1.5">
                 <DropdownMenuItem
                   asChild
-                  className="focus:text-sidebar-foreground focus:bg-accent cursor-pointer rounded-md p-2"
+                  className="focus:text-sidebar-foreground focus:bg-accent cursor-pointer rounded-md p-2.5"
                 >
                   <Link
                     href="/mon-compte"
@@ -426,23 +406,21 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
                         Mon compte
                       </span>
                       <span className="text-sidebar-foreground/60 block truncate text-xs">
-                        Profil personnel
+                        Profil et sécurité
                       </span>
                     </span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-sidebar-border/70 mx-0 my-1" />
+                <DropdownMenuSeparator className="bg-sidebar-border/70 mx-1 my-1.5" />
                 <DropdownMenuItem
                   onClick={() => {
                     setOpenMobile(false);
                     void logout();
                   }}
-                  className="focus:bg-destructive/15 focus:text-destructive text-destructive cursor-pointer rounded-md p-2"
+                  className="focus:bg-destructive/15 focus:text-destructive text-destructive mx-1 h-8 cursor-pointer justify-center gap-2 rounded-md p-1.5 text-xs"
                 >
-                  <span className="border-destructive/20 bg-destructive/10 flex size-8 shrink-0 items-center justify-center rounded-md border">
-                    <LogOut className="size-4" />
-                  </span>
-                  <span className="text-sm font-medium">Deconnexion</span>
+                  <LogOut className="size-3.5" />
+                  <span className="font-medium">Déconnexion</span>
                 </DropdownMenuItem>
               </div>
             </DropdownMenuContent>
