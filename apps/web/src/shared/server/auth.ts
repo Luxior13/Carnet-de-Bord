@@ -509,6 +509,8 @@ export const resetUserPassword = async (userId: string): Promise<string> => {
 
   await prisma.user.update({
     data: {
+      failedLoginAttempts: 0,
+      lockedUntil: null,
       mustChangePassword: true,
       passwordChangedAt: null,
       passwordHash,
@@ -585,12 +587,14 @@ export const mapUserToUserType = (
 ): UserType => ({
   createdAt: user.createdAt,
   email: user.email,
+  failedLoginAttempts: user.failedLoginAttempts,
   firstName: user.firstName,
   id: user.id,
   isActive: user.isActive,
   isProtected: user.isProtected,
   lastLoginAt: user.lastLoginAt,
   lastName: user.lastName,
+  lockedUntil: user.lockedUntil,
   mustChangePassword: user.mustChangePassword,
   passwordChangedAt: user.passwordChangedAt,
   permissions: user.permissions as PermissionsData | null,

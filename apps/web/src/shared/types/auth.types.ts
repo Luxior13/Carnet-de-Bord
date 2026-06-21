@@ -33,17 +33,28 @@ export type StaffProfileType = {
 export type UserType = {
   createdAt: Date;
   email: string;
+  failedLoginAttempts: number;
   firstName: string;
   id: string;
   isActive: boolean;
   isProtected: boolean;
   lastLoginAt: Date | null;
   lastName: string;
+  lockedUntil: Date | null;
   mustChangePassword: boolean;
   passwordChangedAt: Date | null;
   permissions: PermissionsData | null;
   role: UserRole;
   staffProfile: StaffProfileType | null;
+};
+
+export type UserSessionInfo = {
+  createdAt: Date | string;
+  expiresAt: Date | string;
+  id: string;
+  ipAddress: string | null;
+  rememberMe: boolean;
+  userAgent: string | null;
 };
 
 // Full user type (server-side)

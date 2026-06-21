@@ -49,6 +49,7 @@ import { useUser } from '$context/UserContext';
 import type {
   AuditLogEntry,
   UserAuditStats,
+  UserSessionInfo,
   UserType,
 } from '$types/auth.types';
 import {
@@ -250,6 +251,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [tempPassword, setTempPassword] = useState<string | null>(null);
+  const [showRevokeSessionsConfirm, setShowRevokeSessionsConfirm] =
+    useState(false);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -257,6 +260,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [auditStats, setAuditStats] = useState<UserAuditStats | null>(null);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
+  const [securitySessions, setSecuritySessions] = useState<UserSessionInfo[]>(
+    [],
+  );
+  const [isLoadingSecuritySessions, setIsLoadingSecuritySessions] =
+    useState(false);
+  const [isRevokingSecuritySessions, setIsRevokingSecuritySessions] =
+    useState(false);
 
   const [permissions, setPermissions] = useState<PermissionsData | null>(null);
   const [isSavingPermissions, setIsSavingPermissions] = useState(false);
@@ -313,6 +323,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     canResetPasswords &&
     !isSelf &&
     (!user.isProtected || isProtectedActor);
+  const canManageTargetSessions = canResetTargetPassword;
   const canDeleteTargetUser =
     !!user && canDeleteUsers && !user.isProtected && !isSelf;
   const canEditTargetRole = !!user && isProtectedActor && !user.isProtected;
@@ -450,10 +461,40 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     }
   }, [canViewUsers, userId]);
 
+  const fetchSecuritySessions = useCallback(async (): Promise<void> => {
+    if (!canManageTargetSessions) {
+      setSecuritySessions([]);
+
+      return;
+    }
+
+    try {
+      setIsLoadingSecuritySessions(true);
+      const response = await fetch(`/api/users/${userId}/sessions`);
+      const data = await response.json();
+
+      if (data.success) {
+        setSecuritySessions(data.data.sessions);
+      } else {
+        setSecuritySessions([]);
+      }
+    } catch {
+      setSecuritySessions([]);
+    } finally {
+      setIsLoadingSecuritySessions(false);
+    }
+  }, [canManageTargetSessions, userId]);
+
   useEffect(() => {
     void fetchUser();
     void fetchAuditLogs();
   }, [fetchUser, fetchAuditLogs]);
+
+  useEffect(() => {
+    if (activeSection === 'security') {
+      void fetchSecuritySessions();
+    }
+  }, [activeSection, fetchSecuritySessions]);
 
   useEffect(() => {
     setActiveSection(normalizeUserDetailSection(searchParams.get('section')));
@@ -646,6 +687,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
       if (data.success) {
         syncUserState(data.data.user);
+        void fetchSecuritySessions();
         toast.success('Securite mise a jour');
       } else {
         toast.error(data.error?.message || 'Erreur lors de la mise a jour');
@@ -677,6 +719,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         handleSectionChange('security');
         toast.success('Mot de passe reinitialise');
         void fetchUser();
+        void fetchSecuritySessions();
       } else {
         toast.error(
           data.error?.message || 'Erreur lors de la reinitialisation',
@@ -687,6 +730,34 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     } finally {
       setIsResetting(false);
       setShowResetConfirm(false);
+    }
+  };
+
+  const handleRevokeSecuritySessions = async (): Promise<void> => {
+    if (!canManageTargetSessions) {
+      toast.error('Permission insuffisante pour revoquer les sessions');
+
+      return;
+    }
+
+    setIsRevokingSecuritySessions(true);
+    try {
+      const response = await apiFetch(`/api/users/${userId}/sessions`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success('Sessions revoquees');
+        void fetchSecuritySessions();
+      } else {
+        toast.error(data.error?.message || 'Erreur lors de la revocation');
+      }
+    } catch {
+      toast.error('Erreur lors de la revocation');
+    } finally {
+      setIsRevokingSecuritySessions(false);
+      setShowRevokeSessionsConfirm(false);
     }
   };
 
@@ -775,9 +846,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             setIsActive={(isActive) => setEditForm({ ...editForm, isActive })}
             canEditStatus={canEditTargetStatus}
             canResetPassword={canResetTargetPassword}
+            canManageSessions={canManageTargetSessions}
             isSaving={isSaving}
+            isLoadingSessions={isLoadingSecuritySessions}
+            isRevokingSessions={isRevokingSecuritySessions}
             onSaveStatus={handleSaveSecurity}
             onResetPassword={() => setShowResetConfirm(true)}
+            onRevokeSessions={() => setShowRevokeSessionsConfirm(true)}
             tempPassword={tempPassword}
             currentUserId={currentUser?.id}
             canSaveStatus={canSaveSecurity}
@@ -785,6 +860,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             onCancelStatus={handleCancelSecurity}
             canDeleteUser={canDeleteTargetUser}
             onDeleteUser={() => setShowDeleteConfirm(true)}
+            sessions={securitySessions}
           />
         );
       case 'history':
@@ -1030,6 +1106,42 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                   <Loader2 size={16} className="mr-2 animate-spin" />
                 )}
                 Reinitialiser
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog
+        open={showRevokeSessionsConfirm}
+        onOpenChange={setShowRevokeSessionsConfirm}
+      >
+        <AlertDialogContent className="border-border overflow-hidden rounded-lg p-0">
+          <div className="p-6">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-foreground flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
+                  <AlertTriangle size={16} className="text-amber-400" />
+                </div>
+                Revoquer les sessions ?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
+                Toutes les sessions actives de cet utilisateur seront
+                deconnectees. Il devra se reconnecter.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-4">
+              <AlertDialogCancel className="border-border">
+                Annuler
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleRevokeSecuritySessions}
+                disabled={isRevokingSecuritySessions}
+                className="bg-amber-500 text-white hover:bg-amber-500/90"
+              >
+                {isRevokingSecuritySessions && (
+                  <Loader2 size={16} className="mr-2 animate-spin" />
+                )}
+                Revoquer
               </AlertDialogAction>
             </AlertDialogFooter>
           </div>

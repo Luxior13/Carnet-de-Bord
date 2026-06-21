@@ -279,6 +279,98 @@ describe('account security routes', () => {
     });
   });
 
+  describe('GET /api/users/[id]/sessions', () => {
+    it('lists target user active sessions for password reset managers', async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        email: 'target@example.com',
+        id: 'target-1',
+        isProtected: false,
+      });
+      mockPrisma.session.findMany.mockResolvedValueOnce([
+        {
+          createdAt: new Date('2026-03-01T00:00:00.000Z'),
+          expiresAt: new Date('2026-03-20T00:00:00.000Z'),
+          id: 'session-1',
+          ipAddress: '1.1.1.1',
+          rememberMe: true,
+          userAgent: 'Chrome',
+        },
+      ]);
+
+      const route = await import('$app/api/users/[id]/sessions/route');
+      const response = await route.GET(
+        new NextRequest('http://localhost/api/users/target-1/sessions'),
+        { params: Promise.resolve({ id: 'target-1' }) },
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.success).toBe(true);
+      expect(body.data.sessions).toHaveLength(1);
+      expect(mockRequirePermission).toHaveBeenCalled();
+      expect(mockPrisma.session.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ userId: 'target-1' }),
+        }),
+      );
+    });
+
+    it('rejects listing your own sessions through user management', async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        email: 'self@example.com',
+        id: 'user-1',
+        isProtected: false,
+      });
+
+      const route = await import('$app/api/users/[id]/sessions/route');
+      const response = await route.GET(
+        new NextRequest('http://localhost/api/users/user-1/sessions'),
+        { params: Promise.resolve({ id: 'user-1' }) },
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+      expect(mockPrisma.session.findMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('DELETE /api/users/[id]/sessions', () => {
+    it('revokes all target user sessions', async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        email: 'target@example.com',
+        id: 'target-1',
+        isProtected: false,
+      });
+      mockPrisma.session.deleteMany.mockResolvedValueOnce({ count: 2 });
+
+      const route = await import('$app/api/users/[id]/sessions/route');
+      const response = await route.DELETE(
+        new NextRequest('http://localhost/api/users/target-1/sessions', {
+          method: 'DELETE',
+        }),
+        { params: Promise.resolve({ id: 'target-1' }) },
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.success).toBe(true);
+      expect(body.data.revokedSessions).toBe(2);
+      expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
+        where: { userId: 'target-1' },
+      });
+      expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'SESSION_INVALIDATE',
+          category: 'AUTH',
+          metadata: expect.objectContaining({ targetUserId: 'target-1' }),
+          userId: 'user-1',
+        }),
+      );
+    });
+  });
+
   describe('DELETE /api/auth/sessions', () => {
     it('prevents revoking the current session through the revoke endpoint', async () => {
       mockPrisma.session.findFirst.mockResolvedValue({
