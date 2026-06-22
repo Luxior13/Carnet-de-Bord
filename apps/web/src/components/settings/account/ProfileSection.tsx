@@ -4,6 +4,7 @@ import { Calendar, Check, Clock, Edit, Loader2, Mail, X } from 'lucide-react';
 import React, { type FC, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { UserAvatar } from '$components/users/UserAvatar';
 import { getAccessLabel, getRoleColor } from '$constants/permissions.constants';
 import type { UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
@@ -90,10 +91,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
     <Card className="bg-card">
       <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
-          <div className="bg-primary text-primary-foreground flex size-16 shrink-0 items-center justify-center rounded-lg text-xl font-semibold shadow-sm">
-            {userData.firstName.charAt(0)}
-            {userData.lastName.charAt(0)}
-          </div>
+          <UserAvatar user={userData} className="size-16 rounded-lg" />
           <div className="min-w-0">
             <CardTitle className="truncate text-xl">
               {userData.firstName} {userData.lastName}

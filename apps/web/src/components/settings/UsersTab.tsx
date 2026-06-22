@@ -21,6 +21,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { UserAvatar } from '$components/users/UserAvatar';
 import {
   getAccessLabel,
   getRoleColor,
@@ -670,10 +671,7 @@ export const UsersTab: FC = () => {
                   >
                     <TableCell>
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="bg-primary text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-md text-xs font-semibold">
-                          {user.firstName.charAt(0)}
-                          {user.lastName.charAt(0)}
-                        </div>
+                        <UserAvatar user={user} className="size-9 rounded-md" />
                         <div className="min-w-0">
                           <div className="flex min-w-0 items-center gap-2">
                             <span className="text-foreground truncate font-medium">
@@ -776,11 +774,7 @@ export const UsersTab: FC = () => {
               onKeyDown={(event) => handleOpenUserKeyDown(event, user.id)}
             >
               <div className="flex items-center gap-3">
-                {/* Avatar with gradient */}
-                <div className="bg-primary flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-sm font-semibold text-white">
-                  {user.firstName.charAt(0)}
-                  {user.lastName.charAt(0)}
-                </div>
+                <UserAvatar user={user} className="size-11 rounded-lg" />
                 {/* Info */}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">

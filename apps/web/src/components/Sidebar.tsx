@@ -23,6 +23,7 @@ import React, {
   useState,
 } from 'react';
 
+import { UserAvatar } from '$components/users/UserAvatar';
 import {
   getAccessLabel,
   getDesktopSidebarSections,
@@ -142,9 +143,6 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
   );
   const userDisplayName = userData
     ? `${userData.firstName} ${userData.lastName}`
-    : '';
-  const userInitials = userData
-    ? `${userData.firstName.charAt(0)}${userData.lastName.charAt(0)}`
     : '';
   const userAccessLabel = userData ? getAccessLabel(userData) : '';
 
@@ -348,9 +346,7 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
                   'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-0 group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:p-0 group-data-[collapsible=icon]/sidebar:pl-2.5 group-data-[collapsible=icon]/sidebar:shadow-none',
                 )}
               >
-                <span className="bg-sidebar-primary text-sidebar-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-md text-xs font-semibold shadow-sm">
-                  {userInitials}
-                </span>
+                <UserAvatar user={userData} className="size-9 rounded-md" />
                 <span className="min-w-0 flex-1 overflow-hidden transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:max-w-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150">
                   <span className="block truncate text-sm font-medium">
                     {userDisplayName}
@@ -375,9 +371,7 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
             >
               <DropdownMenuLabel className="border-sidebar-border/60 bg-accent/60 border-b p-3 font-normal">
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="bg-sidebar-primary text-sidebar-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-md text-sm font-semibold shadow-sm">
-                    {userInitials}
-                  </span>
+                  <UserAvatar user={userData} className="size-10 rounded-md" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">
                       {userDisplayName}

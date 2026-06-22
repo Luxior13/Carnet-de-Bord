@@ -4,6 +4,7 @@ import { ArrowLeft, FileText, History, Key, Shield, User } from 'lucide-react';
 import Link from 'next/link';
 import React, { type FC } from 'react';
 
+import { UserAvatar } from '$components/users/UserAvatar';
 import { getAccessLabel } from '$constants/permissions.constants';
 import type { UserType } from '$types/auth.types';
 import {
@@ -77,7 +78,6 @@ export const UserDetailSidebarPanel: FC<UserDetailSidebarPanelProps> = ({
   const { setOpenMobile } = useSidebar();
   const accessLabel = getAccessLabel(user);
   const displayName = `${user.firstName} ${user.lastName}`;
-  const initials = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;
 
   const closeMobileSidebar = (): void => {
     setOpenMobile(false);
@@ -111,9 +111,7 @@ export const UserDetailSidebarPanel: FC<UserDetailSidebarPanelProps> = ({
               onClick={closeMobileSidebar}
               title={displayName}
             >
-              <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-md text-[11px] font-semibold">
-                {initials}
-              </div>
+              <UserAvatar user={user} className="size-8 rounded-md" />
               <span className="min-w-0">
                 <span className="flex min-w-0 items-center gap-1.5">
                   <span className="truncate">{displayName}</span>

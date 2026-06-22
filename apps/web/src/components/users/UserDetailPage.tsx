@@ -38,6 +38,7 @@ import {
 } from '$components/users/user-detail/UserProfileTab';
 import { UserResumeTab } from '$components/users/user-detail/UserResumeTab';
 import { UserSecurityTab } from '$components/users/user-detail/UserSecurityTab';
+import { UserAvatar } from '$components/users/UserAvatar';
 import {
   getAccessLabel,
   getRoleColor,
@@ -974,10 +975,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                         <ArrowLeft className="size-4" />
                       </Link>
                     </Button>
-                    <div className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-lg text-sm font-semibold shadow-sm">
-                      {user.firstName.charAt(0)}
-                      {user.lastName.charAt(0)}
-                    </div>
+                    <UserAvatar user={user} className="size-10 rounded-lg" />
                     <div className="min-w-0">
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <h1 className="truncate text-lg font-semibold tracking-tight">
