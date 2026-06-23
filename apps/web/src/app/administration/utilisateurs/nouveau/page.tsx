@@ -34,7 +34,7 @@ import {
 } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
-import { PageCanvas, PageShell } from '$ui/page-shell';
+import { PageCanvas, PageHeader, PageShell } from '$ui/page-shell';
 import {
   Select,
   SelectContent,
@@ -145,87 +145,62 @@ const NewUserContent: FC = () => {
     <PageShell className="py-0">
       <PageCanvas contentClassName="space-y-3">
         <div className="mx-auto w-full max-w-4xl space-y-3">
-          <Card className="shrink-0 overflow-hidden py-0">
-            <div className="bg-primary h-1 w-full" />
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex min-w-0 items-center gap-3">
-                  <Button
-                    asChild
+          <PageHeader
+            title={headerTitle}
+            description={headerSubtitle}
+            actions={
+              <Button asChild variant="outline" size="sm">
+                <Link href="/administration/utilisateurs">
+                  <ArrowLeft className="size-4" />
+                  Retour
+                </Link>
+              </Button>
+            }
+            icon={
+              <ServiceIcon
+                className={
+                  createdUser
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-secondary text-secondary-foreground'
+                }
+              >
+                {createdUser ? (
+                  <CheckCircle2 className="size-5" />
+                ) : (
+                  <UserPlus className="size-5" />
+                )}
+              </ServiceIcon>
+            }
+            meta={
+              <>
+                <Badge
+                  variant={
+                    headerRole === UserRole.ADMIN ? 'default' : 'secondary'
+                  }
+                >
+                  {headerRole === UserRole.ADMIN
+                    ? 'Administrateur'
+                    : 'Utilisateur'}
+                </Badge>
+                {createdUser ? (
+                  <Badge variant="secondary">Créé</Badge>
+                ) : (
+                  <Badge
                     variant="outline"
-                    size="icon"
-                    className="shrink-0"
+                    className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
                   >
-                    <Link
-                      href="/administration/utilisateurs"
-                      aria-label="Retour aux utilisateurs"
-                    >
-                      <ArrowLeft className="size-4" />
-                    </Link>
-                  </Button>
-                  <ServiceIcon
-                    className={
-                      createdUser
-                        ? 'bg-primary/10 text-primary'
-                        : 'bg-secondary text-secondary-foreground'
-                    }
-                  >
-                    {createdUser ? (
-                      <CheckCircle2 className="size-5" />
-                    ) : (
-                      <UserPlus className="size-5" />
-                    )}
-                  </ServiceIcon>
-                  <div className="min-w-0">
-                    <h1 className="truncate text-lg font-semibold tracking-tight">
-                      {headerTitle}
-                    </h1>
-                    <p className="text-muted-foreground truncate text-sm">
-                      {headerSubtitle}
-                    </p>
-                    <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      <Badge
-                        variant={
-                          headerRole === UserRole.ADMIN
-                            ? 'default'
-                            : 'secondary'
-                        }
-                      >
-                        {headerRole === UserRole.ADMIN
-                          ? 'Administrateur'
-                          : 'Utilisateur'}
-                      </Badge>
-                      {createdUser ? (
-                        <Badge variant="secondary">Créé</Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
-                        >
-                          Brouillon
-                        </Badge>
-                      )}
-                      <Badge
-                        variant="outline"
-                        className="border-amber-500/40 text-amber-400"
-                      >
-                        Mot de passe temporaire
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-muted-foreground flex flex-wrap gap-2 text-xs">
-                  <span className="border-border/60 bg-popover inline-flex h-7 items-center gap-1.5 rounded-md border px-2">
-                    <KeyRound className="size-3.5" />
-                    Première connexion
-                    <span className="text-foreground font-medium">
-                      Mot de passe à changer
-                    </span>
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                    Brouillon
+                  </Badge>
+                )}
+                <Badge
+                  variant="outline"
+                  className="border-amber-500/40 text-amber-400"
+                >
+                  Mot de passe temporaire
+                </Badge>
+              </>
+            }
+          />
           {createdUser && temporaryPassword ? (
             <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
               <CardHeader className="border-border/60 bg-accent border-b p-3 sm:p-4">

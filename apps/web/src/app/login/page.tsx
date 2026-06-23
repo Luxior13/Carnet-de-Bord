@@ -103,8 +103,9 @@ function LoginPage(): React.ReactNode {
 
   return (
     <main className="bg-background flex min-h-svh items-center justify-center p-4">
-      <div className="bg-card grid w-full max-w-6xl overflow-hidden rounded-lg border shadow-sm md:grid-cols-[0.9fr_1fr]">
-        <section className="bg-sidebar hidden border-r p-6 md:flex md:flex-col md:justify-between">
+      <Card className="w-full max-w-md overflow-hidden py-0 shadow-none">
+        <div className="bg-primary h-1 w-full" />
+        <CardHeader className="space-y-4">
           <div className="flex items-center gap-3">
             <span className="bg-primary flex size-10 items-center justify-center rounded-lg shadow-sm">
               <Image
@@ -123,165 +124,127 @@ function LoginPage(): React.ReactNode {
               </p>
             </div>
           </div>
-          <div className="space-y-5">
-            <div className="bg-popover text-muted-foreground inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
-              <ShieldCheck className="text-primary size-4" />
+          <div className="space-y-2">
+            <div className="bg-primary/10 text-primary inline-flex items-center gap-2 rounded-md px-2.5 py-1 text-xs font-medium">
+              <ShieldCheck className="size-4" />
               Accès sécurisé
             </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight">
-                Carnet Pro
-              </h1>
-              <p className="text-muted-foreground max-w-sm text-sm leading-6">
-                Un espace protégé pour gérer les accès et garder la main sur vos
-                données.
-              </p>
-            </div>
+            <CardTitle className="text-2xl tracking-tight">Connexion</CardTitle>
+            <CardDescription className="max-w-sm leading-6">
+              Accédez au tableau de bord, aux comptes et à
+              l&apos;administration.
+            </CardDescription>
           </div>
-          <div className="grid gap-2">
-            {['Tableau de bord', 'Comptes', 'Accès sécurisé'].map((item) => (
-              <div
-                key={item}
-                className="bg-popover flex items-center gap-3 rounded-md border px-3 py-2"
-              >
-                <CheckCircle2 className="text-primary size-4" />
-                <span className="text-muted-foreground text-sm">{item}</span>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5" autoComplete="on">
+            {error && (
+              <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
+                {error}
               </div>
-            ))}
-          </div>
-        </section>
-        <section className="p-5 sm:p-8">
-          <div className="mb-8 flex items-center gap-3 md:hidden">
-            <span className="bg-primary flex size-10 items-center justify-center rounded-lg">
-              <Image
-                src="/assets/noc.png"
-                alt=""
-                width={28}
-                height={28}
-                className="object-contain"
-                priority
-              />
-            </span>
-            <div>
-              <p className="text-sm font-semibold">{SITE_CONFIG.name}</p>
-              <p className="text-muted-foreground text-xs">
-                {SITE_CONFIG.description}
-              </p>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="email" required>
+                Email
+              </Label>
+              <div className="relative">
+                <Mail className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                <Input
+                  id="email"
+                  name="username"
+                  type="email"
+                  autoComplete="username"
+                  inputMode="email"
+                  placeholder="email@exemple.fr"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-10 pl-10"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
-          </div>
-          <Card className="border-0 bg-transparent py-0 shadow-none">
-            <CardHeader className="border-0 bg-transparent p-0">
-              <CardTitle className="text-2xl">Connexion</CardTitle>
-              <CardDescription>
-                Utilisez vos identifiants de connexion.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="px-0">
-              <form
-                onSubmit={handleSubmit}
-                className="space-y-5"
-                autoComplete="on"
-              >
-                {error && (
-                  <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
-                    {error}
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <Label htmlFor="email" required>
-                    Email
-                  </Label>
-                  <div className="relative">
-                    <Mail className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                    <Input
-                      id="email"
-                      name="username"
-                      type="email"
-                      autoComplete="username"
-                      inputMode="email"
-                      placeholder="email@exemple.fr"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="h-10 pl-10"
-                      required
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password" required>
-                    Mot de passe
-                  </Label>
-                  <div className="relative">
-                    <Lock className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                    <Input
-                      id="password"
-                      name="password"
-                      type={showPassword ? 'text' : 'password'}
-                      autoComplete="current-password"
-                      placeholder="Votre mot de passe"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="h-10 px-10"
-                      required
-                      disabled={isSubmitting}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 size-8 -translate-y-1/2"
-                      onClick={() => setShowPassword((value) => !value)}
-                      disabled={isSubmitting}
-                      aria-label={
-                        showPassword
-                          ? 'Masquer le mot de passe'
-                          : 'Afficher le mot de passe'
-                      }
-                    >
-                      {showPassword ? (
-                        <EyeOff className="size-4" />
-                      ) : (
-                        <Eye className="size-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="rememberMe"
-                    checked={rememberMe}
-                    onCheckedChange={(checked) =>
-                      setRememberMe(checked === true)
-                    }
-                    disabled={isSubmitting}
-                  />
-                  <Label
-                    htmlFor="rememberMe"
-                    className="text-muted-foreground cursor-pointer text-sm font-normal"
-                  >
-                    Rester connecté
-                  </Label>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="password" required>
+                Mot de passe
+              </Label>
+              <div className="relative">
+                <Lock className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  placeholder="Votre mot de passe"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-10 px-10"
+                  required
+                  disabled={isSubmitting}
+                />
                 <Button
-                  type="submit"
-                  className="h-10 w-full"
-                  disabled={isSubmitting || !email || !password}
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 size-8 -translate-y-1/2"
+                  onClick={() => setShowPassword((value) => !value)}
+                  disabled={isSubmitting}
+                  aria-label={
+                    showPassword
+                      ? 'Masquer le mot de passe'
+                      : 'Afficher le mot de passe'
+                  }
                 >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      Connexion...
-                    </>
+                  {showPassword ? (
+                    <EyeOff className="size-4" />
                   ) : (
-                    'Se connecter'
+                    <Eye className="size-4" />
                   )}
                 </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </section>
-      </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="rememberMe"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked === true)}
+                disabled={isSubmitting}
+              />
+              <Label
+                htmlFor="rememberMe"
+                className="text-muted-foreground cursor-pointer text-sm font-normal"
+              >
+                Rester connecté
+              </Label>
+            </div>
+            <Button
+              type="submit"
+              className="h-10 w-full"
+              disabled={isSubmitting || !email || !password}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Connexion...
+                </>
+              ) : (
+                'Se connecter'
+              )}
+            </Button>
+          </form>
+        </CardContent>
+        <div className="border-border/60 grid gap-2 border-t p-4 text-xs sm:grid-cols-3">
+          {['Tableau de bord', 'Comptes', 'Sécurité'].map((item) => (
+            <div
+              key={item}
+              className="bg-popover text-muted-foreground flex items-center gap-2 rounded-md border px-3 py-2"
+            >
+              <CheckCircle2 className="text-primary size-4" />
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
     </main>
   );
 }

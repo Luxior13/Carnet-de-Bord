@@ -56,17 +56,9 @@ export const NAV_SECTIONS: NavSection[] = [
     id: 'administration',
     items: [
       {
-        children: [
-          {
-            href: '/administration/utilisateurs',
-            icon: 'Users',
-            label: 'Utilisateurs',
-            requiredPermissions: [PERMISSIONS.USERS.VIEW],
-          },
-        ],
-        href: '/administration',
-        icon: 'Settings',
-        label: 'Administration',
+        href: '/administration/utilisateurs',
+        icon: 'Users',
+        label: 'Utilisateurs',
         requiredPermissions: [PERMISSIONS.USERS.VIEW],
       },
     ],

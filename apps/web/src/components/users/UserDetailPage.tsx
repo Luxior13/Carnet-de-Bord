@@ -8,7 +8,6 @@ import {
   Calendar,
   Clock,
   Loader2,
-  Shield,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -28,7 +27,6 @@ import {
   normalizeUserDetailSection,
   USER_DETAIL_SECTIONS,
   type UserDetailSectionId,
-  UserDetailSidebarPanel,
 } from '$components/users/user-detail/UserDetailNavigation';
 import { UserHistoryTab } from '$components/users/user-detail/UserHistoryTab';
 import {
@@ -66,8 +64,9 @@ import {
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent } from '$ui/card';
-import { PageCanvas, PageShell } from '$ui/page-shell';
+import { PageCanvas, PageHeader, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
+import { Tabs, TabsList, TabsTrigger } from '$ui/tabs';
 import { apiFetch } from '$utils/api.utils';
 
 type UserDetailPageProps = {
@@ -890,13 +889,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   return (
     <AuthenticatedLayout
-      sidebarContext={
-        <UserDetailSidebarPanel
-          user={user}
-          activeSection={activeSection}
-          onSectionChange={handleSectionChange}
-        />
-      }
       breadcrumbs={[
         { label: 'Administration' },
         { href: '/administration/utilisateurs', label: 'Utilisateurs' },
@@ -909,115 +901,111 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       <PageShell className="py-0">
         <PageCanvas contentClassName="space-y-3">
           <div className="space-y-3">
-            <Card className="shrink-0 overflow-hidden py-0">
-              <div className="bg-primary h-1 w-full" />
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Button
-                      asChild
+            <PageHeader
+              title={`${user.firstName} ${user.lastName}`}
+              description={user.email}
+              actions={
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/administration/utilisateurs">
+                    <ArrowLeft className="size-4" />
+                    Retour
+                  </Link>
+                </Button>
+              }
+              icon={<UserAvatar user={user} className="size-10 rounded-lg" />}
+              meta={
+                <>
+                  <Badge variant={getRoleColor(user.role)}>
+                    {getAccessLabel(user)}
+                  </Badge>
+                  {user.isProtected && (
+                    <Badge
                       variant="outline"
-                      size="icon"
-                      className="shrink-0 lg:hidden"
+                      className="border-amber-500/40 text-amber-400"
                     >
-                      <Link
-                        href="/administration/utilisateurs"
-                        aria-label="Retour"
-                      >
-                        <ArrowLeft className="size-4" />
-                      </Link>
-                    </Button>
-                    <UserAvatar user={user} className="size-10 rounded-lg" />
-                    <div className="min-w-0">
-                      <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        <h1 className="truncate text-lg font-semibold tracking-tight">
-                          {user.firstName} {user.lastName}
-                        </h1>
-                        {user.isProtected && (
-                          <Shield
-                            size={15}
-                            className="shrink-0 text-amber-500"
-                          />
-                        )}
-                      </div>
-                      <p className="text-muted-foreground truncate text-sm">
-                        {user.email}
-                      </p>
-                      <div className="mt-1.5 flex flex-wrap gap-1.5">
-                        <Badge variant={getRoleColor(user.role)}>
-                          {getAccessLabel(user)}
-                        </Badge>
-                        {user.isActive ? (
-                          <Badge variant="secondary">Actif</Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
-                          >
-                            Inactif
-                          </Badge>
-                        )}
-                        {user.mustChangePassword && (
-                          <Badge
-                            variant="outline"
-                            className="border-amber-500/40 text-amber-400"
-                          >
-                            Mot de passe à changer
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-muted-foreground flex flex-wrap gap-2 text-xs">
-                    <span className="border-border/60 bg-popover inline-flex h-7 items-center gap-1.5 rounded-md border px-2">
-                      <Clock className="size-3.5" />
-                      Dernière connexion
-                      <span className="text-foreground font-medium">
-                        {formatCompactDate(user.lastLoginAt)}
-                      </span>
-                    </span>
-                    <span className="border-border/60 bg-popover inline-flex h-7 items-center gap-1.5 rounded-md border px-2">
-                      <Calendar className="size-3.5" />
-                      Créé
-                      <span className="text-foreground font-medium">
-                        {formatCompactDate(user.createdAt)}
-                      </span>
-                    </span>
-                    <span className="border-border/60 bg-popover inline-flex h-7 items-center gap-1.5 rounded-md border px-2">
-                      <Activity className="size-3.5" />
-                      Activité
-                      <span className="text-foreground font-medium">
-                        {trackedActionsLabel}
-                      </span>
-                    </span>
-                  </div>
+                      Protégé
+                    </Badge>
+                  )}
+                  {user.isActive ? (
+                    <Badge variant="secondary">Actif</Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
+                    >
+                      Inactif
+                    </Badge>
+                  )}
+                  {user.mustChangePassword && (
+                    <Badge
+                      variant="outline"
+                      className="border-amber-500/40 text-amber-400"
+                    >
+                      Mot de passe à changer
+                    </Badge>
+                  )}
+                </>
+              }
+            />
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="border-border/70 bg-card flex items-center gap-3 rounded-lg border p-3">
+                <Clock className="text-muted-foreground size-4" />
+                <div className="min-w-0">
+                  <p className="text-muted-foreground text-xs">
+                    Dernière connexion
+                  </p>
+                  <p className="truncate text-sm font-medium">
+                    {formatCompactDate(user.lastLoginAt)}
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-            <div className="overflow-x-auto lg:hidden">
-              <div className="flex min-w-max gap-2 pb-1">
-                {availableSections.map((section) => (
-                  <Button
-                    type="button"
-                    variant={
-                      activeSection === section.id ? 'secondary' : 'outline'
-                    }
-                    key={section.id}
-                    onClick={() => handleSectionChange(section.id)}
-                    className="h-9 gap-2"
-                  >
-                    <span
-                      className={
-                        activeSection === section.id ? 'text-primary' : ''
-                      }
-                    >
-                      {section.icon}
-                    </span>
-                    {section.label}
-                  </Button>
-                ))}
+              </div>
+              <div className="border-border/70 bg-card flex items-center gap-3 rounded-lg border p-3">
+                <Calendar className="text-muted-foreground size-4" />
+                <div className="min-w-0">
+                  <p className="text-muted-foreground text-xs">Créé</p>
+                  <p className="truncate text-sm font-medium">
+                    {formatCompactDate(user.createdAt)}
+                  </p>
+                </div>
+              </div>
+              <div className="border-border/70 bg-card flex items-center gap-3 rounded-lg border p-3">
+                <Activity className="text-muted-foreground size-4" />
+                <div className="min-w-0">
+                  <p className="text-muted-foreground text-xs">Activité</p>
+                  <p className="truncate text-sm font-medium">
+                    {trackedActionsLabel}
+                  </p>
+                </div>
               </div>
             </div>
+            <Tabs
+              value={activeSection}
+              onValueChange={(value) =>
+                handleSectionChange(value as UserDetailSectionId)
+              }
+              className="min-w-0"
+            >
+              <div className="overflow-x-auto pb-1">
+                <TabsList className="h-10 w-max p-1">
+                  {availableSections.map((section) => (
+                    <TabsTrigger
+                      key={section.id}
+                      value={section.id}
+                      className="h-8 px-3 text-xs sm:text-sm"
+                    >
+                      <span
+                        className={
+                          activeSection === section.id ? 'text-primary' : ''
+                        }
+                      >
+                        {section.icon}
+                      </span>
+                      {section.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+            </Tabs>
             <div>{renderContent()}</div>
           </div>
         </PageCanvas>

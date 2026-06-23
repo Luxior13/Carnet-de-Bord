@@ -12,7 +12,7 @@ export const SectionPanel: FC<SectionPanelProps> = ({
   title,
 }) => {
   return (
-    <section className="border-border/60 bg-popover space-y-3 rounded-md border p-3">
+    <section className="border-border/70 bg-card space-y-3 rounded-lg border p-4 shadow-none">
       <h3 className="text-foreground flex items-center gap-2 text-sm font-semibold">
         <span className="bg-primary/10 text-primary flex size-6 items-center justify-center rounded-md">
           {icon}

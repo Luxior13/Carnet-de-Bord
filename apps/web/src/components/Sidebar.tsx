@@ -3,8 +3,6 @@
 import {
   ChevronRight,
   ChevronsUpDown,
-  Compass,
-  FileText,
   LayoutDashboard,
   LogOut,
   type LucideIcon,
@@ -15,13 +13,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import React, {
-  type FC,
-  type ReactNode,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { UserAvatar } from '$components/users/UserAvatar';
 import {
@@ -71,19 +63,7 @@ const iconMap: Record<string, LucideIcon> = {
 
 type SidebarProps = {
   className?: string;
-  contextualContent?: ReactNode;
 };
-
-type SidebarPanel = 'context' | 'site';
-
-const SIDEBAR_PANEL_OPTIONS: {
-  icon: LucideIcon;
-  id: SidebarPanel;
-  label: string;
-}[] = [
-  { icon: Compass, id: 'site', label: 'Site' },
-  { icon: FileText, id: 'context', label: 'Fiche' },
-];
 
 function isActivePath(pathname: string, href: string): boolean {
   return pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
@@ -109,11 +89,10 @@ function getActiveGroupHref(
   return activeGroup?.href ?? null;
 }
 
-const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
+const Sidebar: FC<SidebarProps> = ({ className }) => {
   const pathname = usePathname();
   const { logout, userData } = useUser();
   const { setOpenMobile, state: sidebarState } = useSidebar();
-  const hasContextualContent = Boolean(contextualContent);
 
   const sections = useMemo(
     () => getDesktopSidebarSections(userData),
@@ -138,9 +117,6 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
   const [openGroupHref, setOpenGroupHref] = useState<string | null>(
     activeGroupHref,
   );
-  const [activePanel, setActivePanel] = useState<SidebarPanel>(
-    hasContextualContent ? 'context' : 'site',
-  );
   const userDisplayName = userData
     ? `${userData.firstName} ${userData.lastName}`
     : '';
@@ -149,10 +125,6 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
   useEffect(() => {
     setOpenGroupHref(activeGroupHref);
   }, [activeGroupHref]);
-
-  useEffect(() => {
-    setActivePanel(hasContextualContent ? 'context' : 'site');
-  }, [hasContextualContent, pathname]);
 
   const renderSubNavItem = (item: NavItem): React.ReactNode => {
     const Icon = iconMap[item.icon] ?? Settings;
@@ -197,6 +169,7 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
             <SidebarMenuButton
               asChild
               isActive={isActive && !hasActiveChild}
+              tooltip={item.label}
               className={
                 hasActiveChild
                   ? 'bg-sidebar-accent/35 text-sidebar-accent-foreground [&>svg]:text-sidebar-ring'
@@ -223,7 +196,7 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
 
     return (
       <SidebarMenuItem key={item.href}>
-        <SidebarMenuButton asChild isActive={isActive}>
+        <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
           <Link
             aria-current={isActive ? 'page' : undefined}
             aria-label={item.label}
@@ -240,22 +213,22 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
   };
 
   return (
-    <SidebarRoot collapsible="icon" variant="floating" className={className}>
+    <SidebarRoot collapsible="icon" variant="sidebar" className={className}>
       <SidebarHeader className="border-sidebar-border/70 border-b p-3 group-data-[collapsible=icon]/sidebar:px-0">
         <Link
           href="/"
           onClick={() => setOpenMobile(false)}
           className={cn(
-            'border-sidebar-border/60 bg-sidebar-accent/35 hover:bg-sidebar-accent/60 flex h-12 w-full min-w-0 items-center gap-3 overflow-hidden rounded-lg border px-2 shadow-sm transition-colors',
-            'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-2.5 group-data-[collapsible=icon]/sidebar:shadow-none',
+            'hover:bg-sidebar-accent/45 flex h-11 w-full min-w-0 items-center gap-3 overflow-hidden rounded-md px-2 transition-colors',
+            'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
           )}
         >
-          <span className="bg-sidebar-primary flex size-9 shrink-0 items-center justify-center rounded-lg shadow-sm">
+          <span className="bg-sidebar-primary flex size-8 shrink-0 items-center justify-center rounded-md">
             <Image
               src="/assets/noc.png"
               alt=""
-              width={26}
-              height={26}
+              width={24}
+              height={24}
               className="object-contain"
               priority
             />
@@ -271,47 +244,8 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
         </Link>
       </SidebarHeader>
       <SidebarContent>
-        {hasContextualContent && (
-          <div className="bg-sidebar/95 sticky top-0 z-10 px-2 pt-2 pb-1 group-data-[collapsible=icon]/sidebar:hidden">
-            <div
-              className="border-sidebar-border/70 bg-sidebar-accent/35 grid grid-cols-2 gap-1 rounded-lg border p-1 shadow-sm"
-              role="tablist"
-              aria-label="Navigation"
-            >
-              {SIDEBAR_PANEL_OPTIONS.map((option) => {
-                const Icon = option.icon;
-                const isSelected = activePanel === option.id;
-
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={isSelected}
-                    onClick={() => setActivePanel(option.id)}
-                    className={cn(
-                      'text-sidebar-foreground/70 hover:text-sidebar-foreground focus-visible:ring-sidebar-ring flex h-8 items-center justify-center gap-1.5 rounded-md px-2 text-xs font-medium transition-[background-color,color,box-shadow] outline-none focus-visible:ring-2',
-                      isSelected &&
-                        'bg-sidebar text-sidebar-foreground border-sidebar-border ring-sidebar-border/70 shadow-sm ring-1',
-                    )}
-                  >
-                    <Icon className="size-3.5" />
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
         {topSections.map((section) => (
-          <SidebarGroup
-            key={section.id}
-            className={cn(
-              hasContextualContent &&
-                activePanel === 'context' &&
-                'hidden group-data-[collapsible=icon]/sidebar:flex',
-            )}
-          >
+          <SidebarGroup key={section.id}>
             {section.label && (
               <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
             )}
@@ -320,11 +254,6 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
-        {contextualContent && activePanel === 'context' && (
-          <SidebarGroup className="pt-0 group-data-[collapsible=icon]/sidebar:hidden">
-            {contextualContent}
-          </SidebarGroup>
-        )}
       </SidebarContent>
       <SidebarFooter className="border-sidebar-border/70 border-t group-data-[collapsible=icon]/sidebar:px-0">
         {bottomSections.map((section) => (
@@ -342,8 +271,8 @@ const Sidebar: FC<SidebarProps> = ({ className, contextualContent }) => {
                 aria-label={`Menu utilisateur de ${userDisplayName}`}
                 title={userDisplayName}
                 className={cn(
-                  'border-sidebar-border/70 bg-sidebar-accent/45 hover:bg-sidebar-accent/60 focus-visible:ring-sidebar-ring data-[state=open]:bg-sidebar-accent/70 data-[state=open]:ring-sidebar-ring/40 flex min-w-0 items-center gap-3 overflow-hidden rounded-lg border p-2 text-left shadow-sm transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-2 data-[state=open]:ring-1',
-                  'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-0 group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:p-0 group-data-[collapsible=icon]/sidebar:pl-2.5 group-data-[collapsible=icon]/sidebar:shadow-none',
+                  'hover:bg-sidebar-accent/60 focus-visible:ring-sidebar-ring data-[state=open]:bg-sidebar-accent/70 flex min-w-0 items-center gap-3 overflow-hidden rounded-md p-2 text-left transition-[background-color,box-shadow] outline-none focus-visible:ring-2',
+                  'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:p-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
                 )}
               >
                 <UserAvatar user={userData} className="size-9 rounded-md" />

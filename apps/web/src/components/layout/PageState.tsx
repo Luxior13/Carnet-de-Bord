@@ -35,16 +35,18 @@ export const PageState: FC<PageStateProps> = ({
   return (
     <PageShell className="py-0">
       <PageCanvas>
-        <Card className="mx-auto max-w-3xl py-0">
-          <CardContent className="p-6">
+        <Card className="mx-auto max-w-2xl py-0 shadow-none">
+          <CardContent className="p-5 sm:p-6">
             <div className="flex items-start gap-4">
               <ServiceIcon className={cn(getToneClassName(tone))}>
                 {icon ?? <ShieldAlert className="size-5" />}
               </ServiceIcon>
               <div className="space-y-3">
                 <div>
-                  <h1 className="text-xl font-semibold">{title}</h1>
-                  <p className="text-muted-foreground mt-1 text-sm">
+                  <h1 className="text-xl font-semibold tracking-tight">
+                    {title}
+                  </h1>
+                  <p className="text-muted-foreground mt-1 text-sm leading-6">
                     {description}
                   </p>
                 </div>

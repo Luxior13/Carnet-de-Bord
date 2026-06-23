@@ -29,12 +29,12 @@ export const AccountPageContent: FC = () => {
 
   return (
     <div className="grid gap-4 lg:grid-cols-3">
-      <div className="order-first lg:order-last lg:col-span-1">
+      <div className="order-last lg:col-span-1">
         <div className="lg:sticky lg:top-20">
           <ActivitySection userData={userData} />
         </div>
       </div>
-      <div className="order-last space-y-4 lg:order-first lg:col-span-2">
+      <div className="order-first space-y-4 lg:col-span-2">
         <ProfileSection userData={userData} onUpdate={refreshUser} />
         <SecuritySection userData={userData} onUpdate={refreshUser} />
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
-import { Users } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
+import Link from 'next/link';
 import React, { type FC } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
@@ -8,6 +9,7 @@ import { AccessDeniedState } from '$components/layout/PageState';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import { UsersListPage } from '$features/users/UsersListPage';
+import { Button } from '$ui/button';
 import { PageCanvas, PageHeader, PageShell } from '$ui/page-shell';
 import { ServiceIcon } from '$ui/service-icon';
 
@@ -16,6 +18,14 @@ const UsersAdministrationContent: FC = () => {
   const canViewUsers = userData
     ? userData.isProtected ||
       hasPermission(userData.role, PERMISSIONS.USERS.VIEW, userData.permissions)
+    : false;
+  const canCreateUsers = userData
+    ? userData.isProtected ||
+      hasPermission(
+        userData.role,
+        PERMISSIONS.USERS.CREATE,
+        userData.permissions,
+      )
     : false;
 
   if (!canViewUsers) {
@@ -34,6 +44,16 @@ const UsersAdministrationContent: FC = () => {
         <PageHeader
           title="Utilisateurs"
           description="Comptes autorisés et accès du carnet."
+          actions={
+            canCreateUsers ? (
+              <Button asChild size="sm">
+                <Link href="/administration/utilisateurs/nouveau">
+                  <Plus className="size-4" />
+                  Nouveau
+                </Link>
+              </Button>
+            ) : null
+          }
           icon={
             <ServiceIcon className="bg-primary/10">
               <Users className="size-5" />

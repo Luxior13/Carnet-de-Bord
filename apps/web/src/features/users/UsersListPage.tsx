@@ -6,7 +6,6 @@ import {
   Clock,
   Key,
   type LucideIcon,
-  Plus,
   Search,
   Shield,
   User,
@@ -15,19 +14,12 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { UserAvatar } from '$components/users/UserAvatar';
-import {
-  getAccessLabel,
-  getRoleColor,
-  hasPermission,
-  PERMISSIONS,
-} from '$constants/permissions.constants';
-import { useUser } from '$context/UserContext';
+import { getAccessLabel, getRoleColor } from '$constants/permissions.constants';
 import type {
   PaginationInfo,
   UserStatsType,
@@ -190,16 +182,16 @@ const UsersStatCard: FC<{
   const toneClassNames = getUsersStatToneClassNames(tone);
 
   return (
-    <Card className="border-border bg-card overflow-hidden rounded-lg py-0 shadow-sm">
+    <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0 shadow-none">
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div
-            className={`${toneClassNames.icon} flex h-10 w-10 items-center justify-center rounded-lg`}
+            className={`${toneClassNames.icon} flex h-9 w-9 items-center justify-center rounded-md`}
           >
-            <Icon size={20} />
+            <Icon size={18} />
           </div>
           <div>
-            <p className={`${toneClassNames.value} text-2xl font-bold`}>
+            <p className={`${toneClassNames.value} text-xl font-semibold`}>
               {value}
             </p>
             <p className="text-muted-foreground text-xs">{label}</p>
@@ -214,7 +206,6 @@ export const UsersListPage: FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { userData } = useUser();
 
   // Get filters from URL
   const urlSearch = searchParams.get('q') || '';
@@ -234,14 +225,6 @@ export const UsersListPage: FC = () => {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const canCreateUsers = userData
-    ? userData.isProtected ||
-      hasPermission(
-        userData.role,
-        PERMISSIONS.USERS.CREATE,
-        userData.permissions,
-      )
-    : false;
 
   // Update URL when filters change
   const updateUrlParams = useCallback(
@@ -451,7 +434,7 @@ export const UsersListPage: FC = () => {
       )}
       <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
         <CardHeader className="bg-card p-4 sm:p-5">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex flex-col gap-1">
             <div className="min-w-0">
               <CardTitle className="text-base">Annuaire utilisateurs</CardTitle>
               <CardDescription>
@@ -462,16 +445,6 @@ export const UsersListPage: FC = () => {
                   totalPages > 1 &&
                   ` - Page ${currentPage}/${totalPages}`}
               </CardDescription>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {canCreateUsers && (
-                <Button asChild className="h-9">
-                  <Link href="/administration/utilisateurs/nouveau">
-                    <Plus size={16} />
-                    Nouveau
-                  </Link>
-                </Button>
-              )}
             </div>
           </div>
           <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">

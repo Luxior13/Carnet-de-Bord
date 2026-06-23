@@ -8,6 +8,7 @@ import { Button } from '$ui/button';
 import { Separator } from '$ui/separator';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '$ui/sheet';
 import { Skeleton } from '$ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
@@ -167,7 +168,7 @@ function SidebarProvider({
           } as React.CSSProperties
         }
         className={cn(
-          'bg-background box-border flex h-svh max-h-svh w-full gap-2 overflow-hidden p-2 max-md:gap-0 max-md:p-0',
+          'bg-background box-border flex h-svh max-h-svh w-full overflow-hidden',
           className,
         )}
         {...props}
@@ -363,7 +364,7 @@ function SidebarContent({
       data-sidebar="content"
       data-slot="sidebar-content"
       className={cn(
-        'flex min-h-0 flex-1 flex-col gap-2 overflow-x-hidden overflow-y-auto p-2 group-data-[collapsible=icon]/sidebar:px-0',
+        'flex min-h-0 flex-1 flex-col gap-1 overflow-x-hidden overflow-y-auto p-2 group-data-[collapsible=icon]/sidebar:px-0',
         className,
       )}
       {...props}
@@ -397,7 +398,7 @@ function SidebarGroupLabel({
       data-sidebar="group-label"
       data-slot="sidebar-group-label"
       className={cn(
-        'text-sidebar-foreground/65 flex h-8 shrink-0 items-center overflow-hidden rounded-md px-2 text-xs font-medium whitespace-nowrap transition-opacity duration-150 group-data-[collapsible=icon]/sidebar:h-0 group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150',
+        'text-sidebar-foreground/55 flex h-8 shrink-0 items-center overflow-hidden rounded-md px-2 text-[11px] font-semibold tracking-wide whitespace-nowrap uppercase transition-opacity duration-150 group-data-[collapsible=icon]/sidebar:h-0 group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150',
         className,
       )}
       {...props}
@@ -472,6 +473,7 @@ type SidebarMenuButtonProps = React.ComponentProps<'button'> & {
   asChild?: boolean;
   isActive?: boolean;
   size?: 'default' | 'lg' | 'sm';
+  tooltip?: React.ReactNode;
 };
 
 function SidebarMenuButton({
@@ -479,18 +481,20 @@ function SidebarMenuButton({
   className,
   isActive = false,
   size = 'default',
+  tooltip,
   ...props
 }: SidebarMenuButtonProps): React.ReactNode {
+  const { isMobile, state } = useSidebar();
   const Comp = asChild ? Slot : 'button';
 
-  return (
+  const button = (
     <Comp
       data-active={isActive}
       data-sidebar="menu-button"
       data-size={size}
       data-slot="sidebar-menu-button"
       className={cn(
-        'text-sidebar-foreground/90 hover:bg-sidebar-accent/75 hover:text-sidebar-accent-foreground hover:border-sidebar-border data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:border-sidebar-ring/45 data-[active=true]:[&>svg]:text-sidebar-ring focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/70 flex w-full items-center gap-2 overflow-hidden rounded-md border border-transparent px-2 text-left text-sm font-medium transition-[background-color,border-color,color,box-shadow] outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 data-[active=true]:font-semibold data-[active=true]:shadow-[inset_2px_0_0_var(--sidebar-ring)] [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
+        'text-sidebar-foreground/85 hover:bg-sidebar-accent/55 hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent/70 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/65 flex w-full items-center gap-2 overflow-hidden rounded-md px-2 text-left text-sm font-medium transition-[background-color,color,box-shadow] outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 data-[active=true]:font-semibold data-[active=true]:shadow-[inset_2px_0_0_var(--sidebar-ring)] [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
         size === 'sm' && 'h-7 text-xs',
         size === 'default' && 'h-8',
         size === 'lg' && 'h-12',
@@ -499,6 +503,19 @@ function SidebarMenuButton({
       )}
       {...props}
     />
+  );
+
+  if (!tooltip || isMobile || state !== 'collapsed') {
+    return button;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent side="right" sideOffset={8}>
+        {tooltip}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -605,7 +622,7 @@ function SidebarMenuSubButton({
       data-sidebar="menu-sub-button"
       data-slot="sidebar-menu-sub-button"
       className={cn(
-        'text-sidebar-foreground/80 hover:bg-sidebar-accent/65 hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:border-sidebar-ring/45 data-[active=true]:[&>svg]:text-sidebar-ring focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/65 flex h-8 min-w-0 items-center gap-2 overflow-hidden rounded-md border border-transparent px-2 text-sm font-medium transition-[background-color,border-color,color,box-shadow] outline-none focus-visible:ring-2 data-[active=true]:font-semibold data-[active=true]:shadow-[inset_2px_0_0_var(--sidebar-ring)] [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+        'text-sidebar-foreground/75 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent/65 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/60 flex h-8 min-w-0 items-center gap-2 overflow-hidden rounded-md px-2 text-sm font-medium transition-[background-color,color,box-shadow] outline-none focus-visible:ring-2 data-[active=true]:font-semibold data-[active=true]:shadow-[inset_2px_0_0_var(--sidebar-ring)] [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
         className,
       )}
       {...props}

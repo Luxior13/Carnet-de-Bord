@@ -51,14 +51,32 @@ export default function HomePage(): React.ReactNode {
           <PageHeader
             title={firstName ? `Bonjour ${firstName}` : 'Tableau de bord'}
             description="Accès rapides, sécurité et administration."
+            actions={
+              <>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/mon-compte">
+                    <UserRound className="size-4" />
+                    Mon compte
+                  </Link>
+                </Button>
+                {canViewUsers && (
+                  <Button asChild size="sm">
+                    <Link href="/administration/utilisateurs">
+                      <Users className="size-4" />
+                      Utilisateurs
+                    </Link>
+                  </Button>
+                )}
+              </>
+            }
             icon={
               <ServiceIcon className="bg-primary/10 text-primary">
                 <Home className="size-5" />
               </ServiceIcon>
             }
           />
-          <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-            <Card className="overflow-hidden py-0">
+          <div className="grid gap-4 xl:grid-cols-[1.3fr_0.9fr]">
+            <Card className="overflow-hidden py-0 shadow-none">
               <CardHeader>
                 <CardTitle>Actions rapides</CardTitle>
                 <CardDescription>
@@ -69,7 +87,7 @@ export default function HomePage(): React.ReactNode {
                 <Button
                   asChild
                   variant="outline"
-                  className="bg-popover h-auto justify-between rounded-md border p-4 text-left"
+                  className="bg-popover h-auto justify-between rounded-md border p-4 text-left shadow-none"
                 >
                   <Link href="/mon-compte">
                     <span className="flex items-center gap-3">
@@ -90,7 +108,7 @@ export default function HomePage(): React.ReactNode {
                   <Button
                     asChild
                     variant="outline"
-                    className="bg-popover h-auto justify-between rounded-md border p-4 text-left"
+                    className="bg-popover h-auto justify-between rounded-md border p-4 text-left shadow-none"
                   >
                     <Link href="/administration/utilisateurs">
                       <span className="flex items-center gap-3">
@@ -112,7 +130,7 @@ export default function HomePage(): React.ReactNode {
                 )}
               </CardContent>
             </Card>
-            <Card className="overflow-hidden py-0">
+            <Card className="overflow-hidden py-0 shadow-none">
               <CardHeader>
                 <CardTitle>État du compte</CardTitle>
                 <CardDescription>Votre accès actuel.</CardDescription>

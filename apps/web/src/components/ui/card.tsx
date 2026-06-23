@@ -9,7 +9,7 @@ const Card: FC<CardProps> = ({ className, ...props }) => {
     <div
       data-slot="card"
       className={cn(
-        'border-border/80 bg-card text-card-foreground flex flex-col gap-0 overflow-hidden rounded-lg border py-0 shadow-sm',
+        'border-border/70 bg-card text-card-foreground flex flex-col gap-0 overflow-hidden rounded-lg border py-0 shadow-none',
         className,
       )}
       {...props}
@@ -22,7 +22,7 @@ const CardHeader: FC<CardProps> = ({ className, ...props }) => {
     <div
       data-slot="card-header"
       className={cn(
-        'border-border/60 bg-accent flex flex-col gap-1.5 border-b p-4 sm:p-5',
+        'border-border/60 flex flex-col gap-1.5 border-b px-4 py-4 sm:px-5 sm:py-5',
         className,
       )}
       {...props}
@@ -65,7 +65,7 @@ const CardFooter: FC<CardProps> = ({ className, ...props }) => {
     <div
       data-slot="card-footer"
       className={cn(
-        'border-border/60 bg-accent flex items-center border-t p-4 sm:p-5',
+        'border-border/60 flex items-center border-t px-4 py-4 sm:px-5 sm:py-5',
         className,
       )}
       {...props}

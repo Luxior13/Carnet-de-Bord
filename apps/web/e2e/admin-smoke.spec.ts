@@ -42,7 +42,9 @@ test('authenticates and reaches the admin surfaces', async ({ page }) => {
   await expect(
     page.getByRole('heading', { name: /Bonjour|Tableau de bord/ }),
   ).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Mon compte' })).toBeVisible();
+  await expect(
+    page.getByRole('main').getByRole('link', { name: 'Mon compte', exact: true }),
+  ).toBeVisible();
 
   await page.goto('/administration/utilisateurs');
   await expect(page.getByRole('heading', { name: 'Utilisateurs' })).toBeVisible();
