@@ -28,17 +28,8 @@ const PageCanvas: FC<PageCanvasProps> = ({
   ...props
 }) => {
   return (
-    <div className={cn('relative min-w-0', className)} {...props}>
-      <div
-        aria-hidden
-        className="border-border/70 bg-popover pointer-events-none absolute inset-y-0 -right-3 -left-3 z-0 min-h-[calc(100svh-3.5rem)] border-x border-y-0 sm:-right-6 sm:-left-6 md:min-h-[calc(100svh-4.5rem)] lg:-right-8 lg:-left-8"
-      />
-      <div
-        className={cn(
-          'relative z-10 space-y-6 py-4 sm:py-5 lg:py-6',
-          contentClassName,
-        )}
-      >
+    <div className={cn('min-w-0', className)} {...props}>
+      <div className={cn('space-y-5 py-4 sm:py-5 lg:py-6', contentClassName)}>
         {children}
       </div>
     </div>
@@ -61,11 +52,11 @@ const PageHeader: FC<PageHeaderProps> = ({
   return (
     <Card className="overflow-hidden py-0">
       <div className="bg-primary h-1 w-full" />
-      <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-4">
+      <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+        <div className="flex min-w-0 items-center gap-3">
           {icon}
           <div className="min-w-0">
-            <h1 className="truncate text-2xl font-semibold tracking-tight">
+            <h1 className="truncate text-lg font-semibold tracking-tight">
               {title}
             </h1>
             {description && (

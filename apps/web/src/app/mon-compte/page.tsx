@@ -2,7 +2,7 @@ import { User } from 'lucide-react';
 import React, { type FC } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
-import { AccountTab } from '$components/settings/AccountTab';
+import { AccountPageContent } from '$features/account/AccountPageContent';
 import { PageCanvas, PageHeader, PageShell } from '$ui/page-shell';
 import { ServiceIcon } from '$ui/service-icon';
 
@@ -22,7 +22,7 @@ const MyAccountPage: FC = () => {
               </ServiceIcon>
             }
           />
-          <AccountTab />
+          <AccountPageContent />
         </PageCanvas>
       </PageShell>
     </AuthenticatedLayout>

@@ -2,41 +2,39 @@
 
 import React, { type FC } from 'react';
 
-import { ActivitySection } from '$components/settings/account/ActivitySection';
-import { ProfileSection } from '$components/settings/account/ProfileSection';
-import { SecuritySection } from '$components/settings/account/SecuritySection';
 import { useUser } from '$context/UserContext';
+import { ActivitySection } from '$features/account/components/ActivitySection';
+import { ProfileSection } from '$features/account/components/ProfileSection';
+import { SecuritySection } from '$features/account/components/SecuritySection';
 import { Skeleton } from '$ui/skeleton';
 
-const AccountTabSkeleton: FC = () => (
-  <div className="grid gap-6 lg:grid-cols-3">
+const AccountPageContentSkeleton: FC = () => (
+  <div className="grid gap-4 lg:grid-cols-3">
     <div className="lg:col-span-2">
       <Skeleton className="h-64 w-full" />
     </div>
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Skeleton className="h-48 w-full" />
       <Skeleton className="h-48 w-full" />
     </div>
   </div>
 );
 
-export const AccountTab: FC = () => {
+export const AccountPageContent: FC = () => {
   const { refreshUser, userData } = useUser();
 
   if (!userData) {
-    return <AccountTabSkeleton />;
+    return <AccountPageContentSkeleton />;
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      {/* Mobile: Activity first, Desktop: Right column */}
+    <div className="grid gap-4 lg:grid-cols-3">
       <div className="order-first lg:order-last lg:col-span-1">
         <div className="lg:sticky lg:top-20">
           <ActivitySection userData={userData} />
         </div>
       </div>
-      {/* Main content */}
-      <div className="order-last space-y-6 lg:order-first lg:col-span-2">
+      <div className="order-last space-y-4 lg:order-first lg:col-span-2">
         <ProfileSection userData={userData} onUpdate={refreshUser} />
         <SecuritySection userData={userData} onUpdate={refreshUser} />
       </div>

@@ -9,7 +9,6 @@ import {
   Mail,
   Plus,
   Shield,
-  ShieldAlert,
   User,
   UserPlus,
 } from 'lucide-react';
@@ -18,6 +17,8 @@ import React, { type FC, useState } from 'react';
 import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
+import { AccessDeniedState } from '$components/layout/PageState';
+import { SectionPanel } from '$components/layout/SectionPanel';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import type { UserType } from '$types/auth.types';
@@ -60,58 +61,6 @@ const EMPTY_USER_FORM: NewUserForm = {
 };
 
 const inputClassName = 'border-border/80 bg-input';
-
-const SectionTitle: FC<{
-  children: React.ReactNode;
-  icon: React.ReactNode;
-}> = ({ children, icon }) => (
-  <h3 className="text-foreground flex items-center gap-2 text-sm font-semibold">
-    <span className="bg-primary/10 text-primary flex size-6 items-center justify-center rounded-md">
-      {icon}
-    </span>
-    {children}
-  </h3>
-);
-
-const CreationPanel: FC<{
-  children: React.ReactNode;
-  icon: React.ReactNode;
-  title: string;
-}> = ({ children, icon, title }) => (
-  <section className="border-border/60 bg-popover space-y-3 rounded-md border p-3">
-    <SectionTitle icon={icon}>{title}</SectionTitle>
-    {children}
-  </section>
-);
-
-const AccessDenied: FC = () => (
-  <PageShell className="py-0">
-    <PageCanvas>
-      <Card className="max-w-3xl py-0">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <ServiceIcon className="bg-destructive/10 text-destructive">
-              <ShieldAlert className="size-5" />
-            </ServiceIcon>
-            <div className="space-y-3">
-              <div>
-                <h1 className="text-xl font-semibold">Accès refusé</h1>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  Vous n&apos;avez pas la permission de créer des utilisateurs.
-                </p>
-              </div>
-              <Button asChild variant="outline">
-                <Link href="/administration/utilisateurs">
-                  Retour aux utilisateurs
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </PageCanvas>
-  </PageShell>
-);
 
 const NewUserContent: FC = () => {
   const { userData } = useUser();
@@ -175,7 +124,13 @@ const NewUserContent: FC = () => {
   };
 
   if (!canCreateUsers) {
-    return <AccessDenied />;
+    return (
+      <AccessDeniedState
+        actionHref="/administration/utilisateurs"
+        actionLabel="Retour aux utilisateurs"
+        description="Vous n'avez pas la permission de créer des utilisateurs."
+      />
+    );
   }
 
   const headerTitle = createdUser
@@ -282,7 +237,7 @@ const NewUserContent: FC = () => {
               </CardHeader>
               <CardContent className="space-y-3 p-3 sm:p-4">
                 <div className="grid gap-3 lg:grid-cols-[1fr_280px]">
-                  <CreationPanel
+                  <SectionPanel
                     icon={<KeyRound className="size-3.5" />}
                     title="Mot de passe temporaire"
                   >
@@ -295,8 +250,8 @@ const NewUserContent: FC = () => {
                         {temporaryPassword}
                       </code>
                     </div>
-                  </CreationPanel>
-                  <CreationPanel
+                  </SectionPanel>
+                  <SectionPanel
                     icon={<Shield className="size-3.5" />}
                     title="Accès"
                   >
@@ -328,7 +283,7 @@ const NewUserContent: FC = () => {
                         </Badge>
                       </div>
                     </div>
-                  </CreationPanel>
+                  </SectionPanel>
                 </div>
               </CardContent>
               <CardFooter className="border-border/60 bg-accent flex flex-wrap gap-2 border-t p-4">
@@ -362,7 +317,7 @@ const NewUserContent: FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-3 p-3 sm:p-4">
                   <div className="grid gap-3 lg:grid-cols-[1fr_320px]">
-                    <CreationPanel
+                    <SectionPanel
                       icon={<User className="size-3.5" />}
                       title="Identité"
                     >
@@ -435,8 +390,8 @@ const NewUserContent: FC = () => {
                           />
                         </div>
                       </div>
-                    </CreationPanel>
-                    <CreationPanel
+                    </SectionPanel>
+                    <SectionPanel
                       icon={<Shield className="size-3.5" />}
                       title="Accès initial"
                     >
@@ -474,7 +429,7 @@ const NewUserContent: FC = () => {
                         Le compte sera créé avec un mot de passe temporaire à
                         changer à la première connexion.
                       </div>
-                    </CreationPanel>
+                    </SectionPanel>
                   </div>
                 </CardContent>
                 <CardFooter className="border-border/60 bg-accent flex justify-between gap-3 border-t p-4">

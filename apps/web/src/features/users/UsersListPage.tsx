@@ -210,7 +210,7 @@ const UsersStatCard: FC<{
   );
 };
 
-export const UsersTab: FC = () => {
+export const UsersListPage: FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

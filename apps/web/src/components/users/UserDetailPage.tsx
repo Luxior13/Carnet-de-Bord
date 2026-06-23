@@ -9,7 +9,6 @@ import {
   Clock,
   Loader2,
   Shield,
-  ShieldAlert,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -23,6 +22,7 @@ import React, {
 import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
+import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { UserAccessTab } from '$components/users/user-detail/UserAccessTab';
 import {
   normalizeUserDetailSection,
@@ -67,7 +67,6 @@ import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent } from '$ui/card';
 import { PageCanvas, PageShell } from '$ui/page-shell';
-import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
 import { apiFetch } from '$utils/api.utils';
 
@@ -187,36 +186,6 @@ const DetailSkeleton: FC = () => (
         </div>
         <Skeleton className="min-h-96 w-full rounded-lg" />
       </div>
-    </PageCanvas>
-  </PageShell>
-);
-
-const AccessDenied: FC = () => (
-  <PageShell className="py-0">
-    <PageCanvas>
-      <Card className="max-w-3xl py-0">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <ServiceIcon className="bg-destructive/10 text-destructive">
-              <ShieldAlert className="size-5" />
-            </ServiceIcon>
-            <div className="space-y-3">
-              <div>
-                <h1 className="text-xl font-semibold">Accès refusé</h1>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  Vous n&apos;avez pas la permission de consulter cet
-                  utilisateur.
-                </p>
-              </div>
-              <Button asChild variant="outline">
-                <Link href="/administration/utilisateurs">
-                  Retour aux utilisateurs
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </PageCanvas>
   </PageShell>
 );
@@ -878,7 +847,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           { href: '/administration/utilisateurs', label: 'Utilisateurs' },
         ]}
       >
-        <AccessDenied />
+        <AccessDeniedState
+          actionHref="/administration/utilisateurs"
+          actionLabel="Retour aux utilisateurs"
+          description="Vous n'avez pas la permission de consulter cet utilisateur."
+        />
       </AuthenticatedLayout>
     );
   }
@@ -904,34 +877,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           { href: '/administration/utilisateurs', label: 'Utilisateurs' },
         ]}
       >
-        <PageShell className="py-0">
-          <PageCanvas>
-            <Card className="max-w-3xl py-0">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <ServiceIcon className="bg-destructive/10 text-destructive">
-                    <ShieldAlert className="size-5" />
-                  </ServiceIcon>
-                  <div className="space-y-3">
-                    <div>
-                      <h1 className="text-xl font-semibold">
-                        Utilisateur introuvable
-                      </h1>
-                      <p className="text-muted-foreground mt-1 text-sm">
-                        {errorMessage || "Impossible de charger l'utilisateur."}
-                      </p>
-                    </div>
-                    <Button asChild variant="outline">
-                      <Link href="/administration/utilisateurs">
-                        Retour aux utilisateurs
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </PageCanvas>
-        </PageShell>
+        <PageState
+          actionHref="/administration/utilisateurs"
+          actionLabel="Retour aux utilisateurs"
+          description={errorMessage || "Impossible de charger l'utilisateur."}
+          title="Utilisateur introuvable"
+          tone="destructive"
+        />
       </AuthenticatedLayout>
     );
   }

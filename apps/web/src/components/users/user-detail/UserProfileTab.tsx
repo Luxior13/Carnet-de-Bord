@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import React, { type FC } from 'react';
 
+import { SectionPanel } from '$components/layout/SectionPanel';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$ui/card';
@@ -70,29 +71,6 @@ const FieldError: FC<{ children: React.ReactNode; id: string }> = ({
   </p>
 );
 
-const SectionTitle: FC<{
-  children: React.ReactNode;
-  icon: React.ReactNode;
-}> = ({ children, icon }) => (
-  <h3 className="text-foreground flex items-center gap-2 text-sm font-semibold">
-    <span className="bg-primary/10 text-primary flex size-6 items-center justify-center rounded-md">
-      {icon}
-    </span>
-    {children}
-  </h3>
-);
-
-const ProfilePanel: FC<{
-  children: React.ReactNode;
-  icon: React.ReactNode;
-  title: string;
-}> = ({ children, icon, title }) => (
-  <section className="border-border/60 bg-popover space-y-3 rounded-md border p-3">
-    <SectionTitle icon={icon}>{title}</SectionTitle>
-    {children}
-  </section>
-);
-
 export const UserProfileTab: FC<UserProfileTabProps> = ({
   canEdit,
   canSave,
@@ -140,7 +118,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">
           <div className="grid gap-3 xl:grid-cols-2">
-            <ProfilePanel icon={<User className="size-3.5" />} title="Identité">
+            <SectionPanel icon={<User className="size-3.5" />} title="Identité">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label className="text-muted-foreground text-xs" required>
@@ -222,8 +200,8 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                   </FieldError>
                 )}
               </div>
-            </ProfilePanel>
-            <ProfilePanel icon={<Mail className="size-3.5" />} title="Contact">
+            </SectionPanel>
+            <SectionPanel icon={<Mail className="size-3.5" />} title="Contact">
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground text-xs" required>
                   Email de connexion
@@ -325,9 +303,9 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                   )}
                 </div>
               </div>
-            </ProfilePanel>
+            </SectionPanel>
           </div>
-          <ProfilePanel
+          <SectionPanel
             icon={<Briefcase className="size-3.5" />}
             title="Organisation"
           >
@@ -449,8 +427,8 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                 )}
               </div>
             </div>
-          </ProfilePanel>
-          <ProfilePanel
+          </SectionPanel>
+          <SectionPanel
             icon={<MessageCircle className="size-3.5" />}
             title="Note interne"
           >
@@ -489,7 +467,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                 </span>
               </div>
             </div>
-          </ProfilePanel>
+          </SectionPanel>
         </CardContent>
         <CardFooter className="border-border/60 bg-accent justify-between gap-3 border-t p-3 sm:p-4">
           <p className="text-muted-foreground text-xs">

@@ -1,15 +1,13 @@
 'use client';
 
-import { ShieldAlert, Users } from 'lucide-react';
-import Link from 'next/link';
+import { Users } from 'lucide-react';
 import React, { type FC } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
-import { UsersTab } from '$components/settings/UsersTab';
+import { AccessDeniedState } from '$components/layout/PageState';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
-import { Button } from '$ui/button';
-import { Card, CardContent } from '$ui/card';
+import { UsersListPage } from '$features/users/UsersListPage';
 import { PageCanvas, PageHeader, PageShell } from '$ui/page-shell';
 import { ServiceIcon } from '$ui/service-icon';
 
@@ -22,31 +20,11 @@ const UsersAdministrationContent: FC = () => {
 
   if (!canViewUsers) {
     return (
-      <PageShell className="py-0">
-        <PageCanvas>
-          <Card className="max-w-3xl py-0">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <ServiceIcon className="bg-destructive/10 text-destructive">
-                  <ShieldAlert className="size-5" />
-                </ServiceIcon>
-                <div className="space-y-3">
-                  <div>
-                    <h1 className="text-xl font-semibold">Accès refusé</h1>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      Vous n&apos;avez pas la permission de consulter les
-                      utilisateurs.
-                    </p>
-                  </div>
-                  <Button asChild variant="outline">
-                    <Link href="/">Retour au tableau de bord</Link>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </PageCanvas>
-      </PageShell>
+      <AccessDeniedState
+        actionHref="/"
+        actionLabel="Retour au tableau de bord"
+        description="Vous n'avez pas la permission de consulter les utilisateurs."
+      />
     );
   }
 
@@ -62,7 +40,7 @@ const UsersAdministrationContent: FC = () => {
             </ServiceIcon>
           }
         />
-        <UsersTab />
+        <UsersListPage />
       </PageCanvas>
     </PageShell>
   );
