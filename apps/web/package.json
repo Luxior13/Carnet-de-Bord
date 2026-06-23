@@ -5,12 +5,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix",
+    "e2e:setup": "bun scripts/e2e-setup.mjs",
+    "test:e2e": "bun run e2e:setup && playwright test",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@next/eslint-plugin-next": "^15.4.5",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^24.2.0",
