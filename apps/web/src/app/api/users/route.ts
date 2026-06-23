@@ -68,20 +68,7 @@ export async function GET(
     const sort = normalizeUserSort(searchParams.get('sort'));
     const status = searchParams.get('status');
 
-    const where: {
-      deletedAt: null;
-      email?: { contains: string; mode: 'insensitive' };
-      firstName?: { contains: string; mode: 'insensitive' };
-      isActive?: boolean;
-      lastName?: { contains: string; mode: 'insensitive' };
-      mustChangePassword?: boolean;
-      OR?: Array<{
-        email?: { contains: string; mode: 'insensitive' };
-        firstName?: { contains: string; mode: 'insensitive' };
-        lastName?: { contains: string; mode: 'insensitive' };
-      }>;
-      role?: UserRole;
-    } = { deletedAt: null };
+    const where: Prisma.UserWhereInput = { deletedAt: null };
 
     if (search) {
       where.OR = [
@@ -103,56 +90,56 @@ export async function GET(
       where.mustChangePassword = true;
     }
 
-    const total = await prisma.user.count({ where });
-    const users = await prisma.user.findMany({
-      orderBy: getUserOrderBy(sort),
-      skip,
-      take: limit,
-      where,
-    });
-
-    const allUsers = await prisma.user.findMany({
-      select: {
-        createdAt: true,
-        isActive: true,
-        lastLoginAt: true,
-        mustChangePassword: true,
-        role: true,
-      },
-      where: { deletedAt: null },
-    });
-
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const baseUserWhere: Prisma.UserWhereInput = { deletedAt: null };
+    const countActiveUsers = (
+      extraWhere: Prisma.UserWhereInput = {},
+    ): Promise<number> =>
+      prisma.user.count({ where: { ...baseUserWhere, ...extraWhere } });
 
-    const stats = allUsers.reduce(
-      (acc, user) => {
-        acc.total++;
-        if (user.isActive) acc.active++;
-        else acc.inactive++;
-        if (user.role === UserRole.ADMIN) acc.byRole.ADMIN++;
-        else acc.byRole.USER++;
-        if (!user.lastLoginAt) acc.neverLoggedIn++;
-        if (user.createdAt >= oneWeekAgo) acc.newThisWeek++;
-        if (user.mustChangePassword) acc.pendingPasswordChange++;
-        if (user.lastLoginAt && user.lastLoginAt >= oneDayAgo) {
-          acc.recentLogins++;
-        }
+    const [
+      total,
+      users,
+      statsTotal,
+      active,
+      inactive,
+      adminCount,
+      userCount,
+      neverLoggedIn,
+      newThisWeek,
+      pendingPasswordChange,
+      recentLogins,
+    ] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        orderBy: getUserOrderBy(sort),
+        skip,
+        take: limit,
+        where,
+      }),
+      countActiveUsers(),
+      countActiveUsers({ isActive: true }),
+      countActiveUsers({ isActive: false }),
+      countActiveUsers({ role: UserRole.ADMIN }),
+      countActiveUsers({ role: UserRole.USER }),
+      countActiveUsers({ lastLoginAt: null }),
+      countActiveUsers({ createdAt: { gte: oneWeekAgo } }),
+      countActiveUsers({ mustChangePassword: true }),
+      countActiveUsers({ lastLoginAt: { gte: oneDayAgo } }),
+    ]);
 
-        return acc;
-      },
-      {
-        active: 0,
-        byRole: { ADMIN: 0, USER: 0 },
-        inactive: 0,
-        neverLoggedIn: 0,
-        newThisWeek: 0,
-        pendingPasswordChange: 0,
-        recentLogins: 0,
-        total: 0,
-      },
-    );
+    const stats = {
+      active,
+      byRole: { ADMIN: adminCount, USER: userCount },
+      inactive,
+      neverLoggedIn,
+      newThisWeek,
+      pendingPasswordChange,
+      recentLogins,
+      total: statsTotal,
+    };
 
     return NextResponse.json({
       data: {

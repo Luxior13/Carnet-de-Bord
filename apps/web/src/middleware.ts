@@ -4,7 +4,16 @@ import { checkRateLimit } from '$server/api-rate-limiter';
 
 const CSRF_COOKIE = 'csrf-token';
 const CSRF_HEADER = 'x-csrf-token';
+const SESSION_COOKIE = 'session';
+const ADMINISTRATION_PATH_PREFIX = '/administration';
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+function isAdministrationPath(pathname: string): boolean {
+  return (
+    pathname === ADMINISTRATION_PATH_PREFIX ||
+    pathname.startsWith(`${ADMINISTRATION_PATH_PREFIX}/`)
+  );
+}
 
 function generateToken(): string {
   const bytes = new Uint8Array(32);
@@ -39,7 +48,7 @@ function addSecurityHeaders(response: NextResponse): void {
   response.headers.set('Content-Security-Policy', csp);
 }
 
-export function middleware(request: NextRequest) {
+export function middleware(request: NextRequest): NextResponse {
   // Rate limiting for API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const ip =
@@ -129,6 +138,20 @@ export function middleware(request: NextRequest) {
   }
 
   // Non-API routes
+  if (
+    isAdministrationPath(request.nextUrl.pathname) &&
+    !request.cookies.get(SESSION_COOKIE)?.value
+  ) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = '/login';
+    loginUrl.search = '';
+
+    const redirectResponse = NextResponse.redirect(loginUrl);
+    addSecurityHeaders(redirectResponse);
+
+    return redirectResponse;
+  }
+
   const response = NextResponse.next();
 
   // Ensure CSRF cookie exists on every response
