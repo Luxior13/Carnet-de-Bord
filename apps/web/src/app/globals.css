@@ -96,6 +96,10 @@
     @apply min-h-svh overflow-x-hidden bg-background text-foreground antialiased;
   }
 
+  .scrollbar-gutter-stable {
+    scrollbar-gutter: stable both-edges;
+  }
+
   ::selection {
     @apply bg-primary text-primary-foreground;
   }
