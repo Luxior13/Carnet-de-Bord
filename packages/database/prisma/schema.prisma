@@ -107,6 +107,7 @@ model AuditLog {
   id          String        @id @default(cuid())
   userId      String?
   user        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  targetUserId String?
   action      AuditAction
   category    AuditCategory
   description String
@@ -116,6 +117,7 @@ model AuditLog {
   createdAt   DateTime      @default(now())
 
   @@index([userId])
+  @@index([targetUserId])
   @@index([action])
   @@index([category])
   @@index([createdAt])

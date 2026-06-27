@@ -478,8 +478,8 @@ export async function PATCH(
           after: afterValues,
           before: beforeValues,
           targetName,
-          targetUserId: id,
         },
+        targetUserId: id,
         userId: auth.user.id,
       });
     } else if (hasAccessChange) {
@@ -494,8 +494,8 @@ export async function PATCH(
           before: beforeValues,
           changes: changedKeys,
           targetName,
-          targetUserId: id,
         },
+        targetUserId: id,
         userId: auth.user.id,
       });
     } else {
@@ -508,8 +508,8 @@ export async function PATCH(
           before: beforeValues,
           changes: changedKeys,
           targetName,
-          targetUserId: id,
         },
+        targetUserId: id,
         userId: auth.user.id,
       });
     }
@@ -608,6 +608,7 @@ export async function DELETE(
       category: 'USER',
       description: `Utilisateur supprimé: ${existingUser.email}`,
       metadata: { deletedUserId: id, email: existingUser.email },
+      targetUserId: id,
       userId: auth.user.id,
     });
 

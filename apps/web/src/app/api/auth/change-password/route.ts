@@ -165,6 +165,7 @@ export async function POST(request: Request) {
       action: 'PASSWORD_CHANGE',
       category: 'AUTH',
       description: 'Mot de passe modifié',
+      targetUserId: user.id,
       userId: user.id,
     });
 

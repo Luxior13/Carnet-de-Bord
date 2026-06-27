@@ -99,7 +99,7 @@ export async function POST(
       action: 'PASSWORD_RESET',
       category: 'AUTH',
       description: `Mot de passe réinitialisé pour: ${existingUser.email}`,
-      metadata: { targetUserId: id },
+      targetUserId: id,
       userId: auth.user.id,
     });
 

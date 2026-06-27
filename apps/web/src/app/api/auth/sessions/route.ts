@@ -114,6 +114,7 @@ export async function DELETE(
         action: 'SESSION_INVALIDATE',
         category: 'AUTH',
         description: 'Session révoquée',
+        targetUserId: user.id,
         userId: user.id,
       });
     } else {
@@ -129,6 +130,7 @@ export async function DELETE(
         action: 'SESSION_INVALIDATE',
         category: 'AUTH',
         description: 'Toutes les autres sessions révoquées',
+        targetUserId: user.id,
         userId: user.id,
       });
     }

@@ -77,10 +77,11 @@ export async function GET(
       );
     }
 
-    // Query for logs BY this user OR ON this user (via targetUserId in metadata)
+    // Query for logs BY this user OR ON this user
     const whereClause = {
       OR: [
         { userId: id },
+        { targetUserId: id },
         {
           metadata: {
             equals: id,

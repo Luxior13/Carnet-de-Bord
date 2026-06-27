@@ -248,6 +248,7 @@ export async function POST(
         createdUserId: newUser.id,
         role: newUser.role,
       },
+      targetUserId: newUser.id,
       userId: auth.user.id,
     });
 

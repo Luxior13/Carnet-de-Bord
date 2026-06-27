@@ -34,6 +34,7 @@ export async function POST(): Promise<
       action: 'LOGOUT',
       category: 'AUTH',
       description: `Deconnexion: ${auth.user.email}`,
+      targetUserId: auth.user.id,
       userId: auth.user.id,
     }).catch((error: unknown) => {
       logger.error('Logout audit error', {

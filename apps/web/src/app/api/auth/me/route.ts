@@ -81,12 +81,21 @@ export async function PATCH(
     }
 
     const { firstName, lastName } = validation.data;
+    const nextFirstName = firstName.trim();
+    const nextLastName = lastName.trim();
+
+    if (nextFirstName === user.firstName && nextLastName === user.lastName) {
+      return NextResponse.json({
+        data: { user },
+        success: true,
+      });
+    }
 
     // Update user profile
     const updatedUser = await prisma.user.update({
       data: {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
+        firstName: nextFirstName,
+        lastName: nextLastName,
       },
       include: { staffProfile: true },
       where: { id: user.id },
@@ -99,10 +108,11 @@ export async function PATCH(
       description: `Profil mis à jour`,
       metadata: {
         changes: {
-          firstName: { from: user.firstName, to: firstName.trim() },
-          lastName: { from: user.lastName, to: lastName.trim() },
+          firstName: { from: user.firstName, to: nextFirstName },
+          lastName: { from: user.lastName, to: nextLastName },
         },
       },
+      targetUserId: user.id,
       userId: user.id,
     });
 

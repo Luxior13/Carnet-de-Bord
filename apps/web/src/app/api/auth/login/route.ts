@@ -63,6 +63,7 @@ async function recordLoginAudit(data: {
         email: data.email,
         ...(data.reason ? { reason: data.reason } : {}),
       },
+      targetUserId: data.userId ?? null,
       userId: data.userId ?? null,
     });
   } catch (error) {

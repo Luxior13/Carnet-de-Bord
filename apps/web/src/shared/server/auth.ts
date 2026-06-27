@@ -629,6 +629,7 @@ export const createAuditLog = async (data: {
   description: string;
   ipAddress?: string | null;
   metadata?: Record<string, unknown>;
+  targetUserId?: string | null;
   userAgent?: string | null;
   userId?: string | null;
 }): Promise<void> => {
@@ -639,6 +640,7 @@ export const createAuditLog = async (data: {
       description: data.description,
       ipAddress: data.ipAddress ?? null,
       metadata: data.metadata as Prisma.InputJsonValue | undefined,
+      targetUserId: data.targetUserId ?? null,
       userAgent: data.userAgent ?? null,
       userId: data.userId ?? null,
     },
@@ -653,6 +655,7 @@ export const createAuditLogWithHeaders = async (data: {
   category: AuditCategory;
   description: string;
   metadata?: Record<string, unknown>;
+  targetUserId?: string | null;
   userId?: string | null;
 }): Promise<void> => {
   const headersList = await headers();

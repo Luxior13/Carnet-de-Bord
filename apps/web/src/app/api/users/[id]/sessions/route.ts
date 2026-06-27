@@ -189,8 +189,8 @@ export async function DELETE(
       description: `Sessions révoquées pour: ${targetUser.email}`,
       metadata: {
         revokedSessions: result.count,
-        targetUserId: targetUser.id,
       },
+      targetUserId: targetUser.id,
       userId: auth.user.id,
     });
 
