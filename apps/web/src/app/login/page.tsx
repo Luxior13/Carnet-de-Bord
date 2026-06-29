@@ -91,8 +91,9 @@ function LoginPage(): React.ReactNode {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-svh items-center justify-center">
-        <Loader2 className="text-primary size-8 animate-spin" />
+      <div className="relative isolate flex min-h-svh items-center justify-center overflow-hidden">
+        <div aria-hidden="true" className="site-background-column" />
+        <Loader2 className="text-primary relative z-10 size-8 animate-spin" />
       </div>
     );
   }
@@ -102,8 +103,9 @@ function LoginPage(): React.ReactNode {
   }
 
   return (
-    <main className="flex min-h-svh items-center justify-center p-4">
-      <Card className="w-full max-w-md overflow-hidden py-0 shadow-none">
+    <main className="relative isolate flex min-h-svh items-center justify-center overflow-hidden p-4">
+      <div aria-hidden="true" className="site-background-column" />
+      <Card className="relative z-10 w-full max-w-md overflow-hidden py-0 shadow-none">
         <div className="bg-primary h-1 w-full" />
         <CardHeader className="space-y-4">
           <div className="flex items-center gap-3">

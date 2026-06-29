@@ -81,6 +81,16 @@
   --sidebar-accent-foreground: #f1f6ff;
   --sidebar-border: #344763;
   --sidebar-ring: #6c92d6;
+  --public-column-width: 66rem;
+  --public-column-border: rgba(232, 238, 248, 0.075);
+  --public-column-shadow: 0 34px 88px -70px rgba(0, 0, 0, 0.98);
+  --site-background-column-bg:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(95, 132, 200, 0.1),
+      transparent 34rem
+    ),
+    linear-gradient(180deg, rgba(18, 25, 37, 0.68), rgba(13, 18, 27, 0.84));
 }
 
 @layer base {
@@ -95,12 +105,35 @@
   body {
     @apply min-h-svh overflow-x-hidden bg-background text-foreground antialiased;
     background-image:
-      linear-gradient(180deg, rgba(13, 18, 27, 0.72), rgba(13, 18, 27, 0.9)),
+      linear-gradient(180deg, rgba(13, 18, 27, 0.74), rgba(9, 13, 20, 0.9)),
+      radial-gradient(
+        circle at 50% 0%,
+        rgba(95, 132, 200, 0.14),
+        transparent 42rem
+      ),
       url('/assets/Fond%20d%27ecran%20site.webp');
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
     background-attachment: fixed;
+  }
+
+  .site-background-column {
+    pointer-events: none;
+    position: fixed;
+    inset-block: 0;
+    left: 50%;
+    z-index: 0;
+    width: 100%;
+    max-width: var(--public-column-width);
+    transform: translateX(-50%);
+    border-inline: 1px solid var(--public-column-border);
+    background: var(--site-background-column-bg);
+    box-shadow: var(--public-column-shadow);
+  }
+
+  .site-background-column--local {
+    position: absolute;
   }
 
   .scrollbar-gutter-stable {

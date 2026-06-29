@@ -47,10 +47,11 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
   if (isLoading) {
     return (
       <div
-        className="flex min-h-svh items-center justify-center"
+        className="relative isolate flex min-h-svh items-center justify-center overflow-hidden"
         role="status"
         aria-label="Chargement"
       >
+        <div aria-hidden="true" className="site-background-column" />
         <Loader2 className="text-primary h-8 w-8 animate-spin" aria-hidden />
         <span className="sr-only">Chargement en cours...</span>
       </div>
@@ -75,12 +76,16 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
         onSuccess={handlePasswordChanged}
       />
       <Sidebar />
-      <SidebarInset className="h-full bg-transparent">
+      <SidebarInset className="relative isolate h-full bg-transparent">
+        <div
+          aria-hidden="true"
+          className="site-background-column site-background-column--local"
+        />
         <Header breadcrumbs={breadcrumbs} />
         <main
           id="main-content"
           className={cn(
-            'min-h-0 flex-1',
+            'relative z-10 min-h-0 flex-1',
             fullHeight
               ? 'overflow-hidden'
               : 'scrollbar-gutter-stable overflow-x-hidden overflow-y-auto',

@@ -9,7 +9,7 @@ const PageShell: FC<PageShellProps> = ({ className, ...props }) => {
   return (
     <div
       className={cn(
-        'mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8',
+        'relative z-10 mx-auto w-full max-w-[var(--public-column-width)] px-4 py-6 sm:px-6 lg:px-8',
         className,
       )}
       {...props}
@@ -28,7 +28,7 @@ const PageCanvas: FC<PageCanvasProps> = ({
   ...props
 }) => {
   return (
-    <div className={cn('min-w-0', className)} {...props}>
+    <div className={cn('relative z-10 min-w-0', className)} {...props}>
       <div className={cn('space-y-6 py-4 sm:py-5 lg:py-6', contentClassName)}>
         {children}
       </div>
