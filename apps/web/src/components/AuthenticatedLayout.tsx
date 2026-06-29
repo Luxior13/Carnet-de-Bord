@@ -47,7 +47,7 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
   if (isLoading) {
     return (
       <div
-        className="bg-background flex min-h-svh items-center justify-center"
+        className="flex min-h-svh items-center justify-center"
         role="status"
         aria-label="Chargement"
       >
@@ -75,7 +75,7 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
         onSuccess={handlePasswordChanged}
       />
       <Sidebar />
-      <SidebarInset className="bg-background h-full">
+      <SidebarInset className="h-full bg-transparent">
         <Header breadcrumbs={breadcrumbs} />
         <main
           id="main-content"

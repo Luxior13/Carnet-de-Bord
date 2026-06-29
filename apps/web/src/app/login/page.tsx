@@ -91,7 +91,7 @@ function LoginPage(): React.ReactNode {
 
   if (authLoading) {
     return (
-      <div className="bg-background flex min-h-svh items-center justify-center">
+      <div className="flex min-h-svh items-center justify-center">
         <Loader2 className="text-primary size-8 animate-spin" />
       </div>
     );
@@ -102,7 +102,7 @@ function LoginPage(): React.ReactNode {
   }
 
   return (
-    <main className="bg-background flex min-h-svh items-center justify-center p-4">
+    <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-md overflow-hidden py-0 shadow-none">
         <div className="bg-primary h-1 w-full" />
         <CardHeader className="space-y-4">

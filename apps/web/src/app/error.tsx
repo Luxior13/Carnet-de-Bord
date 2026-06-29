@@ -13,7 +13,7 @@ type ErrorPageProps = {
 
 const ErrorPage: FC<ErrorPageProps> = ({ error, reset }) => {
   return (
-    <div className="bg-background flex min-h-svh items-center justify-center p-4">
+    <div className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-md text-center">
         <CardContent className="space-y-5 p-6">
           <div className="bg-destructive/10 mx-auto flex h-14 w-14 items-center justify-center rounded-lg">

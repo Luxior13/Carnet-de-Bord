@@ -7,7 +7,7 @@ import { Card, CardContent } from '$ui/card';
 
 const NotFoundPage: FC = () => {
   return (
-    <div className="bg-background flex min-h-svh items-center justify-center p-4">
+    <div className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-md text-center">
         <CardContent className="space-y-6 px-6">
           <div className="bg-secondary text-primary mx-auto flex size-14 items-center justify-center rounded-lg">
