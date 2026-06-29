@@ -23,7 +23,7 @@ const NotFoundPage: FC = () => {
           <Button asChild>
             <Link href="/">
               <ArrowLeft className="size-4" />
-              Retour au tableau de bord
+              Retour à l&apos;accueil
             </Link>
           </Button>
         </CardContent>

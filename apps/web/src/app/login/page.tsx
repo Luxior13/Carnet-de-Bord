@@ -27,8 +27,8 @@ import { Checkbox } from '$ui/checkbox';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 
-const LAST_LOGIN_EMAIL_STORAGE_KEY = 'carnet-pro:last-login-email';
-const LEGACY_LOGIN_EMAILS_STORAGE_KEY = 'carnet-pro:login-emails';
+const LAST_LOGIN_EMAIL_STORAGE_KEY = 'team-control:last-login-email';
+const LEGACY_LOGIN_EMAILS_STORAGE_KEY = 'team-control:login-emails';
 
 function LoginPage(): React.ReactNode {
   const router = useRouter();
@@ -127,11 +127,11 @@ function LoginPage(): React.ReactNode {
           <div className="space-y-2">
             <div className="bg-primary/10 text-primary inline-flex items-center gap-2 rounded-md px-2.5 py-1 text-xs font-medium">
               <ShieldCheck className="size-4" />
-              Accès sécurisé
+              Espace privé
             </div>
             <CardTitle className="text-2xl tracking-tight">Connexion</CardTitle>
             <CardDescription className="max-w-sm leading-6">
-              Accédez au tableau de bord, aux comptes et à
+              Accédez à l&apos;espace privé, aux comptes et à
               l&apos;administration.
             </CardDescription>
           </div>
@@ -234,7 +234,7 @@ function LoginPage(): React.ReactNode {
           </form>
         </CardContent>
         <div className="border-border/60 grid gap-2 border-t p-4 text-xs sm:grid-cols-3">
-          {['Tableau de bord', 'Comptes', 'Sécurité'].map((item) => (
+          {['Vue d’ensemble', 'Comptes', 'Sécurité'].map((item) => (
             <div
               key={item}
               className="bg-popover text-muted-foreground flex items-center gap-2 rounded-md border px-3 py-2"

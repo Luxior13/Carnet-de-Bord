@@ -49,8 +49,8 @@ export default function HomePage(): React.ReactNode {
       <PageShell className="py-0">
         <PageCanvas>
           <PageHeader
-            title={firstName ? `Bonjour ${firstName}` : 'Tableau de bord'}
-            description="Accès rapides, sécurité et administration."
+            title={firstName ? `Bonjour ${firstName}` : "Vue d'ensemble"}
+            description="Pilotage privé, sécurité et raccourcis."
             actions={
               <>
                 <Button asChild variant="outline" size="sm">
@@ -78,9 +78,9 @@ export default function HomePage(): React.ReactNode {
           <div className="grid gap-4 xl:grid-cols-[1.3fr_0.9fr]">
             <Card className="overflow-hidden py-0 shadow-none">
               <CardHeader>
-                <CardTitle>Actions rapides</CardTitle>
+                <CardTitle>Raccourcis</CardTitle>
                 <CardDescription>
-                  Les raccourcis utiles selon vos accès.
+                  Les accès utiles selon votre rôle.
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-3 md:grid-cols-2">
@@ -132,8 +132,8 @@ export default function HomePage(): React.ReactNode {
             </Card>
             <Card className="overflow-hidden py-0 shadow-none">
               <CardHeader>
-                <CardTitle>État du compte</CardTitle>
-                <CardDescription>Votre accès actuel.</CardDescription>
+                <CardTitle>Sécurité du compte</CardTitle>
+                <CardDescription>Votre état d’accès actuel.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="border-border/60 bg-popover flex items-center gap-3 rounded-md border p-3">
@@ -148,7 +148,7 @@ export default function HomePage(): React.ReactNode {
                     </p>
                     <p className="text-muted-foreground text-xs">
                       {userData?.mustChangePassword
-                        ? 'Changement requis à la prochaine action.'
+                        ? 'Changement requis à la prochaine connexion.'
                         : 'Aucune action immédiate requise.'}
                     </p>
                   </div>

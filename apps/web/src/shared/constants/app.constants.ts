@@ -11,11 +11,11 @@ import {
 import type { UserType } from '$types/auth.types';
 
 export const SITE_CONFIG = {
-  description: 'Gestion des accès et du tableau de bord',
+  description: "Gestion privée d'équipe esport",
   logo: '/assets/logo.svg',
-  name: 'Carnet Pro',
-  subtitle: 'Tableau de bord',
-  tag: 'CP',
+  name: 'Team Control',
+  subtitle: 'Gestion privée',
+  tag: 'TC',
 };
 
 export { DEFAULT_ROLE_LABEL, PROTECTED_ROLE_LABEL, ROLE_LABELS };
@@ -39,19 +39,6 @@ export type NavSection = {
 
 // Navigation structure
 export const NAV_SECTIONS: NavSection[] = [
-  {
-    id: 'main',
-    items: [
-      {
-        href: '/',
-        icon: 'LayoutDashboard',
-        label: 'Tableau de bord',
-        requiredPermissions: [PERMISSIONS.DASHBOARD.VIEW],
-      },
-    ],
-    label: '',
-    position: 'top',
-  },
   {
     id: 'administration',
     items: [

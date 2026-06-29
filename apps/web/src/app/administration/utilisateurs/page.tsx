@@ -32,7 +32,7 @@ const UsersAdministrationContent: FC = () => {
     return (
       <AccessDeniedState
         actionHref="/"
-        actionLabel="Retour au tableau de bord"
+        actionLabel="Retour à l'accueil"
         description="Vous n'avez pas la permission de consulter les utilisateurs."
       />
     );
@@ -43,13 +43,13 @@ const UsersAdministrationContent: FC = () => {
       <PageCanvas>
         <PageHeader
           title="Utilisateurs"
-          description="Comptes autorisés et accès du carnet."
+          description="Comptes autorisés et accès de l'équipe."
           actions={
             canCreateUsers ? (
               <Button asChild size="sm">
                 <Link href="/administration/utilisateurs/nouveau">
                   <Plus className="size-4" />
-                  Nouveau
+                  Nouveau membre
                 </Link>
               </Button>
             ) : null

@@ -52,8 +52,8 @@ const PageHeader: FC<PageHeaderProps> = ({
   title,
 }) => {
   return (
-    <Card className="overflow-hidden py-0 shadow-none">
-      <div className="bg-primary h-1 w-full" />
+    <Card className="overflow-hidden rounded-xl py-0 shadow-none">
+      <div className="h-1.5 w-full bg-[linear-gradient(90deg,rgba(95,132,200,0.95),rgba(108,146,214,0.45),rgba(95,132,200,0.18))]" />
       <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div className="flex min-w-0 items-center gap-3">
           {icon}

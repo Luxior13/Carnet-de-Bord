@@ -3,7 +3,6 @@
 import {
   ChevronRight,
   ChevronsUpDown,
-  LayoutDashboard,
   LogOut,
   type LucideIcon,
   Settings,
@@ -56,7 +55,6 @@ import {
 import { cn } from '$utils/css.utils';
 
 const iconMap: Record<string, LucideIcon> = {
-  LayoutDashboard,
   Settings,
   Users,
 };
@@ -172,7 +170,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               tooltip={item.label}
               className={
                 hasActiveChild
-                  ? 'bg-sidebar-accent/35 text-sidebar-accent-foreground [&>svg]:text-sidebar-ring'
+                  ? 'border-sidebar-ring/20 text-sidebar-accent-foreground [&>svg]:text-sidebar-ring bg-sidebar-accent/25 border shadow-[inset_0_0_0_1px_rgba(108,146,214,0.12)]'
                   : undefined
               }
             >
@@ -214,30 +212,30 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
 
   return (
     <SidebarRoot collapsible="icon" variant="sidebar" className={className}>
-      <SidebarHeader className="border-sidebar-border/70 border-b p-3 group-data-[collapsible=icon]/sidebar:px-0">
+      <SidebarHeader className="border-sidebar-border/70 border-b bg-[linear-gradient(180deg,rgba(10,15,24,0.12),rgba(10,15,24,0))] p-3 group-data-[collapsible=icon]/sidebar:px-0">
         <Link
           href="/"
           onClick={() => setOpenMobile(false)}
           className={cn(
-            'hover:bg-sidebar-accent/45 flex h-11 w-full min-w-0 items-center gap-3 overflow-hidden rounded-md px-2 transition-colors',
-            'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
+            'border-sidebar-border/70 hover:border-sidebar-ring/35 flex h-11 w-full min-w-0 items-center gap-3 overflow-hidden rounded-xl border bg-[linear-gradient(180deg,rgba(95,132,200,0.12),rgba(34,49,74,0.8))] px-2.5 transition-[background-color,border-color,box-shadow] hover:bg-[linear-gradient(180deg,rgba(95,132,200,0.16),rgba(34,49,74,0.9))] hover:shadow-[inset_0_0_0_1px_rgba(108,146,214,0.16)]',
+            'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
           )}
         >
-          <span className="bg-sidebar-primary flex size-8 shrink-0 items-center justify-center rounded-md">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg">
             <Image
               src="/assets/noc.png"
               alt=""
-              width={24}
-              height={24}
+              width={30}
+              height={30}
               className="object-contain"
               priority
             />
           </span>
           <span className="max-w-40 min-w-0 overflow-hidden transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:max-w-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150">
-            <span className="block truncate text-sm font-semibold">
+            <span className="block truncate text-sm font-semibold tracking-[0.01em]">
               {SITE_CONFIG.name}
             </span>
-            <span className="text-sidebar-foreground/65 block truncate text-xs">
+            <span className="text-sidebar-foreground/65 block truncate text-[11px]">
               {SITE_CONFIG.subtitle}
             </span>
           </span>
@@ -271,11 +269,11 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 aria-label={`Menu utilisateur de ${userDisplayName}`}
                 title={userDisplayName}
                 className={cn(
-                  'hover:bg-sidebar-accent/60 focus-visible:ring-sidebar-ring data-[state=open]:bg-sidebar-accent/70 flex min-w-0 items-center gap-3 overflow-hidden rounded-md p-2 text-left transition-[background-color,box-shadow] outline-none focus-visible:ring-2',
-                  'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:p-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
+                  'border-sidebar-border/65 hover:border-sidebar-ring/25 focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/35 flex min-w-0 items-center gap-3 overflow-hidden rounded-xl border bg-[linear-gradient(180deg,rgba(95,132,200,0.06),rgba(34,49,74,0.68))] p-2.5 text-left transition-[background-color,border-color,box-shadow] outline-none hover:bg-[linear-gradient(180deg,rgba(95,132,200,0.11),rgba(34,49,74,0.8))] hover:shadow-[inset_0_0_0_1px_rgba(108,146,214,0.1)] focus-visible:ring-2 data-[state=open]:bg-[linear-gradient(180deg,rgba(95,132,200,0.14),rgba(34,49,74,0.86))] data-[state=open]:shadow-[inset_0_0_0_1px_rgba(108,146,214,0.14)]',
+                  'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:p-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
                 )}
               >
-                <UserAvatar user={userData} className="size-9 rounded-md" />
+                <UserAvatar user={userData} className="size-9 rounded-lg" />
                 <span className="min-w-0 flex-1 overflow-hidden transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:max-w-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150">
                   <span className="block truncate text-sm font-medium">
                     {userDisplayName}
@@ -292,15 +290,15 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               align={sidebarState === 'collapsed' ? 'end' : 'center'}
               sideOffset={6}
               className={cn(
-                'border-sidebar-border text-sidebar-foreground bg-card overflow-hidden rounded-lg p-0 shadow-2xl shadow-black/25',
+                'border-sidebar-border text-sidebar-foreground overflow-hidden rounded-xl bg-[linear-gradient(180deg,rgba(18,23,30,0.94),rgba(25,33,50,0.94))] p-0 shadow-2xl shadow-black/20',
                 sidebarState === 'collapsed'
                   ? 'w-64'
                   : 'w-[var(--radix-dropdown-menu-trigger-width)]',
               )}
             >
-              <DropdownMenuLabel className="border-sidebar-border/60 bg-accent/60 border-b p-3 font-normal">
+              <DropdownMenuLabel className="border-sidebar-border/60 bg-sidebar-accent/20 border-b p-3 font-normal">
                 <div className="flex min-w-0 items-center gap-3">
-                  <UserAvatar user={userData} className="size-10 rounded-md" />
+                  <UserAvatar user={userData} className="size-10 rounded-lg" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">
                       {userDisplayName}
@@ -314,14 +312,14 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               <div className="p-1.5">
                 <DropdownMenuItem
                   asChild
-                  className="focus:text-sidebar-foreground focus:bg-accent cursor-pointer rounded-md p-2.5"
+                  className="focus:text-sidebar-foreground focus:bg-sidebar-accent/35 cursor-pointer rounded-lg p-2.5"
                 >
                   <Link
                     href="/mon-compte"
                     className="flex items-center gap-3"
                     onClick={() => setOpenMobile(false)}
                   >
-                    <span className="border-sidebar-border/70 bg-card flex size-8 shrink-0 items-center justify-center rounded-md border">
+                    <span className="border-sidebar-border/70 bg-sidebar-accent/20 flex size-8 shrink-0 items-center justify-center rounded-lg border">
                       <User className="text-sidebar-ring size-4" />
                     </span>
                     <span className="min-w-0">
@@ -340,7 +338,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                     setOpenMobile(false);
                     void logout();
                   }}
-                  className="focus:bg-destructive/15 focus:text-destructive text-destructive mx-1 h-8 cursor-pointer justify-center gap-2 rounded-md p-1.5 text-xs"
+                  className="focus:bg-destructive/15 focus:text-destructive text-destructive mx-1 h-8 cursor-pointer justify-center gap-2 rounded-lg p-1.5 text-xs"
                 >
                   <LogOut className="size-3.5" />
                   <span className="font-medium">Déconnexion</span>
