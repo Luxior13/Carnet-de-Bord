@@ -28,7 +28,7 @@ export const Header: FC<HeaderProps> = ({ breadcrumbs = [], title }) => {
   const headerNavItems = useMemo(() => getHeaderNavItems(userData), [userData]);
 
   return (
-    <header className="bg-background/95 relative z-30 flex h-14 shrink-0 items-center gap-3 border-b px-4 backdrop-blur md:px-5">
+    <header className="border-sidebar-border/70 relative z-30 flex h-14 shrink-0 items-center gap-3 border-b bg-[#182131]/95 px-4 backdrop-blur md:px-5">
       <SidebarTrigger className="-ml-1 shrink-0" />
       <div className="flex min-w-0 items-center gap-4">
         {breadcrumbs.length > 0 && (
@@ -42,7 +42,7 @@ export const Header: FC<HeaderProps> = ({ breadcrumbs = [], title }) => {
       </div>
       {headerNavItems.length > 0 && (
         <nav className="hidden min-w-0 flex-1 items-center justify-center md:flex">
-          <div className="bg-card flex max-w-full items-center gap-1 rounded-lg border p-1">
+          <div className="border-sidebar-border/70 flex max-w-full items-center gap-1 rounded-lg border bg-[#1f293b] p-1">
             {headerNavItems.map((item) => {
               const isActive = isNavItemActive(pathname, item);
 

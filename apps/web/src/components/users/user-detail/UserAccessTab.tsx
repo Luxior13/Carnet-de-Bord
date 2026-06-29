@@ -50,7 +50,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
 }) => {
   return (
     <div>
-      <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
+      <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
         <CardContent className="p-3 sm:p-4">
           <PermissionsEditor
             role={role}
@@ -58,8 +58,8 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             onChange={setPermissions}
             disabled={!canManagePermissions}
             headerControls={
-              <div className="border-border/70 bg-popover flex items-center gap-2 rounded-md border px-2 py-1">
-                <span className="bg-primary/10 text-primary flex size-7 shrink-0 items-center justify-center rounded-md">
+              <div className="border-sidebar-border/70 flex items-center gap-2 rounded-lg border bg-[#111827] px-2 py-1">
+                <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-7 shrink-0 items-center justify-center rounded-md border">
                   <Shield className="size-3.5" />
                 </span>
                 <Label htmlFor="user-role" className="sr-only">
@@ -94,7 +94,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             }
           />
         </CardContent>
-        <CardFooter className="border-border/60 bg-accent justify-between gap-3 border-t p-4">
+        <CardFooter className="border-sidebar-border/65 justify-between gap-3 border-t bg-[#1f293b] p-4">
           <p className="text-muted-foreground text-xs">
             {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
           </p>

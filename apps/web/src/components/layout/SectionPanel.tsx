@@ -24,13 +24,13 @@ export const SectionPanel: FC<SectionPanelProps> = ({
   return (
     <section
       className={cn(
-        'border-sidebar-border/70 overflow-hidden rounded-xl border bg-[linear-gradient(180deg,rgba(18,23,30,0.88),rgba(25,33,50,0.92))] shadow-[inset_0_0_0_1px_rgba(108,146,214,0.06)]',
+        'border-sidebar-border/70 overflow-hidden rounded-xl border bg-[#182131] shadow-[0_18px_42px_-36px_rgba(0,0,0,0.96),inset_0_1px_0_rgba(255,255,255,0.035)]',
         className,
       )}
     >
-      <div className="border-sidebar-border/60 flex flex-col gap-3 border-b bg-[linear-gradient(180deg,rgba(95,132,200,0.06),rgba(95,132,200,0))] p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+      <div className="border-sidebar-border/65 flex flex-col gap-3 border-b bg-[#1f293b] p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="border-sidebar-ring/20 text-sidebar-ring bg-sidebar-accent/20 flex size-9 shrink-0 items-center justify-center rounded-lg border">
+          <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border shadow-[inset_0_1px_0_rgba(255,255,255,0.055)]">
             {icon}
           </span>
           <div className="min-w-0">
@@ -38,7 +38,7 @@ export const SectionPanel: FC<SectionPanelProps> = ({
               {title}
             </h3>
             {description && (
-              <p className="text-sidebar-foreground/65 mt-1 text-sm leading-6">
+              <p className="text-sidebar-foreground/58 mt-1 text-sm leading-6">
                 {description}
               </p>
             )}

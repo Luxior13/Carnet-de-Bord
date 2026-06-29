@@ -2,7 +2,10 @@ import * as React from 'react';
 
 import { cn } from '$utils/css.utils';
 
-function Table({ className, ...props }: React.ComponentProps<'table'>) {
+function Table({
+  className,
+  ...props
+}: React.ComponentProps<'table'>): React.JSX.Element {
   return (
     <div data-slot="table-container" className="relative w-full overflow-auto">
       <table
@@ -14,17 +17,23 @@ function Table({ className, ...props }: React.ComponentProps<'table'>) {
   );
 }
 
-function TableHeader({ className, ...props }: React.ComponentProps<'thead'>) {
+function TableHeader({
+  className,
+  ...props
+}: React.ComponentProps<'thead'>): React.JSX.Element {
   return (
     <thead
       data-slot="table-header"
-      className={cn('[&_tr]:border-b', className)}
+      className={cn('bg-[#1f293b] [&_tr]:border-b', className)}
       {...props}
     />
   );
 }
 
-function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
+function TableBody({
+  className,
+  ...props
+}: React.ComponentProps<'tbody'>): React.JSX.Element {
   return (
     <tbody
       data-slot="table-body"
@@ -34,12 +43,15 @@ function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
   );
 }
 
-function TableFooter({ className, ...props }: React.ComponentProps<'tfoot'>) {
+function TableFooter({
+  className,
+  ...props
+}: React.ComponentProps<'tfoot'>): React.JSX.Element {
   return (
     <tfoot
       data-slot="table-footer"
       className={cn(
-        'bg-muted/50 border-t font-medium [&>tr]:last:border-b-0',
+        'border-t bg-[#1f293b] font-medium [&>tr]:last:border-b-0',
         className,
       )}
       {...props}
@@ -47,7 +59,10 @@ function TableFooter({ className, ...props }: React.ComponentProps<'tfoot'>) {
   );
 }
 
-function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
+function TableRow({
+  className,
+  ...props
+}: React.ComponentProps<'tr'>): React.JSX.Element {
   return (
     <tr
       data-slot="table-row"
@@ -60,7 +75,10 @@ function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
   );
 }
 
-function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
+function TableHead({
+  className,
+  ...props
+}: React.ComponentProps<'th'>): React.JSX.Element {
   return (
     <th
       data-slot="table-head"
@@ -73,7 +91,10 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
   );
 }
 
-function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
+function TableCell({
+  className,
+  ...props
+}: React.ComponentProps<'td'>): React.JSX.Element {
   return (
     <td
       data-slot="table-cell"
@@ -89,7 +110,7 @@ function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
 function TableCaption({
   className,
   ...props
-}: React.ComponentProps<'caption'>) {
+}: React.ComponentProps<'caption'>): React.JSX.Element {
   return (
     <caption
       data-slot="table-caption"

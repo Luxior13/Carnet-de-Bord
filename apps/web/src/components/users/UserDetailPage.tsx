@@ -180,7 +180,7 @@ const DetailSkeleton: FC = () => (
             </div>
           </CardContent>
         </Card>
-        <div className="border-border/60 bg-card rounded-lg border p-3 sm:p-4">
+        <div className="border-sidebar-border/70 rounded-xl border bg-[#182131] p-3 shadow-[0_18px_42px_-36px_rgba(0,0,0,0.96),inset_0_1px_0_rgba(255,255,255,0.035)] sm:p-4">
           <Skeleton className="h-7 w-48 max-w-full" />
         </div>
         <Skeleton className="min-h-96 w-full rounded-lg" />
@@ -948,8 +948,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               }
             />
             <div className="grid gap-3 md:grid-cols-3">
-              <div className="border-border/70 bg-card flex items-center gap-3 rounded-lg border p-3">
-                <Clock className="text-muted-foreground size-4" />
+              <div className="border-sidebar-border/70 flex items-center gap-3 rounded-xl border bg-[#182131] p-3 shadow-[0_18px_42px_-36px_rgba(0,0,0,0.96),inset_0_1px_0_rgba(255,255,255,0.035)]">
+                <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
+                  <Clock className="size-4" />
+                </span>
                 <div className="min-w-0">
                   <p className="text-muted-foreground text-xs">
                     Dernière connexion
@@ -959,8 +961,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                   </p>
                 </div>
               </div>
-              <div className="border-border/70 bg-card flex items-center gap-3 rounded-lg border p-3">
-                <Calendar className="text-muted-foreground size-4" />
+              <div className="border-sidebar-border/70 flex items-center gap-3 rounded-xl border bg-[#182131] p-3 shadow-[0_18px_42px_-36px_rgba(0,0,0,0.96),inset_0_1px_0_rgba(255,255,255,0.035)]">
+                <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
+                  <Calendar className="size-4" />
+                </span>
                 <div className="min-w-0">
                   <p className="text-muted-foreground text-xs">Créé</p>
                   <p className="truncate text-sm font-medium">
@@ -968,8 +972,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                   </p>
                 </div>
               </div>
-              <div className="border-border/70 bg-card flex items-center gap-3 rounded-lg border p-3">
-                <Activity className="text-muted-foreground size-4" />
+              <div className="border-sidebar-border/70 flex items-center gap-3 rounded-xl border bg-[#182131] p-3 shadow-[0_18px_42px_-36px_rgba(0,0,0,0.96),inset_0_1px_0_rgba(255,255,255,0.035)]">
+                <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
+                  <Activity className="size-4" />
+                </span>
                 <div className="min-w-0">
                   <p className="text-muted-foreground text-xs">Activité</p>
                   <p className="truncate text-sm font-medium">

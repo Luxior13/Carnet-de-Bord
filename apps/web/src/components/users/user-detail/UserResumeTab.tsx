@@ -25,10 +25,14 @@ type UserResumeTabProps = {
 type ResumeStatTone = 'neutral' | 'primary' | 'warning';
 
 const getResumeStatToneClassName = (tone: ResumeStatTone): string => {
-  if (tone === 'primary') return 'bg-primary/10 text-primary';
-  if (tone === 'warning') return 'bg-amber-500/10 text-amber-400';
+  if (tone === 'primary') {
+    return 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring';
+  }
+  if (tone === 'warning') {
+    return 'border-amber-500/35 bg-amber-500/10 text-amber-400';
+  }
 
-  return 'bg-secondary text-secondary-foreground';
+  return 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring';
 };
 
 const ResumeStatCard: FC<{
@@ -37,11 +41,11 @@ const ResumeStatCard: FC<{
   tone?: ResumeStatTone;
   value: number;
 }> = ({ icon: Icon, label, tone = 'neutral', value }) => (
-  <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
+  <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
     <CardContent className="p-3 sm:p-4">
       <div className="flex items-center gap-3">
         <div
-          className={`${getResumeStatToneClassName(tone)} flex size-9 shrink-0 items-center justify-center rounded-md`}
+          className={`${getResumeStatToneClassName(tone)} flex size-9 shrink-0 items-center justify-center rounded-lg border`}
         >
           <Icon className="size-4" />
         </div>
@@ -94,8 +98,8 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
         </div>
       )}
       {/* User Details */}
-      <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
-        <CardHeader className="border-border/60 bg-accent border-b p-3 sm:p-4">
+      <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+        <CardHeader className="border-sidebar-border/65 border-b bg-[#1f293b] p-3 sm:p-4">
           <CardTitle className="text-sm">Informations compte</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">

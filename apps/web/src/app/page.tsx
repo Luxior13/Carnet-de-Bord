@@ -76,7 +76,7 @@ export default function HomePage(): React.ReactNode {
             }
           />
           <div className="grid gap-4 xl:grid-cols-[1.3fr_0.9fr]">
-            <Card className="overflow-hidden py-0 shadow-none">
+            <Card className="overflow-hidden py-0">
               <CardHeader>
                 <CardTitle>Raccourcis</CardTitle>
                 <CardDescription>
@@ -130,7 +130,7 @@ export default function HomePage(): React.ReactNode {
                 )}
               </CardContent>
             </Card>
-            <Card className="overflow-hidden py-0 shadow-none">
+            <Card className="overflow-hidden py-0">
               <CardHeader>
                 <CardTitle>Sécurité du compte</CardTitle>
                 <CardDescription>Votre état d’accès actuel.</CardDescription>
@@ -154,7 +154,7 @@ export default function HomePage(): React.ReactNode {
                   </div>
                 </div>
                 <div className="border-border/60 bg-popover flex items-center gap-3 rounded-md border p-3">
-                  <ServiceIcon className="bg-secondary text-secondary-foreground">
+                  <ServiceIcon>
                     <Clock className="size-4" />
                   </ServiceIcon>
                   <div>

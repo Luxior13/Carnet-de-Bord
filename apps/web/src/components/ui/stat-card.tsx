@@ -29,7 +29,7 @@ export const StatCard: FC<StatCardProps> = ({
   return (
     <Card
       className={cn(
-        'border-sidebar-border/70 overflow-hidden rounded-xl border bg-[linear-gradient(180deg,rgba(18,23,30,0.82),rgba(25,33,50,0.92))] shadow-[inset_0_0_0_1px_rgba(108,146,214,0.05)]',
+        'border-sidebar-border/70 overflow-hidden rounded-xl border bg-[#182131]',
         className,
       )}
     >
@@ -63,7 +63,7 @@ export const StatCard: FC<StatCardProps> = ({
           </div>
           <div
             className={cn(
-              'border-sidebar-ring/20 bg-sidebar-accent/20 text-sidebar-ring flex h-10 w-10 items-center justify-center rounded-lg border',
+              'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-10 w-10 items-center justify-center rounded-lg border',
               iconColor.includes('text-') ? '' : iconColor,
             )}
           >

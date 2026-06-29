@@ -129,7 +129,7 @@ const SectionTitle: FC<{
   icon: React.ReactNode;
 }> = ({ children, icon }) => (
   <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
-    <span className="bg-primary/10 text-primary flex size-6 items-center justify-center rounded-md">
+    <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-7 items-center justify-center rounded-lg border">
       {icon}
     </span>
     {children}
@@ -145,19 +145,19 @@ const SecurityMetric: FC<{
 }> = ({ description, icon, label, tone = 'neutral', value }) => {
   const toneClassName =
     tone === 'danger'
-      ? 'bg-destructive/10 text-destructive'
+      ? 'border-destructive/35 bg-destructive/10 text-destructive'
       : tone === 'warning'
-        ? 'bg-amber-500/10 text-amber-400'
+        ? 'border-amber-500/35 bg-amber-500/10 text-amber-400'
         : tone === 'primary'
-          ? 'bg-primary/10 text-primary'
-          : 'bg-secondary text-secondary-foreground';
+          ? 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring'
+          : 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring';
 
   return (
-    <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
+    <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
       <CardContent className="p-3 sm:p-4">
         <div className="flex items-start gap-3">
           <span
-            className={`${toneClassName} flex size-9 shrink-0 items-center justify-center rounded-lg`}
+            className={`${toneClassName} flex size-9 shrink-0 items-center justify-center rounded-lg border`}
           >
             {icon}
           </span>
@@ -279,8 +279,8 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           tone={sessions.length > 0 ? 'primary' : 'neutral'}
         />
       </div>
-      <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
-        <CardHeader className="border-border/60 bg-accent border-b p-3 sm:p-4">
+      <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+        <CardHeader className="border-sidebar-border/65 border-b bg-[#1f293b] p-3 sm:p-4">
           <SectionTitle icon={<Power className="size-3.5" />}>
             État du compte
           </SectionTitle>
@@ -309,7 +309,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             </div>
           )}
         </CardContent>
-        <CardFooter className="border-border/60 bg-accent justify-between gap-3 border-t p-3 sm:p-4">
+        <CardFooter className="border-sidebar-border/65 justify-between gap-3 border-t bg-[#1f293b] p-3 sm:p-4">
           <p className="text-muted-foreground text-xs">
             {hasStatusChanges ? 'Modification non enregistrée' : 'À jour'}
           </p>
@@ -340,8 +340,8 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </div>
         </CardFooter>
       </Card>
-      <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
-        <CardHeader className="border-border/60 bg-accent border-b p-3 sm:p-4">
+      <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+        <CardHeader className="border-sidebar-border/65 border-b bg-[#1f293b] p-3 sm:p-4">
           <SectionTitle icon={<Monitor className="size-3.5" />}>
             Sessions actives
           </SectionTitle>
@@ -378,7 +378,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                     key={session.id}
                     className="border-border/60 bg-popover flex items-center gap-3 rounded-md border p-3"
                   >
-                    <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-md">
+                    <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
                       <DeviceIcon className="size-4" />
                     </span>
                     <div className="min-w-0 flex-1">
@@ -403,7 +403,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           )}
         </CardContent>
         {canManageSessions && sessions.length > 0 && (
-          <CardFooter className="border-border/60 bg-accent justify-end border-t p-3 sm:p-4">
+          <CardFooter className="border-sidebar-border/65 justify-end border-t bg-[#1f293b] p-3 sm:p-4">
             <Button
               type="button"
               variant="outline"
@@ -422,8 +422,8 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardFooter>
         )}
       </Card>
-      <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
-        <CardHeader className="border-border/60 bg-accent border-b p-3 sm:p-4">
+      <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+        <CardHeader className="border-sidebar-border/65 border-b bg-[#1f293b] p-3 sm:p-4">
           <SectionTitle icon={<KeyRound className="size-3.5" />}>
             Mot de passe
           </SectionTitle>
@@ -475,7 +475,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </div>
         </CardContent>
         {canResetPassword && (
-          <CardFooter className="border-border/60 bg-accent justify-end border-t p-3 sm:p-4">
+          <CardFooter className="border-sidebar-border/65 justify-end border-t bg-[#1f293b] p-3 sm:p-4">
             <Button
               type="button"
               variant="outline"

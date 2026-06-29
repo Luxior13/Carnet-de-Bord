@@ -159,9 +159,7 @@ const NewUserContent: FC = () => {
             icon={
               <ServiceIcon
                 className={
-                  createdUser
-                    ? 'bg-primary/10 text-primary'
-                    : 'bg-secondary text-secondary-foreground'
+                  createdUser ? 'bg-primary/10 text-primary' : undefined
                 }
               >
                 {createdUser ? (
@@ -202,8 +200,8 @@ const NewUserContent: FC = () => {
             }
           />
           {createdUser && temporaryPassword ? (
-            <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
-              <CardHeader className="border-border/60 bg-accent border-b p-3 sm:p-4">
+            <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+              <CardHeader className="border-sidebar-border/65 border-b bg-[#1f293b] p-3 sm:p-4">
                 <CardTitle className="text-sm">Compte créé</CardTitle>
                 <CardDescription>
                   Le compte est prêt. Transmettez le mot de passe temporaire,
@@ -261,7 +259,7 @@ const NewUserContent: FC = () => {
                   </SectionPanel>
                 </div>
               </CardContent>
-              <CardFooter className="border-border/60 bg-accent flex flex-wrap gap-2 border-t p-4">
+              <CardFooter className="border-sidebar-border/65 flex flex-wrap gap-2 border-t bg-[#1f293b] p-4">
                 <Button asChild>
                   <Link href={`/administration/utilisateurs/${createdUser.id}`}>
                     Ouvrir la fiche
@@ -282,8 +280,8 @@ const NewUserContent: FC = () => {
                 void handleCreateUser();
               }}
             >
-              <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
-                <CardHeader className="border-border/60 bg-accent border-b p-3 sm:p-4">
+              <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+                <CardHeader className="border-sidebar-border/65 border-b bg-[#1f293b] p-3 sm:p-4">
                   <CardTitle className="text-sm">Création du compte</CardTitle>
                   <CardDescription>
                     Renseignez l&apos;identité, puis choisissez le niveau
@@ -407,7 +405,7 @@ const NewUserContent: FC = () => {
                     </SectionPanel>
                   </div>
                 </CardContent>
-                <CardFooter className="border-border/60 bg-accent flex justify-between gap-3 border-t p-4">
+                <CardFooter className="border-sidebar-border/65 flex justify-between gap-3 border-t bg-[#1f293b] p-4">
                   <p className="text-muted-foreground hidden text-xs sm:block">
                     Le profil pourra être complété après création.
                   </p>

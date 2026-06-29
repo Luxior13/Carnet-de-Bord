@@ -35,7 +35,7 @@ export const PageState: FC<PageStateProps> = ({
   return (
     <PageShell className="py-0">
       <PageCanvas>
-        <Card className="mx-auto max-w-2xl py-0 shadow-none">
+        <Card className="mx-auto max-w-2xl py-0">
           <CardContent className="p-5 sm:p-6">
             <div className="flex items-start gap-4">
               <ServiceIcon className={cn(getToneClassName(tone))}>

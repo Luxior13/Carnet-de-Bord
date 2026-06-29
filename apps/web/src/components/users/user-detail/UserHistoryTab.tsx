@@ -382,13 +382,21 @@ const getChangeDiffs = (
 // COMPONENTS
 // ============================================
 
+const getStatIconClassName = (color?: string): string => {
+  if (color?.includes('amber')) {
+    return 'border-amber-500/35 bg-amber-500/10 text-amber-400';
+  }
+
+  return 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring';
+};
+
 const StatCard: FC<{
   color?: string;
   icon: LucideIcon;
   label: string;
   value: number;
 }> = ({ color, icon: Icon, label, value }) => (
-  <Card className="group border-border/70 bg-card relative overflow-hidden rounded-lg py-0 transition-all hover:shadow-md">
+  <Card className="group border-sidebar-border/70 relative overflow-hidden rounded-xl py-0 transition-all hover:shadow-md">
     <CardContent className="p-3 sm:p-4">
       <div className="flex items-center justify-between">
         <div>
@@ -401,11 +409,11 @@ const StatCard: FC<{
         </div>
         <div
           className={cn(
-            'flex size-9 items-center justify-center rounded-lg',
-            color ? `${color.replace('text-', 'bg-')}/10` : 'bg-secondary',
+            'flex size-9 items-center justify-center rounded-lg border',
+            getStatIconClassName(color),
           )}
         >
-          <Icon className={cn('size-4', color || 'text-muted-foreground')} />
+          <Icon className="size-4" />
         </div>
       </div>
     </CardContent>
@@ -691,10 +699,10 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   // Empty
   if (auditLogs.length === 0) {
     return (
-      <Card className="border-border/70 bg-card min-h-[360px] items-center justify-center rounded-lg py-0">
+      <Card className="border-sidebar-border/70 min-h-[360px] items-center justify-center rounded-xl py-0">
         <CardContent className="flex flex-col items-center p-8">
-          <div className="bg-secondary flex size-20 items-center justify-center rounded-lg">
-            <History className="text-muted-foreground size-10" />
+          <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-20 items-center justify-center rounded-xl border">
+            <History className="size-10" />
           </div>
           <h3 className="text-foreground mt-6 text-lg font-semibold">
             Aucune activité
@@ -735,7 +743,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
         </div>
       </div>
       {/* Filters */}
-      <Card className="border-border/70 bg-card shrink-0 overflow-hidden rounded-lg py-0">
+      <Card className="border-sidebar-border/70 shrink-0 overflow-hidden rounded-xl py-0">
         <CardContent className="p-3 sm:p-4">
           <div className="flex flex-wrap items-center gap-2">
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -816,13 +824,13 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
         </CardContent>
       </Card>
       {/* Timeline */}
-      <Card className="border-border/70 bg-card gap-0 overflow-hidden rounded-lg py-0">
+      <Card className="border-sidebar-border/70 gap-0 overflow-hidden rounded-xl py-0">
         <CardContent className="p-0">
           <div className="px-3 sm:px-4">
             {filteredLogs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16">
-                <div className="bg-secondary flex h-16 w-16 items-center justify-center rounded-lg">
-                  <Filter className="text-muted-foreground h-8 w-8" />
+                <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-16 w-16 items-center justify-center rounded-xl border">
+                  <Filter className="h-8 w-8" />
                 </div>
                 <p className="text-muted-foreground mt-4 text-sm">
                   Aucun résultat pour ces filtres
@@ -844,12 +852,12 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                       <div key={log.id}>
                         {showSeparator && (
                           <div className="bg-card flex items-center gap-3 px-1 py-2">
-                            <div className="bg-secondary h-px flex-1" />
+                            <div className="bg-sidebar-border/70 h-px flex-1" />
                             <span className="text-muted-foreground text-xs font-medium">
                               {DATE_CATEGORY_LABELS.get(category) ||
                                 'Plus ancien'}
                             </span>
-                            <div className="bg-secondary h-px flex-1" />
+                            <div className="bg-sidebar-border/70 h-px flex-1" />
                           </div>
                         )}
                         <TimelineItem
@@ -882,7 +890,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
           </div>
         </CardContent>
         {/* Footer */}
-        <CardFooter className="border-border/60 text-muted-foreground bg-accent shrink-0 justify-center border-t px-4 py-3 text-center text-xs">
+        <CardFooter className="border-sidebar-border/65 text-muted-foreground shrink-0 justify-center border-t bg-[#1f293b] px-4 py-3 text-center text-xs">
           {filteredLogs.length} événement{filteredLogs.length > 1 ? 's' : ''}
           {(categoryFilter !== 'all' ||
             sourceFilter !== 'all' ||

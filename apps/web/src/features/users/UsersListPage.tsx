@@ -142,20 +142,20 @@ const getUsersStatToneClassNames = (
 ): UsersStatToneClassNames => {
   if (tone === 'primary') {
     return {
-      icon: 'bg-primary/10 text-primary',
+      icon: 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring',
       value: 'text-foreground',
     };
   }
 
   if (tone === 'warning') {
     return {
-      icon: 'bg-amber-500/10 text-amber-400',
+      icon: 'border-amber-500/35 bg-amber-500/10 text-amber-400',
       value: 'text-amber-400',
     };
   }
 
   return {
-    icon: 'bg-secondary text-secondary-foreground',
+    icon: 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring',
     value: 'text-foreground',
   };
 };
@@ -182,11 +182,11 @@ const UsersStatCard: FC<{
   const toneClassNames = getUsersStatToneClassNames(tone);
 
   return (
-    <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0 shadow-none">
+    <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div
-            className={`${toneClassNames.icon} flex h-9 w-9 items-center justify-center rounded-md`}
+            className={`${toneClassNames.icon} flex h-9 w-9 items-center justify-center rounded-lg border shadow-[inset_0_1px_0_rgba(255,255,255,0.055)]`}
           >
             <Icon size={18} />
           </div>
@@ -432,8 +432,8 @@ export const UsersListPage: FC = () => {
           />
         </div>
       )}
-      <Card className="border-border/70 bg-card overflow-hidden rounded-lg py-0">
-        <CardHeader className="bg-card p-4 sm:p-5">
+      <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+        <CardHeader className="p-4 sm:p-5">
           <div className="flex flex-col gap-1">
             <div className="min-w-0">
               <CardTitle className="text-base">Annuaire utilisateurs</CardTitle>
@@ -761,7 +761,7 @@ export const UsersListPage: FC = () => {
           </div>
         </CardContent>
         {totalPages > 1 && (
-          <CardFooter className="bg-card p-0">
+          <CardFooter className="p-0">
             <Pagination
               page={currentPage}
               totalPages={totalPages}

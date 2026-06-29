@@ -105,7 +105,7 @@ function LoginPage(): React.ReactNode {
   return (
     <main className="relative isolate flex min-h-svh items-center justify-center overflow-hidden p-4">
       <div aria-hidden="true" className="site-background-column" />
-      <Card className="relative z-10 w-full max-w-md overflow-hidden py-0 shadow-none">
+      <Card className="relative z-10 w-full max-w-md overflow-hidden py-0">
         <div className="bg-primary h-1 w-full" />
         <CardHeader className="space-y-4">
           <div className="flex items-center gap-3">
@@ -235,7 +235,7 @@ function LoginPage(): React.ReactNode {
             </Button>
           </form>
         </CardContent>
-        <div className="border-border/60 grid gap-2 border-t p-4 text-xs sm:grid-cols-3">
+        <div className="border-sidebar-border/65 grid gap-2 border-t bg-[#1f293b] p-4 text-xs sm:grid-cols-3">
           {['Vue d’ensemble', 'Comptes', 'Sécurité'].map((item) => (
             <div
               key={item}
