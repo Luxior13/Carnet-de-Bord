@@ -84,7 +84,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
             type="button"
             variant="outline"
             size="sm"
-            className="border-sidebar-border/65 bg-background/35 rounded-lg"
+            className="border-sidebar-ring/30 bg-sidebar-accent/20 hover:bg-sidebar-accent/32 rounded-lg"
             onClick={() => setIsEditing(true)}
           >
             <Edit className="size-4" />
@@ -122,7 +122,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
       }
     >
       <div className="space-y-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="border-sidebar-ring/20 flex flex-col gap-4 rounded-lg border bg-[linear-gradient(180deg,rgba(95,132,200,0.16),rgba(34,49,74,0.24))] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-4">
             <UserAvatar user={userData} className="size-16 rounded-lg" />
             <div className="min-w-0">
@@ -141,8 +141,8 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
               </Badge>
             </div>
           </div>
-          <div className="border-sidebar-border/45 bg-background/25 rounded-lg border px-3 py-2 sm:text-right">
-            <p className="text-sidebar-foreground/50 text-[11px] font-semibold tracking-[0.12em] uppercase">
+          <div className="border-sidebar-border/55 bg-background/35 rounded-lg border px-3 py-2 sm:text-right">
+            <p className="text-sidebar-ring/85 text-[11px] font-semibold tracking-[0.12em] uppercase">
               Compte créé
             </p>
             <p className="text-sidebar-foreground text-sm font-medium">
@@ -151,25 +151,25 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
           </div>
         </div>
         {!isEditing ? (
-          <dl className="border-sidebar-border/45 bg-background/20 overflow-hidden rounded-lg border">
-            <div className="border-sidebar-border/40 grid gap-1 border-b px-4 py-3 sm:grid-cols-[10rem_1fr]">
-              <dt className="text-sidebar-foreground/52 text-xs font-semibold tracking-[0.1em] uppercase">
+          <dl className="border-sidebar-border/55 bg-background/28 overflow-hidden rounded-lg border">
+            <div className="border-sidebar-border/45 hover:bg-sidebar-accent/[0.06] grid gap-1 border-b px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
+              <dt className="text-sidebar-ring/80 text-xs font-semibold tracking-[0.1em] uppercase">
                 Prénom
               </dt>
               <dd className="text-sidebar-foreground min-w-0 text-sm font-medium">
                 {userData.firstName}
               </dd>
             </div>
-            <div className="border-sidebar-border/40 grid gap-1 border-b px-4 py-3 sm:grid-cols-[10rem_1fr]">
-              <dt className="text-sidebar-foreground/52 text-xs font-semibold tracking-[0.1em] uppercase">
+            <div className="border-sidebar-border/45 hover:bg-sidebar-accent/[0.06] grid gap-1 border-b px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
+              <dt className="text-sidebar-ring/80 text-xs font-semibold tracking-[0.1em] uppercase">
                 Nom
               </dt>
               <dd className="text-sidebar-foreground min-w-0 text-sm font-medium">
                 {userData.lastName}
               </dd>
             </div>
-            <div className="grid gap-1 px-4 py-3 sm:grid-cols-[10rem_1fr]">
-              <dt className="text-sidebar-foreground/52 text-xs font-semibold tracking-[0.1em] uppercase">
+            <div className="hover:bg-sidebar-accent/[0.06] grid gap-1 px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
+              <dt className="text-sidebar-ring/80 text-xs font-semibold tracking-[0.1em] uppercase">
                 Email
               </dt>
               <dd className="min-w-0">
@@ -183,7 +183,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
             </div>
           </dl>
         ) : (
-          <div className="border-sidebar-border/45 bg-background/20 rounded-lg border p-4">
+          <div className="border-sidebar-ring/20 rounded-lg border bg-[linear-gradient(180deg,rgba(95,132,200,0.1),rgba(13,18,27,0.34))] p-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="edit-firstName" required>

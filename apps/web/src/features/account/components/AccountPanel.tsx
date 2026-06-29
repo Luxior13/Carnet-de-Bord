@@ -24,13 +24,14 @@ export const AccountPanel: FC<AccountPanelProps> = ({
   return (
     <section
       className={cn(
-        'border-sidebar-border/55 relative overflow-hidden rounded-xl border bg-[linear-gradient(180deg,rgba(13,18,27,0.78),rgba(12,17,25,0.9))] shadow-[0_18px_42px_-36px_rgba(0,0,0,0.95),inset_0_1px_0_rgba(255,255,255,0.035)] backdrop-blur-sm',
+        'border-sidebar-border/60 relative overflow-hidden rounded-xl border bg-[linear-gradient(180deg,rgba(14,20,31,0.88),rgba(10,15,23,0.94))] shadow-[0_20px_48px_-36px_rgba(0,0,0,0.95),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm',
         className,
       )}
     >
-      <header className="border-sidebar-border/45 flex flex-col gap-3 border-b px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <div className="h-1 w-full bg-[linear-gradient(90deg,rgba(95,132,200,0.92),rgba(108,146,214,0.34),rgba(95,132,200,0.08))]" />
+      <header className="border-sidebar-border/55 flex flex-col gap-3 border-b bg-[linear-gradient(180deg,rgba(95,132,200,0.13),rgba(95,132,200,0.035))] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="border-sidebar-border/60 bg-background/40 text-sidebar-ring flex size-8 shrink-0 items-center justify-center rounded-md border">
+          <span className="border-sidebar-ring/30 bg-sidebar-accent/35 text-sidebar-ring flex size-8 shrink-0 items-center justify-center rounded-md border shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
             {icon}
           </span>
           <div className="min-w-0">
@@ -38,7 +39,7 @@ export const AccountPanel: FC<AccountPanelProps> = ({
               {title}
             </h2>
             {description && (
-              <p className="text-sidebar-foreground/58 mt-0.5 text-xs leading-5">
+              <p className="text-sidebar-foreground/68 mt-0.5 text-xs leading-5">
                 {description}
               </p>
             )}

@@ -140,10 +140,10 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           <button
             type="button"
             onClick={() => setShowPasswordDialog(true)}
-            className="hover:bg-sidebar-accent/10 group flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors sm:px-5"
+            className="bg-sidebar-accent/[0.06] hover:bg-sidebar-accent/[0.14] group flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors sm:px-5"
           >
             <div className="flex min-w-0 items-center gap-3">
-              <span className="border-sidebar-border/60 bg-background/35 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-md border">
+              <span className="border-sidebar-ring/30 bg-sidebar-accent/35 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-md border">
                 <Key className="size-4" />
               </span>
               <div className="min-w-0">
@@ -159,9 +159,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
             </div>
             <ChevronRight className="text-sidebar-foreground/45 group-hover:text-sidebar-ring size-5 shrink-0 transition-colors" />
           </button>
-          <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div className="bg-background/18 flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div className="flex items-center gap-3">
-              <span className="border-sidebar-border/60 bg-background/35 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-md border">
+              <span className="border-sidebar-ring/30 bg-sidebar-accent/28 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-md border">
                 <Monitor className="size-4" />
               </span>
               <div>
@@ -179,7 +179,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="border-sidebar-border/65 bg-background/35 rounded-lg"
+                className="border-sidebar-ring/30 bg-sidebar-accent/20 hover:bg-sidebar-accent/32 rounded-lg"
                 onClick={() => setShowRevokeDialog(true)}
                 disabled={revokingAll}
               >
@@ -195,11 +195,11 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 <Skeleton className="h-14 rounded-lg" />
               </div>
             ) : sessions.length === 0 ? (
-              <div className="border-sidebar-border/45 bg-background/20 text-sidebar-foreground/60 rounded-lg border border-dashed px-4 py-5 text-sm">
+              <div className="border-sidebar-ring/20 bg-sidebar-accent/[0.08] text-sidebar-foreground/68 rounded-lg border border-dashed px-4 py-5 text-sm">
                 Aucune session active n&apos;a été trouvée.
               </div>
             ) : (
-              <div className="border-sidebar-border/45 bg-background/20 overflow-hidden rounded-lg border">
+              <div className="border-sidebar-border/55 bg-background/28 overflow-hidden rounded-lg border">
                 {sessions.map((session) => {
                   const { browser, device } = parseUserAgent(session.userAgent);
                   const isPhone =
@@ -210,11 +210,12 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                     <div
                       key={session.id}
                       className={cn(
-                        'border-sidebar-border/40 flex items-center gap-3 border-b px-3 py-3 last:border-b-0',
-                        session.isCurrent && 'bg-sidebar-accent/12',
+                        'border-sidebar-border/45 hover:bg-sidebar-accent/[0.06] flex items-center gap-3 border-b px-3 py-3 transition-colors last:border-b-0',
+                        session.isCurrent &&
+                          'bg-sidebar-accent/[0.14] shadow-[inset_3px_0_0_rgba(108,146,214,0.58)]',
                       )}
                     >
-                      <span className="border-sidebar-border/55 bg-background/35 flex size-9 shrink-0 items-center justify-center rounded-md border">
+                      <span className="border-sidebar-border/60 bg-background/40 flex size-9 shrink-0 items-center justify-center rounded-md border">
                         <DeviceIcon className="text-sidebar-ring size-4" />
                       </span>
                       <div className="min-w-0 flex-1">
