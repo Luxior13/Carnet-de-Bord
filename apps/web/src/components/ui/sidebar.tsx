@@ -207,7 +207,7 @@ function Sidebar({
         data-sidebar="sidebar"
         id={id ?? SIDEBAR_ID}
         className={cn(
-          'bg-sidebar/92 text-sidebar-foreground flex h-full w-[var(--sidebar-width)] flex-col backdrop-blur-md',
+          'bg-sidebar text-sidebar-foreground flex h-full w-[var(--sidebar-width)] flex-col',
           className,
         )}
         {...props}
@@ -225,7 +225,7 @@ function Sidebar({
           data-slot="sidebar"
           id={id ?? SIDEBAR_ID}
           side={side}
-          className="bg-sidebar/95 text-sidebar-foreground w-[var(--sidebar-width-mobile)] p-0 backdrop-blur-md [&>button]:hidden"
+          className="bg-sidebar text-sidebar-foreground w-[var(--sidebar-width-mobile)] p-0 [&>button]:hidden"
         >
           <SheetTitle className="sr-only">Menu</SheetTitle>
           <SheetDescription className="sr-only">
@@ -246,7 +246,7 @@ function Sidebar({
       data-variant={variant}
       id={id ?? SIDEBAR_ID}
       className={cn(
-        'group/sidebar bg-sidebar/92 text-sidebar-foreground relative hidden h-full shrink-0 flex-col overflow-hidden border-r backdrop-blur-md transition-[width] duration-200 ease-linear md:flex',
+        'group/sidebar bg-sidebar text-sidebar-foreground relative hidden h-full shrink-0 flex-col overflow-hidden border-r transition-[width] duration-200 ease-linear md:flex',
         state === 'collapsed' && collapsible === 'icon'
           ? 'w-[var(--sidebar-width-icon)]'
           : 'w-[var(--sidebar-width)]',

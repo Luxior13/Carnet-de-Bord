@@ -111,23 +111,23 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
       contentClassName="p-0"
     >
       <div className="divide-sidebar-border/45 grid grid-cols-3 divide-x">
-        <div className="bg-sidebar-accent/[0.1] px-3 py-4 text-center">
-          <p className="text-sidebar-ring text-xl font-semibold">
+        <div className="bg-background/28 px-3 py-4 text-center">
+          <p className="text-sidebar-foreground text-xl font-semibold">
             {stats.total}
           </p>
-          <p className="text-sidebar-foreground/62 text-xs">Actions</p>
+          <p className="text-sidebar-foreground/55 text-xs">Actions</p>
         </div>
-        <div className="bg-emerald-500/[0.08] px-3 py-4 text-center">
+        <div className="bg-background/28 px-3 py-4 text-center">
           <p className="text-xl font-semibold text-emerald-400">
             {stats.success}
           </p>
-          <p className="text-sidebar-foreground/62 text-xs">Succès</p>
+          <p className="text-sidebar-foreground/55 text-xs">Succès</p>
         </div>
-        <div className="bg-destructive/[0.08] px-3 py-4 text-center">
+        <div className="bg-background/28 px-3 py-4 text-center">
           <p className="text-destructive text-xl font-semibold">
             {stats.failed}
           </p>
-          <p className="text-sidebar-foreground/62 text-xs">Échecs</p>
+          <p className="text-sidebar-foreground/55 text-xs">Échecs</p>
         </div>
       </div>
       <div className="border-sidebar-border/45 border-t p-4 sm:p-5">
@@ -138,8 +138,8 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
             ))}
           </div>
         ) : recentActivity.length === 0 ? (
-          <div className="border-sidebar-ring/20 bg-sidebar-accent/[0.08] flex flex-col items-center justify-center rounded-lg border border-dashed py-10 text-center">
-            <span className="border-sidebar-ring/30 bg-sidebar-accent/28 text-sidebar-ring mb-3 flex size-10 items-center justify-center rounded-md border">
+          <div className="border-sidebar-border/60 bg-background/45 flex flex-col items-center justify-center rounded-lg border border-dashed py-10 text-center">
+            <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring mb-3 flex size-10 items-center justify-center rounded-lg border">
               <Activity className="size-5" />
             </span>
             <p className="text-sidebar-foreground font-medium">
@@ -150,7 +150,7 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
             </p>
           </div>
         ) : (
-          <div className="border-sidebar-border/55 bg-background/28 overflow-hidden rounded-lg border">
+          <div className="border-sidebar-border/60 bg-background/45 overflow-hidden rounded-lg border">
             {recentActivity.map((log) => {
               const config = getActionConfig(log.action);
               const Icon = config.icon;
@@ -160,7 +160,7 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
                   key={log.id}
                   className="border-sidebar-border/45 hover:bg-sidebar-accent/[0.06] flex items-start gap-3 border-b px-3 py-3 transition-colors last:border-b-0"
                 >
-                  <span className="border-sidebar-border/60 bg-background/40 mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md border">
+                  <span className="border-sidebar-border/60 bg-background/55 mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border">
                     <Icon className={`size-4 ${config.color}`} />
                   </span>
                   <div className="min-w-0 flex-1">

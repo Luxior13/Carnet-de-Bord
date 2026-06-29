@@ -60,8 +60,7 @@ export const AccountPageContent: FC = () => {
 
   return (
     <div className="space-y-5">
-      <section className="border-sidebar-border/60 overflow-hidden rounded-xl border bg-[linear-gradient(180deg,rgba(15,22,34,0.86),rgba(10,15,23,0.92))] shadow-[0_20px_48px_-38px_rgba(0,0,0,0.95),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm">
-        <div className="h-1 w-full bg-[linear-gradient(90deg,rgba(95,132,200,0.92),rgba(108,146,214,0.3),transparent)]" />
+      <section className="border-sidebar-border/70 overflow-hidden rounded-xl border bg-[#182131] shadow-[0_18px_42px_-36px_rgba(0,0,0,0.96),inset_0_1px_0_rgba(255,255,255,0.035)]">
         <div className="divide-sidebar-border/45 grid divide-y md:grid-cols-3 md:divide-x md:divide-y-0">
           {summaryItems.map((item) => {
             const Icon = item.icon;
@@ -69,19 +68,19 @@ export const AccountPageContent: FC = () => {
             return (
               <div
                 key={item.title}
-                className="bg-sidebar-accent/[0.06] flex min-w-0 gap-3 p-4 sm:p-5"
+                className="flex min-w-0 gap-3 bg-[#1f293b] p-4 sm:p-5"
               >
-                <span className="border-sidebar-ring/30 bg-sidebar-accent/35 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-md border">
+                <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
                   <Icon className="size-4" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-sidebar-ring/90 text-[11px] font-semibold tracking-[0.12em] uppercase">
+                  <p className="text-sidebar-foreground text-sm font-bold tracking-tight">
                     {item.title}
                   </p>
-                  <p className="text-sidebar-foreground mt-1 truncate text-xl font-semibold tracking-tight">
+                  <p className="text-sidebar-foreground mt-1 truncate text-lg font-semibold tracking-tight">
                     {item.value}
                   </p>
-                  <p className="text-sidebar-foreground/58 mt-0.5 text-xs">
+                  <p className="text-sidebar-foreground/55 mt-0.5 truncate text-xs">
                     {item.description}
                   </p>
                 </div>
