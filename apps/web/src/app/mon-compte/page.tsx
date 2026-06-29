@@ -3,6 +3,7 @@ import React, { type FC } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { AccountPageContent } from '$features/account/AccountPageContent';
+import { Badge } from '$ui/badge';
 import { PageCanvas, PageHeader, PageShell } from '$ui/page-shell';
 import { ServiceIcon } from '$ui/service-icon';
 
@@ -15,9 +16,22 @@ const MyAccountPage: FC = () => {
         <PageCanvas>
           <PageHeader
             title="Mon compte"
-            description="Profil, sécurité et sessions actives."
+            description="Profil privé, sécurité et sessions actives."
+            meta={
+              <>
+                <Badge variant="outline" className="rounded-full px-3 py-1">
+                  Compte privé
+                </Badge>
+                <Badge variant="outline" className="rounded-full px-3 py-1">
+                  Sécurité
+                </Badge>
+                <Badge variant="outline" className="rounded-full px-3 py-1">
+                  Sessions
+                </Badge>
+              </>
+            }
             icon={
-              <ServiceIcon className="bg-primary/10">
+              <ServiceIcon className="border-sidebar-ring/20 bg-sidebar-accent/25 text-sidebar-ring">
                 <User className="size-5" />
               </ServiceIcon>
             }

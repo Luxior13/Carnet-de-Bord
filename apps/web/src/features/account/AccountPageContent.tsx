@@ -17,16 +17,16 @@ import { StatCard } from '$ui/stat-card';
 const AccountPageContentSkeleton: FC = () => (
   <div className="space-y-5">
     <div className="grid gap-4 md:grid-cols-3">
-      <Skeleton className="h-28 rounded-lg" />
-      <Skeleton className="h-28 rounded-lg" />
-      <Skeleton className="h-28 rounded-lg" />
+      <Skeleton className="h-28 rounded-xl" />
+      <Skeleton className="h-28 rounded-xl" />
+      <Skeleton className="h-28 rounded-xl" />
     </div>
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.95fr)] lg:items-start">
       <div className="space-y-4">
-        <Skeleton className="h-80 rounded-lg" />
-        <Skeleton className="h-96 rounded-lg" />
+        <Skeleton className="h-80 rounded-xl" />
+        <Skeleton className="h-96 rounded-xl" />
       </div>
-      <Skeleton className="h-[42rem] rounded-lg" />
+      <Skeleton className="h-[42rem] rounded-xl" />
     </div>
   </div>
 );

@@ -21,19 +21,28 @@ export const StatCard: FC<StatCardProps> = ({
   className,
   description,
   icon: Icon,
-  iconColor = 'text-primary',
+  iconColor = 'text-sidebar-ring',
   title,
   trend,
   value,
 }) => {
   return (
-    <Card className={cn('card-hover', className)}>
+    <Card
+      className={cn(
+        'border-sidebar-border/70 overflow-hidden rounded-xl border bg-[linear-gradient(180deg,rgba(18,23,30,0.82),rgba(25,33,50,0.92))] shadow-[inset_0_0_0_1px_rgba(108,146,214,0.05)]',
+        className,
+      )}
+    >
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
-            <p className="text-muted-foreground text-sm font-medium">{title}</p>
+            <p className="text-sidebar-foreground/65 text-sm font-medium">
+              {title}
+            </p>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold">{value}</span>
+              <span className="text-sidebar-foreground text-2xl font-bold tracking-tight">
+                {value}
+              </span>
               {trend && (
                 <span
                   className={cn(
@@ -47,12 +56,14 @@ export const StatCard: FC<StatCardProps> = ({
               )}
             </div>
             {description && (
-              <p className="text-muted-foreground text-xs">{description}</p>
+              <p className="text-sidebar-foreground/55 text-xs">
+                {description}
+              </p>
             )}
           </div>
           <div
             className={cn(
-              'bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg',
+              'border-sidebar-ring/20 bg-sidebar-accent/20 text-sidebar-ring flex h-10 w-10 items-center justify-center rounded-lg border',
               iconColor.includes('text-') ? '' : iconColor,
             )}
           >

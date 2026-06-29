@@ -110,36 +110,40 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
       contentClassName="space-y-5"
     >
       <div className="grid grid-cols-3 gap-2">
-        <div className="bg-popover rounded-lg border px-3 py-3 text-center">
-          <p className="text-xl font-semibold">{stats.total}</p>
-          <p className="text-muted-foreground text-xs">Actions</p>
+        <div className="border-sidebar-border/60 bg-sidebar-accent/10 rounded-xl border px-3 py-3 text-center">
+          <p className="text-sidebar-foreground text-xl font-semibold">
+            {stats.total}
+          </p>
+          <p className="text-sidebar-foreground/55 text-xs">Actions</p>
         </div>
-        <div className="rounded-lg border bg-emerald-500/10 px-3 py-3 text-center">
+        <div className="border-sidebar-border/60 rounded-xl border bg-emerald-500/10 px-3 py-3 text-center">
           <p className="text-xl font-semibold text-emerald-400">
             {stats.success}
           </p>
-          <p className="text-muted-foreground text-xs">Succès</p>
+          <p className="text-sidebar-foreground/55 text-xs">Succès</p>
         </div>
-        <div className="bg-destructive/10 rounded-lg border px-3 py-3 text-center">
+        <div className="border-sidebar-border/60 bg-destructive/10 rounded-xl border px-3 py-3 text-center">
           <p className="text-destructive text-xl font-semibold">
             {stats.failed}
           </p>
-          <p className="text-muted-foreground text-xs">Échecs</p>
+          <p className="text-sidebar-foreground/55 text-xs">Échecs</p>
         </div>
       </div>
       {loadingActivity ? (
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-12 rounded-lg" />
+            <Skeleton key={i} className="h-12 rounded-xl" />
           ))}
         </div>
       ) : recentActivity.length === 0 ? (
-        <div className="bg-popover flex flex-col items-center justify-center rounded-lg border border-dashed py-10 text-center">
-          <ServiceIcon className="bg-secondary text-primary mb-3">
+        <div className="border-sidebar-border/60 bg-sidebar-accent/10 flex flex-col items-center justify-center rounded-xl border border-dashed py-10 text-center">
+          <ServiceIcon className="border-sidebar-ring/20 bg-sidebar-accent/20 text-sidebar-ring mb-3">
             <Activity className="size-6" />
           </ServiceIcon>
-          <p className="font-medium">Aucune activité récente</p>
-          <p className="text-muted-foreground mt-1 max-w-[220px] text-xs">
+          <p className="text-sidebar-foreground font-medium">
+            Aucune activité récente
+          </p>
+          <p className="text-sidebar-foreground/55 mt-1 max-w-[220px] text-xs">
             Vos connexions et modifications apparaîtront ici.
           </p>
         </div>
@@ -150,13 +154,16 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
             const Icon = config.icon;
 
             return (
-              <div key={log.id} className="flex items-start gap-3">
-                <div className="bg-secondary mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg">
+              <div
+                key={log.id}
+                className="border-sidebar-border/60 bg-sidebar-accent/10 flex items-start gap-3 rounded-xl border p-3"
+              >
+                <div className="border-sidebar-border/60 bg-sidebar-accent/20 mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border">
                   <Icon className={`size-4 ${config.color}`} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{config.label}</p>
-                  <p className="text-muted-foreground truncate text-xs">
+                  <p className="text-sidebar-foreground/55 truncate text-xs">
                     {formatRelativeAccountTime(log.createdAt)}
                     {log.ipAddress && ` - ${log.ipAddress}`}
                   </p>

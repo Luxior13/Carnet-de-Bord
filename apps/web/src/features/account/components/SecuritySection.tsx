@@ -140,34 +140,38 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         <button
           type="button"
           onClick={() => setShowPasswordDialog(true)}
-          className="bg-popover hover:bg-accent flex w-full items-center justify-between gap-4 rounded-lg border p-4 text-left transition-colors"
+          className="border-sidebar-border/60 hover:border-sidebar-ring/25 hover:bg-sidebar-accent/20 flex w-full items-center justify-between gap-4 rounded-xl border bg-[linear-gradient(180deg,rgba(95,132,200,0.05),rgba(34,49,74,0.5))] p-4 text-left transition-[background-color,border-color,box-shadow]"
         >
           <div className="flex min-w-0 items-center gap-3">
-            <ServiceIcon className="bg-amber-500/10 text-amber-300">
+            <ServiceIcon className="border-sidebar-ring/20 bg-sidebar-accent/20 text-sidebar-ring">
               <Key className="size-5" />
             </ServiceIcon>
             <div className="min-w-0">
-              <p className="font-medium">Mot de passe</p>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-sidebar-foreground font-medium">
+                Mot de passe
+              </p>
+              <p className="text-sidebar-foreground/60 text-sm">
                 {userData.passwordChangedAt
                   ? `Modifié ${formatRelativeAccountTime(userData.passwordChangedAt)}`
                   : 'Jamais modifié'}
               </p>
             </div>
           </div>
-          <ChevronRight className="text-muted-foreground size-5 shrink-0" />
+          <ChevronRight className="text-sidebar-foreground/55 size-5 shrink-0" />
         </button>
         <Separator />
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="border-sidebar-border/60 bg-sidebar-accent/10 flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <ServiceIcon>
+            <ServiceIcon className="border-sidebar-ring/20 bg-sidebar-accent/20 text-sidebar-ring">
               <Monitor className="size-5" />
             </ServiceIcon>
             <div>
-              <p className="font-medium">Sessions actives</p>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-sidebar-foreground font-medium">
+                Sessions actives
+              </p>
+              <p className="text-sidebar-foreground/60 text-sm">
                 {sessions.length} appareil{sessions.length > 1 ? 's' : ''}{' '}
-                connecté{sessions.length > 1 ? 's' : ''}
+                connect{sessions.length > 1 ? 'és' : 'é'}
               </p>
             </div>
           </div>
@@ -175,6 +179,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
             <Button
               variant="outline"
               size="sm"
+              className="border-sidebar-border/70 rounded-lg"
               onClick={() => setShowRevokeDialog(true)}
               disabled={revokingAll}
             >
@@ -185,11 +190,11 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         </div>
         {loadingSessions ? (
           <div className="space-y-2">
-            <Skeleton className="h-14 rounded-lg" />
-            <Skeleton className="h-14 rounded-lg" />
+            <Skeleton className="h-14 rounded-xl" />
+            <Skeleton className="h-14 rounded-xl" />
           </div>
         ) : sessions.length === 0 ? (
-          <div className="bg-popover text-muted-foreground rounded-lg border border-dashed px-4 py-5 text-sm">
+          <div className="border-sidebar-border/60 bg-sidebar-accent/10 text-sidebar-foreground/60 rounded-xl border border-dashed px-4 py-5 text-sm">
             Aucune session active n&apos;a été trouvée.
           </div>
         ) : (
@@ -203,26 +208,32 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 <div
                   key={session.id}
                   className={cn(
-                    'flex items-center gap-3 rounded-lg border p-3',
+                    'border-sidebar-border/60 flex items-center gap-3 rounded-xl border p-3',
                     session.isCurrent
-                      ? 'border-primary/40 bg-primary/10'
-                      : 'bg-popover',
+                      ? 'border-sidebar-ring/25 bg-[linear-gradient(180deg,rgba(95,132,200,0.12),rgba(34,49,74,0.58))]'
+                      : 'bg-sidebar-accent/10',
                   )}
                 >
-                  <DeviceIcon className="text-primary size-5 shrink-0" />
+                  <div className="border-sidebar-border/60 bg-sidebar-accent/20 flex size-10 shrink-0 items-center justify-center rounded-lg border">
+                    <DeviceIcon className="text-sidebar-ring size-5" />
+                  </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="truncate text-sm font-medium">
                         {device} - {browser}
                       </span>
                       {session.isCurrent && (
-                        <Badge variant="secondary">Actuelle</Badge>
+                        <Badge variant="secondary" className="rounded-full">
+                          Actuelle
+                        </Badge>
                       )}
                       {session.rememberMe && (
-                        <Badge variant="outline">Longue</Badge>
+                        <Badge variant="outline" className="rounded-full">
+                          Longue
+                        </Badge>
                       )}
                     </div>
-                    <p className="text-muted-foreground truncate text-xs">
+                    <p className="text-sidebar-foreground/55 truncate text-xs">
                       {session.ipAddress || 'IP inconnue'} - Ouverte{' '}
                       {formatRelativeAccountTime(session.createdAt)}
                     </p>
@@ -232,6 +243,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                       type="button"
                       variant="ghost"
                       size="icon"
+                      className="rounded-lg"
                       onClick={() => handleRevokeSession(session.id)}
                       disabled={revokingId === session.id}
                       aria-label="Déconnecter cette session"
@@ -259,10 +271,10 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         }}
       />
       <AlertDialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
-        <AlertDialogContent className="border-border overflow-hidden rounded-lg p-0">
+        <AlertDialogContent className="border-sidebar-border overflow-hidden rounded-xl p-0">
           <div className="p-6">
             <AlertDialogHeader>
-              <AlertDialogTitle className="text-foreground flex items-center gap-2">
+              <AlertDialogTitle className="text-sidebar-foreground flex items-center gap-2">
                 <div className="bg-destructive/10 flex h-8 w-8 items-center justify-center rounded-lg">
                   <AlertTriangle size={16} className="text-destructive" />
                 </div>

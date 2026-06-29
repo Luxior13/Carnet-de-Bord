@@ -24,19 +24,21 @@ export const SectionPanel: FC<SectionPanelProps> = ({
   return (
     <section
       className={cn(
-        'border-border/70 bg-card overflow-hidden rounded-lg border shadow-none',
+        'border-sidebar-border/70 overflow-hidden rounded-xl border bg-[linear-gradient(180deg,rgba(18,23,30,0.88),rgba(25,33,50,0.92))] shadow-[inset_0_0_0_1px_rgba(108,146,214,0.06)]',
         className,
       )}
     >
-      <div className="border-border/60 flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+      <div className="border-sidebar-border/60 flex flex-col gap-3 border-b bg-[linear-gradient(180deg,rgba(95,132,200,0.06),rgba(95,132,200,0))] p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-md">
+          <span className="border-sidebar-ring/20 text-sidebar-ring bg-sidebar-accent/20 flex size-9 shrink-0 items-center justify-center rounded-lg border">
             {icon}
           </span>
           <div className="min-w-0">
-            <h3 className="text-foreground text-sm font-semibold">{title}</h3>
+            <h3 className="text-sidebar-foreground text-sm font-semibold tracking-tight">
+              {title}
+            </h3>
             {description && (
-              <p className="text-muted-foreground mt-1 text-sm leading-6">
+              <p className="text-sidebar-foreground/65 mt-1 text-sm leading-6">
                 {description}
               </p>
             )}

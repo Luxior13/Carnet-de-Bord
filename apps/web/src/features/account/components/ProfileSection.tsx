@@ -14,6 +14,7 @@ import { Button } from '$ui/button';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { apiFetch } from '$utils/api.utils';
+import { cn } from '$utils/css.utils';
 
 type ProfileSectionProps = {
   onUpdate: () => Promise<void>;
@@ -83,6 +84,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
           <Button
             variant="outline"
             size="sm"
+            className="border-sidebar-border/70 bg-sidebar-accent/10 rounded-lg"
             onClick={() => setIsEditing(true)}
           >
             <Edit className="size-4" />
@@ -91,69 +93,90 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
         ) : null
       }
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="border-sidebar-border/60 flex flex-col gap-4 rounded-xl border bg-[linear-gradient(180deg,rgba(95,132,200,0.06),rgba(34,49,74,0.45))] p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
           <UserAvatar user={userData} className="size-16 rounded-lg" />
           <div className="min-w-0">
-            <p className="text-foreground truncate text-xl font-semibold">
+            <p className="text-sidebar-foreground truncate text-xl font-semibold tracking-tight">
               {userData.firstName} {userData.lastName}
             </p>
-            <p className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
+            <p className="text-sidebar-foreground/65 mt-1 flex items-center gap-2 text-sm">
               <Mail className="size-4 shrink-0" />
               <span className="truncate">{userData.email}</span>
             </p>
-            <Badge variant={getRoleColor(userData.role)} className="mt-3">
+            <Badge
+              variant={getRoleColor(userData.role)}
+              className="mt-3 rounded-full"
+            >
               {getAccessLabel(userData)}
             </Badge>
           </div>
         </div>
-        {isEditing && (
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCancel}
-              disabled={isSaving}
-            >
-              <X className="size-4" />
-              Annuler
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSaveProfile}
-              disabled={isSaving || !firstName.trim() || !lastName.trim()}
-            >
-              {isSaving ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Check className="size-4" />
-              )}
-              Enregistrer
-            </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="border-sidebar-border/60 bg-sidebar-accent/10 rounded-lg border px-3 py-2 text-right">
+            <p className="text-sidebar-foreground/50 text-[11px] tracking-[0.14em] uppercase">
+              Compte créé
+            </p>
+            <p className="text-sidebar-foreground text-sm font-medium">
+              {formatAccountDate(userData.createdAt)}
+            </p>
           </div>
-        )}
+          {isEditing && (
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-lg"
+                onClick={handleCancel}
+                disabled={isSaving}
+              >
+                <X className="size-4" />
+                Annuler
+              </Button>
+              <Button
+                size="sm"
+                className="rounded-lg"
+                onClick={handleSaveProfile}
+                disabled={isSaving || !firstName.trim() || !lastName.trim()}
+              >
+                {isSaving ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Check className="size-4" />
+                )}
+                Enregistrer
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
       {!isEditing ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="bg-popover rounded-lg border p-4">
-            <p className="text-muted-foreground text-xs">Prénom</p>
-            <p className="mt-1 font-medium">{userData.firstName}</p>
-          </div>
-          <div className="bg-popover rounded-lg border p-4">
-            <p className="text-muted-foreground text-xs">Nom</p>
-            <p className="mt-1 font-medium">{userData.lastName}</p>
-          </div>
-          <div className="bg-popover rounded-lg border p-4 sm:col-span-2">
-            <p className="text-muted-foreground text-xs">Email de connexion</p>
-            <p className="mt-1 font-medium">{userData.email}</p>
-            <p className="text-muted-foreground mt-1 text-xs">
-              L&apos;adresse email ne peut pas être modifiée.
+          <div className="border-sidebar-border/60 bg-sidebar-accent/10 rounded-xl border p-4">
+            <p className="text-sidebar-foreground/50 text-[11px] tracking-[0.14em] uppercase">
+              Prénom
+            </p>
+            <p className="text-sidebar-foreground mt-1 font-medium">
+              {userData.firstName}
             </p>
           </div>
-          <div className="bg-popover rounded-lg border p-4 sm:col-span-2">
-            <p className="text-muted-foreground text-xs">Compte créé le</p>
-            <p className="mt-1 font-medium">
-              {formatAccountDate(userData.createdAt)}
+          <div className="border-sidebar-border/60 bg-sidebar-accent/10 rounded-xl border p-4">
+            <p className="text-sidebar-foreground/50 text-[11px] tracking-[0.14em] uppercase">
+              Nom
+            </p>
+            <p className="text-sidebar-foreground mt-1 font-medium">
+              {userData.lastName}
+            </p>
+          </div>
+          <div className="border-sidebar-border/60 bg-sidebar-accent/10 rounded-xl border p-4 sm:col-span-2">
+            <p className="text-sidebar-foreground/50 text-[11px] tracking-[0.14em] uppercase">
+              Email de connexion
+            </p>
+            <p className="text-sidebar-foreground mt-1 font-medium">
+              {userData.email}
+            </p>
+            <p className="text-sidebar-foreground/55 mt-1 text-xs">
+              L&apos;adresse email ne peut pas être modifiée.
             </p>
           </div>
         </div>
@@ -170,6 +193,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                 onChange={(e) => setFirstName(e.target.value)}
                 disabled={isSaving}
                 placeholder="Votre prénom"
+                className={cn('rounded-lg')}
               />
             </div>
             <div className="space-y-2">
@@ -182,6 +206,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                 onChange={(e) => setLastName(e.target.value)}
                 disabled={isSaving}
                 placeholder="Votre nom"
+                className={cn('rounded-lg')}
               />
             </div>
           </div>
@@ -190,9 +215,9 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
             <Input
               value={userData.email}
               disabled
-              className="bg-secondary/50"
+              className="bg-secondary/50 rounded-lg"
             />
-            <p className="text-muted-foreground text-xs">
+            <p className="text-sidebar-foreground/55 text-xs">
               L&apos;adresse email ne peut pas être modifiée.
             </p>
           </div>
