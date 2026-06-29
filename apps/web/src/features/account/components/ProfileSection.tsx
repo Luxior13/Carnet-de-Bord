@@ -4,17 +4,16 @@ import { Check, Edit, Loader2, Mail, User, X } from 'lucide-react';
 import React, { type FC, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { SectionPanel } from '$components/layout/SectionPanel';
 import { UserAvatar } from '$components/users/UserAvatar';
 import { getAccessLabel, getRoleColor } from '$constants/permissions.constants';
 import { formatAccountDate } from '$features/account/account.utils';
+import { AccountPanel } from '$features/account/components/AccountPanel';
 import type { UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { apiFetch } from '$utils/api.utils';
-import { cn } from '$utils/css.utils';
 
 type ProfileSectionProps = {
   onUpdate: () => Promise<void>;
@@ -75,154 +74,158 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
   };
 
   return (
-    <SectionPanel
+    <AccountPanel
       icon={<User className="size-4" />}
       title="Profil"
       description="Identité et adresse de connexion"
       actions={
         !isEditing ? (
           <Button
+            type="button"
             variant="outline"
             size="sm"
-            className="border-sidebar-border/70 bg-sidebar-accent/10 rounded-lg"
+            className="border-sidebar-border/65 bg-background/35 rounded-lg"
             onClick={() => setIsEditing(true)}
           >
             <Edit className="size-4" />
             Modifier
           </Button>
-        ) : null
+        ) : (
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="rounded-lg"
+              onClick={handleCancel}
+              disabled={isSaving}
+            >
+              <X className="size-4" />
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              className="rounded-lg"
+              onClick={handleSaveProfile}
+              disabled={isSaving || !firstName.trim() || !lastName.trim()}
+            >
+              {isSaving ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Check className="size-4" />
+              )}
+              Enregistrer
+            </Button>
+          </div>
+        )
       }
     >
-      <div className="border-sidebar-border/60 flex flex-col gap-4 rounded-xl border bg-[linear-gradient(180deg,rgba(95,132,200,0.06),rgba(34,49,74,0.45))] p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-4">
-          <UserAvatar user={userData} className="size-16 rounded-lg" />
-          <div className="min-w-0">
-            <p className="text-sidebar-foreground truncate text-xl font-semibold tracking-tight">
-              {userData.firstName} {userData.lastName}
-            </p>
-            <p className="text-sidebar-foreground/65 mt-1 flex items-center gap-2 text-sm">
-              <Mail className="size-4 shrink-0" />
-              <span className="truncate">{userData.email}</span>
-            </p>
-            <Badge
-              variant={getRoleColor(userData.role)}
-              className="mt-3 rounded-full"
-            >
-              {getAccessLabel(userData)}
-            </Badge>
+      <div className="space-y-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
+            <UserAvatar user={userData} className="size-16 rounded-lg" />
+            <div className="min-w-0">
+              <p className="text-sidebar-foreground truncate text-xl font-semibold tracking-tight">
+                {userData.firstName} {userData.lastName}
+              </p>
+              <p className="text-sidebar-foreground/65 mt-1 flex items-center gap-2 text-sm">
+                <Mail className="size-4 shrink-0" />
+                <span className="truncate">{userData.email}</span>
+              </p>
+              <Badge
+                variant={getRoleColor(userData.role)}
+                className="mt-3 rounded-full"
+              >
+                {getAccessLabel(userData)}
+              </Badge>
+            </div>
           </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <div className="border-sidebar-border/60 bg-sidebar-accent/10 rounded-lg border px-3 py-2 text-right">
-            <p className="text-sidebar-foreground/50 text-[11px] tracking-[0.14em] uppercase">
+          <div className="border-sidebar-border/45 bg-background/25 rounded-lg border px-3 py-2 sm:text-right">
+            <p className="text-sidebar-foreground/50 text-[11px] font-semibold tracking-[0.12em] uppercase">
               Compte créé
             </p>
             <p className="text-sidebar-foreground text-sm font-medium">
               {formatAccountDate(userData.createdAt)}
             </p>
           </div>
-          {isEditing && (
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="rounded-lg"
-                onClick={handleCancel}
-                disabled={isSaving}
-              >
-                <X className="size-4" />
-                Annuler
-              </Button>
-              <Button
-                size="sm"
-                className="rounded-lg"
-                onClick={handleSaveProfile}
-                disabled={isSaving || !firstName.trim() || !lastName.trim()}
-              >
-                {isSaving ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Check className="size-4" />
-                )}
-                Enregistrer
-              </Button>
-            </div>
-          )}
         </div>
-      </div>
-      {!isEditing ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="border-sidebar-border/60 bg-sidebar-accent/10 rounded-xl border p-4">
-            <p className="text-sidebar-foreground/50 text-[11px] tracking-[0.14em] uppercase">
-              Prénom
-            </p>
-            <p className="text-sidebar-foreground mt-1 font-medium">
-              {userData.firstName}
-            </p>
-          </div>
-          <div className="border-sidebar-border/60 bg-sidebar-accent/10 rounded-xl border p-4">
-            <p className="text-sidebar-foreground/50 text-[11px] tracking-[0.14em] uppercase">
-              Nom
-            </p>
-            <p className="text-sidebar-foreground mt-1 font-medium">
-              {userData.lastName}
-            </p>
-          </div>
-          <div className="border-sidebar-border/60 bg-sidebar-accent/10 rounded-xl border p-4 sm:col-span-2">
-            <p className="text-sidebar-foreground/50 text-[11px] tracking-[0.14em] uppercase">
-              Email de connexion
-            </p>
-            <p className="text-sidebar-foreground mt-1 font-medium">
-              {userData.email}
-            </p>
-            <p className="text-sidebar-foreground/55 mt-1 text-xs">
-              L&apos;adresse email ne peut pas être modifiée.
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="edit-firstName" required>
+        {!isEditing ? (
+          <dl className="border-sidebar-border/45 bg-background/20 overflow-hidden rounded-lg border">
+            <div className="border-sidebar-border/40 grid gap-1 border-b px-4 py-3 sm:grid-cols-[10rem_1fr]">
+              <dt className="text-sidebar-foreground/52 text-xs font-semibold tracking-[0.1em] uppercase">
                 Prénom
-              </Label>
-              <Input
-                id="edit-firstName"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                disabled={isSaving}
-                placeholder="Votre prénom"
-                className={cn('rounded-lg')}
-              />
+              </dt>
+              <dd className="text-sidebar-foreground min-w-0 text-sm font-medium">
+                {userData.firstName}
+              </dd>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-lastName" required>
+            <div className="border-sidebar-border/40 grid gap-1 border-b px-4 py-3 sm:grid-cols-[10rem_1fr]">
+              <dt className="text-sidebar-foreground/52 text-xs font-semibold tracking-[0.1em] uppercase">
                 Nom
-              </Label>
+              </dt>
+              <dd className="text-sidebar-foreground min-w-0 text-sm font-medium">
+                {userData.lastName}
+              </dd>
+            </div>
+            <div className="grid gap-1 px-4 py-3 sm:grid-cols-[10rem_1fr]">
+              <dt className="text-sidebar-foreground/52 text-xs font-semibold tracking-[0.1em] uppercase">
+                Email
+              </dt>
+              <dd className="min-w-0">
+                <p className="text-sidebar-foreground truncate text-sm font-medium">
+                  {userData.email}
+                </p>
+                <p className="text-sidebar-foreground/50 mt-1 text-xs">
+                  L&apos;adresse email ne peut pas être modifiée.
+                </p>
+              </dd>
+            </div>
+          </dl>
+        ) : (
+          <div className="border-sidebar-border/45 bg-background/20 rounded-lg border p-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="edit-firstName" required>
+                  Prénom
+                </Label>
+                <Input
+                  id="edit-firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  disabled={isSaving}
+                  placeholder="Votre prénom"
+                  className="rounded-lg"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-lastName" required>
+                  Nom
+                </Label>
+                <Input
+                  id="edit-lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  disabled={isSaving}
+                  placeholder="Votre nom"
+                  className="rounded-lg"
+                />
+              </div>
+            </div>
+            <div className="mt-4 space-y-2">
+              <Label>Email</Label>
               <Input
-                id="edit-lastName"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                disabled={isSaving}
-                placeholder="Votre nom"
-                className={cn('rounded-lg')}
+                value={userData.email}
+                disabled
+                className="bg-secondary/50 rounded-lg"
               />
+              <p className="text-sidebar-foreground/50 text-xs">
+                L&apos;adresse email ne peut pas être modifiée.
+              </p>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input
-              value={userData.email}
-              disabled
-              className="bg-secondary/50 rounded-lg"
-            />
-            <p className="text-sidebar-foreground/55 text-xs">
-              L&apos;adresse email ne peut pas être modifiée.
-            </p>
-          </div>
-        </div>
-      )}
-    </SectionPanel>
+        )}
+      </div>
+    </AccountPanel>
   );
 };

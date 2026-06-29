@@ -15,7 +15,7 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { ChangePasswordDialog } from '$components/ChangePasswordDialog';
-import { SectionPanel } from '$components/layout/SectionPanel';
+import { AccountPanel } from '$features/account/components/AccountPanel';
 import type { UserType } from '$types/auth.types';
 import {
   AlertDialog,
@@ -29,8 +29,6 @@ import {
 } from '$ui/alert-dialog';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import { Separator } from '$ui/separator';
-import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
 import { apiFetch } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
@@ -80,7 +78,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   }, []);
 
   useEffect(() => {
-    fetchSessions();
+    void fetchSessions();
   }, [fetchSessions]);
 
   const handleRevokeAllSessions = async (): Promise<void> => {
@@ -93,7 +91,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
 
       if (data.success) {
         toast.success('Toutes les autres sessions ont été déconnectées');
-        fetchSessions();
+        void fetchSessions();
       } else {
         toast.error(data.error?.message || 'Erreur');
       }
@@ -115,7 +113,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
 
       if (data.success) {
         toast.success('Session déconnectée');
-        fetchSessions();
+        void fetchSessions();
       } else {
         toast.error(data.error?.message || 'Erreur');
       }
@@ -132,141 +130,145 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
 
   return (
     <>
-      <SectionPanel
+      <AccountPanel
         icon={<Shield className="size-4" />}
         title="Sécurité"
         description="Mot de passe, sessions actives et déconnexions"
+        contentClassName="p-0"
       >
-        <button
-          type="button"
-          onClick={() => setShowPasswordDialog(true)}
-          className="border-sidebar-border/60 hover:border-sidebar-ring/25 hover:bg-sidebar-accent/20 flex w-full items-center justify-between gap-4 rounded-xl border bg-[linear-gradient(180deg,rgba(95,132,200,0.05),rgba(34,49,74,0.5))] p-4 text-left transition-[background-color,border-color,box-shadow]"
-        >
-          <div className="flex min-w-0 items-center gap-3">
-            <ServiceIcon className="border-sidebar-ring/20 bg-sidebar-accent/20 text-sidebar-ring">
-              <Key className="size-5" />
-            </ServiceIcon>
-            <div className="min-w-0">
-              <p className="text-sidebar-foreground font-medium">
-                Mot de passe
-              </p>
-              <p className="text-sidebar-foreground/60 text-sm">
-                {userData.passwordChangedAt
-                  ? `Modifié ${formatRelativeAccountTime(userData.passwordChangedAt)}`
-                  : 'Jamais modifié'}
-              </p>
+        <div className="divide-sidebar-border/45 divide-y">
+          <button
+            type="button"
+            onClick={() => setShowPasswordDialog(true)}
+            className="hover:bg-sidebar-accent/10 group flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors sm:px-5"
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="border-sidebar-border/60 bg-background/35 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-md border">
+                <Key className="size-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sidebar-foreground text-sm font-medium">
+                  Mot de passe
+                </p>
+                <p className="text-sidebar-foreground/58 text-sm">
+                  {userData.passwordChangedAt
+                    ? `Modifié ${formatRelativeAccountTime(userData.passwordChangedAt)}`
+                    : 'Jamais modifié'}
+                </p>
+              </div>
             </div>
-          </div>
-          <ChevronRight className="text-sidebar-foreground/55 size-5 shrink-0" />
-        </button>
-        <Separator />
-        <div className="border-sidebar-border/60 bg-sidebar-accent/10 flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <ServiceIcon className="border-sidebar-ring/20 bg-sidebar-accent/20 text-sidebar-ring">
-              <Monitor className="size-5" />
-            </ServiceIcon>
-            <div>
-              <p className="text-sidebar-foreground font-medium">
-                Sessions actives
-              </p>
-              <p className="text-sidebar-foreground/60 text-sm">
-                {sessions.length} appareil{sessions.length > 1 ? 's' : ''}{' '}
-                connect{sessions.length > 1 ? 'és' : 'é'}
-              </p>
+            <ChevronRight className="text-sidebar-foreground/45 group-hover:text-sidebar-ring size-5 shrink-0 transition-colors" />
+          </button>
+          <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div className="flex items-center gap-3">
+              <span className="border-sidebar-border/60 bg-background/35 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-md border">
+                <Monitor className="size-4" />
+              </span>
+              <div>
+                <p className="text-sidebar-foreground text-sm font-medium">
+                  Sessions actives
+                </p>
+                <p className="text-sidebar-foreground/58 text-sm">
+                  {sessions.length} appareil{sessions.length > 1 ? 's' : ''}{' '}
+                  connect{sessions.length > 1 ? 'és' : 'é'}
+                </p>
+              </div>
             </div>
+            {otherSessionsCount > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-sidebar-border/65 bg-background/35 rounded-lg"
+                onClick={() => setShowRevokeDialog(true)}
+                disabled={revokingAll}
+              >
+                <LogOut className="size-4" />
+                Déconnecter ({otherSessionsCount})
+              </Button>
+            )}
           </div>
-          {otherSessionsCount > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-sidebar-border/70 rounded-lg"
-              onClick={() => setShowRevokeDialog(true)}
-              disabled={revokingAll}
-            >
-              <LogOut className="size-4" />
-              Déconnecter ({otherSessionsCount})
-            </Button>
-          )}
-        </div>
-        {loadingSessions ? (
-          <div className="space-y-2">
-            <Skeleton className="h-14 rounded-xl" />
-            <Skeleton className="h-14 rounded-xl" />
-          </div>
-        ) : sessions.length === 0 ? (
-          <div className="border-sidebar-border/60 bg-sidebar-accent/10 text-sidebar-foreground/60 rounded-xl border border-dashed px-4 py-5 text-sm">
-            Aucune session active n&apos;a été trouvée.
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {sessions.map((session) => {
-              const { browser, device } = parseUserAgent(session.userAgent);
-              const isPhone = device === 'iPhone/iPad' || device === 'Android';
-              const DeviceIcon = isPhone ? Smartphone : Monitor;
+          <div className="px-4 py-4 sm:px-5">
+            {loadingSessions ? (
+              <div className="space-y-2">
+                <Skeleton className="h-14 rounded-lg" />
+                <Skeleton className="h-14 rounded-lg" />
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="border-sidebar-border/45 bg-background/20 text-sidebar-foreground/60 rounded-lg border border-dashed px-4 py-5 text-sm">
+                Aucune session active n&apos;a été trouvée.
+              </div>
+            ) : (
+              <div className="border-sidebar-border/45 bg-background/20 overflow-hidden rounded-lg border">
+                {sessions.map((session) => {
+                  const { browser, device } = parseUserAgent(session.userAgent);
+                  const isPhone =
+                    device === 'iPhone/iPad' || device === 'Android';
+                  const DeviceIcon = isPhone ? Smartphone : Monitor;
 
-              return (
-                <div
-                  key={session.id}
-                  className={cn(
-                    'border-sidebar-border/60 flex items-center gap-3 rounded-xl border p-3',
-                    session.isCurrent
-                      ? 'border-sidebar-ring/25 bg-[linear-gradient(180deg,rgba(95,132,200,0.12),rgba(34,49,74,0.58))]'
-                      : 'bg-sidebar-accent/10',
-                  )}
-                >
-                  <div className="border-sidebar-border/60 bg-sidebar-accent/20 flex size-10 shrink-0 items-center justify-center rounded-lg border">
-                    <DeviceIcon className="text-sidebar-ring size-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="truncate text-sm font-medium">
-                        {device} - {browser}
-                      </span>
-                      {session.isCurrent && (
-                        <Badge variant="secondary" className="rounded-full">
-                          Actuelle
-                        </Badge>
+                  return (
+                    <div
+                      key={session.id}
+                      className={cn(
+                        'border-sidebar-border/40 flex items-center gap-3 border-b px-3 py-3 last:border-b-0',
+                        session.isCurrent && 'bg-sidebar-accent/12',
                       )}
-                      {session.rememberMe && (
-                        <Badge variant="outline" className="rounded-full">
-                          Longue
-                        </Badge>
+                    >
+                      <span className="border-sidebar-border/55 bg-background/35 flex size-9 shrink-0 items-center justify-center rounded-md border">
+                        <DeviceIcon className="text-sidebar-ring size-4" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="truncate text-sm font-medium">
+                            {device} - {browser}
+                          </span>
+                          {session.isCurrent && (
+                            <Badge variant="secondary" className="rounded-full">
+                              Actuelle
+                            </Badge>
+                          )}
+                          {session.rememberMe && (
+                            <Badge variant="outline" className="rounded-full">
+                              Longue
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sidebar-foreground/52 truncate text-xs">
+                          {session.ipAddress || 'IP inconnue'} - Ouverte{' '}
+                          {formatRelativeAccountTime(session.createdAt)}
+                        </p>
+                      </div>
+                      {!session.isCurrent && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-lg"
+                          onClick={() => handleRevokeSession(session.id)}
+                          disabled={revokingId === session.id}
+                          aria-label="Déconnecter cette session"
+                        >
+                          {revokingId === session.id ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <X className="size-4" />
+                          )}
+                        </Button>
                       )}
                     </div>
-                    <p className="text-sidebar-foreground/55 truncate text-xs">
-                      {session.ipAddress || 'IP inconnue'} - Ouverte{' '}
-                      {formatRelativeAccountTime(session.createdAt)}
-                    </p>
-                  </div>
-                  {!session.isCurrent && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-lg"
-                      onClick={() => handleRevokeSession(session.id)}
-                      disabled={revokingId === session.id}
-                      aria-label="Déconnecter cette session"
-                    >
-                      {revokingId === session.id ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <X className="size-4" />
-                      )}
-                    </Button>
-                  )}
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
           </div>
-        )}
-      </SectionPanel>
+        </div>
+      </AccountPanel>
       <ChangePasswordDialog
         open={showPasswordDialog}
         onCancel={() => setShowPasswordDialog(false)}
         onSuccess={() => {
           setShowPasswordDialog(false);
-          onUpdate();
+          void onUpdate();
           toast.success('Mot de passe modifié avec succès');
         }}
       />
