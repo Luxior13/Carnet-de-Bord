@@ -157,6 +157,33 @@ describe('users access hardening', () => {
     );
   });
 
+  it('rejects unknown permission keys before loading the target user', async () => {
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: JSON.stringify({
+          permissions: {
+            [PERMISSIONS.USERS.VIEW]: true,
+            'users:ghost': true,
+          },
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe(ErrorCode.VALIDATION_ERROR);
+    expect(body.error.details.permissions).toEqual([
+      'Permission inconnue: users:ghost',
+    ]);
+    expect(mockRequirePermission).not.toHaveBeenCalled();
+    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
   it('does not update permissions when only the key order changes', async () => {
     const existingPermissions = {
       [PERMISSIONS.USERS.VIEW]: true,

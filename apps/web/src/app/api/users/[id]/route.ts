@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { PERMISSIONS } from '$constants/permissions.constants';
+import {
+  getUnknownPermissionKeys,
+  PERMISSIONS,
+} from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
 import {
@@ -177,6 +180,21 @@ export async function GET(
 // ============================================
 // PATCH /api/users/[id] - Update user
 // ============================================
+const permissionsSchema = z
+  .record(z.string(), z.boolean())
+  .nullable()
+  .optional()
+  .superRefine((value, context) => {
+    const unknownPermissionKeys = getUnknownPermissionKeys(value);
+
+    if (unknownPermissionKeys.length === 0) return;
+
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Permission inconnue: ${unknownPermissionKeys.join(', ')}`,
+    });
+  });
+
 const updateUserSchema = z.object({
   email: optionalEmailSchema,
   firstName: optionalTrimmedStringMax(50, 'Prénom trop long').pipe(
@@ -186,7 +204,7 @@ const updateUserSchema = z.object({
   lastName: optionalTrimmedStringMax(50, 'Nom trop long').pipe(
     z.string().min(1, 'Nom requis').optional().nullable(),
   ),
-  permissions: z.record(z.string(), z.boolean()).nullable().optional(),
+  permissions: permissionsSchema,
   role: z.enum(['ADMIN', 'USER']).optional(),
   staffProfile: staffProfileSchema,
 });

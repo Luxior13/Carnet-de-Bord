@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getAllPermissionKeys,
+  getEffectivePermissions,
+  getUnknownPermissionKeys,
   hasPermission,
+  isKnownPermissionKey,
   PERMISSIONS,
   ROLE_PERMISSIONS,
 } from '../shared/constants/permissions.constants';
@@ -32,6 +35,12 @@ describe('hasPermission', () => {
       hasPermission('USER', PERMISSIONS.USERS.VIEW, customPermissions),
     ).toBe(true);
   });
+
+  it('never grants unknown permissions', () => {
+    expect(hasPermission('ADMIN', 'users:ghost', { 'users:ghost': true })).toBe(
+      false,
+    );
+  });
 });
 
 describe('permission catalogue', () => {
@@ -45,6 +54,26 @@ describe('permission catalogue', () => {
       'users:reset_password',
       'users:edit_permissions',
     ]);
+  });
+
+  it('detects unknown permission keys', () => {
+    expect(isKnownPermissionKey(PERMISSIONS.USERS.VIEW)).toBe(true);
+    expect(isKnownPermissionKey('users:ghost')).toBe(false);
+    expect(
+      getUnknownPermissionKeys({
+        [PERMISSIONS.USERS.VIEW]: true,
+        'users:ghost': false,
+      }),
+    ).toEqual(['users:ghost']);
+  });
+
+  it('excludes unknown permissions from effective permissions', () => {
+    expect(
+      getEffectivePermissions('USER', {
+        [PERMISSIONS.USERS.VIEW]: true,
+        'users:ghost': true,
+      }),
+    ).not.toHaveProperty('users:ghost');
   });
 
   it('defines neutral role presets', () => {

@@ -50,6 +50,8 @@ export type PermissionCategory = {
   permissions: PermissionItem[];
 };
 
+export type PermissionsData = Record<string, boolean>;
+
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   {
     color: 'blue',
@@ -106,6 +108,23 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   },
 ];
 
+const ALL_PERMISSION_KEYS = PERMISSION_CATEGORIES.flatMap((category) =>
+  category.permissions.map((permission) => permission.key),
+);
+
+const ALL_PERMISSION_KEYS_SET = new Set<string>(ALL_PERMISSION_KEYS);
+
+export const isKnownPermissionKey = (permissionKey: string): boolean =>
+  ALL_PERMISSION_KEYS_SET.has(permissionKey);
+
+export const getUnknownPermissionKeys = (
+  permissions?: PermissionsData | null,
+): string[] => {
+  return Object.keys(permissions ?? {}).filter(
+    (permissionKey) => !isKnownPermissionKey(permissionKey),
+  );
+};
+
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   ADMIN: [PERMISSIONS.DASHBOARD.VIEW, ...Object.values(PERMISSIONS.USERS)],
   USER: [PERMISSIONS.DASHBOARD.VIEW],
@@ -115,13 +134,15 @@ const ROLE_PERMISSIONS_MAP = new Map<UserRole, string[]>(
   Object.entries(ROLE_PERMISSIONS) as [UserRole, string[]][],
 );
 
-export type PermissionsData = Record<string, boolean>;
-
 export const hasPermission = (
   role: UserRole,
   permissionKey: string,
   customPermissions?: PermissionsData | null,
 ): boolean => {
+  if (!isKnownPermissionKey(permissionKey)) {
+    return false;
+  }
+
   const customPermissionsMap = new Map(Object.entries(customPermissions ?? {}));
 
   if (customPermissionsMap.has(permissionKey)) {
@@ -144,14 +165,14 @@ export const getEffectivePermissions = (
           [permission.key, rolePermissions.includes(permission.key)] as const,
       ),
     ),
-    ...Object.entries(customPermissions ?? {}),
+    ...Object.entries(customPermissions ?? {}).filter(([permissionKey]) =>
+      isKnownPermissionKey(permissionKey),
+    ),
   ]);
 };
 
 export const getAllPermissionKeys = (): string[] => {
-  return PERMISSION_CATEGORIES.flatMap((category) =>
-    category.permissions.map((permission) => permission.key),
-  );
+  return [...ALL_PERMISSION_KEYS];
 };
 
 export const countCategoryPermissions = (
