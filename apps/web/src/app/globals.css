@@ -118,6 +118,12 @@
     background-attachment: fixed;
   }
 
+  @media (max-width: 767px), (prefers-reduced-motion: reduce) {
+    body {
+      background-attachment: scroll;
+    }
+  }
+
   .site-background-column {
     pointer-events: none;
     position: fixed;

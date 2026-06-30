@@ -439,6 +439,7 @@ export async function PATCH(
         updateData.permissions = permissions;
       }
     }
+    /* eslint-disable security/detect-object-injection -- Staff profile keys are restricted to STAFF_PROFILE_FIELDS and validated by staffProfileSchema. */
     if (staffProfile !== undefined) {
       const staffProfileUpdateData: Record<string, Date | string | null> = {};
 
@@ -471,6 +472,7 @@ export async function PATCH(
         };
       }
     }
+    /* eslint-enable security/detect-object-injection */
 
     // Only update if there are actual changes
     if (Object.keys(updateData).length === 0) {

@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
 
+import { env } from '$env';
 import { prisma } from '$server/prisma';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+type HealthResponse = {
+  database: 'connected' | 'disconnected';
+  error?: string;
+  latency?: number;
+  status: 'healthy' | 'unhealthy';
+  timestamp: string;
+  uptime?: number;
+};
+
+export async function GET(): Promise<NextResponse<HealthResponse>> {
   const start = Date.now();
 
   try {
@@ -19,10 +29,16 @@ export async function GET() {
       uptime: process.uptime(),
     });
   } catch (error) {
+    const isDevelopment = env.NODE_ENV === 'development';
+
     return NextResponse.json(
       {
         database: 'disconnected',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        ...(isDevelopment
+          ? {
+              error: error instanceof Error ? error.message : 'Unknown error',
+            }
+          : {}),
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
       },

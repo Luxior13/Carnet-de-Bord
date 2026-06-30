@@ -323,6 +323,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const canEditTargetRole = !!user && isProtectedActor && !user.isProtected;
   const canEditTargetStatus = canEditTargetProfile;
   const availableSections = USER_DETAIL_SECTIONS;
+  /* eslint-disable security/detect-object-injection -- Profile keys are typed local StaffProfileForm fields, not user-controlled object paths. */
   const profileErrors = useMemo(() => {
     const buildLengthError = (
       field: keyof typeof STAFF_PROFILE_MAX_LENGTHS,
@@ -388,6 +389,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
         return currentValue !== savedValue;
       }));
+  /* eslint-enable security/detect-object-injection */
   const hasAccessChanges =
     !!user &&
     (editForm.role !== user.role ||

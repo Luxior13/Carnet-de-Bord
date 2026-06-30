@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { describe, expect, it } from 'vitest';
 
+/* eslint-disable security/detect-object-injection -- These tests mirror bounded array/string indexing from the password generator and compare fixed test arrays. */
+
 // ============================================
 // Test implementations that mirror auth.ts logic
 // We can't import server-only modules in tests

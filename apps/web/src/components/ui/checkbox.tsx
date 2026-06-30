@@ -7,7 +7,7 @@ import { cn } from '$utils/css.utils';
 function Checkbox({
   className,
   ...props
-}: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
+}: React.ComponentProps<typeof CheckboxPrimitive.Root>): React.ReactNode {
   return (
     <CheckboxPrimitive.Root
       data-slot="checkbox"

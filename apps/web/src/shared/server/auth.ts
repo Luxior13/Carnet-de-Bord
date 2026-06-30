@@ -58,6 +58,7 @@ export const generateSessionToken = (): string => {
  * - At least one digit
  * - At least one special character (for extra security)
  */
+/* eslint-disable security/detect-object-injection -- Numeric indexes are bounded by internal strings and arrays during crypto-random character selection and shuffle. */
 export const generateTemporaryPassword = (): string => {
   const lowercase = 'abcdefghijklmnopqrstuvwxyz';
   const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -105,6 +106,7 @@ export const generateTemporaryPassword = (): string => {
 
   return combined.join('');
 };
+/* eslint-enable security/detect-object-injection */
 
 /**
  * Hashes a password using bcrypt

@@ -6,6 +6,7 @@ const CSRF_COOKIE = 'csrf-token';
 const CSRF_HEADER = 'x-csrf-token';
 const SESSION_COOKIE = 'session';
 const PROTECTED_PAGE_PATH_PREFIXES = [
+  '/',
   '/administration',
   '/mon-compte',
 ] as const;
@@ -26,6 +27,9 @@ function generateToken(): string {
 
 function addSecurityHeaders(response: NextResponse): void {
   // Security headers
+  response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+  response.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
+  response.headers.set('X-DNS-Prefetch-Control', 'off');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
@@ -45,9 +49,20 @@ function addSecurityHeaders(response: NextResponse): void {
     "img-src 'self' data: blob: https:",
     "font-src 'self'",
     "connect-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
     "frame-ancestors 'none'",
+    ...(!isDev ? ['upgrade-insecure-requests'] : []),
   ].join('; ');
   response.headers.set('Content-Security-Policy', csp);
+
+  if (!isDev) {
+    response.headers.set(
+      'Strict-Transport-Security',
+      'max-age=63072000; includeSubDomains; preload',
+    );
+  }
 }
 
 export function middleware(request: NextRequest): NextResponse {
@@ -174,5 +189,5 @@ export function middleware(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|assets/.*|.*\\..*).*)'],
 };

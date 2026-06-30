@@ -19,7 +19,7 @@ export function Breadcrumb({
   className,
   items,
   showHome = true,
-}: BreadcrumbProps) {
+}: BreadcrumbProps): React.ReactNode {
   const allItems = showHome
     ? [{ href: '/', label: 'Accueil' }, ...items]
     : items;

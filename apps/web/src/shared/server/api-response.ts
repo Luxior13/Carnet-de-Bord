@@ -4,13 +4,26 @@ import { NextResponse } from 'next/server';
 
 import { PAGINATION } from '$constants/pagination.constants';
 import { logger } from '$server/logger';
-import type { ApiErrorResponse, PaginationMeta } from '$types/api.types';
+import type {
+  ApiErrorResponse,
+  ApiSuccessResponse,
+  PaginationMeta,
+} from '$types/api.types';
 import { ErrorCode } from '$types/api.types';
+
+type ApiPaginatedSuccessResponse<T> = {
+  data: T;
+  pagination: PaginationMeta;
+  success: true;
+};
 
 /**
  * Standard success response for API routes.
  */
-export function apiSuccess<T>(data: T, status = 200) {
+export function apiSuccess<T>(
+  data: T,
+  status = 200,
+): NextResponse<ApiSuccessResponse<T>> {
   return NextResponse.json({ data, success: true as const }, { status });
 }
 
@@ -21,7 +34,7 @@ export function apiPaginatedSuccess<T>(
   data: T,
   pagination: PaginationMeta,
   status = 200,
-) {
+): NextResponse<ApiPaginatedSuccessResponse<T>> {
   return NextResponse.json(
     { data, pagination, success: true as const },
     { status },
@@ -65,22 +78,30 @@ export function apiError(
  * Shorthand for common error types.
  */
 export const apiErrors = {
-  badRequest: (message: string, details?: Record<string, string[]>) =>
+  badRequest: (
+    message: string,
+    details?: Record<string, string[]>,
+  ): NextResponse<ApiErrorResponse> =>
     apiError(ErrorCode.VALIDATION_ERROR, message, 400, { details }),
 
-  forbidden: (message = 'Accès interdit') =>
+  forbidden: (message = 'Accès interdit'): NextResponse<ApiErrorResponse> =>
     apiError(ErrorCode.FORBIDDEN, message, 403),
 
-  internal: (action: string, error: unknown) =>
+  internal: (action: string, error: unknown): NextResponse<ApiErrorResponse> =>
     apiError(ErrorCode.INTERNAL_ERROR, 'Erreur serveur', 500, {
       action,
       error,
     }),
 
-  notFound: (message = 'Ressource non trouvée') =>
+  notFound: (
+    message = 'Ressource non trouvée',
+  ): NextResponse<ApiErrorResponse> =>
     apiError(ErrorCode.NOT_FOUND, message, 404),
 
-  validation: (message: string, details?: Record<string, string[]>) =>
+  validation: (
+    message: string,
+    details?: Record<string, string[]>,
+  ): NextResponse<ApiErrorResponse> =>
     apiError(ErrorCode.VALIDATION_ERROR, message, 400, { details }),
 };
 

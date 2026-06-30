@@ -4,6 +4,7 @@
  * Centralizes logging for API routes with structured output.
  * In production, this could be extended to send logs to external services.
  */
+/* eslint-disable no-console */
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -73,12 +74,12 @@ function log(level: LogLevel, message: string, context?: LogContext): void {
 }
 
 export const logger = {
-  debug: (message: string, context?: LogContext) =>
+  debug: (message: string, context?: LogContext): void =>
     log('debug', message, context),
-  error: (message: string, context?: LogContext) =>
+  error: (message: string, context?: LogContext): void =>
     log('error', message, context),
-  info: (message: string, context?: LogContext) =>
+  info: (message: string, context?: LogContext): void =>
     log('info', message, context),
-  warn: (message: string, context?: LogContext) =>
+  warn: (message: string, context?: LogContext): void =>
     log('warn', message, context),
 };

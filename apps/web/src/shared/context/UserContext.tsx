@@ -182,14 +182,14 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
   }, [fetchUser]);
 
   // Function to extend session (reset timers)
-  const extendSession = useCallback(() => {
+  const extendSession = useCallback((): void => {
     setShowSessionWarning(false);
     lastActivityRef.current = Date.now();
   }, []);
 
   // Auto-logout after inactivity with warning
   useEffect(() => {
-    const clearTimers = () => {
+    const clearTimers = (): void => {
       if (warningTimeoutRef.current) {
         clearTimeout(warningTimeoutRef.current);
       }
@@ -205,22 +205,22 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
       return;
     }
 
-    const resetTimers = () => {
+    const resetTimers = (): void => {
       clearTimers();
 
       // Set warning timeout (5 minutes before logout)
-      warningTimeoutRef.current = setTimeout(() => {
+      warningTimeoutRef.current = setTimeout((): void => {
         setShowSessionWarning(true);
       }, INACTIVITY_TIMEOUT_MS - WARNING_BEFORE_MS);
 
       // Set logout timeout
-      logoutTimeoutRef.current = setTimeout(() => {
+      logoutTimeoutRef.current = setTimeout((): void => {
         toast.warning('Session expirée pour inactivité');
-        logout();
+        void logout();
       }, INACTIVITY_TIMEOUT_MS);
     };
 
-    const handleActivity = () => {
+    const handleActivity = (): void => {
       // Don't reset if warning is showing - user must click button
       if (showSessionWarning) return;
       lastActivityRef.current = Date.now();
@@ -236,8 +236,8 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
     // Initialize timers
     resetTimers();
 
-    return () => {
-      events.forEach((event) => {
+    return (): void => {
+      events.forEach((event): void => {
         window.removeEventListener(event, handleActivity);
       });
       clearTimers();
