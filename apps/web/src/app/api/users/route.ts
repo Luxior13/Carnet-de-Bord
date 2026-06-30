@@ -23,11 +23,30 @@ import { emailSchema, trimmedStringMin } from '$utils/zod.utils';
 
 const USER_SORT_OPTIONS = ['name', 'recent', 'created'] as const;
 type UserSortOption = (typeof USER_SORT_OPTIONS)[number];
+const USER_STATUS_OPTIONS = ['active', 'inactive', 'pending'] as const;
+type UserStatusOption = (typeof USER_STATUS_OPTIONS)[number];
+const USER_SEARCH_MAX_LENGTH = 100;
+
+type CountGroup = {
+  _count: {
+    _all: number;
+  };
+};
 
 function normalizeUserSort(value: string | null): UserSortOption {
   return USER_SORT_OPTIONS.includes(value as UserSortOption)
     ? (value as UserSortOption)
     : 'name';
+}
+
+function normalizeUserRole(value: string | null): UserRole | null {
+  return value === UserRole.ADMIN || value === UserRole.USER ? value : null;
+}
+
+function normalizeUserStatus(value: string | null): UserStatusOption | null {
+  return USER_STATUS_OPTIONS.includes(value as UserStatusOption)
+    ? (value as UserStatusOption)
+    : null;
 }
 
 function getUserOrderBy(
@@ -63,10 +82,12 @@ export async function GET(
     const { limit, page, skip } = parsePagination(searchParams, 25, {
       maxLimit: 100,
     });
-    const search = searchParams.get('search')?.trim().toLowerCase() || '';
-    const role = searchParams.get('role') as UserRole | null;
+    const search = (
+      searchParams.get('search')?.trim().slice(0, USER_SEARCH_MAX_LENGTH) || ''
+    ).toLowerCase();
+    const role = normalizeUserRole(searchParams.get('role'));
     const sort = normalizeUserSort(searchParams.get('sort'));
-    const status = searchParams.get('status');
+    const status = normalizeUserStatus(searchParams.get('status'));
 
     const where: Prisma.UserWhereInput = { deletedAt: null };
 
@@ -78,7 +99,7 @@ export async function GET(
       ];
     }
 
-    if (role && ['ADMIN', 'USER'].includes(role)) {
+    if (role) {
       where.role = role;
     }
 
@@ -103,10 +124,8 @@ export async function GET(
       total,
       users,
       statsTotal,
-      active,
-      inactive,
-      adminCount,
-      userCount,
+      activeStatusCounts,
+      roleCounts,
       neverLoggedIn,
       newThisWeek,
       pendingPasswordChange,
@@ -120,15 +139,38 @@ export async function GET(
         where,
       }),
       countActiveUsers(),
-      countActiveUsers({ isActive: true }),
-      countActiveUsers({ isActive: false }),
-      countActiveUsers({ role: UserRole.ADMIN }),
-      countActiveUsers({ role: UserRole.USER }),
+      prisma.user.groupBy({
+        _count: { _all: true },
+        by: ['isActive'],
+        where: baseUserWhere,
+      }),
+      prisma.user.groupBy({
+        _count: { _all: true },
+        by: ['role'],
+        where: baseUserWhere,
+      }),
       countActiveUsers({ lastLoginAt: null }),
       countActiveUsers({ createdAt: { gte: oneWeekAgo } }),
       countActiveUsers({ mustChangePassword: true }),
       countActiveUsers({ lastLoginAt: { gte: oneDayAgo } }),
     ]);
+
+    const active =
+      (activeStatusCounts as (CountGroup & { isActive: boolean })[]).find(
+        (group) => group.isActive,
+      )?._count._all ?? 0;
+    const inactive =
+      (activeStatusCounts as (CountGroup & { isActive: boolean })[]).find(
+        (group) => !group.isActive,
+      )?._count._all ?? 0;
+    const adminCount =
+      (roleCounts as (CountGroup & { role: UserRole })[]).find(
+        (group) => group.role === UserRole.ADMIN,
+      )?._count._all ?? 0;
+    const userCount =
+      (roleCounts as (CountGroup & { role: UserRole })[]).find(
+        (group) => group.role === UserRole.USER,
+      )?._count._all ?? 0;
 
     const stats = {
       active,

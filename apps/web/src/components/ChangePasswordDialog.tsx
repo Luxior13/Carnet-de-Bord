@@ -44,6 +44,13 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
     () => validatePassword(newPassword),
     [newPassword],
   );
+  const isConfirmMismatch =
+    confirmPassword.length > 0 && newPassword !== confirmPassword;
+  const canSubmit =
+    (!canCancel || currentPassword.length > 0) &&
+    passwordValidation.isValid &&
+    confirmPassword.length > 0 &&
+    !isConfirmMismatch;
 
   const strengthLabel = getPasswordStrengthLabel(passwordValidation.score);
   const strengthColor = getPasswordStrengthColor(passwordValidation.score);
@@ -137,7 +144,10 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
           </DialogHeader>
           <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             {error && (
-              <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm">
+              <div
+                className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
+                role="alert"
+              >
                 {error}
               </div>
             )}
@@ -155,6 +165,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                   disabled={isLoading}
                   autoComplete="current-password"
                   autoFocus
+                  aria-invalid={canCancel && !currentPassword && !!error}
                 />
               </div>
             )}
@@ -173,6 +184,9 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 autoFocus={!canCancel}
                 aria-describedby={
                   newPassword.length > 0 ? 'password-strength' : undefined
+                }
+                aria-invalid={
+                  newPassword.length > 0 && !passwordValidation.isValid
                 }
               />
               {newPassword.length > 0 && (
@@ -239,13 +253,19 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 placeholder="Confirmez votre mot de passe"
                 disabled={isLoading}
                 autoComplete="new-password"
+                aria-invalid={isConfirmMismatch}
+                aria-describedby={
+                  isConfirmMismatch ? 'confirmPassword-error' : undefined
+                }
               />
-              {confirmPassword.length > 0 &&
-                newPassword !== confirmPassword && (
-                  <p className="text-destructive text-xs">
-                    Les mots de passe ne correspondent pas
-                  </p>
-                )}
+              {isConfirmMismatch && (
+                <p
+                  id="confirmPassword-error"
+                  className="text-destructive text-xs"
+                >
+                  Les mots de passe ne correspondent pas
+                </p>
+              )}
             </div>
             <div className={canCancel ? 'flex gap-2' : ''}>
               {canCancel && (
@@ -262,7 +282,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
               <Button
                 type="submit"
                 className={cn(canCancel ? 'flex-1' : 'w-full')}
-                disabled={isLoading}
+                disabled={isLoading || !canSubmit}
               >
                 {isLoading ? (
                   <>

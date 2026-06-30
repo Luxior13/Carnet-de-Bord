@@ -30,6 +30,7 @@ import {
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Skeleton } from '$ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { apiFetch } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 
@@ -61,24 +62,38 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
 
-  const fetchSessions = useCallback(async (): Promise<void> => {
-    try {
-      setLoadingSessions(true);
-      const response = await fetch('/api/auth/sessions');
-      const data = await response.json();
-
-      if (data.success) {
-        setSessions(data.data.sessions);
+  const fetchSessions = useCallback(
+    async (signal?: AbortSignal): Promise<void> => {
+      if (!signal?.aborted) {
+        setLoadingSessions(true);
       }
-    } catch {
-      // Sessions are non-blocking for the account page.
-    } finally {
-      setLoadingSessions(false);
-    }
-  }, []);
+
+      try {
+        const response = await fetch('/api/auth/sessions', { signal });
+        const data = await response.json();
+
+        if (!signal?.aborted && response.ok && data.success) {
+          setSessions(data.data.sessions);
+        }
+      } catch {
+        // Sessions are non-blocking for the account page.
+      } finally {
+        if (!signal?.aborted) {
+          setLoadingSessions(false);
+        }
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
-    void fetchSessions();
+    const controller = new AbortController();
+
+    void fetchSessions(controller.signal);
+
+    return (): void => {
+      controller.abort();
+    };
   }, [fetchSessions]);
 
   const handleRevokeAllSessions = async (): Promise<void> => {
@@ -89,7 +104,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       });
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok && data.success) {
         toast.success('Toutes les autres sessions ont été déconnectées');
         void fetchSessions();
       } else {
@@ -111,7 +126,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       });
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok && data.success) {
         toast.success('Session déconnectée');
         void fetchSessions();
       } else {
@@ -169,8 +184,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                   Sessions actives
                 </p>
                 <p className="text-sidebar-foreground/58 text-sm">
-                  {sessions.length} appareil{sessions.length > 1 ? 's' : ''}{' '}
-                  connect{sessions.length > 1 ? 'és' : 'é'}
+                  {loadingSessions
+                    ? 'Chargement des sessions...'
+                    : `${sessions.length} appareil${sessions.length > 1 ? 's' : ''} connecté${sessions.length > 1 ? 's' : ''}`}
                 </p>
               </div>
             </div>
@@ -240,21 +256,28 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                         </p>
                       </div>
                       {!session.isCurrent && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="rounded-lg"
-                          onClick={() => handleRevokeSession(session.id)}
-                          disabled={revokingId === session.id}
-                          aria-label="Déconnecter cette session"
-                        >
-                          {revokingId === session.id ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <X className="size-4" />
-                          )}
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="rounded-lg"
+                              onClick={() => handleRevokeSession(session.id)}
+                              disabled={revokingId === session.id}
+                              aria-label="Déconnecter cette session"
+                            >
+                              {revokingId === session.id ? (
+                                <Loader2 className="size-4 animate-spin" />
+                              ) : (
+                                <X className="size-4" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">
+                            Déconnecter cette session
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                     </div>
                   );

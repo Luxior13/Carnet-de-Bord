@@ -11,6 +11,9 @@ const mockInvalidateOtherUserSessions = vi.fn();
 const mockResetUserPassword = vi.fn();
 const mockVerifyPassword = vi.fn();
 const mockCreateAuditLogWithHeaders = vi.fn();
+const mockMapUserToUserType = vi.fn((user: unknown): unknown => user);
+const mockCheckRateLimit = vi.fn();
+const mockRecordLoginAttempt = vi.fn();
 
 const mockPrisma = {
   session: {
@@ -21,6 +24,7 @@ const mockPrisma = {
   },
   user: {
     findUnique: vi.fn(),
+    update: vi.fn(),
   },
 };
 
@@ -35,9 +39,15 @@ vi.mock('$server/auth', () => ({
   createAuditLogWithHeaders: mockCreateAuditLogWithHeaders,
   getAuthSession: mockGetAuthSession,
   invalidateOtherUserSessions: mockInvalidateOtherUserSessions,
+  mapUserToUserType: mockMapUserToUserType,
   resetUserPassword: mockResetUserPassword,
   updateUserPassword: mockUpdateUserPassword,
   verifyPassword: mockVerifyPassword,
+}));
+
+vi.mock('$server/rate-limiter', () => ({
+  checkRateLimit: mockCheckRateLimit,
+  recordLoginAttempt: mockRecordLoginAttempt,
 }));
 
 vi.mock('$server/prisma', () => ({
@@ -82,8 +92,35 @@ describe('account security routes', () => {
     mockUpdateUserPassword.mockResolvedValue(undefined);
     mockInvalidateOtherUserSessions.mockResolvedValue(undefined);
     mockResetUserPassword.mockResolvedValue('TempPassword1!');
+    mockCheckRateLimit.mockResolvedValue({
+      allowed: true,
+      remainingAttempts: 5,
+    });
+    mockRecordLoginAttempt.mockResolvedValue(undefined);
+    mockMapUserToUserType.mockImplementation((user: unknown) => user);
     mockRequirePermission.mockReturnValue({ success: true });
     mockCreateAuditLogWithHeaders.mockResolvedValue(undefined);
+  });
+
+  describe('PATCH /api/auth/me', () => {
+    it('rejects whitespace-only profile names after trimming', async () => {
+      const route = await import('$app/api/auth/me/route');
+      const response = await route.PATCH(
+        new Request('http://localhost/api/auth/me', {
+          body: JSON.stringify({
+            firstName: '   ',
+            lastName: 'Dupont',
+          }),
+          method: 'PATCH',
+        }),
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe(ErrorCode.VALIDATION_ERROR);
+      expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    });
   });
 
   describe('POST /api/auth/change-password', () => {
@@ -126,6 +163,37 @@ describe('account security routes', () => {
       expect(response.status).toBe(400);
       expect(body.success).toBe(false);
       expect(body.error.message).toBe('Le mot de passe actuel est incorrect');
+      expect(mockRecordLoginAttempt).toHaveBeenCalledWith(
+        'password-change:user-1',
+        false,
+      );
+      expect(mockUpdateUserPassword).not.toHaveBeenCalled();
+    });
+
+    it('rate limits repeated current password checks', async () => {
+      mockCheckRateLimit.mockResolvedValueOnce({
+        allowed: false,
+        remainingAttempts: 0,
+        retryAfter: 120,
+      });
+
+      const route = await import('$app/api/auth/change-password/route');
+      const response = await route.POST(
+        new Request('http://localhost/api/auth/change-password', {
+          body: JSON.stringify({
+            confirmPassword: 'NewPassword1!',
+            currentPassword: 'WrongPassword1!',
+            newPassword: 'NewPassword1!',
+          }),
+          method: 'POST',
+        }),
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(429);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe(ErrorCode.RATE_LIMITED);
+      expect(mockVerifyPassword).not.toHaveBeenCalled();
       expect(mockUpdateUserPassword).not.toHaveBeenCalled();
     });
 
@@ -364,7 +432,8 @@ describe('account security routes', () => {
         expect.objectContaining({
           action: 'SESSION_INVALIDATE',
           category: 'AUTH',
-          metadata: expect.objectContaining({ targetUserId: 'target-1' }),
+          metadata: expect.objectContaining({ revokedSessions: 2 }),
+          targetUserId: 'target-1',
           userId: 'user-1',
         }),
       );

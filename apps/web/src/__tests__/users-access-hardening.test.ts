@@ -20,6 +20,7 @@ const mockPrisma = {
     create: vi.fn(),
     findMany: vi.fn(),
     findUnique: vi.fn(),
+    groupBy: vi.fn(),
     update: vi.fn(),
   },
 };
@@ -77,6 +78,7 @@ describe('users access hardening', () => {
       }),
     });
     mockRequirePermission.mockReturnValue({ success: true });
+    mockPrisma.user.groupBy.mockResolvedValue([]);
   });
 
   it('uses users:update for profile updates without requiring edit_permissions', async () => {
@@ -429,6 +431,33 @@ describe('users access hardening', () => {
       expect.objectContaining({
         skip: 0,
         take: 25,
+      }),
+    );
+  });
+
+  it('limits users list search input before querying', async () => {
+    mockPrisma.user.count.mockResolvedValue(0);
+    mockPrisma.user.findMany.mockResolvedValueOnce([]);
+    const longSearch = 'a'.repeat(140);
+
+    const route = await import('$app/api/users/route');
+    const response = await route.GET(
+      new Request(`http://localhost/api/users?search=${longSearch}`) as never,
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(mockPrisma.user.findMany).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: expect.arrayContaining([
+            expect.objectContaining({
+              email: expect.objectContaining({ contains: 'a'.repeat(100) }),
+            }),
+          ]),
+        }),
       }),
     );
   });

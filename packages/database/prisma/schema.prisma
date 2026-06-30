@@ -38,6 +38,11 @@ model User {
   @@index([email])
   @@index([role])
   @@index([deletedAt])
+  @@index([deletedAt, createdAt])
+  @@index([deletedAt, isActive])
+  @@index([deletedAt, lastLoginAt])
+  @@index([deletedAt, mustChangePassword])
+  @@index([deletedAt, role])
 }
 
 model StaffProfile {
@@ -77,6 +82,8 @@ model Session {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([userId, expiresAt])
+  @@index([userId, createdAt])
   @@index([token])
 }
 
@@ -117,7 +124,10 @@ model AuditLog {
   createdAt   DateTime      @default(now())
 
   @@index([userId])
+  @@index([userId, action])
+  @@index([userId, createdAt])
   @@index([targetUserId])
+  @@index([targetUserId, createdAt])
   @@index([action])
   @@index([category])
   @@index([createdAt])

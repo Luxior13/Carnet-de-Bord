@@ -20,6 +20,9 @@ type ProfileSectionProps = {
   userData: UserType;
 };
 
+const PROFILE_FIELD_MAX_LENGTH = 50;
+const PROFILE_FORM_ID = 'account-profile-form';
+
 export const ProfileSection: FC<ProfileSectionProps> = ({
   onUpdate,
   userData,
@@ -34,9 +37,33 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
     setLastName(userData.lastName);
   }, [userData]);
 
+  const trimmedFirstName = firstName.trim();
+  const trimmedLastName = lastName.trim();
+  const firstNameError = !trimmedFirstName
+    ? 'Le prénom est requis'
+    : trimmedFirstName.length > PROFILE_FIELD_MAX_LENGTH
+      ? 'Prénom trop long'
+      : null;
+  const lastNameError = !trimmedLastName
+    ? 'Le nom est requis'
+    : trimmedLastName.length > PROFILE_FIELD_MAX_LENGTH
+      ? 'Nom trop long'
+      : null;
+  const hasProfileChanges =
+    trimmedFirstName !== userData.firstName ||
+    trimmedLastName !== userData.lastName;
+  const canSaveProfile =
+    !isSaving && hasProfileChanges && !firstNameError && !lastNameError;
+
   const handleSaveProfile = async (): Promise<void> => {
-    if (!firstName.trim() || !lastName.trim()) {
-      toast.error('Le prénom et le nom sont requis');
+    if (firstNameError || lastNameError) {
+      toast.error('Corrigez les champs du profil avant de sauvegarder');
+
+      return;
+    }
+
+    if (!hasProfileChanges) {
+      setIsEditing(false);
 
       return;
     }
@@ -45,15 +72,15 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
       setIsSaving(true);
       const response = await apiFetch('/api/auth/me', {
         body: JSON.stringify({
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
+          firstName: trimmedFirstName,
+          lastName: trimmedLastName,
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'PATCH',
       });
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok && data.success) {
         toast.success('Profil mis à jour avec succès');
         await onUpdate();
         setIsEditing(false);
@@ -104,11 +131,11 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
               Annuler
             </Button>
             <Button
-              type="button"
+              type="submit"
+              form={PROFILE_FORM_ID}
               size="sm"
               className="rounded-lg"
-              onClick={handleSaveProfile}
-              disabled={isSaving || !firstName.trim() || !lastName.trim()}
+              disabled={!canSaveProfile}
             >
               {isSaving ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -183,7 +210,14 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
             </div>
           </dl>
         ) : (
-          <div className="border-sidebar-border/60 bg-background/45 rounded-lg border p-4">
+          <form
+            id={PROFILE_FORM_ID}
+            className="border-sidebar-border/60 bg-background/45 rounded-lg border p-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleSaveProfile();
+            }}
+          >
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="edit-firstName" required>
@@ -195,8 +229,24 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                   onChange={(e) => setFirstName(e.target.value)}
                   disabled={isSaving}
                   placeholder="Votre prénom"
+                  name="firstName"
+                  autoComplete="given-name"
+                  maxLength={PROFILE_FIELD_MAX_LENGTH}
+                  aria-invalid={!!firstNameError}
+                  aria-describedby={
+                    firstNameError ? 'edit-firstName-error' : undefined
+                  }
+                  autoFocus
                   className="rounded-lg"
                 />
+                {firstNameError && (
+                  <p
+                    id="edit-firstName-error"
+                    className="text-destructive text-xs"
+                  >
+                    {firstNameError}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-lastName" required>
@@ -208,13 +258,29 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                   onChange={(e) => setLastName(e.target.value)}
                   disabled={isSaving}
                   placeholder="Votre nom"
+                  name="lastName"
+                  autoComplete="family-name"
+                  maxLength={PROFILE_FIELD_MAX_LENGTH}
+                  aria-invalid={!!lastNameError}
+                  aria-describedby={
+                    lastNameError ? 'edit-lastName-error' : undefined
+                  }
                   className="rounded-lg"
                 />
+                {lastNameError && (
+                  <p
+                    id="edit-lastName-error"
+                    className="text-destructive text-xs"
+                  >
+                    {lastNameError}
+                  </p>
+                )}
               </div>
             </div>
             <div className="mt-4 space-y-2">
-              <Label>Email</Label>
+              <Label htmlFor="profile-email-readonly">Email</Label>
               <Input
+                id="profile-email-readonly"
                 value={userData.email}
                 disabled
                 className="bg-secondary/50 rounded-lg"
@@ -223,7 +289,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                 L&apos;adresse email ne peut pas être modifiée.
               </p>
             </div>
-          </div>
+          </form>
         )}
       </div>
     </AccountPanel>

@@ -2,7 +2,7 @@
 
 import { Plus, Users } from 'lucide-react';
 import Link from 'next/link';
-import React, { type FC } from 'react';
+import React, { type FC, Suspense } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { AccessDeniedState } from '$components/layout/PageState';
@@ -12,6 +12,18 @@ import { UsersListPage } from '$features/users/UsersListPage';
 import { Button } from '$ui/button';
 import { PageCanvas, PageHeader, PageShell } from '$ui/page-shell';
 import { ServiceIcon } from '$ui/service-icon';
+import { Skeleton } from '$ui/skeleton';
+
+const UsersListFallback: FC = () => (
+  <div className="space-y-4" role="status" aria-label="Chargement">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      {[...Array(4)].map((_, index) => (
+        <Skeleton key={index} className="h-20 rounded-xl" />
+      ))}
+    </div>
+    <Skeleton className="h-96 rounded-xl" />
+  </div>
+);
 
 const UsersAdministrationContent: FC = () => {
   const { userData } = useUser();
@@ -60,7 +72,9 @@ const UsersAdministrationContent: FC = () => {
             </ServiceIcon>
           }
         />
-        <UsersListPage />
+        <Suspense fallback={<UsersListFallback />}>
+          <UsersListPage />
+        </Suspense>
       </PageCanvas>
     </PageShell>
   );

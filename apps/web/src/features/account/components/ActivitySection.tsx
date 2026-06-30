@@ -21,85 +21,100 @@ type ActivitySectionProps = {
   userData: UserType;
 };
 
+const getActionConfig = (
+  action: string,
+): { color: string; icon: LucideIcon; label: string } => {
+  switch (action) {
+    case 'ACCOUNT_LOCKED':
+      return {
+        color: 'text-destructive',
+        icon: Shield,
+        label: 'Compte verrouillé',
+      };
+    case 'LOGIN_FAILED':
+      return {
+        color: 'text-destructive',
+        icon: XCircle,
+        label: 'Échec connexion',
+      };
+    case 'LOGIN_SUCCESS':
+      return {
+        color: 'text-emerald-400',
+        icon: CheckCircle,
+        label: 'Connexion',
+      };
+    case 'LOGOUT':
+      return {
+        color: 'text-muted-foreground',
+        icon: LogIn,
+        label: 'Déconnexion',
+      };
+    case 'PASSWORD_CHANGE':
+      return {
+        color: 'text-amber-300',
+        icon: Shield,
+        label: 'MDP modifié',
+      };
+    case 'PASSWORD_RESET':
+      return {
+        color: 'text-amber-300',
+        icon: Shield,
+        label: 'MDP réinitialisé',
+      };
+    default:
+      return {
+        color: 'text-muted-foreground',
+        icon: Clock,
+        label: action,
+      };
+  }
+};
+
 export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
   const [recentActivity, setRecentActivity] = useState<AuditLogEntry[]>([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
   const [stats, setStats] = useState({ failed: 0, success: 0, total: 0 });
 
-  const getActionConfig = (
-    action: string,
-  ): { color: string; icon: LucideIcon; label: string } => {
-    switch (action) {
-      case 'ACCOUNT_LOCKED':
-        return {
-          color: 'text-destructive',
-          icon: Shield,
-          label: 'Compte verrouillé',
-        };
-      case 'LOGIN_FAILED':
-        return {
-          color: 'text-destructive',
-          icon: XCircle,
-          label: 'Échec connexion',
-        };
-      case 'LOGIN_SUCCESS':
-        return {
-          color: 'text-emerald-400',
-          icon: CheckCircle,
-          label: 'Connexion',
-        };
-      case 'LOGOUT':
-        return {
-          color: 'text-muted-foreground',
-          icon: LogIn,
-          label: 'Déconnexion',
-        };
-      case 'PASSWORD_CHANGE':
-        return {
-          color: 'text-amber-300',
-          icon: Shield,
-          label: 'MDP modifié',
-        };
-      case 'PASSWORD_RESET':
-        return {
-          color: 'text-amber-300',
-          icon: Shield,
-          label: 'MDP réinitialisé',
-        };
-      default:
-        return {
-          color: 'text-muted-foreground',
-          icon: Clock,
-          label: action,
-        };
-    }
-  };
+  const fetchActivity = useCallback(
+    async (signal?: AbortSignal): Promise<void> => {
+      try {
+        if (!signal?.aborted) {
+          setLoadingActivity(true);
+        }
 
-  const fetchActivity = useCallback(async (): Promise<void> => {
-    try {
-      setLoadingActivity(true);
-      const response = await fetch(
-        `/api/users/${userData.id}/audit?pageSize=8`,
-      );
-      const data = await response.json();
+        const response = await fetch(
+          `/api/users/${userData.id}/audit?pageSize=8`,
+          { signal },
+        );
+        const data = await response.json();
 
-      if (data.success) {
-        setRecentActivity(data.data.logs);
-        setStats({
-          failed: data.data.stats?.failedLogins || 0,
-          success: data.data.stats?.successfulLogins || 0,
-          total: data.data.stats?.totalActions || 0,
-        });
+        if (!signal?.aborted && response.ok && data.success) {
+          setRecentActivity(data.data.logs);
+          setStats({
+            failed: data.data.stats?.failedLogins || 0,
+            success: data.data.stats?.successfulLogins || 0,
+            total: data.data.stats?.totalActions || 0,
+          });
+        }
+      } catch {
+        // Activity is non-blocking for the profile screen.
+      } finally {
+        if (!signal?.aborted) {
+          setLoadingActivity(false);
+        }
       }
-    } catch {
-      // Activity is non-blocking for the profile screen.
-    } finally {
-      setLoadingActivity(false);
-    }
-  }, [userData.id]);
+    },
+    [userData.id],
+  );
 
   useEffect(() => {
-    void fetchActivity();
+    const controller = new AbortController();
+
+    void fetchActivity(controller.signal);
+
+    return (): void => {
+      controller.abort();
+    };
   }, [fetchActivity]);
 
   return (

@@ -10,8 +10,13 @@ import {
   verifyPassword,
 } from '$server/auth';
 import { prisma } from '$server/prisma';
-import { ErrorCode } from '$types/api.types';
+import { checkRateLimit, recordLoginAttempt } from '$server/rate-limiter';
+import { type ApiErrorResponse, ErrorCode } from '$types/api.types';
 import { validatePassword } from '$utils/password.utils';
+
+type ChangePasswordSuccessResponse = {
+  success: true;
+};
 
 const changePasswordSchema = z.object({
   confirmPassword: z
@@ -21,7 +26,9 @@ const changePasswordSchema = z.object({
   newPassword: z.string().min(1, 'Le nouveau mot de passe est requis'),
 });
 
-export async function POST(request: Request) {
+export async function POST(
+  request: Request,
+): Promise<NextResponse<ChangePasswordSuccessResponse | ApiErrorResponse>> {
   try {
     const { session, user } = await getAuthSession();
 
@@ -60,12 +67,15 @@ export async function POST(request: Request) {
     // Validate password complexity
     const passwordValidation = validatePassword(newPassword);
     if (!passwordValidation.isValid) {
+      const passwordError =
+        passwordValidation.errors[0] ?? 'Mot de passe invalide';
+
       return NextResponse.json(
         {
           error: {
             code: ErrorCode.VALIDATION_ERROR,
             details: { password: passwordValidation.errors },
-            message: passwordValidation.errors[0],
+            message: passwordError,
           },
           success: false,
         },
@@ -118,12 +128,38 @@ export async function POST(request: Request) {
         );
       }
 
+      const rateLimitKey = `password-change:${user.id}`;
+      const rateLimit = await checkRateLimit(rateLimitKey);
+
+      if (!rateLimit.allowed) {
+        return NextResponse.json(
+          {
+            error: {
+              code: ErrorCode.RATE_LIMITED,
+              message:
+                'Trop de tentatives. Réessayez dans ' +
+                Math.ceil((rateLimit.retryAfter || 0) / 60) +
+                ' minutes.',
+            },
+            success: false,
+          },
+          {
+            headers: {
+              'Retry-After': String(rateLimit.retryAfter || 1800),
+            },
+            status: 429,
+          },
+        );
+      }
+
       const isCurrentPasswordValid = await verifyPassword(
         currentPassword,
         storedUser.passwordHash,
       );
 
       if (!isCurrentPasswordValid) {
+        await recordLoginAttempt(rateLimitKey, false);
+
         return NextResponse.json(
           {
             error: {
@@ -157,6 +193,8 @@ export async function POST(request: Request) {
 
     // Update password
     await updateUserPassword(user.id, newPassword);
+    await recordLoginAttempt(`password-change:${user.id}`, true);
+
     if (session) {
       await invalidateOtherUserSessions(user.id, session.token);
     }

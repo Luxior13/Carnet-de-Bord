@@ -77,43 +77,31 @@ export async function GET(
       );
     }
 
-    // Query for logs BY this user OR ON this user
+    // Query for logs BY this user OR ON this user.
+    // Older metadata fallbacks were removed now that targetUserId is structured.
     const whereClause = {
-      OR: [
-        { userId: id },
-        { targetUserId: id },
-        {
-          metadata: {
-            equals: id,
-            path: ['targetUserId'],
-          },
-        },
-      ],
+      OR: [{ userId: id }, { targetUserId: id }],
     };
 
-    // Get total count
-    const total = await prisma.auditLog.count({
-      where: whereClause,
-    });
-
-    // Get audit logs
-    const logs = await prisma.auditLog.findMany({
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: pageSize,
-      where: whereClause,
-    });
-
-    // Calculate stats (only for actions BY this user for login stats)
-    const userLogs = await prisma.auditLog.findMany({
-      select: { action: true },
-      where: { userId: id },
-    });
+    const [total, logs, failedLogins, successfulLogins] = await Promise.all([
+      prisma.auditLog.count({ where: whereClause }),
+      prisma.auditLog.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+        where: whereClause,
+      }),
+      prisma.auditLog.count({
+        where: { action: 'LOGIN_FAILED', userId: id },
+      }),
+      prisma.auditLog.count({
+        where: { action: 'LOGIN_SUCCESS', userId: id },
+      }),
+    ]);
 
     const stats: UserAuditStats = {
-      failedLogins: userLogs.filter((l) => l.action === 'LOGIN_FAILED').length,
-      successfulLogins: userLogs.filter((l) => l.action === 'LOGIN_SUCCESS')
-        .length,
+      failedLogins,
+      successfulLogins,
       totalActions: total,
     };
 

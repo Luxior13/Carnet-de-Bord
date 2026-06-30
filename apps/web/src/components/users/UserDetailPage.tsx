@@ -66,7 +66,7 @@ import { Button } from '$ui/button';
 import { Card, CardContent } from '$ui/card';
 import { PageCanvas, PageHeader, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
-import { Tabs, TabsList, TabsTrigger } from '$ui/tabs';
+import { ScrollableTabsList, Tabs, TabsTrigger } from '$ui/tabs';
 import { apiFetch } from '$utils/api.utils';
 
 type UserDetailPageProps = {
@@ -991,26 +991,24 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               }
               className="min-w-0"
             >
-              <div className="overflow-x-auto pb-1">
-                <TabsList className="h-10 w-max p-1">
-                  {availableSections.map((section) => (
-                    <TabsTrigger
-                      key={section.id}
-                      value={section.id}
-                      className="h-8 px-3 text-xs sm:text-sm"
+              <ScrollableTabsList className="h-10 p-1">
+                {availableSections.map((section) => (
+                  <TabsTrigger
+                    key={section.id}
+                    value={section.id}
+                    className="h-8 px-3 text-xs sm:text-sm"
+                  >
+                    <span
+                      className={
+                        activeSection === section.id ? 'text-primary' : ''
+                      }
                     >
-                      <span
-                        className={
-                          activeSection === section.id ? 'text-primary' : ''
-                        }
-                      >
-                        {section.icon}
-                      </span>
-                      {section.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </div>
+                      {section.icon}
+                    </span>
+                    {section.label}
+                  </TabsTrigger>
+                ))}
+              </ScrollableTabsList>
             </Tabs>
             <div>{renderContent()}</div>
           </div>

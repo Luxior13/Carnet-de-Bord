@@ -15,7 +15,13 @@ import {
   X,
 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import React, { type FC, useCallback, useEffect, useState } from 'react';
+import React, {
+  type FC,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 
 import { UserAvatar } from '$components/users/UserAvatar';
@@ -27,14 +33,13 @@ import type {
 } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
+import { Card, CardContent } from '$ui/card';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '$ui/card';
+  DataTableDesktop,
+  DataTableEmptyState,
+  DataTableMobileList,
+  DataTableSection,
+} from '$ui/data-table-section';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,7 +47,6 @@ import {
   DropdownMenuTrigger,
 } from '$ui/dropdown-menu';
 import { Input } from '$ui/input';
-import { Pagination } from '$ui/pagination';
 import {
   Select,
   SelectContent,
@@ -59,7 +63,7 @@ import {
   TableHeader,
   TableRow,
 } from '$ui/table';
-import { Tabs, TabsList, TabsTrigger } from '$ui/tabs';
+import { ScrollableTabsList, Tabs, TabsTrigger } from '$ui/tabs';
 
 type FilterStatus = 'all' | 'active' | 'inactive' | 'pending';
 type FilterRole = 'all' | UserRole;
@@ -77,6 +81,7 @@ const FILTER_ROLE_OPTIONS: readonly FilterRole[] = [
   UserRole.USER,
 ];
 const SORT_OPTIONS: readonly SortOption[] = ['name', 'recent', 'created'];
+const USER_SEARCH_MAX_LENGTH = 100;
 const USERS_PER_PAGE = 20;
 
 const getSortLabel = (sort: SortOption): string => {
@@ -104,6 +109,15 @@ const normalizeFilterRole = (value: string | null): FilterRole =>
 const normalizeSortOption = (value: string | null): SortOption =>
   SORT_OPTIONS.includes(value as SortOption) ? (value as SortOption) : 'name';
 
+const normalizePage = (value: string | null): number => {
+  const parsed = Number.parseInt(value ?? '1', 10);
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+};
+
+const normalizeSearchQuery = (value: string | null): string =>
+  (value ?? '').trim().slice(0, USER_SEARCH_MAX_LENGTH);
+
 const buildUsersQueryParams = ({
   limit,
   page,
@@ -123,6 +137,31 @@ const buildUsersQueryParams = ({
   params.set('page', String(page));
   params.set('limit', String(limit));
   if (search) params.set('search', search);
+  if (status !== 'all') params.set('status', status);
+  if (role !== 'all') params.set('role', role);
+  if (sort !== 'name') params.set('sort', sort);
+
+  return params;
+};
+
+const buildUsersPageUrlParams = ({
+  page,
+  role,
+  search,
+  sort,
+  status,
+}: {
+  page: number;
+  role: FilterRole;
+  search: string;
+  sort: SortOption;
+  status: FilterStatus;
+}): URLSearchParams => {
+  const params = new URLSearchParams();
+  const normalizedSearch = normalizeSearchQuery(search);
+
+  if (page > 1) params.set('page', String(page));
+  if (normalizedSearch) params.set('search', normalizedSearch);
   if (status !== 'all') params.set('status', status);
   if (role !== 'all') params.set('role', role);
   if (sort !== 'name') params.set('sort', sort);
@@ -203,56 +242,39 @@ const UsersStatCard: FC<{
 };
 
 export const UsersListPage: FC = () => {
-  const router = useRouter();
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
-
-  // Get filters from URL
-  const urlSearch = searchParams.get('q') || '';
-  const urlStatus = normalizeFilterStatus(searchParams.get('status'));
-  const urlRole = normalizeFilterRole(searchParams.get('role'));
-  const urlSort = normalizeSortOption(searchParams.get('sort'));
+  const currentQueryString = searchParams.toString();
 
   const [users, setUsers] = useState<UserType[]>([]);
   const [stats, setStats] = useState<UserStatsType | null>(null);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(urlSearch);
-  const [debouncedSearch, setDebouncedSearch] = useState(urlSearch);
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>(urlStatus);
-  const [filterRole, setFilterRole] = useState<FilterRole>(urlRole);
-  const [sortBy, setSortBy] = useState<SortOption>(urlSort);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(() =>
+    normalizeSearchQuery(searchParams.get('search')),
+  );
+  const [debouncedSearch, setDebouncedSearch] = useState(() =>
+    normalizeSearchQuery(searchParams.get('search')),
+  );
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>(() =>
+    normalizeFilterStatus(searchParams.get('status')),
+  );
+  const [filterRole, setFilterRole] = useState<FilterRole>(() =>
+    normalizeFilterRole(searchParams.get('role')),
+  );
+  const [sortBy, setSortBy] = useState<SortOption>(() =>
+    normalizeSortOption(searchParams.get('sort')),
+  );
+  const hasLoadedUsersRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const lastSyncedQueryStringRef = useRef(currentQueryString);
 
   // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // Update URL when filters change
-  const updateUrlParams = useCallback(
-    (params: Record<string, string>): void => {
-      const newParams = new URLSearchParams(searchParams.toString());
-      Object.entries(params).forEach(([key, value]) => {
-        if (value && value !== 'all' && value !== 'name' && value !== '') {
-          newParams.set(key, value);
-        } else {
-          newParams.delete(key);
-        }
-      });
-      const queryString = newParams.toString();
-      router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
-        scroll: false,
-      });
-    },
-    [router, pathname, searchParams],
+  const [currentPage, setCurrentPage] = useState(() =>
+    normalizePage(searchParams.get('page')),
   );
-
-  useEffect((): void => {
-    setSearchQuery(urlSearch);
-    setDebouncedSearch(urlSearch);
-    setFilterStatus(urlStatus);
-    setFilterRole(urlRole);
-    setSortBy(urlSort);
-    setCurrentPage(1);
-  }, [urlSearch, urlStatus, urlRole, urlSort]);
 
   const fetchUsers = useCallback(
     async (
@@ -262,8 +284,16 @@ export const UsersListPage: FC = () => {
       role: FilterRole = 'all',
       sort: SortOption = 'name',
     ): Promise<void> => {
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       try {
-        setIsLoading(true);
+        if (hasLoadedUsersRef.current) {
+          setIsRefreshing(true);
+        } else {
+          setIsLoading(true);
+        }
 
         const params = buildUsersQueryParams({
           limit: USERS_PER_PAGE,
@@ -274,24 +304,94 @@ export const UsersListPage: FC = () => {
           status,
         });
 
-        const response = await fetch(`/api/users?${params.toString()}`);
+        const response = await fetch(`/api/users?${params.toString()}`, {
+          signal: controller.signal,
+        });
         const data = await response.json();
 
-        if (data.success) {
+        if (controller.signal.aborted) return;
+
+        if (response.ok && data.success) {
+          const nextPagination = data.data.pagination as PaginationInfo;
+          const resolvedTotalPages = Math.max(
+            1,
+            nextPagination.totalPages || 0,
+          );
+
+          if (page > resolvedTotalPages) {
+            setCurrentPage(resolvedTotalPages);
+
+            return;
+          }
+
           setUsers(data.data.users);
           setStats(data.data.stats);
-          setPagination(data.data.pagination);
+          setPagination(nextPagination);
         } else {
           toast.error(data.error?.message || 'Erreur lors du chargement');
         }
       } catch {
+        if (controller.signal.aborted) return;
         toast.error('Erreur lors du chargement');
       } finally {
+        if (abortControllerRef.current !== controller) return;
+
+        abortControllerRef.current = null;
+        hasLoadedUsersRef.current = true;
         setIsLoading(false);
+        setIsRefreshing(false);
       }
     },
     [],
   );
+
+  useEffect((): (() => void) => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
+  useEffect((): void => {
+    if (currentQueryString === lastSyncedQueryStringRef.current) return;
+
+    const nextSearch = normalizeSearchQuery(searchParams.get('search'));
+
+    lastSyncedQueryStringRef.current = currentQueryString;
+    setSearchQuery(nextSearch);
+    setDebouncedSearch(nextSearch);
+    setFilterStatus(normalizeFilterStatus(searchParams.get('status')));
+    setFilterRole(normalizeFilterRole(searchParams.get('role')));
+    setSortBy(normalizeSortOption(searchParams.get('sort')));
+    setCurrentPage(normalizePage(searchParams.get('page')));
+  }, [currentQueryString, searchParams]);
+
+  useEffect((): void => {
+    const params = buildUsersPageUrlParams({
+      page: currentPage,
+      role: filterRole,
+      search: debouncedSearch,
+      sort: sortBy,
+      status: filterStatus,
+    });
+    const nextQueryString = params.toString();
+
+    if (currentQueryString === nextQueryString) return;
+
+    lastSyncedQueryStringRef.current = nextQueryString;
+    router.replace(
+      nextQueryString ? `${pathname}?${nextQueryString}` : pathname,
+      { scroll: false },
+    );
+  }, [
+    currentPage,
+    currentQueryString,
+    debouncedSearch,
+    filterRole,
+    filterStatus,
+    pathname,
+    router,
+    sortBy,
+  ]);
 
   // Fetch on mount and when filters change
   useEffect((): void => {
@@ -308,13 +408,12 @@ export const UsersListPage: FC = () => {
   // Handle search with debounce
   useEffect((): (() => void) => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
+      setDebouncedSearch(normalizeSearchQuery(searchQuery));
       setCurrentPage(1); // Reset to page 1 on search
-      updateUrlParams({ q: searchQuery });
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, updateUrlParams]);
+  }, [searchQuery]);
 
   // Handle other filter changes
   const handleFilterChange = (
@@ -325,24 +424,22 @@ export const UsersListPage: FC = () => {
     if (type === 'status') {
       const nextStatus = normalizeFilterStatus(value);
       setFilterStatus(nextStatus);
-      updateUrlParams({ status: nextStatus });
     } else if (type === 'role') {
       const nextRole = normalizeFilterRole(value);
       setFilterRole(nextRole);
-      updateUrlParams({ role: nextRole });
     } else {
       const nextSort = normalizeSortOption(value);
       setSortBy(nextSort);
-      updateUrlParams({ sort: nextSort });
     }
   };
 
   const clearFilters = (): void => {
     setSearchQuery('');
+    setDebouncedSearch('');
     setFilterStatus('all');
     setFilterRole('all');
     setSortBy('name');
-    router.replace(pathname, { scroll: false });
+    setCurrentPage(1);
   };
 
   const openUserDetail = (userId: string): void => {
@@ -360,7 +457,10 @@ export const UsersListPage: FC = () => {
   };
 
   const hasActiveFilters =
-    searchQuery || filterStatus !== 'all' || filterRole !== 'all';
+    !!searchQuery ||
+    filterStatus !== 'all' ||
+    filterRole !== 'all' ||
+    sortBy !== 'name';
 
   const displayedUsers = users;
 
@@ -372,12 +472,14 @@ export const UsersListPage: FC = () => {
     if (!date) return 'Jamais';
     const now = new Date();
     const then = new Date(date);
+    if (Number.isNaN(then.getTime())) return 'Jamais';
+
     const diffMs = now.getTime() - then.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return "A l'instant";
+    if (diffMins < 1) return "À l'instant";
     if (diffMins < 60) return `${diffMins}min`;
     if (diffHours < 24) return `${diffHours}h`;
     if (diffDays < 30) return `${diffDays}j`;
@@ -432,22 +534,24 @@ export const UsersListPage: FC = () => {
           />
         </div>
       )}
-      <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
-        <CardHeader className="p-4 sm:p-5">
-          <div className="flex flex-col gap-1">
-            <div className="min-w-0">
-              <CardTitle className="text-base">Annuaire utilisateurs</CardTitle>
-              <CardDescription>
-                {totalFiltered} utilisateur
-                {totalFiltered !== 1 ? 's' : ''}
-                {hasActiveFilters && stats && ` sur ${stats.total}`}
-                {pagination &&
-                  totalPages > 1 &&
-                  ` - Page ${currentPage}/${totalPages}`}
-              </CardDescription>
-            </div>
-          </div>
-          <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+      <DataTableSection
+        title="Annuaire utilisateurs"
+        description={
+          <>
+            {totalFiltered} utilisateur
+            {totalFiltered !== 1 ? 's' : ''}
+            {hasActiveFilters && stats && ` sur ${stats.total}`}
+            {pagination &&
+              totalPages > 1 &&
+              ` - Page ${currentPage}/${totalPages}`}
+            {isRefreshing && ' - Mise à jour...'}
+          </>
+        }
+        contentClassName={
+          isRefreshing ? 'opacity-60 transition-opacity' : undefined
+        }
+        toolbar={
+          <>
             <div className="flex min-w-0 flex-1 flex-col gap-3 lg:flex-row lg:items-center">
               <div className="relative w-full lg:max-w-xs">
                 <Search
@@ -455,9 +559,11 @@ export const UsersListPage: FC = () => {
                   className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2"
                 />
                 <Input
+                  aria-label="Rechercher un utilisateur"
                   placeholder="Rechercher..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  maxLength={USER_SEARCH_MAX_LENGTH}
                   className="h-9 pr-8 pl-9"
                 />
                 {searchQuery && (
@@ -467,6 +573,7 @@ export const UsersListPage: FC = () => {
                     size="icon"
                     onClick={() => setSearchQuery('')}
                     className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 size-7 -translate-y-1/2"
+                    aria-label="Effacer la recherche"
                   >
                     <X size={14} />
                   </Button>
@@ -477,25 +584,20 @@ export const UsersListPage: FC = () => {
                 onValueChange={(value) => handleFilterChange('status', value)}
                 className="min-w-0"
               >
-                <div className="overflow-x-auto">
-                  <TabsList className="h-9 w-max p-1">
-                    <TabsTrigger value="all" className="h-7 px-2.5 text-xs">
-                      Tous
-                    </TabsTrigger>
-                    <TabsTrigger value="active" className="h-7 px-2.5 text-xs">
-                      Actifs
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="inactive"
-                      className="h-7 px-2.5 text-xs"
-                    >
-                      Inactifs
-                    </TabsTrigger>
-                    <TabsTrigger value="pending" className="h-7 px-2.5 text-xs">
-                      MDP
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
+                <ScrollableTabsList className="h-9 p-1">
+                  <TabsTrigger value="all" className="h-7 px-2.5 text-xs">
+                    Tous
+                  </TabsTrigger>
+                  <TabsTrigger value="active" className="h-7 px-2.5 text-xs">
+                    Actifs
+                  </TabsTrigger>
+                  <TabsTrigger value="inactive" className="h-7 px-2.5 text-xs">
+                    Inactifs
+                  </TabsTrigger>
+                  <TabsTrigger value="pending" className="h-7 px-2.5 text-xs">
+                    MDP
+                  </TabsTrigger>
+                </ScrollableTabsList>
               </Tabs>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -550,229 +652,217 @@ export const UsersListPage: FC = () => {
                 </Button>
               )}
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="hidden md:block">
-            <Table>
-              <TableHeader>
+          </>
+        }
+        pagination={
+          totalPages > 1
+            ? {
+                limit: USERS_PER_PAGE,
+                onPageChange: setCurrentPage,
+                page: currentPage,
+                total: totalFiltered,
+                totalPages,
+              }
+            : undefined
+        }
+      >
+        <DataTableDesktop>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Utilisateur</TableHead>
+                <TableHead>Rôle</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Mot de passe</TableHead>
+                <TableHead>Dernière connexion</TableHead>
+                <TableHead className="w-24 text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {displayedUsers.length === 0 ? (
                 <TableRow>
-                  <TableHead>Utilisateur</TableHead>
-                  <TableHead>Rôle</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Mot de passe</TableHead>
-                  <TableHead>Dernière connexion</TableHead>
-                  <TableHead className="w-24 text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {displayedUsers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-44 text-center">
-                      <div className="flex flex-col items-center gap-2">
-                        <UserMinus
-                          size={32}
-                          className="text-muted-foreground"
-                        />
-                        <p className="text-muted-foreground text-sm">
-                          Aucun utilisateur trouvé
-                        </p>
-                        {hasActiveFilters && (
+                  <TableCell colSpan={6} className="h-44 text-center">
+                    <DataTableEmptyState
+                      icon={<UserMinus size={32} />}
+                      title="Aucun utilisateur trouvé"
+                      action={
+                        hasActiveFilters && (
                           <Button
                             type="button"
                             variant="link"
                             size="sm"
                             onClick={clearFilters}
                           >
-                            Effacer les filtres
+                            Réinitialiser
                           </Button>
-                        )}
+                        )
+                      }
+                      className="py-0"
+                    />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                displayedUsers.map((user) => (
+                  <TableRow
+                    key={user.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Voir ${user.firstName} ${user.lastName}`}
+                    className="hover:bg-accent/50 focus:bg-accent/50 cursor-pointer focus:outline-none"
+                    onClick={() => openUserDetail(user.id)}
+                    onKeyDown={(event) => handleOpenUserKeyDown(event, user.id)}
+                  >
+                    <TableCell>
+                      <div className="flex min-w-0 items-center gap-3">
+                        <UserAvatar user={user} className="size-9 rounded-md" />
+                        <div className="min-w-0">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="text-foreground truncate font-medium">
+                              {user.firstName} {user.lastName}
+                            </span>
+                            {user.isProtected && (
+                              <Shield
+                                size={14}
+                                className="shrink-0 text-amber-500"
+                              />
+                            )}
+                          </div>
+                          <p className="text-muted-foreground truncate text-xs">
+                            {user.email}
+                          </p>
+                        </div>
                       </div>
                     </TableCell>
-                  </TableRow>
-                ) : (
-                  displayedUsers.map((user) => (
-                    <TableRow
-                      key={user.id}
-                      role="button"
-                      tabIndex={0}
-                      aria-label={`Voir ${user.firstName} ${user.lastName}`}
-                      className="hover:bg-accent/50 focus:bg-accent/50 cursor-pointer focus:outline-none"
-                      onClick={() => openUserDetail(user.id)}
-                      onKeyDown={(event) =>
-                        handleOpenUserKeyDown(event, user.id)
-                      }
-                    >
-                      <TableCell>
-                        <div className="flex min-w-0 items-center gap-3">
-                          <UserAvatar
-                            user={user}
-                            className="size-9 rounded-md"
-                          />
-                          <div className="min-w-0">
-                            <div className="flex min-w-0 items-center gap-2">
-                              <span className="text-foreground truncate font-medium">
-                                {user.firstName} {user.lastName}
-                              </span>
-                              {user.isProtected && (
-                                <Shield
-                                  size={14}
-                                  className="shrink-0 text-amber-500"
-                                />
-                              )}
-                            </div>
-                            <p className="text-muted-foreground truncate text-xs">
-                              {user.email}
-                            </p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={getRoleColor(user.role)}
-                          className="shrink-0"
-                        >
-                          {user.role === 'ADMIN' ? (
-                            <Shield size={10} className="mr-1" />
-                          ) : (
-                            <User size={10} className="mr-1" />
-                          )}
-                          {getAccessLabel(user)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <UserStatusBadge isActive={user.isActive} />
-                      </TableCell>
-                      <TableCell>
-                        {user.mustChangePassword ? (
-                          <Badge
-                            variant="outline"
-                            className="border-amber-500/40 text-amber-400"
-                          >
-                            <Key size={10} className="mr-1" />À changer
-                          </Badge>
+                    <TableCell>
+                      <Badge
+                        variant={getRoleColor(user.role)}
+                        className="shrink-0"
+                      >
+                        {user.role === 'ADMIN' ? (
+                          <Shield size={10} className="mr-1" />
                         ) : (
-                          <span className="text-muted-foreground text-xs">
-                            À jour
-                          </span>
+                          <User size={10} className="mr-1" />
                         )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-xs">
-                        {formatRelativeTime(user.lastLoginAt)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            openUserDetail(user.id);
-                          }}
+                        {getAccessLabel(user)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <UserStatusBadge isActive={user.isActive} />
+                    </TableCell>
+                    <TableCell>
+                      {user.mustChangePassword ? (
+                        <Badge
+                          variant="outline"
+                          className="border-amber-500/40 text-amber-400"
                         >
-                          Ouvrir
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          <div className="divide-border divide-y md:hidden">
-            {displayedUsers.length === 0 ? (
-              <div className="py-14 text-center">
-                <UserMinus
-                  size={40}
-                  className="text-muted-foreground mx-auto mb-3"
-                />
-                <p className="text-muted-foreground">
-                  Aucun utilisateur trouvé
-                </p>
-                {hasActiveFilters && (
+                          <Key size={10} className="mr-1" />À changer
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">
+                          À jour
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
+                      {formatRelativeTime(user.lastLoginAt)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openUserDetail(user.id);
+                        }}
+                      >
+                        Ouvrir
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </DataTableDesktop>
+        <DataTableMobileList>
+          {displayedUsers.length === 0 ? (
+            <DataTableEmptyState
+              icon={<UserMinus size={40} />}
+              title="Aucun utilisateur trouvé"
+              action={
+                hasActiveFilters && (
                   <Button
                     type="button"
                     variant="link"
                     size="sm"
                     onClick={clearFilters}
-                    className="mt-2"
                   >
-                    Effacer les filtres
+                    Réinitialiser
                   </Button>
-                )}
-              </div>
-            ) : (
-              displayedUsers.map((user) => (
-                <div
-                  key={user.id}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Voir ${user.firstName} ${user.lastName}`}
-                  className="hover:bg-accent/50 focus:bg-accent/50 cursor-pointer p-4 focus:outline-none"
-                  onClick={() => openUserDetail(user.id)}
-                  onKeyDown={(event) => handleOpenUserKeyDown(event, user.id)}
-                >
-                  <div className="flex items-start gap-3">
-                    <UserAvatar user={user} className="size-11 rounded-lg" />
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <div className="min-w-0">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <h3 className="text-foreground truncate font-medium">
-                            {user.firstName} {user.lastName}
-                          </h3>
-                          {user.isProtected && (
-                            <Shield
-                              size={14}
-                              className="shrink-0 text-amber-500"
-                            />
-                          )}
-                        </div>
-                        <p className="text-muted-foreground truncate text-sm">
-                          {user.email}
-                        </p>
+                )
+              }
+              className="py-14"
+            />
+          ) : (
+            displayedUsers.map((user) => (
+              <div
+                key={user.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`Voir ${user.firstName} ${user.lastName}`}
+                className="hover:bg-accent/50 focus:bg-accent/50 cursor-pointer p-4 focus:outline-none"
+                onClick={() => openUserDetail(user.id)}
+                onKeyDown={(event) => handleOpenUserKeyDown(event, user.id)}
+              >
+                <div className="flex items-start gap-3">
+                  <UserAvatar user={user} className="size-11 rounded-lg" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="min-w-0">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <h3 className="text-foreground truncate font-medium">
+                          {user.firstName} {user.lastName}
+                        </h3>
+                        {user.isProtected && (
+                          <Shield
+                            size={14}
+                            className="shrink-0 text-amber-500"
+                          />
+                        )}
                       </div>
-                      <div className="flex flex-wrap items-center gap-1.5">
+                      <p className="text-muted-foreground truncate text-sm">
+                        {user.email}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge
+                        variant={getRoleColor(user.role)}
+                        className="text-[10px]"
+                      >
+                        {getAccessLabel(user)}
+                      </Badge>
+                      {!user.isActive && (
+                        <UserStatusBadge isActive={user.isActive} />
+                      )}
+                      {user.mustChangePassword && (
                         <Badge
-                          variant={getRoleColor(user.role)}
-                          className="text-[10px]"
+                          variant="outline"
+                          className="border-amber-500/40 text-[10px] text-amber-400"
                         >
-                          {getAccessLabel(user)}
+                          MDP temporaire
                         </Badge>
-                        {!user.isActive && (
-                          <UserStatusBadge isActive={user.isActive} />
-                        )}
-                        {user.mustChangePassword && (
-                          <Badge
-                            variant="outline"
-                            className="border-amber-500/40 text-[10px] text-amber-400"
-                          >
-                            MDP temporaire
-                          </Badge>
-                        )}
-                        <span className="text-muted-foreground ml-auto text-xs">
-                          {formatRelativeTime(user.lastLoginAt)}
-                        </span>
-                      </div>
+                      )}
+                      <span className="text-muted-foreground ml-auto text-xs">
+                        {formatRelativeTime(user.lastLoginAt)}
+                      </span>
                     </div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-        {totalPages > 1 && (
-          <CardFooter className="p-0">
-            <Pagination
-              page={currentPage}
-              totalPages={totalPages}
-              total={totalFiltered}
-              limit={USERS_PER_PAGE}
-              onPageChange={setCurrentPage}
-              className="w-full rounded-none border-x-0 border-b-0 bg-transparent"
-            />
-          </CardFooter>
-        )}
-      </Card>
+              </div>
+            ))
+          )}
+        </DataTableMobileList>
+      </DataTableSection>
     </div>
   );
 };

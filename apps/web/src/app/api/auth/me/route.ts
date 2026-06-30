@@ -11,6 +11,7 @@ import {
   ErrorCode,
 } from '$types/api.types';
 import type { UserType } from '$types/auth.types';
+import { trimmedStringMinMax } from '$utils/zod.utils';
 
 type MeResponseData = {
   session: {
@@ -21,11 +22,13 @@ type MeResponseData = {
 };
 
 const updateProfileSchema = z.object({
-  firstName: z
-    .string()
-    .min(1, 'Le prénom est requis')
-    .max(50, 'Prénom trop long'),
-  lastName: z.string().min(1, 'Le nom est requis').max(50, 'Nom trop long'),
+  firstName: trimmedStringMinMax(
+    1,
+    50,
+    'Le prénom est requis',
+    'Prénom trop long',
+  ),
+  lastName: trimmedStringMinMax(1, 50, 'Le nom est requis', 'Nom trop long'),
 });
 
 export async function GET(): Promise<
@@ -80,9 +83,8 @@ export async function PATCH(
       );
     }
 
-    const { firstName, lastName } = validation.data;
-    const nextFirstName = firstName.trim();
-    const nextLastName = lastName.trim();
+    const { firstName: nextFirstName, lastName: nextLastName } =
+      validation.data;
 
     if (nextFirstName === user.firstName && nextLastName === user.lastName) {
       return NextResponse.json({

@@ -5,13 +5,15 @@ import { checkRateLimit } from '$server/api-rate-limiter';
 const CSRF_COOKIE = 'csrf-token';
 const CSRF_HEADER = 'x-csrf-token';
 const SESSION_COOKIE = 'session';
-const ADMINISTRATION_PATH_PREFIX = '/administration';
+const PROTECTED_PAGE_PATH_PREFIXES = [
+  '/administration',
+  '/mon-compte',
+] as const;
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-function isAdministrationPath(pathname: string): boolean {
-  return (
-    pathname === ADMINISTRATION_PATH_PREFIX ||
-    pathname.startsWith(`${ADMINISTRATION_PATH_PREFIX}/`)
+function isProtectedPagePath(pathname: string): boolean {
+  return PROTECTED_PAGE_PATH_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }
 
@@ -139,7 +141,7 @@ export function middleware(request: NextRequest): NextResponse {
 
   // Non-API routes
   if (
-    isAdministrationPath(request.nextUrl.pathname) &&
+    isProtectedPagePath(request.nextUrl.pathname) &&
     !request.cookies.get(SESSION_COOKIE)?.value
   ) {
     const loginUrl = request.nextUrl.clone();
