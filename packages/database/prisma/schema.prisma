@@ -41,6 +41,7 @@ model User {
   @@index([deletedAt, createdAt])
   @@index([deletedAt, isActive])
   @@index([deletedAt, lastLoginAt])
+  @@index([deletedAt, lockedUntil])
   @@index([deletedAt, mustChangePassword])
   @@index([deletedAt, role])
 }

@@ -40,12 +40,33 @@ export type NavSection = {
 // Navigation structure
 export const NAV_SECTIONS: NavSection[] = [
   {
+    id: 'dashboard',
+    items: [
+      {
+        href: '/',
+        icon: 'Home',
+        label: 'Accueil',
+        requiredPermissions: [PERMISSIONS.DASHBOARD.VIEW],
+      },
+    ],
+    label: '',
+    position: 'top',
+  },
+  {
     id: 'administration',
     items: [
       {
-        href: '/administration/utilisateurs',
-        icon: 'Users',
-        label: 'Utilisateurs',
+        children: [
+          {
+            href: '/administration/utilisateurs',
+            icon: 'Users',
+            label: 'Utilisateurs',
+            requiredPermissions: [PERMISSIONS.USERS.VIEW],
+          },
+        ],
+        href: '/administration',
+        icon: 'Settings',
+        label: 'Administration',
         requiredPermissions: [PERMISSIONS.USERS.VIEW],
       },
     ],

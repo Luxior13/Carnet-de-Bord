@@ -3,6 +3,7 @@
 import {
   ChevronRight,
   ChevronsUpDown,
+  Home,
   LogOut,
   type LucideIcon,
   Settings,
@@ -55,6 +56,7 @@ import {
 import { cn } from '$utils/css.utils';
 
 const iconMap: Record<string, LucideIcon> = {
+  Home,
   Settings,
   Users,
 };

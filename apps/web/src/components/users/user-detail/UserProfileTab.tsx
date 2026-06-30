@@ -121,7 +121,11 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
             <SectionPanel icon={<User className="size-3.5" />} title="Identité">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="text-muted-foreground text-xs" required>
+                  <Label
+                    htmlFor="user-first-name"
+                    className="text-muted-foreground text-xs"
+                    required
+                  >
                     Prénom
                   </Label>
                   <Input
@@ -147,7 +151,11 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                   )}
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-muted-foreground text-xs" required>
+                  <Label
+                    htmlFor="user-last-name"
+                    className="text-muted-foreground text-xs"
+                    required
+                  >
                     Nom
                   </Label>
                   <Input
@@ -174,7 +182,10 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-muted-foreground text-xs">
+                <Label
+                  htmlFor="user-display-name"
+                  className="text-muted-foreground text-xs"
+                >
                   Nom affiché
                 </Label>
                 <Input
@@ -203,7 +214,11 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
             </SectionPanel>
             <SectionPanel icon={<Mail className="size-3.5" />} title="Contact">
               <div className="space-y-1.5">
-                <Label className="text-muted-foreground text-xs" required>
+                <Label
+                  htmlFor="user-email"
+                  className="text-muted-foreground text-xs"
+                  required
+                >
                   Email de connexion
                 </Label>
                 <Input
@@ -240,7 +255,10 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="text-muted-foreground text-xs">
+                  <Label
+                    htmlFor="user-discord"
+                    className="text-muted-foreground text-xs"
+                  >
                     ID Discord
                   </Label>
                   <div className="relative">
@@ -271,7 +289,10 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                   )}
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-muted-foreground text-xs">
+                  <Label
+                    htmlFor="user-phone"
+                    className="text-muted-foreground text-xs"
+                  >
                     Téléphone
                   </Label>
                   <div className="relative">
@@ -311,7 +332,12 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
           >
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <div className="space-y-1.5">
-                <Label className="text-muted-foreground text-xs">Poste</Label>
+                <Label
+                  htmlFor="user-job-title"
+                  className="text-muted-foreground text-xs"
+                >
+                  Poste
+                </Label>
                 <div className="relative">
                   <Briefcase className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
                   <Input
@@ -339,7 +365,12 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                 )}
               </div>
               <div className="space-y-1.5">
-                <Label className="text-muted-foreground text-xs">Pôle</Label>
+                <Label
+                  htmlFor="user-department"
+                  className="text-muted-foreground text-xs"
+                >
+                  Pôle
+                </Label>
                 <div className="relative">
                   <Building2 className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
                   <Input
@@ -367,7 +398,10 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                 )}
               </div>
               <div className="space-y-1.5">
-                <Label className="text-muted-foreground text-xs">
+                <Label
+                  htmlFor="user-timezone"
+                  className="text-muted-foreground text-xs"
+                >
                   Fuseau horaire
                 </Label>
                 <div className="relative">
@@ -397,7 +431,10 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                 )}
               </div>
               <div className="space-y-1.5">
-                <Label className="text-muted-foreground text-xs">
+                <Label
+                  htmlFor="user-joined-at"
+                  className="text-muted-foreground text-xs"
+                >
                   Arrivée staff
                 </Label>
                 <div className="relative">
@@ -433,6 +470,9 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
             title="Note interne"
           >
             <div className="space-y-1.5">
+              <Label htmlFor="user-internal-note" className="sr-only">
+                Note interne
+              </Label>
               <Textarea
                 id="user-internal-note"
                 value={form.staffProfile.internalNote}
@@ -446,7 +486,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                 aria-invalid={!!errors.staffProfile.internalNote}
                 aria-describedby={
                   errors.staffProfile.internalNote
-                    ? 'user-internal-note-error'
+                    ? 'user-internal-note-error user-internal-note-count'
                     : 'user-internal-note-count'
                 }
                 className={`${inputClassName} min-h-24 resize-y`}

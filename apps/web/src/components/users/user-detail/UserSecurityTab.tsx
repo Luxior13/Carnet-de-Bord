@@ -55,10 +55,20 @@ type ParsedUserAgent = {
   isMobile: boolean;
 };
 
-const formatDate = (date: Date | string | null): string => {
-  if (!date) return 'Jamais';
+const toValidDate = (date: Date | string | null): Date | null => {
+  if (!date) return null;
 
-  return new Date(date).toLocaleDateString('fr-FR', {
+  const parsedDate = new Date(date);
+
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+};
+
+const formatDate = (date: Date | string | null): string => {
+  const parsedDate = toValidDate(date);
+
+  if (!parsedDate) return 'Jamais';
+
+  return parsedDate.toLocaleDateString('fr-FR', {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
@@ -68,21 +78,31 @@ const formatDate = (date: Date | string | null): string => {
 };
 
 const formatRelativeTime = (date: Date | string | null): string => {
-  if (!date) return 'Jamais';
+  const then = toValidDate(date);
+
+  if (!then) return 'Jamais';
 
   const now = new Date();
-  const then = new Date(date);
-  const diffMs = now.getTime() - then.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
+  const diffMs = then.getTime() - now.getTime();
+  const isFuture = diffMs > 0;
+  const absDiffMs = Math.abs(diffMs);
+  const diffMins = Math.floor(absDiffMs / 60000);
+  const diffHours = Math.floor(absDiffMs / 3600000);
+  const diffDays = Math.floor(absDiffMs / 86400000);
 
-  if (diffMins < 1) return "A l'instant";
-  if (diffMins < 60) return `Il y a ${diffMins} min`;
-  if (diffHours < 24) return `Il y a ${diffHours}h`;
-  if (diffDays < 7) return `Il y a ${diffDays}j`;
+  if (isFuture) {
+    if (diffMins < 1) return "Dans moins d'une minute";
+    if (diffMins < 60) return `Dans ${diffMins} min`;
+    if (diffHours < 24) return `Dans ${diffHours}h`;
+    if (diffDays < 7) return `Dans ${diffDays}j`;
+  } else {
+    if (diffMins < 1) return "A l'instant";
+    if (diffMins < 60) return `Il y a ${diffMins} min`;
+    if (diffHours < 24) return `Il y a ${diffHours}h`;
+    if (diffDays < 7) return `Il y a ${diffDays}j`;
+  }
 
-  return new Date(date).toLocaleDateString('fr-FR', {
+  return then.toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -199,7 +219,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   user,
 }) => {
   const isSelf = currentUserId === user.id;
-  const lockedUntil = user.lockedUntil ? new Date(user.lockedUntil) : null;
+  const lockedUntil = toValidDate(user.lockedUntil);
   const isLocked = !!lockedUntil && lockedUntil > new Date();
   const sessionCountLabel = isLoadingSessions
     ? 'Chargement'
@@ -288,17 +308,25 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
         <CardContent className="space-y-3 p-3 sm:p-4">
           <div className="border-border/60 bg-popover flex items-center justify-between gap-4 rounded-md border p-3">
             <div>
-              <Label className="text-foreground text-sm font-medium">
+              <Label
+                htmlFor="user-active-switch"
+                className="text-foreground text-sm font-medium"
+              >
                 Compte actif
               </Label>
-              <p className="text-muted-foreground text-xs">
+              <p
+                id="user-active-switch-description"
+                className="text-muted-foreground text-xs"
+              >
                 Les comptes inactifs ne peuvent pas se connecter.
               </p>
             </div>
             <Switch
+              id="user-active-switch"
               checked={isActive}
               onCheckedChange={setIsActive}
               disabled={!canEditStatus || isSelf}
+              aria-describedby="user-active-switch-description"
             />
           </div>
           {isSelf && (

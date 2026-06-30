@@ -198,11 +198,20 @@ const DATE_FILTERS = [
 // HELPERS
 // ============================================
 
+const toValidDate = (date: Date | string | null): Date | null => {
+  if (!date) return null;
+
+  const parsedDate = new Date(date);
+
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+};
+
 const formatRelativeTime = (date: Date | string | null): string => {
-  if (!date) return 'Date inconnue';
+  const then = toValidDate(date);
+
+  if (!then) return 'Date inconnue';
 
   const now = new Date();
-  const then = new Date(date);
   const diffMs = now.getTime() - then.getTime();
   const diffSecs = Math.floor(diffMs / 1000);
   const diffMins = Math.floor(diffMs / 60000);
@@ -223,9 +232,11 @@ const formatRelativeTime = (date: Date | string | null): string => {
 };
 
 const formatFullDate = (date: Date | string | null): string => {
-  if (!date) return '';
+  const parsedDate = toValidDate(date);
 
-  return new Date(date).toLocaleDateString('fr-FR', {
+  if (!parsedDate) return '';
+
+  return parsedDate.toLocaleDateString('fr-FR', {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
@@ -238,7 +249,9 @@ type DateCategory = 'today' | 'yesterday' | 'thisWeek' | 'thisMonth' | 'older';
 
 const getDateCategory = (date: Date | string): DateCategory => {
   const now = new Date();
-  const then = new Date(date);
+  const then = toValidDate(date);
+
+  if (!then) return 'older';
 
   // Reset time to compare dates only
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -307,7 +320,11 @@ const formatChangeValue = (key: string, value: unknown): string => {
   }
 
   if (key === 'staffProfile.joinedAt') {
-    return new Date(value as string).toLocaleDateString('fr-FR', {
+    const parsedDate = toValidDate(value as string);
+
+    if (!parsedDate) return '(vide)';
+
+    return parsedDate.toLocaleDateString('fr-FR', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -619,7 +636,10 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
       // Date filter
       if (dateFilter !== 'all') {
         const days = parseInt(dateFilter, 10);
-        const logDate = new Date(log.createdAt);
+        const logDate = toValidDate(log.createdAt);
+
+        if (!logDate) return false;
+
         const diffDays = Math.floor(
           (now.getTime() - logDate.getTime()) / 86400000,
         );

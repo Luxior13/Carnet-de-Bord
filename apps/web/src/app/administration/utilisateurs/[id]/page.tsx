@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 
 import { UserDetailPage } from '$components/users/UserDetailPage';
 
@@ -11,5 +11,9 @@ export default async function AdministrationUserDetailPage({
 }: AdministrationUserDetailPageProps): Promise<React.ReactNode> {
   const { id } = await params;
 
-  return <UserDetailPage userId={id} />;
+  return (
+    <Suspense fallback={null}>
+      <UserDetailPage userId={id} />
+    </Suspense>
+  );
 }

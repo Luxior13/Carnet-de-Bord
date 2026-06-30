@@ -157,6 +157,73 @@ describe('users access hardening', () => {
     );
   });
 
+  it('does not update permissions when only the key order changes', async () => {
+    const existingPermissions = {
+      [PERMISSIONS.USERS.VIEW]: true,
+      [PERMISSIONS.DASHBOARD.VIEW]: true,
+    };
+    const nextPermissions = {
+      [PERMISSIONS.DASHBOARD.VIEW]: true,
+      [PERMISSIONS.USERS.VIEW]: true,
+    };
+    const existingUser = buildUser({
+      id: 'target-1',
+      permissions: existingPermissions,
+    });
+
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: JSON.stringify({ permissions: nextPermissions }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    expect(mockInvalidateAllUserSessions).not.toHaveBeenCalled();
+    expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
+  });
+
+  it('audits inactive account reactivation as USER_ACTIVATE', async () => {
+    const existingUser = buildUser({
+      id: 'target-1',
+      isActive: false,
+    });
+
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+    mockPrisma.user.update.mockResolvedValue({
+      ...existingUser,
+      isActive: true,
+    });
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: JSON.stringify({ isActive: true }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'USER_ACTIVATE',
+        category: 'USER',
+        targetUserId: 'target-1',
+        userId: 'viewer-1',
+      }),
+    );
+  });
+
   it('updates staff profile fields with users:update only', async () => {
     const existingUser = buildUser({ id: 'target-1', staffProfile: null });
     const updatedUser = {
@@ -230,6 +297,27 @@ describe('users access hardening', () => {
         userId: 'viewer-1',
       }),
     );
+  });
+
+  it('rejects non date-only staff profile joinedAt values', async () => {
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: JSON.stringify({
+          staffProfile: {
+            joinedAt: '2026-03-01T12:00:00.000Z',
+          },
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe(ErrorCode.VALIDATION_ERROR);
+    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
   });
 
   it('rejects empty user patches before loading the target user', async () => {
@@ -332,21 +420,19 @@ describe('users access hardening', () => {
   it('redacts ip and user-agent for other users when viewer is not protected', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(buildUser({ id: 'target-1' }));
     mockPrisma.auditLog.count.mockResolvedValue(1);
-    mockPrisma.auditLog.findMany
-      .mockResolvedValueOnce([
-        {
-          action: 'LOGIN_SUCCESS',
-          category: 'AUTH',
-          createdAt: new Date('2026-03-02T00:00:00.000Z'),
-          description: 'Connexion reussie',
-          id: 'log-1',
-          ipAddress: '1.2.3.4',
-          metadata: null,
-          userAgent: 'TestAgent',
-          userId: 'target-1',
-        },
-      ])
-      .mockResolvedValueOnce([{ action: 'LOGIN_SUCCESS' }]);
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      {
+        action: 'LOGIN_SUCCESS',
+        category: 'AUTH',
+        createdAt: new Date('2026-03-02T00:00:00.000Z'),
+        description: 'Connexion reussie',
+        id: 'log-1',
+        ipAddress: '1.2.3.4',
+        metadata: null,
+        userAgent: 'TestAgent',
+        userId: 'target-1',
+      },
+    ]);
 
     const route = await import('$app/api/users/[id]/audit/route');
     const response = await route.GET(
@@ -458,6 +544,93 @@ describe('users access hardening', () => {
             }),
           ]),
         }),
+      }),
+    );
+  });
+
+  it('returns personal dashboard data without querying managed users', async () => {
+    const route = await import('$app/api/dashboard/route');
+    const response = await route.GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.users).toEqual({
+      active: 1,
+      inactive: 0,
+      recentLogins: 0,
+      total: 1,
+    });
+    expect(body.data.recentActivity).toEqual([]);
+    expect(mockPrisma.user.groupBy).not.toHaveBeenCalled();
+    expect(mockPrisma.auditLog.findMany).not.toHaveBeenCalled();
+  });
+
+  it('aggregates dashboard stats for users managers without loading all users', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'viewer-1',
+        passwordHash: undefined,
+        permissions: { [PERMISSIONS.USERS.VIEW]: true },
+      }),
+    });
+    mockPrisma.user.groupBy.mockResolvedValueOnce([
+      { _count: { _all: 3 }, isActive: true },
+      { _count: { _all: 1 }, isActive: false },
+    ]);
+    mockPrisma.user.count
+      .mockResolvedValueOnce(2)
+      .mockResolvedValueOnce(1)
+      .mockResolvedValueOnce(3);
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      {
+        action: 'LOGIN_SUCCESS',
+        category: 'AUTH',
+        createdAt: new Date('2026-03-03T10:00:00.000Z'),
+        description: 'Connexion reussie',
+        id: 'log-1',
+        user: { firstName: 'Jean', lastName: 'Dupont' },
+      },
+    ]);
+
+    const route = await import('$app/api/dashboard/route');
+    const response = await route.GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.users).toEqual({
+      active: 3,
+      inactive: 1,
+      recentLogins: 3,
+      total: 4,
+    });
+    expect(body.data.security).toEqual({
+      lockedUsers: 1,
+      pendingPassword: 2,
+    });
+    expect(body.data.recentActivity[0]).toMatchObject({
+      action: 'LOGIN_SUCCESS',
+      id: 'log-1',
+      userName: 'Jean Dupont',
+    });
+    expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
+    expect(mockPrisma.user.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        by: ['isActive'],
+        where: { deletedAt: null },
+      }),
+    );
+    expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          action: true,
+          user: expect.any(Object),
+        }),
+        take: 8,
       }),
     );
   });

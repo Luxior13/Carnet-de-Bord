@@ -64,7 +64,11 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
   const formatDate = (date: Date | string | null): string => {
     if (!date) return 'Jamais';
 
-    return new Date(date).toLocaleDateString('fr-FR', {
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) return 'Jamais';
+
+    return parsedDate.toLocaleDateString('fr-FR', {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',

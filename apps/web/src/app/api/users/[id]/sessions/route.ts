@@ -95,6 +95,14 @@ export async function GET(
 
     const sessions = await prisma.session.findMany({
       orderBy: { createdAt: 'desc' },
+      select: {
+        createdAt: true,
+        expiresAt: true,
+        id: true,
+        ipAddress: true,
+        rememberMe: true,
+        userAgent: true,
+      },
       where: {
         expiresAt: { gt: new Date() },
         userId: targetUser.id,

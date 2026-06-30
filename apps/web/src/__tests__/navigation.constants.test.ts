@@ -9,10 +9,16 @@ import {
 } from '$constants/app.constants';
 import { PERMISSIONS } from '$constants/permissions.constants';
 
+type TestUser = {
+  isProtected: boolean;
+  permissions: Record<string, boolean>;
+  role: 'USER';
+};
+
 function buildUser(
   permissions: Record<string, boolean> = {},
   isProtected = false,
-) {
+): TestUser {
   return {
     isProtected,
     permissions,

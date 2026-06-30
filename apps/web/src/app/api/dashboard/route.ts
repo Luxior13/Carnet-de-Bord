@@ -8,27 +8,7 @@ import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
 } from '$types/api.types';
-
-export type DashboardStats = {
-  recentActivity: {
-    action: string;
-    category: string;
-    createdAt: string;
-    description: string;
-    id: string;
-    userName: string | null;
-  }[];
-  security: {
-    lockedUsers: number;
-    pendingPassword: number;
-  };
-  users: {
-    active: number;
-    inactive: number;
-    recentLogins: number;
-    total: number;
-  };
-};
+import type { DashboardStats } from '$types/dashboard.types';
 
 export async function GET(): Promise<
   NextResponse<ApiSuccessResponse<DashboardStats> | ApiErrorResponse>
@@ -70,72 +50,78 @@ export async function GET(): Promise<
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const now = new Date();
 
-    const [users, recentLogs] = await Promise.all([
-      prisma.user.findMany({
-        select: {
-          isActive: true,
-          lastLoginAt: true,
-          lockedUntil: true,
-          mustChangePassword: true,
-        },
-        where: { deletedAt: null },
+    const userWhere = { deletedAt: null };
+
+    const [
+      statusCounts,
+      pendingPassword,
+      lockedUsers,
+      recentLogins,
+      recentLogs,
+    ] = await Promise.all([
+      prisma.user.groupBy({
+        _count: { _all: true },
+        by: ['isActive'],
+        where: userWhere,
+      }),
+      prisma.user.count({
+        where: { ...userWhere, mustChangePassword: true },
+      }),
+      prisma.user.count({
+        where: { ...userWhere, lockedUntil: { gt: now } },
+      }),
+      prisma.user.count({
+        where: { ...userWhere, lastLoginAt: { gte: oneDayAgo } },
       }),
       prisma.auditLog.findMany({
-        include: {
+        orderBy: { createdAt: 'desc' },
+        select: {
+          action: true,
+          category: true,
+          createdAt: true,
+          description: true,
+          id: true,
           user: {
             select: { firstName: true, lastName: true },
           },
         },
-        orderBy: { createdAt: 'desc' },
         take: 8,
       }),
     ]);
 
-    const userStats = users.reduce(
-      (acc, user) => {
-        acc.total++;
-        if (user.isActive) acc.active++;
-        if (!user.isActive) acc.inactive++;
-        if (user.mustChangePassword) acc.pendingPassword++;
-        if (user.lockedUntil && user.lockedUntil > now) acc.lockedUsers++;
-        if (user.lastLoginAt && user.lastLoginAt >= oneDayAgo)
-          acc.recentLogins++;
+    const activeUsers =
+      statusCounts.find((statusCount) => statusCount.isActive)?._count._all ??
+      0;
+    const inactiveUsers =
+      statusCounts.find((statusCount) => !statusCount.isActive)?._count._all ??
+      0;
+    const totalUsers = activeUsers + inactiveUsers;
 
-        return acc;
+    const stats: DashboardStats = {
+      recentActivity: recentLogs.map((log) => ({
+        action: log.action,
+        category: log.category,
+        createdAt: log.createdAt.toISOString(),
+        description: log.description,
+        id: log.id,
+        userName: log.user
+          ? `${log.user.firstName} ${log.user.lastName}`
+          : null,
+      })),
+      security: {
+        lockedUsers,
+        pendingPassword,
       },
-      {
-        active: 0,
-        inactive: 0,
-        lockedUsers: 0,
-        pendingPassword: 0,
-        recentLogins: 0,
-        total: 0,
+      users: {
+        active: activeUsers,
+        inactive: inactiveUsers,
+        recentLogins,
+        total: totalUsers,
       },
-    );
+    };
 
     return NextResponse.json({
-      data: {
-        recentActivity: recentLogs.map((log) => ({
-          action: log.action,
-          category: log.category,
-          createdAt: log.createdAt.toISOString(),
-          description: log.description,
-          id: log.id,
-          userName: log.user
-            ? `${log.user.firstName} ${log.user.lastName}`
-            : null,
-        })),
-        security: {
-          lockedUsers: userStats.lockedUsers,
-          pendingPassword: userStats.pendingPassword,
-        },
-        users: {
-          active: userStats.active,
-          inactive: userStats.inactive,
-          recentLogins: userStats.recentLogins,
-          total: userStats.total,
-        },
-      },
+      data: stats,
       success: true,
     });
   } catch (error) {

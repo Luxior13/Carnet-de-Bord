@@ -16,6 +16,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { toast } from 'sonner';
@@ -101,7 +102,11 @@ const formatDateInputValue = (
 ): string => {
   if (!date) return '';
 
-  return new Date(date).toISOString().slice(0, 10);
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) return '';
+
+  return parsedDate.toISOString().slice(0, 10);
 };
 
 const normalizeProfileText = (value: string | null | undefined): string => {
@@ -130,11 +135,33 @@ const mapStaffProfileToForm = (
 const formatCompactDate = (date: Date | string | null): string => {
   if (!date) return 'Jamais';
 
-  return new Date(date).toLocaleDateString('fr-FR', {
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) return 'Jamais';
+
+  return parsedDate.toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   });
+};
+
+const buildUserDetailSectionHref = (
+  pathname: string,
+  currentQueryString: string,
+  sectionId: UserDetailSectionId,
+): string => {
+  const nextParams = new URLSearchParams(currentQueryString);
+
+  if (sectionId === 'resume') {
+    nextParams.delete('section');
+  } else {
+    nextParams.set('section', sectionId);
+  }
+
+  const nextQueryString = nextParams.toString();
+
+  return nextQueryString ? `${pathname}?${nextQueryString}` : pathname;
 };
 
 const arePermissionsEqual = (
@@ -193,12 +220,17 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { userData: currentUser } = useUser();
+  const currentQueryString = searchParams.toString();
+  const { isLoading: isCurrentUserLoading, userData: currentUser } = useUser();
   const [user, setUser] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [activeSection, setActiveSection] =
-    useState<UserDetailSectionId>('resume');
+  const [activeSection, setActiveSection] = useState<UserDetailSectionId>(() =>
+    normalizeUserDetailSection(searchParams.get('section')),
+  );
+  const userAbortControllerRef = useRef<AbortController | null>(null);
+  const auditAbortControllerRef = useRef<AbortController | null>(null);
+  const sessionsAbortControllerRef = useRef<AbortController | null>(null);
 
   const [editForm, setEditForm] = useState({
     email: '',
@@ -371,81 +403,159 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     hasAccessChanges && (canEditTargetRole || canManageTargetPermissions);
   const canSaveSecurity = canEditTargetStatus && !isSelf && hasSecurityChanges;
 
-  const fetchUser = useCallback(async (): Promise<void> => {
-    if (!canViewUsers) return;
+  const fetchUser = useCallback(
+    async (options: { background?: boolean } = {}): Promise<void> => {
+      userAbortControllerRef.current?.abort();
+      userAbortControllerRef.current = null;
 
-    try {
-      setIsLoading(true);
-      setErrorMessage(null);
-      const response = await fetch(`/api/users/${userId}`);
-      const data = await response.json();
+      if (!canViewUsers) {
+        setIsLoading(false);
 
-      if (data.success) {
-        const loadedUser = data.data.user as UserType;
-        setUser(loadedUser);
-        setEditForm({
-          email: loadedUser.email,
-          firstName: loadedUser.firstName,
-          isActive: loadedUser.isActive,
-          lastName: loadedUser.lastName,
-          role: loadedUser.role,
-          staffProfile: mapStaffProfileToForm(loadedUser.staffProfile),
-        });
-        setPermissions(loadedUser.permissions);
-      } else {
-        setErrorMessage(
-          data.error?.message || "Impossible de charger l'utilisateur",
-        );
+        return;
       }
-    } catch {
-      setErrorMessage("Impossible de charger l'utilisateur");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [canViewUsers, userId]);
+
+      const controller = new AbortController();
+      userAbortControllerRef.current = controller;
+      const isBackgroundFetch = options.background === true;
+
+      try {
+        if (!isBackgroundFetch) {
+          setIsLoading(true);
+          setErrorMessage(null);
+        }
+
+        const response = await fetch(`/api/users/${userId}`, {
+          signal: controller.signal,
+        });
+        const data = await response.json();
+
+        if (controller.signal.aborted) return;
+
+        if (response.ok && data.success) {
+          const loadedUser = data.data.user as UserType;
+          setUser(loadedUser);
+          setEditForm({
+            email: loadedUser.email,
+            firstName: loadedUser.firstName,
+            isActive: loadedUser.isActive,
+            lastName: loadedUser.lastName,
+            role: loadedUser.role,
+            staffProfile: mapStaffProfileToForm(loadedUser.staffProfile),
+          });
+          setPermissions(loadedUser.permissions);
+        } else if (!isBackgroundFetch) {
+          setErrorMessage(
+            data.error?.message || "Impossible de charger l'utilisateur",
+          );
+        }
+      } catch {
+        if (controller.signal.aborted) return;
+
+        if (!isBackgroundFetch) {
+          setErrorMessage("Impossible de charger l'utilisateur");
+        }
+      } finally {
+        if (userAbortControllerRef.current !== controller) return;
+
+        userAbortControllerRef.current = null;
+        if (!isBackgroundFetch) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [canViewUsers, userId],
+  );
 
   const fetchAuditLogs = useCallback(async (): Promise<void> => {
-    if (!canViewUsers) return;
+    auditAbortControllerRef.current?.abort();
+    auditAbortControllerRef.current = null;
+
+    if (!canViewUsers) {
+      setAuditLogs([]);
+      setAuditStats(null);
+      setIsLoadingAudit(false);
+
+      return;
+    }
+
+    const controller = new AbortController();
+    auditAbortControllerRef.current = controller;
 
     try {
       setIsLoadingAudit(true);
-      const response = await fetch(`/api/users/${userId}/audit?pageSize=200`);
+      const response = await fetch(`/api/users/${userId}/audit?pageSize=200`, {
+        signal: controller.signal,
+      });
       const data = await response.json();
 
-      if (data.success) {
+      if (controller.signal.aborted) return;
+
+      if (response.ok && data.success) {
         setAuditLogs(data.data.logs);
         setAuditStats(data.data.stats);
       }
     } catch {
+      if (controller.signal.aborted) return;
+
       // Audit history is useful, but it should not block the profile page.
     } finally {
+      if (auditAbortControllerRef.current !== controller) return;
+
+      auditAbortControllerRef.current = null;
       setIsLoadingAudit(false);
     }
   }, [canViewUsers, userId]);
 
   const fetchSecuritySessions = useCallback(async (): Promise<void> => {
+    sessionsAbortControllerRef.current?.abort();
+    sessionsAbortControllerRef.current = null;
+
     if (!canManageTargetSessions) {
       setSecuritySessions([]);
+      setIsLoadingSecuritySessions(false);
 
       return;
     }
 
+    const controller = new AbortController();
+    sessionsAbortControllerRef.current = controller;
+
     try {
       setIsLoadingSecuritySessions(true);
-      const response = await fetch(`/api/users/${userId}/sessions`);
+      const response = await fetch(`/api/users/${userId}/sessions`, {
+        signal: controller.signal,
+      });
       const data = await response.json();
 
-      if (data.success) {
+      if (controller.signal.aborted) return;
+
+      if (response.ok && data.success) {
         setSecuritySessions(data.data.sessions);
       } else {
         setSecuritySessions([]);
       }
     } catch {
+      if (controller.signal.aborted) return;
+
       setSecuritySessions([]);
     } finally {
+      if (sessionsAbortControllerRef.current !== controller) return;
+
+      sessionsAbortControllerRef.current = null;
       setIsLoadingSecuritySessions(false);
     }
   }, [canManageTargetSessions, userId]);
+
+  useEffect((): (() => void) => {
+    return (): void => {
+      userAbortControllerRef.current?.abort();
+      auditAbortControllerRef.current?.abort();
+      sessionsAbortControllerRef.current?.abort();
+      userAbortControllerRef.current = null;
+      auditAbortControllerRef.current = null;
+      sessionsAbortControllerRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     void fetchUser();
@@ -459,8 +569,32 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   }, [activeSection, fetchSecuritySessions]);
 
   useEffect(() => {
-    setActiveSection(normalizeUserDetailSection(searchParams.get('section')));
-  }, [searchParams, userId]);
+    const requestedSection = normalizeUserDetailSection(
+      new URLSearchParams(currentQueryString).get('section'),
+    );
+
+    if (requestedSection === activeSection) return;
+
+    if (hasCurrentSectionChanges) {
+      router.replace(
+        buildUserDetailSectionHref(pathname, currentQueryString, activeSection),
+        { scroll: false },
+      );
+      toast.error(
+        'Enregistrez ou annulez les modifications avant de changer de section',
+      );
+
+      return;
+    }
+
+    setActiveSection(requestedSection);
+  }, [
+    activeSection,
+    currentQueryString,
+    hasCurrentSectionChanges,
+    pathname,
+    router,
+  ]);
 
   const handleSectionChange = useCallback(
     (sectionId: UserDetailSectionId): void => {
@@ -474,14 +608,19 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         return;
       }
 
-      const nextParams = new URLSearchParams(searchParams.toString());
-      nextParams.set('section', sectionId);
       setActiveSection(sectionId);
-      router.replace(`${pathname}?${nextParams.toString()}`, {
-        scroll: false,
-      });
+      router.replace(
+        buildUserDetailSectionHref(pathname, currentQueryString, sectionId),
+        { scroll: false },
+      );
     },
-    [activeSection, hasCurrentSectionChanges, pathname, router, searchParams],
+    [
+      activeSection,
+      currentQueryString,
+      hasCurrentSectionChanges,
+      pathname,
+      router,
+    ],
   );
 
   const syncUserState = (updatedUser: UserType): void => {
@@ -572,7 +711,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       });
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok && data.success) {
         syncUserState(data.data.user);
         toast.success('Utilisateur mis à jour');
       } else {
@@ -612,7 +751,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       });
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok && data.success) {
         syncUserState(data.data.user);
         toast.success('Accès mis à jour');
       } else {
@@ -647,7 +786,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       });
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok && data.success) {
         syncUserState(data.data.user);
         void fetchSecuritySessions();
         toast.success('Sécurité mise à jour');
@@ -676,11 +815,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       });
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok && data.success) {
         setTempPassword(data.data.temporaryPassword);
         handleSectionChange('security');
         toast.success('Mot de passe réinitialisé');
-        void fetchUser();
+        void fetchUser({ background: true });
         void fetchSecuritySessions();
       } else {
         toast.error(
@@ -709,7 +848,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       });
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok && data.success) {
         toast.success('Sessions révoquées');
         void fetchSecuritySessions();
       } else {
@@ -738,7 +877,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       });
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok && data.success) {
         toast.success('Utilisateur supprimé');
         router.push('/administration/utilisateurs');
       } else {
@@ -837,6 +976,19 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         return <UserResumeTab user={user} auditStats={auditStats} />;
     }
   };
+
+  if (isCurrentUserLoading) {
+    return (
+      <AuthenticatedLayout
+        breadcrumbs={[
+          { label: 'Administration' },
+          { href: '/administration/utilisateurs', label: 'Utilisateurs' },
+        ]}
+      >
+        <DetailSkeleton />
+      </AuthenticatedLayout>
+    );
+  }
 
   if (!canViewUsers) {
     return (

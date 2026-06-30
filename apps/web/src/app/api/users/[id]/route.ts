@@ -26,6 +26,17 @@ type RouteParams = {
   params: Promise<{ id: string }>;
 };
 
+const isValidDateInput = (value: string): boolean => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+
+  const parsedDate = new Date(`${value}T00:00:00.000Z`);
+
+  return (
+    !Number.isNaN(parsedDate.getTime()) &&
+    parsedDate.toISOString().slice(0, 10) === value
+  );
+};
+
 const optionalProfileDateSchema = z
   .string()
   .optional()
@@ -39,8 +50,7 @@ const optionalProfileDateSchema = z
     return trimmedValue ? trimmedValue : null;
   })
   .refine(
-    (value) =>
-      value === undefined || value === null || !Number.isNaN(Date.parse(value)),
+    (value) => value === undefined || value === null || isValidDateInput(value),
     { message: 'Date invalide' },
   )
   .transform((value) =>
@@ -86,10 +96,33 @@ const formatProfileAuditValue = (
   if (value === undefined || value === null || value === '') return null;
 
   if (field === 'joinedAt') {
-    return new Date(value as Date | string).toISOString().slice(0, 10);
+    const parsedDate = new Date(value as Date | string);
+
+    if (Number.isNaN(parsedDate.getTime())) return null;
+
+    return parsedDate.toISOString().slice(0, 10);
   }
 
   return String(value);
+};
+
+const arePermissionRecordsEqual = (
+  first: Record<string, boolean> | null,
+  second: Record<string, boolean> | null,
+): boolean => {
+  const firstEntries = new Map(Object.entries(first ?? {}));
+  const secondEntries = new Map(Object.entries(second ?? {}));
+  const keys = new Set([...firstEntries.keys(), ...secondEntries.keys()]);
+
+  for (const key of keys) {
+    if (
+      (firstEntries.get(key) ?? false) !== (secondEntries.get(key) ?? false)
+    ) {
+      return false;
+    }
+  }
+
+  return true;
 };
 
 // ============================================
@@ -400,7 +433,7 @@ export async function PATCH(
         boolean
       > | null;
       // Only track if actually changed
-      if (JSON.stringify(permissions) !== JSON.stringify(existingPerms)) {
+      if (!arePermissionRecordsEqual(permissions, existingPerms)) {
         beforeValues.permissions = existingPerms;
         afterValues.permissions = permissions;
         updateData.permissions = permissions;
@@ -474,6 +507,23 @@ export async function PATCH(
         action: 'USER_DEACTIVATE',
         category: 'USER',
         description: `Utilisateur désactivé: ${updatedUser.email}`,
+        metadata: {
+          after: afterValues,
+          before: beforeValues,
+          targetName,
+        },
+        targetUserId: id,
+        userId: auth.user.id,
+      });
+    } else if (isActive === true && existingUser.isActive === false) {
+      if (hasAccessChange) {
+        await invalidateAllUserSessions(id);
+      }
+
+      await createAuditLogWithHeaders({
+        action: 'USER_ACTIVATE',
+        category: 'USER',
+        description: `Utilisateur activé: ${updatedUser.email}`,
         metadata: {
           after: afterValues,
           before: beforeValues,
