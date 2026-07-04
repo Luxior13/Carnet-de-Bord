@@ -19,8 +19,9 @@ Definir comment organiser le site prive pour eviter d'avoir trop de pages separe
 - Un contrat ou document est gere dans documents ou contrats.
 - Un rappel est gere dans notifications et rappels.
 - Une sanction est geree dans incidents et sanctions.
+- Une personne externe ou sensible est geree dans personnes et contacts.
 - Une cotisation est geree dans adherents ou tresorerie selon le choix final.
-- Une fiche sponsor, membre ou adherent peut afficher ces informations liees sans devenir leur page de gestion principale.
+- Une fiche sponsor, membre, adherent ou personne peut afficher ces informations liees sans devenir leur page de gestion principale.
 
 ## Exemple sponsor
 
@@ -64,6 +65,25 @@ Actions possibles depuis la fiche membre :
 - Voir les documents lies.
 - Ajouter un rappel ou une action a faire.
 
+## Exemple personne externe
+
+Sur la fiche d'une personne externe ou sensible, on doit pouvoir garder les informations utiles sans la transformer en membre.
+
+- Informations de contact modifiables depuis la fiche personne.
+- Statut de la personne.
+- Tags internes.
+- Notes sensibles selon les permissions.
+- Incidents, sanctions ou bans lies en lecture seule.
+- Tournois ou evenements concernes.
+- Historique des actions importantes.
+
+Actions possibles depuis la fiche personne :
+
+- Ajouter une note interne.
+- Voir ou creer un incident dans incidents et sanctions.
+- Ajouter un rappel lie a la personne.
+- Archiver la fiche sans supprimer l'historique.
+
 ## Organisation des ecrans
 
 - Les grandes pages servent a gerer les listes et les actions principales.
@@ -104,6 +124,7 @@ Chaque pole affiche ensuite sa propre navigation pour eviter une sidebar geante.
 
 ### Bureau et juridique
 
+- Personnes et contacts.
 - Sponsors et partenaires.
 - Documents officiels.
 - Chartes.

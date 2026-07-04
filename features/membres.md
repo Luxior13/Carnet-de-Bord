@@ -13,7 +13,7 @@ Cette partie complete la gestion utilisateurs deja existante, mais ne la remplac
 - Ouvrir la fiche detaillee d'un membre.
 - Ajouter ou modifier les informations de contact.
 - Ajouter des notes internes libres.
-- Noter les bans, sanctions ou problemes connus.
+- Voir les bans, sanctions ou problemes connus lies au membre.
 - Garder l'historique des changements importants.
 - Archiver un membre sans supprimer ses informations.
 
@@ -29,13 +29,13 @@ Cette partie complete la gestion utilisateurs deja existante, mais ne la remplac
 - Roles.
 - Statut.
 - Notes internes.
-- Bans par jeu.
-- Sanctions.
+- Bans par jeu lies.
+- Sanctions liees.
 - Documents lies.
 - Date d'arrivee.
 - Date de depart si besoin.
 
-## Bans et informations sensibles
+## Bans et informations sensibles en lecture liee
 
 - Jeu concerne.
 - Type de ban.
@@ -45,6 +45,9 @@ Cette partie complete la gestion utilisateurs deja existante, mais ne la remplac
 - Source ou preuve.
 - Commentaire interne.
 - Statut du ban.
+
+Les bans et sanctions doivent etre crees ou modifies depuis incidents et sanctions.
+La fiche membre sert surtout a les afficher avec le bon contexte.
 
 ## Idees d'ecran
 
@@ -78,7 +81,6 @@ Cette partie complete la gestion utilisateurs deja existante, mais ne la remplac
 - Voir les notes sensibles.
 - Modifier les informations d'un membre.
 - Ajouter une note interne.
-- Ajouter ou modifier un ban.
 - Archiver un membre.
 
 ## A clarifier

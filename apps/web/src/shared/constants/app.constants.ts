@@ -254,6 +254,14 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: dashboardAccess,
           },
           {
+            description:
+              'Repertoire central des personnes internes, externes, anciens contacts et profils sensibles.',
+            href: '/bureau-juridique/personnes-contacts',
+            icon: 'Users',
+            label: 'Personnes & contacts',
+            requiredPermissions: dashboardAccess,
+          },
+          {
             children: [
               {
                 description: 'Chartes, reglements et documents officiels.',
@@ -309,7 +317,7 @@ export const NAV_SPACES: NavigationSpace[] = [
         position: 'top',
       },
     ],
-    summary: 'Documents, contrats, sanctions',
+    summary: 'Contacts, contrats, sanctions',
     tone: 'legal',
   },
   {
