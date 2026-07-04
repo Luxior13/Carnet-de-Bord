@@ -334,6 +334,23 @@ export async function PATCH(
       );
     }
 
+    if (
+      isPermissionsUpdate &&
+      existingUser.id === auth.user.id &&
+      !auth.user.isProtected
+    ) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message: 'Vous ne pouvez pas modifier vos propres permissions',
+          },
+          success: false,
+        },
+        { status: 403 },
+      );
+    }
+
     // Cannot deactivate protected accounts (unless you're protected too)
     if (
       isActive === false &&

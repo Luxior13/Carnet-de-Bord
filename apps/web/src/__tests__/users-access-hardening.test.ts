@@ -157,6 +157,33 @@ describe('users access hardening', () => {
     );
   });
 
+  it('rejects self permission updates for non-protected users', async () => {
+    const existingUser = buildUser({ id: 'viewer-1', permissions: {} });
+    const nextPermissions = {
+      [PERMISSIONS.USERS.DELETE]: true,
+      [PERMISSIONS.USERS.EDIT_PERMISSIONS]: true,
+    };
+
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/viewer-1', {
+        body: JSON.stringify({ permissions: nextPermissions }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'viewer-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    expect(mockInvalidateAllUserSessions).not.toHaveBeenCalled();
+    expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
+  });
+
   it('rejects unknown permission keys before loading the target user', async () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(

@@ -294,25 +294,33 @@ export default function HomePage(): React.ReactNode {
   const [dashboardError, setDashboardError] = useState<string | null>(null);
 
   const firstName = userData?.firstName?.trim();
+  const mustChangePassword = !!userData?.mustChangePassword;
   const canViewDashboard = userData
-    ? userData.isProtected ||
-      hasPermission(
-        userData.role,
-        PERMISSIONS.DASHBOARD.VIEW,
-        userData.permissions,
-      )
+    ? !mustChangePassword &&
+      (userData.isProtected ||
+        hasPermission(
+          userData.role,
+          PERMISSIONS.DASHBOARD.VIEW,
+          userData.permissions,
+        ))
     : false;
   const canViewUsers = userData
-    ? userData.isProtected ||
-      hasPermission(userData.role, PERMISSIONS.USERS.VIEW, userData.permissions)
+    ? !mustChangePassword &&
+      (userData.isProtected ||
+        hasPermission(
+          userData.role,
+          PERMISSIONS.USERS.VIEW,
+          userData.permissions,
+        ))
     : false;
   const canCreateUsers = userData
-    ? userData.isProtected ||
-      hasPermission(
-        userData.role,
-        PERMISSIONS.USERS.CREATE,
-        userData.permissions,
-      )
+    ? !mustChangePassword &&
+      (userData.isProtected ||
+        hasPermission(
+          userData.role,
+          PERMISSIONS.USERS.CREATE,
+          userData.permissions,
+        ))
     : false;
 
   const fetchDashboardStats = useCallback(async (): Promise<void> => {

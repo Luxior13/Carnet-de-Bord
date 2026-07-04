@@ -23,6 +23,7 @@ import {
 import { env } from '$env';
 import type { ServerAuthResponseType, UserType } from '$types/auth.types';
 
+import { logger } from './logger';
 import { prisma } from './prisma';
 
 export const SESSION_COOKIE_NAME = 'session';
@@ -396,8 +397,16 @@ export const authenticateUser = async (
 
   // Password is invalid
   if (!isValid) {
-    const newFailedAttempts = user.failedLoginAttempts + 1;
-    const remainingAttempts = MAX_FAILED_ATTEMPTS - newFailedAttempts;
+    const updatedLoginState = await prisma.user.update({
+      data: { failedLoginAttempts: { increment: 1 } },
+      select: { failedLoginAttempts: true },
+      where: { id: user.id },
+    });
+    const newFailedAttempts = updatedLoginState.failedLoginAttempts;
+    const remainingAttempts = Math.max(
+      0,
+      MAX_FAILED_ATTEMPTS - newFailedAttempts,
+    );
 
     if (newFailedAttempts >= MAX_FAILED_ATTEMPTS) {
       // Lock the account
@@ -405,22 +414,27 @@ export const authenticateUser = async (
         Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000,
       );
       await prisma.user.update({
-        data: {
-          failedLoginAttempts: newFailedAttempts,
-          lockedUntil,
-        },
+        data: { lockedUntil },
         where: { id: user.id },
       });
 
-      // Log the account lock
-      await prisma.auditLog.create({
-        data: {
-          action: 'ACCOUNT_LOCKED',
-          category: 'AUTH',
-          description: `Compte verrouillé après ${MAX_FAILED_ATTEMPTS} tentatives échouées`,
-          userId: user.id,
-        },
-      });
+      // Log the account lock without hiding the authentication result if audit storage fails.
+      await prisma.auditLog
+        .create({
+          data: {
+            action: 'ACCOUNT_LOCKED',
+            category: 'AUTH',
+            description: `Compte verrouillé après ${MAX_FAILED_ATTEMPTS} tentatives échouées`,
+            userId: user.id,
+          },
+        })
+        .catch((error: unknown) => {
+          logger.error('Account lock audit error', {
+            action: 'ACCOUNT_LOCKED',
+            error,
+            userId: user.id,
+          });
+        });
 
       return {
         error: 'ACCOUNT_LOCKED',
@@ -429,12 +443,6 @@ export const authenticateUser = async (
         userId: user.id,
       };
     }
-
-    // Increment failed attempts
-    await prisma.user.update({
-      data: { failedLoginAttempts: newFailedAttempts },
-      where: { id: user.id },
-    });
 
     return {
       error: 'INVALID_CREDENTIALS',
@@ -660,14 +668,26 @@ export const createAuditLogWithHeaders = async (data: {
   targetUserId?: string | null;
   userId?: string | null;
 }): Promise<void> => {
-  const headersList = await headers();
+  try {
+    const headersList = await headers();
 
-  await createAuditLog({
-    ...data,
-    ipAddress:
-      headersList.get('x-forwarded-for') ||
-      headersList.get('x-real-ip') ||
-      null,
-    userAgent: headersList.get('user-agent') || null,
-  });
+    await createAuditLog({
+      ...data,
+      ipAddress:
+        headersList.get('x-forwarded-for') ||
+        headersList.get('x-real-ip') ||
+        null,
+      userAgent: headersList.get('user-agent') || null,
+    });
+  } catch (error) {
+    logger.error('Audit log error', {
+      action: data.action,
+      error,
+      metadata: {
+        category: data.category,
+        targetUserId: data.targetUserId ?? null,
+      },
+      userId: data.userId ?? undefined,
+    });
+  }
 };

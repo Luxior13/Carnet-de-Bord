@@ -144,27 +144,33 @@ export async function recordLoginAttempt(
 
     if (!windowExpired) {
       await prisma.rateLimit.update({
-        data: { count: entry.count + 1 },
+        data: { count: { increment: 1 } },
         where: { key: identifier },
       });
-    } else {
-      // Window expired, reset
-      await prisma.rateLimit.update({
-        data: {
-          blockedUntil: null,
-          count: 1,
-          firstAttempt: now,
-        },
-        where: { key: identifier },
-      });
+
+      return;
     }
-  } else {
-    await prisma.rateLimit.create({
+
+    // Window expired, reset
+    await prisma.rateLimit.update({
       data: {
+        blockedUntil: null,
         count: 1,
         firstAttempt: now,
-        key: identifier,
       },
+      where: { key: identifier },
     });
+
+    return;
   }
+
+  await prisma.rateLimit.upsert({
+    create: {
+      count: 1,
+      firstAttempt: now,
+      key: identifier,
+    },
+    update: { count: { increment: 1 } },
+    where: { key: identifier },
+  });
 }

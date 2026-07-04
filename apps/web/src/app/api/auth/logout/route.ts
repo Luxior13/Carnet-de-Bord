@@ -19,7 +19,9 @@ export async function POST(): Promise<
   NextResponse<ApiSuccessResponse<{ message: string }> | ApiErrorResponse>
 > {
   try {
-    const auth = await requireAuth();
+    const auth = await requireAuth(undefined, {
+      allowPasswordChangeRequired: true,
+    });
     if (!auth.success) return auth.response;
 
     // Get session token from cookie to invalidate

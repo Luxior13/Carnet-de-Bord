@@ -32,7 +32,12 @@ const LEGACY_LOGIN_EMAILS_STORAGE_KEY = 'team-control:login-emails';
 
 function LoginPage(): React.ReactNode {
   const router = useRouter();
-  const { isLoading: authLoading, login, userData } = useUser();
+  const {
+    error: authError,
+    isLoading: authLoading,
+    login,
+    userData,
+  } = useUser();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,6 +45,7 @@ function LoginPage(): React.ReactNode {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const displayedError = error ?? authError;
 
   useEffect(() => {
     if (userData && !authLoading) {
@@ -140,9 +146,9 @@ function LoginPage(): React.ReactNode {
         </CardHeader>
         <CardContent className="space-y-5">
           <form onSubmit={handleSubmit} className="space-y-5" autoComplete="on">
-            {error && (
+            {displayedError && (
               <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
-                {error}
+                {displayedError}
               </div>
             )}
             <div className="space-y-2">

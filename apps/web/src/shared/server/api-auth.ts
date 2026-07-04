@@ -22,6 +22,10 @@ type RequireAuthFailure = {
 
 type RequireAuthResult = RequireAuthSuccess | RequireAuthFailure;
 
+type RequireAuthOptions = {
+  allowPasswordChangeRequired?: boolean;
+};
+
 type RequirePermissionSuccess = {
   response?: never;
   success: true;
@@ -41,6 +45,7 @@ type RequirePermissionResult =
  */
 export async function requireAuth(
   allowedRoles?: UserRole[],
+  options: RequireAuthOptions = {},
 ): Promise<RequireAuthResult> {
   const { session, user } = await getAuthSession();
 
@@ -67,6 +72,23 @@ export async function requireAuth(
           error: {
             code: ErrorCode.FORBIDDEN,
             message: 'Accès refusé',
+          },
+          success: false,
+        },
+        { status: 403 },
+      ),
+      success: false,
+    };
+  }
+
+  if (user.mustChangePassword && !options.allowPasswordChangeRequired) {
+    return {
+      response: NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.PASSWORD_CHANGE_REQUIRED,
+            message:
+              'Vous devez changer votre mot de passe temporaire avant de continuer',
           },
           success: false,
         },

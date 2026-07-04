@@ -35,7 +35,9 @@ export async function GET(): Promise<
   NextResponse<ApiSuccessResponse<MeResponseData> | ApiErrorResponse>
 > {
   try {
-    const auth = await requireAuth();
+    const auth = await requireAuth(undefined, {
+      allowPasswordChangeRequired: true,
+    });
     if (!auth.success) return auth.response;
     const { session, user } = auth;
 
