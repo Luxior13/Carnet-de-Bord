@@ -169,6 +169,40 @@
     );
   }
 
+  .sidebar-scrollbar {
+    scrollbar-color: rgba(108, 146, 214, 0.42) transparent;
+    scrollbar-width: thin;
+  }
+
+  .sidebar-scrollbar::-webkit-scrollbar {
+    width: 0.625rem;
+  }
+
+  .sidebar-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .sidebar-scrollbar::-webkit-scrollbar-thumb {
+    border: 0.1875rem solid transparent;
+    border-radius: 999px;
+    background: rgba(108, 146, 214, 0.44);
+    background-clip: content-box;
+  }
+
+  .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(122, 167, 232, 0.68);
+    background-clip: content-box;
+  }
+
+  [data-sidebar='sidebar'][data-collapsible='icon'] .sidebar-scrollbar {
+    scrollbar-width: none;
+  }
+
+  [data-sidebar='sidebar'][data-collapsible='icon']
+    .sidebar-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   ::selection {
     @apply bg-primary text-primary-foreground;
   }

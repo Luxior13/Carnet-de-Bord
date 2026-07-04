@@ -384,7 +384,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               >
                 <Icon className="size-4" />
                 <span>{item.label}</span>
-                <ChevronRight className="ml-auto size-4 transition-transform duration-150 group-data-[collapsible=icon]/sidebar:hidden group-data-[state=open]/collapsible:rotate-90" />
+                <ChevronRight className="ml-auto size-4 shrink-0 transition-transform duration-150 group-data-[collapsible=icon]/sidebar:hidden group-data-[state=open]/collapsible:rotate-90" />
               </CollapsibleTrigger>
             </SidebarMenuButton>
             <CollapsibleContent>

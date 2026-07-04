@@ -5,7 +5,6 @@ import { PanelLeft } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '$ui/button';
-import { ScrollArea } from '$ui/scroll-area';
 import { Separator } from '$ui/separator';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '$ui/sheet';
 import { Skeleton } from '$ui/skeleton';
@@ -14,7 +13,7 @@ import { cn } from '$utils/css.utils';
 
 const SIDEBAR_STORAGE_KEY = 'sidebar_state';
 const SIDEBAR_ID = 'app-sidebar';
-const SIDEBAR_WIDTH = '16rem';
+const SIDEBAR_WIDTH = '17rem';
 const SIDEBAR_WIDTH_ICON = '3.5rem';
 const SIDEBAR_WIDTH_MOBILE = '18rem';
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
@@ -363,7 +362,7 @@ function SidebarFooter({
   );
 }
 
-type SidebarContentProps = React.ComponentProps<typeof ScrollArea> & {
+type SidebarContentProps = React.ComponentProps<'div'> & {
   scrollRestoreKey?: string;
   scrollStorageKey?: string;
 };
@@ -371,6 +370,7 @@ type SidebarContentProps = React.ComponentProps<typeof ScrollArea> & {
 function SidebarContent({
   children,
   className,
+  onScroll,
   scrollRestoreKey,
   scrollStorageKey,
   ...props
@@ -409,6 +409,8 @@ function SidebarContent({
     React.UIEventHandler<HTMLDivElement>
   >(
     (event) => {
+      onScroll?.(event);
+
       if (!storageKey) return;
 
       try {
@@ -420,22 +422,25 @@ function SidebarContent({
         // Ignore storage errors in constrained environments.
       }
     },
-    [storageKey],
+    [onScroll, storageKey],
   );
 
   return (
-    <ScrollArea
+    <div
+      {...props}
+      ref={viewportRef}
       data-sidebar="content"
       data-slot="sidebar-content"
-      className={cn('min-h-0 flex-1 overflow-hidden', className)}
-      onViewportScroll={handleViewportScroll}
-      scrollbarClassName="group-data-[collapsible=icon]/sidebar:hidden"
-      viewportClassName="flex h-full flex-col gap-2 p-3 group-data-[collapsible=icon]/sidebar:px-0"
-      viewportRef={viewportRef}
-      {...props}
+      className={cn(
+        'sidebar-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 group-data-[collapsible=icon]/sidebar:px-0',
+        className,
+      )}
+      onScroll={handleViewportScroll}
     >
-      {children}
-    </ScrollArea>
+      <div data-sidebar="content-inner" className="flex min-w-0 flex-col gap-2">
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -448,7 +453,7 @@ function SidebarGroup({
       data-sidebar="group"
       data-slot="sidebar-group"
       className={cn(
-        'relative flex w-full min-w-0 flex-col gap-1.5 py-1.5',
+        'relative flex w-full max-w-full min-w-0 flex-col gap-1.5 py-1.5',
         className,
       )}
       {...props}
@@ -499,7 +504,7 @@ function SidebarGroupContent({
     <div
       data-sidebar="group-content"
       data-slot="sidebar-group-content"
-      className={cn('w-full text-sm', className)}
+      className={cn('w-full max-w-full min-w-0 text-sm', className)}
       {...props}
     />
   );
@@ -513,7 +518,10 @@ function SidebarMenu({
     <ul
       data-sidebar="menu"
       data-slot="sidebar-menu"
-      className={cn('flex w-full min-w-0 flex-col gap-1.5', className)}
+      className={cn(
+        'flex w-full max-w-full min-w-0 flex-col gap-1.5',
+        className,
+      )}
       {...props}
     />
   );
@@ -528,7 +536,7 @@ function SidebarMenuItem({
       data-sidebar="menu-item"
       data-slot="sidebar-menu-item"
       className={cn(
-        'group/menu-item relative group-data-[collapsible=icon]/sidebar:flex group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:pl-2.5',
+        'group/menu-item relative w-full max-w-full min-w-0 group-data-[collapsible=icon]/sidebar:flex group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:pl-2.5',
         className,
       )}
       {...props}
@@ -561,7 +569,7 @@ function SidebarMenuButton({
       data-size={size}
       data-slot="sidebar-menu-button"
       className={cn(
-        'hover:bg-sidebar-accent/55 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/65 flex w-full items-center gap-2.5 overflow-hidden rounded-md border border-transparent px-3 text-left text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
+        'hover:bg-sidebar-accent/55 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/65 flex w-full max-w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-md border border-transparent px-3 text-left text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
         'data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring data-[active=true]:border-sidebar-ring/45 data-[active=true]:bg-[linear-gradient(180deg,rgba(95,132,200,0.16),rgba(34,49,74,0.92))] data-[active=true]:font-semibold data-[active=true]:shadow-[inset_0_0_0_1px_rgba(108,146,214,0.34)]',
         size === 'sm' && 'h-9 text-xs',
         size === 'default' && 'h-10',
@@ -654,7 +662,7 @@ function SidebarMenuSub({
       data-sidebar="menu-sub"
       data-slot="sidebar-menu-sub"
       className={cn(
-        'border-sidebar-border/80 ml-3 flex min-w-0 translate-x-px flex-col gap-1 border-l py-1 pl-2 group-data-[collapsible=icon]/sidebar:hidden',
+        'border-sidebar-border/80 ml-3 flex min-w-0 translate-x-px flex-col gap-1 border-l py-1 pr-1 pl-2 group-data-[collapsible=icon]/sidebar:hidden',
         className,
       )}
       {...props}
@@ -693,7 +701,7 @@ function SidebarMenuSubButton({
       data-sidebar="menu-sub-button"
       data-slot="sidebar-menu-sub-button"
       className={cn(
-        'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/60 flex h-8 min-w-0 items-center gap-2 overflow-hidden rounded-md px-2.5 text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+        'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/60 flex h-8 w-full min-w-0 items-center gap-2 overflow-hidden rounded-md border border-transparent px-2.5 text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
         'data-[active=true]:bg-sidebar-accent/65 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring data-[active=true]:border-sidebar-ring/30 data-[active=true]:border data-[active=true]:font-semibold data-[active=true]:shadow-[inset_0_0_0_1px_rgba(108,146,214,0.22)]',
         className,
       )}
