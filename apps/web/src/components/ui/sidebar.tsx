@@ -5,6 +5,7 @@ import { PanelLeft } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '$ui/button';
+import { ScrollArea } from '$ui/scroll-area';
 import { Separator } from '$ui/separator';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '$ui/sheet';
 import { Skeleton } from '$ui/skeleton';
@@ -17,6 +18,7 @@ const SIDEBAR_WIDTH = '16rem';
 const SIDEBAR_WIDTH_ICON = '3.5rem';
 const SIDEBAR_WIDTH_MOBILE = '18rem';
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
+const SIDEBAR_SCROLL_STORAGE_PREFIX = 'sidebar_scroll:';
 const MOBILE_BREAKPOINT = 768;
 
 type SidebarContextProps = {
@@ -207,7 +209,7 @@ function Sidebar({
         data-sidebar="sidebar"
         id={id ?? SIDEBAR_ID}
         className={cn(
-          'bg-sidebar text-sidebar-foreground flex h-full w-[var(--sidebar-width)] flex-col',
+          'sidebar-pattern bg-sidebar text-sidebar-foreground relative flex h-full w-[var(--sidebar-width)] flex-col overflow-hidden',
           className,
         )}
         {...props}
@@ -225,7 +227,9 @@ function Sidebar({
           data-slot="sidebar"
           id={id ?? SIDEBAR_ID}
           side={side}
-          className="bg-sidebar text-sidebar-foreground w-[var(--sidebar-width-mobile)] p-0 [&>button]:hidden"
+          className={cn(
+            'sidebar-pattern bg-sidebar text-sidebar-foreground w-[var(--sidebar-width-mobile)] overflow-hidden p-0 [&>button]:hidden',
+          )}
         >
           <SheetTitle className="sr-only">Menu</SheetTitle>
           <SheetDescription className="sr-only">
@@ -246,7 +250,7 @@ function Sidebar({
       data-variant={variant}
       id={id ?? SIDEBAR_ID}
       className={cn(
-        'group/sidebar bg-sidebar text-sidebar-foreground relative hidden h-full shrink-0 flex-col overflow-hidden border-r transition-[width] duration-200 ease-linear md:flex',
+        'sidebar-pattern group/sidebar bg-sidebar text-sidebar-foreground relative hidden h-full shrink-0 flex-col overflow-hidden border-r transition-[width] duration-200 ease-linear md:flex',
         state === 'collapsed' && collapsible === 'icon'
           ? 'w-[var(--sidebar-width-icon)]'
           : 'w-[var(--sidebar-width)]',
@@ -359,20 +363,79 @@ function SidebarFooter({
   );
 }
 
+type SidebarContentProps = React.ComponentProps<typeof ScrollArea> & {
+  scrollRestoreKey?: string;
+  scrollStorageKey?: string;
+};
+
 function SidebarContent({
+  children,
   className,
+  scrollRestoreKey,
+  scrollStorageKey,
   ...props
-}: React.ComponentProps<'div'>): React.ReactNode {
+}: SidebarContentProps): React.ReactNode {
+  const viewportRef = React.useRef<HTMLDivElement | null>(null);
+  const storageKey = scrollStorageKey
+    ? `${SIDEBAR_SCROLL_STORAGE_PREFIX}${scrollStorageKey}`
+    : null;
+
+  React.useEffect((): (() => void) | undefined => {
+    const viewport = viewportRef.current;
+
+    if (!viewport || !storageKey) return undefined;
+
+    let scrollTop = 0;
+
+    try {
+      scrollTop = Number(window.sessionStorage.getItem(storageKey) ?? 0);
+    } catch {
+      scrollTop = 0;
+    }
+
+    const restoreScroll = (): void => {
+      viewport.scrollTop = Number.isFinite(scrollTop) ? scrollTop : 0;
+    };
+    const frameId = window.requestAnimationFrame(restoreScroll);
+
+    restoreScroll();
+
+    return (): void => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [scrollRestoreKey, storageKey]);
+
+  const handleViewportScroll = React.useCallback<
+    React.UIEventHandler<HTMLDivElement>
+  >(
+    (event) => {
+      if (!storageKey) return;
+
+      try {
+        window.sessionStorage.setItem(
+          storageKey,
+          String(event.currentTarget.scrollTop),
+        );
+      } catch {
+        // Ignore storage errors in constrained environments.
+      }
+    },
+    [storageKey],
+  );
+
   return (
-    <div
+    <ScrollArea
       data-sidebar="content"
       data-slot="sidebar-content"
-      className={cn(
-        'flex min-h-0 flex-1 flex-col gap-2 overflow-x-hidden overflow-y-auto p-3 group-data-[collapsible=icon]/sidebar:px-0',
-        className,
-      )}
+      className={cn('min-h-0 flex-1 overflow-hidden', className)}
+      onViewportScroll={handleViewportScroll}
+      scrollbarClassName="group-data-[collapsible=icon]/sidebar:hidden"
+      viewportClassName="flex h-full flex-col gap-2 p-3 group-data-[collapsible=icon]/sidebar:px-0"
+      viewportRef={viewportRef}
       {...props}
-    />
+    >
+      {children}
+    </ScrollArea>
   );
 }
 
@@ -385,7 +448,7 @@ function SidebarGroup({
       data-sidebar="group"
       data-slot="sidebar-group"
       className={cn(
-        'relative flex w-full min-w-0 flex-col gap-1.5 px-3 py-2.5 group-data-[collapsible=icon]/sidebar:px-0',
+        'relative flex w-full min-w-0 flex-col gap-1.5 py-1.5',
         className,
       )}
       {...props}
@@ -402,7 +465,7 @@ function SidebarGroupLabel({
       data-sidebar="group-label"
       data-slot="sidebar-group-label"
       className={cn(
-        'text-sidebar-foreground/48 flex h-7 shrink-0 items-center overflow-hidden rounded-lg px-2.5 text-[11px] font-semibold tracking-[0.14em] uppercase transition-opacity duration-150 group-data-[collapsible=icon]/sidebar:h-0 group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150',
+        'text-sidebar-foreground/58 flex h-6 shrink-0 items-center overflow-hidden rounded-lg px-2 text-[11px] font-semibold tracking-[0.14em] uppercase transition-opacity duration-150 group-data-[collapsible=icon]/sidebar:h-0 group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150',
         className,
       )}
       {...props}
@@ -591,7 +654,7 @@ function SidebarMenuSub({
       data-sidebar="menu-sub"
       data-slot="sidebar-menu-sub"
       className={cn(
-        'border-sidebar-border/80 mx-3 flex min-w-0 translate-x-px flex-col gap-1.5 border-l px-2.5 py-1 group-data-[collapsible=icon]/sidebar:hidden',
+        'border-sidebar-border/80 ml-3 flex min-w-0 translate-x-px flex-col gap-1 border-l py-1 pl-2 group-data-[collapsible=icon]/sidebar:hidden',
         className,
       )}
       {...props}

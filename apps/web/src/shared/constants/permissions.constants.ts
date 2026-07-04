@@ -4,6 +4,12 @@ export const PERMISSIONS = {
   DASHBOARD: {
     VIEW: 'dashboard:view',
   },
+  TREASURY: {
+    EDIT: 'treasury:edit',
+    EXPORT: 'treasury:export',
+    VALIDATE: 'treasury:validate',
+    VIEW: 'treasury:view',
+  },
   USERS: {
     CREATE: 'users:create',
     DELETE: 'users:delete',
@@ -19,6 +25,7 @@ export const ROLE_TEMPLATES = {
     label: 'Admin complet',
     permissions: [
       PERMISSIONS.DASHBOARD.VIEW,
+      ...Object.values(PERMISSIONS.TREASURY),
       ...Object.values(PERMISSIONS.USERS),
     ],
   },
@@ -106,6 +113,35 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       },
     ],
   },
+  {
+    color: 'green',
+    description: 'Acces financier strict',
+    icon: 'Wallet',
+    key: 'treasury',
+    label: 'Tresorerie',
+    permissions: [
+      {
+        description: 'Consulter les tableaux, operations et bilans financiers',
+        key: PERMISSIONS.TREASURY.VIEW,
+        label: 'Voir la tresorerie',
+      },
+      {
+        description: 'Modifier les donnees et operations financieres',
+        key: PERMISSIONS.TREASURY.EDIT,
+        label: 'Modifier la tresorerie',
+      },
+      {
+        description: 'Exporter les donnees et documents financiers',
+        key: PERMISSIONS.TREASURY.EXPORT,
+        label: 'Exporter la tresorerie',
+      },
+      {
+        description: 'Valider les actions financieres sensibles',
+        key: PERMISSIONS.TREASURY.VALIDATE,
+        label: 'Valider la tresorerie',
+      },
+    ],
+  },
 ];
 
 const ALL_PERMISSION_KEYS = PERMISSION_CATEGORIES.flatMap((category) =>
@@ -126,7 +162,11 @@ export const getUnknownPermissionKeys = (
 };
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
-  ADMIN: [PERMISSIONS.DASHBOARD.VIEW, ...Object.values(PERMISSIONS.USERS)],
+  ADMIN: [
+    PERMISSIONS.DASHBOARD.VIEW,
+    ...Object.values(PERMISSIONS.TREASURY),
+    ...Object.values(PERMISSIONS.USERS),
+  ],
   USER: [PERMISSIONS.DASHBOARD.VIEW],
 };
 

@@ -13,6 +13,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   Users,
+  Wallet,
   X,
 } from 'lucide-react';
 import React, { type FC, memo, useCallback, useMemo, useState } from 'react';
@@ -48,6 +49,7 @@ import { cn } from '$utils/css.utils';
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
   Users,
+  Wallet,
 };
 
 // Color config type
@@ -72,6 +74,11 @@ const colorClasses: Record<string, ColorConfig> = {
     ring: 'ring-amber-500/20',
   },
   blue: defaultColorConfig,
+  green: {
+    bg: 'bg-[#5fbd7b]/10',
+    icon: 'text-[#97e6ad]',
+    ring: 'ring-[#5fbd7b]/20',
+  },
   violet: {
     bg: 'bg-primary/10',
     icon: 'text-primary',
@@ -110,7 +117,8 @@ const getPermissionTone = (permissionKey: string): PermissionTone => {
   if (permissionKey.includes(':delete')) return 'critical';
   if (
     permissionKey.includes('reset_password') ||
-    permissionKey.includes('edit_permissions')
+    permissionKey.includes('edit_permissions') ||
+    (permissionKey.startsWith('treasury:') && permissionKey !== 'treasury:view')
   ) {
     return 'sensitive';
   }

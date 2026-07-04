@@ -1,5 +1,6 @@
 'use client';
 
+import { Search } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React, { type FC, useMemo } from 'react';
@@ -40,6 +41,13 @@ export const Header: FC<HeaderProps> = ({ breadcrumbs = [], title }) => {
           </h1>
         )}
       </div>
+      <Link
+        href="/recherche"
+        className="border-sidebar-border/70 bg-popover/70 text-muted-foreground hover:border-sidebar-ring/35 hover:text-foreground ml-auto flex h-9 min-w-9 shrink-0 items-center justify-center gap-2 rounded-md border px-2.5 text-sm transition-colors md:min-w-64 md:justify-start"
+      >
+        <Search className="size-4" />
+        <span className="hidden md:inline">Recherche globale</span>
+      </Link>
       {headerNavItems.length > 0 && (
         <nav className="hidden min-w-0 flex-1 items-center justify-center md:flex">
           <div className="border-sidebar-border/70 flex max-w-full items-center gap-1 rounded-lg border bg-[#1f293b] p-1">

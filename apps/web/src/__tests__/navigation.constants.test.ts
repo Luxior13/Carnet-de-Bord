@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  getActiveNavigationSpace,
   getDesktopSidebarSections,
   getHeaderNavItems,
+  getVisibleNavigationSpaces,
   getVisibleNavSections,
   NAV_SECTIONS,
   type NavItem,
@@ -46,7 +48,32 @@ describe('navigation visibility', () => {
   it('shows default user navigation to authenticated users', () => {
     const hrefs = getVisibleHrefs();
 
-    expect(hrefs).toEqual(['/']);
+    expect(hrefs).toContain('/tableau-de-bord');
+    expect(hrefs).toContain('/vie-interne/membres');
+    expect(hrefs).not.toContain('/tresorerie/operations');
+    expect(hrefs).not.toContain('/administration/utilisateurs');
+  });
+
+  it('shows treasury navigation only to accounts with treasury permissions', () => {
+    const hrefs = getVisibleHrefs({
+      [PERMISSIONS.TREASURY.VIEW]: true,
+    });
+
+    expect(hrefs).toContain('/tresorerie');
+    expect(hrefs).toContain('/tresorerie/operations');
+    expect(hrefs).not.toContain('/tresorerie/exports-finance');
+    expect(hrefs).not.toContain('/tresorerie/validations-finance');
+  });
+
+  it('shows sensitive treasury actions to matching finance permissions', () => {
+    const hrefs = getVisibleHrefs({
+      [PERMISSIONS.TREASURY.EXPORT]: true,
+      [PERMISSIONS.TREASURY.VALIDATE]: true,
+    });
+
+    expect(hrefs).toContain('/tresorerie/exports-finance');
+    expect(hrefs).toContain('/tresorerie/validations-finance');
+    expect(hrefs).not.toContain('/tresorerie/operations');
   });
 
   it('hides the dashboard when the dashboard permission is explicitly revoked', () => {
@@ -62,23 +89,39 @@ describe('navigation visibility', () => {
       [PERMISSIONS.USERS.VIEW]: true,
     });
 
-    expect(hrefs).toEqual([
-      '/',
-      '/administration',
-      '/administration/utilisateurs',
-    ]);
+    expect(hrefs).toContain('/tableau-de-bord');
+    expect(hrefs).toContain('/systeme');
+    expect(hrefs).toContain('/administration/utilisateurs');
   });
 
-  it('keeps the desktop header empty and pages in the desktop sidebar', () => {
+  it('keeps the desktop header empty and shows the active space in the desktop sidebar', () => {
     const user = buildUser();
 
     const headerHrefs = getHeaderNavItems(user).map((item) => item.href);
-    const sidebarHrefs = getDesktopSidebarSections(user).flatMap((section) =>
-      flattenHrefs(section.items),
-    );
+    const sidebarHrefs = getDesktopSidebarSections(
+      user,
+      '/vie-interne/membres',
+    ).flatMap((section) => flattenHrefs(section.items));
 
     expect(headerHrefs).toEqual([]);
-    expect(sidebarHrefs).toEqual(['/']);
+    expect(sidebarHrefs).toContain('/vie-interne');
+    expect(sidebarHrefs).toContain('/vie-interne/membres');
+    expect(sidebarHrefs).not.toContain('/tresorerie/operations');
+  });
+
+  it('detects the active navigation space from the current path', () => {
+    const user = buildUser({
+      [PERMISSIONS.TREASURY.VIEW]: true,
+      [PERMISSIONS.USERS.VIEW]: true,
+    });
+    const spaces = getVisibleNavigationSpaces(user);
+
+    expect(getActiveNavigationSpace('/tresorerie/operations', spaces).id).toBe(
+      'treasury',
+    );
+    expect(
+      getActiveNavigationSpace('/administration/utilisateurs', spaces).id,
+    ).toBe('system');
   });
 
   it('shows the full navigation to protected users', () => {

@@ -44,7 +44,7 @@ describe('hasPermission', () => {
 });
 
 describe('permission catalogue', () => {
-  it('contains only dashboard and user permissions', () => {
+  it('contains dashboard, user and treasury permissions', () => {
     expect(getAllPermissionKeys()).toEqual([
       'dashboard:view',
       'users:view',
@@ -53,6 +53,10 @@ describe('permission catalogue', () => {
       'users:delete',
       'users:reset_password',
       'users:edit_permissions',
+      'treasury:view',
+      'treasury:edit',
+      'treasury:export',
+      'treasury:validate',
     ]);
   });
 
@@ -79,6 +83,10 @@ describe('permission catalogue', () => {
   it('defines neutral role presets', () => {
     expect(ROLE_PERMISSIONS.ADMIN).toEqual([
       PERMISSIONS.DASHBOARD.VIEW,
+      PERMISSIONS.TREASURY.EDIT,
+      PERMISSIONS.TREASURY.EXPORT,
+      PERMISSIONS.TREASURY.VALIDATE,
+      PERMISSIONS.TREASURY.VIEW,
       PERMISSIONS.USERS.CREATE,
       PERMISSIONS.USERS.DELETE,
       PERMISSIONS.USERS.EDIT_PERMISSIONS,

@@ -75,3 +75,90 @@ Actions possibles depuis la fiche membre :
 ## A garder en tete
 
 L'objectif est d'avoir un site clair pour l'UX : peu de grandes pages dans la sidebar, mais des fiches riches qui regroupent toutes les informations liees a un sponsor, un membre, un adherent ou une autre entite importante.
+
+## Organisation cible par poles
+
+Le site prive doit etre organise avec un selecteur d'espace en haut de la sidebar.
+Chaque pole affiche ensuite sa propre navigation pour eviter une sidebar geante.
+
+### Tableau de bord
+
+- Vue d'ensemble.
+- Mes taches.
+- Mes rappels.
+- Prochaines reunions.
+- Documents a accepter.
+- Alertes importantes.
+
+### Vie interne
+
+- Actualite interne.
+- Membres.
+- Adherents.
+- Calendrier interne.
+- Gestion des reunions.
+- Debriefs.
+- Recrutement et tryouts.
+- Onboarding et depart.
+- Notifications et rappels.
+
+### Bureau et juridique
+
+- Sponsors et partenaires.
+- Documents officiels.
+- Chartes.
+- Contrats.
+- Acceptation des chartes.
+- Incidents et sanctions.
+- Inventaire et acces.
+- Decisions du bureau.
+
+### Tresorerie
+
+- Tableau de bord financier.
+- Comptes.
+- Budget.
+- Operations.
+- Recettes.
+- Depenses.
+- Cotisations adherents.
+- Sponsoring financier.
+- Factures et justificatifs.
+- Remboursements.
+- Bilans.
+- Exports finance.
+- Validations finance.
+- Journal financier.
+- Archives finance.
+
+### Systeme
+
+- Utilisateurs et permissions.
+- Parametres.
+- Validations globales.
+- Exports et sauvegardes.
+- Archives globales.
+- Journal d'activite.
+- Modeles de documents.
+- Modeles de notifications.
+- Automatisations.
+
+### Sport / Team Control
+
+Ce pole est prevu plus tard comme liaison avec le site public.
+Il ne doit pas dupliquer les donnees deja gerees cote public.
+
+- Jeux.
+- Rosters.
+- Membres esport.
+- Scrims.
+- Tournois et matchs.
+- Calendrier esport.
+- Recrutement et tryouts.
+- Debriefs.
+- Performance.
+
+## Recherche globale
+
+La recherche globale ne doit pas etre dans la sidebar.
+Elle doit rester disponible dans le header et respecter les permissions de chaque pole.
