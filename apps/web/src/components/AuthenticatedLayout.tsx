@@ -79,7 +79,7 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
       <SidebarInset className="relative isolate h-full bg-transparent">
         <div
           aria-hidden="true"
-          className="site-background-column site-background-column--local"
+          className="site-background-column site-background-column--local private-background-column"
         />
         <Header breadcrumbs={breadcrumbs} />
         <main

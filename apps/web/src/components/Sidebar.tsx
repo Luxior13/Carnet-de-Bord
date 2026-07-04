@@ -75,7 +75,6 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarRail,
   useSidebar,
 } from '$ui/sidebar';
 import { cn } from '$utils/css.utils';
@@ -562,7 +561,6 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
           </DropdownMenu>
         )}
       </SidebarFooter>
-      <SidebarRail />
     </SidebarRoot>
   );
 };

@@ -3,13 +3,35 @@ import React, { type ComponentProps, type FC, type ReactNode } from 'react';
 import { Card, CardContent } from '$ui/card';
 import { cn } from '$utils/css.utils';
 
-type PageShellProps = ComponentProps<'div'>;
+type PageShellWidth = 'default' | 'full' | 'narrow' | 'wide';
 
-const PageShell: FC<PageShellProps> = ({ className, ...props }) => {
+type PageShellProps = ComponentProps<'div'> & {
+  width?: PageShellWidth;
+};
+
+function getPageShellWidthClass(width: PageShellWidth): string {
+  switch (width) {
+    case 'default':
+      return 'max-w-[var(--private-content-width)]';
+    case 'full':
+      return 'max-w-none';
+    case 'narrow':
+      return 'max-w-5xl';
+    case 'wide':
+      return 'max-w-[var(--private-content-width-wide)]';
+  }
+}
+
+const PageShell: FC<PageShellProps> = ({
+  className,
+  width = 'default',
+  ...props
+}) => {
   return (
     <div
       className={cn(
-        'relative z-10 mx-auto w-full max-w-[var(--public-column-width)] px-4 py-6 sm:px-6 lg:px-8',
+        'relative z-10 mx-auto w-full px-[var(--private-content-padding)] py-6 sm:py-7 lg:py-8',
+        getPageShellWidthClass(width),
         className,
       )}
       {...props}

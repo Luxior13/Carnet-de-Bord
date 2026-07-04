@@ -11,12 +11,10 @@ import { Skeleton } from '$ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
-const SIDEBAR_STORAGE_KEY = 'sidebar_state';
 const SIDEBAR_ID = 'app-sidebar';
 const SIDEBAR_WIDTH = '17rem';
 const SIDEBAR_WIDTH_ICON = '3.5rem';
 const SIDEBAR_WIDTH_MOBILE = '18rem';
-const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
 const SIDEBAR_SCROLL_STORAGE_PREFIX = 'sidebar_scroll:';
 const MOBILE_BREAKPOINT = 768;
 
@@ -31,21 +29,6 @@ type SidebarContextProps = {
 };
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
-
-function getSidebarStoredValue(): boolean | null {
-  if (typeof window === 'undefined') return null;
-
-  try {
-    const storedValue = window.localStorage.getItem(SIDEBAR_STORAGE_KEY);
-
-    if (storedValue === 'true') return true;
-    if (storedValue === 'false') return false;
-  } catch {
-    return null;
-  }
-
-  return null;
-}
 
 function useIsMobile(): boolean {
   const [isMobile, setIsMobile] = React.useState(false);
@@ -79,85 +62,43 @@ function useSidebar(): SidebarContextProps {
 }
 
 type SidebarProviderProps = React.ComponentProps<'div'> & {
-  defaultOpen?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  open?: boolean;
+  defaultOpen?: never;
+  onOpenChange?: never;
+  open?: never;
 };
 
 function SidebarProvider({
   children,
   className,
-  defaultOpen = true,
-  onOpenChange,
-  open: openProp,
   style,
   ...props
 }: SidebarProviderProps): React.ReactNode {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
-  const [_open, _setOpen] = React.useState(
-    () => getSidebarStoredValue() ?? defaultOpen,
-  );
-  const open = openProp ?? _open;
 
   const setOpen = React.useCallback<
     React.Dispatch<React.SetStateAction<boolean>>
-  >(
-    (value) => {
-      const openState = value instanceof Function ? value(open) : value;
-
-      if (onOpenChange) {
-        onOpenChange(openState);
-      } else {
-        _setOpen(openState);
-      }
-
-      try {
-        window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(openState));
-      } catch {
-        // Ignore storage errors in constrained environments.
-      }
-    },
-    [onOpenChange, open],
-  );
+  >(() => undefined, []);
 
   const toggleSidebar = React.useCallback((): void => {
     if (isMobile) {
       setOpenMobile((value) => !value);
-    } else {
-      setOpen((value) => !value);
     }
-  }, [isMobile, setOpen]);
+  }, [isMobile]);
 
-  React.useEffect((): (() => void) => {
-    const handleKeyDown = (event: KeyboardEvent): void => {
-      if (
-        event.key.toLowerCase() === SIDEBAR_KEYBOARD_SHORTCUT &&
-        (event.metaKey || event.ctrlKey)
-      ) {
-        event.preventDefault();
-        toggleSidebar();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return (): void => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleSidebar]);
-
-  const state = open ? 'expanded' : 'collapsed';
+  const state = 'expanded';
 
   const contextValue = React.useMemo<SidebarContextProps>(
     (): SidebarContextProps => ({
       isMobile,
-      open,
+      open: true,
       openMobile,
       setOpen,
       setOpenMobile,
       state,
       toggleSidebar,
     }),
-    [isMobile, open, openMobile, setOpen, state, toggleSidebar],
+    [isMobile, openMobile, setOpen, toggleSidebar],
   );
 
   return (
@@ -280,7 +221,7 @@ function SidebarTrigger({
       type="button"
       variant="ghost"
       size="icon"
-      className={cn('size-9', className)}
+      className={cn('size-9 md:hidden', className)}
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
@@ -290,31 +231,6 @@ function SidebarTrigger({
       <PanelLeft className="size-4" />
       <span className="sr-only">Basculer la barre latérale</span>
     </Button>
-  );
-}
-
-function SidebarRail({
-  className,
-  ...props
-}: React.ComponentProps<'button'>): React.ReactNode {
-  const { open, toggleSidebar } = useSidebar();
-
-  return (
-    <button
-      aria-controls={SIDEBAR_ID}
-      aria-expanded={open}
-      data-sidebar="rail"
-      data-slot="sidebar-rail"
-      type="button"
-      aria-label="Basculer la barre latérale"
-      tabIndex={-1}
-      onClick={toggleSidebar}
-      className={cn(
-        'hover:after:bg-sidebar-ring/70 after:bg-sidebar-border/80 absolute inset-y-0 right-0 hidden w-3 translate-x-1/2 cursor-ew-resize transition-all after:absolute after:inset-y-0 after:left-1/2 after:w-px md:block',
-        className,
-      )}
-      {...props}
-    />
   );
 }
 
@@ -744,7 +660,6 @@ export {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarProvider,
-  SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
