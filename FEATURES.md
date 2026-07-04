@@ -6,6 +6,7 @@ Chaque ligne pourra ensuite avoir son propre fichier detaille.
 ## Organisation globale
 
 - [Organisation UX et relations](features/organisation-ux.md) - Regle generale pour lier les donnees entre modules sans les dupliquer.
+- [Documentation des pages](features/pages/README.md) - Detail page par page avec contenu attendu, actions, donnees et liaisons entre modules.
 - [Raisons des autres features](features/tri-autres-features.md) - Aide pour decider quelles features garder, fusionner ou repousser.
 
 ## Deja existant
