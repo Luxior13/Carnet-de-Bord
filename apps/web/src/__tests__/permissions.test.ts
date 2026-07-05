@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildPermissionOverrides,
   getAllPermissionKeys,
   getEffectivePermissions,
+  getRoleBasePermissions,
   getUnknownPermissionKeys,
   hasPermission,
   isKnownPermissionKey,
@@ -40,6 +42,42 @@ describe('hasPermission', () => {
     expect(hasPermission('ADMIN', 'users:ghost', { 'users:ghost': true })).toBe(
       false,
     );
+  });
+
+  it('exposes role base permissions for default access states', () => {
+    const userRoleBasePermissions = getRoleBasePermissions('USER');
+
+    expect(userRoleBasePermissions[PERMISSIONS.DASHBOARD.VIEW]).toBe(true);
+    expect(userRoleBasePermissions[PERMISSIONS.USERS.VIEW]).toBe(false);
+  });
+
+  it('builds compact overrides instead of storing default values', () => {
+    expect(
+      buildPermissionOverrides('USER', [
+        PERMISSIONS.DASHBOARD.VIEW,
+        PERMISSIONS.USERS.VIEW,
+      ]),
+    ).toEqual({
+      [PERMISSIONS.USERS.VIEW]: true,
+    });
+    expect(
+      buildPermissionOverrides('USER', [PERMISSIONS.DASHBOARD.VIEW]),
+    ).toBeNull();
+  });
+
+  it('requires linked view permissions before granting secondary actions', () => {
+    expect(
+      hasPermission('USER', PERMISSIONS.USERS.UPDATE, {
+        [PERMISSIONS.USERS.UPDATE]: true,
+        [PERMISSIONS.USERS.VIEW]: false,
+      }),
+    ).toBe(false);
+    expect(
+      hasPermission('USER', PERMISSIONS.USERS.UPDATE, {
+        [PERMISSIONS.USERS.UPDATE]: true,
+        [PERMISSIONS.USERS.VIEW]: true,
+      }),
+    ).toBe(true);
   });
 });
 

@@ -42,10 +42,26 @@ export const ROLE_TEMPLATES = {
   },
 } as const;
 
+export type PermissionAction =
+  | 'create'
+  | 'delete'
+  | 'export'
+  | 'manage'
+  | 'reset'
+  | 'update'
+  | 'validate'
+  | 'view';
+
+export type PermissionRisk = 'critical' | 'default' | 'sensitive';
+
 export type PermissionItem = {
+  action: PermissionAction;
+  dependencies?: string[];
   description: string;
   key: string;
   label: string;
+  module: string;
+  risk: PermissionRisk;
 };
 
 export type PermissionCategory = {
@@ -62,54 +78,80 @@ export type PermissionsData = Record<string, boolean>;
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   {
     color: 'blue',
-    description: 'Accès au tableau de bord',
+    description: 'Acces au tableau de bord',
     icon: 'LayoutDashboard',
     key: 'dashboard',
     label: 'Tableau de bord',
     permissions: [
       {
-        description: 'Accéder au tableau de bord et voir les statistiques',
+        action: 'view',
+        description: 'Acceder au tableau de bord et voir les statistiques',
         key: PERMISSIONS.DASHBOARD.VIEW,
         label: 'Voir le tableau de bord',
+        module: "Vue d'ensemble",
+        risk: 'default',
       },
     ],
   },
   {
     color: 'violet',
-    description: 'Gestion des utilisateurs du système',
+    description: 'Gestion des utilisateurs du systeme',
     icon: 'Users',
     key: 'users',
     label: 'Utilisateurs',
     permissions: [
       {
+        action: 'view',
         description: 'Consulter la liste des utilisateurs',
         key: PERMISSIONS.USERS.VIEW,
         label: 'Voir les utilisateurs',
+        module: 'Comptes',
+        risk: 'default',
       },
       {
-        description: 'Créer de nouveaux comptes utilisateur',
+        action: 'create',
+        dependencies: [PERMISSIONS.USERS.VIEW],
+        description: 'Creer de nouveaux comptes utilisateur',
         key: PERMISSIONS.USERS.CREATE,
-        label: 'Créer des utilisateurs',
+        label: 'Creer des utilisateurs',
+        module: 'Comptes',
+        risk: 'sensitive',
       },
       {
+        action: 'update',
+        dependencies: [PERMISSIONS.USERS.VIEW],
         description: 'Modifier les informations des utilisateurs',
         key: PERMISSIONS.USERS.UPDATE,
         label: 'Modifier les utilisateurs',
+        module: 'Comptes',
+        risk: 'sensitive',
       },
       {
+        action: 'delete',
+        dependencies: [PERMISSIONS.USERS.VIEW],
         description: 'Supprimer des comptes utilisateur',
         key: PERMISSIONS.USERS.DELETE,
         label: 'Supprimer des utilisateurs',
+        module: 'Comptes',
+        risk: 'critical',
       },
       {
-        description: 'Réinitialiser les mots de passe',
+        action: 'reset',
+        dependencies: [PERMISSIONS.USERS.VIEW],
+        description: 'Reinitialiser les mots de passe',
         key: PERMISSIONS.USERS.RESET_PASSWORD,
-        label: 'Réinitialiser les mots de passe',
+        label: 'Reinitialiser les mots de passe',
+        module: 'Securite',
+        risk: 'critical',
       },
       {
+        action: 'manage',
+        dependencies: [PERMISSIONS.USERS.VIEW],
         description: 'Modifier les permissions des utilisateurs',
         key: PERMISSIONS.USERS.EDIT_PERMISSIONS,
-        label: 'Gérer les permissions',
+        label: 'Gerer les permissions',
+        module: 'Acces',
+        risk: 'critical',
       },
     ],
   },
@@ -121,24 +163,39 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
     label: 'Tresorerie',
     permissions: [
       {
+        action: 'view',
         description: 'Consulter les tableaux, operations et bilans financiers',
         key: PERMISSIONS.TREASURY.VIEW,
         label: 'Voir la tresorerie',
+        module: 'Finance',
+        risk: 'sensitive',
       },
       {
+        action: 'update',
+        dependencies: [PERMISSIONS.TREASURY.VIEW],
         description: 'Modifier les donnees et operations financieres',
         key: PERMISSIONS.TREASURY.EDIT,
         label: 'Modifier la tresorerie',
+        module: 'Finance',
+        risk: 'critical',
       },
       {
+        action: 'export',
+        dependencies: [PERMISSIONS.TREASURY.VIEW],
         description: 'Exporter les donnees et documents financiers',
         key: PERMISSIONS.TREASURY.EXPORT,
         label: 'Exporter la tresorerie',
+        module: 'Exports',
+        risk: 'sensitive',
       },
       {
+        action: 'validate',
+        dependencies: [PERMISSIONS.TREASURY.VIEW],
         description: 'Valider les actions financieres sensibles',
         key: PERMISSIONS.TREASURY.VALIDATE,
         label: 'Valider la tresorerie',
+        module: 'Validations',
+        risk: 'critical',
       },
     ],
   },
@@ -149,6 +206,11 @@ const ALL_PERMISSION_KEYS = PERMISSION_CATEGORIES.flatMap((category) =>
 );
 
 const ALL_PERMISSION_KEYS_SET = new Set<string>(ALL_PERMISSION_KEYS);
+const PERMISSION_ITEM_MAP = new Map<string, PermissionItem>(
+  PERMISSION_CATEGORIES.flatMap((category) =>
+    category.permissions.map((permission) => [permission.key, permission]),
+  ),
+);
 
 export const isKnownPermissionKey = (permissionKey: string): boolean =>
   ALL_PERMISSION_KEYS_SET.has(permissionKey);
@@ -184,27 +246,54 @@ export const hasPermission = (
   }
 
   const customPermissionsMap = new Map(Object.entries(customPermissions ?? {}));
+  const visitedPermissionKeys = new Set<string>();
 
-  if (customPermissionsMap.has(permissionKey)) {
-    return customPermissionsMap.get(permissionKey) ?? false;
-  }
+  const hasPermissionWithDependencies = (
+    currentPermissionKey: string,
+  ): boolean => {
+    if (visitedPermissionKeys.has(currentPermissionKey)) return true;
+    visitedPermissionKeys.add(currentPermissionKey);
 
-  return ROLE_PERMISSIONS_MAP.get(role)?.includes(permissionKey) ?? false;
+    if (!isKnownPermissionKey(currentPermissionKey)) return false;
+
+    const isDirectlyAllowed = customPermissionsMap.has(currentPermissionKey)
+      ? (customPermissionsMap.get(currentPermissionKey) ?? false)
+      : (ROLE_PERMISSIONS_MAP.get(role)?.includes(currentPermissionKey) ??
+        false);
+
+    if (!isDirectlyAllowed) return false;
+
+    const permission = PERMISSION_ITEM_MAP.get(currentPermissionKey);
+
+    return (permission?.dependencies ?? []).every((dependency) =>
+      hasPermissionWithDependencies(dependency),
+    );
+  };
+
+  return hasPermissionWithDependencies(permissionKey);
+};
+
+export const getRoleBasePermissions = (
+  role: UserRole,
+): Record<string, boolean> => {
+  const rolePermissions = ROLE_PERMISSIONS_MAP.get(role) ?? [];
+
+  return Object.fromEntries(
+    PERMISSION_CATEGORIES.flatMap((category) =>
+      category.permissions.map(
+        (permission) =>
+          [permission.key, rolePermissions.includes(permission.key)] as const,
+      ),
+    ),
+  );
 };
 
 export const getEffectivePermissions = (
   role: UserRole,
   customPermissions?: PermissionsData | null,
 ): Record<string, boolean> => {
-  const rolePermissions = ROLE_PERMISSIONS_MAP.get(role) ?? [];
-
   return Object.fromEntries([
-    ...PERMISSION_CATEGORIES.flatMap((category) =>
-      category.permissions.map(
-        (permission) =>
-          [permission.key, rolePermissions.includes(permission.key)] as const,
-      ),
-    ),
+    ...Object.entries(getRoleBasePermissions(role)),
     ...Object.entries(customPermissions ?? {}).filter(([permissionKey]) =>
       isKnownPermissionKey(permissionKey),
     ),
@@ -213,6 +302,34 @@ export const getEffectivePermissions = (
 
 export const getAllPermissionKeys = (): string[] => {
   return [...ALL_PERMISSION_KEYS];
+};
+
+export const getPermissionItem = (
+  permissionKey: string,
+): PermissionItem | undefined => {
+  return PERMISSION_ITEM_MAP.get(permissionKey);
+};
+
+export const buildPermissionOverrides = (
+  role: UserRole,
+  enabledPermissionKeys: Iterable<string>,
+): PermissionsData | null => {
+  const enabledKeys = new Set(enabledPermissionKeys);
+  const roleBasePermissions = getRoleBasePermissions(role);
+  const roleBasePermissionsMap = new Map(Object.entries(roleBasePermissions));
+  const overrides = Object.fromEntries(
+    ALL_PERMISSION_KEYS.flatMap((permissionKey) => {
+      const enabled = enabledKeys.has(permissionKey);
+
+      if ((roleBasePermissionsMap.get(permissionKey) ?? false) === enabled) {
+        return [];
+      }
+
+      return [[permissionKey, enabled] as const];
+    }),
+  ) as PermissionsData;
+
+  return Object.keys(overrides).length > 0 ? overrides : null;
 };
 
 export const countCategoryPermissions = (
