@@ -1,47 +1,21 @@
 'use client';
 
-import {
-  Activity,
-  Archive,
-  Bell,
-  BriefcaseBusiness,
-  CalendarClock,
-  CheckCircle2,
-  CircleDollarSign,
-  ClipboardList,
-  FileCheck2,
-  FileText,
-  Handshake,
-  History,
-  Home,
-  LayoutDashboard,
-  type LucideIcon,
-  Newspaper,
-  Search,
-  Settings,
-  ShieldCheck,
-  UserCheck,
-  UserPlus,
-  Users,
-  Wallet,
-} from 'lucide-react';
+import { Home } from 'lucide-react';
 import Link from 'next/link';
 import React, { type FC } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { AccessDeniedState } from '$components/layout/PageState';
 import {
+  canShowNavigationItem,
+  filterNavigationSpace,
   getNavigationSpaceItems,
   type NavigationSpace,
   type NavItem,
 } from '$constants/app.constants';
+import { getNavigationIcon } from '$constants/navigation-icon.constants';
 import { getNavigationSpaceToneClasses } from '$constants/navigation-theme.constants';
-import {
-  hasPermission,
-  type PermissionsData,
-} from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
-import { type UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { PageCanvas, PageShell } from '$ui/page-shell';
@@ -51,114 +25,6 @@ import { cn } from '$utils/css.utils';
 type PrivateFeaturePageProps = {
   item: NavItem;
   space: NavigationSpace;
-};
-
-type PermissionUser = Pick<
-  UserType,
-  'isProtected' | 'permissions' | 'role'
-> | null;
-
-function canAccessNavItem(user: PermissionUser, item: NavItem): boolean {
-  if (!user) return false;
-  if (user.isProtected) return true;
-  if (!item.requiredPermissions?.length) return true;
-
-  return item.requiredPermissions.some((permissionKey) =>
-    hasPermission(
-      user.role,
-      permissionKey,
-      user.permissions as PermissionsData | null,
-    ),
-  );
-}
-
-function canShowNavItem(user: PermissionUser, item: NavItem): boolean {
-  return (
-    canAccessNavItem(user, item) ||
-    (item.children?.some((child) => canShowNavItem(user, child)) ?? false)
-  );
-}
-
-function filterVisibleNavItems(
-  user: PermissionUser,
-  items: readonly NavItem[],
-): NavItem[] {
-  return items
-    .map((item) => {
-      const children = item.children
-        ? filterVisibleNavItems(user, item.children)
-        : undefined;
-
-      return {
-        ...item,
-        ...(children ? { children } : {}),
-      };
-    })
-    .filter((item) => canShowNavItem(user, item));
-}
-
-function filterVisibleSpace(
-  user: PermissionUser,
-  space: NavigationSpace,
-): NavigationSpace {
-  return {
-    ...space,
-    sections: space.sections
-      .map((section) => ({
-        ...section,
-        items: filterVisibleNavItems(user, section.items),
-      }))
-      .filter((section) => section.items.length > 0),
-  };
-}
-
-const getIcon = (icon: string): LucideIcon => {
-  switch (icon) {
-    case 'Activity':
-      return Activity;
-    case 'Archive':
-      return Archive;
-    case 'Bell':
-      return Bell;
-    case 'BriefcaseBusiness':
-      return BriefcaseBusiness;
-    case 'CalendarClock':
-      return CalendarClock;
-    case 'CheckCircle2':
-      return CheckCircle2;
-    case 'CircleDollarSign':
-      return CircleDollarSign;
-    case 'ClipboardList':
-      return ClipboardList;
-    case 'FileCheck2':
-      return FileCheck2;
-    case 'FileText':
-      return FileText;
-    case 'Handshake':
-      return Handshake;
-    case 'History':
-      return History;
-    case 'Home':
-      return Home;
-    case 'LayoutDashboard':
-      return LayoutDashboard;
-    case 'Newspaper':
-      return Newspaper;
-    case 'Search':
-      return Search;
-    case 'ShieldCheck':
-      return ShieldCheck;
-    case 'UserCheck':
-      return UserCheck;
-    case 'UserPlus':
-      return UserPlus;
-    case 'Users':
-      return Users;
-    case 'Wallet':
-      return Wallet;
-    default:
-      return Settings;
-  }
 };
 
 const SpaceLinks: FC<{ currentHref: string; space: NavigationSpace }> = ({
@@ -174,7 +40,7 @@ const SpaceLinks: FC<{ currentHref: string; space: NavigationSpace }> = ({
       <h2 className="text-sm font-semibold">Pages du pole</h2>
       <div className="mt-3 space-y-1.5">
         {links.map((link) => {
-          const LinkIcon = getIcon(link.icon);
+          const LinkIcon = getNavigationIcon(link.icon);
           const isCurrent = link.href === currentHref;
 
           return (
@@ -213,7 +79,7 @@ const SectionMap: FC<{ item: NavItem; space: NavigationSpace }> = ({
           <h2 className="text-sm font-semibold">Sous-pages</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {children.map((child) => {
-              const ChildIcon = getIcon(child.icon);
+              const ChildIcon = getNavigationIcon(child.icon);
 
               return (
                 <Button
@@ -262,14 +128,14 @@ const SectionMap: FC<{ item: NavItem; space: NavigationSpace }> = ({
 
 const PrivateFeaturePage: FC<PrivateFeaturePageProps> = ({ item, space }) => {
   const { userData } = useUser();
-  const canAccessPage = canShowNavItem(userData, item);
-  const visibleSpace = filterVisibleSpace(userData, space);
+  const canAccessPage = canShowNavigationItem(userData, item);
+  const visibleSpace = filterNavigationSpace(space, userData);
   const visibleItem =
     getNavigationSpaceItems(visibleSpace).find(
       (link) => link.href === item.href,
     ) ?? item;
   const tone = getNavigationSpaceToneClasses(space.tone);
-  const Icon = getIcon(item.icon);
+  const Icon = getNavigationIcon(item.icon);
 
   return (
     <AuthenticatedLayout

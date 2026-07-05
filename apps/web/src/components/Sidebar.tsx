@@ -1,32 +1,11 @@
 'use client';
 
 import {
-  Activity,
-  Archive,
-  Bell,
-  BriefcaseBusiness,
-  CalendarClock,
   CheckCircle2,
   ChevronRight,
   ChevronsUpDown,
-  CircleDollarSign,
-  ClipboardList,
-  FileCheck2,
-  FileText,
-  Handshake,
-  History,
-  Home,
-  LayoutDashboard,
   LogOut,
-  type LucideIcon,
-  Newspaper,
-  Settings,
-  ShieldCheck,
   User,
-  UserCheck,
-  UserPlus,
-  Users,
-  Wallet,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -43,6 +22,7 @@ import {
   type NavItem,
   SITE_CONFIG,
 } from '$constants/app.constants';
+import { getNavigationIcon } from '$constants/navigation-icon.constants';
 import {
   getNavigationSpaceBadgeClasses,
   getNavigationSpaceToneClasses,
@@ -78,30 +58,6 @@ import {
   useSidebar,
 } from '$ui/sidebar';
 import { cn } from '$utils/css.utils';
-
-const iconMap: Record<string, LucideIcon> = {
-  Activity,
-  Archive,
-  Bell,
-  BriefcaseBusiness,
-  CalendarClock,
-  CheckCircle2,
-  CircleDollarSign,
-  ClipboardList,
-  FileCheck2,
-  FileText,
-  Handshake,
-  History,
-  Home,
-  LayoutDashboard,
-  Newspaper,
-  Settings,
-  ShieldCheck,
-  UserCheck,
-  UserPlus,
-  Users,
-  Wallet,
-};
 
 type SidebarProps = {
   className?: string;
@@ -148,7 +104,7 @@ const SpaceSwitcher: FC<{
   spaces: NavigationSpace[];
 }> = ({ activeSpace, spaces }) => {
   const { setOpenMobile, state: sidebarState } = useSidebar();
-  const ActiveIcon = iconMap[activeSpace.icon] ?? Settings;
+  const ActiveIcon = getNavigationIcon(activeSpace.icon);
   const activeTone = getNavigationSpaceToneClasses(activeSpace.tone);
 
   return (
@@ -196,7 +152,7 @@ const SpaceSwitcher: FC<{
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-sidebar-border/70 mx-1 my-1" />
         {spaces.map((space) => {
-          const SpaceIcon = iconMap[space.icon] ?? Settings;
+          const SpaceIcon = getNavigationIcon(space.icon);
           const isActive = activeSpace.id === space.id;
           const tone = getNavigationSpaceToneClasses(space.tone);
 
@@ -316,7 +272,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
   }, [activeGroupHref]);
 
   const renderSubNavItem = (item: NavItem): React.ReactNode => {
-    const Icon = iconMap[item.icon] ?? Settings;
+    const Icon = getNavigationIcon(item.icon);
     const isActive = isActivePath(
       pathname,
       item.href,
@@ -346,7 +302,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
   };
 
   const renderNavItem = (item: NavItem): React.ReactNode => {
-    const Icon = iconMap[item.icon] ?? Settings;
+    const Icon = getNavigationIcon(item.icon);
     const children = item.children ?? [];
     const hasActiveChild = children.some((child) =>
       isNavItemActive(pathname, child, activeSpace.href),

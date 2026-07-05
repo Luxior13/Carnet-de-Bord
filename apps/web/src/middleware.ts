@@ -8,7 +8,14 @@ const SESSION_COOKIE = 'session';
 const PROTECTED_PAGE_PATH_PREFIXES = [
   '/',
   '/administration',
+  '/bureau-juridique',
   '/mon-compte',
+  '/recherche',
+  '/sport-team-control',
+  '/systeme',
+  '/tableau-de-bord',
+  '/tresorerie',
+  '/vie-interne',
 ] as const;
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 

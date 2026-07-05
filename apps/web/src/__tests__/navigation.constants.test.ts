@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   getActiveNavigationSpace,
   getDesktopSidebarSections,
-  getHeaderNavItems,
   getVisibleNavigationSpaces,
   getVisibleNavSections,
   NAV_SECTIONS,
@@ -94,16 +93,14 @@ describe('navigation visibility', () => {
     expect(hrefs).toContain('/administration/utilisateurs');
   });
 
-  it('keeps the desktop header empty and shows the active space in the desktop sidebar', () => {
+  it('shows the active space in the desktop sidebar', () => {
     const user = buildUser();
 
-    const headerHrefs = getHeaderNavItems(user).map((item) => item.href);
     const sidebarHrefs = getDesktopSidebarSections(
       user,
       '/vie-interne/membres',
     ).flatMap((section) => flattenHrefs(section.items));
 
-    expect(headerHrefs).toEqual([]);
     expect(sidebarHrefs).toContain('/vie-interne');
     expect(sidebarHrefs).toContain('/vie-interne/membres');
     expect(sidebarHrefs).not.toContain('/tresorerie/operations');

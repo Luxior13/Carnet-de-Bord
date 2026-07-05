@@ -1,3 +1,4 @@
+import type { NavigationIconName } from '$constants/navigation-icon.constants';
 import type { NavigationSpaceTone } from '$constants/navigation-theme.constants';
 import {
   DEFAULT_ROLE_LABEL,
@@ -25,9 +26,8 @@ export { DEFAULT_ROLE_LABEL, PROTECTED_ROLE_LABEL, ROLE_LABELS };
 export type NavItem = {
   children?: NavItem[];
   description?: string;
-  desktopSurface?: 'header' | 'sidebar';
   href: string;
-  icon: string;
+  icon: NavigationIconName;
   label: string;
   requiredPermissions?: readonly string[];
   status?: string;
@@ -45,7 +45,7 @@ export type NavigationSpace = {
   badge?: string;
   description: string;
   href: string;
-  icon: string;
+  icon: NavigationIconName;
   id: string;
   label: string;
   matchHrefs?: readonly string[];
@@ -59,6 +59,10 @@ const treasuryAccess = [PERMISSIONS.TREASURY.VIEW] as const;
 const treasuryExportAccess = [PERMISSIONS.TREASURY.EXPORT] as const;
 const treasuryValidationAccess = [PERMISSIONS.TREASURY.VALIDATE] as const;
 const usersAccess = [PERMISSIONS.USERS.VIEW] as const;
+type NavigationUser = Pick<
+  UserType,
+  'isProtected' | 'permissions' | 'role'
+> | null;
 
 export const NAV_SPACES: NavigationSpace[] = [
   {
@@ -669,8 +673,8 @@ export const getAccessLabel = (
   return getPermissionAccessLabel(user);
 };
 
-function canAccessNavItem(
-  user: Pick<UserType, 'isProtected' | 'permissions' | 'role'> | null,
+export function canAccessNavigationItem(
+  user: NavigationUser,
   item: NavItem,
 ): boolean {
   if (!user) return false;
@@ -686,9 +690,20 @@ function canAccessNavItem(
   );
 }
 
+export function canShowNavigationItem(
+  user: NavigationUser,
+  item: NavItem,
+): boolean {
+  return (
+    canAccessNavigationItem(user, item) ||
+    (item.children?.some((child) => canShowNavigationItem(user, child)) ??
+      false)
+  );
+}
+
 function filterNavItems(
   items: readonly NavItem[],
-  user: Pick<UserType, 'isProtected' | 'permissions' | 'role'> | null,
+  user: NavigationUser,
 ): NavItem[] {
   return items
     .map((item) => {
@@ -704,36 +719,13 @@ function filterNavItems(
     .filter((item) => {
       const hasVisibleChildren = (item.children?.length ?? 0) > 0;
 
-      return hasVisibleChildren || canAccessNavItem(user, item);
-    });
-}
-
-function filterNavItemsByDesktopSurface(
-  items: readonly NavItem[],
-  surface: 'header' | 'sidebar',
-): NavItem[] {
-  return items
-    .map((item) => {
-      const visibleChildren = item.children
-        ? filterNavItemsByDesktopSurface(item.children, surface)
-        : undefined;
-
-      return {
-        ...item,
-        ...(visibleChildren ? { children: visibleChildren } : {}),
-      };
-    })
-    .filter((item) => {
-      const hasVisibleChildren = (item.children?.length ?? 0) > 0;
-      const itemSurface = item.desktopSurface ?? 'sidebar';
-
-      return hasVisibleChildren || itemSurface === surface;
+      return hasVisibleChildren || canAccessNavigationItem(user, item);
     });
 }
 
 function filterNavSections(
   sections: readonly NavSection[],
-  user: Pick<UserType, 'isProtected' | 'permissions' | 'role'> | null,
+  user: NavigationUser,
 ): NavSection[] {
   return sections
     .map((section) => ({
@@ -751,6 +743,16 @@ function isPathInSpace(pathname: string, space: NavigationSpace): boolean {
   );
 }
 
+export function filterNavigationSpace(
+  space: NavigationSpace,
+  user: NavigationUser,
+): NavigationSpace {
+  return {
+    ...space,
+    sections: filterNavSections(space.sections, user),
+  };
+}
+
 export function flattenNavItems(items: readonly NavItem[]): NavItem[] {
   return items.flatMap((item) => [
     item,
@@ -763,12 +765,11 @@ export function getNavigationSpaceItems(space: NavigationSpace): NavItem[] {
 }
 
 export function getVisibleNavigationSpaces(
-  user: Pick<UserType, 'isProtected' | 'permissions' | 'role'> | null,
+  user: NavigationUser,
 ): NavigationSpace[] {
-  return NAV_SPACES.map((space) => ({
-    ...space,
-    sections: filterNavSections(space.sections, user),
-  })).filter((space) => space.sections.length > 0);
+  return NAV_SPACES.map((space) => filterNavigationSpace(space, user)).filter(
+    (space) => space.sections.length > 0,
+  );
 }
 
 export function getDefaultNavigationSpace(): NavigationSpace {
@@ -808,31 +809,16 @@ export function getNavigationPageBySlug(
   return item ? { item, space } : null;
 }
 
-export function getVisibleNavSections(
-  user: Pick<UserType, 'isProtected' | 'permissions' | 'role'> | null,
-): NavSection[] {
+export function getVisibleNavSections(user: NavigationUser): NavSection[] {
   return filterNavSections(NAV_SECTIONS, user);
 }
 
 export function getDesktopSidebarSections(
-  user: Pick<UserType, 'isProtected' | 'permissions' | 'role'> | null,
+  user: NavigationUser,
   pathname = '/tableau-de-bord',
 ): NavSection[] {
   const visibleSpaces = getVisibleNavigationSpaces(user);
   const activeSpace = getActiveNavigationSpace(pathname, visibleSpaces);
 
-  return activeSpace.sections
-    .map((section) => ({
-      ...section,
-      items: filterNavItemsByDesktopSurface(section.items, 'sidebar'),
-    }))
-    .filter((section) => section.items.length > 0);
-}
-
-export function getHeaderNavItems(
-  user: Pick<UserType, 'isProtected' | 'permissions' | 'role'> | null,
-): NavItem[] {
-  return getVisibleNavSections(user).flatMap((section) =>
-    filterNavItemsByDesktopSurface(section.items, 'header'),
-  );
+  return activeSpace.sections;
 }
