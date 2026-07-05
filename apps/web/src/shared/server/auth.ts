@@ -37,6 +37,34 @@ const hashSessionToken = (token: string): string => {
   return encodeHexLowerCase(sha256(textEncoder.encode(token)));
 };
 
+const SESSION_USER_SELECT = {
+  createdAt: true,
+  email: true,
+  failedLoginAttempts: true,
+  firstName: true,
+  id: true,
+  isActive: true,
+  isProtected: true,
+  lastLoginAt: true,
+  lastName: true,
+  lockedUntil: true,
+  mustChangePassword: true,
+  passwordChangedAt: true,
+  permissions: true,
+  role: true,
+  staffProfile: true,
+} satisfies Prisma.UserSelect;
+
+const SESSION_WITH_USER_SELECT = {
+  expiresAt: true,
+  rememberMe: true,
+  token: true,
+  user: {
+    select: SESSION_USER_SELECT,
+  },
+  userId: true,
+} satisfies Prisma.SessionSelect;
+
 // ============================================
 // TOKEN & PASSWORD GENERATION
 // ============================================
@@ -179,16 +207,17 @@ const validateSessionToken = async (
 ): Promise<ServerAuthResponseType> => {
   const hashedToken = hashSessionToken(token);
 
-  const session = await prisma.session.findFirst({
-    include: {
-      user: {
-        include: { staffProfile: true },
-      },
-    },
-    where: {
-      OR: [{ token: hashedToken }, { token }],
-    },
+  let session = await prisma.session.findUnique({
+    select: SESSION_WITH_USER_SELECT,
+    where: { token: hashedToken },
   });
+
+  if (!session && token !== hashedToken) {
+    session = await prisma.session.findUnique({
+      select: SESSION_WITH_USER_SELECT,
+      where: { token },
+    });
+  }
 
   if (!session || Date.now() >= session.expiresAt.getTime()) {
     if (session) {
@@ -341,6 +370,43 @@ const DUMMY_HASH =
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MINUTES = 30;
 
+type AuthenticatedUser = Pick<
+  User,
+  | 'createdAt'
+  | 'email'
+  | 'failedLoginAttempts'
+  | 'firstName'
+  | 'id'
+  | 'isActive'
+  | 'isProtected'
+  | 'lastLoginAt'
+  | 'lastName'
+  | 'lockedUntil'
+  | 'mustChangePassword'
+  | 'passwordChangedAt'
+  | 'passwordHash'
+  | 'permissions'
+  | 'role'
+>;
+
+const AUTHENTICATION_USER_SELECT = {
+  createdAt: true,
+  email: true,
+  failedLoginAttempts: true,
+  firstName: true,
+  id: true,
+  isActive: true,
+  isProtected: true,
+  lastLoginAt: true,
+  lastName: true,
+  lockedUntil: true,
+  mustChangePassword: true,
+  passwordChangedAt: true,
+  passwordHash: true,
+  permissions: true,
+  role: true,
+} satisfies Prisma.UserSelect;
+
 /**
  * Authenticates a user with email and password
  * Uses constant-time comparison to prevent timing attacks
@@ -350,7 +416,7 @@ export const authenticateUser = async (
   email: string,
   password: string,
 ): Promise<
-  | { success: true; user: User }
+  | { success: true; user: AuthenticatedUser }
   | {
       error: string;
       lockedUntil?: Date;
@@ -360,6 +426,7 @@ export const authenticateUser = async (
     }
 > => {
   const user = await prisma.user.findUnique({
+    select: AUTHENTICATION_USER_SELECT,
     where: { deletedAt: null, email: email.toLowerCase().trim() },
   });
 
@@ -559,7 +626,23 @@ export const getUserById = async (id: string): Promise<User | null> => {
 /**
  * Map User to UserType (client-safe)
  */
-type UserWithOptionalStaffProfile = User & {
+type UserWithOptionalStaffProfile = Pick<
+  User,
+  | 'createdAt'
+  | 'email'
+  | 'failedLoginAttempts'
+  | 'firstName'
+  | 'id'
+  | 'isActive'
+  | 'isProtected'
+  | 'lastLoginAt'
+  | 'lastName'
+  | 'lockedUntil'
+  | 'mustChangePassword'
+  | 'passwordChangedAt'
+  | 'permissions'
+  | 'role'
+> & {
   staffProfile?: StaffProfile | null;
 };
 

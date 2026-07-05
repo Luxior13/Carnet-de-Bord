@@ -42,6 +42,11 @@ export async function POST(
 
     // Get existing user
     const existingUser = await prisma.user.findUnique({
+      select: {
+        email: true,
+        id: true,
+        isProtected: true,
+      },
       where: { deletedAt: null, id },
     });
 

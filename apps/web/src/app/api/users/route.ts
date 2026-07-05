@@ -27,6 +27,23 @@ const USER_STATUS_OPTIONS = ['active', 'inactive', 'pending'] as const;
 type UserStatusOption = (typeof USER_STATUS_OPTIONS)[number];
 const USER_SEARCH_MAX_LENGTH = 100;
 
+const USER_LIST_SELECT = {
+  createdAt: true,
+  email: true,
+  failedLoginAttempts: true,
+  firstName: true,
+  id: true,
+  isActive: true,
+  isProtected: true,
+  lastLoginAt: true,
+  lastName: true,
+  lockedUntil: true,
+  mustChangePassword: true,
+  passwordChangedAt: true,
+  permissions: true,
+  role: true,
+} satisfies Prisma.UserSelect;
+
 type CountGroup = {
   _count: {
     _all: number;
@@ -134,6 +151,7 @@ export async function GET(
       prisma.user.count({ where }),
       prisma.user.findMany({
         orderBy: getUserOrderBy(sort),
+        select: USER_LIST_SELECT,
         skip,
         take: limit,
         where,

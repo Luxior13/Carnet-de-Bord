@@ -33,6 +33,15 @@ export async function GET(): Promise<
     // Get all sessions for the user
     const sessions = await prisma.session.findMany({
       orderBy: { createdAt: 'desc' },
+      select: {
+        createdAt: true,
+        expiresAt: true,
+        id: true,
+        ipAddress: true,
+        rememberMe: true,
+        token: true,
+        userAgent: true,
+      },
       where: {
         expiresAt: { gt: new Date() },
         userId: user.id,
@@ -72,6 +81,10 @@ export async function DELETE(
     if (sessionId) {
       // Delete a specific session
       const sessionToDelete = await prisma.session.findFirst({
+        select: {
+          id: true,
+          token: true,
+        },
         where: {
           id: sessionId,
           userId: user.id,

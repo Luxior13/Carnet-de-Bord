@@ -87,6 +87,9 @@ const EMPTY_STAFF_PROFILE_FORM: StaffProfileForm = {
   timezone: '',
 };
 
+const USER_AUDIT_PAGE_SIZE = 200;
+const USER_AUDIT_SUMMARY_PAGE_SIZE = 1;
+
 const STAFF_PROFILE_MAX_LENGTHS = {
   department: 80,
   discordId: 20,
@@ -231,6 +234,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const userAbortControllerRef = useRef<AbortController | null>(null);
   const auditAbortControllerRef = useRef<AbortController | null>(null);
   const sessionsAbortControllerRef = useRef<AbortController | null>(null);
+  const hasLoadedAuditLogsRef = useRef(false);
+  const hasLoadedAuditSummaryRef = useRef(false);
 
   const [editForm, setEditForm] = useState({
     email: '',
@@ -468,45 +473,68 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     [canViewUsers, userId],
   );
 
-  const fetchAuditLogs = useCallback(async (): Promise<void> => {
-    auditAbortControllerRef.current?.abort();
-    auditAbortControllerRef.current = null;
-
-    if (!canViewUsers) {
-      setAuditLogs([]);
-      setAuditStats(null);
-      setIsLoadingAudit(false);
-
-      return;
-    }
-
-    const controller = new AbortController();
-    auditAbortControllerRef.current = controller;
-
-    try {
-      setIsLoadingAudit(true);
-      const response = await fetch(`/api/users/${userId}/audit?pageSize=200`, {
-        signal: controller.signal,
-      });
-      const data = await response.json();
-
-      if (controller.signal.aborted) return;
-
-      if (response.ok && data.success) {
-        setAuditLogs(data.data.logs);
-        setAuditStats(data.data.stats);
-      }
-    } catch {
-      if (controller.signal.aborted) return;
-
-      // Audit history is useful, but it should not block the profile page.
-    } finally {
-      if (auditAbortControllerRef.current !== controller) return;
-
+  const fetchAuditData = useCallback(
+    async (includeLogs: boolean): Promise<void> => {
+      auditAbortControllerRef.current?.abort();
       auditAbortControllerRef.current = null;
-      setIsLoadingAudit(false);
-    }
-  }, [canViewUsers, userId]);
+
+      if (!canViewUsers) {
+        setAuditLogs([]);
+        setAuditStats(null);
+        setIsLoadingAudit(false);
+        hasLoadedAuditLogsRef.current = false;
+        hasLoadedAuditSummaryRef.current = false;
+
+        return;
+      }
+
+      const controller = new AbortController();
+      auditAbortControllerRef.current = controller;
+
+      try {
+        setIsLoadingAudit(true);
+        const auditParams = new URLSearchParams({
+          pageSize: String(
+            includeLogs ? USER_AUDIT_PAGE_SIZE : USER_AUDIT_SUMMARY_PAGE_SIZE,
+          ),
+        });
+
+        if (!includeLogs) {
+          auditParams.set('includeLogs', 'false');
+        }
+
+        const response = await fetch(
+          `/api/users/${userId}/audit?${auditParams.toString()}`,
+          {
+            signal: controller.signal,
+          },
+        );
+        const data = await response.json();
+
+        if (controller.signal.aborted) return;
+
+        if (response.ok && data.success) {
+          setAuditStats(data.data.stats);
+          hasLoadedAuditSummaryRef.current = true;
+
+          if (includeLogs) {
+            setAuditLogs(data.data.logs);
+            hasLoadedAuditLogsRef.current = true;
+          }
+        }
+      } catch {
+        if (controller.signal.aborted) return;
+
+        // Audit history is useful, but it should not block the profile page.
+      } finally {
+        if (auditAbortControllerRef.current !== controller) return;
+
+        auditAbortControllerRef.current = null;
+        setIsLoadingAudit(false);
+      }
+    },
+    [canViewUsers, userId],
+  );
 
   const fetchSecuritySessions = useCallback(async (): Promise<void> => {
     sessionsAbortControllerRef.current?.abort();
@@ -561,8 +589,29 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   useEffect(() => {
     void fetchUser();
-    void fetchAuditLogs();
-  }, [fetchUser, fetchAuditLogs]);
+  }, [fetchUser]);
+
+  useEffect(() => {
+    hasLoadedAuditLogsRef.current = false;
+    hasLoadedAuditSummaryRef.current = false;
+    setAuditLogs([]);
+    setAuditStats(null);
+    setIsLoadingAudit(false);
+  }, [userId]);
+
+  useEffect(() => {
+    if (activeSection === 'history') {
+      if (hasLoadedAuditLogsRef.current) return;
+
+      void fetchAuditData(true);
+
+      return;
+    }
+
+    if (!hasLoadedAuditSummaryRef.current) {
+      void fetchAuditData(false);
+    }
+  }, [activeSection, fetchAuditData]);
 
   useEffect(() => {
     if (activeSection === 'security') {

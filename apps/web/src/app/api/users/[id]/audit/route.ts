@@ -58,9 +58,11 @@ export async function GET(
     } = parsePagination(searchParams, PAGINATION.DEFAULT_LIMIT, {
       limitParam: 'pageSize',
     });
+    const includeLogs = searchParams.get('includeLogs') !== 'false';
 
     // Check user exists
     const user = await prisma.user.findUnique({
+      select: { id: true },
       where: { id },
     });
 
@@ -85,12 +87,14 @@ export async function GET(
 
     const [total, logs, failedLogins, successfulLogins] = await Promise.all([
       prisma.auditLog.count({ where: whereClause }),
-      prisma.auditLog.findMany({
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: pageSize,
-        where: whereClause,
-      }),
+      includeLogs
+        ? prisma.auditLog.findMany({
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: pageSize,
+            where: whereClause,
+          })
+        : Promise.resolve([]),
       prisma.auditLog.count({
         where: { action: 'LOGIN_FAILED', userId: id },
       }),

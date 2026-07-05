@@ -16,6 +16,7 @@ const SIDEBAR_WIDTH = '17rem';
 const SIDEBAR_WIDTH_ICON = '3.5rem';
 const SIDEBAR_WIDTH_MOBILE = '18rem';
 const SIDEBAR_SCROLL_STORAGE_PREFIX = 'sidebar_scroll:';
+const SIDEBAR_SCROLL_SAVE_DELAY_MS = 120;
 const MOBILE_BREAKPOINT = 768;
 
 type SidebarContextProps = {
@@ -292,6 +293,8 @@ function SidebarContent({
   ...props
 }: SidebarContentProps): React.ReactNode {
   const viewportRef = React.useRef<HTMLDivElement | null>(null);
+  const pendingScrollTopRef = React.useRef<number | null>(null);
+  const scrollSaveTimeoutRef = React.useRef<number | null>(null);
   const storageKey = scrollStorageKey
     ? `${SIDEBAR_SCROLL_STORAGE_PREFIX}${scrollStorageKey}`
     : null;
@@ -321,6 +324,28 @@ function SidebarContent({
     };
   }, [scrollRestoreKey, storageKey]);
 
+  React.useEffect((): (() => void) => {
+    return (): void => {
+      if (scrollSaveTimeoutRef.current !== null) {
+        window.clearTimeout(scrollSaveTimeoutRef.current);
+        scrollSaveTimeoutRef.current = null;
+      }
+
+      if (storageKey && pendingScrollTopRef.current !== null) {
+        try {
+          window.sessionStorage.setItem(
+            storageKey,
+            String(pendingScrollTopRef.current),
+          );
+        } catch {
+          // Ignore storage errors in constrained environments.
+        }
+      }
+
+      pendingScrollTopRef.current = null;
+    };
+  }, [storageKey]);
+
   const handleViewportScroll = React.useCallback<
     React.UIEventHandler<HTMLDivElement>
   >(
@@ -329,14 +354,24 @@ function SidebarContent({
 
       if (!storageKey) return;
 
-      try {
-        window.sessionStorage.setItem(
-          storageKey,
-          String(event.currentTarget.scrollTop),
-        );
-      } catch {
-        // Ignore storage errors in constrained environments.
-      }
+      pendingScrollTopRef.current = event.currentTarget.scrollTop;
+
+      if (scrollSaveTimeoutRef.current !== null) return;
+
+      scrollSaveTimeoutRef.current = window.setTimeout(() => {
+        scrollSaveTimeoutRef.current = null;
+
+        if (pendingScrollTopRef.current === null) return;
+
+        try {
+          window.sessionStorage.setItem(
+            storageKey,
+            String(pendingScrollTopRef.current),
+          );
+        } catch {
+          // Ignore storage errors in constrained environments.
+        }
+      }, SIDEBAR_SCROLL_SAVE_DELAY_MS);
     },
     [onScroll, storageKey],
   );

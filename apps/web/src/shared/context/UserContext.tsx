@@ -26,6 +26,17 @@ import { apiFetch } from '$utils/api.utils';
 const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
 // Show warning 5 minutes before timeout
 const WARNING_BEFORE_MS = 5 * 60 * 1000;
+const ACTIVITY_TIMER_RESET_THROTTLE_MS = 15 * 1000;
+const ACTIVITY_EVENTS = [
+  'mousedown',
+  'keydown',
+  'scroll',
+  'touchstart',
+] as const;
+const ACTIVITY_LISTENER_OPTIONS: AddEventListenerOptions = { passive: true };
+const ACTIVITY_REMOVE_LISTENER_OPTIONS: EventListenerOptions = {
+  capture: false,
+};
 
 type SessionResponse = {
   expiresAt: string;
@@ -69,6 +80,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
   const [sessionRememberMe, setSessionRememberMe] = useState<boolean>(false);
   const [showSessionWarning, setShowSessionWarning] = useState<boolean>(false);
   const lastActivityRef = useRef<number>(Date.now());
+  const showSessionWarningRef = useRef(false);
   const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const logoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -183,9 +195,14 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
 
   // Function to extend session (reset timers)
   const extendSession = useCallback((): void => {
+    showSessionWarningRef.current = false;
     setShowSessionWarning(false);
     lastActivityRef.current = Date.now();
   }, []);
+
+  useEffect(() => {
+    showSessionWarningRef.current = showSessionWarning;
+  }, [showSessionWarning]);
 
   // Auto-logout after inactivity with warning
   useEffect(() => {
@@ -200,6 +217,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
 
     if (!userData || sessionRememberMe) {
       clearTimers();
+      showSessionWarningRef.current = false;
       setShowSessionWarning(false);
 
       return;
@@ -210,6 +228,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
 
       // Set warning timeout (5 minutes before logout)
       warningTimeoutRef.current = setTimeout((): void => {
+        showSessionWarningRef.current = true;
         setShowSessionWarning(true);
       }, INACTIVITY_TIMEOUT_MS - WARNING_BEFORE_MS);
 
@@ -222,27 +241,36 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
 
     const handleActivity = (): void => {
       // Don't reset if warning is showing - user must click button
-      if (showSessionWarning) return;
-      lastActivityRef.current = Date.now();
+      if (showSessionWarningRef.current) return;
+
+      const now = Date.now();
+      if (now - lastActivityRef.current < ACTIVITY_TIMER_RESET_THROTTLE_MS) {
+        return;
+      }
+
+      lastActivityRef.current = now;
       resetTimers();
     };
 
     // Track user activity
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
-    events.forEach((event) => {
-      window.addEventListener(event, handleActivity);
+    ACTIVITY_EVENTS.forEach((event) => {
+      window.addEventListener(event, handleActivity, ACTIVITY_LISTENER_OPTIONS);
     });
 
     // Initialize timers
     resetTimers();
 
     return (): void => {
-      events.forEach((event): void => {
-        window.removeEventListener(event, handleActivity);
+      ACTIVITY_EVENTS.forEach((event): void => {
+        window.removeEventListener(
+          event,
+          handleActivity,
+          ACTIVITY_REMOVE_LISTENER_OPTIONS,
+        );
       });
       clearTimers();
     };
-  }, [userData, sessionRememberMe, logout, showSessionWarning]);
+  }, [userData, sessionRememberMe, logout]);
 
   return (
     <UserContext.Provider
