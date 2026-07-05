@@ -54,7 +54,7 @@ const DataTableSection: FC<DataTableSectionProps> = ({
 }) => (
   <Card
     className={cn(
-      'border-sidebar-border/70 overflow-hidden rounded-xl py-0',
+      'border-sidebar-border/70 overflow-hidden rounded-lg py-0',
       className,
     )}
   >

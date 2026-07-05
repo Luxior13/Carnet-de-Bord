@@ -910,7 +910,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
           </div>
         </CardContent>
         {/* Footer */}
-        <CardFooter className="border-sidebar-border/65 text-muted-foreground shrink-0 justify-center border-t bg-[#1f293b] px-4 py-3 text-center text-xs">
+        <CardFooter className="border-sidebar-border/65 text-muted-foreground bg-surface-muted shrink-0 justify-center border-t px-4 py-3 text-center text-xs">
           {filteredLogs.length} événement{filteredLogs.length > 1 ? 's' : ''}
           {(categoryFilter !== 'all' ||
             sourceFilter !== 'all' ||

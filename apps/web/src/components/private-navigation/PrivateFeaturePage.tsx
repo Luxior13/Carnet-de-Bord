@@ -27,36 +27,71 @@ type PrivateFeaturePageProps = {
   space: NavigationSpace;
 };
 
-const SpaceLinks: FC<{ currentHref: string; space: NavigationSpace }> = ({
+const SpaceNavigationLink: FC<{
+  currentHref: string;
+  item: NavItem;
+  nested?: boolean;
+}> = ({ currentHref, item, nested = false }) => {
+  const LinkIcon = getNavigationIcon(item.icon);
+  const isCurrent = item.href === currentHref;
+
+  return (
+    <Button
+      asChild
+      variant={isCurrent ? 'secondary' : 'ghost'}
+      className={cn(
+        'h-auto w-full justify-start rounded-md px-2.5 py-2 text-left',
+        nested && 'pl-7',
+      )}
+    >
+      <Link href={item.href} aria-current={isCurrent ? 'page' : undefined}>
+        <LinkIcon className="size-4 shrink-0" />
+        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+      </Link>
+    </Button>
+  );
+};
+
+const SpaceNavigation: FC<{ currentHref: string; space: NavigationSpace }> = ({
   currentHref,
   space,
 }) => {
-  const links = getNavigationSpaceItems(space).filter(
-    (item) => (item.children?.length ?? 0) === 0,
-  );
+  const sections = space.sections.filter((section) => section.items.length > 0);
 
   return (
-    <aside className="border-sidebar-border/70 bg-card/90 rounded-lg border p-4">
-      <h2 className="text-sm font-semibold">Pages du pole</h2>
-      <div className="mt-3 space-y-1.5">
-        {links.map((link) => {
-          const LinkIcon = getNavigationIcon(link.icon);
-          const isCurrent = link.href === currentHref;
-
-          return (
-            <Button
-              key={link.href}
-              asChild
-              variant={isCurrent ? 'secondary' : 'ghost'}
-              className="h-auto w-full justify-start rounded-md px-2.5 py-2 text-left"
-            >
-              <Link href={link.href}>
-                <LinkIcon className="size-4 shrink-0" />
-                <span className="min-w-0 flex-1 truncate">{link.label}</span>
-              </Link>
-            </Button>
-          );
-        })}
+    <aside
+      aria-label={`Navigation du pôle ${space.label}`}
+      className="border-sidebar-border/70 bg-surface rounded-lg border p-4 shadow-[var(--shadow-panel)]"
+    >
+      <h2 className="text-sm font-semibold">Navigation du pôle</h2>
+      <div className="mt-3 space-y-3">
+        {sections.map((section) => (
+          <div key={section.id} className="space-y-1.5">
+            {section.label && (
+              <p className="text-muted-foreground px-2 text-[11px] font-semibold tracking-[0.14em] uppercase">
+                {section.label}
+              </p>
+            )}
+            <div className="space-y-1">
+              {section.items.map((sectionItem) => (
+                <div key={sectionItem.href} className="space-y-1">
+                  <SpaceNavigationLink
+                    currentHref={currentHref}
+                    item={sectionItem}
+                  />
+                  {sectionItem.children?.map((child) => (
+                    <SpaceNavigationLink
+                      key={child.href}
+                      currentHref={currentHref}
+                      item={child}
+                      nested
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </aside>
   );
@@ -75,7 +110,7 @@ const SectionMap: FC<{ item: NavItem; space: NavigationSpace }> = ({
   return (
     <div className="space-y-4">
       {children.length > 0 && (
-        <section className="border-sidebar-border/70 bg-card/90 rounded-lg border p-4">
+        <section className="border-sidebar-border/70 bg-surface rounded-lg border p-4 shadow-[var(--shadow-panel)]">
           <h2 className="text-sm font-semibold">Sous-pages</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {children.map((child) => {
@@ -98,13 +133,13 @@ const SectionMap: FC<{ item: NavItem; space: NavigationSpace }> = ({
           </div>
         </section>
       )}
-      <section className="border-sidebar-border/70 bg-card/90 rounded-lg border p-4">
-        <h2 className="text-sm font-semibold">Organisation du pole</h2>
+      <section className="border-sidebar-border/70 bg-surface rounded-lg border p-4 shadow-[var(--shadow-panel)]">
+        <h2 className="text-sm font-semibold">Organisation du pôle</h2>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           {visibleSections.map((section) => (
             <div
               key={section.id}
-              className="border-border/60 bg-popover/60 rounded-md border p-3"
+              className="border-border/60 bg-surface-muted/60 rounded-md border p-3"
             >
               <p className="text-sm font-medium">{section.label}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -155,7 +190,7 @@ const PrivateFeaturePage: FC<PrivateFeaturePageProps> = ({ item, space }) => {
           <PageCanvas contentClassName="space-y-5">
             <section
               className={cn(
-                'overflow-hidden rounded-lg border shadow-sm shadow-black/10',
+                'overflow-hidden rounded-lg border shadow-[var(--shadow-panel-strong)]',
                 tone.hero,
               )}
             >
@@ -185,14 +220,14 @@ const PrivateFeaturePage: FC<PrivateFeaturePageProps> = ({ item, space }) => {
                 <Button asChild variant="outline" className="rounded-md">
                   <Link href={space.href}>
                     <Home className="size-4" />
-                    Accueil du pole
+                    Accueil du pôle
                   </Link>
                 </Button>
               </div>
             </section>
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
               <SectionMap item={visibleItem} space={visibleSpace} />
-              <SpaceLinks currentHref={item.href} space={visibleSpace} />
+              <SpaceNavigation currentHref={item.href} space={visibleSpace} />
             </div>
           </PageCanvas>
         </PageShell>

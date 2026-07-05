@@ -53,13 +53,13 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
               ? `Ouvrir les notifications (${unreadNotificationsCount} non lues)`
               : 'Ouvrir les notifications'
           }
-          className="border-sidebar-border/70 bg-popover/70 text-muted-foreground hover:border-sidebar-ring/35 hover:bg-popover hover:text-foreground relative shadow-none"
+          className="border-sidebar-border/70 bg-surface-control text-muted-foreground hover:border-sidebar-ring/35 hover:bg-surface-subtle hover:text-foreground relative shadow-none"
           size="icon"
           variant="outline"
         >
           <Bell className="size-4" />
           {unreadNotificationsCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-cyan-400 text-[10px] font-bold text-slate-950 ring-2 ring-[#182131]">
+            <span className="ring-surface absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-cyan-400 text-[10px] font-bold text-slate-950 ring-2">
               {unreadNotificationsCount}
               <span className="sr-only">notifications non lues</span>
             </span>
@@ -68,7 +68,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
       </PopoverTrigger>
       <PopoverContent
         align="end"
-        className="border-sidebar-border/80 w-[min(calc(100vw-2rem),22rem)] overflow-hidden bg-[#162033]/98 p-0 shadow-2xl shadow-black/25"
+        className="border-sidebar-border/80 bg-surface-raised/98 w-[min(calc(100vw-2rem),22rem)] overflow-hidden p-0 shadow-2xl shadow-black/25"
         sideOffset={8}
       >
         <div className="border-sidebar-border/65 border-b px-4 py-3">

@@ -112,10 +112,11 @@ const SpaceSwitcher: FC<{
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label={`Espace actif : ${activeSpace.label}`}
+          aria-label={`Pôle actif : ${activeSpace.label}`}
           title={activeSpace.label}
           className={cn(
-            'border-sidebar-border/65 hover:border-sidebar-ring/30 focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/40 flex h-11 w-full min-w-0 items-center gap-3 rounded-xl border bg-[#101827]/75 px-2.5 text-left transition-[background-color,border-color,box-shadow] outline-none hover:bg-[#162238]/85 focus-visible:ring-2 data-[state=open]:bg-[#172238]',
+            'focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/45 flex h-12 w-full min-w-0 items-center gap-3 rounded-xl border px-2.5 text-left transition-[background-color,border-color,box-shadow] outline-none hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] focus-visible:ring-2 data-[state=open]:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]',
+            activeTone.soft,
             'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
           )}
         >
@@ -129,7 +130,7 @@ const SpaceSwitcher: FC<{
           </span>
           <span className="min-w-0 flex-1 overflow-hidden transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:max-w-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150">
             <span className="text-sidebar-foreground/60 block truncate text-[11px] font-medium uppercase">
-              Espace
+              Pôle actif
             </span>
             <span className="block truncate text-sm font-semibold">
               {activeSpace.label}
@@ -144,7 +145,7 @@ const SpaceSwitcher: FC<{
         sideOffset={10}
         alignOffset={sidebarState === 'collapsed' ? 0 : -2}
         className={cn(
-          'border-sidebar-border text-sidebar-foreground w-[calc(100vw-2rem)] max-w-80 overflow-hidden rounded-xl bg-[linear-gradient(180deg,rgba(18,23,30,0.96),rgba(25,33,50,0.96))] p-1.5 shadow-2xl shadow-black/25 sm:w-80',
+          'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground w-[calc(100vw-2rem)] max-w-80 overflow-hidden rounded-lg p-1.5 shadow-2xl shadow-black/25 sm:w-80',
         )}
       >
         <DropdownMenuLabel className="text-sidebar-foreground/60 px-2 py-1.5 text-xs font-medium">
@@ -375,21 +376,22 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
 
   return (
     <SidebarRoot collapsible="icon" variant="sidebar" className={className}>
-      <SidebarHeader className="border-sidebar-border/70 border-b bg-[linear-gradient(180deg,rgba(10,15,24,0.12),rgba(10,15,24,0))] p-3 group-data-[collapsible=icon]/sidebar:px-0">
+      <SidebarHeader className="border-sidebar-border/70 gap-2.5 border-b bg-[linear-gradient(180deg,rgba(10,15,24,0.12),rgba(10,15,24,0))] p-3 group-data-[collapsible=icon]/sidebar:px-0">
         <Link
           href="/tableau-de-bord"
+          aria-label="Retour au tableau de bord"
           onClick={() => setOpenMobile(false)}
           className={cn(
-            'border-sidebar-border/70 hover:border-sidebar-ring/35 flex h-11 w-full min-w-0 items-center gap-3 overflow-hidden rounded-xl border bg-[linear-gradient(180deg,rgba(95,132,200,0.12),rgba(34,49,74,0.8))] px-2.5 transition-[background-color,border-color,box-shadow] hover:bg-[linear-gradient(180deg,rgba(95,132,200,0.16),rgba(34,49,74,0.9))] hover:shadow-[inset_0_0_0_1px_rgba(108,146,214,0.16)]',
+            'hover:bg-sidebar-accent/30 focus-visible:ring-sidebar-ring hover:border-sidebar-border/45 flex h-10 w-full min-w-0 items-center gap-3 overflow-hidden rounded-lg border border-transparent px-2 text-left transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-2',
             'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
           )}
         >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg">
             <Image
               src="/assets/noc.png"
               alt=""
-              width={30}
-              height={30}
+              width={28}
+              height={28}
               className="object-contain"
               priority
             />
@@ -398,7 +400,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
             <span className="block truncate text-sm font-semibold tracking-[0.01em]">
               {SITE_CONFIG.name}
             </span>
-            <span className="text-sidebar-foreground/65 block truncate text-[11px]">
+            <span className="text-sidebar-foreground/58 block truncate text-[11px]">
               {SITE_CONFIG.subtitle}
             </span>
           </span>
@@ -438,7 +440,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 aria-label={`Menu utilisateur de ${userDisplayName}`}
                 title={userDisplayName}
                 className={cn(
-                  'border-sidebar-border/65 hover:border-sidebar-ring/25 focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/35 flex min-w-0 items-center gap-3 overflow-hidden rounded-xl border bg-[linear-gradient(180deg,rgba(95,132,200,0.06),rgba(34,49,74,0.68))] p-2.5 text-left transition-[background-color,border-color,box-shadow] outline-none hover:bg-[linear-gradient(180deg,rgba(95,132,200,0.11),rgba(34,49,74,0.8))] hover:shadow-[inset_0_0_0_1px_rgba(108,146,214,0.1)] focus-visible:ring-2 data-[state=open]:bg-[linear-gradient(180deg,rgba(95,132,200,0.14),rgba(34,49,74,0.86))] data-[state=open]:shadow-[inset_0_0_0_1px_rgba(108,146,214,0.14)]',
+                  'border-sidebar-border/65 bg-surface-control hover:border-sidebar-ring/25 hover:bg-surface-subtle focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/35 data-[state=open]:bg-surface-subtle flex min-w-0 items-center gap-3 overflow-hidden rounded-lg border p-2.5 text-left transition-[background-color,border-color,box-shadow] outline-none hover:shadow-[inset_0_0_0_1px_rgba(108,146,214,0.1)] focus-visible:ring-2 data-[state=open]:shadow-[inset_0_0_0_1px_rgba(108,146,214,0.14)]',
                   'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:p-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
                 )}
               >
@@ -459,13 +461,13 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               align={sidebarState === 'collapsed' ? 'end' : 'center'}
               sideOffset={6}
               className={cn(
-                'border-sidebar-border text-sidebar-foreground overflow-hidden rounded-xl bg-[linear-gradient(180deg,rgba(18,23,30,0.94),rgba(25,33,50,0.94))] p-0 shadow-2xl shadow-black/20',
+                'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground overflow-hidden rounded-lg p-0 shadow-2xl shadow-black/20',
                 sidebarState === 'collapsed'
                   ? 'w-64'
                   : 'w-[var(--radix-dropdown-menu-trigger-width)]',
               )}
             >
-              <DropdownMenuLabel className="border-sidebar-border/60 bg-sidebar-accent/20 border-b p-3 font-normal">
+              <DropdownMenuLabel className="border-sidebar-border/60 bg-surface-muted border-b p-3 font-normal">
                 <div className="flex min-w-0 items-center gap-3">
                   <UserAvatar user={userData} className="size-10 rounded-lg" />
                   <div className="min-w-0 flex-1">

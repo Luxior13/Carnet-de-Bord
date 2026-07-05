@@ -127,7 +127,7 @@ export const GlobalSearch: FC = () => {
       <DialogTrigger asChild>
         <button
           aria-label="Ouvrir la recherche globale"
-          className="border-sidebar-border/70 bg-popover/70 text-muted-foreground hover:border-sidebar-ring/35 hover:text-foreground flex h-9 min-w-9 shrink-0 items-center justify-center gap-2 rounded-md border px-2.5 text-sm transition-colors lg:min-w-64 lg:justify-start"
+          className="border-sidebar-border/70 bg-surface-control text-muted-foreground hover:border-sidebar-ring/35 hover:text-foreground flex h-9 min-w-9 shrink-0 items-center justify-center gap-2 rounded-md border px-2.5 text-sm transition-colors lg:min-w-64 lg:justify-start"
           type="button"
         >
           <Search className="size-4" />
@@ -135,7 +135,7 @@ export const GlobalSearch: FC = () => {
         </button>
       </DialogTrigger>
       <DialogContent
-        className="border-sidebar-border/80 max-w-2xl overflow-hidden bg-[#162033]/98 p-0 shadow-2xl shadow-black/30"
+        className="border-sidebar-border/80 bg-surface-raised/98 max-w-2xl overflow-hidden p-0 shadow-2xl shadow-black/30"
         fullscreenOnMobile
         hideCloseButton
       >

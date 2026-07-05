@@ -300,7 +300,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
         />
       </div>
       <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
-        <CardHeader className="border-sidebar-border/65 border-b bg-[#1f293b] p-3 sm:p-4">
+        <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
           <SectionTitle icon={<Power className="size-3.5" />}>
             État du compte
           </SectionTitle>
@@ -337,7 +337,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             </div>
           )}
         </CardContent>
-        <CardFooter className="border-sidebar-border/65 justify-between gap-3 border-t bg-[#1f293b] p-3 sm:p-4">
+        <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-between gap-3 border-t p-3 sm:p-4">
           <p className="text-muted-foreground text-xs">
             {hasStatusChanges ? 'Modification non enregistrée' : 'À jour'}
           </p>
@@ -369,7 +369,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
         </CardFooter>
       </Card>
       <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
-        <CardHeader className="border-sidebar-border/65 border-b bg-[#1f293b] p-3 sm:p-4">
+        <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
           <SectionTitle icon={<Monitor className="size-3.5" />}>
             Sessions actives
           </SectionTitle>
@@ -431,7 +431,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           )}
         </CardContent>
         {canManageSessions && sessions.length > 0 && (
-          <CardFooter className="border-sidebar-border/65 justify-end border-t bg-[#1f293b] p-3 sm:p-4">
+          <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
             <Button
               type="button"
               variant="outline"
@@ -451,7 +451,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
         )}
       </Card>
       <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
-        <CardHeader className="border-sidebar-border/65 border-b bg-[#1f293b] p-3 sm:p-4">
+        <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
           <SectionTitle icon={<KeyRound className="size-3.5" />}>
             Mot de passe
           </SectionTitle>
@@ -503,7 +503,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </div>
         </CardContent>
         {canResetPassword && (
-          <CardFooter className="border-sidebar-border/65 justify-end border-t bg-[#1f293b] p-3 sm:p-4">
+          <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
             <Button
               type="button"
               variant="outline"

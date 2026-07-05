@@ -601,7 +601,7 @@ export default function HomePage(): React.ReactNode {
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)] xl:items-start">
                 <div className="space-y-4">
                   <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
-                    <CardHeader className="border-sidebar-border/65 border-b bg-[#1f293b] p-4">
+                    <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-4">
                       <CardTitle className="text-sm">Raccourcis</CardTitle>
                       <CardDescription>
                         Acces utiles selon votre role actuel.
@@ -618,7 +618,7 @@ export default function HomePage(): React.ReactNode {
                   </Card>
                   {canViewDashboard && (
                     <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
-                      <CardHeader className="border-sidebar-border/65 border-b bg-[#1f293b] p-4">
+                      <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-4">
                         <CardTitle className="text-sm">
                           Activite recente
                         </CardTitle>
@@ -636,7 +636,7 @@ export default function HomePage(): React.ReactNode {
                   )}
                 </div>
                 <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
-                  <CardHeader className="border-sidebar-border/65 border-b bg-[#1f293b] p-4">
+                  <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-4">
                     <CardTitle className="text-sm">
                       Securite du compte
                     </CardTitle>
@@ -697,7 +697,7 @@ export default function HomePage(): React.ReactNode {
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="border-sidebar-border/65 justify-end border-t bg-[#1f293b] p-4">
+                  <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-end border-t p-4">
                     <Button asChild variant="outline" size="sm">
                       <Link href="/mon-compte">
                         <UserRound className="size-4" />

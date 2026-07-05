@@ -28,7 +28,7 @@ export const AccountPanel: FC<AccountPanelProps> = ({
 
   return (
     <section className={cn('relative', className)} aria-labelledby={titleId}>
-      <Card className="border-sidebar-border/70 bg-[#182131]">
+      <Card className="border-sidebar-border/70 bg-surface">
         <CardHeader className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div className="flex min-w-0 items-center gap-3">
             <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border shadow-[inset_0_1px_0_rgba(255,255,255,0.055)]">
@@ -52,9 +52,7 @@ export const AccountPanel: FC<AccountPanelProps> = ({
             <div className="flex shrink-0 items-center gap-2">{actions}</div>
           )}
         </CardHeader>
-        <CardContent
-          className={cn('bg-[#182131] p-4 sm:p-5', contentClassName)}
-        >
+        <CardContent className={cn('bg-surface p-4 sm:p-5', contentClassName)}>
           {children}
         </CardContent>
       </Card>

@@ -23,6 +23,11 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-control: var(--surface-control);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -64,6 +69,11 @@
   --accent-foreground: #f2f6ff;
   --destructive: #d9546b;
   --destructive-foreground: #fff7f8;
+  --surface: #182131;
+  --surface-muted: #1f293b;
+  --surface-raised: #162033;
+  --surface-subtle: #111827;
+  --surface-control: rgba(17, 24, 39, 0.72);
   --border: #33445d;
   --input: #0d121b;
   --ring: #6c92d6;
@@ -87,6 +97,12 @@
   --private-content-padding: clamp(1rem, 2.2vw, 2rem);
   --public-column-border: rgba(232, 238, 248, 0.075);
   --public-column-shadow: 0 34px 88px -70px rgba(0, 0, 0, 0.98);
+  --shadow-panel:
+    0 18px 42px -36px rgba(0, 0, 0, 0.96),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  --shadow-panel-strong:
+    0 24px 64px -42px rgba(0, 0, 0, 0.98),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
   --site-background-column-bg:
     radial-gradient(
       circle at 50% 0%,

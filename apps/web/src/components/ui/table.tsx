@@ -24,7 +24,7 @@ function TableHeader({
   return (
     <thead
       data-slot="table-header"
-      className={cn('bg-[#1f293b] [&_tr]:border-b', className)}
+      className={cn('bg-surface-muted [&_tr]:border-b', className)}
       {...props}
     />
   );
@@ -51,7 +51,7 @@ function TableFooter({
     <tfoot
       data-slot="table-footer"
       className={cn(
-        'border-t bg-[#1f293b] font-medium [&>tr]:last:border-b-0',
+        'bg-surface-muted border-t font-medium [&>tr]:last:border-b-0',
         className,
       )}
       {...props}

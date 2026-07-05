@@ -103,7 +103,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   return (
     <form onSubmit={handleSubmit}>
       <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
-        <CardHeader className="border-sidebar-border/65 flex-row items-center justify-between border-b bg-[#1f293b] p-3 sm:p-4">
+        <CardHeader className="border-sidebar-border/65 bg-surface-muted flex-row items-center justify-between border-b p-3 sm:p-4">
           <div>
             <CardTitle className="text-sm">Profil staff</CardTitle>
           </div>
@@ -509,7 +509,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
             </div>
           </SectionPanel>
         </CardContent>
-        <CardFooter className="border-sidebar-border/65 justify-between gap-3 border-t bg-[#1f293b] p-3 sm:p-4">
+        <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-between gap-3 border-t p-3 sm:p-4">
           <p className="text-muted-foreground text-xs">
             {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
           </p>

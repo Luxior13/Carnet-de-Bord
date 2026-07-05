@@ -60,7 +60,7 @@ export const AccountPageContent: FC = () => {
 
   return (
     <div className="space-y-5">
-      <section className="border-sidebar-border/70 overflow-hidden rounded-xl border bg-[#182131] shadow-[0_18px_42px_-36px_rgba(0,0,0,0.96),inset_0_1px_0_rgba(255,255,255,0.035)]">
+      <section className="border-sidebar-border/70 bg-surface overflow-hidden rounded-lg border shadow-[var(--shadow-panel)]">
         <div className="divide-sidebar-border/45 grid divide-y md:grid-cols-3 md:divide-x md:divide-y-0">
           {summaryItems.map((item) => {
             const Icon = item.icon;
@@ -68,7 +68,7 @@ export const AccountPageContent: FC = () => {
             return (
               <div
                 key={item.title}
-                className="flex min-w-0 gap-3 bg-[#1f293b] p-4 sm:p-5"
+                className="bg-surface-muted flex min-w-0 gap-3 p-4 sm:p-5"
               >
                 <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
                   <Icon className="size-4" />

@@ -322,7 +322,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
 
     return (
       <div className="space-y-3">
-        <div className="border-sidebar-border/65 flex flex-col gap-3 rounded-lg border bg-[#1f293b] p-3">
+        <div className="border-sidebar-border/65 bg-surface-muted flex flex-col gap-3 rounded-lg border p-3">
           <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <h3 className="text-foreground font-semibold">Permissions</h3>
@@ -493,9 +493,9 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
               >
                 <div
                   className={cn(
-                    'border-sidebar-border/70 overflow-hidden rounded-xl border bg-[#182131] transition-all',
+                    'border-sidebar-border/70 bg-surface overflow-hidden rounded-lg border transition-all',
                     isOpen &&
-                      'border-primary/30 ring-primary/20 bg-[#182131] ring-1',
+                      'border-primary/30 ring-primary/20 bg-surface ring-1',
                   )}
                 >
                   {/* Category Header */}
@@ -685,7 +685,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
             );
           })}
           {visibleCategories.length === 0 && (
-            <div className="border-sidebar-border/70 flex flex-col items-center justify-center rounded-xl border bg-[#182131] p-8 text-center">
+            <div className="border-sidebar-border/70 bg-surface flex flex-col items-center justify-center rounded-lg border p-8 text-center">
               <Search className="text-muted-foreground size-8" />
               <p className="text-foreground mt-3 text-sm font-medium">
                 Aucune permission trouvée

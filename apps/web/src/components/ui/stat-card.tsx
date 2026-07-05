@@ -29,7 +29,7 @@ export const StatCard: FC<StatCardProps> = ({
   return (
     <Card
       className={cn(
-        'border-sidebar-border/70 overflow-hidden rounded-xl border bg-[#182131]',
+        'border-sidebar-border/70 bg-surface overflow-hidden rounded-lg border',
         className,
       )}
     >

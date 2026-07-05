@@ -241,7 +241,7 @@ function LoginPage(): React.ReactNode {
             </Button>
           </form>
         </CardContent>
-        <div className="border-sidebar-border/65 grid gap-2 border-t bg-[#1f293b] p-4 text-xs sm:grid-cols-3">
+        <div className="border-sidebar-border/65 bg-surface-muted grid gap-2 border-t p-4 text-xs sm:grid-cols-3">
           {['Vue d’ensemble', 'Comptes', 'Sécurité'].map((item) => (
             <div
               key={item}

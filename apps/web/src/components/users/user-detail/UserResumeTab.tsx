@@ -103,7 +103,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
       )}
       {/* User Details */}
       <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
-        <CardHeader className="border-sidebar-border/65 border-b bg-[#1f293b] p-3 sm:p-4">
+        <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
           <CardTitle className="text-sm">Informations compte</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">

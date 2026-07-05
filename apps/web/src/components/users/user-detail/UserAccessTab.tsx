@@ -94,7 +94,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             }
           />
         </CardContent>
-        <CardFooter className="border-sidebar-border/65 justify-between gap-3 border-t bg-[#1f293b] p-4">
+        <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-between gap-3 border-t p-4">
           <p className="text-muted-foreground text-xs">
             {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
           </p>
