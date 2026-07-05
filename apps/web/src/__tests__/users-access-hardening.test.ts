@@ -471,6 +471,57 @@ describe('users access hardening', () => {
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 
+  it('blocks non-protected users from changing admin access fields', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(
+      buildUser({
+        id: 'admin-1',
+        isProtected: false,
+        role: 'ADMIN',
+      }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/admin-1', {
+        body: JSON.stringify({ isActive: false }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'admin-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    expect(mockInvalidateAllUserSessions).not.toHaveBeenCalled();
+  });
+
+  it('blocks non-protected users from deleting admin accounts', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(
+      buildUser({
+        id: 'admin-1',
+        isProtected: false,
+        role: 'ADMIN',
+      }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.DELETE(
+      new Request('http://localhost/api/users/admin-1', {
+        method: 'DELETE',
+      }) as never,
+      { params: Promise.resolve({ id: 'admin-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    expect(mockInvalidateAllUserSessions).not.toHaveBeenCalled();
+  });
+
   it('redacts ip and user-agent for other users when viewer is not protected', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(buildUser({ id: 'target-1' }));
     mockPrisma.auditLog.count.mockResolvedValue(1);

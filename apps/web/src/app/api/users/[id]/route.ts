@@ -320,6 +320,27 @@ export async function PATCH(
       );
     }
 
+    if (
+      existingUser.role === 'ADMIN' &&
+      !auth.user.isProtected &&
+      (email !== undefined ||
+        typeof isActive === 'boolean' ||
+        isPermissionsUpdate ||
+        role !== undefined)
+    ) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message:
+              "Seul un superadmin peut modifier les accÃ¨s d'un administrateur",
+          },
+          success: false,
+        },
+        { status: 403 },
+      );
+    }
+
     // Cannot deactivate yourself
     if (isActive === false && existingUser.id === auth.user.id) {
       return NextResponse.json(
@@ -673,6 +694,19 @@ export async function DELETE(
           error: {
             code: ErrorCode.FORBIDDEN,
             message: 'Ce compte est protégé et ne peut pas être supprimé',
+          },
+          success: false,
+        },
+        { status: 403 },
+      );
+    }
+
+    if (existingUser.role === 'ADMIN' && !auth.user.isProtected) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message: 'Seul un superadmin peut supprimer un administrateur',
           },
           success: false,
         },

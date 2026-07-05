@@ -46,6 +46,7 @@ export async function POST(
         email: true,
         id: true,
         isProtected: true,
+        role: true,
       },
       where: { deletedAt: null, id },
     });
@@ -79,7 +80,7 @@ export async function POST(
 
     // Protected accounts can only be reset by a protected actor
     if (
-      existingUser.isProtected &&
+      (existingUser.isProtected || existingUser.role === 'ADMIN') &&
       existingUser.id !== auth.user.id &&
       !auth.user.isProtected
     ) {

@@ -345,6 +345,29 @@ describe('account security routes', () => {
       expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
       expect(mockResetUserPassword).not.toHaveBeenCalled();
     });
+
+    it('rejects resetting an admin password for non-protected users', async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        email: 'admin@example.com',
+        id: 'admin-1',
+        isProtected: false,
+        role: 'ADMIN',
+      });
+
+      const route = await import('$app/api/users/[id]/reset-password/route');
+      const response = await route.POST(
+        new NextRequest('http://localhost/api/users/admin-1/reset-password', {
+          method: 'POST',
+        }),
+        { params: Promise.resolve({ id: 'admin-1' }) },
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+      expect(mockResetUserPassword).not.toHaveBeenCalled();
+    });
   });
 
   describe('GET /api/users/[id]/sessions', () => {
@@ -402,6 +425,27 @@ describe('account security routes', () => {
       expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
       expect(mockPrisma.session.findMany).not.toHaveBeenCalled();
     });
+
+    it('rejects listing admin sessions for non-protected users', async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        email: 'admin@example.com',
+        id: 'admin-1',
+        isProtected: false,
+        role: 'ADMIN',
+      });
+
+      const route = await import('$app/api/users/[id]/sessions/route');
+      const response = await route.GET(
+        new NextRequest('http://localhost/api/users/admin-1/sessions'),
+        { params: Promise.resolve({ id: 'admin-1' }) },
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+      expect(mockPrisma.session.findMany).not.toHaveBeenCalled();
+    });
   });
 
   describe('DELETE /api/users/[id]/sessions', () => {
@@ -437,6 +481,29 @@ describe('account security routes', () => {
           userId: 'user-1',
         }),
       );
+    });
+
+    it('rejects revoking admin sessions for non-protected users', async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        email: 'admin@example.com',
+        id: 'admin-1',
+        isProtected: false,
+        role: 'ADMIN',
+      });
+
+      const route = await import('$app/api/users/[id]/sessions/route');
+      const response = await route.DELETE(
+        new NextRequest('http://localhost/api/users/admin-1/sessions', {
+          method: 'DELETE',
+        }),
+        { params: Promise.resolve({ id: 'admin-1' }) },
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+      expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
     });
   });
 

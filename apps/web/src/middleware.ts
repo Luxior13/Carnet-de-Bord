@@ -5,6 +5,7 @@ import { checkRateLimit } from '$server/api-rate-limiter';
 const CSRF_COOKIE = 'csrf-token';
 const CSRF_HEADER = 'x-csrf-token';
 const SESSION_COOKIE = 'session';
+const CSRF_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 const PROTECTED_PAGE_PATH_PREFIXES = [
   '/',
   '/administration',
@@ -30,6 +31,22 @@ function generateToken(): string {
   crypto.getRandomValues(bytes);
 
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+function isValidToken(token: string | null | undefined): token is string {
+  return typeof token === 'string' && CSRF_TOKEN_PATTERN.test(token);
+}
+
+function tokensMatch(first: string, second: string): boolean {
+  if (first.length !== second.length) return false;
+
+  let difference = 0;
+
+  for (let index = 0; index < first.length; index++) {
+    difference |= first.charCodeAt(index) ^ second.charCodeAt(index);
+  }
+
+  return difference === 0;
 }
 
 function addSecurityHeaders(response: NextResponse): void {
@@ -111,7 +128,7 @@ export function middleware(request: NextRequest): NextResponse {
 
     // Ensure CSRF cookie exists on every response
     const existingToken = request.cookies.get(CSRF_COOKIE)?.value;
-    if (!existingToken) {
+    if (!isValidToken(existingToken)) {
       const token = generateToken();
       response.cookies.set(CSRF_COOKIE, token, {
         httpOnly: false, // Must be readable by JS to send in header
@@ -123,21 +140,14 @@ export function middleware(request: NextRequest): NextResponse {
 
     // Validate CSRF on mutation API requests
     if (MUTATION_METHODS.has(request.method)) {
-      // Skip CSRF for login (no cookie yet)
-      if (request.nextUrl.pathname === '/api/auth/login') {
-        response.headers.set(
-          'X-RateLimit-Remaining',
-          String(rateLimit.remaining),
-        );
-        addSecurityHeaders(response);
-
-        return response;
-      }
-
       const cookieToken = request.cookies.get(CSRF_COOKIE)?.value;
       const headerToken = request.headers.get(CSRF_HEADER);
 
-      if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+      if (
+        !isValidToken(cookieToken) ||
+        !isValidToken(headerToken) ||
+        !tokensMatch(cookieToken, headerToken)
+      ) {
         const csrfErrorResponse = NextResponse.json(
           {
             error: {
@@ -180,7 +190,7 @@ export function middleware(request: NextRequest): NextResponse {
 
   // Ensure CSRF cookie exists on every response
   const existingToken = request.cookies.get(CSRF_COOKIE)?.value;
-  if (!existingToken) {
+  if (!isValidToken(existingToken)) {
     const token = generateToken();
     response.cookies.set(CSRF_COOKIE, token, {
       httpOnly: false, // Must be readable by JS to send in header

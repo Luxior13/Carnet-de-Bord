@@ -32,9 +32,14 @@ const SESSION_LONG_DURATION_DAYS = 30;
 const SESSION_RENEWAL_THRESHOLD_DAYS = 7;
 const BCRYPT_ROUNDS = 12;
 const textEncoder = new TextEncoder();
+const LEGACY_PLAINTEXT_SESSION_TOKEN_PATTERN = /^[a-z2-7]{52}$/;
 
 const hashSessionToken = (token: string): string => {
   return encodeHexLowerCase(sha256(textEncoder.encode(token)));
+};
+
+const isLegacyPlaintextSessionToken = (token: string): boolean => {
+  return LEGACY_PLAINTEXT_SESSION_TOKEN_PATTERN.test(token);
 };
 
 const SESSION_USER_SELECT = {
@@ -206,17 +211,19 @@ const validateSessionToken = async (
   token: string,
 ): Promise<ServerAuthResponseType> => {
   const hashedToken = hashSessionToken(token);
+  let shouldMigrateLegacySession = false;
 
   let session = await prisma.session.findUnique({
     select: SESSION_WITH_USER_SELECT,
     where: { token: hashedToken },
   });
 
-  if (!session && token !== hashedToken) {
+  if (!session && isLegacyPlaintextSessionToken(token)) {
     session = await prisma.session.findUnique({
       select: SESSION_WITH_USER_SELECT,
       where: { token },
     });
+    shouldMigrateLegacySession = Boolean(session);
   }
 
   if (!session || Date.now() >= session.expiresAt.getTime()) {
@@ -227,6 +234,14 @@ const validateSessionToken = async (
     }
 
     return { session: null, user: null };
+  }
+
+  if (shouldMigrateLegacySession) {
+    await prisma.session.update({
+      data: { token: hashedToken },
+      where: { token: session.token },
+    });
+    session.token = hashedToken;
   }
 
   // Long sessions renew when they are close to expiring.

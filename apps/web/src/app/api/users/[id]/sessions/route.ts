@@ -22,12 +22,14 @@ const getTargetUserForSessionManagement = async (
   email: string;
   id: string;
   isProtected: boolean;
+  role: string;
 } | null> => {
   return prisma.user.findUnique({
     select: {
       email: true,
       id: true,
       isProtected: true,
+      role: true,
     },
     where: { deletedAt: null, id },
   });
@@ -80,7 +82,10 @@ export async function GET(
       );
     }
 
-    if (targetUser.isProtected && !auth.user.isProtected) {
+    if (
+      (targetUser.isProtected || targetUser.role === 'ADMIN') &&
+      !auth.user.isProtected
+    ) {
       return NextResponse.json(
         {
           error: {
@@ -174,7 +179,10 @@ export async function DELETE(
       );
     }
 
-    if (targetUser.isProtected && !auth.user.isProtected) {
+    if (
+      (targetUser.isProtected || targetUser.role === 'ADMIN') &&
+      !auth.user.isProtected
+    ) {
       return NextResponse.json(
         {
           error: {
