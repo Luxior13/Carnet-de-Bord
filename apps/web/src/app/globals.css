@@ -53,50 +53,62 @@
 :root,
 .dark {
   color-scheme: dark;
-  --background: #0d121b;
+  --background: #0b1017;
   --foreground: #e8eef8;
-  --card: #182131;
+  --surface-subtle: #101721;
+  --surface: #172131;
+  --surface-muted: #202c3f;
+  --surface-raised: #233149;
+  --surface-control: rgba(16, 23, 33, 0.78);
+  --card: var(--surface);
   --card-foreground: #e8eef8;
-  --popover: #111827;
+  --popover: var(--surface-raised);
   --popover-foreground: #e8eef8;
-  --primary: #5f84c8;
-  --primary-foreground: #f8fbff;
-  --secondary: #1f293b;
+  --primary: #7aa7e8;
+  --primary-foreground: #07111f;
+  --secondary: var(--surface-muted);
   --secondary-foreground: #dbe7fb;
-  --muted: #111827;
-  --muted-foreground: #94a3ba;
-  --accent: #1f293b;
+  --muted: var(--surface-subtle);
+  --muted-foreground: #9aa8bd;
+  --accent: var(--surface-muted);
   --accent-foreground: #f2f6ff;
   --destructive: #d9546b;
   --destructive-foreground: #fff7f8;
-  --surface: #182131;
-  --surface-muted: #1f293b;
-  --surface-raised: #162033;
-  --surface-subtle: #111827;
-  --surface-control: rgba(17, 24, 39, 0.72);
-  --border: #33445d;
-  --input: #0d121b;
-  --ring: #6c92d6;
-  --chart-1: #6c92d6;
+  --border: #3a4d66;
+  --input: var(--surface-subtle);
+  --ring: #8bb8f5;
+  --chart-1: var(--ring);
   --chart-2: #8f6fe8;
   --chart-3: #55c2a2;
   --chart-4: #d9b75f;
   --chart-5: #d9546b;
   --radius: 0.625rem;
-  --sidebar: #182131;
+  --sidebar: #141d2b;
   --sidebar-foreground: #dbe5f5;
-  --sidebar-primary: #5f84c8;
-  --sidebar-primary-foreground: #f8fbff;
-  --sidebar-accent: #1f293b;
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--surface-muted);
   --sidebar-accent-foreground: #f1f6ff;
-  --sidebar-border: #344763;
-  --sidebar-ring: #6c92d6;
+  --sidebar-border: #3a506d;
+  --sidebar-ring: var(--ring);
   --public-column-width: 66rem;
   --private-content-width: 72rem;
   --private-content-width-wide: 88rem;
   --private-content-padding: clamp(1rem, 2.2vw, 2rem);
   --public-column-border: rgba(232, 238, 248, 0.075);
   --public-column-shadow: 0 34px 88px -70px rgba(0, 0, 0, 0.98);
+  --page-overlay-start: rgba(11, 16, 23, 0.76);
+  --page-overlay-end: rgba(8, 12, 18, 0.92);
+  --page-glow: rgba(122, 167, 232, 0.12);
+  --column-glow: rgba(122, 167, 232, 0.08);
+  --column-surface-start: rgba(20, 29, 43, 0.68);
+  --column-surface-end: rgba(11, 16, 23, 0.86);
+  --sidebar-pattern-primary: rgba(122, 167, 232, 0.05);
+  --sidebar-pattern-secondary: rgba(38, 198, 218, 0.028);
+  --sidebar-pattern-mask-start: rgba(0, 0, 0, 0.72);
+  --sidebar-pattern-mask-end: rgba(0, 0, 0, 0.34);
+  --sidebar-scrollbar-thumb: rgba(122, 167, 232, 0.42);
+  --sidebar-scrollbar-thumb-hover: rgba(139, 184, 245, 0.68);
   --shadow-panel:
     0 18px 42px -36px rgba(0, 0, 0, 0.96),
     inset 0 1px 0 rgba(255, 255, 255, 0.035);
@@ -104,12 +116,12 @@
     0 24px 64px -42px rgba(0, 0, 0, 0.98),
     inset 0 1px 0 rgba(255, 255, 255, 0.045);
   --site-background-column-bg:
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(95, 132, 200, 0.1),
-      transparent 34rem
-    ),
-    linear-gradient(180deg, rgba(18, 25, 37, 0.68), rgba(13, 18, 27, 0.84));
+    radial-gradient(circle at 50% 0%, var(--column-glow), transparent 34rem),
+    linear-gradient(
+      180deg,
+      var(--column-surface-start),
+      var(--column-surface-end)
+    );
 }
 
 @layer base {
@@ -124,10 +136,14 @@
   body {
     @apply min-h-svh overflow-x-hidden bg-background text-foreground antialiased;
     background-image:
-      linear-gradient(180deg, rgba(13, 18, 27, 0.74), rgba(9, 13, 20, 0.9)),
+      linear-gradient(
+        180deg,
+        var(--page-overlay-start),
+        var(--page-overlay-end)
+      ),
       radial-gradient(
         circle at 50% 0%,
-        rgba(95, 132, 200, 0.14),
+        var(--page-glow),
         transparent 42rem
       ),
       url('/assets/Fond%20d%27ecran%20site.webp');
@@ -177,23 +193,23 @@
     background-image:
       repeating-linear-gradient(
         135deg,
-        rgba(122, 167, 232, 0.055) 0 1px,
+        var(--sidebar-pattern-primary) 0 1px,
         transparent 1px 18px
       ),
       repeating-linear-gradient(
         45deg,
-        rgba(38, 198, 218, 0.035) 0 1px,
+        var(--sidebar-pattern-secondary) 0 1px,
         transparent 1px 24px
       );
     mask-image: linear-gradient(
       180deg,
-      rgba(0, 0, 0, 0.72),
-      rgba(0, 0, 0, 0.34)
+      var(--sidebar-pattern-mask-start),
+      var(--sidebar-pattern-mask-end)
     );
   }
 
   .sidebar-scrollbar {
-    scrollbar-color: rgba(108, 146, 214, 0.42) transparent;
+    scrollbar-color: var(--sidebar-scrollbar-thumb) transparent;
     scrollbar-width: thin;
   }
 
@@ -208,12 +224,12 @@
   .sidebar-scrollbar::-webkit-scrollbar-thumb {
     border: 0.1875rem solid transparent;
     border-radius: 999px;
-    background: rgba(108, 146, 214, 0.44);
+    background: var(--sidebar-scrollbar-thumb);
     background-clip: content-box;
   }
 
   .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(122, 167, 232, 0.68);
+    background: var(--sidebar-scrollbar-thumb-hover);
     background-clip: content-box;
   }
 
