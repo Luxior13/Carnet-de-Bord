@@ -8,12 +8,12 @@ import { ChangePasswordDialog } from '$components/ChangePasswordDialog';
 import { Header } from '$components/layout/Header';
 import Sidebar from '$components/Sidebar';
 import { useUser } from '$context/UserContext';
-import { type BreadcrumbItem } from '$ui/breadcrumb';
+import { type BreadcrumbEntry } from '$ui/breadcrumb';
 import { SidebarInset, SidebarProvider } from '$ui/sidebar';
 import { cn } from '$utils/css.utils';
 
 type AuthenticatedLayoutProps = {
-  breadcrumbs?: BreadcrumbItem[];
+  breadcrumbs?: BreadcrumbEntry[];
   children: ReactNode;
   fullHeight?: boolean;
 };
