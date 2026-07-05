@@ -7,6 +7,7 @@ import {
   CircleAlert,
   LayoutDashboard,
   type LucideIcon,
+  RotateCcw,
   Search,
   ShieldCheck,
   ShieldOff,
@@ -21,6 +22,7 @@ import React, { type FC, memo, useCallback, useMemo, useState } from 'react';
 import {
   buildPermissionOverrides,
   getEffectivePermissions,
+  getRoleBasePermissions,
   PERMISSION_CATEGORIES,
   type PermissionAction,
   type PermissionCategory,
@@ -129,18 +131,18 @@ const FILTER_OPTIONS: Array<{
   value: PermissionFilter;
 }> = [
   { icon: SlidersHorizontal, label: 'Toutes', value: 'all' },
-  { icon: ShieldCheck, label: 'Autorisees', value: 'enabled' },
-  { icon: ShieldOff, label: 'Refusees', value: 'disabled' },
-  { icon: CircleAlert, label: 'A completer', value: 'incomplete' },
-  { icon: Sparkles, label: 'Modifiees', value: 'custom' },
+  { icon: ShieldCheck, label: 'Autorisées', value: 'enabled' },
+  { icon: ShieldOff, label: 'Refusées', value: 'disabled' },
+  { icon: CircleAlert, label: 'À compléter', value: 'incomplete' },
+  { icon: Sparkles, label: 'Modifiées', value: 'custom' },
 ];
 
 const ACTION_LABELS: Record<PermissionAction, string> = {
-  create: 'Creer',
+  create: 'Créer',
   delete: 'Supprimer',
   export: 'Exporter',
-  manage: 'Gerer',
-  reset: 'Reinitialiser',
+  manage: 'Gérer',
+  reset: 'Réinitialiser',
   update: 'Modifier',
   validate: 'Valider',
   view: 'Voir',
@@ -188,11 +190,11 @@ const getRiskBorderClassName = (risk: PermissionRisk): string => {
 const getPermissionResultLabel = (
   resultState: PermissionResultState,
 ): string => {
-  if (resultState === 'page-blocked') return 'Page bloquee';
-  if (resultState === 'incomplete') return 'A completer';
-  if (resultState === 'allowed') return 'Autorise';
+  if (resultState === 'page-blocked') return 'Page bloquée';
+  if (resultState === 'incomplete') return 'À compléter';
+  if (resultState === 'allowed') return 'Autorisé';
 
-  return 'Refuse';
+  return 'Refusé';
 };
 
 const getPermissionResultBadgeClassName = (
@@ -212,6 +214,14 @@ const getPermissionResultBadgeClassName = (
 
   return 'border-destructive/30 bg-destructive/10 text-destructive';
 };
+
+const getPermissionOriginLabel = (hasCustomChoice: boolean): string =>
+  hasCustomChoice ? 'Manuel' : 'Rôle';
+
+const getPermissionOriginBadgeClassName = (hasCustomChoice: boolean): string =>
+  hasCustomChoice
+    ? 'border-primary/40 bg-primary/10 text-primary'
+    : 'border-border/70 text-muted-foreground';
 
 const getStateButtonClassName = (
   option: PermissionChoiceState,
@@ -314,47 +324,80 @@ const getCategoryAccessPermission = (
 };
 
 type PermissionStatePickerProps = {
+  canReset: boolean;
+  defaultState: PermissionChoiceState;
   disabled: boolean;
   onChange: (state: PermissionChoiceState) => void;
+  onReset: () => void;
   permissionLabel: string;
   state: PermissionChoiceState;
 };
 
 const PermissionStatePicker: FC<PermissionStatePickerProps> = memo(
-  ({ disabled, onChange, permissionLabel, state }) => {
+  ({
+    canReset,
+    defaultState,
+    disabled,
+    onChange,
+    onReset,
+    permissionLabel,
+    state,
+  }) => {
     return (
-      <div
-        className="border-border/70 bg-popover grid min-w-[12.5rem] grid-cols-2 gap-1 rounded-lg border p-1"
-        role="group"
-        aria-label={`Choix de la permission ${permissionLabel}`}
-      >
-        {OVERRIDE_STATE_OPTIONS.map((option) => {
-          const OptionIcon = option.icon;
+      <div className="flex min-w-0 items-center gap-1.5">
+        <div
+          className="border-border/70 bg-popover grid min-w-0 flex-1 grid-cols-2 gap-1 rounded-lg border p-1 sm:min-w-[12.5rem] sm:flex-none"
+          role="group"
+          aria-label={`Choix de la permission ${permissionLabel}`}
+        >
+          {OVERRIDE_STATE_OPTIONS.map((option) => {
+            const OptionIcon = option.icon;
 
-          return (
-            <Tooltip key={option.value}>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={disabled}
-                  onClick={() => onChange(option.value)}
-                  className={cn(
-                    'h-8 rounded-md border px-2 text-xs font-medium',
-                    getStateButtonClassName(option.value, state),
-                  )}
-                  aria-pressed={state === option.value}
-                  aria-label={`${option.label} ${permissionLabel}`}
-                >
-                  <OptionIcon className="size-3.5" />
-                  <span className="ml-1 hidden sm:inline">{option.label}</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent sideOffset={6}>{option.label}</TooltipContent>
-            </Tooltip>
-          );
-        })}
+            return (
+              <Tooltip key={option.value}>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={disabled}
+                    onClick={() => onChange(option.value)}
+                    className={cn(
+                      'h-8 rounded-md border px-2 text-xs font-medium',
+                      getStateButtonClassName(option.value, state),
+                    )}
+                    aria-pressed={state === option.value}
+                    aria-label={`${option.label} ${permissionLabel}`}
+                  >
+                    <OptionIcon className="size-3.5" />
+                    <span className="ml-1 hidden sm:inline">
+                      {option.label}
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent sideOffset={6}>{option.label}</TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              disabled={disabled || !canReset}
+              onClick={onReset}
+              className="text-muted-foreground hover:text-foreground size-9 shrink-0"
+              aria-label={`Revenir au rôle pour ${permissionLabel}`}
+            >
+              <RotateCcw className="size-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent sideOffset={6}>
+            Défaut du rôle : {defaultState === 'allow' ? 'autorisé' : 'refusé'}
+          </TooltipContent>
+        </Tooltip>
       </div>
     );
   },
@@ -379,6 +422,14 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
       () => new Set(permissionsMap.keys()),
       [permissionsMap],
     );
+    const roleBasePermissions = useMemo(
+      () => getRoleBasePermissions(role),
+      [role],
+    );
+    const roleBasePermissionsMap = useMemo(
+      () => new Map(Object.entries(roleBasePermissions)),
+      [roleBasePermissions],
+    );
     const effectivePermissions = useMemo(
       () => getEffectivePermissions(role, permissions),
       [role, permissions],
@@ -402,8 +453,25 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
     const handleSetPermissionOverride = useCallback(
       (permissionKey: string, state: PermissionChoiceState) => {
         const nextPermissionsMap = new Map(permissionsMap);
+        const enabled = state === 'allow';
+        const roleBaseEnabled =
+          roleBasePermissionsMap.get(permissionKey) ?? false;
 
-        nextPermissionsMap.set(permissionKey, state === 'allow');
+        if (enabled === roleBaseEnabled) {
+          nextPermissionsMap.delete(permissionKey);
+        } else {
+          nextPermissionsMap.set(permissionKey, enabled);
+        }
+
+        onChange(toPermissionsData(nextPermissionsMap));
+      },
+      [onChange, permissionsMap, roleBasePermissionsMap],
+    );
+
+    const handleResetPermissionOverride = useCallback(
+      (permissionKey: string) => {
+        const nextPermissionsMap = new Map(permissionsMap);
+        nextPermissionsMap.delete(permissionKey);
 
         onChange(toPermissionsData(nextPermissionsMap));
       },
@@ -421,12 +489,41 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
         if (!accessPermission) return;
 
         const nextPermissionsMap = new Map(permissionsMap);
-        nextPermissionsMap.set(accessPermission.key, allowed);
+        const roleBaseEnabled =
+          roleBasePermissionsMap.get(accessPermission.key) ?? false;
+
+        if (allowed === roleBaseEnabled) {
+          nextPermissionsMap.delete(accessPermission.key);
+        } else {
+          nextPermissionsMap.set(accessPermission.key, allowed);
+        }
+
+        onChange(toPermissionsData(nextPermissionsMap));
+      },
+      [onChange, permissionsMap, roleBasePermissionsMap],
+    );
+
+    const handleResetCategoryOverrides = useCallback(
+      (categoryKey: string) => {
+        const category = PERMISSION_CATEGORIES.find(
+          (item) => item.key === categoryKey,
+        );
+        if (!category) return;
+
+        const nextPermissionsMap = new Map(permissionsMap);
+
+        for (const permission of category.permissions) {
+          nextPermissionsMap.delete(permission.key);
+        }
 
         onChange(toPermissionsData(nextPermissionsMap));
       },
       [onChange, permissionsMap],
     );
+
+    const handleResetAllOverrides = useCallback(() => {
+      onChange(null);
+    }, [onChange]);
 
     const handleApplyTemplate = useCallback(
       (templateKey: keyof typeof ROLE_TEMPLATES) => {
@@ -534,10 +631,81 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
     const selectedCategoryAccessPermission = selectedCategory
       ? getCategoryAccessPermission(selectedCategory)
       : undefined;
+    const selectedSourceCategory = selectedCategory
+      ? (PERMISSION_CATEGORIES.find(
+          (category) => category.key === selectedCategory.key,
+        ) ?? selectedCategory)
+      : null;
+    const selectedCategoryOverrideCount =
+      selectedSourceCategory?.permissions.filter((permission) =>
+        customPermissionKeys.has(permission.key),
+      ).length ?? 0;
+    const selectedCategoryAccessPermissionKey =
+      selectedCategoryAccessPermission?.key;
+
+    const getPermissionViewModel = useCallback(
+      (permission: PermissionItem) => {
+        const isEnabled = effectivePermissionsMap.get(permission.key) ?? false;
+        const overrideState = getPermissionOverrideState(
+          effectivePermissionsMap,
+          permission.key,
+        );
+        const hasCustomChoice = customPermissionKeys.has(permission.key);
+        const isRoleDefaultEnabled =
+          roleBasePermissionsMap.get(permission.key) ?? false;
+        const defaultState: PermissionChoiceState = isRoleDefaultEnabled
+          ? 'allow'
+          : 'deny';
+        const riskLabel = RISK_LABELS[permission.risk];
+        const dependencies = permission.dependencies ?? [];
+        const missingDependencies = getMissingPermissionDependencies(
+          permission,
+          effectivePermissionsMap,
+        );
+        const hasMissingDependencies = missingDependencies.length > 0;
+        const isBlockedByPage = missingDependencies.some(
+          (dependency) => dependency === selectedCategoryAccessPermissionKey,
+        );
+        const dependencyLabels = dependencies.map(
+          (dependency) => permissionLabelMap.get(dependency) ?? dependency,
+        );
+        const missingDependencyLabels = missingDependencies.map(
+          (dependency) => permissionLabelMap.get(dependency) ?? dependency,
+        );
+        const resultState: PermissionResultState = isBlockedByPage
+          ? 'page-blocked'
+          : hasMissingDependencies
+            ? 'incomplete'
+            : isEnabled
+              ? 'allowed'
+              : 'denied';
+
+        return {
+          defaultState,
+          dependencyLabels,
+          hasCustomChoice,
+          hasMissingDependencies,
+          isBlockedByPage,
+          isEnabled,
+          isRoleDefaultEnabled,
+          missingDependencyLabels,
+          overrideState,
+          resultState,
+          riskLabel,
+        };
+      },
+      [
+        customPermissionKeys,
+        effectivePermissionsMap,
+        permissionLabelMap,
+        roleBasePermissionsMap,
+        selectedCategoryAccessPermissionKey,
+      ],
+    );
 
     return (
       <div className="space-y-3">
-        <div className="border-sidebar-border/65 bg-surface-muted flex flex-col gap-3 rounded-lg border p-3">
+        <div className="border-sidebar-border/55 bg-surface-muted flex flex-col gap-3 rounded-lg border p-3">
           <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <h3 className="text-foreground font-semibold">Permissions</h3>
@@ -556,11 +724,11 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   variant="outline"
                   className="border-amber-500/40 text-xs text-amber-300"
                 >
-                  {incompletePermissionCount} a completer
+                  {incompletePermissionCount} à compléter
                 </Badge>
               )}
               <Badge variant="outline" className="text-xs">
-                {deniedPermissionCount} refusee
+                {deniedPermissionCount} refusée
                 {deniedPermissionCount > 1 ? 's' : ''}
               </Badge>
               {customPermissionCount > 0 && (
@@ -568,7 +736,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   variant="outline"
                   className="border-primary/40 text-primary text-xs"
                 >
-                  {customPermissionCount} choix manuel
+                  {customPermissionCount} surcharge
                   {customPermissionCount > 1 ? 's' : ''}
                 </Badge>
               )}
@@ -583,6 +751,19 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                 <div className="min-w-0 lg:min-w-56">{headerControls}</div>
               )}
               <div className="flex flex-wrap gap-2">
+                {customPermissionCount > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={disabled}
+                    onClick={handleResetAllOverrides}
+                    className="text-muted-foreground hover:text-foreground gap-1.5"
+                  >
+                    <RotateCcw className="size-3.5" />
+                    Tout réinitialiser
+                  </Button>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -592,7 +773,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                       className="gap-2"
                     >
                       <Sparkles size={14} />
-                      Modeles
+                      Modèles
                       <ChevronDown size={14} />
                     </Button>
                   </DropdownMenuTrigger>
@@ -651,10 +832,10 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
         </div>
         {visibleCategories.length > 0 && selectedCategory ? (
           <div className="grid gap-3 xl:grid-cols-[18rem_minmax(0,1fr)]">
-            <aside className="border-sidebar-border/70 bg-surface overflow-hidden rounded-lg border">
+            <aside className="border-sidebar-border/60 bg-surface overflow-hidden rounded-lg border">
               <div className="p-2">
                 <p className="text-muted-foreground px-2 pb-2 text-[11px] font-semibold tracking-[0.14em] uppercase">
-                  Poles
+                  Pôles
                 </p>
                 <div className="space-y-1">
                   {visibleCategories.map((category) => {
@@ -700,10 +881,10 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                             utilisable
                             {categoryResult.ready > 1 ? 's' : ''}
                             {categoryResult.incomplete > 0
-                              ? ` - ${categoryResult.incomplete} a completer`
+                              ? ` - ${categoryResult.incomplete} à compléter`
                               : ''}
                             {hasActiveFilters
-                              ? ` - ${category.permissions.length} affichee${category.permissions.length > 1 ? 's' : ''}`
+                              ? ` - ${category.permissions.length} affichée${category.permissions.length > 1 ? 's' : ''}`
                               : ''}
                           </span>
                         </span>
@@ -723,24 +904,24 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   <strong className="block text-xs text-[#b6f1c6]">
                     {readyPermissionCount}
                   </strong>
-                  autorisees
+                  autorisées
                 </span>
                 <span>
                   <strong className="block text-xs text-amber-300">
                     {incompletePermissionCount}
                   </strong>
-                  a completer
+                  à compléter
                 </span>
                 <span>
                   <strong className="text-destructive block text-xs">
                     {deniedPermissionCount}
                   </strong>
-                  refusees
+                  refusées
                 </span>
               </div>
             </aside>
-            <section className="border-sidebar-border/70 bg-surface overflow-hidden rounded-lg border">
-              <div className="border-sidebar-border/65 bg-surface-muted flex flex-col gap-3 border-b p-3 lg:flex-row lg:items-center lg:justify-between">
+            <section className="border-sidebar-border/60 bg-surface overflow-hidden rounded-lg border">
+              <div className="border-sidebar-border/55 bg-surface-muted flex flex-col gap-3 border-b p-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex min-w-0 items-start gap-3">
                   <span
                     className={cn(
@@ -767,7 +948,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                           variant="outline"
                           className="border-amber-500/40 text-xs text-amber-300"
                         >
-                          {selectedCategoryResult?.incomplete} a completer
+                          {selectedCategoryResult?.incomplete} à compléter
                         </Badge>
                       )}
                     </div>
@@ -777,6 +958,21 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {selectedCategoryOverrideCount > 0 && selectedCategory && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={disabled}
+                      onClick={() =>
+                        handleResetCategoryOverrides(selectedCategory.key)
+                      }
+                      className="text-muted-foreground hover:text-foreground gap-1.5"
+                    >
+                      <RotateCcw className="size-3.5" />
+                      Réinitialiser ce pôle
+                    </Button>
+                  )}
                   {selectedCategoryAccessPermission && (
                     <>
                       <Button
@@ -831,9 +1027,9 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   {selectedCategoryGroups.map((group) => (
                     <div
                       key={group.module}
-                      className="border-sidebar-border/70 overflow-hidden rounded-lg border"
+                      className="border-sidebar-border/60 overflow-hidden rounded-lg border"
                     >
-                      <div className="bg-surface-muted border-sidebar-border/65 flex items-center justify-between gap-2 border-b px-3 py-2">
+                      <div className="bg-surface-muted border-sidebar-border/55 flex items-center justify-between gap-2 border-b px-3 py-2">
                         <div>
                           <h5 className="text-foreground text-sm font-semibold">
                             {group.module}
@@ -844,179 +1040,285 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                           </p>
                         </div>
                       </div>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="h-9 min-w-[16rem] px-3">
-                              Permission
-                            </TableHead>
-                            <TableHead className="h-9 min-w-[8rem] px-3">
-                              Resultat
-                            </TableHead>
-                            <TableHead className="h-9 min-w-[17rem] px-3">
-                              Choix
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {group.permissions.map((permission) => {
-                            const isEnabled =
-                              effectivePermissionsMap.get(permission.key) ??
-                              false;
-                            const overrideState = getPermissionOverrideState(
-                              effectivePermissionsMap,
-                              permission.key,
-                            );
-                            const hasCustomChoice = customPermissionKeys.has(
-                              permission.key,
-                            );
-                            const riskLabel = RISK_LABELS[permission.risk];
-                            const dependencies = permission.dependencies ?? [];
-                            const missingDependencies =
-                              getMissingPermissionDependencies(
-                                permission,
-                                effectivePermissionsMap,
-                              );
-                            const hasMissingDependencies =
-                              missingDependencies.length > 0;
-                            const isBlockedByPage = missingDependencies.some(
-                              (dependency) =>
-                                dependency ===
-                                selectedCategoryAccessPermission?.key,
-                            );
-                            const dependencyLabels = dependencies.map(
-                              (dependency) =>
-                                permissionLabelMap.get(dependency) ??
-                                dependency,
-                            );
-                            const missingDependencyLabels =
-                              missingDependencies.map(
-                                (dependency) =>
-                                  permissionLabelMap.get(dependency) ??
-                                  dependency,
-                              );
-                            const resultState: PermissionResultState =
-                              isBlockedByPage
-                                ? 'page-blocked'
-                                : hasMissingDependencies
-                                  ? 'incomplete'
-                                  : isEnabled
-                                    ? 'allowed'
-                                    : 'denied';
+                      <div className="hidden overflow-x-auto md:block">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="h-9 min-w-[16rem] px-3">
+                                Permission
+                              </TableHead>
+                              <TableHead className="h-9 min-w-[9rem] px-3">
+                                Résultat
+                              </TableHead>
+                              <TableHead className="h-9 min-w-[18rem] px-3">
+                                Choix
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {group.permissions.map((permission) => {
+                              const view = getPermissionViewModel(permission);
 
-                            return (
-                              <TableRow
-                                key={permission.key}
-                                className={cn(
-                                  'hover:bg-accent/35 border-l-2',
-                                  getRiskBorderClassName(permission.risk),
-                                  getPermissionRowClassName(
-                                    isEnabled,
-                                    hasMissingDependencies,
-                                  ),
-                                )}
-                              >
-                                <TableCell className="px-3 py-3 align-top">
-                                  <div className="flex min-w-0 flex-col gap-1">
-                                    <div className="flex flex-wrap items-center gap-1.5">
-                                      <span className="text-foreground text-sm font-medium">
-                                        {permission.label}
-                                      </span>
-                                      <Badge
-                                        variant="outline"
-                                        className="text-muted-foreground border-border/70 text-[10px]"
-                                      >
-                                        {ACTION_LABELS[permission.action]}
-                                      </Badge>
-                                      {riskLabel && (
+                              return (
+                                <TableRow
+                                  key={permission.key}
+                                  className={cn(
+                                    'hover:bg-accent/35 border-l-2',
+                                    getRiskBorderClassName(permission.risk),
+                                    getPermissionRowClassName(
+                                      view.isEnabled,
+                                      view.hasMissingDependencies,
+                                    ),
+                                  )}
+                                >
+                                  <TableCell className="px-3 py-3 align-top">
+                                    <div className="flex min-w-0 flex-col gap-1">
+                                      <div className="flex flex-wrap items-center gap-1.5">
+                                        <span className="text-foreground text-sm font-medium">
+                                          {permission.label}
+                                        </span>
                                         <Badge
                                           variant="outline"
-                                          className={cn(
-                                            'text-[10px]',
-                                            getRiskBadgeClassName(
-                                              permission.risk,
-                                            ),
+                                          className="text-muted-foreground border-border/70 text-[10px]"
+                                        >
+                                          {ACTION_LABELS[permission.action]}
+                                        </Badge>
+                                        {view.riskLabel && (
+                                          <Badge
+                                            variant="outline"
+                                            className={cn(
+                                              'text-[10px]',
+                                              getRiskBadgeClassName(
+                                                permission.risk,
+                                              ),
+                                            )}
+                                          >
+                                            {view.riskLabel}
+                                          </Badge>
+                                        )}
+                                        {view.hasMissingDependencies && (
+                                          <Badge
+                                            variant="outline"
+                                            className="border-amber-500/40 text-[10px] text-amber-400"
+                                          >
+                                            {view.isBlockedByPage
+                                              ? 'Page bloquée'
+                                              : 'Accès lié manquant'}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-muted-foreground text-xs">
+                                        {permission.description}
+                                      </p>
+                                      <p className="text-muted-foreground/85 text-[11px]">
+                                        {view.hasCustomChoice
+                                          ? `Surcharge : ${view.isEnabled ? 'autorisé' : 'refusé'}`
+                                          : `Rôle : ${view.isRoleDefaultEnabled ? 'autorisé' : 'refusé'}`}
+                                      </p>
+                                      {view.hasMissingDependencies ? (
+                                        <p className="text-[11px] text-amber-300">
+                                          {view.isBlockedByPage
+                                            ? 'Page bloquée par : '
+                                            : 'À autoriser aussi : '}
+                                          {view.missingDependencyLabels.join(
+                                            ', ',
                                           )}
-                                        >
-                                          {riskLabel}
-                                        </Badge>
-                                      )}
-                                      {hasCustomChoice && (
-                                        <Badge
-                                          variant="outline"
-                                          className="border-primary/40 text-primary text-[10px]"
-                                        >
-                                          Choix manuel
-                                        </Badge>
-                                      )}
-                                      {hasMissingDependencies && (
-                                        <Badge
-                                          variant="outline"
-                                          className="border-amber-500/40 text-[10px] text-amber-400"
-                                        >
-                                          {isBlockedByPage
-                                            ? 'Page bloquee'
-                                            : 'Acces lie manquant'}
-                                        </Badge>
+                                        </p>
+                                      ) : (
+                                        view.dependencyLabels.length > 0 && (
+                                          <p className="text-muted-foreground/85 text-[11px]">
+                                            Accès lié :{' '}
+                                            {view.dependencyLabels.join(', ')}
+                                          </p>
+                                        )
                                       )}
                                     </div>
-                                    <p className="text-muted-foreground text-xs">
-                                      {permission.description}
-                                    </p>
-                                    {hasMissingDependencies ? (
-                                      <p className="text-[11px] text-amber-300">
-                                        {isBlockedByPage
-                                          ? 'Page bloquee par : '
-                                          : 'A autoriser aussi : '}
-                                        {missingDependencyLabels.join(', ')}
-                                      </p>
-                                    ) : (
-                                      dependencies.length > 0 && (
-                                        <p className="text-muted-foreground/85 text-[11px]">
-                                          Acces lie :{' '}
-                                          {dependencyLabels.join(', ')}
-                                        </p>
-                                      )
-                                    )}
-                                  </div>
-                                </TableCell>
-                                <TableCell className="px-3 py-3 align-top">
-                                  <div className="flex flex-col gap-1">
-                                    <Badge
-                                      variant={
-                                        resultState === 'allowed'
-                                          ? 'secondary'
-                                          : 'outline'
+                                  </TableCell>
+                                  <TableCell className="px-3 py-3 align-top">
+                                    <div className="flex flex-col items-start gap-1.5">
+                                      <Badge
+                                        variant={
+                                          view.resultState === 'allowed'
+                                            ? 'secondary'
+                                            : 'outline'
+                                        }
+                                        className={cn(
+                                          'w-fit text-xs',
+                                          getPermissionResultBadgeClassName(
+                                            view.resultState,
+                                          ),
+                                        )}
+                                      >
+                                        {getPermissionResultLabel(
+                                          view.resultState,
+                                        )}
+                                      </Badge>
+                                      <Badge
+                                        variant="outline"
+                                        className={cn(
+                                          'w-fit text-[10px]',
+                                          getPermissionOriginBadgeClassName(
+                                            view.hasCustomChoice,
+                                          ),
+                                        )}
+                                      >
+                                        {getPermissionOriginLabel(
+                                          view.hasCustomChoice,
+                                        )}
+                                      </Badge>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="px-3 py-3 align-top">
+                                    <PermissionStatePicker
+                                      canReset={view.hasCustomChoice}
+                                      defaultState={view.defaultState}
+                                      disabled={disabled}
+                                      permissionLabel={permission.label}
+                                      state={view.overrideState}
+                                      onChange={(state) =>
+                                        handleSetPermissionOverride(
+                                          permission.key,
+                                          state,
+                                        )
                                       }
+                                      onReset={() =>
+                                        handleResetPermissionOverride(
+                                          permission.key,
+                                        )
+                                      }
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                      <div className="divide-sidebar-border/60 divide-y md:hidden">
+                        {group.permissions.map((permission) => {
+                          const view = getPermissionViewModel(permission);
+
+                          return (
+                            <div
+                              key={permission.key}
+                              className={cn(
+                                'border-l-2 p-3',
+                                getRiskBorderClassName(permission.risk),
+                                getPermissionRowClassName(
+                                  view.isEnabled,
+                                  view.hasMissingDependencies,
+                                ),
+                              )}
+                            >
+                              <div className="flex min-w-0 flex-col gap-2">
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <span className="text-foreground text-sm font-medium">
+                                    {permission.label}
+                                  </span>
+                                  <Badge
+                                    variant="outline"
+                                    className="text-muted-foreground border-border/70 text-[10px]"
+                                  >
+                                    {ACTION_LABELS[permission.action]}
+                                  </Badge>
+                                  {view.riskLabel && (
+                                    <Badge
+                                      variant="outline"
                                       className={cn(
-                                        'w-fit text-xs',
-                                        getPermissionResultBadgeClassName(
-                                          resultState,
-                                        ),
+                                        'text-[10px]',
+                                        getRiskBadgeClassName(permission.risk),
                                       )}
                                     >
-                                      {getPermissionResultLabel(resultState)}
+                                      {view.riskLabel}
                                     </Badge>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="px-3 py-3 align-top">
-                                  <PermissionStatePicker
-                                    disabled={disabled}
-                                    permissionLabel={permission.label}
-                                    state={overrideState}
-                                    onChange={(state) =>
-                                      handleSetPermissionOverride(
-                                        permission.key,
-                                        state,
-                                      )
+                                  )}
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      'text-[10px]',
+                                      getPermissionOriginBadgeClassName(
+                                        view.hasCustomChoice,
+                                      ),
+                                    )}
+                                  >
+                                    {getPermissionOriginLabel(
+                                      view.hasCustomChoice,
+                                    )}
+                                  </Badge>
+                                  {view.hasMissingDependencies && (
+                                    <Badge
+                                      variant="outline"
+                                      className="border-amber-500/40 text-[10px] text-amber-400"
+                                    >
+                                      {view.isBlockedByPage
+                                        ? 'Page bloquée'
+                                        : 'Accès lié manquant'}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-muted-foreground text-xs">
+                                  {permission.description}
+                                </p>
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <Badge
+                                    variant={
+                                      view.resultState === 'allowed'
+                                        ? 'secondary'
+                                        : 'outline'
                                     }
-                                  />
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
+                                    className={cn(
+                                      'w-fit text-xs',
+                                      getPermissionResultBadgeClassName(
+                                        view.resultState,
+                                      ),
+                                    )}
+                                  >
+                                    {getPermissionResultLabel(view.resultState)}
+                                  </Badge>
+                                  <span className="text-muted-foreground text-[11px]">
+                                    {view.hasCustomChoice
+                                      ? `Surcharge : ${view.isEnabled ? 'autorisé' : 'refusé'}`
+                                      : `Rôle : ${view.isRoleDefaultEnabled ? 'autorisé' : 'refusé'}`}
+                                  </span>
+                                </div>
+                                {view.hasMissingDependencies ? (
+                                  <p className="text-[11px] text-amber-300">
+                                    {view.isBlockedByPage
+                                      ? 'Page bloquée par : '
+                                      : 'À autoriser aussi : '}
+                                    {view.missingDependencyLabels.join(', ')}
+                                  </p>
+                                ) : (
+                                  view.dependencyLabels.length > 0 && (
+                                    <p className="text-muted-foreground/85 text-[11px]">
+                                      Accès lié :{' '}
+                                      {view.dependencyLabels.join(', ')}
+                                    </p>
+                                  )
+                                )}
+                                <PermissionStatePicker
+                                  canReset={view.hasCustomChoice}
+                                  defaultState={view.defaultState}
+                                  disabled={disabled}
+                                  permissionLabel={permission.label}
+                                  state={view.overrideState}
+                                  onChange={(state) =>
+                                    handleSetPermissionOverride(
+                                      permission.key,
+                                      state,
+                                    )
+                                  }
+                                  onReset={() =>
+                                    handleResetPermissionOverride(
+                                      permission.key,
+                                    )
+                                  }
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1024,10 +1326,10 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
             </section>
           </div>
         ) : (
-          <div className="border-sidebar-border/70 bg-surface flex flex-col items-center justify-center rounded-lg border p-8 text-center">
+          <div className="border-sidebar-border/60 bg-surface flex flex-col items-center justify-center rounded-lg border p-8 text-center">
             <Search className="text-muted-foreground size-8" />
             <p className="text-foreground mt-3 text-sm font-medium">
-              Aucune permission trouvee
+              Aucune permission trouvée
             </p>
             <p className="text-muted-foreground mt-1 max-w-sm text-xs">
               Ajustez la recherche ou changez de filtre pour afficher

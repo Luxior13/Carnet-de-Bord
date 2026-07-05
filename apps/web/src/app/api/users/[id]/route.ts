@@ -64,7 +64,7 @@ const optionalProfileDateSchema = z
 
 const staffProfileSchema = z
   .object({
-    department: optionalProfileString(80, 'Pole trop long'),
+    department: optionalProfileString(80, 'Pôle trop long'),
     discordId: optionalProfileString(20, 'ID Discord trop long').refine(
       (value) =>
         value === undefined || value === null || /^\d{17,20}$/.test(value),
@@ -333,7 +333,7 @@ export async function PATCH(
           error: {
             code: ErrorCode.FORBIDDEN,
             message:
-              "Seul un superadmin peut modifier les accÃ¨s d'un administrateur",
+              "Seul un superadmin peut modifier les accès d'un administrateur",
           },
           success: false,
         },

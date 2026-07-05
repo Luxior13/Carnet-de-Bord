@@ -26,9 +26,9 @@ import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { UserAccessTab } from '$components/users/user-detail/UserAccessTab';
 import {
   normalizeUserDetailSection,
-  USER_DETAIL_SECTIONS,
   type UserDetailSectionId,
 } from '$components/users/user-detail/UserDetailNavigation';
+import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailSectionRail';
 import { UserHistoryTab } from '$components/users/user-detail/UserHistoryTab';
 import {
   type ProfileForm,
@@ -38,6 +38,7 @@ import {
 import { UserResumeTab } from '$components/users/user-detail/UserResumeTab';
 import { UserSecurityTab } from '$components/users/user-detail/UserSecurityTab';
 import { UserAvatar } from '$components/users/UserAvatar';
+import { UsersAdminHero } from '$components/users/UsersAdminHero';
 import {
   getAccessLabel,
   getRoleColor,
@@ -65,9 +66,8 @@ import {
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent } from '$ui/card';
-import { PageCanvas, PageHeader, PageShell } from '$ui/page-shell';
+import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
-import { ScrollableTabsList, Tabs, TabsTrigger } from '$ui/tabs';
 import { apiFetch } from '$utils/api.utils';
 
 type UserDetailPageProps = {
@@ -188,9 +188,18 @@ const arePermissionsEqual = (
 
 const DetailSkeleton: FC = () => (
   <PageShell className="py-0">
-    <PageCanvas contentClassName="space-y-4">
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-full lg:hidden" />
+    <PageCanvas contentClassName="relative space-y-4">
+      <div className="hidden 2xl:absolute 2xl:top-0 2xl:right-[calc(100%+0.75rem)] 2xl:bottom-0 2xl:block 2xl:w-44">
+        <div className="border-sidebar-border/70 bg-surface sticky top-4 rounded-lg border p-1 shadow-[var(--shadow-panel)]">
+          <Skeleton className="mx-2 my-2 h-4 w-14" />
+          <div className="space-y-1">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton key={index} className="h-10 rounded-md" />
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="min-w-0 space-y-4">
         <Card className="shrink-0 overflow-hidden py-0">
           <div className="bg-primary h-1 w-full" />
           <CardContent className="p-3 sm:p-4">
@@ -210,9 +219,12 @@ const DetailSkeleton: FC = () => (
             </div>
           </CardContent>
         </Card>
-        <div className="border-sidebar-border/70 bg-surface rounded-lg border p-3 shadow-[var(--shadow-panel)] sm:p-4">
-          <Skeleton className="h-7 w-48 max-w-full" />
+        <div className="grid gap-3 md:grid-cols-3">
+          <Skeleton className="h-[4.125rem] rounded-lg" />
+          <Skeleton className="h-[4.125rem] rounded-lg" />
+          <Skeleton className="h-[4.125rem] rounded-lg" />
         </div>
+        <Skeleton className="h-11 w-full rounded-lg lg:hidden" />
         <Skeleton className="min-h-96 w-full rounded-lg" />
       </div>
     </PageCanvas>
@@ -327,7 +339,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     !!user && canDeleteUsers && !user.isProtected && !isSelf;
   const canEditTargetRole = !!user && isProtectedActor && !user.isProtected;
   const canEditTargetStatus = canEditTargetProfile;
-  const availableSections = USER_DETAIL_SECTIONS;
   /* eslint-disable security/detect-object-injection -- Profile keys are typed local StaffProfileForm fields, not user-controlled object paths. */
   const profileErrors = useMemo(() => {
     const buildLengthError = (
@@ -357,7 +368,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           ? 'Nom trop long'
           : null,
       staffProfile: {
-        department: buildLengthError('department', 'Pole'),
+        department: buildLengthError('department', 'Pôle'),
         discordId:
           editForm.staffProfile.discordId.trim() &&
           !/^\d{17,20}$/.test(editForm.staffProfile.discordId.trim())
@@ -409,6 +420,15 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const canSaveAccess =
     hasAccessChanges && (canEditTargetRole || canManageTargetPermissions);
   const canSaveSecurity = canEditTargetStatus && !isSelf && hasSecurityChanges;
+  const dirtySections = useMemo<UserDetailSectionId[]>(() => {
+    const sections: UserDetailSectionId[] = [];
+
+    if (hasProfileChanges) sections.push('profile');
+    if (hasAccessChanges) sections.push('access');
+    if (hasSecurityChanges) sections.push('security');
+
+    return sections;
+  }, [hasAccessChanges, hasProfileChanges, hasSecurityChanges]);
 
   const fetchUser = useCallback(
     async (options: { background?: boolean } = {}): Promise<void> => {
@@ -1102,9 +1122,22 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       ]}
     >
       <PageShell className="py-0">
-        <PageCanvas contentClassName="space-y-3">
-          <div className="space-y-3">
-            <PageHeader
+        <PageCanvas contentClassName="relative space-y-5">
+          <UserDetailSectionRail
+            activeSection={activeSection}
+            className="2xl:absolute 2xl:top-0 2xl:right-[calc(100%+0.75rem)] 2xl:bottom-0 2xl:w-44"
+            dirtySections={dirtySections}
+            getSectionHref={(sectionId) =>
+              buildUserDetailSectionHref(
+                pathname,
+                currentQueryString,
+                sectionId,
+              )
+            }
+            onSectionChange={handleSectionChange}
+          />
+          <div className="min-w-0 space-y-3">
+            <UsersAdminHero
               title={`${user.firstName} ${user.lastName}`}
               description={user.email}
               actions={
@@ -1115,7 +1148,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                   </Link>
                 </Button>
               }
-              icon={<UserAvatar user={user} className="size-10 rounded-lg" />}
+              icon={<UserAvatar user={user} className="size-full rounded-lg" />}
+              iconClassName="overflow-hidden p-0"
               meta={
                 <>
                   <Badge variant={getRoleColor(user.role)}>
@@ -1187,33 +1221,20 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 </div>
               </div>
             </div>
-            <Tabs
-              value={activeSection}
-              onValueChange={(value) =>
-                handleSectionChange(value as UserDetailSectionId)
+            <UserDetailSectionRail
+              activeSection={activeSection}
+              dirtySections={dirtySections}
+              getSectionHref={(sectionId) =>
+                buildUserDetailSectionHref(
+                  pathname,
+                  currentQueryString,
+                  sectionId,
+                )
               }
-              className="min-w-0"
-            >
-              <ScrollableTabsList className="h-10 p-1">
-                {availableSections.map((section) => (
-                  <TabsTrigger
-                    key={section.id}
-                    value={section.id}
-                    className="h-8 px-3 text-xs sm:text-sm"
-                  >
-                    <span
-                      className={
-                        activeSection === section.id ? 'text-primary' : ''
-                      }
-                    >
-                      {section.icon}
-                    </span>
-                    {section.label}
-                  </TabsTrigger>
-                ))}
-              </ScrollableTabsList>
-            </Tabs>
-            <div>{renderContent()}</div>
+              layout="mobile"
+              onSectionChange={handleSectionChange}
+            />
+            <div className="min-w-0">{renderContent()}</div>
           </div>
         </PageCanvas>
       </PageShell>

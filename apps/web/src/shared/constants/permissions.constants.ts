@@ -78,14 +78,14 @@ export type PermissionsData = Record<string, boolean>;
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   {
     color: 'blue',
-    description: 'Acces au tableau de bord',
+    description: 'Accès au tableau de bord',
     icon: 'LayoutDashboard',
     key: 'dashboard',
     label: 'Tableau de bord',
     permissions: [
       {
         action: 'view',
-        description: 'Acceder au tableau de bord et voir les statistiques',
+        description: 'Accéder au tableau de bord et voir les statistiques',
         key: PERMISSIONS.DASHBOARD.VIEW,
         label: 'Voir le tableau de bord',
         module: "Vue d'ensemble",
@@ -95,7 +95,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   },
   {
     color: 'violet',
-    description: 'Gestion des utilisateurs du systeme',
+    description: 'Gestion des utilisateurs du système',
     icon: 'Users',
     key: 'users',
     label: 'Utilisateurs',
@@ -111,9 +111,9 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       {
         action: 'create',
         dependencies: [PERMISSIONS.USERS.VIEW],
-        description: 'Creer de nouveaux comptes utilisateur',
+        description: 'Créer de nouveaux comptes utilisateur',
         key: PERMISSIONS.USERS.CREATE,
-        label: 'Creer des utilisateurs',
+        label: 'Créer des utilisateurs',
         module: 'Comptes',
         risk: 'sensitive',
       },
@@ -138,9 +138,9 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       {
         action: 'reset',
         dependencies: [PERMISSIONS.USERS.VIEW],
-        description: 'Reinitialiser les mots de passe',
+        description: 'Réinitialiser les mots de passe',
         key: PERMISSIONS.USERS.RESET_PASSWORD,
-        label: 'Reinitialiser les mots de passe',
+        label: 'Réinitialiser les mots de passe',
         module: 'Securite',
         risk: 'critical',
       },
@@ -150,17 +150,17 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         description: 'Modifier les permissions des utilisateurs',
         key: PERMISSIONS.USERS.EDIT_PERMISSIONS,
         label: 'Gerer les permissions',
-        module: 'Acces',
+        module: 'Accès',
         risk: 'critical',
       },
     ],
   },
   {
     color: 'green',
-    description: 'Acces financier strict',
+    description: 'Accès financier strict',
     icon: 'Wallet',
     key: 'treasury',
-    label: 'Tresorerie',
+    label: 'Trésorerie',
     permissions: [
       {
         action: 'view',
@@ -173,7 +173,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       {
         action: 'update',
         dependencies: [PERMISSIONS.TREASURY.VIEW],
-        description: 'Modifier les donnees et operations financieres',
+        description: 'Modifier les données et opérations financières',
         key: PERMISSIONS.TREASURY.EDIT,
         label: 'Modifier la tresorerie',
         module: 'Finance',
@@ -182,7 +182,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       {
         action: 'export',
         dependencies: [PERMISSIONS.TREASURY.VIEW],
-        description: 'Exporter les donnees et documents financiers',
+        description: 'Exporter les données et documents financiers',
         key: PERMISSIONS.TREASURY.EXPORT,
         label: 'Exporter la tresorerie',
         module: 'Exports',

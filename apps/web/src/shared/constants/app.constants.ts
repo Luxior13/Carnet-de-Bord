@@ -3,8 +3,8 @@ import type { NavigationSpaceTone } from '$constants/navigation-theme.constants'
 import {
   DEFAULT_ROLE_LABEL,
   getAccessLabel as getPermissionAccessLabel,
+  getEffectivePermissions,
   getRoleLabel as getPermissionRoleLabel,
-  hasPermission,
   PERMISSIONS,
   type PermissionsData,
   PROTECTED_ROLE_LABEL,
@@ -303,10 +303,10 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: dashboardAccess,
           },
           {
-            description: 'Materiel, licences, maillots et acces confies.',
+            description: 'Matériel, licences, maillots et accès confiés.',
             href: '/bureau-juridique/inventaire-acces',
             icon: 'Archive',
-            label: 'Inventaire et acces',
+            label: 'Inventaire et accès',
             requiredPermissions: dashboardAccess,
           },
           {
@@ -326,17 +326,17 @@ export const NAV_SPACES: NavigationSpace[] = [
   },
   {
     badge: 'Restreint',
-    description: 'Finance isolee avec permissions strictes.',
+    description: 'Finance isolée avec permissions strictes.',
     href: '/tresorerie',
     icon: 'Wallet',
     id: 'treasury',
-    label: 'Tresorerie',
+    label: 'Trésorerie',
     sections: [
       {
         id: 'treasury-overview',
         items: [
           {
-            description: 'Vue globale financiere.',
+            description: 'Vue globale financière.',
             href: '/tresorerie',
             icon: 'Wallet',
             label: 'Tableau de bord financier',
@@ -350,7 +350,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: treasuryAccess,
           },
           {
-            description: 'Previsions et enveloppes budgetaires.',
+            description: 'Prévisions et enveloppes budgétaires.',
             href: '/tresorerie/budget',
             icon: 'ClipboardList',
             label: 'Budget',
@@ -385,10 +385,10 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: treasuryAccess,
           },
           {
-            description: 'Depenses et sorties de tresorerie.',
+            description: 'Dépenses et sorties de trésorerie.',
             href: '/tresorerie/depenses',
             icon: 'Wallet',
-            label: 'Depenses',
+            label: 'Dépenses',
             requiredPermissions: treasuryAccess,
           },
           {
@@ -420,7 +420,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: treasuryAccess,
           },
         ],
-        label: 'Operations',
+        label: 'Opérations',
         position: 'top',
       },
       {
@@ -434,28 +434,28 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: treasuryExportAccess,
           },
           {
-            description: 'Actions financieres a approuver.',
+            description: 'Actions financières à approuver.',
             href: '/tresorerie/validations-finance',
             icon: 'CheckCircle2',
             label: 'Validations finance',
             requiredPermissions: treasuryValidationAccess,
           },
           {
-            description: 'Historique des actions financieres.',
+            description: 'Historique des actions financières.',
             href: '/tresorerie/journal-financier',
             icon: 'History',
             label: 'Journal financier',
             requiredPermissions: treasuryAccess,
           },
           {
-            description: 'Anciennes periodes et donnees financieres.',
+            description: 'Anciennes périodes et données financières.',
             href: '/tresorerie/archives-finance',
             icon: 'Archive',
             label: 'Archives finance',
             requiredPermissions: treasuryAccess,
           },
         ],
-        label: 'Controle',
+        label: 'Contrôle',
         position: 'top',
       },
     ],
@@ -463,39 +463,39 @@ export const NAV_SPACES: NavigationSpace[] = [
     tone: 'treasury',
   },
   {
-    description: 'Administration, securite et configuration globale.',
+    description: 'Administration, sécurité et configuration globale.',
     href: '/systeme',
     icon: 'Settings',
     id: 'system',
-    label: 'Systeme',
+    label: 'Système',
     matchHrefs: ['/administration'],
     sections: [
       {
         id: 'system-admin',
         items: [
           {
-            description: 'Accueil du pole systeme.',
+            description: 'Accueil du pôle système.',
             href: '/systeme',
             icon: 'Settings',
             label: "Vue d'ensemble",
             requiredPermissions: usersAccess,
           },
           {
-            description: 'Comptes, roles et permissions existants.',
+            description: 'Comptes, rôles et permissions existants.',
             href: '/administration/utilisateurs',
             icon: 'Users',
             label: 'Utilisateurs & permissions',
             requiredPermissions: usersAccess,
           },
           {
-            description: 'Configuration des jeux, statuts, categories et tags.',
+            description: 'Configuration des jeux, statuts, catégories et tags.',
             href: '/systeme/parametres',
             icon: 'Settings',
-            label: 'Parametres',
+            label: 'Paramètres',
             requiredPermissions: usersAccess,
           },
           {
-            description: 'Actions sensibles a approuver.',
+            description: 'Actions sensibles à approuver.',
             href: '/systeme/validations',
             icon: 'CheckCircle2',
             label: 'Validations globales',
@@ -509,7 +509,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: usersAccess,
           },
           {
-            description: 'Archives transversales du site prive.',
+            description: 'Archives transversales du site privé.',
             href: '/systeme/archives',
             icon: 'Archive',
             label: 'Archives globales',
@@ -519,23 +519,23 @@ export const NAV_SPACES: NavigationSpace[] = [
             description: 'Historique admin et actions sensibles.',
             href: '/systeme/journal-activite',
             icon: 'History',
-            label: "Journal d'activite",
+            label: "Journal d'activité",
             requiredPermissions: usersAccess,
           },
           {
             children: [
               {
-                description: 'Modeles de chartes, contrats et documents.',
+                description: 'Modèles de chartes, contrats et documents.',
                 href: '/systeme/modeles-documents',
                 icon: 'FileText',
-                label: 'Modeles de documents',
+                label: 'Modèles de documents',
                 requiredPermissions: usersAccess,
               },
               {
-                description: 'Modeles de messages, rappels et notifications.',
+                description: 'Modèles de messages, rappels et notifications.',
                 href: '/systeme/modeles-notifications',
                 icon: 'Bell',
-                label: 'Modeles de notifications',
+                label: 'Modèles de notifications',
                 requiredPermissions: usersAccess,
               },
               {
@@ -546,10 +546,10 @@ export const NAV_SPACES: NavigationSpace[] = [
                 requiredPermissions: usersAccess,
               },
             ],
-            description: 'Modeles et automatisations transversales.',
+            description: 'Modèles et automatisations transversales.',
             href: '/systeme/modeles',
             icon: 'FileText',
-            label: 'Modeles & automatisations',
+            label: 'Modèles & automatisations',
             requiredPermissions: usersAccess,
           },
         ],
@@ -557,7 +557,7 @@ export const NAV_SPACES: NavigationSpace[] = [
         position: 'top',
       },
     ],
-    summary: 'Permissions et parametres',
+    summary: 'Permissions et paramètres',
     tone: 'system',
   },
   {
@@ -628,7 +628,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             status: 'Lecture publique plus tard',
           },
           {
-            description: 'Tryouts sportifs lies aux donnees internes.',
+            description: 'Tryouts sportifs liés aux données internes.',
             href: '/sport-team-control/recrutement-tryouts',
             icon: 'UserPlus',
             label: 'Recrutement & tryouts',
@@ -681,12 +681,14 @@ export function canAccessNavigationItem(
   if (user.isProtected) return true;
   if (!item.requiredPermissions?.length) return true;
 
-  return item.requiredPermissions.some((permissionKey) =>
-    hasPermission(
-      user.role,
-      permissionKey,
-      user.permissions as PermissionsData | null,
-    ),
+  const effectivePermissions = getEffectivePermissions(
+    user.role,
+    user.permissions as PermissionsData | null,
+  );
+  const effectivePermissionsMap = new Map(Object.entries(effectivePermissions));
+
+  return item.requiredPermissions.some(
+    (permissionKey) => effectivePermissionsMap.get(permissionKey) ?? false,
   );
 }
 

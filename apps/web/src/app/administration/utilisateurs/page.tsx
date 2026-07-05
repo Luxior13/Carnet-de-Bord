@@ -6,12 +6,12 @@ import React, { type FC, Suspense } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { AccessDeniedState } from '$components/layout/PageState';
+import { UsersAdminHero } from '$components/users/UsersAdminHero';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import { UsersListPage } from '$features/users/UsersListPage';
 import { Button } from '$ui/button';
-import { PageCanvas, PageHeader, PageShell } from '$ui/page-shell';
-import { ServiceIcon } from '$ui/service-icon';
+import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 
 const UsersListFallback: FC = () => (
@@ -52,8 +52,8 @@ const UsersAdministrationContent: FC = () => {
 
   return (
     <PageShell className="py-0">
-      <PageCanvas>
-        <PageHeader
+      <PageCanvas contentClassName="space-y-5">
+        <UsersAdminHero
           title="Utilisateurs"
           description="Comptes autorisés et accès de l'équipe."
           actions={
@@ -66,11 +66,7 @@ const UsersAdministrationContent: FC = () => {
               </Button>
             ) : null
           }
-          icon={
-            <ServiceIcon className="bg-primary/10">
-              <Users className="size-5" />
-            </ServiceIcon>
-          }
+          icon={<Users className="size-5" />}
         />
         <Suspense fallback={<UsersListFallback />}>
           <UsersListPage />

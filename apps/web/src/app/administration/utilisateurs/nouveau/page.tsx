@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { AccessDeniedState } from '$components/layout/PageState';
 import { SectionPanel } from '$components/layout/SectionPanel';
+import { UsersAdminHero } from '$components/users/UsersAdminHero';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import type { UserType } from '$types/auth.types';
@@ -34,7 +35,7 @@ import {
 } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
-import { PageCanvas, PageHeader, PageShell } from '$ui/page-shell';
+import { PageCanvas, PageShell } from '$ui/page-shell';
 import {
   Select,
   SelectContent,
@@ -43,7 +44,6 @@ import {
   SelectValue,
 } from '$ui/select';
 import { Separator } from '$ui/separator';
-import { ServiceIcon } from '$ui/service-icon';
 import { apiFetch } from '$utils/api.utils';
 
 type NewUserForm = {
@@ -143,9 +143,9 @@ const NewUserContent: FC = () => {
 
   return (
     <PageShell className="py-0">
-      <PageCanvas contentClassName="space-y-3">
-        <div className="mx-auto w-full max-w-4xl space-y-3">
-          <PageHeader
+      <PageCanvas contentClassName="space-y-5">
+        <div className="mx-auto w-full max-w-4xl space-y-5">
+          <UsersAdminHero
             title={headerTitle}
             description={headerSubtitle}
             actions={
@@ -157,17 +157,11 @@ const NewUserContent: FC = () => {
               </Button>
             }
             icon={
-              <ServiceIcon
-                className={
-                  createdUser ? 'bg-primary/10 text-primary' : undefined
-                }
-              >
-                {createdUser ? (
-                  <CheckCircle2 className="size-5" />
-                ) : (
-                  <UserPlus className="size-5" />
-                )}
-              </ServiceIcon>
+              createdUser ? (
+                <CheckCircle2 className="size-5" />
+              ) : (
+                <UserPlus className="size-5" />
+              )
             }
             meta={
               <>

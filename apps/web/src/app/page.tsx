@@ -72,7 +72,7 @@ type HomeShortcut = {
 };
 
 const ACTION_LABELS = new Map<string, string>([
-  ['ACCOUNT_LOCKED', 'Compte verrouille'],
+  ['ACCOUNT_LOCKED', 'Compte verrouillé'],
   ['LOGIN_FAILED', 'Echec de connexion'],
   ['LOGIN_SUCCESS', 'Connexion'],
   ['LOGOUT', 'Deconnexion'],
@@ -392,7 +392,7 @@ export default function HomePage(): React.ReactNode {
   const shortcuts = useMemo<HomeShortcut[]>(() => {
     const nextShortcuts: HomeShortcut[] = [
       {
-        description: 'Profil, mot de passe, sessions et activite personnelle.',
+        description: 'Profil, mot de passe, sessions et activité personnelle.',
         href: '/mon-compte',
         icon: UserRound,
         label: 'Mon compte',
@@ -401,7 +401,7 @@ export default function HomePage(): React.ReactNode {
 
     if (canViewUsers) {
       nextShortcuts.push({
-        description: 'Consulter les comptes, les acces et la securite.',
+        description: 'Consulter les comptes, les accès et la sécurité.',
         href: '/administration/utilisateurs',
         icon: Users,
         label: 'Utilisateurs',
@@ -410,7 +410,7 @@ export default function HomePage(): React.ReactNode {
 
     if (canCreateUsers) {
       nextShortcuts.push({
-        description: 'Creer un membre et lui transmettre son acces temporaire.',
+        description: 'Créer un membre et lui transmettre son accès temporaire.',
         href: '/administration/utilisateurs/nouveau',
         icon: UserPlus,
         label: 'Nouveau membre',
@@ -429,7 +429,7 @@ export default function HomePage(): React.ReactNode {
     if (!canViewDashboard) {
       return [
         {
-          description: 'Acces limite aux informations de votre compte.',
+          description: 'Accès limité aux informations de votre compte.',
           icon: UserRound,
           label: 'Vue personnelle',
           tone: 'neutral',
@@ -437,15 +437,15 @@ export default function HomePage(): React.ReactNode {
         },
         {
           description: userData?.isActive
-            ? 'Connexion autorisee'
-            : 'Connexion desactivee',
+            ? 'Connexion autorisée'
+            : 'Connexion désactivée',
           icon: ShieldCheck,
-          label: 'Etat du compte',
+          label: 'État du compte',
           tone: userData?.isActive ? 'primary' : 'danger',
           value: userData?.isActive ? 'Actif' : 'Inactif',
         },
         {
-          description: 'Derniere activite connue',
+          description: 'Dernière activité connue',
           icon: Clock,
           label: 'Connexion',
           tone: 'neutral',
@@ -454,11 +454,11 @@ export default function HomePage(): React.ReactNode {
         {
           description: userData?.mustChangePassword
             ? 'Changement requis'
-            : 'Aucune action immediate',
+            : 'Aucune action immédiate',
           icon: KeyRound,
           label: 'Mot de passe',
           tone: userData?.mustChangePassword ? 'warning' : 'primary',
-          value: userData?.mustChangePassword ? 'A changer' : 'OK',
+          value: userData?.mustChangePassword ? 'À changer' : 'OK',
         },
       ];
     }
@@ -466,8 +466,8 @@ export default function HomePage(): React.ReactNode {
     return [
       {
         description: canViewUsers
-          ? 'Comptes non supprimes'
-          : 'Vue limitee a votre compte',
+          ? 'Comptes non supprimés'
+          : 'Vue limitée à votre compte',
         icon: Users,
         label: canViewUsers ? 'Utilisateurs' : 'Compte',
         tone: 'primary',
@@ -476,9 +476,9 @@ export default function HomePage(): React.ReactNode {
       {
         description: canViewUsers
           ? `${stats?.users.inactive ?? 0} compte(s) inactif(s)`
-          : 'Etat de votre compte',
+          : 'État de votre compte',
         icon: ShieldCheck,
-        label: canViewUsers ? 'Actifs' : 'Etat',
+        label: canViewUsers ? 'Actifs' : 'État',
         tone: 'primary',
         value: canViewUsers
           ? String(stats?.users.active ?? 0)
@@ -488,8 +488,8 @@ export default function HomePage(): React.ReactNode {
       },
       {
         description: canViewUsers
-          ? 'Connexions sur les dernieres 24h'
-          : 'Derniere connexion personnelle',
+          ? 'Connexions sur les dernières 24h'
+          : 'Dernière connexion personnelle',
         icon: CalendarClock,
         label: canViewUsers ? 'Connexions 24h' : 'Connexion',
         tone: 'neutral',
@@ -498,9 +498,9 @@ export default function HomePage(): React.ReactNode {
           : formatRelativeDashboardTime(userData?.lastLoginAt ?? null),
       },
       {
-        description: `${lockedUsers} verrouille(s), ${pendingPassword} mot(s) de passe a changer`,
+        description: `${lockedUsers} verrouillé(s), ${pendingPassword} mot(s) de passe à changer`,
         icon: AlertTriangle,
-        label: 'Alertes securite',
+        label: 'Alertes sécurité',
         tone: securityAlerts > 0 ? 'warning' : 'primary',
         value: String(securityAlerts),
       },
@@ -513,7 +513,7 @@ export default function HomePage(): React.ReactNode {
         <PageCanvas contentClassName="space-y-4">
           <PageHeader
             title={firstName ? `Bonjour ${firstName}` : "Vue d'ensemble"}
-            description="Pilotage prive, securite et raccourcis."
+            description="Pilotage privé, sécurité et raccourcis."
             actions={
               <>
                 <Button asChild variant="outline" size="sm">
@@ -549,7 +549,7 @@ export default function HomePage(): React.ReactNode {
                       variant="outline"
                       className="border-amber-500/40 text-amber-400"
                     >
-                      Mot de passe a changer
+                      Mot de passe à changer
                     </Badge>
                   )}
                 </>
@@ -593,7 +593,7 @@ export default function HomePage(): React.ReactNode {
                       ) : (
                         <RefreshCw className="size-4" />
                       )}
-                      Reessayer
+                      Réessayer
                     </Button>
                   </CardContent>
                 </Card>
@@ -604,7 +604,7 @@ export default function HomePage(): React.ReactNode {
                     <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-4">
                       <CardTitle className="text-sm">Raccourcis</CardTitle>
                       <CardDescription>
-                        Acces utiles selon votre role actuel.
+                        Accès utiles selon votre rôle actuel.
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-3 p-4 md:grid-cols-2">
@@ -620,10 +620,10 @@ export default function HomePage(): React.ReactNode {
                     <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
                       <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-4">
                         <CardTitle className="text-sm">
-                          Activite recente
+                          Activité récente
                         </CardTitle>
                         <CardDescription>
-                          Derniers evenements visibles pour votre role.
+                          Derniers événements visibles pour votre rôle.
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="p-4">
@@ -638,10 +638,10 @@ export default function HomePage(): React.ReactNode {
                 <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
                   <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-4">
                     <CardTitle className="text-sm">
-                      Securite du compte
+                      Sécurité du compte
                     </CardTitle>
                     <CardDescription>
-                      Votre etat d&apos;acces et les signaux importants.
+                      Votre état d&apos;accès et les signaux importants.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3 p-4">
@@ -659,12 +659,12 @@ export default function HomePage(): React.ReactNode {
                         <p className="text-sm font-medium">
                           {userData?.mustChangePassword
                             ? 'Mot de passe temporaire'
-                            : 'Compte securise'}
+                            : 'Compte sécurisé'}
                         </p>
                         <p className="text-muted-foreground mt-0.5 text-xs">
                           {userData?.mustChangePassword
-                            ? 'Changement requis a la prochaine connexion.'
-                            : 'Aucune action immediate requise.'}
+                            ? 'Changement requis à la prochaine connexion.'
+                            : 'Aucune action immédiate requise.'}
                         </p>
                       </div>
                     </div>
@@ -674,7 +674,7 @@ export default function HomePage(): React.ReactNode {
                       </ServiceIcon>
                       <div className="min-w-0">
                         <p className="text-sm font-medium">
-                          Derniere connexion
+                          Dernière connexion
                         </p>
                         <p className="text-muted-foreground mt-0.5 text-xs">
                           {formatDashboardDate(userData?.lastLoginAt ?? null)}
