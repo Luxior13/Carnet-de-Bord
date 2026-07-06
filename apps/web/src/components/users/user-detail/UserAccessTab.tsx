@@ -149,7 +149,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
 
   return (
     <div>
-      <Card className="border-sidebar-border/60 overflow-hidden rounded-lg py-0">
+      <Card className="border-sidebar-border/60 overflow-visible rounded-lg py-0">
         <CardContent className="p-2.5 sm:p-3">
           <PermissionsEditor
             role={role}
@@ -195,7 +195,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             }
           />
         </CardContent>
-        <CardFooter className="border-sidebar-border/60 bg-surface-muted justify-between gap-3 border-t p-3">
+        <CardFooter className="border-sidebar-border/60 bg-surface-muted/95 sticky bottom-3 z-20 justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur">
           <p className="text-muted-foreground text-xs">
             {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
           </p>

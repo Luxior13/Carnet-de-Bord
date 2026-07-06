@@ -9,7 +9,6 @@ import {
   Clock,
   Loader2,
 } from 'lucide-react';
-import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, {
   type FC,
@@ -75,6 +74,17 @@ import { apiFetch } from '$utils/api.utils';
 type UserDetailPageProps = {
   userId: string;
 };
+
+type PendingNavigation =
+  | {
+      href: string;
+      kind: 'href';
+    }
+  | {
+      href: string;
+      kind: 'section';
+      sectionId: UserDetailSectionId;
+    };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
 
@@ -178,6 +188,41 @@ const normalizePermissionPageKey = (pageKey: string | null): string => {
     : DEFAULT_PERMISSION_PAGE_KEY;
 };
 
+const isPlainLeftClick = (event: MouseEvent): boolean => {
+  return (
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.shiftKey
+  );
+};
+
+const findAnchorElement = (
+  target: EventTarget | null,
+): HTMLAnchorElement | null => {
+  if (!(target instanceof Element)) return null;
+
+  return target.closest('a[href]');
+};
+
+const isInternalNavigationLink = (anchor: HTMLAnchorElement): boolean => {
+  const target = anchor.getAttribute('target');
+  const href = anchor.getAttribute('href');
+
+  if (!href) return false;
+  if (target && target !== '_self') return false;
+  if (
+    href.startsWith('#') ||
+    href.startsWith('mailto:') ||
+    href.startsWith('tel:')
+  ) {
+    return false;
+  }
+
+  return anchor.origin === window.location.origin;
+};
+
 const DetailSkeleton: FC = () => (
   <PageShell className="py-0">
     <PageCanvas contentClassName="relative space-y-4">
@@ -238,6 +283,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const [permissionPageKey, setPermissionPageKey] = useState(() =>
     normalizePermissionPageKey(searchParams.get('permissionPage')),
   );
+  const [pendingNavigation, setPendingNavigation] =
+    useState<PendingNavigation | null>(null);
+  const [showUnsavedNavigationConfirm, setShowUnsavedNavigationConfirm] =
+    useState(false);
+  const skipSectionNavigationGuardRef = useRef(false);
   const userAbortControllerRef = useRef<AbortController | null>(null);
   const auditAbortControllerRef = useRef<AbortController | null>(null);
   const sessionsAbortControllerRef = useRef<AbortController | null>(null);
@@ -427,6 +477,62 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
     return sections;
   }, [hasAccessChanges, hasProfileChanges, hasSecurityChanges]);
+
+  const requestPendingNavigation = useCallback(
+    (navigation: PendingNavigation): void => {
+      setPendingNavigation(navigation);
+      setShowUnsavedNavigationConfirm(true);
+    },
+    [],
+  );
+
+  const discardSectionChanges = useCallback(
+    (sectionId: UserDetailSectionId): void => {
+      if (!user) return;
+
+      if (sectionId === 'profile') {
+        setEditForm((currentForm) => ({
+          ...currentForm,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          staffProfile: mapStaffProfileToForm(user.staffProfile),
+        }));
+
+        return;
+      }
+
+      if (sectionId === 'access') {
+        setEditForm((currentForm) => ({
+          ...currentForm,
+          role: user.role,
+        }));
+        setPermissions(user.permissions);
+
+        return;
+      }
+
+      if (sectionId === 'security') {
+        setEditForm((currentForm) => ({
+          ...currentForm,
+          isActive: user.isActive,
+        }));
+      }
+    },
+    [user],
+  );
+
+  const handleNavigateBackToUsers = useCallback((): void => {
+    const usersHref = '/administration/utilisateurs';
+
+    if (hasUnsavedChanges) {
+      requestPendingNavigation({ href: usersHref, kind: 'href' });
+
+      return;
+    }
+
+    router.push(usersHref);
+  }, [hasUnsavedChanges, requestPendingNavigation, router]);
 
   const fetchUser = useCallback(
     async (options: { background?: boolean } = {}): Promise<void> => {
@@ -663,19 +769,61 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   }, [hasUnsavedChanges]);
 
   useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handleDocumentClick = (event: MouseEvent): void => {
+      if (event.defaultPrevented || !isPlainLeftClick(event)) return;
+
+      const anchor = findAnchorElement(event.target);
+      if (!anchor || !isInternalNavigationLink(anchor)) return;
+
+      const nextUrl = new URL(anchor.href);
+      const currentUrl = new URL(window.location.href);
+
+      if (nextUrl.pathname === currentUrl.pathname) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      requestPendingNavigation({
+        href: `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
+        kind: 'href',
+      });
+    };
+
+    document.addEventListener('click', handleDocumentClick, true);
+
+    return (): void => {
+      document.removeEventListener('click', handleDocumentClick, true);
+    };
+  }, [hasUnsavedChanges, requestPendingNavigation]);
+
+  useEffect(() => {
     const requestedSection = normalizeUserDetailSection(
       new URLSearchParams(currentQueryString).get('section'),
     );
 
     if (requestedSection === activeSection) return;
 
+    if (skipSectionNavigationGuardRef.current) {
+      skipSectionNavigationGuardRef.current = false;
+      setActiveSection(requestedSection);
+
+      return;
+    }
+
     if (hasCurrentSectionChanges) {
+      requestPendingNavigation({
+        href: buildUserDetailSectionHref(
+          pathname,
+          currentQueryString,
+          requestedSection,
+        ),
+        kind: 'section',
+        sectionId: requestedSection,
+      });
       router.replace(
         buildUserDetailSectionHref(pathname, currentQueryString, activeSection),
         { scroll: false },
-      );
-      toast.error(
-        'Enregistrez ou annulez les modifications avant de changer de section',
       );
 
       return;
@@ -687,6 +835,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     currentQueryString,
     hasCurrentSectionChanges,
     pathname,
+    requestPendingNavigation,
     router,
   ]);
 
@@ -695,9 +844,15 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       if (sectionId === activeSection) return;
 
       if (hasCurrentSectionChanges) {
-        toast.error(
-          'Enregistrez ou annulez les modifications avant de changer de section',
-        );
+        requestPendingNavigation({
+          href: buildUserDetailSectionHref(
+            pathname,
+            currentQueryString,
+            sectionId,
+          ),
+          kind: 'section',
+          sectionId,
+        });
 
         return;
       }
@@ -713,6 +868,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       currentQueryString,
       hasCurrentSectionChanges,
       pathname,
+      requestPendingNavigation,
       router,
     ],
   );
@@ -732,6 +888,31 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     },
     [currentQueryString, pathname, router],
   );
+
+  const handleCancelPendingNavigation = useCallback((): void => {
+    setShowUnsavedNavigationConfirm(false);
+    setPendingNavigation(null);
+  }, []);
+
+  const handleConfirmPendingNavigation = useCallback((): void => {
+    if (!pendingNavigation) return;
+
+    const navigation = pendingNavigation;
+
+    setShowUnsavedNavigationConfirm(false);
+    setPendingNavigation(null);
+
+    if (navigation.kind === 'section') {
+      discardSectionChanges(activeSection);
+      skipSectionNavigationGuardRef.current = true;
+      setActiveSection(navigation.sectionId);
+      router.replace(navigation.href, { scroll: false });
+
+      return;
+    }
+
+    router.push(navigation.href);
+  }, [activeSection, discardSectionChanges, pendingNavigation, router]);
 
   const syncUserState = (updatedUser: UserType): void => {
     setUser(updatedUser);
@@ -1182,11 +1363,14 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               title={`${user.firstName} ${user.lastName}`}
               description={user.email}
               actions={
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/administration/utilisateurs">
-                    <ArrowLeft className="size-4" />
-                    Retour
-                  </Link>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNavigateBackToUsers}
+                >
+                  <ArrowLeft className="size-4" />
+                  Retour
                 </Button>
               }
               icon={<UserAvatar user={user} className="size-full rounded-lg" />}
@@ -1279,6 +1463,50 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           </div>
         </PageCanvas>
       </PageShell>
+      <AlertDialog
+        open={showUnsavedNavigationConfirm}
+        onOpenChange={(open) => {
+          if (open) {
+            setShowUnsavedNavigationConfirm(true);
+
+            return;
+          }
+
+          handleCancelPendingNavigation();
+        }}
+      >
+        <AlertDialogContent className="border-border overflow-hidden rounded-lg p-0">
+          <div className="p-6">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-foreground flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
+                  <AlertTriangle size={16} className="text-amber-400" />
+                </div>
+                Quitter sans enregistrer ?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
+                Les modifications de cette section seront perdues. Vous pouvez
+                rester sur la page pour les enregistrer ou les annuler
+                manuellement.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-4">
+              <AlertDialogCancel
+                className="border-border"
+                onClick={handleCancelPendingNavigation}
+              >
+                Rester
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmPendingNavigation}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Quitter sans enregistrer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
         <AlertDialogContent className="border-border overflow-hidden rounded-lg p-0">
           <div className="p-6">

@@ -1,5 +1,8 @@
 import { UserRole } from '@repo/database';
 
+import type { NavigationIconName } from '$constants/navigation-icon.constants';
+import type { NavigationSpaceTone } from '$constants/navigation-theme.constants';
+
 export const PERMISSIONS = {
   DASHBOARD: {
     VIEW: 'dashboard:view',
@@ -42,6 +45,36 @@ export const ROLE_TEMPLATES = {
   },
 } as const;
 
+export type PermissionPole = {
+  icon: NavigationIconName;
+  key: string;
+  label: string;
+  tone: NavigationSpaceTone;
+};
+
+export const PERMISSION_POLES = [
+  {
+    icon: 'LayoutDashboard',
+    key: 'dashboard',
+    label: 'Tableau de bord',
+    tone: 'dashboard',
+  },
+  {
+    icon: 'Settings',
+    key: 'system',
+    label: 'Système',
+    tone: 'system',
+  },
+  {
+    icon: 'Wallet',
+    key: 'treasury',
+    label: 'Trésorerie',
+    tone: 'treasury',
+  },
+] as const satisfies readonly PermissionPole[];
+
+export type PermissionPoleKey = (typeof PERMISSION_POLES)[number]['key'];
+
 export type PermissionAction =
   | 'create'
   | 'delete'
@@ -65,19 +98,19 @@ export type PermissionItem = {
 };
 
 export type PermissionCategory = {
-  color: string;
   description: string;
-  icon: string;
+  icon: NavigationIconName;
   key: string;
   label: string;
   permissions: PermissionItem[];
+  poleKey: PermissionPoleKey;
+  tone: NavigationSpaceTone;
 };
 
 export type PermissionsData = Record<string, boolean>;
 
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   {
-    color: 'blue',
     description: 'Accès au tableau de bord',
     icon: 'LayoutDashboard',
     key: 'dashboard',
@@ -92,13 +125,14 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         risk: 'default',
       },
     ],
+    poleKey: 'dashboard',
+    tone: 'dashboard',
   },
   {
-    color: 'violet',
     description: 'Gestion des utilisateurs du système',
     icon: 'Users',
     key: 'users',
-    label: 'Utilisateurs',
+    label: 'Utilisateurs & permissions',
     permissions: [
       {
         action: 'view',
@@ -154,9 +188,10 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         risk: 'critical',
       },
     ],
+    poleKey: 'system',
+    tone: 'system',
   },
   {
-    color: 'green',
     description: 'Accès financier strict',
     icon: 'Wallet',
     key: 'treasury',
@@ -198,6 +233,8 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         risk: 'critical',
       },
     ],
+    poleKey: 'treasury',
+    tone: 'treasury',
   },
 ];
 

@@ -5,22 +5,24 @@ import {
   Check,
   ChevronDown,
   CircleAlert,
-  LayoutDashboard,
-  type LucideIcon,
   RotateCcw,
   ShieldCheck,
   Sparkles,
-  Users,
-  Wallet,
   X,
 } from 'lucide-react';
 import React, { type FC, memo, useCallback, useMemo } from 'react';
 
+import { getNavigationIcon } from '$constants/navigation-icon.constants';
+import {
+  getNavigationSpaceToneClasses,
+  type NavigationSpaceTone,
+} from '$constants/navigation-theme.constants';
 import {
   buildPermissionOverrides,
   getEffectivePermissions,
   getRoleBasePermissions,
   PERMISSION_CATEGORIES,
+  PERMISSION_POLES,
   type PermissionAction,
   type PermissionCategory,
   type PermissionItem,
@@ -46,48 +48,6 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
-const iconMap: Record<string, LucideIcon> = {
-  LayoutDashboard,
-  Users,
-  Wallet,
-};
-
-type ColorConfig = {
-  bg: string;
-  border: string;
-  icon: string;
-  ring: string;
-};
-
-const defaultColorConfig: ColorConfig = {
-  bg: 'bg-primary/10',
-  border: 'border-primary/35',
-  icon: 'text-primary',
-  ring: 'ring-primary/20',
-};
-
-const colorClasses: Record<string, ColorConfig> = {
-  amber: {
-    bg: 'bg-amber-500/10',
-    border: 'border-amber-500/35',
-    icon: 'text-amber-400',
-    ring: 'ring-amber-500/20',
-  },
-  blue: defaultColorConfig,
-  green: {
-    bg: 'bg-[#5fbd7b]/10',
-    border: 'border-[#5fbd7b]/35',
-    icon: 'text-[#97e6ad]',
-    ring: 'ring-[#5fbd7b]/20',
-  },
-  violet: {
-    bg: 'bg-violet-500/10',
-    border: 'border-violet-500/35',
-    icon: 'text-violet-300',
-    ring: 'ring-violet-500/20',
-  },
-};
-
 type PermissionsEditorProps = {
   disabled?: boolean;
   headerControls?: React.ReactNode;
@@ -108,6 +68,28 @@ type PermissionResultState =
 type PermissionModuleGroup = {
   module: string;
   permissions: PermissionItem[];
+};
+
+const permissionSelectTriggerClassName =
+  'border-sidebar-border/70 bg-surface text-sidebar-foreground hover:bg-sidebar-accent/25 focus-visible:border-sidebar-ring/45 focus-visible:ring-sidebar-ring/35 h-10 w-full shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]';
+
+const permissionSelectContentClassName =
+  'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground rounded-lg p-1.5 shadow-2xl shadow-black/25';
+
+const permissionSelectItemClassName =
+  'focus:bg-sidebar-accent/55 focus:text-sidebar-accent-foreground rounded-md py-2';
+
+type SelectVisualOptionProps = {
+  icon: Parameters<typeof getNavigationIcon>[0];
+  label: string;
+  tone: NavigationSpaceTone;
+};
+
+type PermissionCategoryResult = {
+  enabled: number;
+  incomplete: number;
+  ready: number;
+  total: number;
 };
 
 type PermissionViewModel = {
@@ -263,12 +245,7 @@ const getMissingPermissionDependencies = (
 const countCategoryPermissionResults = (
   category: PermissionCategory,
   effectivePermissionsMap: Map<string, boolean>,
-): {
-  enabled: number;
-  incomplete: number;
-  ready: number;
-  total: number;
-} => {
+): PermissionCategoryResult => {
   const total = category.permissions.length;
   const enabled = category.permissions.filter(
     (permission) => effectivePermissionsMap.get(permission.key) ?? false,
@@ -378,31 +355,26 @@ const PermissionStatePicker: FC<PermissionStatePickerProps> = memo(
 
 PermissionStatePicker.displayName = 'PermissionStatePicker';
 
-type PermissionMetricProps = {
-  label: string;
-  tone?: 'danger' | 'default' | 'success' | 'warning';
-  value: string | number;
-};
-
-const PermissionMetric: FC<PermissionMetricProps> = ({
+const SelectVisualOption: FC<SelectVisualOptionProps> = ({
+  icon,
   label,
-  tone = 'default',
-  value,
+  tone,
 }) => {
+  const OptionIcon = getNavigationIcon(icon);
+  const optionTone = getNavigationSpaceToneClasses(tone);
+
   return (
-    <div className="border-sidebar-border/60 bg-surface flex min-w-0 items-center justify-between gap-3 rounded-lg border px-3 py-2">
-      <span className="text-muted-foreground truncate text-xs">{label}</span>
+    <span className="flex min-w-0 items-center gap-2">
       <span
         className={cn(
-          'text-sm font-semibold',
-          tone === 'success' && 'text-[#b6f1c6]',
-          tone === 'warning' && 'text-amber-300',
-          tone === 'danger' && 'text-destructive',
+          'flex size-6 shrink-0 items-center justify-center rounded-md',
+          optionTone.icon,
         )}
       >
-        {value}
+        <OptionIcon className="size-3.5" />
       </span>
-    </div>
+      <span className="min-w-0 truncate">{label}</span>
+    </span>
   );
 };
 
@@ -619,34 +591,39 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
       [onChange, role],
     );
 
-    const totalPermissions = PERMISSION_CATEGORIES.reduce(
-      (acc, category) => acc + category.permissions.length,
-      0,
+    const handlePoleChange = useCallback(
+      (poleKey: string) => {
+        const firstPoleCategory = PERMISSION_CATEGORIES.find(
+          (category) => category.poleKey === poleKey,
+        );
+
+        if (!firstPoleCategory) return;
+
+        onSelectedPageChange(firstPoleCategory.key);
+      },
+      [onSelectedPageChange],
     );
-    const enabledPermissions =
-      Object.values(effectivePermissions).filter(Boolean).length;
-    const incompletePermissionCount = PERMISSION_CATEGORIES.reduce(
-      (total, category) =>
-        total +
-        countCategoryPermissionResults(category, effectivePermissionsMap)
-          .incomplete,
-      0,
-    );
-    const readyPermissionCount = enabledPermissions - incompletePermissionCount;
+
     const customPermissionCount = customPermissionKeys.size;
-    const deniedPermissionCount = totalPermissions - enabledPermissions;
-    const allEnabled = enabledPermissions === totalPermissions;
-    const noneEnabled = enabledPermissions === 0;
     const selectedCategory =
       PERMISSION_CATEGORIES.find(
         (category) => category.key === selectedPageKey,
       ) ??
       PERMISSION_CATEGORIES[0] ??
       null;
-    const selectedCategoryColors = selectedCategory
-      ? (colorClasses[selectedCategory.color] ?? defaultColorConfig)
-      : defaultColorConfig;
-    const selectedCategoryIconClassName = `${selectedCategoryColors.bg} ${selectedCategoryColors.icon}`;
+    const selectedPole =
+      PERMISSION_POLES.find((pole) => pole.key === selectedCategory?.poleKey) ??
+      PERMISSION_POLES[0] ??
+      null;
+    const selectedPoleCategories = selectedPole
+      ? PERMISSION_CATEGORIES.filter(
+          (category) => category.poleKey === selectedPole.key,
+        )
+      : PERMISSION_CATEGORIES;
+    const selectedCategoryTone = getNavigationSpaceToneClasses(
+      selectedCategory?.tone ?? 'system',
+    );
+    const selectedCategoryIconClassName = selectedCategoryTone.icon;
     const selectedCategoryResult = selectedCategory
       ? countCategoryPermissionResults(
           selectedCategory,
@@ -747,29 +724,18 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
     return (
       <div className="space-y-3">
         <section className="border-sidebar-border/55 bg-surface-muted overflow-hidden rounded-lg border">
-          <div className="flex flex-col gap-4 p-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="flex flex-col gap-4 p-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-foreground font-semibold">
                   Accès par page
                 </h3>
-                <Badge
-                  variant="secondary"
-                  className={cn(
-                    'text-xs',
-                    allEnabled && 'bg-primary/10 text-primary',
-                    noneEnabled && 'bg-muted text-muted-foreground',
-                  )}
-                >
-                  {readyPermissionCount}/{totalPermissions} utilisables
-                </Badge>
                 {customPermissionCount > 0 && (
                   <Badge
                     variant="outline"
                     className="border-primary/40 text-primary text-xs"
                   >
-                    {customPermissionCount} réglage
-                    {customPermissionCount > 1 ? 's' : ''} manuel
+                    {customPermissionCount} exception
                     {customPermissionCount > 1 ? 's' : ''}
                   </Badge>
                 )}
@@ -780,86 +746,61 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                 )}
               </div>
               <p className="text-muted-foreground max-w-3xl text-sm leading-6">
-                Choisissez une page, puis ajustez uniquement les actions utiles.
-                Le rôle sert de base ; les réglages manuels apparaissent comme
-                des exceptions.
+                Le rôle définit la base. Les réglages ci-dessous ajoutent
+                seulement les exceptions nécessaires, page par page.
               </p>
             </div>
-            <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-center">
+            <div className="flex min-w-0 flex-wrap gap-2 xl:justify-end">
               {headerControls && (
-                <div className="min-w-0 lg:min-w-56">{headerControls}</div>
+                <div className="min-w-0 flex-1 sm:flex-none lg:min-w-56">
+                  {headerControls}
+                </div>
               )}
-              <div className="flex flex-wrap gap-2">
-                {customPermissionCount > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <Button
-                    type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     disabled={disabled}
-                    onClick={handleResetAllOverrides}
-                    className="text-muted-foreground hover:text-foreground gap-1.5"
+                    className="gap-2"
                   >
-                    <RotateCcw className="size-3.5" />
-                    Tout réinitialiser
+                    <Sparkles size={14} />
+                    Profils rapides
+                    <ChevronDown size={14} />
                   </Button>
-                )}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={disabled}
-                      className="gap-2"
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {Object.entries(ROLE_TEMPLATES).map(([key, template]) => (
+                    <DropdownMenuItem
+                      key={key}
+                      onClick={() =>
+                        handleApplyTemplate(key as keyof typeof ROLE_TEMPLATES)
+                      }
                     >
-                      <Sparkles size={14} />
-                      Profils rapides
-                      <ChevronDown size={14} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {Object.entries(ROLE_TEMPLATES).map(([key, template]) => (
-                      <DropdownMenuItem
-                        key={key}
-                        onClick={() =>
-                          handleApplyTemplate(
-                            key as keyof typeof ROLE_TEMPLATES,
-                          )
-                        }
-                      >
-                        {template.label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                      {template.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {customPermissionCount > 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={disabled}
+                  onClick={handleResetAllOverrides}
+                  className="text-muted-foreground hover:text-foreground gap-1.5"
+                >
+                  <RotateCcw className="size-3.5" />
+                  Tout réinitialiser
+                </Button>
+              )}
             </div>
-          </div>
-          <div className="border-sidebar-border/55 grid gap-3 border-t p-3 md:grid-cols-4">
-            <PermissionMetric
-              label="Autorisées"
-              value={readyPermissionCount}
-              tone="success"
-            />
-            <PermissionMetric
-              label="À compléter"
-              value={incompletePermissionCount}
-              tone={incompletePermissionCount > 0 ? 'warning' : 'default'}
-            />
-            <PermissionMetric
-              label="Refusées"
-              value={deniedPermissionCount}
-              tone={deniedPermissionCount > 0 ? 'danger' : 'default'}
-            />
-            <PermissionMetric
-              label="Exceptions"
-              value={customPermissionCount}
-              tone={customPermissionCount > 0 ? 'warning' : 'default'}
-            />
           </div>
         </section>
         {selectedCategory && (
           <section className="border-sidebar-border/60 bg-surface overflow-hidden rounded-lg border">
-            <div className="border-sidebar-border/55 bg-surface-muted grid gap-4 border-b p-4 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start">
+            <div className="border-sidebar-border/55 bg-surface-muted grid gap-4 border-b p-4 xl:grid-cols-[minmax(0,1fr)_26rem] xl:items-start">
               <div className="flex min-w-0 items-start gap-3">
                 <span
                   className={cn(
@@ -868,7 +809,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   )}
                 >
                   {React.createElement(
-                    iconMap[selectedCategory.icon] || LayoutDashboard,
+                    getNavigationIcon(selectedCategory.icon),
                     { className: 'size-5' },
                   )}
                 </span>
@@ -895,31 +836,89 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   </p>
                 </div>
               </div>
-              <div className="min-w-0 space-y-2">
-                <label
-                  htmlFor="permission-page"
-                  className="text-muted-foreground text-xs font-medium"
-                >
-                  Page à configurer
-                </label>
-                <Select
-                  value={selectedCategory.key}
-                  onValueChange={onSelectedPageChange}
-                >
-                  <SelectTrigger
-                    id="permission-page"
-                    className="border-border bg-popover h-10 w-full"
+              <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+                <div className="min-w-0 space-y-2">
+                  <label
+                    htmlFor="permission-pole"
+                    className="text-muted-foreground text-xs font-medium"
                   >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PERMISSION_CATEGORIES.map((category) => (
-                      <SelectItem key={category.key} value={category.key}>
-                        {category.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    Pôle
+                  </label>
+                  <Select
+                    value={selectedPole?.key}
+                    onValueChange={handlePoleChange}
+                  >
+                    <SelectTrigger
+                      id="permission-pole"
+                      className={permissionSelectTriggerClassName}
+                    >
+                      <SelectValue>
+                        {selectedPole && (
+                          <SelectVisualOption
+                            icon={selectedPole.icon}
+                            label={selectedPole.label}
+                            tone={selectedPole.tone}
+                          />
+                        )}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className={permissionSelectContentClassName}>
+                      {PERMISSION_POLES.map((pole) => (
+                        <SelectItem
+                          key={pole.key}
+                          value={pole.key}
+                          className={permissionSelectItemClassName}
+                        >
+                          <SelectVisualOption
+                            icon={pole.icon}
+                            label={pole.label}
+                            tone={pole.tone}
+                          />
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="min-w-0 space-y-2">
+                  <label
+                    htmlFor="permission-page"
+                    className="text-muted-foreground text-xs font-medium"
+                  >
+                    Page
+                  </label>
+                  <Select
+                    value={selectedCategory.key}
+                    onValueChange={onSelectedPageChange}
+                  >
+                    <SelectTrigger
+                      id="permission-page"
+                      className={permissionSelectTriggerClassName}
+                    >
+                      <SelectValue>
+                        <SelectVisualOption
+                          icon={selectedCategory.icon}
+                          label={selectedCategory.label}
+                          tone={selectedCategory.tone}
+                        />
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className={permissionSelectContentClassName}>
+                      {selectedPoleCategories.map((category) => (
+                        <SelectItem
+                          key={category.key}
+                          value={category.key}
+                          className={permissionSelectItemClassName}
+                        >
+                          <SelectVisualOption
+                            icon={category.icon}
+                            label={category.label}
+                            tone={category.tone}
+                          />
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
             <div className="space-y-4 p-4">
