@@ -6,6 +6,7 @@ import {
   CircleAlert,
   RotateCcw,
   ShieldCheck,
+  type LucideIcon,
   X,
 } from 'lucide-react';
 import React, { type FC, memo, useCallback, useMemo } from 'react';
@@ -61,7 +62,7 @@ type PermissionModuleGroup = {
 };
 
 const permissionSelectTriggerClassName =
-  'border-sidebar-border/70 bg-surface text-sidebar-foreground hover:bg-sidebar-accent/25 focus-visible:border-sidebar-ring/45 focus-visible:ring-sidebar-ring/35 h-10 w-full shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]';
+  'border-sidebar-border/70 bg-surface text-sidebar-foreground hover:bg-sidebar-accent/25 focus-visible:border-sidebar-ring/45 focus-visible:ring-sidebar-ring/35 h-11 w-full shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]';
 
 const permissionSelectContentClassName =
   'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground rounded-lg p-1.5 shadow-2xl shadow-black/25';
@@ -72,6 +73,7 @@ const permissionSelectItemClassName =
 type SelectVisualOptionProps = {
   icon: Parameters<typeof getNavigationIcon>[0];
   label: string;
+  result?: PermissionCategoryResult;
   tone: NavigationSpaceTone;
 };
 
@@ -81,6 +83,8 @@ type PermissionCategoryResult = {
   ready: number;
   total: number;
 };
+
+type PermissionAccessStatus = 'full' | 'none' | 'partial';
 
 type PermissionViewModel = {
   defaultState: PermissionChoiceState;
@@ -254,6 +258,59 @@ const countCategoryPermissionResults = (
   };
 };
 
+const EMPTY_PERMISSION_RESULT: PermissionCategoryResult = {
+  enabled: 0,
+  incomplete: 0,
+  ready: 0,
+  total: 0,
+};
+
+const sumPermissionResults = (
+  results: PermissionCategoryResult[],
+): PermissionCategoryResult => {
+  return results.reduce<PermissionCategoryResult>(
+    (total, result) => ({
+      enabled: total.enabled + result.enabled,
+      incomplete: total.incomplete + result.incomplete,
+      ready: total.ready + result.ready,
+      total: total.total + result.total,
+    }),
+    EMPTY_PERMISSION_RESULT,
+  );
+};
+
+const getPermissionAccessStatus = (
+  result: PermissionCategoryResult,
+): PermissionAccessStatus => {
+  if (result.total > 0 && result.ready === result.total) return 'full';
+  if (result.ready === 0 && result.incomplete === 0) return 'none';
+
+  return 'partial';
+};
+
+const getPermissionAccessStatusLabel = (
+  status: PermissionAccessStatus,
+): string => {
+  if (status === 'full') return 'Complet';
+  if (status === 'none') return 'Aucun';
+
+  return 'Partiel';
+};
+
+const getPermissionAccessBadgeClassName = (
+  status: PermissionAccessStatus,
+): string => {
+  if (status === 'full') {
+    return 'border-[#5fbd7b]/35 bg-[#5fbd7b]/15 text-[#b6f1c6]';
+  }
+
+  if (status === 'partial') {
+    return 'border-amber-500/40 bg-amber-500/15 text-amber-300';
+  }
+
+  return 'border-sidebar-border/65 bg-sidebar-accent/20 text-sidebar-foreground/62';
+};
+
 const getCategoryAccessPermission = (
   category: PermissionCategory,
 ): PermissionItem | undefined => {
@@ -348,13 +405,15 @@ PermissionStatePicker.displayName = 'PermissionStatePicker';
 const SelectVisualOption: FC<SelectVisualOptionProps> = ({
   icon,
   label,
+  result,
   tone,
 }) => {
   const OptionIcon = getNavigationIcon(icon);
   const optionTone = getNavigationSpaceToneClasses(tone);
+  const accessStatus = result ? getPermissionAccessStatus(result) : null;
 
   return (
-    <span className="flex min-w-0 items-center gap-2">
+    <span className="flex w-full min-w-0 items-center gap-2">
       <span
         className={cn(
           'flex size-6 shrink-0 items-center justify-center rounded-md',
@@ -363,7 +422,22 @@ const SelectVisualOption: FC<SelectVisualOptionProps> = ({
       >
         <OptionIcon className="size-3.5" />
       </span>
-      <span className="min-w-0 truncate">{label}</span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      {result && accessStatus && (
+        <span className="ml-auto flex shrink-0 items-center gap-1.5">
+          <span className="border-sidebar-border/65 bg-background/35 text-sidebar-foreground/70 rounded-md border px-1.5 py-0.5 text-[10px] leading-none font-semibold">
+            {result.ready}/{result.total}
+          </span>
+          <span
+            className={cn(
+              'rounded-md border px-1.5 py-0.5 text-[10px] leading-none font-semibold',
+              getPermissionAccessBadgeClassName(accessStatus),
+            )}
+          >
+            {getPermissionAccessStatusLabel(accessStatus)}
+          </span>
+        </span>
+      )}
     </span>
   );
 };
@@ -507,6 +581,32 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
       () => new Map(Object.entries(effectivePermissions)),
       [effectivePermissions],
     );
+    const categoryResultMap = useMemo(
+      () =>
+        new Map(
+          PERMISSION_CATEGORIES.map((category) => [
+            category.key,
+            countCategoryPermissionResults(category, effectivePermissionsMap),
+          ] as const),
+        ),
+      [effectivePermissionsMap],
+    );
+    const poleResultMap = useMemo(
+      () =>
+        new Map(
+          PERMISSION_POLES.map((pole) => {
+            const poleResults = PERMISSION_CATEGORIES.filter(
+              (category) => category.poleKey === pole.key,
+            ).map(
+              (category) =>
+                categoryResultMap.get(category.key) ?? EMPTY_PERMISSION_RESULT,
+            );
+
+            return [pole.key, sumPermissionResults(poleResults)] as const;
+          }),
+        ),
+      [categoryResultMap],
+    );
     const permissionLabelMap = useMemo(
       () =>
         new Map(
@@ -603,10 +703,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
     );
     const selectedCategoryIconClassName = selectedCategoryTone.icon;
     const selectedCategoryResult = selectedCategory
-      ? countCategoryPermissionResults(
-          selectedCategory,
-          effectivePermissionsMap,
-        )
+      ? (categoryResultMap.get(selectedCategory.key) ?? EMPTY_PERMISSION_RESULT)
       : null;
     const selectedCategoryAccessPermission = selectedCategory
       ? getCategoryAccessPermission(selectedCategory)
@@ -757,7 +854,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
         </section>
         {selectedCategory && (
           <section className="border-sidebar-border/60 bg-surface overflow-hidden rounded-lg border">
-            <div className="border-sidebar-border/55 bg-surface-muted grid gap-4 border-b p-4 xl:grid-cols-[minmax(0,1fr)_26rem] xl:items-start">
+            <div className="border-sidebar-border/55 bg-surface-muted grid gap-4 border-b p-4 xl:grid-cols-[minmax(0,1fr)_40rem] xl:items-start">
               <div className="flex min-w-0 items-start gap-3">
                 <span
                   className={cn(
@@ -793,7 +890,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   </p>
                 </div>
               </div>
-              <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+              <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
                 <div className="min-w-0 space-y-2">
                   <label
                     htmlFor="permission-pole"
@@ -814,6 +911,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                           <SelectVisualOption
                             icon={selectedPole.icon}
                             label={selectedPole.label}
+                            result={poleResultMap.get(selectedPole.key)}
                             tone={selectedPole.tone}
                           />
                         )}
@@ -829,6 +927,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                           <SelectVisualOption
                             icon={pole.icon}
                             label={pole.label}
+                            result={poleResultMap.get(pole.key)}
                             tone={pole.tone}
                           />
                         </SelectItem>
@@ -855,6 +954,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                         <SelectVisualOption
                           icon={selectedCategory.icon}
                           label={selectedCategory.label}
+                          result={selectedCategoryResult ?? undefined}
                           tone={selectedCategory.tone}
                         />
                       </SelectValue>
@@ -869,6 +969,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                           <SelectVisualOption
                             icon={category.icon}
                             label={category.label}
+                            result={categoryResultMap.get(category.key)}
                             tone={category.tone}
                           />
                         </SelectItem>
