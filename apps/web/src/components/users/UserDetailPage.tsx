@@ -189,7 +189,7 @@ const arePermissionsEqual = (
 const DetailSkeleton: FC = () => (
   <PageShell className="py-0">
     <PageCanvas contentClassName="relative space-y-4">
-      <div className="hidden 2xl:absolute 2xl:top-0 2xl:right-[calc(100%+0.75rem)] 2xl:bottom-0 2xl:block 2xl:w-44">
+      <div className="hidden 2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:block 2xl:w-44">
         <div className="border-sidebar-border/70 bg-surface sticky top-4 rounded-lg border p-1 shadow-[var(--shadow-panel)]">
           <Skeleton className="mx-2 my-2 h-4 w-14" />
           <div className="space-y-1">
@@ -1125,7 +1125,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         <PageCanvas contentClassName="relative space-y-5">
           <UserDetailSectionRail
             activeSection={activeSection}
-            className="2xl:absolute 2xl:top-0 2xl:right-[calc(100%+0.75rem)] 2xl:bottom-0 2xl:w-44"
+            className="2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:w-44"
             dirtySections={dirtySections}
             getSectionHref={(sectionId) =>
               buildUserDetailSectionHref(
