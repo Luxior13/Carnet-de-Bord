@@ -442,7 +442,7 @@ const getChangeDiffs = (
 // COMPONENTS
 // ============================================
 
-const getStatIconClassName = (color?: string): string => {
+const getActivityToneClassName = (color?: string): string => {
   if (color?.includes('amber')) {
     return 'border-amber-500/35 bg-amber-500/10 text-amber-400';
   }
@@ -454,34 +454,30 @@ const getStatIconClassName = (color?: string): string => {
   return 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring';
 };
 
-const StatCard: FC<{
+const SummaryPill: FC<{
   color?: string;
   icon: LucideIcon;
   label: string;
   value: number;
 }> = ({ color, icon: Icon, label, value }) => (
-  <Card className="group border-sidebar-border/70 relative overflow-hidden rounded-xl py-0 transition-all hover:shadow-md">
-    <CardContent className="p-3 sm:p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-foreground text-xl font-semibold tracking-tight">
-            {value}
-          </p>
-          <p className="text-muted-foreground mt-1 text-xs font-medium">
-            {label}
-          </p>
-        </div>
-        <div
-          className={cn(
-            'flex size-9 items-center justify-center rounded-lg border',
-            getStatIconClassName(color),
-          )}
-        >
-          <Icon className="size-4" />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
+  <div className="border-sidebar-border/65 bg-background/35 flex min-w-[8.5rem] items-center gap-2 rounded-lg border px-3 py-2">
+    <span
+      className={cn(
+        'flex size-8 shrink-0 items-center justify-center rounded-md border',
+        getActivityToneClassName(color),
+      )}
+    >
+      <Icon className="size-4" />
+    </span>
+    <span className="min-w-0">
+      <span className="text-foreground block text-sm font-semibold leading-4">
+        {value}
+      </span>
+      <span className="text-muted-foreground block truncate text-xs">
+        {label}
+      </span>
+    </span>
+  </div>
 );
 
 // Component to display a single change (before -> after)
@@ -508,13 +504,13 @@ const ChangeItem: FC<{
   );
 };
 
-const TimelineItem: FC<{
+const ActivityListRow: FC<{
   config: ActionConfig;
   isOpen: boolean;
-  isTargetedAction: boolean;
   log: AuditLogEntry;
   onToggle: () => void;
-}> = memo(({ config, isOpen, isTargetedAction, log, onToggle }) => {
+  sourceLabel: string;
+}> = memo(({ config, isOpen, log, onToggle, sourceLabel }) => {
   const Icon = config.icon;
 
   // Extract data from metadata
@@ -522,119 +518,126 @@ const TimelineItem: FC<{
   const targetName = metadata?.targetName as string | undefined;
   const changes = getChangeDiffs(metadata);
   const hasChanges = changes.length > 0;
+  const secondaryText =
+    targetName ||
+    (log.description && log.description !== config.label
+      ? log.description
+      : null);
 
   return (
     <button
       type="button"
       aria-expanded={isOpen}
       className={cn(
-        'group w-full cursor-pointer overflow-hidden rounded-lg border p-2.5 text-left transition-all sm:p-3',
-        isOpen
-          ? 'border-border bg-popover'
-          : 'hover:border-border hover:bg-accent/60 border-transparent',
+        'group w-full cursor-pointer text-left transition-colors',
+        isOpen ? 'bg-popover' : 'hover:bg-accent/45',
       )}
       onClick={onToggle}
     >
-      <div className="flex items-start gap-3">
-        {/* Icon */}
-        <div
-          className={cn(
-            'flex size-8 shrink-0 items-center justify-center rounded-lg transition-transform',
-            config.color,
-            isOpen && 'scale-105',
-          )}
-        >
-          <Icon size={16} />
-        </div>
-        {/* Content */}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <p className="text-foreground text-sm font-medium">
-                  {config.label}
-                </p>
-                {isTargetedAction && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-primary/10 text-primary px-1.5 py-0 text-[10px]"
-                  >
-                    sur compte
-                  </Badge>
-                )}
-                {hasChanges && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-primary/10 text-primary px-1.5 py-0 text-[10px]"
-                  >
-                    {changes.length} modif.
-                  </Badge>
-                )}
-              </div>
-              {targetName && (
-                <p className="text-muted-foreground mt-0.5 truncate text-xs">
-                  {targetName}
-                </p>
+      <div className="grid gap-3 px-3 py-3 sm:px-4 md:grid-cols-[minmax(0,1fr)_8.5rem_9.5rem_1.5rem] md:items-center">
+        <div className="flex min-w-0 items-start gap-3">
+          <span
+            className={cn(
+              'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg',
+              config.color,
+            )}
+          >
+            <Icon size={16} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <p className="text-foreground min-w-0 truncate text-sm font-medium">
+                {config.label}
+              </p>
+              <Badge
+                variant="secondary"
+                className="bg-primary/10 text-primary px-1.5 py-0 text-[10px] md:hidden"
+              >
+                {sourceLabel}
+              </Badge>
+              {hasChanges && (
+                <Badge
+                  variant="secondary"
+                  className="bg-primary/10 text-primary px-1.5 py-0 text-[10px]"
+                >
+                  {changes.length} modif.
+                </Badge>
               )}
-              {log.description &&
-                log.description !== targetName &&
-                log.description !== config.label && (
-                  <p className="text-muted-foreground mt-0.5 truncate text-xs">
-                    {log.description}
-                  </p>
-                )}
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <span className="text-muted-foreground text-xs">
-                {formatRelativeTime(log.createdAt)}
-              </span>
               <ChevronDown
                 size={14}
                 className={cn(
-                  'text-muted-foreground transition-transform',
+                  'text-muted-foreground ml-auto transition-transform md:hidden',
                   isOpen && 'rotate-180',
                 )}
               />
             </div>
+            {secondaryText && (
+              <p className="text-muted-foreground mt-0.5 truncate text-xs">
+                {secondaryText}
+              </p>
+            )}
           </div>
-          {/* Expanded details */}
-          {isOpen && (
-            <div className="mt-3 space-y-2">
-              {/* Date and IP on same line */}
-              <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+        </div>
+        <div className="hidden md:block">
+          <span className="border-sidebar-border/70 bg-surface-muted text-muted-foreground inline-flex rounded-md border px-2 py-1 text-xs">
+            {sourceLabel}
+          </span>
+        </div>
+        <div className="hidden min-w-0 md:block">
+          <p className="text-muted-foreground truncate text-xs">
+            {formatRelativeTime(log.createdAt)}
+          </p>
+          <p className="text-muted-foreground/70 truncate text-[11px]">
+            {formatFullDate(log.createdAt)}
+          </p>
+        </div>
+        <ChevronDown
+          size={15}
+          className={cn(
+            'text-muted-foreground hidden justify-self-end transition-transform md:block',
+            isOpen && 'rotate-180',
+          )}
+        />
+      </div>
+      {isOpen && (
+        <div className="border-sidebar-border/65 bg-background/20 border-t px-3 py-3 sm:px-4">
+          <div className="space-y-2 md:ml-12">
+            <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+              <span className="flex items-center gap-1.5">
+                <Calendar size={12} />
+                {formatFullDate(log.createdAt)}
+              </span>
+              <span>{sourceLabel}</span>
+              {log.ipAddress && (
                 <span className="flex items-center gap-1.5">
-                  <Calendar size={12} />
-                  {formatFullDate(log.createdAt)}
+                  <Globe size={12} />
+                  {log.ipAddress}
                 </span>
-                {log.ipAddress && (
-                  <span className="flex items-center gap-1.5">
-                    <Globe size={12} />
-                    {log.ipAddress}
-                  </span>
-                )}
-              </div>
-              {/* Changes diff */}
-              {hasChanges && (
-                <div className="border-border bg-card space-y-1.5 rounded-lg border p-2.5">
-                  {changes.map((change) => (
-                    <ChangeItem
-                      key={change.fieldKey}
-                      fieldKey={change.fieldKey}
-                      before={change.before}
-                      after={change.after}
-                    />
-                  ))}
-                </div>
               )}
             </div>
-          )}
+            {log.description && (
+              <p className="text-muted-foreground text-xs">{log.description}</p>
+            )}
+            {hasChanges && (
+              <div className="border-border bg-card space-y-1.5 rounded-lg border p-2.5">
+                {changes.map((change) => (
+                  <ChangeItem
+                    key={change.fieldKey}
+                    fieldKey={change.fieldKey}
+                    before={change.before}
+                    after={change.after}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </button>
   );
 });
 
-TimelineItem.displayName = 'TimelineItem';
+ActivityListRow.displayName = 'ActivityListRow';
 
 // ============================================
 // MAIN COMPONENT
@@ -709,6 +712,48 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
 
   const displayedLogs = filteredLogs.slice(0, showCount);
   const hasMore = filteredLogs.length > showCount;
+  const hasActiveFilters =
+    categoryFilter !== 'all' || sourceFilter !== 'all' || dateFilter !== 'all';
+  const summaryItems: Array<{
+    color?: string;
+    icon: LucideIcon;
+    label: string;
+    value: number;
+  }> = [
+    { icon: History, label: 'Total', value: stats.total },
+    {
+      color: 'text-primary',
+      icon: LogIn,
+      label: 'Connexions',
+      value: stats.connections,
+    },
+    {
+      color: 'text-amber-400',
+      icon: Shield,
+      label: 'Sécurité',
+      value: stats.security,
+    },
+    {
+      color: 'text-primary',
+      icon: Users,
+      label: 'Administration',
+      value: stats.administration,
+    },
+    {
+      color: 'text-sky-300',
+      icon: Globe,
+      label: 'Système',
+      value: stats.system,
+    },
+  ];
+
+  if (stats.other > 0) {
+    summaryItems.push({
+      icon: History,
+      label: 'Autres',
+      value: stats.other,
+    });
+  }
 
   // Export to CSV (limited to 500 rows)
   const handleExport = (): void => {
@@ -754,18 +799,10 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-          {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-lg" />
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-10 w-36 rounded-lg" />
-          <Skeleton className="h-10 w-32 rounded-lg" />
-        </div>
+        <Skeleton className="h-32 rounded-xl" />
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-lg" />
+            <Skeleton key={i} className="h-14 rounded-lg" />
           ))}
         </div>
       </div>
@@ -794,39 +831,36 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* Stats */}
-      <div className="shrink-0">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-          <StatCard label="Total" value={stats.total} icon={History} />
-          <StatCard
-            label="Connexions"
-            value={stats.connections}
-            color="text-primary"
-            icon={LogIn}
-          />
-          <StatCard
-            label="Sécurité"
-            value={stats.security}
-            color="text-amber-400"
-            icon={Shield}
-          />
-          <StatCard
-            label="Administration"
-            value={stats.administration}
-            color="text-primary"
-            icon={Users}
-          />
-          <StatCard
-            label="Système"
-            value={stats.system}
-            color="text-sky-300"
-            icon={Globe}
-          />
-        </div>
-      </div>
-      {/* Filters */}
       <Card className="border-sidebar-border/70 shrink-0 overflow-hidden rounded-xl py-0">
-        <CardContent className="p-3 sm:p-4">
+        <CardContent className="p-0">
+          <div className="flex flex-col gap-3 p-3 sm:p-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-10 shrink-0 items-center justify-center rounded-lg border">
+                <History className="size-4" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-foreground text-sm font-semibold">
+                  Journal d'activité
+                </h3>
+                <p className="text-muted-foreground text-xs">
+                  {filteredLogs.length} affiché
+                  {filteredLogs.length > 1 ? 's' : ''} sur {auditLogs.length}
+                </p>
+              </div>
+            </div>
+            <div className="flex min-w-0 flex-wrap gap-2">
+              {summaryItems.map((item) => (
+                <SummaryPill
+                  key={item.label}
+                  icon={item.icon}
+                  label={item.label}
+                  value={item.value}
+                  color={item.color}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="border-sidebar-border/65 border-t p-3 sm:p-4">
           <div className="flex flex-wrap items-center gap-2">
             <Select
               value={categoryFilter}
@@ -879,23 +913,23 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {(categoryFilter !== 'all' ||
-              sourceFilter !== 'all' ||
-              dateFilter !== 'all') && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground h-9 rounded-lg"
-                onClick={() => {
-                  setCategoryFilter('all');
-                  setSourceFilter('all');
-                  setDateFilter('all');
-                }}
-              >
-                <RefreshCw size={14} className="mr-1.5" />
-                Réinitialiser
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                'text-muted-foreground h-9 w-36 rounded-lg',
+                !hasActiveFilters && 'pointer-events-none invisible',
+              )}
+              disabled={!hasActiveFilters}
+              onClick={() => {
+                setCategoryFilter('all');
+                setSourceFilter('all');
+                setDateFilter('all');
+              }}
+            >
+              <RefreshCw size={14} className="mr-1.5" />
+              Réinitialiser
+            </Button>
             <div className="flex-1" />
             <Button
               variant="outline"
@@ -908,82 +942,77 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
               <span className="hidden sm:inline">Exporter</span>
             </Button>
           </div>
-        </CardContent>
-      </Card>
-      {/* Timeline */}
-      <Card className="border-sidebar-border/70 gap-0 overflow-hidden rounded-xl py-0">
-        <CardContent className="p-0">
-          <div className="px-3 sm:px-4">
-            {filteredLogs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16">
-                <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-16 w-16 items-center justify-center rounded-xl border">
-                  <Filter className="h-8 w-8" />
-                </div>
-                <p className="text-muted-foreground mt-4 text-sm">
-                  Aucun résultat pour ces filtres
-                </p>
-              </div>
-            ) : (
-              <div className="pb-4">
-                {((): React.ReactNode => {
-                  let lastCategory: DateCategory | null = null;
-
-                  return displayedLogs.map((log) => {
-                    const config = getActionConfig(log);
-                    const isTargetedAction =
-                      log.targetUserId === userId && log.userId !== userId;
-                    const category = getDateCategory(log.createdAt);
-                    const showSeparator = category !== lastCategory;
-                    lastCategory = category;
-
-                    return (
-                      <div key={log.id}>
-                        {showSeparator && (
-                          <div className="bg-card flex items-center gap-3 px-1 py-2">
-                            <div className="bg-sidebar-border/70 h-px flex-1" />
-                            <span className="text-muted-foreground text-xs font-medium">
-                              {DATE_CATEGORY_LABELS.get(category) ||
-                                'Plus ancien'}
-                            </span>
-                            <div className="bg-sidebar-border/70 h-px flex-1" />
-                          </div>
-                        )}
-                        <TimelineItem
-                          log={log}
-                          config={config}
-                          isTargetedAction={isTargetedAction}
-                          isOpen={openLogId === log.id}
-                          onToggle={() =>
-                            setOpenLogId(openLogId === log.id ? null : log.id)
-                          }
-                        />
-                      </div>
-                    );
-                  });
-                })()}
-                {hasMore && (
-                  <div className="pt-4 text-center">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-border rounded-lg"
-                      onClick={() => setShowCount((c) => c + 20)}
-                    >
-                      Charger plus ({filteredLogs.length - showCount} restants)
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </CardContent>
-        {/* Footer */}
+      </Card>
+
+      <Card className="border-sidebar-border/70 gap-0 overflow-hidden rounded-xl py-0">
+        <CardContent className="p-0">
+          <div className="border-sidebar-border/65 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_8.5rem_9.5rem_1.5rem] border-b px-4 py-2 text-xs font-medium md:grid">
+            <span>Événement</span>
+            <span>Portée</span>
+            <span>Date</span>
+            <span />
+          </div>
+          {filteredLogs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-16 w-16 items-center justify-center rounded-xl border">
+                <Filter className="h-8 w-8" />
+              </div>
+              <p className="text-muted-foreground mt-4 text-sm">
+                Aucun résultat pour ces filtres
+              </p>
+            </div>
+          ) : (
+            <div className="divide-sidebar-border/65 divide-y">
+              {((): React.ReactNode => {
+                let lastCategory: DateCategory | null = null;
+
+                return displayedLogs.map((log) => {
+                  const config = getActionConfig(log);
+                  const category = getDateCategory(log.createdAt);
+                  const showSeparator = category !== lastCategory;
+                  const sourceLabel = getLogSourceLabel(log, userId);
+                  lastCategory = category;
+
+                  return (
+                    <React.Fragment key={log.id}>
+                      {showSeparator && (
+                        <div className="bg-surface-muted/35 text-muted-foreground px-3 py-2 text-xs font-medium sm:px-4">
+                          {DATE_CATEGORY_LABELS.get(category) || 'Plus ancien'}
+                        </div>
+                      )}
+                      <ActivityListRow
+                        log={log}
+                        config={config}
+                        sourceLabel={sourceLabel}
+                        isOpen={openLogId === log.id}
+                        onToggle={() =>
+                          setOpenLogId(openLogId === log.id ? null : log.id)
+                        }
+                      />
+                    </React.Fragment>
+                  );
+                });
+              })()}
+              {hasMore && (
+                <div className="p-4 text-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-border rounded-lg"
+                    onClick={() => setShowCount((c) => c + 20)}
+                  >
+                    Charger plus ({filteredLogs.length - showCount} restants)
+                  </Button>
+                </div>
+              )}
+              </div>
+          )}
+        </CardContent>
         <CardFooter className="border-sidebar-border/65 text-muted-foreground bg-surface-muted shrink-0 justify-center border-t px-4 py-3 text-center text-xs">
           {filteredLogs.length} événement{filteredLogs.length > 1 ? 's' : ''}
-          {(categoryFilter !== 'all' ||
-            sourceFilter !== 'all' ||
-            dateFilter !== 'all') &&
-            ' (filtre)'}
+          {hasActiveFilters && ' (filtre)'}
         </CardFooter>
       </Card>
     </div>
