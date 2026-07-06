@@ -8,6 +8,8 @@ import {
   Calendar,
   Clock,
   Loader2,
+  ShieldCheck,
+  type LucideIcon,
 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, {
@@ -223,6 +225,28 @@ const isInternalNavigationLink = (anchor: HTMLAnchorElement): boolean => {
   return anchor.origin === window.location.origin;
 };
 
+const UserDetailMetricCard: FC<{
+  icon: LucideIcon;
+  iconClassName?: string;
+  label: string;
+  value: string;
+}> = ({ icon: Icon, iconClassName, label, value }) => (
+  <div className="border-sidebar-border/70 bg-surface flex min-w-0 items-center gap-3 rounded-lg border p-3 shadow-[var(--shadow-panel)]">
+    <span
+      className={[
+        'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border',
+        iconClassName ?? '',
+      ].join(' ')}
+    >
+      <Icon className="size-4" />
+    </span>
+    <div className="min-w-0">
+      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="truncate text-sm font-medium">{value}</p>
+    </div>
+  </div>
+);
+
 const DetailSkeleton: FC = () => (
   <PageShell className="py-0">
     <PageCanvas contentClassName="relative space-y-4">
@@ -256,7 +280,8 @@ const DetailSkeleton: FC = () => (
             </div>
           </CardContent>
         </Card>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Skeleton className="h-[4.125rem] rounded-lg" />
           <Skeleton className="h-[4.125rem] rounded-lg" />
           <Skeleton className="h-[4.125rem] rounded-lg" />
           <Skeleton className="h-[4.125rem] rounded-lg" />
@@ -617,18 +642,24 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
       try {
         setIsLoadingAudit(true);
-        const auditParams = new URLSearchParams({
-          pageSize: String(
-            includeLogs ? USER_AUDIT_PAGE_SIZE : USER_AUDIT_SUMMARY_PAGE_SIZE,
-          ),
-        });
+        const requestedPageSize = includeLogs
+          ? USER_AUDIT_PAGE_SIZE
+          : USER_AUDIT_SUMMARY_PAGE_SIZE;
+        const buildAuditParams = (page: number): URLSearchParams => {
+          const params = new URLSearchParams({
+            page: String(page),
+            pageSize: String(requestedPageSize),
+          });
 
-        if (!includeLogs) {
-          auditParams.set('includeLogs', 'false');
-        }
+          if (!includeLogs) {
+            params.set('includeLogs', 'false');
+          }
+
+          return params;
+        };
 
         const response = await fetch(
-          `/api/users/${userId}/audit?${auditParams.toString()}`,
+          `/api/users/${userId}/audit?${buildAuditParams(1).toString()}`,
           {
             signal: controller.signal,
           },
@@ -642,7 +673,25 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           hasLoadedAuditSummaryRef.current = true;
 
           if (includeLogs) {
-            setAuditLogs(data.data.logs);
+            const loadedLogs = [...(data.data.logs as AuditLogEntry[])];
+            const totalPages = Number(data.data.pagination?.totalPages ?? 1);
+
+            for (let page = 2; page <= totalPages; page += 1) {
+              const pageResponse = await fetch(
+                `/api/users/${userId}/audit?${buildAuditParams(page).toString()}`,
+                {
+                  signal: controller.signal,
+                },
+              );
+              const pageData = await pageResponse.json();
+
+              if (controller.signal.aborted) return;
+              if (!pageResponse.ok || !pageData.success) break;
+
+              loadedLogs.push(...(pageData.data.logs as AuditLogEntry[]));
+            }
+
+            setAuditLogs(loadedLogs);
             hasLoadedAuditLogsRef.current = true;
           }
         }
@@ -1409,7 +1458,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 </>
               }
             />
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div className="border-sidebar-border/70 bg-surface flex items-center gap-3 rounded-lg border p-3 shadow-[var(--shadow-panel)]">
                 <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
                   <Clock className="size-4" />
@@ -1445,6 +1494,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                   </p>
                 </div>
               </div>
+              <UserDetailMetricCard
+                icon={ShieldCheck}
+                label="Accès"
+                value={getAccessLabel(user)}
+              />
             </div>
             <UserDetailSectionRail
               activeSection={activeSection}

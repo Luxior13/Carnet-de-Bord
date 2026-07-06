@@ -169,6 +169,10 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
             {recentActivity.map((log) => {
               const config = getActionConfig(log.action);
               const Icon = config.icon;
+              const label =
+                config.label === log.action
+                  ? log.description || log.action
+                  : config.label;
 
               return (
                 <div
@@ -180,7 +184,7 @@ export const ActivitySection: FC<ActivitySectionProps> = ({ userData }) => {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
-                      {config.label}
+                      {label}
                     </p>
                     <p className="text-sidebar-foreground/52 truncate text-xs">
                       {formatRelativeAccountTime(log.createdAt)}

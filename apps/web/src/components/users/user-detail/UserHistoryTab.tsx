@@ -51,8 +51,11 @@ type UserHistoryTabProps = {
   userId: string;
 };
 
+type ActionCategoryKey = 'admin' | 'auth' | 'other' | 'security' | 'system';
+type CategoryFilterValue = ActionCategoryKey | 'all';
+
 type ActionConfig = {
-  category: string;
+  category: ActionCategoryKey;
   color: string;
   icon: LucideIcon;
   label: string;
@@ -63,22 +66,6 @@ type ChangeDiff = {
   before: unknown;
   fieldKey: string;
 };
-
-const SECURITY_ACTIONS = new Set([
-  'ACCOUNT_LOCKED',
-  'PASSWORD_CHANGE',
-  'PASSWORD_RESET',
-  'SESSION_INVALIDATE',
-]);
-
-const ADMINISTRATION_ACTIONS = new Set([
-  'PERMISSION_UPDATE',
-  'USER_ACTIVATE',
-  'USER_CREATE',
-  'USER_DEACTIVATE',
-  'USER_DELETE',
-  'USER_UPDATE',
-]);
 
 // ============================================
 // CONFIGURATION
@@ -174,11 +161,67 @@ const DEFAULT_CONFIG: ActionConfig = {
   label: 'Action',
 };
 
-const CATEGORY_FILTERS = [
+const mapAuditCategoryToActionCategory = (
+  category: AuditLogEntry['category'],
+): ActionCategoryKey => {
+  if (category === 'AUTH') return 'auth';
+  if (category === 'PERMISSION' || category === 'USER') return 'admin';
+  if (category === 'SYSTEM') return 'system';
+
+  return 'other';
+};
+
+const getActionCategory = (log: AuditLogEntry): ActionCategoryKey => {
+  return (
+    ACTION_CONFIG[log.action]?.category ??
+    mapAuditCategoryToActionCategory(log.category)
+  );
+};
+
+const getActionConfig = (log: AuditLogEntry): ActionConfig => {
+  const knownConfig = ACTION_CONFIG[log.action];
+
+  if (knownConfig) return knownConfig;
+
+  const category = mapAuditCategoryToActionCategory(log.category);
+
+  if (category === 'system') {
+    return {
+      category,
+      color: 'text-sky-300 bg-sky-500/10',
+      icon: Globe,
+      label: log.description || DEFAULT_CONFIG.label,
+    };
+  }
+
+  return {
+    ...DEFAULT_CONFIG,
+    category,
+    label: log.description || DEFAULT_CONFIG.label,
+  };
+};
+
+const getLogSourceLabel = (log: AuditLogEntry, viewedUserId: string): string => {
+  const isByUser = log.userId === viewedUserId;
+  const isOnUser = log.targetUserId === viewedUserId;
+
+  if (isByUser && isOnUser) return 'Fait par lui';
+  if (isByUser) return 'Fait par lui';
+  if (isOnUser) return 'Sur son compte';
+
+  return 'Activité liée';
+};
+
+const CATEGORY_FILTERS: Array<{
+  icon: LucideIcon;
+  label: string;
+  value: CategoryFilterValue;
+}> = [
   { icon: Filter, label: 'Toutes', value: 'all' },
   { icon: LogIn, label: 'Connexions', value: 'auth' },
   { icon: Shield, label: 'Sécurité', value: 'security' },
   { icon: Users, label: 'Administration', value: 'admin' },
+  { icon: Globe, label: 'Système', value: 'system' },
 ];
 
 const SOURCE_FILTERS = [
@@ -404,6 +447,10 @@ const getStatIconClassName = (color?: string): string => {
     return 'border-amber-500/35 bg-amber-500/10 text-amber-400';
   }
 
+  if (color?.includes('sky')) {
+    return 'border-sky-500/35 bg-sky-500/10 text-sky-300';
+  }
+
   return 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring';
 };
 
@@ -529,6 +576,13 @@ const TimelineItem: FC<{
                   {targetName}
                 </p>
               )}
+              {log.description &&
+                log.description !== targetName &&
+                log.description !== config.label && (
+                  <p className="text-muted-foreground mt-0.5 truncate text-xs">
+                    {log.description}
+                  </p>
+                )}
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <span className="text-muted-foreground text-xs">
@@ -591,31 +645,34 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   isLoading,
   userId,
 }) => {
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] =
+    useState<CategoryFilterValue>('all');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [showCount, setShowCount] = useState(20);
   const [openLogId, setOpenLogId] = useState<string | null>(null);
 
   const stats = useMemo(() => {
-    const connectionEvents = auditLogs.filter((log) => {
-      const config = ACTION_CONFIG[log.action] || DEFAULT_CONFIG;
-
-      return config.category === 'auth';
-    }).length;
-    const securityEvents = auditLogs.filter((log) =>
-      SECURITY_ACTIONS.has(log.action),
-    ).length;
-    const administrationEvents = auditLogs.filter((log) =>
-      ADMINISTRATION_ACTIONS.has(log.action),
-    ).length;
-
-    return {
-      administration: administrationEvents,
-      connections: connectionEvents,
-      security: securityEvents,
+    const counts = {
+      administration: 0,
+      connections: 0,
+      other: 0,
+      security: 0,
+      system: 0,
       total: auditLogs.length,
     };
+
+    auditLogs.forEach((log) => {
+      const category = getActionCategory(log);
+
+      if (category === 'auth') counts.connections += 1;
+      if (category === 'security') counts.security += 1;
+      if (category === 'admin') counts.administration += 1;
+      if (category === 'system') counts.system += 1;
+      if (category === 'other') counts.other += 1;
+    });
+
+    return counts;
   }, [auditLogs]);
 
   const filteredLogs = useMemo(() => {
@@ -624,14 +681,14 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
     return auditLogs.filter((log) => {
       // Category filter
       if (categoryFilter !== 'all') {
-        const config = ACTION_CONFIG[log.action] || DEFAULT_CONFIG;
-        if (config.category !== categoryFilter) return false;
+        if (getActionCategory(log) !== categoryFilter) return false;
       }
       // Source filter
       if (sourceFilter !== 'all') {
         const isByUser = log.userId === userId;
+        const isOnUser = log.targetUserId === userId;
         if (sourceFilter === 'by' && !isByUser) return false;
-        if (sourceFilter === 'on' && isByUser) return false;
+        if (sourceFilter === 'on' && !isOnUser) return false;
       }
       // Date filter
       if (dateFilter !== 'all') {
@@ -660,15 +717,14 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
 
     const headers = ['Date', 'Action', 'Description', 'IP', 'Source'];
     const rows = logsToExport.map((log) => {
-      const config = ACTION_CONFIG[log.action] || DEFAULT_CONFIG;
-      const isByUser = log.userId === userId;
+      const config = getActionConfig(log);
 
       return [
         formatFullDate(log.createdAt),
         config.label,
         log.description || '',
         log.ipAddress || '',
-        isByUser ? 'Fait par lui' : 'Sur son compte',
+        getLogSourceLabel(log, userId),
       ];
     });
 
@@ -698,8 +754,8 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-lg" />
           ))}
         </div>
@@ -740,7 +796,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
     <div className="space-y-3">
       {/* Stats */}
       <div className="shrink-0">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
           <StatCard label="Total" value={stats.total} icon={History} />
           <StatCard
             label="Connexions"
@@ -760,13 +816,24 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
             color="text-primary"
             icon={Users}
           />
+          <StatCard
+            label="Système"
+            value={stats.system}
+            color="text-sky-300"
+            icon={Globe}
+          />
         </div>
       </div>
       {/* Filters */}
       <Card className="border-sidebar-border/70 shrink-0 overflow-hidden rounded-xl py-0">
         <CardContent className="p-3 sm:p-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <Select
+              value={categoryFilter}
+              onValueChange={(value) =>
+                setCategoryFilter(value as CategoryFilterValue)
+              }
+            >
               <SelectTrigger className="border-border h-9 w-[160px] rounded-lg text-sm">
                 <SelectValue placeholder="Catégorie" />
               </SelectTrigger>
@@ -862,8 +929,9 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                   let lastCategory: DateCategory | null = null;
 
                   return displayedLogs.map((log) => {
-                    const config = ACTION_CONFIG[log.action] || DEFAULT_CONFIG;
-                    const isTargetedAction = log.userId !== userId;
+                    const config = getActionConfig(log);
+                    const isTargetedAction =
+                      log.targetUserId === userId && log.userId !== userId;
                     const category = getDateCategory(log.createdAt);
                     const showSeparator = category !== lastCategory;
                     lastCategory = category;

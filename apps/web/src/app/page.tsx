@@ -154,7 +154,10 @@ const getMetricToneClassName = (tone: DashboardMetricTone): string => {
 };
 
 const getActivityLabel = (activity: DashboardActivityItem): string => {
-  return ACTION_LABELS.get(activity.action) ?? activity.action;
+  return (
+    ACTION_LABELS.get(activity.action) ??
+    (activity.description || activity.action)
+  );
 };
 
 const DashboardSkeleton: FC = () => (

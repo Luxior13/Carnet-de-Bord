@@ -149,6 +149,7 @@ export type AuditLogEntry = {
   id: string;
   ipAddress: string | null;
   metadata: Record<string, unknown> | null;
+  targetUserId: string | null;
   userAgent: string | null;
   userId: string | null;
 };

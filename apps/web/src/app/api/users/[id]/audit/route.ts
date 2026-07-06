@@ -119,6 +119,7 @@ export async function GET(
           id: log.id,
           ipAddress: canViewSensitiveAudit ? log.ipAddress : null,
           metadata: log.metadata as Record<string, unknown> | null,
+          targetUserId: log.targetUserId,
           userAgent: canViewSensitiveAudit ? log.userAgent : null,
           userId: log.userId,
         })),
