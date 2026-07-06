@@ -332,6 +332,23 @@ export const buildPermissionOverrides = (
   return Object.keys(overrides).length > 0 ? overrides : null;
 };
 
+export const arePermissionOverridesEqual = (
+  first?: PermissionsData | null,
+  second?: PermissionsData | null,
+): boolean => {
+  const firstEntries = new Map(Object.entries(first ?? {}));
+  const secondEntries = new Map(Object.entries(second ?? {}));
+
+  if (firstEntries.size !== secondEntries.size) return false;
+
+  for (const [permissionKey, firstValue] of firstEntries) {
+    if (!secondEntries.has(permissionKey)) return false;
+    if (secondEntries.get(permissionKey) !== firstValue) return false;
+  }
+
+  return true;
+};
+
 export const countCategoryPermissions = (
   categoryKey: string,
   effectivePermissions: Record<string, boolean>,

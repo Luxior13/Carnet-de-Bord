@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import {
+  arePermissionOverridesEqual,
   getUnknownPermissionKeys,
   PERMISSIONS,
 } from '$constants/permissions.constants';
@@ -107,25 +108,6 @@ const formatProfileAuditValue = (
   }
 
   return String(value);
-};
-
-const arePermissionRecordsEqual = (
-  first: Record<string, boolean> | null,
-  second: Record<string, boolean> | null,
-): boolean => {
-  const firstEntries = new Map(Object.entries(first ?? {}));
-  const secondEntries = new Map(Object.entries(second ?? {}));
-  const keys = new Set([...firstEntries.keys(), ...secondEntries.keys()]);
-
-  for (const key of keys) {
-    if (
-      (firstEntries.get(key) ?? false) !== (secondEntries.get(key) ?? false)
-    ) {
-      return false;
-    }
-  }
-
-  return true;
 };
 
 // ============================================
@@ -489,7 +471,7 @@ export async function PATCH(
         boolean
       > | null;
       // Only track if actually changed
-      if (!arePermissionRecordsEqual(permissions, existingPerms)) {
+      if (!arePermissionOverridesEqual(permissions, existingPerms)) {
         beforeValues.permissions = existingPerms;
         afterValues.permissions = permissions;
         updateData.permissions = permissions;

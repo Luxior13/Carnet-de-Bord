@@ -40,9 +40,11 @@ import { UserSecurityTab } from '$components/users/user-detail/UserSecurityTab';
 import { UserAvatar } from '$components/users/UserAvatar';
 import { UsersAdminHero } from '$components/users/UsersAdminHero';
 import {
+  arePermissionOverridesEqual,
   getAccessLabel,
   getRoleColor,
   hasPermission,
+  PERMISSION_CATEGORIES,
   PERMISSIONS,
   type PermissionsData,
 } from '$constants/permissions.constants';
@@ -89,6 +91,7 @@ const EMPTY_STAFF_PROFILE_FORM: StaffProfileForm = {
 
 const USER_AUDIT_PAGE_SIZE = 200;
 const USER_AUDIT_SUMMARY_PAGE_SIZE = 1;
+const DEFAULT_PERMISSION_PAGE_KEY = PERMISSION_CATEGORIES[0]?.key ?? '';
 
 const STAFF_PROFILE_MAX_LENGTHS = {
   department: 80,
@@ -167,23 +170,12 @@ const buildUserDetailSectionHref = (
   return nextQueryString ? `${pathname}?${nextQueryString}` : pathname;
 };
 
-const arePermissionsEqual = (
-  first: PermissionsData | null,
-  second: PermissionsData | null,
-): boolean => {
-  const firstEntries = new Map(Object.entries(first ?? {}));
-  const secondEntries = new Map(Object.entries(second ?? {}));
-  const keys = new Set([...firstEntries.keys(), ...secondEntries.keys()]);
+const normalizePermissionPageKey = (pageKey: string | null): string => {
+  if (!pageKey) return DEFAULT_PERMISSION_PAGE_KEY;
 
-  for (const key of keys) {
-    if (
-      (firstEntries.get(key) ?? false) !== (secondEntries.get(key) ?? false)
-    ) {
-      return false;
-    }
-  }
-
-  return true;
+  return PERMISSION_CATEGORIES.some((category) => category.key === pageKey)
+    ? pageKey
+    : DEFAULT_PERMISSION_PAGE_KEY;
 };
 
 const DetailSkeleton: FC = () => (
@@ -242,6 +234,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<UserDetailSectionId>(() =>
     normalizeUserDetailSection(searchParams.get('section')),
+  );
+  const [permissionPageKey, setPermissionPageKey] = useState(() =>
+    normalizePermissionPageKey(searchParams.get('permissionPage')),
   );
   const userAbortControllerRef = useRef<AbortController | null>(null);
   const auditAbortControllerRef = useRef<AbortController | null>(null);
@@ -406,19 +401,22 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         return currentValue !== savedValue;
       }));
   /* eslint-enable security/detect-object-injection */
-  const hasAccessChanges =
-    !!user &&
-    (editForm.role !== user.role ||
-      !arePermissionsEqual(permissions, user.permissions));
+  const hasRoleChanges = !!user && editForm.role !== user.role;
+  const hasPermissionChanges =
+    !!user && !arePermissionOverridesEqual(permissions, user.permissions);
+  const hasAccessChanges = hasRoleChanges || hasPermissionChanges;
   const hasSecurityChanges = !!user && editForm.isActive !== user.isActive;
   const hasCurrentSectionChanges =
     (activeSection === 'profile' && hasProfileChanges) ||
     (activeSection === 'access' && hasAccessChanges) ||
     (activeSection === 'security' && hasSecurityChanges);
+  const hasUnsavedChanges =
+    hasProfileChanges || hasAccessChanges || hasSecurityChanges;
   const canSaveProfile =
     canEditTargetProfile && hasProfileChanges && !hasProfileErrors;
   const canSaveAccess =
-    hasAccessChanges && (canEditTargetRole || canManageTargetPermissions);
+    (hasRoleChanges && canEditTargetRole) ||
+    (hasPermissionChanges && canManageTargetPermissions);
   const canSaveSecurity = canEditTargetStatus && !isSelf && hasSecurityChanges;
   const dirtySections = useMemo<UserDetailSectionId[]>(() => {
     const sections: UserDetailSectionId[] = [];
@@ -640,6 +638,31 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   }, [activeSection, fetchSecuritySessions]);
 
   useEffect(() => {
+    const requestedPermissionPageKey = normalizePermissionPageKey(
+      new URLSearchParams(currentQueryString).get('permissionPage'),
+    );
+
+    if (requestedPermissionPageKey === permissionPageKey) return;
+
+    setPermissionPageKey(requestedPermissionPageKey);
+  }, [currentQueryString, permissionPageKey]);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent): void => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return (): void => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => {
     const requestedSection = normalizeUserDetailSection(
       new URLSearchParams(currentQueryString).get('section'),
     );
@@ -692,6 +715,22 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       pathname,
       router,
     ],
+  );
+
+  const handlePermissionPageChange = useCallback(
+    (pageKey: string): void => {
+      const nextPermissionPageKey = normalizePermissionPageKey(pageKey);
+      const nextParams = new URLSearchParams(currentQueryString);
+
+      setPermissionPageKey(nextPermissionPageKey);
+      nextParams.set('section', 'access');
+      nextParams.set('permissionPage', nextPermissionPageKey);
+
+      router.replace(`${pathname}?${nextParams.toString()}`, {
+        scroll: false,
+      });
+    },
+    [currentQueryString, pathname, router],
   );
 
   const syncUserState = (updatedUser: UserType): void => {
@@ -1004,6 +1043,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             canEditRole={canEditTargetRole}
             canManagePermissions={canManageTargetPermissions}
             isSaving={isSavingPermissions}
+            permissionPageKey={permissionPageKey}
+            onPermissionPageChange={handlePermissionPageChange}
             onSave={handleSaveAccess}
             onCancel={handleCancelAccess}
             hasChanges={hasAccessChanges}

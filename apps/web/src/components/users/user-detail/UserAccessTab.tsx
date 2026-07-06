@@ -1,12 +1,24 @@
 'use client';
 
 import { UserRole } from '@repo/database';
-import { Loader2, Save, Shield } from 'lucide-react';
+import {
+  Crown,
+  Loader2,
+  LockKeyhole,
+  Save,
+  Shield,
+  ShieldCheck,
+} from 'lucide-react';
 import React, { type FC } from 'react';
 
 import { PermissionsEditor } from '$components/users/PermissionsEditor';
-import { type PermissionsData } from '$constants/permissions.constants';
+import {
+  getAccessLabel,
+  PERMISSION_CATEGORIES,
+  type PermissionsData,
+} from '$constants/permissions.constants';
 import type { UserType } from '$types/auth.types';
+import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardFooter } from '$ui/card';
 import { Input } from '$ui/input';
@@ -26,7 +38,9 @@ type UserAccessTabProps = {
   hasChanges: boolean;
   isSaving: boolean;
   onCancel: () => void;
+  onPermissionPageChange: (pageKey: string) => void;
   onSave: () => void;
+  permissionPageKey: string;
   permissions: PermissionsData | null;
   role: UserRole;
   setPermissions: (permissions: PermissionsData | null) => void;
@@ -41,13 +55,98 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   hasChanges,
   isSaving,
   onCancel,
+  onPermissionPageChange,
   onSave,
+  permissionPageKey,
   permissions,
   role,
   setPermissions,
   setRole,
   user,
 }) => {
+  if (user.isProtected) {
+    const totalPermissions = PERMISSION_CATEGORIES.reduce(
+      (total, category) => total + category.permissions.length,
+      0,
+    );
+
+    return (
+      <Card className="border-sidebar-border/60 overflow-hidden rounded-lg py-0">
+        <CardContent className="space-y-4 p-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-amber-500/35 bg-amber-500/10 text-amber-300">
+                <Crown className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-foreground font-semibold">
+                    Accès superadmin
+                  </h3>
+                  <Badge
+                    variant="outline"
+                    className="border-amber-500/40 text-amber-300"
+                  >
+                    {getAccessLabel(user)}
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground mt-1 max-w-3xl text-sm leading-6">
+                  Ce compte est protégé par le système. Il dispose déjà de tous
+                  les accès et ses permissions ne se gèrent pas manuellement.
+                </p>
+              </div>
+            </div>
+            <div className="border-sidebar-border/60 bg-surface-control flex items-center gap-2 rounded-lg border px-2 py-1">
+              <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-7 shrink-0 items-center justify-center rounded-md border">
+                <Shield className="size-3.5" />
+              </span>
+              <Input
+                value="Superadmin"
+                disabled
+                className="border-border bg-popover h-8 min-w-0"
+              />
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="border-sidebar-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
+              <ShieldCheck className="size-5 shrink-0 text-[#97e6ad]" />
+              <div className="min-w-0">
+                <p className="text-foreground text-sm font-semibold">
+                  Toutes les pages
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {PERMISSION_CATEGORIES.length} espaces accessibles
+                </p>
+              </div>
+            </div>
+            <div className="border-sidebar-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
+              <Crown className="size-5 shrink-0 text-amber-300" />
+              <div className="min-w-0">
+                <p className="text-foreground text-sm font-semibold">
+                  {totalPermissions} permissions
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Accordées automatiquement
+                </p>
+              </div>
+            </div>
+            <div className="border-sidebar-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
+              <LockKeyhole className="text-primary size-5 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-foreground text-sm font-semibold">
+                  Non modifiable
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Protégé contre les restrictions
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div>
       <Card className="border-sidebar-border/60 overflow-hidden rounded-lg py-0">
@@ -56,6 +155,8 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             role={role}
             permissions={permissions}
             onChange={setPermissions}
+            selectedPageKey={permissionPageKey}
+            onSelectedPageChange={onPermissionPageChange}
             disabled={!canManagePermissions}
             headerControls={
               <div className="border-sidebar-border/60 bg-surface-control flex items-center gap-2 rounded-lg border px-2 py-1">

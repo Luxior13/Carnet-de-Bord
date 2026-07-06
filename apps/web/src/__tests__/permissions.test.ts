@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  arePermissionOverridesEqual,
   buildPermissionOverrides,
   getAllPermissionKeys,
   getEffectivePermissions,
@@ -63,6 +64,29 @@ describe('hasPermission', () => {
     expect(
       buildPermissionOverrides('USER', [PERMISSIONS.DASHBOARD.VIEW]),
     ).toBeNull();
+  });
+
+  it('stores an explicit deny override when blocking a page granted by role', () => {
+    const adminWithoutUsersPage = ROLE_PERMISSIONS.ADMIN.filter(
+      (permission) => permission !== PERMISSIONS.USERS.VIEW,
+    );
+
+    expect(buildPermissionOverrides('ADMIN', adminWithoutUsersPage)).toEqual({
+      [PERMISSIONS.USERS.VIEW]: false,
+    });
+  });
+
+  it('does not create a saveable override when the role already blocks a page', () => {
+    expect(
+      buildPermissionOverrides('USER', [PERMISSIONS.DASHBOARD.VIEW]),
+    ).toBeNull();
+  });
+
+  it('distinguishes an explicit deny override from a missing override', () => {
+    expect(
+      arePermissionOverridesEqual({ [PERMISSIONS.USERS.VIEW]: false }, null),
+    ).toBe(false);
+    expect(arePermissionOverridesEqual(null, {})).toBe(true);
   });
 
   it('requires linked view permissions before granting secondary actions', () => {
