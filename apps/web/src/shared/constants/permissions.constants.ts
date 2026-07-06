@@ -23,28 +23,6 @@ export const PERMISSIONS = {
   },
 } as const;
 
-export const ROLE_TEMPLATES = {
-  ADMIN_COMPLET: {
-    label: 'Admin complet',
-    permissions: [
-      PERMISSIONS.DASHBOARD.VIEW,
-      ...Object.values(PERMISSIONS.TREASURY),
-      ...Object.values(PERMISSIONS.USERS),
-    ],
-  },
-  GESTION_UTILISATEURS: {
-    label: 'Gestion utilisateurs',
-    permissions: [
-      PERMISSIONS.DASHBOARD.VIEW,
-      ...Object.values(PERMISSIONS.USERS),
-    ],
-  },
-  LECTURE_SEULE: {
-    label: 'Lecture seule',
-    permissions: [PERMISSIONS.DASHBOARD.VIEW, PERMISSIONS.USERS.VIEW],
-  },
-} as const;
-
 export type PermissionPole = {
   icon: NavigationIconName;
   key: string;
@@ -111,10 +89,10 @@ export type PermissionsData = Record<string, boolean>;
 
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   {
-    description: 'Accès au tableau de bord',
+    description: 'Vue globale du site privé selon les permissions.',
     icon: 'LayoutDashboard',
     key: 'dashboard',
-    label: 'Tableau de bord',
+    label: "Vue d'ensemble",
     permissions: [
       {
         action: 'view',
@@ -192,10 +170,10 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
     tone: 'system',
   },
   {
-    description: 'Accès financier strict',
+    description: 'Vue globale financière.',
     icon: 'Wallet',
     key: 'treasury',
-    label: 'Trésorerie',
+    label: 'Tableau de bord financier',
     permissions: [
       {
         action: 'view',

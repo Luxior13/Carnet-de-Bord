@@ -3,11 +3,9 @@
 import { UserRole } from '@repo/database';
 import {
   Check,
-  ChevronDown,
   CircleAlert,
   RotateCcw,
   ShieldCheck,
-  Sparkles,
   X,
 } from 'lucide-react';
 import React, { type FC, memo, useCallback, useMemo } from 'react';
@@ -18,7 +16,6 @@ import {
   type NavigationSpaceTone,
 } from '$constants/navigation-theme.constants';
 import {
-  buildPermissionOverrides,
   getEffectivePermissions,
   getRoleBasePermissions,
   PERMISSION_CATEGORIES,
@@ -28,16 +25,9 @@ import {
   type PermissionItem,
   type PermissionRisk,
   type PermissionsData,
-  ROLE_TEMPLATES,
 } from '$constants/permissions.constants';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '$ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -579,18 +569,6 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
       onChange(null);
     }, [onChange]);
 
-    const handleApplyTemplate = useCallback(
-      (templateKey: keyof typeof ROLE_TEMPLATES) => {
-        const template = Object.entries(ROLE_TEMPLATES).find(
-          ([key]) => key === templateKey,
-        )?.[1];
-        if (!template) return;
-
-        onChange(buildPermissionOverrides(role, template.permissions));
-      },
-      [onChange, role],
-    );
-
     const handlePoleChange = useCallback(
       (poleKey: string) => {
         const firstPoleCategory = PERMISSION_CATEGORIES.find(
@@ -750,52 +728,31 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                 seulement les exceptions nécessaires, page par page.
               </p>
             </div>
-            <div className="flex min-w-0 flex-wrap gap-2 xl:justify-end">
-              {headerControls && (
-                <div className="min-w-0 flex-1 sm:flex-none lg:min-w-56">
-                  {headerControls}
-                </div>
-              )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={disabled}
-                    className="gap-2"
-                  >
-                    <Sparkles size={14} />
-                    Profils rapides
-                    <ChevronDown size={14} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {Object.entries(ROLE_TEMPLATES).map(([key, template]) => (
-                    <DropdownMenuItem
-                      key={key}
-                      onClick={() =>
-                        handleApplyTemplate(key as keyof typeof ROLE_TEMPLATES)
-                      }
-                    >
-                      {template.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {customPermissionCount > 0 && (
+            {(headerControls || customPermissionCount > 0) && (
+              <div className="flex min-w-0 flex-wrap gap-2 xl:justify-end">
+                {headerControls && (
+                  <div className="min-w-0 flex-1 sm:flex-none lg:min-w-56">
+                    {headerControls}
+                  </div>
+                )}
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  disabled={disabled}
+                  disabled={disabled || customPermissionCount === 0}
+                  aria-hidden={customPermissionCount === 0}
+                  tabIndex={customPermissionCount === 0 ? -1 : undefined}
                   onClick={handleResetAllOverrides}
-                  className="text-muted-foreground hover:text-foreground gap-1.5"
+                  className={cn(
+                    'text-muted-foreground hover:text-foreground gap-1.5',
+                    customPermissionCount === 0 && 'invisible',
+                  )}
                 >
                   <RotateCcw className="size-3.5" />
                   Tout réinitialiser
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </section>
         {selectedCategory && (
