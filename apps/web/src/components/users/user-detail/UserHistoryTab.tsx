@@ -21,12 +21,21 @@ import {
   UserCheck,
   UserMinus,
   UserPlus,
-  Users,
   XCircle,
 } from 'lucide-react';
 import React, { type FC, memo, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import type { NavigationIconName } from '$constants/navigation-icon.constants';
+import { getNavigationIcon } from '$constants/navigation-icon.constants';
+import {
+  getNavigationSpaceToneClasses,
+  type NavigationSpaceTone,
+} from '$constants/navigation-theme.constants';
+import {
+  PERMISSION_CATEGORIES,
+  PERMISSION_POLES,
+} from '$constants/permissions.constants';
 import type { AuditLogEntry } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
@@ -51,14 +60,48 @@ type UserHistoryTabProps = {
   userId: string;
 };
 
-type ActionCategoryKey = 'admin' | 'auth' | 'other' | 'security' | 'system';
-type CategoryFilterValue = ActionCategoryKey | 'all';
+type ActionCategoryKey =
+  | 'access'
+  | 'auth'
+  | 'lifecycle'
+  | 'other'
+  | 'profile'
+  | 'security'
+  | 'system';
+type ActivityScope = 'all' | 'by' | 'on';
+const DEFAULT_ACTIVITY_SCOPE: ActivityScope = 'on';
+const ALL_FILTER_VALUE = 'all';
 
 type ActionConfig = {
   category: ActionCategoryKey;
   color: string;
   icon: LucideIcon;
   label: string;
+};
+
+type ActivityLocationInfo = {
+  description: string;
+  icon: NavigationIconName;
+  pageKey: string;
+  pageLabel: string;
+  poleKey: string;
+  poleLabel: string;
+  tone: NavigationSpaceTone;
+};
+
+type ActivityFilterOption = {
+  count: number;
+  icon: NavigationIconName;
+  label: string;
+  tone: NavigationSpaceTone;
+  value: string;
+};
+
+type ActivityPoleInfo = {
+  icon: NavigationIconName;
+  key: string;
+  label: string;
+  tone: NavigationSpaceTone;
 };
 
 type ChangeDiff = {
@@ -111,7 +154,7 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   },
   // User actions
   PERMISSION_UPDATE: {
-    category: 'admin',
+    category: 'access',
     color: 'text-primary bg-primary/10',
     icon: Shield,
     label: 'Permissions modifiées',
@@ -123,31 +166,31 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
     label: 'Session révoquée',
   },
   USER_ACTIVATE: {
-    category: 'admin',
+    category: 'lifecycle',
     color: 'text-primary bg-primary/10',
     icon: UserCheck,
     label: 'Utilisateur activé',
   },
   USER_CREATE: {
-    category: 'admin',
+    category: 'lifecycle',
     color: 'text-primary bg-primary/10',
     icon: UserPlus,
     label: 'Utilisateur créé',
   },
   USER_DEACTIVATE: {
-    category: 'admin',
+    category: 'lifecycle',
     color: 'text-amber-400 bg-amber-500/10',
     icon: UserMinus,
     label: 'Utilisateur désactivé',
   },
   USER_DELETE: {
-    category: 'admin',
+    category: 'lifecycle',
     color: 'text-destructive bg-destructive/10',
     icon: Trash2,
     label: 'Utilisateur supprimé',
   },
   USER_UPDATE: {
-    category: 'admin',
+    category: 'profile',
     color: 'text-primary bg-primary/10',
     icon: Pencil,
     label: 'Utilisateur modifié',
@@ -165,17 +208,11 @@ const mapAuditCategoryToActionCategory = (
   category: AuditLogEntry['category'],
 ): ActionCategoryKey => {
   if (category === 'AUTH') return 'auth';
-  if (category === 'PERMISSION' || category === 'USER') return 'admin';
+  if (category === 'PERMISSION') return 'access';
+  if (category === 'USER') return 'profile';
   if (category === 'SYSTEM') return 'system';
 
   return 'other';
-};
-
-const getActionCategory = (log: AuditLogEntry): ActionCategoryKey => {
-  return (
-    ACTION_CONFIG[log.action]?.category ??
-    mapAuditCategoryToActionCategory(log.category)
-  );
 };
 
 const getActionConfig = (log: AuditLogEntry): ActionConfig => {
@@ -201,37 +238,329 @@ const getActionConfig = (log: AuditLogEntry): ActionConfig => {
   };
 };
 
-const getLogSourceLabel = (log: AuditLogEntry, viewedUserId: string): string => {
-  const isByUser = log.userId === viewedUserId;
-  const isOnUser = log.targetUserId === viewedUserId;
+const isLogByViewedUser = (log: AuditLogEntry, viewedUserId: string): boolean =>
+  log.userId === viewedUserId;
 
-  if (isByUser && isOnUser) return 'Fait par lui';
-  if (isByUser) return 'Fait par lui';
-  if (isOnUser) return 'Sur son compte';
+const isLogOnViewedUser = (log: AuditLogEntry, viewedUserId: string): boolean =>
+  log.targetUserId === viewedUserId;
+
+const getLogSourceLabel = (
+  log: AuditLogEntry,
+  viewedUserId: string,
+): string => {
+  const isByUser = isLogByViewedUser(log, viewedUserId);
+  const isOnUser = isLogOnViewedUser(log, viewedUserId);
+
+  if (isByUser && isOnUser) return 'Réalisé par et concernant ce compte';
+  if (isByUser) return 'Réalisé par ce compte';
+  if (isOnUser) return 'Concernant ce compte';
 
   return 'Activité liée';
 };
 
-const CATEGORY_FILTERS: Array<{
+const FALLBACK_SYSTEM_POLE: ActivityPoleInfo = {
+  icon: 'Settings',
+  key: 'system',
+  label: 'Système',
+  tone: 'system',
+};
+
+const getPermissionPole = (poleKey: string): ActivityPoleInfo =>
+  PERMISSION_POLES.find((pole) => pole.key === poleKey) ?? FALLBACK_SYSTEM_POLE;
+
+const getPermissionCategoryLocation = (
+  pageKey: string,
+  fallback: ActivityLocationInfo,
+): ActivityLocationInfo => {
+  const category = PERMISSION_CATEGORIES.find(
+    (permissionCategory) => permissionCategory.key === pageKey,
+  );
+
+  if (!category) return fallback;
+
+  const pole = getPermissionPole(category.poleKey);
+
+  return {
+    description: category.description,
+    icon: category.icon,
+    pageKey: category.key,
+    pageLabel: category.label,
+    poleKey: pole.key,
+    poleLabel: pole.label,
+    tone: category.tone,
+  };
+};
+
+const AUTH_ACTIVITY_LOCATION: ActivityLocationInfo = {
+  description: 'Connexions, sessions et sécurité du compte.',
+  icon: 'ShieldCheck',
+  pageKey: 'authentication',
+  pageLabel: 'Authentification',
+  poleKey: 'system',
+  poleLabel: 'Système',
+  tone: 'system',
+};
+
+const TECHNICAL_ACTIVITY_LOCATION: ActivityLocationInfo = {
+  description: 'Événements techniques et traces système.',
+  icon: 'Settings',
+  pageKey: 'technical',
+  pageLabel: 'Technique',
+  poleKey: 'system',
+  poleLabel: 'Système',
+  tone: 'system',
+};
+
+const OTHER_ACTIVITY_LOCATION: ActivityLocationInfo = {
+  description: 'Activités sans page applicative renseignée.',
+  icon: 'History',
+  pageKey: 'other',
+  pageLabel: 'Page non renseignée',
+  poleKey: 'other',
+  poleLabel: 'Autre',
+  tone: 'internal',
+};
+
+const USERS_ACTIVITY_LOCATION = getPermissionCategoryLocation('users', {
+  description: 'Gestion des utilisateurs du système.',
+  icon: 'Users',
+  pageKey: 'users',
+  pageLabel: 'Utilisateurs & permissions',
+  poleKey: 'system',
+  poleLabel: 'Système',
+  tone: 'system',
+});
+
+const AUTH_ACTIVITY_ACTIONS = new Set([
+  'ACCOUNT_LOCKED',
+  'LOGIN_FAILED',
+  'LOGIN_SUCCESS',
+  'LOGOUT',
+  'PASSWORD_CHANGE',
+]);
+
+const USERS_ACTIVITY_ACTIONS = new Set([
+  'PASSWORD_RESET',
+  'PERMISSION_UPDATE',
+  'SESSION_INVALIDATE',
+  'USER_ACTIVATE',
+  'USER_CREATE',
+  'USER_DEACTIVATE',
+  'USER_DELETE',
+  'USER_UPDATE',
+]);
+
+const normalizeFilterKey = (value: string): string =>
+  value
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const getMetadataString = (
+  metadata: Record<string, unknown> | null,
+  keys: string[],
+): string | null => {
+  const entries = Object.entries(metadata ?? {});
+
+  for (const key of keys) {
+    const match = entries.find(([entryKey]) => entryKey === key);
+
+    if (!match) continue;
+
+    const [, value] = match;
+
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+
+  return null;
+};
+
+const getLocationIcon = (poleKey: string): NavigationIconName => {
+  if (poleKey.includes('dashboard')) return 'LayoutDashboard';
+  if (poleKey.includes('treasury')) return 'Wallet';
+  if (poleKey.includes('system') || poleKey.includes('systeme')) {
+    return 'Settings';
+  }
+
+  return 'History';
+};
+
+const getMetadataLocation = (
+  metadata: Record<string, unknown> | null,
+): ActivityLocationInfo | null => {
+  const poleLabel = getMetadataString(metadata, [
+    'poleLabel',
+    'pole',
+    'sectionLabel',
+    'areaLabel',
+  ]);
+  const pageLabel = getMetadataString(metadata, [
+    'pageLabel',
+    'page',
+    'moduleLabel',
+    'module',
+    'routeLabel',
+    'route',
+  ]);
+
+  if (!poleLabel && !pageLabel) return null;
+
+  const rawPoleKey =
+    getMetadataString(metadata, ['poleKey', 'poleId', 'sectionKey']) ??
+    poleLabel ??
+    OTHER_ACTIVITY_LOCATION.poleLabel;
+  const rawPageKey =
+    getMetadataString(metadata, ['pageKey', 'pageId', 'moduleKey']) ??
+    pageLabel ??
+    OTHER_ACTIVITY_LOCATION.pageLabel;
+  const poleKey =
+    normalizeFilterKey(rawPoleKey) || OTHER_ACTIVITY_LOCATION.poleKey;
+  const pageKey =
+    normalizeFilterKey(rawPageKey) || OTHER_ACTIVITY_LOCATION.pageKey;
+  const permissionCategory = PERMISSION_CATEGORIES.find(
+    (category) => category.key === pageKey,
+  );
+
+  if (permissionCategory) {
+    return getPermissionCategoryLocation(pageKey, OTHER_ACTIVITY_LOCATION);
+  }
+
+  const permissionPole = PERMISSION_POLES.find((pole) => pole.key === poleKey);
+
+  return {
+    description: 'Page renseignée par les métadonnées du journal.',
+    icon: getLocationIcon(poleKey),
+    pageKey,
+    pageLabel: pageLabel ?? OTHER_ACTIVITY_LOCATION.pageLabel,
+    poleKey,
+    poleLabel:
+      poleLabel ?? permissionPole?.label ?? OTHER_ACTIVITY_LOCATION.poleLabel,
+    tone: permissionPole?.tone ?? OTHER_ACTIVITY_LOCATION.tone,
+  };
+};
+
+const getActivityLocation = (log: AuditLogEntry): ActivityLocationInfo => {
+  const metadataLocation = getMetadataLocation(log.metadata);
+
+  if (metadataLocation) return metadataLocation;
+  if (AUTH_ACTIVITY_ACTIONS.has(log.action)) return AUTH_ACTIVITY_LOCATION;
+  if (USERS_ACTIVITY_ACTIONS.has(log.action)) return USERS_ACTIVITY_LOCATION;
+  if (log.category === 'AUTH') return AUTH_ACTIVITY_LOCATION;
+  if (log.category === 'PERMISSION' || log.category === 'USER') {
+    return USERS_ACTIVITY_LOCATION;
+  }
+  if (log.category === 'SYSTEM') return TECHNICAL_ACTIVITY_LOCATION;
+
+  return OTHER_ACTIVITY_LOCATION;
+};
+
+const getActivityLocationLabel = (location: ActivityLocationInfo): string =>
+  `${location.poleLabel} / ${location.pageLabel}`;
+
+const buildLocationFilterOptions = (
+  logs: AuditLogEntry[],
+  level: 'page' | 'pole',
+  allLabel: string,
+  poleKey?: string,
+): ActivityFilterOption[] => {
+  const allOption: ActivityFilterOption = {
+    count: 0,
+    icon: 'Search',
+    label: allLabel,
+    tone: 'internal',
+    value: ALL_FILTER_VALUE,
+  };
+  const options: ActivityFilterOption[] = [allOption];
+  const optionMap = new Map([[ALL_FILTER_VALUE, allOption]]);
+
+  logs.forEach((log) => {
+    const location = getActivityLocation(log);
+
+    if (
+      level === 'page' &&
+      poleKey &&
+      poleKey !== ALL_FILTER_VALUE &&
+      location.poleKey !== poleKey
+    ) {
+      return;
+    }
+
+    allOption.count += 1;
+
+    const value = level === 'pole' ? location.poleKey : location.pageKey;
+    const existingOption = optionMap.get(value);
+
+    if (existingOption) {
+      existingOption.count += 1;
+
+      return;
+    }
+
+    const permissionPole = PERMISSION_POLES.find(
+      (pole) => pole.key === location.poleKey,
+    );
+    const option = {
+      count: 1,
+      icon:
+        level === 'pole'
+          ? (permissionPole?.icon ?? getLocationIcon(location.poleKey))
+          : location.icon,
+      label:
+        level === 'pole'
+          ? (permissionPole?.label ?? location.poleLabel)
+          : location.pageLabel,
+      tone:
+        level === 'pole'
+          ? (permissionPole?.tone ?? location.tone)
+          : location.tone,
+      value,
+    };
+
+    optionMap.set(value, option);
+    options.push(option);
+  });
+
+  return [
+    allOption,
+    ...options
+      .slice(1)
+      .sort((first, second) => first.label.localeCompare(second.label, 'fr')),
+  ];
+};
+
+const ACTIVITY_SCOPE_OPTIONS: Array<{
+  description: string;
   icon: LucideIcon;
   label: string;
-  value: CategoryFilterValue;
+  value: ActivityScope;
 }> = [
-  { icon: Filter, label: 'Toutes', value: 'all' },
-  { icon: LogIn, label: 'Connexions', value: 'auth' },
-  { icon: Shield, label: 'Sécurité', value: 'security' },
-  { icon: Users, label: 'Administration', value: 'admin' },
-  { icon: Globe, label: 'Système', value: 'system' },
-];
-
-const SOURCE_FILTERS = [
-  { label: 'Tous', value: 'all' },
-  { label: 'Fait par lui', value: 'by' },
-  { label: 'Sur son compte', value: 'on' },
+  {
+    description: 'Modifications, accès, sessions et sécurité',
+    icon: Shield,
+    label: 'Concernant ce compte',
+    value: 'on',
+  },
+  {
+    description: 'Connexions et actions effectuées',
+    icon: UserCheck,
+    label: 'Réalisées par ce compte',
+    value: 'by',
+  },
+  {
+    description: 'Toutes les traces liées à cet utilisateur',
+    icon: History,
+    label: 'Tout le journal',
+    value: 'all',
+  },
 ];
 
 const DATE_FILTERS = [
-  { label: 'Tout', value: 'all' },
+  { label: 'Toute période', value: 'all' },
   { label: '7 derniers jours', value: '7' },
   { label: '30 derniers jours', value: '30' },
   { label: '90 derniers jours', value: '90' },
@@ -402,6 +731,15 @@ const escapeCsvCell = (value: string): string => {
   return `"${escapedValue}"`;
 };
 
+const activitySelectTriggerClassName =
+  'border-sidebar-border/70 bg-surface text-sidebar-foreground hover:bg-sidebar-accent/25 focus-visible:border-sidebar-ring/45 focus-visible:ring-sidebar-ring/35 h-11 w-full shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]';
+
+const activitySelectContentClassName =
+  'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground rounded-lg p-1.5 shadow-2xl shadow-black/25';
+
+const activitySelectItemClassName =
+  'focus:bg-sidebar-accent/55 focus:text-sidebar-accent-foreground rounded-md py-2';
+
 const getChangeDiffs = (
   metadata: Record<string, unknown> | null,
 ): ChangeDiff[] => {
@@ -442,43 +780,34 @@ const getChangeDiffs = (
 // COMPONENTS
 // ============================================
 
-const getActivityToneClassName = (color?: string): string => {
-  if (color?.includes('amber')) {
-    return 'border-amber-500/35 bg-amber-500/10 text-amber-400';
-  }
-
-  if (color?.includes('sky')) {
-    return 'border-sky-500/35 bg-sky-500/10 text-sky-300';
-  }
-
-  return 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring';
-};
-
-const SummaryPill: FC<{
-  color?: string;
-  icon: LucideIcon;
+const ActivitySelectVisualOption: FC<{
+  count?: number;
+  icon: NavigationIconName;
   label: string;
-  value: number;
-}> = ({ color, icon: Icon, label, value }) => (
-  <div className="border-sidebar-border/65 bg-background/35 flex min-w-[8.5rem] items-center gap-2 rounded-lg border px-3 py-2">
-    <span
-      className={cn(
-        'flex size-8 shrink-0 items-center justify-center rounded-md border',
-        getActivityToneClassName(color),
+  tone: NavigationSpaceTone;
+}> = ({ count, icon, label, tone }) => {
+  const Icon = getNavigationIcon(icon);
+  const toneClasses = getNavigationSpaceToneClasses(tone);
+
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      <span
+        className={cn(
+          'flex size-7 shrink-0 items-center justify-center rounded-md border',
+          toneClasses.icon,
+        )}
+      >
+        <Icon className="size-3.5" />
+      </span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      {typeof count === 'number' && (
+        <Badge variant="secondary" className="ml-auto shrink-0 text-[10px]">
+          {count}
+        </Badge>
       )}
-    >
-      <Icon className="size-4" />
-    </span>
-    <span className="min-w-0">
-      <span className="text-foreground block text-sm font-semibold leading-4">
-        {value}
-      </span>
-      <span className="text-muted-foreground block truncate text-xs">
-        {label}
-      </span>
-    </span>
-  </div>
-);
+    </div>
+  );
+};
 
 // Component to display a single change (before -> after)
 const ChangeItem: FC<{
@@ -507,11 +836,13 @@ const ChangeItem: FC<{
 const ActivityListRow: FC<{
   config: ActionConfig;
   isOpen: boolean;
+  location: ActivityLocationInfo;
   log: AuditLogEntry;
   onToggle: () => void;
   sourceLabel: string;
-}> = memo(({ config, isOpen, log, onToggle, sourceLabel }) => {
+}> = memo(({ config, isOpen, location, log, onToggle, sourceLabel }) => {
   const Icon = config.icon;
+  const LocationIcon = getNavigationIcon(location.icon);
 
   // Extract data from metadata
   const metadata = log.metadata as Record<string, unknown> | null;
@@ -534,7 +865,7 @@ const ActivityListRow: FC<{
       )}
       onClick={onToggle}
     >
-      <div className="grid gap-3 px-3 py-3 sm:px-4 md:grid-cols-[minmax(0,1fr)_8.5rem_9.5rem_1.5rem] md:items-center">
+      <div className="grid gap-3 px-3 py-3 sm:px-4 md:grid-cols-[minmax(0,1fr)_12rem_8.5rem_9.5rem_1.5rem] md:items-center">
         <div className="flex min-w-0 items-start gap-3">
           <span
             className={cn(
@@ -576,7 +907,21 @@ const ActivityListRow: FC<{
                 {secondaryText}
               </p>
             )}
+            <p className="text-muted-foreground/80 mt-1 flex min-w-0 items-center gap-1 text-[11px] md:hidden">
+              <LocationIcon size={11} className="shrink-0" />
+              <span className="truncate">
+                {getActivityLocationLabel(location)}
+              </span>
+            </p>
           </div>
+        </div>
+        <div className="hidden min-w-0 md:block">
+          <p className="text-muted-foreground/70 truncate text-[11px]">
+            {location.poleLabel}
+          </p>
+          <p className="text-muted-foreground truncate text-xs font-medium">
+            {location.pageLabel}
+          </p>
         </div>
         <div className="hidden md:block">
           <span className="border-sidebar-border/70 bg-surface-muted text-muted-foreground inline-flex rounded-md border px-2 py-1 text-xs">
@@ -608,6 +953,10 @@ const ActivityListRow: FC<{
                 {formatFullDate(log.createdAt)}
               </span>
               <span>{sourceLabel}</span>
+              <span className="flex items-center gap-1.5">
+                <LocationIcon size={12} />
+                {getActivityLocationLabel(location)}
+              </span>
               {log.ipAddress && (
                 <span className="flex items-center gap-1.5">
                   <Globe size={12} />
@@ -648,50 +997,78 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   isLoading,
   userId,
 }) => {
-  const [categoryFilter, setCategoryFilter] =
-    useState<CategoryFilterValue>('all');
-  const [sourceFilter, setSourceFilter] = useState('all');
+  const [poleFilter, setPoleFilter] = useState(ALL_FILTER_VALUE);
+  const [pageFilter, setPageFilter] = useState(ALL_FILTER_VALUE);
+  const [activityScope, setActivityScope] = useState<ActivityScope>(
+    DEFAULT_ACTIVITY_SCOPE,
+  );
   const [dateFilter, setDateFilter] = useState('all');
   const [showCount, setShowCount] = useState(20);
   const [openLogId, setOpenLogId] = useState<string | null>(null);
+  const isPageFilterLocked = poleFilter === ALL_FILTER_VALUE;
 
-  const stats = useMemo(() => {
-    const counts = {
-      administration: 0,
-      connections: 0,
-      other: 0,
-      security: 0,
-      system: 0,
-      total: auditLogs.length,
-    };
+  const poleOptions = useMemo(
+    () => buildLocationFilterOptions(auditLogs, 'pole', 'Tous les pôles'),
+    [auditLogs],
+  );
 
-    auditLogs.forEach((log) => {
-      const category = getActionCategory(log);
+  const pageOptions = useMemo(() => {
+    if (isPageFilterLocked) {
+      return [
+        {
+          count: auditLogs.length,
+          icon: 'Search',
+          label: 'Toutes les pages',
+          tone: 'internal',
+          value: ALL_FILTER_VALUE,
+        } satisfies ActivityFilterOption,
+      ];
+    }
 
-      if (category === 'auth') counts.connections += 1;
-      if (category === 'security') counts.security += 1;
-      if (category === 'admin') counts.administration += 1;
-      if (category === 'system') counts.system += 1;
-      if (category === 'other') counts.other += 1;
-    });
+    return buildLocationFilterOptions(
+      auditLogs,
+      'page',
+      'Toutes les pages',
+      poleFilter,
+    );
+  }, [auditLogs, isPageFilterLocked, poleFilter]);
+  const effectivePageFilter = isPageFilterLocked
+    ? ALL_FILTER_VALUE
+    : pageFilter;
 
-    return counts;
-  }, [auditLogs]);
+  const scopeCounts = useMemo(
+    () => ({
+      all: auditLogs.length,
+      by: auditLogs.filter((log) => isLogByViewedUser(log, userId)).length,
+      on: auditLogs.filter((log) => isLogOnViewedUser(log, userId)).length,
+    }),
+    [auditLogs, userId],
+  );
 
   const filteredLogs = useMemo(() => {
     const now = new Date();
 
     return auditLogs.filter((log) => {
-      // Category filter
-      if (categoryFilter !== 'all') {
-        if (getActionCategory(log) !== categoryFilter) return false;
+      // Location filters
+      const location = getActivityLocation(log);
+
+      if (poleFilter !== ALL_FILTER_VALUE) {
+        if (location.poleKey !== poleFilter) return false;
       }
-      // Source filter
-      if (sourceFilter !== 'all') {
-        const isByUser = log.userId === userId;
-        const isOnUser = log.targetUserId === userId;
-        if (sourceFilter === 'by' && !isByUser) return false;
-        if (sourceFilter === 'on' && !isOnUser) return false;
+
+      if (effectivePageFilter !== ALL_FILTER_VALUE) {
+        if (location.pageKey !== effectivePageFilter) return false;
+      }
+
+      // Scope filter
+      if (activityScope !== 'all') {
+        if (activityScope === 'by' && !isLogByViewedUser(log, userId)) {
+          return false;
+        }
+
+        if (activityScope === 'on' && !isLogOnViewedUser(log, userId)) {
+          return false;
+        }
       }
       // Date filter
       if (dateFilter !== 'all') {
@@ -708,66 +1085,124 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
 
       return true;
     });
-  }, [auditLogs, categoryFilter, sourceFilter, dateFilter, userId]);
+  }, [
+    activityScope,
+    auditLogs,
+    dateFilter,
+    effectivePageFilter,
+    poleFilter,
+    userId,
+  ]);
 
   const displayedLogs = filteredLogs.slice(0, showCount);
   const hasMore = filteredLogs.length > showCount;
   const hasActiveFilters =
-    categoryFilter !== 'all' || sourceFilter !== 'all' || dateFilter !== 'all';
-  const summaryItems: Array<{
-    color?: string;
-    icon: LucideIcon;
-    label: string;
-    value: number;
-  }> = [
-    { icon: History, label: 'Total', value: stats.total },
-    {
-      color: 'text-primary',
-      icon: LogIn,
-      label: 'Connexions',
-      value: stats.connections,
-    },
-    {
-      color: 'text-amber-400',
-      icon: Shield,
-      label: 'Sécurité',
-      value: stats.security,
-    },
-    {
-      color: 'text-primary',
-      icon: Users,
-      label: 'Administration',
-      value: stats.administration,
-    },
-    {
-      color: 'text-sky-300',
-      icon: Globe,
-      label: 'Système',
-      value: stats.system,
-    },
-  ];
+    poleFilter !== ALL_FILTER_VALUE ||
+    effectivePageFilter !== ALL_FILTER_VALUE ||
+    activityScope !== DEFAULT_ACTIVITY_SCOPE ||
+    dateFilter !== 'all';
+  const selectedPoleOption =
+    poleOptions.find((option) => option.value === poleFilter) ??
+    poleOptions[0] ??
+    ({
+      count: auditLogs.length,
+      icon: 'Search',
+      label: 'Tous les pôles',
+      tone: 'internal',
+      value: ALL_FILTER_VALUE,
+    } satisfies ActivityFilterOption);
+  const selectedPageOption =
+    pageOptions.find((option) => option.value === effectivePageFilter) ??
+    pageOptions[0] ??
+    ({
+      count: filteredLogs.length,
+      icon: 'Search',
+      label: 'Toutes les pages',
+      tone: 'internal',
+      value: ALL_FILTER_VALUE,
+    } satisfies ActivityFilterOption);
+  const selectedPageLocation =
+    effectivePageFilter === ALL_FILTER_VALUE
+      ? null
+      : (auditLogs
+          .map((log) => getActivityLocation(log))
+          .find((location) => location.pageKey === effectivePageFilter) ??
+        null);
+  const selectedPageTitle =
+    effectivePageFilter === ALL_FILTER_VALUE
+      ? 'Toutes les pages'
+      : selectedPageOption.label;
+  const selectedPageDescription =
+    selectedPageLocation?.description ??
+    (poleFilter === ALL_FILTER_VALUE
+      ? 'Journal consolidé de tous les pôles et toutes les pages.'
+      : `Journal consolidé des pages du pôle ${selectedPoleOption.label}.`);
+  const selectedPageVisualOption =
+    effectivePageFilter === ALL_FILTER_VALUE
+      ? selectedPoleOption
+      : selectedPageOption;
 
-  if (stats.other > 0) {
-    summaryItems.push({
-      icon: History,
-      label: 'Autres',
-      value: stats.other,
-    });
-  }
+  const getScopeCount = (scope: ActivityScope): number => {
+    if (scope === 'by') return scopeCounts.by;
+    if (scope === 'on') return scopeCounts.on;
+
+    return scopeCounts.all;
+  };
+
+  const handleActivityScopeChange = (scope: ActivityScope): void => {
+    setActivityScope(scope);
+    setShowCount(20);
+    setOpenLogId(null);
+  };
+
+  const handlePoleFilterChange = (value: string): void => {
+    setPoleFilter(value);
+    setPageFilter(ALL_FILTER_VALUE);
+    setShowCount(20);
+    setOpenLogId(null);
+  };
+
+  const handlePageFilterChange = (value: string): void => {
+    if (isPageFilterLocked) return;
+
+    setPageFilter(value);
+    setShowCount(20);
+    setOpenLogId(null);
+  };
+
+  const handleResetFilters = (): void => {
+    setPoleFilter(ALL_FILTER_VALUE);
+    setPageFilter(ALL_FILTER_VALUE);
+    setActivityScope(DEFAULT_ACTIVITY_SCOPE);
+    setDateFilter('all');
+    setShowCount(20);
+    setOpenLogId(null);
+  };
 
   // Export to CSV (limited to 500 rows)
   const handleExport = (): void => {
     const maxExport = 500;
     const logsToExport = filteredLogs.slice(0, maxExport);
 
-    const headers = ['Date', 'Action', 'Description', 'IP', 'Source'];
+    const headers = [
+      'Date',
+      'Action',
+      'Description',
+      'Pôle',
+      'Page',
+      'IP',
+      'Portée',
+    ];
     const rows = logsToExport.map((log) => {
       const config = getActionConfig(log);
+      const location = getActivityLocation(log);
 
       return [
         formatFullDate(log.createdAt),
         config.label,
         log.description || '',
+        location.poleLabel,
+        location.pageLabel,
         log.ipAddress || '',
         getLogSourceLabel(log, userId),
       ];
@@ -821,7 +1256,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
             Aucune activité
           </h3>
           <p className="text-muted-foreground mt-2 max-w-xs text-center text-sm">
-            Les connexions, changements de sécurité et actions administratives
+            Les connexions, changements de profil, accès et actions de sécurité
             apparaîtront ici.
           </p>
         </CardContent>
@@ -829,192 +1264,327 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
     );
   }
 
+  const SelectedPageIcon = getNavigationIcon(selectedPageVisualOption.icon);
+  const selectedPageToneClasses = getNavigationSpaceToneClasses(
+    selectedPageVisualOption.tone,
+  );
+
   return (
-    <div className="space-y-3">
-      <Card className="border-sidebar-border/70 shrink-0 overflow-hidden rounded-xl py-0">
-        <CardContent className="p-0">
-          <div className="flex flex-col gap-3 p-3 sm:p-4 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-10 shrink-0 items-center justify-center rounded-lg border">
-                <History className="size-4" />
-              </span>
-              <div className="min-w-0">
-                <h3 className="text-foreground text-sm font-semibold">
-                  Journal d'activité
-                </h3>
-                <p className="text-muted-foreground text-xs">
-                  {filteredLogs.length} affiché
-                  {filteredLogs.length > 1 ? 's' : ''} sur {auditLogs.length}
+    <Card className="border-sidebar-border/60 overflow-visible rounded-lg py-0">
+      <CardContent className="p-2.5 sm:p-3">
+        <div className="space-y-3">
+          <section className="border-sidebar-border/55 bg-surface-muted overflow-hidden rounded-lg border">
+            <div className="flex flex-col gap-4 p-4 xl:flex-row xl:items-center xl:justify-between">
+              <div className="min-w-0 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-foreground font-semibold">
+                    Journal d&apos;activité
+                  </h3>
+                  <Badge variant="secondary" className="text-xs">
+                    {filteredLogs.length}/{auditLogs.length} affichés
+                  </Badge>
+                  {hasActiveFilters && (
+                    <Badge
+                      variant="outline"
+                      className="border-primary/40 text-primary text-xs"
+                    >
+                      Filtres actifs
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-muted-foreground max-w-3xl text-sm leading-6">
+                  Les événements sont regroupés avec les mêmes pôles et pages
+                  que l&apos;onglet Accès. La portée indique si le compte est
+                  concerné ou s&apos;il a réalisé l&apos;action.
                 </p>
               </div>
+              <div className="flex min-w-0 flex-wrap gap-2 xl:justify-end">
+                <div className="min-w-44">
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger
+                      aria-label="Filtrer par période"
+                      className={activitySelectTriggerClassName}
+                    >
+                      <SelectValue placeholder="Période" />
+                    </SelectTrigger>
+                    <SelectContent className={activitySelectContentClassName}>
+                      {DATE_FILTERS.map((filter) => (
+                        <SelectItem
+                          key={filter.value}
+                          value={filter.value}
+                          className={activitySelectItemClassName}
+                        >
+                          {filter.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    'text-muted-foreground h-11 gap-1.5',
+                    !hasActiveFilters && 'invisible',
+                  )}
+                  disabled={!hasActiveFilters}
+                  onClick={handleResetFilters}
+                >
+                  <RefreshCw className="size-3.5" />
+                  Réinitialiser
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-11 gap-1.5"
+                  onClick={handleExport}
+                  disabled={filteredLogs.length === 0}
+                >
+                  <Download className="size-3.5" />
+                  Exporter
+                </Button>
+              </div>
             </div>
-            <div className="flex min-w-0 flex-wrap gap-2">
-              {summaryItems.map((item) => (
-                <SummaryPill
-                  key={item.label}
-                  icon={item.icon}
-                  label={item.label}
-                  value={item.value}
-                  color={item.color}
-                />
-              ))}
+          </section>
+          <section className="border-sidebar-border/60 bg-surface overflow-hidden rounded-lg border">
+            <div className="border-sidebar-border/55 bg-surface-muted grid gap-4 border-b p-4 xl:grid-cols-[minmax(0,1fr)_40rem] xl:items-start">
+              <div className="flex min-w-0 items-start gap-3">
+                <span
+                  className={cn(
+                    'flex size-11 shrink-0 items-center justify-center rounded-lg border',
+                    selectedPageToneClasses.icon,
+                  )}
+                >
+                  <SelectedPageIcon className="size-5" />
+                </span>
+                <div className="min-w-0 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="text-foreground font-semibold">
+                      {selectedPageTitle}
+                    </h4>
+                    <Badge variant="secondary" className="text-xs">
+                      {filteredLogs.length} événement
+                      {filteredLogs.length > 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                  <p className="text-muted-foreground max-w-2xl text-sm leading-6">
+                    {selectedPageDescription}
+                  </p>
+                </div>
+              </div>
+              <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
+                <div className="min-w-0 space-y-2">
+                  <label
+                    htmlFor="activity-pole"
+                    className="text-muted-foreground text-xs font-medium"
+                  >
+                    Pôle
+                  </label>
+                  <Select
+                    value={poleFilter}
+                    onValueChange={handlePoleFilterChange}
+                  >
+                    <SelectTrigger
+                      id="activity-pole"
+                      className={activitySelectTriggerClassName}
+                    >
+                      <SelectValue>
+                        <ActivitySelectVisualOption
+                          icon={selectedPoleOption.icon}
+                          label={selectedPoleOption.label}
+                          count={selectedPoleOption.count}
+                          tone={selectedPoleOption.tone}
+                        />
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className={activitySelectContentClassName}>
+                      {poleOptions.map((filter) => (
+                        <SelectItem
+                          key={filter.value}
+                          value={filter.value}
+                          className={activitySelectItemClassName}
+                        >
+                          <ActivitySelectVisualOption
+                            icon={filter.icon}
+                            label={filter.label}
+                            count={filter.count}
+                            tone={filter.tone}
+                          />
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="min-w-0 space-y-2">
+                  <label
+                    htmlFor="activity-page"
+                    className="text-muted-foreground text-xs font-medium"
+                  >
+                    Page
+                  </label>
+                  <Select
+                    value={effectivePageFilter}
+                    onValueChange={handlePageFilterChange}
+                    disabled={isPageFilterLocked}
+                  >
+                    <SelectTrigger
+                      id="activity-page"
+                      className={cn(
+                        activitySelectTriggerClassName,
+                        isPageFilterLocked && 'opacity-70',
+                      )}
+                    >
+                      <SelectValue>
+                        <ActivitySelectVisualOption
+                          icon={selectedPageOption.icon}
+                          label={selectedPageOption.label}
+                          count={selectedPageOption.count}
+                          tone={selectedPageOption.tone}
+                        />
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className={activitySelectContentClassName}>
+                      {pageOptions.map((filter) => (
+                        <SelectItem
+                          key={filter.value}
+                          value={filter.value}
+                          className={activitySelectItemClassName}
+                        >
+                          <ActivitySelectVisualOption
+                            icon={filter.icon}
+                            label={filter.label}
+                            count={filter.count}
+                            tone={filter.tone}
+                          />
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="border-sidebar-border/65 border-t p-3 sm:p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Select
-              value={categoryFilter}
-              onValueChange={(value) =>
-                setCategoryFilter(value as CategoryFilterValue)
-              }
-            >
-              <SelectTrigger className="border-border h-9 w-[160px] rounded-lg text-sm">
-                <SelectValue placeholder="Catégorie" />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORY_FILTERS.map((filter) => {
-                  const FilterIcon = filter.icon;
+            <div className="space-y-4 p-4">
+              <div className="grid gap-2 md:grid-cols-3">
+                {ACTIVITY_SCOPE_OPTIONS.map((scope) => {
+                  const ScopeIcon = scope.icon;
+                  const isActiveScope = activityScope === scope.value;
 
                   return (
-                    <SelectItem key={filter.value} value={filter.value}>
-                      <div className="flex items-center gap-2">
-                        <FilterIcon
-                          size={14}
-                          className="text-muted-foreground"
-                        />
-                        <span>{filter.label}</span>
-                      </div>
-                    </SelectItem>
+                    <button
+                      key={scope.value}
+                      type="button"
+                      aria-pressed={isActiveScope}
+                      onClick={() => handleActivityScopeChange(scope.value)}
+                      className={cn(
+                        'border-sidebar-border/60 bg-surface-muted hover:bg-sidebar-accent/25 flex min-w-0 items-center gap-3 rounded-lg border p-3 text-left transition-colors',
+                        isActiveScope &&
+                          'border-primary/45 bg-primary/10 shadow-[inset_0_0_0_1px_rgba(108,146,214,0.16)]',
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border',
+                          isActiveScope && 'border-primary/40 bg-primary/15',
+                        )}
+                      >
+                        <ScopeIcon className="size-4" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="text-foreground block truncate text-sm font-semibold">
+                          {scope.label}
+                        </span>
+                        <span className="text-muted-foreground block truncate text-xs">
+                          {scope.description}
+                        </span>
+                      </span>
+                      <Badge
+                        variant={isActiveScope ? 'secondary' : 'outline'}
+                        className="shrink-0"
+                      >
+                        {getScopeCount(scope.value)}
+                      </Badge>
+                    </button>
                   );
                 })}
-              </SelectContent>
-            </Select>
-            <Select value={sourceFilter} onValueChange={setSourceFilter}>
-              <SelectTrigger className="border-border h-9 w-[150px] rounded-lg text-sm">
-                <SelectValue placeholder="Source" />
-              </SelectTrigger>
-              <SelectContent>
-                {SOURCE_FILTERS.map((filter) => (
-                  <SelectItem key={filter.value} value={filter.value}>
-                    {filter.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="border-border h-9 w-[150px] rounded-lg text-sm">
-                <SelectValue placeholder="Période" />
-              </SelectTrigger>
-              <SelectContent>
-                {DATE_FILTERS.map((filter) => (
-                  <SelectItem key={filter.value} value={filter.value}>
-                    {filter.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                'text-muted-foreground h-9 w-36 rounded-lg',
-                !hasActiveFilters && 'pointer-events-none invisible',
-              )}
-              disabled={!hasActiveFilters}
-              onClick={() => {
-                setCategoryFilter('all');
-                setSourceFilter('all');
-                setDateFilter('all');
-              }}
-            >
-              <RefreshCw size={14} className="mr-1.5" />
-              Réinitialiser
-            </Button>
-            <div className="flex-1" />
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 rounded-lg"
-              onClick={handleExport}
-              disabled={filteredLogs.length === 0}
-            >
-              <Download size={14} className="mr-1.5" />
-              <span className="hidden sm:inline">Exporter</span>
-            </Button>
-          </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-sidebar-border/70 gap-0 overflow-hidden rounded-xl py-0">
-        <CardContent className="p-0">
-          <div className="border-sidebar-border/65 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_8.5rem_9.5rem_1.5rem] border-b px-4 py-2 text-xs font-medium md:grid">
-            <span>Événement</span>
-            <span>Portée</span>
-            <span>Date</span>
-            <span />
-          </div>
-          {filteredLogs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16">
-              <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-16 w-16 items-center justify-center rounded-xl border">
-                <Filter className="h-8 w-8" />
               </div>
-              <p className="text-muted-foreground mt-4 text-sm">
-                Aucun résultat pour ces filtres
-              </p>
-            </div>
-          ) : (
-            <div className="divide-sidebar-border/65 divide-y">
-              {((): React.ReactNode => {
-                let lastCategory: DateCategory | null = null;
-
-                return displayedLogs.map((log) => {
-                  const config = getActionConfig(log);
-                  const category = getDateCategory(log.createdAt);
-                  const showSeparator = category !== lastCategory;
-                  const sourceLabel = getLogSourceLabel(log, userId);
-                  lastCategory = category;
-
-                  return (
-                    <React.Fragment key={log.id}>
-                      {showSeparator && (
-                        <div className="bg-surface-muted/35 text-muted-foreground px-3 py-2 text-xs font-medium sm:px-4">
-                          {DATE_CATEGORY_LABELS.get(category) || 'Plus ancien'}
-                        </div>
-                      )}
-                      <ActivityListRow
-                        log={log}
-                        config={config}
-                        sourceLabel={sourceLabel}
-                        isOpen={openLogId === log.id}
-                        onToggle={() =>
-                          setOpenLogId(openLogId === log.id ? null : log.id)
-                        }
-                      />
-                    </React.Fragment>
-                  );
-                });
-              })()}
-              {hasMore && (
-                <div className="p-4 text-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-border rounded-lg"
-                    onClick={() => setShowCount((c) => c + 20)}
-                  >
-                    Charger plus ({filteredLogs.length - showCount} restants)
-                  </Button>
+              <div className="border-sidebar-border/60 overflow-hidden rounded-lg border">
+                <div className="border-sidebar-border/65 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_12rem_8.5rem_9.5rem_1.5rem] border-b px-4 py-2 text-xs font-medium md:grid">
+                  <span>Événement</span>
+                  <span>Page</span>
+                  <span>Portée</span>
+                  <span>Date</span>
+                  <span />
                 </div>
-              )}
+                {filteredLogs.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16">
+                    <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-16 w-16 items-center justify-center rounded-xl border">
+                      <Filter className="h-8 w-8" />
+                    </div>
+                    <p className="text-muted-foreground mt-4 text-sm">
+                      Aucun résultat pour ces filtres
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-sidebar-border/65 divide-y">
+                    {((): React.ReactNode => {
+                      let lastCategory: DateCategory | null = null;
+
+                      return displayedLogs.map((log) => {
+                        const config = getActionConfig(log);
+                        const category = getDateCategory(log.createdAt);
+                        const showSeparator = category !== lastCategory;
+                        const location = getActivityLocation(log);
+                        const sourceLabel = getLogSourceLabel(log, userId);
+                        lastCategory = category;
+
+                        return (
+                          <React.Fragment key={log.id}>
+                            {showSeparator && (
+                              <div className="bg-surface-muted/35 text-muted-foreground px-3 py-2 text-xs font-medium sm:px-4">
+                                {DATE_CATEGORY_LABELS.get(category) ||
+                                  'Plus ancien'}
+                              </div>
+                            )}
+                            <ActivityListRow
+                              log={log}
+                              config={config}
+                              location={location}
+                              sourceLabel={sourceLabel}
+                              isOpen={openLogId === log.id}
+                              onToggle={() =>
+                                setOpenLogId(
+                                  openLogId === log.id ? null : log.id,
+                                )
+                              }
+                            />
+                          </React.Fragment>
+                        );
+                      });
+                    })()}
+                    {hasMore && (
+                      <div className="p-4 text-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-border rounded-lg"
+                          onClick={() => setShowCount((c) => c + 20)}
+                        >
+                          Charger plus ({filteredLogs.length - showCount}{' '}
+                          restants)
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-          )}
-        </CardContent>
-        <CardFooter className="border-sidebar-border/65 text-muted-foreground bg-surface-muted shrink-0 justify-center border-t px-4 py-3 text-center text-xs">
-          {filteredLogs.length} événement{filteredLogs.length > 1 ? 's' : ''}
-          {hasActiveFilters && ' (filtre)'}
-        </CardFooter>
-      </Card>
-    </div>
+            </div>
+          </section>
+        </div>
+      </CardContent>
+      <CardFooter className="border-sidebar-border/60 text-muted-foreground bg-surface-muted/95 justify-center rounded-b-lg border-t px-4 py-3 text-center text-xs">
+        {filteredLogs.length} événement{filteredLogs.length > 1 ? 's' : ''}
+        {hasActiveFilters && ' (filtre)'}
+      </CardFooter>
+    </Card>
   );
 };
