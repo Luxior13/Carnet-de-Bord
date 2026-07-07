@@ -529,7 +529,8 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             <div>
               <p className="text-sm font-medium">Supprimer cet utilisateur</p>
               <p className="text-muted-foreground text-xs">
-                Cette action est définitive et invalide les sessions associées.
+                Le compte sera désactivé, masqué de l&apos;annuaire et ses
+                sessions seront invalidées.
               </p>
             </div>
             <Button

@@ -8,8 +8,8 @@ import {
   Calendar,
   Clock,
   Loader2,
-  ShieldCheck,
   type LucideIcon,
+  ShieldCheck,
 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, {
@@ -395,20 +395,33 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     : false;
 
   const isSelf = currentUser?.id === user?.id;
+  const isTargetAdminAccessRestricted =
+    !!user && user.role === UserRole.ADMIN && !isProtectedActor;
   const canEditTargetProfile =
     !!user && canUpdateUsers && (!user.isProtected || isProtectedActor);
+  const canEditTargetEmail =
+    canEditTargetProfile && !isTargetAdminAccessRestricted;
   const canManageTargetPermissions =
-    !!user && canEditUserPermissions && (!user.isProtected || isProtectedActor);
+    !!user &&
+    canEditUserPermissions &&
+    !user.isProtected &&
+    !isTargetAdminAccessRestricted;
   const canResetTargetPassword =
     !!user &&
     canResetPasswords &&
     !isSelf &&
-    (!user.isProtected || isProtectedActor);
+    (!user.isProtected || isProtectedActor) &&
+    !isTargetAdminAccessRestricted;
   const canManageTargetSessions = canResetTargetPassword;
   const canDeleteTargetUser =
-    !!user && canDeleteUsers && !user.isProtected && !isSelf;
+    !!user &&
+    canDeleteUsers &&
+    !user.isProtected &&
+    !isSelf &&
+    !isTargetAdminAccessRestricted;
   const canEditTargetRole = !!user && isProtectedActor && !user.isProtected;
-  const canEditTargetStatus = canEditTargetProfile;
+  const canEditTargetStatus =
+    canEditTargetProfile && !isTargetAdminAccessRestricted;
   /* eslint-disable security/detect-object-injection -- Profile keys are typed local StaffProfileForm fields, not user-controlled object paths. */
   const profileErrors = useMemo(() => {
     const buildLengthError = (
@@ -464,7 +477,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     Object.values(profileErrors.staffProfile).some(Boolean);
   const hasProfileChanges =
     !!user &&
-    (editForm.email.trim().toLowerCase() !== user.email ||
+    ((canEditTargetEmail &&
+      editForm.email.trim().toLowerCase() !== user.email) ||
       editForm.firstName.trim() !== user.firstName ||
       editForm.lastName.trim() !== user.lastName ||
       (
@@ -1030,7 +1044,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     try {
       const response = await apiFetch(`/api/users/${userId}`, {
         body: JSON.stringify({
-          email: editForm.email.trim(),
+          ...(canEditTargetEmail ? { email: editForm.email.trim() } : {}),
           firstName: editForm.firstName.trim(),
           lastName: editForm.lastName.trim(),
           staffProfile: {
@@ -1254,6 +1268,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               setEditForm((currentForm) => ({ ...currentForm, ...form }))
             }
             canEdit={canEditTargetProfile}
+            canEditEmail={canEditTargetEmail}
             isSaving={isSaving}
             onSave={handleSaveProfile}
             onCancel={handleCancelProfile}
@@ -1642,8 +1657,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 Supprimer cet utilisateur ?
               </AlertDialogTitle>
               <AlertDialogDescription className="text-muted-foreground">
-                Cette action est irréversible. L&apos;utilisateur sera supprimé
-                définitivement et toutes ses sessions seront invalidées.
+                Le compte sera désactivé, masqué des listes actives et toutes
+                ses sessions seront invalidées.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="mt-4">

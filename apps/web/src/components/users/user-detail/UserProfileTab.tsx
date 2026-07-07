@@ -50,6 +50,7 @@ type ProfileErrors = {
 
 type UserProfileTabProps = {
   canEdit: boolean;
+  canEditEmail: boolean;
   canSave: boolean;
   errors: ProfileErrors;
   form: ProfileForm;
@@ -73,6 +74,7 @@ const FieldError: FC<{ children: React.ReactNode; id: string }> = ({
 
 export const UserProfileTab: FC<UserProfileTabProps> = ({
   canEdit,
+  canEditEmail,
   canSave,
   errors,
   form,
@@ -82,6 +84,13 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   onSave,
   setForm,
 }) => {
+  const canEditEmailField = canEdit && canEditEmail;
+  const emailHint = !canEdit
+    ? 'Email en lecture seule pour votre niveau d’accès.'
+    : canEditEmail
+      ? "Modifier cet email change l'identifiant utilisé à la connexion."
+      : "Modifier l'email d'un administrateur est réservé au superadmin.";
+
   const updateStaffProfile = (
     field: keyof StaffProfileForm,
     value: string,
@@ -231,7 +240,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                   onChange={(event) =>
                     setForm({ ...form, email: event.target.value })
                   }
-                  disabled={!canEdit}
+                  disabled={!canEditEmailField}
                   aria-invalid={!!errors.email}
                   aria-describedby={
                     errors.email ? 'user-email-error' : 'user-email-hint'
@@ -246,10 +255,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                     className="text-muted-foreground flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-2.5 py-2 text-xs"
                   >
                     <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-400" />
-                    <span>
-                      Modifier cet email change l&apos;identifiant utilisé à la
-                      connexion.
-                    </span>
+                    <span>{emailHint}</span>
                   </div>
                 )}
               </div>
