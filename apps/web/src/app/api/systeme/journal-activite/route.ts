@@ -28,6 +28,7 @@ const CONNECTION_ACTIONS: AuditAction[] = [
   AuditAction.LOGIN_SUCCESS,
   AuditAction.LOGOUT,
 ];
+const CONNECTION_ACTION_VALUES = new Set<string>(CONNECTION_ACTIONS);
 
 type JournalLog = {
   action: AuditAction;
@@ -123,6 +124,13 @@ export async function GET(
       searchParams.get('action'),
       AUDIT_ACTIONS,
     );
+    const connectionAction =
+      logType === 'connections'
+        ? getEnumFilter<AuditAction>(
+            searchParams.get('connectionAction'),
+            CONNECTION_ACTION_VALUES,
+          )
+        : undefined;
     const category = getEnumFilter<AuditCategory>(
       searchParams.get('category'),
       AUDIT_CATEGORIES,
@@ -135,9 +143,11 @@ export async function GET(
     const canViewSensitiveAudit = auth.user.isProtected;
     const logTypeFilter = action
       ? undefined
-      : logType === 'connections'
-        ? { action: { in: CONNECTION_ACTIONS } }
-        : { action: { notIn: CONNECTION_ACTIONS } };
+      : connectionAction
+        ? { action: connectionAction }
+        : logType === 'connections'
+          ? { action: { in: CONNECTION_ACTIONS } }
+          : { action: { notIn: CONNECTION_ACTIONS } };
 
     const andFilters = [
       action ? { action } : undefined,

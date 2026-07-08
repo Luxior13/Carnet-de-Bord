@@ -886,8 +886,10 @@ describe('users access hardening', () => {
     mockPrisma.user.findMany.mockReset();
     mockPrisma.auditLog.findMany
       .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
     mockPrisma.user.findMany
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
 
@@ -899,7 +901,13 @@ describe('users access hardening', () => {
 
     await route.GET(
       new Request(
-        'http://localhost/api/systeme/journal-activite?logType=connections&poleKey=system&pageKey=authentication',
+        'http://localhost/api/systeme/journal-activite?logType=connections',
+      ) as never,
+    );
+
+    await route.GET(
+      new Request(
+        'http://localhost/api/systeme/journal-activite?logType=connections&connectionAction=LOGIN_FAILED',
       ) as never,
     );
 
@@ -937,9 +945,15 @@ describe('users access hardening', () => {
                 ],
               },
             },
-            { poleKey: 'system' },
-            { pageKey: 'authentication' },
           ]),
+        },
+      }),
+    );
+    expect(mockPrisma.auditLog.findMany).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        where: {
+          AND: expect.arrayContaining([{ action: 'LOGIN_FAILED' }]),
         },
       }),
     );
