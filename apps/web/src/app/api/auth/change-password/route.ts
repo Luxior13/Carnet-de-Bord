@@ -203,6 +203,15 @@ export async function POST(
       action: 'PASSWORD_CHANGE',
       category: 'AUTH',
       description: 'Mot de passe modifié',
+      metadata: {
+        pageKey: 'account',
+        pageLabel: 'Mon compte',
+        passwordChange: true,
+        poleKey: 'account',
+        poleLabel: 'Compte',
+        tabKey: 'security',
+        tabLabel: 'Sécurité',
+      },
       targetUserId: user.id,
       userId: user.id,
     });

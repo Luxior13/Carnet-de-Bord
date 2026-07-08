@@ -3,7 +3,6 @@
 import {
   ArrowRight,
   Ban,
-  Calendar,
   CheckCircle,
   ChevronDown,
   Download,
@@ -33,6 +32,7 @@ import {
   type NavigationSpaceTone,
 } from '$constants/navigation-theme.constants';
 import {
+  getPermissionItem,
   PERMISSION_CATEGORIES,
   PERMISSION_POLES,
 } from '$constants/permissions.constants';
@@ -48,6 +48,7 @@ import {
   SelectValue,
 } from '$ui/select';
 import { Skeleton } from '$ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
 // ============================================
@@ -69,6 +70,7 @@ type ActionCategoryKey =
   | 'security'
   | 'system';
 type ActivityScope = 'all' | 'by' | 'on';
+type ActivityScopeIconKey = 'by' | 'linked' | 'on';
 const DEFAULT_ACTIVITY_SCOPE: ActivityScope = 'on';
 const ALL_FILTER_VALUE = 'all';
 
@@ -86,7 +88,14 @@ type ActivityLocationInfo = {
   pageLabel: string;
   poleKey: string;
   poleLabel: string;
+  tabKey: string;
+  tabLabel: string;
   tone: NavigationSpaceTone;
+};
+
+type ActivityTabInfo = {
+  tabKey: string;
+  tabLabel: string;
 };
 
 type ActivityFilterOption = {
@@ -102,6 +111,13 @@ type ActivityPoleInfo = {
   key: string;
   label: string;
   tone: NavigationSpaceTone;
+};
+
+type ActivityScopeVisual = {
+  className: string;
+  icon: LucideIcon;
+  label: string;
+  value: ActivityScopeIconKey;
 };
 
 type ChangeDiff = {
@@ -204,6 +220,41 @@ const DEFAULT_CONFIG: ActionConfig = {
   label: 'Action',
 };
 
+const ACTION_CATEGORY_LABELS = new Map<ActionCategoryKey, string>([
+  ['access', 'Accès'],
+  ['auth', 'Connexion'],
+  ['lifecycle', 'Cycle de vie'],
+  ['other', 'Autre'],
+  ['profile', 'Profil'],
+  ['security', 'Sécurité'],
+  ['system', 'Technique'],
+]);
+
+const ACTIVITY_SCOPE_VISUALS: Record<
+  ActivityScopeIconKey,
+  ActivityScopeVisual
+> = {
+  by: {
+    className: 'border-[#5fbd7b]/35 bg-[#5fbd7b]/10 text-[#97e6ad]',
+    icon: UserCheck,
+    label: 'Réalisé par ce compte',
+    value: 'by',
+  },
+  linked: {
+    className:
+      'border-sidebar-border/70 bg-surface-muted text-muted-foreground',
+    icon: History,
+    label: 'Activité liée',
+    value: 'linked',
+  },
+  on: {
+    className: 'border-[#7aa7e8]/35 bg-[#7aa7e8]/10 text-[#9ec3ff]',
+    icon: Shield,
+    label: 'Concernant ce compte',
+    value: 'on',
+  },
+};
+
 const mapAuditCategoryToActionCategory = (
   category: AuditLogEntry['category'],
 ): ActionCategoryKey => {
@@ -258,6 +309,32 @@ const getLogSourceLabel = (
   return 'Activité liée';
 };
 
+const getLogScopeVisuals = (
+  log: AuditLogEntry,
+  viewedUserId: string,
+): ActivityScopeVisual[] => {
+  const scopes: ActivityScopeVisual[] = [];
+
+  if (isLogOnViewedUser(log, viewedUserId)) {
+    scopes.push(ACTIVITY_SCOPE_VISUALS.on);
+  }
+
+  if (isLogByViewedUser(log, viewedUserId)) {
+    scopes.push(ACTIVITY_SCOPE_VISUALS.by);
+  }
+
+  return scopes.length > 0 ? scopes : [ACTIVITY_SCOPE_VISUALS.linked];
+};
+
+const getActivityScopeOptionVisuals = (
+  scope: ActivityScope,
+): ActivityScopeVisual[] => {
+  if (scope === 'by') return [ACTIVITY_SCOPE_VISUALS.by];
+  if (scope === 'on') return [ACTIVITY_SCOPE_VISUALS.on];
+
+  return [ACTIVITY_SCOPE_VISUALS.on, ACTIVITY_SCOPE_VISUALS.by];
+};
+
 const FALLBACK_SYSTEM_POLE: ActivityPoleInfo = {
   icon: 'Settings',
   key: 'system',
@@ -287,8 +364,64 @@ const getPermissionCategoryLocation = (
     pageLabel: category.label,
     poleKey: pole.key,
     poleLabel: pole.label,
+    tabKey: fallback.tabKey,
+    tabLabel: fallback.tabLabel,
     tone: category.tone,
   };
+};
+
+const DEFAULT_ACTIVITY_TAB: ActivityTabInfo = {
+  tabKey: 'page',
+  tabLabel: 'Page',
+};
+
+const getInferredActivityTab = (log: AuditLogEntry): ActivityTabInfo => {
+  if (log.action === 'PERMISSION_UPDATE') {
+    return { tabKey: 'access', tabLabel: 'Accès' };
+  }
+
+  if (log.action === 'USER_UPDATE') {
+    return { tabKey: 'profile', tabLabel: 'Profil' };
+  }
+
+  if (
+    log.action === 'ACCOUNT_LOCKED' ||
+    log.action === 'PASSWORD_CHANGE' ||
+    log.action === 'PASSWORD_RESET' ||
+    log.action === 'SESSION_INVALIDATE'
+  ) {
+    return { tabKey: 'security', tabLabel: 'Sécurité' };
+  }
+
+  if (
+    log.action === 'LOGIN_FAILED' ||
+    log.action === 'LOGIN_SUCCESS' ||
+    log.action === 'LOGOUT'
+  ) {
+    return { tabKey: 'auth', tabLabel: 'Connexions' };
+  }
+
+  if (
+    log.action === 'USER_ACTIVATE' ||
+    log.action === 'USER_CREATE' ||
+    log.action === 'USER_DEACTIVATE' ||
+    log.action === 'USER_DELETE'
+  ) {
+    return { tabKey: 'resume', tabLabel: 'Résumé' };
+  }
+
+  if (log.category === 'AUTH') {
+    return { tabKey: 'auth', tabLabel: 'Connexions' };
+  }
+  if (log.category === 'PERMISSION') {
+    return { tabKey: 'access', tabLabel: 'Accès' };
+  }
+  if (log.category === 'USER') return { tabKey: 'profile', tabLabel: 'Profil' };
+  if (log.category === 'SYSTEM') {
+    return { tabKey: 'technical', tabLabel: 'Technique' };
+  }
+
+  return DEFAULT_ACTIVITY_TAB;
 };
 
 const AUTH_ACTIVITY_LOCATION: ActivityLocationInfo = {
@@ -298,6 +431,8 @@ const AUTH_ACTIVITY_LOCATION: ActivityLocationInfo = {
   pageLabel: 'Authentification',
   poleKey: 'system',
   poleLabel: 'Système',
+  tabKey: 'auth',
+  tabLabel: 'Connexions',
   tone: 'system',
 };
 
@@ -308,6 +443,8 @@ const TECHNICAL_ACTIVITY_LOCATION: ActivityLocationInfo = {
   pageLabel: 'Technique',
   poleKey: 'system',
   poleLabel: 'Système',
+  tabKey: 'technical',
+  tabLabel: 'Technique',
   tone: 'system',
 };
 
@@ -318,6 +455,8 @@ const OTHER_ACTIVITY_LOCATION: ActivityLocationInfo = {
   pageLabel: 'Page non renseignée',
   poleKey: 'other',
   poleLabel: 'Autre',
+  tabKey: DEFAULT_ACTIVITY_TAB.tabKey,
+  tabLabel: DEFAULT_ACTIVITY_TAB.tabLabel,
   tone: 'internal',
 };
 
@@ -328,6 +467,8 @@ const USERS_ACTIVITY_LOCATION = getPermissionCategoryLocation('users', {
   pageLabel: 'Utilisateurs & permissions',
   poleKey: 'system',
   poleLabel: 'Système',
+  tabKey: DEFAULT_ACTIVITY_TAB.tabKey,
+  tabLabel: DEFAULT_ACTIVITY_TAB.tabLabel,
   tone: 'system',
 });
 
@@ -380,7 +521,31 @@ const getMetadataString = (
   return null;
 };
 
+const getMetadataActivityTab = (
+  metadata: Record<string, unknown> | null,
+): ActivityTabInfo | null => {
+  const tabLabel = getMetadataString(metadata, [
+    'tabLabel',
+    'tab',
+    'sectionTabLabel',
+    'viewLabel',
+  ]);
+
+  if (!tabLabel) return null;
+
+  const rawTabKey =
+    getMetadataString(metadata, ['tabKey', 'tabId', 'viewKey']) ?? tabLabel;
+
+  return {
+    tabKey: normalizeFilterKey(rawTabKey) || DEFAULT_ACTIVITY_TAB.tabKey,
+    tabLabel,
+  };
+};
+
 const getLocationIcon = (poleKey: string): NavigationIconName => {
+  if (poleKey.includes('account') || poleKey.includes('compte')) {
+    return 'UserCheck';
+  }
   if (poleKey.includes('dashboard')) return 'LayoutDashboard';
   if (poleKey.includes('treasury')) return 'Wallet';
   if (poleKey.includes('system') || poleKey.includes('systeme')) {
@@ -422,12 +587,20 @@ const getMetadataLocation = (
     normalizeFilterKey(rawPoleKey) || OTHER_ACTIVITY_LOCATION.poleKey;
   const pageKey =
     normalizeFilterKey(rawPageKey) || OTHER_ACTIVITY_LOCATION.pageKey;
+  const metadataTab = getMetadataActivityTab(metadata);
   const permissionCategory = PERMISSION_CATEGORIES.find(
     (category) => category.key === pageKey,
   );
 
   if (permissionCategory) {
-    return getPermissionCategoryLocation(pageKey, OTHER_ACTIVITY_LOCATION);
+    const permissionLocation = getPermissionCategoryLocation(
+      pageKey,
+      OTHER_ACTIVITY_LOCATION,
+    );
+
+    return metadataTab
+      ? { ...permissionLocation, ...metadataTab }
+      : permissionLocation;
   }
 
   const permissionPole = PERMISSION_POLES.find((pole) => pole.key === poleKey);
@@ -440,27 +613,46 @@ const getMetadataLocation = (
     poleKey,
     poleLabel:
       poleLabel ?? permissionPole?.label ?? OTHER_ACTIVITY_LOCATION.poleLabel,
+    tabKey: metadataTab?.tabKey ?? DEFAULT_ACTIVITY_TAB.tabKey,
+    tabLabel: metadataTab?.tabLabel ?? DEFAULT_ACTIVITY_TAB.tabLabel,
     tone: permissionPole?.tone ?? OTHER_ACTIVITY_LOCATION.tone,
+  };
+};
+
+const applyActivityTab = (
+  log: AuditLogEntry,
+  location: ActivityLocationInfo,
+): ActivityLocationInfo => {
+  const metadataTab = getMetadataActivityTab(log.metadata);
+
+  return {
+    ...location,
+    ...(metadataTab ?? getInferredActivityTab(log)),
   };
 };
 
 const getActivityLocation = (log: AuditLogEntry): ActivityLocationInfo => {
   const metadataLocation = getMetadataLocation(log.metadata);
 
-  if (metadataLocation) return metadataLocation;
-  if (AUTH_ACTIVITY_ACTIONS.has(log.action)) return AUTH_ACTIVITY_LOCATION;
-  if (USERS_ACTIVITY_ACTIONS.has(log.action)) return USERS_ACTIVITY_LOCATION;
-  if (log.category === 'AUTH') return AUTH_ACTIVITY_LOCATION;
-  if (log.category === 'PERMISSION' || log.category === 'USER') {
-    return USERS_ACTIVITY_LOCATION;
+  if (metadataLocation) return applyActivityTab(log, metadataLocation);
+  if (AUTH_ACTIVITY_ACTIONS.has(log.action)) {
+    return applyActivityTab(log, AUTH_ACTIVITY_LOCATION);
   }
-  if (log.category === 'SYSTEM') return TECHNICAL_ACTIVITY_LOCATION;
+  if (USERS_ACTIVITY_ACTIONS.has(log.action)) {
+    return applyActivityTab(log, USERS_ACTIVITY_LOCATION);
+  }
+  if (log.category === 'AUTH') {
+    return applyActivityTab(log, AUTH_ACTIVITY_LOCATION);
+  }
+  if (log.category === 'PERMISSION' || log.category === 'USER') {
+    return applyActivityTab(log, USERS_ACTIVITY_LOCATION);
+  }
+  if (log.category === 'SYSTEM') {
+    return applyActivityTab(log, TECHNICAL_ACTIVITY_LOCATION);
+  }
 
-  return OTHER_ACTIVITY_LOCATION;
+  return applyActivityTab(log, OTHER_ACTIVITY_LOCATION);
 };
-
-const getActivityLocationLabel = (location: ActivityLocationInfo): string =>
-  `${location.poleLabel} / ${location.pageLabel}`;
 
 const buildLocationFilterOptions = (
   logs: AuditLogEntry[],
@@ -535,29 +727,27 @@ const buildLocationFilterOptions = (
 
 const ACTIVITY_SCOPE_OPTIONS: Array<{
   description: string;
-  icon: LucideIcon;
   label: string;
   value: ActivityScope;
 }> = [
   {
     description: 'Modifications, accès, sessions et sécurité',
-    icon: Shield,
     label: 'Concernant ce compte',
     value: 'on',
   },
   {
     description: 'Connexions et actions effectuées',
-    icon: UserCheck,
     label: 'Réalisées par ce compte',
     value: 'by',
   },
   {
     description: 'Toutes les traces liées à cet utilisateur',
-    icon: History,
     label: 'Tout le journal',
     value: 'all',
   },
 ];
+
+const PERMISSION_CHANGE_FIELD_PREFIX = 'permissions.';
 
 const DATE_FILTERS = [
   { label: 'Toute période', value: 'all' },
@@ -662,7 +852,10 @@ const FIELD_LABELS = new Map<string, string>([
   ['isActive', 'Actif'],
   ['lastName', 'Nom'],
   ['name', 'Nom'],
+  ['passwordChange', 'Mot de passe'],
+  ['passwordReset', 'Mot de passe'],
   ['permissions', 'Permissions'],
+  ['revokedSessions', 'Sessions révoquées'],
   ['role', 'Rôle'],
   ['sortOrder', 'Ordre'],
   ['staffProfile.department', 'Pôle'],
@@ -675,8 +868,106 @@ const FIELD_LABELS = new Map<string, string>([
   ['staffProfile.timezone', 'Fuseau horaire'],
 ]);
 
+const FACT_ONLY_CHANGE_KEYS = new Set([
+  'passwordChange',
+  'passwordReset',
+  'revokedSessions',
+]);
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
+
+const getPermissionChangeFieldKey = (permissionKey: string): string =>
+  `${PERMISSION_CHANGE_FIELD_PREFIX}${permissionKey}`;
+
+const getPermissionKeyFromChangeField = (fieldKey: string): string | null => {
+  if (!fieldKey.startsWith(PERMISSION_CHANGE_FIELD_PREFIX)) return null;
+
+  return fieldKey.slice(PERMISSION_CHANGE_FIELD_PREFIX.length);
+};
+
+const getChangeFieldLabel = (fieldKey: string): string => {
+  const permissionKey = getPermissionKeyFromChangeField(fieldKey);
+
+  if (permissionKey) {
+    return getPermissionItem(permissionKey)?.label ?? permissionKey;
+  }
+
+  return FIELD_LABELS.get(fieldKey) || fieldKey;
+};
+
+const toPermissionAuditMap = (value: unknown): Map<string, boolean> => {
+  if (!isRecord(value)) return new Map();
+
+  return new Map(
+    Object.entries(value).flatMap(([permissionKey, enabled]) => {
+      return typeof enabled === 'boolean'
+        ? [[permissionKey, enabled] as const]
+        : [];
+    }),
+  );
+};
+
+const getPermissionChangeDiffs = (
+  before: unknown,
+  after: unknown,
+): ChangeDiff[] => {
+  const beforePermissions = toPermissionAuditMap(before);
+  const afterPermissions = toPermissionAuditMap(after);
+  const permissionKeys = new Set([
+    ...beforePermissions.keys(),
+    ...afterPermissions.keys(),
+  ]);
+
+  return [...permissionKeys]
+    .filter((permissionKey) => {
+      return (
+        beforePermissions.get(permissionKey) !==
+        afterPermissions.get(permissionKey)
+      );
+    })
+    .sort((left, right) =>
+      getChangeFieldLabel(getPermissionChangeFieldKey(left)).localeCompare(
+        getChangeFieldLabel(getPermissionChangeFieldKey(right)),
+        'fr',
+      ),
+    )
+    .map((permissionKey) => ({
+      after: afterPermissions.has(permissionKey)
+        ? afterPermissions.get(permissionKey)
+        : null,
+      before: beforePermissions.has(permissionKey)
+        ? beforePermissions.get(permissionKey)
+        : null,
+      fieldKey: getPermissionChangeFieldKey(permissionKey),
+    }));
+};
+
 // Format value for display
 const formatChangeValue = (key: string, value: unknown): string => {
+  if (getPermissionKeyFromChangeField(key)) {
+    if (value === null || value === undefined) return 'Rôle par défaut';
+
+    return value ? 'Autorisé' : 'Refusé';
+  }
+
+  if (key === 'passwordReset') {
+    return value ? 'Mot de passe temporaire généré' : '(vide)';
+  }
+
+  if (key === 'passwordChange') {
+    return value ? 'Mot de passe modifié' : '(vide)';
+  }
+
+  if (key === 'revokedSessions') {
+    const count = Number(value);
+
+    if (!Number.isFinite(count)) return String(value);
+
+    return `${count} session${count > 1 ? 's' : ''}`;
+  }
+
   if (value === null || value === undefined) return '(vide)';
 
   if (key === 'isActive') {
@@ -749,11 +1040,33 @@ const getChangeDiffs = (
   if (beforeValues && afterValues) {
     const afterValuesByKey = new Map(Object.entries(afterValues));
 
-    return Object.entries(beforeValues).map(([fieldKey, before]) => ({
-      after: afterValuesByKey.get(fieldKey),
-      before,
-      fieldKey,
-    }));
+    return Object.entries(beforeValues).flatMap(([fieldKey, before]) => {
+      const after = afterValuesByKey.get(fieldKey);
+
+      if (fieldKey === 'permissions') {
+        return getPermissionChangeDiffs(before, after);
+      }
+
+      return [{ after, before, fieldKey }];
+    });
+  }
+
+  if (metadata?.passwordReset === true) {
+    return [{ after: true, before: null, fieldKey: 'passwordReset' }];
+  }
+
+  if (metadata?.passwordChange === true) {
+    return [{ after: true, before: null, fieldKey: 'passwordChange' }];
+  }
+
+  if (typeof metadata?.revokedSessions === 'number') {
+    return [
+      {
+        after: metadata.revokedSessions,
+        before: null,
+        fieldKey: 'revokedSessions',
+      },
+    ];
   }
 
   const changeValues = metadata?.changes as Record<
@@ -766,14 +1079,17 @@ const getChangeDiffs = (
   return Object.entries(changeValues)
     .filter(([, value]) => {
       return (
-        value && typeof value === 'object' && ('from' in value || 'to' in value)
+        isRecord(value) &&
+        (Object.hasOwn(value, 'from') || Object.hasOwn(value, 'to'))
       );
     })
-    .map(([fieldKey, value]) => ({
-      after: value.to,
-      before: value.from,
-      fieldKey,
-    }));
+    .flatMap(([fieldKey, value]) => {
+      if (fieldKey === 'permissions') {
+        return getPermissionChangeDiffs(value.from, value.to);
+      }
+
+      return [{ after: value.to, before: value.from, fieldKey }];
+    });
 };
 
 // ============================================
@@ -809,26 +1125,98 @@ const ActivitySelectVisualOption: FC<{
   );
 };
 
+const ActivityScopeIconGroup: FC<{
+  scopes: ActivityScopeVisual[];
+  size?: 'md' | 'sm';
+}> = ({ scopes, size = 'sm' }) => (
+  <span className="inline-flex items-center gap-1">
+    {scopes.map((scope) => {
+      const ScopeIcon = scope.icon;
+
+      return (
+        <Tooltip key={scope.value}>
+          <TooltipTrigger asChild>
+            <span
+              aria-label={scope.label}
+              className={cn(
+                'inline-flex shrink-0 items-center justify-center rounded-md border',
+                size === 'md' ? 'size-8' : 'size-7',
+                scope.className,
+              )}
+            >
+              <ScopeIcon className={size === 'md' ? 'size-4' : 'size-3.5'} />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent sideOffset={6}>{scope.label}</TooltipContent>
+        </Tooltip>
+      );
+    })}
+  </span>
+);
+
+const ActivityScopeSummary: FC<{ scopes: ActivityScopeVisual[] }> = ({
+  scopes,
+}) => (
+  <span className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5">
+    {scopes.map((scope) => {
+      const ScopeIcon = scope.icon;
+
+      return (
+        <span
+          key={scope.value}
+          className={cn(
+            'inline-flex max-w-full items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-[11px] font-medium',
+            scope.className,
+          )}
+        >
+          <ScopeIcon className="size-3 shrink-0" />
+          <span className="min-w-0 truncate">{scope.label}</span>
+        </span>
+      );
+    })}
+  </span>
+);
+
 // Component to display a single change (before -> after)
 const ChangeItem: FC<{
   after: unknown;
   before: unknown;
   fieldKey: string;
 }> = ({ after, before, fieldKey }) => {
-  const label = FIELD_LABELS.get(fieldKey) || fieldKey;
+  const label = getChangeFieldLabel(fieldKey);
   const beforeStr = formatChangeValue(fieldKey, before);
   const afterStr = formatChangeValue(fieldKey, after);
+  const isFactOnly = FACT_ONLY_CHANGE_KEYS.has(fieldKey);
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 text-xs">
-      <span className="text-muted-foreground font-medium">{label}:</span>
-      <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 line-through">
-        {beforeStr}
+    <div className="border-sidebar-border/60 bg-background/40 grid gap-2 rounded-md border px-2.5 py-2 text-xs sm:grid-cols-[minmax(13rem,16rem)_minmax(0,1fr)] sm:items-center">
+      <span
+        className="text-foreground min-w-0 truncate font-semibold"
+        title={label}
+      >
+        {label}
       </span>
-      <ArrowRight size={12} className="text-muted-foreground" />
-      <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5">
-        {afterStr}
-      </span>
+      {isFactOnly ? (
+        <span className="bg-primary/10 text-primary min-w-0 rounded px-1.5 py-0.5 font-medium break-words">
+          {afterStr}
+        </span>
+      ) : (
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <span className="text-muted-foreground/70 text-[10px] font-medium uppercase">
+            Avant
+          </span>
+          <span className="bg-muted text-muted-foreground max-w-full rounded px-1.5 py-0.5 break-words line-through">
+            {beforeStr}
+          </span>
+          <ArrowRight size={12} className="text-muted-foreground shrink-0" />
+          <span className="text-primary/80 text-[10px] font-medium uppercase">
+            Après
+          </span>
+          <span className="bg-primary/10 text-primary max-w-full rounded px-1.5 py-0.5 break-words">
+            {afterStr}
+          </span>
+        </div>
+      )}
     </div>
   );
 };
@@ -839,150 +1227,255 @@ const ActivityListRow: FC<{
   location: ActivityLocationInfo;
   log: AuditLogEntry;
   onToggle: () => void;
-  sourceLabel: string;
-}> = memo(({ config, isOpen, location, log, onToggle, sourceLabel }) => {
+  scopeVisuals: ActivityScopeVisual[];
+}> = memo(({ config, isOpen, location, log, onToggle, scopeVisuals }) => {
   const Icon = config.icon;
   const LocationIcon = getNavigationIcon(location.icon);
+  const locationToneClasses = getNavigationSpaceToneClasses(location.tone);
+  const categoryLabel =
+    ACTION_CATEGORY_LABELS.get(config.category) ??
+    ACTION_CATEGORY_LABELS.get('other') ??
+    'Autre';
 
   // Extract data from metadata
   const metadata = log.metadata as Record<string, unknown> | null;
-  const targetName = metadata?.targetName as string | undefined;
   const changes = getChangeDiffs(metadata);
   const hasChanges = changes.length > 0;
-  const secondaryText =
-    targetName ||
-    (log.description && log.description !== config.label
-      ? log.description
-      : null);
 
   return (
-    <button
-      type="button"
-      aria-expanded={isOpen}
+    <article
       className={cn(
-        'group w-full cursor-pointer text-left transition-colors',
-        isOpen ? 'bg-popover' : 'hover:bg-accent/45',
+        'border-sidebar-border/60 bg-surface-muted/35 relative overflow-hidden rounded-lg border transition-colors',
+        isOpen
+          ? 'border-sidebar-ring/35 bg-popover/75 shadow-[inset_0_0_0_1px_rgba(108,146,214,0.08)]'
+          : 'hover:border-sidebar-border hover:bg-surface-muted/60',
       )}
-      onClick={onToggle}
     >
-      <div className="grid gap-3 px-3 py-3 sm:px-4 md:grid-cols-[minmax(0,1fr)_12rem_8.5rem_9.5rem_1.5rem] md:items-center">
-        <div className="flex min-w-0 items-start gap-3">
-          <span
-            className={cn(
-              'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg',
-              config.color,
-            )}
-          >
-            <Icon size={16} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <p className="text-foreground min-w-0 truncate text-sm font-medium">
-                {config.label}
-              </p>
-              <Badge
-                variant="secondary"
-                className="bg-primary/10 text-primary px-1.5 py-0 text-[10px] md:hidden"
-              >
-                {sourceLabel}
-              </Badge>
-              {hasChanges && (
-                <Badge
-                  variant="secondary"
-                  className="bg-primary/10 text-primary px-1.5 py-0 text-[10px]"
-                >
-                  {changes.length} modif.
-                </Badge>
+      <span
+        aria-hidden="true"
+        className={cn(
+          'absolute inset-y-0 left-0 w-1',
+          locationToneClasses.accent,
+        )}
+      />
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        className="group w-full cursor-pointer text-left"
+        onClick={onToggle}
+      >
+        <div className="grid gap-3 px-3 py-3 sm:px-4 md:grid-cols-[minmax(0,1fr)_18rem_10rem_1.5rem] md:items-center">
+          <div className="flex min-w-0 items-start gap-3">
+            <span
+              className={cn(
+                'mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-lg',
+                config.color,
               )}
-              <ChevronDown
-                size={14}
-                className={cn(
-                  'text-muted-foreground ml-auto transition-transform md:hidden',
-                  isOpen && 'rotate-180',
+            >
+              <Icon size={17} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start gap-1.5">
+                <p
+                  className="text-foreground min-w-0 truncate text-sm font-semibold"
+                  title={config.label}
+                >
+                  {config.label}
+                </p>
+                <ChevronDown
+                  size={14}
+                  className={cn(
+                    'text-muted-foreground ml-auto transition-transform md:hidden',
+                    isOpen && 'rotate-180',
+                  )}
+                />
+              </div>
+              <ActivityScopeSummary scopes={scopeVisuals} />
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                {hasChanges && (
+                  <Badge
+                    variant="secondary"
+                    className="border-primary/20 bg-primary/15 text-primary px-1.5 py-0 text-[10px]"
+                  >
+                    {changes.length}{' '}
+                    {changes.length > 1 ? 'changements' : 'changement'}
+                  </Badge>
                 )}
-              />
+                <Badge
+                  variant="outline"
+                  className="text-muted-foreground px-1.5 py-0 text-[10px]"
+                >
+                  {categoryLabel}
+                </Badge>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5 md:hidden">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'max-w-full px-1.5 py-0 text-[10px]',
+                    locationToneClasses.soft,
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'mr-1 inline-block size-1.5 rounded-full',
+                      locationToneClasses.dot,
+                    )}
+                  />
+                  <span className="truncate">{location.poleLabel}</span>
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'max-w-full px-1.5 py-0 text-[10px]',
+                    locationToneClasses.soft,
+                  )}
+                >
+                  <LocationIcon size={10} className="mr-1 shrink-0" />
+                  <span className="truncate">{location.pageLabel}</span>
+                </Badge>
+                <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+                  Onglet {location.tabLabel}
+                </Badge>
+              </div>
             </div>
-            {secondaryText && (
-              <p className="text-muted-foreground mt-0.5 truncate text-xs">
-                {secondaryText}
-              </p>
-            )}
-            <p className="text-muted-foreground/80 mt-1 flex min-w-0 items-center gap-1 text-[11px] md:hidden">
-              <LocationIcon size={11} className="shrink-0" />
-              <span className="truncate">
-                {getActivityLocationLabel(location)}
-              </span>
+          </div>
+          <div className="hidden min-w-0 text-right md:block">
+            <div
+              className={cn(
+                'min-w-0 rounded-lg border px-2 py-1.5',
+                locationToneClasses.soft,
+              )}
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <span
+                  className={cn(
+                    'flex size-6 shrink-0 items-center justify-center rounded-md border',
+                    locationToneClasses.icon,
+                  )}
+                >
+                  <LocationIcon size={13} />
+                </span>
+                <span className="min-w-0">
+                  <span
+                    className="block truncate text-[11px] font-medium opacity-80"
+                    title={location.poleLabel}
+                  >
+                    {location.poleLabel}
+                  </span>
+                  <span
+                    className="block truncate text-xs font-semibold"
+                    title={location.pageLabel}
+                  >
+                    {location.pageLabel}
+                  </span>
+                </span>
+              </div>
+              <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px]">
+                <span
+                  className={cn(
+                    'size-1.5 shrink-0 rounded-full',
+                    locationToneClasses.dot,
+                  )}
+                />
+                <span className="text-muted-foreground/80 shrink-0">
+                  Onglet
+                </span>
+                <span
+                  className="min-w-0 truncate font-medium"
+                  title={location.tabLabel}
+                >
+                  {location.tabLabel}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="hidden min-w-0 md:block">
+            <p className="text-foreground truncate text-xs font-medium">
+              {formatRelativeTime(log.createdAt)}
+            </p>
+            <p className="text-muted-foreground/70 mt-0.5 truncate text-[11px]">
+              {formatFullDate(log.createdAt)}
             </p>
           </div>
+          <ChevronDown
+            size={15}
+            className={cn(
+              'text-muted-foreground hidden justify-self-end transition-transform md:block',
+              isOpen && 'rotate-180',
+            )}
+          />
         </div>
-        <div className="hidden min-w-0 md:block">
-          <p className="text-muted-foreground/70 truncate text-[11px]">
-            {location.poleLabel}
-          </p>
-          <p className="text-muted-foreground truncate text-xs font-medium">
-            {location.pageLabel}
-          </p>
-        </div>
-        <div className="hidden md:block">
-          <span className="border-sidebar-border/70 bg-surface-muted text-muted-foreground inline-flex rounded-md border px-2 py-1 text-xs">
-            {sourceLabel}
-          </span>
-        </div>
-        <div className="hidden min-w-0 md:block">
-          <p className="text-muted-foreground truncate text-xs">
-            {formatRelativeTime(log.createdAt)}
-          </p>
-          <p className="text-muted-foreground/70 truncate text-[11px]">
-            {formatFullDate(log.createdAt)}
-          </p>
-        </div>
-        <ChevronDown
-          size={15}
-          className={cn(
-            'text-muted-foreground hidden justify-self-end transition-transform md:block',
-            isOpen && 'rotate-180',
-          )}
-        />
-      </div>
+      </button>
       {isOpen && (
-        <div className="border-sidebar-border/65 bg-background/20 border-t px-3 py-3 sm:px-4">
-          <div className="space-y-2 md:ml-12">
-            <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-              <span className="flex items-center gap-1.5">
-                <Calendar size={12} />
-                {formatFullDate(log.createdAt)}
-              </span>
-              <span>{sourceLabel}</span>
-              <span className="flex items-center gap-1.5">
-                <LocationIcon size={12} />
-                {getActivityLocationLabel(location)}
-              </span>
-              {log.ipAddress && (
-                <span className="flex items-center gap-1.5">
-                  <Globe size={12} />
-                  {log.ipAddress}
-                </span>
-              )}
-            </div>
-            {log.description && (
-              <p className="text-muted-foreground text-xs">{log.description}</p>
-            )}
+        <div className="border-sidebar-border/65 bg-background/25 border-t px-3 py-3 sm:px-4">
+          <div className="space-y-3 md:ml-[3.25rem]">
             {hasChanges && (
-              <div className="border-border bg-card space-y-1.5 rounded-lg border p-2.5">
-                {changes.map((change) => (
-                  <ChangeItem
-                    key={change.fieldKey}
-                    fieldKey={change.fieldKey}
-                    before={change.before}
-                    after={change.after}
-                  />
-                ))}
-              </div>
+              <section className="border-sidebar-ring/35 bg-sidebar-ring/10 rounded-lg border p-3">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <p className="text-foreground text-xs font-semibold">
+                    Changements
+                  </p>
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/10 text-primary text-[10px]"
+                  >
+                    {changes.length}
+                  </Badge>
+                </div>
+                <div className="space-y-1.5">
+                  {changes.map((change) => (
+                    <ChangeItem
+                      key={change.fieldKey}
+                      fieldKey={change.fieldKey}
+                      before={change.before}
+                      after={change.after}
+                    />
+                  ))}
+                </div>
+              </section>
             )}
+            <details className="group/technical">
+              <summary className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer list-none items-center gap-1.5 text-[11px] font-medium transition-colors [&::-webkit-details-marker]:hidden">
+                <Key className="size-3" />
+                Détails techniques
+                <ChevronDown className="size-3 transition-transform group-open/technical:rotate-180" />
+              </summary>
+              <div className="border-sidebar-border/60 bg-surface-muted/35 mt-2 rounded-lg border px-3 py-2">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+                  <span className="text-muted-foreground">
+                    Action{' '}
+                    <span className="text-foreground font-medium">
+                      {log.action}
+                    </span>
+                  </span>
+                  <span className="text-muted-foreground">
+                    Catégorie{' '}
+                    <span className="text-foreground font-medium">
+                      {log.category}
+                    </span>
+                  </span>
+                  <span className="text-muted-foreground">
+                    ID{' '}
+                    <span className="text-foreground font-medium">
+                      {log.id}
+                    </span>
+                  </span>
+                  {log.ipAddress && (
+                    <span className="text-muted-foreground">
+                      IP{' '}
+                      <span className="text-foreground font-medium">
+                        {log.ipAddress}
+                      </span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </details>
           </div>
         </div>
       )}
-    </button>
+    </article>
   );
 });
 
@@ -1190,6 +1683,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
       'Description',
       'Pôle',
       'Page',
+      'Onglet',
       'IP',
       'Portée',
     ];
@@ -1203,6 +1697,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
         log.description || '',
         location.poleLabel,
         location.pageLabel,
+        location.tabLabel,
         log.ipAddress || '',
         getLogSourceLabel(log, userId),
       ];
@@ -1466,8 +1961,10 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
             <div className="space-y-4 p-4">
               <div className="grid gap-2 md:grid-cols-3">
                 {ACTIVITY_SCOPE_OPTIONS.map((scope) => {
-                  const ScopeIcon = scope.icon;
                   const isActiveScope = activityScope === scope.value;
+                  const scopeVisuals = getActivityScopeOptionVisuals(
+                    scope.value,
+                  );
 
                   return (
                     <button
@@ -1481,14 +1978,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                           'border-primary/45 bg-primary/10 shadow-[inset_0_0_0_1px_rgba(108,146,214,0.16)]',
                       )}
                     >
-                      <span
-                        className={cn(
-                          'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border',
-                          isActiveScope && 'border-primary/40 bg-primary/15',
-                        )}
-                      >
-                        <ScopeIcon className="size-4" />
-                      </span>
+                      <ActivityScopeIconGroup scopes={scopeVisuals} size="md" />
                       <span className="min-w-0 flex-1">
                         <span className="text-foreground block truncate text-sm font-semibold">
                           {scope.label}
@@ -1507,16 +1997,15 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                   );
                 })}
               </div>
-              <div className="border-sidebar-border/60 overflow-hidden rounded-lg border">
-                <div className="border-sidebar-border/65 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_12rem_8.5rem_9.5rem_1.5rem] border-b px-4 py-2 text-xs font-medium md:grid">
+              <div className="space-y-2">
+                <div className="border-sidebar-border/60 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_18rem_10rem_1.5rem] rounded-lg border px-4 py-2 text-xs font-medium md:grid">
                   <span>Événement</span>
-                  <span>Page</span>
-                  <span>Portée</span>
-                  <span>Date</span>
+                  <span>Pôle / page / onglet</span>
+                  <span className="text-right">Date</span>
                   <span />
                 </div>
                 {filteredLogs.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16">
+                  <div className="border-sidebar-border/60 flex flex-col items-center justify-center rounded-lg border py-16">
                     <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-16 w-16 items-center justify-center rounded-xl border">
                       <Filter className="h-8 w-8" />
                     </div>
@@ -1525,7 +2014,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                     </p>
                   </div>
                 ) : (
-                  <div className="divide-sidebar-border/65 divide-y">
+                  <div className="space-y-2">
                     {((): React.ReactNode => {
                       let lastCategory: DateCategory | null = null;
 
@@ -1534,13 +2023,13 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                         const category = getDateCategory(log.createdAt);
                         const showSeparator = category !== lastCategory;
                         const location = getActivityLocation(log);
-                        const sourceLabel = getLogSourceLabel(log, userId);
+                        const scopeVisuals = getLogScopeVisuals(log, userId);
                         lastCategory = category;
 
                         return (
                           <React.Fragment key={log.id}>
                             {showSeparator && (
-                              <div className="bg-surface-muted/35 text-muted-foreground px-3 py-2 text-xs font-medium sm:px-4">
+                              <div className="text-muted-foreground px-1 pt-2 text-xs font-medium first:pt-0">
                                 {DATE_CATEGORY_LABELS.get(category) ||
                                   'Plus ancien'}
                               </div>
@@ -1549,7 +2038,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                               log={log}
                               config={config}
                               location={location}
-                              sourceLabel={sourceLabel}
+                              scopeVisuals={scopeVisuals}
                               isOpen={openLogId === log.id}
                               onToggle={() =>
                                 setOpenLogId(
@@ -1562,7 +2051,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                       });
                     })()}
                     {hasMore && (
-                      <div className="p-4 text-center">
+                      <div className="pt-2 text-center">
                         <Button
                           variant="outline"
                           size="sm"

@@ -1,0 +1,1288 @@
+'use client';
+
+import {
+  ArrowRight,
+  Ban,
+  CheckCircle,
+  ChevronDown,
+  Filter,
+  History,
+  Home,
+  Key,
+  Loader2,
+  LogIn,
+  LogOut,
+  type LucideIcon,
+  Pencil,
+  RefreshCw,
+  Shield,
+  Trash2,
+  UserCheck,
+  UserMinus,
+  UserPlus,
+  XCircle,
+} from 'lucide-react';
+import Link from 'next/link';
+import React, {
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
+import AuthenticatedLayout from '$components/AuthenticatedLayout';
+import { AccessDeniedState } from '$components/layout/PageState';
+import {
+  canShowNavigationItem,
+  type NavigationSpace,
+  type NavItem,
+} from '$constants/app.constants';
+import {
+  getNavigationIcon,
+  type NavigationIconName,
+} from '$constants/navigation-icon.constants';
+import {
+  getNavigationSpaceToneClasses,
+  type NavigationSpaceTone,
+} from '$constants/navigation-theme.constants';
+import {
+  getPermissionItem,
+  PERMISSION_CATEGORIES,
+  PERMISSION_POLES,
+} from '$constants/permissions.constants';
+import { useUser } from '$context/UserContext';
+import { Badge } from '$ui/badge';
+import { Button } from '$ui/button';
+import { PageCanvas, PageShell } from '$ui/page-shell';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '$ui/select';
+import { ServiceIcon } from '$ui/service-icon';
+import { Skeleton } from '$ui/skeleton';
+import { cn } from '$utils/css.utils';
+
+type SystemActivityJournalPageProps = {
+  item: NavItem;
+  space: NavigationSpace;
+};
+
+type JournalLog = {
+  action: string;
+  actorName: string | null;
+  category: string;
+  createdAt: string;
+  description: string;
+  id: string;
+  ipAddress: string | null;
+  metadata: Record<string, unknown> | null;
+  targetName: string | null;
+  targetUserId: string | null;
+  userId: string | null;
+};
+
+type JournalResponse = {
+  logs: JournalLog[];
+  nextCursor: string | null;
+  pageSize: number;
+};
+
+type ActionConfig = {
+  category: ActionCategoryKey;
+  color: string;
+  icon: LucideIcon;
+  label: string;
+};
+
+type ActionCategoryKey =
+  | 'access'
+  | 'auth'
+  | 'lifecycle'
+  | 'other'
+  | 'profile'
+  | 'security'
+  | 'system';
+
+type ChangeDiff = {
+  after: unknown;
+  before: unknown;
+  fieldKey: string;
+};
+
+type ActivityLocationInfo = {
+  icon: NavigationIconName;
+  pageKey: string;
+  pageLabel: string;
+  poleKey: string;
+  poleLabel: string;
+  tabLabel: string;
+  tone: NavigationSpaceTone;
+};
+
+type ScopeVisual = {
+  className: string;
+  icon: LucideIcon;
+  label: string;
+  value: string;
+};
+
+const PAGE_SIZE = 40;
+const ALL_FILTER_VALUE = 'all';
+const PERMISSION_CHANGE_FIELD_PREFIX = 'permissions.';
+
+const PERIOD_OPTIONS = [
+  { label: '24 dernières heures', value: '24h' },
+  { label: '7 derniers jours', value: '7d' },
+  { label: '30 derniers jours', value: '30d' },
+  { label: '90 derniers jours', value: '90d' },
+  { label: 'Toute période', value: ALL_FILTER_VALUE },
+];
+
+const CATEGORY_OPTIONS = [
+  { label: 'Toutes les catégories', value: ALL_FILTER_VALUE },
+  { label: 'Connexion', value: 'AUTH' },
+  { label: 'Utilisateur', value: 'USER' },
+  { label: 'Permissions', value: 'PERMISSION' },
+  { label: 'Système', value: 'SYSTEM' },
+];
+
+const ACTION_OPTIONS = [
+  { label: 'Toutes les actions', value: ALL_FILTER_VALUE },
+  { label: 'Connexion réussie', value: 'LOGIN_SUCCESS' },
+  { label: 'Connexion échouée', value: 'LOGIN_FAILED' },
+  { label: 'Déconnexion', value: 'LOGOUT' },
+  { label: 'Mot de passe modifié', value: 'PASSWORD_CHANGE' },
+  { label: 'Mot de passe réinitialisé', value: 'PASSWORD_RESET' },
+  { label: 'Compte verrouillé', value: 'ACCOUNT_LOCKED' },
+  { label: 'Sessions invalidées', value: 'SESSION_INVALIDATE' },
+  { label: 'Utilisateur créé', value: 'USER_CREATE' },
+  { label: 'Utilisateur modifié', value: 'USER_UPDATE' },
+  { label: 'Utilisateur supprimé', value: 'USER_DELETE' },
+  { label: 'Utilisateur activé', value: 'USER_ACTIVATE' },
+  { label: 'Utilisateur désactivé', value: 'USER_DEACTIVATE' },
+  { label: 'Permissions modifiées', value: 'PERMISSION_UPDATE' },
+];
+
+const ACTION_CONFIG = new Map<string, ActionConfig>(
+  Object.entries({
+    ACCOUNT_LOCKED: {
+      category: 'security',
+      color: 'border-red-500/35 bg-red-500/10 text-red-300',
+      icon: Ban,
+      label: 'Compte verrouillé',
+    },
+    LOGIN_FAILED: {
+      category: 'auth',
+      color: 'border-red-500/35 bg-red-500/10 text-red-300',
+      icon: XCircle,
+      label: 'Connexion échouée',
+    },
+    LOGIN_SUCCESS: {
+      category: 'auth',
+      color: 'border-[#5fbd7b]/35 bg-[#5fbd7b]/10 text-[#97e6ad]',
+      icon: LogIn,
+      label: 'Connexion réussie',
+    },
+    LOGOUT: {
+      category: 'auth',
+      color: 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring',
+      icon: LogOut,
+      label: 'Déconnexion',
+    },
+    PASSWORD_CHANGE: {
+      category: 'security',
+      color: 'border-amber-500/35 bg-amber-500/10 text-amber-300',
+      icon: Key,
+      label: 'Mot de passe modifié',
+    },
+    PASSWORD_RESET: {
+      category: 'security',
+      color: 'border-amber-500/35 bg-amber-500/10 text-amber-300',
+      icon: RefreshCw,
+      label: 'Mot de passe réinitialisé',
+    },
+    PERMISSION_UPDATE: {
+      category: 'access',
+      color: 'border-[#7aa7e8]/35 bg-[#7aa7e8]/10 text-[#9ec3ff]',
+      icon: Shield,
+      label: 'Permissions modifiées',
+    },
+    SESSION_INVALIDATE: {
+      category: 'security',
+      color: 'border-amber-500/35 bg-amber-500/10 text-amber-300',
+      icon: RefreshCw,
+      label: 'Sessions invalidées',
+    },
+    USER_ACTIVATE: {
+      category: 'lifecycle',
+      color: 'border-[#5fbd7b]/35 bg-[#5fbd7b]/10 text-[#97e6ad]',
+      icon: CheckCircle,
+      label: 'Utilisateur activé',
+    },
+    USER_CREATE: {
+      category: 'lifecycle',
+      color: 'border-[#5fbd7b]/35 bg-[#5fbd7b]/10 text-[#97e6ad]',
+      icon: UserPlus,
+      label: 'Utilisateur créé',
+    },
+    USER_DEACTIVATE: {
+      category: 'lifecycle',
+      color: 'border-amber-500/35 bg-amber-500/10 text-amber-300',
+      icon: UserMinus,
+      label: 'Utilisateur désactivé',
+    },
+    USER_DELETE: {
+      category: 'lifecycle',
+      color: 'border-red-500/35 bg-red-500/10 text-red-300',
+      icon: Trash2,
+      label: 'Utilisateur supprimé',
+    },
+    USER_UPDATE: {
+      category: 'profile',
+      color: 'border-[#7aa7e8]/35 bg-[#7aa7e8]/10 text-[#9ec3ff]',
+      icon: Pencil,
+      label: 'Utilisateur modifié',
+    },
+  }),
+);
+
+const DEFAULT_ACTION_CONFIG: ActionConfig = {
+  category: 'other',
+  color: 'border-sidebar-border/70 bg-surface-muted text-muted-foreground',
+  icon: History,
+  label: 'Action',
+};
+
+const CATEGORY_LABELS = new Map<ActionCategoryKey, string>([
+  ['access', 'Accès'],
+  ['auth', 'Connexion'],
+  ['lifecycle', 'Cycle de vie'],
+  ['other', 'Autre'],
+  ['profile', 'Profil'],
+  ['security', 'Sécurité'],
+  ['system', 'Technique'],
+]);
+
+const FIELD_LABELS = new Map<string, string>([
+  ['email', 'Email'],
+  ['firstName', 'Prénom'],
+  ['isActive', 'Actif'],
+  ['lastName', 'Nom'],
+  ['passwordChange', 'Mot de passe'],
+  ['passwordReset', 'Mot de passe'],
+  ['permissions', 'Permissions'],
+  ['revokedSessions', 'Sessions révoquées'],
+  ['role', 'Rôle'],
+  ['staffProfile.department', 'Pôle'],
+  ['staffProfile.discordId', 'ID Discord'],
+  ['staffProfile.displayName', 'Nom affiché'],
+  ['staffProfile.internalNote', 'Note interne'],
+  ['staffProfile.jobTitle', 'Poste'],
+  ['staffProfile.joinedAt', 'Arrivée staff'],
+  ['staffProfile.phone', 'Téléphone'],
+  ['staffProfile.timezone', 'Fuseau horaire'],
+]);
+
+const FACT_ONLY_CHANGE_KEYS = new Set([
+  'passwordChange',
+  'passwordReset',
+  'revokedSessions',
+]);
+
+const AUTH_LOCATION: ActivityLocationInfo = {
+  icon: 'ShieldCheck',
+  pageKey: 'authentication',
+  pageLabel: 'Authentification',
+  poleKey: 'system',
+  poleLabel: 'Système',
+  tabLabel: 'Connexions',
+  tone: 'system',
+};
+
+const USERS_LOCATION: ActivityLocationInfo = {
+  icon: 'Users',
+  pageKey: 'users',
+  pageLabel: 'Utilisateurs & permissions',
+  poleKey: 'system',
+  poleLabel: 'Système',
+  tabLabel: 'Page',
+  tone: 'system',
+};
+
+const SYSTEM_LOCATION: ActivityLocationInfo = {
+  icon: 'Settings',
+  pageKey: 'technical',
+  pageLabel: 'Technique',
+  poleKey: 'system',
+  poleLabel: 'Système',
+  tabLabel: 'Technique',
+  tone: 'system',
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
+
+const toValidDate = (date: Date | string | null): Date | null => {
+  if (!date) return null;
+
+  const parsedDate = new Date(date);
+
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+};
+
+const formatRelativeTime = (date: Date | string | null): string => {
+  const then = toValidDate(date);
+  if (!then) return 'Date inconnue';
+
+  const now = new Date();
+  const diffMs = then.getTime() - now.getTime();
+  const isFuture = diffMs > 0;
+  const absDiffMs = Math.abs(diffMs);
+  const diffMins = Math.floor(absDiffMs / 60000);
+  const diffHours = Math.floor(absDiffMs / 3600000);
+  const diffDays = Math.floor(absDiffMs / 86400000);
+
+  if (isFuture) {
+    if (diffMins < 1) return "Dans moins d'une minute";
+    if (diffMins < 60) return `Dans ${diffMins} min`;
+    if (diffHours < 24) return `Dans ${diffHours}h`;
+    if (diffDays < 7) return `Dans ${diffDays}j`;
+  } else {
+    if (diffMins < 1) return "A l'instant";
+    if (diffMins < 60) return `Il y a ${diffMins} min`;
+    if (diffHours < 24) return `Il y a ${diffHours}h`;
+    if (diffDays < 7) return `Il y a ${diffDays}j`;
+  }
+
+  return then.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+
+const formatFullDate = (date: Date | string | null): string => {
+  const parsedDate = toValidDate(date);
+  if (!parsedDate) return 'Date inconnue';
+
+  return parsedDate.toLocaleString('fr-FR', {
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
+const getActionConfig = (log: JournalLog): ActionConfig => {
+  return (
+    ACTION_CONFIG.get(log.action) ?? {
+      ...DEFAULT_ACTION_CONFIG,
+      label: log.description || log.action,
+    }
+  );
+};
+
+const getPermissionChangeFieldKey = (permissionKey: string): string =>
+  `${PERMISSION_CHANGE_FIELD_PREFIX}${permissionKey}`;
+
+const getPermissionKeyFromChangeField = (fieldKey: string): string | null => {
+  if (!fieldKey.startsWith(PERMISSION_CHANGE_FIELD_PREFIX)) return null;
+
+  return fieldKey.slice(PERMISSION_CHANGE_FIELD_PREFIX.length);
+};
+
+const getChangeFieldLabel = (fieldKey: string): string => {
+  const permissionKey = getPermissionKeyFromChangeField(fieldKey);
+
+  if (permissionKey) {
+    return getPermissionItem(permissionKey)?.label ?? permissionKey;
+  }
+
+  return FIELD_LABELS.get(fieldKey) || fieldKey;
+};
+
+const toPermissionAuditMap = (value: unknown): Map<string, boolean> => {
+  if (!isRecord(value)) return new Map();
+
+  return new Map(
+    Object.entries(value).flatMap(([permissionKey, enabled]) => {
+      return typeof enabled === 'boolean'
+        ? [[permissionKey, enabled] as const]
+        : [];
+    }),
+  );
+};
+
+const getPermissionChangeDiffs = (
+  before: unknown,
+  after: unknown,
+): ChangeDiff[] => {
+  const beforePermissions = toPermissionAuditMap(before);
+  const afterPermissions = toPermissionAuditMap(after);
+  const permissionKeys = new Set([
+    ...beforePermissions.keys(),
+    ...afterPermissions.keys(),
+  ]);
+
+  return [...permissionKeys]
+    .filter((permissionKey) => {
+      return (
+        beforePermissions.get(permissionKey) !==
+        afterPermissions.get(permissionKey)
+      );
+    })
+    .sort((left, right) =>
+      getChangeFieldLabel(getPermissionChangeFieldKey(left)).localeCompare(
+        getChangeFieldLabel(getPermissionChangeFieldKey(right)),
+        'fr',
+      ),
+    )
+    .map((permissionKey) => ({
+      after: afterPermissions.has(permissionKey)
+        ? afterPermissions.get(permissionKey)
+        : null,
+      before: beforePermissions.has(permissionKey)
+        ? beforePermissions.get(permissionKey)
+        : null,
+      fieldKey: getPermissionChangeFieldKey(permissionKey),
+    }));
+};
+
+const formatChangeValue = (key: string, value: unknown): string => {
+  if (getPermissionKeyFromChangeField(key)) {
+    if (value === null || value === undefined) return 'Rôle par défaut';
+
+    return value ? 'Autorisé' : 'Refusé';
+  }
+
+  if (key === 'passwordReset') {
+    return value ? 'Mot de passe temporaire généré' : '(vide)';
+  }
+
+  if (key === 'passwordChange') {
+    return value ? 'Mot de passe modifié' : '(vide)';
+  }
+
+  if (key === 'revokedSessions') {
+    const count = Number(value);
+
+    if (!Number.isFinite(count)) return String(value);
+
+    return `${count} session${count > 1 ? 's' : ''}`;
+  }
+
+  if (value === null || value === undefined) return '(vide)';
+
+  if (key === 'isActive') return value ? 'Oui' : 'Non';
+  if (key === 'role') {
+    return value === 'ADMIN' ? 'Administrateur' : 'Utilisateur';
+  }
+  if (key === 'staffProfile.joinedAt') {
+    const parsedDate = toValidDate(value as string);
+
+    return parsedDate
+      ? parsedDate.toLocaleDateString('fr-FR', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        })
+      : '(vide)';
+  }
+  if (typeof value === 'string') {
+    return value.length > 42 ? `${value.slice(0, 42)}...` : value;
+  }
+
+  return String(value);
+};
+
+const getChangeDiffs = (
+  metadata: Record<string, unknown> | null,
+): ChangeDiff[] => {
+  const beforeValues = metadata?.before as Record<string, unknown> | undefined;
+  const afterValues = metadata?.after as Record<string, unknown> | undefined;
+
+  if (beforeValues && afterValues) {
+    const afterValuesByKey = new Map(Object.entries(afterValues));
+
+    return Object.entries(beforeValues).flatMap(([fieldKey, before]) => {
+      const after = afterValuesByKey.get(fieldKey);
+
+      if (fieldKey === 'permissions') {
+        return getPermissionChangeDiffs(before, after);
+      }
+
+      return [{ after, before, fieldKey }];
+    });
+  }
+
+  if (metadata?.passwordReset === true) {
+    return [{ after: true, before: null, fieldKey: 'passwordReset' }];
+  }
+  if (metadata?.passwordChange === true) {
+    return [{ after: true, before: null, fieldKey: 'passwordChange' }];
+  }
+  if (typeof metadata?.revokedSessions === 'number') {
+    return [
+      {
+        after: metadata.revokedSessions,
+        before: null,
+        fieldKey: 'revokedSessions',
+      },
+    ];
+  }
+
+  const changeValues = metadata?.changes as Record<
+    string,
+    { from?: unknown; to?: unknown }
+  > | null;
+
+  if (!changeValues || !isRecord(changeValues)) return [];
+
+  return Object.entries(changeValues)
+    .filter(([, value]) => {
+      return (
+        isRecord(value) &&
+        (Object.hasOwn(value, 'from') || Object.hasOwn(value, 'to'))
+      );
+    })
+    .flatMap(([fieldKey, value]) => {
+      if (fieldKey === 'permissions') {
+        return getPermissionChangeDiffs(value.from, value.to);
+      }
+
+      return [{ after: value.to, before: value.from, fieldKey }];
+    });
+};
+
+const getMetadataString = (
+  metadata: Record<string, unknown> | null,
+  keys: string[],
+): string | null => {
+  if (!metadata) return null;
+
+  const entries = Object.entries(metadata);
+
+  for (const key of keys) {
+    const value = entries.find(([entryKey]) => entryKey === key)?.[1];
+
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+
+  return null;
+};
+
+const getLocationIcon = (poleKey: string): NavigationIconName => {
+  if (poleKey.includes('account') || poleKey.includes('compte')) {
+    return 'UserCheck';
+  }
+  if (poleKey.includes('treasury')) return 'Wallet';
+  if (poleKey.includes('system') || poleKey.includes('systeme')) {
+    return 'Settings';
+  }
+
+  return 'LayoutDashboard';
+};
+
+const getActivityLocation = (log: JournalLog): ActivityLocationInfo => {
+  const metadata = log.metadata;
+  const rawPageKey = getMetadataString(metadata, ['pageKey', 'pageId']);
+  const rawPoleKey = getMetadataString(metadata, ['poleKey', 'sectionKey']);
+  const pageLabel = getMetadataString(metadata, ['pageLabel', 'moduleLabel']);
+  const poleLabel = getMetadataString(metadata, ['poleLabel', 'sectionLabel']);
+  const tabLabel = getMetadataString(metadata, [
+    'tabLabel',
+    'tab',
+    'viewLabel',
+  ]);
+
+  if (rawPageKey || rawPoleKey || pageLabel || poleLabel) {
+    const pageKey = rawPageKey ?? 'unknown';
+    const poleKey = rawPoleKey ?? 'system';
+    const category = PERMISSION_CATEGORIES.find(
+      (permissionCategory) => permissionCategory.key === pageKey,
+    );
+    const pole = PERMISSION_POLES.find(
+      (permissionPole) => permissionPole.key === poleKey,
+    );
+
+    return {
+      icon: category?.icon ?? pole?.icon ?? getLocationIcon(poleKey),
+      pageKey,
+      pageLabel: pageLabel ?? category?.label ?? 'Page non renseignée',
+      poleKey,
+      poleLabel: poleLabel ?? pole?.label ?? 'Système',
+      tabLabel: tabLabel ?? 'Page',
+      tone: category?.tone ?? pole?.tone ?? 'system',
+    };
+  }
+
+  if (
+    log.category === 'AUTH' ||
+    log.action === 'LOGIN_SUCCESS' ||
+    log.action === 'LOGIN_FAILED' ||
+    log.action === 'LOGOUT'
+  ) {
+    return AUTH_LOCATION;
+  }
+
+  if (log.category === 'SYSTEM') return SYSTEM_LOCATION;
+
+  return {
+    ...USERS_LOCATION,
+    tabLabel:
+      log.action === 'PERMISSION_UPDATE'
+        ? 'Accès'
+        : log.action === 'USER_UPDATE'
+          ? 'Profil'
+          : log.action === 'PASSWORD_RESET' ||
+              log.action === 'SESSION_INVALIDATE'
+            ? 'Sécurité'
+            : 'Page',
+  };
+};
+
+const getScopeVisuals = (log: JournalLog): ScopeVisual[] => {
+  const visuals: ScopeVisual[] = [];
+
+  if (log.actorName || log.userId) {
+    visuals.push({
+      className: 'border-[#5fbd7b]/35 bg-[#5fbd7b]/10 text-[#97e6ad]',
+      icon: UserCheck,
+      label: `Réalisé par ${log.actorName ?? log.userId}`,
+      value: 'actor',
+    });
+  }
+  if (log.targetName || log.targetUserId) {
+    visuals.push({
+      className: 'border-[#7aa7e8]/35 bg-[#7aa7e8]/10 text-[#9ec3ff]',
+      icon: Shield,
+      label: `Concernant ${log.targetName ?? log.targetUserId}`,
+      value: 'target',
+    });
+  }
+
+  return visuals.length > 0
+    ? visuals
+    : [
+        {
+          className:
+            'border-sidebar-border/70 bg-surface-muted text-muted-foreground',
+          icon: History,
+          label: 'Activité système',
+          value: 'system',
+        },
+      ];
+};
+
+const ScopeSummary: FC<{ scopes: ScopeVisual[] }> = ({ scopes }) => (
+  <span className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5">
+    {scopes.map((scope) => {
+      const Icon = scope.icon;
+
+      return (
+        <span
+          key={scope.value}
+          className={cn(
+            'inline-flex max-w-full items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-[11px] font-medium',
+            scope.className,
+          )}
+        >
+          <Icon className="size-3 shrink-0" />
+          <span className="min-w-0 truncate">{scope.label}</span>
+        </span>
+      );
+    })}
+  </span>
+);
+
+const ChangeItem: FC<ChangeDiff> = ({ after, before, fieldKey }) => {
+  const label = getChangeFieldLabel(fieldKey);
+  const isFactOnly = FACT_ONLY_CHANGE_KEYS.has(fieldKey);
+  const beforeValue = formatChangeValue(fieldKey, before);
+  const afterValue = formatChangeValue(fieldKey, after);
+
+  return (
+    <div className="border-sidebar-border/60 bg-background/40 grid gap-2 rounded-md border px-2.5 py-2 text-xs sm:grid-cols-[minmax(13rem,16rem)_minmax(0,1fr)] sm:items-center">
+      <span
+        className="text-foreground min-w-0 truncate font-semibold"
+        title={label}
+      >
+        {label}
+      </span>
+      {isFactOnly ? (
+        <span className="bg-primary/10 text-primary min-w-0 rounded px-1.5 py-0.5 font-medium break-words">
+          {afterValue}
+        </span>
+      ) : (
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <span className="text-muted-foreground/70 text-[10px] font-medium uppercase">
+            Avant
+          </span>
+          <span className="bg-muted text-muted-foreground max-w-full rounded px-1.5 py-0.5 break-words line-through">
+            {beforeValue}
+          </span>
+          <ArrowRight size={12} className="text-muted-foreground shrink-0" />
+          <span className="text-primary/80 text-[10px] font-medium uppercase">
+            Après
+          </span>
+          <span className="bg-primary/10 text-primary max-w-full rounded px-1.5 py-0.5 break-words">
+            {afterValue}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const JournalCard: FC<{
+  isOpen: boolean;
+  log: JournalLog;
+  onToggle: () => void;
+}> = ({ isOpen, log, onToggle }) => {
+  const config = getActionConfig(log);
+  const changes = getChangeDiffs(log.metadata);
+  const location = getActivityLocation(log);
+  const locationToneClasses = getNavigationSpaceToneClasses(location.tone);
+  const LocationIcon = getNavigationIcon(location.icon);
+  const EventIcon = config.icon;
+  const categoryLabel =
+    CATEGORY_LABELS.get(config.category) ?? CATEGORY_LABELS.get('other');
+  const scopeVisuals = getScopeVisuals(log);
+
+  return (
+    <article
+      className={cn(
+        'border-sidebar-border/60 bg-surface-muted/35 relative overflow-hidden rounded-lg border transition-colors',
+        isOpen
+          ? 'border-sidebar-ring/35 bg-popover/75 shadow-[inset_0_0_0_1px_rgba(108,146,214,0.08)]'
+          : 'hover:border-sidebar-border hover:bg-surface-muted/60',
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          'absolute inset-y-0 left-0 w-1',
+          locationToneClasses.accent,
+        )}
+      />
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        className="group w-full cursor-pointer text-left"
+        onClick={onToggle}
+      >
+        <div className="grid gap-3 px-3 py-3 sm:px-4 md:grid-cols-[minmax(0,1fr)_18rem_10rem_1.5rem] md:items-center">
+          <div className="flex min-w-0 items-start gap-3">
+            <span
+              className={cn(
+                'mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-lg border',
+                config.color,
+              )}
+            >
+              <EventIcon size={17} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start gap-1.5">
+                <p
+                  className="text-foreground min-w-0 truncate text-sm font-semibold"
+                  title={config.label}
+                >
+                  {config.label}
+                </p>
+                <ChevronDown
+                  size={14}
+                  className={cn(
+                    'text-muted-foreground ml-auto transition-transform md:hidden',
+                    isOpen && 'rotate-180',
+                  )}
+                />
+              </div>
+              <ScopeSummary scopes={scopeVisuals} />
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                {changes.length > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="border-primary/20 bg-primary/15 text-primary px-1.5 py-0 text-[10px]"
+                  >
+                    {changes.length}{' '}
+                    {changes.length > 1 ? 'changements' : 'changement'}
+                  </Badge>
+                )}
+                <Badge
+                  variant="outline"
+                  className="text-muted-foreground px-1.5 py-0 text-[10px]"
+                >
+                  {categoryLabel}
+                </Badge>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5 md:hidden">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'max-w-full px-1.5 py-0 text-[10px]',
+                    locationToneClasses.soft,
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'mr-1 inline-block size-1.5 rounded-full',
+                      locationToneClasses.dot,
+                    )}
+                  />
+                  <span className="truncate">{location.poleLabel}</span>
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'max-w-full px-1.5 py-0 text-[10px]',
+                    locationToneClasses.soft,
+                  )}
+                >
+                  <LocationIcon size={10} className="mr-1 shrink-0" />
+                  <span className="truncate">{location.pageLabel}</span>
+                </Badge>
+                <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+                  Onglet {location.tabLabel}
+                </Badge>
+              </div>
+            </div>
+          </div>
+          <div className="hidden min-w-0 md:block">
+            <div
+              className={cn(
+                'min-w-0 rounded-lg border px-2 py-1.5',
+                locationToneClasses.soft,
+              )}
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <span
+                  className={cn(
+                    'flex size-6 shrink-0 items-center justify-center rounded-md border',
+                    locationToneClasses.icon,
+                  )}
+                >
+                  <LocationIcon size={13} />
+                </span>
+                <span className="min-w-0">
+                  <span
+                    className="block truncate text-[11px] font-medium opacity-80"
+                    title={location.poleLabel}
+                  >
+                    {location.poleLabel}
+                  </span>
+                  <span
+                    className="block truncate text-xs font-semibold"
+                    title={location.pageLabel}
+                  >
+                    {location.pageLabel}
+                  </span>
+                </span>
+              </div>
+              <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px]">
+                <span
+                  className={cn(
+                    'size-1.5 shrink-0 rounded-full',
+                    locationToneClasses.dot,
+                  )}
+                />
+                <span className="text-muted-foreground/80 shrink-0">
+                  Onglet
+                </span>
+                <span
+                  className="min-w-0 truncate font-medium"
+                  title={location.tabLabel}
+                >
+                  {location.tabLabel}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="hidden min-w-0 text-right md:block">
+            <p className="text-foreground truncate text-xs font-medium">
+              {formatRelativeTime(log.createdAt)}
+            </p>
+            <p className="text-muted-foreground/70 mt-0.5 truncate text-[11px]">
+              {formatFullDate(log.createdAt)}
+            </p>
+          </div>
+          <ChevronDown
+            size={15}
+            className={cn(
+              'text-muted-foreground hidden justify-self-end transition-transform md:block',
+              isOpen && 'rotate-180',
+            )}
+          />
+        </div>
+      </button>
+      {isOpen && (
+        <div className="border-sidebar-border/65 bg-background/25 border-t px-3 py-3 sm:px-4">
+          <div className="space-y-3 md:ml-[3.25rem]">
+            {changes.length > 0 && (
+              <section className="border-sidebar-ring/35 bg-sidebar-ring/10 rounded-lg border p-3">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <p className="text-foreground text-xs font-semibold">
+                    Changements
+                  </p>
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/10 text-primary text-[10px]"
+                  >
+                    {changes.length}
+                  </Badge>
+                </div>
+                <div className="space-y-1.5">
+                  {changes.map((change) => (
+                    <ChangeItem
+                      key={change.fieldKey}
+                      fieldKey={change.fieldKey}
+                      before={change.before}
+                      after={change.after}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+            <details className="group/technical">
+              <summary className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer list-none items-center gap-1.5 text-[11px] font-medium transition-colors [&::-webkit-details-marker]:hidden">
+                <Key className="size-3" />
+                Détails techniques
+                <ChevronDown className="size-3 transition-transform group-open/technical:rotate-180" />
+              </summary>
+              <div className="border-sidebar-border/60 bg-surface-muted/35 mt-2 rounded-lg border px-3 py-2">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+                  <span className="text-muted-foreground">
+                    Action{' '}
+                    <span className="text-foreground font-medium">
+                      {log.action}
+                    </span>
+                  </span>
+                  <span className="text-muted-foreground">
+                    Catégorie{' '}
+                    <span className="text-foreground font-medium">
+                      {log.category}
+                    </span>
+                  </span>
+                  <span className="text-muted-foreground">
+                    ID{' '}
+                    <span className="text-foreground font-medium">
+                      {log.id}
+                    </span>
+                  </span>
+                  {log.ipAddress && (
+                    <span className="text-muted-foreground">
+                      IP{' '}
+                      <span className="text-foreground font-medium">
+                        {log.ipAddress}
+                      </span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+      )}
+    </article>
+  );
+};
+
+const JournalSkeleton: FC = () => (
+  <div className="space-y-2">
+    {Array.from({ length: 6 }).map((_, index) => (
+      <Skeleton key={index} className="h-24 rounded-lg" />
+    ))}
+  </div>
+);
+
+export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
+  item,
+  space,
+}) => {
+  const { userData } = useUser();
+  const canAccessPage = canShowNavigationItem(userData, item);
+  const tone = getNavigationSpaceToneClasses(space.tone);
+  const Icon = getNavigationIcon(item.icon);
+  const [period, setPeriod] = useState('30d');
+  const [category, setCategory] = useState(ALL_FILTER_VALUE);
+  const [action, setAction] = useState(ALL_FILTER_VALUE);
+  const [logs, setLogs] = useState<JournalLog[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [openLogId, setOpenLogId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const queryParams = useMemo(() => {
+    const params = new URLSearchParams({
+      limit: String(PAGE_SIZE),
+      period,
+    });
+
+    if (category !== ALL_FILTER_VALUE) params.set('category', category);
+    if (action !== ALL_FILTER_VALUE) params.set('action', action);
+
+    return params;
+  }, [action, category, period]);
+
+  const fetchLogs = useCallback(
+    async (cursor?: string): Promise<void> => {
+      const params = new URLSearchParams(queryParams);
+      const append = !!cursor;
+
+      if (cursor) params.set('cursor', cursor);
+
+      try {
+        if (append) {
+          setIsLoadingMore(true);
+        } else {
+          setIsLoading(true);
+          setError(null);
+        }
+
+        const response = await fetch(
+          `/api/systeme/journal-activite?${params.toString()}`,
+        );
+        const body = (await response.json()) as {
+          data?: JournalResponse;
+          error?: { message?: string };
+          success: boolean;
+        };
+
+        if (!response.ok || !body.success || !body.data) {
+          throw new Error(
+            body.error?.message ||
+              "Impossible de charger le journal d'activité",
+          );
+        }
+
+        const responseData = body.data;
+
+        setLogs((currentLogs) =>
+          append ? [...currentLogs, ...responseData.logs] : responseData.logs,
+        );
+        setNextCursor(responseData.nextCursor);
+      } catch (fetchError) {
+        setError(
+          fetchError instanceof Error
+            ? fetchError.message
+            : "Impossible de charger le journal d'activité",
+        );
+      } finally {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
+    },
+    [queryParams],
+  );
+
+  useEffect(() => {
+    setLogs([]);
+    setNextCursor(null);
+    setOpenLogId(null);
+    if (canAccessPage) {
+      void fetchLogs();
+    }
+  }, [canAccessPage, fetchLogs]);
+
+  if (!canAccessPage) {
+    return (
+      <AuthenticatedLayout
+        breadcrumbs={[
+          { href: space.href, label: space.label },
+          { label: item.label },
+        ]}
+      >
+        <AccessDeniedState
+          actionHref="/tableau-de-bord"
+          actionLabel="Retour au tableau de bord"
+          description="Vous n'avez pas les permissions nécessaires pour accéder au journal global."
+        />
+      </AuthenticatedLayout>
+    );
+  }
+
+  return (
+    <AuthenticatedLayout
+      breadcrumbs={[
+        { href: space.href, label: space.label },
+        { label: item.label },
+      ]}
+    >
+      <PageShell className="py-0">
+        <PageCanvas contentClassName="space-y-5">
+          <section
+            className={cn(
+              'overflow-hidden rounded-lg border shadow-[var(--shadow-panel-strong)]',
+              tone.hero,
+            )}
+          >
+            <div className={cn('h-1.5 w-full', tone.accent)} />
+            <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex min-w-0 items-start gap-4">
+                <ServiceIcon className={cn('mt-0.5 size-11', tone.icon)}>
+                  <Icon className="size-5" />
+                </ServiceIcon>
+                <div className="min-w-0">
+                  <Badge variant="outline" className={tone.soft}>
+                    {space.label}
+                  </Badge>
+                  <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">
+                    {item.label}
+                  </h1>
+                  <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-6">
+                    Historique central des connexions, changements utilisateurs
+                    et actions sensibles du site privé.
+                  </p>
+                </div>
+              </div>
+              <Button asChild variant="outline" className="rounded-md">
+                <Link href={space.href}>
+                  <Home className="size-4" />
+                  Accueil du pôle
+                </Link>
+              </Button>
+            </div>
+          </section>
+          <section className="border-sidebar-border/70 bg-surface rounded-lg border p-4 shadow-[var(--shadow-panel)]">
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_13rem_13rem_13rem_auto] lg:items-end">
+              <div>
+                <p className="text-foreground text-sm font-semibold">
+                  Filtres du journal
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <span className="text-muted-foreground text-[11px] font-medium">
+                  Période
+                </span>
+                <Select value={period} onValueChange={setPeriod}>
+                  <SelectTrigger className="border-sidebar-border/70 bg-surface h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PERIOD_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <span className="text-muted-foreground text-[11px] font-medium">
+                  Catégorie
+                </span>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger className="border-sidebar-border/70 bg-surface h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORY_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <span className="text-muted-foreground text-[11px] font-medium">
+                  Action
+                </span>
+                <Select value={action} onValueChange={setAction}>
+                  <SelectTrigger className="border-sidebar-border/70 bg-surface h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACTION_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 rounded-md"
+                onClick={() => void fetchLogs()}
+                disabled={isLoading}
+              >
+                <RefreshCw
+                  className={cn('size-4', isLoading && 'animate-spin')}
+                />
+                Actualiser
+              </Button>
+            </div>
+          </section>
+          <section className="space-y-2">
+            <div className="border-sidebar-border/60 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_18rem_10rem_1.5rem] rounded-lg border px-4 py-2 text-xs font-medium md:grid">
+              <span>Événement</span>
+              <span>Pôle / page / onglet</span>
+              <span className="text-right">Date</span>
+              <span />
+            </div>
+            {isLoading ? (
+              <JournalSkeleton />
+            ) : error ? (
+              <div className="border-sidebar-border/60 flex flex-col items-center justify-center rounded-lg border py-16">
+                <div className="border-destructive/35 bg-destructive/10 text-destructive flex h-16 w-16 items-center justify-center rounded-xl border">
+                  <XCircle className="h-8 w-8" />
+                </div>
+                <p className="text-muted-foreground mt-4 text-sm">{error}</p>
+              </div>
+            ) : logs.length === 0 ? (
+              <div className="border-sidebar-border/60 flex flex-col items-center justify-center rounded-lg border py-16">
+                <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-16 w-16 items-center justify-center rounded-xl border">
+                  <Filter className="h-8 w-8" />
+                </div>
+                <p className="text-muted-foreground mt-4 text-sm">
+                  Aucun log pour ces filtres
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {logs.map((log) => (
+                  <JournalCard
+                    key={log.id}
+                    log={log}
+                    isOpen={openLogId === log.id}
+                    onToggle={() =>
+                      setOpenLogId(openLogId === log.id ? null : log.id)
+                    }
+                  />
+                ))}
+                {nextCursor && (
+                  <div className="pt-2 text-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void fetchLogs(nextCursor)}
+                      disabled={isLoadingMore}
+                    >
+                      {isLoadingMore ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <ChevronDown className="size-4" />
+                      )}
+                      Charger plus
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        </PageCanvas>
+      </PageShell>
+    </AuthenticatedLayout>
+  );
+};

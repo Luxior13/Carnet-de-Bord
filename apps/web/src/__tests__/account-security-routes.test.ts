@@ -87,6 +87,7 @@ describe('account security routes', () => {
     mockPrisma.user.findUnique.mockResolvedValue({
       passwordHash: 'stored-hash',
     });
+    mockPrisma.session.deleteMany.mockResolvedValue({ count: 0 });
     mockPrisma.session.findMany.mockResolvedValue([]);
     mockVerifyPassword.mockResolvedValue(false);
     mockUpdateUserPassword.mockResolvedValue(undefined);
@@ -120,6 +121,55 @@ describe('account security routes', () => {
       expect(body.success).toBe(false);
       expect(body.error.code).toBe(ErrorCode.VALIDATION_ERROR);
       expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('audits profile changes from my account with before and after values', async () => {
+      mockRequireAuth.mockResolvedValueOnce({
+        session: null,
+        success: true,
+        user: {
+          firstName: 'Jean',
+          id: 'user-1',
+          lastName: 'Dupont',
+        },
+      });
+      mockPrisma.user.update.mockResolvedValueOnce({
+        firstName: 'Jeanne',
+        id: 'user-1',
+        lastName: 'Dupont',
+      });
+
+      const route = await import('$app/api/auth/me/route');
+      const response = await route.PATCH(
+        new Request('http://localhost/api/auth/me', {
+          body: JSON.stringify({
+            firstName: 'Jeanne',
+            lastName: 'Dupont',
+          }),
+          method: 'PATCH',
+        }),
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.success).toBe(true);
+      expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'USER_UPDATE',
+          category: 'USER',
+          metadata: expect.objectContaining({
+            after: { firstName: 'Jeanne' },
+            before: { firstName: 'Jean' },
+            changes: {
+              firstName: { from: 'Jean', to: 'Jeanne' },
+            },
+            pageLabel: 'Mon compte',
+            tabLabel: 'Profil',
+          }),
+          targetUserId: 'user-1',
+          userId: 'user-1',
+        }),
+      );
     });
   });
 
@@ -264,6 +314,11 @@ describe('account security routes', () => {
         expect.objectContaining({
           action: 'PASSWORD_CHANGE',
           category: 'AUTH',
+          metadata: expect.objectContaining({
+            pageLabel: 'Mon compte',
+            passwordChange: true,
+            tabKey: 'security',
+          }),
           userId: 'user-1',
         }),
       );
@@ -550,6 +605,11 @@ describe('account security routes', () => {
         expect.objectContaining({
           action: 'SESSION_INVALIDATE',
           category: 'AUTH',
+          metadata: expect.objectContaining({
+            pageLabel: 'Mon compte',
+            revokedSessions: 0,
+            tabKey: 'security',
+          }),
           userId: 'user-1',
         }),
       );

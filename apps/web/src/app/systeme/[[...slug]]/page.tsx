@@ -3,6 +3,7 @@ import React from 'react';
 
 import PrivateFeaturePage from '$components/private-navigation/PrivateFeaturePage';
 import { getNavigationPageBySlug } from '$constants/app.constants';
+import { SystemActivityJournalPage } from '$features/audit/SystemActivityJournalPage';
 
 type SystemePageProps = {
   params: Promise<{ slug?: string[] }>;
@@ -15,6 +16,10 @@ export default async function SystemePage({
   const match = getNavigationPageBySlug('system', slug);
 
   if (!match) notFound();
+
+  if (match.item.href === '/systeme/journal-activite') {
+    return <SystemActivityJournalPage item={match.item} space={match.space} />;
+  }
 
   return <PrivateFeaturePage item={match.item} space={match.space} />;
 }

@@ -44,8 +44,10 @@ export async function POST(
     const existingUser = await prisma.user.findUnique({
       select: {
         email: true,
+        firstName: true,
         id: true,
         isProtected: true,
+        lastName: true,
         role: true,
       },
       where: { deletedAt: null, id },
@@ -99,12 +101,20 @@ export async function POST(
 
     // Reset password
     const temporaryPassword = await resetUserPassword(id);
+    const targetName =
+      existingUser.firstName && existingUser.lastName
+        ? `${existingUser.firstName} ${existingUser.lastName}`
+        : existingUser.email;
 
     // Log audit
     await createAuditLogWithHeaders({
       action: 'PASSWORD_RESET',
       category: 'AUTH',
       description: `Mot de passe réinitialisé pour: ${existingUser.email}`,
+      metadata: {
+        passwordReset: true,
+        targetName,
+      },
       targetUserId: id,
       userId: auth.user.id,
     });

@@ -127,11 +127,16 @@ model AuditLog {
   @@index([userId])
   @@index([userId, action])
   @@index([userId, createdAt])
+  @@index([userId, createdAt, id])
   @@index([targetUserId])
   @@index([targetUserId, createdAt])
+  @@index([targetUserId, createdAt, id])
   @@index([action])
+  @@index([action, createdAt, id])
   @@index([category])
+  @@index([category, createdAt, id])
   @@index([createdAt])
+  @@index([createdAt, id])
 }
 
 model RateLimit {

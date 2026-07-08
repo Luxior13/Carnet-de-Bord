@@ -20,15 +20,19 @@ const getTargetUserForSessionManagement = async (
   id: string,
 ): Promise<{
   email: string;
+  firstName: string;
   id: string;
   isProtected: boolean;
+  lastName: string;
   role: string;
 } | null> => {
   return prisma.user.findUnique({
     select: {
       email: true,
+      firstName: true,
       id: true,
       isProtected: true,
+      lastName: true,
       role: true,
     },
     where: { deletedAt: null, id },
@@ -198,6 +202,10 @@ export async function DELETE(
     const result = await prisma.session.deleteMany({
       where: { userId: targetUser.id },
     });
+    const targetName =
+      targetUser.firstName && targetUser.lastName
+        ? `${targetUser.firstName} ${targetUser.lastName}`
+        : targetUser.email;
 
     await createAuditLogWithHeaders({
       action: 'SESSION_INVALIDATE',
@@ -205,6 +213,7 @@ export async function DELETE(
       description: `Sessions révoquées pour: ${targetUser.email}`,
       metadata: {
         revokedSessions: result.count,
+        targetName,
       },
       targetUserId: targetUser.id,
       userId: auth.user.id,

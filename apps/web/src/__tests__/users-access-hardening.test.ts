@@ -772,4 +772,151 @@ describe('users access hardening', () => {
       }),
     );
   });
+
+  it('loads the system activity journal with cursor pagination and masked ip', async () => {
+    mockPrisma.auditLog.findMany.mockReset();
+    mockPrisma.user.findMany.mockReset();
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      {
+        action: 'LOGIN_SUCCESS',
+        category: 'AUTH',
+        createdAt: new Date('2026-03-03T10:00:00.000Z'),
+        description: 'Connexion reussie',
+        id: 'log-3',
+        ipAddress: '1.2.3.4',
+        metadata: null,
+        targetUserId: 'target-1',
+        userId: 'actor-1',
+      },
+      {
+        action: 'USER_UPDATE',
+        category: 'USER',
+        createdAt: new Date('2026-03-03T09:00:00.000Z'),
+        description: 'Utilisateur modifie',
+        id: 'log-2',
+        ipAddress: '5.6.7.8',
+        metadata: { targetName: 'Nom archive' },
+        targetUserId: 'deleted-target',
+        userId: null,
+      },
+      {
+        action: 'LOGOUT',
+        category: 'AUTH',
+        createdAt: new Date('2026-03-03T08:00:00.000Z'),
+        description: 'Deconnexion',
+        id: 'log-1',
+        ipAddress: null,
+        metadata: null,
+        targetUserId: null,
+        userId: 'actor-1',
+      },
+    ]);
+    mockPrisma.user.findMany.mockResolvedValueOnce([
+      {
+        email: 'actor@example.com',
+        firstName: 'Alice',
+        id: 'actor-1',
+        lastName: 'Admin',
+      },
+      {
+        email: 'target@example.com',
+        firstName: 'Bob',
+        id: 'target-1',
+        lastName: 'User',
+      },
+    ]);
+
+    const route = await import('$app/api/systeme/journal-activite/route');
+    const response = await route.GET(
+      new Request(
+        'http://localhost/api/systeme/journal-activite?limit=2&period=7d&category=AUTH&action=LOGIN_SUCCESS&cursor=log-4',
+      ) as never,
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
+    expect(body.success).toBe(true);
+    expect(body.data.logs).toHaveLength(2);
+    expect(body.data.nextCursor).toBe('log-2');
+    expect(body.data.logs[0]).toMatchObject({
+      actorName: 'Alice Admin',
+      ipAddress: null,
+      targetName: 'Bob User',
+    });
+    expect(body.data.logs[1]).toMatchObject({
+      actorName: null,
+      ipAddress: null,
+      targetName: 'Nom archive',
+    });
+    expect(mockRequirePermission).toHaveBeenCalledWith(
+      expect.any(Object),
+      PERMISSIONS.USERS.VIEW,
+    );
+    expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cursor: { id: 'log-4' },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        skip: 1,
+        take: 3,
+        where: {
+          AND: expect.arrayContaining([
+            { action: 'LOGIN_SUCCESS' },
+            { category: 'AUTH' },
+            expect.objectContaining({
+              createdAt: expect.objectContaining({ gte: expect.any(Date) }),
+            }),
+          ]),
+        },
+      }),
+    );
+    expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: {
+            in: expect.arrayContaining(['actor-1', 'target-1']),
+          },
+        },
+      }),
+    );
+  });
+
+  it('keeps system activity journal ip visible for protected viewers', async () => {
+    mockPrisma.auditLog.findMany.mockReset();
+    mockPrisma.user.findMany.mockReset();
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'protected-1',
+        isProtected: true,
+        passwordHash: undefined,
+      }),
+    });
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      {
+        action: 'LOGIN_FAILED',
+        category: 'AUTH',
+        createdAt: new Date('2026-03-03T10:00:00.000Z'),
+        description: 'Connexion echouee',
+        id: 'log-1',
+        ipAddress: '1.2.3.4',
+        metadata: null,
+        targetUserId: null,
+        userId: null,
+      },
+    ]);
+    mockPrisma.user.findMany.mockResolvedValueOnce([]);
+
+    const route = await import('$app/api/systeme/journal-activite/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/systeme/journal-activite') as never,
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.logs[0].ipAddress).toBe('1.2.3.4');
+  });
 });

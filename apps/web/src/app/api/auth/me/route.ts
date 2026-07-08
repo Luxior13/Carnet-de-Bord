@@ -95,6 +95,22 @@ export async function PATCH(
       });
     }
 
+    const beforeValues: Record<string, unknown> = {};
+    const afterValues: Record<string, unknown> = {};
+    const changes: Record<string, { from: unknown; to: unknown }> = {};
+
+    if (nextFirstName !== user.firstName) {
+      beforeValues.firstName = user.firstName;
+      afterValues.firstName = nextFirstName;
+      changes.firstName = { from: user.firstName, to: nextFirstName };
+    }
+
+    if (nextLastName !== user.lastName) {
+      beforeValues.lastName = user.lastName;
+      afterValues.lastName = nextLastName;
+      changes.lastName = { from: user.lastName, to: nextLastName };
+    }
+
     // Update user profile
     const updatedUser = await prisma.user.update({
       data: {
@@ -111,10 +127,15 @@ export async function PATCH(
       category: 'USER',
       description: `Profil mis à jour`,
       metadata: {
-        changes: {
-          firstName: { from: user.firstName, to: nextFirstName },
-          lastName: { from: user.lastName, to: nextLastName },
-        },
+        after: afterValues,
+        before: beforeValues,
+        changes,
+        pageKey: 'account',
+        pageLabel: 'Mon compte',
+        poleKey: 'account',
+        poleLabel: 'Compte',
+        tabKey: 'profile',
+        tabLabel: 'Profil',
       },
       targetUserId: user.id,
       userId: user.id,

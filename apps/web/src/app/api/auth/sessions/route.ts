@@ -127,12 +127,21 @@ export async function DELETE(
         action: 'SESSION_INVALIDATE',
         category: 'AUTH',
         description: 'Session révoquée',
+        metadata: {
+          pageKey: 'account',
+          pageLabel: 'Mon compte',
+          poleKey: 'account',
+          poleLabel: 'Compte',
+          revokedSessions: 1,
+          tabKey: 'security',
+          tabLabel: 'Sécurité',
+        },
         targetUserId: user.id,
         userId: user.id,
       });
     } else {
       // Delete all other sessions (not current)
-      await prisma.session.deleteMany({
+      const deleteResult = await prisma.session.deleteMany({
         where: {
           NOT: { token: currentSession?.token },
           userId: user.id,
@@ -143,6 +152,15 @@ export async function DELETE(
         action: 'SESSION_INVALIDATE',
         category: 'AUTH',
         description: 'Toutes les autres sessions révoquées',
+        metadata: {
+          pageKey: 'account',
+          pageLabel: 'Mon compte',
+          poleKey: 'account',
+          poleLabel: 'Compte',
+          revokedSessions: deleteResult.count,
+          tabKey: 'security',
+          tabLabel: 'Sécurité',
+        },
         targetUserId: user.id,
         userId: user.id,
       });

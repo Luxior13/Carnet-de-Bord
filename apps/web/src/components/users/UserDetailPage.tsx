@@ -763,6 +763,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     }
   }, [canManageTargetSessions, userId]);
 
+  const refreshAuditAfterMutation = useCallback((): void => {
+    hasLoadedAuditLogsRef.current = false;
+    hasLoadedAuditSummaryRef.current = false;
+    void fetchAuditData(activeSection === 'history');
+  }, [activeSection, fetchAuditData]);
+
   useEffect((): (() => void) => {
     return (): void => {
       userAbortControllerRef.current?.abort();
@@ -1067,6 +1073,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
       if (response.ok && data.success) {
         syncUserState(data.data.user);
+        refreshAuditAfterMutation();
         toast.success('Utilisateur mis à jour');
       } else {
         toast.error(data.error?.message || 'Erreur lors de la mise à jour');
@@ -1107,6 +1114,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
       if (response.ok && data.success) {
         syncUserState(data.data.user);
+        refreshAuditAfterMutation();
         toast.success('Accès mis à jour');
       } else {
         toast.error(data.error?.message || 'Erreur lors de la mise à jour');
@@ -1142,6 +1150,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
       if (response.ok && data.success) {
         syncUserState(data.data.user);
+        refreshAuditAfterMutation();
         void fetchSecuritySessions();
         toast.success('Sécurité mise à jour');
       } else {
@@ -1174,6 +1183,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         handleSectionChange('security');
         toast.success('Mot de passe réinitialisé');
         void fetchUser({ background: true });
+        refreshAuditAfterMutation();
         void fetchSecuritySessions();
       } else {
         toast.error(
@@ -1204,6 +1214,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
       if (response.ok && data.success) {
         toast.success('Sessions révoquées');
+        refreshAuditAfterMutation();
         void fetchSecuritySessions();
       } else {
         toast.error(data.error?.message || 'Erreur lors de la révocation');
