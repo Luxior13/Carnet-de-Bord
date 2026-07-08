@@ -507,6 +507,17 @@ export const authenticateUser = async (
             action: 'ACCOUNT_LOCKED',
             category: 'AUTH',
             description: `Compte verrouillé après ${MAX_FAILED_ATTEMPTS} tentatives échouées`,
+            metadata: {
+              pageKey: 'authentication',
+              pageLabel: 'Authentification',
+              poleKey: 'system',
+              poleLabel: 'Système',
+              tabKey: 'connections',
+              tabLabel: 'Connexions',
+            },
+            pageKey: 'authentication',
+            poleKey: 'system',
+            tabKey: 'connections',
             userId: user.id,
           },
         })
@@ -731,6 +742,19 @@ export const checkUserPermission = (
 /**
  * Creates an audit log entry
  */
+const getAuditLocationKey = (
+  metadata: Record<string, unknown> | undefined,
+  key: 'pageKey' | 'poleKey' | 'tabKey',
+): string | null => {
+  const value = Object.entries(metadata ?? {}).find(
+    ([entryKey]) => entryKey === key,
+  )?.[1];
+
+  return typeof value === 'string' && value.trim().length > 0
+    ? value.trim()
+    : null;
+};
+
 export const createAuditLog = async (data: {
   action: AuditAction;
   category: AuditCategory;
@@ -748,6 +772,9 @@ export const createAuditLog = async (data: {
       description: data.description,
       ipAddress: data.ipAddress ?? null,
       metadata: data.metadata as Prisma.InputJsonValue | undefined,
+      pageKey: getAuditLocationKey(data.metadata, 'pageKey'),
+      poleKey: getAuditLocationKey(data.metadata, 'poleKey'),
+      tabKey: getAuditLocationKey(data.metadata, 'tabKey'),
       targetUserId: data.targetUserId ?? null,
       userAgent: data.userAgent ?? null,
       userId: data.userId ?? null,

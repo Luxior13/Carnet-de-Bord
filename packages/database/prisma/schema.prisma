@@ -120,6 +120,9 @@ model AuditLog {
   category    AuditCategory
   description String
   metadata    Json?
+  poleKey     String?
+  pageKey     String?
+  tabKey      String?
   ipAddress   String?
   userAgent   String?
   createdAt   DateTime      @default(now())
@@ -131,6 +134,9 @@ model AuditLog {
   @@index([targetUserId])
   @@index([targetUserId, createdAt])
   @@index([targetUserId, createdAt, id])
+  @@index([poleKey, createdAt, id])
+  @@index([poleKey, pageKey, createdAt, id])
+  @@index([pageKey, createdAt, id])
   @@index([action])
   @@index([action, createdAt, id])
   @@index([category])

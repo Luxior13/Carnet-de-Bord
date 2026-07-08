@@ -22,6 +22,12 @@ const DATE_RANGES = new Map<string, number>([
 
 const AUDIT_ACTIONS = new Set<string>(Object.values(AuditAction));
 const AUDIT_CATEGORIES = new Set<string>(Object.values(AuditCategory));
+const CONNECTION_ACTIONS: AuditAction[] = [
+  AuditAction.ACCOUNT_LOCKED,
+  AuditAction.LOGIN_FAILED,
+  AuditAction.LOGIN_SUCCESS,
+  AuditAction.LOGOUT,
+];
 
 type JournalLog = {
   action: AuditAction;
@@ -70,6 +76,14 @@ const getDateRangeStart = (value: string | null): Date | undefined => {
   return new Date(Date.now() - duration);
 };
 
+const getTextFilter = (value: string | null): string | undefined => {
+  if (!value || value === 'all') return undefined;
+
+  const trimmedValue = value.trim();
+
+  return trimmedValue.length > 0 ? trimmedValue : undefined;
+};
+
 const getUserName = (
   user:
     | {
@@ -101,6 +115,10 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const limit = clampLimit(searchParams.get('limit'));
     const cursor = searchParams.get('cursor') || undefined;
+    const logType =
+      searchParams.get('logType') === 'connections'
+        ? 'connections'
+        : 'activity';
     const action = getEnumFilter<AuditAction>(
       searchParams.get('action'),
       AUDIT_ACTIONS,
@@ -111,14 +129,24 @@ export async function GET(
     );
     const createdAfter = getDateRangeStart(searchParams.get('period'));
     const actorId = searchParams.get('actorId') || undefined;
+    const pageKey = getTextFilter(searchParams.get('pageKey'));
+    const poleKey = getTextFilter(searchParams.get('poleKey'));
     const targetUserId = searchParams.get('targetUserId') || undefined;
     const canViewSensitiveAudit = auth.user.isProtected;
+    const logTypeFilter = action
+      ? undefined
+      : logType === 'connections'
+        ? { action: { in: CONNECTION_ACTIONS } }
+        : { action: { notIn: CONNECTION_ACTIONS } };
 
     const andFilters = [
       action ? { action } : undefined,
+      logTypeFilter,
       category ? { category } : undefined,
       createdAfter ? { createdAt: { gte: createdAfter } } : undefined,
       actorId ? { userId: actorId } : undefined,
+      poleKey ? { poleKey } : undefined,
+      pageKey ? { pageKey } : undefined,
       targetUserId ? { targetUserId } : undefined,
     ].filter((filter): filter is NonNullable<typeof filter> => !!filter);
 

@@ -130,6 +130,15 @@ type ScopeVisual = {
   value: string;
 };
 
+type ActivityFilterOption = {
+  icon: NavigationIconName;
+  label: string;
+  tone: NavigationSpaceTone;
+  value: string;
+};
+
+type JournalLogType = 'activity' | 'connections';
+
 const PAGE_SIZE = 40;
 const ALL_FILTER_VALUE = 'all';
 const PERMISSION_CHANGE_FIELD_PREFIX = 'permissions.';
@@ -142,30 +151,80 @@ const PERIOD_OPTIONS = [
   { label: 'Toute période', value: ALL_FILTER_VALUE },
 ];
 
-const CATEGORY_OPTIONS = [
-  { label: 'Toutes les catégories', value: ALL_FILTER_VALUE },
-  { label: 'Connexion', value: 'AUTH' },
-  { label: 'Utilisateur', value: 'USER' },
-  { label: 'Permissions', value: 'PERMISSION' },
-  { label: 'Système', value: 'SYSTEM' },
+const JOURNAL_TYPE_OPTIONS: Array<{
+  description: string;
+  icon: LucideIcon;
+  label: string;
+  value: JournalLogType;
+}> = [
+  {
+    description: 'Actions métier et changements sensibles',
+    icon: History,
+    label: 'Activité',
+    value: 'activity',
+  },
+  {
+    description: 'Connexions, échecs et déconnexions',
+    icon: LogIn,
+    label: 'Connexions',
+    value: 'connections',
+  },
 ];
 
-const ACTION_OPTIONS = [
-  { label: 'Toutes les actions', value: ALL_FILTER_VALUE },
-  { label: 'Connexion réussie', value: 'LOGIN_SUCCESS' },
-  { label: 'Connexion échouée', value: 'LOGIN_FAILED' },
-  { label: 'Déconnexion', value: 'LOGOUT' },
-  { label: 'Mot de passe modifié', value: 'PASSWORD_CHANGE' },
-  { label: 'Mot de passe réinitialisé', value: 'PASSWORD_RESET' },
-  { label: 'Compte verrouillé', value: 'ACCOUNT_LOCKED' },
-  { label: 'Sessions invalidées', value: 'SESSION_INVALIDATE' },
-  { label: 'Utilisateur créé', value: 'USER_CREATE' },
-  { label: 'Utilisateur modifié', value: 'USER_UPDATE' },
-  { label: 'Utilisateur supprimé', value: 'USER_DELETE' },
-  { label: 'Utilisateur activé', value: 'USER_ACTIVATE' },
-  { label: 'Utilisateur désactivé', value: 'USER_DEACTIVATE' },
-  { label: 'Permissions modifiées', value: 'PERMISSION_UPDATE' },
+const ALL_POLE_OPTION: ActivityFilterOption = {
+  icon: 'Search',
+  label: 'Tous les pôles',
+  tone: 'internal',
+  value: ALL_FILTER_VALUE,
+};
+
+const ACCOUNT_POLE_OPTION: ActivityFilterOption = {
+  icon: 'UserCheck',
+  label: 'Espace personnel',
+  tone: 'internal',
+  value: 'account',
+};
+
+const ALL_PAGE_OPTION: ActivityFilterOption = {
+  icon: 'Search',
+  label: 'Toutes les pages',
+  tone: 'internal',
+  value: ALL_FILTER_VALUE,
+};
+
+const ACCOUNT_PAGE_OPTION: ActivityFilterOption = {
+  icon: 'UserCheck',
+  label: 'Mon compte',
+  tone: 'internal',
+  value: 'account',
+};
+
+const AUTHENTICATION_PAGE_OPTION: ActivityFilterOption = {
+  icon: 'ShieldCheck',
+  label: 'Authentification',
+  tone: 'system',
+  value: 'authentication',
+};
+
+const JOURNAL_POLE_OPTIONS: ActivityFilterOption[] = [
+  ALL_POLE_OPTION,
+  ACCOUNT_POLE_OPTION,
+  ...PERMISSION_POLES.map((pole) => ({
+    icon: pole.icon,
+    label: pole.label,
+    tone: pole.tone,
+    value: pole.key,
+  })),
 ];
+
+const activitySelectTriggerClassName =
+  'border-sidebar-border/70 bg-surface text-sidebar-foreground hover:bg-sidebar-accent/25 focus-visible:border-sidebar-ring/45 focus-visible:ring-sidebar-ring/35 h-11 w-full shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]';
+
+const activitySelectContentClassName =
+  'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground rounded-lg p-1.5 shadow-2xl shadow-black/25';
+
+const activitySelectItemClassName =
+  'focus:bg-sidebar-accent/55 focus:text-sidebar-accent-foreground rounded-md py-2';
 
 const ACTION_CONFIG = new Map<string, ActionConfig>(
   Object.entries({
@@ -401,6 +460,56 @@ const getActionConfig = (log: JournalLog): ActionConfig => {
       label: log.description || log.action,
     }
   );
+};
+
+const ActivitySelectVisualOption: FC<ActivityFilterOption> = ({
+  icon,
+  label,
+  tone,
+}) => {
+  const Icon = getNavigationIcon(icon);
+  const toneClasses = getNavigationSpaceToneClasses(tone);
+
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      <span
+        className={cn(
+          'flex size-7 shrink-0 items-center justify-center rounded-md border',
+          toneClasses.icon,
+        )}
+      >
+        <Icon className="size-3.5" />
+      </span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+    </div>
+  );
+};
+
+const getJournalPageOptions = (poleKey: string): ActivityFilterOption[] => {
+  if (poleKey === ALL_FILTER_VALUE) return [ALL_PAGE_OPTION];
+
+  const options: ActivityFilterOption[] = [ALL_PAGE_OPTION];
+
+  if (poleKey === 'account') {
+    options.push(ACCOUNT_PAGE_OPTION);
+  }
+
+  if (poleKey === 'system') {
+    options.push(AUTHENTICATION_PAGE_OPTION);
+  }
+
+  options.push(
+    ...PERMISSION_CATEGORIES.filter((category) => {
+      return category.poleKey === poleKey;
+    }).map((category) => ({
+      icon: category.icon,
+      label: category.label,
+      tone: category.tone,
+      value: category.key,
+    })),
+  );
+
+  return options;
 };
 
 const getPermissionChangeFieldKey = (permissionKey: string): string =>
@@ -1056,26 +1165,64 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
   const tone = getNavigationSpaceToneClasses(space.tone);
   const Icon = getNavigationIcon(item.icon);
   const [period, setPeriod] = useState('30d');
-  const [category, setCategory] = useState(ALL_FILTER_VALUE);
-  const [action, setAction] = useState(ALL_FILTER_VALUE);
+  const [logType, setLogType] = useState<JournalLogType>('activity');
+  const [poleFilter, setPoleFilter] = useState(ALL_FILTER_VALUE);
+  const [pageFilter, setPageFilter] = useState(ALL_FILTER_VALUE);
   const [logs, setLogs] = useState<JournalLog[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [openLogId, setOpenLogId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isPageFilterLocked = poleFilter === ALL_FILTER_VALUE;
+  const effectivePageFilter = isPageFilterLocked
+    ? ALL_FILTER_VALUE
+    : pageFilter;
+  const pageOptions = useMemo(
+    () => getJournalPageOptions(poleFilter),
+    [poleFilter],
+  );
+  const selectedPoleOption =
+    JOURNAL_POLE_OPTIONS.find((option) => option.value === poleFilter) ??
+    ALL_POLE_OPTION;
+  const selectedPageOption =
+    pageOptions.find((option) => option.value === effectivePageFilter) ??
+    ALL_PAGE_OPTION;
 
   const queryParams = useMemo(() => {
     const params = new URLSearchParams({
       limit: String(PAGE_SIZE),
+      logType,
       period,
     });
 
-    if (category !== ALL_FILTER_VALUE) params.set('category', category);
-    if (action !== ALL_FILTER_VALUE) params.set('action', action);
+    if (poleFilter !== ALL_FILTER_VALUE) params.set('poleKey', poleFilter);
+    if (effectivePageFilter !== ALL_FILTER_VALUE) {
+      params.set('pageKey', effectivePageFilter);
+    }
 
     return params;
-  }, [action, category, period]);
+  }, [effectivePageFilter, logType, period, poleFilter]);
+
+  const handleLogTypeChange = (value: JournalLogType): void => {
+    setLogType(value);
+    setPoleFilter(ALL_FILTER_VALUE);
+    setPageFilter(ALL_FILTER_VALUE);
+    setOpenLogId(null);
+  };
+
+  const handlePoleFilterChange = (value: string): void => {
+    setPoleFilter(value);
+    setPageFilter(ALL_FILTER_VALUE);
+    setOpenLogId(null);
+  };
+
+  const handlePageFilterChange = (value: string): void => {
+    if (isPageFilterLocked) return;
+
+    setPageFilter(value);
+    setOpenLogId(null);
+  };
 
   const fetchLogs = useCallback(
     async (cursor?: string): Promise<void> => {
@@ -1197,57 +1344,160 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
             </div>
           </section>
           <section className="border-sidebar-border/70 bg-surface rounded-lg border p-4 shadow-[var(--shadow-panel)]">
-            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_13rem_13rem_13rem_auto] lg:items-end">
-              <div>
+            <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_18rem_18rem_13rem_auto] xl:items-end">
+              <div className="space-y-3">
                 <p className="text-foreground text-sm font-semibold">
                   Filtres du journal
                 </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {JOURNAL_TYPE_OPTIONS.map((option) => {
+                    const TypeIcon = option.icon;
+                    const isActiveType = logType === option.value;
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        aria-pressed={isActiveType}
+                        onClick={() => handleLogTypeChange(option.value)}
+                        className={cn(
+                          'border-sidebar-border/60 bg-surface-muted hover:bg-sidebar-accent/25 flex min-w-0 items-center gap-3 rounded-lg border p-3 text-left transition-colors',
+                          isActiveType &&
+                            'border-primary/45 bg-primary/10 shadow-[inset_0_0_0_1px_rgba(108,146,214,0.16)]',
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            'flex size-8 shrink-0 items-center justify-center rounded-md border',
+                            isActiveType
+                              ? 'border-primary/35 bg-primary/15 text-primary'
+                              : 'border-sidebar-border/70 bg-background/45 text-muted-foreground',
+                          )}
+                        >
+                          <TypeIcon className="size-4" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="text-foreground block truncate text-sm font-semibold">
+                            {option.label}
+                          </span>
+                          <span className="text-muted-foreground block truncate text-xs">
+                            {option.description}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <span className="text-muted-foreground text-[11px] font-medium">
+              <div className="space-y-2">
+                <label
+                  htmlFor="journal-pole"
+                  className="text-muted-foreground text-xs font-medium"
+                >
+                  Pôle
+                </label>
+                <Select
+                  value={poleFilter}
+                  onValueChange={handlePoleFilterChange}
+                >
+                  <SelectTrigger
+                    id="journal-pole"
+                    className={activitySelectTriggerClassName}
+                  >
+                    <SelectValue>
+                      <ActivitySelectVisualOption
+                        icon={selectedPoleOption.icon}
+                        label={selectedPoleOption.label}
+                        tone={selectedPoleOption.tone}
+                        value={selectedPoleOption.value}
+                      />
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className={activitySelectContentClassName}>
+                    {JOURNAL_POLE_OPTIONS.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        className={activitySelectItemClassName}
+                      >
+                        <ActivitySelectVisualOption
+                          icon={option.icon}
+                          label={option.label}
+                          tone={option.tone}
+                          value={option.value}
+                        />
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label
+                  htmlFor="journal-page"
+                  className="text-muted-foreground text-xs font-medium"
+                >
+                  Page
+                </label>
+                <Select
+                  value={effectivePageFilter}
+                  onValueChange={handlePageFilterChange}
+                  disabled={isPageFilterLocked}
+                >
+                  <SelectTrigger
+                    id="journal-page"
+                    className={cn(
+                      activitySelectTriggerClassName,
+                      isPageFilterLocked && 'opacity-70',
+                    )}
+                  >
+                    <SelectValue>
+                      <ActivitySelectVisualOption
+                        icon={selectedPageOption.icon}
+                        label={selectedPageOption.label}
+                        tone={selectedPageOption.tone}
+                        value={selectedPageOption.value}
+                      />
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className={activitySelectContentClassName}>
+                    {pageOptions.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        className={activitySelectItemClassName}
+                      >
+                        <ActivitySelectVisualOption
+                          icon={option.icon}
+                          label={option.label}
+                          tone={option.tone}
+                          value={option.value}
+                        />
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label
+                  htmlFor="journal-period"
+                  className="text-muted-foreground text-xs font-medium"
+                >
                   Période
-                </span>
+                </label>
                 <Select value={period} onValueChange={setPeriod}>
-                  <SelectTrigger className="border-sidebar-border/70 bg-surface h-10">
+                  <SelectTrigger
+                    id="journal-period"
+                    className={activitySelectTriggerClassName}
+                  >
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className={activitySelectContentClassName}>
                     {PERIOD_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <span className="text-muted-foreground text-[11px] font-medium">
-                  Catégorie
-                </span>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="border-sidebar-border/70 bg-surface h-10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORY_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <span className="text-muted-foreground text-[11px] font-medium">
-                  Action
-                </span>
-                <Select value={action} onValueChange={setAction}>
-                  <SelectTrigger className="border-sidebar-border/70 bg-surface h-10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ACTION_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        className={activitySelectItemClassName}
+                      >
                         {option.label}
                       </SelectItem>
                     ))}
@@ -1257,7 +1507,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 rounded-md"
+                className="h-11 rounded-md"
                 onClick={() => void fetchLogs()}
                 disabled={isLoading}
               >

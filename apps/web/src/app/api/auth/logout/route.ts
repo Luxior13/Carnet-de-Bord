@@ -15,6 +15,15 @@ import {
   type ApiSuccessResponse,
 } from '$types/api.types';
 
+const AUTH_CONNECTION_AUDIT_LOCATION = {
+  pageKey: 'authentication',
+  pageLabel: 'Authentification',
+  poleKey: 'system',
+  poleLabel: 'Système',
+  tabKey: 'connections',
+  tabLabel: 'Connexions',
+} as const;
+
 export async function POST(): Promise<
   NextResponse<ApiSuccessResponse<{ message: string }> | ApiErrorResponse>
 > {
@@ -36,6 +45,7 @@ export async function POST(): Promise<
       action: 'LOGOUT',
       category: 'AUTH',
       description: `Deconnexion: ${auth.user.email}`,
+      metadata: AUTH_CONNECTION_AUDIT_LOCATION,
       targetUserId: auth.user.id,
       userId: auth.user.id,
     }).catch((error: unknown) => {

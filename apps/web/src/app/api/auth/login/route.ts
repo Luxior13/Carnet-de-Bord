@@ -28,6 +28,15 @@ const loginSchema = z.object({
   rememberMe: z.boolean().optional().default(false),
 });
 
+const AUTH_CONNECTION_AUDIT_LOCATION = {
+  pageKey: 'authentication',
+  pageLabel: 'Authentification',
+  poleKey: 'system',
+  poleLabel: 'Système',
+  tabKey: 'connections',
+  tabLabel: 'Connexions',
+} as const;
+
 type LoginResponseData = {
   mustChangePassword: boolean;
   session: {
@@ -61,6 +70,7 @@ async function recordLoginAudit(data: {
       description: data.description,
       metadata: {
         email: data.email,
+        ...AUTH_CONNECTION_AUDIT_LOCATION,
         ...(data.reason ? { reason: data.reason } : {}),
       },
       targetUserId: data.userId ?? null,

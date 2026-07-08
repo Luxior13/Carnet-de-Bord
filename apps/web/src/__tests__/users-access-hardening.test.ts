@@ -881,6 +881,70 @@ describe('users access hardening', () => {
     );
   });
 
+  it('separates connection logs from default system activity filters', async () => {
+    mockPrisma.auditLog.findMany.mockReset();
+    mockPrisma.user.findMany.mockReset();
+    mockPrisma.auditLog.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+    mockPrisma.user.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+
+    const route = await import('$app/api/systeme/journal-activite/route');
+
+    await route.GET(
+      new Request('http://localhost/api/systeme/journal-activite') as never,
+    );
+
+    await route.GET(
+      new Request(
+        'http://localhost/api/systeme/journal-activite?logType=connections&poleKey=system&pageKey=authentication',
+      ) as never,
+    );
+
+    expect(mockPrisma.auditLog.findMany).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        where: {
+          AND: expect.arrayContaining([
+            {
+              action: {
+                notIn: [
+                  'ACCOUNT_LOCKED',
+                  'LOGIN_FAILED',
+                  'LOGIN_SUCCESS',
+                  'LOGOUT',
+                ],
+              },
+            },
+          ]),
+        },
+      }),
+    );
+    expect(mockPrisma.auditLog.findMany).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        where: {
+          AND: expect.arrayContaining([
+            {
+              action: {
+                in: [
+                  'ACCOUNT_LOCKED',
+                  'LOGIN_FAILED',
+                  'LOGIN_SUCCESS',
+                  'LOGOUT',
+                ],
+              },
+            },
+            { poleKey: 'system' },
+            { pageKey: 'authentication' },
+          ]),
+        },
+      }),
+    );
+  });
+
   it('keeps system activity journal ip visible for protected viewers', async () => {
     mockPrisma.auditLog.findMany.mockReset();
     mockPrisma.user.findMany.mockReset();
