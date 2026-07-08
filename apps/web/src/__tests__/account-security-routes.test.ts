@@ -164,6 +164,7 @@ describe('account security routes', () => {
               firstName: { from: 'Jean', to: 'Jeanne' },
             },
             pageLabel: 'Mon compte',
+            poleLabel: 'Espace personnel',
             tabLabel: 'Profil',
           }),
           targetUserId: 'user-1',
@@ -317,6 +318,7 @@ describe('account security routes', () => {
           metadata: expect.objectContaining({
             pageLabel: 'Mon compte',
             passwordChange: true,
+            poleLabel: 'Espace personnel',
             tabKey: 'security',
           }),
           userId: 'user-1',
@@ -607,6 +609,7 @@ describe('account security routes', () => {
           category: 'AUTH',
           metadata: expect.objectContaining({
             pageLabel: 'Mon compte',
+            poleLabel: 'Espace personnel',
             revokedSessions: 0,
             tabKey: 'security',
           }),

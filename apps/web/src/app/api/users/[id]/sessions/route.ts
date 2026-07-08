@@ -16,6 +16,15 @@ type RouteParams = {
   params: Promise<{ id: string }>;
 };
 
+const USERS_SECURITY_AUDIT_LOCATION = {
+  pageKey: 'users',
+  pageLabel: 'Utilisateurs & permissions',
+  poleKey: 'system',
+  poleLabel: 'Système',
+  tabKey: 'security',
+  tabLabel: 'Sécurité',
+} as const;
+
 const getTargetUserForSessionManagement = async (
   id: string,
 ): Promise<{
@@ -213,6 +222,7 @@ export async function DELETE(
       description: `Sessions révoquées pour: ${targetUser.email}`,
       metadata: {
         revokedSessions: result.count,
+        ...USERS_SECURITY_AUDIT_LOCATION,
         targetName,
       },
       targetUserId: targetUser.id,

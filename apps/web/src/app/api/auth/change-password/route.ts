@@ -208,7 +208,7 @@ export async function POST(
         pageLabel: 'Mon compte',
         passwordChange: true,
         poleKey: 'account',
-        poleLabel: 'Compte',
+        poleLabel: 'Espace personnel',
         tabKey: 'security',
         tabLabel: 'Sécurité',
       },

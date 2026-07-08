@@ -15,6 +15,15 @@ type RouteParams = {
   params: Promise<{ id: string }>;
 };
 
+const USERS_SECURITY_AUDIT_LOCATION = {
+  pageKey: 'users',
+  pageLabel: 'Utilisateurs & permissions',
+  poleKey: 'system',
+  poleLabel: 'Système',
+  tabKey: 'security',
+  tabLabel: 'Sécurité',
+} as const;
+
 // ============================================
 // POST /api/users/[id]/reset-password
 // ============================================
@@ -113,6 +122,7 @@ export async function POST(
       description: `Mot de passe réinitialisé pour: ${existingUser.email}`,
       metadata: {
         passwordReset: true,
+        ...USERS_SECURITY_AUDIT_LOCATION,
         targetName,
       },
       targetUserId: id,

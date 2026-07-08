@@ -133,7 +133,7 @@ export async function PATCH(
         pageKey: 'account',
         pageLabel: 'Mon compte',
         poleKey: 'account',
-        poleLabel: 'Compte',
+        poleLabel: 'Espace personnel',
         tabKey: 'profile',
         tabLabel: 'Profil',
       },

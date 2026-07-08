@@ -303,6 +303,21 @@ const AUTH_LOCATION: ActivityLocationInfo = {
   tone: 'system',
 };
 
+const ACCOUNT_PROFILE_LOCATION: ActivityLocationInfo = {
+  icon: 'UserCheck',
+  pageKey: 'account',
+  pageLabel: 'Mon compte',
+  poleKey: 'account',
+  poleLabel: 'Espace personnel',
+  tabLabel: 'Profil',
+  tone: 'internal',
+};
+
+const ACCOUNT_SECURITY_LOCATION: ActivityLocationInfo = {
+  ...ACCOUNT_PROFILE_LOCATION,
+  tabLabel: 'Sécurité',
+};
+
 const USERS_LOCATION: ActivityLocationInfo = {
   icon: 'Users',
   pageKey: 'users',
@@ -591,6 +606,10 @@ const getLocationIcon = (poleKey: string): NavigationIconName => {
   return 'LayoutDashboard';
 };
 
+const isSelfTargetedActivity = (log: JournalLog): boolean => {
+  return !!log.userId && !!log.targetUserId && log.userId === log.targetUserId;
+};
+
 const getActivityLocation = (log: JournalLog): ActivityLocationInfo => {
   const metadata = log.metadata;
   const rawPageKey = getMetadataString(metadata, ['pageKey', 'pageId']);
@@ -624,13 +643,37 @@ const getActivityLocation = (log: JournalLog): ActivityLocationInfo => {
     };
   }
 
+  if (isSelfTargetedActivity(log)) {
+    if (log.action === 'USER_UPDATE') return ACCOUNT_PROFILE_LOCATION;
+    if (
+      log.action === 'PASSWORD_CHANGE' ||
+      log.action === 'SESSION_INVALIDATE'
+    ) {
+      return ACCOUNT_SECURITY_LOCATION;
+    }
+  }
+
+  if (log.action === 'PASSWORD_RESET' || log.action === 'SESSION_INVALIDATE') {
+    return {
+      ...USERS_LOCATION,
+      tabLabel: 'Sécurité',
+    };
+  }
+
   if (
-    log.category === 'AUTH' ||
     log.action === 'LOGIN_SUCCESS' ||
     log.action === 'LOGIN_FAILED' ||
-    log.action === 'LOGOUT'
+    log.action === 'LOGOUT' ||
+    log.action === 'PASSWORD_CHANGE' ||
+    log.action === 'ACCOUNT_LOCKED'
   ) {
-    return AUTH_LOCATION;
+    return {
+      ...AUTH_LOCATION,
+      tabLabel:
+        log.action === 'PASSWORD_CHANGE' || log.action === 'ACCOUNT_LOCKED'
+          ? 'Sécurité'
+          : AUTH_LOCATION.tabLabel,
+    };
   }
 
   if (log.category === 'SYSTEM') return SYSTEM_LOCATION;
@@ -642,9 +685,11 @@ const getActivityLocation = (log: JournalLog): ActivityLocationInfo => {
         ? 'Accès'
         : log.action === 'USER_UPDATE'
           ? 'Profil'
-          : log.action === 'PASSWORD_RESET' ||
-              log.action === 'SESSION_INVALIDATE'
-            ? 'Sécurité'
+          : log.action === 'USER_ACTIVATE' ||
+              log.action === 'USER_CREATE' ||
+              log.action === 'USER_DEACTIVATE' ||
+              log.action === 'USER_DELETE'
+            ? 'Résumé'
             : 'Page',
   };
 };
@@ -1226,7 +1271,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
           <section className="space-y-2">
             <div className="border-sidebar-border/60 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_18rem_10rem_1.5rem] rounded-lg border px-4 py-2 text-xs font-medium md:grid">
               <span>Événement</span>
-              <span>Pôle / page / onglet</span>
+              <span>Emplacement</span>
               <span className="text-right">Date</span>
               <span />
             </div>

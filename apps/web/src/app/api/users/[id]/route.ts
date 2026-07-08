@@ -30,6 +30,13 @@ type RouteParams = {
   params: Promise<{ id: string }>;
 };
 
+const USERS_PAGE_AUDIT_LOCATION = {
+  pageKey: 'users',
+  pageLabel: 'Utilisateurs & permissions',
+  poleKey: 'system',
+  poleLabel: 'Système',
+} as const;
+
 const isValidDateInput = (value: string): boolean => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
 
@@ -550,6 +557,9 @@ export async function PATCH(
         metadata: {
           after: afterValues,
           before: beforeValues,
+          ...USERS_PAGE_AUDIT_LOCATION,
+          tabKey: 'resume',
+          tabLabel: 'Résumé',
           targetName,
         },
         targetUserId: id,
@@ -567,6 +577,9 @@ export async function PATCH(
         metadata: {
           after: afterValues,
           before: beforeValues,
+          ...USERS_PAGE_AUDIT_LOCATION,
+          tabKey: 'resume',
+          tabLabel: 'Résumé',
           targetName,
         },
         targetUserId: id,
@@ -583,6 +596,9 @@ export async function PATCH(
           after: afterValues,
           before: beforeValues,
           changes: changedKeys,
+          ...USERS_PAGE_AUDIT_LOCATION,
+          tabKey: 'access',
+          tabLabel: 'Accès',
           targetName,
         },
         targetUserId: id,
@@ -597,6 +613,9 @@ export async function PATCH(
           after: afterValues,
           before: beforeValues,
           changes: changedKeys,
+          ...USERS_PAGE_AUDIT_LOCATION,
+          tabKey: 'profile',
+          tabLabel: 'Profil',
           targetName,
         },
         targetUserId: id,
@@ -710,7 +729,13 @@ export async function DELETE(
       action: 'USER_DELETE',
       category: 'USER',
       description: `Utilisateur supprimé: ${existingUser.email}`,
-      metadata: { deletedUserId: id, email: existingUser.email },
+      metadata: {
+        deletedUserId: id,
+        email: existingUser.email,
+        ...USERS_PAGE_AUDIT_LOCATION,
+        tabKey: 'resume',
+        tabLabel: 'Résumé',
+      },
       targetUserId: id,
       userId: auth.user.id,
     });

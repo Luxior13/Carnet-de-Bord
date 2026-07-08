@@ -26,6 +26,12 @@ type UserSortOption = (typeof USER_SORT_OPTIONS)[number];
 const USER_STATUS_OPTIONS = ['active', 'inactive', 'pending'] as const;
 type UserStatusOption = (typeof USER_STATUS_OPTIONS)[number];
 const USER_SEARCH_MAX_LENGTH = 100;
+const USERS_PAGE_AUDIT_LOCATION = {
+  pageKey: 'users',
+  pageLabel: 'Utilisateurs & permissions',
+  poleKey: 'system',
+  poleLabel: 'Système',
+} as const;
 
 const USER_LIST_SELECT = {
   createdAt: true,
@@ -306,7 +312,10 @@ export async function POST(
       description: `Utilisateur créé: ${newUser.email}`,
       metadata: {
         createdUserId: newUser.id,
+        ...USERS_PAGE_AUDIT_LOCATION,
         role: newUser.role,
+        tabKey: 'creation',
+        tabLabel: 'Création',
       },
       targetUserId: newUser.id,
       userId: auth.user.id,

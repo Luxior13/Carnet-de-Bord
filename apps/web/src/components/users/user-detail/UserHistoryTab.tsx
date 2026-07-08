@@ -295,6 +295,9 @@ const isLogByViewedUser = (log: AuditLogEntry, viewedUserId: string): boolean =>
 const isLogOnViewedUser = (log: AuditLogEntry, viewedUserId: string): boolean =>
   log.targetUserId === viewedUserId;
 
+const isSelfTargetedActivity = (log: AuditLogEntry): boolean =>
+  !!log.userId && !!log.targetUserId && log.userId === log.targetUserId;
+
 const getLogSourceLabel = (
   log: AuditLogEntry,
   viewedUserId: string,
@@ -434,6 +437,24 @@ const AUTH_ACTIVITY_LOCATION: ActivityLocationInfo = {
   tabKey: 'auth',
   tabLabel: 'Connexions',
   tone: 'system',
+};
+
+const ACCOUNT_PROFILE_LOCATION: ActivityLocationInfo = {
+  description: 'Profil personnel et sécurité du compte connecté.',
+  icon: 'UserCheck',
+  pageKey: 'account',
+  pageLabel: 'Mon compte',
+  poleKey: 'account',
+  poleLabel: 'Espace personnel',
+  tabKey: 'profile',
+  tabLabel: 'Profil',
+  tone: 'internal',
+};
+
+const ACCOUNT_SECURITY_LOCATION: ActivityLocationInfo = {
+  ...ACCOUNT_PROFILE_LOCATION,
+  tabKey: 'security',
+  tabLabel: 'Sécurité',
 };
 
 const TECHNICAL_ACTIVITY_LOCATION: ActivityLocationInfo = {
@@ -635,6 +656,15 @@ const getActivityLocation = (log: AuditLogEntry): ActivityLocationInfo => {
   const metadataLocation = getMetadataLocation(log.metadata);
 
   if (metadataLocation) return applyActivityTab(log, metadataLocation);
+  if (isSelfTargetedActivity(log)) {
+    if (log.action === 'USER_UPDATE') return ACCOUNT_PROFILE_LOCATION;
+    if (
+      log.action === 'PASSWORD_CHANGE' ||
+      log.action === 'SESSION_INVALIDATE'
+    ) {
+      return ACCOUNT_SECURITY_LOCATION;
+    }
+  }
   if (AUTH_ACTIVITY_ACTIONS.has(log.action)) {
     return applyActivityTab(log, AUTH_ACTIVITY_LOCATION);
   }
@@ -2000,7 +2030,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
               <div className="space-y-2">
                 <div className="border-sidebar-border/60 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_18rem_10rem_1.5rem] rounded-lg border px-4 py-2 text-xs font-medium md:grid">
                   <span>Événement</span>
-                  <span>Pôle / page / onglet</span>
+                  <span>Emplacement</span>
                   <span className="text-right">Date</span>
                   <span />
                 </div>
