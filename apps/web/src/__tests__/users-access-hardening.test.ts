@@ -901,7 +901,7 @@ describe('users access hardening', () => {
 
     await route.GET(
       new Request(
-        'http://localhost/api/systeme/journal-activite?logType=connections',
+        'http://localhost/api/systeme/journal-activite?logType=connections&action=USER_UPDATE&category=USER&poleKey=system&pageKey=authentication',
       ) as never,
     );
 
@@ -948,6 +948,23 @@ describe('users access hardening', () => {
           ]),
         },
       }),
+    );
+    const connectionsCall = mockPrisma.auditLog.findMany.mock.calls[1]?.[0] as
+      | { where?: { AND?: unknown[] } }
+      | undefined;
+    const connectionsFilters = connectionsCall?.where?.AND ?? [];
+
+    expect(connectionsFilters).not.toEqual(
+      expect.arrayContaining([{ action: 'USER_UPDATE' }]),
+    );
+    expect(connectionsFilters).not.toEqual(
+      expect.arrayContaining([{ category: 'USER' }]),
+    );
+    expect(connectionsFilters).not.toEqual(
+      expect.arrayContaining([{ poleKey: 'system' }]),
+    );
+    expect(connectionsFilters).not.toEqual(
+      expect.arrayContaining([{ pageKey: 'authentication' }]),
     );
     expect(mockPrisma.auditLog.findMany).toHaveBeenNthCalledWith(
       3,

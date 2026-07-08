@@ -120,10 +120,10 @@ export async function GET(
       searchParams.get('logType') === 'connections'
         ? 'connections'
         : 'activity';
-    const action = getEnumFilter<AuditAction>(
-      searchParams.get('action'),
-      AUDIT_ACTIONS,
-    );
+    const action =
+      logType === 'connections'
+        ? undefined
+        : getEnumFilter<AuditAction>(searchParams.get('action'), AUDIT_ACTIONS);
     const connectionAction =
       logType === 'connections'
         ? getEnumFilter<AuditAction>(
@@ -131,14 +131,23 @@ export async function GET(
             CONNECTION_ACTION_VALUES,
           )
         : undefined;
-    const category = getEnumFilter<AuditCategory>(
-      searchParams.get('category'),
-      AUDIT_CATEGORIES,
-    );
+    const category =
+      logType === 'connections'
+        ? undefined
+        : getEnumFilter<AuditCategory>(
+            searchParams.get('category'),
+            AUDIT_CATEGORIES,
+          );
     const createdAfter = getDateRangeStart(searchParams.get('period'));
     const actorId = searchParams.get('actorId') || undefined;
-    const pageKey = getTextFilter(searchParams.get('pageKey'));
-    const poleKey = getTextFilter(searchParams.get('poleKey'));
+    const pageKey =
+      logType === 'connections'
+        ? undefined
+        : getTextFilter(searchParams.get('pageKey'));
+    const poleKey =
+      logType === 'connections'
+        ? undefined
+        : getTextFilter(searchParams.get('poleKey'));
     const targetUserId = searchParams.get('targetUserId') || undefined;
     const canViewSensitiveAudit = auth.user.isProtected;
     const logTypeFilter = action

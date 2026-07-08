@@ -28,6 +28,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -1255,12 +1256,9 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
     CONNECTION_EVENT_OPTIONS.find(
       (option) => option.value === connectionEventFilter,
     ) ?? ALL_CONNECTION_EVENT_OPTION;
-  const filterGridClassName = cn(
-    'grid gap-3 xl:items-end',
-    isConnectionJournal
-      ? 'xl:grid-cols-[minmax(0,1fr)_18rem_13rem_auto]'
-      : 'xl:grid-cols-[minmax(0,1fr)_18rem_18rem_13rem_auto]',
-  );
+  const requestSequenceRef = useRef(0);
+  const filterControlsGridClassName =
+    'grid gap-3 xl:grid-cols-[18rem_18rem_13rem_auto] xl:items-end';
 
   const queryParams = useMemo(() => {
     const params = new URLSearchParams({
@@ -1284,14 +1282,17 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
   }, [connectionEventFilter, effectivePageFilter, logType, period, poleFilter]);
 
   const handleLogTypeChange = (value: JournalLogType): void => {
+    if (value === logType) return;
+
+    requestSequenceRef.current += 1;
     setLogType(value);
-    setConnectionEventFilter(ALL_FILTER_VALUE);
-    setPoleFilter(ALL_FILTER_VALUE);
-    setPageFilter(ALL_FILTER_VALUE);
     setOpenLogId(null);
   };
 
   const handlePoleFilterChange = (value: string): void => {
+    if (value === poleFilter) return;
+
+    requestSequenceRef.current += 1;
     setPoleFilter(value);
     setPageFilter(ALL_FILTER_VALUE);
     setOpenLogId(null);
@@ -1299,12 +1300,17 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
 
   const handlePageFilterChange = (value: string): void => {
     if (isPageFilterLocked) return;
+    if (value === pageFilter) return;
 
+    requestSequenceRef.current += 1;
     setPageFilter(value);
     setOpenLogId(null);
   };
 
   const handleConnectionEventFilterChange = (value: string): void => {
+    if (value === connectionEventFilter) return;
+
+    requestSequenceRef.current += 1;
     setConnectionEventFilter(value);
     setOpenLogId(null);
   };
@@ -1313,6 +1319,9 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
     async (cursor?: string): Promise<void> => {
       const params = new URLSearchParams(queryParams);
       const append = !!cursor;
+      const requestId = requestSequenceRef.current + 1;
+
+      requestSequenceRef.current = requestId;
 
       if (cursor) params.set('cursor', cursor);
 
@@ -1342,19 +1351,25 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
 
         const responseData = body.data;
 
+        if (requestSequenceRef.current !== requestId) return;
+
         setLogs((currentLogs) =>
           append ? [...currentLogs, ...responseData.logs] : responseData.logs,
         );
         setNextCursor(responseData.nextCursor);
       } catch (fetchError) {
+        if (requestSequenceRef.current !== requestId) return;
+
         setError(
           fetchError instanceof Error
             ? fetchError.message
             : "Impossible de charger le journal d'activité",
         );
       } finally {
-        setIsLoading(false);
-        setIsLoadingMore(false);
+        if (requestSequenceRef.current === requestId) {
+          setIsLoading(false);
+          setIsLoadingMore(false);
+        }
       }
     },
     [queryParams],
@@ -1429,7 +1444,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
             </div>
           </section>
           <section className="border-sidebar-border/70 bg-surface rounded-lg border p-4 shadow-[var(--shadow-panel)]">
-            <div className={filterGridClassName}>
+            <div className="space-y-3">
               <div className="space-y-3">
                 <p className="text-foreground text-sm font-semibold">
                   Filtres du journal
@@ -1474,180 +1489,186 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                   })}
                 </div>
               </div>
-              {isConnectionJournal ? (
+              <div className={filterControlsGridClassName}>
+                {isConnectionJournal ? (
+                  <div className="space-y-2 xl:col-span-2">
+                    <label
+                      htmlFor="journal-connection-event"
+                      className="text-muted-foreground text-xs font-medium"
+                    >
+                      Événement
+                    </label>
+                    <Select
+                      value={connectionEventFilter}
+                      onValueChange={handleConnectionEventFilterChange}
+                    >
+                      <SelectTrigger
+                        id="journal-connection-event"
+                        className={activitySelectTriggerClassName}
+                      >
+                        <SelectValue>
+                          <ConnectionEventSelectOption
+                            color={selectedConnectionEventOption.color}
+                            icon={selectedConnectionEventOption.icon}
+                            label={selectedConnectionEventOption.label}
+                            value={selectedConnectionEventOption.value}
+                          />
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className={activitySelectContentClassName}>
+                        {CONNECTION_EVENT_OPTIONS.map((option) => (
+                          <SelectItem
+                            key={option.value}
+                            value={option.value}
+                            className={activitySelectItemClassName}
+                          >
+                            <ConnectionEventSelectOption
+                              color={option.color}
+                              icon={option.icon}
+                              label={option.label}
+                              value={option.value}
+                            />
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="journal-pole"
+                        className="text-muted-foreground text-xs font-medium"
+                      >
+                        Pôle
+                      </label>
+                      <Select
+                        value={poleFilter}
+                        onValueChange={handlePoleFilterChange}
+                      >
+                        <SelectTrigger
+                          id="journal-pole"
+                          className={activitySelectTriggerClassName}
+                        >
+                          <SelectValue>
+                            <ActivitySelectVisualOption
+                              icon={selectedPoleOption.icon}
+                              label={selectedPoleOption.label}
+                              tone={selectedPoleOption.tone}
+                              value={selectedPoleOption.value}
+                            />
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent
+                          className={activitySelectContentClassName}
+                        >
+                          {JOURNAL_POLE_OPTIONS.map((option) => (
+                            <SelectItem
+                              key={option.value}
+                              value={option.value}
+                              className={activitySelectItemClassName}
+                            >
+                              <ActivitySelectVisualOption
+                                icon={option.icon}
+                                label={option.label}
+                                tone={option.tone}
+                                value={option.value}
+                              />
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="journal-page"
+                        className="text-muted-foreground text-xs font-medium"
+                      >
+                        Page
+                      </label>
+                      <Select
+                        value={effectivePageFilter}
+                        onValueChange={handlePageFilterChange}
+                        disabled={isPageFilterLocked}
+                      >
+                        <SelectTrigger
+                          id="journal-page"
+                          className={cn(
+                            activitySelectTriggerClassName,
+                            isPageFilterLocked && 'opacity-70',
+                          )}
+                        >
+                          <SelectValue>
+                            <ActivitySelectVisualOption
+                              icon={selectedPageOption.icon}
+                              label={selectedPageOption.label}
+                              tone={selectedPageOption.tone}
+                              value={selectedPageOption.value}
+                            />
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent
+                          className={activitySelectContentClassName}
+                        >
+                          {pageOptions.map((option) => (
+                            <SelectItem
+                              key={option.value}
+                              value={option.value}
+                              className={activitySelectItemClassName}
+                            >
+                              <ActivitySelectVisualOption
+                                icon={option.icon}
+                                label={option.label}
+                                tone={option.tone}
+                                value={option.value}
+                              />
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
                 <div className="space-y-2">
                   <label
-                    htmlFor="journal-connection-event"
+                    htmlFor="journal-period"
                     className="text-muted-foreground text-xs font-medium"
                   >
-                    Événement
+                    Période
                   </label>
-                  <Select
-                    value={connectionEventFilter}
-                    onValueChange={handleConnectionEventFilterChange}
-                  >
+                  <Select value={period} onValueChange={setPeriod}>
                     <SelectTrigger
-                      id="journal-connection-event"
+                      id="journal-period"
                       className={activitySelectTriggerClassName}
                     >
-                      <SelectValue>
-                        <ConnectionEventSelectOption
-                          color={selectedConnectionEventOption.color}
-                          icon={selectedConnectionEventOption.icon}
-                          label={selectedConnectionEventOption.label}
-                          value={selectedConnectionEventOption.value}
-                        />
-                      </SelectValue>
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent className={activitySelectContentClassName}>
-                      {CONNECTION_EVENT_OPTIONS.map((option) => (
+                      {PERIOD_OPTIONS.map((option) => (
                         <SelectItem
                           key={option.value}
                           value={option.value}
                           className={activitySelectItemClassName}
                         >
-                          <ConnectionEventSelectOption
-                            color={option.color}
-                            icon={option.icon}
-                            label={option.label}
-                            value={option.value}
-                          />
+                          {option.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              ) : (
-                <>
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="journal-pole"
-                      className="text-muted-foreground text-xs font-medium"
-                    >
-                      Pôle
-                    </label>
-                    <Select
-                      value={poleFilter}
-                      onValueChange={handlePoleFilterChange}
-                    >
-                      <SelectTrigger
-                        id="journal-pole"
-                        className={activitySelectTriggerClassName}
-                      >
-                        <SelectValue>
-                          <ActivitySelectVisualOption
-                            icon={selectedPoleOption.icon}
-                            label={selectedPoleOption.label}
-                            tone={selectedPoleOption.tone}
-                            value={selectedPoleOption.value}
-                          />
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent className={activitySelectContentClassName}>
-                        {JOURNAL_POLE_OPTIONS.map((option) => (
-                          <SelectItem
-                            key={option.value}
-                            value={option.value}
-                            className={activitySelectItemClassName}
-                          >
-                            <ActivitySelectVisualOption
-                              icon={option.icon}
-                              label={option.label}
-                              tone={option.tone}
-                              value={option.value}
-                            />
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="journal-page"
-                      className="text-muted-foreground text-xs font-medium"
-                    >
-                      Page
-                    </label>
-                    <Select
-                      value={effectivePageFilter}
-                      onValueChange={handlePageFilterChange}
-                      disabled={isPageFilterLocked}
-                    >
-                      <SelectTrigger
-                        id="journal-page"
-                        className={cn(
-                          activitySelectTriggerClassName,
-                          isPageFilterLocked && 'opacity-70',
-                        )}
-                      >
-                        <SelectValue>
-                          <ActivitySelectVisualOption
-                            icon={selectedPageOption.icon}
-                            label={selectedPageOption.label}
-                            tone={selectedPageOption.tone}
-                            value={selectedPageOption.value}
-                          />
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent className={activitySelectContentClassName}>
-                        {pageOptions.map((option) => (
-                          <SelectItem
-                            key={option.value}
-                            value={option.value}
-                            className={activitySelectItemClassName}
-                          >
-                            <ActivitySelectVisualOption
-                              icon={option.icon}
-                              label={option.label}
-                              tone={option.tone}
-                              value={option.value}
-                            />
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </>
-              )}
-              <div className="space-y-2">
-                <label
-                  htmlFor="journal-period"
-                  className="text-muted-foreground text-xs font-medium"
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 rounded-md"
+                  onClick={() => void fetchLogs()}
+                  disabled={isLoading}
                 >
-                  Période
-                </label>
-                <Select value={period} onValueChange={setPeriod}>
-                  <SelectTrigger
-                    id="journal-period"
-                    className={activitySelectTriggerClassName}
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className={activitySelectContentClassName}>
-                    {PERIOD_OPTIONS.map((option) => (
-                      <SelectItem
-                        key={option.value}
-                        value={option.value}
-                        className={activitySelectItemClassName}
-                      >
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <RefreshCw
+                    className={cn('size-4', isLoading && 'animate-spin')}
+                  />
+                  Actualiser
+                </Button>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 rounded-md"
-                onClick={() => void fetchLogs()}
-                disabled={isLoading}
-              >
-                <RefreshCw
-                  className={cn('size-4', isLoading && 'animate-spin')}
-                />
-                Actualiser
-              </Button>
             </div>
           </section>
           <section className="space-y-2">
