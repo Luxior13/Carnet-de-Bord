@@ -33,7 +33,6 @@ import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailS
 import { UserHistoryTab } from '$components/users/user-detail/UserHistoryTab';
 import {
   type ProfileForm,
-  type StaffProfileForm,
   UserProfileTab,
 } from '$components/users/user-detail/UserProfileTab';
 import { UserResumeTab } from '$components/users/user-detail/UserResumeTab';
@@ -90,65 +89,9 @@ type PendingNavigation =
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
 
-const EMPTY_STAFF_PROFILE_FORM: StaffProfileForm = {
-  department: '',
-  discordId: '',
-  displayName: '',
-  internalNote: '',
-  jobTitle: '',
-  joinedAt: '',
-  phone: '',
-  timezone: '',
-};
-
 const USER_AUDIT_PAGE_SIZE = 200;
 const USER_AUDIT_SUMMARY_PAGE_SIZE = 1;
 const DEFAULT_PERMISSION_PAGE_KEY = PERMISSION_CATEGORIES[0]?.key ?? '';
-
-const STAFF_PROFILE_MAX_LENGTHS = {
-  department: 80,
-  discordId: 20,
-  displayName: 80,
-  internalNote: 1000,
-  jobTitle: 80,
-  phone: 32,
-  timezone: 64,
-} as const;
-
-const formatDateInputValue = (
-  date: Date | string | null | undefined,
-): string => {
-  if (!date) return '';
-
-  const parsedDate = new Date(date);
-
-  if (Number.isNaN(parsedDate.getTime())) return '';
-
-  return parsedDate.toISOString().slice(0, 10);
-};
-
-const normalizeProfileText = (value: string | null | undefined): string => {
-  return value?.trim() ?? '';
-};
-
-const nullableProfileText = (value: string): string | null => {
-  const trimmedValue = value.trim();
-
-  return trimmedValue ? trimmedValue : null;
-};
-
-const mapStaffProfileToForm = (
-  staffProfile: UserType['staffProfile'],
-): StaffProfileForm => ({
-  department: normalizeProfileText(staffProfile?.department),
-  discordId: normalizeProfileText(staffProfile?.discordId),
-  displayName: normalizeProfileText(staffProfile?.displayName),
-  internalNote: normalizeProfileText(staffProfile?.internalNote),
-  jobTitle: normalizeProfileText(staffProfile?.jobTitle),
-  joinedAt: formatDateInputValue(staffProfile?.joinedAt),
-  phone: normalizeProfileText(staffProfile?.phone),
-  timezone: normalizeProfileText(staffProfile?.timezone),
-});
 
 const formatCompactDate = (date: Date | string | null): string => {
   if (!date) return 'Jamais';
@@ -325,7 +268,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     isActive: true,
     lastName: '',
     role: 'USER' as UserRole,
-    staffProfile: EMPTY_STAFF_PROFILE_FORM,
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -422,18 +364,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const canEditTargetRole = !!user && isProtectedActor && !user.isProtected;
   const canEditTargetStatus =
     canEditTargetProfile && !isTargetAdminAccessRestricted;
-  /* eslint-disable security/detect-object-injection -- Profile keys are typed local StaffProfileForm fields, not user-controlled object paths. */
   const profileErrors = useMemo(() => {
-    const buildLengthError = (
-      field: keyof typeof STAFF_PROFILE_MAX_LENGTHS,
-      label: string,
-    ): string | null => {
-      return editForm.staffProfile[field].trim().length >
-        STAFF_PROFILE_MAX_LENGTHS[field]
-        ? `${label} trop long`
-        : null;
-    };
-
     return {
       email: !editForm.email.trim()
         ? 'Email obligatoire'
@@ -450,46 +381,18 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         : editForm.lastName.trim().length > 50
           ? 'Nom trop long'
           : null,
-      staffProfile: {
-        department: buildLengthError('department', 'Pôle'),
-        discordId:
-          editForm.staffProfile.discordId.trim() &&
-          !/^\d{17,20}$/.test(editForm.staffProfile.discordId.trim())
-            ? 'ID Discord invalide'
-            : buildLengthError('discordId', 'ID Discord'),
-        displayName: buildLengthError('displayName', 'Nom affiché'),
-        internalNote: buildLengthError('internalNote', 'Note interne'),
-        jobTitle: buildLengthError('jobTitle', 'Poste'),
-        joinedAt:
-          editForm.staffProfile.joinedAt &&
-          Number.isNaN(Date.parse(editForm.staffProfile.joinedAt))
-            ? 'Date invalide'
-            : null,
-        phone: buildLengthError('phone', 'Téléphone'),
-        timezone: buildLengthError('timezone', 'Fuseau horaire'),
-      },
     };
   }, [editForm]);
   const hasProfileErrors =
     !!profileErrors.email ||
     !!profileErrors.firstName ||
-    !!profileErrors.lastName ||
-    Object.values(profileErrors.staffProfile).some(Boolean);
+    !!profileErrors.lastName;
   const hasProfileChanges =
     !!user &&
     ((canEditTargetEmail &&
       editForm.email.trim().toLowerCase() !== user.email) ||
       editForm.firstName.trim() !== user.firstName ||
-      editForm.lastName.trim() !== user.lastName ||
-      (
-        Object.keys(EMPTY_STAFF_PROFILE_FORM) as Array<keyof StaffProfileForm>
-      ).some((field) => {
-        const currentValue = normalizeProfileText(editForm.staffProfile[field]);
-        const savedValue = mapStaffProfileToForm(user.staffProfile)[field];
-
-        return currentValue !== savedValue;
-      }));
-  /* eslint-enable security/detect-object-injection */
+      editForm.lastName.trim() !== user.lastName);
   const hasRoleChanges = !!user && editForm.role !== user.role;
   const hasPermissionChanges =
     !!user && !arePermissionOverridesEqual(permissions, user.permissions);
@@ -535,7 +438,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          staffProfile: mapStaffProfileToForm(user.staffProfile),
         }));
 
         return;
@@ -610,7 +512,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             isActive: loadedUser.isActive,
             lastName: loadedUser.lastName,
             role: loadedUser.role,
-            staffProfile: mapStaffProfileToForm(loadedUser.staffProfile),
           });
           setPermissions(loadedUser.permissions);
         } else if (!isBackgroundFetch) {
@@ -991,7 +892,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       isActive: updatedUser.isActive,
       lastName: updatedUser.lastName,
       role: updatedUser.role,
-      staffProfile: mapStaffProfileToForm(updatedUser.staffProfile),
     });
     setPermissions(updatedUser.permissions);
   };
@@ -1004,7 +904,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      staffProfile: mapStaffProfileToForm(user.staffProfile),
     }));
   };
 
@@ -1053,18 +952,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           ...(canEditTargetEmail ? { email: editForm.email.trim() } : {}),
           firstName: editForm.firstName.trim(),
           lastName: editForm.lastName.trim(),
-          staffProfile: {
-            department: nullableProfileText(editForm.staffProfile.department),
-            discordId: nullableProfileText(editForm.staffProfile.discordId),
-            displayName: nullableProfileText(editForm.staffProfile.displayName),
-            internalNote: nullableProfileText(
-              editForm.staffProfile.internalNote,
-            ),
-            jobTitle: nullableProfileText(editForm.staffProfile.jobTitle),
-            joinedAt: editForm.staffProfile.joinedAt || null,
-            phone: nullableProfileText(editForm.staffProfile.phone),
-            timezone: nullableProfileText(editForm.staffProfile.timezone),
-          },
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'PATCH',
@@ -1273,7 +1160,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               email: editForm.email,
               firstName: editForm.firstName,
               lastName: editForm.lastName,
-              staffProfile: editForm.staffProfile,
             }}
             setForm={(form: ProfileForm) =>
               setEditForm((currentForm) => ({ ...currentForm, ...form }))
