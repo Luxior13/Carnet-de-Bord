@@ -1,17 +1,112 @@
 'use client';
 
-import { CalendarDays, Clock3, ShieldCheck } from 'lucide-react';
-import React, { type FC } from 'react';
+import {
+  Activity,
+  CalendarDays,
+  Clock3,
+  ShieldCheck,
+  User,
+} from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import React, {
+  type FC,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
+import type { UserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
+import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailSectionRail';
+import { UserHistoryTab } from '$components/users/user-detail/UserHistoryTab';
+import { UserAvatar } from '$components/users/UserAvatar';
 import { useUser } from '$context/UserContext';
 import {
   formatAccountDate,
   formatRelativeAccountTime,
 } from '$features/account/account.utils';
-import { ActivitySection } from '$features/account/components/ActivitySection';
 import { ProfileSection } from '$features/account/components/ProfileSection';
 import { SecuritySection } from '$features/account/components/SecuritySection';
+import type { AuditLogEntry, UserType } from '$types/auth.types';
+import { Badge } from '$ui/badge';
+import { PageHeader } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
+
+type AccountSectionId = 'activity' | 'profile' | 'security';
+
+const ACCOUNT_AUDIT_PAGE_SIZE = 200;
+
+const ACCOUNT_SECTIONS: Array<UserDetailSection<AccountSectionId>> = [
+  {
+    icon: <User className="h-4 w-4" />,
+    id: 'profile',
+    label: 'Profil',
+  },
+  {
+    icon: <ShieldCheck className="h-4 w-4" />,
+    id: 'security',
+    label: 'Sécurité',
+  },
+  {
+    icon: <Activity className="h-4 w-4" />,
+    id: 'activity',
+    label: 'Activité',
+  },
+];
+
+const normalizeAccountSection = (value: string | null): AccountSectionId => {
+  if (value === 'security') return 'security';
+  if (value === 'activity' || value === 'history') return 'activity';
+
+  return 'profile';
+};
+
+const buildAccountSectionHref = (
+  pathname: string,
+  currentQueryString: string,
+  sectionId: AccountSectionId,
+): string => {
+  const nextParams = new URLSearchParams(currentQueryString);
+
+  if (sectionId === 'profile') {
+    nextParams.delete('section');
+  } else {
+    nextParams.set('section', sectionId);
+  }
+
+  const nextQueryString = nextParams.toString();
+
+  return nextQueryString ? `${pathname}?${nextQueryString}` : pathname;
+};
+
+const getAccountDisplayName = (userData: UserType): string => {
+  return `${userData.firstName} ${userData.lastName}`.trim() || userData.email;
+};
+
+type AccountHeaderProps = {
+  userData: UserType;
+};
+
+const AccountHeader: FC<AccountHeaderProps> = ({ userData }) => (
+  <PageHeader
+    title={getAccountDisplayName(userData)}
+    description={userData.email}
+    meta={
+      <>
+        <Badge variant="outline" className="rounded-full px-3 py-1">
+          Compte privé
+        </Badge>
+        <Badge variant="outline" className="rounded-full px-3 py-1">
+          Sécurité
+        </Badge>
+        <Badge variant="outline" className="rounded-full px-3 py-1">
+          Sessions
+        </Badge>
+      </>
+    }
+    icon={<UserAvatar user={userData} className="size-12 rounded-lg" />}
+  />
+);
 
 const AccountPageContentSkeleton: FC = () => (
   <div className="space-y-5">
@@ -27,10 +122,156 @@ const AccountPageContentSkeleton: FC = () => (
 );
 
 export const AccountPageContent: FC = () => {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentQueryString = searchParams.toString();
   const { refreshUser, userData } = useUser();
+  const [activeSection, setActiveSection] = useState<AccountSectionId>(() =>
+    normalizeAccountSection(searchParams.get('section')),
+  );
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [isLoadingAudit, setIsLoadingAudit] = useState(false);
+  const auditAbortControllerRef = useRef<AbortController | null>(null);
+  const hasLoadedAuditLogsRef = useRef(false);
+
+  const fetchAccountAuditLogs = useCallback(async (): Promise<void> => {
+    auditAbortControllerRef.current?.abort();
+    auditAbortControllerRef.current = null;
+
+    if (!userData?.id) {
+      setAuditLogs([]);
+      setIsLoadingAudit(false);
+      hasLoadedAuditLogsRef.current = false;
+
+      return;
+    }
+
+    const controller = new AbortController();
+    auditAbortControllerRef.current = controller;
+
+    try {
+      setIsLoadingAudit(true);
+
+      const buildAuditParams = (page: number): URLSearchParams => {
+        return new URLSearchParams({
+          page: String(page),
+          pageSize: String(ACCOUNT_AUDIT_PAGE_SIZE),
+        });
+      };
+
+      const response = await fetch(
+        `/api/users/${userData.id}/audit?${buildAuditParams(1).toString()}`,
+        { signal: controller.signal },
+      );
+      const data = await response.json();
+
+      if (controller.signal.aborted) return;
+
+      if (response.ok && data.success) {
+        const loadedLogs = [...(data.data.logs as AuditLogEntry[])];
+        const totalPages = Number(data.data.pagination?.totalPages ?? 1);
+
+        for (let page = 2; page <= totalPages; page += 1) {
+          const pageResponse = await fetch(
+            `/api/users/${userData.id}/audit?${buildAuditParams(page).toString()}`,
+            { signal: controller.signal },
+          );
+          const pageData = await pageResponse.json();
+
+          if (controller.signal.aborted) return;
+          if (!pageResponse.ok || !pageData.success) break;
+
+          loadedLogs.push(...(pageData.data.logs as AuditLogEntry[]));
+        }
+
+        setAuditLogs(loadedLogs);
+      } else {
+        setAuditLogs([]);
+      }
+
+      hasLoadedAuditLogsRef.current = true;
+    } catch {
+      if (controller.signal.aborted) return;
+
+      setAuditLogs([]);
+      hasLoadedAuditLogsRef.current = true;
+    } finally {
+      if (auditAbortControllerRef.current !== controller) return;
+
+      auditAbortControllerRef.current = null;
+      setIsLoadingAudit(false);
+    }
+  }, [userData?.id]);
+
+  useEffect(() => {
+    const requestedSection = normalizeAccountSection(
+      new URLSearchParams(currentQueryString).get('section'),
+    );
+
+    if (requestedSection !== activeSection) {
+      setActiveSection(requestedSection);
+    }
+  }, [activeSection, currentQueryString]);
+
+  useEffect(() => {
+    auditAbortControllerRef.current?.abort();
+    auditAbortControllerRef.current = null;
+    hasLoadedAuditLogsRef.current = false;
+    setAuditLogs([]);
+    setIsLoadingAudit(false);
+  }, [userData?.id]);
+
+  useEffect(() => {
+    return (): void => {
+      auditAbortControllerRef.current?.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeSection !== 'activity') return;
+    if (hasLoadedAuditLogsRef.current) return;
+
+    void fetchAccountAuditLogs();
+  }, [activeSection, fetchAccountAuditLogs]);
+
+  const handleSectionChange = (sectionId: AccountSectionId): void => {
+    if (sectionId === activeSection) return;
+
+    setActiveSection(sectionId);
+    router.replace(
+      buildAccountSectionHref(pathname, currentQueryString, sectionId),
+      { scroll: false },
+    );
+  };
+
+  const handleAccountUpdate = useCallback(async (): Promise<void> => {
+    await refreshUser();
+    hasLoadedAuditLogsRef.current = false;
+
+    if (activeSection === 'activity') {
+      void fetchAccountAuditLogs();
+    }
+  }, [activeSection, fetchAccountAuditLogs, refreshUser]);
 
   if (!userData) {
-    return <AccountPageContentSkeleton />;
+    return (
+      <div className="relative space-y-5">
+        <UserDetailSectionRail
+          activeSection={activeSection}
+          ariaLabel="Navigation du compte"
+          className="2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:w-44"
+          dirtySections={[]}
+          getSectionHref={(sectionId) =>
+            buildAccountSectionHref(pathname, currentQueryString, sectionId)
+          }
+          heading="Compte"
+          onSectionChange={handleSectionChange}
+          sections={ACCOUNT_SECTIONS}
+        />
+        <AccountPageContentSkeleton />
+      </div>
+    );
   }
 
   const summaryItems = [
@@ -57,9 +298,25 @@ export const AccountPageContent: FC = () => {
         : 'Jamais',
     },
   ];
+  const shouldShowAuditLoading =
+    isLoadingAudit ||
+    (activeSection === 'activity' && !hasLoadedAuditLogsRef.current);
 
   return (
-    <div className="space-y-5">
+    <div className="relative space-y-5">
+      <UserDetailSectionRail
+        activeSection={activeSection}
+        ariaLabel="Navigation du compte"
+        className="2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:w-44"
+        dirtySections={[]}
+        getSectionHref={(sectionId) =>
+          buildAccountSectionHref(pathname, currentQueryString, sectionId)
+        }
+        heading="Compte"
+        onSectionChange={handleSectionChange}
+        sections={ACCOUNT_SECTIONS}
+      />
+      <AccountHeader userData={userData} />
       <section className="border-sidebar-border/70 bg-surface overflow-hidden rounded-lg border shadow-[var(--shadow-panel)]">
         <div className="divide-sidebar-border/45 grid divide-y md:grid-cols-3 md:divide-x md:divide-y-0">
           {summaryItems.map((item) => {
@@ -89,12 +346,31 @@ export const AccountPageContent: FC = () => {
           })}
         </div>
       </section>
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.95fr)] lg:items-start">
-        <div className="space-y-4">
-          <ProfileSection userData={userData} onUpdate={refreshUser} />
-          <SecuritySection userData={userData} onUpdate={refreshUser} />
+      <UserDetailSectionRail
+        activeSection={activeSection}
+        ariaLabel="Navigation du compte"
+        dirtySections={[]}
+        getSectionHref={(sectionId) =>
+          buildAccountSectionHref(pathname, currentQueryString, sectionId)
+        }
+        layout="mobile"
+        onSectionChange={handleSectionChange}
+        sections={ACCOUNT_SECTIONS}
+      />
+      <div className="min-w-0">
+        <div hidden={activeSection !== 'profile'}>
+          <ProfileSection userData={userData} onUpdate={handleAccountUpdate} />
         </div>
-        <ActivitySection userData={userData} />
+        <div hidden={activeSection !== 'security'}>
+          <SecuritySection userData={userData} onUpdate={handleAccountUpdate} />
+        </div>
+        <div hidden={activeSection !== 'activity'}>
+          <UserHistoryTab
+            auditLogs={auditLogs}
+            isLoading={shouldShowAuditLoading}
+            userId={userData.id}
+          />
+        </div>
       </div>
     </div>
   );

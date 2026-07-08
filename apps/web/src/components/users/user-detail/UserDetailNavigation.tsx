@@ -8,11 +8,12 @@ export type UserDetailSectionId =
   | 'security'
   | 'history';
 
-export type UserDetailSection = {
-  icon: React.ReactNode;
-  id: UserDetailSectionId;
-  label: string;
-};
+export type UserDetailSection<SectionId extends string = UserDetailSectionId> =
+  {
+    icon: React.ReactNode;
+    id: SectionId;
+    label: string;
+  };
 
 export const USER_DETAIL_SECTIONS: UserDetailSection[] = [
   {

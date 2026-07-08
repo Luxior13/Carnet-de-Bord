@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import React, { type FC, type MouseEvent } from 'react';
+import React, { type MouseEvent } from 'react';
 
 import { cn } from '$utils/css.utils';
 
@@ -13,13 +13,18 @@ import {
 
 type UserDetailSectionRailLayout = 'desktop' | 'mobile';
 
-type UserDetailSectionRailProps = {
-  activeSection: UserDetailSectionId;
+type UserDetailSectionRailProps<
+  SectionId extends string = UserDetailSectionId,
+> = {
+  activeSection: SectionId;
+  ariaLabel?: string;
   className?: string;
-  dirtySections: readonly UserDetailSectionId[];
-  getSectionHref: (sectionId: UserDetailSectionId) => string;
+  dirtySections: readonly SectionId[];
+  getSectionHref: (sectionId: SectionId) => string;
+  heading?: string;
   layout?: UserDetailSectionRailLayout;
-  onSectionChange: (sectionId: UserDetailSectionId) => void;
+  onSectionChange: (sectionId: SectionId) => void;
+  sections?: readonly UserDetailSection<SectionId>[];
 };
 
 const shouldLetBrowserHandleClick = (
@@ -35,16 +40,24 @@ const shouldLetBrowserHandleClick = (
   );
 };
 
-export const UserDetailSectionRail: FC<UserDetailSectionRailProps> = ({
+export const UserDetailSectionRail = <
+  SectionId extends string = UserDetailSectionId,
+>({
   activeSection,
+  ariaLabel = 'Navigation de la fiche utilisateur',
   className,
   dirtySections,
   getSectionHref,
+  heading = 'Fiche',
   layout = 'desktop',
   onSectionChange,
-}) => {
+  sections,
+}: UserDetailSectionRailProps<SectionId>): React.JSX.Element => {
+  const visibleSections =
+    sections ??
+    (USER_DETAIL_SECTIONS as unknown as readonly UserDetailSection<SectionId>[]);
   const renderSectionLink = (
-    section: UserDetailSection,
+    section: UserDetailSection<SectionId>,
     display: UserDetailSectionRailLayout,
   ): React.JSX.Element => {
     const isActive = activeSection === section.id;
@@ -112,12 +125,12 @@ export const UserDetailSectionRail: FC<UserDetailSectionRailProps> = ({
   if (layout === 'mobile') {
     return (
       <nav
-        aria-label="Navigation de la fiche utilisateur"
+        aria-label={ariaLabel}
         className="sticky top-2 z-20 -mx-1 2xl:hidden"
       >
         <div className="scrollbar-gutter-stable overflow-x-auto px-1 pb-1">
           <div className="border-sidebar-border/70 bg-surface/95 inline-flex min-w-full gap-1 rounded-lg border p-1 shadow-[var(--shadow-panel)] backdrop-blur">
-            {USER_DETAIL_SECTIONS.map((section) =>
+            {visibleSections.map((section) =>
               renderSectionLink(section, 'mobile'),
             )}
           </div>
@@ -127,16 +140,13 @@ export const UserDetailSectionRail: FC<UserDetailSectionRailProps> = ({
   }
 
   return (
-    <nav
-      aria-label="Navigation de la fiche utilisateur"
-      className={cn('hidden 2xl:block', className)}
-    >
+    <nav aria-label={ariaLabel} className={cn('hidden 2xl:block', className)}>
       <div className="border-sidebar-border/70 bg-surface/90 sticky top-4 rounded-lg border p-1 shadow-[var(--shadow-panel)] backdrop-blur">
         <div className="text-muted-foreground px-2 py-2 text-xs font-medium">
-          Fiche
+          {heading}
         </div>
         <div className="space-y-1">
-          {USER_DETAIL_SECTIONS.map((section) =>
+          {visibleSections.map((section) =>
             renderSectionLink(section, 'desktop'),
           )}
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Edit, Loader2, Mail, User, X } from 'lucide-react';
+import { Edit, Loader2, Mail, Save, User, X } from 'lucide-react';
 import React, { type FC, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -14,6 +14,7 @@ import { Button } from '$ui/button';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { apiFetch } from '$utils/api.utils';
+import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 
 type ProfileSectionProps = {
   onUpdate: () => Promise<void>;
@@ -106,7 +107,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
       title="Profil"
       description="Identité et adresse de connexion"
       actions={
-        !isEditing ? (
+        !isEditing && (
           <Button
             type="button"
             variant="outline"
@@ -117,34 +118,6 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
             <Edit className="size-4" />
             Modifier
           </Button>
-        ) : (
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="rounded-lg"
-              onClick={handleCancel}
-              disabled={isSaving}
-            >
-              <X className="size-4" />
-              Annuler
-            </Button>
-            <Button
-              type="submit"
-              form={PROFILE_FORM_ID}
-              size="sm"
-              className="rounded-lg"
-              disabled={!canSaveProfile}
-            >
-              {isSaving ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Check className="size-4" />
-              )}
-              Enregistrer
-            </Button>
-          </div>
         )
       }
     >
@@ -212,82 +185,119 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
         ) : (
           <form
             id={PROFILE_FORM_ID}
-            className="border-sidebar-border/60 bg-background/45 rounded-lg border p-4"
+            className="border-sidebar-border/60 bg-background/45 rounded-lg border"
+            {...passwordManagerIgnoreAttributes}
             onSubmit={(event) => {
               event.preventDefault();
               void handleSaveProfile();
             }}
           >
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="edit-firstName" required>
-                  Prénom
-                </Label>
-                <Input
-                  id="edit-firstName"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  disabled={isSaving}
-                  placeholder="Votre prénom"
-                  name="firstName"
-                  autoComplete="given-name"
-                  maxLength={PROFILE_FIELD_MAX_LENGTH}
-                  aria-invalid={!!firstNameError}
-                  aria-describedby={
-                    firstNameError ? 'edit-firstName-error' : undefined
-                  }
-                  autoFocus
-                  className="rounded-lg"
-                />
-                {firstNameError && (
-                  <p
-                    id="edit-firstName-error"
-                    className="text-destructive text-xs"
-                  >
-                    {firstNameError}
-                  </p>
-                )}
+            <div className="space-y-4 p-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-firstName" required>
+                    Prénom
+                  </Label>
+                  <Input
+                    id="edit-firstName"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    disabled={isSaving}
+                    placeholder="Votre prénom"
+                    name="firstName"
+                    {...passwordManagerIgnoreAttributes}
+                    maxLength={PROFILE_FIELD_MAX_LENGTH}
+                    aria-invalid={!!firstNameError}
+                    aria-describedby={
+                      firstNameError ? 'edit-firstName-error' : undefined
+                    }
+                    autoFocus
+                    className="rounded-lg"
+                  />
+                  {firstNameError && (
+                    <p
+                      id="edit-firstName-error"
+                      className="text-destructive text-xs"
+                    >
+                      {firstNameError}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lastName" required>
+                    Nom
+                  </Label>
+                  <Input
+                    id="edit-lastName"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    disabled={isSaving}
+                    placeholder="Votre nom"
+                    name="lastName"
+                    {...passwordManagerIgnoreAttributes}
+                    maxLength={PROFILE_FIELD_MAX_LENGTH}
+                    aria-invalid={!!lastNameError}
+                    aria-describedby={
+                      lastNameError ? 'edit-lastName-error' : undefined
+                    }
+                    className="rounded-lg"
+                  />
+                  {lastNameError && (
+                    <p
+                      id="edit-lastName-error"
+                      className="text-destructive text-xs"
+                    >
+                      {lastNameError}
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-lastName" required>
-                  Nom
-                </Label>
+                <Label htmlFor="profile-email-readonly">Email</Label>
                 <Input
-                  id="edit-lastName"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  disabled={isSaving}
-                  placeholder="Votre nom"
-                  name="lastName"
-                  autoComplete="family-name"
-                  maxLength={PROFILE_FIELD_MAX_LENGTH}
-                  aria-invalid={!!lastNameError}
-                  aria-describedby={
-                    lastNameError ? 'edit-lastName-error' : undefined
-                  }
-                  className="rounded-lg"
+                  id="profile-email-readonly"
+                  value={userData.email}
+                  disabled
+                  {...passwordManagerIgnoreAttributes}
+                  className="bg-secondary/50 rounded-lg"
                 />
-                {lastNameError && (
-                  <p
-                    id="edit-lastName-error"
-                    className="text-destructive text-xs"
-                  >
-                    {lastNameError}
-                  </p>
-                )}
+                <p className="text-sidebar-foreground/50 text-xs">
+                  L&apos;adresse email ne peut pas être modifiée.
+                </p>
               </div>
             </div>
-            <div className="mt-4 space-y-2">
-              <Label htmlFor="profile-email-readonly">Email</Label>
-              <Input
-                id="profile-email-readonly"
-                value={userData.email}
-                disabled
-                className="bg-secondary/50 rounded-lg"
-              />
-              <p className="text-sidebar-foreground/50 text-xs">
-                L&apos;adresse email ne peut pas être modifiée.
+            <div className="border-sidebar-border/60 bg-surface-muted/95 sticky bottom-3 z-20 flex flex-col gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-muted-foreground text-xs">
+                {hasProfileChanges
+                  ? 'Modifications non enregistrées'
+                  : 'À jour'}
               </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-lg"
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                >
+                  <X className="size-4" />
+                  Annuler
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="rounded-lg"
+                  disabled={!canSaveProfile}
+                >
+                  {isSaving ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Save className="size-4" />
+                  )}
+                  Enregistrer
+                </Button>
+              </div>
             </div>
           </form>
         )}

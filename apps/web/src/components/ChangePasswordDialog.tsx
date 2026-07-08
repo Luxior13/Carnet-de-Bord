@@ -15,6 +15,7 @@ import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { ServiceIcon } from '$ui/service-icon';
 import { apiFetch } from '$utils/api.utils';
+import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 import { cn } from '$utils/css.utils';
 import {
   getPasswordStrengthColor,
@@ -142,7 +143,11 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 : 'Pour des raisons de sécurité, vous devez changer votre mot de passe temporaire avant de continuer.'}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <form
+            {...passwordManagerIgnoreAttributes}
+            onSubmit={handleSubmit}
+            className="mt-4 space-y-4"
+          >
             {error && (
               <div
                 className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
@@ -163,7 +168,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Votre mot de passe actuel"
                   disabled={isLoading}
-                  autoComplete="current-password"
+                  {...passwordManagerIgnoreAttributes}
                   autoFocus
                   aria-invalid={canCancel && !currentPassword && !!error}
                 />
@@ -180,7 +185,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Minimum 8 caractères"
                 disabled={isLoading}
-                autoComplete="new-password"
+                {...passwordManagerIgnoreAttributes}
                 autoFocus={!canCancel}
                 aria-describedby={
                   newPassword.length > 0 ? 'password-strength' : undefined
@@ -252,7 +257,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirmez votre mot de passe"
                 disabled={isLoading}
-                autoComplete="new-password"
+                {...passwordManagerIgnoreAttributes}
                 aria-invalid={isConfirmMismatch}
                 aria-describedby={
                   isConfirmMismatch ? 'confirmPassword-error' : undefined

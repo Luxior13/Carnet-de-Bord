@@ -45,6 +45,7 @@ import {
 } from '$ui/select';
 import { Separator } from '$ui/separator';
 import { apiFetch } from '$utils/api.utils';
+import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 
 type NewUserForm = {
   email: string;
@@ -269,6 +270,7 @@ const NewUserContent: FC = () => {
             </Card>
           ) : (
             <form
+              {...passwordManagerIgnoreAttributes}
               onSubmit={(event) => {
                 event.preventDefault();
                 void handleCreateUser();
@@ -300,7 +302,7 @@ const NewUserContent: FC = () => {
                           <Input
                             id="newFirstName"
                             value={form.firstName}
-                            autoComplete="given-name"
+                            {...passwordManagerIgnoreAttributes}
                             placeholder="Jean"
                             onChange={(event) =>
                               setForm({
@@ -322,7 +324,7 @@ const NewUserContent: FC = () => {
                           <Input
                             id="newLastName"
                             value={form.lastName}
-                            autoComplete="family-name"
+                            {...passwordManagerIgnoreAttributes}
                             placeholder="Dupont"
                             onChange={(event) =>
                               setForm({
@@ -348,7 +350,7 @@ const NewUserContent: FC = () => {
                             id="newEmail"
                             type="email"
                             value={form.email}
-                            autoComplete="email"
+                            {...passwordManagerIgnoreAttributes}
                             placeholder="jean.dupont@example.com"
                             onChange={(event) =>
                               setForm({ ...form, email: event.target.value })

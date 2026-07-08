@@ -22,6 +22,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { Textarea } from '$ui/textarea';
+import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 
 export type StaffProfileForm = {
   department: string;
@@ -110,7 +111,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form {...passwordManagerIgnoreAttributes} onSubmit={handleSubmit}>
       <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
         <CardHeader className="border-sidebar-border/65 bg-surface-muted flex-row items-center justify-between border-b p-3 sm:p-4">
           <div>
@@ -141,7 +142,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                     id="user-first-name"
                     value={form.firstName}
                     maxLength={50}
-                    autoComplete="given-name"
+                    {...passwordManagerIgnoreAttributes}
                     placeholder="Jean"
                     onChange={(event) =>
                       setForm({ ...form, firstName: event.target.value })
@@ -171,7 +172,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                     id="user-last-name"
                     value={form.lastName}
                     maxLength={50}
-                    autoComplete="family-name"
+                    {...passwordManagerIgnoreAttributes}
                     placeholder="Dupont"
                     onChange={(event) =>
                       setForm({ ...form, lastName: event.target.value })
@@ -201,6 +202,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                   id="user-display-name"
                   value={form.staffProfile.displayName}
                   maxLength={80}
+                  {...passwordManagerIgnoreAttributes}
                   placeholder="Coach Jean"
                   onChange={(event) =>
                     updateStaffProfile('displayName', event.target.value)
@@ -235,7 +237,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                   type="email"
                   value={form.email}
                   maxLength={254}
-                  autoComplete="email"
+                  {...passwordManagerIgnoreAttributes}
                   placeholder="jean.dupont@exemple.fr"
                   onChange={(event) =>
                     setForm({ ...form, email: event.target.value })
@@ -274,6 +276,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                       value={form.staffProfile.discordId}
                       maxLength={20}
                       inputMode="numeric"
+                      {...passwordManagerIgnoreAttributes}
                       placeholder="123456789012345678"
                       onChange={(event) =>
                         updateStaffProfile('discordId', event.target.value)
@@ -308,7 +311,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                       type="tel"
                       value={form.staffProfile.phone}
                       maxLength={32}
-                      autoComplete="tel"
+                      {...passwordManagerIgnoreAttributes}
                       placeholder="+33 6 12 34 56 78"
                       onChange={(event) =>
                         updateStaffProfile('phone', event.target.value)
@@ -350,6 +353,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                     id="user-job-title"
                     value={form.staffProfile.jobTitle}
                     maxLength={80}
+                    {...passwordManagerIgnoreAttributes}
                     placeholder="Responsable finances"
                     onChange={(event) =>
                       updateStaffProfile('jobTitle', event.target.value)
@@ -383,6 +387,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                     id="user-department"
                     value={form.staffProfile.department}
                     maxLength={80}
+                    {...passwordManagerIgnoreAttributes}
                     placeholder="Direction"
                     onChange={(event) =>
                       updateStaffProfile('department', event.target.value)
@@ -416,6 +421,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                     id="user-timezone"
                     value={form.staffProfile.timezone}
                     maxLength={64}
+                    {...passwordManagerIgnoreAttributes}
                     placeholder="Europe/Paris"
                     onChange={(event) =>
                       updateStaffProfile('timezone', event.target.value)
@@ -449,6 +455,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                     id="user-joined-at"
                     type="date"
                     value={form.staffProfile.joinedAt}
+                    {...passwordManagerIgnoreAttributes}
                     placeholder="2026-06-21"
                     onChange={(event) =>
                       updateStaffProfile('joinedAt', event.target.value)
@@ -515,7 +522,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
             </div>
           </SectionPanel>
         </CardContent>
-        <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-between gap-3 border-t p-3 sm:p-4">
+        <CardFooter className="border-sidebar-border/60 bg-surface-muted/95 sticky bottom-3 z-20 justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:p-4">
           <p className="text-muted-foreground text-xs">
             {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
           </p>
