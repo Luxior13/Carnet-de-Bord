@@ -22,7 +22,6 @@ export type {
   AuditLog,
   RateLimit,
   Session,
-  StaffProfile,
   User,
 } from '@prisma/client';
 

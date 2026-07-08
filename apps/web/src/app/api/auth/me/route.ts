@@ -117,7 +117,6 @@ export async function PATCH(
         firstName: nextFirstName,
         lastName: nextLastName,
       },
-      include: { staffProfile: true },
       where: { id: user.id },
     });
 

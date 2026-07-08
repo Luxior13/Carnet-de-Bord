@@ -30,7 +30,6 @@ const buildAuthUser = (
   passwordChangedAt: null,
   permissions: {},
   role: 'USER',
-  staffProfile: null,
   ...overrides,
 });
 

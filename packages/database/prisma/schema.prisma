@@ -31,9 +31,8 @@ model User {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  sessions     Session[]
-  auditLogs    AuditLog[]
-  staffProfile StaffProfile?
+  sessions  Session[]
+  auditLogs AuditLog[]
 
   @@index([email])
   @@index([role])
@@ -44,28 +43,6 @@ model User {
   @@index([deletedAt, lockedUntil])
   @@index([deletedAt, mustChangePassword])
   @@index([deletedAt, role])
-}
-
-model StaffProfile {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  displayName     String?
-  jobTitle        String?
-  department      String?
-  discordId       String?
-  phone           String?
-  timezone        String?
-  joinedAt        DateTime?
-  internalNote    String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([department])
-  @@index([discordId])
-  @@index([jobTitle])
-  @@index([joinedAt])
 }
 
 model Session {

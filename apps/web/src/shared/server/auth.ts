@@ -9,7 +9,6 @@ import type { Prisma } from '@prisma/client';
 import {
   type AuditAction,
   type AuditCategory,
-  type StaffProfile,
   type User,
   type UserRole,
 } from '@repo/database';
@@ -57,7 +56,6 @@ const SESSION_USER_SELECT = {
   passwordChangedAt: true,
   permissions: true,
   role: true,
-  staffProfile: true,
 } satisfies Prisma.UserSelect;
 
 const SESSION_WITH_USER_SELECT = {
@@ -652,7 +650,7 @@ export const getUserById = async (id: string): Promise<User | null> => {
 /**
  * Map User to UserType (client-safe)
  */
-type UserWithOptionalStaffProfile = Pick<
+type ClientSafeUser = Pick<
   User,
   | 'createdAt'
   | 'email'
@@ -668,42 +666,9 @@ type UserWithOptionalStaffProfile = Pick<
   | 'passwordChangedAt'
   | 'permissions'
   | 'role'
-> & {
-  staffProfile?: StaffProfile | null;
-};
+>;
 
-type MapUserOptions = {
-  includeStaffInternalNote?: boolean;
-};
-
-const mapStaffProfileToClient = (
-  staffProfile: StaffProfile | null | undefined,
-  options: MapUserOptions = {},
-): UserType['staffProfile'] => {
-  if (!staffProfile) return null;
-
-  return {
-    createdAt: staffProfile.createdAt,
-    department: staffProfile.department,
-    discordId: staffProfile.discordId,
-    displayName: staffProfile.displayName,
-    id: staffProfile.id,
-    internalNote: options.includeStaffInternalNote
-      ? staffProfile.internalNote
-      : null,
-    jobTitle: staffProfile.jobTitle,
-    joinedAt: staffProfile.joinedAt,
-    phone: staffProfile.phone,
-    timezone: staffProfile.timezone,
-    updatedAt: staffProfile.updatedAt,
-    userId: staffProfile.userId,
-  };
-};
-
-export const mapUserToUserType = (
-  user: UserWithOptionalStaffProfile,
-  options: MapUserOptions = {},
-): UserType => ({
+export const mapUserToUserType = (user: ClientSafeUser): UserType => ({
   createdAt: user.createdAt,
   email: user.email,
   failedLoginAttempts: user.failedLoginAttempts,
@@ -718,7 +683,6 @@ export const mapUserToUserType = (
   passwordChangedAt: user.passwordChangedAt,
   permissions: user.permissions as PermissionsData | null,
   role: user.role,
-  staffProfile: mapStaffProfileToClient(user.staffProfile, options),
 });
 
 // ============================================
