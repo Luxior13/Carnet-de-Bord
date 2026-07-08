@@ -2,12 +2,13 @@
 
 import {
   AlertTriangle,
-  ChevronRight,
-  Key,
+  KeyRound,
+  Laptop,
   Loader2,
   LogOut,
   Monitor,
   Shield,
+  ShieldCheck,
   Smartphone,
   X,
 } from 'lucide-react';
@@ -15,7 +16,6 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { ChangePasswordDialog } from '$components/ChangePasswordDialog';
-import { AccountPanel } from '$features/account/components/AccountPanel';
 import type { UserType } from '$types/auth.types';
 import {
   AlertDialog,
@@ -29,6 +29,8 @@ import {
 } from '$ui/alert-dialog';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$ui/card';
+import { Separator } from '$ui/separator';
 import { Skeleton } from '$ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { apiFetch } from '$utils/api.utils';
@@ -49,6 +51,164 @@ type SessionInfo = {
 type SecuritySectionProps = {
   onUpdate: () => Promise<void>;
   userData: UserType;
+};
+
+type SecurityMetricProps = {
+  description: string;
+  icon: React.ReactNode;
+  label: string;
+  tone?: 'danger' | 'neutral' | 'primary' | 'warning';
+  value: string;
+};
+
+const SectionTitle: FC<{
+  children: React.ReactNode;
+  icon: React.ReactNode;
+}> = ({ children, icon }) => (
+  <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
+    <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-7 items-center justify-center rounded-lg border">
+      {icon}
+    </span>
+    {children}
+  </CardTitle>
+);
+
+const SecurityMetric: FC<SecurityMetricProps> = ({
+  description,
+  icon,
+  label,
+  tone = 'neutral',
+  value,
+}) => {
+  const toneClassName =
+    tone === 'danger'
+      ? 'border-destructive/35 bg-destructive/10 text-destructive'
+      : tone === 'warning'
+        ? 'border-amber-500/35 bg-amber-500/10 text-amber-400'
+        : tone === 'primary'
+          ? 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring'
+          : 'border-sidebar-border/70 bg-background/45 text-muted-foreground';
+
+  return (
+    <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-start gap-3">
+          <span
+            className={`${toneClassName} flex size-9 shrink-0 items-center justify-center rounded-lg border`}
+          >
+            {icon}
+          </span>
+          <div className="min-w-0">
+            <p className="text-muted-foreground text-xs">{label}</p>
+            <p className="text-foreground mt-0.5 truncate text-sm font-semibold">
+              {value}
+            </p>
+            <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
+              {description}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const formatSessionDateTime = (date: string | null): string => {
+  if (!date) return 'Date inconnue';
+
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) return 'Date inconnue';
+
+  return parsedDate.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+
+const getSessionDeviceIcon = (device: string): typeof Monitor => {
+  return device === 'iPhone/iPad' || device === 'Android'
+    ? Smartphone
+    : Monitor;
+};
+
+const getSessionTitle = (session: SessionInfo): string => {
+  const { browser, device } = parseUserAgent(session.userAgent);
+
+  return `${device} - ${browser}`;
+};
+
+type SessionRowProps = {
+  isRevoking?: boolean;
+  onRevoke?: (sessionId: string) => void;
+  session: SessionInfo;
+};
+
+const SessionRow: FC<SessionRowProps> = ({ isRevoking, onRevoke, session }) => {
+  const { browser, device } = parseUserAgent(session.userAgent);
+  const DeviceIcon = getSessionDeviceIcon(device);
+  const canRevoke = !!onRevoke && !session.isCurrent;
+
+  return (
+    <div
+      className={cn(
+        'border-border/60 bg-popover flex items-center gap-3 rounded-md border p-3',
+        session.isCurrent &&
+          'border-sidebar-ring/35 bg-sidebar-accent/[0.1] shadow-[inset_3px_0_0_rgba(108,146,214,0.5)]',
+      )}
+    >
+      <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
+        <DeviceIcon className="size-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <p className="text-foreground truncate text-sm font-medium">
+            {device} - {browser}
+          </p>
+          {session.isCurrent && (
+            <Badge variant="secondary" className="rounded-full">
+              Actuelle
+            </Badge>
+          )}
+          {session.rememberMe && (
+            <Badge variant="outline" className="rounded-full">
+              Longue session
+            </Badge>
+          )}
+        </div>
+        <p className="text-muted-foreground mt-1 truncate text-xs">
+          Ouverte {formatRelativeAccountTime(session.createdAt)} - Expire le{' '}
+          {formatSessionDateTime(session.expiresAt)}
+          {session.ipAddress ? ` - IP ${session.ipAddress}` : ''}
+        </p>
+      </div>
+      {canRevoke && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="shrink-0 rounded-lg"
+              onClick={() => onRevoke(session.id)}
+              disabled={isRevoking}
+              aria-label="Déconnecter cette session"
+            >
+              {isRevoking ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <X className="size-4" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">Déconnecter cette session</TooltipContent>
+        </Tooltip>
+      )}
+    </div>
+  );
 };
 
 export const SecuritySection: FC<SecuritySectionProps> = ({
@@ -139,154 +299,188 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
     }
   };
 
-  const otherSessionsCount = sessions.filter(
-    (session) => !session.isCurrent,
-  ).length;
+  const currentSession = sessions.find((session) => session.isCurrent);
+  const otherSessions = sessions.filter((session) => !session.isCurrent);
+  const passwordStatusLabel = userData.mustChangePassword
+    ? 'À changer'
+    : userData.passwordChangedAt
+      ? 'À jour'
+      : 'Jamais modifié';
+  const passwordChangedLabel = userData.passwordChangedAt
+    ? formatRelativeAccountTime(userData.passwordChangedAt)
+    : 'Jamais';
+  const currentSessionLabel = loadingSessions
+    ? 'Chargement'
+    : currentSession
+      ? getSessionTitle(currentSession)
+      : 'Non détectée';
+  const otherSessionsLabel = loadingSessions
+    ? 'Chargement'
+    : String(otherSessions.length);
 
   return (
     <>
-      <AccountPanel
-        icon={<Shield className="size-4" />}
-        title="Sécurité"
-        description="Mot de passe, sessions actives et déconnexions"
-        contentClassName="p-0"
-      >
-        <div className="divide-sidebar-border/45 divide-y">
-          <button
-            type="button"
-            onClick={() => setShowPasswordDialog(true)}
-            className="bg-background/28 hover:bg-sidebar-accent/[0.08] group flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors sm:px-5"
-          >
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
-                <Key className="size-4" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-sidebar-foreground text-sm font-medium">
-                  Mot de passe
-                </p>
-                <p className="text-sidebar-foreground/58 text-sm">
-                  {userData.passwordChangedAt
-                    ? `Modifié ${formatRelativeAccountTime(userData.passwordChangedAt)}`
-                    : 'Jamais modifié'}
-                </p>
+      <div className="space-y-3">
+        <div className="grid gap-3 md:grid-cols-3">
+          <SecurityMetric
+            icon={<KeyRound className="size-4" />}
+            label="Mot de passe"
+            value={passwordStatusLabel}
+            description={`Dernier changement : ${passwordChangedLabel}`}
+            tone={userData.mustChangePassword ? 'warning' : 'primary'}
+          />
+          <SecurityMetric
+            icon={<Laptop className="size-4" />}
+            label="Session actuelle"
+            value={currentSessionLabel}
+            description={
+              currentSession
+                ? `Ouverte ${formatRelativeAccountTime(currentSession.createdAt)}`
+                : 'Appareil utilisé maintenant'
+            }
+            tone={currentSession ? 'primary' : 'neutral'}
+          />
+          <SecurityMetric
+            icon={<ShieldCheck className="size-4" />}
+            label="Autres sessions"
+            value={otherSessionsLabel}
+            description={
+              otherSessions.length > 0
+                ? 'Appareils connectés à surveiller'
+                : 'Aucun autre appareil connecté'
+            }
+            tone={otherSessions.length > 0 ? 'warning' : 'primary'}
+          />
+        </div>
+        <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+          <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
+            <SectionTitle icon={<KeyRound className="size-3.5" />}>
+              Mot de passe
+            </SectionTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 p-3 sm:p-4">
+            <div className="border-border/60 bg-popover space-y-3 rounded-md border p-3">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground text-sm">État</span>
+                {userData.mustChangePassword ? (
+                  <Badge
+                    variant="outline"
+                    className="border-amber-500/40 text-amber-400"
+                  >
+                    À changer
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">À jour</Badge>
+                )}
+              </div>
+              <Separator className="bg-border/60" />
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground text-sm">
+                  Dernier changement
+                </span>
+                <span className="text-foreground text-sm">
+                  {passwordChangedLabel}
+                </span>
+              </div>
+              <Separator className="bg-border/60" />
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground text-sm">
+                  Tentatives échouées
+                </span>
+                <span className="text-foreground text-sm">
+                  {userData.failedLoginAttempts}
+                </span>
               </div>
             </div>
-            <ChevronRight className="text-sidebar-foreground/45 group-hover:text-sidebar-ring size-5 shrink-0 transition-colors" />
-          </button>
-          <div className="bg-background/25 flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-            <div className="flex items-center gap-3">
-              <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
-                <Monitor className="size-4" />
-              </span>
-              <div>
-                <p className="text-sidebar-foreground text-sm font-medium">
-                  Sessions actives
-                </p>
-                <p className="text-sidebar-foreground/58 text-sm">
-                  {loadingSessions
-                    ? 'Chargement des sessions...'
-                    : `${sessions.length} appareil${sessions.length > 1 ? 's' : ''} connecté${sessions.length > 1 ? 's' : ''}`}
+          </CardContent>
+          <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPasswordDialog(true)}
+              className="gap-2"
+            >
+              <Shield className="size-4" />
+              Changer le mot de passe
+            </Button>
+          </CardFooter>
+        </Card>
+        <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+          <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
+            <SectionTitle icon={<Monitor className="size-3.5" />}>
+              Sessions actives
+            </SectionTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 p-3 sm:p-4">
+            {loadingSessions ? (
+              <div className="space-y-2">
+                <Skeleton className="h-16 rounded-md" />
+                <Skeleton className="h-16 rounded-md" />
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="border-border/60 bg-popover rounded-md border p-3">
+                <p className="text-muted-foreground text-sm">
+                  Aucune session active n&apos;a été trouvée.
                 </p>
               </div>
-            </div>
-            {otherSessionsCount > 0 && (
+            ) : (
+              <>
+                {currentSession && (
+                  <div className="space-y-2">
+                    <p className="text-muted-foreground text-xs font-medium tracking-[0.08em] uppercase">
+                      Session actuelle
+                    </p>
+                    <SessionRow session={currentSession} />
+                  </div>
+                )}
+                {otherSessions.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-muted-foreground text-xs font-medium tracking-[0.08em] uppercase">
+                      Autres sessions
+                    </p>
+                    <div className="space-y-2">
+                      {otherSessions.map((session) => (
+                        <SessionRow
+                          key={session.id}
+                          session={session}
+                          isRevoking={revokingId === session.id}
+                          onRevoke={handleRevokeSession}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border-border/60 bg-popover rounded-md border p-3">
+                    <p className="text-muted-foreground text-sm">
+                      Aucune autre session active.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+          {otherSessions.length > 0 && (
+            <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="border-sidebar-border/70 bg-background/35 hover:bg-sidebar-accent/20 rounded-lg"
+                className="gap-2"
                 onClick={() => setShowRevokeDialog(true)}
                 disabled={revokingAll}
               >
-                <LogOut className="size-4" />
-                Déconnecter ({otherSessionsCount})
+                {revokingAll ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <LogOut className="size-4" />
+                )}
+                Déconnecter les autres sessions
               </Button>
-            )}
-          </div>
-          <div className="px-4 py-4 sm:px-5">
-            {loadingSessions ? (
-              <div className="space-y-2">
-                <Skeleton className="h-14 rounded-lg" />
-                <Skeleton className="h-14 rounded-lg" />
-              </div>
-            ) : sessions.length === 0 ? (
-              <div className="border-sidebar-border/60 bg-background/45 text-sidebar-foreground/62 rounded-lg border border-dashed px-4 py-5 text-sm">
-                Aucune session active n&apos;a été trouvée.
-              </div>
-            ) : (
-              <div className="border-sidebar-border/60 bg-background/45 overflow-hidden rounded-lg border">
-                {sessions.map((session) => {
-                  const { browser, device } = parseUserAgent(session.userAgent);
-                  const isPhone =
-                    device === 'iPhone/iPad' || device === 'Android';
-                  const DeviceIcon = isPhone ? Smartphone : Monitor;
-
-                  return (
-                    <div
-                      key={session.id}
-                      className={cn(
-                        'border-sidebar-border/45 hover:bg-sidebar-accent/[0.06] flex items-center gap-3 border-b px-3 py-3 transition-colors last:border-b-0',
-                        session.isCurrent &&
-                          'bg-sidebar-accent/[0.1] shadow-[inset_3px_0_0_rgba(108,146,214,0.48)]',
-                      )}
-                    >
-                      <span className="border-sidebar-border/60 bg-background/55 flex size-9 shrink-0 items-center justify-center rounded-lg border">
-                        <DeviceIcon className="text-sidebar-ring size-4" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="truncate text-sm font-medium">
-                            {device} - {browser}
-                          </span>
-                          {session.isCurrent && (
-                            <Badge variant="secondary" className="rounded-full">
-                              Actuelle
-                            </Badge>
-                          )}
-                          {session.rememberMe && (
-                            <Badge variant="outline" className="rounded-full">
-                              Longue
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sidebar-foreground/52 truncate text-xs">
-                          {session.ipAddress || 'IP inconnue'} - Ouverte{' '}
-                          {formatRelativeAccountTime(session.createdAt)}
-                        </p>
-                      </div>
-                      {!session.isCurrent && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="rounded-lg"
-                              onClick={() => handleRevokeSession(session.id)}
-                              disabled={revokingId === session.id}
-                              aria-label="Déconnecter cette session"
-                            >
-                              {revokingId === session.id ? (
-                                <Loader2 className="size-4 animate-spin" />
-                              ) : (
-                                <X className="size-4" />
-                              )}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="left">
-                            Déconnecter cette session
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      </AccountPanel>
+            </CardFooter>
+          )}
+        </Card>
+      </div>
       <ChangePasswordDialog
         open={showPasswordDialog}
         onCancel={() => setShowPasswordDialog(false)}
@@ -307,10 +501,10 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 Déconnecter les autres sessions ?
               </AlertDialogTitle>
               <AlertDialogDescription>
-                Vous serez déconnecté de {otherSessionsCount} autre
-                {otherSessionsCount > 1 ? 's' : ''} appareil
-                {otherSessionsCount > 1 ? 's' : ''}. Seule cette session restera
-                active.
+                Vous serez déconnecté de {otherSessions.length} autre
+                {otherSessions.length > 1 ? 's' : ''} appareil
+                {otherSessions.length > 1 ? 's' : ''}. Seule cette session
+                restera active.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="mt-4">
