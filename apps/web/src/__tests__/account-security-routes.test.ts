@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PERMISSIONS } from '$constants/permissions.constants';
 import { ErrorCode } from '$types/api.types';
 
 const mockGetAuthSession = vi.fn();
@@ -67,7 +68,10 @@ describe('account security routes', () => {
       },
       user: {
         id: 'user-1',
+        isProtected: false,
         mustChangePassword: false,
+        permissions: null,
+        role: 'USER',
       },
     });
 
@@ -81,6 +85,9 @@ describe('account security routes', () => {
       success: true,
       user: {
         id: 'user-1',
+        isProtected: false,
+        permissions: null,
+        role: 'USER',
       },
     });
 
@@ -101,6 +108,22 @@ describe('account security routes', () => {
     mockMapUserToUserType.mockImplementation((user: unknown) => user);
     mockRequirePermission.mockReturnValue({ success: true });
     mockCreateAuditLogWithHeaders.mockResolvedValue(undefined);
+  });
+
+  describe('GET /api/auth/me', () => {
+    it('returns the personal account without requiring user-management permissions', async () => {
+      const route = await import('$app/api/auth/me/route');
+      const response = await route.GET();
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.success).toBe(true);
+      expect(body.data.user.id).toBe('user-1');
+      expect(mockRequireAuth).toHaveBeenCalledWith(undefined, {
+        allowPasswordChangeRequired: true,
+      });
+      expect(mockRequirePermission).not.toHaveBeenCalled();
+    });
   });
 
   describe('PATCH /api/auth/me', () => {
@@ -171,10 +194,92 @@ describe('account security routes', () => {
           userId: 'user-1',
         }),
       );
+      expect(mockRequirePermission).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'user-1' }),
+        PERMISSIONS.ACCOUNT.UPDATE_PROFILE,
+      );
+    });
+
+    it('rejects profile changes when personal profile updates are disabled', async () => {
+      mockRequireAuth.mockResolvedValueOnce({
+        session: null,
+        success: true,
+        user: {
+          firstName: 'Jean',
+          id: 'user-1',
+          lastName: 'Dupont',
+        },
+      });
+      mockRequirePermission.mockReturnValueOnce({
+        response: Response.json(
+          {
+            error: {
+              code: ErrorCode.FORBIDDEN,
+              message: 'Action non autorisee',
+            },
+            success: false,
+          },
+          { status: 403 },
+        ),
+        success: false,
+      });
+
+      const route = await import('$app/api/auth/me/route');
+      const response = await route.PATCH(
+        new Request('http://localhost/api/auth/me', {
+          body: JSON.stringify({
+            firstName: 'Jeanne',
+            lastName: 'Dupont',
+          }),
+          method: 'PATCH',
+        }),
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body.success).toBe(false);
+      expect(mockPrisma.user.update).not.toHaveBeenCalled();
+      expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
     });
   });
 
   describe('POST /api/auth/change-password', () => {
+    it('rejects standard password changes when personal password changes are disabled', async () => {
+      mockGetAuthSession.mockResolvedValueOnce({
+        session: {
+          expiresAt: new Date('2026-03-20T00:00:00.000Z'),
+          rememberMe: false,
+          token: 'session-hash',
+          userId: 'user-1',
+        },
+        user: {
+          id: 'user-1',
+          isProtected: false,
+          mustChangePassword: false,
+          permissions: { [PERMISSIONS.ACCOUNT.CHANGE_PASSWORD]: false },
+          role: 'USER',
+        },
+      });
+
+      const route = await import('$app/api/auth/change-password/route');
+      const response = await route.POST(
+        new Request('http://localhost/api/auth/change-password', {
+          body: JSON.stringify({
+            confirmPassword: 'NewPassword1!',
+            currentPassword: 'CurrentPassword1!',
+            newPassword: 'NewPassword1!',
+          }),
+          method: 'POST',
+        }),
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+      expect(mockUpdateUserPassword).not.toHaveBeenCalled();
+    });
+
     it('requires the current password for standard password changes', async () => {
       const route = await import('$app/api/auth/change-password/route');
       const response = await route.POST(
@@ -377,6 +482,7 @@ describe('account security routes', () => {
       expect(body.data.sessions).toHaveLength(2);
       expect(body.data.sessions[0].isCurrent).toBe(true);
       expect(body.data.sessions[1].isCurrent).toBe(false);
+      expect(mockRequirePermission).not.toHaveBeenCalled();
     });
   });
 
@@ -428,7 +534,7 @@ describe('account security routes', () => {
   });
 
   describe('GET /api/users/[id]/sessions', () => {
-    it('lists target user active sessions for password reset managers', async () => {
+    it('lists target user active sessions for session viewers', async () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({
         email: 'target@example.com',
         id: 'target-1',
@@ -455,7 +561,10 @@ describe('account security routes', () => {
       expect(response.status).toBe(200);
       expect(body.success).toBe(true);
       expect(body.data.sessions).toHaveLength(1);
-      expect(mockRequirePermission).toHaveBeenCalled();
+      expect(mockRequirePermission).toHaveBeenCalledWith(
+        expect.any(Object),
+        'users:view_sessions',
+      );
       expect(mockPrisma.session.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ userId: 'target-1' }),
@@ -526,6 +635,10 @@ describe('account security routes', () => {
       expect(response.status).toBe(200);
       expect(body.success).toBe(true);
       expect(body.data.revokedSessions).toBe(2);
+      expect(mockRequirePermission).toHaveBeenCalledWith(
+        expect.any(Object),
+        'users:revoke_sessions',
+      );
       expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
         where: { userId: 'target-1' },
       });
@@ -534,6 +647,62 @@ describe('account security routes', () => {
           action: 'SESSION_INVALIDATE',
           category: 'AUTH',
           metadata: expect.objectContaining({ revokedSessions: 2 }),
+          targetUserId: 'target-1',
+          userId: 'user-1',
+        }),
+      );
+    });
+
+    it('revokes one target user session when a session id is provided', async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        email: 'target@example.com',
+        firstName: 'Target',
+        id: 'target-1',
+        isProtected: false,
+        lastName: 'User',
+      });
+      mockPrisma.session.findFirst.mockResolvedValueOnce({
+        id: 'session-1',
+      });
+      mockPrisma.session.delete.mockResolvedValueOnce({
+        id: 'session-1',
+      });
+
+      const route = await import('$app/api/users/[id]/sessions/route');
+      const response = await route.DELETE(
+        new NextRequest(
+          'http://localhost/api/users/target-1/sessions?id=session-1',
+          {
+            method: 'DELETE',
+          },
+        ),
+        { params: Promise.resolve({ id: 'target-1' }) },
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.success).toBe(true);
+      expect(body.data.revokedSessions).toBe(1);
+      expect(mockPrisma.session.findFirst).toHaveBeenCalledWith({
+        select: { id: true },
+        where: {
+          id: 'session-1',
+          userId: 'target-1',
+        },
+      });
+      expect(mockPrisma.session.delete).toHaveBeenCalledWith({
+        where: { id: 'session-1' },
+      });
+      expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+      expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'SESSION_INVALIDATE',
+          category: 'AUTH',
+          metadata: expect.objectContaining({
+            revocationScope: 'single',
+            revokedSessions: 1,
+            sessionId: 'session-1',
+          }),
           targetUserId: 'target-1',
           userId: 'user-1',
         }),
@@ -583,6 +752,7 @@ describe('account security routes', () => {
       expect(response.status).toBe(403);
       expect(body.success).toBe(false);
       expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+      expect(mockRequirePermission).not.toHaveBeenCalled();
       expect(mockPrisma.session.delete).not.toHaveBeenCalled();
     });
 
@@ -616,6 +786,7 @@ describe('account security routes', () => {
           userId: 'user-1',
         }),
       );
+      expect(mockRequirePermission).not.toHaveBeenCalled();
     });
   });
 });

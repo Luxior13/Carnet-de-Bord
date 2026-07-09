@@ -12,6 +12,7 @@ import React, {
   type FC,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -20,6 +21,7 @@ import type { UserDetailSection } from '$components/users/user-detail/UserDetail
 import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailSectionRail';
 import { UserHistoryTab } from '$components/users/user-detail/UserHistoryTab';
 import { UserAvatar } from '$components/users/UserAvatar';
+import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import {
   formatAccountDate,
@@ -135,11 +137,47 @@ export const AccountPageContent: FC = () => {
   const auditAbortControllerRef = useRef<AbortController | null>(null);
   const hasLoadedAuditLogsRef = useRef(false);
 
+  const canUseAccountPermission = useCallback(
+    (permissionKey: string): boolean => {
+      if (!userData) return false;
+      if (userData.isProtected) return true;
+
+      return hasPermission(userData.role, permissionKey, userData.permissions);
+    },
+    [userData],
+  );
+  const canViewProfile = canUseAccountPermission(
+    PERMISSIONS.ACCOUNT.VIEW_PROFILE,
+  );
+  const canViewSecurity = canUseAccountPermission(
+    PERMISSIONS.ACCOUNT.VIEW_SECURITY,
+  );
+  const canChangePassword =
+    !!userData?.mustChangePassword ||
+    canUseAccountPermission(PERMISSIONS.ACCOUNT.CHANGE_PASSWORD);
+  const canViewActivity = canUseAccountPermission(
+    PERMISSIONS.ACCOUNT.VIEW_ACTIVITY,
+  );
+  const visibleAccountSections = useMemo(
+    () =>
+      userData
+        ? ACCOUNT_SECTIONS.filter((section) => {
+            if (section.id === 'profile') return canViewProfile;
+            if (section.id === 'security') return true;
+            if (section.id === 'activity') return canViewActivity;
+
+            return false;
+          })
+        : ACCOUNT_SECTIONS,
+    [canViewActivity, canViewProfile, userData],
+  );
+  const firstVisibleSection = visibleAccountSections[0]?.id ?? null;
+
   const fetchAccountAuditLogs = useCallback(async (): Promise<void> => {
     auditAbortControllerRef.current?.abort();
     auditAbortControllerRef.current = null;
 
-    if (!userData?.id) {
+    if (!userData?.id || !canViewActivity) {
       setAuditLogs([]);
       setIsLoadingAudit(false);
       hasLoadedAuditLogsRef.current = false;
@@ -202,7 +240,7 @@ export const AccountPageContent: FC = () => {
       auditAbortControllerRef.current = null;
       setIsLoadingAudit(false);
     }
-  }, [userData?.id]);
+  }, [canViewActivity, userData?.id]);
 
   useEffect(() => {
     const requestedSection = normalizeAccountSection(
@@ -213,6 +251,34 @@ export const AccountPageContent: FC = () => {
       setActiveSection(requestedSection);
     }
   }, [activeSection, currentQueryString]);
+
+  useEffect(() => {
+    if (!userData) return;
+    if (!firstVisibleSection) return;
+    if (
+      visibleAccountSections.some((section) => section.id === activeSection)
+    ) {
+      return;
+    }
+
+    setActiveSection(firstVisibleSection);
+    router.replace(
+      buildAccountSectionHref(
+        pathname,
+        currentQueryString,
+        firstVisibleSection,
+      ),
+      { scroll: false },
+    );
+  }, [
+    activeSection,
+    currentQueryString,
+    firstVisibleSection,
+    pathname,
+    router,
+    userData,
+    visibleAccountSections,
+  ]);
 
   useEffect(() => {
     auditAbortControllerRef.current?.abort();
@@ -230,10 +296,11 @@ export const AccountPageContent: FC = () => {
 
   useEffect(() => {
     if (activeSection !== 'activity') return;
+    if (!canViewActivity) return;
     if (hasLoadedAuditLogsRef.current) return;
 
     void fetchAccountAuditLogs();
-  }, [activeSection, fetchAccountAuditLogs]);
+  }, [activeSection, canViewActivity, fetchAccountAuditLogs]);
 
   const handleSectionChange = (sectionId: AccountSectionId): void => {
     if (sectionId === activeSection) return;
@@ -249,10 +316,10 @@ export const AccountPageContent: FC = () => {
     await refreshUser();
     hasLoadedAuditLogsRef.current = false;
 
-    if (activeSection === 'activity') {
+    if (activeSection === 'activity' && canViewActivity) {
       void fetchAccountAuditLogs();
     }
-  }, [activeSection, fetchAccountAuditLogs, refreshUser]);
+  }, [activeSection, canViewActivity, fetchAccountAuditLogs, refreshUser]);
 
   if (!userData) {
     return (
@@ -314,7 +381,7 @@ export const AccountPageContent: FC = () => {
         }
         heading="Compte"
         onSectionChange={handleSectionChange}
-        sections={ACCOUNT_SECTIONS}
+        sections={visibleAccountSections}
       />
       <AccountHeader userData={userData} />
       <section className="border-sidebar-border/70 bg-surface overflow-hidden rounded-lg border shadow-[var(--shadow-panel)]">
@@ -355,22 +422,44 @@ export const AccountPageContent: FC = () => {
         }
         layout="mobile"
         onSectionChange={handleSectionChange}
-        sections={ACCOUNT_SECTIONS}
+        sections={visibleAccountSections}
       />
       <div className="min-w-0">
-        <div hidden={activeSection !== 'profile'}>
-          <ProfileSection userData={userData} onUpdate={handleAccountUpdate} />
-        </div>
+        {visibleAccountSections.length === 0 && (
+          <div className="border-sidebar-border/70 bg-surface rounded-lg border p-5 shadow-[var(--shadow-panel)]">
+            <p className="text-sidebar-foreground text-sm font-semibold">
+              Aucun onglet personnel disponible
+            </p>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Les droits de compte personnel sont desactives pour ce compte.
+            </p>
+          </div>
+        )}
+        {canViewProfile && (
+          <div hidden={activeSection !== 'profile'}>
+            <ProfileSection
+              userData={userData}
+              onUpdate={handleAccountUpdate}
+            />
+          </div>
+        )}
         <div hidden={activeSection !== 'security'}>
-          <SecuritySection userData={userData} onUpdate={handleAccountUpdate} />
-        </div>
-        <div hidden={activeSection !== 'activity'}>
-          <UserHistoryTab
-            auditLogs={auditLogs}
-            isLoading={shouldShowAuditLoading}
-            userId={userData.id}
+          <SecuritySection
+            userData={userData}
+            onUpdate={handleAccountUpdate}
+            canChangePassword={canChangePassword}
+            canViewSecurity={canViewSecurity}
           />
         </div>
+        {canViewActivity && (
+          <div hidden={activeSection !== 'activity'}>
+            <UserHistoryTab
+              auditLogs={auditLogs}
+              isLoading={shouldShowAuditLoading}
+              userId={userData.id}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

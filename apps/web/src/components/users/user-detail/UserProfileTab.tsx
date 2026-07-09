@@ -59,12 +59,9 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   onSave,
   setForm,
 }) => {
-  const canEditEmailField = canEdit && canEditEmail;
-  const emailHint = !canEdit
-    ? 'Email en lecture seule pour votre niveau d’accès.'
-    : canEditEmail
-      ? "Modifier cet email change l'identifiant utilisé à la connexion."
-      : "Modifier l'email d'un administrateur est réservé au superadmin.";
+  const emailHint = canEditEmail
+    ? "Modifier cet email change l'identifiant utilise a la connexion."
+    : "Email en lecture seule pour votre niveau d'acces.";
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -76,7 +73,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
       <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
         <CardHeader className="border-sidebar-border/65 bg-surface-muted flex-row items-center justify-between border-b p-3 sm:p-4">
           <CardTitle className="text-sm">Compte utilisateur</CardTitle>
-          {!canEdit && (
+          {!canEdit && !canEditEmail && (
             <Badge
               variant="outline"
               className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
@@ -87,7 +84,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">
           <div className="grid gap-3 xl:grid-cols-2">
-            <SectionPanel icon={<User className="size-3.5" />} title="Identité">
+            <SectionPanel icon={<User className="size-3.5" />} title="Identite">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label
@@ -95,7 +92,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                     className="text-muted-foreground text-xs"
                     required
                   >
-                    Prénom
+                    Prenom
                   </Label>
                   <Input
                     id="user-first-name"
@@ -173,7 +170,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                   onChange={(event) =>
                     setForm({ ...form, email: event.target.value })
                   }
-                  disabled={!canEditEmailField}
+                  disabled={!canEditEmail}
                   aria-invalid={!!errors.email}
                   aria-describedby={
                     errors.email ? 'user-email-error' : 'user-email-hint'
@@ -197,7 +194,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
         </CardContent>
         <CardFooter className="border-sidebar-border/60 bg-surface-muted/95 sticky bottom-3 z-20 justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:p-4">
           <p className="text-muted-foreground text-xs">
-            {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
+            {hasChanges ? 'Modifications non enregistrees' : 'A jour'}
           </p>
           <div className="flex gap-2">
             <Button

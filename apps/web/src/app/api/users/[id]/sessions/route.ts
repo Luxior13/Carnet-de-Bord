@@ -63,7 +63,7 @@ export async function GET(
 
     const permCheck = requirePermission(
       auth.user,
-      PERMISSIONS.USERS.RESET_PASSWORD,
+      PERMISSIONS.USERS.VIEW_SESSIONS,
     );
     if (!permCheck.success) return permCheck.response;
 
@@ -146,7 +146,7 @@ export async function GET(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: RouteParams,
 ): Promise<
   NextResponse<
@@ -160,7 +160,7 @@ export async function DELETE(
 
     const permCheck = requirePermission(
       auth.user,
-      PERMISSIONS.USERS.RESET_PASSWORD,
+      PERMISSIONS.USERS.REVOKE_SESSIONS,
     );
     if (!permCheck.success) return permCheck.response;
 
@@ -208,19 +208,69 @@ export async function DELETE(
       );
     }
 
-    const result = await prisma.session.deleteMany({
-      where: { userId: targetUser.id },
-    });
+    const sessionId = request.nextUrl.searchParams.get('id')?.trim() || null;
     const targetName =
       targetUser.firstName && targetUser.lastName
         ? `${targetUser.firstName} ${targetUser.lastName}`
         : targetUser.email;
+
+    if (sessionId) {
+      const session = await prisma.session.findFirst({
+        select: { id: true },
+        where: {
+          id: sessionId,
+          userId: targetUser.id,
+        },
+      });
+
+      if (!session) {
+        return NextResponse.json(
+          {
+            error: {
+              code: ErrorCode.NOT_FOUND,
+              message: 'Session non trouvée',
+            },
+            success: false,
+          },
+          { status: 404 },
+        );
+      }
+
+      await prisma.session.delete({
+        where: { id: session.id },
+      });
+
+      await createAuditLogWithHeaders({
+        action: 'SESSION_INVALIDATE',
+        category: 'AUTH',
+        description: `Session révoquée pour: ${targetUser.email}`,
+        metadata: {
+          revocationScope: 'single',
+          revokedSessions: 1,
+          sessionId: session.id,
+          ...USERS_SECURITY_AUDIT_LOCATION,
+          targetName,
+        },
+        targetUserId: targetUser.id,
+        userId: auth.user.id,
+      });
+
+      return NextResponse.json({
+        data: { revokedSessions: 1 },
+        success: true,
+      });
+    }
+
+    const result = await prisma.session.deleteMany({
+      where: { userId: targetUser.id },
+    });
 
     await createAuditLogWithHeaders({
       action: 'SESSION_INVALIDATE',
       category: 'AUTH',
       description: `Sessions révoquées pour: ${targetUser.email}`,
       metadata: {
+        revocationScope: 'all',
         revokedSessions: result.count,
         ...USERS_SECURITY_AUDIT_LOCATION,
         targetName,

@@ -49,6 +49,8 @@ type SessionInfo = {
 };
 
 type SecuritySectionProps = {
+  canChangePassword: boolean;
+  canViewSecurity: boolean;
   onUpdate: () => Promise<void>;
   userData: UserType;
 };
@@ -212,6 +214,8 @@ const SessionRow: FC<SessionRowProps> = ({ isRevoking, onRevoke, session }) => {
 };
 
 export const SecuritySection: FC<SecuritySectionProps> = ({
+  canChangePassword,
+  canViewSecurity,
   onUpdate,
   userData,
 }) => {
@@ -317,18 +321,26 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   const otherSessionsLabel = loadingSessions
     ? 'Chargement'
     : String(otherSessions.length);
+  const canViewPasswordSecurity = canViewSecurity || canChangePassword;
 
   return (
     <>
       <div className="space-y-3">
-        <div className="grid gap-3 md:grid-cols-3">
-          <SecurityMetric
-            icon={<KeyRound className="size-4" />}
-            label="Mot de passe"
-            value={passwordStatusLabel}
-            description={`Dernier changement : ${passwordChangedLabel}`}
-            tone={userData.mustChangePassword ? 'warning' : 'primary'}
-          />
+        <div
+          className={cn(
+            'grid gap-3',
+            canViewPasswordSecurity ? 'md:grid-cols-3' : 'md:grid-cols-2',
+          )}
+        >
+          {canViewPasswordSecurity && (
+            <SecurityMetric
+              icon={<KeyRound className="size-4" />}
+              label="Mot de passe"
+              value={passwordStatusLabel}
+              description={`Dernier changement : ${passwordChangedLabel}`}
+              tone={userData.mustChangePassword ? 'warning' : 'primary'}
+            />
+          )}
           <SecurityMetric
             icon={<Laptop className="size-4" />}
             label="Session actuelle"
@@ -352,60 +364,64 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
             tone={otherSessions.length > 0 ? 'warning' : 'primary'}
           />
         </div>
-        <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
-          <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
-            <SectionTitle icon={<KeyRound className="size-3.5" />}>
-              Mot de passe
-            </SectionTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 p-3 sm:p-4">
-            <div className="border-border/60 bg-popover space-y-3 rounded-md border p-3">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-muted-foreground text-sm">État</span>
-                {userData.mustChangePassword ? (
-                  <Badge
-                    variant="outline"
-                    className="border-amber-500/40 text-amber-400"
-                  >
-                    À changer
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary">À jour</Badge>
-                )}
+        {canViewPasswordSecurity && (
+          <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+            <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
+              <SectionTitle icon={<KeyRound className="size-3.5" />}>
+                Mot de passe
+              </SectionTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 p-3 sm:p-4">
+              <div className="border-border/60 bg-popover space-y-3 rounded-md border p-3">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-muted-foreground text-sm">État</span>
+                  {userData.mustChangePassword ? (
+                    <Badge
+                      variant="outline"
+                      className="border-amber-500/40 text-amber-400"
+                    >
+                      À changer
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">À jour</Badge>
+                  )}
+                </div>
+                <Separator className="bg-border/60" />
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-muted-foreground text-sm">
+                    Dernier changement
+                  </span>
+                  <span className="text-foreground text-sm">
+                    {passwordChangedLabel}
+                  </span>
+                </div>
+                <Separator className="bg-border/60" />
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-muted-foreground text-sm">
+                    Tentatives échouées
+                  </span>
+                  <span className="text-foreground text-sm">
+                    {userData.failedLoginAttempts}
+                  </span>
+                </div>
               </div>
-              <Separator className="bg-border/60" />
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-muted-foreground text-sm">
-                  Dernier changement
-                </span>
-                <span className="text-foreground text-sm">
-                  {passwordChangedLabel}
-                </span>
-              </div>
-              <Separator className="bg-border/60" />
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-muted-foreground text-sm">
-                  Tentatives échouées
-                </span>
-                <span className="text-foreground text-sm">
-                  {userData.failedLoginAttempts}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPasswordDialog(true)}
-              className="gap-2"
-            >
-              <Shield className="size-4" />
-              Changer le mot de passe
-            </Button>
-          </CardFooter>
-        </Card>
+            </CardContent>
+            {canChangePassword && (
+              <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPasswordDialog(true)}
+                  className="gap-2"
+                >
+                  <Shield className="size-4" />
+                  Changer le mot de passe
+                </Button>
+              </CardFooter>
+            )}
+          </Card>
+        )}
         <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
           <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
             <SectionTitle icon={<Monitor className="size-3.5" />}>

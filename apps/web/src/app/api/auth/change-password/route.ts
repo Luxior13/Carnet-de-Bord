@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { apiErrors } from '$server/api-response';
 import {
   createAuditLogWithHeaders,
@@ -63,6 +64,27 @@ export async function POST(
     }
 
     const { confirmPassword, currentPassword, newPassword } = validation.data;
+
+    if (
+      !user.mustChangePassword &&
+      !user.isProtected &&
+      !hasPermission(
+        user.role,
+        PERMISSIONS.ACCOUNT.CHANGE_PASSWORD,
+        user.permissions,
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message: "Vous n'avez pas la permission de changer ce mot de passe",
+          },
+          success: false,
+        },
+        { status: 403 },
+      );
+    }
 
     // Validate password complexity
     const passwordValidation = validatePassword(newPassword);

@@ -81,7 +81,7 @@ describe('users access hardening', () => {
     mockPrisma.user.groupBy.mockResolvedValue([]);
   });
 
-  it('uses users:update for profile updates without requiring edit_permissions', async () => {
+  it('uses users:update_profile for profile updates without requiring edit_permissions', async () => {
     const existingUser = buildUser({ id: 'target-1' });
 
     mockPrisma.user.findUnique.mockResolvedValue(existingUser);
@@ -103,7 +103,7 @@ describe('users access hardening', () => {
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
     expect(mockRequirePermission.mock.calls.map(([, key]) => key)).toEqual([
-      PERMISSIONS.USERS.UPDATE,
+      PERMISSIONS.USERS.UPDATE_PROFILE,
     ]);
     expect(mockPrisma.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -114,6 +114,20 @@ describe('users access hardening', () => {
   });
 
   it('allows permissions-only updates with users:edit_permissions only', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'viewer-1',
+        passwordHash: undefined,
+        permissions: {
+          [PERMISSIONS.USERS.EDIT_PERMISSIONS]: true,
+          [PERMISSIONS.USERS.VIEW]: true,
+          [PERMISSIONS.USERS.VIEW_ACCESS]: true,
+        },
+      }),
+    });
     const existingUser = buildUser({ id: 'target-1', permissions: {} });
     const nextPermissions = {
       [PERMISSIONS.DASHBOARD.VIEW]: true,
@@ -153,6 +167,57 @@ describe('users access hardening', () => {
         action: 'PERMISSION_UPDATE',
         category: 'PERMISSION',
         userId: 'viewer-1',
+      }),
+    );
+  });
+
+  it('audits personal account permission updates on the personal account tab', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'viewer-1',
+        passwordHash: undefined,
+        permissions: {
+          [PERMISSIONS.USERS.EDIT_PERMISSIONS]: true,
+          [PERMISSIONS.USERS.VIEW]: true,
+          [PERMISSIONS.USERS.VIEW_ACCESS]: true,
+        },
+      }),
+    });
+    const existingUser = buildUser({ id: 'target-1', permissions: {} });
+    const nextPermissions = {
+      [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+    };
+
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+    mockPrisma.user.update.mockResolvedValue({
+      ...existingUser,
+      permissions: nextPermissions,
+    });
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: JSON.stringify({ permissions: nextPermissions }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'PERMISSION_UPDATE',
+        category: 'PERMISSION',
+        metadata: expect.objectContaining({
+          tabKey: 'account',
+          tabLabel: 'Compte personnel',
+        }),
+        targetUserId: 'target-1',
       }),
     );
   });
@@ -212,6 +277,20 @@ describe('users access hardening', () => {
   });
 
   it('does not update permissions when only the key order changes', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'viewer-1',
+        passwordHash: undefined,
+        permissions: {
+          [PERMISSIONS.USERS.EDIT_PERMISSIONS]: true,
+          [PERMISSIONS.USERS.VIEW]: true,
+          [PERMISSIONS.USERS.VIEW_ACCESS]: true,
+        },
+      }),
+    });
     const existingPermissions = {
       [PERMISSIONS.USERS.VIEW]: true,
       [PERMISSIONS.DASHBOARD.VIEW]: true,
@@ -239,6 +318,33 @@ describe('users access hardening', () => {
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    expect(mockInvalidateAllUserSessions).not.toHaveBeenCalled();
+    expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
+  });
+
+  it('rejects permission escalation when granting a permission the actor does not own', async () => {
+    const existingUser = buildUser({ id: 'target-1', permissions: {} });
+
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: JSON.stringify({
+          permissions: {
+            [PERMISSIONS.USERS.DELETE]: true,
+          },
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
     expect(mockInvalidateAllUserSessions).not.toHaveBeenCalled();
     expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
@@ -479,7 +585,66 @@ describe('users access hardening', () => {
     expect(body.data.logs[0].userAgent).toBeNull();
     expect(mockRequirePermission).toHaveBeenCalledWith(
       expect.any(Object),
-      PERMISSIONS.USERS.VIEW,
+      PERMISSIONS.USERS.VIEW_ACTIVITY,
+    );
+  });
+
+  it('allows users to view their own audit logs with personal activity permission', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'target-1',
+        passwordHash: undefined,
+        permissions: {},
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValue(buildUser({ id: 'target-1' }));
+    mockPrisma.auditLog.count
+      .mockResolvedValueOnce(1)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(0);
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      {
+        action: 'USER_UPDATE',
+        category: 'USER',
+        createdAt: new Date('2026-03-02T00:00:00.000Z'),
+        description: 'Profil mis a jour',
+        id: 'log-1',
+        ipAddress: '1.2.3.4',
+        metadata: {
+          pageLabel: 'Mon compte',
+          poleLabel: 'Espace personnel',
+          tabLabel: 'Profil',
+        },
+        targetUserId: 'target-1',
+        userAgent: 'TestAgent',
+        userId: 'target-1',
+      },
+    ]);
+
+    const route = await import('$app/api/users/[id]/audit/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users/target-1/audit') as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.logs[0].ipAddress).toBe('1.2.3.4');
+    expect(body.data.logs[0].userAgent).toBe('TestAgent');
+    expect(mockRequirePermission).toHaveBeenCalledWith(
+      expect.any(Object),
+      PERMISSIONS.ACCOUNT.VIEW_ACTIVITY,
+    );
+    expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          OR: [{ userId: 'target-1' }, { targetUserId: 'target-1' }],
+        },
+      }),
     );
   });
 
@@ -778,7 +943,7 @@ describe('users access hardening', () => {
     });
     expect(mockRequirePermission).toHaveBeenCalledWith(
       expect.any(Object),
-      PERMISSIONS.USERS.VIEW,
+      PERMISSIONS.USERS.VIEW_ACTIVITY,
     );
     expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -3,7 +3,9 @@ import { z } from 'zod';
 
 import {
   arePermissionOverridesEqual,
+  getAccountPermissionKeys,
   getUnknownPermissionKeys,
+  hasPermission,
   PERMISSIONS,
 } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
@@ -35,6 +37,34 @@ const USERS_PAGE_AUDIT_LOCATION = {
   poleKey: 'system',
   poleLabel: 'Système',
 } as const;
+
+const ACCOUNT_PERMISSION_KEY_SET = new Set(getAccountPermissionKeys());
+
+const toPermissionMap = (value: unknown): Map<string, boolean> => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return new Map();
+  }
+
+  return new Map(
+    Object.entries(value).flatMap(([permissionKey, enabled]) =>
+      typeof enabled === 'boolean' ? [[permissionKey, enabled] as const] : [],
+    ),
+  );
+};
+
+const getChangedPermissionKeys = (
+  before: unknown,
+  after: unknown,
+): string[] => {
+  const beforeMap = toPermissionMap(before);
+  const afterMap = toPermissionMap(after);
+  const permissionKeys = new Set([...beforeMap.keys(), ...afterMap.keys()]);
+
+  return [...permissionKeys].filter(
+    (permissionKey) =>
+      beforeMap.get(permissionKey) !== afterMap.get(permissionKey),
+  );
+};
 
 // ============================================
 // GET /api/users/[id] - Get single user
@@ -150,14 +180,18 @@ export async function PATCH(
     const { email, firstName, isActive, lastName, permissions, role } =
       validation.data;
     const isPermissionsUpdate = permissions !== undefined;
-    const isProfileUpdate =
-      email !== undefined ||
-      firstName !== undefined ||
-      typeof isActive === 'boolean' ||
-      lastName !== undefined ||
-      role !== undefined;
+    const isProfileUpdate = firstName !== undefined || lastName !== undefined;
+    const isLoginUpdate = email !== undefined;
+    const isStatusUpdate = typeof isActive === 'boolean';
+    const isRoleUpdate = role !== undefined;
 
-    if (!isProfileUpdate && !isPermissionsUpdate) {
+    if (
+      !isProfileUpdate &&
+      !isLoginUpdate &&
+      !isStatusUpdate &&
+      !isRoleUpdate &&
+      !isPermissionsUpdate
+    ) {
       return NextResponse.json(
         {
           error: {
@@ -171,11 +205,35 @@ export async function PATCH(
     }
 
     if (isProfileUpdate) {
-      const updatePermCheck = requirePermission(
+      const profilePermCheck = requirePermission(
         auth.user,
-        PERMISSIONS.USERS.UPDATE,
+        PERMISSIONS.USERS.UPDATE_PROFILE,
       );
-      if (!updatePermCheck.success) return updatePermCheck.response;
+      if (!profilePermCheck.success) return profilePermCheck.response;
+    }
+
+    if (isLoginUpdate) {
+      const loginPermCheck = requirePermission(
+        auth.user,
+        PERMISSIONS.USERS.UPDATE_LOGIN,
+      );
+      if (!loginPermCheck.success) return loginPermCheck.response;
+    }
+
+    if (isStatusUpdate) {
+      const statusPermCheck = requirePermission(
+        auth.user,
+        PERMISSIONS.USERS.MANAGE_STATUS,
+      );
+      if (!statusPermCheck.success) return statusPermCheck.response;
+    }
+
+    if (isRoleUpdate) {
+      const rolePermCheck = requirePermission(
+        auth.user,
+        PERMISSIONS.USERS.MANAGE_ROLES,
+      );
+      if (!rolePermCheck.success) return rolePermCheck.response;
     }
 
     if (isPermissionsUpdate) {
@@ -269,6 +327,34 @@ export async function PATCH(
         },
         { status: 403 },
       );
+    }
+
+    if (isPermissionsUpdate && permissions && !auth.user.isProtected) {
+      const grantedUnauthorizedPermissions = Object.entries(permissions)
+        .filter(
+          ([permissionKey, enabled]) =>
+            enabled &&
+            !hasPermission(
+              auth.user.role,
+              permissionKey,
+              auth.user.permissions,
+            ),
+        )
+        .map(([permissionKey]) => permissionKey);
+
+      if (grantedUnauthorizedPermissions.length > 0) {
+        return NextResponse.json(
+          {
+            error: {
+              code: ErrorCode.FORBIDDEN,
+              message:
+                'Vous ne pouvez pas accorder une permission que vous ne possedez pas',
+            },
+            success: false,
+          },
+          { status: 403 },
+        );
+      }
     }
 
     // Cannot deactivate protected accounts (unless you're protected too)
@@ -417,6 +503,21 @@ export async function PATCH(
       existingUser.firstName && existingUser.lastName
         ? `${existingUser.firstName} ${existingUser.lastName}`
         : existingUser.email;
+    const changedPermissionKeys = changedKeys.includes('permissions')
+      ? getChangedPermissionKeys(
+          beforeValues.permissions,
+          afterValues.permissions,
+        )
+      : [];
+    const hasOnlyAccountPermissionChanges =
+      changedKeys.length === 1 &&
+      changedPermissionKeys.length > 0 &&
+      changedPermissionKeys.every((permissionKey) =>
+        ACCOUNT_PERMISSION_KEY_SET.has(permissionKey),
+      );
+    const permissionAuditTab = hasOnlyAccountPermissionChanges
+      ? { tabKey: 'account', tabLabel: 'Compte personnel' }
+      : { tabKey: 'access', tabLabel: 'AccÃ¨s' };
 
     // If deactivated, invalidate all sessions
     if (isActive === false) {
@@ -469,8 +570,7 @@ export async function PATCH(
           before: beforeValues,
           changes: changedKeys,
           ...USERS_PAGE_AUDIT_LOCATION,
-          tabKey: 'access',
-          tabLabel: 'Accès',
+          ...permissionAuditTab,
           targetName,
         },
         targetUserId: id,

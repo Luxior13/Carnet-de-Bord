@@ -4,6 +4,13 @@ import type { NavigationIconName } from '$constants/navigation-icon.constants';
 import type { NavigationSpaceTone } from '$constants/navigation-theme.constants';
 
 export const PERMISSIONS = {
+  ACCOUNT: {
+    CHANGE_PASSWORD: 'account:change_password',
+    UPDATE_PROFILE: 'account:update_profile',
+    VIEW_ACTIVITY: 'account:view_activity',
+    VIEW_PROFILE: 'account:view_profile',
+    VIEW_SECURITY: 'account:view_security',
+  },
   DASHBOARD: {
     VIEW: 'dashboard:view',
   },
@@ -17,9 +24,18 @@ export const PERMISSIONS = {
     CREATE: 'users:create',
     DELETE: 'users:delete',
     EDIT_PERMISSIONS: 'users:edit_permissions',
+    EXPORT: 'users:export',
+    MANAGE_ROLES: 'users:manage_roles',
+    MANAGE_STATUS: 'users:manage_status',
     RESET_PASSWORD: 'users:reset_password',
-    UPDATE: 'users:update',
+    RESTORE: 'users:restore',
+    REVOKE_SESSIONS: 'users:revoke_sessions',
+    UPDATE_LOGIN: 'users:update_login',
+    UPDATE_PROFILE: 'users:update_profile',
     VIEW: 'users:view',
+    VIEW_ACCESS: 'users:view_access',
+    VIEW_ACTIVITY: 'users:view_activity',
+    VIEW_SESSIONS: 'users:view_sessions',
   },
 } as const;
 
@@ -40,13 +56,13 @@ export const PERMISSION_POLES = [
   {
     icon: 'Settings',
     key: 'system',
-    label: 'Système',
+    label: 'Systeme',
     tone: 'system',
   },
   {
     icon: 'Wallet',
     key: 'treasury',
-    label: 'Trésorerie',
+    label: 'Tresorerie',
     tone: 'treasury',
   },
 ] as const satisfies readonly PermissionPole[];
@@ -59,6 +75,8 @@ export type PermissionAction =
   | 'export'
   | 'manage'
   | 'reset'
+  | 'restore'
+  | 'revoke'
   | 'update'
   | 'validate'
   | 'view';
@@ -85,18 +103,99 @@ export type PermissionCategory = {
   tone: NavigationSpaceTone;
 };
 
+export type AccountPermissionCategory = {
+  description: string;
+  icon: NavigationIconName;
+  key: string;
+  label: string;
+  permissions: PermissionItem[];
+  tone: NavigationSpaceTone;
+};
+
 export type PermissionsData = Record<string, boolean>;
+
+export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
+  {
+    description: 'Identite visible et modifiable depuis Mon compte.',
+    icon: 'UserCheck',
+    key: 'account-profile',
+    label: 'Profil personnel',
+    permissions: [
+      {
+        action: 'view',
+        description: 'Consulter son profil depuis la page Mon compte',
+        key: PERMISSIONS.ACCOUNT.VIEW_PROFILE,
+        label: 'Voir son profil personnel',
+        module: 'Profil',
+        risk: 'default',
+      },
+      {
+        action: 'update',
+        dependencies: [PERMISSIONS.ACCOUNT.VIEW_PROFILE],
+        description: 'Modifier son prenom et son nom depuis la page Mon compte',
+        key: PERMISSIONS.ACCOUNT.UPDATE_PROFILE,
+        label: 'Modifier son profil personnel',
+        module: 'Profil',
+        risk: 'default',
+      },
+    ],
+    tone: 'internal',
+  },
+  {
+    description: 'Mot de passe et securite du compte connecte.',
+    icon: 'ShieldCheck',
+    key: 'account-security',
+    label: 'Securite personnelle',
+    permissions: [
+      {
+        action: 'view',
+        description: 'Voir les informations de securite de son compte',
+        key: PERMISSIONS.ACCOUNT.VIEW_SECURITY,
+        label: 'Voir sa securite',
+        module: 'Securite',
+        risk: 'default',
+      },
+      {
+        action: 'update',
+        dependencies: [PERMISSIONS.ACCOUNT.VIEW_SECURITY],
+        description: 'Changer son mot de passe depuis Mon compte',
+        key: PERMISSIONS.ACCOUNT.CHANGE_PASSWORD,
+        label: 'Changer son mot de passe',
+        module: 'Mot de passe',
+        risk: 'sensitive',
+      },
+    ],
+    tone: 'internal',
+  },
+  {
+    description: 'Historique visible depuis son propre compte.',
+    icon: 'History',
+    key: 'account-activity',
+    label: 'Activite personnelle',
+    permissions: [
+      {
+        action: 'view',
+        description: 'Consulter les activites liees a son propre compte',
+        key: PERMISSIONS.ACCOUNT.VIEW_ACTIVITY,
+        label: 'Voir son activite',
+        module: 'Activite',
+        risk: 'default',
+      },
+    ],
+    tone: 'internal',
+  },
+];
 
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   {
-    description: 'Vue globale du site privé selon les permissions.',
+    description: 'Vue globale du site prive selon les permissions.',
     icon: 'LayoutDashboard',
     key: 'dashboard',
     label: "Vue d'ensemble",
     permissions: [
       {
         action: 'view',
-        description: 'Accéder au tableau de bord et voir les statistiques',
+        description: 'Acceder au tableau de bord et voir les statistiques',
         key: PERMISSIONS.DASHBOARD.VIEW,
         label: 'Voir le tableau de bord',
         module: "Vue d'ensemble",
@@ -107,62 +206,144 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
     tone: 'dashboard',
   },
   {
-    description: 'Gestion des utilisateurs du système',
+    description: 'Gestion des utilisateurs, des acces et de la securite.',
     icon: 'Users',
     key: 'users',
     label: 'Utilisateurs & permissions',
     permissions: [
       {
         action: 'view',
-        description: 'Consulter la liste des utilisateurs',
+        description:
+          'Consulter la liste, le resume et les informations de base',
         key: PERMISSIONS.USERS.VIEW,
         label: 'Voir les utilisateurs',
-        module: 'Comptes',
+        module: 'Lecture',
         risk: 'default',
       },
       {
         action: 'create',
         dependencies: [PERMISSIONS.USERS.VIEW],
-        description: 'Créer de nouveaux comptes utilisateur',
+        description: 'Creer de nouveaux comptes utilisateur standards',
         key: PERMISSIONS.USERS.CREATE,
-        label: 'Créer des utilisateurs',
-        module: 'Comptes',
+        label: 'Creer des utilisateurs',
+        module: 'Creation',
         risk: 'sensitive',
       },
       {
         action: 'update',
         dependencies: [PERMISSIONS.USERS.VIEW],
-        description: 'Modifier les informations des utilisateurs',
-        key: PERMISSIONS.USERS.UPDATE,
-        label: 'Modifier les utilisateurs',
-        module: 'Comptes',
+        description: 'Modifier le prenom et le nom des comptes',
+        key: PERMISSIONS.USERS.UPDATE_PROFILE,
+        label: 'Modifier le profil',
+        module: 'Profil',
         risk: 'sensitive',
       },
       {
-        action: 'delete',
+        action: 'update',
         dependencies: [PERMISSIONS.USERS.VIEW],
-        description: 'Supprimer des comptes utilisateur',
-        key: PERMISSIONS.USERS.DELETE,
-        label: 'Supprimer des utilisateurs',
-        module: 'Comptes',
-        risk: 'critical',
-      },
-      {
-        action: 'reset',
-        dependencies: [PERMISSIONS.USERS.VIEW],
-        description: 'Réinitialiser les mots de passe',
-        key: PERMISSIONS.USERS.RESET_PASSWORD,
-        label: 'Réinitialiser les mots de passe',
-        module: 'Securite',
+        description: "Modifier l'email utilise pour la connexion",
+        key: PERMISSIONS.USERS.UPDATE_LOGIN,
+        label: 'Modifier le login',
+        module: 'Profil',
         risk: 'critical',
       },
       {
         action: 'manage',
         dependencies: [PERMISSIONS.USERS.VIEW],
-        description: 'Modifier les permissions des utilisateurs',
+        description: 'Activer ou desactiver les comptes utilisateur',
+        key: PERMISSIONS.USERS.MANAGE_STATUS,
+        label: 'Gerer le statut',
+        module: 'Securite',
+        risk: 'critical',
+      },
+      {
+        action: 'view',
+        dependencies: [PERMISSIONS.USERS.VIEW],
+        description: 'Voir le role et les permissions detaillees',
+        key: PERMISSIONS.USERS.VIEW_ACCESS,
+        label: 'Voir les acces',
+        module: 'Acces',
+        risk: 'sensitive',
+      },
+      {
+        action: 'manage',
+        dependencies: [PERMISSIONS.USERS.VIEW_ACCESS],
+        description: 'Modifier les roles fonctionnels des comptes',
+        key: PERMISSIONS.USERS.MANAGE_ROLES,
+        label: 'Gerer les roles',
+        module: 'Acces',
+        risk: 'critical',
+      },
+      {
+        action: 'manage',
+        dependencies: [PERMISSIONS.USERS.VIEW_ACCESS],
+        description: 'Modifier les permissions accordees aux comptes',
         key: PERMISSIONS.USERS.EDIT_PERMISSIONS,
         label: 'Gerer les permissions',
-        module: 'Accès',
+        module: 'Acces',
+        risk: 'critical',
+      },
+      {
+        action: 'reset',
+        dependencies: [PERMISSIONS.USERS.VIEW],
+        description: 'Generer un mot de passe temporaire',
+        key: PERMISSIONS.USERS.RESET_PASSWORD,
+        label: 'Reinitialiser les mots de passe',
+        module: 'Securite',
+        risk: 'critical',
+      },
+      {
+        action: 'view',
+        dependencies: [PERMISSIONS.USERS.VIEW],
+        description: 'Consulter les sessions actives des comptes',
+        key: PERMISSIONS.USERS.VIEW_SESSIONS,
+        label: 'Voir les sessions',
+        module: 'Sessions',
+        risk: 'sensitive',
+      },
+      {
+        action: 'revoke',
+        dependencies: [PERMISSIONS.USERS.VIEW_SESSIONS],
+        description: 'Revoquer une session ou toutes les sessions actives',
+        key: PERMISSIONS.USERS.REVOKE_SESSIONS,
+        label: 'Revoquer les sessions',
+        module: 'Sessions',
+        risk: 'critical',
+      },
+      {
+        action: 'view',
+        dependencies: [PERMISSIONS.USERS.VIEW],
+        description: "Consulter l'activite liee aux comptes utilisateur",
+        key: PERMISSIONS.USERS.VIEW_ACTIVITY,
+        label: "Voir l'activite",
+        module: 'Activite',
+        risk: 'sensitive',
+      },
+      {
+        action: 'delete',
+        dependencies: [PERMISSIONS.USERS.VIEW],
+        description: 'Supprimer ou desactiver durablement un compte',
+        key: PERMISSIONS.USERS.DELETE,
+        label: 'Supprimer des utilisateurs',
+        module: 'Cycle de vie',
+        risk: 'critical',
+      },
+      {
+        action: 'restore',
+        dependencies: [PERMISSIONS.USERS.VIEW],
+        description: 'Restaurer un compte supprime si la fonction est activee',
+        key: PERMISSIONS.USERS.RESTORE,
+        label: 'Restaurer des utilisateurs',
+        module: 'Cycle de vie',
+        risk: 'critical',
+      },
+      {
+        action: 'export',
+        dependencies: [PERMISSIONS.USERS.VIEW],
+        description: 'Exporter la liste et les informations administratives',
+        key: PERMISSIONS.USERS.EXPORT,
+        label: 'Exporter les utilisateurs',
+        module: 'Exports',
         risk: 'critical',
       },
     ],
@@ -170,7 +351,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
     tone: 'system',
   },
   {
-    description: 'Vue globale financière.',
+    description: 'Vue globale financiere.',
     icon: 'Wallet',
     key: 'treasury',
     label: 'Tableau de bord financier',
@@ -186,7 +367,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       {
         action: 'update',
         dependencies: [PERMISSIONS.TREASURY.VIEW],
-        description: 'Modifier les données et opérations financières',
+        description: 'Modifier les donnees et operations financieres',
         key: PERMISSIONS.TREASURY.EDIT,
         label: 'Modifier la tresorerie',
         module: 'Finance',
@@ -195,7 +376,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       {
         action: 'export',
         dependencies: [PERMISSIONS.TREASURY.VIEW],
-        description: 'Exporter les données et documents financiers',
+        description: 'Exporter les donnees et documents financiers',
         key: PERMISSIONS.TREASURY.EXPORT,
         label: 'Exporter la tresorerie',
         module: 'Exports',
@@ -216,15 +397,27 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   },
 ];
 
-const ALL_PERMISSION_KEYS = PERMISSION_CATEGORIES.flatMap((category) =>
+const ACCESS_PERMISSION_KEYS = PERMISSION_CATEGORIES.flatMap((category) =>
   category.permissions.map((permission) => permission.key),
 );
 
+const ACCOUNT_PERMISSION_KEYS = ACCOUNT_PERMISSION_CATEGORIES.flatMap(
+  (category) => category.permissions.map((permission) => permission.key),
+);
+
+const ALL_PERMISSION_KEYS = [
+  ...ACCESS_PERMISSION_KEYS,
+  ...ACCOUNT_PERMISSION_KEYS,
+];
+
 const ALL_PERMISSION_KEYS_SET = new Set<string>(ALL_PERMISSION_KEYS);
 const PERMISSION_ITEM_MAP = new Map<string, PermissionItem>(
-  PERMISSION_CATEGORIES.flatMap((category) =>
-    category.permissions.map((permission) => [permission.key, permission]),
-  ),
+  [
+    ...PERMISSION_CATEGORIES.flatMap((category) => category.permissions),
+    ...ACCOUNT_PERMISSION_CATEGORIES.flatMap(
+      (category) => category.permissions,
+    ),
+  ].map((permission) => [permission.key, permission]),
 );
 
 export const isKnownPermissionKey = (permissionKey: string): boolean =>
@@ -240,11 +433,12 @@ export const getUnknownPermissionKeys = (
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   ADMIN: [
+    ...Object.values(PERMISSIONS.ACCOUNT),
     PERMISSIONS.DASHBOARD.VIEW,
     ...Object.values(PERMISSIONS.TREASURY),
     ...Object.values(PERMISSIONS.USERS),
   ],
-  USER: [PERMISSIONS.DASHBOARD.VIEW],
+  USER: [...Object.values(PERMISSIONS.ACCOUNT), PERMISSIONS.DASHBOARD.VIEW],
 };
 
 const ROLE_PERMISSIONS_MAP = new Map<UserRole, string[]>(
@@ -294,11 +488,9 @@ export const getRoleBasePermissions = (
   const rolePermissions = ROLE_PERMISSIONS_MAP.get(role) ?? [];
 
   return Object.fromEntries(
-    PERMISSION_CATEGORIES.flatMap((category) =>
-      category.permissions.map(
-        (permission) =>
-          [permission.key, rolePermissions.includes(permission.key)] as const,
-      ),
+    ALL_PERMISSION_KEYS.map(
+      (permissionKey) =>
+        [permissionKey, rolePermissions.includes(permissionKey)] as const,
     ),
   );
 };
@@ -317,6 +509,14 @@ export const getEffectivePermissions = (
 
 export const getAllPermissionKeys = (): string[] => {
   return [...ALL_PERMISSION_KEYS];
+};
+
+export const getAccessPermissionKeys = (): string[] => {
+  return [...ACCESS_PERMISSION_KEYS];
+};
+
+export const getAccountPermissionKeys = (): string[] => {
+  return [...ACCOUNT_PERMISSION_KEYS];
 };
 
 export const getPermissionItem = (

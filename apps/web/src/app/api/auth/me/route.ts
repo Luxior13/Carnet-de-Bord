@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { requireAuth } from '$server/api-auth';
+import { PERMISSIONS } from '$constants/permissions.constants';
+import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
 import { createAuditLogWithHeaders, mapUserToUserType } from '$server/auth';
 import { prisma } from '$server/prisma';
@@ -94,6 +95,12 @@ export async function PATCH(
         success: true,
       });
     }
+
+    const profilePermission = requirePermission(
+      user,
+      PERMISSIONS.ACCOUNT.UPDATE_PROFILE,
+    );
+    if (!profilePermission.success) return profilePermission.response;
 
     const beforeValues: Record<string, unknown> = {};
     const afterValues: Record<string, unknown> = {};

@@ -25,8 +25,10 @@ import { toast } from 'sonner';
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { UserAccessTab } from '$components/users/user-detail/UserAccessTab';
+import { UserAccountTab } from '$components/users/user-detail/UserAccountTab';
 import {
   normalizeUserDetailSection,
+  USER_DETAIL_SECTIONS,
   type UserDetailSectionId,
 } from '$components/users/user-detail/UserDetailNavigation';
 import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailSectionRail';
@@ -40,8 +42,9 @@ import { UserSecurityTab } from '$components/users/user-detail/UserSecurityTab';
 import { UserAvatar } from '$components/users/UserAvatar';
 import { UsersAdminHero } from '$components/users/UsersAdminHero';
 import {
-  arePermissionOverridesEqual,
   getAccessLabel,
+  getAccessPermissionKeys,
+  getAccountPermissionKeys,
   getRoleColor,
   hasPermission,
   PERMISSION_CATEGORIES,
@@ -92,6 +95,53 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
 const USER_AUDIT_PAGE_SIZE = 200;
 const USER_AUDIT_SUMMARY_PAGE_SIZE = 1;
 const DEFAULT_PERMISSION_PAGE_KEY = PERMISSION_CATEGORIES[0]?.key ?? '';
+const ACCESS_PERMISSION_KEYS = getAccessPermissionKeys();
+const ACCOUNT_PERMISSION_KEYS = getAccountPermissionKeys();
+
+const havePermissionOverridesChangedForKeys = (
+  first: PermissionsData | null | undefined,
+  second: PermissionsData | null | undefined,
+  permissionKeys: readonly string[],
+): boolean => {
+  const firstPermissionsMap = new Map(Object.entries(first ?? {}));
+  const secondPermissionsMap = new Map(Object.entries(second ?? {}));
+
+  for (const permissionKey of permissionKeys) {
+    if (
+      firstPermissionsMap.get(permissionKey) !==
+      secondPermissionsMap.get(permissionKey)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+const resetPermissionOverridesForKeys = (
+  currentPermissions: PermissionsData | null | undefined,
+  originalPermissions: PermissionsData | null | undefined,
+  permissionKeys: readonly string[],
+): PermissionsData | null => {
+  const nextPermissionsMap = new Map(Object.entries(currentPermissions ?? {}));
+  const originalPermissionsMap = new Map(
+    Object.entries(originalPermissions ?? {}),
+  );
+
+  for (const permissionKey of permissionKeys) {
+    const originalValue = originalPermissionsMap.get(permissionKey);
+
+    if (typeof originalValue === 'boolean') {
+      nextPermissionsMap.set(permissionKey, originalValue);
+    } else {
+      nextPermissionsMap.delete(permissionKey);
+    }
+  }
+
+  return nextPermissionsMap.size > 0
+    ? (Object.fromEntries(nextPermissionsMap) as PermissionsData)
+    : null;
+};
 
 const formatCompactDate = (date: Date | string | null): string => {
   if (!date) return 'Jamais';
@@ -290,6 +340,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     useState(false);
   const [isRevokingSecuritySessions, setIsRevokingSecuritySessions] =
     useState(false);
+  const [revokingSecuritySessionId, setRevokingSecuritySessionId] = useState<
+    string | null
+  >(null);
 
   const [permissions, setPermissions] = useState<PermissionsData | null>(null);
   const [isSavingPermissions, setIsSavingPermissions] = useState(false);
@@ -307,7 +360,39 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     ? isProtectedActor ||
       hasPermission(
         currentUser.role,
-        PERMISSIONS.USERS.UPDATE,
+        PERMISSIONS.USERS.UPDATE_PROFILE,
+        currentUser.permissions,
+      )
+    : false;
+  const canUpdateUserLogin = currentUser
+    ? isProtectedActor ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.UPDATE_LOGIN,
+        currentUser.permissions,
+      )
+    : false;
+  const canManageUserStatus = currentUser
+    ? isProtectedActor ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.MANAGE_STATUS,
+        currentUser.permissions,
+      )
+    : false;
+  const canManageUserRoles = currentUser
+    ? isProtectedActor ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.MANAGE_ROLES,
+        currentUser.permissions,
+      )
+    : false;
+  const canViewUserAccess = currentUser
+    ? isProtectedActor ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.VIEW_ACCESS,
         currentUser.permissions,
       )
     : false;
@@ -316,6 +401,30 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       hasPermission(
         currentUser.role,
         PERMISSIONS.USERS.EDIT_PERMISSIONS,
+        currentUser.permissions,
+      )
+    : false;
+  const canViewUserSessions = currentUser
+    ? isProtectedActor ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.VIEW_SESSIONS,
+        currentUser.permissions,
+      )
+    : false;
+  const canRevokeUserSessions = currentUser
+    ? isProtectedActor ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.REVOKE_SESSIONS,
+        currentUser.permissions,
+      )
+    : false;
+  const canViewUserActivity = currentUser
+    ? isProtectedActor ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.VIEW_ACTIVITY,
         currentUser.permissions,
       )
     : false;
@@ -342,7 +451,14 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const canEditTargetProfile =
     !!user && canUpdateUsers && (!user.isProtected || isProtectedActor);
   const canEditTargetEmail =
-    canEditTargetProfile && !isTargetAdminAccessRestricted;
+    !!user &&
+    canUpdateUserLogin &&
+    (!user.isProtected || isProtectedActor) &&
+    !isTargetAdminAccessRestricted;
+  const canViewTargetAccess =
+    !!user &&
+    (canViewUserAccess || canEditUserPermissions || canManageUserRoles);
+  const canViewTargetPersonalAccount = canViewTargetAccess;
   const canManageTargetPermissions =
     !!user &&
     canEditUserPermissions &&
@@ -354,16 +470,56 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     !isSelf &&
     (!user.isProtected || isProtectedActor) &&
     !isTargetAdminAccessRestricted;
-  const canManageTargetSessions = canResetTargetPassword;
+  const canViewTargetSessions =
+    !!user &&
+    canViewUserSessions &&
+    !isSelf &&
+    (!user.isProtected || isProtectedActor) &&
+    !isTargetAdminAccessRestricted;
+  const canRevokeTargetSessions =
+    !!user &&
+    canRevokeUserSessions &&
+    !isSelf &&
+    (!user.isProtected || isProtectedActor) &&
+    !isTargetAdminAccessRestricted;
   const canDeleteTargetUser =
     !!user &&
     canDeleteUsers &&
     !user.isProtected &&
     !isSelf &&
     !isTargetAdminAccessRestricted;
-  const canEditTargetRole = !!user && isProtectedActor && !user.isProtected;
+  const canEditTargetRole =
+    !!user && isProtectedActor && canManageUserRoles && !user.isProtected;
   const canEditTargetStatus =
-    canEditTargetProfile && !isTargetAdminAccessRestricted;
+    !!user &&
+    canManageUserStatus &&
+    (!user.isProtected || isProtectedActor) &&
+    !isTargetAdminAccessRestricted;
+  const canViewTargetActivity = !!user && (isSelf || canViewUserActivity);
+  const canFetchUserAudit = currentUser?.id === userId || canViewUserActivity;
+  const canViewTargetSecurity =
+    canResetTargetPassword ||
+    canViewTargetSessions ||
+    canRevokeTargetSessions ||
+    canEditTargetStatus ||
+    canDeleteTargetUser;
+  const visibleUserDetailSections = useMemo(
+    () =>
+      USER_DETAIL_SECTIONS.filter((section) => {
+        if (section.id === 'access') return canViewTargetAccess;
+        if (section.id === 'account') return canViewTargetPersonalAccount;
+        if (section.id === 'security') return canViewTargetSecurity;
+        if (section.id === 'history') return canViewTargetActivity;
+
+        return true;
+      }),
+    [
+      canViewTargetAccess,
+      canViewTargetActivity,
+      canViewTargetPersonalAccount,
+      canViewTargetSecurity,
+    ],
+  );
   const profileErrors = useMemo(() => {
     return {
       email: !editForm.email.trim()
@@ -387,38 +543,68 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     !!profileErrors.email ||
     !!profileErrors.firstName ||
     !!profileErrors.lastName;
-  const hasProfileChanges =
+  const hasProfileIdentityChanges =
     !!user &&
-    ((canEditTargetEmail &&
-      editForm.email.trim().toLowerCase() !== user.email) ||
-      editForm.firstName.trim() !== user.firstName ||
+    (editForm.firstName.trim() !== user.firstName ||
       editForm.lastName.trim() !== user.lastName);
+  const hasProfileLoginChanges =
+    !!user &&
+    canEditTargetEmail &&
+    editForm.email.trim().toLowerCase() !== user.email;
+  const hasProfileChanges = hasProfileIdentityChanges || hasProfileLoginChanges;
   const hasRoleChanges = !!user && editForm.role !== user.role;
-  const hasPermissionChanges =
-    !!user && !arePermissionOverridesEqual(permissions, user.permissions);
-  const hasAccessChanges = hasRoleChanges || hasPermissionChanges;
+  const hasAccessPermissionChanges =
+    !!user &&
+    havePermissionOverridesChangedForKeys(
+      permissions,
+      user.permissions,
+      ACCESS_PERMISSION_KEYS,
+    );
+  const hasAccountPermissionChanges =
+    !!user &&
+    havePermissionOverridesChangedForKeys(
+      permissions,
+      user.permissions,
+      ACCOUNT_PERMISSION_KEYS,
+    );
+  const hasAccessChanges = hasRoleChanges || hasAccessPermissionChanges;
+  const hasAccountChanges = hasAccountPermissionChanges;
   const hasSecurityChanges = !!user && editForm.isActive !== user.isActive;
   const hasCurrentSectionChanges =
     (activeSection === 'profile' && hasProfileChanges) ||
     (activeSection === 'access' && hasAccessChanges) ||
+    (activeSection === 'account' && hasAccountChanges) ||
     (activeSection === 'security' && hasSecurityChanges);
   const hasUnsavedChanges =
-    hasProfileChanges || hasAccessChanges || hasSecurityChanges;
+    hasProfileChanges ||
+    hasAccessChanges ||
+    hasAccountChanges ||
+    hasSecurityChanges;
   const canSaveProfile =
-    canEditTargetProfile && hasProfileChanges && !hasProfileErrors;
+    ((hasProfileIdentityChanges && canEditTargetProfile) ||
+      (hasProfileLoginChanges && canEditTargetEmail)) &&
+    !hasProfileErrors;
   const canSaveAccess =
     (hasRoleChanges && canEditTargetRole) ||
-    (hasPermissionChanges && canManageTargetPermissions);
+    (hasAccessPermissionChanges && canManageTargetPermissions);
+  const canSaveAccount =
+    hasAccountPermissionChanges && canManageTargetPermissions;
   const canSaveSecurity = canEditTargetStatus && !isSelf && hasSecurityChanges;
   const dirtySections = useMemo<UserDetailSectionId[]>(() => {
     const sections: UserDetailSectionId[] = [];
 
     if (hasProfileChanges) sections.push('profile');
     if (hasAccessChanges) sections.push('access');
+    if (hasAccountChanges) sections.push('account');
     if (hasSecurityChanges) sections.push('security');
 
     return sections;
-  }, [hasAccessChanges, hasProfileChanges, hasSecurityChanges]);
+  }, [
+    hasAccessChanges,
+    hasAccountChanges,
+    hasProfileChanges,
+    hasSecurityChanges,
+  ]);
 
   const requestPendingNavigation = useCallback(
     (navigation: PendingNavigation): void => {
@@ -448,7 +634,25 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           ...currentForm,
           role: user.role,
         }));
-        setPermissions(user.permissions);
+        setPermissions((currentPermissions) =>
+          resetPermissionOverridesForKeys(
+            currentPermissions,
+            user.permissions,
+            ACCESS_PERMISSION_KEYS,
+          ),
+        );
+
+        return;
+      }
+
+      if (sectionId === 'account') {
+        setPermissions((currentPermissions) =>
+          resetPermissionOverridesForKeys(
+            currentPermissions,
+            user.permissions,
+            ACCOUNT_PERMISSION_KEYS,
+          ),
+        );
 
         return;
       }
@@ -542,7 +746,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       auditAbortControllerRef.current?.abort();
       auditAbortControllerRef.current = null;
 
-      if (!canViewUsers) {
+      if (!canFetchUserAudit) {
         setAuditLogs([]);
         setAuditStats(null);
         setIsLoadingAudit(false);
@@ -621,14 +825,14 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         setIsLoadingAudit(false);
       }
     },
-    [canViewUsers, userId],
+    [canFetchUserAudit, userId],
   );
 
   const fetchSecuritySessions = useCallback(async (): Promise<void> => {
     sessionsAbortControllerRef.current?.abort();
     sessionsAbortControllerRef.current = null;
 
-    if (!canManageTargetSessions) {
+    if (!canViewTargetSessions) {
       setSecuritySessions([]);
       setIsLoadingSecuritySessions(false);
 
@@ -662,7 +866,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       sessionsAbortControllerRef.current = null;
       setIsLoadingSecuritySessions(false);
     }
-  }, [canManageTargetSessions, userId]);
+  }, [canViewTargetSessions, userId]);
 
   const refreshAuditAfterMutation = useCallback((): void => {
     hasLoadedAuditLogsRef.current = false;
@@ -691,6 +895,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     setAuditLogs([]);
     setAuditStats(null);
     setIsLoadingAudit(false);
+    setSecuritySessions([]);
+    setRevokingSecuritySessionId(null);
+    setTempPassword(null);
   }, [userId]);
 
   useEffect(() => {
@@ -914,7 +1121,25 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       ...currentForm,
       role: user.role,
     }));
-    setPermissions(user.permissions);
+    setPermissions((currentPermissions) =>
+      resetPermissionOverridesForKeys(
+        currentPermissions,
+        user.permissions,
+        ACCESS_PERMISSION_KEYS,
+      ),
+    );
+  };
+
+  const handleCancelAccount = (): void => {
+    if (!user) return;
+
+    setPermissions((currentPermissions) =>
+      resetPermissionOverridesForKeys(
+        currentPermissions,
+        user.permissions,
+        ACCOUNT_PERMISSION_KEYS,
+      ),
+    );
   };
 
   const handleCancelSecurity = (): void => {
@@ -1013,6 +1238,42 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     }
   };
 
+  const handleSaveAccount = async (): Promise<void> => {
+    if (!canManageTargetPermissions) {
+      toast.error('Permission insuffisante pour modifier le compte personnel');
+
+      return;
+    }
+
+    if (!hasAccountChanges) {
+      toast.info('Aucune modification a enregistrer');
+
+      return;
+    }
+
+    setIsSavingPermissions(true);
+    try {
+      const response = await apiFetch(`/api/users/${userId}`, {
+        body: JSON.stringify({ permissions }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH',
+      });
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        syncUserState(data.data.user);
+        refreshAuditAfterMutation();
+        toast.success('Compte personnel mis a jour');
+      } else {
+        toast.error(data.error?.message || 'Erreur lors de la mise a jour');
+      }
+    } catch {
+      toast.error('Erreur lors de la mise a jour');
+    } finally {
+      setIsSavingPermissions(false);
+    }
+  };
+
   const handleSaveSecurity = async (): Promise<void> => {
     if (!canEditTargetStatus || isSelf) {
       toast.error('Permission insuffisante pour modifier cet état');
@@ -1086,7 +1347,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   };
 
   const handleRevokeSecuritySessions = async (): Promise<void> => {
-    if (!canManageTargetSessions) {
+    if (!canRevokeTargetSessions) {
       toast.error('Permission insuffisante pour révoquer les sessions');
 
       return;
@@ -1111,6 +1372,42 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     } finally {
       setIsRevokingSecuritySessions(false);
       setShowRevokeSessionsConfirm(false);
+    }
+  };
+
+  const handleRevokeSecuritySession = async (
+    sessionId: string,
+  ): Promise<void> => {
+    if (!canRevokeTargetSessions) {
+      toast.error('Permission insuffisante pour révoquer les sessions');
+
+      return;
+    }
+
+    setRevokingSecuritySessionId(sessionId);
+    try {
+      const response = await apiFetch(
+        `/api/users/${userId}/sessions?id=${encodeURIComponent(sessionId)}`,
+        {
+          method: 'DELETE',
+        },
+      );
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setSecuritySessions((currentSessions) =>
+          currentSessions.filter((session) => session.id !== sessionId),
+        );
+        toast.success('Session révoquée');
+        refreshAuditAfterMutation();
+        void fetchSecuritySessions();
+      } else {
+        toast.error(data.error?.message || 'Erreur lors de la révocation');
+      }
+    } catch {
+      toast.error('Erreur lors de la révocation');
+    } finally {
+      setRevokingSecuritySessionId(null);
     }
   };
 
@@ -1145,7 +1442,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   const trackedActionsLabel = isLoadingAudit
     ? 'Chargement'
-    : String(auditStats?.totalActions ?? auditLogs.length);
+    : canFetchUserAudit
+      ? String(auditStats?.totalActions ?? auditLogs.length)
+      : 'Restreint';
 
   const renderContent = (): React.ReactNode => {
     if (!user) return null;
@@ -1175,6 +1474,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           />
         );
       case 'access':
+        if (!canViewTargetAccess) {
+          return (
+            <AccessDeniedState description="Vous n'avez pas la permission de consulter les acces de cet utilisateur." />
+          );
+        }
+
         return (
           <UserAccessTab
             user={user}
@@ -1193,7 +1498,34 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             canSave={canSaveAccess}
           />
         );
+      case 'account':
+        if (!canViewTargetPersonalAccount) {
+          return (
+            <AccessDeniedState description="Vous n'avez pas la permission de consulter le compte personnel de cet utilisateur." />
+          );
+        }
+
+        return (
+          <UserAccountTab
+            user={user}
+            role={editForm.role}
+            permissions={permissions}
+            setPermissions={setPermissions}
+            canManagePermissions={canManageTargetPermissions}
+            isSaving={isSavingPermissions}
+            onSave={handleSaveAccount}
+            onCancel={handleCancelAccount}
+            hasChanges={hasAccountChanges}
+            canSave={canSaveAccount}
+          />
+        );
       case 'security':
+        if (!canViewTargetSecurity) {
+          return (
+            <AccessDeniedState description="Vous n'avez pas la permission de consulter la securite de cet utilisateur." />
+          );
+        }
+
         return (
           <UserSecurityTab
             user={user}
@@ -1201,12 +1533,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             setIsActive={(isActive) => setEditForm({ ...editForm, isActive })}
             canEditStatus={canEditTargetStatus}
             canResetPassword={canResetTargetPassword}
-            canManageSessions={canManageTargetSessions}
+            canRevokeSessions={canRevokeTargetSessions}
+            canViewSessions={canViewTargetSessions}
             isSaving={isSaving}
             isLoadingSessions={isLoadingSecuritySessions}
+            isRevokingSessionId={revokingSecuritySessionId}
             isRevokingSessions={isRevokingSecuritySessions}
             onSaveStatus={handleSaveSecurity}
+            onClearTempPassword={() => setTempPassword(null)}
             onResetPassword={() => setShowResetConfirm(true)}
+            onRevokeSession={handleRevokeSecuritySession}
             onRevokeSessions={() => setShowRevokeSessionsConfirm(true)}
             tempPassword={tempPassword}
             currentUserId={currentUser?.id}
@@ -1219,6 +1555,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           />
         );
       case 'history':
+        if (!canViewTargetActivity) {
+          return (
+            <AccessDeniedState description="Vous n'avez pas la permission de consulter l'activite de cet utilisateur." />
+          );
+        }
+
         return (
           <UserHistoryTab
             auditLogs={auditLogs}
@@ -1318,6 +1660,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               )
             }
             onSectionChange={handleSectionChange}
+            sections={visibleUserDetailSections}
           />
           <div className="min-w-0 space-y-3">
             <UsersAdminHero
@@ -1424,6 +1767,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               }
               layout="mobile"
               onSectionChange={handleSectionChange}
+              sections={visibleUserDetailSections}
             />
             <div className="min-w-0">{renderContent()}</div>
           </div>

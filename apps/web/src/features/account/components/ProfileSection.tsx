@@ -1,11 +1,16 @@
 'use client';
 
-import { Edit, Loader2, Mail, Save, User, X } from 'lucide-react';
+import { Edit, Loader2, LockKeyhole, Mail, Save, User, X } from 'lucide-react';
 import React, { type FC, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { UserAvatar } from '$components/users/UserAvatar';
-import { getAccessLabel, getRoleColor } from '$constants/permissions.constants';
+import {
+  getAccessLabel,
+  getRoleColor,
+  hasPermission,
+  PERMISSIONS,
+} from '$constants/permissions.constants';
 import { formatAccountDate } from '$features/account/account.utils';
 import { AccountPanel } from '$features/account/components/AccountPanel';
 import type { UserType } from '$types/auth.types';
@@ -53,10 +58,27 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
   const hasProfileChanges =
     trimmedFirstName !== userData.firstName ||
     trimmedLastName !== userData.lastName;
+  const canEditProfile =
+    userData.isProtected ||
+    hasPermission(
+      userData.role,
+      PERMISSIONS.ACCOUNT.UPDATE_PROFILE,
+      userData.permissions,
+    );
   const canSaveProfile =
-    !isSaving && hasProfileChanges && !firstNameError && !lastNameError;
+    canEditProfile &&
+    !isSaving &&
+    hasProfileChanges &&
+    !firstNameError &&
+    !lastNameError;
 
   const handleSaveProfile = async (): Promise<void> => {
+    if (!canEditProfile) {
+      toast.error('Modification du profil non autorisee');
+
+      return;
+    }
+
     if (firstNameError || lastNameError) {
       toast.error('Corrigez les champs du profil avant de sauvegarder');
 
@@ -107,7 +129,8 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
       title="Profil"
       description="Identité et adresse de connexion"
       actions={
-        !isEditing && (
+        !isEditing &&
+        canEditProfile && (
           <Button
             type="button"
             variant="outline"
@@ -151,37 +174,46 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
           </div>
         </div>
         {!isEditing ? (
-          <dl className="border-sidebar-border/60 bg-background/45 overflow-hidden rounded-lg border">
-            <div className="border-sidebar-border/45 hover:bg-sidebar-accent/[0.06] grid gap-1 border-b px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
-              <dt className="text-sidebar-foreground text-sm font-bold tracking-tight">
-                Prénom
-              </dt>
-              <dd className="text-sidebar-foreground min-w-0 text-sm font-medium">
-                {userData.firstName}
-              </dd>
-            </div>
-            <div className="border-sidebar-border/45 hover:bg-sidebar-accent/[0.06] grid gap-1 border-b px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
-              <dt className="text-sidebar-foreground text-sm font-bold tracking-tight">
-                Nom
-              </dt>
-              <dd className="text-sidebar-foreground min-w-0 text-sm font-medium">
-                {userData.lastName}
-              </dd>
-            </div>
-            <div className="hover:bg-sidebar-accent/[0.06] grid gap-1 px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
-              <dt className="text-sidebar-foreground text-sm font-bold tracking-tight">
-                Email
-              </dt>
-              <dd className="min-w-0">
-                <p className="text-sidebar-foreground truncate text-sm font-medium">
-                  {userData.email}
-                </p>
-                <p className="text-sidebar-foreground/50 mt-1 text-xs">
-                  L&apos;adresse email ne peut pas être modifiée.
-                </p>
-              </dd>
-            </div>
-          </dl>
+          <>
+            <dl className="border-sidebar-border/60 bg-background/45 overflow-hidden rounded-lg border">
+              <div className="border-sidebar-border/45 hover:bg-sidebar-accent/[0.06] grid gap-1 border-b px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
+                <dt className="text-sidebar-foreground text-sm font-bold tracking-tight">
+                  Prénom
+                </dt>
+                <dd className="text-sidebar-foreground min-w-0 text-sm font-medium">
+                  {userData.firstName}
+                </dd>
+              </div>
+              <div className="border-sidebar-border/45 hover:bg-sidebar-accent/[0.06] grid gap-1 border-b px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
+                <dt className="text-sidebar-foreground text-sm font-bold tracking-tight">
+                  Nom
+                </dt>
+                <dd className="text-sidebar-foreground min-w-0 text-sm font-medium">
+                  {userData.lastName}
+                </dd>
+              </div>
+              <div className="hover:bg-sidebar-accent/[0.06] grid gap-1 px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
+                <dt className="text-sidebar-foreground text-sm font-bold tracking-tight">
+                  Email
+                </dt>
+                <dd className="min-w-0">
+                  <p className="text-sidebar-foreground truncate text-sm font-medium">
+                    {userData.email}
+                  </p>
+                  <p className="text-sidebar-foreground/50 mt-1 text-xs">
+                    L&apos;adresse email ne peut pas être modifiée.
+                  </p>
+                </dd>
+              </div>
+            </dl>
+            {!canEditProfile && (
+              <div className="text-muted-foreground flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs">
+                <LockKeyhole className="mt-0.5 size-3.5 shrink-0 text-amber-400" />
+                La modification du prenom et du nom est verrouillee sur ce
+                compte.
+              </div>
+            )}
+          </>
         ) : (
           <form
             id={PROFILE_FORM_ID}

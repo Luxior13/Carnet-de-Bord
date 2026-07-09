@@ -4,9 +4,9 @@ import { UserRole } from '@repo/database';
 import {
   Check,
   CircleAlert,
+  type LucideIcon,
   RotateCcw,
   ShieldCheck,
-  type LucideIcon,
   X,
 } from 'lucide-react';
 import React, { type FC, memo, useCallback, useMemo } from 'react';
@@ -17,6 +17,7 @@ import {
   type NavigationSpaceTone,
 } from '$constants/navigation-theme.constants';
 import {
+  getAccessPermissionKeys,
   getEffectivePermissions,
   getRoleBasePermissions,
   PERMISSION_CATEGORIES,
@@ -106,6 +107,8 @@ const ACTION_LABELS: Record<PermissionAction, string> = {
   export: 'Exporter',
   manage: 'Gérer',
   reset: 'Réinitialiser',
+  restore: 'Restaurer',
+  revoke: 'Revoquer',
   update: 'Modifier',
   validate: 'Valider',
   view: 'Voir',
@@ -565,6 +568,19 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
       () => new Set(permissionsMap.keys()),
       [permissionsMap],
     );
+    const accessPermissionKeys = useMemo(
+      () => new Set(getAccessPermissionKeys()),
+      [],
+    );
+    const customAccessPermissionKeys = useMemo(
+      () =>
+        new Set(
+          [...customPermissionKeys].filter((permissionKey) =>
+            accessPermissionKeys.has(permissionKey),
+          ),
+        ),
+      [accessPermissionKeys, customPermissionKeys],
+    );
     const roleBasePermissions = useMemo(
       () => getRoleBasePermissions(role),
       [role],
@@ -584,10 +600,16 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
     const categoryResultMap = useMemo(
       () =>
         new Map(
-          PERMISSION_CATEGORIES.map((category) => [
-            category.key,
-            countCategoryPermissionResults(category, effectivePermissionsMap),
-          ] as const),
+          PERMISSION_CATEGORIES.map(
+            (category) =>
+              [
+                category.key,
+                countCategoryPermissionResults(
+                  category,
+                  effectivePermissionsMap,
+                ),
+              ] as const,
+          ),
         ),
       [effectivePermissionsMap],
     );
@@ -666,8 +688,14 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
     );
 
     const handleResetAllOverrides = useCallback(() => {
-      onChange(null);
-    }, [onChange]);
+      const nextPermissionsMap = new Map(permissionsMap);
+
+      for (const permissionKey of accessPermissionKeys) {
+        nextPermissionsMap.delete(permissionKey);
+      }
+
+      onChange(toPermissionsData(nextPermissionsMap));
+    }, [accessPermissionKeys, onChange, permissionsMap]);
 
     const handlePoleChange = useCallback(
       (poleKey: string) => {
@@ -682,7 +710,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
       [onSelectedPageChange],
     );
 
-    const customPermissionCount = customPermissionKeys.size;
+    const customPermissionCount = customAccessPermissionKeys.size;
     const selectedCategory =
       PERMISSION_CATEGORIES.find(
         (category) => category.key === selectedPageKey,

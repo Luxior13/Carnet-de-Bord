@@ -1,10 +1,11 @@
-import { FileText, History, Key, Shield, User } from 'lucide-react';
+import { FileText, History, Key, Shield, User, UserCheck } from 'lucide-react';
 import React from 'react';
 
 export type UserDetailSectionId =
   | 'resume'
   | 'profile'
   | 'access'
+  | 'account'
   | 'security'
   | 'history';
 
@@ -28,6 +29,11 @@ export const USER_DETAIL_SECTIONS: UserDetailSection[] = [
     label: 'Acc\u00e8s',
   },
   {
+    icon: <UserCheck className="h-4 w-4" />,
+    id: 'account',
+    label: 'Compte personnel',
+  },
+  {
     icon: <Key className="h-4 w-4" />,
     id: 'security',
     label: 'S\u00e9curit\u00e9',
@@ -44,6 +50,7 @@ export const normalizeUserDetailSection = (
 ): UserDetailSectionId => {
   if (value === 'profile' || value === 'edit') return 'profile';
   if (value === 'access' || value === 'permissions') return 'access';
+  if (value === 'account' || value === 'personal-account') return 'account';
   if (value === 'security') return 'security';
   if (value === 'history') return 'history';
 

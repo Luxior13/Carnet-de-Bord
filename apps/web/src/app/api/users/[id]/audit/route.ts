@@ -41,10 +41,20 @@ export async function GET(
     const auth = await requireAuth();
     if (!auth.success) return auth.response;
 
-    // Allow users to view their own audit logs, or require USERS.VIEW permission for others
+    // Allow users to view their own audit logs with account permission,
+    // or require user-management activity permission for others.
     const isOwnAudit = auth.user.id === id;
-    if (!isOwnAudit) {
-      const permCheck = requirePermission(auth.user, PERMISSIONS.USERS.VIEW);
+    if (isOwnAudit) {
+      const ownActivityCheck = requirePermission(
+        auth.user,
+        PERMISSIONS.ACCOUNT.VIEW_ACTIVITY,
+      );
+      if (!ownActivityCheck.success) return ownActivityCheck.response;
+    } else {
+      const permCheck = requirePermission(
+        auth.user,
+        PERMISSIONS.USERS.VIEW_ACTIVITY,
+      );
       if (!permCheck.success) return permCheck.response;
     }
     const canViewSensitiveAudit = isOwnAudit || auth.user.isProtected;

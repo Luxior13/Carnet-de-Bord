@@ -110,7 +110,10 @@ export async function GET(
     const auth = await requireAuth();
     if (!auth.success) return auth.response;
 
-    const permCheck = requirePermission(auth.user, PERMISSIONS.USERS.VIEW);
+    const permCheck = requirePermission(
+      auth.user,
+      PERMISSIONS.USERS.VIEW_ACTIVITY,
+    );
     if (!permCheck.success) return permCheck.response;
 
     const { searchParams } = new URL(request.url);
