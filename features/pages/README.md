@@ -3,6 +3,10 @@
 Ce dossier decrit chaque page prevue du site prive.
 Chaque fichier explique le contenu attendu, les actions, les donnees gerees et les liaisons avec les autres pages.
 
+## Cadrage avant implementation
+
+- [Matrice de preparation long terme](MATRICE_PREPARATION.md) - statuts, permissions, modeles UI, donnees et liens entre modules.
+
 ## Tableau de bord
 
 - [Vue d'ensemble](tableau-de-bord.md) - `/tableau-de-bord`
