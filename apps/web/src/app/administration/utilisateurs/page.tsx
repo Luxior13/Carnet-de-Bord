@@ -18,10 +18,10 @@ const UsersListFallback: FC = () => (
   <div className="space-y-4" role="status" aria-label="Chargement">
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       {[...Array(4)].map((_, index) => (
-        <Skeleton key={index} className="h-20 rounded-xl" />
+        <Skeleton key={index} className="h-20 rounded-md" />
       ))}
     </div>
-    <Skeleton className="h-96 rounded-xl" />
+    <Skeleton className="h-96 rounded-md" />
   </div>
 );
 

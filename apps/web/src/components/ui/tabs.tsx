@@ -27,7 +27,7 @@ function TabsList({ className, ...props }: TabsListProps): React.JSX.Element {
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        'border-sidebar-border/70 bg-surface-muted text-muted-foreground inline-flex h-12 w-fit items-center justify-start gap-1 rounded-lg border p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]',
+        'border-border/75 bg-surface-muted/75 text-muted-foreground inline-flex h-10 w-fit items-center justify-start gap-1 rounded-md border p-1 shadow-none',
         className,
       )}
       {...props}
@@ -64,7 +64,7 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "hover:bg-surface/70 hover:text-foreground data-[state=active]:border-sidebar-border/75 data-[state=active]:bg-surface data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "hover:bg-surface/80 hover:text-foreground data-[state=active]:border-border/80 data-[state=active]:bg-surface data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/35 focus-visible:outline-ring inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}

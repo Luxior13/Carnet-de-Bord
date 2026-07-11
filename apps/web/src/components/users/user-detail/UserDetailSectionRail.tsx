@@ -82,7 +82,7 @@ export const UserDetailSectionRail = <
             ? 'h-10 gap-2 px-2 text-sm'
             : 'h-9 min-w-[4.75rem] flex-1 justify-center gap-1.5 px-2 text-xs',
           isActive
-            ? 'border-sidebar-ring/35 bg-sidebar-ring/15 text-foreground shadow-sm'
+            ? 'border-sidebar-ring/35 bg-sidebar-ring/15 text-foreground shadow-none'
             : 'text-muted-foreground hover:bg-surface-muted/85 hover:text-foreground',
         )}
       >

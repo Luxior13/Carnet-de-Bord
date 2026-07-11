@@ -16,7 +16,7 @@ const NotFoundPage: FC = () => {
             <SearchX className="size-7" />
           </ServiceIcon>
           <div className="space-y-2">
-            <h1 className="text-5xl font-semibold tracking-tight">404</h1>
+            <h1 className="text-5xl font-semibold tracking-normal">404</h1>
             <h2 className="text-xl font-semibold">Page introuvable</h2>
           </div>
           <p className="text-muted-foreground">

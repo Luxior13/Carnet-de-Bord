@@ -235,13 +235,13 @@ const ALL_CONNECTION_EVENT_OPTION: ConnectionEventFilterOption = {
 const CONNECTION_EVENT_OPTIONS: ConnectionEventFilterOption[] = [
   ALL_CONNECTION_EVENT_OPTION,
   {
-    color: 'border-[#5fbd7b]/35 bg-[#5fbd7b]/10 text-[#97e6ad]',
+    color: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
     icon: LogIn,
     label: 'Connexions réussies',
     value: 'LOGIN_SUCCESS',
   },
   {
-    color: 'border-red-500/35 bg-red-500/10 text-red-300',
+    color: 'border-destructive/35 bg-destructive/10 text-destructive',
     icon: XCircle,
     label: 'Connexions échouées',
     value: 'LOGIN_FAILED',
@@ -253,7 +253,7 @@ const CONNECTION_EVENT_OPTIONS: ConnectionEventFilterOption[] = [
     value: 'LOGOUT',
   },
   {
-    color: 'border-red-500/35 bg-red-500/10 text-red-300',
+    color: 'border-destructive/35 bg-destructive/10 text-destructive',
     icon: Ban,
     label: 'Comptes verrouillés',
     value: 'ACCOUNT_LOCKED',
@@ -261,10 +261,10 @@ const CONNECTION_EVENT_OPTIONS: ConnectionEventFilterOption[] = [
 ];
 
 const activitySelectTriggerClassName =
-  'border-sidebar-border/70 bg-surface text-sidebar-foreground hover:bg-sidebar-accent/25 focus-visible:border-sidebar-ring/45 focus-visible:ring-sidebar-ring/35 h-11 w-full shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]';
+  'border-sidebar-border/70 bg-surface text-sidebar-foreground hover:bg-sidebar-accent/25 focus-visible:border-sidebar-ring/45 focus-visible:ring-sidebar-ring/35 h-11 w-full shadow-none';
 
 const activitySelectContentClassName =
-  'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground rounded-lg p-1.5 shadow-2xl shadow-black/25';
+  'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]';
 
 const activitySelectItemClassName =
   'focus:bg-sidebar-accent/55 focus:text-sidebar-accent-foreground rounded-md py-2';
@@ -273,19 +273,19 @@ const ACTION_CONFIG = new Map<string, ActionConfig>(
   Object.entries({
     ACCOUNT_LOCKED: {
       category: 'security',
-      color: 'border-red-500/35 bg-red-500/10 text-red-300',
+      color: 'border-destructive/35 bg-destructive/10 text-destructive',
       icon: Ban,
       label: 'Compte verrouillé',
     },
     LOGIN_FAILED: {
       category: 'auth',
-      color: 'border-red-500/35 bg-red-500/10 text-red-300',
+      color: 'border-destructive/35 bg-destructive/10 text-destructive',
       icon: XCircle,
       label: 'Connexion échouée',
     },
     LOGIN_SUCCESS: {
       category: 'auth',
-      color: 'border-[#5fbd7b]/35 bg-[#5fbd7b]/10 text-[#97e6ad]',
+      color: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
       icon: LogIn,
       label: 'Connexion réussie',
     },
@@ -309,7 +309,7 @@ const ACTION_CONFIG = new Map<string, ActionConfig>(
     },
     PERMISSION_UPDATE: {
       category: 'access',
-      color: 'border-[#7aa7e8]/35 bg-[#7aa7e8]/10 text-[#9ec3ff]',
+      color: 'border-chart-2/35 bg-chart-2/10 text-chart-2',
       icon: Shield,
       label: 'Permissions modifiées',
     },
@@ -321,13 +321,13 @@ const ACTION_CONFIG = new Map<string, ActionConfig>(
     },
     USER_ACTIVATE: {
       category: 'lifecycle',
-      color: 'border-[#5fbd7b]/35 bg-[#5fbd7b]/10 text-[#97e6ad]',
+      color: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
       icon: CheckCircle,
       label: 'Utilisateur activé',
     },
     USER_CREATE: {
       category: 'lifecycle',
-      color: 'border-[#5fbd7b]/35 bg-[#5fbd7b]/10 text-[#97e6ad]',
+      color: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
       icon: UserPlus,
       label: 'Utilisateur créé',
     },
@@ -339,13 +339,13 @@ const ACTION_CONFIG = new Map<string, ActionConfig>(
     },
     USER_DELETE: {
       category: 'lifecycle',
-      color: 'border-red-500/35 bg-red-500/10 text-red-300',
+      color: 'border-destructive/35 bg-destructive/10 text-destructive',
       icon: Trash2,
       label: 'Utilisateur supprimé',
     },
     USER_UPDATE: {
       category: 'profile',
-      color: 'border-[#7aa7e8]/35 bg-[#7aa7e8]/10 text-[#9ec3ff]',
+      color: 'border-chart-2/35 bg-chart-2/10 text-chart-2',
       icon: Pencil,
       label: 'Utilisateur modifié',
     },
@@ -869,7 +869,7 @@ const getScopeVisuals = (log: JournalLog): ScopeVisual[] => {
 
   if (log.actorName || log.userId) {
     visuals.push({
-      className: 'border-[#5fbd7b]/35 bg-[#5fbd7b]/10 text-[#97e6ad]',
+      className: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
       icon: UserCheck,
       label: `Réalisé par ${log.actorName ?? log.userId}`,
       value: 'actor',
@@ -877,7 +877,7 @@ const getScopeVisuals = (log: JournalLog): ScopeVisual[] => {
   }
   if (log.targetName || log.targetUserId) {
     visuals.push({
-      className: 'border-[#7aa7e8]/35 bg-[#7aa7e8]/10 text-[#9ec3ff]',
+      className: 'border-chart-2/35 bg-chart-2/10 text-chart-2',
       icon: Shield,
       label: `Concernant ${log.targetName ?? log.targetUserId}`,
       value: 'target',
@@ -977,7 +977,7 @@ const JournalCard: FC<{
       className={cn(
         'border-sidebar-border/60 bg-surface-muted/35 relative overflow-hidden rounded-lg border transition-colors',
         isOpen
-          ? 'border-sidebar-ring/35 bg-popover/75 shadow-[inset_0_0_0_1px_rgba(108,146,214,0.08)]'
+          ? 'border-sidebar-ring/35 bg-popover/75'
           : 'hover:border-sidebar-border hover:bg-surface-muted/60',
       )}
     >
@@ -1462,8 +1462,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                         onClick={() => handleLogTypeChange(option.value)}
                         className={cn(
                           'border-sidebar-border/60 bg-surface-muted hover:bg-sidebar-accent/25 flex min-w-0 items-center gap-3 rounded-lg border p-3 text-left transition-colors',
-                          isActiveType &&
-                            'border-primary/45 bg-primary/10 shadow-[inset_0_0_0_1px_rgba(108,146,214,0.16)]',
+                          isActiveType && 'border-primary/45 bg-primary/10',
                         )}
                       >
                         <span
@@ -1682,14 +1681,14 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
               <JournalSkeleton />
             ) : error ? (
               <div className="border-sidebar-border/60 flex flex-col items-center justify-center rounded-lg border py-16">
-                <div className="border-destructive/35 bg-destructive/10 text-destructive flex h-16 w-16 items-center justify-center rounded-xl border">
+                <div className="border-destructive/35 bg-destructive/10 text-destructive flex h-16 w-16 items-center justify-center rounded-md border">
                   <XCircle className="h-8 w-8" />
                 </div>
                 <p className="text-muted-foreground mt-4 text-sm">{error}</p>
               </div>
             ) : logs.length === 0 ? (
               <div className="border-sidebar-border/60 flex flex-col items-center justify-center rounded-lg border py-16">
-                <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-16 w-16 items-center justify-center rounded-xl border">
+                <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-16 w-16 items-center justify-center rounded-md border">
                   <Filter className="h-8 w-8" />
                 </div>
                 <p className="text-muted-foreground mt-4 text-sm">

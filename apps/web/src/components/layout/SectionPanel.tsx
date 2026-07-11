@@ -24,17 +24,17 @@ export const SectionPanel: FC<SectionPanelProps> = ({
   return (
     <section
       className={cn(
-        'border-sidebar-border/70 bg-surface overflow-hidden rounded-lg border shadow-[var(--shadow-panel)]',
+        'border-border/80 bg-surface overflow-hidden rounded-md border shadow-[var(--shadow-panel)]',
         className,
       )}
     >
-      <div className="border-sidebar-border/65 bg-surface-muted flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+      <div className="border-border/70 bg-surface-muted/75 flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border shadow-[inset_0_1px_0_rgba(255,255,255,0.055)]">
+          <span className="border-sidebar-ring/30 bg-sidebar-ring/10 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-md border">
             {icon}
           </span>
           <div className="min-w-0">
-            <h3 className="text-sidebar-foreground text-sm font-semibold tracking-tight">
+            <h3 className="text-sidebar-foreground text-sm font-semibold tracking-normal">
               {title}
             </h3>
             {description && (
@@ -48,9 +48,7 @@ export const SectionPanel: FC<SectionPanelProps> = ({
           <div className="flex shrink-0 items-center gap-2">{actions}</div>
         )}
       </div>
-      <div className={cn('space-y-4 p-4 sm:p-5', contentClassName)}>
-        {children}
-      </div>
+      <div className={cn('space-y-4 p-4', contentClassName)}>{children}</div>
     </section>
   );
 };

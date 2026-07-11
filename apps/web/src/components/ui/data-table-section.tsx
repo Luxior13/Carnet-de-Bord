@@ -54,11 +54,11 @@ const DataTableSection: FC<DataTableSectionProps> = ({
 }) => (
   <Card
     className={cn(
-      'border-sidebar-border/70 overflow-hidden rounded-lg py-0',
+      'border-border/80 overflow-hidden rounded-md py-0',
       className,
     )}
   >
-    <CardHeader className="p-4 sm:p-5">
+    <CardHeader className="p-4">
       <div className="flex flex-col gap-1">
         <div className="min-w-0">
           <CardTitle className="text-base">{title}</CardTitle>
@@ -68,7 +68,7 @@ const DataTableSection: FC<DataTableSectionProps> = ({
       {toolbar && (
         <div
           className={cn(
-            'mt-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between',
+            'mt-3 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between',
             toolbarClassName,
           )}
         >
@@ -114,7 +114,7 @@ const DataTableMobileList: FC<DataTableSlotProps> = ({
   children,
   className,
 }) => (
-  <div className={cn('divide-sidebar-border/70 divide-y md:hidden', className)}>
+  <div className={cn('divide-border/70 divide-y md:hidden', className)}>
     {children}
   </div>
 );

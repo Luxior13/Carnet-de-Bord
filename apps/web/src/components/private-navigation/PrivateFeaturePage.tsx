@@ -61,14 +61,14 @@ const SpaceNavigation: FC<{ currentHref: string; space: NavigationSpace }> = ({
   return (
     <aside
       aria-label={`Navigation du pôle ${space.label}`}
-      className="border-sidebar-border/70 bg-surface rounded-lg border p-4 shadow-[var(--shadow-panel)]"
+      className="border-border/80 bg-surface rounded-md border p-4 shadow-[var(--shadow-panel)]"
     >
       <h2 className="text-sm font-semibold">Navigation du pôle</h2>
       <div className="mt-3 space-y-3">
         {sections.map((section) => (
           <div key={section.id} className="space-y-1.5">
             {section.label && (
-              <p className="text-muted-foreground px-2 text-[11px] font-semibold tracking-[0.14em] uppercase">
+              <p className="text-muted-foreground px-2 text-[11px] font-semibold uppercase">
                 {section.label}
               </p>
             )}
@@ -110,7 +110,7 @@ const SectionMap: FC<{ item: NavItem; space: NavigationSpace }> = ({
   return (
     <div className="space-y-4">
       {children.length > 0 && (
-        <section className="border-sidebar-border/70 bg-surface rounded-lg border p-4 shadow-[var(--shadow-panel)]">
+        <section className="border-border/80 bg-surface rounded-md border p-4 shadow-[var(--shadow-panel)]">
           <h2 className="text-sm font-semibold">Sous-pages</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {children.map((child) => {
@@ -133,13 +133,13 @@ const SectionMap: FC<{ item: NavItem; space: NavigationSpace }> = ({
           </div>
         </section>
       )}
-      <section className="border-sidebar-border/70 bg-surface rounded-lg border p-4 shadow-[var(--shadow-panel)]">
+      <section className="border-border/80 bg-surface rounded-md border p-4 shadow-[var(--shadow-panel)]">
         <h2 className="text-sm font-semibold">Organisation du pôle</h2>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           {visibleSections.map((section) => (
             <div
               key={section.id}
-              className="border-border/60 bg-surface-muted/60 rounded-md border p-3"
+              className="border-border/65 bg-surface-muted/55 rounded-md border p-3"
             >
               <p className="text-sm font-medium">{section.label}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -190,12 +190,12 @@ const PrivateFeaturePage: FC<PrivateFeaturePageProps> = ({ item, space }) => {
           <PageCanvas contentClassName="space-y-5">
             <section
               className={cn(
-                'overflow-hidden rounded-lg border shadow-[var(--shadow-panel-strong)]',
+                'overflow-hidden rounded-md border shadow-[var(--shadow-panel)]',
                 tone.hero,
               )}
             >
-              <div className={cn('h-1.5 w-full', tone.accent)} />
-              <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
+              <div className={cn('h-1 w-full', tone.accent)} />
+              <div className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex min-w-0 items-start gap-4">
                   <ServiceIcon className={cn('mt-0.5 size-11', tone.icon)}>
                     <Icon className="size-5" />
@@ -209,7 +209,7 @@ const PrivateFeaturePage: FC<PrivateFeaturePageProps> = ({ item, space }) => {
                         <Badge variant="outline">{item.status}</Badge>
                       )}
                     </div>
-                    <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">
+                    <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">
                       {item.label}
                     </h1>
                     <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-6">

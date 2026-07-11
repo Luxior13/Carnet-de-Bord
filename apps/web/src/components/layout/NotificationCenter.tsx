@@ -34,8 +34,7 @@ const QUICK_LINKS = [
   },
 ] as const;
 
-const defaultAccentClassName =
-  'border-cyan-400/35 bg-cyan-400/10 text-cyan-200';
+const defaultAccentClassName = 'border-primary/35 bg-primary/10 text-primary';
 
 export const NotificationCenter: FC<NotificationCenterProps> = ({
   notifications = [],
@@ -59,7 +58,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
         >
           <Bell className="size-4" />
           {unreadNotificationsCount > 0 && (
-            <span className="ring-surface absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-cyan-400 text-[10px] font-bold text-slate-950 ring-2">
+            <span className="ring-surface bg-primary text-primary-foreground absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full text-[10px] font-bold ring-2">
               {unreadNotificationsCount}
               <span className="sr-only">notifications non lues</span>
             </span>
@@ -68,7 +67,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
       </PopoverTrigger>
       <PopoverContent
         align="end"
-        className="border-sidebar-border/80 bg-surface-raised/98 w-[min(calc(100vw-2rem),22rem)] overflow-hidden p-0 shadow-2xl shadow-black/25"
+        className="border-sidebar-border/80 bg-surface-raised/98 w-[min(calc(100vw-2rem),22rem)] overflow-hidden p-0 shadow-[var(--shadow-panel-strong)]"
         sideOffset={8}
       >
         <div className="border-sidebar-border/65 border-b px-4 py-3">
@@ -84,7 +83,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
               </p>
             </div>
             {unreadNotificationsCount > 0 && (
-              <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-2 py-0.5 text-xs font-semibold text-cyan-100">
+              <span className="border-primary/30 bg-primary/10 text-primary rounded-full border px-2 py-0.5 text-xs font-semibold">
                 {unreadNotificationsCount}
               </span>
             )}
@@ -116,7 +115,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                         {notification.title}
                       </span>
                       {isUnread && (
-                        <span className="size-1.5 shrink-0 rounded-full bg-cyan-300" />
+                        <span className="bg-primary size-1.5 shrink-0 rounded-full" />
                       )}
                     </span>
                     <span className="text-muted-foreground mt-0.5 line-clamp-2 text-xs leading-5">

@@ -70,7 +70,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
 
   return (
     <form {...passwordManagerIgnoreAttributes} onSubmit={handleSubmit}>
-      <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+      <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
         <CardHeader className="border-sidebar-border/65 bg-surface-muted flex-row items-center justify-between border-b p-3 sm:p-4">
           <CardTitle className="text-sm">Compte utilisateur</CardTitle>
           {!canEdit && !canEditEmail && (

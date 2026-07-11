@@ -115,7 +115,7 @@ function LoginPage(): React.ReactNode {
         <div className="bg-primary h-1 w-full" />
         <CardHeader className="space-y-4">
           <div className="flex items-center gap-3">
-            <span className="bg-primary flex size-10 items-center justify-center rounded-lg shadow-sm">
+            <span className="bg-primary flex size-10 items-center justify-center rounded-lg shadow-none">
               <Image
                 src="/assets/noc.png"
                 alt=""
@@ -137,7 +137,9 @@ function LoginPage(): React.ReactNode {
               <ShieldCheck className="size-4" />
               Espace privé
             </div>
-            <CardTitle className="text-2xl tracking-tight">Connexion</CardTitle>
+            <CardTitle className="text-2xl tracking-normal">
+              Connexion
+            </CardTitle>
             <CardDescription className="max-w-sm leading-6">
               Accédez à l&apos;espace privé, aux comptes et à
               l&apos;administration.

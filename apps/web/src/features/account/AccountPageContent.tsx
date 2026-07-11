@@ -112,13 +112,13 @@ const AccountHeader: FC<AccountHeaderProps> = ({ userData }) => (
 
 const AccountPageContentSkeleton: FC = () => (
   <div className="space-y-5">
-    <Skeleton className="h-28 rounded-xl" />
+    <Skeleton className="h-28 rounded-md" />
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.95fr)] lg:items-start">
       <div className="space-y-4">
-        <Skeleton className="h-72 rounded-xl" />
-        <Skeleton className="h-96 rounded-xl" />
+        <Skeleton className="h-72 rounded-md" />
+        <Skeleton className="h-96 rounded-md" />
       </div>
-      <Skeleton className="h-[34rem] rounded-xl" />
+      <Skeleton className="h-[34rem] rounded-md" />
     </div>
   </div>
 );
@@ -398,10 +398,10 @@ export const AccountPageContent: FC = () => {
                   <Icon className="size-4" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-sidebar-foreground text-sm font-bold tracking-tight">
+                  <p className="text-sidebar-foreground text-sm font-bold tracking-normal">
                     {item.title}
                   </p>
-                  <p className="text-sidebar-foreground mt-1 truncate text-lg font-semibold tracking-tight">
+                  <p className="text-sidebar-foreground mt-1 truncate text-lg font-semibold tracking-normal">
                     {item.value}
                   </p>
                   <p className="text-sidebar-foreground/55 mt-0.5 truncate text-xs">

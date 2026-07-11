@@ -98,25 +98,25 @@ describe('getPasswordStrengthLabel', () => {
 });
 
 describe('getPasswordStrengthColor', () => {
-  it('returns bg-red-500 for score 0-1', () => {
-    expect(getPasswordStrengthColor(0)).toBe('bg-red-500');
-    expect(getPasswordStrengthColor(1)).toBe('bg-red-500');
+  it('returns bg-destructive for score 0-1', () => {
+    expect(getPasswordStrengthColor(0)).toBe('bg-destructive');
+    expect(getPasswordStrengthColor(1)).toBe('bg-destructive');
   });
 
-  it('returns bg-orange-500 for score 2', () => {
-    expect(getPasswordStrengthColor(2)).toBe('bg-orange-500');
+  it('returns bg-amber-500 for score 2', () => {
+    expect(getPasswordStrengthColor(2)).toBe('bg-amber-500');
   });
 
-  it('returns bg-yellow-500 for score 3', () => {
-    expect(getPasswordStrengthColor(3)).toBe('bg-yellow-500');
+  it('returns bg-chart-4 for score 3', () => {
+    expect(getPasswordStrengthColor(3)).toBe('bg-chart-4');
   });
 
-  it('returns bg-green-500 for score 4', () => {
-    expect(getPasswordStrengthColor(4)).toBe('bg-green-500');
+  it('returns bg-chart-3 for score 4', () => {
+    expect(getPasswordStrengthColor(4)).toBe('bg-chart-3');
   });
 
-  it('returns bg-gray-500 for invalid scores', () => {
-    expect(getPasswordStrengthColor(-1)).toBe('bg-gray-500');
-    expect(getPasswordStrengthColor(5)).toBe('bg-gray-500');
+  it('returns bg-muted-foreground for invalid scores', () => {
+    expect(getPasswordStrengthColor(-1)).toBe('bg-muted-foreground');
+    expect(getPasswordStrengthColor(5)).toBe('bg-muted-foreground');
   });
 });

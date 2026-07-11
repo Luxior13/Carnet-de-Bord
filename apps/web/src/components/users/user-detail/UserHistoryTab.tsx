@@ -235,7 +235,7 @@ const ACTIVITY_SCOPE_VISUALS: Record<
   ActivityScopeVisual
 > = {
   by: {
-    className: 'border-[#5fbd7b]/35 bg-[#5fbd7b]/10 text-[#97e6ad]',
+    className: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
     icon: UserCheck,
     label: 'Réalisé par ce compte',
     value: 'by',
@@ -248,7 +248,7 @@ const ACTIVITY_SCOPE_VISUALS: Record<
     value: 'linked',
   },
   on: {
-    className: 'border-[#7aa7e8]/35 bg-[#7aa7e8]/10 text-[#9ec3ff]',
+    className: 'border-chart-2/35 bg-chart-2/10 text-chart-2',
     icon: Shield,
     label: 'Concernant ce compte',
     value: 'on',
@@ -1053,10 +1053,10 @@ const escapeCsvCell = (value: string): string => {
 };
 
 const activitySelectTriggerClassName =
-  'border-sidebar-border/70 bg-surface text-sidebar-foreground hover:bg-sidebar-accent/25 focus-visible:border-sidebar-ring/45 focus-visible:ring-sidebar-ring/35 h-11 w-full shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]';
+  'border-sidebar-border/70 bg-surface text-sidebar-foreground hover:bg-sidebar-accent/25 focus-visible:border-sidebar-ring/45 focus-visible:ring-sidebar-ring/35 h-11 w-full shadow-none';
 
 const activitySelectContentClassName =
-  'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground rounded-lg p-1.5 shadow-2xl shadow-black/25';
+  'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]';
 
 const activitySelectItemClassName =
   'focus:bg-sidebar-accent/55 focus:text-sidebar-accent-foreground rounded-md py-2';
@@ -1277,7 +1277,7 @@ const ActivityListRow: FC<{
       className={cn(
         'border-sidebar-border/60 bg-surface-muted/35 relative overflow-hidden rounded-lg border transition-colors',
         isOpen
-          ? 'border-sidebar-ring/35 bg-popover/75 shadow-[inset_0_0_0_1px_rgba(108,146,214,0.08)]'
+          ? 'border-sidebar-ring/35 bg-popover/75'
           : 'hover:border-sidebar-border hover:bg-surface-muted/60',
       )}
     >
@@ -1759,7 +1759,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-32 rounded-xl" />
+        <Skeleton className="h-32 rounded-md" />
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => (
             <Skeleton key={i} className="h-14 rounded-lg" />
@@ -1772,9 +1772,9 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   // Empty
   if (auditLogs.length === 0) {
     return (
-      <Card className="border-sidebar-border/70 min-h-[360px] items-center justify-center rounded-xl py-0">
+      <Card className="border-sidebar-border/70 min-h-[360px] items-center justify-center rounded-md py-0">
         <CardContent className="flex flex-col items-center p-8">
-          <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-20 items-center justify-center rounded-xl border">
+          <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-20 items-center justify-center rounded-md border">
             <History className="size-10" />
           </div>
           <h3 className="text-foreground mt-6 text-lg font-semibold">
@@ -2004,8 +2004,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                       onClick={() => handleActivityScopeChange(scope.value)}
                       className={cn(
                         'border-sidebar-border/60 bg-surface-muted hover:bg-sidebar-accent/25 flex min-w-0 items-center gap-3 rounded-lg border p-3 text-left transition-colors',
-                        isActiveScope &&
-                          'border-primary/45 bg-primary/10 shadow-[inset_0_0_0_1px_rgba(108,146,214,0.16)]',
+                        isActiveScope && 'border-primary/45 bg-primary/10',
                       )}
                     >
                       <ActivityScopeIconGroup scopes={scopeVisuals} size="md" />
@@ -2036,7 +2035,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                 </div>
                 {filteredLogs.length === 0 ? (
                   <div className="border-sidebar-border/60 flex flex-col items-center justify-center rounded-lg border py-16">
-                    <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-16 w-16 items-center justify-center rounded-xl border">
+                    <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-16 w-16 items-center justify-center rounded-md border">
                       <Filter className="h-8 w-8" />
                     </div>
                     <p className="text-muted-foreground mt-4 text-sm">

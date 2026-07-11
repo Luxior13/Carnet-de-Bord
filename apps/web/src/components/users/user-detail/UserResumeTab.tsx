@@ -41,7 +41,7 @@ const ResumeStatCard: FC<{
   tone?: ResumeStatTone;
   value: number;
 }> = ({ icon: Icon, label, tone = 'neutral', value }) => (
-  <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+  <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
     <CardContent className="p-3 sm:p-4">
       <div className="flex items-center gap-3">
         <div
@@ -50,7 +50,7 @@ const ResumeStatCard: FC<{
           <Icon className="size-4" />
         </div>
         <div className="min-w-0">
-          <p className="text-foreground text-xl font-semibold tracking-tight">
+          <p className="text-foreground text-xl font-semibold tracking-normal">
             {value}
           </p>
           <p className="text-muted-foreground truncate text-xs">{label}</p>
@@ -102,7 +102,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
         </div>
       )}
       {/* User Details */}
-      <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+      <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
         <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
           <CardTitle className="text-sm">Informations compte</CardTitle>
         </CardHeader>

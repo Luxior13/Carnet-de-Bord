@@ -221,11 +221,11 @@ const UsersStatCard: FC<{
   const toneClassNames = getUsersStatToneClassNames(tone);
 
   return (
-    <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+    <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div
-            className={`${toneClassNames.icon} flex h-9 w-9 items-center justify-center rounded-lg border shadow-[inset_0_1px_0_rgba(255,255,255,0.055)]`}
+            className={`${toneClassNames.icon} flex h-9 w-9 items-center justify-center rounded-lg border shadow-none`}
           >
             <Icon size={18} />
           </div>

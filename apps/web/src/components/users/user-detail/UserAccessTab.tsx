@@ -109,7 +109,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             <div className="border-sidebar-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
-              <ShieldCheck className="size-5 shrink-0 text-[#97e6ad]" />
+              <ShieldCheck className="text-chart-3 size-5 shrink-0" />
               <div className="min-w-0">
                 <p className="text-foreground text-sm font-semibold">
                   Toutes les pages

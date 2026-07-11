@@ -288,7 +288,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
     >
       {children}
       {showSessionWarning && (
-        <div className="bg-card fixed right-4 bottom-4 z-50 max-w-sm rounded-lg border p-4 shadow-lg">
+        <div className="bg-card fixed right-4 bottom-4 z-50 max-w-sm rounded-md border p-4 shadow-[var(--shadow-panel)]">
           <p className="mb-2 font-medium">Session bientôt expirée</p>
           <p className="text-muted-foreground mb-3 text-sm">
             Votre session va expirer dans 5 minutes pour inactivité.

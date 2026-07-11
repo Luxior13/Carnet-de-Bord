@@ -30,7 +30,7 @@ const PageShell: FC<PageShellProps> = ({
   return (
     <div
       className={cn(
-        'relative z-10 mx-auto w-full px-[var(--private-content-padding)] py-6 sm:py-7 lg:py-8',
+        'relative z-10 mx-auto w-full px-[var(--private-content-padding)] py-5 sm:py-6',
         getPageShellWidthClass(width),
         className,
       )}
@@ -51,7 +51,7 @@ const PageCanvas: FC<PageCanvasProps> = ({
 }) => {
   return (
     <div className={cn('relative z-10 min-w-0', className)} {...props}>
-      <div className={cn('space-y-6 py-4 sm:py-5 lg:py-6', contentClassName)}>
+      <div className={cn('space-y-5 py-4 sm:py-5', contentClassName)}>
         {children}
       </div>
     </div>
@@ -74,13 +74,13 @@ const PageHeader: FC<PageHeaderProps> = ({
   title,
 }) => {
   return (
-    <Card className="overflow-hidden rounded-lg py-0 shadow-none">
-      <div className="h-1.5 w-full bg-[linear-gradient(90deg,rgba(95,132,200,0.95),rgba(108,146,214,0.45),rgba(95,132,200,0.18))]" />
-      <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+    <Card className="overflow-hidden rounded-md py-0 shadow-[var(--shadow-panel)]">
+      <div className="bg-primary h-1 w-full" />
+      <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           {icon}
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
+            <h1 className="truncate text-xl font-semibold tracking-normal sm:text-2xl">
               {title}
             </h1>
             {description && (

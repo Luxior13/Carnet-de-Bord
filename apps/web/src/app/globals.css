@@ -53,70 +53,67 @@
 :root,
 .dark {
   color-scheme: dark;
-  --background: #0b1017;
-  --foreground: #e8eef8;
-  --surface-subtle: #101721;
-  --surface: #172131;
-  --surface-muted: #202c3f;
-  --surface-raised: #233149;
-  --surface-control: rgba(16, 23, 33, 0.78);
+  --background: #101113;
+  --foreground: #eef1f4;
+  --surface-subtle: #15171a;
+  --surface: #1a1d21;
+  --surface-muted: #22262b;
+  --surface-raised: #282d33;
+  --surface-control: rgba(21, 23, 26, 0.86);
   --card: var(--surface);
-  --card-foreground: #e8eef8;
+  --card-foreground: #eef1f4;
   --popover: var(--surface-raised);
-  --popover-foreground: #e8eef8;
-  --primary: #7aa7e8;
-  --primary-foreground: #07111f;
+  --popover-foreground: #eef1f4;
+  --primary: #6db8b1;
+  --primary-foreground: #071313;
   --secondary: var(--surface-muted);
-  --secondary-foreground: #dbe7fb;
+  --secondary-foreground: #e3e8ed;
   --muted: var(--surface-subtle);
-  --muted-foreground: #9aa8bd;
-  --accent: var(--surface-muted);
-  --accent-foreground: #f2f6ff;
-  --destructive: #d9546b;
+  --muted-foreground: #a7b0ba;
+  --accent: #2a3035;
+  --accent-foreground: #f4f6f8;
+  --destructive: #e05d6f;
   --destructive-foreground: #fff7f8;
-  --border: #3a4d66;
+  --border: #343a42;
   --input: var(--surface-subtle);
-  --ring: #8bb8f5;
+  --ring: #75c6be;
   --chart-1: var(--ring);
-  --chart-2: #8f6fe8;
-  --chart-3: #55c2a2;
-  --chart-4: #d9b75f;
-  --chart-5: #d9546b;
-  --radius: 0.625rem;
-  --sidebar: #141d2b;
-  --sidebar-foreground: #dbe5f5;
+  --chart-2: #7da7d9;
+  --chart-3: #82c66f;
+  --chart-4: #d7b35d;
+  --chart-5: #e05d6f;
+  --radius: 0.5rem;
+  --sidebar: #141619;
+  --sidebar-foreground: #e2e7eb;
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
   --sidebar-accent: var(--surface-muted);
-  --sidebar-accent-foreground: #f1f6ff;
-  --sidebar-border: #3a506d;
+  --sidebar-accent-foreground: #f4f6f8;
+  --sidebar-border: #323840;
   --sidebar-ring: var(--ring);
   --public-column-width: 66rem;
-  --private-content-width: 72rem;
-  --private-content-width-wide: 88rem;
-  --private-content-padding: clamp(1rem, 2.2vw, 2rem);
-  --public-column-border: rgba(232, 238, 248, 0.075);
-  --public-column-shadow: 0 34px 88px -70px rgba(0, 0, 0, 0.98);
-  --page-overlay-start: rgba(11, 16, 23, 0.76);
-  --page-overlay-end: rgba(8, 12, 18, 0.92);
-  --page-glow: rgba(122, 167, 232, 0.12);
-  --column-glow: rgba(122, 167, 232, 0.08);
-  --column-surface-start: rgba(20, 29, 43, 0.68);
-  --column-surface-end: rgba(11, 16, 23, 0.86);
-  --sidebar-pattern-primary: rgba(122, 167, 232, 0.05);
-  --sidebar-pattern-secondary: rgba(38, 198, 218, 0.028);
-  --sidebar-pattern-mask-start: rgba(0, 0, 0, 0.72);
-  --sidebar-pattern-mask-end: rgba(0, 0, 0, 0.34);
-  --sidebar-scrollbar-thumb: rgba(122, 167, 232, 0.42);
-  --sidebar-scrollbar-thumb-hover: rgba(139, 184, 245, 0.68);
+  --private-content-width: 76rem;
+  --private-content-width-wide: 92rem;
+  --private-content-padding: clamp(1rem, 1.8vw, 1.75rem);
+  --public-column-border: rgba(238, 241, 244, 0.06);
+  --public-column-shadow: 0 24px 64px -54px rgba(0, 0, 0, 0.92);
+  --page-overlay-start: rgba(16, 17, 19, 0.92);
+  --page-overlay-end: rgba(16, 17, 19, 0.98);
+  --column-surface-start: rgba(26, 29, 33, 0.86);
+  --column-surface-end: rgba(16, 17, 19, 0.94);
+  --sidebar-pattern-primary: rgba(238, 241, 244, 0.035);
+  --sidebar-pattern-secondary: rgba(109, 184, 177, 0.028);
+  --sidebar-pattern-mask-start: rgba(0, 0, 0, 0.64);
+  --sidebar-pattern-mask-end: rgba(0, 0, 0, 0.42);
+  --sidebar-scrollbar-thumb: rgba(109, 184, 177, 0.35);
+  --sidebar-scrollbar-thumb-hover: rgba(117, 198, 190, 0.58);
   --shadow-panel:
-    0 18px 42px -36px rgba(0, 0, 0, 0.96),
-    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    0 16px 34px -30px rgba(0, 0, 0, 0.88),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
   --shadow-panel-strong:
-    0 24px 64px -42px rgba(0, 0, 0, 0.98),
-    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    0 22px 50px -38px rgba(0, 0, 0, 0.94),
+    inset 0 1px 0 rgba(255, 255, 255, 0.032);
   --site-background-column-bg:
-    radial-gradient(circle at 50% 0%, var(--column-glow), transparent 34rem),
     linear-gradient(
       180deg,
       var(--column-surface-start),
@@ -140,23 +137,7 @@
         180deg,
         var(--page-overlay-start),
         var(--page-overlay-end)
-      ),
-      radial-gradient(
-        circle at 50% 0%,
-        var(--page-glow),
-        transparent 42rem
-      ),
-      url('/assets/Fond%20d%27ecran%20site.webp');
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-attachment: fixed;
-  }
-
-  @media (max-width: 767px), (prefers-reduced-motion: reduce) {
-    body {
-      background-attachment: scroll;
-    }
+      );
   }
 
   .site-background-column {

@@ -27,12 +27,12 @@ export const UsersAdminHero: FC<UsersAdminHeroProps> = ({
   return (
     <section
       className={cn(
-        'overflow-hidden rounded-lg border shadow-[var(--shadow-panel-strong)]',
+        'overflow-hidden rounded-md border shadow-[var(--shadow-panel)]',
         tone.hero,
       )}
     >
-      <div className={cn('h-1.5 w-full', tone.accent)} />
-      <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className={cn('h-1 w-full', tone.accent)} />
+      <div className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           <ServiceIcon
             className={cn('mt-0.5 size-11', tone.icon, iconClassName)}
@@ -46,7 +46,9 @@ export const UsersAdminHero: FC<UsersAdminHeroProps> = ({
               </Badge>
               {meta}
             </div>
-            <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">{title}</h1>
+            <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">
+              {title}
+            </h1>
             <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-6">
               {description}
             </p>

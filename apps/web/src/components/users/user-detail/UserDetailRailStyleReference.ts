@@ -3,7 +3,7 @@ export const USER_DETAIL_RAIL_STYLE_REFERENCE = {
   avatar:
     'bg-primary text-primary-foreground flex size-12 shrink-0 items-center justify-center rounded-lg text-sm font-semibold',
   badgeRow: 'flex flex-wrap gap-1.5',
-  card: 'border-border bg-card overflow-hidden rounded-lg border shadow-sm',
+  card: 'border-border bg-card overflow-hidden rounded-lg border shadow-[var(--shadow-panel)]',
   cardAccent: 'bg-primary h-1 w-full',
   cardHeader: 'border-border space-y-4 border-b p-4',
   identity: 'flex items-start gap-3',

@@ -9,7 +9,7 @@ const Card: FC<CardProps> = ({ className, ...props }) => {
     <div
       data-slot="card"
       className={cn(
-        'border-sidebar-border/70 bg-surface text-card-foreground flex flex-col gap-0 overflow-hidden rounded-lg border py-0 shadow-[var(--shadow-panel)]',
+        'border-border/80 bg-surface text-card-foreground flex flex-col gap-0 overflow-hidden rounded-md border py-0 shadow-[var(--shadow-panel)]',
         className,
       )}
       {...props}
@@ -22,7 +22,7 @@ const CardHeader: FC<CardProps> = ({ className, ...props }) => {
     <div
       data-slot="card-header"
       className={cn(
-        'border-sidebar-border/65 bg-surface-muted flex flex-col gap-1.5 border-b px-4 py-4 sm:px-5 sm:py-5',
+        'border-border/70 bg-surface-muted/75 flex flex-col gap-1.5 border-b px-4 py-3.5 sm:px-5 sm:py-4',
         className,
       )}
       {...props}
@@ -34,7 +34,7 @@ const CardTitle: FC<CardProps> = ({ className, ...props }) => {
   return (
     <div
       data-slot="card-title"
-      className={cn('leading-none font-semibold', className)}
+      className={cn('leading-none font-semibold tracking-normal', className)}
       {...props}
     />
   );
@@ -52,11 +52,7 @@ const CardDescription: FC<CardProps> = ({ className, ...props }) => {
 
 const CardContent: FC<CardProps> = ({ className, ...props }) => {
   return (
-    <div
-      data-slot="card-content"
-      className={cn('p-4 sm:p-5', className)}
-      {...props}
-    />
+    <div data-slot="card-content" className={cn('p-4', className)} {...props} />
   );
 };
 
@@ -65,7 +61,7 @@ const CardFooter: FC<CardProps> = ({ className, ...props }) => {
     <div
       data-slot="card-footer"
       className={cn(
-        'border-sidebar-border/65 bg-surface-muted flex items-center border-t px-4 py-4 sm:px-5 sm:py-5',
+        'border-border/70 bg-surface-muted/75 flex items-center border-t px-4 py-3.5 sm:px-5 sm:py-4',
         className,
       )}
       {...props}

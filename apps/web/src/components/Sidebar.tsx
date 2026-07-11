@@ -115,7 +115,7 @@ const SpaceSwitcher: FC<{
           aria-label={`Pôle actif : ${activeSpace.label}`}
           title={activeSpace.label}
           className={cn(
-            'focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/45 flex h-12 w-full min-w-0 items-center gap-3 rounded-xl border px-2.5 text-left transition-[background-color,border-color,box-shadow] outline-none hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] focus-visible:ring-2 data-[state=open]:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]',
+            'focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/45 flex h-11 w-full min-w-0 items-center gap-3 rounded-md border px-2.5 text-left transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-2',
             activeTone.soft,
             'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
           )}
@@ -145,7 +145,7 @@ const SpaceSwitcher: FC<{
         sideOffset={10}
         alignOffset={sidebarState === 'collapsed' ? 0 : -2}
         className={cn(
-          'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground w-[calc(100vw-2rem)] max-w-80 overflow-hidden rounded-lg p-1.5 shadow-2xl shadow-black/25 sm:w-80',
+          'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground w-[calc(100vw-2rem)] max-w-80 overflow-hidden rounded-md p-1.5 shadow-[var(--shadow-panel-strong)] sm:w-80',
         )}
       >
         <DropdownMenuLabel className="text-sidebar-foreground/60 px-2 py-1.5 text-xs font-medium">
@@ -376,13 +376,13 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
 
   return (
     <SidebarRoot collapsible="icon" variant="sidebar" className={className}>
-      <SidebarHeader className="border-sidebar-border/70 gap-2.5 border-b bg-[linear-gradient(180deg,rgba(10,15,24,0.12),rgba(10,15,24,0))] p-3 group-data-[collapsible=icon]/sidebar:px-0">
+      <SidebarHeader className="border-sidebar-border/70 bg-sidebar/95 gap-2.5 border-b p-3 group-data-[collapsible=icon]/sidebar:px-0">
         <Link
           href="/tableau-de-bord"
           aria-label="Retour au tableau de bord"
           onClick={() => setOpenMobile(false)}
           className={cn(
-            'hover:bg-sidebar-accent/30 focus-visible:ring-sidebar-ring hover:border-sidebar-border/45 flex h-10 w-full min-w-0 items-center gap-3 overflow-hidden rounded-lg border border-transparent px-2 text-left transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-2',
+            'hover:bg-sidebar-accent/30 focus-visible:ring-sidebar-ring hover:border-sidebar-border/45 flex h-10 w-full min-w-0 items-center gap-3 overflow-hidden rounded-md border border-transparent px-2 text-left transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-2',
             'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
           )}
         >
@@ -397,7 +397,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
             />
           </span>
           <span className="max-w-40 min-w-0 overflow-hidden transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:max-w-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150">
-            <span className="block truncate text-sm font-semibold tracking-[0.01em]">
+            <span className="block truncate text-sm font-semibold tracking-normal">
               {SITE_CONFIG.name}
             </span>
             <span className="text-sidebar-foreground/58 block truncate text-[11px]">
@@ -440,7 +440,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 aria-label={`Menu utilisateur de ${userDisplayName}`}
                 title={userDisplayName}
                 className={cn(
-                  'border-sidebar-border/65 bg-surface-control hover:border-sidebar-ring/25 hover:bg-surface-subtle focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/35 data-[state=open]:bg-surface-subtle flex min-w-0 items-center gap-3 overflow-hidden rounded-lg border p-2.5 text-left transition-[background-color,border-color,box-shadow] outline-none hover:shadow-[inset_0_0_0_1px_rgba(108,146,214,0.1)] focus-visible:ring-2 data-[state=open]:shadow-[inset_0_0_0_1px_rgba(108,146,214,0.14)]',
+                  'border-sidebar-border/65 bg-surface-control hover:border-sidebar-ring/25 hover:bg-surface-subtle focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/35 data-[state=open]:bg-surface-subtle flex min-w-0 items-center gap-3 overflow-hidden rounded-md border p-2.5 text-left transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-2',
                   'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:p-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
                 )}
               >
@@ -461,7 +461,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               align={sidebarState === 'collapsed' ? 'end' : 'center'}
               sideOffset={6}
               className={cn(
-                'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground overflow-hidden rounded-lg p-0 shadow-2xl shadow-black/20',
+                'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground overflow-hidden rounded-md p-0 shadow-[var(--shadow-panel-strong)]',
                 sidebarState === 'collapsed'
                   ? 'w-64'
                   : 'w-[var(--radix-dropdown-menu-trigger-width)]',

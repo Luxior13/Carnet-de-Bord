@@ -63,10 +63,10 @@ type PermissionModuleGroup = {
 };
 
 const permissionSelectTriggerClassName =
-  'border-sidebar-border/70 bg-surface text-sidebar-foreground hover:bg-sidebar-accent/25 focus-visible:border-sidebar-ring/45 focus-visible:ring-sidebar-ring/35 h-11 w-full shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]';
+  'border-sidebar-border/70 bg-surface text-sidebar-foreground hover:bg-sidebar-accent/25 focus-visible:border-sidebar-ring/45 focus-visible:ring-sidebar-ring/35 h-11 w-full shadow-none';
 
 const permissionSelectContentClassName =
-  'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground rounded-lg p-1.5 shadow-2xl shadow-black/25';
+  'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]';
 
 const permissionSelectItemClassName =
   'focus:bg-sidebar-accent/55 focus:text-sidebar-accent-foreground rounded-md py-2';
@@ -165,7 +165,7 @@ const getPermissionResultBadgeClassName = (
   }
 
   if (resultState === 'allowed') {
-    return 'border-[#5fbd7b]/35 bg-[#5fbd7b]/15 text-[#b6f1c6]';
+    return 'border-chart-3/35 bg-chart-3/15 text-chart-3';
   }
 
   return 'border-destructive/30 bg-destructive/10 text-destructive';
@@ -188,10 +188,10 @@ const getStateButtonClassName = (
   }
 
   if (option === 'allow') {
-    return 'border-[#5fbd7b]/35 bg-[#5fbd7b]/15 text-[#b6f1c6] shadow-sm';
+    return 'border-chart-3/35 bg-chart-3/15 text-chart-3 shadow-none';
   }
 
-  return 'border-destructive/40 bg-destructive/15 text-destructive shadow-sm';
+  return 'border-destructive/40 bg-destructive/15 text-destructive shadow-none';
 };
 
 const toPermissionsData = (
@@ -304,7 +304,7 @@ const getPermissionAccessBadgeClassName = (
   status: PermissionAccessStatus,
 ): string => {
   if (status === 'full') {
-    return 'border-[#5fbd7b]/35 bg-[#5fbd7b]/15 text-[#b6f1c6]';
+    return 'border-chart-3/35 bg-chart-3/15 text-chart-3';
   }
 
   if (status === 'partial') {
@@ -1013,7 +1013,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   className={cn(
                     'grid gap-3 rounded-lg border p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center',
                     selectedPageIsAllowed
-                      ? 'border-[#5fbd7b]/30 bg-[#5fbd7b]/10'
+                      ? 'border-chart-3/30 bg-chart-3/10'
                       : 'border-amber-500/35 bg-amber-500/10',
                   )}
                 >
@@ -1024,7 +1024,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                         className={cn(
                           'text-xs',
                           selectedPageIsAllowed
-                            ? 'border-[#5fbd7b]/35 text-[#b6f1c6]'
+                            ? 'border-chart-3/35 text-chart-3'
                             : 'border-amber-500/40 text-amber-300',
                         )}
                       >
@@ -1084,7 +1084,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                 )}
                 {selectedPageIsAllowed ? (
                   <div className="border-sidebar-border/60 bg-surface-muted flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2">
-                    <ShieldCheck className="size-4 shrink-0 text-[#97e6ad]" />
+                    <ShieldCheck className="text-chart-3 size-4 shrink-0" />
                     <p className="text-muted-foreground text-xs">
                       Les actions autorisées seront utilisables sur cette page.
                     </p>

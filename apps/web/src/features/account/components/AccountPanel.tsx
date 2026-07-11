@@ -31,13 +31,13 @@ export const AccountPanel: FC<AccountPanelProps> = ({
       <Card className="border-sidebar-border/70 bg-surface">
         <CardHeader className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border shadow-[inset_0_1px_0_rgba(255,255,255,0.055)]">
+            <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border shadow-none">
               {icon}
             </span>
             <div className="min-w-0">
               <h2
                 id={titleId}
-                className="text-sidebar-foreground truncate text-sm font-bold tracking-tight"
+                className="text-sidebar-foreground truncate text-sm font-bold tracking-normal"
               >
                 {title}
               </h2>

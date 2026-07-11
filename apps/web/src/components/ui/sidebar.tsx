@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
 const SIDEBAR_ID = 'app-sidebar';
-const SIDEBAR_WIDTH = '17rem';
+const SIDEBAR_WIDTH = '17.5rem';
 const SIDEBAR_WIDTH_ICON = '3.5rem';
 const SIDEBAR_WIDTH_MOBILE = '18rem';
 const SIDEBAR_SCROLL_STORAGE_PREFIX = 'sidebar_scroll:';
@@ -192,6 +192,7 @@ function Sidebar({
       id={id ?? SIDEBAR_ID}
       className={cn(
         'sidebar-pattern group/sidebar bg-sidebar text-sidebar-foreground relative hidden h-full shrink-0 flex-col overflow-hidden border-r transition-[width] duration-200 ease-linear md:flex',
+        'border-sidebar-border',
         state === 'collapsed' && collapsible === 'icon'
           ? 'w-[var(--sidebar-width-icon)]'
           : 'w-[var(--sidebar-width)]',
@@ -383,7 +384,7 @@ function SidebarContent({
       data-sidebar="content"
       data-slot="sidebar-content"
       className={cn(
-        'sidebar-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 group-data-[collapsible=icon]/sidebar:px-0',
+        'sidebar-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-2.5 group-data-[collapsible=icon]/sidebar:px-0',
         className,
       )}
       onScroll={handleViewportScroll}
@@ -421,7 +422,7 @@ function SidebarGroupLabel({
       data-sidebar="group-label"
       data-slot="sidebar-group-label"
       className={cn(
-        'text-sidebar-foreground/58 flex h-6 shrink-0 items-center overflow-hidden rounded-lg px-2 text-[11px] font-semibold tracking-[0.14em] uppercase transition-opacity duration-150 group-data-[collapsible=icon]/sidebar:h-0 group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150',
+        'text-sidebar-foreground/58 flex h-6 shrink-0 items-center overflow-hidden rounded-md px-2 text-[11px] font-semibold uppercase transition-opacity duration-150 group-data-[collapsible=icon]/sidebar:h-0 group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150',
         className,
       )}
       {...props}
@@ -520,8 +521,8 @@ function SidebarMenuButton({
       data-size={size}
       data-slot="sidebar-menu-button"
       className={cn(
-        'hover:bg-sidebar-accent/55 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/65 flex w-full max-w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-md border border-transparent px-3 text-left text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
-        'data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring data-[active=true]:border-sidebar-ring/45 data-[active=true]:bg-[linear-gradient(180deg,rgba(95,132,200,0.16),rgba(34,49,74,0.92))] data-[active=true]:font-semibold data-[active=true]:shadow-[inset_0_0_0_1px_rgba(108,146,214,0.34)]',
+        'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/65 flex w-full max-w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-md border border-transparent px-3 text-left text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
+        'data-[active=true]:border-sidebar-ring/45 data-[active=true]:bg-sidebar-accent/70 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring data-[active=true]:font-semibold',
         size === 'sm' && 'h-9 text-xs',
         size === 'default' && 'h-10',
         size === 'lg' && 'h-12',
@@ -593,7 +594,7 @@ function SidebarMenuSkeleton({
       data-sidebar="menu-skeleton"
       data-slot="sidebar-menu-skeleton"
       className={cn(
-        'flex h-10 items-center gap-2.5 rounded-xl px-3',
+        'flex h-10 items-center gap-2.5 rounded-md px-3',
         className,
       )}
       {...props}
@@ -613,7 +614,7 @@ function SidebarMenuSub({
       data-sidebar="menu-sub"
       data-slot="sidebar-menu-sub"
       className={cn(
-        'border-sidebar-border/80 ml-3 flex min-w-0 translate-x-px flex-col gap-1 border-l py-1 pr-1 pl-2 group-data-[collapsible=icon]/sidebar:hidden',
+        'border-sidebar-border/75 ml-3 flex min-w-0 translate-x-px flex-col gap-1 border-l py-1 pr-1 pl-2 group-data-[collapsible=icon]/sidebar:hidden',
         className,
       )}
       {...props}
@@ -653,7 +654,7 @@ function SidebarMenuSubButton({
       data-slot="sidebar-menu-sub-button"
       className={cn(
         'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/60 flex h-8 w-full min-w-0 items-center gap-2 overflow-hidden rounded-md border border-transparent px-2.5 text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
-        'data-[active=true]:bg-sidebar-accent/65 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring data-[active=true]:border-sidebar-ring/30 data-[active=true]:border data-[active=true]:font-semibold data-[active=true]:shadow-[inset_0_0_0_1px_rgba(108,146,214,0.22)]',
+        'data-[active=true]:bg-sidebar-accent/65 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring data-[active=true]:border-sidebar-ring/30 data-[active=true]:border data-[active=true]:font-semibold',
         className,
       )}
       {...props}

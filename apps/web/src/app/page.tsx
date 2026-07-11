@@ -164,12 +164,12 @@ const DashboardSkeleton: FC = () => (
   <div className="space-y-4" role="status" aria-label="Chargement">
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {[...Array(4)].map((_, index) => (
-        <Skeleton key={index} className="h-28 rounded-xl" />
+        <Skeleton key={index} className="h-28 rounded-md" />
       ))}
     </div>
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)]">
-      <Skeleton className="h-72 rounded-xl" />
-      <Skeleton className="h-72 rounded-xl" />
+      <Skeleton className="h-72 rounded-md" />
+      <Skeleton className="h-72 rounded-md" />
     </div>
   </div>
 );
@@ -181,7 +181,7 @@ const DashboardMetricCard: FC<DashboardMetric> = ({
   tone = 'neutral',
   value,
 }) => (
-  <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+  <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
     <CardContent className="p-4">
       <div className="flex items-start gap-3">
         <span
@@ -191,7 +191,7 @@ const DashboardMetricCard: FC<DashboardMetric> = ({
         </span>
         <div className="min-w-0">
           <p className="text-muted-foreground text-xs">{label}</p>
-          <p className="text-foreground mt-1 truncate text-2xl font-semibold tracking-tight">
+          <p className="text-foreground mt-1 truncate text-2xl font-semibold tracking-normal">
             {value}
           </p>
           <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
@@ -569,7 +569,7 @@ export default function HomePage(): React.ReactNode {
                 ))}
               </div>
               {dashboardError && (
-                <Card className="border-destructive/30 bg-destructive/5 overflow-hidden rounded-xl py-0">
+                <Card className="border-destructive/30 bg-destructive/5 overflow-hidden rounded-md py-0">
                   <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-start gap-3">
                       <span className="bg-destructive/10 text-destructive border-destructive/30 flex size-9 shrink-0 items-center justify-center rounded-lg border">
@@ -603,7 +603,7 @@ export default function HomePage(): React.ReactNode {
               )}
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)] xl:items-start">
                 <div className="space-y-4">
-                  <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+                  <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
                     <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-4">
                       <CardTitle className="text-sm">Raccourcis</CardTitle>
                       <CardDescription>
@@ -620,7 +620,7 @@ export default function HomePage(): React.ReactNode {
                     </CardContent>
                   </Card>
                   {canViewDashboard && (
-                    <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+                    <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
                       <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-4">
                         <CardTitle className="text-sm">
                           Activité récente
@@ -638,7 +638,7 @@ export default function HomePage(): React.ReactNode {
                     </Card>
                   )}
                 </div>
-                <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+                <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
                   <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-4">
                     <CardTitle className="text-sm">
                       Sécurité du compte

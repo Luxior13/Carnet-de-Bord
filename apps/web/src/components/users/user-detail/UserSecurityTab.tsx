@@ -195,7 +195,7 @@ const SecurityMetric: FC<{
           : 'border-sidebar-border/70 bg-background/45 text-muted-foreground';
 
   return (
-    <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+    <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
       <CardContent className="p-3 sm:p-4">
         <div className="flex items-start gap-3">
           <span
@@ -492,7 +492,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           }
         />
       </div>
-      <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+      <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
         <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
           <SectionTitle icon={<KeyRound className="size-3.5" />}>
             Mot de passe & verrouillage
@@ -572,7 +572,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardFooter>
         )}
       </Card>
-      <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+      <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
         <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
           <SectionTitle icon={<Monitor className="size-3.5" />}>
             Sessions actives
@@ -632,7 +632,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardFooter>
         )}
       </Card>
-      <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+      <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
         <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
           <SectionTitle icon={<Power className="size-3.5" />}>
             État du compte

@@ -15,11 +15,11 @@ type UserAvatarProps = {
 };
 
 const DICEBEAR_BACKGROUND_COLORS = [
-  'dbeafe',
-  'e0f2fe',
-  'e2e8f0',
-  'bfdbfe',
-  'cbd5e1',
+  'dce7e5',
+  'dfe5e8',
+  'ced9d8',
+  'e2e0d8',
+  'd8dde5',
 ];
 
 function getDisplayName(user: AvatarUser): string {
@@ -58,7 +58,7 @@ export const UserAvatar: FC<UserAvatarProps> = ({ className, user }) => {
       role="img"
       aria-label={`Avatar de ${displayName}`}
       className={cn(
-        'bg-sidebar-primary text-sidebar-primary-foreground relative flex shrink-0 items-center justify-center overflow-hidden shadow-sm',
+        'bg-sidebar-primary text-sidebar-primary-foreground relative flex shrink-0 items-center justify-center overflow-hidden shadow-none',
         className,
       )}
     >

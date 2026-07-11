@@ -22,7 +22,7 @@ const Toaster: FC<ToasterProps> = ({ ...props }) => {
             'group-[.toast]:bg-muted group-[.toast]:text-muted-foreground font-medium',
           description: 'group-[.toast]:text-muted-foreground',
           toast:
-            'group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg',
+            'group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-[var(--shadow-panel)]',
         },
       }}
       {...props}

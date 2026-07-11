@@ -24,7 +24,7 @@ function TableHeader({
   return (
     <thead
       data-slot="table-header"
-      className={cn('bg-surface-muted [&_tr]:border-b', className)}
+      className={cn('bg-surface-muted/70 [&_tr]:border-b', className)}
       {...props}
     />
   );
@@ -67,7 +67,7 @@ function TableRow({
     <tr
       data-slot="table-row"
       className={cn(
-        'hover:bg-accent/45 data-[state=selected]:bg-accent border-b transition-colors',
+        'border-border/65 hover:bg-accent/35 data-[state=selected]:bg-accent/70 border-b transition-colors',
         className,
       )}
       {...props}
@@ -83,7 +83,7 @@ function TableHead({
     <th
       data-slot="table-head"
       className={cn(
-        'text-muted-foreground h-12 px-4 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0',
+        'text-muted-foreground h-10 px-4 text-left align-middle text-xs font-semibold [&:has([role=checkbox])]:pr-0',
         className,
       )}
       {...props}
@@ -99,7 +99,7 @@ function TableCell({
     <td
       data-slot="table-cell"
       className={cn(
-        'p-4 align-middle [&:has([role=checkbox])]:pr-0',
+        'px-4 py-3 align-middle [&:has([role=checkbox])]:pr-0',
         className,
       )}
       {...props}

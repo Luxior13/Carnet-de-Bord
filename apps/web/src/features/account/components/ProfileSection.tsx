@@ -145,11 +145,11 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
       }
     >
       <div className="space-y-5">
-        <div className="border-sidebar-border/60 flex flex-col gap-4 rounded-lg border bg-[rgba(31,41,59,0.34)] p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="border-sidebar-border/60 bg-surface-muted/55 flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-4">
             <UserAvatar user={userData} className="size-16 rounded-lg" />
             <div className="min-w-0">
-              <p className="text-sidebar-foreground truncate text-xl font-semibold tracking-tight">
+              <p className="text-sidebar-foreground truncate text-xl font-semibold tracking-normal">
                 {userData.firstName} {userData.lastName}
               </p>
               <p className="text-sidebar-foreground/65 mt-1 flex items-center gap-2 text-sm">
@@ -165,7 +165,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
             </div>
           </div>
           <div className="border-sidebar-border/60 bg-background/45 rounded-lg border px-3 py-2 sm:text-right">
-            <p className="text-sidebar-foreground text-xs font-bold tracking-tight">
+            <p className="text-sidebar-foreground text-xs font-bold tracking-normal">
               Compte créé
             </p>
             <p className="text-sidebar-foreground/58 text-xs">
@@ -177,7 +177,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
           <>
             <dl className="border-sidebar-border/60 bg-background/45 overflow-hidden rounded-lg border">
               <div className="border-sidebar-border/45 hover:bg-sidebar-accent/[0.06] grid gap-1 border-b px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
-                <dt className="text-sidebar-foreground text-sm font-bold tracking-tight">
+                <dt className="text-sidebar-foreground text-sm font-bold tracking-normal">
                   Prénom
                 </dt>
                 <dd className="text-sidebar-foreground min-w-0 text-sm font-medium">
@@ -185,7 +185,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                 </dd>
               </div>
               <div className="border-sidebar-border/45 hover:bg-sidebar-accent/[0.06] grid gap-1 border-b px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
-                <dt className="text-sidebar-foreground text-sm font-bold tracking-tight">
+                <dt className="text-sidebar-foreground text-sm font-bold tracking-normal">
                   Nom
                 </dt>
                 <dd className="text-sidebar-foreground min-w-0 text-sm font-medium">
@@ -193,7 +193,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                 </dd>
               </div>
               <div className="hover:bg-sidebar-accent/[0.06] grid gap-1 px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
-                <dt className="text-sidebar-foreground text-sm font-bold tracking-tight">
+                <dt className="text-sidebar-foreground text-sm font-bold tracking-normal">
                   Email
                 </dt>
                 <dd className="min-w-0">

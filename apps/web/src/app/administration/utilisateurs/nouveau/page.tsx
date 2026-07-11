@@ -195,7 +195,7 @@ const NewUserContent: FC = () => {
             }
           />
           {createdUser && temporaryPassword ? (
-            <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+            <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
               <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
                 <CardTitle className="text-sm">Compte créé</CardTitle>
                 <CardDescription>
@@ -276,7 +276,7 @@ const NewUserContent: FC = () => {
                 void handleCreateUser();
               }}
             >
-              <Card className="border-sidebar-border/70 overflow-hidden rounded-xl py-0">
+              <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
                 <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
                   <CardTitle className="text-sm">Création du compte</CardTitle>
                   <CardDescription>

@@ -29,7 +29,7 @@ export const StatCard: FC<StatCardProps> = ({
   return (
     <Card
       className={cn(
-        'border-sidebar-border/70 bg-surface overflow-hidden rounded-lg border',
+        'border-border/80 bg-surface overflow-hidden rounded-md border',
         className,
       )}
     >
@@ -40,7 +40,7 @@ export const StatCard: FC<StatCardProps> = ({
               {title}
             </p>
             <div className="flex items-baseline gap-2">
-              <span className="text-sidebar-foreground text-2xl font-bold tracking-tight">
+              <span className="text-sidebar-foreground text-2xl font-bold tracking-normal">
                 {value}
               </span>
               {trend && (
@@ -63,7 +63,7 @@ export const StatCard: FC<StatCardProps> = ({
           </div>
           <div
             className={cn(
-              'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-10 w-10 items-center justify-center rounded-lg border',
+              'border-sidebar-ring/30 bg-sidebar-ring/10 text-sidebar-ring flex h-10 w-10 items-center justify-center rounded-md border',
               iconColor.includes('text-') ? '' : iconColor,
             )}
           >

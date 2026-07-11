@@ -135,7 +135,7 @@ export const GlobalSearch: FC = () => {
         </button>
       </DialogTrigger>
       <DialogContent
-        className="border-sidebar-border/80 bg-surface-raised/98 max-w-2xl overflow-hidden p-0 shadow-2xl shadow-black/30"
+        className="border-sidebar-border/80 bg-surface-raised/98 max-w-2xl overflow-hidden p-0 shadow-[var(--shadow-panel-strong)]"
         fullscreenOnMobile
         hideCloseButton
       >

@@ -72,14 +72,14 @@ export function getPasswordStrengthColor(score: number): string {
   switch (score) {
     case 0:
     case 1:
-      return 'bg-red-500';
+      return 'bg-destructive';
     case 2:
-      return 'bg-orange-500';
+      return 'bg-amber-500';
     case 3:
-      return 'bg-yellow-500';
+      return 'bg-chart-4';
     case 4:
-      return 'bg-green-500';
+      return 'bg-chart-3';
     default:
-      return 'bg-gray-500';
+      return 'bg-muted-foreground';
   }
 }
