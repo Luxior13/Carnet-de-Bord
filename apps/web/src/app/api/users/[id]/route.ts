@@ -517,7 +517,7 @@ export async function PATCH(
       );
     const permissionAuditTab = hasOnlyAccountPermissionChanges
       ? { tabKey: 'account', tabLabel: 'Compte personnel' }
-      : { tabKey: 'access', tabLabel: 'AccÃ¨s' };
+      : { tabKey: 'access', tabLabel: 'Accès' };
 
     // If deactivated, invalidate all sessions
     if (isActive === false) {

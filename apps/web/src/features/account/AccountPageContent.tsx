@@ -37,6 +37,7 @@ import { Skeleton } from '$ui/skeleton';
 type AccountSectionId = 'activity' | 'profile' | 'security';
 
 const ACCOUNT_AUDIT_PAGE_SIZE = 200;
+const ACCOUNT_AUDIT_MAX_PREFETCH_PAGES = 5;
 
 const ACCOUNT_SECTIONS: Array<UserDetailSection<AccountSectionId>> = [
   {
@@ -133,6 +134,7 @@ export const AccountPageContent: FC = () => {
     normalizeAccountSection(searchParams.get('section')),
   );
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [auditTotalLogs, setAuditTotalLogs] = useState<number | null>(null);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
   const auditAbortControllerRef = useRef<AbortController | null>(null);
   const hasLoadedAuditLogsRef = useRef(false);
@@ -179,6 +181,7 @@ export const AccountPageContent: FC = () => {
 
     if (!userData?.id || !canViewActivity) {
       setAuditLogs([]);
+      setAuditTotalLogs(null);
       setIsLoadingAudit(false);
       hasLoadedAuditLogsRef.current = false;
 
@@ -208,9 +211,19 @@ export const AccountPageContent: FC = () => {
 
       if (response.ok && data.success) {
         const loadedLogs = [...(data.data.logs as AuditLogEntry[])];
+        const totalLogs = Number(
+          data.data.pagination?.total ?? loadedLogs.length,
+        );
+        const safeTotalLogs = Number.isFinite(totalLogs)
+          ? totalLogs
+          : loadedLogs.length;
         const totalPages = Number(data.data.pagination?.totalPages ?? 1);
+        const pagesToFetch = Math.min(
+          totalPages,
+          ACCOUNT_AUDIT_MAX_PREFETCH_PAGES,
+        );
 
-        for (let page = 2; page <= totalPages; page += 1) {
+        for (let page = 2; page <= pagesToFetch; page += 1) {
           const pageResponse = await fetch(
             `/api/users/${userData.id}/audit?${buildAuditParams(page).toString()}`,
             { signal: controller.signal },
@@ -224,8 +237,10 @@ export const AccountPageContent: FC = () => {
         }
 
         setAuditLogs(loadedLogs);
+        setAuditTotalLogs(safeTotalLogs);
       } else {
         setAuditLogs([]);
+        setAuditTotalLogs(null);
       }
 
       hasLoadedAuditLogsRef.current = true;
@@ -233,6 +248,7 @@ export const AccountPageContent: FC = () => {
       if (controller.signal.aborted) return;
 
       setAuditLogs([]);
+      setAuditTotalLogs(null);
       hasLoadedAuditLogsRef.current = true;
     } finally {
       if (auditAbortControllerRef.current !== controller) return;
@@ -285,6 +301,7 @@ export const AccountPageContent: FC = () => {
     auditAbortControllerRef.current = null;
     hasLoadedAuditLogsRef.current = false;
     setAuditLogs([]);
+    setAuditTotalLogs(null);
     setIsLoadingAudit(false);
   }, [userData?.id]);
 
@@ -455,7 +472,11 @@ export const AccountPageContent: FC = () => {
           <div hidden={activeSection !== 'activity'}>
             <UserHistoryTab
               auditLogs={auditLogs}
+              isAuditTruncated={
+                auditTotalLogs !== null && auditLogs.length < auditTotalLogs
+              }
               isLoading={shouldShowAuditLoading}
+              totalAuditLogs={auditTotalLogs ?? auditLogs.length}
               userId={userData.id}
             />
           </div>

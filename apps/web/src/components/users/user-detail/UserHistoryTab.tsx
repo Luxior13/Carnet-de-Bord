@@ -57,7 +57,9 @@ import { cn } from '$utils/css.utils';
 
 type UserHistoryTabProps = {
   auditLogs: AuditLogEntry[];
+  isAuditTruncated?: boolean;
   isLoading: boolean;
+  totalAuditLogs?: number;
   userId: string;
 };
 
@@ -1517,7 +1519,9 @@ ActivityListRow.displayName = 'ActivityListRow';
 
 export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   auditLogs,
+  isAuditTruncated = false,
   isLoading,
+  totalAuditLogs,
   userId,
 }) => {
   const [poleFilter, setPoleFilter] = useState(ALL_FILTER_VALUE);
@@ -1619,6 +1623,10 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
 
   const displayedLogs = filteredLogs.slice(0, showCount);
   const hasMore = filteredLogs.length > showCount;
+  const loadedAuditLogsCount = auditLogs.length;
+  const effectiveTotalAuditLogs = totalAuditLogs ?? loadedAuditLogsCount;
+  const hasTruncatedAuditLogs =
+    isAuditTruncated && effectiveTotalAuditLogs > loadedAuditLogsCount;
   const hasActiveFilters =
     poleFilter !== ALL_FILTER_VALUE ||
     effectivePageFilter !== ALL_FILTER_VALUE ||
@@ -1808,6 +1816,15 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                   <Badge variant="secondary" className="text-xs">
                     {filteredLogs.length}/{auditLogs.length} affichés
                   </Badge>
+                  {hasTruncatedAuditLogs && (
+                    <Badge
+                      variant="outline"
+                      className="border-amber-500/40 text-xs text-amber-400"
+                    >
+                      Derniers {loadedAuditLogsCount}/{effectiveTotalAuditLogs}{' '}
+                      chargés
+                    </Badge>
+                  )}
                   {hasActiveFilters && (
                     <Badge
                       variant="outline"

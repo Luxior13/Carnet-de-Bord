@@ -93,6 +93,7 @@ type PendingNavigation =
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
 
 const USER_AUDIT_PAGE_SIZE = 200;
+const USER_AUDIT_MAX_PREFETCH_PAGES = 5;
 const USER_AUDIT_SUMMARY_PAGE_SIZE = 1;
 const DEFAULT_PERMISSION_PAGE_KEY = PERMISSION_CATEGORIES[0]?.key ?? '';
 const ACCESS_PERMISSION_KEYS = getAccessPermissionKeys();
@@ -331,6 +332,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [auditTotalLogs, setAuditTotalLogs] = useState<number | null>(null);
   const [auditStats, setAuditStats] = useState<UserAuditStats | null>(null);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
   const [securitySessions, setSecuritySessions] = useState<UserSessionInfo[]>(
@@ -748,6 +750,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
       if (!canFetchUserAudit) {
         setAuditLogs([]);
+        setAuditTotalLogs(null);
         setAuditStats(null);
         setIsLoadingAudit(false);
         hasLoadedAuditLogsRef.current = false;
@@ -793,9 +796,21 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
           if (includeLogs) {
             const loadedLogs = [...(data.data.logs as AuditLogEntry[])];
+            const totalLogs = Number(
+              data.data.pagination?.total ??
+                data.data.stats?.totalActions ??
+                loadedLogs.length,
+            );
+            const safeTotalLogs = Number.isFinite(totalLogs)
+              ? totalLogs
+              : loadedLogs.length;
             const totalPages = Number(data.data.pagination?.totalPages ?? 1);
+            const pagesToFetch = Math.min(
+              totalPages,
+              USER_AUDIT_MAX_PREFETCH_PAGES,
+            );
 
-            for (let page = 2; page <= totalPages; page += 1) {
+            for (let page = 2; page <= pagesToFetch; page += 1) {
               const pageResponse = await fetch(
                 `/api/users/${userId}/audit?${buildAuditParams(page).toString()}`,
                 {
@@ -811,6 +826,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             }
 
             setAuditLogs(loadedLogs);
+            setAuditTotalLogs(safeTotalLogs);
             hasLoadedAuditLogsRef.current = true;
           }
         }
@@ -893,6 +909,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     hasLoadedAuditLogsRef.current = false;
     hasLoadedAuditSummaryRef.current = false;
     setAuditLogs([]);
+    setAuditTotalLogs(null);
     setAuditStats(null);
     setIsLoadingAudit(false);
     setSecuritySessions([]);
@@ -1564,7 +1581,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         return (
           <UserHistoryTab
             auditLogs={auditLogs}
+            isAuditTruncated={
+              auditTotalLogs !== null && auditLogs.length < auditTotalLogs
+            }
             isLoading={isLoadingAudit}
+            totalAuditLogs={auditTotalLogs ?? auditStats?.totalActions}
             userId={userId}
           />
         );
