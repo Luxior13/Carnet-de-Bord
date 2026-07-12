@@ -81,7 +81,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-foreground font-semibold">
-                    Accès superadmin
+                    Accès super-administrateur
                   </h3>
                   <Badge
                     variant="outline"
@@ -101,7 +101,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                 <Shield className="size-3.5" />
               </span>
               <Input
-                value="Superadmin"
+                value="Super-administrateur"
                 disabled
                 className="border-border bg-popover h-8 min-w-0"
               />
@@ -169,7 +169,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                 {user.isProtected ? (
                   <Input
                     id="user-role"
-                    value="Superadmin"
+                    value="Super-administrateur"
                     disabled
                     className="border-border bg-popover h-8 min-w-0"
                   />

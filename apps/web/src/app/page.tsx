@@ -25,9 +25,10 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
+import { ContentState } from '$components/layout/ContentState';
+import { PageHero } from '$components/layout/PageHero';
 import {
   getAccessLabel,
   hasPermission,
@@ -49,7 +50,7 @@ import {
   CardHeader,
   CardTitle,
 } from '$ui/card';
-import { PageCanvas, PageHeader, PageShell } from '$ui/page-shell';
+import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Separator } from '$ui/separator';
 import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
@@ -73,18 +74,18 @@ type HomeShortcut = {
 
 const ACTION_LABELS = new Map<string, string>([
   ['ACCOUNT_LOCKED', 'Compte verrouillé'],
-  ['LOGIN_FAILED', 'Echec de connexion'],
+  ['LOGIN_FAILED', 'Échec de connexion'],
   ['LOGIN_SUCCESS', 'Connexion'],
-  ['LOGOUT', 'Deconnexion'],
-  ['PASSWORD_CHANGE', 'Mot de passe modifie'],
-  ['PASSWORD_RESET', 'Mot de passe reinitialise'],
-  ['PERMISSION_UPDATE', 'Permissions modifiees'],
-  ['SESSION_INVALIDATE', 'Sessions revoquees'],
-  ['USER_ACTIVATE', 'Utilisateur active'],
-  ['USER_CREATE', 'Utilisateur cree'],
-  ['USER_DEACTIVATE', 'Utilisateur desactive'],
-  ['USER_DELETE', 'Utilisateur supprime'],
-  ['USER_UPDATE', 'Utilisateur modifie'],
+  ['LOGOUT', 'Déconnexion'],
+  ['PASSWORD_CHANGE', 'Mot de passe modifié'],
+  ['PASSWORD_RESET', 'Mot de passe réinitialisé'],
+  ['PERMISSION_UPDATE', 'Permissions modifiées'],
+  ['SESSION_INVALIDATE', 'Sessions révoquées'],
+  ['USER_ACTIVATE', 'Utilisateur activé'],
+  ['USER_CREATE', 'Utilisateur créé'],
+  ['USER_DEACTIVATE', 'Utilisateur désactivé'],
+  ['USER_DELETE', 'Utilisateur supprimé'],
+  ['USER_UPDATE', 'Utilisateur modifié'],
 ]);
 
 const toValidDate = (date: Date | string | null | undefined): Date | null => {
@@ -137,6 +138,12 @@ const formatRelativeDashboardTime = (
   });
 };
 
+const formatRefreshTime = (date: Date): string =>
+  date.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
 const getMetricToneClassName = (tone: DashboardMetricTone): string => {
   if (tone === 'danger') {
     return 'border-destructive/35 bg-destructive/10 text-destructive';
@@ -162,7 +169,7 @@ const getActivityLabel = (activity: DashboardActivityItem): string => {
 
 const DashboardSkeleton: FC = () => (
   <div className="space-y-4" role="status" aria-label="Chargement">
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
       {[...Array(4)].map((_, index) => (
         <Skeleton key={index} className="h-28 rounded-md" />
       ))}
@@ -182,19 +189,19 @@ const DashboardMetricCard: FC<DashboardMetric> = ({
   value,
 }) => (
   <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
-    <CardContent className="p-4">
+    <CardContent className="p-3 sm:p-4">
       <div className="flex items-start gap-3">
         <span
-          className={`${getMetricToneClassName(tone)} flex size-10 shrink-0 items-center justify-center rounded-lg border`}
+          className={`${getMetricToneClassName(tone)} flex size-9 shrink-0 items-center justify-center rounded-lg border sm:size-10`}
         >
           <Icon className="size-4" />
         </span>
         <div className="min-w-0">
           <p className="text-muted-foreground text-xs">{label}</p>
-          <p className="text-foreground mt-1 truncate text-2xl font-semibold tracking-normal">
+          <p className="text-foreground mt-1 truncate text-xl font-semibold tracking-normal sm:text-2xl">
             {value}
           </p>
-          <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
+          <p className="text-muted-foreground mt-1 line-clamp-2 hidden text-xs sm:block">
             {description}
           </p>
         </div>
@@ -203,14 +210,17 @@ const DashboardMetricCard: FC<DashboardMetric> = ({
   </Card>
 );
 
-const ShortcutButton: FC<{ shortcut: HomeShortcut }> = ({ shortcut }) => {
+const ShortcutButton: FC<{
+  className?: string;
+  shortcut: HomeShortcut;
+}> = ({ className, shortcut }) => {
   const Icon = shortcut.icon;
 
   return (
     <Button
       asChild
-      variant="outline"
-      className="bg-popover h-auto min-h-20 justify-between rounded-md border p-4 text-left shadow-none"
+      variant="ghost"
+      className={`bg-surface hover:bg-surface-muted h-auto min-h-20 justify-between rounded-none border-0 p-4 text-left shadow-none ${className ?? ''}`}
     >
       <Link href={shortcut.href}>
         <span className="flex min-w-0 items-center gap-3">
@@ -233,10 +243,11 @@ const ShortcutButton: FC<{ shortcut: HomeShortcut }> = ({ shortcut }) => {
 const DashboardActivityList: FC<{
   activities: DashboardActivityItem[];
   isLoading: boolean;
-}> = ({ activities, isLoading }) => {
+  isUnavailable?: boolean;
+}> = ({ activities, isLoading, isUnavailable = false }) => {
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-3" role="status" aria-label="Chargement">
         {[...Array(4)].map((_, index) => (
           <Skeleton key={index} className="h-14 rounded-md" />
         ))}
@@ -244,13 +255,24 @@ const DashboardActivityList: FC<{
     );
   }
 
+  if (isUnavailable) {
+    return (
+      <ContentState
+        className="rounded-none border-0 bg-transparent px-0"
+        description="Aucun événement n’est affiché tant que l’actualisation n’a pas réussi."
+        kind="warning"
+        title="Activité indisponible"
+      />
+    );
+  }
+
   if (activities.length === 0) {
     return (
-      <div className="border-border/60 bg-popover rounded-md border p-4">
-        <p className="text-muted-foreground text-sm">
-          Aucune activite recente a afficher.
-        </p>
-      </div>
+      <ContentState
+        className="rounded-none border-0 bg-transparent px-0"
+        description="Les prochains événements visibles apparaîtront ici."
+        title="Aucune activité récente"
+      />
     );
   }
 
@@ -268,7 +290,7 @@ const DashboardActivityList: FC<{
                 <p className="text-foreground truncate text-sm font-medium">
                   {getActivityLabel(activity)}
                 </p>
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-xs">
                   {activity.category}
                 </Badge>
               </div>
@@ -276,7 +298,7 @@ const DashboardActivityList: FC<{
                 {activity.description}
               </p>
               <p className="text-muted-foreground mt-1 text-xs">
-                {activity.userName ?? 'Systeme'} -{' '}
+                {activity.userName ?? 'Système'} -{' '}
                 {formatRelativeDashboardTime(activity.createdAt)}
               </p>
             </div>
@@ -295,6 +317,9 @@ export default function HomePage(): React.ReactNode {
   );
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
+  const [lastSuccessfulLoadAt, setLastSuccessfulLoadAt] = useState<Date | null>(
+    null,
+  );
 
   const firstName = userData?.firstName?.trim();
   const mustChangePassword = !!userData?.mustChangePassword;
@@ -325,6 +350,19 @@ export default function HomePage(): React.ReactNode {
           userData.permissions,
         ))
     : false;
+  const canViewRecentActivity = userData
+    ? userData.isProtected ||
+      hasPermission(
+        userData.role,
+        PERMISSIONS.USERS.VIEW_ACTIVITY,
+        userData.permissions,
+      ) ||
+      hasPermission(
+        userData.role,
+        PERMISSIONS.SYSTEM.AUDIT,
+        userData.permissions,
+      )
+    : false;
 
   const fetchDashboardStats = useCallback(async (): Promise<void> => {
     dashboardAbortControllerRef.current?.abort();
@@ -354,8 +392,8 @@ export default function HomePage(): React.ReactNode {
 
       if (response.ok && data.success) {
         setDashboardStats(data.data);
+        setLastSuccessfulLoadAt(new Date());
       } else {
-        setDashboardStats(null);
         setDashboardError(
           data.success
             ? 'Impossible de charger le tableau de bord'
@@ -365,7 +403,6 @@ export default function HomePage(): React.ReactNode {
     } catch {
       if (controller.signal.aborted) return;
 
-      setDashboardStats(null);
       setDashboardError('Impossible de charger le tableau de bord');
     } finally {
       if (dashboardAbortControllerRef.current !== controller) return;
@@ -385,12 +422,6 @@ export default function HomePage(): React.ReactNode {
   useEffect((): void => {
     void fetchDashboardStats();
   }, [fetchDashboardStats]);
-
-  useEffect((): void => {
-    if (dashboardError) {
-      toast.error(dashboardError);
-    }
-  }, [dashboardError]);
 
   const shortcuts = useMemo<HomeShortcut[]>(() => {
     const nextShortcuts: HomeShortcut[] = [
@@ -425,9 +456,12 @@ export default function HomePage(): React.ReactNode {
 
   const dashboardMetrics = useMemo<DashboardMetric[]>(() => {
     const stats = dashboardStats;
-    const lockedUsers = stats?.security.lockedUsers ?? 0;
-    const pendingPassword = stats?.security.pendingPassword ?? 0;
-    const securityAlerts = lockedUsers + pendingPassword;
+    const lockedUsers = stats?.security.lockedUsers;
+    const pendingPassword = stats?.security.pendingPassword;
+    const securityAlerts =
+      lockedUsers === undefined || pendingPassword === undefined
+        ? null
+        : lockedUsers + pendingPassword;
 
     if (!canViewDashboard) {
       return [
@@ -474,7 +508,7 @@ export default function HomePage(): React.ReactNode {
         icon: Users,
         label: canViewUsers ? 'Utilisateurs' : 'Compte',
         tone: 'primary',
-        value: String(stats?.users.total ?? 0),
+        value: stats ? String(stats.users.total) : '—',
       },
       {
         description: canViewUsers
@@ -484,7 +518,9 @@ export default function HomePage(): React.ReactNode {
         label: canViewUsers ? 'Actifs' : 'État',
         tone: 'primary',
         value: canViewUsers
-          ? String(stats?.users.active ?? 0)
+          ? stats
+            ? String(stats.users.active)
+            : '—'
           : userData?.isActive
             ? 'Actif'
             : 'Inactif',
@@ -497,15 +533,25 @@ export default function HomePage(): React.ReactNode {
         label: canViewUsers ? 'Connexions 24h' : 'Connexion',
         tone: 'neutral',
         value: canViewUsers
-          ? String(stats?.users.recentLogins ?? 0)
+          ? stats
+            ? String(stats.users.recentLogins)
+            : '—'
           : formatRelativeDashboardTime(userData?.lastLoginAt ?? null),
       },
       {
-        description: `${lockedUsers} verrouillé(s), ${pendingPassword} mot(s) de passe à changer`,
+        description:
+          securityAlerts === null
+            ? 'Données de sécurité indisponibles'
+            : `${lockedUsers} verrouillé(s), ${pendingPassword} mot(s) de passe à changer`,
         icon: AlertTriangle,
         label: 'Alertes sécurité',
-        tone: securityAlerts > 0 ? 'warning' : 'primary',
-        value: String(securityAlerts),
+        tone:
+          securityAlerts === null
+            ? 'neutral'
+            : securityAlerts > 0
+              ? 'warning'
+              : 'primary',
+        value: securityAlerts === null ? '—' : String(securityAlerts),
       },
     ];
   }, [canViewDashboard, canViewUsers, dashboardStats, userData]);
@@ -514,7 +560,7 @@ export default function HomePage(): React.ReactNode {
     <AuthenticatedLayout>
       <PageShell className="py-0">
         <PageCanvas contentClassName="space-y-4">
-          <PageHeader
+          <PageHero
             title={firstName ? `Bonjour ${firstName}` : "Vue d'ensemble"}
             description="Pilotage privé, sécurité et raccourcis."
             actions={
@@ -535,17 +581,18 @@ export default function HomePage(): React.ReactNode {
                 )}
               </>
             }
-            icon={
-              <ServiceIcon className="bg-primary/10 text-primary">
-                <Home className="size-5" />
-              </ServiceIcon>
-            }
+            icon={<Home className="size-5" />}
             meta={
               userData ? (
                 <>
                   <Badge variant="secondary">{getAccessLabel(userData)}</Badge>
                   {!canViewDashboard && (
                     <Badge variant="outline">Vue personnelle</Badge>
+                  )}
+                  {lastSuccessfulLoadAt && (
+                    <Badge variant="outline">
+                      Actualisé à {formatRefreshTime(lastSuccessfulLoadAt)}
+                    </Badge>
                   )}
                   {userData.mustChangePassword && (
                     <Badge
@@ -558,32 +605,20 @@ export default function HomePage(): React.ReactNode {
                 </>
               ) : null
             }
+            tone="dashboard"
           />
           {isLoadingDashboard && !dashboardStats && canViewDashboard ? (
             <DashboardSkeleton />
           ) : (
             <>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                 {dashboardMetrics.map((metric) => (
                   <DashboardMetricCard key={metric.label} {...metric} />
                 ))}
               </div>
               {dashboardError && (
-                <Card className="border-destructive/30 bg-destructive/5 overflow-hidden rounded-md py-0">
-                  <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex min-w-0 items-start gap-3">
-                      <span className="bg-destructive/10 text-destructive border-destructive/30 flex size-9 shrink-0 items-center justify-center rounded-lg border">
-                        <AlertTriangle className="size-4" />
-                      </span>
-                      <div>
-                        <p className="text-sm font-medium">
-                          Tableau de bord indisponible
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Les raccourcis restent disponibles.
-                        </p>
-                      </div>
-                    </div>
+                <ContentState
+                  action={
                     <Button
                       type="button"
                       variant="outline"
@@ -598,8 +633,15 @@ export default function HomePage(): React.ReactNode {
                       )}
                       Réessayer
                     </Button>
-                  </CardContent>
-                </Card>
+                  }
+                  description={
+                    dashboardStats && lastSuccessfulLoadAt
+                      ? `Les dernières données fiables, actualisées à ${formatRefreshTime(lastSuccessfulLoadAt)}, restent affichées.`
+                      : 'Les raccourcis restent disponibles. Les métriques sont masquées pour éviter des valeurs trompeuses.'
+                  }
+                  kind="error"
+                  title="Tableau de bord indisponible"
+                />
               )}
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)] xl:items-start">
                 <div className="space-y-4">
@@ -610,16 +652,22 @@ export default function HomePage(): React.ReactNode {
                         Accès utiles selon votre rôle actuel.
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="grid gap-3 p-4 md:grid-cols-2">
-                      {shortcuts.map((shortcut) => (
+                    <CardContent className="bg-border/60 grid gap-px p-0 md:grid-cols-2">
+                      {shortcuts.map((shortcut, index) => (
                         <ShortcutButton
+                          className={
+                            shortcuts.length % 2 === 1 &&
+                            index === shortcuts.length - 1
+                              ? 'md:col-span-2'
+                              : undefined
+                          }
                           key={shortcut.href}
                           shortcut={shortcut}
                         />
                       ))}
                     </CardContent>
                   </Card>
-                  {canViewDashboard && (
+                  {canViewDashboard && canViewRecentActivity && (
                     <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
                       <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-4">
                         <CardTitle className="text-sm">
@@ -632,7 +680,8 @@ export default function HomePage(): React.ReactNode {
                       <CardContent className="p-4">
                         <DashboardActivityList
                           activities={dashboardStats?.recentActivity ?? []}
-                          isLoading={isLoadingDashboard}
+                          isUnavailable={!dashboardStats && !!dashboardError}
+                          isLoading={isLoadingDashboard && !dashboardStats}
                         />
                       </CardContent>
                     </Card>
@@ -647,8 +696,8 @@ export default function HomePage(): React.ReactNode {
                       Votre état d&apos;accès et les signaux importants.
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3 p-4">
-                    <div className="border-border/60 bg-popover flex items-start gap-3 rounded-md border p-3">
+                  <CardContent className="divide-border/60 divide-y p-0">
+                    <div className="flex items-start gap-3 px-4 py-4">
                       <ServiceIcon
                         className={
                           userData?.mustChangePassword
@@ -671,7 +720,7 @@ export default function HomePage(): React.ReactNode {
                         </p>
                       </div>
                     </div>
-                    <div className="border-border/60 bg-popover flex items-start gap-3 rounded-md border p-3">
+                    <div className="flex items-start gap-3 px-4 py-4">
                       <ServiceIcon className="size-9">
                         <Clock className="size-4" />
                       </ServiceIcon>
@@ -684,7 +733,7 @@ export default function HomePage(): React.ReactNode {
                         </p>
                       </div>
                     </div>
-                    <div className="border-border/60 bg-popover flex items-start gap-3 rounded-md border p-3">
+                    <div className="flex items-start gap-3 px-4 py-4">
                       <ServiceIcon className="size-9">
                         <KeyRound className="size-4" />
                       </ServiceIcon>
@@ -704,7 +753,7 @@ export default function HomePage(): React.ReactNode {
                     <Button asChild variant="outline" size="sm">
                       <Link href="/mon-compte">
                         <UserRound className="size-4" />
-                        Gerer mon compte
+                        Gérer mon compte
                       </Link>
                     </Button>
                   </CardFooter>

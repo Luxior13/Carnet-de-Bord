@@ -22,13 +22,21 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-fill: var(--destructive-fill);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
   --color-surface-raised: var(--surface-raised);
   --color-surface-subtle: var(--surface-subtle);
   --color-surface-control: var(--surface-control);
   --color-border: var(--border);
+  --color-border-control: var(--border-control);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-chart-1: var(--chart-1);
@@ -72,9 +80,17 @@
   --muted-foreground: #a7b0ba;
   --accent: #2a3035;
   --accent-foreground: #f4f6f8;
-  --destructive: #e05d6f;
+  --destructive: #f27988;
+  --destructive-fill: #bd4054;
   --destructive-foreground: #fff7f8;
+  --success: #69c58a;
+  --success-foreground: #07130d;
+  --warning: #d7b35d;
+  --warning-foreground: #171006;
+  --info: #7da7d9;
+  --info-foreground: #071019;
   --border: #343a42;
+  --border-control: #5f6974;
   --input: var(--surface-subtle);
   --ring: #75c6be;
   --chart-1: var(--ring);
@@ -113,12 +129,11 @@
   --shadow-panel-strong:
     0 22px 50px -38px rgba(0, 0, 0, 0.94),
     inset 0 1px 0 rgba(255, 255, 255, 0.032);
-  --site-background-column-bg:
-    linear-gradient(
-      180deg,
-      var(--column-surface-start),
-      var(--column-surface-end)
-    );
+  --site-background-column-bg: linear-gradient(
+    180deg,
+    var(--column-surface-start),
+    var(--column-surface-end)
+  );
 }
 
 @layer base {
@@ -127,17 +142,16 @@
   }
 
   html {
-    @apply overflow-x-hidden bg-background;
+    @apply bg-background overflow-x-hidden;
   }
 
   body {
-    @apply min-h-svh overflow-x-hidden bg-background text-foreground antialiased;
-    background-image:
-      linear-gradient(
-        180deg,
-        var(--page-overlay-start),
-        var(--page-overlay-end)
-      );
+    @apply bg-background text-foreground min-h-svh overflow-x-hidden antialiased;
+    background-image: linear-gradient(
+      180deg,
+      var(--page-overlay-start),
+      var(--page-overlay-end)
+    );
   }
 
   .site-background-column {

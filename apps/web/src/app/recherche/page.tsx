@@ -1,20 +1,17 @@
+import { notFound } from 'next/navigation';
 import React from 'react';
 
 import PrivateFeaturePage from '$components/private-navigation/PrivateFeaturePage';
 import {
   getDefaultNavigationSpace,
-  type NavItem,
+  getNavigationItemByHref,
 } from '$constants/app.constants';
 
-const searchPage: NavItem = {
-  description:
-    'Recherche transversale dans le site prive avec resultats limites par permissions.',
-  href: '/recherche',
-  icon: 'Search',
-  label: 'Recherche globale',
-};
-
 export default function RecherchePage(): React.ReactNode {
+  const searchPage = getNavigationItemByHref('/recherche');
+
+  if (!searchPage) notFound();
+
   return (
     <PrivateFeaturePage item={searchPage} space={getDefaultNavigationSpace()} />
   );

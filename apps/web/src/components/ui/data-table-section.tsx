@@ -107,14 +107,14 @@ const DataTableSection: FC<DataTableSectionProps> = ({
 );
 
 const DataTableDesktop: FC<DataTableSlotProps> = ({ children, className }) => (
-  <div className={cn('hidden md:block', className)}>{children}</div>
+  <div className={cn('hidden lg:block', className)}>{children}</div>
 );
 
 const DataTableMobileList: FC<DataTableSlotProps> = ({
   children,
   className,
 }) => (
-  <div className={cn('divide-border/70 divide-y md:hidden', className)}>
+  <div className={cn('divide-border/70 divide-y lg:hidden', className)}>
     {children}
   </div>
 );

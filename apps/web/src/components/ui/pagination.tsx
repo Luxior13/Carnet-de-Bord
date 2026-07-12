@@ -55,14 +55,14 @@ const Pagination: FC<PaginationProps> = ({
       )}
       role="navigation"
     >
-      <p className="text-muted-foreground text-[10px] sm:text-xs">
+      <p className="text-muted-foreground text-xs">
         {start}-{end} sur {total}
       </p>
-      <div className="flex items-center gap-0.5 sm:gap-1">
+      <div className="flex items-center gap-1">
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 sm:h-8 sm:w-8"
+          className="size-10 lg:size-8"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
           aria-label="Page précédente"
@@ -73,11 +73,11 @@ const Pagination: FC<PaginationProps> = ({
         <span
           aria-label={`Page ${page} sur ${totalPages}`}
           aria-live="polite"
-          className="text-muted-foreground px-2 text-xs sm:hidden"
+          className="text-muted-foreground px-2 text-xs lg:hidden"
         >
           {page}/{totalPages}
         </span>
-        <div className="hidden sm:flex sm:items-center sm:gap-1">
+        <div className="hidden lg:flex lg:items-center lg:gap-1">
           {pages.map((p, i) =>
             p === 'ellipsis' ? (
               <span
@@ -93,7 +93,7 @@ const Pagination: FC<PaginationProps> = ({
                 key={p}
                 variant={p === page ? 'default' : 'ghost'}
                 size="icon"
-                className="h-8 w-8 text-xs"
+                className="size-8 text-xs"
                 onClick={() => onPageChange(p)}
               >
                 {p}
@@ -104,7 +104,7 @@ const Pagination: FC<PaginationProps> = ({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 sm:h-8 sm:w-8"
+          className="size-10 lg:size-8"
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
           aria-label="Page suivante"

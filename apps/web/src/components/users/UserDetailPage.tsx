@@ -1308,7 +1308,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     }
 
     if (!hasAccountChanges) {
-      toast.info('Aucune modification a enregistrer');
+      toast.info('Aucune modification à enregistrer');
 
       return;
     }
@@ -1325,12 +1325,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       if (response.ok && data.success) {
         syncUserState(data.data.user);
         refreshAuditAfterMutation();
-        toast.success('Compte personnel mis a jour');
+        toast.success('Compte personnel mis à jour');
       } else {
-        toast.error(data.error?.message || 'Erreur lors de la mise a jour');
+        toast.error(data.error?.message || 'Erreur lors de la mise à jour');
       }
     } catch {
-      toast.error('Erreur lors de la mise a jour');
+      toast.error('Erreur lors de la mise à jour');
     } finally {
       setIsSavingPermissions(false);
     }
@@ -1538,7 +1538,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       case 'access':
         if (!canViewTargetAccess) {
           return (
-            <AccessDeniedState description="Vous n'avez pas la permission de consulter les acces de cet utilisateur." />
+            <AccessDeniedState description="Vous n'avez pas la permission de consulter les accès de cet utilisateur." />
           );
         }
 
@@ -1584,7 +1584,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       case 'security':
         if (!canViewTargetSecurity) {
           return (
-            <AccessDeniedState description="Vous n'avez pas la permission de consulter la securite de cet utilisateur." />
+            <AccessDeniedState description="Vous n'avez pas la permission de consulter la sécurité de cet utilisateur." />
           );
         }
 
@@ -1621,7 +1621,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       case 'history':
         if (!canViewTargetActivity) {
           return (
-            <AccessDeniedState description="Vous n'avez pas la permission de consulter l'activite de cet utilisateur." />
+            <AccessDeniedState description="Vous n'avez pas la permission de consulter l'activité de cet utilisateur." />
           );
         }
 

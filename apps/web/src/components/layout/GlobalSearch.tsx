@@ -15,7 +15,6 @@ import {
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
 import { getNavigationSpaceToneClasses } from '$constants/navigation-theme.constants';
 import { useUser } from '$context/UserContext';
-import { Button } from '$ui/button';
 import {
   Dialog,
   DialogContent,
@@ -85,7 +84,7 @@ function getEmptyQueryResults(
   return [...activeSpaceResults, ...otherResults].slice(0, 8);
 }
 
-export const GlobalSearch: FC = () => {
+export const QuickNavigation: FC = () => {
   const pathname = usePathname();
   const { userData } = useUser();
   const [open, setOpen] = useState(false);
@@ -126,12 +125,12 @@ export const GlobalSearch: FC = () => {
     >
       <DialogTrigger asChild>
         <button
-          aria-label="Ouvrir la recherche globale"
-          className="border-sidebar-border/70 bg-surface-control text-muted-foreground hover:border-sidebar-ring/35 hover:text-foreground flex h-9 min-w-9 shrink-0 items-center justify-center gap-2 rounded-md border px-2.5 text-sm transition-colors lg:min-w-64 lg:justify-start"
+          aria-label="Ouvrir la navigation rapide"
+          className="border-sidebar-border/70 bg-surface-control text-muted-foreground hover:border-sidebar-ring/35 hover:text-foreground flex h-10 min-w-10 shrink-0 items-center justify-center gap-2 rounded-md border px-2.5 text-sm transition-colors lg:h-9 lg:min-w-64 lg:justify-start"
           type="button"
         >
           <Search className="size-4" />
-          <span className="hidden lg:inline">Rechercher...</span>
+          <span className="hidden lg:inline">Aller à une page...</span>
         </button>
       </DialogTrigger>
       <DialogContent
@@ -140,19 +139,19 @@ export const GlobalSearch: FC = () => {
         hideCloseButton
       >
         <DialogHeader className="sr-only">
-          <DialogTitle>Recherche globale</DialogTitle>
+          <DialogTitle>Navigation rapide</DialogTitle>
           <DialogDescription>
-            Recherche rapide dans les pages accessibles.
+            Accès rapide aux pages opérationnelles autorisées.
           </DialogDescription>
         </DialogHeader>
         <div className="border-sidebar-border/65 flex items-center gap-3 border-b px-4 py-3">
           <Search className="text-muted-foreground size-4 shrink-0" />
           <Input
-            aria-label="Rechercher dans les pages accessibles"
+            aria-label="Rechercher dans les pages opérationnelles"
             autoFocus
             className="h-10 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Rechercher une page..."
+            placeholder="Rechercher une page opérationnelle..."
             value={query}
           />
         </div>
@@ -203,18 +202,10 @@ export const GlobalSearch: FC = () => {
                 <Search className="size-4" />
               </span>
               <p className="text-foreground mt-3 text-sm font-semibold">
-                Aucun resultat
+                Aucune page opérationnelle trouvée
               </p>
             </div>
           )}
-        </div>
-        <div className="border-sidebar-border/65 flex items-center justify-end border-t p-2">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/recherche" onClick={closeSearch}>
-              Recherche avancee
-              <ArrowRight className="size-4" />
-            </Link>
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

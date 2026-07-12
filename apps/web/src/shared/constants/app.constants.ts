@@ -22,8 +22,16 @@ export const SITE_CONFIG = {
 
 export { DEFAULT_ROLE_LABEL, PROTECTED_ROLE_LABEL, ROLE_LABELS };
 
+export type NavigationAvailability = 'live' | 'planned';
+export type NavigationAvailabilityFilter = NavigationAvailability | 'all';
+
 // Navigation items for sidebar
 export type NavItem = {
+  /**
+   * Destinations are deliberately planned by default. A page must be
+   * explicitly promoted to `live` before it can enter the main navigation.
+   */
+  availability?: NavigationAvailability;
   children?: NavItem[];
   description?: string;
   href: string;
@@ -49,6 +57,7 @@ export type NavigationSpace = {
   id: string;
   label: string;
   matchHrefs?: readonly string[];
+  routeBaseHref?: string;
   sections: NavSection[];
   summary: string;
   tone: NavigationSpaceTone;
@@ -75,7 +84,6 @@ const treasuryArchiveAccess = [PERMISSIONS.TREASURY.ARCHIVES] as const;
 const treasuryAuditAccess = [PERMISSIONS.TREASURY.AUDIT] as const;
 const treasuryExportAccess = [PERMISSIONS.TREASURY.EXPORT] as const;
 const treasuryValidationAccess = [PERMISSIONS.TREASURY.VALIDATE] as const;
-const systemAccess = [PERMISSIONS.SYSTEM.VIEW] as const;
 const systemArchiveAccess = [PERMISSIONS.SYSTEM.ARCHIVES] as const;
 const systemAuditAccess = [PERMISSIONS.SYSTEM.AUDIT] as const;
 const systemAutomationAccess = [PERMISSIONS.SYSTEM.AUTOMATION] as const;
@@ -83,6 +91,10 @@ const systemExportAccess = [PERMISSIONS.SYSTEM.EXPORTS] as const;
 const systemSettingsAccess = [PERMISSIONS.SYSTEM.SETTINGS] as const;
 const systemValidationAccess = [PERMISSIONS.SYSTEM.VALIDATE] as const;
 const usersAccess = [PERMISSIONS.USERS.VIEW] as const;
+const systemHubAccess = [
+  PERMISSIONS.USERS.VIEW,
+  PERMISSIONS.SYSTEM.AUDIT,
+] as const;
 type NavigationUser = Pick<
   UserType,
   'isProtected' | 'permissions' | 'role'
@@ -91,27 +103,44 @@ type NavigationUser = Pick<
 export const NAV_SPACES: NavigationSpace[] = [
   {
     description: 'Vue globale, alertes et raccourcis selon les droits.',
-    href: '/tableau-de-bord',
+    href: '/',
     icon: 'LayoutDashboard',
     id: 'dashboard',
     label: 'Tableau de bord',
-    matchHrefs: ['/recherche'],
+    matchHrefs: ['/tableau-de-bord'],
+    routeBaseHref: '/tableau-de-bord',
     sections: [
       {
         id: 'dashboard-overview',
         items: [
           {
-            description: 'Vue globale du site prive selon les permissions.',
-            href: '/tableau-de-bord',
+            availability: 'live',
+            description: 'Vue globale du site privé selon les permissions.',
+            href: '/',
             icon: 'LayoutDashboard',
             label: "Vue d'ensemble",
             requiredPermissions: dashboardAccess,
           },
           {
-            description: 'Actions personnelles a suivre.',
+            availability: 'live',
+            description:
+              'Profil, mot de passe, sessions et activité personnelle.',
+            href: '/mon-compte',
+            icon: 'UserCheck',
+            label: 'Mon compte',
+          },
+          {
+            availability: 'live',
+            description: 'Fonctionnalités prévues et état de leur préparation.',
+            href: '/feuille-de-route',
+            icon: 'ClipboardList',
+            label: 'Feuille de route',
+          },
+          {
+            description: 'Actions personnelles à suivre.',
             href: '/tableau-de-bord/mes-taches',
             icon: 'ClipboardList',
-            label: 'Mes taches',
+            label: 'Mes tâches',
             requiredPermissions: tasksAccess,
           },
           {
@@ -122,25 +151,33 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: notificationsAccess,
           },
           {
-            description: 'Reunions proches et elements a preparer.',
+            description: 'Réunions proches et éléments à préparer.',
             href: '/tableau-de-bord/prochaines-reunions',
             icon: 'CalendarClock',
-            label: 'Prochaines reunions',
+            label: 'Prochaines réunions',
             requiredPermissions: meetingsAccess,
           },
           {
-            description: 'Chartes et documents a lire ou accepter.',
+            description: 'Chartes et documents à lire ou accepter.',
             href: '/tableau-de-bord/documents-a-accepter',
             icon: 'FileCheck2',
-            label: 'Documents a accepter',
+            label: 'Documents à accepter',
             requiredPermissions: documentsAccess,
           },
           {
-            description: 'Points importants a traiter rapidement.',
+            description: 'Points importants à traiter rapidement.',
             href: '/tableau-de-bord/alertes-importantes',
             icon: 'ShieldCheck',
             label: 'Alertes importantes',
             requiredPermissions: notificationsAccess,
+          },
+          {
+            description:
+              'Recherche transversale future dans les données autorisées.',
+            href: '/recherche',
+            icon: 'Search',
+            label: 'Recherche étendue',
+            requiredPermissions: dashboardAccess,
           },
         ],
         label: 'Pilotage',
@@ -161,17 +198,17 @@ export const NAV_SPACES: NavigationSpace[] = [
         id: 'internal-main',
         items: [
           {
-            description: 'Accueil du pole vie interne.',
+            description: 'Accueil du pôle vie interne.',
             href: '/vie-interne',
             icon: 'Home',
             label: "Vue d'ensemble",
             requiredPermissions: internalAccess,
           },
           {
-            description: 'Informations importantes reservees a la structure.',
+            description: 'Informations importantes réservées à la structure.',
             href: '/vie-interne/actualite-interne',
             icon: 'Newspaper',
-            label: 'Actualite interne',
+            label: 'Actualité interne',
             requiredPermissions: internalAccess,
           },
           {
@@ -185,58 +222,58 @@ export const NAV_SPACES: NavigationSpace[] = [
                 requiredPermissions: membersAccess,
               },
               {
-                description: 'Adhesions, statuts et cotisations liees.',
+                description: 'Adhésions, statuts et cotisations liées.',
                 href: '/vie-interne/adherents',
                 icon: 'UserCheck',
-                label: 'Adherents',
+                label: 'Adhérents',
                 requiredPermissions: membersAccess,
               },
               {
-                description: 'Arrivees, departs et checklists internes.',
+                description: 'Arrivées, départs et checklists internes.',
                 href: '/vie-interne/onboarding-depart',
                 icon: 'UserPlus',
-                label: 'Onboarding et depart',
+                label: 'Onboarding et départ',
                 requiredPermissions: membersUpdateAccess,
               },
             ],
-            description: 'Personnes, adherents et parcours interne.',
+            description: 'Personnes, adhérents et parcours interne.',
             href: '/vie-interne/membres-adherents',
             icon: 'Users',
-            label: 'Membres & adherents',
+            label: 'Membres & adhérents',
             requiredPermissions: membersAccess,
           },
           {
             children: [
               {
-                description: 'Organisation et compte rendu des reunions.',
+                description: 'Organisation et compte rendu des réunions.',
                 href: '/vie-interne/reunions',
                 icon: 'ClipboardList',
-                label: 'Gestion des reunions',
+                label: 'Gestion des réunions',
                 requiredPermissions: meetingsUpdateAccess,
               },
               {
-                description: 'Echeances et evenements internes.',
+                description: 'Échéances et événements internes.',
                 href: '/vie-interne/calendrier-interne',
                 icon: 'CalendarClock',
                 label: 'Calendrier interne',
                 requiredPermissions: meetingsAccess,
               },
               {
-                description: 'Retours apres reunions, matchs, scrims ou tests.',
+                description: 'Retours après réunions, matchs, scrims ou tests.',
                 href: '/vie-interne/debriefs',
                 icon: 'FileText',
-                label: 'Debriefs',
+                label: 'Débriefs',
                 requiredPermissions: meetingsAccess,
               },
             ],
-            description: 'Temps forts, reunions et retours internes.',
+            description: 'Temps forts, réunions et retours internes.',
             href: '/vie-interne/reunions-suivi',
             icon: 'CalendarClock',
-            label: 'Reunions & suivi',
+            label: 'Réunions & suivi',
             requiredPermissions: meetingsAccess,
           },
           {
-            description: 'Candidatures, tests et decisions de recrutement.',
+            description: 'Candidatures, tests et décisions de recrutement.',
             href: '/vie-interne/recrutement-tryouts',
             icon: 'UserPlus',
             label: 'Recrutement & tryouts',
@@ -254,7 +291,7 @@ export const NAV_SPACES: NavigationSpace[] = [
         position: 'top',
       },
     ],
-    summary: 'Membres, reunions, rappels',
+    summary: 'Membres, réunions, rappels',
     tone: 'internal',
   },
   {
@@ -268,7 +305,7 @@ export const NAV_SPACES: NavigationSpace[] = [
         id: 'legal-main',
         items: [
           {
-            description: 'Accueil du pole bureau et juridique.',
+            description: 'Accueil du pôle bureau et juridique.',
             href: '/bureau-juridique',
             icon: 'Home',
             label: "Vue d'ensemble",
@@ -283,7 +320,7 @@ export const NAV_SPACES: NavigationSpace[] = [
           },
           {
             description:
-              'Repertoire central des personnes internes, externes, anciens contacts et profils sensibles.',
+              'Répertoire central des personnes internes, externes, anciens contacts et profils sensibles.',
             href: '/bureau-juridique/personnes-contacts',
             icon: 'Users',
             label: 'Personnes & contacts',
@@ -292,7 +329,7 @@ export const NAV_SPACES: NavigationSpace[] = [
           {
             children: [
               {
-                description: 'Chartes, reglements et documents officiels.',
+                description: 'Chartes, règlements et documents officiels.',
                 href: '/bureau-juridique/documents-officiels',
                 icon: 'FileText',
                 label: 'Documents officiels',
@@ -320,7 +357,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: documentsAccess,
           },
           {
-            description: 'Incidents, avertissements et decisions sensibles.',
+            description: 'Incidents, avertissements et décisions sensibles.',
             href: '/bureau-juridique/incidents-sanctions',
             icon: 'ShieldCheck',
             label: 'Incidents et sanctions',
@@ -334,10 +371,10 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: legalAccess,
           },
           {
-            description: 'Decisions structurelles importantes du bureau.',
+            description: 'Décisions structurelles importantes du bureau.',
             href: '/bureau-juridique/decisions-bureau',
             icon: 'ClipboardList',
-            label: 'Decisions du bureau',
+            label: 'Décisions du bureau',
             requiredPermissions: legalAccess,
           },
         ],
@@ -398,7 +435,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             description: 'Liste centrale des mouvements financiers.',
             href: '/tresorerie/operations',
             icon: 'ClipboardList',
-            label: 'Operations',
+            label: 'Opérations',
             requiredPermissions: treasuryAccess,
           },
           {
@@ -416,10 +453,10 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: treasuryAccess,
           },
           {
-            description: 'Cotisations et paiements adherents.',
+            description: 'Cotisations et paiements adhérents.',
             href: '/tresorerie/cotisations-adherents',
             icon: 'UserCheck',
-            label: 'Cotisations adherents',
+            label: 'Cotisations adhérents',
             requiredPermissions: treasuryAccess,
           },
           {
@@ -498,13 +535,15 @@ export const NAV_SPACES: NavigationSpace[] = [
         id: 'system-admin',
         items: [
           {
+            availability: 'live',
             description: 'Accueil du pôle système.',
             href: '/systeme',
             icon: 'Settings',
             label: "Vue d'ensemble",
-            requiredPermissions: systemAccess,
+            requiredPermissions: systemHubAccess,
           },
           {
+            availability: 'live',
             description: 'Comptes, rôles et permissions existants.',
             href: '/administration/utilisateurs',
             icon: 'Users',
@@ -540,6 +579,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: systemArchiveAccess,
           },
           {
+            availability: 'live',
             description: 'Historique admin et actions sensibles.',
             href: '/systeme/journal-activite',
             icon: 'History',
@@ -596,7 +636,7 @@ export const NAV_SPACES: NavigationSpace[] = [
         id: 'sport-main',
         items: [
           {
-            description: 'Vue future liee au site public esport.',
+            description: 'Vue future liée au site public esport.',
             href: '/sport-team-control',
             icon: 'Activity',
             label: "Vue d'ensemble",
@@ -604,7 +644,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             status: 'Plus tard',
           },
           {
-            description: 'Jeux deja geres cote public.',
+            description: 'Jeux déjà gérés côté public.',
             href: '/sport-team-control/jeux',
             icon: 'Activity',
             label: 'Jeux',
@@ -612,7 +652,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             status: 'Lecture publique plus tard',
           },
           {
-            description: 'Rosters deja geres cote public.',
+            description: 'Rosters déjà gérés côté public.',
             href: '/sport-team-control/rosters',
             icon: 'Users',
             label: 'Rosters',
@@ -620,7 +660,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             status: 'Lecture publique plus tard',
           },
           {
-            description: 'Profils esport deja geres cote public.',
+            description: 'Profils esport déjà gérés côté public.',
             href: '/sport-team-control/membres-esport',
             icon: 'Users',
             label: 'Membres esport',
@@ -628,7 +668,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             status: 'Lecture publique plus tard',
           },
           {
-            description: 'Scrims deja geres cote public.',
+            description: 'Scrims déjà gérés côté public.',
             href: '/sport-team-control/scrims',
             icon: 'CalendarClock',
             label: 'Scrims',
@@ -636,7 +676,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             status: 'Lecture publique plus tard',
           },
           {
-            description: 'Matchs et tournois deja geres cote public.',
+            description: 'Matchs et tournois déjà gérés côté public.',
             href: '/sport-team-control/tournois-matchs',
             icon: 'CalendarClock',
             label: 'Tournois / matchs',
@@ -644,7 +684,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             status: 'Lecture publique plus tard',
           },
           {
-            description: 'Calendrier esport lie au public plus tard.',
+            description: 'Calendrier esport lié au public plus tard.',
             href: '/sport-team-control/calendrier-esport',
             icon: 'CalendarClock',
             label: 'Calendrier esport',
@@ -657,18 +697,18 @@ export const NAV_SPACES: NavigationSpace[] = [
             icon: 'UserPlus',
             label: 'Recrutement & tryouts',
             requiredPermissions: sportUpdateAccess,
-            status: 'A relier',
+            status: 'À relier',
           },
           {
-            description: 'Debriefs sportifs lies aux matchs ou scrims.',
+            description: 'Débriefs sportifs liés aux matchs ou scrims.',
             href: '/sport-team-control/debriefs',
             icon: 'FileText',
-            label: 'Debriefs',
+            label: 'Débriefs',
             requiredPermissions: sportAccess,
-            status: 'A relier',
+            status: 'À relier',
           },
           {
-            description: 'Suivi performance a confirmer plus tard.',
+            description: 'Suivi performance à confirmer plus tard.',
             href: '/sport-team-control/performance',
             icon: 'Activity',
             label: 'Performance',
@@ -676,7 +716,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             status: 'Plus tard',
           },
         ],
-        label: 'Lecture liee',
+        label: 'Lecture liée',
         position: 'top',
       },
     ],
@@ -690,6 +730,12 @@ export const NAV_SECTIONS: NavSection[] = NAV_SPACES.flatMap(
 );
 
 export const getRoleLabel = getPermissionRoleLabel;
+
+export function getNavigationAvailability(
+  item: NavItem,
+): NavigationAvailability {
+  return item.availability ?? 'planned';
+}
 
 export const getAccessLabel = (
   user: Pick<UserType, 'isProtected' | 'role'>,
@@ -728,11 +774,12 @@ export function canShowNavigationItem(
 function filterNavItems(
   items: readonly NavItem[],
   user: NavigationUser,
+  availability: NavigationAvailabilityFilter,
 ): NavItem[] {
   return items
     .map((item) => {
       const visibleChildren = item.children
-        ? filterNavItems(item.children, user)
+        ? filterNavItems(item.children, user, availability)
         : undefined;
 
       return {
@@ -742,19 +789,26 @@ function filterNavItems(
     })
     .filter((item) => {
       const hasVisibleChildren = (item.children?.length ?? 0) > 0;
+      const hasExpectedAvailability =
+        availability === 'all' ||
+        getNavigationAvailability(item) === availability;
 
-      return hasVisibleChildren || canAccessNavigationItem(user, item);
+      return (
+        hasVisibleChildren ||
+        (hasExpectedAvailability && canAccessNavigationItem(user, item))
+      );
     });
 }
 
 function filterNavSections(
   sections: readonly NavSection[],
   user: NavigationUser,
+  availability: NavigationAvailabilityFilter,
 ): NavSection[] {
   return sections
     .map((section) => ({
       ...section,
-      items: filterNavItems(section.items, user),
+      items: filterNavItems(section.items, user, availability),
     }))
     .filter((section) => section.items.length > 0);
 }
@@ -770,10 +824,11 @@ function isPathInSpace(pathname: string, space: NavigationSpace): boolean {
 export function filterNavigationSpace(
   space: NavigationSpace,
   user: NavigationUser,
+  availability: NavigationAvailabilityFilter = 'live',
 ): NavigationSpace {
   return {
     ...space,
-    sections: filterNavSections(space.sections, user),
+    sections: filterNavSections(space.sections, user, availability),
   };
 }
 
@@ -819,10 +874,17 @@ export function canOpenNavigationHref(
 
 export function getVisibleNavigationSpaces(
   user: NavigationUser,
+  availability: NavigationAvailabilityFilter = 'live',
 ): NavigationSpace[] {
-  return NAV_SPACES.map((space) => filterNavigationSpace(space, user)).filter(
-    (space) => space.sections.length > 0,
-  );
+  return NAV_SPACES.map((space) =>
+    filterNavigationSpace(space, user, availability),
+  ).filter((space) => space.sections.length > 0);
+}
+
+export function getPlannedNavigationSpaces(
+  user: NavigationUser,
+): NavigationSpace[] {
+  return getVisibleNavigationSpaces(user, 'planned');
 }
 
 export function getDefaultNavigationSpace(): NavigationSpace {
@@ -852,8 +914,9 @@ export function getNavigationPageBySlug(
 
   if (!space) return null;
 
+  const routeBaseHref = space.routeBaseHref ?? space.href;
   const targetHref =
-    slug.length > 0 ? `${space.href}/${slug.join('/')}` : space.href;
+    slug.length > 0 ? `${routeBaseHref}/${slug.join('/')}` : routeBaseHref;
   const item =
     getNavigationSpaceItems(space).find(
       (navigationItem) => navigationItem.href === targetHref,
@@ -862,8 +925,11 @@ export function getNavigationPageBySlug(
   return item ? { item, space } : null;
 }
 
-export function getVisibleNavSections(user: NavigationUser): NavSection[] {
-  return filterNavSections(NAV_SECTIONS, user);
+export function getVisibleNavSections(
+  user: NavigationUser,
+  availability: NavigationAvailabilityFilter = 'live',
+): NavSection[] {
+  return filterNavSections(NAV_SECTIONS, user, availability);
 }
 
 export function getDesktopSidebarSections(

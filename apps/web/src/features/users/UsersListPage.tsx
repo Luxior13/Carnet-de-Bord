@@ -22,8 +22,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { toast } from 'sonner';
 
+import { ContentState } from '$components/layout/ContentState';
 import { UserAvatar } from '$components/users/UserAvatar';
 import { getAccessLabel, getRoleColor } from '$constants/permissions.constants';
 import type {
@@ -36,7 +36,6 @@ import { Button } from '$ui/button';
 import { Card, CardContent } from '$ui/card';
 import {
   DataTableDesktop,
-  DataTableEmptyState,
   DataTableMobileList,
   DataTableSection,
 } from '$ui/data-table-section';
@@ -253,6 +252,9 @@ export const UsersListPage: FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [lastSuccessfulLoadAt, setLastSuccessfulLoadAt] = useState<Date | null>(
+    null,
+  );
   const [searchQuery, setSearchQuery] = useState(() =>
     normalizeSearchQuery(searchParams.get('search')),
   );
@@ -329,17 +331,16 @@ export const UsersListPage: FC = () => {
           setUsers(data.data.users);
           setStats(data.data.stats);
           setPagination(nextPagination);
+          setLastSuccessfulLoadAt(new Date());
         } else {
           const message =
             data.error?.message || 'Impossible de charger les utilisateurs';
           setLoadError(message);
-          toast.error(message);
         }
       } catch {
         if (controller.signal.aborted) return;
         const message = 'Impossible de charger les utilisateurs';
         setLoadError(message);
-        toast.error(message);
       } finally {
         if (abortControllerRef.current !== controller) return;
 
@@ -499,7 +500,7 @@ export const UsersListPage: FC = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6" role="status" aria-label="Chargement">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-20" />
@@ -518,28 +519,39 @@ export const UsersListPage: FC = () => {
   return (
     <div className="space-y-4">
       {loadError && (
-        <div
-          className="border-destructive/35 bg-destructive/10 text-destructive flex flex-wrap items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm"
-          role="alert"
-        >
-          <span>{loadError}</span>
-          <Button
-            onClick={() =>
-              void fetchUsers(
-                currentPage,
-                debouncedSearch,
-                filterStatus,
-                filterRole,
-                sortBy,
-              )
-            }
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            Réessayer
-          </Button>
-        </div>
+        <ContentState
+          action={
+            <Button
+              onClick={() =>
+                void fetchUsers(
+                  currentPage,
+                  debouncedSearch,
+                  filterStatus,
+                  filterRole,
+                  sortBy,
+                )
+              }
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              Réessayer
+            </Button>
+          }
+          description={
+            lastSuccessfulLoadAt && users.length > 0
+              ? `Les dernières données fiables, actualisées à ${lastSuccessfulLoadAt.toLocaleTimeString(
+                  'fr-FR',
+                  {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  },
+                )}, restent affichées.`
+              : undefined
+          }
+          kind="error"
+          title={loadError}
+        />
       )}
       {/* Stats Cards */}
       {stats && (
@@ -576,6 +588,15 @@ export const UsersListPage: FC = () => {
               totalPages > 1 &&
               ` - Page ${currentPage}/${totalPages}`}
             {isRefreshing && ' - Mise à jour...'}
+            {!isRefreshing && lastSuccessfulLoadAt && (
+              <span className="ml-1">
+                - Actualisé à{' '}
+                {lastSuccessfulLoadAt.toLocaleTimeString('fr-FR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            )}
           </>
         }
         contentClassName={
@@ -713,8 +734,10 @@ export const UsersListPage: FC = () => {
               {displayedUsers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="h-44 text-center">
-                    <DataTableEmptyState
-                      icon={<UserMinus size={32} />}
+                    <ContentState
+                      className="min-h-0 border-0 bg-transparent p-0"
+                      icon={<UserMinus className="size-5" />}
+                      layout="panel"
                       title={
                         loadError
                           ? 'Utilisateurs indisponibles'
@@ -733,7 +756,6 @@ export const UsersListPage: FC = () => {
                           </Button>
                         )
                       }
-                      className="py-0"
                     />
                   </TableCell>
                 </TableRow>
@@ -823,8 +845,10 @@ export const UsersListPage: FC = () => {
         </DataTableDesktop>
         <DataTableMobileList>
           {displayedUsers.length === 0 ? (
-            <DataTableEmptyState
-              icon={<UserMinus size={40} />}
+            <ContentState
+              className="min-h-48 border-0 bg-transparent"
+              icon={<UserMinus className="size-5" />}
+              layout="panel"
               title={
                 loadError
                   ? 'Utilisateurs indisponibles'
@@ -843,7 +867,6 @@ export const UsersListPage: FC = () => {
                   </Button>
                 )
               }
-              className="py-14"
             />
           ) : (
             displayedUsers.map((user) => (
@@ -878,7 +901,7 @@ export const UsersListPage: FC = () => {
                     <div className="flex flex-wrap items-center gap-1.5">
                       <Badge
                         variant={getRoleColor(user.role)}
-                        className="text-[10px]"
+                        className="text-xs"
                       >
                         {getAccessLabel(user)}
                       </Badge>
@@ -888,7 +911,7 @@ export const UsersListPage: FC = () => {
                       {user.mustChangePassword && (
                         <Badge
                           variant="outline"
-                          className="border-amber-500/40 text-[10px] text-amber-400"
+                          className="border-amber-500/40 text-xs text-amber-400"
                         >
                           MDP temporaire
                         </Badge>

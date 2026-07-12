@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import React from 'react';
 
 import PrivateFeaturePage from '$components/private-navigation/PrivateFeaturePage';
+import { SystemHomePage } from '$components/private-navigation/SystemHomePage';
 import { getNavigationPageBySlug } from '$constants/app.constants';
 import { SystemActivityJournalPage } from '$features/audit/SystemActivityJournalPage';
 
@@ -13,6 +14,11 @@ export default async function SystemePage({
   params,
 }: SystemePageProps): Promise<React.ReactNode> {
   const { slug = [] } = await params;
+
+  if (slug.length === 0) {
+    return <SystemHomePage />;
+  }
+
   const match = getNavigationPageBySlug('system', slug);
 
   if (!match) notFound();

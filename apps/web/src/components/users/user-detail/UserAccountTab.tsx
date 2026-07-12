@@ -147,17 +147,17 @@ const PersonalPermissionRow: FC<PersonalPermissionRowProps> = ({
           {permission.label}
         </p>
         <Badge variant="outline" className="rounded-full">
-          {isAllowed ? 'Autorise' : 'Refuse'}
+          {isAllowed ? 'Autorisé' : 'Refusé'}
         </Badge>
         <Badge variant="secondary" className="rounded-full">
-          {hasCustomChoice ? 'Manuel' : 'Role'}
+          {hasCustomChoice ? 'Manuel' : 'Rôle'}
         </Badge>
         {missingDependencyLabels.length > 0 && (
           <Badge
             variant="outline"
             className="border-amber-500/40 text-amber-300"
           >
-            A completer
+            À compléter
           </Badge>
         )}
       </div>
@@ -277,7 +277,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-foreground font-semibold">
-                  Compte personnel superadmin
+                  Compte personnel du super-administrateur
                 </h3>
                 <Badge
                   variant="outline"
@@ -288,7 +288,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
               </div>
               <p className="text-muted-foreground mt-1 max-w-3xl text-sm leading-6">
                 Ce compte dispose automatiquement des actions personnelles et ne
-                se gere pas par restrictions manuelles.
+                se gère pas par restrictions manuelles.
               </p>
             </div>
           </div>
@@ -310,7 +310,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
                 Compte personnel
               </CardTitle>
               <p className="text-muted-foreground mt-1 max-w-3xl text-sm leading-6">
-                Actions que ce compte peut effectuer lui-meme depuis Mon compte.
+                Actions que ce compte peut effectuer lui-même depuis Mon compte.
               </p>
             </div>
           </div>
@@ -362,7 +362,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
       </CardContent>
       <CardFooter className="border-sidebar-border/60 bg-surface-muted/95 sticky bottom-3 z-20 justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur">
         <p className="text-muted-foreground text-xs">
-          {hasChanges ? 'Modifications non enregistrees' : 'A jour'}
+          {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
         </p>
         <div className="flex gap-2">
           <Button
@@ -373,7 +373,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
             disabled={!canManagePermissions || isSaving}
           >
             <RotateCcw className="size-4" />
-            Role
+            Rôle
           </Button>
           <Button
             type="button"

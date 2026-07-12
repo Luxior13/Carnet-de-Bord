@@ -33,6 +33,8 @@ import React, {
 } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
+import { ContentState } from '$components/layout/ContentState';
+import { PageHero } from '$components/layout/PageHero';
 import { AccessDeniedState } from '$components/layout/PageState';
 import {
   canShowNavigationItem,
@@ -63,7 +65,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '$ui/select';
-import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
 import { cn } from '$utils/css.utils';
 
@@ -900,7 +901,7 @@ const ScopeSummary: FC<{ scopes: ScopeVisual[] }> = ({ scopes }) => (
         <span
           key={scope.value}
           className={cn(
-            'inline-flex max-w-full items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-[11px] font-medium',
+            'inline-flex max-w-full items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-xs font-medium',
             scope.className,
           )}
         >
@@ -932,14 +933,14 @@ const ChangeItem: FC<ChangeDiff> = ({ after, before, fieldKey }) => {
         </span>
       ) : (
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-          <span className="text-muted-foreground/70 text-[10px] font-medium uppercase">
+          <span className="text-muted-foreground/70 text-xs font-medium uppercase">
             Avant
           </span>
           <span className="bg-muted text-muted-foreground max-w-full rounded px-1.5 py-0.5 break-words line-through">
             {beforeValue}
           </span>
           <ArrowRight size={12} className="text-muted-foreground shrink-0" />
-          <span className="text-primary/80 text-[10px] font-medium uppercase">
+          <span className="text-primary/80 text-xs font-medium uppercase">
             Après
           </span>
           <span className="bg-primary/10 text-primary max-w-full rounded px-1.5 py-0.5 break-words">
@@ -1019,7 +1020,7 @@ const JournalCard: FC<{
                 {changes.length > 0 && (
                   <Badge
                     variant="secondary"
-                    className="border-primary/20 bg-primary/15 text-primary px-1.5 py-0 text-[10px]"
+                    className="border-primary/20 bg-primary/15 text-primary px-1.5 py-0 text-xs"
                   >
                     {changes.length}{' '}
                     {changes.length > 1 ? 'changements' : 'changement'}
@@ -1027,7 +1028,7 @@ const JournalCard: FC<{
                 )}
                 <Badge
                   variant="outline"
-                  className="text-muted-foreground px-1.5 py-0 text-[10px]"
+                  className="text-muted-foreground px-1.5 py-0 text-xs"
                 >
                   {categoryLabel}
                 </Badge>
@@ -1036,7 +1037,7 @@ const JournalCard: FC<{
                 <Badge
                   variant="outline"
                   className={cn(
-                    'max-w-full px-1.5 py-0 text-[10px]',
+                    'max-w-full px-1.5 py-0 text-xs',
                     locationToneClasses.soft,
                   )}
                 >
@@ -1051,14 +1052,14 @@ const JournalCard: FC<{
                 <Badge
                   variant="outline"
                   className={cn(
-                    'max-w-full px-1.5 py-0 text-[10px]',
+                    'max-w-full px-1.5 py-0 text-xs',
                     locationToneClasses.soft,
                   )}
                 >
                   <LocationIcon size={10} className="mr-1 shrink-0" />
                   <span className="truncate">{location.pageLabel}</span>
                 </Badge>
-                <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+                <Badge variant="outline" className="px-1.5 py-0 text-xs">
                   Onglet {location.tabLabel}
                 </Badge>
               </div>
@@ -1082,7 +1083,7 @@ const JournalCard: FC<{
                 </span>
                 <span className="min-w-0">
                   <span
-                    className="block truncate text-[11px] font-medium opacity-80"
+                    className="block truncate text-xs font-medium opacity-80"
                     title={location.poleLabel}
                   >
                     {location.poleLabel}
@@ -1095,7 +1096,7 @@ const JournalCard: FC<{
                   </span>
                 </span>
               </div>
-              <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px]">
+              <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs">
                 <span
                   className={cn(
                     'size-1.5 shrink-0 rounded-full',
@@ -1118,7 +1119,7 @@ const JournalCard: FC<{
             <p className="text-foreground truncate text-xs font-medium">
               {formatRelativeTime(log.createdAt)}
             </p>
-            <p className="text-muted-foreground/70 mt-0.5 truncate text-[11px]">
+            <p className="text-muted-foreground/70 mt-0.5 truncate text-xs">
               {formatFullDate(log.createdAt)}
             </p>
           </div>
@@ -1142,7 +1143,7 @@ const JournalCard: FC<{
                   </p>
                   <Badge
                     variant="secondary"
-                    className="bg-primary/10 text-primary text-[10px]"
+                    className="bg-primary/10 text-primary text-xs"
                   >
                     {changes.length}
                   </Badge>
@@ -1160,13 +1161,13 @@ const JournalCard: FC<{
               </section>
             )}
             <details className="group/technical">
-              <summary className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer list-none items-center gap-1.5 text-[11px] font-medium transition-colors [&::-webkit-details-marker]:hidden">
+              <summary className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium transition-colors [&::-webkit-details-marker]:hidden">
                 <Key className="size-3" />
                 Détails techniques
                 <ChevronDown className="size-3 transition-transform group-open/technical:rotate-180" />
               </summary>
               <div className="border-sidebar-border/60 bg-surface-muted/35 mt-2 rounded-lg border px-3 py-2">
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                   <span className="text-muted-foreground">
                     Action{' '}
                     <span className="text-foreground font-medium">
@@ -1204,7 +1205,7 @@ const JournalCard: FC<{
 };
 
 const JournalSkeleton: FC = () => (
-  <div className="space-y-2">
+  <div className="space-y-2" role="status" aria-label="Chargement">
     {Array.from({ length: 6 }).map((_, index) => (
       <Skeleton key={index} className="h-24 rounded-lg" />
     ))}
@@ -1217,7 +1218,6 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
 }) => {
   const { userData } = useUser();
   const canAccessPage = canShowNavigationItem(userData, item);
-  const tone = getNavigationSpaceToneClasses(space.tone);
   const Icon = getNavigationIcon(item.icon);
   const [period, setPeriod] = useState('30d');
   const [logType, setLogType] = useState<JournalLogType>('activity');
@@ -1408,39 +1408,28 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
     >
       <PageShell className="py-0">
         <PageCanvas contentClassName="space-y-5">
-          <section
-            className={cn(
-              'overflow-hidden rounded-lg border shadow-[var(--shadow-panel-strong)]',
-              tone.hero,
-            )}
-          >
-            <div className={cn('h-1.5 w-full', tone.accent)} />
-            <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex min-w-0 items-start gap-4">
-                <ServiceIcon className={cn('mt-0.5 size-11', tone.icon)}>
-                  <Icon className="size-5" />
-                </ServiceIcon>
-                <div className="min-w-0">
-                  <Badge variant="outline" className={tone.soft}>
-                    {space.label}
-                  </Badge>
-                  <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">
-                    {item.label}
-                  </h1>
-                  <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-6">
-                    Historique central des connexions, changements utilisateurs
-                    et actions sensibles du site privé.
-                  </p>
-                </div>
-              </div>
-              <Button asChild variant="outline" className="rounded-md">
+          <PageHero
+            actions={
+              <Button asChild variant="outline">
                 <Link href={space.href}>
                   <Home className="size-4" />
                   Accueil du pôle
                 </Link>
               </Button>
-            </div>
-          </section>
+            }
+            description="Historique central des connexions, changements utilisateurs et actions sensibles du site privé."
+            eyebrow={
+              <Badge
+                className={getNavigationSpaceToneClasses(space.tone).soft}
+                variant="outline"
+              >
+                {space.label}
+              </Badge>
+            }
+            icon={<Icon className="size-5" />}
+            title={item.label}
+            tone={space.tone}
+          />
           <section className="border-sidebar-border/70 bg-surface rounded-lg border p-4 shadow-[var(--shadow-panel)]">
             <div className="space-y-3">
               <div className="space-y-3">
@@ -1678,42 +1667,51 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
             {isLoading ? (
               <JournalSkeleton />
             ) : error && logs.length === 0 ? (
-              <div
-                className="border-sidebar-border/60 flex flex-col items-center justify-center rounded-lg border py-16"
-                role="alert"
-              >
-                <div className="border-destructive/35 bg-destructive/10 text-destructive flex h-16 w-16 items-center justify-center rounded-md border">
-                  <XCircle className="h-8 w-8" />
-                </div>
-                <p className="text-muted-foreground mt-4 text-sm">{error}</p>
-              </div>
+              <ContentState
+                action={
+                  <Button
+                    disabled={isLoading}
+                    onClick={() => void fetchLogs()}
+                    type="button"
+                    variant="outline"
+                  >
+                    <RefreshCw className="size-4" />
+                    Réessayer
+                  </Button>
+                }
+                description={error}
+                kind="error"
+                layout="panel"
+                title="Journal indisponible"
+              />
             ) : logs.length === 0 ? (
-              <div className="border-sidebar-border/60 flex flex-col items-center justify-center rounded-lg border py-16">
-                <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-16 w-16 items-center justify-center rounded-md border">
-                  <Filter className="h-8 w-8" />
-                </div>
-                <p className="text-muted-foreground mt-4 text-sm">
-                  Aucun log pour ces filtres
-                </p>
-              </div>
+              <ContentState
+                description="Modifiez les filtres ou la période pour élargir la recherche."
+                icon={<Filter className="size-5" />}
+                layout="panel"
+                title="Aucun événement pour ces filtres"
+              />
             ) : (
               <div className="space-y-2">
                 {error && (
-                  <div
-                    className="border-destructive/35 bg-destructive/10 text-destructive flex flex-wrap items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm"
-                    role="alert"
-                  >
-                    <span>{error}</span>
-                    <Button
-                      disabled={isLoadingMore}
-                      onClick={() => void fetchLogs(failedCursor ?? undefined)}
-                      size="sm"
-                      type="button"
-                      variant="outline"
-                    >
-                      Réessayer
-                    </Button>
-                  </div>
+                  <ContentState
+                    action={
+                      <Button
+                        disabled={isLoadingMore}
+                        onClick={() =>
+                          void fetchLogs(failedCursor ?? undefined)
+                        }
+                        size="sm"
+                        type="button"
+                        variant="outline"
+                      >
+                        Réessayer
+                      </Button>
+                    }
+                    description="Les événements déjà chargés restent affichés."
+                    kind="error"
+                    title={error}
+                  />
                 )}
                 {logs.map((log) => (
                   <JournalCard

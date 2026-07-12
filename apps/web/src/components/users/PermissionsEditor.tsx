@@ -108,7 +108,7 @@ const ACTION_LABELS: Record<PermissionAction, string> = {
   manage: 'Gérer',
   reset: 'Réinitialiser',
   restore: 'Restaurer',
-  revoke: 'Revoquer',
+  revoke: 'Révoquer',
   send: 'Envoyer',
   sync: 'Synchroniser',
   update: 'Modifier',
@@ -430,12 +430,12 @@ const SelectVisualOption: FC<SelectVisualOptionProps> = ({
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {result && accessStatus && (
         <span className="ml-auto flex shrink-0 items-center gap-1.5">
-          <span className="border-sidebar-border/65 bg-background/35 text-sidebar-foreground/70 rounded-md border px-1.5 py-0.5 text-[10px] leading-none font-semibold">
+          <span className="border-sidebar-border/65 bg-background/35 text-sidebar-foreground/70 rounded-md border px-1.5 py-0.5 text-xs leading-none font-semibold">
             {result.ready}/{result.total}
           </span>
           <span
             className={cn(
-              'rounded-md border px-1.5 py-0.5 text-[10px] leading-none font-semibold',
+              'rounded-md border px-1.5 py-0.5 text-xs leading-none font-semibold',
               getPermissionAccessBadgeClassName(accessStatus),
             )}
           >
@@ -474,7 +474,7 @@ const PermissionCard: FC<PermissionCardProps> = memo(
               </h6>
               <Badge
                 variant="outline"
-                className="text-muted-foreground border-border/70 text-[10px]"
+                className="text-muted-foreground border-border/70 text-xs"
               >
                 {ACTION_LABELS[permission.action]}
               </Badge>
@@ -482,7 +482,7 @@ const PermissionCard: FC<PermissionCardProps> = memo(
                 <Badge
                   variant="outline"
                   className={cn(
-                    'text-[10px]',
+                    'text-xs',
                     getRiskBadgeClassName(permission.risk),
                   )}
                 >
@@ -492,7 +492,7 @@ const PermissionCard: FC<PermissionCardProps> = memo(
               <Badge
                 variant="outline"
                 className={cn(
-                  'text-[10px]',
+                  'text-xs',
                   getPermissionOriginBadgeClassName(view.hasCustomChoice),
                 )}
               >
@@ -514,14 +514,14 @@ const PermissionCard: FC<PermissionCardProps> = memo(
               >
                 {getPermissionResultLabel(view.resultState)}
               </Badge>
-              <span className="text-muted-foreground text-[11px]">
+              <span className="text-muted-foreground text-xs">
                 {view.hasCustomChoice
                   ? `Surcharge : ${view.isEnabled ? 'autorisé' : 'refusé'}`
                   : `Rôle : ${view.isRoleDefaultEnabled ? 'autorisé' : 'refusé'}`}
               </span>
             </div>
             {view.hasMissingDependencies ? (
-              <p className="text-[11px] text-amber-300">
+              <p className="text-xs text-amber-300">
                 {view.isBlockedByPage
                   ? 'La page est bloquée par : '
                   : 'À autoriser aussi : '}
@@ -529,7 +529,7 @@ const PermissionCard: FC<PermissionCardProps> = memo(
               </p>
             ) : (
               view.dependencyLabels.length > 0 && (
-                <p className="text-muted-foreground/85 text-[11px]">
+                <p className="text-muted-foreground/85 text-xs">
                   Accès lié : {view.dependencyLabels.join(', ')}
                 </p>
               )

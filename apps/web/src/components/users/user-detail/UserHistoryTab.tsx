@@ -811,7 +811,7 @@ const formatRelativeTime = (date: Date | string | null): string => {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffSecs < 60) return "A l'instant";
+  if (diffSecs < 60) return "À l'instant";
   if (diffMins < 60) return `Il y a ${diffMins} min`;
   if (diffHours < 24) return `Il y a ${diffHours}h`;
   if (diffDays === 1) return 'Hier';
@@ -1148,7 +1148,7 @@ const ActivitySelectVisualOption: FC<{
       </span>
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {typeof count === 'number' && (
-        <Badge variant="secondary" className="ml-auto shrink-0 text-[10px]">
+        <Badge variant="secondary" className="ml-auto shrink-0 text-xs">
           {count}
         </Badge>
       )}
@@ -1196,7 +1196,7 @@ const ActivityScopeSummary: FC<{ scopes: ActivityScopeVisual[] }> = ({
         <span
           key={scope.value}
           className={cn(
-            'inline-flex max-w-full items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-[11px] font-medium',
+            'inline-flex max-w-full items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-xs font-medium',
             scope.className,
           )}
         >
@@ -1233,14 +1233,14 @@ const ChangeItem: FC<{
         </span>
       ) : (
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-          <span className="text-muted-foreground/70 text-[10px] font-medium uppercase">
+          <span className="text-muted-foreground/70 text-xs font-medium uppercase">
             Avant
           </span>
           <span className="bg-muted text-muted-foreground max-w-full rounded px-1.5 py-0.5 break-words line-through">
             {beforeStr}
           </span>
           <ArrowRight size={12} className="text-muted-foreground shrink-0" />
-          <span className="text-primary/80 text-[10px] font-medium uppercase">
+          <span className="text-primary/80 text-xs font-medium uppercase">
             Après
           </span>
           <span className="bg-primary/10 text-primary max-w-full rounded px-1.5 py-0.5 break-words">
@@ -1326,7 +1326,7 @@ const ActivityListRow: FC<{
                 {hasChanges && (
                   <Badge
                     variant="secondary"
-                    className="border-primary/20 bg-primary/15 text-primary px-1.5 py-0 text-[10px]"
+                    className="border-primary/20 bg-primary/15 text-primary px-1.5 py-0 text-xs"
                   >
                     {changes.length}{' '}
                     {changes.length > 1 ? 'changements' : 'changement'}
@@ -1334,7 +1334,7 @@ const ActivityListRow: FC<{
                 )}
                 <Badge
                   variant="outline"
-                  className="text-muted-foreground px-1.5 py-0 text-[10px]"
+                  className="text-muted-foreground px-1.5 py-0 text-xs"
                 >
                   {categoryLabel}
                 </Badge>
@@ -1343,7 +1343,7 @@ const ActivityListRow: FC<{
                 <Badge
                   variant="outline"
                   className={cn(
-                    'max-w-full px-1.5 py-0 text-[10px]',
+                    'max-w-full px-1.5 py-0 text-xs',
                     locationToneClasses.soft,
                   )}
                 >
@@ -1358,14 +1358,14 @@ const ActivityListRow: FC<{
                 <Badge
                   variant="outline"
                   className={cn(
-                    'max-w-full px-1.5 py-0 text-[10px]',
+                    'max-w-full px-1.5 py-0 text-xs',
                     locationToneClasses.soft,
                   )}
                 >
                   <LocationIcon size={10} className="mr-1 shrink-0" />
                   <span className="truncate">{location.pageLabel}</span>
                 </Badge>
-                <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+                <Badge variant="outline" className="px-1.5 py-0 text-xs">
                   Onglet {location.tabLabel}
                 </Badge>
               </div>
@@ -1389,7 +1389,7 @@ const ActivityListRow: FC<{
                 </span>
                 <span className="min-w-0">
                   <span
-                    className="block truncate text-[11px] font-medium opacity-80"
+                    className="block truncate text-xs font-medium opacity-80"
                     title={location.poleLabel}
                   >
                     {location.poleLabel}
@@ -1402,7 +1402,7 @@ const ActivityListRow: FC<{
                   </span>
                 </span>
               </div>
-              <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px]">
+              <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs">
                 <span
                   className={cn(
                     'size-1.5 shrink-0 rounded-full',
@@ -1425,7 +1425,7 @@ const ActivityListRow: FC<{
             <p className="text-foreground truncate text-xs font-medium">
               {formatRelativeTime(log.createdAt)}
             </p>
-            <p className="text-muted-foreground/70 mt-0.5 truncate text-[11px]">
+            <p className="text-muted-foreground/70 mt-0.5 truncate text-xs">
               {formatFullDate(log.createdAt)}
             </p>
           </div>
@@ -1449,7 +1449,7 @@ const ActivityListRow: FC<{
                   </p>
                   <Badge
                     variant="secondary"
-                    className="bg-primary/10 text-primary text-[10px]"
+                    className="bg-primary/10 text-primary text-xs"
                   >
                     {changes.length}
                   </Badge>
@@ -1467,13 +1467,13 @@ const ActivityListRow: FC<{
               </section>
             )}
             <details className="group/technical">
-              <summary className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer list-none items-center gap-1.5 text-[11px] font-medium transition-colors [&::-webkit-details-marker]:hidden">
+              <summary className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium transition-colors [&::-webkit-details-marker]:hidden">
                 <Key className="size-3" />
                 Détails techniques
                 <ChevronDown className="size-3 transition-transform group-open/technical:rotate-180" />
               </summary>
               <div className="border-sidebar-border/60 bg-surface-muted/35 mt-2 rounded-lg border px-3 py-2">
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                   <span className="text-muted-foreground">
                     Action{' '}
                     <span className="text-foreground font-medium">

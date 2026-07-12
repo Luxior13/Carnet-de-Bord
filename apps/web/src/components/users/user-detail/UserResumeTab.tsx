@@ -90,7 +90,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
           />
           <ResumeStatCard
             icon={Check}
-            label="Connexions reussies"
+            label="Connexions réussies"
             value={auditStats.successfulLogins}
           />
           <ResumeStatCard

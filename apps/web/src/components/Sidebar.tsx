@@ -129,7 +129,7 @@ const SpaceSwitcher: FC<{
             <ActiveIcon className="size-4" />
           </span>
           <span className="min-w-0 flex-1 overflow-hidden transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:max-w-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150">
-            <span className="text-sidebar-foreground/60 block truncate text-[11px] font-medium uppercase">
+            <span className="text-sidebar-foreground/60 block truncate text-xs font-medium uppercase">
               Pôle actif
             </span>
             <span className="block truncate text-sm font-semibold">
@@ -194,7 +194,7 @@ const SpaceSwitcher: FC<{
                       {space.label}
                     </span>
                     {isActive && (
-                      <span className="border-sidebar-ring/35 bg-sidebar-ring/12 text-sidebar-foreground/85 inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] leading-none font-medium">
+                      <span className="border-sidebar-ring/35 bg-sidebar-ring/12 text-sidebar-foreground/85 inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs leading-none font-medium">
                         <CheckCircle2 className="size-3" />
                         Actif
                       </span>
@@ -202,7 +202,7 @@ const SpaceSwitcher: FC<{
                     {space.badge && (
                       <span
                         className={cn(
-                          'inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-[10px] leading-none font-medium',
+                          'inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-xs leading-none font-medium',
                           getNavigationSpaceBadgeClasses(space.badge),
                         )}
                       >
@@ -400,7 +400,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
             <span className="block truncate text-sm font-semibold tracking-normal">
               {SITE_CONFIG.name}
             </span>
-            <span className="text-sidebar-foreground/58 block truncate text-[11px]">
+            <span className="text-sidebar-foreground/58 block truncate text-xs">
               {SITE_CONFIG.subtitle}
             </span>
           </span>

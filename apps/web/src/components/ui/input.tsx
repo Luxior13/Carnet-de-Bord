@@ -10,8 +10,8 @@ const Input: FC<InputProps> = ({ className, type, ...props }) => {
       type={type}
       data-slot="input"
       className={cn(
-        'border-border/80 bg-input text-foreground selection:bg-primary selection:text-primary-foreground file:text-foreground placeholder:text-muted-foreground flex h-9 w-full min-w-0 rounded-md border px-3 py-1 text-base shadow-none transition-[background-color,border-color,color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
-        'hover:border-border focus-visible:border-ring focus-visible:bg-surface-control focus-visible:ring-ring/25 focus-visible:ring-[3px]',
+        'border-border-control bg-input text-foreground selection:bg-primary selection:text-primary-foreground file:text-foreground placeholder:text-muted-foreground flex h-10 w-full min-w-0 rounded-md border px-3 py-1 text-base shadow-none transition-[background-color,border-color,color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:h-9 lg:text-sm',
+        'hover:border-ring/70 focus-visible:border-ring focus-visible:bg-surface-control focus-visible:ring-ring/25 focus-visible:ring-[3px]',
         'aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40',
         className,
       )}

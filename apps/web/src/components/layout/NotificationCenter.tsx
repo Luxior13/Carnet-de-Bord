@@ -34,7 +34,7 @@ const QUICK_LINKS = [
   {
     href: '/vie-interne/notifications-rappels',
     icon: Settings,
-    label: 'Tout gerer',
+    label: 'Tout gérer',
   },
 ] as const;
 
@@ -75,7 +75,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
         >
           <Bell className="size-4" />
           {unreadNotificationsCount > 0 && (
-            <span className="ring-surface bg-primary text-primary-foreground absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full text-[10px] font-bold ring-2">
+            <span className="ring-surface bg-primary text-primary-foreground absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full text-xs font-bold ring-2">
               {unreadNotificationsCount}
               <span className="sr-only">notifications non lues</span>
             </span>
@@ -139,7 +139,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                       {notification.description}
                     </span>
                     {notification.meta && (
-                      <span className="text-muted-foreground/75 mt-1 block text-[11px] font-medium uppercase">
+                      <span className="text-muted-foreground/75 mt-1 block text-xs font-medium uppercase">
                         {notification.meta}
                       </span>
                     )}

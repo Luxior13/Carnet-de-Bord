@@ -17,11 +17,17 @@ import React, {
   useState,
 } from 'react';
 
+import { ContentState } from '$components/layout/ContentState';
+import { PageHero } from '$components/layout/PageHero';
 import type { UserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
 import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailSectionRail';
 import { UserHistoryTab } from '$components/users/user-detail/UserHistoryTab';
 import { UserAvatar } from '$components/users/UserAvatar';
-import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
+import {
+  getAccessLabel,
+  hasPermission,
+  PERMISSIONS,
+} from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import {
   formatAccountDate,
@@ -31,7 +37,6 @@ import { ProfileSection } from '$features/account/components/ProfileSection';
 import { SecuritySection } from '$features/account/components/SecuritySection';
 import type { AuditLogEntry, UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
-import { PageHeader } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 
 type AccountSectionId = 'activity' | 'profile' | 'security';
@@ -91,28 +96,24 @@ type AccountHeaderProps = {
 };
 
 const AccountHeader: FC<AccountHeaderProps> = ({ userData }) => (
-  <PageHeader
+  <PageHero
     title={getAccountDisplayName(userData)}
     description={userData.email}
     meta={
       <>
-        <Badge variant="outline" className="rounded-full px-3 py-1">
-          Compte privé
-        </Badge>
-        <Badge variant="outline" className="rounded-full px-3 py-1">
-          Sécurité
-        </Badge>
-        <Badge variant="outline" className="rounded-full px-3 py-1">
-          Sessions
-        </Badge>
+        <Badge variant="secondary">{getAccessLabel(userData)}</Badge>
+        <Badge variant="outline">Compte privé</Badge>
+        {userData.isProtected && <Badge variant="warning">Protégé</Badge>}
       </>
     }
-    icon={<UserAvatar user={userData} className="size-12 rounded-lg" />}
+    icon={<UserAvatar user={userData} className="size-full rounded-md" />}
+    iconClassName="overflow-hidden p-0"
+    tone="dashboard"
   />
 );
 
 const AccountPageContentSkeleton: FC = () => (
-  <div className="space-y-5">
+  <div className="space-y-5" role="status" aria-label="Chargement">
     <Skeleton className="h-28 rounded-md" />
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.95fr)] lg:items-start">
       <div className="space-y-4">
@@ -444,10 +445,7 @@ export const AccountPageContent: FC = () => {
             const Icon = item.icon;
 
             return (
-              <div
-                key={item.title}
-                className="bg-surface-muted flex min-w-0 gap-3 p-4 sm:p-5"
-              >
+              <div key={item.title} className="flex min-w-0 gap-3 p-4 sm:p-5">
                 <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
                   <Icon className="size-4" />
                 </span>
@@ -480,14 +478,11 @@ export const AccountPageContent: FC = () => {
       />
       <div className="min-w-0">
         {visibleAccountSections.length === 0 && (
-          <div className="border-sidebar-border/70 bg-surface rounded-lg border p-5 shadow-[var(--shadow-panel)]">
-            <p className="text-sidebar-foreground text-sm font-semibold">
-              Aucun onglet personnel disponible
-            </p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Les droits de compte personnel sont desactives pour ce compte.
-            </p>
-          </div>
+          <ContentState
+            description="Les droits de compte personnel sont désactivés pour ce compte."
+            layout="panel"
+            title="Aucun onglet personnel disponible"
+          />
         )}
         {canViewProfile && (
           <div hidden={activeSection !== 'profile'}>

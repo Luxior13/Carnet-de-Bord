@@ -17,7 +17,7 @@ const SIDEBAR_WIDTH_ICON = '3.5rem';
 const SIDEBAR_WIDTH_MOBILE = '18rem';
 const SIDEBAR_SCROLL_STORAGE_PREFIX = 'sidebar_scroll:';
 const SIDEBAR_SCROLL_SAVE_DELAY_MS = 120;
-const MOBILE_BREAKPOINT = 768;
+const MOBILE_BREAKPOINT = 1024;
 
 type SidebarContextProps = {
   isMobile: boolean;
@@ -191,7 +191,7 @@ function Sidebar({
       data-variant={variant}
       id={id ?? SIDEBAR_ID}
       className={cn(
-        'sidebar-pattern group/sidebar bg-sidebar text-sidebar-foreground relative hidden h-full shrink-0 flex-col overflow-hidden border-r transition-[width] duration-200 ease-linear md:flex',
+        'sidebar-pattern group/sidebar bg-sidebar text-sidebar-foreground relative hidden h-full shrink-0 flex-col overflow-hidden border-r transition-[width] duration-200 ease-linear lg:flex',
         'border-sidebar-border',
         state === 'collapsed' && collapsible === 'icon'
           ? 'w-[var(--sidebar-width-icon)]'
@@ -223,7 +223,7 @@ function SidebarTrigger({
       type="button"
       variant="ghost"
       size="icon"
-      className={cn('size-9 md:hidden', className)}
+      className={cn('size-10 lg:hidden', className)}
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
@@ -422,7 +422,7 @@ function SidebarGroupLabel({
       data-sidebar="group-label"
       data-slot="sidebar-group-label"
       className={cn(
-        'text-sidebar-foreground/58 flex h-6 shrink-0 items-center overflow-hidden rounded-md px-2 text-[11px] font-semibold uppercase transition-opacity duration-150 group-data-[collapsible=icon]/sidebar:h-0 group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150',
+        'text-sidebar-foreground/65 flex h-6 shrink-0 items-center overflow-hidden rounded-md px-2 text-xs font-semibold uppercase transition-opacity duration-150 group-data-[collapsible=icon]/sidebar:h-0 group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150',
         className,
       )}
       {...props}
@@ -440,7 +440,7 @@ function SidebarGroupAction({
       data-slot="sidebar-group-action"
       type="button"
       className={cn(
-        'text-sidebar-foreground/65 hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground absolute top-3 right-3 flex size-7 items-center justify-center rounded-lg border border-transparent transition-colors group-data-[collapsible=icon]/sidebar:hidden',
+        'text-sidebar-foreground/65 hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground absolute top-1 right-1 flex size-10 items-center justify-center rounded-lg border border-transparent transition-colors group-data-[collapsible=icon]/sidebar:hidden lg:top-3 lg:right-3 lg:size-7',
         className,
       )}
       {...props}
@@ -523,10 +523,10 @@ function SidebarMenuButton({
       className={cn(
         'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/65 flex w-full max-w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-md border border-transparent px-3 text-left text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
         'data-[active=true]:border-sidebar-ring/45 data-[active=true]:bg-sidebar-accent/70 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring data-[active=true]:font-semibold',
-        size === 'sm' && 'h-9 text-xs',
+        size === 'sm' && 'h-10 text-xs lg:h-9',
         size === 'default' && 'h-10',
         size === 'lg' && 'h-12',
-        'group-data-[collapsible=icon]/sidebar:h-9 group-data-[collapsible=icon]/sidebar:w-9 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:p-0 group-data-[collapsible=icon]/sidebar:[&>span]:max-w-0 group-data-[collapsible=icon]/sidebar:[&>span]:opacity-0 group-data-[collapsible=icon]/sidebar:[&>span]:delay-0 group-data-[state=expanded]/sidebar:[&>span]:delay-150',
+        'group-data-[collapsible=icon]/sidebar:h-10 group-data-[collapsible=icon]/sidebar:w-10 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:p-0 lg:group-data-[collapsible=icon]/sidebar:h-9 lg:group-data-[collapsible=icon]/sidebar:w-9 group-data-[collapsible=icon]/sidebar:[&>span]:max-w-0 group-data-[collapsible=icon]/sidebar:[&>span]:opacity-0 group-data-[collapsible=icon]/sidebar:[&>span]:delay-0 group-data-[state=expanded]/sidebar:[&>span]:delay-150',
         className,
       )}
       {...props}
@@ -557,7 +557,7 @@ function SidebarMenuAction({
       data-slot="sidebar-menu-action"
       type="button"
       className={cn(
-        'text-sidebar-foreground/65 hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground absolute top-1.5 right-1 flex size-6 items-center justify-center rounded-md border border-transparent transition-colors group-data-[collapsible=icon]/sidebar:hidden',
+        'text-sidebar-foreground/65 hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground absolute top-0 right-0 flex size-10 items-center justify-center rounded-md border border-transparent transition-colors group-data-[collapsible=icon]/sidebar:hidden lg:top-1.5 lg:right-1 lg:size-6',
         className,
       )}
       {...props}
@@ -653,7 +653,7 @@ function SidebarMenuSubButton({
       data-sidebar="menu-sub-button"
       data-slot="sidebar-menu-sub-button"
       className={cn(
-        'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/60 flex h-8 w-full min-w-0 items-center gap-2 overflow-hidden rounded-md border border-transparent px-2.5 text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+        'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/60 flex h-10 w-full min-w-0 items-center gap-2 overflow-hidden rounded-md border border-transparent px-2.5 text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 lg:h-8 [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
         'data-[active=true]:bg-sidebar-accent/65 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring data-[active=true]:border-sidebar-ring/30 data-[active=true]:border data-[active=true]:font-semibold',
         className,
       )}

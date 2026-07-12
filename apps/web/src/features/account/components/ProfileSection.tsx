@@ -73,7 +73,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
 
   const handleSaveProfile = async (): Promise<void> => {
     if (!canEditProfile) {
-      toast.error('Modification du profil non autorisee');
+      toast.error('Modification du profil non autorisée');
 
       return;
     }
@@ -144,7 +144,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
       }
     >
       <div className="space-y-5">
-        <div className="border-sidebar-border/60 bg-surface-muted/55 flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="border-sidebar-border/55 flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-4">
             <UserAvatar user={userData} className="size-16 rounded-lg" />
             <div className="min-w-0">
@@ -163,7 +163,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
               </Badge>
             </div>
           </div>
-          <div className="border-sidebar-border/60 bg-background/45 rounded-lg border px-3 py-2 sm:text-right">
+          <div className="sm:text-right">
             <p className="text-sidebar-foreground text-xs font-bold tracking-normal">
               Compte créé
             </p>
@@ -174,8 +174,8 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
         </div>
         {!isEditing ? (
           <>
-            <dl className="border-sidebar-border/60 bg-background/45 overflow-hidden rounded-lg border">
-              <div className="border-sidebar-border/45 hover:bg-sidebar-accent/[0.06] grid gap-1 border-b px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
+            <dl className="divide-sidebar-border/45 divide-y">
+              <div className="hover:bg-sidebar-accent/[0.06] grid gap-1 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
                 <dt className="text-sidebar-foreground text-sm font-bold tracking-normal">
                   Prénom
                 </dt>
@@ -183,7 +183,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                   {userData.firstName}
                 </dd>
               </div>
-              <div className="border-sidebar-border/45 hover:bg-sidebar-accent/[0.06] grid gap-1 border-b px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
+              <div className="hover:bg-sidebar-accent/[0.06] grid gap-1 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
                 <dt className="text-sidebar-foreground text-sm font-bold tracking-normal">
                   Nom
                 </dt>
@@ -191,7 +191,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                   {userData.lastName}
                 </dd>
               </div>
-              <div className="hover:bg-sidebar-accent/[0.06] grid gap-1 px-4 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
+              <div className="hover:bg-sidebar-accent/[0.06] grid gap-1 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
                 <dt className="text-sidebar-foreground text-sm font-bold tracking-normal">
                   Email
                 </dt>
@@ -208,7 +208,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
             {!canEditProfile && (
               <div className="text-muted-foreground flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs">
                 <LockKeyhole className="mt-0.5 size-3.5 shrink-0 text-amber-400" />
-                La modification du prenom et du nom est verrouillee sur ce
+                La modification du prénom et du nom est verrouillée sur ce
                 compte.
               </div>
             )}

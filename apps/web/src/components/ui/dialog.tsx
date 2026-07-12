@@ -35,7 +35,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/62 backdrop-blur-sm',
+        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/68 duration-200',
         className,
       )}
       {...props}
@@ -77,7 +77,7 @@ function DialogContent({
         >
           {children}
           {!hideCloseButton && (
-            <DialogPrimitive.Close className="focus:ring-ring focus:ring-offset-background data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
+            <DialogPrimitive.Close className="focus-visible:ring-ring focus-visible:ring-offset-background data-[state=open]:bg-accent data-[state=open]:text-muted-foreground hover:bg-accent hover:text-accent-foreground absolute top-2 right-2 inline-flex size-10 items-center justify-center rounded-md opacity-70 transition-[background-color,color,opacity,box-shadow] hover:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none">
               <XIcon className="h-4 w-4" />
               <span className="sr-only">Fermer</span>
             </DialogPrimitive.Close>

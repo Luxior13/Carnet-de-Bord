@@ -241,6 +241,10 @@ function LoginPage(): React.ReactNode {
                 Rester connecté
               </Label>
             </div>
+            <p className="text-muted-foreground text-xs leading-5">
+              Mot de passe oublié ou accès bloqué&nbsp;? La récupération est
+              gérée par un administrateur habilité de votre équipe.
+            </p>
             <Button
               type="submit"
               className="h-10 w-full"
@@ -257,11 +261,11 @@ function LoginPage(): React.ReactNode {
             </Button>
           </form>
         </CardContent>
-        <div className="border-sidebar-border/65 bg-surface-muted grid gap-2 border-t p-4 text-xs sm:grid-cols-3">
-          {['Vue d’ensemble', 'Comptes', 'Sécurité'].map((item) => (
+        <div className="border-sidebar-border/65 bg-surface-muted grid grid-cols-3 gap-2 border-t p-3 text-xs sm:p-4">
+          {['Vue globale', 'Comptes', 'Sécurité'].map((item) => (
             <div
               key={item}
-              className="bg-popover text-muted-foreground flex items-center gap-2 rounded-md border px-3 py-2"
+              className="bg-popover text-muted-foreground flex min-w-0 flex-col items-center justify-center gap-1.5 rounded-md border px-2 py-2 text-center sm:flex-row sm:gap-2 sm:px-3"
             >
               <CheckCircle2 className="text-primary size-4" />
               <span>{item}</span>

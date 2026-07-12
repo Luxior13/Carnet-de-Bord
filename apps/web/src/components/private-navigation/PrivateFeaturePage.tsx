@@ -1,6 +1,6 @@
 'use client';
 
-import { Home } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
 import Link from 'next/link';
 import React, { type FC } from 'react';
 
@@ -27,76 +27,6 @@ type PrivateFeaturePageProps = {
   space: NavigationSpace;
 };
 
-const SpaceNavigationLink: FC<{
-  currentHref: string;
-  item: NavItem;
-  nested?: boolean;
-}> = ({ currentHref, item, nested = false }) => {
-  const LinkIcon = getNavigationIcon(item.icon);
-  const isCurrent = item.href === currentHref;
-
-  return (
-    <Button
-      asChild
-      variant={isCurrent ? 'secondary' : 'ghost'}
-      className={cn(
-        'h-auto w-full justify-start rounded-md px-2.5 py-2 text-left',
-        nested && 'pl-7',
-      )}
-    >
-      <Link href={item.href} aria-current={isCurrent ? 'page' : undefined}>
-        <LinkIcon className="size-4 shrink-0" />
-        <span className="min-w-0 flex-1 truncate">{item.label}</span>
-      </Link>
-    </Button>
-  );
-};
-
-const SpaceNavigation: FC<{ currentHref: string; space: NavigationSpace }> = ({
-  currentHref,
-  space,
-}) => {
-  const sections = space.sections.filter((section) => section.items.length > 0);
-
-  return (
-    <aside
-      aria-label={`Navigation du pôle ${space.label}`}
-      className="border-border/80 bg-surface rounded-md border p-4 shadow-[var(--shadow-panel)]"
-    >
-      <h2 className="text-sm font-semibold">Navigation du pôle</h2>
-      <div className="mt-3 space-y-3">
-        {sections.map((section) => (
-          <div key={section.id} className="space-y-1.5">
-            {section.label && (
-              <p className="text-muted-foreground px-2 text-[11px] font-semibold uppercase">
-                {section.label}
-              </p>
-            )}
-            <div className="space-y-1">
-              {section.items.map((sectionItem) => (
-                <div key={sectionItem.href} className="space-y-1">
-                  <SpaceNavigationLink
-                    currentHref={currentHref}
-                    item={sectionItem}
-                  />
-                  {sectionItem.children?.map((child) => (
-                    <SpaceNavigationLink
-                      key={child.href}
-                      currentHref={currentHref}
-                      item={child}
-                      nested
-                    />
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </aside>
-  );
-};
-
 const SectionMap: FC<{ item: NavItem; space: NavigationSpace }> = ({
   item,
   space,
@@ -111,23 +41,22 @@ const SectionMap: FC<{ item: NavItem; space: NavigationSpace }> = ({
     <div className="space-y-4">
       {children.length > 0 && (
         <section className="border-border/80 bg-surface rounded-md border p-4 shadow-[var(--shadow-panel)]">
-          <h2 className="text-sm font-semibold">Sous-pages</h2>
+          <h2 className="text-sm font-semibold">
+            Sous-fonctionnalités prévues
+          </h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {children.map((child) => {
               const ChildIcon = getNavigationIcon(child.icon);
 
               return (
-                <Button
+                <Badge
                   key={child.href}
-                  asChild
                   variant="outline"
-                  className="h-9 rounded-md"
+                  className="h-9 gap-2 rounded-md px-3"
                 >
-                  <Link href={child.href}>
-                    <ChildIcon className="size-4" />
-                    {child.label}
-                  </Link>
-                </Button>
+                  <ChildIcon className="size-4" />
+                  {child.label}
+                </Badge>
               );
             })}
           </div>
@@ -164,7 +93,7 @@ const SectionMap: FC<{ item: NavItem; space: NavigationSpace }> = ({
 const PrivateFeaturePage: FC<PrivateFeaturePageProps> = ({ item, space }) => {
   const { userData } = useUser();
   const canAccessPage = canShowNavigationItem(userData, item);
-  const visibleSpace = filterNavigationSpace(space, userData);
+  const visibleSpace = filterNavigationSpace(space, userData, 'all');
   const visibleItem =
     getNavigationSpaceItems(visibleSpace).find(
       (link) => link.href === item.href,
@@ -175,7 +104,7 @@ const PrivateFeaturePage: FC<PrivateFeaturePageProps> = ({ item, space }) => {
   return (
     <AuthenticatedLayout
       breadcrumbs={[
-        { href: space.href, label: space.label },
+        { href: '/feuille-de-route', label: 'Feuille de route' },
         { label: item.label },
       ]}
     >
@@ -183,7 +112,7 @@ const PrivateFeaturePage: FC<PrivateFeaturePageProps> = ({ item, space }) => {
         <AccessDeniedState
           actionHref="/tableau-de-bord"
           actionLabel="Retour au tableau de bord"
-          description="Vous n'avez pas les permissions necessaires pour acceder a cette page."
+          description="Vous n'avez pas les permissions nécessaires pour accéder à cette page."
         />
       ) : (
         <PageShell className="py-0">
@@ -221,9 +150,9 @@ const PrivateFeaturePage: FC<PrivateFeaturePageProps> = ({ item, space }) => {
                   </div>
                 </div>
                 <Button asChild variant="outline" className="rounded-md">
-                  <Link href={space.href}>
-                    <Home className="size-4" />
-                    Accueil du pôle
+                  <Link href="/feuille-de-route">
+                    <ClipboardList className="size-4" />
+                    Voir la feuille de route
                   </Link>
                 </Button>
               </div>
@@ -236,15 +165,12 @@ const PrivateFeaturePage: FC<PrivateFeaturePageProps> = ({ item, space }) => {
                 Cette page n&apos;est pas encore opérationnelle
               </p>
               <p className="text-muted-foreground mt-1 text-sm leading-6">
-                Les liens ci-dessous présentent l&apos;organisation prévue du
-                pôle. Aucune donnée métier ne peut encore être consultée ou
-                modifiée depuis cette page.
+                Cette page présente l&apos;organisation prévue du pôle. Aucune
+                donnée métier ne peut encore être consultée ou modifiée depuis
+                cet écran.
               </p>
             </div>
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
-              <SectionMap item={visibleItem} space={visibleSpace} />
-              <SpaceNavigation currentHref={item.href} space={visibleSpace} />
-            </div>
+            <SectionMap item={visibleItem} space={visibleSpace} />
           </PageCanvas>
         </PageShell>
       )}

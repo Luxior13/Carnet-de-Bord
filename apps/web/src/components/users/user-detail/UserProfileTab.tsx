@@ -60,8 +60,8 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   setForm,
 }) => {
   const emailHint = canEditEmail
-    ? "Modifier cet email change l'identifiant utilise a la connexion."
-    : "Email en lecture seule pour votre niveau d'acces.";
+    ? "Modifier cet email change l'identifiant utilisé à la connexion."
+    : "Email en lecture seule pour votre niveau d'accès.";
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -84,7 +84,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">
           <div className="grid gap-3 xl:grid-cols-2">
-            <SectionPanel icon={<User className="size-3.5" />} title="Identite">
+            <SectionPanel icon={<User className="size-3.5" />} title="Identité">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label
@@ -92,7 +92,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                     className="text-muted-foreground text-xs"
                     required
                   >
-                    Prenom
+                    Prénom
                   </Label>
                   <Input
                     id="user-first-name"
@@ -194,7 +194,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
         </CardContent>
         <CardFooter className="border-sidebar-border/60 bg-surface-muted/95 sticky bottom-3 z-20 justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:p-4">
           <p className="text-muted-foreground text-xs">
-            {hasChanges ? 'Modifications non enregistrees' : 'A jour'}
+            {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
           </p>
           <div className="flex gap-2">
             <Button
