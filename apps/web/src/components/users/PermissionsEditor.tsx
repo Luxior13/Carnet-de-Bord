@@ -102,6 +102,9 @@ type PermissionViewModel = {
 };
 
 const ACTION_LABELS: Record<PermissionAction, string> = {
+  approve: 'Approuver',
+  archive: 'Archiver',
+  assign: 'Assigner',
   create: 'Créer',
   delete: 'Supprimer',
   export: 'Exporter',
@@ -109,6 +112,8 @@ const ACTION_LABELS: Record<PermissionAction, string> = {
   reset: 'Réinitialiser',
   restore: 'Restaurer',
   revoke: 'Revoquer',
+  send: 'Envoyer',
+  sync: 'Synchroniser',
   update: 'Modifier',
   validate: 'Valider',
   view: 'Voir',

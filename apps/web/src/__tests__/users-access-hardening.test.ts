@@ -4,6 +4,7 @@ import { PERMISSIONS } from '$constants/permissions.constants';
 import { ErrorCode } from '$types/api.types';
 
 const mockRequireAuth = vi.fn();
+const mockRequireAnyPermission = vi.fn();
 const mockRequirePermission = vi.fn();
 const mockCreateAuditLogWithHeaders = vi.fn();
 const mockCreateUser = vi.fn();
@@ -28,6 +29,7 @@ const mockPrisma = {
 vi.mock('server-only', () => ({}));
 
 vi.mock('$server/api-auth', () => ({
+  requireAnyPermission: mockRequireAnyPermission,
   requireAuth: mockRequireAuth,
   requirePermission: mockRequirePermission,
 }));
@@ -77,6 +79,7 @@ describe('users access hardening', () => {
         passwordHash: undefined,
       }),
     });
+    mockRequireAnyPermission.mockReturnValue({ success: true });
     mockRequirePermission.mockReturnValue({ success: true });
     mockPrisma.user.groupBy.mockResolvedValue([]);
   });
@@ -941,10 +944,10 @@ describe('users access hardening', () => {
       ipAddress: null,
       targetName: 'Nom archive',
     });
-    expect(mockRequirePermission).toHaveBeenCalledWith(
-      expect.any(Object),
+    expect(mockRequireAnyPermission).toHaveBeenCalledWith(expect.any(Object), [
+      PERMISSIONS.SYSTEM.AUDIT,
       PERMISSIONS.USERS.VIEW_ACTIVITY,
-    );
+    ]);
     expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         cursor: { id: 'log-4' },

@@ -40,8 +40,8 @@ tant que leur module metier n'est pas pret.
 
 ## Permissions cibles
 
-Les permissions actuelles couvrent surtout compte, dashboard, utilisateurs et tresorerie.
-Avant de brancher les futures pages, prevoir ces familles.
+Le socle de permissions est structure par pole pour preparer les futures pages
+sans donner un acces trop large via `dashboard:view`.
 
 | Famille | Permissions a prevoir | Notes |
 | --- | --- | --- |
@@ -51,8 +51,8 @@ Avant de brancher les futures pages, prevoir ces familles.
 | Vie interne | `internal:view`, `members:view`, `members:update`, `meetings:view`, `meetings:update` | Base pour membres, adherents, reunions. |
 | Documents | `documents:view`, `documents:create`, `documents:update`, `documents:approve`, `documents:archive` | Commun au juridique, systeme et dashboard. |
 | Juridique | `legal:view`, `contracts:view`, `contracts:update`, `incidents:view`, `incidents:update` | Donnees sensibles, audit obligatoire. |
-| Tresorerie | `treasury:view`, `treasury:edit`, `treasury:validate`, `treasury:export` | Deja amorce, a etendre par sous-module. |
-| Systeme | `system:view`, `system:settings`, `system:exports`, `system:automation`, `system:audit` | Ne pas tout melanger avec `users:*`. |
+| Tresorerie | `treasury:view`, `treasury:edit`, `treasury:validate`, `treasury:export`, `treasury:audit`, `treasury:archives` | Finance isolee avec controles separes. |
+| Systeme | `system:view`, `system:audit`, `system:settings`, `system:validate`, `system:exports`, `system:archives`, `system:automation` | Ne pas tout melanger avec `users:*`. |
 | Sport | `sport:view`, `sport:update`, `sport:public_sync` | Priorite plus tard, lecture publique separee. |
 
 ## Entites transversales a prevoir
@@ -94,7 +94,7 @@ Avant de brancher les futures pages, prevoir ces familles.
 | `/administration/utilisateurs` | Live | DataList | users, stats, filtres | `users:view` | fiche utilisateur, export |
 | `/administration/utilisateurs/nouveau` | Live | FormFlow | user, role, mot de passe temporaire | `users:create` | fiche utilisateur, audit |
 | `/administration/utilisateurs/[id]` | Live partiel | EntityDetail | user, permissions, sessions, audit | `users:*` | compte, securite, historique |
-| `/systeme/journal-activite` | Live partiel | AuditJournal | audit logs, filtres, utilisateurs | `users:view_activity` puis `system:audit` | toutes pages auditees |
+| `/systeme/journal-activite` | Live partiel | AuditJournal | audit logs, filtres, utilisateurs | `system:audit` avec fallback temporaire `users:view_activity` | toutes pages auditees |
 | `/recherche` | Squelette | SearchResults | a definir | selon modules | toutes entites indexees |
 | `/not-found` | Support | PageState | aucune | public | retour contextuel plus tard |
 | `/error` | Support | PageState | digest erreur | public | support/admin plus tard |
@@ -159,8 +159,8 @@ Avant de brancher les futures pages, prevoir ces familles.
 | `/tresorerie/remboursements` | A connecter | ApprovalQueue | demandes remboursement | `treasury:validate` | membres, depenses |
 | `/tresorerie/exports-finance` | A connecter | SettingsHub / Export | exports | `treasury:export` | bilans, operations |
 | `/tresorerie/validations-finance` | A connecter | ApprovalQueue | validations sensibles | `treasury:validate` | operations, audit |
-| `/tresorerie/journal-financier` | A connecter | AuditJournal | audit financier | `treasury:view` | operations |
-| `/tresorerie/archives-finance` | A connecter | DocumentVault | archives | `treasury:view` | exports, bilans |
+| `/tresorerie/journal-financier` | A connecter | AuditJournal | audit financier | `treasury:audit` | operations |
+| `/tresorerie/archives-finance` | A connecter | DocumentVault | archives | `treasury:archives` | exports, bilans |
 
 ## Systeme
 
@@ -168,9 +168,9 @@ Avant de brancher les futures pages, prevoir ces familles.
 | --- | --- | --- | --- | --- | --- |
 | `/systeme` | Squelette | SettingsHub | resume systeme | `system:view` | utilisateurs, journal |
 | `/systeme/parametres` | A connecter | SettingsHub | reglages globaux | `system:settings` | audit |
-| `/systeme/validations` | A connecter | ApprovalQueue | validations globales | `system:view` | finance, documents |
+| `/systeme/validations` | A connecter | ApprovalQueue | validations globales | `system:validate` | finance, documents |
 | `/systeme/exports-sauvegardes` | A connecter | SettingsHub / Export | exports, backups | `system:exports` | archives |
-| `/systeme/archives` | A connecter | DocumentVault | archives globales | `system:view` | documents, finance |
+| `/systeme/archives` | A connecter | DocumentVault | archives globales | `system:archives` | documents, finance |
 | `/systeme/modeles` | A connecter | SettingsHub | modeles | `system:settings` | documents, notifications |
 | `/systeme/modeles-documents` | A connecter | DocumentVault | modeles documents | `documents:update` | juridique |
 | `/systeme/modeles-notifications` | A connecter | SettingsHub | modeles messages | `notifications:manage` | automatisations |

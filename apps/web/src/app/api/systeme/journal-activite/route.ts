@@ -2,7 +2,7 @@ import { AuditAction, AuditCategory } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
-import { requireAuth, requirePermission } from '$server/api-auth';
+import { requireAnyPermission, requireAuth } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
 import { prisma } from '$server/prisma';
 import {
@@ -110,10 +110,10 @@ export async function GET(
     const auth = await requireAuth();
     if (!auth.success) return auth.response;
 
-    const permCheck = requirePermission(
-      auth.user,
+    const permCheck = requireAnyPermission(auth.user, [
+      PERMISSIONS.SYSTEM.AUDIT,
       PERMISSIONS.USERS.VIEW_ACTIVITY,
-    );
+    ]);
     if (!permCheck.success) return permCheck.response;
 
     const { searchParams } = new URL(request.url);

@@ -65,6 +65,15 @@ describe('hasPermission', () => {
       true,
     );
     expect(userRoleBasePermissionsMap.get(PERMISSIONS.USERS.VIEW)).toBe(false);
+    expect(userRoleBasePermissionsMap.get(PERMISSIONS.SYSTEM.VIEW)).toBe(false);
+    expect(userRoleBasePermissionsMap.get(PERMISSIONS.INTERNAL.VIEW)).toBe(
+      false,
+    );
+    expect(userRoleBasePermissionsMap.get(PERMISSIONS.LEGAL.VIEW)).toBe(false);
+    expect(userRoleBasePermissionsMap.get(PERMISSIONS.SPORT.VIEW)).toBe(false);
+    expect(
+      userRoleBasePermissionsMap.get(PERMISSIONS.DASHBOARD.MANAGE_WIDGETS),
+    ).toBe(false);
   });
 
   it('builds compact overrides instead of storing default values', () => {
@@ -126,6 +135,49 @@ describe('hasPermission', () => {
     ).toBe(true);
   });
 
+  it('requires system view before granting system secondary actions', () => {
+    expect(
+      hasPermission('USER', PERMISSIONS.SYSTEM.AUDIT, {
+        [PERMISSIONS.SYSTEM.AUDIT]: true,
+        [PERMISSIONS.SYSTEM.VIEW]: false,
+      }),
+    ).toBe(false);
+    expect(
+      hasPermission('USER', PERMISSIONS.SYSTEM.AUDIT, {
+        [PERMISSIONS.SYSTEM.AUDIT]: true,
+        [PERMISSIONS.SYSTEM.VIEW]: true,
+      }),
+    ).toBe(true);
+  });
+
+  it('requires pole view permissions before granting module actions', () => {
+    expect(
+      hasPermission('USER', PERMISSIONS.MEMBERS.VIEW, {
+        [PERMISSIONS.MEMBERS.VIEW]: true,
+        [PERMISSIONS.INTERNAL.VIEW]: false,
+      }),
+    ).toBe(false);
+    expect(
+      hasPermission('USER', PERMISSIONS.MEMBERS.VIEW, {
+        [PERMISSIONS.INTERNAL.VIEW]: true,
+        [PERMISSIONS.MEMBERS.VIEW]: true,
+      }),
+    ).toBe(true);
+    expect(
+      hasPermission('USER', PERMISSIONS.DOCUMENTS.APPROVE, {
+        [PERMISSIONS.DOCUMENTS.APPROVE]: true,
+        [PERMISSIONS.DOCUMENTS.VIEW]: true,
+        [PERMISSIONS.LEGAL.VIEW]: false,
+      }),
+    ).toBe(false);
+    expect(
+      hasPermission('USER', PERMISSIONS.TREASURY.AUDIT, {
+        [PERMISSIONS.TREASURY.AUDIT]: true,
+        [PERMISSIONS.TREASURY.VIEW]: false,
+      }),
+    ).toBe(false);
+  });
+
   it('requires personal account dependencies before granting sensitive account actions', () => {
     expect(
       hasPermission('USER', PERMISSIONS.ACCOUNT.UPDATE_PROFILE, {
@@ -141,9 +193,40 @@ describe('hasPermission', () => {
 });
 
 describe('permission catalogue', () => {
-  it('contains dashboard, user and treasury permissions', () => {
+  it('contains the long-term access permission families', () => {
     expect(getAllPermissionKeys()).toEqual([
       'dashboard:view',
+      'dashboard:manage_widgets',
+      'tasks:view',
+      'tasks:create',
+      'tasks:update',
+      'tasks:assign',
+      'tasks:delete',
+      'notifications:view',
+      'notifications:manage',
+      'notifications:send',
+      'internal:view',
+      'members:view',
+      'members:update',
+      'meetings:view',
+      'meetings:update',
+      'legal:view',
+      'documents:view',
+      'documents:create',
+      'documents:update',
+      'documents:approve',
+      'documents:archive',
+      'contracts:view',
+      'contracts:update',
+      'incidents:view',
+      'incidents:update',
+      'system:view',
+      'system:audit',
+      'system:settings',
+      'system:validate',
+      'system:exports',
+      'system:archives',
+      'system:automation',
       'users:view',
       'users:create',
       'users:update_profile',
@@ -163,6 +246,11 @@ describe('permission catalogue', () => {
       'treasury:edit',
       'treasury:export',
       'treasury:validate',
+      'treasury:audit',
+      'treasury:archives',
+      'sport:view',
+      'sport:update',
+      'sport:public_sync',
       'account:view_profile',
       'account:update_profile',
       'account:view_security',
@@ -194,26 +282,20 @@ describe('permission catalogue', () => {
   it('defines neutral role presets', () => {
     expect(ROLE_PERMISSIONS.ADMIN).toEqual([
       ...Object.values(PERMISSIONS.ACCOUNT),
-      PERMISSIONS.DASHBOARD.VIEW,
-      PERMISSIONS.TREASURY.EDIT,
-      PERMISSIONS.TREASURY.EXPORT,
-      PERMISSIONS.TREASURY.VALIDATE,
-      PERMISSIONS.TREASURY.VIEW,
-      PERMISSIONS.USERS.CREATE,
-      PERMISSIONS.USERS.DELETE,
-      PERMISSIONS.USERS.EDIT_PERMISSIONS,
-      PERMISSIONS.USERS.EXPORT,
-      PERMISSIONS.USERS.MANAGE_ROLES,
-      PERMISSIONS.USERS.MANAGE_STATUS,
-      PERMISSIONS.USERS.RESET_PASSWORD,
-      PERMISSIONS.USERS.RESTORE,
-      PERMISSIONS.USERS.REVOKE_SESSIONS,
-      PERMISSIONS.USERS.UPDATE_LOGIN,
-      PERMISSIONS.USERS.UPDATE_PROFILE,
-      PERMISSIONS.USERS.VIEW,
-      PERMISSIONS.USERS.VIEW_ACCESS,
-      PERMISSIONS.USERS.VIEW_ACTIVITY,
-      PERMISSIONS.USERS.VIEW_SESSIONS,
+      ...Object.values(PERMISSIONS.DASHBOARD),
+      ...Object.values(PERMISSIONS.TASKS),
+      ...Object.values(PERMISSIONS.NOTIFICATIONS),
+      ...Object.values(PERMISSIONS.INTERNAL),
+      ...Object.values(PERMISSIONS.MEMBERS),
+      ...Object.values(PERMISSIONS.MEETINGS),
+      ...Object.values(PERMISSIONS.LEGAL),
+      ...Object.values(PERMISSIONS.DOCUMENTS),
+      ...Object.values(PERMISSIONS.CONTRACTS),
+      ...Object.values(PERMISSIONS.INCIDENTS),
+      ...Object.values(PERMISSIONS.SYSTEM),
+      ...Object.values(PERMISSIONS.TREASURY),
+      ...Object.values(PERMISSIONS.USERS),
+      ...Object.values(PERMISSIONS.SPORT),
     ]);
     expect(ROLE_PERMISSIONS.USER).toEqual([
       ...Object.values(PERMISSIONS.ACCOUNT),
