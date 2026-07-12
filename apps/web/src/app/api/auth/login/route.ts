@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { apiErrors, parseJsonBody } from '$server/api-response';
 import {
   authenticateUser,
   createAuditLogWithHeaders,
@@ -8,25 +9,33 @@ import {
   generateSessionToken,
   setSessionTokenCookie,
 } from '$server/auth';
-import { logger } from '$server/logger';
 import {
   checkRateLimit,
   createRateLimitKey,
   recordLoginAttempt,
 } from '$server/rate-limiter';
+import { getClientIp } from '$server/request-context';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
   ErrorCode,
 } from '$types/api.types';
 import type { UserType } from '$types/auth.types';
-import { emailSchema, trimmedString } from '$utils/zod.utils';
+import { isPasswordWithinBcryptLimit } from '$utils/password.utils';
+import { emailSchema } from '$utils/zod.utils';
 
-const loginSchema = z.object({
-  email: emailSchema,
-  password: trimmedString.pipe(z.string().min(1, 'Mot de passe requis')),
-  rememberMe: z.boolean().optional().default(false),
-});
+const loginSchema = z
+  .object({
+    email: emailSchema,
+    password: z
+      .string()
+      .min(1, 'Mot de passe requis')
+      .refine(isPasswordWithinBcryptLimit, {
+        message: 'Mot de passe trop long',
+      }),
+    rememberMe: z.boolean().optional().default(false),
+  })
+  .strict();
 
 const AUTH_CONNECTION_AUDIT_LOCATION = {
   pageKey: 'authentication',
@@ -46,16 +55,6 @@ type LoginResponseData = {
   user: UserType;
 };
 
-function getClientIp(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) {
-    const firstIp = forwarded.split(',')[0];
-    if (firstIp) return firstIp.trim();
-  }
-
-  return request.headers.get('x-real-ip') || 'unknown';
-}
-
 async function recordLoginAudit(data: {
   action: 'LOGIN_FAILED' | 'LOGIN_SUCCESS';
   description: string;
@@ -63,27 +62,18 @@ async function recordLoginAudit(data: {
   reason?: string;
   userId?: string | null;
 }): Promise<void> {
-  try {
-    await createAuditLogWithHeaders({
-      action: data.action,
-      category: 'AUTH',
-      description: data.description,
-      metadata: {
-        email: data.email,
-        ...AUTH_CONNECTION_AUDIT_LOCATION,
-        ...(data.reason ? { reason: data.reason } : {}),
-      },
-      targetUserId: data.userId ?? null,
-      userId: data.userId ?? null,
-    });
-  } catch (error) {
-    logger.error('Login audit error', {
-      action: data.action,
-      error,
-      metadata: { email: data.email },
-      userId: data.userId ?? undefined,
-    });
-  }
+  await createAuditLogWithHeaders({
+    action: data.action,
+    category: 'AUTH',
+    description: data.description,
+    metadata: {
+      email: data.email,
+      ...AUTH_CONNECTION_AUDIT_LOCATION,
+      ...(data.reason ? { reason: data.reason } : {}),
+    },
+    targetUserId: data.userId ?? null,
+    userId: data.userId ?? null,
+  });
 }
 
 export async function POST(
@@ -92,8 +82,9 @@ export async function POST(
   NextResponse<ApiSuccessResponse<LoginResponseData> | ApiErrorResponse>
 > {
   try {
-    const body = await request.json();
-    const validation = loginSchema.safeParse(body);
+    const parsedBody = await parseJsonBody(request);
+    if (!parsedBody.success) return parsedBody.response;
+    const validation = loginSchema.safeParse(parsedBody.data);
 
     if (!validation.success) {
       return NextResponse.json(
@@ -112,7 +103,7 @@ export async function POST(
     const { email, password, rememberMe } = validation.data;
 
     // Rate limiting based on IP + email combination
-    const clientIp = getClientIp(request);
+    const clientIp = getClientIp(request.headers) ?? 'unknown';
     const rateLimitKey = createRateLimitKey(clientIp, email);
     const rateLimit = await checkRateLimit(rateLimitKey);
 
@@ -150,63 +141,17 @@ export async function POST(
         userId: result.userId,
       });
 
-      // Handle account locked
-      if (result.error === 'ACCOUNT_LOCKED' && result.lockedUntil) {
-        const minutesLeft = Math.ceil(
-          (result.lockedUntil.getTime() - Date.now()) / 60000,
-        );
-
-        return NextResponse.json(
-          {
-            error: {
-              code: ErrorCode.ACCOUNT_LOCKED,
-              message: `Compte verrouillé. Réessayez dans ${minutesLeft} minute${minutesLeft > 1 ? 's' : ''}.`,
-            },
-            success: false,
-          },
-          { status: 423 },
-        );
-      }
-
-      const errorMap: Record<
-        string,
-        { code: ErrorCode; message: string; status: number }
-      > = {
-        ACCOUNT_DISABLED: {
-          code: ErrorCode.ACCOUNT_DISABLED,
-          message: 'Ce compte est désactivé',
-          status: 403,
-        },
-        INVALID_CREDENTIALS: {
-          code: ErrorCode.INVALID_CREDENTIALS,
-          message: 'Email ou mot de passe incorrect',
-          status: 401,
-        },
-      };
-
-      const error = errorMap[result.error] || {
-        code: ErrorCode.INTERNAL_ERROR,
-        message: 'Erreur interne',
-        status: 500,
-      };
-
-      // Add remaining attempts info from account lockout system
-      const remainingInfo =
-        result.remainingAttempts !== undefined && result.remainingAttempts > 0
-          ? ` (${result.remainingAttempts} tentative${result.remainingAttempts > 1 ? 's' : ''} restante${result.remainingAttempts > 1 ? 's' : ''})`
-          : result.remainingAttempts === 0
-            ? ' (dernière tentative avant blocage)'
-            : '';
-
       return NextResponse.json(
         {
           error: {
-            code: error.code,
-            message: error.message + remainingInfo,
+            // Disabled, locked, unknown and wrong-password accounts share the
+            // same public response to prevent account enumeration.
+            code: ErrorCode.INVALID_CREDENTIALS,
+            message: 'Email ou mot de passe incorrect',
           },
           success: false,
         },
-        { status: error.status },
+        { status: 401 },
       );
     }
 
@@ -221,14 +166,19 @@ export async function POST(
       token,
       result.user.id,
       rememberMe && canUseLongSession,
+      {
+        action: 'LOGIN_SUCCESS',
+        category: 'AUTH',
+        description: `Connexion réussie: ${result.user.email}`,
+        metadata: {
+          email: result.user.email,
+          ...AUTH_CONNECTION_AUDIT_LOCATION,
+        },
+        targetUserId: result.user.id,
+        userId: result.user.id,
+      },
     );
     await setSessionTokenCookie(session.token, session.expiresAt);
-    await recordLoginAudit({
-      action: 'LOGIN_SUCCESS',
-      description: `Connexion reussie: ${result.user.email}`,
-      email: result.user.email,
-      userId: result.user.id,
-    });
 
     const user: UserType = {
       createdAt: result.user.createdAt,
@@ -259,17 +209,6 @@ export async function POST(
       success: true,
     });
   } catch (error) {
-    logger.error('Login error', { action: 'LOGIN', error });
-
-    return NextResponse.json(
-      {
-        error: {
-          code: ErrorCode.INTERNAL_ERROR,
-          message: 'Erreur interne du serveur',
-        },
-        success: false,
-      },
-      { status: 500 },
-    );
+    return apiErrors.internal('LOGIN', error, request);
   }
 }

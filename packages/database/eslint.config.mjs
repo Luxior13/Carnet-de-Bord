@@ -1,4 +1,3 @@
-import importPlugin from 'eslint-plugin-import';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import regexpPlugin from 'eslint-plugin-regexp';
 import security from 'eslint-plugin-security';
@@ -26,7 +25,6 @@ export default [
     },
     ignores: ['dist/**', 'node_modules/**', '.next/**', '*.mjs'],
     plugins: {
-      import: importPlugin,
       'simple-import-sort': simpleImportSort,
       'sort-keys-custom-order': sortKeysCustomOrder,
       turbo: turboPlugin,
@@ -36,7 +34,7 @@ export default [
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       '@typescript-eslint/explicit-function-return-type': 'warn',
       '@typescript-eslint/no-explicit-any': 'warn',
-      'import/no-duplicates': 'error',
+      'no-duplicate-imports': 'error',
       'no-console': 'warn',
       'no-template-curly-in-string': 'error',
       'padding-line-between-statements': [

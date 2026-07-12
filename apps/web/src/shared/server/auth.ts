@@ -21,9 +21,11 @@ import {
 } from '$constants/permissions.constants';
 import { env } from '$env';
 import type { ServerAuthResponseType, UserType } from '$types/auth.types';
+import { isPasswordWithinBcryptLimit } from '$utils/password.utils';
 
 import { logger } from './logger';
 import { prisma } from './prisma';
+import { getClientIp, getRequestId, getUserAgent } from './request-context';
 
 export const SESSION_COOKIE_NAME = 'session';
 const SESSION_SHORT_DURATION_DAYS = 1;
@@ -32,6 +34,41 @@ const SESSION_RENEWAL_THRESHOLD_DAYS = 7;
 const BCRYPT_ROUNDS = 12;
 const textEncoder = new TextEncoder();
 const LEGACY_PLAINTEXT_SESSION_TOKEN_PATTERN = /^[a-z2-7]{52}$/;
+
+export type AuditLogInput = {
+  action: AuditAction;
+  category: AuditCategory;
+  description: string;
+  ipAddress?: string | null;
+  metadata?: Record<string, unknown>;
+  requestId?: string | null;
+  targetUserId?: string | null;
+  userAgent?: string | null;
+  userId?: string | null;
+};
+
+type AuditClient = Pick<Prisma.TransactionClient, 'auditLog'>;
+
+type RequiredAuditLogInput = Omit<AuditLogInput, 'ipAddress' | 'userAgent'>;
+
+type AuditWriteOptions = {
+  client?: AuditClient;
+  required?: boolean;
+};
+
+const getRequestContext = async (): Promise<{
+  ipAddress: string | null;
+  requestId: string | null;
+  userAgent: string | null;
+}> => {
+  const headersList = await headers();
+
+  return {
+    ipAddress: getClientIp(headersList),
+    requestId: getRequestId(headersList),
+    userAgent: getUserAgent(headersList),
+  };
+};
 
 const hashSessionToken = (token: string): string => {
   return encodeHexLowerCase(sha256(textEncoder.encode(token)));
@@ -144,6 +181,10 @@ export const generateTemporaryPassword = (): string => {
  * Hashes a password using bcrypt
  */
 export const hashPassword = async (password: string): Promise<string> => {
+  if (!isPasswordWithinBcryptLimit(password)) {
+    throw new RangeError('Password exceeds bcrypt 72-byte limit');
+  }
+
   return bcrypt.hash(password, BCRYPT_ROUNDS);
 };
 
@@ -154,6 +195,8 @@ export const verifyPassword = async (
   password: string,
   hash: string,
 ): Promise<boolean> => {
+  if (!isPasswordWithinBcryptLimit(password)) return false;
+
   return bcrypt.compare(password, hash);
 };
 
@@ -168,31 +211,41 @@ export const createSession = async (
   token: string,
   userId: string,
   rememberMe = false,
+  audit?: RequiredAuditLogInput,
 ): Promise<{ expiresAt: Date; rememberMe: boolean; token: string }> => {
   const sessionId = hashSessionToken(token);
-  const headersList = await headers();
+  const requestContext = await getRequestContext();
   const durationDays = rememberMe
     ? SESSION_LONG_DURATION_DAYS
     : SESSION_SHORT_DURATION_DAYS;
+  const loginAt = new Date();
 
-  const session = await prisma.session.create({
-    data: {
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * durationDays),
-      ipAddress:
-        headersList.get('x-forwarded-for') ||
-        headersList.get('x-real-ip') ||
-        null,
-      rememberMe,
-      token: sessionId,
-      userAgent: headersList.get('user-agent') || null,
-      userId,
-    },
-  });
+  // Session creation, last-login state and its success audit must either all
+  // commit or all roll back because they describe the same authentication.
+  const session = await prisma.$transaction(async (transaction) => {
+    const createdSession = await transaction.session.create({
+      data: {
+        expiresAt: new Date(
+          loginAt.getTime() + 1000 * 60 * 60 * 24 * durationDays,
+        ),
+        ipAddress: requestContext.ipAddress,
+        rememberMe,
+        token: sessionId,
+        userAgent: requestContext.userAgent,
+        userId,
+      },
+    });
 
-  // Update last login
-  await prisma.user.update({
-    data: { lastLoginAt: new Date() },
-    where: { id: userId },
+    await transaction.user.update({
+      data: { lastLoginAt: loginAt },
+      where: { id: userId },
+    });
+
+    if (audit) {
+      await createAuditLog({ ...audit, ...requestContext }, transaction);
+    }
+
+    return createdSession;
   });
 
   return {
@@ -327,9 +380,11 @@ export const invalidateOtherUserSessions = async (
   userId: string,
   currentSessionToken: string,
 ): Promise<void> => {
+  const hashedCurrentSessionToken = hashSessionToken(currentSessionToken);
+
   await prisma.session.deleteMany({
     where: {
-      NOT: { token: currentSessionToken },
+      token: { notIn: [currentSessionToken, hashedCurrentSessionToken] },
       userId,
     },
   });
@@ -452,8 +507,10 @@ export const authenticateUser = async (
     return { error: 'INVALID_CREDENTIALS', success: false };
   }
 
+  const now = new Date();
+
   // Check if account is locked
-  if (user.lockedUntil && user.lockedUntil > new Date()) {
+  if (user.lockedUntil && user.lockedUntil > now) {
     return {
       error: 'ACCOUNT_LOCKED',
       lockedUntil: user.lockedUntil,
@@ -462,13 +519,7 @@ export const authenticateUser = async (
     };
   }
 
-  // If lock has expired, reset the counter
-  if (user.lockedUntil && user.lockedUntil <= new Date()) {
-    await prisma.user.update({
-      data: { failedLoginAttempts: 0, lockedUntil: null },
-      where: { id: user.id },
-    });
-  }
+  const lockExpired = Boolean(user.lockedUntil && user.lockedUntil <= now);
 
   // Account is disabled
   if (!user.isActive) {
@@ -477,10 +528,55 @@ export const authenticateUser = async (
 
   // Password is invalid
   if (!isValid) {
-    const updatedLoginState = await prisma.user.update({
-      data: { failedLoginAttempts: { increment: 1 } },
-      select: { failedLoginAttempts: true },
-      where: { id: user.id },
+    const requestContext = await getRequestContext();
+    const updatedLoginState = await prisma.$transaction(async (transaction) => {
+      const failedState = await transaction.user.update({
+        data: lockExpired
+          ? { failedLoginAttempts: 1, lockedUntil: null }
+          : { failedLoginAttempts: { increment: 1 } },
+        select: { failedLoginAttempts: true },
+        where: { id: user.id },
+      });
+
+      if (failedState.failedLoginAttempts < MAX_FAILED_ATTEMPTS) {
+        return {
+          failedLoginAttempts: failedState.failedLoginAttempts,
+          lockedUntil: null,
+        };
+      }
+
+      const lockedUntil = new Date(
+        Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000,
+      );
+
+      await transaction.user.update({
+        data: { lockedUntil },
+        where: { id: user.id },
+      });
+
+      await createAuditLog(
+        {
+          action: 'ACCOUNT_LOCKED',
+          category: 'AUTH',
+          description: `Compte verrouillé après ${MAX_FAILED_ATTEMPTS} tentatives échouées`,
+          ...requestContext,
+          metadata: {
+            pageKey: 'authentication',
+            pageLabel: 'Authentification',
+            poleKey: 'system',
+            poleLabel: 'Système',
+            tabKey: 'connections',
+            tabLabel: 'Connexions',
+          },
+          userId: user.id,
+        },
+        transaction,
+      );
+
+      return {
+        failedLoginAttempts: failedState.failedLoginAttempts,
+        lockedUntil,
+      };
     });
     const newFailedAttempts = updatedLoginState.failedLoginAttempts;
     const remainingAttempts = Math.max(
@@ -489,47 +585,9 @@ export const authenticateUser = async (
     );
 
     if (newFailedAttempts >= MAX_FAILED_ATTEMPTS) {
-      // Lock the account
-      const lockedUntil = new Date(
-        Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000,
-      );
-      await prisma.user.update({
-        data: { lockedUntil },
-        where: { id: user.id },
-      });
-
-      // Log the account lock without hiding the authentication result if audit storage fails.
-      await prisma.auditLog
-        .create({
-          data: {
-            action: 'ACCOUNT_LOCKED',
-            category: 'AUTH',
-            description: `Compte verrouillé après ${MAX_FAILED_ATTEMPTS} tentatives échouées`,
-            metadata: {
-              pageKey: 'authentication',
-              pageLabel: 'Authentification',
-              poleKey: 'system',
-              poleLabel: 'Système',
-              tabKey: 'connections',
-              tabLabel: 'Connexions',
-            },
-            pageKey: 'authentication',
-            poleKey: 'system',
-            tabKey: 'connections',
-            userId: user.id,
-          },
-        })
-        .catch((error: unknown) => {
-          logger.error('Account lock audit error', {
-            action: 'ACCOUNT_LOCKED',
-            error,
-            userId: user.id,
-          });
-        });
-
       return {
         error: 'ACCOUNT_LOCKED',
-        lockedUntil,
+        lockedUntil: updatedLoginState.lockedUntil ?? undefined,
         success: false,
         userId: user.id,
       };
@@ -544,11 +602,16 @@ export const authenticateUser = async (
   }
 
   // Success - reset failed attempts
-  if (user.failedLoginAttempts > 0) {
+  if (user.failedLoginAttempts > 0 || lockExpired) {
     await prisma.user.update({
       data: { failedLoginAttempts: 0, lockedUntil: null },
       where: { id: user.id },
     });
+
+    return {
+      success: true,
+      user: { ...user, failedLoginAttempts: 0, lockedUntil: null },
+    };
   }
 
   return { success: true, user };
@@ -561,25 +624,46 @@ export const authenticateUser = async (
 /**
  * Creates a new user (admin only)
  */
-export const createUser = async (data: {
-  email: string;
-  firstName: string;
-  lastName: string;
-  password: string;
-  role: UserRole;
-}): Promise<User> => {
+export const createUser = async (
+  data: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    password: string;
+    role: UserRole;
+  },
+  auditFactory?: (user: User) => RequiredAuditLogInput,
+): Promise<User> => {
   const passwordHash = await hashPassword(data.password);
+  const requestContext = auditFactory ? await getRequestContext() : null;
 
-  return prisma.user.create({
-    data: {
-      email: data.email.toLowerCase().trim(),
-      firstName: data.firstName.trim(),
-      lastName: data.lastName.trim(),
-      mustChangePassword: true,
-      passwordHash,
-      role: data.role,
-    },
+  return prisma.$transaction(async (transaction) => {
+    const user = await transaction.user.create({
+      data: {
+        email: data.email.toLowerCase().trim(),
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        mustChangePassword: true,
+        passwordHash,
+        role: data.role,
+      },
+    });
+
+    if (auditFactory && requestContext) {
+      await createAuditLog(
+        { ...auditFactory(user), ...requestContext },
+        transaction,
+      );
+    }
+
+    return user;
   });
+};
+
+type UpdateUserPasswordOptions = {
+  audit?: RequiredAuditLogInput;
+  currentSessionToken?: string;
+  rateLimitKey?: string;
 };
 
 /**
@@ -588,39 +672,79 @@ export const createUser = async (data: {
 export const updateUserPassword = async (
   userId: string,
   newPassword: string,
+  options: UpdateUserPasswordOptions = {},
 ): Promise<void> => {
   const passwordHash = await hashPassword(newPassword);
+  const requestContext = options.audit ? await getRequestContext() : null;
 
-  await prisma.user.update({
-    data: {
-      mustChangePassword: false,
-      passwordChangedAt: new Date(),
-      passwordHash,
-    },
-    where: { id: userId },
+  await prisma.$transaction(async (transaction) => {
+    await transaction.user.update({
+      data: {
+        mustChangePassword: false,
+        passwordChangedAt: new Date(),
+        passwordHash,
+      },
+      where: { id: userId },
+    });
+
+    if (options.currentSessionToken) {
+      const hashedToken = hashSessionToken(options.currentSessionToken);
+      await transaction.session.deleteMany({
+        where: {
+          token: {
+            notIn: [options.currentSessionToken, hashedToken],
+          },
+          userId,
+        },
+      });
+    }
+
+    if (options.rateLimitKey) {
+      await transaction.rateLimit.deleteMany({
+        where: { key: options.rateLimitKey },
+      });
+    }
+
+    if (options.audit && requestContext) {
+      await createAuditLog(
+        { ...options.audit, ...requestContext },
+        transaction,
+      );
+    }
   });
 };
 
 /**
  * Resets user password (generates temp password)
  */
-export const resetUserPassword = async (userId: string): Promise<string> => {
+export const resetUserPassword = async (
+  userId: string,
+  audit?: RequiredAuditLogInput,
+): Promise<string> => {
   const tempPassword = generateTemporaryPassword();
   const passwordHash = await hashPassword(tempPassword);
+  const requestContext = audit ? await getRequestContext() : null;
 
-  await prisma.user.update({
-    data: {
-      failedLoginAttempts: 0,
-      lockedUntil: null,
-      mustChangePassword: true,
-      passwordChangedAt: null,
-      passwordHash,
-    },
-    where: { id: userId },
+  await prisma.$transaction(async (transaction) => {
+    await transaction.user.update({
+      data: {
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+        mustChangePassword: true,
+        passwordChangedAt: null,
+        passwordHash,
+      },
+      where: { id: userId },
+    });
+
+    await transaction.session.deleteMany({
+      where: { userId },
+    });
+
+    if (audit && requestContext) {
+      await createAuditLog({ ...audit, ...requestContext }, transaction);
+    }
   });
-
-  // Invalidate all sessions
-  await invalidateAllUserSessions(userId);
 
   return tempPassword;
 };
@@ -719,23 +843,21 @@ const getAuditLocationKey = (
     : null;
 };
 
-export const createAuditLog = async (data: {
-  action: AuditAction;
-  category: AuditCategory;
-  description: string;
-  ipAddress?: string | null;
-  metadata?: Record<string, unknown>;
-  targetUserId?: string | null;
-  userAgent?: string | null;
-  userId?: string | null;
-}): Promise<void> => {
-  await prisma.auditLog.create({
+export const createAuditLog = async (
+  data: AuditLogInput,
+  client: AuditClient = prisma,
+): Promise<void> => {
+  const metadata = data.requestId
+    ? { ...(data.metadata ?? {}), requestId: data.requestId }
+    : data.metadata;
+
+  await client.auditLog.create({
     data: {
       action: data.action,
       category: data.category,
       description: data.description,
       ipAddress: data.ipAddress ?? null,
-      metadata: data.metadata as Prisma.InputJsonValue | undefined,
+      metadata: metadata as Prisma.InputJsonValue | undefined,
       pageKey: getAuditLocationKey(data.metadata, 'pageKey'),
       poleKey: getAuditLocationKey(data.metadata, 'poleKey'),
       tabKey: getAuditLocationKey(data.metadata, 'tabKey'),
@@ -749,25 +871,20 @@ export const createAuditLog = async (data: {
 /**
  * Creates audit log with request headers
  */
-export const createAuditLogWithHeaders = async (data: {
-  action: AuditAction;
-  category: AuditCategory;
-  description: string;
-  metadata?: Record<string, unknown>;
-  targetUserId?: string | null;
-  userId?: string | null;
-}): Promise<void> => {
-  try {
-    const headersList = await headers();
+export const createAuditLogWithHeaders = async (
+  data: RequiredAuditLogInput,
+  options: AuditWriteOptions = {},
+): Promise<void> => {
+  let requestId: string | undefined;
 
-    await createAuditLog({
-      ...data,
-      ipAddress:
-        headersList.get('x-forwarded-for') ||
-        headersList.get('x-real-ip') ||
-        null,
-      userAgent: headersList.get('user-agent') || null,
-    });
+  try {
+    const requestContext = await getRequestContext();
+    requestId = requestContext.requestId ?? undefined;
+
+    await createAuditLog(
+      { ...data, ...requestContext },
+      options.client ?? prisma,
+    );
   } catch (error) {
     logger.error('Audit log error', {
       action: data.action,
@@ -776,7 +893,12 @@ export const createAuditLogWithHeaders = async (data: {
         category: data.category,
         targetUserId: data.targetUserId ?? null,
       },
+      requestId,
       userId: data.userId ?? undefined,
     });
+
+    // Mutations that share the same database pass their transaction client
+    // and require the audit write. Rethrowing makes Prisma roll back both.
+    if (options.required) throw error;
   }
 };

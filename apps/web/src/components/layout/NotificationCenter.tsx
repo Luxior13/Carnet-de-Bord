@@ -1,7 +1,11 @@
+'use client';
+
 import { Bell, BellRing, type LucideIcon, Settings, Timer } from 'lucide-react';
 import Link from 'next/link';
-import React, { type FC } from 'react';
+import React, { type FC, useMemo } from 'react';
 
+import { canOpenNavigationHref } from '$constants/app.constants';
+import { useUser } from '$context/UserContext';
 import { Button } from '$ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '$ui/popover';
 import { cn } from '$utils/css.utils';
@@ -39,7 +43,20 @@ const defaultAccentClassName = 'border-primary/35 bg-primary/10 text-primary';
 export const NotificationCenter: FC<NotificationCenterProps> = ({
   notifications = [],
 }) => {
-  const unreadNotificationsCount = notifications.filter(
+  const { userData } = useUser();
+  const visibleNotifications = useMemo(
+    () =>
+      notifications.filter((notification) =>
+        canOpenNavigationHref(userData, notification.href),
+      ),
+    [notifications, userData],
+  );
+  const visibleQuickLinks = useMemo(
+    () =>
+      QUICK_LINKS.filter((link) => canOpenNavigationHref(userData, link.href)),
+    [userData],
+  );
+  const unreadNotificationsCount = visibleNotifications.filter(
     (notification) => !notification.read,
   ).length;
 
@@ -89,9 +106,9 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
             )}
           </div>
         </div>
-        {notifications.length > 0 ? (
+        {visibleNotifications.length > 0 ? (
           <div className="max-h-80 overflow-y-auto p-2">
-            {notifications.map((notification) => {
+            {visibleNotifications.map((notification) => {
               const NotificationIcon = notification.icon ?? BellRing;
               const isUnread = !notification.read;
 
@@ -144,25 +161,33 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
             </p>
           </div>
         )}
-        <div className="border-sidebar-border/65 grid grid-cols-2 border-t">
-          {QUICK_LINKS.map((link, index) => {
-            const LinkIcon = link.icon;
+        {visibleQuickLinks.length > 0 && (
+          <div
+            className={cn(
+              'border-sidebar-border/65 grid border-t',
+              visibleQuickLinks.length > 1 ? 'grid-cols-2' : 'grid-cols-1',
+            )}
+          >
+            {visibleQuickLinks.map((link, index) => {
+              const LinkIcon = link.icon;
 
-            return (
-              <Link
-                className={cn(
-                  'hover:bg-sidebar-accent/55 text-muted-foreground hover:text-foreground flex h-10 items-center justify-center gap-2 text-xs font-semibold transition-colors',
-                  index === 0 && 'border-sidebar-border/65 border-r',
-                )}
-                href={link.href}
-                key={link.href}
-              >
-                <LinkIcon className="size-3.5" />
-                {link.label}
-              </Link>
-            );
-          })}
-        </div>
+              return (
+                <Link
+                  className={cn(
+                    'hover:bg-sidebar-accent/55 text-muted-foreground hover:text-foreground flex h-10 items-center justify-center gap-2 text-xs font-semibold transition-colors',
+                    index < visibleQuickLinks.length - 1 &&
+                      'border-sidebar-border/65 border-r',
+                  )}
+                  href={link.href}
+                  key={link.href}
+                >
+                  <LinkIcon className="size-3.5" />
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );

@@ -111,6 +111,14 @@ export async function GET(
       );
     }
 
+    const now = new Date();
+    await prisma.session.deleteMany({
+      where: {
+        expiresAt: { lte: now },
+        userId: targetUser.id,
+      },
+    });
+
     const sessions = await prisma.session.findMany({
       orderBy: { createdAt: 'desc' },
       select: {
@@ -122,7 +130,7 @@ export async function GET(
         userAgent: true,
       },
       where: {
-        expiresAt: { gt: new Date() },
+        expiresAt: { gt: now },
         userId: targetUser.id,
       },
     });
@@ -236,23 +244,28 @@ export async function DELETE(
         );
       }
 
-      await prisma.session.delete({
-        where: { id: session.id },
-      });
+      await prisma.$transaction(async (transaction) => {
+        await transaction.session.delete({
+          where: { id: session.id },
+        });
 
-      await createAuditLogWithHeaders({
-        action: 'SESSION_INVALIDATE',
-        category: 'AUTH',
-        description: `Session révoquée pour: ${targetUser.email}`,
-        metadata: {
-          revocationScope: 'single',
-          revokedSessions: 1,
-          sessionId: session.id,
-          ...USERS_SECURITY_AUDIT_LOCATION,
-          targetName,
-        },
-        targetUserId: targetUser.id,
-        userId: auth.user.id,
+        await createAuditLogWithHeaders(
+          {
+            action: 'SESSION_INVALIDATE',
+            category: 'AUTH',
+            description: `Session révoquée pour: ${targetUser.email}`,
+            metadata: {
+              revocationScope: 'single',
+              revokedSessions: 1,
+              sessionId: session.id,
+              ...USERS_SECURITY_AUDIT_LOCATION,
+              targetName,
+            },
+            targetUserId: targetUser.id,
+            userId: auth.user.id,
+          },
+          { client: transaction, required: true },
+        );
       });
 
       return NextResponse.json({
@@ -261,22 +274,29 @@ export async function DELETE(
       });
     }
 
-    const result = await prisma.session.deleteMany({
-      where: { userId: targetUser.id },
-    });
+    const result = await prisma.$transaction(async (transaction) => {
+      const deleteResult = await transaction.session.deleteMany({
+        where: { userId: targetUser.id },
+      });
 
-    await createAuditLogWithHeaders({
-      action: 'SESSION_INVALIDATE',
-      category: 'AUTH',
-      description: `Sessions révoquées pour: ${targetUser.email}`,
-      metadata: {
-        revocationScope: 'all',
-        revokedSessions: result.count,
-        ...USERS_SECURITY_AUDIT_LOCATION,
-        targetName,
-      },
-      targetUserId: targetUser.id,
-      userId: auth.user.id,
+      await createAuditLogWithHeaders(
+        {
+          action: 'SESSION_INVALIDATE',
+          category: 'AUTH',
+          description: `Sessions révoquées pour: ${targetUser.email}`,
+          metadata: {
+            revocationScope: 'all',
+            revokedSessions: deleteResult.count,
+            ...USERS_SECURITY_AUDIT_LOCATION,
+            targetName,
+          },
+          targetUserId: targetUser.id,
+          userId: auth.user.id,
+        },
+        { client: transaction, required: true },
+      );
+
+      return deleteResult;
     });
 
     return NextResponse.json({

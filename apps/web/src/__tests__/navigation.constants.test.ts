@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  canOpenNavigationHref,
   getActiveNavigationSpace,
   getDesktopSidebarSections,
   getVisibleNavigationSpaces,
@@ -70,6 +71,22 @@ describe('navigation visibility', () => {
     expect(hrefs).toContain('/tableau-de-bord/prochaines-reunions');
     expect(hrefs).toContain('/tableau-de-bord/documents-a-accepter');
     expect(hrefs).toContain('/tableau-de-bord/alertes-importantes');
+  });
+
+  it('filters known notification links with the same navigation permissions', () => {
+    const user = buildUser();
+
+    expect(canOpenNavigationHref(user, '/tableau-de-bord/mes-rappels')).toBe(
+      false,
+    );
+    expect(canOpenNavigationHref(user, '/tableau-de-bord')).toBe(true);
+    expect(canOpenNavigationHref(user, '/resource/dynamic-id')).toBe(true);
+    expect(
+      canOpenNavigationHref(
+        buildUser({ [PERMISSIONS.NOTIFICATIONS.MANAGE]: true }),
+        '/vie-interne/notifications-rappels',
+      ),
+    ).toBe(false);
   });
 
   it('shows internal navigation with internal module permissions', () => {
@@ -174,11 +191,13 @@ describe('navigation visibility', () => {
   });
 
   it('hides the dashboard when the dashboard permission is explicitly revoked', () => {
-    const hrefs = getVisibleHrefs({
+    const user = buildUser({
       [PERMISSIONS.DASHBOARD.VIEW]: false,
     });
+    const hrefs = getVisibleHrefs(user.permissions);
 
     expect(hrefs).toEqual([]);
+    expect(getDesktopSidebarSections(user, '/tableau-de-bord')).toEqual([]);
   });
 
   it('shows users navigation to accounts with users view permission', () => {

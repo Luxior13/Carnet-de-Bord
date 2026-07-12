@@ -26,6 +26,7 @@ import {
 import { Checkbox } from '$ui/checkbox';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
+import { getSafeReturnPath } from '$utils/navigation.utils';
 
 const LAST_LOGIN_EMAIL_STORAGE_KEY = 'team-control:last-login-email';
 const LEGACY_LOGIN_EMAILS_STORAGE_KEY = 'team-control:login-emails';
@@ -45,15 +46,24 @@ function LoginPage(): React.ReactNode {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [returnPath, setReturnPath] = useState('/');
+  const [isReturnPathReady, setIsReturnPathReady] = useState(false);
   const displayedError = error ?? authError;
 
   useEffect(() => {
-    if (userData && !authLoading) {
-      router.push('/');
+    if (userData && !authLoading && isReturnPathReady) {
+      router.replace(returnPath);
     }
-  }, [userData, authLoading, router]);
+  }, [userData, authLoading, isReturnPathReady, returnPath, router]);
 
   useEffect(() => {
+    setReturnPath(
+      getSafeReturnPath(
+        new URLSearchParams(window.location.search).get('next'),
+      ),
+    );
+    setIsReturnPathReady(true);
+
     const lastSavedEmail = window.localStorage.getItem(
       LAST_LOGIN_EMAIL_STORAGE_KEY,
     );
@@ -86,7 +96,7 @@ function LoginPage(): React.ReactNode {
 
       if (success) {
         saveLoginEmail(normalizedEmail);
-        router.push('/');
+        router.replace(returnPath);
       }
     } catch {
       setError('Une erreur est survenue');
@@ -149,7 +159,11 @@ function LoginPage(): React.ReactNode {
         <CardContent className="space-y-5">
           <form onSubmit={handleSubmit} className="space-y-5" autoComplete="on">
             {displayedError && (
-              <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
+              <div
+                aria-live="assertive"
+                className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
+                role="alert"
+              >
                 {displayedError}
               </div>
             )}

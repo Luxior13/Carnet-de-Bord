@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
-import { requireAuth } from '$server/api-auth';
+import { PERMISSIONS } from '$constants/permissions.constants';
+import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
 import { createAuditLogWithHeaders } from '$server/auth';
 import { prisma } from '$server/prisma';
@@ -30,6 +31,17 @@ export async function GET(): Promise<
     if (!auth.success) return auth.response;
     const { session: currentSession, user } = auth;
 
+    const permission = requirePermission(
+      user,
+      PERMISSIONS.ACCOUNT.VIEW_SECURITY,
+    );
+    if (!permission.success) return permission.response;
+
+    const now = new Date();
+    await prisma.session.deleteMany({
+      where: { expiresAt: { lte: now }, userId: user.id },
+    });
+
     // Get all sessions for the user
     const sessions = await prisma.session.findMany({
       orderBy: { createdAt: 'desc' },
@@ -43,7 +55,7 @@ export async function GET(): Promise<
         userAgent: true,
       },
       where: {
-        expiresAt: { gt: new Date() },
+        expiresAt: { gt: now },
         userId: user.id,
       },
     });
@@ -74,6 +86,25 @@ export async function DELETE(
     const auth = await requireAuth();
     if (!auth.success) return auth.response;
     const { session: currentSession, user } = auth;
+
+    const permission = requirePermission(
+      user,
+      PERMISSIONS.ACCOUNT.VIEW_SECURITY,
+    );
+    if (!permission.success) return permission.response;
+
+    if (!currentSession) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.UNAUTHORIZED,
+            message: 'Session actuelle introuvable',
+          },
+          success: false,
+        },
+        { status: 401 },
+      );
+    }
 
     const url = new URL(request.url);
     const sessionId = url.searchParams.get('id');
@@ -119,50 +150,60 @@ export async function DELETE(
         );
       }
 
-      await prisma.session.delete({
-        where: { id: sessionId },
-      });
+      await prisma.$transaction(async (transaction) => {
+        await transaction.session.delete({
+          where: { id: sessionId },
+        });
 
-      await createAuditLogWithHeaders({
-        action: 'SESSION_INVALIDATE',
-        category: 'AUTH',
-        description: 'Session révoquée',
-        metadata: {
-          pageKey: 'account',
-          pageLabel: 'Mon compte',
-          poleKey: 'account',
-          poleLabel: 'Espace personnel',
-          revokedSessions: 1,
-          tabKey: 'security',
-          tabLabel: 'Sécurité',
-        },
-        targetUserId: user.id,
-        userId: user.id,
+        await createAuditLogWithHeaders(
+          {
+            action: 'SESSION_INVALIDATE',
+            category: 'AUTH',
+            description: 'Session révoquée',
+            metadata: {
+              pageKey: 'account',
+              pageLabel: 'Mon compte',
+              poleKey: 'account',
+              poleLabel: 'Espace personnel',
+              revokedSessions: 1,
+              tabKey: 'security',
+              tabLabel: 'Sécurité',
+            },
+            targetUserId: user.id,
+            userId: user.id,
+          },
+          { client: transaction, required: true },
+        );
       });
     } else {
       // Delete all other sessions (not current)
-      const deleteResult = await prisma.session.deleteMany({
-        where: {
-          NOT: { token: currentSession?.token },
-          userId: user.id,
-        },
-      });
+      await prisma.$transaction(async (transaction) => {
+        const deleteResult = await transaction.session.deleteMany({
+          where: {
+            NOT: { token: currentSession.token },
+            userId: user.id,
+          },
+        });
 
-      await createAuditLogWithHeaders({
-        action: 'SESSION_INVALIDATE',
-        category: 'AUTH',
-        description: 'Toutes les autres sessions révoquées',
-        metadata: {
-          pageKey: 'account',
-          pageLabel: 'Mon compte',
-          poleKey: 'account',
-          poleLabel: 'Espace personnel',
-          revokedSessions: deleteResult.count,
-          tabKey: 'security',
-          tabLabel: 'Sécurité',
-        },
-        targetUserId: user.id,
-        userId: user.id,
+        await createAuditLogWithHeaders(
+          {
+            action: 'SESSION_INVALIDATE',
+            category: 'AUTH',
+            description: 'Toutes les autres sessions révoquées',
+            metadata: {
+              pageKey: 'account',
+              pageLabel: 'Mon compte',
+              poleKey: 'account',
+              poleLabel: 'Espace personnel',
+              revokedSessions: deleteResult.count,
+              tabKey: 'security',
+              tabLabel: 'Sécurité',
+            },
+            targetUserId: user.id,
+            userId: user.id,
+          },
+          { client: transaction, required: true },
+        );
       });
     }
 

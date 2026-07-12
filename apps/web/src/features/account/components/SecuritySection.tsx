@@ -221,14 +221,24 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
+  const [sessionsError, setSessionsError] = useState<string | null>(null);
   const [revokingAll, setRevokingAll] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
 
   const fetchSessions = useCallback(
     async (signal?: AbortSignal): Promise<void> => {
+      if (!canViewSecurity) {
+        setSessions([]);
+        setSessionsError(null);
+        setLoadingSessions(false);
+
+        return;
+      }
+
       if (!signal?.aborted) {
         setLoadingSessions(true);
+        setSessionsError(null);
       }
 
       try {
@@ -237,16 +247,22 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
 
         if (!signal?.aborted && response.ok && data.success) {
           setSessions(data.data.sessions);
+        } else if (!signal?.aborted) {
+          setSessionsError(
+            data.error?.message || 'Impossible de charger les sessions',
+          );
         }
       } catch {
-        // Sessions are non-blocking for the account page.
+        if (!signal?.aborted) {
+          setSessionsError('Impossible de charger les sessions');
+        }
       } finally {
         if (!signal?.aborted) {
           setLoadingSessions(false);
         }
       }
     },
-    [],
+    [canViewSecurity],
   );
 
   useEffect(() => {
@@ -314,12 +330,16 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
     : 'Jamais';
   const currentSessionLabel = loadingSessions
     ? 'Chargement'
-    : currentSession
-      ? getSessionTitle(currentSession)
-      : 'Non détectée';
+    : sessionsError
+      ? 'Indisponible'
+      : currentSession
+        ? getSessionTitle(currentSession)
+        : 'Non détectée';
   const otherSessionsLabel = loadingSessions
     ? 'Chargement'
-    : String(otherSessions.length);
+    : sessionsError
+      ? 'Indisponible'
+      : String(otherSessions.length);
   const canViewPasswordSecurity = canViewSecurity || canChangePassword;
 
   return (
@@ -328,7 +348,11 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         <div
           className={cn(
             'grid gap-3',
-            canViewPasswordSecurity ? 'md:grid-cols-3' : 'md:grid-cols-2',
+            canViewPasswordSecurity && canViewSecurity
+              ? 'md:grid-cols-3'
+              : canViewPasswordSecurity
+                ? 'md:grid-cols-1'
+                : 'md:grid-cols-2',
           )}
         >
           {canViewPasswordSecurity && (
@@ -340,28 +364,36 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               tone={userData.mustChangePassword ? 'warning' : 'primary'}
             />
           )}
-          <SecurityMetric
-            icon={<Laptop className="size-4" />}
-            label="Session actuelle"
-            value={currentSessionLabel}
-            description={
-              currentSession
-                ? `Ouverte ${formatRelativeAccountTime(currentSession.createdAt)}`
-                : 'Appareil utilisé maintenant'
-            }
-            tone={currentSession ? 'primary' : 'neutral'}
-          />
-          <SecurityMetric
-            icon={<ShieldCheck className="size-4" />}
-            label="Autres sessions"
-            value={otherSessionsLabel}
-            description={
-              otherSessions.length > 0
-                ? 'Appareils connectés à surveiller'
-                : 'Aucun autre appareil connecté'
-            }
-            tone={otherSessions.length > 0 ? 'warning' : 'primary'}
-          />
+          {canViewSecurity && (
+            <>
+              <SecurityMetric
+                icon={<Laptop className="size-4" />}
+                label="Session actuelle"
+                value={currentSessionLabel}
+                description={
+                  sessionsError
+                    ? 'Impossible de charger les sessions'
+                    : currentSession
+                      ? `Ouverte ${formatRelativeAccountTime(currentSession.createdAt)}`
+                      : 'Appareil utilisé maintenant'
+                }
+                tone={currentSession ? 'primary' : 'neutral'}
+              />
+              <SecurityMetric
+                icon={<ShieldCheck className="size-4" />}
+                label="Autres sessions"
+                value={otherSessionsLabel}
+                description={
+                  sessionsError
+                    ? 'Impossible de charger les sessions'
+                    : otherSessions.length > 0
+                      ? 'Appareils connectés à surveiller'
+                      : 'Aucun autre appareil connecté'
+                }
+                tone={otherSessions.length > 0 ? 'warning' : 'primary'}
+              />
+            </>
+          )}
         </div>
         {canViewPasswordSecurity && (
           <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
@@ -421,80 +453,97 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
             )}
           </Card>
         )}
-        <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
-          <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
-            <SectionTitle icon={<Monitor className="size-3.5" />}>
-              Sessions actives
-            </SectionTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 p-3 sm:p-4">
-            {loadingSessions ? (
-              <div className="space-y-2">
-                <Skeleton className="h-16 rounded-md" />
-                <Skeleton className="h-16 rounded-md" />
-              </div>
-            ) : sessions.length === 0 ? (
-              <div className="border-border/60 bg-popover rounded-md border p-3">
-                <p className="text-muted-foreground text-sm">
-                  Aucune session active n&apos;a été trouvée.
-                </p>
-              </div>
-            ) : (
-              <>
-                {currentSession && (
-                  <div className="space-y-2">
-                    <p className="text-muted-foreground text-xs font-medium uppercase">
-                      Session actuelle
-                    </p>
-                    <SessionRow session={currentSession} />
-                  </div>
-                )}
-                {otherSessions.length > 0 ? (
-                  <div className="space-y-2">
-                    <p className="text-muted-foreground text-xs font-medium uppercase">
-                      Autres sessions
-                    </p>
+        {canViewSecurity && (
+          <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
+            <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
+              <SectionTitle icon={<Monitor className="size-3.5" />}>
+                Sessions actives
+              </SectionTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 p-3 sm:p-4">
+              {loadingSessions ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-16 rounded-md" />
+                  <Skeleton className="h-16 rounded-md" />
+                </div>
+              ) : sessionsError ? (
+                <div
+                  className="border-destructive/35 bg-destructive/10 text-destructive flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 text-sm"
+                  role="alert"
+                >
+                  <span>{sessionsError}</span>
+                  <Button
+                    onClick={() => void fetchSessions()}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    Réessayer
+                  </Button>
+                </div>
+              ) : sessions.length === 0 ? (
+                <div className="border-border/60 bg-popover rounded-md border p-3">
+                  <p className="text-muted-foreground text-sm">
+                    Aucune session active n&apos;a été trouvée.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {currentSession && (
                     <div className="space-y-2">
-                      {otherSessions.map((session) => (
-                        <SessionRow
-                          key={session.id}
-                          session={session}
-                          isRevoking={revokingId === session.id}
-                          onRevoke={handleRevokeSession}
-                        />
-                      ))}
+                      <p className="text-muted-foreground text-xs font-medium uppercase">
+                        Session actuelle
+                      </p>
+                      <SessionRow session={currentSession} />
                     </div>
-                  </div>
-                ) : (
-                  <div className="border-border/60 bg-popover rounded-md border p-3">
-                    <p className="text-muted-foreground text-sm">
-                      Aucune autre session active.
-                    </p>
-                  </div>
-                )}
-              </>
+                  )}
+                  {otherSessions.length > 0 ? (
+                    <div className="space-y-2">
+                      <p className="text-muted-foreground text-xs font-medium uppercase">
+                        Autres sessions
+                      </p>
+                      <div className="space-y-2">
+                        {otherSessions.map((session) => (
+                          <SessionRow
+                            key={session.id}
+                            session={session}
+                            isRevoking={revokingId === session.id}
+                            onRevoke={handleRevokeSession}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border-border/60 bg-popover rounded-md border p-3">
+                      <p className="text-muted-foreground text-sm">
+                        Aucune autre session active.
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+            {otherSessions.length > 0 && (
+              <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setShowRevokeDialog(true)}
+                  disabled={revokingAll}
+                >
+                  {revokingAll ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <LogOut className="size-4" />
+                  )}
+                  Déconnecter les autres sessions
+                </Button>
+              </CardFooter>
             )}
-          </CardContent>
-          {otherSessions.length > 0 && (
-            <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => setShowRevokeDialog(true)}
-                disabled={revokingAll}
-              >
-                {revokingAll ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <LogOut className="size-4" />
-                )}
-                Déconnecter les autres sessions
-              </Button>
-            </CardFooter>
-          )}
-        </Card>
+          </Card>
+        )}
       </div>
       <ChangePasswordDialog
         open={showPasswordDialog}

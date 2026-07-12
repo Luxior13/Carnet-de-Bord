@@ -14,7 +14,7 @@ import type { UserType } from '$types/auth.types';
 
 export const SITE_CONFIG = {
   description: "Gestion privée d'équipe esport",
-  logo: '/assets/logo.svg',
+  logo: '/assets/noc.png',
   name: 'Team Control',
   subtitle: 'Gestion privée',
   tag: 'TC',
@@ -788,6 +788,35 @@ export function getNavigationSpaceItems(space: NavigationSpace): NavItem[] {
   return flattenNavItems(space.sections.flatMap((section) => section.items));
 }
 
+export function getNavigationItemByHref(href: string): NavItem | null {
+  for (const space of NAV_SPACES) {
+    const item = getNavigationSpaceItems(space).find(
+      (navigationItem) => navigationItem.href === href,
+    );
+
+    if (item) return item;
+  }
+
+  return null;
+}
+
+export function canOpenNavigationHref(
+  user: NavigationUser,
+  href: string,
+): boolean {
+  const item = getNavigationItemByHref(href);
+
+  // Dynamic destinations (for example, a specific user record) are checked by
+  // their destination page. Known navigation entries are filtered here.
+  if (!item) return true;
+
+  return getVisibleNavigationSpaces(user).some((space) =>
+    getNavigationSpaceItems(space).some(
+      (visibleItem) => visibleItem.href === href,
+    ),
+  );
+}
+
 export function getVisibleNavigationSpaces(
   user: NavigationUser,
 ): NavigationSpace[] {
@@ -842,6 +871,10 @@ export function getDesktopSidebarSections(
   pathname = '/tableau-de-bord',
 ): NavSection[] {
   const visibleSpaces = getVisibleNavigationSpaces(user);
+
+  // Never reveal the unfiltered dashboard when every space is denied.
+  if (visibleSpaces.length === 0) return [];
+
   const activeSpace = getActiveNavigationSpace(pathname, visibleSpaces);
 
   return activeSpace.sections;

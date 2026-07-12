@@ -1,21 +1,61 @@
 import 'server-only';
 
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { PAGINATION } from '$constants/pagination.constants';
 import { logger } from '$server/logger';
-import type {
-  ApiErrorResponse,
-  ApiSuccessResponse,
-  PaginationMeta,
+import {
+  type ApiErrorResponse,
+  type ApiSuccessResponse,
+  ErrorCode,
+  type PaginationMeta,
 } from '$types/api.types';
-import { ErrorCode } from '$types/api.types';
+import {
+  getRequestId,
+  REQUEST_ID_HEADER,
+  REQUEST_METHOD_HEADER,
+  REQUEST_PATH_HEADER,
+} from '$utils/request-context.utils';
 
 type ApiPaginatedSuccessResponse<T> = {
   data: T;
   pagination: PaginationMeta;
   success: true;
 };
+
+type JsonBodyResult =
+  | { data: unknown; success: true }
+  | { response: NextResponse<ApiErrorResponse>; success: false };
+
+export function isPrismaUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'P2002'
+  );
+}
+
+/**
+ * Reads a JSON request body without leaking SyntaxError as a 500 response.
+ * Schema validation deliberately stays in each route so field-level errors
+ * remain specific to that endpoint.
+ */
+export async function parseJsonBody(request: Request): Promise<JsonBodyResult> {
+  try {
+    return { data: await request.json(), success: true };
+  } catch {
+    return {
+      response: apiError(
+        ErrorCode.VALIDATION_ERROR,
+        'Corps JSON invalide',
+        400,
+      ),
+      success: false,
+    };
+  }
+}
 
 /**
  * Standard success response for API routes.
@@ -53,12 +93,19 @@ export function apiError(
     action?: string;
     details?: Record<string, string[]>;
     error?: unknown;
+    method?: string;
+    path?: string;
+    requestId?: string;
   },
 ): NextResponse<ApiErrorResponse> {
   if (context?.error) {
     logger.error(message, {
       action: context.action,
       error: context.error,
+      method: context.method,
+      path: context.path,
+      requestId: context.requestId,
+      status,
     });
   }
 
@@ -74,6 +121,31 @@ export function apiError(
   return NextResponse.json(body, { status });
 }
 
+const getInternalErrorRequestContext = async (
+  request?: Request,
+): Promise<{
+  method?: string;
+  path?: string;
+  requestId?: string;
+}> => {
+  try {
+    const requestHeaders = request?.headers ?? (await headers());
+    const requestId = getRequestId(requestHeaders) ?? undefined;
+    const method =
+      request?.method ??
+      requestHeaders.get(REQUEST_METHOD_HEADER)?.slice(0, 16) ??
+      undefined;
+    const path = request
+      ? new URL(request.url).pathname.slice(0, 2048)
+      : (requestHeaders.get(REQUEST_PATH_HEADER)?.slice(0, 2048) ?? undefined);
+
+    return { method, path, requestId };
+  } catch {
+    // Unit calls and startup failures may execute without a Next request scope.
+    return {};
+  }
+};
+
 /**
  * Shorthand for common error types.
  */
@@ -87,11 +159,24 @@ export const apiErrors = {
   forbidden: (message = 'Accès interdit'): NextResponse<ApiErrorResponse> =>
     apiError(ErrorCode.FORBIDDEN, message, 403),
 
-  internal: (action: string, error: unknown): NextResponse<ApiErrorResponse> =>
-    apiError(ErrorCode.INTERNAL_ERROR, 'Erreur serveur', 500, {
+  internal: async (
+    action: string,
+    error: unknown,
+    request?: Request,
+  ): Promise<NextResponse<ApiErrorResponse>> => {
+    const requestContext = await getInternalErrorRequestContext(request);
+    const response = apiError(ErrorCode.INTERNAL_ERROR, 'Erreur serveur', 500, {
       action,
       error,
-    }),
+      ...requestContext,
+    });
+
+    if (requestContext.requestId) {
+      response.headers.set(REQUEST_ID_HEADER, requestContext.requestId);
+    }
+
+    return response;
+  },
 
   notFound: (
     message = 'Ressource non trouvée',

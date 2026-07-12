@@ -9,7 +9,7 @@ import { z } from 'zod';
 export const emailSchema = z
   .string()
   .transform((val) => val.trim())
-  .pipe(z.string().email('Email invalide'))
+  .pipe(z.string().max(254, 'Email trop long').email('Email invalide'))
   .transform((val) => val.toLowerCase());
 
 /**
@@ -20,7 +20,14 @@ export const optionalEmailSchema = z
   .optional()
   .nullable()
   .transform((val) => (val ? val.trim() : val))
-  .pipe(z.string().email('Email invalide').optional().nullable())
+  .pipe(
+    z
+      .string()
+      .max(254, 'Email trop long')
+      .email('Email invalide')
+      .optional()
+      .nullable(),
+  )
   .transform((val) => (val ? val.toLowerCase() : val));
 
 /**

@@ -100,13 +100,7 @@ type ActionConfig = {
 };
 
 type ActionCategoryKey =
-  | 'access'
-  | 'auth'
-  | 'lifecycle'
-  | 'other'
-  | 'profile'
-  | 'security'
-  | 'system';
+  'access' | 'auth' | 'lifecycle' | 'other' | 'profile' | 'security' | 'system';
 
 type ChangeDiff = {
   after: unknown;
@@ -1237,6 +1231,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [failedCursor, setFailedCursor] = useState<string | null>(null);
   const isConnectionJournal = logType === 'connections';
   const isPageFilterLocked = poleFilter === ALL_FILTER_VALUE;
   const effectivePageFilter = isPageFilterLocked
@@ -1353,6 +1348,8 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
 
         if (requestSequenceRef.current !== requestId) return;
 
+        setError(null);
+        setFailedCursor(null);
         setLogs((currentLogs) =>
           append ? [...currentLogs, ...responseData.logs] : responseData.logs,
         );
@@ -1365,6 +1362,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
             ? fetchError.message
             : "Impossible de charger le journal d'activité",
         );
+        setFailedCursor(cursor ?? null);
       } finally {
         if (requestSequenceRef.current === requestId) {
           setIsLoading(false);
@@ -1679,8 +1677,11 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
             </div>
             {isLoading ? (
               <JournalSkeleton />
-            ) : error ? (
-              <div className="border-sidebar-border/60 flex flex-col items-center justify-center rounded-lg border py-16">
+            ) : error && logs.length === 0 ? (
+              <div
+                className="border-sidebar-border/60 flex flex-col items-center justify-center rounded-lg border py-16"
+                role="alert"
+              >
                 <div className="border-destructive/35 bg-destructive/10 text-destructive flex h-16 w-16 items-center justify-center rounded-md border">
                   <XCircle className="h-8 w-8" />
                 </div>
@@ -1697,6 +1698,23 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
               </div>
             ) : (
               <div className="space-y-2">
+                {error && (
+                  <div
+                    className="border-destructive/35 bg-destructive/10 text-destructive flex flex-wrap items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm"
+                    role="alert"
+                  >
+                    <span>{error}</span>
+                    <Button
+                      disabled={isLoadingMore}
+                      onClick={() => void fetchLogs(failedCursor ?? undefined)}
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      Réessayer
+                    </Button>
+                  </div>
+                )}
                 {logs.map((log) => (
                   <JournalCard
                     key={log.id}

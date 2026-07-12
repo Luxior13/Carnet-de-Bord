@@ -148,6 +148,7 @@ export const GlobalSearch: FC = () => {
         <div className="border-sidebar-border/65 flex items-center gap-3 border-b px-4 py-3">
           <Search className="text-muted-foreground size-4 shrink-0" />
           <Input
+            aria-label="Rechercher dans les pages accessibles"
             autoFocus
             className="h-10 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
             onChange={(event) => setQuery(event.target.value)}
@@ -156,6 +157,9 @@ export const GlobalSearch: FC = () => {
           />
         </div>
         <div className="max-h-[min(28rem,calc(100vh-11rem))] overflow-y-auto p-2">
+          <span aria-live="polite" className="sr-only" role="status">
+            {results.length} résultat{results.length > 1 ? 's' : ''}
+          </span>
           {results.length > 0 ? (
             <div className="space-y-1">
               {results.map((result) => {

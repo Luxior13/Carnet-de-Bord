@@ -19,7 +19,6 @@ import { Button } from '$ui/button';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { apiFetch } from '$utils/api.utils';
-import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 
 type ProfileSectionProps = {
   onUpdate: () => Promise<void>;
@@ -216,9 +215,9 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
           </>
         ) : (
           <form
+            autoComplete="on"
             id={PROFILE_FORM_ID}
             className="border-sidebar-border/60 bg-background/45 rounded-lg border"
-            {...passwordManagerIgnoreAttributes}
             onSubmit={(event) => {
               event.preventDefault();
               void handleSaveProfile();
@@ -231,13 +230,14 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                     Prénom
                   </Label>
                   <Input
+                    autoComplete="given-name"
                     id="edit-firstName"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     disabled={isSaving}
                     placeholder="Votre prénom"
                     name="firstName"
-                    {...passwordManagerIgnoreAttributes}
+                    required
                     maxLength={PROFILE_FIELD_MAX_LENGTH}
                     aria-invalid={!!firstNameError}
                     aria-describedby={
@@ -250,6 +250,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                     <p
                       id="edit-firstName-error"
                       className="text-destructive text-xs"
+                      role="alert"
                     >
                       {firstNameError}
                     </p>
@@ -260,13 +261,14 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                     Nom
                   </Label>
                   <Input
+                    autoComplete="family-name"
                     id="edit-lastName"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     disabled={isSaving}
                     placeholder="Votre nom"
                     name="lastName"
-                    {...passwordManagerIgnoreAttributes}
+                    required
                     maxLength={PROFILE_FIELD_MAX_LENGTH}
                     aria-invalid={!!lastNameError}
                     aria-describedby={
@@ -278,6 +280,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                     <p
                       id="edit-lastName-error"
                       className="text-destructive text-xs"
+                      role="alert"
                     >
                       {lastNameError}
                     </p>
@@ -287,10 +290,12 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
               <div className="space-y-2">
                 <Label htmlFor="profile-email-readonly">Email</Label>
                 <Input
+                  autoComplete="email"
                   id="profile-email-readonly"
+                  name="email"
+                  type="email"
                   value={userData.email}
                   disabled
-                  {...passwordManagerIgnoreAttributes}
                   className="bg-secondary/50 rounded-lg"
                 />
                 <p className="text-sidebar-foreground/50 text-xs">

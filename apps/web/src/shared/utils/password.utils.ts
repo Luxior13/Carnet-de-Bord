@@ -5,10 +5,26 @@ export type PasswordValidationResult = {
 };
 
 const MIN_LENGTH = 8;
+export const MAX_BCRYPT_PASSWORD_BYTES = 72;
 const REQUIRE_UPPERCASE = true;
 const REQUIRE_LOWERCASE = true;
 const REQUIRE_NUMBER = true;
 // Note: Special characters are optional but add to score
+
+const textEncoder = new TextEncoder();
+
+/**
+ * bcrypt only considers the first 72 bytes of a password. The limit must be
+ * checked in UTF-8 bytes (not JavaScript characters) to avoid two distinct
+ * passwords producing the same hash.
+ */
+export function getPasswordByteLength(password: string): number {
+  return textEncoder.encode(password).byteLength;
+}
+
+export function isPasswordWithinBcryptLimit(password: string): boolean {
+  return getPasswordByteLength(password) <= MAX_BCRYPT_PASSWORD_BYTES;
+}
 
 export function validatePassword(password: string): PasswordValidationResult {
   const errors: string[] = [];
@@ -20,6 +36,12 @@ export function validatePassword(password: string): PasswordValidationResult {
     );
   } else {
     score++;
+  }
+
+  if (!isPasswordWithinBcryptLimit(password)) {
+    errors.push(
+      `Le mot de passe ne doit pas dépasser ${MAX_BCRYPT_PASSWORD_BYTES} octets`,
+    );
   }
 
   if (REQUIRE_UPPERCASE && !/[A-Z]/.test(password)) {

@@ -37,8 +37,7 @@ type RequirePermissionFailure = {
 };
 
 type RequirePermissionResult =
-  | RequirePermissionSuccess
-  | RequirePermissionFailure;
+  RequirePermissionSuccess | RequirePermissionFailure;
 
 /**
  * Requires authentication for an API route

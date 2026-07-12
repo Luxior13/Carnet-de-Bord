@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors } from '$server/api-response';
+import { apiErrors, parseJsonBody } from '$server/api-response';
 import { createAuditLogWithHeaders, mapUserToUserType } from '$server/auth';
 import { prisma } from '$server/prisma';
 import {
@@ -22,15 +22,17 @@ type MeResponseData = {
   user: UserType;
 };
 
-const updateProfileSchema = z.object({
-  firstName: trimmedStringMinMax(
-    1,
-    50,
-    'Le prénom est requis',
-    'Prénom trop long',
-  ),
-  lastName: trimmedStringMinMax(1, 50, 'Le nom est requis', 'Nom trop long'),
-});
+const updateProfileSchema = z
+  .object({
+    firstName: trimmedStringMinMax(
+      1,
+      50,
+      'Le prénom est requis',
+      'Prénom trop long',
+    ),
+    lastName: trimmedStringMinMax(1, 50, 'Le nom est requis', 'Nom trop long'),
+  })
+  .strict();
 
 export async function GET(): Promise<
   NextResponse<ApiSuccessResponse<MeResponseData> | ApiErrorResponse>
@@ -69,8 +71,9 @@ export async function PATCH(
     if (!auth.success) return auth.response;
     const { user } = auth;
 
-    const body = await request.json();
-    const validation = updateProfileSchema.safeParse(body);
+    const parsedBody = await parseJsonBody(request);
+    if (!parsedBody.success) return parsedBody.response;
+    const validation = updateProfileSchema.safeParse(parsedBody.data);
 
     if (!validation.success) {
       return NextResponse.json(
@@ -118,33 +121,38 @@ export async function PATCH(
       changes.lastName = { from: user.lastName, to: nextLastName };
     }
 
-    // Update user profile
-    const updatedUser = await prisma.user.update({
-      data: {
-        firstName: nextFirstName,
-        lastName: nextLastName,
-      },
-      where: { id: user.id },
-    });
+    const updatedUser = await prisma.$transaction(async (transaction) => {
+      const updatedProfile = await transaction.user.update({
+        data: {
+          firstName: nextFirstName,
+          lastName: nextLastName,
+        },
+        where: { id: user.id },
+      });
 
-    // Log the change
-    await createAuditLogWithHeaders({
-      action: 'USER_UPDATE',
-      category: 'USER',
-      description: `Profil mis à jour`,
-      metadata: {
-        after: afterValues,
-        before: beforeValues,
-        changes,
-        pageKey: 'account',
-        pageLabel: 'Mon compte',
-        poleKey: 'account',
-        poleLabel: 'Espace personnel',
-        tabKey: 'profile',
-        tabLabel: 'Profil',
-      },
-      targetUserId: user.id,
-      userId: user.id,
+      await createAuditLogWithHeaders(
+        {
+          action: 'USER_UPDATE',
+          category: 'USER',
+          description: 'Profil mis à jour',
+          metadata: {
+            after: afterValues,
+            before: beforeValues,
+            changes,
+            pageKey: 'account',
+            pageLabel: 'Mon compte',
+            poleKey: 'account',
+            poleLabel: 'Espace personnel',
+            tabKey: 'profile',
+            tabLabel: 'Profil',
+          },
+          targetUserId: user.id,
+          userId: user.id,
+        },
+        { client: transaction, required: true },
+      );
+
+      return updatedProfile;
     });
 
     return NextResponse.json({

@@ -136,6 +136,7 @@ export const AccountPageContent: FC = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [auditTotalLogs, setAuditTotalLogs] = useState<number | null>(null);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
   const auditAbortControllerRef = useRef<AbortController | null>(null);
   const hasLoadedAuditLogsRef = useRef(false);
 
@@ -160,18 +161,34 @@ export const AccountPageContent: FC = () => {
   const canViewActivity = canUseAccountPermission(
     PERMISSIONS.ACCOUNT.VIEW_ACTIVITY,
   );
+  const canExportUserActivity = userData
+    ? userData.isProtected ||
+      hasPermission(
+        userData.role,
+        PERMISSIONS.USERS.EXPORT,
+        userData.permissions,
+      )
+    : false;
   const visibleAccountSections = useMemo(
     () =>
       userData
         ? ACCOUNT_SECTIONS.filter((section) => {
             if (section.id === 'profile') return canViewProfile;
-            if (section.id === 'security') return true;
+            if (section.id === 'security') {
+              return canViewSecurity || canChangePassword;
+            }
             if (section.id === 'activity') return canViewActivity;
 
             return false;
           })
         : ACCOUNT_SECTIONS,
-    [canViewActivity, canViewProfile, userData],
+    [
+      canChangePassword,
+      canViewActivity,
+      canViewProfile,
+      canViewSecurity,
+      userData,
+    ],
   );
   const firstVisibleSection = visibleAccountSections[0]?.id ?? null;
 
@@ -182,6 +199,7 @@ export const AccountPageContent: FC = () => {
     if (!userData?.id || !canViewActivity) {
       setAuditLogs([]);
       setAuditTotalLogs(null);
+      setAuditError(null);
       setIsLoadingAudit(false);
       hasLoadedAuditLogsRef.current = false;
 
@@ -193,6 +211,7 @@ export const AccountPageContent: FC = () => {
 
     try {
       setIsLoadingAudit(true);
+      setAuditError(null);
 
       const buildAuditParams = (page: number): URLSearchParams => {
         return new URLSearchParams({
@@ -222,6 +241,7 @@ export const AccountPageContent: FC = () => {
           totalPages,
           ACCOUNT_AUDIT_MAX_PREFETCH_PAGES,
         );
+        let didFailToLoadEveryPage = false;
 
         for (let page = 2; page <= pagesToFetch; page += 1) {
           const pageResponse = await fetch(
@@ -231,24 +251,40 @@ export const AccountPageContent: FC = () => {
           const pageData = await pageResponse.json();
 
           if (controller.signal.aborted) return;
-          if (!pageResponse.ok || !pageData.success) break;
+          if (!pageResponse.ok || !pageData.success) {
+            didFailToLoadEveryPage = true;
+            setAuditError(
+              pageData.error?.message ||
+                "Impossible de charger toute l'activité",
+            );
+            break;
+          }
 
           loadedLogs.push(...(pageData.data.logs as AuditLogEntry[]));
         }
 
-        setAuditLogs(loadedLogs);
-        setAuditTotalLogs(safeTotalLogs);
+        if (didFailToLoadEveryPage) {
+          setAuditLogs((previousLogs) =>
+            previousLogs.length > 0 ? previousLogs : loadedLogs,
+          );
+          setAuditTotalLogs((previousTotal) =>
+            previousTotal === null ? safeTotalLogs : previousTotal,
+          );
+        } else {
+          setAuditLogs(loadedLogs);
+          setAuditTotalLogs(safeTotalLogs);
+        }
       } else {
-        setAuditLogs([]);
-        setAuditTotalLogs(null);
+        setAuditError(
+          data.error?.message || "Impossible de charger l'activité",
+        );
       }
 
       hasLoadedAuditLogsRef.current = true;
     } catch {
       if (controller.signal.aborted) return;
 
-      setAuditLogs([]);
-      setAuditTotalLogs(null);
+      setAuditError("Impossible de charger l'activité");
       hasLoadedAuditLogsRef.current = true;
     } finally {
       if (auditAbortControllerRef.current !== controller) return;
@@ -302,6 +338,7 @@ export const AccountPageContent: FC = () => {
     hasLoadedAuditLogsRef.current = false;
     setAuditLogs([]);
     setAuditTotalLogs(null);
+    setAuditError(null);
     setIsLoadingAudit(false);
   }, [userData?.id]);
 
@@ -460,22 +497,27 @@ export const AccountPageContent: FC = () => {
             />
           </div>
         )}
-        <div hidden={activeSection !== 'security'}>
-          <SecuritySection
-            userData={userData}
-            onUpdate={handleAccountUpdate}
-            canChangePassword={canChangePassword}
-            canViewSecurity={canViewSecurity}
-          />
-        </div>
+        {(canViewSecurity || canChangePassword) && (
+          <div hidden={activeSection !== 'security'}>
+            <SecuritySection
+              userData={userData}
+              onUpdate={handleAccountUpdate}
+              canChangePassword={canChangePassword}
+              canViewSecurity={canViewSecurity}
+            />
+          </div>
+        )}
         {canViewActivity && (
           <div hidden={activeSection !== 'activity'}>
             <UserHistoryTab
               auditLogs={auditLogs}
+              canExport={canExportUserActivity}
+              error={auditError}
               isAuditTruncated={
                 auditTotalLogs !== null && auditLogs.length < auditTotalLogs
               }
               isLoading={shouldShowAuditLoading}
+              onRetry={() => void fetchAccountAuditLogs()}
               totalAuditLogs={auditTotalLogs ?? auditLogs.length}
               userId={userData.id}
             />

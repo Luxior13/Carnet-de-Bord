@@ -23,8 +23,10 @@ describe('hasPermission', () => {
       true,
     );
     expect(hasPermission('ADMIN', PERMISSIONS.USERS.CREATE)).toBe(true);
+    expect(hasPermission('ADMIN', PERMISSIONS.USERS.EXPORT)).toBe(true);
     expect(hasPermission('USER', PERMISSIONS.DASHBOARD.VIEW)).toBe(true);
     expect(hasPermission('USER', PERMISSIONS.USERS.CREATE)).toBe(false);
+    expect(hasPermission('USER', PERMISSIONS.USERS.EXPORT)).toBe(false);
     expect(hasPermission('USER', PERMISSIONS.USERS.VIEW)).toBe(false);
   });
 
@@ -33,6 +35,7 @@ describe('hasPermission', () => {
       [PERMISSIONS.DASHBOARD.VIEW]: false,
       [PERMISSIONS.USERS.VIEW]: true,
       [PERMISSIONS.USERS.CREATE]: false,
+      [PERMISSIONS.USERS.EXPORT]: true,
     };
 
     expect(
@@ -44,6 +47,14 @@ describe('hasPermission', () => {
     expect(
       hasPermission('USER', PERMISSIONS.USERS.VIEW, customPermissions),
     ).toBe(true);
+    expect(
+      hasPermission('USER', PERMISSIONS.USERS.EXPORT, customPermissions),
+    ).toBe(true);
+    expect(
+      hasPermission('ADMIN', PERMISSIONS.USERS.EXPORT, {
+        [PERMISSIONS.USERS.EXPORT]: false,
+      }),
+    ).toBe(false);
   });
 
   it('never grants unknown permissions', () => {

@@ -4,32 +4,36 @@
   "types": "./src/index.ts",
   "scripts": {
     "build": "prisma generate",
-    "deploy": "prisma migrate deploy",
+    "db:backup": "bun run scripts/backup-database.ts",
+    "db:migrate:baseline": "bun run scripts/baseline-existing-database.ts",
+    "db:migrate:deploy": "bun run scripts/safe-migrate-deploy.ts",
+    "db:migrate:status": "prisma migrate status",
+    "deploy": "bun run db:migrate:deploy",
     "seed": "bun run prisma/seed.ts",
-    "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",
-    "lint:fix": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix"
+    "lint": "eslint \"{src,scripts}/**/*.{js,jsx,ts,tsx}\"",
+    "lint:fix": "eslint \"{src,scripts}/**/*.{js,jsx,ts,tsx}\" --fix",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^24.2.0",
-    "eslint": "^9.32.0",
+    "@types/node": "^24.13.3",
+    "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-prettier": "^5.5.3",
-    "eslint-plugin-regexp": "^2.9.1",
+    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-regexp": "^2.10.0",
     "eslint-plugin-security": "^3.0.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-sort-keys-custom-order": "^2.2.1",
-    "eslint-plugin-turbo": "^2.5.5",
-    "eslint-plugin-unused-imports": "^4.1.4",
-    "prettier": "^3.6.2",
-    "typescript": "^5.9.2",
-    "typescript-eslint": "^8.39.0"
+    "eslint-plugin-turbo": "^2.10.4",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "prettier": "^3.9.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.63.0"
   },
   "dependencies": {
-    "@prisma/client": "^6.13.0",
+    "@prisma/client": "6.19.3",
     "bcryptjs": "^2.4.3",
-    "prisma": "6.13.0",
+    "prisma": "6.19.3",
     "prisma-json-types-generator": "^3.5.1"
   }
 }

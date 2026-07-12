@@ -9,7 +9,6 @@ import {
   invalidateSession,
   SESSION_COOKIE_NAME,
 } from '$server/auth';
-import { logger } from '$server/logger';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -48,12 +47,6 @@ export async function POST(): Promise<
       metadata: AUTH_CONNECTION_AUDIT_LOCATION,
       targetUserId: auth.user.id,
       userId: auth.user.id,
-    }).catch((error: unknown) => {
-      logger.error('Logout audit error', {
-        action: 'LOGOUT',
-        error,
-        userId: auth.user.id,
-      });
     });
 
     await deleteSessionCookie();

@@ -2,12 +2,7 @@ import { FileText, History, Key, Shield, User, UserCheck } from 'lucide-react';
 import React from 'react';
 
 export type UserDetailSectionId =
-  | 'resume'
-  | 'profile'
-  | 'access'
-  | 'account'
-  | 'security'
-  | 'history';
+  'resume' | 'profile' | 'access' | 'account' | 'security' | 'history';
 
 export type UserDetailSection<SectionId extends string = UserDetailSectionId> =
   {

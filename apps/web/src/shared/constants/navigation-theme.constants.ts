@@ -1,10 +1,5 @@
 export type NavigationSpaceTone =
-  | 'dashboard'
-  | 'internal'
-  | 'legal'
-  | 'sport'
-  | 'system'
-  | 'treasury';
+  'dashboard' | 'internal' | 'legal' | 'sport' | 'system' | 'treasury';
 
 export type NavigationSpaceToneClasses = {
   accent: string;

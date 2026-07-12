@@ -4,15 +4,20 @@ import { z } from 'zod';
 import {
   arePermissionOverridesEqual,
   getAccountPermissionKeys,
+  getAllPermissionKeys,
   getUnknownPermissionKeys,
   hasPermission,
   PERMISSIONS,
 } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors } from '$server/api-response';
 import {
+  apiErrors,
+  isPrismaUniqueConstraintError,
+  parseJsonBody,
+} from '$server/api-response';
+import {
+  type AuditLogInput,
   createAuditLogWithHeaders,
-  invalidateAllUserSessions,
   mapUserToUserType,
 } from '$server/auth';
 import { prisma } from '$server/prisma';
@@ -22,10 +27,7 @@ import {
   ErrorCode,
 } from '$types/api.types';
 import type { UserType } from '$types/auth.types';
-import {
-  optionalEmailSchema,
-  optionalTrimmedStringMax,
-} from '$utils/zod.utils';
+import { emailSchema, trimmedStringMinMax } from '$utils/zod.utils';
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -103,9 +105,21 @@ export async function GET(
       );
     }
 
+    const canViewAccess =
+      auth.user.isProtected ||
+      hasPermission(
+        auth.user.role,
+        PERMISSIONS.USERS.VIEW_ACCESS,
+        auth.user.permissions,
+      );
+    const clientUser = mapUserToUserType(user);
+
     return NextResponse.json({
       data: {
-        user: mapUserToUserType(user),
+        user: {
+          ...clientUser,
+          permissions: canViewAccess ? clientUser.permissions : null,
+        },
       },
       success: true,
     });
@@ -134,14 +148,20 @@ const permissionsSchema = z
 
 const updateUserSchema = z
   .object({
-    email: optionalEmailSchema,
-    firstName: optionalTrimmedStringMax(50, 'Prénom trop long').pipe(
-      z.string().min(1, 'Prénom requis').optional().nullable(),
-    ),
+    email: emailSchema.optional(),
+    firstName: trimmedStringMinMax(
+      1,
+      50,
+      'Prénom requis',
+      'Prénom trop long',
+    ).optional(),
     isActive: z.boolean().optional(),
-    lastName: optionalTrimmedStringMax(50, 'Nom trop long').pipe(
-      z.string().min(1, 'Nom requis').optional().nullable(),
-    ),
+    lastName: trimmedStringMinMax(
+      1,
+      50,
+      'Nom requis',
+      'Nom trop long',
+    ).optional(),
     permissions: permissionsSchema,
     role: z.enum(['ADMIN', 'USER']).optional(),
   })
@@ -160,8 +180,9 @@ export async function PATCH(
     const auth = await requireAuth();
     if (!auth.success) return auth.response;
 
-    const body = await request.json();
-    const validation = updateUserSchema.safeParse(body);
+    const parsedBody = await parseJsonBody(request);
+    if (!parsedBody.success) return parsedBody.response;
+    const validation = updateUserSchema.safeParse(parsedBody.data);
 
     if (!validation.success) {
       return NextResponse.json(
@@ -277,6 +298,21 @@ export async function PATCH(
       );
     }
 
+    // A protected account is the recovery invariant for administration. Even
+    // another protected actor cannot disable or demote it.
+    if (existingUser.isProtected && (isActive === false || role === 'USER')) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message: 'Un compte protégé doit rester actif et administrateur',
+          },
+          success: false,
+        },
+        { status: 403 },
+      );
+    }
+
     if (
       existingUser.role === 'ADMIN' &&
       !auth.user.isProtected &&
@@ -329,20 +365,38 @@ export async function PATCH(
       );
     }
 
-    if (isPermissionsUpdate && permissions && !auth.user.isProtected) {
-      const grantedUnauthorizedPermissions = Object.entries(permissions)
-        .filter(
+    if (!auth.user.isProtected && (isPermissionsUpdate || isRoleUpdate)) {
+      const beforePermissions = existingUser.permissions as Record<
+        string,
+        boolean
+      > | null;
+      const afterPermissions =
+        permissions !== undefined ? permissions : beforePermissions;
+      const afterRole = role ?? existingUser.role;
+      const unauthorizedPermissionKeys = new Set(
+        Object.entries(afterPermissions ?? {}).flatMap(
           ([permissionKey, enabled]) =>
             enabled &&
-            !hasPermission(
-              auth.user.role,
-              permissionKey,
-              auth.user.permissions,
-            ),
-        )
-        .map(([permissionKey]) => permissionKey);
+            !hasPermission(auth.user.role, permissionKey, auth.user.permissions)
+              ? [permissionKey]
+              : [],
+        ),
+      );
 
-      if (grantedUnauthorizedPermissions.length > 0) {
+      for (const permissionKey of getAllPermissionKeys()) {
+        const isGainedEffectively =
+          !hasPermission(existingUser.role, permissionKey, beforePermissions) &&
+          hasPermission(afterRole, permissionKey, afterPermissions);
+
+        if (
+          isGainedEffectively &&
+          !hasPermission(auth.user.role, permissionKey, auth.user.permissions)
+        ) {
+          unauthorizedPermissionKeys.add(permissionKey);
+        }
+      }
+
+      if (unauthorizedPermissionKeys.size > 0) {
         return NextResponse.json(
           {
             error: {
@@ -490,10 +544,6 @@ export async function PATCH(
       });
     }
 
-    const updatedUser = await prisma.user.update({
-      data: updateData,
-      where: { id },
-    });
     const changedKeys = Object.keys(afterValues);
     const hasAccessChange =
       changedKeys.includes('permissions') || changedKeys.includes('role');
@@ -519,14 +569,17 @@ export async function PATCH(
       ? { tabKey: 'account', tabLabel: 'Compte personnel' }
       : { tabKey: 'access', tabLabel: 'Accès' };
 
-    // If deactivated, invalidate all sessions
-    if (isActive === false) {
-      await invalidateAllUserSessions(id);
+    const updatedEmail =
+      typeof updateData.email === 'string'
+        ? updateData.email
+        : existingUser.email;
+    let auditData: AuditLogInput;
 
-      await createAuditLogWithHeaders({
+    if (isActive === false) {
+      auditData = {
         action: 'USER_DEACTIVATE',
         category: 'USER',
-        description: `Utilisateur désactivé: ${updatedUser.email}`,
+        description: `Utilisateur désactivé: ${updatedEmail}`,
         metadata: {
           after: afterValues,
           before: beforeValues,
@@ -537,16 +590,12 @@ export async function PATCH(
         },
         targetUserId: id,
         userId: auth.user.id,
-      });
+      };
     } else if (isActive === true && existingUser.isActive === false) {
-      if (hasAccessChange) {
-        await invalidateAllUserSessions(id);
-      }
-
-      await createAuditLogWithHeaders({
+      auditData = {
         action: 'USER_ACTIVATE',
         category: 'USER',
-        description: `Utilisateur activé: ${updatedUser.email}`,
+        description: `Utilisateur activé: ${updatedEmail}`,
         metadata: {
           after: afterValues,
           before: beforeValues,
@@ -557,14 +606,12 @@ export async function PATCH(
         },
         targetUserId: id,
         userId: auth.user.id,
-      });
+      };
     } else if (hasAccessChange) {
-      await invalidateAllUserSessions(id);
-
-      await createAuditLogWithHeaders({
+      auditData = {
         action: 'PERMISSION_UPDATE',
         category: 'PERMISSION',
-        description: `Permissions modifiées: ${updatedUser.email}`,
+        description: `Permissions modifiées: ${updatedEmail}`,
         metadata: {
           after: afterValues,
           before: beforeValues,
@@ -575,12 +622,12 @@ export async function PATCH(
         },
         targetUserId: id,
         userId: auth.user.id,
-      });
+      };
     } else {
-      await createAuditLogWithHeaders({
+      auditData = {
         action: 'USER_UPDATE',
         category: 'USER',
-        description: `Utilisateur modifié: ${updatedUser.email}`,
+        description: `Utilisateur modifié: ${updatedEmail}`,
         metadata: {
           after: afterValues,
           before: beforeValues,
@@ -592,8 +639,27 @@ export async function PATCH(
         },
         targetUserId: id,
         userId: auth.user.id,
-      });
+      };
     }
+
+    const shouldInvalidateSessions = isActive === false || hasAccessChange;
+    const updatedUser = await prisma.$transaction(async (transaction) => {
+      const nextUser = await transaction.user.update({
+        data: updateData,
+        where: { id },
+      });
+
+      if (shouldInvalidateSessions) {
+        await transaction.session.deleteMany({ where: { userId: id } });
+      }
+
+      await createAuditLogWithHeaders(auditData, {
+        client: transaction,
+        required: true,
+      });
+
+      return nextUser;
+    });
 
     return NextResponse.json({
       data: {
@@ -602,6 +668,19 @@ export async function PATCH(
       success: true,
     });
   } catch (error) {
+    if (isPrismaUniqueConstraintError(error)) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.VALIDATION_ERROR,
+            message: 'Cet email est déjà utilisé',
+          },
+          success: false,
+        },
+        { status: 409 },
+      );
+    }
+
     return apiErrors.internal('USER_UPDATE', error);
   }
 }
@@ -685,29 +764,31 @@ export async function DELETE(
       );
     }
 
-    // Soft delete
-    await prisma.user.update({
-      data: { deletedAt: new Date(), isActive: false },
-      where: { id },
-    });
+    await prisma.$transaction(async (transaction) => {
+      await transaction.user.update({
+        data: { deletedAt: new Date(), isActive: false },
+        where: { id },
+      });
 
-    // Invalidate all sessions
-    await invalidateAllUserSessions(id);
+      await transaction.session.deleteMany({ where: { userId: id } });
 
-    // Log audit
-    await createAuditLogWithHeaders({
-      action: 'USER_DELETE',
-      category: 'USER',
-      description: `Utilisateur supprimé: ${existingUser.email}`,
-      metadata: {
-        deletedUserId: id,
-        email: existingUser.email,
-        ...USERS_PAGE_AUDIT_LOCATION,
-        tabKey: 'resume',
-        tabLabel: 'Résumé',
-      },
-      targetUserId: id,
-      userId: auth.user.id,
+      await createAuditLogWithHeaders(
+        {
+          action: 'USER_DELETE',
+          category: 'USER',
+          description: `Utilisateur supprimé: ${existingUser.email}`,
+          metadata: {
+            deletedUserId: id,
+            email: existingUser.email,
+            ...USERS_PAGE_AUDIT_LOCATION,
+            tabKey: 'resume',
+            tabLabel: 'Résumé',
+          },
+          targetUserId: id,
+          userId: auth.user.id,
+        },
+        { client: transaction, required: true },
+      );
     });
 
     return NextResponse.json({

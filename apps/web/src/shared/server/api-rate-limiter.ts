@@ -1,12 +1,46 @@
 import 'server-only';
 
-// Simple in-memory rate limiter for API routes
-// In production, use Redis for distributed rate limiting
+// Per-instance limiter. It intentionally has a hard memory bound; deployments
+// with several instances still need an external store for a global limit.
 
 const requests = new Map<string, { count: number; resetAt: number }>();
 
 const WINDOW_MS = 60 * 1000; // 1 minute window
 const MAX_REQUESTS = 100; // 100 requests per minute per IP
+const MAX_TRACKED_CLIENTS = 10_000;
+const MAX_IDENTIFIER_LENGTH = 128;
+const CLEANUP_INTERVAL_MS = 15 * 1000;
+
+let nextCleanupAt = 0;
+
+const cleanupExpiredEntries = (now: number, force = false): void => {
+  if (!force && now < nextCleanupAt) return;
+
+  nextCleanupAt = now + CLEANUP_INTERVAL_MS;
+  for (const [key, entry] of requests.entries()) {
+    if (entry.resetAt <= now) requests.delete(key);
+  }
+};
+
+const ensureCapacity = (now: number): void => {
+  if (requests.size < MAX_TRACKED_CLIENTS) return;
+
+  cleanupExpiredEntries(now, true);
+
+  // The map is insertion ordered. Evicting the oldest remaining window keeps
+  // memory bounded under identifier churn while preserving recent clients.
+  while (requests.size >= MAX_TRACKED_CLIENTS) {
+    const oldestKey = requests.keys().next().value as string | undefined;
+    if (!oldestKey) break;
+    requests.delete(oldestKey);
+  }
+};
+
+const normalizeIdentifier = (identifier: string): string => {
+  const normalized = identifier.trim().slice(0, MAX_IDENTIFIER_LENGTH);
+
+  return normalized || 'unknown';
+};
 
 export function checkRateLimit(ip: string): {
   allowed: boolean;
@@ -14,23 +48,22 @@ export function checkRateLimit(ip: string): {
   resetAt: number;
 } {
   const now = Date.now();
-  const key = ip;
+  const key = normalizeIdentifier(ip);
 
   let entry = requests.get(key);
 
-  // Clean up old entries periodically
-  if (requests.size > 10000) {
-    for (const [k, v] of requests.entries()) {
-      if (v.resetAt < now) requests.delete(k);
-    }
-  }
+  cleanupExpiredEntries(now);
 
-  if (!entry || entry.resetAt < now) {
+  if (!entry || entry.resetAt <= now) {
+    if (!entry) ensureCapacity(now);
     entry = { count: 0, resetAt: now + WINDOW_MS };
     requests.set(key, entry);
   }
 
   entry.count++;
+  // Refresh insertion order so capacity eviction approximates LRU.
+  requests.delete(key);
+  requests.set(key, entry);
 
   return {
     allowed: entry.count <= MAX_REQUESTS,

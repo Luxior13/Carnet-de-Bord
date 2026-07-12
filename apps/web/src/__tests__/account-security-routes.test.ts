@@ -17,6 +17,7 @@ const mockCheckRateLimit = vi.fn();
 const mockRecordLoginAttempt = vi.fn();
 
 const mockPrisma = {
+  $transaction: vi.fn(),
   session: {
     delete: vi.fn(),
     deleteMany: vi.fn(),
@@ -58,6 +59,11 @@ vi.mock('$server/prisma', () => ({
 describe('account security routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    mockPrisma.$transaction.mockImplementation(
+      async (callback: (client: typeof mockPrisma) => unknown) =>
+        callback(mockPrisma),
+    );
 
     mockGetAuthSession.mockResolvedValue({
       session: {
@@ -127,6 +133,22 @@ describe('account security routes', () => {
   });
 
   describe('PATCH /api/auth/me', () => {
+    it('returns 400 for an invalid JSON body', async () => {
+      const route = await import('$app/api/auth/me/route');
+      const response = await route.PATCH(
+        new Request('http://localhost/api/auth/me', {
+          body: '{invalid',
+          headers: { 'content-type': 'application/json' },
+          method: 'PATCH',
+        }),
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(body.error.code).toBe(ErrorCode.VALIDATION_ERROR);
+      expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    });
+
     it('rejects whitespace-only profile names after trimming', async () => {
       const route = await import('$app/api/auth/me/route');
       const response = await route.PATCH(
@@ -193,6 +215,7 @@ describe('account security routes', () => {
           targetUserId: 'user-1',
           userId: 'user-1',
         }),
+        { client: mockPrisma, required: true },
       );
       expect(mockRequirePermission).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'user-1' }),
@@ -411,24 +434,24 @@ describe('account security routes', () => {
       expect(mockUpdateUserPassword).toHaveBeenCalledWith(
         'user-1',
         'NewPassword1!',
-      );
-      expect(mockInvalidateOtherUserSessions).toHaveBeenCalledWith(
-        'user-1',
-        'session-hash',
-      );
-      expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledWith(
         expect.objectContaining({
-          action: 'PASSWORD_CHANGE',
-          category: 'AUTH',
-          metadata: expect.objectContaining({
-            pageLabel: 'Mon compte',
-            passwordChange: true,
-            poleLabel: 'Espace personnel',
-            tabKey: 'security',
+          audit: expect.objectContaining({
+            action: 'PASSWORD_CHANGE',
+            category: 'AUTH',
+            metadata: expect.objectContaining({
+              pageLabel: 'Mon compte',
+              passwordChange: true,
+              poleLabel: 'Espace personnel',
+              tabKey: 'security',
+            }),
+            userId: 'user-1',
           }),
-          userId: 'user-1',
+          currentSessionToken: 'session-hash',
+          rateLimitKey: 'password-change:user-1',
         }),
       );
+      expect(mockInvalidateOtherUserSessions).not.toHaveBeenCalled();
+      expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
     });
 
     it('returns a validation error for malformed payloads', async () => {
@@ -482,7 +505,30 @@ describe('account security routes', () => {
       expect(body.data.sessions).toHaveLength(2);
       expect(body.data.sessions[0].isCurrent).toBe(true);
       expect(body.data.sessions[1].isCurrent).toBe(false);
-      expect(mockRequirePermission).not.toHaveBeenCalled();
+      expect(mockRequirePermission).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'user-1' }),
+        PERMISSIONS.ACCOUNT.VIEW_SECURITY,
+      );
+    });
+
+    it('blocks personal session data without account security permission', async () => {
+      mockRequirePermission.mockReturnValueOnce({
+        response: Response.json(
+          {
+            error: { code: ErrorCode.FORBIDDEN, message: 'Accès refusé' },
+            success: false,
+          },
+          { status: 403 },
+        ),
+        success: false,
+      });
+
+      const route = await import('$app/api/auth/sessions/route');
+      const response = await route.GET();
+
+      expect(response.status).toBe(403);
+      expect(mockPrisma.session.findMany).not.toHaveBeenCalled();
+      expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
     });
   });
 
@@ -650,6 +696,7 @@ describe('account security routes', () => {
           targetUserId: 'target-1',
           userId: 'user-1',
         }),
+        { client: mockPrisma, required: true },
       );
     });
 
@@ -706,6 +753,7 @@ describe('account security routes', () => {
           targetUserId: 'target-1',
           userId: 'user-1',
         }),
+        { client: mockPrisma, required: true },
       );
     });
 
@@ -752,7 +800,10 @@ describe('account security routes', () => {
       expect(response.status).toBe(403);
       expect(body.success).toBe(false);
       expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
-      expect(mockRequirePermission).not.toHaveBeenCalled();
+      expect(mockRequirePermission).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'user-1' }),
+        PERMISSIONS.ACCOUNT.VIEW_SECURITY,
+      );
       expect(mockPrisma.session.delete).not.toHaveBeenCalled();
     });
 
@@ -785,8 +836,12 @@ describe('account security routes', () => {
           }),
           userId: 'user-1',
         }),
+        { client: mockPrisma, required: true },
       );
-      expect(mockRequirePermission).not.toHaveBeenCalled();
+      expect(mockRequirePermission).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'user-1' }),
+        PERMISSIONS.ACCOUNT.VIEW_SECURITY,
+      );
     });
   });
 });

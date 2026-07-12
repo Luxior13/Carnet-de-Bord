@@ -5,9 +5,13 @@ import { z } from 'zod';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors, parsePagination } from '$server/api-response';
 import {
-  createAuditLogWithHeaders,
+  apiErrors,
+  isPrismaUniqueConstraintError,
+  parseJsonBody,
+  parsePagination,
+} from '$server/api-response';
+import {
   createUser,
   generateTemporaryPassword,
   mapUserToUserType,
@@ -19,7 +23,7 @@ import {
   ErrorCode,
 } from '$types/api.types';
 import type { UsersListResponse, UserType } from '$types/auth.types';
-import { emailSchema, trimmedStringMin } from '$utils/zod.utils';
+import { emailSchema, trimmedStringMinMax } from '$utils/zod.utils';
 
 const USER_SORT_OPTIONS = ['name', 'recent', 'created'] as const;
 type UserSortOption = (typeof USER_SORT_OPTIONS)[number];
@@ -46,7 +50,6 @@ const USER_LIST_SELECT = {
   lockedUntil: true,
   mustChangePassword: true,
   passwordChangedAt: true,
-  permissions: true,
   role: true,
 } satisfies Prisma.UserSelect;
 
@@ -216,7 +219,9 @@ export async function GET(
           totalPages: Math.ceil(total / limit),
         },
         stats,
-        users: users.map((user) => mapUserToUserType(user)),
+        users: users.map((user) =>
+          mapUserToUserType({ ...user, permissions: null }),
+        ),
       },
       success: true,
     });
@@ -225,12 +230,14 @@ export async function GET(
   }
 }
 
-const createUserSchema = z.object({
-  email: emailSchema,
-  firstName: trimmedStringMin(1, 'Prénom requis'),
-  lastName: trimmedStringMin(1, 'Nom requis'),
-  role: z.enum(['ADMIN', 'USER']),
-});
+const createUserSchema = z
+  .object({
+    email: emailSchema,
+    firstName: trimmedStringMinMax(1, 50, 'Prénom requis', 'Prénom trop long'),
+    lastName: trimmedStringMinMax(1, 50, 'Nom requis', 'Nom trop long'),
+    role: z.enum(['ADMIN', 'USER']),
+  })
+  .strict();
 
 export async function POST(
   request: NextRequest,
@@ -247,8 +254,9 @@ export async function POST(
     const permCheck = requirePermission(auth.user, PERMISSIONS.USERS.CREATE);
     if (!permCheck.success) return permCheck.response;
 
-    const body = await request.json();
-    const validation = createUserSchema.safeParse(body);
+    const parsedBody = await parseJsonBody(request);
+    if (!parsedBody.success) return parsedBody.response;
+    const validation = createUserSchema.safeParse(parsedBody.data);
 
     if (!validation.success) {
       return NextResponse.json(
@@ -298,28 +306,29 @@ export async function POST(
     }
 
     const temporaryPassword = generateTemporaryPassword();
-    const newUser = await createUser({
-      email,
-      firstName,
-      lastName,
-      password: temporaryPassword,
-      role,
-    });
-
-    await createAuditLogWithHeaders({
-      action: 'USER_CREATE',
-      category: 'USER',
-      description: `Utilisateur créé: ${newUser.email}`,
-      metadata: {
-        createdUserId: newUser.id,
-        ...USERS_PAGE_AUDIT_LOCATION,
-        role: newUser.role,
-        tabKey: 'creation',
-        tabLabel: 'Création',
+    const newUser = await createUser(
+      {
+        email,
+        firstName,
+        lastName,
+        password: temporaryPassword,
+        role,
       },
-      targetUserId: newUser.id,
-      userId: auth.user.id,
-    });
+      (createdUser) => ({
+        action: 'USER_CREATE',
+        category: 'USER',
+        description: `Utilisateur créé: ${createdUser.email}`,
+        metadata: {
+          createdUserId: createdUser.id,
+          ...USERS_PAGE_AUDIT_LOCATION,
+          role: createdUser.role,
+          tabKey: 'creation',
+          tabLabel: 'Création',
+        },
+        targetUserId: createdUser.id,
+        userId: auth.user.id,
+      }),
+    );
 
     return NextResponse.json({
       data: {
@@ -329,6 +338,19 @@ export async function POST(
       success: true,
     });
   } catch (error) {
+    if (isPrismaUniqueConstraintError(error)) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.VALIDATION_ERROR,
+            message: 'Cet email est déjà utilisé',
+          },
+          success: false,
+        },
+        { status: 409 },
+      );
+    }
+
     return apiErrors.internal('USER_CREATE', error);
   }
 }

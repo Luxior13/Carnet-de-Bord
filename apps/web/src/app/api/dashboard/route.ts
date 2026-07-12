@@ -27,6 +27,18 @@ export async function GET(): Promise<
         PERMISSIONS.USERS.VIEW,
         auth.user.permissions,
       );
+    const canViewRecentActivity =
+      auth.user.isProtected ||
+      hasPermission(
+        auth.user.role,
+        PERMISSIONS.USERS.VIEW_ACTIVITY,
+        auth.user.permissions,
+      ) ||
+      hasPermission(
+        auth.user.role,
+        PERMISSIONS.SYSTEM.AUDIT,
+        auth.user.permissions,
+      );
 
     if (!canViewUsers) {
       return NextResponse.json({
@@ -73,20 +85,22 @@ export async function GET(): Promise<
       prisma.user.count({
         where: { ...userWhere, lastLoginAt: { gte: oneDayAgo } },
       }),
-      prisma.auditLog.findMany({
-        orderBy: { createdAt: 'desc' },
-        select: {
-          action: true,
-          category: true,
-          createdAt: true,
-          description: true,
-          id: true,
-          user: {
-            select: { firstName: true, lastName: true },
-          },
-        },
-        take: 8,
-      }),
+      canViewRecentActivity
+        ? prisma.auditLog.findMany({
+            orderBy: { createdAt: 'desc' },
+            select: {
+              action: true,
+              category: true,
+              createdAt: true,
+              description: true,
+              id: true,
+              user: {
+                select: { firstName: true, lastName: true },
+              },
+            },
+            take: 8,
+          })
+        : Promise.resolve([]),
     ]);
 
     const activeUsers =

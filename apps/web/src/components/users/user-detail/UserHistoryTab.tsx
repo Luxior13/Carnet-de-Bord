@@ -25,8 +25,10 @@ import {
 import React, { type FC, memo, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import type { NavigationIconName } from '$constants/navigation-icon.constants';
-import { getNavigationIcon } from '$constants/navigation-icon.constants';
+import {
+  getNavigationIcon,
+  type NavigationIconName,
+} from '$constants/navigation-icon.constants';
 import {
   getNavigationSpaceToneClasses,
   type NavigationSpaceTone,
@@ -57,20 +59,17 @@ import { cn } from '$utils/css.utils';
 
 type UserHistoryTabProps = {
   auditLogs: AuditLogEntry[];
+  canExport?: boolean;
+  error?: string | null;
   isAuditTruncated?: boolean;
   isLoading: boolean;
+  onRetry?: () => void;
   totalAuditLogs?: number;
   userId: string;
 };
 
 type ActionCategoryKey =
-  | 'access'
-  | 'auth'
-  | 'lifecycle'
-  | 'other'
-  | 'profile'
-  | 'security'
-  | 'system';
+  'access' | 'auth' | 'lifecycle' | 'other' | 'profile' | 'security' | 'system';
 type ActivityScope = 'all' | 'by' | 'on';
 type ActivityScopeIconKey = 'by' | 'linked' | 'on';
 const DEFAULT_ACTIVITY_SCOPE: ActivityScope = 'on';
@@ -1519,8 +1518,11 @@ ActivityListRow.displayName = 'ActivityListRow';
 
 export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   auditLogs,
+  canExport = false,
+  error = null,
   isAuditTruncated = false,
   isLoading,
+  onRetry,
   totalAuditLogs,
   userId,
 }) => {
@@ -1764,7 +1766,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   };
 
   // Loading
-  if (isLoading) {
+  if (isLoading && auditLogs.length === 0) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-32 rounded-md" />
@@ -1774,6 +1776,31 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
           ))}
         </div>
       </div>
+    );
+  }
+
+  if (error && auditLogs.length === 0) {
+    return (
+      <Card className="border-destructive/35 bg-destructive/5 min-h-[280px] items-center justify-center rounded-md py-0">
+        <CardContent
+          className="flex flex-col items-center p-8 text-center"
+          role="alert"
+        >
+          <div className="border-destructive/35 bg-destructive/10 text-destructive flex size-16 items-center justify-center rounded-md border">
+            <XCircle className="size-8" />
+          </div>
+          <h3 className="text-foreground mt-5 text-lg font-semibold">
+            Activité indisponible
+          </h3>
+          <p className="text-muted-foreground mt-2 max-w-sm text-sm">{error}</p>
+          {onRetry && (
+            <Button className="mt-4" onClick={onRetry} variant="outline">
+              <RefreshCw className="size-4" />
+              Réessayer
+            </Button>
+          )}
+        </CardContent>
+      </Card>
     );
   }
 
@@ -1803,9 +1830,26 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   );
 
   return (
-    <Card className="border-sidebar-border/60 overflow-visible rounded-lg py-0">
+    <Card
+      aria-busy={isLoading}
+      className="border-sidebar-border/60 overflow-visible rounded-lg py-0"
+    >
       <CardContent className="p-2.5 sm:p-3">
         <div className="space-y-3">
+          {error && (
+            <div
+              className="border-destructive/35 bg-destructive/10 text-destructive flex flex-wrap items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm"
+              role="alert"
+            >
+              <span>{error}</span>
+              {onRetry && (
+                <Button onClick={onRetry} size="sm" variant="outline">
+                  <RefreshCw className="size-4" />
+                  Réessayer
+                </Button>
+              )}
+            </div>
+          )}
           <section className="border-sidebar-border/55 bg-surface-muted overflow-hidden rounded-lg border">
             <div className="flex flex-col gap-4 p-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="min-w-0 space-y-2">
@@ -1875,16 +1919,18 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                   <RefreshCw className="size-3.5" />
                   Réinitialiser
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-11 gap-1.5"
-                  onClick={handleExport}
-                  disabled={filteredLogs.length === 0}
-                >
-                  <Download className="size-3.5" />
-                  Exporter
-                </Button>
+                {canExport && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-11 gap-1.5"
+                    onClick={handleExport}
+                    disabled={filteredLogs.length === 0}
+                  >
+                    <Download className="size-3.5" />
+                    Exporter
+                  </Button>
+                )}
               </div>
             </div>
           </section>

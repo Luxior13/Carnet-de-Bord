@@ -48,10 +48,12 @@ const Pagination: FC<PaginationProps> = ({
 
   return (
     <div
+      aria-label="Pagination"
       className={cn(
         'flex items-center justify-between border-t px-3 py-2 sm:px-4 sm:py-3',
         className,
       )}
+      role="navigation"
     >
       <p className="text-muted-foreground text-[10px] sm:text-xs">
         {start}-{end} sur {total}
@@ -68,7 +70,11 @@ const Pagination: FC<PaginationProps> = ({
           <ChevronLeft className="h-4 w-4" />
         </Button>
         {/* Page numbers hidden on mobile, show current/total instead */}
-        <span className="text-muted-foreground px-2 text-xs sm:hidden">
+        <span
+          aria-label={`Page ${page} sur ${totalPages}`}
+          aria-live="polite"
+          className="text-muted-foreground px-2 text-xs sm:hidden"
+        >
           {page}/{totalPages}
         </span>
         <div className="hidden sm:flex sm:items-center sm:gap-1">
@@ -82,6 +88,8 @@ const Pagination: FC<PaginationProps> = ({
               </span>
             ) : (
               <Button
+                aria-current={p === page ? 'page' : undefined}
+                aria-label={`Page ${p}`}
                 key={p}
                 variant={p === page ? 'default' : 'ghost'}
                 size="icon"

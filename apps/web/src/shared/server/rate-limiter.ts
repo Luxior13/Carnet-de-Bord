@@ -20,12 +20,45 @@ const CONFIG = {
   windowMs: 15 * 60 * 1000,
 } as const;
 
+const CLEANUP_INTERVAL_MS = 60 * 1000;
+const MAX_KEY_PART_LENGTH = 254;
+let nextCleanupAt = 0;
+
+const cleanupExpiredEntries = async (now: Date): Promise<void> => {
+  if (now.getTime() < nextCleanupAt) return;
+
+  // Advance before awaiting so concurrent requests do not all launch the same
+  // table-wide cleanup query.
+  nextCleanupAt = now.getTime() + CLEANUP_INTERVAL_MS;
+  try {
+    await prisma.rateLimit.deleteMany({
+      where: {
+        OR: [
+          { blockedUntil: { lt: now, not: null } },
+          {
+            blockedUntil: null,
+            firstAttempt: {
+              lt: new Date(now.getTime() - CONFIG.windowMs),
+            },
+          },
+        ],
+      },
+    });
+  } catch (error) {
+    nextCleanupAt = 0;
+    throw error;
+  }
+};
+
 /**
  * Creates a unique identifier for rate limiting from IP and email
  */
 export function createRateLimitKey(ip: string | null, email: string): string {
-  const sanitizedEmail = email.toLowerCase().trim();
-  const sanitizedIp = ip || 'unknown';
+  const sanitizedEmail = email
+    .toLowerCase()
+    .trim()
+    .slice(0, MAX_KEY_PART_LENGTH);
+  const sanitizedIp = (ip?.trim() || 'unknown').slice(0, MAX_KEY_PART_LENGTH);
 
   return `${sanitizedIp}:${sanitizedEmail}`;
 }
@@ -37,27 +70,7 @@ export async function checkRateLimit(identifier: string): Promise<{
 }> {
   const now = new Date();
 
-  // Clean up old entries first
-  await prisma.rateLimit.deleteMany({
-    where: {
-      OR: [
-        // Entries where block has expired
-        {
-          blockedUntil: {
-            lt: now,
-            not: null,
-          },
-        },
-        // Entries where window has expired and not blocked
-        {
-          blockedUntil: null,
-          firstAttempt: {
-            lt: new Date(now.getTime() - CONFIG.windowMs),
-          },
-        },
-      ],
-    },
-  });
+  await cleanupExpiredEntries(now);
 
   const entry = await prisma.rateLimit.findUnique({
     where: { key: identifier },
@@ -126,9 +139,7 @@ export async function recordLoginAttempt(
 ): Promise<void> {
   if (success) {
     // Reset on successful login
-    await prisma.rateLimit
-      .delete({ where: { key: identifier } })
-      .catch(() => {});
+    await prisma.rateLimit.deleteMany({ where: { key: identifier } });
 
     return;
   }

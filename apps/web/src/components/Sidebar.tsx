@@ -378,7 +378,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
     <SidebarRoot collapsible="icon" variant="sidebar" className={className}>
       <SidebarHeader className="border-sidebar-border/70 bg-sidebar/95 gap-2.5 border-b p-3 group-data-[collapsible=icon]/sidebar:px-0">
         <Link
-          href="/tableau-de-bord"
+          href="/"
           aria-label="Retour au tableau de bord"
           onClick={() => setOpenMobile(false)}
           className={cn(

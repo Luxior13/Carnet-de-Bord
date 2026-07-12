@@ -31,8 +31,10 @@ model User {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  sessions  Session[]
-  auditLogs AuditLog[]
+  sessions             Session[]
+  auditLogs            AuditLog[]            @relation("AuditActor")
+  targetedAuditLogs    AuditLog[]            @relation("AuditTarget")
+  archivedStaffProfile ArchivedStaffProfile?
 
   @@index([email])
   @@index([role])
@@ -43,6 +45,9 @@ model User {
   @@index([deletedAt, lockedUntil])
   @@index([deletedAt, mustChangePassword])
   @@index([deletedAt, role])
+  @@index([email(ops: raw("gin_trgm_ops"))], type: Gin, map: "User_email_trgm_idx")
+  @@index([firstName(ops: raw("gin_trgm_ops"))], type: Gin, map: "User_firstName_trgm_idx")
+  @@index([lastName(ops: raw("gin_trgm_ops"))], type: Gin, map: "User_lastName_trgm_idx")
 }
 
 model Session {
@@ -89,20 +94,21 @@ enum AuditCategory {
 }
 
 model AuditLog {
-  id          String        @id @default(cuid())
-  userId      String?
-  user        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id           String        @id @default(cuid())
+  userId       String?
+  user         User?         @relation("AuditActor", fields: [userId], references: [id], onDelete: SetNull)
   targetUserId String?
-  action      AuditAction
-  category    AuditCategory
-  description String
-  metadata    Json?
-  poleKey     String?
-  pageKey     String?
-  tabKey      String?
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime      @default(now())
+  targetUser   User?         @relation("AuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  action       AuditAction
+  category     AuditCategory
+  description  String
+  metadata     Json?
+  poleKey      String?
+  pageKey      String?
+  tabKey       String?
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime      @default(now())
 
   @@index([userId])
   @@index([userId, action])
@@ -120,6 +126,31 @@ model AuditLog {
   @@index([category, createdAt, id])
   @@index([createdAt])
   @@index([createdAt, id])
+}
+
+/// Read-only archive of the legacy StaffProfile table.
+/// The application no longer writes these fields, but keeping the historical
+/// values prevents the migration baseline from destroying existing data.
+model ArchivedStaffProfile {
+  id           String    @id
+  userId       String?   @unique
+  displayName  String?
+  jobTitle     String?
+  department   String?
+  discordId    String?
+  phone        String?
+  timezone     String?
+  joinedAt     DateTime?
+  internalNote String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([department])
+  @@index([discordId])
+  @@index([jobTitle])
+  @@index([joinedAt])
 }
 
 model RateLimit {

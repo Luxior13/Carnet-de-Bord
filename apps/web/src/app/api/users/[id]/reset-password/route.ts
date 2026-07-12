@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
-import { createAuditLogWithHeaders, resetUserPassword } from '$server/auth';
+import { resetUserPassword } from '$server/auth';
 import { prisma } from '$server/prisma';
 import {
   type ApiErrorResponse,
@@ -108,15 +108,13 @@ export async function POST(
       );
     }
 
-    // Reset password
-    const temporaryPassword = await resetUserPassword(id);
     const targetName =
       existingUser.firstName && existingUser.lastName
         ? `${existingUser.firstName} ${existingUser.lastName}`
         : existingUser.email;
 
-    // Log audit
-    await createAuditLogWithHeaders({
+    // Password reset, lock reset, session revocation and audit are atomic.
+    const temporaryPassword = await resetUserPassword(id, {
       action: 'PASSWORD_RESET',
       category: 'AUTH',
       description: `Mot de passe réinitialisé pour: ${existingUser.email}`,

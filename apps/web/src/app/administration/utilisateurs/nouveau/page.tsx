@@ -4,6 +4,7 @@ import { UserRole } from '@repo/database';
 import {
   ArrowLeft,
   CheckCircle2,
+  Copy,
   KeyRound,
   Loader2,
   Mail,
@@ -45,7 +46,6 @@ import {
 } from '$ui/select';
 import { Separator } from '$ui/separator';
 import { apiFetch } from '$utils/api.utils';
-import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 
 type NewUserForm = {
   email: string;
@@ -53,6 +53,10 @@ type NewUserForm = {
   lastName: string;
   role: UserRole;
 };
+
+type NewUserFormErrors = Partial<
+  Record<'email' | 'firstName' | 'lastName', string>
+>;
 
 const EMPTY_USER_FORM: NewUserForm = {
   email: '',
@@ -62,6 +66,7 @@ const EMPTY_USER_FORM: NewUserForm = {
 };
 
 const inputClassName = 'border-border/80 bg-input';
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
 
 const NewUserContent: FC = () => {
   const { userData } = useUser();
@@ -77,6 +82,7 @@ const NewUserContent: FC = () => {
 
   const [form, setForm] = useState(EMPTY_USER_FORM);
   const [isCreating, setIsCreating] = useState(false);
+  const [errors, setErrors] = useState<NewUserFormErrors>({});
   const [createdUser, setCreatedUser] = useState<UserType | null>(null);
   const [temporaryPassword, setTemporaryPassword] = useState<string | null>(
     null,
@@ -86,6 +92,53 @@ const NewUserContent: FC = () => {
     setForm(EMPTY_USER_FORM);
     setCreatedUser(null);
     setTemporaryPassword(null);
+    setErrors({});
+  };
+
+  const updateField = <Field extends keyof NewUserForm>(
+    field: Field,
+    value: NewUserForm[Field],
+  ): void => {
+    setForm((currentForm) => ({ ...currentForm, [field]: value }));
+    if (field !== 'role') {
+      setErrors((currentErrors) => ({ ...currentErrors, [field]: undefined }));
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const nextErrors: NewUserFormErrors = {};
+    const normalizedEmail = form.email.trim();
+
+    if (!form.firstName.trim()) {
+      nextErrors.firstName = 'Prénom obligatoire';
+    } else if (form.firstName.trim().length > 50) {
+      nextErrors.firstName = 'Prénom trop long';
+    }
+    if (!form.lastName.trim()) {
+      nextErrors.lastName = 'Nom obligatoire';
+    } else if (form.lastName.trim().length > 50) {
+      nextErrors.lastName = 'Nom trop long';
+    }
+    if (!normalizedEmail) {
+      nextErrors.email = 'Email obligatoire';
+    } else if (!EMAIL_PATTERN.test(normalizedEmail)) {
+      nextErrors.email = 'Adresse email invalide';
+    }
+
+    setErrors(nextErrors);
+
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const copyTemporaryPassword = async (): Promise<void> => {
+    if (!temporaryPassword) return;
+
+    try {
+      await navigator.clipboard.writeText(temporaryPassword);
+      toast.success('Mot de passe temporaire copié');
+    } catch {
+      toast.error('Impossible de copier le mot de passe');
+    }
   };
 
   const handleCreateUser = async (): Promise<void> => {
@@ -95,8 +148,8 @@ const NewUserContent: FC = () => {
       return;
     }
 
-    if (!form.email || !form.firstName || !form.lastName) {
-      toast.error('Veuillez remplir tous les champs');
+    if (!validateForm()) {
+      toast.error('Corrigez les champs signalés');
 
       return;
     }
@@ -104,7 +157,12 @@ const NewUserContent: FC = () => {
     setIsCreating(true);
     try {
       const response = await apiFetch('/api/users', {
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          email: form.email.trim().toLowerCase(),
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+        }),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       });
@@ -197,7 +255,9 @@ const NewUserContent: FC = () => {
           {createdUser && temporaryPassword ? (
             <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
               <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
-                <CardTitle className="text-sm">Compte créé</CardTitle>
+                <CardTitle aria-live="polite" className="text-sm" role="status">
+                  Compte créé
+                </CardTitle>
                 <CardDescription>
                   Le compte est prêt. Transmettez le mot de passe temporaire,
                   puis ouvrez la fiche si vous devez compléter son profil.
@@ -214,9 +274,20 @@ const NewUserContent: FC = () => {
                         À communiquer une seule fois. L&apos;utilisateur devra
                         le changer à sa première connexion.
                       </p>
-                      <code className="border-border bg-popover text-foreground block rounded-md border px-3 py-2 font-mono text-sm">
-                        {temporaryPassword}
-                      </code>
+                      <div className="flex items-center gap-2">
+                        <code className="border-border bg-popover text-foreground min-w-0 flex-1 overflow-x-auto rounded-md border px-3 py-2 font-mono text-sm">
+                          {temporaryPassword}
+                        </code>
+                        <Button
+                          aria-label="Copier le mot de passe temporaire"
+                          onClick={() => void copyTemporaryPassword()}
+                          size="icon"
+                          type="button"
+                          variant="outline"
+                        >
+                          <Copy className="size-4" />
+                        </Button>
+                      </div>
                     </div>
                   </SectionPanel>
                   <SectionPanel
@@ -270,7 +341,7 @@ const NewUserContent: FC = () => {
             </Card>
           ) : (
             <form
-              {...passwordManagerIgnoreAttributes}
+              noValidate
               onSubmit={(event) => {
                 event.preventDefault();
                 void handleCreateUser();
@@ -300,18 +371,33 @@ const NewUserContent: FC = () => {
                             Prénom
                           </Label>
                           <Input
+                            aria-describedby={
+                              errors.firstName
+                                ? 'newFirstName-error'
+                                : undefined
+                            }
+                            aria-invalid={!!errors.firstName}
+                            autoComplete="given-name"
                             id="newFirstName"
+                            maxLength={50}
+                            name="firstName"
+                            required
                             value={form.firstName}
-                            {...passwordManagerIgnoreAttributes}
                             placeholder="Jean"
                             onChange={(event) =>
-                              setForm({
-                                ...form,
-                                firstName: event.target.value,
-                              })
+                              updateField('firstName', event.target.value)
                             }
                             className={inputClassName}
                           />
+                          {errors.firstName && (
+                            <p
+                              className="text-destructive text-xs"
+                              id="newFirstName-error"
+                              role="alert"
+                            >
+                              {errors.firstName}
+                            </p>
+                          )}
                         </div>
                         <div className="space-y-1.5">
                           <Label
@@ -322,18 +408,31 @@ const NewUserContent: FC = () => {
                             Nom
                           </Label>
                           <Input
+                            aria-describedby={
+                              errors.lastName ? 'newLastName-error' : undefined
+                            }
+                            aria-invalid={!!errors.lastName}
+                            autoComplete="family-name"
                             id="newLastName"
+                            maxLength={50}
+                            name="lastName"
+                            required
                             value={form.lastName}
-                            {...passwordManagerIgnoreAttributes}
                             placeholder="Dupont"
                             onChange={(event) =>
-                              setForm({
-                                ...form,
-                                lastName: event.target.value,
-                              })
+                              updateField('lastName', event.target.value)
                             }
                             className={inputClassName}
                           />
+                          {errors.lastName && (
+                            <p
+                              className="text-destructive text-xs"
+                              id="newLastName-error"
+                              role="alert"
+                            >
+                              {errors.lastName}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="space-y-1.5">
@@ -347,17 +446,33 @@ const NewUserContent: FC = () => {
                         <div className="relative">
                           <Mail className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
                           <Input
+                            aria-describedby={
+                              errors.email ? 'newEmail-error' : undefined
+                            }
+                            aria-invalid={!!errors.email}
+                            autoComplete="email"
                             id="newEmail"
+                            maxLength={254}
+                            name="email"
+                            required
                             type="email"
                             value={form.email}
-                            {...passwordManagerIgnoreAttributes}
                             placeholder="jean.dupont@example.com"
                             onChange={(event) =>
-                              setForm({ ...form, email: event.target.value })
+                              updateField('email', event.target.value)
                             }
                             className={`${inputClassName} pl-9`}
                           />
                         </div>
+                        {errors.email && (
+                          <p
+                            className="text-destructive text-xs"
+                            id="newEmail-error"
+                            role="alert"
+                          >
+                            {errors.email}
+                          </p>
+                        )}
                       </div>
                     </SectionPanel>
                     <SectionPanel
@@ -375,7 +490,7 @@ const NewUserContent: FC = () => {
                         <Select
                           value={form.role}
                           onValueChange={(value) =>
-                            setForm({ ...form, role: value as UserRole })
+                            updateField('role', value as UserRole)
                           }
                         >
                           <SelectTrigger

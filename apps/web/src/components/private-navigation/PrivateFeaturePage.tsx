@@ -205,9 +205,12 @@ const PrivateFeaturePage: FC<PrivateFeaturePageProps> = ({ item, space }) => {
                       <Badge variant="outline" className={tone.soft}>
                         {space.label}
                       </Badge>
-                      {item.status && (
-                        <Badge variant="outline">{item.status}</Badge>
-                      )}
+                      <Badge
+                        variant="outline"
+                        className="border-amber-500/40 bg-amber-500/10 text-amber-300"
+                      >
+                        {item.status ?? 'Fonctionnalité en préparation'}
+                      </Badge>
                     </div>
                     <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">
                       {item.label}
@@ -225,6 +228,19 @@ const PrivateFeaturePage: FC<PrivateFeaturePageProps> = ({ item, space }) => {
                 </Button>
               </div>
             </section>
+            <div
+              className="text-foreground rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3"
+              role="status"
+            >
+              <p className="text-sm font-semibold">
+                Cette page n&apos;est pas encore opérationnelle
+              </p>
+              <p className="text-muted-foreground mt-1 text-sm leading-6">
+                Les liens ci-dessous présentent l&apos;organisation prévue du
+                pôle. Aucune donnée métier ne peut encore être consultée ou
+                modifiée depuis cette page.
+              </p>
+            </div>
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
               <SectionMap item={visibleItem} space={visibleSpace} />
               <SpaceNavigation currentHref={item.href} space={visibleSpace} />

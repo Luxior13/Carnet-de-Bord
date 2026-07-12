@@ -48,10 +48,12 @@ type UserSecurityTabProps = {
   onClearTempPassword: () => void;
   onDeleteUser: () => void;
   onResetPassword: () => void;
+  onRetrySessions: () => void;
   onRevokeSession: (sessionId: string) => void;
   onRevokeSessions: () => void;
   onSaveStatus: () => void;
   sessions: UserSessionInfo[];
+  sessionsError: string | null;
   setIsActive: (isActive: boolean) => void;
   tempPassword: string | null;
   user: UserType;
@@ -334,10 +336,12 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   onClearTempPassword,
   onDeleteUser,
   onResetPassword,
+  onRetrySessions,
   onRevokeSession,
   onRevokeSessions,
   onSaveStatus,
   sessions,
+  sessionsError,
   setIsActive,
   tempPassword,
   user,
@@ -347,9 +351,11 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   const isLocked = !!lockedUntil && lockedUntil > new Date();
   const sessionCountLabel = isLoadingSessions
     ? 'Chargement'
-    : canViewSessions
-      ? String(sessions.length)
-      : 'Restreint';
+    : sessionsError
+      ? 'Indisponible'
+      : canViewSessions
+        ? String(sessions.length)
+        : 'Restreint';
   const passwordStatusLabel = user.mustChangePassword
     ? 'À changer'
     : user.passwordChangedAt
@@ -586,10 +592,21 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                 sessions de cet utilisateur.
               </p>
             </div>
-          ) : isLoadingSessions ? (
+          ) : isLoadingSessions && sessions.length === 0 ? (
             <div className="space-y-2">
               <Skeleton className="h-16 rounded-md" />
               <Skeleton className="h-16 rounded-md" />
+            </div>
+          ) : sessionsError && sessions.length === 0 ? (
+            <div
+              className="border-destructive/35 bg-destructive/10 text-destructive flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 text-sm"
+              role="alert"
+            >
+              <span>{sessionsError}</span>
+              <Button onClick={onRetrySessions} size="sm" variant="outline">
+                <RotateCcw className="size-4" />
+                Réessayer
+              </Button>
             </div>
           ) : sessions.length === 0 ? (
             <div className="border-border/60 bg-popover rounded-md border p-3">
@@ -599,6 +616,18 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             </div>
           ) : (
             <div className="space-y-2">
+              {sessionsError && (
+                <div
+                  className="border-destructive/35 bg-destructive/10 text-destructive flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 text-sm"
+                  role="alert"
+                >
+                  <span>{sessionsError}</span>
+                  <Button onClick={onRetrySessions} size="sm" variant="outline">
+                    <RotateCcw className="size-4" />
+                    Réessayer
+                  </Button>
+                </div>
+              )}
               {sessions.map((session) => (
                 <SessionRow
                   key={session.id}

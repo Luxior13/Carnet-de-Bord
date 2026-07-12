@@ -2,11 +2,9 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
-import { apiErrors } from '$server/api-response';
+import { apiErrors, parseJsonBody } from '$server/api-response';
 import {
-  createAuditLogWithHeaders,
   getAuthSession,
-  invalidateOtherUserSessions,
   updateUserPassword,
   verifyPassword,
 } from '$server/auth';
@@ -19,13 +17,15 @@ type ChangePasswordSuccessResponse = {
   success: true;
 };
 
-const changePasswordSchema = z.object({
-  confirmPassword: z
-    .string()
-    .min(1, 'La confirmation du mot de passe est requise'),
-  currentPassword: z.string().optional(),
-  newPassword: z.string().min(1, 'Le nouveau mot de passe est requis'),
-});
+const changePasswordSchema = z
+  .object({
+    confirmPassword: z
+      .string()
+      .min(1, 'La confirmation du mot de passe est requise'),
+    currentPassword: z.string().optional(),
+    newPassword: z.string().min(1, 'Le nouveau mot de passe est requis'),
+  })
+  .strict();
 
 export async function POST(
   request: Request,
@@ -46,8 +46,9 @@ export async function POST(
       );
     }
 
-    const body = await request.json();
-    const validation = changePasswordSchema.safeParse(body);
+    const parsedBody = await parseJsonBody(request);
+    if (!parsedBody.success) return parsedBody.response;
+    const validation = changePasswordSchema.safeParse(parsedBody.data);
 
     if (!validation.success) {
       return NextResponse.json(
@@ -64,6 +65,7 @@ export async function POST(
     }
 
     const { confirmPassword, currentPassword, newPassword } = validation.data;
+    const rateLimitKey = `password-change:${user.id}`;
 
     if (
       !user.mustChangePassword &&
@@ -150,7 +152,6 @@ export async function POST(
         );
       }
 
-      const rateLimitKey = `password-change:${user.id}`;
       const rateLimit = await checkRateLimit(rateLimitKey);
 
       if (!rateLimit.allowed) {
@@ -213,29 +214,27 @@ export async function POST(
       );
     }
 
-    // Update password
-    await updateUserPassword(user.id, newPassword);
-    await recordLoginAttempt(`password-change:${user.id}`, true);
-
-    if (session) {
-      await invalidateOtherUserSessions(user.id, session.token);
-    }
-
-    await createAuditLogWithHeaders({
-      action: 'PASSWORD_CHANGE',
-      category: 'AUTH',
-      description: 'Mot de passe modifié',
-      metadata: {
-        pageKey: 'account',
-        pageLabel: 'Mon compte',
-        passwordChange: true,
-        poleKey: 'account',
-        poleLabel: 'Espace personnel',
-        tabKey: 'security',
-        tabLabel: 'Sécurité',
+    // Password state, rate-limit reset, other-session revocation and audit are
+    // one transaction so a partial security change cannot be reported as done.
+    await updateUserPassword(user.id, newPassword, {
+      audit: {
+        action: 'PASSWORD_CHANGE',
+        category: 'AUTH',
+        description: 'Mot de passe modifié',
+        metadata: {
+          pageKey: 'account',
+          pageLabel: 'Mon compte',
+          passwordChange: true,
+          poleKey: 'account',
+          poleLabel: 'Espace personnel',
+          tabKey: 'security',
+          tabLabel: 'Sécurité',
+        },
+        targetUserId: user.id,
+        userId: user.id,
       },
-      targetUserId: user.id,
-      userId: user.id,
+      currentSessionToken: session?.token,
+      rateLimitKey,
     });
 
     return NextResponse.json({ success: true });

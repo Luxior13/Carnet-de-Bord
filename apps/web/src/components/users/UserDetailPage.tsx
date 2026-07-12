@@ -335,11 +335,15 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const [auditTotalLogs, setAuditTotalLogs] = useState<number | null>(null);
   const [auditStats, setAuditStats] = useState<UserAuditStats | null>(null);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
   const [securitySessions, setSecuritySessions] = useState<UserSessionInfo[]>(
     [],
   );
   const [isLoadingSecuritySessions, setIsLoadingSecuritySessions] =
     useState(false);
+  const [securitySessionsError, setSecuritySessionsError] = useState<
+    string | null
+  >(null);
   const [isRevokingSecuritySessions, setIsRevokingSecuritySessions] =
     useState(false);
   const [revokingSecuritySessionId, setRevokingSecuritySessionId] = useState<
@@ -427,6 +431,14 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       hasPermission(
         currentUser.role,
         PERMISSIONS.USERS.VIEW_ACTIVITY,
+        currentUser.permissions,
+      )
+    : false;
+  const canExportUsers = currentUser
+    ? isProtectedActor ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.EXPORT,
         currentUser.permissions,
       )
     : false;
@@ -542,9 +554,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     };
   }, [editForm]);
   const hasProfileErrors =
-    !!profileErrors.email ||
-    !!profileErrors.firstName ||
-    !!profileErrors.lastName;
+    (canEditTargetEmail && !!profileErrors.email) ||
+    (canEditTargetProfile &&
+      (!!profileErrors.firstName || !!profileErrors.lastName));
   const hasProfileIdentityChanges =
     !!user &&
     (editForm.firstName.trim() !== user.firstName ||
@@ -752,6 +764,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         setAuditLogs([]);
         setAuditTotalLogs(null);
         setAuditStats(null);
+        setAuditError(null);
         setIsLoadingAudit(false);
         hasLoadedAuditLogsRef.current = false;
         hasLoadedAuditSummaryRef.current = false;
@@ -764,6 +777,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
       try {
         setIsLoadingAudit(true);
+        setAuditError(null);
         const requestedPageSize = includeLogs
           ? USER_AUDIT_PAGE_SIZE
           : USER_AUDIT_SUMMARY_PAGE_SIZE;
@@ -809,6 +823,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               totalPages,
               USER_AUDIT_MAX_PREFETCH_PAGES,
             );
+            let didFailToLoadEveryPage = false;
 
             for (let page = 2; page <= pagesToFetch; page += 1) {
               const pageResponse = await fetch(
@@ -820,20 +835,40 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               const pageData = await pageResponse.json();
 
               if (controller.signal.aborted) return;
-              if (!pageResponse.ok || !pageData.success) break;
+              if (!pageResponse.ok || !pageData.success) {
+                didFailToLoadEveryPage = true;
+                setAuditError(
+                  pageData.error?.message ||
+                    "Impossible de charger tout l'historique",
+                );
+                break;
+              }
 
               loadedLogs.push(...(pageData.data.logs as AuditLogEntry[]));
             }
 
-            setAuditLogs(loadedLogs);
-            setAuditTotalLogs(safeTotalLogs);
+            if (didFailToLoadEveryPage) {
+              setAuditLogs((previousLogs) =>
+                previousLogs.length > 0 ? previousLogs : loadedLogs,
+              );
+              setAuditTotalLogs((previousTotal) =>
+                previousTotal === null ? safeTotalLogs : previousTotal,
+              );
+            } else {
+              setAuditLogs(loadedLogs);
+              setAuditTotalLogs(safeTotalLogs);
+            }
             hasLoadedAuditLogsRef.current = true;
           }
+        } else {
+          setAuditError(
+            data.error?.message || "Impossible de charger l'historique",
+          );
         }
       } catch {
         if (controller.signal.aborted) return;
 
-        // Audit history is useful, but it should not block the profile page.
+        setAuditError("Impossible de charger l'historique");
       } finally {
         if (auditAbortControllerRef.current !== controller) return;
 
@@ -850,6 +885,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
     if (!canViewTargetSessions) {
       setSecuritySessions([]);
+      setSecuritySessionsError(null);
       setIsLoadingSecuritySessions(false);
 
       return;
@@ -860,6 +896,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
     try {
       setIsLoadingSecuritySessions(true);
+      setSecuritySessionsError(null);
       const response = await fetch(`/api/users/${userId}/sessions`, {
         signal: controller.signal,
       });
@@ -870,12 +907,14 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       if (response.ok && data.success) {
         setSecuritySessions(data.data.sessions);
       } else {
-        setSecuritySessions([]);
+        setSecuritySessionsError(
+          data.error?.message || 'Impossible de charger les sessions',
+        );
       }
     } catch {
       if (controller.signal.aborted) return;
 
-      setSecuritySessions([]);
+      setSecuritySessionsError('Impossible de charger les sessions');
     } finally {
       if (sessionsAbortControllerRef.current !== controller) return;
 
@@ -911,8 +950,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     setAuditLogs([]);
     setAuditTotalLogs(null);
     setAuditStats(null);
+    setAuditError(null);
     setIsLoadingAudit(false);
     setSecuritySessions([]);
+    setSecuritySessionsError(null);
     setRevokingSecuritySessionId(null);
     setTempPassword(null);
   }, [userId]);
@@ -1169,7 +1210,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   };
 
   const handleSaveProfile = async (): Promise<void> => {
-    if (!canEditTargetProfile) {
+    if (!canEditTargetProfile && !canEditTargetEmail) {
       toast.error('Permission insuffisante pour modifier cet utilisateur');
 
       return;
@@ -1192,8 +1233,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       const response = await apiFetch(`/api/users/${userId}`, {
         body: JSON.stringify({
           ...(canEditTargetEmail ? { email: editForm.email.trim() } : {}),
-          firstName: editForm.firstName.trim(),
-          lastName: editForm.lastName.trim(),
+          ...(canEditTargetProfile
+            ? {
+                firstName: editForm.firstName.trim(),
+                lastName: editForm.lastName.trim(),
+              }
+            : {}),
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'PATCH',
@@ -1561,6 +1606,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             onResetPassword={() => setShowResetConfirm(true)}
             onRevokeSession={handleRevokeSecuritySession}
             onRevokeSessions={() => setShowRevokeSessionsConfirm(true)}
+            onRetrySessions={() => void fetchSecuritySessions()}
             tempPassword={tempPassword}
             currentUserId={currentUser?.id}
             canSaveStatus={canSaveSecurity}
@@ -1569,6 +1615,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             canDeleteUser={canDeleteTargetUser}
             onDeleteUser={() => setShowDeleteConfirm(true)}
             sessions={securitySessions}
+            sessionsError={securitySessionsError}
           />
         );
       case 'history':
@@ -1581,10 +1628,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         return (
           <UserHistoryTab
             auditLogs={auditLogs}
+            canExport={canExportUsers}
+            error={auditError}
             isAuditTruncated={
               auditTotalLogs !== null && auditLogs.length < auditTotalLogs
             }
             isLoading={isLoadingAudit}
+            onRetry={() => void fetchAuditData(true)}
             totalAuditLogs={auditTotalLogs ?? auditStats?.totalActions}
             userId={userId}
           />

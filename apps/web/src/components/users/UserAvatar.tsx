@@ -34,7 +34,9 @@ function getAvatarInitials(user: AvatarUser): string {
 }
 
 function getDiceBearAvatarDataUri(user: AvatarUser): string {
-  const seed = user.firstName.trim() || user.email || getDisplayName(user);
+  // Use stable account identity rather than only the first name so two users
+  // named alike do not receive the same generated avatar.
+  const seed = user.email.trim().toLowerCase() || getDisplayName(user);
 
   return createAvatar(notionistsNeutral, {
     backgroundColor: DICEBEAR_BACKGROUND_COLORS,

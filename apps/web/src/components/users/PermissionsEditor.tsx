@@ -52,10 +52,7 @@ type PermissionsEditorProps = {
 
 type PermissionChoiceState = 'allow' | 'deny';
 type PermissionResultState =
-  | 'allowed'
-  | 'denied'
-  | 'incomplete'
-  | 'page-blocked';
+  'allowed' | 'denied' | 'incomplete' | 'page-blocked';
 
 type PermissionModuleGroup = {
   module: string;

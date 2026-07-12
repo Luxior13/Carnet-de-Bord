@@ -1,27 +1,35 @@
 {
   "name": "carnet-pro",
+  "private": true,
   "devDependencies": {
-    "eslint": "^9.32.0",
-    "npm-check-updates": "^18.0.2",
-    "prettier": "^3.6.2",
-    "turbo": "^2.5.5"
+    "eslint": "^9.39.5",
+    "npm-check-updates": "^18.3.1",
+    "prettier": "^3.9.5",
+    "turbo": "^2.10.4"
   },
-  "packageManager": "bun@1.2.19",
+  "packageManager": "bun@1.3.10",
   "scripts": {
-    "build": "turbo run build --env-mode=loose",
+    "build": "turbo run build",
+    "check": "bun run lint && bun run typecheck && bun run test && bun run build",
     "dev": "turbo run dev",
-    "deploy": "turbo run deploy --env-mode=loose",
-    "start": "turbo run start --env-mode=loose",
+    "db:migrate:deploy": "turbo run db:migrate:deploy --filter=@repo/database",
+    "start": "turbo run start",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
-    "clear": "find . -type d \\( -name 'node_modules' -o -name 'dist' -o -name '.next' -o -name '.turbo' -o -name '.prisma' -o -name 'generated' \\) -prune -print -exec rm -rf '{}' +",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e --filter=web",
+    "typecheck": "turbo run typecheck",
+    "clear": "bun scripts/clear-workspace.mjs",
     "ncu": "ncu -ws -i"
   },
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
-  "dependencies": {
-    "swr": "^2.4.1"
+  "overrides": {
+    "flatted": "3.4.2",
+    "postcss": "8.5.18",
+    "rollup": "4.62.2",
+    "vite": "7.3.6"
   }
 }

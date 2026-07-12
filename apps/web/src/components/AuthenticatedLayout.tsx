@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 
@@ -9,8 +9,10 @@ import { Header } from '$components/layout/Header';
 import Sidebar from '$components/Sidebar';
 import { useUser } from '$context/UserContext';
 import { type BreadcrumbEntry } from '$ui/breadcrumb';
+import { Button } from '$ui/button';
 import { SidebarInset, SidebarProvider } from '$ui/sidebar';
 import { cn } from '$utils/css.utils';
+import { getSafeReturnPath } from '$utils/navigation.utils';
 
 type AuthenticatedLayoutProps = {
   breadcrumbs?: BreadcrumbEntry[];
@@ -24,14 +26,17 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
   fullHeight = false,
 }) => {
   const router = useRouter();
-  const { isLoading, refreshUser, userData } = useUser();
+  const { error, isLoading, refreshUser, userData } = useUser();
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !userData) {
-      router.push('/login');
+    if (!isLoading && !userData && !error) {
+      const returnPath = getSafeReturnPath(
+        `${window.location.pathname}${window.location.search}`,
+      );
+      router.push(`/login?next=${encodeURIComponent(returnPath)}`);
     }
-  }, [isLoading, userData, router]);
+  }, [error, isLoading, userData, router]);
 
   useEffect(() => {
     if (userData?.mustChangePassword) {
@@ -59,6 +64,30 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
   }
 
   if (!userData) {
+    if (error) {
+      return (
+        <main className="relative isolate flex min-h-svh items-center justify-center overflow-hidden p-4">
+          <div aria-hidden="true" className="site-background-column" />
+          <div
+            className="bg-card relative z-10 max-w-md rounded-md border p-6 text-center shadow-[var(--shadow-panel)]"
+            role="alert"
+          >
+            <AlertTriangle className="text-destructive mx-auto size-8" />
+            <h1 className="mt-4 text-lg font-semibold">Session indisponible</h1>
+            <p className="text-muted-foreground mt-2 text-sm">{error}</p>
+            <Button
+              className="mt-4"
+              onClick={() => void refreshUser()}
+              type="button"
+              variant="outline"
+            >
+              Réessayer
+            </Button>
+          </div>
+        </main>
+      );
+    }
+
     return null;
   }
 

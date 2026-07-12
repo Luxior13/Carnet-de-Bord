@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { checkRateLimit } from '$server/api-rate-limiter';
+import {
+  getClientIp,
+  REQUEST_ID_HEADER,
+  REQUEST_METHOD_HEADER,
+  REQUEST_PATH_HEADER,
+} from '$utils/request-context.utils';
 
 const CSRF_COOKIE = 'csrf-token';
 const CSRF_HEADER = 'x-csrf-token';
@@ -19,6 +25,12 @@ const PROTECTED_PAGE_PATH_PREFIXES = [
   '/vie-interne',
 ] as const;
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const HEALTH_API_PATHS = new Set([
+  '/api/health',
+  '/api/health/live',
+  '/api/health/ready',
+]);
+const API_CACHE_CONTROL = 'private, no-store, max-age=0, must-revalidate';
 
 function isProtectedPagePath(pathname: string): boolean {
   return PROTECTED_PAGE_PATH_PREFIXES.some(
@@ -49,8 +61,29 @@ function tokensMatch(first: string, second: string): boolean {
   return difference === 0;
 }
 
-function addSecurityHeaders(response: NextResponse): void {
+function createDownstreamResponse(
+  request: NextRequest,
+  requestId: string,
+): NextResponse {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(REQUEST_ID_HEADER, requestId);
+  requestHeaders.set(REQUEST_METHOD_HEADER, request.method);
+  requestHeaders.set(REQUEST_PATH_HEADER, request.nextUrl.pathname);
+
+  return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
+function addResponseHeaders(
+  response: NextResponse,
+  requestId: string,
+  isApi = false,
+): void {
   // Security headers
+  response.headers.set(REQUEST_ID_HEADER, requestId);
+  if (isApi) {
+    response.headers.set('Cache-Control', API_CACHE_CONTROL);
+    response.headers.set('Pragma', 'no-cache');
+  }
   response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
   response.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
   response.headers.set('X-DNS-Prefetch-Control', 'off');
@@ -70,7 +103,7 @@ function addSecurityHeaders(response: NextResponse): void {
     "default-src 'self'",
     `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
     "style-src 'self' 'unsafe-inline'", // Required for Tailwind CSS
-    "img-src 'self' data: blob: https:",
+    "img-src 'self' data: blob:",
     "font-src 'self'",
     "connect-src 'self'",
     "object-src 'none'",
@@ -90,16 +123,17 @@ function addSecurityHeaders(response: NextResponse): void {
 }
 
 export function middleware(request: NextRequest): NextResponse {
+  // Always replace a client-provided identifier with a server-generated UUID.
+  const requestId = crypto.randomUUID();
+
   // Rate limiting for API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    const ip =
-      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      request.headers.get('x-real-ip') ||
-      'unknown';
+    const isHealthEndpoint = HEALTH_API_PATHS.has(request.nextUrl.pathname);
+    const rateLimit = isHealthEndpoint
+      ? null
+      : checkRateLimit(getClientIp(request.headers) ?? 'unknown');
 
-    const rateLimit = checkRateLimit(ip);
-
-    if (!rateLimit.allowed) {
+    if (rateLimit && !rateLimit.allowed) {
       const errorResponse = NextResponse.json(
         {
           error: {
@@ -118,17 +152,17 @@ export function middleware(request: NextRequest): NextResponse {
           status: 429,
         },
       );
-      addSecurityHeaders(errorResponse);
+      addResponseHeaders(errorResponse, requestId, true);
 
       return errorResponse;
     }
 
     // Continue with request processing, will add rate limit headers to response later
-    const response = NextResponse.next();
+    const response = createDownstreamResponse(request, requestId);
 
     // Ensure CSRF cookie exists on every response
     const existingToken = request.cookies.get(CSRF_COOKIE)?.value;
-    if (!isValidToken(existingToken)) {
+    if (!isHealthEndpoint && !isValidToken(existingToken)) {
       const token = generateToken();
       response.cookies.set(CSRF_COOKIE, token, {
         httpOnly: false, // Must be readable by JS to send in header
@@ -139,7 +173,7 @@ export function middleware(request: NextRequest): NextResponse {
     }
 
     // Validate CSRF on mutation API requests
-    if (MUTATION_METHODS.has(request.method)) {
+    if (!isHealthEndpoint && MUTATION_METHODS.has(request.method)) {
       const cookieToken = request.cookies.get(CSRF_COOKIE)?.value;
       const headerToken = request.headers.get(CSRF_HEADER);
 
@@ -158,15 +192,20 @@ export function middleware(request: NextRequest): NextResponse {
           },
           { status: 403 },
         );
-        addSecurityHeaders(csrfErrorResponse);
+        addResponseHeaders(csrfErrorResponse, requestId, true);
 
         return csrfErrorResponse;
       }
     }
 
     // Add rate limit headers to response
-    response.headers.set('X-RateLimit-Remaining', String(rateLimit.remaining));
-    addSecurityHeaders(response);
+    if (rateLimit) {
+      response.headers.set(
+        'X-RateLimit-Remaining',
+        String(rateLimit.remaining),
+      );
+    }
+    addResponseHeaders(response, requestId, true);
 
     return response;
   }
@@ -177,16 +216,18 @@ export function middleware(request: NextRequest): NextResponse {
     !request.cookies.get(SESSION_COOKIE)?.value
   ) {
     const loginUrl = request.nextUrl.clone();
+    const requestedPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
     loginUrl.pathname = '/login';
     loginUrl.search = '';
+    loginUrl.searchParams.set('next', requestedPath);
 
     const redirectResponse = NextResponse.redirect(loginUrl);
-    addSecurityHeaders(redirectResponse);
+    addResponseHeaders(redirectResponse, requestId);
 
     return redirectResponse;
   }
 
-  const response = NextResponse.next();
+  const response = createDownstreamResponse(request, requestId);
 
   // Ensure CSRF cookie exists on every response
   const existingToken = request.cookies.get(CSRF_COOKIE)?.value;
@@ -200,11 +241,14 @@ export function middleware(request: NextRequest): NextResponse {
     });
   }
 
-  addSecurityHeaders(response);
+  addResponseHeaders(response, requestId);
 
   return response;
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|assets/.*|.*\\..*).*)'],
+  matcher: [
+    '/api/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|assets/.*|.*\\..*).*)',
+  ],
 };

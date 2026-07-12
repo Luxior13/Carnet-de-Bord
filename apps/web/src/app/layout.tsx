@@ -4,7 +4,6 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import React, { type FC, type ReactNode } from 'react';
 
-import ReactScan from '$components/ReactScan';
 import { SITE_CONFIG } from '$constants/app.constants';
 import { UserProvider } from '$context/UserContext';
 import { env } from '$env';
@@ -26,6 +25,10 @@ export const metadata: Metadata = {
   icons: {
     icon: '/assets/noc.png',
   },
+  robots: {
+    follow: false,
+    index: false,
+  },
   title: `${SITE_CONFIG.name}${env.NODE_ENV === 'development' ? ' - Dev' : ''}`,
 };
 
@@ -43,7 +46,6 @@ const RootLayout: FC<RootLayoutProps> = ({ children }) => {
           'bg-background min-h-svh antialiased',
         )}
       >
-        {env.NODE_ENV === 'development' && <ReactScan />}
         <Toaster closeButton={true} />
         <UserProvider>{children}</UserProvider>
       </body>

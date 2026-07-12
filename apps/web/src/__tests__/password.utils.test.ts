@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  getPasswordByteLength,
   getPasswordStrengthColor,
   getPasswordStrengthLabel,
+  MAX_BCRYPT_PASSWORD_BYTES,
   validatePassword,
 } from '../shared/utils/password.utils';
 
@@ -69,6 +71,26 @@ describe('validatePassword', () => {
     const result = validatePassword('Abcdefg1');
     expect(result.errors).not.toContain(
       'Le mot de passe doit contenir au moins 8 caractères',
+    );
+  });
+
+  it('keeps leading and trailing spaces as password characters', () => {
+    const result = validatePassword(' Abcdef1 ');
+
+    expect(result.isValid).toBe(true);
+  });
+
+  it('rejects passwords above the bcrypt limit in UTF-8 bytes', () => {
+    const password = `Abcdef1${'é'.repeat(33)}`;
+    const result = validatePassword(password);
+
+    expect(password.length).toBeLessThanOrEqual(MAX_BCRYPT_PASSWORD_BYTES);
+    expect(getPasswordByteLength(password)).toBeGreaterThan(
+      MAX_BCRYPT_PASSWORD_BYTES,
+    );
+    expect(result.isValid).toBe(false);
+    expect(result.errors.some((error) => error.includes('72 octets'))).toBe(
+      true,
     );
   });
 });

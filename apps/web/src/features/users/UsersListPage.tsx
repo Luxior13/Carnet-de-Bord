@@ -252,6 +252,7 @@ export const UsersListPage: FC = () => {
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState(() =>
     normalizeSearchQuery(searchParams.get('search')),
   );
@@ -289,6 +290,7 @@ export const UsersListPage: FC = () => {
       abortControllerRef.current = controller;
 
       try {
+        setLoadError(null);
         if (hasLoadedUsersRef.current) {
           setIsRefreshing(true);
         } else {
@@ -328,11 +330,16 @@ export const UsersListPage: FC = () => {
           setStats(data.data.stats);
           setPagination(nextPagination);
         } else {
-          toast.error(data.error?.message || 'Erreur lors du chargement');
+          const message =
+            data.error?.message || 'Impossible de charger les utilisateurs';
+          setLoadError(message);
+          toast.error(message);
         }
       } catch {
         if (controller.signal.aborted) return;
-        toast.error('Erreur lors du chargement');
+        const message = 'Impossible de charger les utilisateurs';
+        setLoadError(message);
+        toast.error(message);
       } finally {
         if (abortControllerRef.current !== controller) return;
 
@@ -510,6 +517,30 @@ export const UsersListPage: FC = () => {
 
   return (
     <div className="space-y-4">
+      {loadError && (
+        <div
+          className="border-destructive/35 bg-destructive/10 text-destructive flex flex-wrap items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm"
+          role="alert"
+        >
+          <span>{loadError}</span>
+          <Button
+            onClick={() =>
+              void fetchUsers(
+                currentPage,
+                debouncedSearch,
+                filterStatus,
+                filterRole,
+                sortBy,
+              )
+            }
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            Réessayer
+          </Button>
+        </div>
+      )}
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -684,8 +715,13 @@ export const UsersListPage: FC = () => {
                   <TableCell colSpan={6} className="h-44 text-center">
                     <DataTableEmptyState
                       icon={<UserMinus size={32} />}
-                      title="Aucun utilisateur trouvé"
+                      title={
+                        loadError
+                          ? 'Utilisateurs indisponibles'
+                          : 'Aucun utilisateur trouvé'
+                      }
                       action={
+                        !loadError &&
                         hasActiveFilters && (
                           <Button
                             type="button"
@@ -789,8 +825,13 @@ export const UsersListPage: FC = () => {
           {displayedUsers.length === 0 ? (
             <DataTableEmptyState
               icon={<UserMinus size={40} />}
-              title="Aucun utilisateur trouvé"
+              title={
+                loadError
+                  ? 'Utilisateurs indisponibles'
+                  : 'Aucun utilisateur trouvé'
+              }
               action={
+                !loadError &&
                 hasActiveFilters && (
                   <Button
                     type="button"

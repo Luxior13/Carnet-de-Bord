@@ -15,7 +15,6 @@ import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { ServiceIcon } from '$ui/service-icon';
 import { apiFetch } from '$utils/api.utils';
-import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 import { cn } from '$utils/css.utils';
 import {
   getPasswordStrengthColor,
@@ -143,11 +142,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 : 'Pour des raisons de sécurité, vous devez changer votre mot de passe temporaire avant de continuer.'}
             </DialogDescription>
           </DialogHeader>
-          <form
-            {...passwordManagerIgnoreAttributes}
-            onSubmit={handleSubmit}
-            className="mt-4 space-y-4"
-          >
+          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             {error && (
               <div
                 className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
@@ -162,13 +157,15 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                   Mot de passe actuel
                 </Label>
                 <Input
+                  autoComplete="current-password"
                   id="currentPassword"
+                  name="current-password"
+                  required
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Votre mot de passe actuel"
                   disabled={isLoading}
-                  {...passwordManagerIgnoreAttributes}
                   autoFocus
                   aria-invalid={canCancel && !currentPassword && !!error}
                 />
@@ -179,13 +176,15 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 Nouveau mot de passe
               </Label>
               <Input
+                autoComplete="new-password"
                 id="newPassword"
+                name="new-password"
+                required
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Minimum 8 caractères"
                 disabled={isLoading}
-                {...passwordManagerIgnoreAttributes}
                 autoFocus={!canCancel}
                 aria-describedby={
                   newPassword.length > 0 ? 'password-strength' : undefined
@@ -251,13 +250,15 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 Confirmer le mot de passe
               </Label>
               <Input
+                autoComplete="new-password"
                 id="confirmPassword"
+                name="confirm-password"
+                required
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirmez votre mot de passe"
                 disabled={isLoading}
-                {...passwordManagerIgnoreAttributes}
                 aria-invalid={isConfirmMismatch}
                 aria-describedby={
                   isConfirmMismatch ? 'confirmPassword-error' : undefined
@@ -267,6 +268,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 <p
                   id="confirmPassword-error"
                   className="text-destructive text-xs"
+                  role="alert"
                 >
                   Les mots de passe ne correspondent pas
                 </p>

@@ -83,6 +83,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
   const showSessionWarningRef = useRef(false);
   const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const logoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const resetSessionTimersRef = useRef<() => void>(() => {});
 
   const fetchUser = useCallback(async (): Promise<void> => {
     try {
@@ -94,6 +95,10 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
         session: SessionResponse | null;
         user: UserType;
       }> = await response.json();
+
+      if (!response.ok && response.status !== 401 && response.status !== 403) {
+        throw new Error('Session check failed');
+      }
 
       if (data.success && data.data.user) {
         setUserData(data.data.user);
@@ -108,6 +113,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
       setUserData(null);
       setMustChangePassword(false);
       setSessionRememberMe(false);
+      setError('Impossible de vérifier votre session');
     } finally {
       setIsLoading(false);
     }
@@ -198,6 +204,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
     showSessionWarningRef.current = false;
     setShowSessionWarning(false);
     lastActivityRef.current = Date.now();
+    resetSessionTimersRef.current();
   }, []);
 
   useEffect(() => {
@@ -239,6 +246,8 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
       }, INACTIVITY_TIMEOUT_MS);
     };
 
+    resetSessionTimersRef.current = resetTimers;
+
     const handleActivity = (): void => {
       // Don't reset if warning is showing - user must click button
       if (showSessionWarningRef.current) return;
@@ -269,6 +278,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
         );
       });
       clearTimers();
+      resetSessionTimersRef.current = (): void => {};
     };
   }, [userData, sessionRememberMe, logout]);
 
@@ -288,9 +298,20 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
     >
       {children}
       {showSessionWarning && (
-        <div className="bg-card fixed right-4 bottom-4 z-50 max-w-sm rounded-md border p-4 shadow-[var(--shadow-panel)]">
-          <p className="mb-2 font-medium">Session bientôt expirée</p>
-          <p className="text-muted-foreground mb-3 text-sm">
+        <div
+          aria-describedby="session-warning-description"
+          aria-labelledby="session-warning-title"
+          aria-live="assertive"
+          className="bg-card fixed right-4 bottom-4 z-50 max-w-sm rounded-md border p-4 shadow-[var(--shadow-panel)]"
+          role="alert"
+        >
+          <p id="session-warning-title" className="mb-2 font-medium">
+            Session bientôt expirée
+          </p>
+          <p
+            id="session-warning-description"
+            className="text-muted-foreground mb-3 text-sm"
+          >
             Votre session va expirer dans 5 minutes pour inactivité.
           </p>
           <div className="flex gap-2">

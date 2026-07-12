@@ -12,6 +12,10 @@ type LogContext = {
   action?: string;
   error?: unknown;
   metadata?: Record<string, unknown>;
+  method?: string;
+  path?: string;
+  requestId?: string;
+  status?: number;
   userId?: string;
 };
 
@@ -32,6 +36,10 @@ function log(level: LogLevel, message: string, context?: LogContext): void {
   };
 
   if (context?.action) logEntry.action = context.action;
+  if (context?.method) logEntry.method = context.method;
+  if (context?.path) logEntry.path = context.path;
+  if (context?.requestId) logEntry.requestId = context.requestId;
+  if (context?.status) logEntry.status = context.status;
   if (context?.userId) logEntry.userId = context.userId;
   if (context?.metadata) logEntry.metadata = context.metadata;
   if (context?.error !== undefined) logEntry.error = formatError(context.error);
@@ -52,23 +60,32 @@ function log(level: LogLevel, message: string, context?: LogContext): void {
     }
   } else {
     const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
+    const developmentContext = {
+      ...(context?.action ? { action: context.action } : {}),
+      ...(context?.method ? { method: context.method } : {}),
+      ...(context?.path ? { path: context.path } : {}),
+      ...(context?.requestId ? { requestId: context.requestId } : {}),
+      ...(context?.status ? { status: context.status } : {}),
+      ...(context?.userId ? { userId: context.userId } : {}),
+      ...(context?.metadata ? { metadata: context.metadata } : {}),
+    };
     switch (level) {
       case 'error':
         console.error(
           prefix,
           message,
           context?.error || '',
-          context?.metadata || '',
+          developmentContext,
         );
         break;
       case 'warn':
-        console.warn(prefix, message, context?.metadata || '');
+        console.warn(prefix, message, developmentContext);
         break;
       case 'info':
-        console.info(prefix, message, context?.metadata || '');
+        console.info(prefix, message, developmentContext);
         break;
       default:
-        console.log(prefix, message, context?.metadata || '');
+        console.log(prefix, message, developmentContext);
     }
   }
 }
