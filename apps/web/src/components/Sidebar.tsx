@@ -5,12 +5,14 @@ import {
   ChevronRight,
   ChevronsUpDown,
   LogOut,
+  Pin,
+  PinOff,
   User,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { UserAvatar } from '$components/users/UserAvatar';
 import {
@@ -55,6 +57,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarTrigger,
   useSidebar,
 } from '$ui/sidebar';
 import { cn } from '$utils/css.utils';
@@ -103,7 +106,7 @@ const SpaceSwitcher: FC<{
   activeSpace: NavigationSpace;
   spaces: NavigationSpace[];
 }> = ({ activeSpace, spaces }) => {
-  const { setOpenMobile, state: sidebarState } = useSidebar();
+  const { closeDesktop, setOpenMobile, state: sidebarState } = useSidebar();
   const ActiveIcon = getNavigationIcon(activeSpace.icon);
   const activeTone = getNavigationSpaceToneClasses(activeSpace.tone);
 
@@ -117,7 +120,7 @@ const SpaceSwitcher: FC<{
           className={cn(
             'focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/45 flex h-11 w-full min-w-0 items-center gap-3 rounded-md border px-2.5 text-left transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-2',
             activeTone.soft,
-            'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
+            'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-3.5',
           )}
         >
           <span
@@ -170,7 +173,10 @@ const SpaceSwitcher: FC<{
               <Link
                 aria-current={isActive ? 'page' : undefined}
                 href={space.href}
-                onClick={() => setOpenMobile(false)}
+                onClick={() => {
+                  setOpenMobile(false);
+                  closeDesktop();
+                }}
                 className="flex min-w-0 items-center gap-3"
               >
                 <span
@@ -226,7 +232,13 @@ const SpaceSwitcher: FC<{
 const Sidebar: FC<SidebarProps> = ({ className }) => {
   const pathname = usePathname();
   const { logout, userData } = useUser();
-  const { setOpenMobile, state: sidebarState } = useSidebar();
+  const {
+    closeDesktop,
+    isPinned,
+    setOpenMobile,
+    state: sidebarState,
+    togglePinned,
+  } = useSidebar();
 
   const visibleSpaces = useMemo(
     () => getVisibleNavigationSpaces(userData),
@@ -263,14 +275,27 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
   const [openGroupHref, setOpenGroupHref] = useState<string | null>(
     activeGroupHref,
   );
+  const previousPathnameRef = useRef(pathname);
   const userDisplayName = userData
     ? `${userData.firstName} ${userData.lastName}`
     : '';
   const userAccessLabel = userData ? getAccessLabel(userData) : '';
 
+  const handleNavigation = (): void => {
+    setOpenMobile(false);
+    closeDesktop();
+  };
+
   useEffect(() => {
     setOpenGroupHref(activeGroupHref);
   }, [activeGroupHref]);
+
+  useEffect(() => {
+    if (previousPathnameRef.current === pathname) return;
+
+    previousPathnameRef.current = pathname;
+    closeDesktop();
+  }, [closeDesktop, pathname]);
 
   const renderSubNavItem = (item: NavItem): React.ReactNode => {
     const Icon = getNavigationIcon(item.icon);
@@ -291,7 +316,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
             aria-current={isActive ? 'page' : undefined}
             aria-label={item.label}
             href={item.href}
-            onClick={() => setOpenMobile(false)}
+            onClick={handleNavigation}
             title={item.label}
           >
             <Icon className="size-4" />
@@ -363,7 +388,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
             aria-current={isActive ? 'page' : undefined}
             aria-label={item.label}
             href={item.href}
-            onClick={() => setOpenMobile(false)}
+            onClick={handleNavigation}
             title={item.label}
           >
             <Icon className="size-4" />
@@ -376,14 +401,14 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
 
   return (
     <SidebarRoot collapsible="icon" variant="sidebar" className={className}>
-      <SidebarHeader className="border-sidebar-border/70 bg-sidebar/95 gap-2.5 border-b p-3 group-data-[collapsible=icon]/sidebar:px-0">
+      <SidebarHeader className="border-sidebar-border/70 bg-sidebar/95 relative gap-2.5 border-b p-3 group-data-[collapsible=icon]/sidebar:px-0">
         <Link
           href="/"
           aria-label="Retour au tableau de bord"
-          onClick={() => setOpenMobile(false)}
+          onClick={handleNavigation}
           className={cn(
             'hover:bg-sidebar-accent/30 focus-visible:ring-sidebar-ring hover:border-sidebar-border/45 flex h-10 w-full min-w-0 items-center gap-3 overflow-hidden rounded-md border border-transparent px-2 text-left transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-2',
-            'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
+            'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-3.5 group-data-[state=expanded]/sidebar:pr-[5.5rem]',
           )}
         >
           <span className="flex size-8 shrink-0 items-center justify-center rounded-lg">
@@ -405,6 +430,31 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
             </span>
           </span>
         </Link>
+        <div className="absolute top-3 right-2 z-10 hidden items-center gap-0.5 group-data-[collapsible=icon]/sidebar:hidden lg:flex">
+          <button
+            type="button"
+            aria-label={
+              isPinned
+                ? 'Désépingler la barre latérale'
+                : 'Épingler la barre latérale'
+            }
+            aria-pressed={isPinned}
+            title={
+              isPinned
+                ? 'Désépingler la barre latérale'
+                : 'Épingler la barre latérale'
+            }
+            className="text-sidebar-foreground/70 hover:bg-sidebar-accent/55 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring inline-flex size-10 shrink-0 items-center justify-center rounded-md border border-transparent transition-[background-color,color,box-shadow] outline-none focus-visible:ring-2"
+            onClick={togglePinned}
+          >
+            {isPinned ? (
+              <PinOff className="size-4" aria-hidden="true" />
+            ) : (
+              <Pin className="size-4" aria-hidden="true" />
+            )}
+          </button>
+          <SidebarTrigger className="text-sidebar-foreground/70 hover:bg-sidebar-accent/55 hover:text-sidebar-accent-foreground shrink-0" />
+        </div>
         {visibleSpaces.length > 0 && (
           <SpaceSwitcher activeSpace={activeSpace} spaces={visibleSpaces} />
         )}
@@ -441,7 +491,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 title={userDisplayName}
                 className={cn(
                   'border-sidebar-border/65 bg-surface-control hover:border-sidebar-ring/25 hover:bg-surface-subtle focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/35 data-[state=open]:bg-surface-subtle flex min-w-0 items-center gap-3 overflow-hidden rounded-md border p-2.5 text-left transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-2',
-                  'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:p-0 group-data-[collapsible=icon]/sidebar:pl-2.5',
+                  'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:p-0 group-data-[collapsible=icon]/sidebar:pl-3.5',
                 )}
               >
                 <UserAvatar user={userData} className="size-9 rounded-lg" />
@@ -488,7 +538,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                   <Link
                     href="/mon-compte"
                     className="flex items-center gap-3"
-                    onClick={() => setOpenMobile(false)}
+                    onClick={handleNavigation}
                   >
                     <span className="border-sidebar-border/70 bg-sidebar-accent/20 flex size-8 shrink-0 items-center justify-center rounded-lg border">
                       <User className="text-sidebar-ring size-4" />
@@ -506,7 +556,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 <DropdownMenuSeparator className="bg-sidebar-border/70 mx-1 my-1.5" />
                 <DropdownMenuItem
                   onClick={() => {
-                    setOpenMobile(false);
+                    handleNavigation();
                     void logout();
                   }}
                   className="focus:bg-destructive/15 focus:text-destructive text-destructive mx-1 h-8 cursor-pointer justify-center gap-2 rounded-lg p-1.5 text-xs"

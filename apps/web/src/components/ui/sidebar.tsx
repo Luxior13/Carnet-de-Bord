@@ -13,19 +13,27 @@ import { cn } from '$utils/css.utils';
 
 const SIDEBAR_ID = 'app-sidebar';
 const SIDEBAR_WIDTH = '17.5rem';
-const SIDEBAR_WIDTH_ICON = '3.5rem';
+const SIDEBAR_WIDTH_ICON = '4rem';
 const SIDEBAR_WIDTH_MOBILE = '18rem';
+const SIDEBAR_PINNED_STORAGE_KEY = 'app-sidebar:pinned:v1';
+const SIDEBAR_PREVIEW_CLOSE_DELAY_MS = 280;
+const SIDEBAR_PREVIEW_OPEN_DELAY_MS = 180;
 const SIDEBAR_SCROLL_STORAGE_PREFIX = 'sidebar_scroll:';
 const SIDEBAR_SCROLL_SAVE_DELAY_MS = 120;
 const MOBILE_BREAKPOINT = 1024;
 
 type SidebarContextProps = {
+  closeDesktop: () => void;
   isMobile: boolean;
+  isPinned: boolean;
   open: boolean;
   openMobile: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setOpenMobile: React.Dispatch<React.SetStateAction<boolean>>;
+  setPinned: (pinned: boolean) => void;
+  setPreviewOpen: (open: boolean) => void;
   state: 'collapsed' | 'expanded';
+  togglePinned: () => void;
   toggleSidebar: () => void;
 };
 
@@ -75,31 +83,155 @@ function SidebarProvider({
   ...props
 }: SidebarProviderProps): React.ReactNode {
   const isMobile = useIsMobile();
+  const [desktopOpen, setDesktopOpen] = React.useState(false);
+  const [isPinPreferenceLoaded, setIsPinPreferenceLoaded] =
+    React.useState(false);
+  const [isPinned, setIsPinnedState] = React.useState(false);
   const [openMobile, setOpenMobile] = React.useState(false);
+  const [previewOpen, setPreviewOpenState] = React.useState(false);
+
+  const open = desktopOpen || isPinned || previewOpen;
+
+  React.useEffect((): void => {
+    try {
+      setIsPinnedState(
+        window.localStorage.getItem(SIDEBAR_PINNED_STORAGE_KEY) === 'true',
+      );
+    } catch {
+      setIsPinnedState(false);
+    } finally {
+      setIsPinPreferenceLoaded(true);
+    }
+  }, []);
+
+  React.useEffect((): void => {
+    if (!isPinPreferenceLoaded) return;
+
+    try {
+      window.localStorage.setItem(SIDEBAR_PINNED_STORAGE_KEY, String(isPinned));
+    } catch {
+      // Ignore storage errors in constrained environments.
+    }
+  }, [isPinPreferenceLoaded, isPinned]);
+
+  React.useEffect((): void => {
+    if (isMobile) {
+      setDesktopOpen(false);
+      setPreviewOpenState(false);
+
+      return;
+    }
+
+    setOpenMobile(false);
+  }, [isMobile]);
+
+  const closeDesktop = React.useCallback((): void => {
+    if (isMobile || isPinned) return;
+
+    setDesktopOpen(false);
+    setPreviewOpenState(false);
+  }, [isMobile, isPinned]);
 
   const setOpen = React.useCallback<
     React.Dispatch<React.SetStateAction<boolean>>
-  >(() => undefined, []);
+  >(
+    (value) => {
+      const nextOpen = typeof value === 'function' ? value(open) : value;
+
+      if (nextOpen) {
+        setDesktopOpen(true);
+
+        return;
+      }
+
+      setDesktopOpen(false);
+      setIsPinnedState(false);
+      setPreviewOpenState(false);
+    },
+    [open],
+  );
+
+  const setPinned = React.useCallback((pinned: boolean): void => {
+    setIsPinnedState(pinned);
+    setPreviewOpenState(false);
+    setDesktopOpen(!pinned);
+  }, []);
+
+  const setPreviewOpen = React.useCallback(
+    (nextOpen: boolean): void => {
+      if (isMobile || isPinned) return;
+
+      setPreviewOpenState(nextOpen);
+    },
+    [isMobile, isPinned],
+  );
+
+  const togglePinned = React.useCallback((): void => {
+    setPinned(!isPinned);
+  }, [isPinned, setPinned]);
 
   const toggleSidebar = React.useCallback((): void => {
     if (isMobile) {
       setOpenMobile((value) => !value);
-    }
-  }, [isMobile]);
 
-  const state = 'expanded';
+      return;
+    }
+
+    if (open) {
+      setDesktopOpen(false);
+      setIsPinnedState(false);
+      setPreviewOpenState(false);
+
+      return;
+    }
+
+    setDesktopOpen(true);
+  }, [isMobile, open]);
+
+  React.useEffect((): (() => void) | undefined => {
+    if (isMobile || isPinned || !open) return undefined;
+
+    const handleEscape = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+
+      closeDesktop();
+    };
+
+    window.addEventListener('keydown', handleEscape);
+
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [closeDesktop, isMobile, isPinned, open]);
+
+  const state = isMobile || open ? 'expanded' : 'collapsed';
 
   const contextValue = React.useMemo<SidebarContextProps>(
     (): SidebarContextProps => ({
+      closeDesktop,
       isMobile,
-      open: true,
+      isPinned,
+      open,
       openMobile,
       setOpen,
       setOpenMobile,
+      setPinned,
+      setPreviewOpen,
       state,
+      togglePinned,
       toggleSidebar,
     }),
-    [isMobile, openMobile, setOpen, toggleSidebar],
+    [
+      closeDesktop,
+      isMobile,
+      isPinned,
+      open,
+      openMobile,
+      setOpen,
+      setPinned,
+      setPreviewOpen,
+      state,
+      togglePinned,
+      toggleSidebar,
+    ],
   );
 
   return (
@@ -137,11 +269,102 @@ function Sidebar({
   className,
   collapsible = 'offcanvas',
   id,
+  onFocusCapture,
+  onMouseEnter,
+  onMouseLeave,
+  onPointerDown,
   side = 'left',
   variant = 'sidebar',
   ...props
 }: SidebarProps): React.ReactNode {
-  const { isMobile, openMobile, setOpenMobile, state } = useSidebar();
+  const {
+    isMobile,
+    isPinned,
+    openMobile,
+    setOpen,
+    setOpenMobile,
+    setPreviewOpen,
+    state,
+  } = useSidebar();
+  const previewCloseTimeoutRef = React.useRef<number | null>(null);
+  const previewOpenTimeoutRef = React.useRef<number | null>(null);
+
+  const clearPreviewTimeouts = React.useCallback((): void => {
+    if (previewCloseTimeoutRef.current !== null) {
+      window.clearTimeout(previewCloseTimeoutRef.current);
+      previewCloseTimeoutRef.current = null;
+    }
+
+    if (previewOpenTimeoutRef.current !== null) {
+      window.clearTimeout(previewOpenTimeoutRef.current);
+      previewOpenTimeoutRef.current = null;
+    }
+  }, []);
+
+  React.useEffect(() => clearPreviewTimeouts, [clearPreviewTimeouts]);
+
+  const handleMouseEnter = React.useCallback<
+    React.MouseEventHandler<HTMLDivElement>
+  >(
+    (event) => {
+      onMouseEnter?.(event);
+      clearPreviewTimeouts();
+
+      if (isMobile || isPinned || state === 'expanded') return;
+
+      previewOpenTimeoutRef.current = window.setTimeout(() => {
+        previewOpenTimeoutRef.current = null;
+        setPreviewOpen(true);
+      }, SIDEBAR_PREVIEW_OPEN_DELAY_MS);
+    },
+    [
+      clearPreviewTimeouts,
+      isMobile,
+      isPinned,
+      onMouseEnter,
+      setPreviewOpen,
+      state,
+    ],
+  );
+
+  const handleMouseLeave = React.useCallback<
+    React.MouseEventHandler<HTMLDivElement>
+  >(
+    (event) => {
+      onMouseLeave?.(event);
+      clearPreviewTimeouts();
+
+      if (isMobile || isPinned) return;
+
+      previewCloseTimeoutRef.current = window.setTimeout(() => {
+        previewCloseTimeoutRef.current = null;
+        setPreviewOpen(false);
+      }, SIDEBAR_PREVIEW_CLOSE_DELAY_MS);
+    },
+    [clearPreviewTimeouts, isMobile, isPinned, onMouseLeave, setPreviewOpen],
+  );
+
+  const handleFocusCapture = React.useCallback<
+    React.FocusEventHandler<HTMLDivElement>
+  >(
+    (event) => {
+      onFocusCapture?.(event);
+
+      if (!isMobile && !isPinned) setOpen(true);
+    },
+    [isMobile, isPinned, onFocusCapture, setOpen],
+  );
+
+  const handlePointerDown = React.useCallback<
+    React.PointerEventHandler<HTMLDivElement>
+  >(
+    (event) => {
+      onPointerDown?.(event);
+
+      if (!isMobile && !isPinned && state === 'expanded') setOpen(true);
+    },
+    [isMobile, isPinned, onPointerDown, setOpen, state],
+  );
 
   if (collapsible === 'none') {
     return (
@@ -169,7 +392,7 @@ function Sidebar({
           id={id ?? SIDEBAR_ID}
           side={side}
           className={cn(
-            'sidebar-pattern bg-sidebar text-sidebar-foreground w-[var(--sidebar-width-mobile)] overflow-hidden p-0 [&>button]:hidden',
+            'sidebar-pattern bg-sidebar text-sidebar-foreground w-[18rem] overflow-hidden p-0 [&>button]:hidden',
           )}
         >
           <SheetTitle className="sr-only">Menu</SheetTitle>
@@ -184,25 +407,41 @@ function Sidebar({
 
   return (
     <div
-      data-collapsible={state === 'collapsed' ? collapsible : ''}
-      data-side={side}
-      data-slot="sidebar"
-      data-state={state}
-      data-variant={variant}
-      id={id ?? SIDEBAR_ID}
+      data-pinned={isPinned}
+      data-slot="sidebar-reservation"
       className={cn(
-        'sidebar-pattern group/sidebar bg-sidebar text-sidebar-foreground relative hidden h-full shrink-0 flex-col overflow-hidden border-r transition-[width] duration-200 ease-linear lg:flex',
-        'border-sidebar-border',
-        state === 'collapsed' && collapsible === 'icon'
-          ? 'w-[var(--sidebar-width-icon)]'
-          : 'w-[var(--sidebar-width)]',
-        side === 'right' && 'border-r-0 border-l',
-        variant === 'floating' && 'rounded-lg border',
-        className,
+        'relative z-40 hidden h-full shrink-0 transition-[width] duration-200 ease-out motion-reduce:transition-none lg:block',
+        isPinned ? 'w-[var(--sidebar-width)]' : 'w-[var(--sidebar-width-icon)]',
       )}
-      {...props}
     >
-      {children}
+      <div
+        data-collapsible={state === 'collapsed' ? collapsible : ''}
+        data-pinned={isPinned}
+        data-side={side}
+        data-sidebar="sidebar"
+        data-slot="sidebar"
+        data-state={state}
+        data-variant={variant}
+        id={id ?? SIDEBAR_ID}
+        className={cn(
+          'sidebar-pattern group/sidebar bg-sidebar text-sidebar-foreground absolute inset-y-0 hidden h-full flex-col overflow-hidden border-r transition-[width,box-shadow] duration-200 ease-out motion-reduce:transition-none lg:flex',
+          'border-sidebar-border',
+          state === 'collapsed' && collapsible === 'icon'
+            ? 'w-[var(--sidebar-width-icon)]'
+            : 'w-[var(--sidebar-width)] shadow-[var(--shadow-panel-strong)]',
+          side === 'left' ? 'left-0' : 'right-0',
+          side === 'right' && 'border-r-0 border-l',
+          variant === 'floating' && 'rounded-lg border',
+          className,
+        )}
+        onFocusCapture={handleFocusCapture}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onPointerDown={handlePointerDown}
+        {...props}
+      >
+        {children}
+      </div>
     </div>
   );
 }
@@ -213,17 +452,23 @@ function SidebarTrigger({
   ...props
 }: React.ComponentProps<typeof Button>): React.ReactNode {
   const { isMobile, open, openMobile, toggleSidebar } = useSidebar();
+  const isExpanded = isMobile ? openMobile : open;
+  const label = isExpanded
+    ? 'Fermer la barre latérale'
+    : 'Ouvrir la barre latérale';
 
   return (
     <Button
       aria-controls={SIDEBAR_ID}
-      aria-expanded={isMobile ? openMobile : open}
+      aria-expanded={isExpanded}
+      aria-label={label}
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       type="button"
       variant="ghost"
       size="icon"
-      className={cn('size-10 lg:hidden', className)}
+      className={cn('size-10', className)}
+      title={label}
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
@@ -231,7 +476,7 @@ function SidebarTrigger({
       {...props}
     >
       <PanelLeft className="size-4" />
-      <span className="sr-only">Basculer la barre latérale</span>
+      <span className="sr-only">{label}</span>
     </Button>
   );
 }
@@ -488,7 +733,7 @@ function SidebarMenuItem({
       data-sidebar="menu-item"
       data-slot="sidebar-menu-item"
       className={cn(
-        'group/menu-item relative w-full max-w-full min-w-0 group-data-[collapsible=icon]/sidebar:flex group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:pl-2.5',
+        'group/menu-item relative w-full max-w-full min-w-0 group-data-[collapsible=icon]/sidebar:flex group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:pl-3.5',
         className,
       )}
       {...props}

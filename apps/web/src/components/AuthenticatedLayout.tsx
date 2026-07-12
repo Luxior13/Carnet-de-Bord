@@ -105,7 +105,7 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
         onSuccess={handlePasswordChanged}
       />
       <Sidebar />
-      <SidebarInset className="relative isolate h-full bg-transparent">
+      <SidebarInset className="relative isolate h-full w-full bg-transparent">
         <div
           aria-hidden="true"
           className="site-background-column site-background-column--local private-background-column"
@@ -114,7 +114,7 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
         <main
           id="main-content"
           className={cn(
-            'relative z-10 min-h-0 flex-1',
+            'relative z-10 min-h-0 w-full flex-1',
             fullHeight
               ? 'overflow-hidden'
               : 'scrollbar-gutter-stable overflow-x-hidden overflow-y-auto',
@@ -124,7 +124,7 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
           {fullHeight ? (
             children
           ) : (
-            <div className="animate-fade-in-up">{children}</div>
+            <div className="animate-fade-in-up mx-auto w-full">{children}</div>
           )}
         </main>
       </SidebarInset>
