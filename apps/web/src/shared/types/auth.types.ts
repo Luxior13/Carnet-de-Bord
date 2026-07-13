@@ -9,6 +9,8 @@ import { type PermissionsData } from '$constants/permissions.constants';
 // Session type
 export type SessionType = {
   expiresAt: Date;
+  idleExpiresAt: Date;
+  lastSeenAt: Date;
   rememberMe: boolean;
   token: string;
   userId: string;
@@ -36,7 +38,9 @@ export type UserSessionInfo = {
   createdAt: Date | string;
   expiresAt: Date | string;
   id: string;
+  idleExpiresAt: Date | string;
   ipAddress: string | null;
+  lastSeenAt: Date | string;
   rememberMe: boolean;
   userAgent: string | null;
 };

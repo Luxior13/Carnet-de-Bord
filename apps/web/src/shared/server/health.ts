@@ -91,7 +91,8 @@ export async function createReadinessResponse(): Promise<
             COUNT(*) FILTER (
               WHERE table_name = 'Session'
                 AND column_name IN (
-                  'id', 'userId', 'token', 'expiresAt', 'rememberMe'
+                  'id', 'userId', 'token', 'expiresAt', 'idleExpiresAt',
+                  'lastSeenAt', 'rememberMe'
                 )
             )::int AS "sessionColumns",
             COUNT(*) FILTER (
@@ -114,7 +115,7 @@ export async function createReadinessResponse(): Promise<
 
         if (
           schema?.userColumns !== 11 ||
-          schema.sessionColumns !== 5 ||
+          schema.sessionColumns !== 7 ||
           schema.auditLogColumns !== 6 ||
           schema.rateLimitColumns !== 4
         ) {

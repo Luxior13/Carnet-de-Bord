@@ -26,7 +26,7 @@ vi.mock('$server/prisma', () => ({
 const readySchema = {
   auditLogColumns: 6,
   rateLimitColumns: 4,
-  sessionColumns: 5,
+  sessionColumns: 7,
   userColumns: 11,
 };
 
@@ -72,6 +72,8 @@ describe('operational health routes', () => {
     );
     const query = String(mocks.transaction.$queryRaw.mock.calls[0]?.[0]);
     expect(query).toContain('current_schema()');
+    expect(query).toContain("'idleExpiresAt'");
+    expect(query).toContain("'lastSeenAt'");
     expect(response.headers.get('cache-control')).toContain('no-store');
   });
 

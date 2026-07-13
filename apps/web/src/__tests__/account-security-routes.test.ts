@@ -68,6 +68,8 @@ describe('account security routes', () => {
     mockGetAuthSession.mockResolvedValue({
       session: {
         expiresAt: new Date('2026-03-20T00:00:00.000Z'),
+        idleExpiresAt: new Date('2026-03-01T00:30:00.000Z'),
+        lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
         rememberMe: false,
         token: 'session-hash',
         userId: 'user-1',
@@ -84,6 +86,8 @@ describe('account security routes', () => {
     mockRequireAuth.mockResolvedValue({
       session: {
         expiresAt: new Date('2026-03-20T00:00:00.000Z'),
+        idleExpiresAt: new Date('2026-03-01T00:30:00.000Z'),
+        lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
         rememberMe: false,
         token: 'session-hash',
         userId: 'user-1',
@@ -267,10 +271,12 @@ describe('account security routes', () => {
   });
 
   describe('POST /api/auth/change-password', () => {
-    it('rejects standard password changes when personal password changes are disabled', async () => {
+    it('keeps password changes available despite a legacy deny override', async () => {
       mockGetAuthSession.mockResolvedValueOnce({
         session: {
           expiresAt: new Date('2026-03-20T00:00:00.000Z'),
+          idleExpiresAt: new Date('2026-03-01T00:30:00.000Z'),
+          lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
           rememberMe: false,
           token: 'session-hash',
           userId: 'user-1',
@@ -283,6 +289,9 @@ describe('account security routes', () => {
           role: 'USER',
         },
       });
+      mockVerifyPassword
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false);
 
       const route = await import('$app/api/auth/change-password/route');
       const response = await route.POST(
@@ -297,10 +306,13 @@ describe('account security routes', () => {
       );
       const body = await response.json();
 
-      expect(response.status).toBe(403);
-      expect(body.success).toBe(false);
-      expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
-      expect(mockUpdateUserPassword).not.toHaveBeenCalled();
+      expect(response.status).toBe(200);
+      expect(body.success).toBe(true);
+      expect(mockUpdateUserPassword).toHaveBeenCalledWith(
+        'user-1',
+        'NewPassword1!',
+        expect.objectContaining({ currentSessionToken: 'session-hash' }),
+      );
     });
 
     it('requires the current password for standard password changes', async () => {
@@ -406,6 +418,8 @@ describe('account security routes', () => {
       mockGetAuthSession.mockResolvedValue({
         session: {
           expiresAt: new Date('2026-03-20T00:00:00.000Z'),
+          idleExpiresAt: new Date('2026-03-01T00:30:00.000Z'),
+          lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
           rememberMe: false,
           token: 'session-hash',
           userId: 'user-1',
@@ -480,7 +494,9 @@ describe('account security routes', () => {
           createdAt: new Date('2026-03-01T00:00:00.000Z'),
           expiresAt: new Date('2026-03-20T00:00:00.000Z'),
           id: 'session-1',
+          idleExpiresAt: new Date('2026-03-08T00:00:00.000Z'),
           ipAddress: '1.1.1.1',
+          lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
           rememberMe: true,
           token: 'session-hash',
           userAgent: 'Chrome',
@@ -489,7 +505,9 @@ describe('account security routes', () => {
           createdAt: new Date('2026-03-02T00:00:00.000Z'),
           expiresAt: new Date('2026-03-21T00:00:00.000Z'),
           id: 'session-2',
+          idleExpiresAt: new Date('2026-03-02T00:30:00.000Z'),
           ipAddress: '2.2.2.2',
+          lastSeenAt: new Date('2026-03-02T00:00:00.000Z'),
           rememberMe: false,
           token: 'other-hash',
           userAgent: 'Firefox',
@@ -505,6 +523,19 @@ describe('account security routes', () => {
       expect(body.data.sessions).toHaveLength(2);
       expect(body.data.sessions[0].isCurrent).toBe(true);
       expect(body.data.sessions[1].isCurrent).toBe(false);
+      expect(body.data.sessions[0]).toMatchObject({
+        idleExpiresAt: '2026-03-08T00:00:00.000Z',
+        lastSeenAt: '2026-03-01T00:00:00.000Z',
+      });
+      expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
+        where: {
+          OR: [
+            { expiresAt: { lte: expect.any(Date) } },
+            { idleExpiresAt: { lte: expect.any(Date) } },
+          ],
+          userId: 'user-1',
+        },
+      });
       expect(mockRequirePermission).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'user-1' }),
         PERMISSIONS.ACCOUNT.VIEW_SECURITY,
@@ -591,7 +622,9 @@ describe('account security routes', () => {
           createdAt: new Date('2026-03-01T00:00:00.000Z'),
           expiresAt: new Date('2026-03-20T00:00:00.000Z'),
           id: 'session-1',
+          idleExpiresAt: new Date('2026-03-08T00:00:00.000Z'),
           ipAddress: '1.1.1.1',
+          lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
           rememberMe: true,
           userAgent: 'Chrome',
         },
@@ -607,13 +640,30 @@ describe('account security routes', () => {
       expect(response.status).toBe(200);
       expect(body.success).toBe(true);
       expect(body.data.sessions).toHaveLength(1);
+      expect(body.data.sessions[0]).toMatchObject({
+        idleExpiresAt: '2026-03-08T00:00:00.000Z',
+        lastSeenAt: '2026-03-01T00:00:00.000Z',
+      });
+      expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
+        where: {
+          OR: [
+            { expiresAt: { lte: expect.any(Date) } },
+            { idleExpiresAt: { lte: expect.any(Date) } },
+          ],
+          userId: 'target-1',
+        },
+      });
       expect(mockRequirePermission).toHaveBeenCalledWith(
         expect.any(Object),
         'users:view_sessions',
       );
       expect(mockPrisma.session.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ userId: 'target-1' }),
+          where: expect.objectContaining({
+            expiresAt: { gt: expect.any(Date) },
+            idleExpiresAt: { gt: expect.any(Date) },
+            userId: 'target-1',
+          }),
         }),
       );
     });

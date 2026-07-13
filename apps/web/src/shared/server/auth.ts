@@ -30,7 +30,9 @@ import { getClientIp, getRequestId, getUserAgent } from './request-context';
 export const SESSION_COOKIE_NAME = 'session';
 const SESSION_SHORT_DURATION_DAYS = 1;
 const SESSION_LONG_DURATION_DAYS = 30;
-const SESSION_RENEWAL_THRESHOLD_DAYS = 7;
+const SESSION_SHORT_IDLE_DURATION_MINUTES = 30;
+const SESSION_LONG_IDLE_DURATION_DAYS = 7;
+const SESSION_ACTIVITY_UPDATE_INTERVAL_MINUTES = 1;
 const BCRYPT_ROUNDS = 12;
 const textEncoder = new TextEncoder();
 const LEGACY_PLAINTEXT_SESSION_TOKEN_PATTERN = /^[a-z2-7]{52}$/;
@@ -97,6 +99,8 @@ const SESSION_USER_SELECT = {
 
 const SESSION_WITH_USER_SELECT = {
   expiresAt: true,
+  idleExpiresAt: true,
+  lastSeenAt: true,
   rememberMe: true,
   token: true,
   user: {
@@ -104,6 +108,25 @@ const SESSION_WITH_USER_SELECT = {
   },
   userId: true,
 } satisfies Prisma.SessionSelect;
+
+const getSessionIdleDurationMs = (rememberMe: boolean): number => {
+  return rememberMe
+    ? 1000 * 60 * 60 * 24 * SESSION_LONG_IDLE_DURATION_DAYS
+    : 1000 * 60 * SESSION_SHORT_IDLE_DURATION_MINUTES;
+};
+
+const getIdleExpiration = (
+  activityAt: Date,
+  absoluteExpiration: Date,
+  rememberMe: boolean,
+): Date => {
+  return new Date(
+    Math.min(
+      absoluteExpiration.getTime(),
+      activityAt.getTime() + getSessionIdleDurationMs(rememberMe),
+    ),
+  );
+};
 
 // ============================================
 // TOKEN & PASSWORD GENERATION
@@ -212,23 +235,33 @@ export const createSession = async (
   userId: string,
   rememberMe = false,
   audit?: RequiredAuditLogInput,
-): Promise<{ expiresAt: Date; rememberMe: boolean; token: string }> => {
+): Promise<{
+  expiresAt: Date;
+  idleExpiresAt: Date;
+  lastSeenAt: Date;
+  rememberMe: boolean;
+  token: string;
+}> => {
   const sessionId = hashSessionToken(token);
   const requestContext = await getRequestContext();
   const durationDays = rememberMe
     ? SESSION_LONG_DURATION_DAYS
     : SESSION_SHORT_DURATION_DAYS;
   const loginAt = new Date();
+  const expiresAt = new Date(
+    loginAt.getTime() + 1000 * 60 * 60 * 24 * durationDays,
+  );
+  const idleExpiresAt = getIdleExpiration(loginAt, expiresAt, rememberMe);
 
   // Session creation, last-login state and its success audit must either all
   // commit or all roll back because they describe the same authentication.
   const session = await prisma.$transaction(async (transaction) => {
     const createdSession = await transaction.session.create({
       data: {
-        expiresAt: new Date(
-          loginAt.getTime() + 1000 * 60 * 60 * 24 * durationDays,
-        ),
+        expiresAt,
+        idleExpiresAt,
         ipAddress: requestContext.ipAddress,
+        lastSeenAt: loginAt,
         rememberMe,
         token: sessionId,
         userAgent: requestContext.userAgent,
@@ -250,6 +283,8 @@ export const createSession = async (
 
   return {
     expiresAt: session.expiresAt,
+    idleExpiresAt: session.idleExpiresAt,
+    lastSeenAt: session.lastSeenAt,
     rememberMe: session.rememberMe,
     token,
   };
@@ -277,38 +312,61 @@ const validateSessionToken = async (
     shouldMigrateLegacySession = Boolean(session);
   }
 
-  if (!session || Date.now() >= session.expiresAt.getTime()) {
-    if (session) {
-      await prisma.session.delete({
-        where: { token: session.token },
-      });
-    }
+  if (!session) {
+    return { session: null, user: null };
+  }
+
+  const activityAt = new Date();
+  if (
+    activityAt.getTime() >= session.expiresAt.getTime() ||
+    activityAt.getTime() >= session.idleExpiresAt.getTime()
+  ) {
+    await prisma.session.deleteMany({
+      where: { token: session.token },
+    });
 
     return { session: null, user: null };
   }
 
   if (shouldMigrateLegacySession) {
-    await prisma.session.update({
+    await prisma.session.updateMany({
       data: { token: hashedToken },
       where: { token: session.token },
     });
     session.token = hashedToken;
   }
 
-  // Long sessions renew when they are close to expiring.
-  if (
-    session.rememberMe &&
-    Date.now() >=
-      session.expiresAt.getTime() -
-        1000 * 60 * 60 * 24 * SESSION_RENEWAL_THRESHOLD_DAYS
-  ) {
-    session.expiresAt = new Date(
-      Date.now() + 1000 * 60 * 60 * 24 * SESSION_LONG_DURATION_DAYS,
+  const shouldUpdateActivity =
+    activityAt.getTime() - session.lastSeenAt.getTime() >=
+    1000 * 60 * SESSION_ACTIVITY_UPDATE_INTERVAL_MINUTES;
+
+  if (shouldUpdateActivity) {
+    const activityCutoff = new Date(
+      activityAt.getTime() -
+        1000 * 60 * SESSION_ACTIVITY_UPDATE_INTERVAL_MINUTES,
     );
-    await prisma.session.update({
-      data: { expiresAt: session.expiresAt },
-      where: { token: session.token },
+    const nextIdleExpiresAt = getIdleExpiration(
+      activityAt,
+      session.expiresAt,
+      session.rememberMe,
+    );
+    const updateResult = await prisma.session.updateMany({
+      data: {
+        idleExpiresAt: nextIdleExpiresAt,
+        lastSeenAt: activityAt,
+      },
+      where: {
+        expiresAt: { gt: activityAt },
+        idleExpiresAt: { gt: activityAt },
+        lastSeenAt: { lte: activityCutoff },
+        token: session.token,
+      },
     });
+
+    if (updateResult.count > 0) {
+      session.idleExpiresAt = nextIdleExpiresAt;
+      session.lastSeenAt = activityAt;
+    }
   }
 
   const user = mapUserToUserType(session.user);
@@ -316,6 +374,8 @@ const validateSessionToken = async (
   return {
     session: {
       expiresAt: session.expiresAt,
+      idleExpiresAt: session.idleExpiresAt,
+      lastSeenAt: session.lastSeenAt,
       rememberMe: session.rememberMe,
       token: session.token,
       userId: session.userId,

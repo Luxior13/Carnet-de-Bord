@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => {
   const transaction = {
@@ -29,6 +29,7 @@ const mocks = vi.hoisted(() => {
       session: {
         deleteMany: vi.fn(),
         findUnique: vi.fn(),
+        updateMany: vi.fn(),
       },
       user: {
         findUnique: vi.fn(),
@@ -76,9 +77,50 @@ import {
   authenticateUser,
   createSession,
   createUser,
+  getAuthSession,
   resetUserPassword,
   updateUserPassword,
 } from '$server/auth';
+
+const SESSION_USER = {
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  email: 'user@example.com',
+  failedLoginAttempts: 0,
+  firstName: 'Jean',
+  id: 'user-1',
+  isActive: true,
+  isProtected: false,
+  lastLoginAt: new Date('2026-07-01T00:00:00.000Z'),
+  lastName: 'Dupont',
+  lockedUntil: null,
+  mustChangePassword: false,
+  passwordChangedAt: new Date('2026-01-01T00:00:00.000Z'),
+  permissions: null,
+  role: 'USER' as const,
+};
+
+type StoredSession = {
+  expiresAt: Date;
+  idleExpiresAt: Date;
+  lastSeenAt: Date;
+  rememberMe: boolean;
+  token: string;
+  user: typeof SESSION_USER;
+  userId: string;
+};
+
+const buildStoredSession = (
+  overrides: Partial<StoredSession> = {},
+): StoredSession => ({
+  expiresAt: new Date('2026-07-14T12:00:00.000Z'),
+  idleExpiresAt: new Date('2026-07-13T12:30:00.000Z'),
+  lastSeenAt: new Date('2026-07-13T12:00:00.000Z'),
+  rememberMe: false,
+  token: 'stored-session-hash',
+  user: SESSION_USER,
+  userId: 'user-1',
+  ...overrides,
+});
 
 const audit = {
   action: 'PASSWORD_CHANGE' as const,
@@ -107,13 +149,33 @@ describe('auth security transactions', () => {
     mocks.transaction.rateLimit.deleteMany.mockResolvedValue({ count: 1 });
     mocks.transaction.session.create.mockResolvedValue({
       expiresAt: new Date('2026-07-13T00:00:00.000Z'),
+      idleExpiresAt: new Date('2026-07-13T00:00:00.000Z'),
+      lastSeenAt: new Date('2026-07-13T00:00:00.000Z'),
       rememberMe: false,
     });
     mocks.transaction.session.deleteMany.mockResolvedValue({ count: 2 });
     mocks.transaction.user.update.mockResolvedValue({ id: 'user-1' });
+    mocks.prisma.session.deleteMany.mockResolvedValue({ count: 1 });
+    mocks.prisma.session.updateMany.mockResolvedValue({ count: 1 });
   });
 
-  it('commits session creation, last login and success audit together', async () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('creates a normal session with a one-day absolute limit and a thirty-minute idle limit', async () => {
+    const loginAt = new Date('2026-07-13T12:00:00.000Z');
+    const expiresAt = new Date('2026-07-14T12:00:00.000Z');
+    const idleExpiresAt = new Date('2026-07-13T12:30:00.000Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(loginAt);
+    mocks.transaction.session.create.mockResolvedValueOnce({
+      expiresAt,
+      idleExpiresAt,
+      lastSeenAt: loginAt,
+      rememberMe: false,
+    });
+
     const result = await createSession('raw-session-token', 'user-1', false, {
       action: 'LOGIN_SUCCESS',
       category: 'AUTH',
@@ -125,7 +187,11 @@ describe('auth security transactions', () => {
     expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(mocks.transaction.session.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
+        expiresAt,
+        idleExpiresAt,
         ipAddress: '203.0.113.9',
+        lastSeenAt: loginAt,
+        rememberMe: false,
         token: expect.not.stringMatching(/^raw-session-token$/),
         userAgent: 'Regression Browser',
         userId: 'user-1',
@@ -145,7 +211,192 @@ describe('auth security transactions', () => {
         userId: 'user-1',
       }),
     });
-    expect(result.token).toBe('raw-session-token');
+    expect(result).toEqual({
+      expiresAt,
+      idleExpiresAt,
+      lastSeenAt: loginAt,
+      rememberMe: false,
+      token: 'raw-session-token',
+    });
+  });
+
+  it('creates a remembered session with a thirty-day absolute limit and a seven-day idle limit', async () => {
+    const loginAt = new Date('2026-07-13T12:00:00.000Z');
+    const expiresAt = new Date('2026-08-12T12:00:00.000Z');
+    const idleExpiresAt = new Date('2026-07-20T12:00:00.000Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(loginAt);
+    mocks.transaction.session.create.mockResolvedValueOnce({
+      expiresAt,
+      idleExpiresAt,
+      lastSeenAt: loginAt,
+      rememberMe: true,
+    });
+
+    const result = await createSession(
+      'remembered-session-token',
+      'user-1',
+      true,
+    );
+
+    expect(mocks.transaction.session.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        expiresAt,
+        idleExpiresAt,
+        lastSeenAt: loginAt,
+        rememberMe: true,
+      }),
+    });
+    expect(result).toEqual({
+      expiresAt,
+      idleExpiresAt,
+      lastSeenAt: loginAt,
+      rememberMe: true,
+      token: 'remembered-session-token',
+    });
+  });
+
+  it.each([
+    {
+      label: 'absolute limit',
+      overrides: {
+        expiresAt: new Date('2026-07-13T11:59:59.999Z'),
+        idleExpiresAt: new Date('2026-07-13T12:30:00.000Z'),
+      },
+    },
+    {
+      label: 'idle limit',
+      overrides: {
+        expiresAt: new Date('2026-07-14T12:00:00.000Z'),
+        idleExpiresAt: new Date('2026-07-13T11:59:59.999Z'),
+      },
+    },
+  ])('deletes a session expired by its $label', async ({ overrides }) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-13T12:00:00.000Z'));
+    mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
+    mocks.prisma.session.findUnique.mockResolvedValueOnce(
+      buildStoredSession(overrides),
+    );
+
+    await expect(getAuthSession(false)).resolves.toEqual({
+      session: null,
+      user: null,
+    });
+
+    expect(mocks.prisma.session.deleteMany).toHaveBeenCalledWith({
+      where: { token: 'stored-session-hash' },
+    });
+    expect(mocks.prisma.session.updateMany).not.toHaveBeenCalled();
+    expect(mocks.cookieStore.delete).toHaveBeenCalledWith('session');
+  });
+
+  it('touches an active session after one minute without extending its absolute limit', async () => {
+    const activityAt = new Date('2026-07-13T12:00:00.000Z');
+    const expiresAt = new Date('2026-07-14T12:00:00.000Z');
+    const nextIdleExpiresAt = new Date('2026-07-13T12:30:00.000Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(activityAt);
+    mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
+    mocks.prisma.session.findUnique.mockResolvedValueOnce(
+      buildStoredSession({
+        expiresAt,
+        idleExpiresAt: new Date('2026-07-13T12:10:00.000Z'),
+        lastSeenAt: new Date('2026-07-13T11:58:00.000Z'),
+      }),
+    );
+
+    const result = await getAuthSession(false);
+
+    expect(mocks.prisma.session.updateMany).toHaveBeenCalledWith({
+      data: {
+        idleExpiresAt: nextIdleExpiresAt,
+        lastSeenAt: activityAt,
+      },
+      where: {
+        expiresAt: { gt: activityAt },
+        idleExpiresAt: { gt: activityAt },
+        lastSeenAt: { lte: new Date('2026-07-13T11:59:00.000Z') },
+        token: 'stored-session-hash',
+      },
+    });
+    expect(
+      mocks.prisma.session.updateMany.mock.calls[0]?.[0]?.data,
+    ).not.toHaveProperty('expiresAt');
+    expect(result.session).toMatchObject({
+      expiresAt,
+      idleExpiresAt: nextIdleExpiresAt,
+      lastSeenAt: activityAt,
+    });
+  });
+
+  it('does not write activity again inside the one-minute throttle window', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-13T12:00:00.000Z'));
+    mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
+    mocks.prisma.session.findUnique.mockResolvedValueOnce(
+      buildStoredSession({
+        lastSeenAt: new Date('2026-07-13T11:59:30.000Z'),
+      }),
+    );
+
+    const result = await getAuthSession(false);
+
+    expect(result.user?.id).toBe('user-1');
+    expect(mocks.prisma.session.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('migrates a legacy plaintext token with an idempotent update', async () => {
+    const legacyToken = 'a'.repeat(52);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-13T12:00:00.000Z'));
+    mocks.cookieStore.get.mockReturnValue({ value: legacyToken });
+    mocks.prisma.session.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(
+        buildStoredSession({
+          lastSeenAt: new Date('2026-07-13T12:00:00.000Z'),
+          token: legacyToken,
+        }),
+      );
+
+    const result = await getAuthSession(false);
+
+    expect(mocks.prisma.session.findUnique).toHaveBeenCalledTimes(2);
+    expect(mocks.prisma.session.updateMany).toHaveBeenCalledWith({
+      data: { token: expect.not.stringMatching(legacyToken) },
+      where: { token: legacyToken },
+    });
+    expect(result.session?.token).not.toBe(legacyToken);
+    expect(result.user?.id).toBe('user-1');
+  });
+
+  it('caps the refreshed idle limit at the absolute expiration', async () => {
+    const activityAt = new Date('2026-07-13T12:00:00.000Z');
+    const expiresAt = new Date('2026-07-13T12:10:00.000Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(activityAt);
+    mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
+    mocks.prisma.session.findUnique.mockResolvedValueOnce(
+      buildStoredSession({
+        expiresAt,
+        idleExpiresAt: new Date('2026-07-13T12:05:00.000Z'),
+        lastSeenAt: new Date('2026-07-13T11:58:00.000Z'),
+      }),
+    );
+
+    const result = await getAuthSession(false);
+
+    expect(mocks.prisma.session.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          idleExpiresAt: expiresAt,
+          lastSeenAt: activityAt,
+        },
+      }),
+    );
+    expect(result.session?.idleExpiresAt).toEqual(expiresAt);
+    expect(result.session?.expiresAt).toEqual(expiresAt);
   });
 
   it('keeps password whitespace and mutates password, sessions, limiter and audit in one transaction', async () => {

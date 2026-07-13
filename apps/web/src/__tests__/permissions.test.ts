@@ -9,6 +9,8 @@ import {
   getUnknownPermissionKeys,
   hasPermission,
   isKnownPermissionKey,
+  isPermissionAlwaysEnabled,
+  normalizePermissionOverrides,
   PERMISSIONS,
   ROLE_PERMISSIONS,
 } from '../shared/constants/permissions.constants';
@@ -115,6 +117,16 @@ describe('hasPermission', () => {
     });
   });
 
+  it('never stores deny overrides for essential personal account actions', () => {
+    expect(
+      buildPermissionOverrides('USER', [
+        PERMISSIONS.ACCOUNT.UPDATE_PROFILE,
+        PERMISSIONS.ACCOUNT.VIEW_ACTIVITY,
+        PERMISSIONS.DASHBOARD.VIEW,
+      ]),
+    ).toBeNull();
+  });
+
   it('does not create a saveable override when the role already blocks a page', () => {
     expect(
       buildPermissionOverrides('USER', [
@@ -189,15 +201,34 @@ describe('hasPermission', () => {
     ).toBe(false);
   });
 
-  it('requires personal account dependencies before granting sensitive account actions', () => {
+  it('keeps essential personal account actions enabled despite deny overrides', () => {
+    expect(
+      hasPermission('USER', PERMISSIONS.ACCOUNT.VIEW_PROFILE, {
+        [PERMISSIONS.ACCOUNT.VIEW_PROFILE]: false,
+      }),
+    ).toBe(true);
+    expect(
+      hasPermission('USER', PERMISSIONS.ACCOUNT.VIEW_SECURITY, {
+        [PERMISSIONS.ACCOUNT.VIEW_SECURITY]: false,
+      }),
+    ).toBe(true);
+    expect(
+      hasPermission('USER', PERMISSIONS.ACCOUNT.CHANGE_PASSWORD, {
+        [PERMISSIONS.ACCOUNT.CHANGE_PASSWORD]: false,
+        [PERMISSIONS.ACCOUNT.VIEW_SECURITY]: false,
+      }),
+    ).toBe(true);
+  });
+
+  it('keeps optional personal account actions configurable', () => {
     expect(
       hasPermission('USER', PERMISSIONS.ACCOUNT.UPDATE_PROFILE, {
-        [PERMISSIONS.ACCOUNT.VIEW_PROFILE]: false,
+        [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
       }),
     ).toBe(false);
     expect(
-      hasPermission('USER', PERMISSIONS.ACCOUNT.CHANGE_PASSWORD, {
-        [PERMISSIONS.ACCOUNT.VIEW_SECURITY]: false,
+      hasPermission('USER', PERMISSIONS.ACCOUNT.VIEW_ACTIVITY, {
+        [PERMISSIONS.ACCOUNT.VIEW_ACTIVITY]: false,
       }),
     ).toBe(false);
   });
@@ -288,6 +319,43 @@ describe('permission catalogue', () => {
         'users:ghost': true,
       }),
     ).not.toHaveProperty('users:ghost');
+  });
+
+  it('normalizes non-overridable personal permissions out of stored overrides', () => {
+    expect(
+      normalizePermissionOverrides({
+        [PERMISSIONS.ACCOUNT.CHANGE_PASSWORD]: false,
+        [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+        [PERMISSIONS.ACCOUNT.VIEW_PROFILE]: false,
+        [PERMISSIONS.ACCOUNT.VIEW_SECURITY]: false,
+      }),
+    ).toEqual({ [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false });
+    expect(isPermissionAlwaysEnabled(PERMISSIONS.ACCOUNT.CHANGE_PASSWORD)).toBe(
+      true,
+    );
+    expect(isPermissionAlwaysEnabled(PERMISSIONS.ACCOUNT.UPDATE_PROFILE)).toBe(
+      false,
+    );
+  });
+
+  it('reports essential permissions as effective while preserving optional denies', () => {
+    const effectivePermissions = getEffectivePermissions('USER', {
+      [PERMISSIONS.ACCOUNT.CHANGE_PASSWORD]: false,
+      [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+      [PERMISSIONS.ACCOUNT.VIEW_ACTIVITY]: false,
+      [PERMISSIONS.ACCOUNT.VIEW_PROFILE]: false,
+      [PERMISSIONS.ACCOUNT.VIEW_SECURITY]: false,
+    });
+
+    expect(effectivePermissions[PERMISSIONS.ACCOUNT.VIEW_PROFILE]).toBe(true);
+    expect(effectivePermissions[PERMISSIONS.ACCOUNT.VIEW_SECURITY]).toBe(true);
+    expect(effectivePermissions[PERMISSIONS.ACCOUNT.CHANGE_PASSWORD]).toBe(
+      true,
+    );
+    expect(effectivePermissions[PERMISSIONS.ACCOUNT.UPDATE_PROFILE]).toBe(
+      false,
+    );
+    expect(effectivePermissions[PERMISSIONS.ACCOUNT.VIEW_ACTIVITY]).toBe(false);
   });
 
   it('defines neutral role presets', () => {

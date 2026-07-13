@@ -17,6 +17,8 @@ import { trimmedStringMinMax } from '$utils/zod.utils';
 type MeResponseData = {
   session: {
     expiresAt: string;
+    idleExpiresAt: string;
+    lastSeenAt: string;
     rememberMe: boolean;
   } | null;
   user: UserType;
@@ -49,6 +51,8 @@ export async function GET(): Promise<
         session: session
           ? {
               expiresAt: session.expiresAt.toISOString(),
+              idleExpiresAt: session.idleExpiresAt.toISOString(),
+              lastSeenAt: session.lastSeenAt.toISOString(),
               rememberMe: session.rememberMe,
             }
           : null,

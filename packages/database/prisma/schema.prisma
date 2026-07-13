@@ -51,13 +51,15 @@ model User {
 }
 
 model Session {
-  id         String   @id @default(cuid())
-  userId     String
-  token      String   @unique
-  expiresAt  DateTime
-  rememberMe Boolean  @default(false)
-  userAgent  String?
-  ipAddress  String?
+  id            String   @id @default(cuid())
+  userId        String
+  token         String   @unique
+  expiresAt     DateTime
+  idleExpiresAt DateTime @default(dbgenerated("(CURRENT_TIMESTAMP + '00:30:00'::interval)"))
+  lastSeenAt    DateTime @default(now())
+  rememberMe    Boolean  @default(false)
+  userAgent     String?
+  ipAddress     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -66,6 +68,7 @@ model Session {
 
   @@index([userId])
   @@index([userId, expiresAt])
+  @@index([userId, idleExpiresAt])
   @@index([userId, createdAt])
   @@index([token])
 }

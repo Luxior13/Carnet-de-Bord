@@ -166,6 +166,7 @@ export type PermissionRisk = 'critical' | 'default' | 'sensitive';
 
 export type PermissionItem = {
   action: PermissionAction;
+  alwaysEnabled?: boolean;
   dependencies?: string[];
   description: string;
   key: string;
@@ -204,6 +205,7 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
     permissions: [
       {
         action: 'view',
+        alwaysEnabled: true,
         description: 'Consulter son profil depuis la page Mon compte',
         key: PERMISSIONS.ACCOUNT.VIEW_PROFILE,
         label: 'Voir son profil personnel',
@@ -230,6 +232,7 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
     permissions: [
       {
         action: 'view',
+        alwaysEnabled: true,
         description: 'Voir les informations de sécurité de son compte',
         key: PERMISSIONS.ACCOUNT.VIEW_SECURITY,
         label: 'Voir sa sécurité',
@@ -238,6 +241,7 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
       },
       {
         action: 'update',
+        alwaysEnabled: true,
         dependencies: [PERMISSIONS.ACCOUNT.VIEW_SECURITY],
         description: 'Changer son mot de passe depuis Mon compte',
         key: PERMISSIONS.ACCOUNT.CHANGE_PASSWORD,
@@ -933,8 +937,33 @@ const PERMISSION_ITEM_MAP = new Map<string, PermissionItem>(
   ].map((permission) => [permission.key, permission]),
 );
 
+const ALWAYS_ENABLED_PERMISSION_KEYS = new Set(
+  [...PERMISSION_ITEM_MAP.values()]
+    .filter((permission) => permission.alwaysEnabled)
+    .map((permission) => permission.key),
+);
+
 export const isKnownPermissionKey = (permissionKey: string): boolean =>
   ALL_PERMISSION_KEYS_SET.has(permissionKey);
+
+export const isPermissionAlwaysEnabled = (permissionKey: string): boolean =>
+  ALWAYS_ENABLED_PERMISSION_KEYS.has(permissionKey);
+
+export const normalizePermissionOverrides = (
+  permissions?: PermissionsData | null,
+): PermissionsData | null => {
+  const normalizedPermissions = Object.fromEntries(
+    Object.entries(permissions ?? {}).filter(
+      ([permissionKey]) =>
+        isKnownPermissionKey(permissionKey) &&
+        !isPermissionAlwaysEnabled(permissionKey),
+    ),
+  ) as PermissionsData;
+
+  return Object.keys(normalizedPermissions).length > 0
+    ? normalizedPermissions
+    : null;
+};
 
 export const getUnknownPermissionKeys = (
   permissions?: PermissionsData | null,
@@ -989,6 +1018,8 @@ export const hasPermission = (
 
     if (!isKnownPermissionKey(currentPermissionKey)) return false;
 
+    if (isPermissionAlwaysEnabled(currentPermissionKey)) return true;
+
     const isDirectlyAllowed = customPermissionsMap.has(currentPermissionKey)
       ? (customPermissionsMap.get(currentPermissionKey) ?? false)
       : (ROLE_PERMISSIONS_MAP.get(role)?.includes(currentPermissionKey) ??
@@ -1025,10 +1056,11 @@ export const getEffectivePermissions = (
 ): Record<string, boolean> => {
   return Object.fromEntries([
     ...Object.entries(getRoleBasePermissions(role)),
-    ...Object.entries(customPermissions ?? {}).filter(([permissionKey]) =>
-      isKnownPermissionKey(permissionKey),
+    ...Object.entries(normalizePermissionOverrides(customPermissions) ?? {}),
+    ...[...ALWAYS_ENABLED_PERMISSION_KEYS].map(
+      (permissionKey) => [permissionKey, true] as const,
     ),
-  ]);
+  ]) as Record<string, boolean>;
 };
 
 export const getAllPermissionKeys = (): string[] => {
@@ -1058,6 +1090,8 @@ export const buildPermissionOverrides = (
   const roleBasePermissionsMap = new Map(Object.entries(roleBasePermissions));
   const overrides = Object.fromEntries(
     ALL_PERMISSION_KEYS.flatMap((permissionKey) => {
+      if (isPermissionAlwaysEnabled(permissionKey)) return [];
+
       const enabled = enabledKeys.has(permissionKey);
 
       if ((roleBasePermissionsMap.get(permissionKey) ?? false) === enabled) {

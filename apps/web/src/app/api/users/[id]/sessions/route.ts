@@ -114,7 +114,7 @@ export async function GET(
     const now = new Date();
     await prisma.session.deleteMany({
       where: {
-        expiresAt: { lte: now },
+        OR: [{ expiresAt: { lte: now } }, { idleExpiresAt: { lte: now } }],
         userId: targetUser.id,
       },
     });
@@ -125,12 +125,15 @@ export async function GET(
         createdAt: true,
         expiresAt: true,
         id: true,
+        idleExpiresAt: true,
         ipAddress: true,
+        lastSeenAt: true,
         rememberMe: true,
         userAgent: true,
       },
       where: {
         expiresAt: { gt: now },
+        idleExpiresAt: { gt: now },
         userId: targetUser.id,
       },
     });
@@ -141,7 +144,9 @@ export async function GET(
           createdAt: session.createdAt,
           expiresAt: session.expiresAt,
           id: session.id,
+          idleExpiresAt: session.idleExpiresAt,
           ipAddress: session.ipAddress,
+          lastSeenAt: session.lastSeenAt,
           rememberMe: session.rememberMe,
           userAgent: session.userAgent,
         })),

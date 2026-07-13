@@ -50,6 +50,8 @@ type LoginResponseData = {
   mustChangePassword: boolean;
   session: {
     expiresAt: string;
+    idleExpiresAt: string;
+    lastSeenAt: string;
     rememberMe: boolean;
   };
   user: UserType;
@@ -202,6 +204,8 @@ export async function POST(
         mustChangePassword: result.user.mustChangePassword,
         session: {
           expiresAt: session.expiresAt.toISOString(),
+          idleExpiresAt: session.idleExpiresAt.toISOString(),
+          lastSeenAt: session.lastSeenAt.toISOString(),
           rememberMe: session.rememberMe,
         },
         user,

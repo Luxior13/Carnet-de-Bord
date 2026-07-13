@@ -38,6 +38,8 @@ describe('requireAuth', () => {
     mockGetAuthSession.mockResolvedValueOnce({
       session: {
         expiresAt: new Date('2026-03-20T00:00:00.000Z'),
+        idleExpiresAt: new Date('2026-03-01T00:30:00.000Z'),
+        lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
         rememberMe: false,
         token: 'session-hash',
         userId: 'user-1',
@@ -59,6 +61,8 @@ describe('requireAuth', () => {
     mockGetAuthSession.mockResolvedValueOnce({
       session: {
         expiresAt: new Date('2026-03-20T00:00:00.000Z'),
+        idleExpiresAt: new Date('2026-03-01T00:30:00.000Z'),
+        lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
         rememberMe: false,
         token: 'session-hash',
         userId: 'user-1',

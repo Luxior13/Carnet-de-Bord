@@ -310,6 +310,76 @@ describe('users access hardening', () => {
     );
   });
 
+  it('persists only configurable personal permissions from a mixed payload', async () => {
+    const existingUser = buildUser({ id: 'target-1', permissions: {} });
+    const requestedPermissions = {
+      [PERMISSIONS.ACCOUNT.CHANGE_PASSWORD]: false,
+      [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+      [PERMISSIONS.ACCOUNT.VIEW_PROFILE]: false,
+      [PERMISSIONS.ACCOUNT.VIEW_SECURITY]: false,
+    };
+    const persistedPermissions = {
+      [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+    };
+
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+    mockPrisma.user.update.mockResolvedValue({
+      ...existingUser,
+      permissions: persistedPermissions,
+    });
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: JSON.stringify({ permissions: requestedPermissions }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(mockPrisma.user.update).toHaveBeenCalledWith({
+      data: { permissions: persistedPermissions },
+      where: { id: 'target-1' },
+    });
+    expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
+      where: { userId: 'target-1' },
+    });
+    expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores an essential-only personal permission payload without side effects', async () => {
+    const existingUser = buildUser({ id: 'target-1', permissions: null });
+    const requestedPermissions = {
+      [PERMISSIONS.ACCOUNT.CHANGE_PASSWORD]: false,
+      [PERMISSIONS.ACCOUNT.VIEW_PROFILE]: false,
+      [PERMISSIONS.ACCOUNT.VIEW_SECURITY]: false,
+    };
+
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: JSON.stringify({ permissions: requestedPermissions }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.user.permissions).toBeNull();
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+    expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+    expect(mockInvalidateAllUserSessions).not.toHaveBeenCalled();
+    expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
+  });
+
   it('rejects self permission updates for non-protected users', async () => {
     const existingUser = buildUser({ id: 'viewer-1', permissions: {} });
     const nextPermissions = {

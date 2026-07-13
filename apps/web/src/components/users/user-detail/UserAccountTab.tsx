@@ -150,7 +150,11 @@ const PersonalPermissionRow: FC<PersonalPermissionRowProps> = ({
           {isAllowed ? 'Autorisé' : 'Refusé'}
         </Badge>
         <Badge variant="secondary" className="rounded-full">
-          {hasCustomChoice ? 'Manuel' : 'Rôle'}
+          {permission.alwaysEnabled
+            ? 'Essentiel'
+            : hasCustomChoice
+              ? 'Manuel'
+              : 'Rôle'}
         </Badge>
         {missingDependencyLabels.length > 0 && (
           <Badge
@@ -164,6 +168,12 @@ const PersonalPermissionRow: FC<PersonalPermissionRowProps> = ({
       <p className="text-muted-foreground max-w-3xl text-xs leading-5">
         {permission.description}
       </p>
+      {permission.alwaysEnabled && (
+        <p className="text-primary text-xs leading-5">
+          Toujours disponible pour garantir l’accès aux fonctions essentielles
+          du compte.
+        </p>
+      )}
       {missingDependencyLabels.length > 0 && (
         <p className="text-xs leading-5 text-amber-300/90">
           Prerequis : {missingDependencyLabels.join(', ')}
@@ -173,7 +183,7 @@ const PersonalPermissionRow: FC<PersonalPermissionRowProps> = ({
     <Switch
       checked={isAllowed}
       onCheckedChange={onChange}
-      disabled={!canManagePermissions}
+      disabled={permission.alwaysEnabled || !canManagePermissions}
       aria-label={permission.label}
       className="self-start sm:self-center"
     />
@@ -222,6 +232,8 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
     permissionKey: string,
     enabled: boolean,
   ): void => {
+    if (ACCOUNT_PERMISSION_ITEM_MAP.get(permissionKey)?.alwaysEnabled) return;
+
     const nextPermissionsMap = new Map(permissionsMap);
 
     writePermissionChoice(
@@ -339,7 +351,10 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
                   key={permission.key}
                   permission={permission}
                   canManagePermissions={canManagePermissions}
-                  hasCustomChoice={permissionsMap.has(permission.key)}
+                  hasCustomChoice={
+                    !permission.alwaysEnabled &&
+                    permissionsMap.has(permission.key)
+                  }
                   isAllowed={hasPermission(role, permission.key, permissions)}
                   missingDependencyLabels={(permission.dependencies ?? [])
                     .filter(

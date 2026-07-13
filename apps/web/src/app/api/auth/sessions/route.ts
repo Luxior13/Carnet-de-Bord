@@ -15,8 +15,10 @@ type SessionInfo = {
   createdAt: Date;
   expiresAt: Date;
   id: string;
+  idleExpiresAt: Date;
   ipAddress: string | null;
   isCurrent: boolean;
+  lastSeenAt: Date;
   rememberMe: boolean;
   userAgent: string | null;
 };
@@ -39,7 +41,10 @@ export async function GET(): Promise<
 
     const now = new Date();
     await prisma.session.deleteMany({
-      where: { expiresAt: { lte: now }, userId: user.id },
+      where: {
+        OR: [{ expiresAt: { lte: now } }, { idleExpiresAt: { lte: now } }],
+        userId: user.id,
+      },
     });
 
     // Get all sessions for the user
@@ -49,13 +54,16 @@ export async function GET(): Promise<
         createdAt: true,
         expiresAt: true,
         id: true,
+        idleExpiresAt: true,
         ipAddress: true,
+        lastSeenAt: true,
         rememberMe: true,
         token: true,
         userAgent: true,
       },
       where: {
         expiresAt: { gt: now },
+        idleExpiresAt: { gt: now },
         userId: user.id,
       },
     });
@@ -64,8 +72,10 @@ export async function GET(): Promise<
       createdAt: session.createdAt,
       expiresAt: session.expiresAt,
       id: session.id,
+      idleExpiresAt: session.idleExpiresAt,
       ipAddress: session.ipAddress,
       isCurrent: session.token === currentSession?.token,
+      lastSeenAt: session.lastSeenAt,
       rememberMe: session.rememberMe,
       userAgent: session.userAgent,
     }));

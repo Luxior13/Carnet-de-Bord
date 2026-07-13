@@ -7,6 +7,7 @@ import {
   getAllPermissionKeys,
   getUnknownPermissionKeys,
   hasPermission,
+  normalizePermissionOverrides,
   PERMISSIONS,
 } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
@@ -198,8 +199,18 @@ export async function PATCH(
       );
     }
 
-    const { email, firstName, isActive, lastName, permissions, role } =
-      validation.data;
+    const {
+      email,
+      firstName,
+      isActive,
+      lastName,
+      permissions: requestedPermissions,
+      role,
+    } = validation.data;
+    const permissions =
+      requestedPermissions === undefined
+        ? undefined
+        : normalizePermissionOverrides(requestedPermissions);
     const isPermissionsUpdate = permissions !== undefined;
     const isProfileUpdate = firstName !== undefined || lastName !== undefined;
     const isLoginUpdate = email !== undefined;

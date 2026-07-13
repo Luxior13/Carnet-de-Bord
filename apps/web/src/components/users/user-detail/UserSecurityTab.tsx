@@ -285,8 +285,12 @@ const SessionRow: FC<{
           )}
         </div>
         <div className="text-muted-foreground mt-1 flex min-w-0 flex-wrap gap-x-3 gap-y-1 text-xs">
+          <span>Active {formatRelativeTime(session.lastSeenAt)}</span>
           <span>Ouverte {formatRelativeTime(session.createdAt)}</span>
-          <span>Expire le {formatSessionDateTime(session.expiresAt)}</span>
+          <span>
+            Inactivité jusqu’au {formatSessionDateTime(session.idleExpiresAt)}
+          </span>
+          <span>Limite absolue {formatSessionDateTime(session.expiresAt)}</span>
           <span>
             {session.ipAddress ? `IP ${session.ipAddress}` : 'IP inconnue'}
           </span>

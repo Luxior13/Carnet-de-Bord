@@ -137,4 +137,68 @@ describe('POST /api/auth/login', () => {
       message: 'Email ou mot de passe incorrect',
     });
   });
+
+  it('returns both idle and absolute deadlines after a successful login', async () => {
+    const expiresAt = new Date('2026-08-12T12:00:00.000Z');
+    const idleExpiresAt = new Date('2026-07-20T12:00:00.000Z');
+    const lastSeenAt = new Date('2026-07-13T12:00:00.000Z');
+    mocks.authenticateUser.mockResolvedValue({
+      success: true,
+      user: {
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        email: 'user@example.com',
+        failedLoginAttempts: 0,
+        firstName: 'Jean',
+        id: 'user-1',
+        isActive: true,
+        isProtected: false,
+        lastLoginAt: null,
+        lastName: 'Dupont',
+        lockedUntil: null,
+        mustChangePassword: false,
+        passwordChangedAt: null,
+        permissions: null,
+        role: 'USER',
+      },
+    });
+    mocks.generateSessionToken.mockReturnValue('raw-session-token');
+    mocks.createSession.mockResolvedValue({
+      expiresAt,
+      idleExpiresAt,
+      lastSeenAt,
+      rememberMe: true,
+      token: 'raw-session-token',
+    });
+    const { POST } = await import('$app/api/auth/login/route');
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/auth/login', {
+        body: JSON.stringify({
+          email: 'user@example.com',
+          password: 'Secret1!',
+          rememberMe: true,
+        }),
+        method: 'POST',
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mocks.createSession).toHaveBeenCalledWith(
+      'raw-session-token',
+      'user-1',
+      true,
+      expect.objectContaining({ action: 'LOGIN_SUCCESS' }),
+    );
+    expect(mocks.setSessionTokenCookie).toHaveBeenCalledWith(
+      'raw-session-token',
+      expiresAt,
+    );
+    expect(body.data.session).toEqual({
+      expiresAt: expiresAt.toISOString(),
+      idleExpiresAt: idleExpiresAt.toISOString(),
+      lastSeenAt: lastSeenAt.toISOString(),
+      rememberMe: true,
+    });
+  });
 });

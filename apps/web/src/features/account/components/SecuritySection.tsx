@@ -42,8 +42,10 @@ type SessionInfo = {
   createdAt: string;
   expiresAt: string;
   id: string;
+  idleExpiresAt: string;
   ipAddress: string | null;
   isCurrent: boolean;
+  lastSeenAt: string;
   rememberMe: boolean;
   userAgent: string | null;
 };
@@ -180,11 +182,16 @@ const SessionRow: FC<SessionRowProps> = ({ isRevoking, onRevoke, session }) => {
             </Badge>
           )}
         </div>
-        <p className="text-muted-foreground mt-1 truncate text-xs">
-          Ouverte {formatRelativeAccountTime(session.createdAt)} - Expire le{' '}
-          {formatSessionDateTime(session.expiresAt)}
-          {session.ipAddress ? ` - IP ${session.ipAddress}` : ''}
-        </p>
+        <div className="text-muted-foreground mt-1 flex min-w-0 flex-wrap gap-x-3 gap-y-1 text-xs">
+          <span>
+            Active {formatRelativeAccountTime(session.lastSeenAt)} · inactivité
+            jusqu’au {formatSessionDateTime(session.idleExpiresAt)}
+          </span>
+          <span>Limite absolue {formatSessionDateTime(session.expiresAt)}</span>
+          <span>
+            {session.ipAddress ? `IP ${session.ipAddress}` : 'IP inconnue'}
+          </span>
+        </div>
       </div>
       {canRevoke && (
         <Tooltip>
@@ -374,7 +381,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                   sessionsError
                     ? 'Impossible de charger les sessions'
                     : currentSession
-                      ? `Ouverte ${formatRelativeAccountTime(currentSession.createdAt)}`
+                      ? `Active ${formatRelativeAccountTime(currentSession.lastSeenAt)}`
                       : 'Appareil utilisé maintenant'
                 }
                 tone={currentSession ? 'primary' : 'neutral'}
