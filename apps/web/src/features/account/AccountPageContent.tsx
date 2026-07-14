@@ -7,7 +7,7 @@ import {
   ShieldCheck,
   User,
 } from 'lucide-react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import React, {
   type FC,
   useCallback,
@@ -127,13 +127,10 @@ const AccountPageContentSkeleton: FC = () => (
 
 export const AccountPageContent: FC = () => {
   const pathname = usePathname();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const currentQueryString = searchParams.toString();
+  const requestedSection = normalizeAccountSection(searchParams.get('section'));
   const { refreshUser, userData } = useUser();
-  const [activeSection, setActiveSection] = useState<AccountSectionId>(() =>
-    normalizeAccountSection(searchParams.get('section')),
-  );
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [auditTotalLogs, setAuditTotalLogs] = useState<number | null>(null);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
@@ -192,6 +189,11 @@ export const AccountPageContent: FC = () => {
     ],
   );
   const firstVisibleSection = visibleAccountSections[0]?.id ?? null;
+  const activeSection = visibleAccountSections.some(
+    (section) => section.id === requestedSection,
+  )
+    ? requestedSection
+    : (firstVisibleSection ?? requestedSection);
 
   const fetchAccountAuditLogs = useCallback(async (): Promise<void> => {
     auditAbortControllerRef.current?.abort();
@@ -296,41 +298,22 @@ export const AccountPageContent: FC = () => {
   }, [canViewActivity, userData?.id]);
 
   useEffect(() => {
-    const requestedSection = normalizeAccountSection(
-      new URLSearchParams(currentQueryString).get('section'),
-    );
-
-    if (requestedSection !== activeSection) {
-      setActiveSection(requestedSection);
-    }
-  }, [activeSection, currentQueryString]);
-
-  useEffect(() => {
     if (!userData) return;
     if (!firstVisibleSection) return;
-    if (
-      visibleAccountSections.some((section) => section.id === activeSection)
-    ) {
-      return;
-    }
+    if (requestedSection === activeSection) return;
 
-    setActiveSection(firstVisibleSection);
-    router.replace(
-      buildAccountSectionHref(
-        pathname,
-        currentQueryString,
-        firstVisibleSection,
-      ),
-      { scroll: false },
+    window.history.replaceState(
+      null,
+      '',
+      buildAccountSectionHref(pathname, currentQueryString, activeSection),
     );
   }, [
     activeSection,
     currentQueryString,
     firstVisibleSection,
     pathname,
-    router,
+    requestedSection,
     userData,
-    visibleAccountSections,
   ]);
 
   useEffect(() => {
@@ -360,10 +343,10 @@ export const AccountPageContent: FC = () => {
   const handleSectionChange = (sectionId: AccountSectionId): void => {
     if (sectionId === activeSection) return;
 
-    setActiveSection(sectionId);
-    router.replace(
+    window.history.replaceState(
+      null,
+      '',
       buildAccountSectionHref(pathname, currentQueryString, sectionId),
-      { scroll: false },
     );
   };
 
