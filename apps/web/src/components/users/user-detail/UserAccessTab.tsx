@@ -5,6 +5,7 @@ import {
   Crown,
   Loader2,
   LockKeyhole,
+  LogOut,
   Save,
   Shield,
   ShieldCheck,
@@ -195,11 +196,19 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             }
           />
         </CardContent>
-        <CardFooter className="border-sidebar-border/60 bg-surface-muted/95 sticky bottom-3 z-20 justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur">
-          <p className="text-muted-foreground text-xs">
-            {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
-          </p>
-          <div className="flex gap-2">
+        <CardFooter className="border-sidebar-border/60 bg-surface-muted/95 sticky bottom-3 z-20 flex-col items-stretch justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center">
+          <div className="space-y-1">
+            <p className="text-muted-foreground text-xs">
+              {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
+            </p>
+            {hasChanges && (
+              <p className="flex items-center gap-1.5 text-xs text-amber-300">
+                <LogOut className="size-3.5 shrink-0" />
+                Enregistrer déconnectera cet utilisateur de toutes ses sessions.
+              </p>
+            )}
+          </div>
+          <div className="flex justify-end gap-2">
             <Button
               type="button"
               variant="outline"

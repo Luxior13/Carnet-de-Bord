@@ -26,7 +26,7 @@ export const USER_DETAIL_SECTIONS: UserDetailSection[] = [
   {
     icon: <UserCheck className="h-4 w-4" />,
     id: 'account',
-    label: 'Compte personnel',
+    label: 'Autonomie',
   },
   {
     icon: <Key className="h-4 w-4" />,

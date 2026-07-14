@@ -35,7 +35,7 @@ export async function GET(): Promise<
 
     const permission = requirePermission(
       user,
-      PERMISSIONS.ACCOUNT.VIEW_SECURITY,
+      PERMISSIONS.ACCOUNT.MANAGE_SESSIONS,
     );
     if (!permission.success) return permission.response;
 
@@ -99,7 +99,7 @@ export async function DELETE(
 
     const permission = requirePermission(
       user,
-      PERMISSIONS.ACCOUNT.VIEW_SECURITY,
+      PERMISSIONS.ACCOUNT.MANAGE_SESSIONS,
     );
     if (!permission.success) return permission.response;
 

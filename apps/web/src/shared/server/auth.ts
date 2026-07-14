@@ -17,6 +17,7 @@ import { cookies, headers } from 'next/headers';
 
 import {
   hasPermission,
+  normalizePermissionOverrides,
   type PermissionsData,
 } from '$constants/permissions.constants';
 import { env } from '$env';
@@ -628,7 +629,8 @@ export const authenticateUser = async (
             tabKey: 'connections',
             tabLabel: 'Connexions',
           },
-          userId: user.id,
+          targetUserId: user.id,
+          userId: null,
         },
         transaction,
       );
@@ -850,7 +852,8 @@ type ClientSafeUser = Pick<
   | 'passwordChangedAt'
   | 'permissions'
   | 'role'
->;
+> &
+  Partial<Pick<User, 'updatedAt'>>;
 
 export const mapUserToUserType = (user: ClientSafeUser): UserType => ({
   createdAt: user.createdAt,
@@ -865,8 +868,11 @@ export const mapUserToUserType = (user: ClientSafeUser): UserType => ({
   lockedUntil: user.lockedUntil,
   mustChangePassword: user.mustChangePassword,
   passwordChangedAt: user.passwordChangedAt,
-  permissions: user.permissions as PermissionsData | null,
+  permissions: normalizePermissionOverrides(
+    user.permissions as PermissionsData | null,
+  ),
   role: user.role,
+  ...(user.updatedAt ? { updatedAt: user.updatedAt } : {}),
 });
 
 // ============================================

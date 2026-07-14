@@ -52,6 +52,7 @@ type SessionInfo = {
 
 type SecuritySectionProps = {
   canChangePassword: boolean;
+  canManageSessions: boolean;
   canViewSecurity: boolean;
   onUpdate: () => Promise<void>;
   userData: UserType;
@@ -221,6 +222,7 @@ const SessionRow: FC<SessionRowProps> = ({ isRevoking, onRevoke, session }) => {
 
 export const SecuritySection: FC<SecuritySectionProps> = ({
   canChangePassword,
+  canManageSessions,
   canViewSecurity,
   onUpdate,
   userData,
@@ -235,7 +237,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
 
   const fetchSessions = useCallback(
     async (signal?: AbortSignal): Promise<void> => {
-      if (!canViewSecurity) {
+      if (!canManageSessions) {
         setSessions([]);
         setSessionsError(null);
         setLoadingSessions(false);
@@ -269,7 +271,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         }
       }
     },
-    [canViewSecurity],
+    [canManageSessions],
   );
 
   useEffect(() => {
@@ -355,7 +357,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         <div
           className={cn(
             'grid gap-3',
-            canViewPasswordSecurity && canViewSecurity
+            canViewPasswordSecurity && canManageSessions
               ? 'md:grid-cols-3'
               : canViewPasswordSecurity
                 ? 'md:grid-cols-1'
@@ -371,7 +373,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               tone={userData.mustChangePassword ? 'warning' : 'primary'}
             />
           )}
-          {canViewSecurity && (
+          {canManageSessions && (
             <>
               <SecurityMetric
                 icon={<Laptop className="size-4" />}
@@ -460,7 +462,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
             )}
           </Card>
         )}
-        {canViewSecurity && (
+        {canManageSessions && (
           <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
             <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
               <SectionTitle icon={<Monitor className="size-3.5" />}>

@@ -272,6 +272,7 @@ export const UsersListPage: FC = () => {
   );
   const hasLoadedUsersRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isSyncingStateFromUrlRef = useRef(false);
   const lastSyncedQueryStringRef = useRef(currentQueryString);
 
   // Pagination
@@ -364,6 +365,7 @@ export const UsersListPage: FC = () => {
 
     const nextSearch = normalizeSearchQuery(searchParams.get('search'));
 
+    isSyncingStateFromUrlRef.current = true;
     lastSyncedQueryStringRef.current = currentQueryString;
     setSearchQuery(nextSearch);
     setDebouncedSearch(nextSearch);
@@ -374,6 +376,12 @@ export const UsersListPage: FC = () => {
   }, [currentQueryString, searchParams]);
 
   useEffect((): void => {
+    if (isSyncingStateFromUrlRef.current) {
+      isSyncingStateFromUrlRef.current = false;
+
+      return;
+    }
+
     const params = buildUsersPageUrlParams({
       page: currentPage,
       role: filterRole,
@@ -386,9 +394,10 @@ export const UsersListPage: FC = () => {
     if (currentQueryString === nextQueryString) return;
 
     lastSyncedQueryStringRef.current = nextQueryString;
-    router.replace(
+    window.history.replaceState(
+      null,
+      '',
       nextQueryString ? `${pathname}?${nextQueryString}` : pathname,
-      { scroll: false },
     );
   }, [
     currentPage,
@@ -397,7 +406,6 @@ export const UsersListPage: FC = () => {
     filterRole,
     filterStatus,
     pathname,
-    router,
     sortBy,
   ]);
 
@@ -415,13 +423,19 @@ export const UsersListPage: FC = () => {
 
   // Handle search with debounce
   useEffect((): (() => void) => {
+    const normalizedSearch = normalizeSearchQuery(searchQuery);
+
+    // On mount and after a browser history navigation, both values already
+    // come from the URL. Avoid forcing a valid deep-linked page back to 1.
+    if (normalizedSearch === debouncedSearch) return () => undefined;
+
     const timer = setTimeout(() => {
-      setDebouncedSearch(normalizeSearchQuery(searchQuery));
+      setDebouncedSearch(normalizedSearch);
       setCurrentPage(1); // Reset to page 1 on search
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [debouncedSearch, searchQuery]);
 
   // Handle other filter changes
   const handleFilterChange = (

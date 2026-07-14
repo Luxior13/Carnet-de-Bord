@@ -109,6 +109,13 @@ describe('POST /api/auth/login', () => {
       code: ErrorCode.INVALID_CREDENTIALS,
       message: 'Email ou mot de passe incorrect',
     });
+    expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'LOGIN_FAILED',
+        targetUserId: 'disabled-user',
+        userId: null,
+      }),
+    );
   });
 
   it('does not reveal locked accounts in the public response', async () => {

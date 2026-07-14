@@ -6,6 +6,7 @@ import type { NavigationSpaceTone } from '$constants/navigation-theme.constants'
 export const PERMISSIONS = {
   ACCOUNT: {
     CHANGE_PASSWORD: 'account:change_password',
+    MANAGE_SESSIONS: 'account:manage_sessions',
     UPDATE_PROFILE: 'account:update_profile',
     VIEW_ACTIVITY: 'account:view_activity',
     VIEW_PROFILE: 'account:view_profile',
@@ -83,6 +84,7 @@ export const PERMISSIONS = {
     DELETE: 'users:delete',
     EDIT_PERMISSIONS: 'users:edit_permissions',
     EXPORT: 'users:export',
+    MANAGE_ACCOUNT_POLICY: 'users:manage_account_policy',
     MANAGE_ROLES: 'users:manage_roles',
     MANAGE_STATUS: 'users:manage_status',
     RESET_PASSWORD: 'users:reset_password',
@@ -92,6 +94,7 @@ export const PERMISSIONS = {
     UPDATE_PROFILE: 'users:update_profile',
     VIEW: 'users:view',
     VIEW_ACCESS: 'users:view_access',
+    VIEW_ACCOUNT_POLICY: 'users:view_account_policy',
     VIEW_ACTIVITY: 'users:view_activity',
     VIEW_SESSIONS: 'users:view_sessions',
   },
@@ -217,7 +220,7 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
         dependencies: [PERMISSIONS.ACCOUNT.VIEW_PROFILE],
         description: 'Modifier son prénom et son nom depuis la page Mon compte',
         key: PERMISSIONS.ACCOUNT.UPDATE_PROFILE,
-        label: 'Modifier son profil personnel',
+        label: 'Modifier son prénom et son nom',
         module: 'Profil',
         risk: 'default',
       },
@@ -249,6 +252,17 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
         module: 'Mot de passe',
         risk: 'sensitive',
       },
+      {
+        action: 'manage',
+        alwaysEnabled: true,
+        dependencies: [PERMISSIONS.ACCOUNT.VIEW_SECURITY],
+        description:
+          'Consulter les appareils connectés et révoquer ses autres sessions',
+        key: PERMISSIONS.ACCOUNT.MANAGE_SESSIONS,
+        label: 'Gérer ses sessions actives',
+        module: 'Sessions',
+        risk: 'sensitive',
+      },
     ],
     tone: 'internal',
   },
@@ -260,9 +274,11 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
     permissions: [
       {
         action: 'view',
-        description: 'Consulter les activités liées à son propre compte',
+        alwaysEnabled: true,
+        description:
+          'Consulter le journal de sécurité et les actions liées à son propre compte',
         key: PERMISSIONS.ACCOUNT.VIEW_ACTIVITY,
-        label: 'Voir son activité',
+        label: "Voir son journal d'activité",
         module: 'Activité',
         risk: 'default',
       },
@@ -696,7 +712,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         dependencies: [PERMISSIONS.USERS.VIEW],
         description: 'Modifier le prénom et le nom des comptes',
         key: PERMISSIONS.USERS.UPDATE_PROFILE,
-        label: 'Modifier le profil',
+        label: 'Modifier le profil des utilisateurs',
         module: 'Profil',
         risk: 'sensitive',
       },
@@ -739,11 +755,31 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       {
         action: 'manage',
         dependencies: [PERMISSIONS.USERS.VIEW_ACCESS],
-        description: 'Modifier les permissions accordées aux comptes',
+        description: 'Modifier les accès métier accordés aux comptes',
         key: PERMISSIONS.USERS.EDIT_PERMISSIONS,
-        label: 'Gérer les permissions',
+        label: 'Gérer les accès métier',
         module: 'Accès',
         risk: 'critical',
+      },
+      {
+        action: 'view',
+        dependencies: [PERMISSIONS.USERS.VIEW],
+        description:
+          "Voir les actions qu'un utilisateur peut effectuer sur son propre compte, sans consulter ses accès métier",
+        key: PERMISSIONS.USERS.VIEW_ACCOUNT_POLICY,
+        label: "Voir l'autonomie des comptes",
+        module: 'Compte personnel',
+        risk: 'sensitive',
+      },
+      {
+        action: 'manage',
+        dependencies: [PERMISSIONS.USERS.VIEW_ACCOUNT_POLICY],
+        description:
+          "Définir les actions qu'un utilisateur peut effectuer sur son propre compte",
+        key: PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY,
+        label: "Gérer l'autonomie des comptes",
+        module: 'Compte personnel',
+        risk: 'sensitive',
       },
       {
         action: 'reset',

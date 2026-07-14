@@ -538,7 +538,7 @@ describe('account security routes', () => {
       });
       expect(mockRequirePermission).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'user-1' }),
-        PERMISSIONS.ACCOUNT.VIEW_SECURITY,
+        PERMISSIONS.ACCOUNT.MANAGE_SESSIONS,
       );
     });
 
@@ -852,7 +852,7 @@ describe('account security routes', () => {
       expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
       expect(mockRequirePermission).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'user-1' }),
-        PERMISSIONS.ACCOUNT.VIEW_SECURITY,
+        PERMISSIONS.ACCOUNT.MANAGE_SESSIONS,
       );
       expect(mockPrisma.session.delete).not.toHaveBeenCalled();
     });
@@ -890,7 +890,7 @@ describe('account security routes', () => {
       );
       expect(mockRequirePermission).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'user-1' }),
-        PERMISSIONS.ACCOUNT.VIEW_SECURITY,
+        PERMISSIONS.ACCOUNT.MANAGE_SESSIONS,
       );
     });
   });

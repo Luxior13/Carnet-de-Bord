@@ -565,7 +565,8 @@ describe('auth security transactions', () => {
     expect(mocks.transaction.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         action: 'ACCOUNT_LOCKED',
-        userId: 'user-1',
+        targetUserId: 'user-1',
+        userId: null,
       }),
     });
   });

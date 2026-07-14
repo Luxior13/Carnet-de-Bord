@@ -32,6 +32,7 @@ export type UserType = {
   passwordChangedAt: Date | null;
   permissions: PermissionsData | null;
   role: UserRole;
+  updatedAt?: Date | string;
 };
 
 export type UserSessionInfo = {
@@ -84,10 +85,12 @@ export type CreateUserRequest = {
 // User update request
 export type UpdateUserRequest = {
   email?: string;
+  expectedUpdatedAt?: string;
   firstName?: string;
   isActive?: boolean;
   lastName?: string;
   permissions?: PermissionsData | null;
+  permissionScope?: 'access' | 'account';
   role?: UserRole;
 };
 

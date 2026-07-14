@@ -228,6 +228,12 @@ const groupPermissionsByModule = (
   }));
 };
 
+const PERMISSION_ITEM_BY_KEY = new Map(
+  PERMISSION_CATEGORIES.flatMap((category) => category.permissions).map(
+    (permission) => [permission.key, permission] as const,
+  ),
+);
+
 const getMissingPermissionDependencies = (
   permission: PermissionItem,
   effectivePermissionsMap: Map<string, boolean>,
@@ -236,9 +242,28 @@ const getMissingPermissionDependencies = (
 
   if (!isEnabled) return [];
 
-  return (permission.dependencies ?? []).filter(
-    (dependency) => !(effectivePermissionsMap.get(dependency) ?? false),
-  );
+  const missingDependencies = new Set<string>();
+  const visitedPermissionKeys = new Set<string>();
+
+  const visitDependencies = (permissionKey: string): void => {
+    if (visitedPermissionKeys.has(permissionKey)) return;
+    visitedPermissionKeys.add(permissionKey);
+
+    const currentPermission = PERMISSION_ITEM_BY_KEY.get(permissionKey);
+
+    for (const dependencyKey of currentPermission?.dependencies ?? []) {
+      if (!(effectivePermissionsMap.get(dependencyKey) ?? false)) {
+        missingDependencies.add(dependencyKey);
+        continue;
+      }
+
+      visitDependencies(dependencyKey);
+    }
+  };
+
+  visitDependencies(permission.key);
+
+  return [...missingDependencies];
 };
 
 const countCategoryPermissionResults = (

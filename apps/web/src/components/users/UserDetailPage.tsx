@@ -87,7 +87,6 @@ type PendingNavigation =
   | {
       href: string;
       kind: 'section';
-      sectionId: UserDetailSectionId;
     };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
@@ -141,6 +140,22 @@ const resetPermissionOverridesForKeys = (
 
   return nextPermissionsMap.size > 0
     ? (Object.fromEntries(nextPermissionsMap) as PermissionsData)
+    : null;
+};
+
+const selectPermissionOverridesForKeys = (
+  permissions: PermissionsData | null | undefined,
+  permissionKeys: readonly string[],
+): PermissionsData | null => {
+  const permissionKeySet = new Set(permissionKeys);
+  const selectedPermissions = Object.fromEntries(
+    Object.entries(permissions ?? {}).filter(([permissionKey]) =>
+      permissionKeySet.has(permissionKey),
+    ),
+  ) as PermissionsData;
+
+  return Object.keys(selectedPermissions).length > 0
+    ? selectedPermissions
     : null;
 };
 
@@ -292,16 +307,18 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentQueryString = searchParams.toString();
+  const requestedSection = normalizeUserDetailSection(
+    searchParams.get('section'),
+  );
+  const permissionPageKey = normalizePermissionPageKey(
+    searchParams.get('permissionPage'),
+  );
   const { isLoading: isCurrentUserLoading, userData: currentUser } = useUser();
   const [user, setUser] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<UserDetailSectionId>(() =>
-    normalizeUserDetailSection(searchParams.get('section')),
-  );
-  const [permissionPageKey, setPermissionPageKey] = useState(() =>
-    normalizePermissionPageKey(searchParams.get('permissionPage')),
-  );
+  const [activeSection, setActiveSection] =
+    useState<UserDetailSectionId>(requestedSection);
   const [pendingNavigation, setPendingNavigation] =
     useState<PendingNavigation | null>(null);
   const [showUnsavedNavigationConfirm, setShowUnsavedNavigationConfirm] =
@@ -410,6 +427,22 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         currentUser.permissions,
       )
     : false;
+  const canViewUserAccountPolicy = currentUser
+    ? isProtectedActor ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.VIEW_ACCOUNT_POLICY,
+        currentUser.permissions,
+      )
+    : false;
+  const canManageUserAccountPolicy = currentUser
+    ? isProtectedActor ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY,
+        currentUser.permissions,
+      )
+    : false;
   const canViewUserSessions = currentUser
     ? isProtectedActor ||
       hasPermission(
@@ -472,10 +505,18 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const canViewTargetAccess =
     !!user &&
     (canViewUserAccess || canEditUserPermissions || canManageUserRoles);
-  const canViewTargetPersonalAccount = canViewTargetAccess;
-  const canManageTargetPermissions =
+  const canViewTargetPersonalAccount =
+    !!user && (canViewUserAccountPolicy || canManageUserAccountPolicy);
+  const canManageTargetAccessPermissions =
     !!user &&
     canEditUserPermissions &&
+    !isSelf &&
+    !user.isProtected &&
+    !isTargetAdminAccessRestricted;
+  const canManageTargetAccountPolicy =
+    !!user &&
+    canManageUserAccountPolicy &&
+    !isSelf &&
     !user.isProtected &&
     !isTargetAdminAccessRestricted;
   const canResetTargetPassword =
@@ -600,9 +641,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     !hasProfileErrors;
   const canSaveAccess =
     (hasRoleChanges && canEditTargetRole) ||
-    (hasAccessPermissionChanges && canManageTargetPermissions);
+    (hasAccessPermissionChanges && canManageTargetAccessPermissions);
   const canSaveAccount =
-    hasAccountPermissionChanges && canManageTargetPermissions;
+    hasAccountPermissionChanges && canManageTargetAccountPolicy;
   const canSaveSecurity = canEditTargetStatus && !isSelf && hasSecurityChanges;
   const dirtySections = useMemo<UserDetailSectionId[]>(() => {
     const sections: UserDetailSectionId[] = [];
@@ -979,16 +1020,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   }, [activeSection, fetchSecuritySessions]);
 
   useEffect(() => {
-    const requestedPermissionPageKey = normalizePermissionPageKey(
-      new URLSearchParams(currentQueryString).get('permissionPage'),
-    );
-
-    if (requestedPermissionPageKey === permissionPageKey) return;
-
-    setPermissionPageKey(requestedPermissionPageKey);
-  }, [currentQueryString, permissionPageKey]);
-
-  useEffect(() => {
     if (!hasUnsavedChanges) return;
 
     const handleBeforeUnload = (event: BeforeUnloadEvent): void => {
@@ -1033,10 +1064,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   }, [hasUnsavedChanges, requestPendingNavigation]);
 
   useEffect(() => {
-    const requestedSection = normalizeUserDetailSection(
-      new URLSearchParams(currentQueryString).get('section'),
-    );
-
     if (requestedSection === activeSection) return;
 
     if (skipSectionNavigationGuardRef.current) {
@@ -1054,11 +1081,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           requestedSection,
         ),
         kind: 'section',
-        sectionId: requestedSection,
       });
-      router.replace(
+      window.history.replaceState(
+        null,
+        '',
         buildUserDetailSectionHref(pathname, currentQueryString, activeSection),
-        { scroll: false },
       );
 
       return;
@@ -1071,7 +1098,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     hasCurrentSectionChanges,
     pathname,
     requestPendingNavigation,
-    router,
+    requestedSection,
   ]);
 
   const handleSectionChange = useCallback(
@@ -1086,16 +1113,15 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             sectionId,
           ),
           kind: 'section',
-          sectionId,
         });
 
         return;
       }
 
-      setActiveSection(sectionId);
-      router.replace(
+      window.history.replaceState(
+        null,
+        '',
         buildUserDetailSectionHref(pathname, currentQueryString, sectionId),
-        { scroll: false },
       );
     },
     [
@@ -1104,7 +1130,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       hasCurrentSectionChanges,
       pathname,
       requestPendingNavigation,
-      router,
     ],
   );
 
@@ -1113,15 +1138,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       const nextPermissionPageKey = normalizePermissionPageKey(pageKey);
       const nextParams = new URLSearchParams(currentQueryString);
 
-      setPermissionPageKey(nextPermissionPageKey);
       nextParams.set('section', 'access');
       nextParams.set('permissionPage', nextPermissionPageKey);
 
-      router.replace(`${pathname}?${nextParams.toString()}`, {
-        scroll: false,
-      });
+      window.history.replaceState(
+        null,
+        '',
+        `${pathname}?${nextParams.toString()}`,
+      );
     },
-    [currentQueryString, pathname, router],
+    [currentQueryString, pathname],
   );
 
   const handleCancelPendingNavigation = useCallback((): void => {
@@ -1140,8 +1166,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     if (navigation.kind === 'section') {
       discardSectionChanges(activeSection);
       skipSectionNavigationGuardRef.current = true;
-      setActiveSection(navigation.sectionId);
-      router.replace(navigation.href, { scroll: false });
+      window.history.replaceState(null, '', navigation.href);
 
       return;
     }
@@ -1232,6 +1257,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     try {
       const response = await apiFetch(`/api/users/${userId}`, {
         body: JSON.stringify({
+          ...(user?.updatedAt
+            ? {
+                expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
+              }
+            : {}),
           ...(canEditTargetEmail ? { email: editForm.email.trim() } : {}),
           ...(canEditTargetProfile
             ? {
@@ -1260,7 +1290,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   };
 
   const handleSaveAccess = async (): Promise<void> => {
-    if (!canEditTargetRole && !canManageTargetPermissions) {
+    if (!canEditTargetRole && !canManageTargetAccessPermissions) {
       toast.error('Permission insuffisante pour modifier les accès');
 
       return;
@@ -1272,10 +1302,26 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       return;
     }
 
-    const payload: { permissions?: PermissionsData | null; role?: UserRole } =
-      {};
+    if (!user?.updatedAt) {
+      toast.error('Version de la fiche indisponible. Rechargez la page.');
+
+      return;
+    }
+
+    const payload: {
+      expectedUpdatedAt: string;
+      permissions?: PermissionsData | null;
+      permissionScope?: 'access';
+      role?: UserRole;
+    } = { expectedUpdatedAt: new Date(user.updatedAt).toISOString() };
     if (canEditTargetRole) payload.role = editForm.role;
-    if (canManageTargetPermissions) payload.permissions = permissions;
+    if (canManageTargetAccessPermissions && hasAccessPermissionChanges) {
+      payload.permissionScope = 'access';
+      payload.permissions = selectPermissionOverridesForKeys(
+        permissions,
+        ACCESS_PERMISSION_KEYS,
+      );
+    }
 
     setIsSavingPermissions(true);
     try {
@@ -1301,8 +1347,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   };
 
   const handleSaveAccount = async (): Promise<void> => {
-    if (!canManageTargetPermissions) {
-      toast.error('Permission insuffisante pour modifier le compte personnel');
+    if (!canManageTargetAccountPolicy) {
+      toast.error(
+        "Permission insuffisante pour modifier l'autonomie du compte",
+      );
 
       return;
     }
@@ -1313,10 +1361,23 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       return;
     }
 
+    if (!user?.updatedAt) {
+      toast.error('Version de la fiche indisponible. Rechargez la page.');
+
+      return;
+    }
+
     setIsSavingPermissions(true);
     try {
       const response = await apiFetch(`/api/users/${userId}`, {
-        body: JSON.stringify({ permissions }),
+        body: JSON.stringify({
+          expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
+          permissions: selectPermissionOverridesForKeys(
+            permissions,
+            ACCOUNT_PERMISSION_KEYS,
+          ),
+          permissionScope: 'account',
+        }),
         headers: { 'Content-Type': 'application/json' },
         method: 'PATCH',
       });
@@ -1325,7 +1386,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       if (response.ok && data.success) {
         syncUserState(data.data.user);
         refreshAuditAfterMutation();
-        toast.success('Compte personnel mis à jour');
+        toast.success('Autonomie du compte mise à jour');
       } else {
         toast.error(data.error?.message || 'Erreur lors de la mise à jour');
       }
@@ -1352,7 +1413,14 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     setIsSaving(true);
     try {
       const response = await apiFetch(`/api/users/${userId}`, {
-        body: JSON.stringify({ isActive: editForm.isActive }),
+        body: JSON.stringify({
+          ...(user?.updatedAt
+            ? {
+                expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
+              }
+            : {}),
+          isActive: editForm.isActive,
+        }),
         headers: { 'Content-Type': 'application/json' },
         method: 'PATCH',
       });
@@ -1550,7 +1618,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             permissions={permissions}
             setPermissions={setPermissions}
             canEditRole={canEditTargetRole}
-            canManagePermissions={canManageTargetPermissions}
+            canManagePermissions={canManageTargetAccessPermissions}
             isSaving={isSavingPermissions}
             permissionPageKey={permissionPageKey}
             onPermissionPageChange={handlePermissionPageChange}
@@ -1563,7 +1631,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       case 'account':
         if (!canViewTargetPersonalAccount) {
           return (
-            <AccessDeniedState description="Vous n'avez pas la permission de consulter le compte personnel de cet utilisateur." />
+            <AccessDeniedState description="Vous n'avez pas la permission de consulter l'autonomie de ce compte." />
           );
         }
 
@@ -1573,7 +1641,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             role={editForm.role}
             permissions={permissions}
             setPermissions={setPermissions}
-            canManagePermissions={canManageTargetPermissions}
+            canManagePermissions={canManageTargetAccountPolicy}
             isSaving={isSavingPermissions}
             onSave={handleSaveAccount}
             onCancel={handleCancelAccount}

@@ -156,24 +156,20 @@ export const AccountPageContent: FC = () => {
   const canChangePassword =
     !!userData?.mustChangePassword ||
     canUseAccountPermission(PERMISSIONS.ACCOUNT.CHANGE_PASSWORD);
+  const canManageSessions = canUseAccountPermission(
+    PERMISSIONS.ACCOUNT.MANAGE_SESSIONS,
+  );
   const canViewActivity = canUseAccountPermission(
     PERMISSIONS.ACCOUNT.VIEW_ACTIVITY,
   );
-  const canExportUserActivity = userData
-    ? userData.isProtected ||
-      hasPermission(
-        userData.role,
-        PERMISSIONS.USERS.EXPORT,
-        userData.permissions,
-      )
-    : false;
+  const canExportUserActivity = canViewActivity;
   const visibleAccountSections = useMemo(
     () =>
       userData
         ? ACCOUNT_SECTIONS.filter((section) => {
             if (section.id === 'profile') return canViewProfile;
             if (section.id === 'security') {
-              return canViewSecurity || canChangePassword;
+              return canViewSecurity || canChangePassword || canManageSessions;
             }
             if (section.id === 'activity') return canViewActivity;
 
@@ -182,6 +178,7 @@ export const AccountPageContent: FC = () => {
         : ACCOUNT_SECTIONS,
     [
       canChangePassword,
+      canManageSessions,
       canViewActivity,
       canViewProfile,
       canViewSecurity,
@@ -475,12 +472,13 @@ export const AccountPageContent: FC = () => {
             />
           </div>
         )}
-        {(canViewSecurity || canChangePassword) && (
+        {(canViewSecurity || canChangePassword || canManageSessions) && (
           <div hidden={activeSection !== 'security'}>
             <SecuritySection
               userData={userData}
               onUpdate={handleAccountUpdate}
               canChangePassword={canChangePassword}
+              canManageSessions={canManageSessions}
               canViewSecurity={canViewSecurity}
             />
           </div>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  ACCOUNT_PERMISSION_CATEGORIES,
   arePermissionOverridesEqual,
   buildPermissionOverrides,
   getAllPermissionKeys,
@@ -11,6 +12,7 @@ import {
   isKnownPermissionKey,
   isPermissionAlwaysEnabled,
   normalizePermissionOverrides,
+  PERMISSION_CATEGORIES,
   PERMISSIONS,
   ROLE_PERMISSIONS,
 } from '../shared/constants/permissions.constants';
@@ -26,9 +28,18 @@ describe('hasPermission', () => {
     );
     expect(hasPermission('ADMIN', PERMISSIONS.USERS.CREATE)).toBe(true);
     expect(hasPermission('ADMIN', PERMISSIONS.USERS.EXPORT)).toBe(true);
+    expect(
+      hasPermission('ADMIN', PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY),
+    ).toBe(true);
+    expect(hasPermission('ADMIN', PERMISSIONS.USERS.VIEW_ACCOUNT_POLICY)).toBe(
+      true,
+    );
     expect(hasPermission('USER', PERMISSIONS.DASHBOARD.VIEW)).toBe(true);
     expect(hasPermission('USER', PERMISSIONS.USERS.CREATE)).toBe(false);
     expect(hasPermission('USER', PERMISSIONS.USERS.EXPORT)).toBe(false);
+    expect(hasPermission('USER', PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY)).toBe(
+      false,
+    );
     expect(hasPermission('USER', PERMISSIONS.USERS.VIEW)).toBe(false);
   });
 
@@ -156,6 +167,20 @@ describe('hasPermission', () => {
         [PERMISSIONS.USERS.VIEW]: true,
       }),
     ).toBe(true);
+    expect(
+      hasPermission('USER', PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY, {
+        [PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY]: true,
+        [PERMISSIONS.USERS.VIEW]: true,
+        [PERMISSIONS.USERS.VIEW_ACCOUNT_POLICY]: false,
+      }),
+    ).toBe(false);
+    expect(
+      hasPermission('USER', PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY, {
+        [PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY]: true,
+        [PERMISSIONS.USERS.VIEW]: true,
+        [PERMISSIONS.USERS.VIEW_ACCOUNT_POLICY]: true,
+      }),
+    ).toBe(true);
   });
 
   it('requires system view before granting system secondary actions', () => {
@@ -218,23 +243,62 @@ describe('hasPermission', () => {
         [PERMISSIONS.ACCOUNT.VIEW_SECURITY]: false,
       }),
     ).toBe(true);
-  });
-
-  it('keeps optional personal account actions configurable', () => {
     expect(
-      hasPermission('USER', PERMISSIONS.ACCOUNT.UPDATE_PROFILE, {
-        [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+      hasPermission('USER', PERMISSIONS.ACCOUNT.MANAGE_SESSIONS, {
+        [PERMISSIONS.ACCOUNT.MANAGE_SESSIONS]: false,
       }),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       hasPermission('USER', PERMISSIONS.ACCOUNT.VIEW_ACTIVITY, {
         [PERMISSIONS.ACCOUNT.VIEW_ACTIVITY]: false,
+      }),
+    ).toBe(true);
+  });
+
+  it('keeps personal profile updates configurable', () => {
+    expect(
+      hasPermission('USER', PERMISSIONS.ACCOUNT.UPDATE_PROFILE, {
+        [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
       }),
     ).toBe(false);
   });
 });
 
 describe('permission catalogue', () => {
+  it('defines an acyclic dependency graph with known keys', () => {
+    const permissionItems = [
+      ...PERMISSION_CATEGORIES.flatMap((category) => category.permissions),
+      ...ACCOUNT_PERMISSION_CATEGORIES.flatMap(
+        (category) => category.permissions,
+      ),
+    ];
+    const permissionItemMap = new Map(
+      permissionItems.map((permission) => [permission.key, permission]),
+    );
+    const visited = new Set<string>();
+    const visiting = new Set<string>();
+
+    const visit = (permissionKey: string): void => {
+      expect(visiting.has(permissionKey), `cycle at ${permissionKey}`).toBe(
+        false,
+      );
+      if (visited.has(permissionKey)) return;
+
+      visiting.add(permissionKey);
+      const permission = permissionItemMap.get(permissionKey);
+
+      for (const dependencyKey of permission?.dependencies ?? []) {
+        expect(permissionItemMap.has(dependencyKey)).toBe(true);
+        visit(dependencyKey);
+      }
+
+      visiting.delete(permissionKey);
+      visited.add(permissionKey);
+    };
+
+    for (const permission of permissionItems) visit(permission.key);
+  });
+
   it('contains the long-term access permission families', () => {
     expect(getAllPermissionKeys()).toEqual([
       'dashboard:view',
@@ -277,6 +341,8 @@ describe('permission catalogue', () => {
       'users:view_access',
       'users:manage_roles',
       'users:edit_permissions',
+      'users:view_account_policy',
+      'users:manage_account_policy',
       'users:reset_password',
       'users:view_sessions',
       'users:revoke_sessions',
@@ -297,6 +363,7 @@ describe('permission catalogue', () => {
       'account:update_profile',
       'account:view_security',
       'account:change_password',
+      'account:manage_sessions',
       'account:view_activity',
     ]);
   });
@@ -326,6 +393,7 @@ describe('permission catalogue', () => {
       normalizePermissionOverrides({
         [PERMISSIONS.ACCOUNT.CHANGE_PASSWORD]: false,
         [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+        [PERMISSIONS.ACCOUNT.VIEW_ACTIVITY]: false,
         [PERMISSIONS.ACCOUNT.VIEW_PROFILE]: false,
         [PERMISSIONS.ACCOUNT.VIEW_SECURITY]: false,
       }),
@@ -355,7 +423,7 @@ describe('permission catalogue', () => {
     expect(effectivePermissions[PERMISSIONS.ACCOUNT.UPDATE_PROFILE]).toBe(
       false,
     );
-    expect(effectivePermissions[PERMISSIONS.ACCOUNT.VIEW_ACTIVITY]).toBe(false);
+    expect(effectivePermissions[PERMISSIONS.ACCOUNT.VIEW_ACTIVITY]).toBe(true);
   });
 
   it('defines neutral role presets', () => {

@@ -65,8 +65,17 @@ const buildUser = (
   passwordHash: 'hash',
   permissions: {},
   role: 'USER',
+  updatedAt: new Date('2026-03-01T00:00:00.000Z'),
   ...overrides,
 });
+
+const USER_REVISION = '2026-03-01T00:00:00.000Z';
+
+const stringifyRequestBody = (body: Record<string, unknown>): string =>
+  JSON.stringify({
+    ...('permissions' in body ? { expectedUpdatedAt: USER_REVISION } : {}),
+    ...body,
+  });
 
 describe('users access hardening', () => {
   beforeEach(() => {
@@ -102,7 +111,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
-        body: JSON.stringify({ firstName: 'Jeanne' }),
+        body: stringifyRequestBody({ firstName: 'Jeanne' }),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'target-1' }) },
@@ -111,13 +120,14 @@ describe('users access hardening', () => {
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
+    expect(body.data.user.permissions).toBeNull();
     expect(mockRequirePermission.mock.calls.map(([, key]) => key)).toEqual([
       PERMISSIONS.USERS.UPDATE_PROFILE,
     ]);
     expect(mockPrisma.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ firstName: 'Jeanne' }),
-        where: { id: 'target-1' },
+        where: expect.objectContaining({ id: 'target-1' }),
       }),
     );
   });
@@ -132,7 +142,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
-        body: JSON.stringify({ email: 'next@example.com' }),
+        body: stringifyRequestBody({ email: 'next@example.com' }),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'target-1' }) },
@@ -181,7 +191,10 @@ describe('users access hardening', () => {
         },
       }),
     });
-    const targetPermissions = { [PERMISSIONS.USERS.DELETE]: true };
+    const targetPermissions = {
+      [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+      [PERMISSIONS.USERS.DELETE]: true,
+    };
     mockPrisma.user.findUnique.mockResolvedValueOnce(
       buildUser({ id: 'target-1', permissions: targetPermissions }),
     );
@@ -194,7 +207,46 @@ describe('users access hardening', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.data.user.permissions).toEqual(targetPermissions);
+    expect(body.data.user.permissions).toEqual({
+      [PERMISSIONS.USERS.DELETE]: true,
+    });
+  });
+
+  it('returns only personal-account overrides with account-policy read access', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'viewer-1',
+        passwordHash: undefined,
+        permissions: {
+          [PERMISSIONS.USERS.VIEW]: true,
+          [PERMISSIONS.USERS.VIEW_ACCOUNT_POLICY]: true,
+        },
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(
+      buildUser({
+        id: 'target-1',
+        permissions: {
+          [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+          [PERMISSIONS.SYSTEM.SETTINGS]: true,
+        },
+      }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users/target-1') as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.user.permissions).toEqual({
+      [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+    });
   });
 
   it('allows permissions-only updates with users:edit_permissions only', async () => {
@@ -227,7 +279,10 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
-        body: JSON.stringify({ permissions: nextPermissions }),
+        body: stringifyRequestBody({
+          permissions: nextPermissions,
+          permissionScope: 'access',
+        }),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'target-1' }) },
@@ -236,13 +291,14 @@ describe('users access hardening', () => {
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
+    expect(body.data.user.permissions).toEqual(nextPermissions);
     expect(mockRequirePermission.mock.calls.map(([, key]) => key)).toEqual([
       PERMISSIONS.USERS.EDIT_PERMISSIONS,
     ]);
     expect(mockPrisma.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ permissions: nextPermissions }),
-        where: { id: 'target-1' },
+        where: expect.objectContaining({ id: 'target-1' }),
       }),
     );
     expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
@@ -267,9 +323,9 @@ describe('users access hardening', () => {
         id: 'viewer-1',
         passwordHash: undefined,
         permissions: {
-          [PERMISSIONS.USERS.EDIT_PERMISSIONS]: true,
+          [PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY]: true,
           [PERMISSIONS.USERS.VIEW]: true,
-          [PERMISSIONS.USERS.VIEW_ACCESS]: true,
+          [PERMISSIONS.USERS.VIEW_ACCOUNT_POLICY]: true,
         },
       }),
     });
@@ -287,7 +343,10 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
-        body: JSON.stringify({ permissions: nextPermissions }),
+        body: stringifyRequestBody({
+          permissions: nextPermissions,
+          permissionScope: 'account',
+        }),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'target-1' }) },
@@ -296,13 +355,17 @@ describe('users access hardening', () => {
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
+    expect(mockRequirePermission).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'viewer-1' }),
+      PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY,
+    );
     expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'PERMISSION_UPDATE',
         category: 'PERMISSION',
         metadata: expect.objectContaining({
           tabKey: 'account',
-          tabLabel: 'Compte personnel',
+          tabLabel: 'Autonomie du compte',
         }),
         targetUserId: 'target-1',
       }),
@@ -314,6 +377,7 @@ describe('users access hardening', () => {
     const existingUser = buildUser({ id: 'target-1', permissions: {} });
     const requestedPermissions = {
       [PERMISSIONS.ACCOUNT.CHANGE_PASSWORD]: false,
+      [PERMISSIONS.ACCOUNT.MANAGE_SESSIONS]: false,
       [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
       [PERMISSIONS.ACCOUNT.VIEW_PROFILE]: false,
       [PERMISSIONS.ACCOUNT.VIEW_SECURITY]: false,
@@ -331,7 +395,10 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
-        body: JSON.stringify({ permissions: requestedPermissions }),
+        body: stringifyRequestBody({
+          permissions: requestedPermissions,
+          permissionScope: 'account',
+        }),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'target-1' }) },
@@ -340,13 +407,13 @@ describe('users access hardening', () => {
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
-    expect(mockPrisma.user.update).toHaveBeenCalledWith({
-      data: { permissions: persistedPermissions },
-      where: { id: 'target-1' },
-    });
-    expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
-      where: { userId: 'target-1' },
-    });
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { permissions: persistedPermissions },
+        where: expect.objectContaining({ id: 'target-1' }),
+      }),
+    );
+    expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
     expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledTimes(1);
   });
 
@@ -354,6 +421,7 @@ describe('users access hardening', () => {
     const existingUser = buildUser({ id: 'target-1', permissions: null });
     const requestedPermissions = {
       [PERMISSIONS.ACCOUNT.CHANGE_PASSWORD]: false,
+      [PERMISSIONS.ACCOUNT.MANAGE_SESSIONS]: false,
       [PERMISSIONS.ACCOUNT.VIEW_PROFILE]: false,
       [PERMISSIONS.ACCOUNT.VIEW_SECURITY]: false,
     };
@@ -363,7 +431,10 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
-        body: JSON.stringify({ permissions: requestedPermissions }),
+        body: stringifyRequestBody({
+          permissions: requestedPermissions,
+          permissionScope: 'account',
+        }),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'target-1' }) },
@@ -380,6 +451,320 @@ describe('users access hardening', () => {
     expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
   });
 
+  it('merges account overrides without overwriting access overrides', async () => {
+    const existingUser = buildUser({
+      id: 'target-1',
+      permissions: {
+        [PERMISSIONS.USERS.VIEW]: false,
+      },
+    });
+    const mergedPermissions = {
+      [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+      [PERMISSIONS.USERS.VIEW]: false,
+    };
+
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+    mockPrisma.user.update.mockResolvedValue({
+      ...existingUser,
+      permissions: mergedPermissions,
+    });
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          permissions: { [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false },
+          permissionScope: 'account',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { permissions: mergedPermissions },
+      }),
+    );
+    expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('does not reject an account-policy change because of an untouched access grant', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'viewer-1',
+        passwordHash: undefined,
+        permissions: {
+          [PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY]: true,
+          [PERMISSIONS.USERS.VIEW]: true,
+          [PERMISSIONS.USERS.VIEW_ACCOUNT_POLICY]: true,
+        },
+      }),
+    });
+    const existingUser = buildUser({
+      id: 'target-1',
+      permissions: { [PERMISSIONS.SYSTEM.SETTINGS]: true },
+    });
+    const mergedPermissions = {
+      [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+      [PERMISSIONS.SYSTEM.SETTINGS]: true,
+    };
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+    mockPrisma.user.update.mockResolvedValue({
+      ...existingUser,
+      permissions: mergedPermissions,
+    });
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          permissions: { [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false },
+          permissionScope: 'account',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { permissions: mergedPermissions } }),
+    );
+  });
+
+  it('merges access overrides without overwriting account overrides', async () => {
+    const existingUser = buildUser({
+      id: 'target-1',
+      permissions: {
+        [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+        [PERMISSIONS.USERS.VIEW]: false,
+      },
+    });
+    const mergedPermissions = {
+      [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+      [PERMISSIONS.DASHBOARD.VIEW]: false,
+    };
+
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+    mockPrisma.user.update.mockResolvedValue({
+      ...existingUser,
+      permissions: mergedPermissions,
+    });
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          permissions: { [PERMISSIONS.DASHBOARD.VIEW]: false },
+          permissionScope: 'access',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { permissions: mergedPermissions },
+      }),
+    );
+    expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
+      where: { userId: 'target-1' },
+    });
+  });
+
+  it('rejects permission keys outside the declared scope', async () => {
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          permissions: { [PERMISSIONS.USERS.VIEW]: true },
+          permissionScope: 'account',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe(ErrorCode.VALIDATION_ERROR);
+    expect(body.error.details.permissions).toEqual([
+      `Permission hors scope: ${PERMISSIONS.USERS.VIEW}`,
+    ]);
+    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('requires an explicit permission payload when a scope is provided', async () => {
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({ permissionScope: 'account' }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('requires a client revision for permission updates', async () => {
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: JSON.stringify({
+          permissions: { [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false },
+          permissionScope: 'account',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.details.expectedUpdatedAt).toEqual([
+      'La version de la fiche est requise pour modifier les accès',
+    ]);
+    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('does not let a legacy payload bypass account-policy authorization', async () => {
+    const existingUser = buildUser({ id: 'target-1', permissions: null });
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+    mockRequirePermission.mockImplementation((_user, permissionKey) =>
+      permissionKey === PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY
+        ? {
+            response: Response.json(
+              {
+                error: { code: ErrorCode.FORBIDDEN, message: 'Interdit' },
+                success: false,
+              },
+              { status: 403 },
+            ),
+            success: false,
+          }
+        : { success: true },
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          permissions: { [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false },
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(403);
+    expect(mockRequirePermission).toHaveBeenCalledWith(
+      expect.anything(),
+      PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY,
+    );
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('redacts permission overrides from no-op PATCH responses', async () => {
+    const existingUser = buildUser({
+      id: 'target-1',
+      permissions: { [PERMISSIONS.USERS.DELETE]: true },
+    });
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({ firstName: existingUser.firstName }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.user.permissions).toBeNull();
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('revokes existing sessions when the login email changes', async () => {
+    const existingUser = buildUser({ id: 'target-1' });
+    mockPrisma.user.findUnique
+      .mockResolvedValueOnce(existingUser)
+      .mockResolvedValueOnce(null);
+    mockPrisma.user.update.mockResolvedValue({
+      ...existingUser,
+      email: 'nouveau@example.com',
+    });
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({ email: 'nouveau@example.com' }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
+      where: { userId: 'target-1' },
+    });
+  });
+
+  it('returns a conflict instead of overwriting a concurrent update', async () => {
+    const existingUser = buildUser({ id: 'target-1' });
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+    mockPrisma.user.update.mockRejectedValue({ code: 'P2025' });
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({ firstName: 'Jeanne' }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body.error.code).toBe(ErrorCode.CONFLICT);
+    expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
+  });
+
+  it('rejects a permission save based on a stale client revision', async () => {
+    const existingUser = buildUser({
+      id: 'target-1',
+      updatedAt: new Date('2026-03-02T00:00:00.000Z'),
+    });
+    mockPrisma.user.findUnique.mockResolvedValue(existingUser);
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          permissions: { [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false },
+          permissionScope: 'account',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body.error.code).toBe(ErrorCode.CONFLICT);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
   it('rejects self permission updates for non-protected users', async () => {
     const existingUser = buildUser({ id: 'viewer-1', permissions: {} });
     const nextPermissions = {
@@ -392,7 +777,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/viewer-1', {
-        body: JSON.stringify({ permissions: nextPermissions }),
+        body: stringifyRequestBody({ permissions: nextPermissions }),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'viewer-1' }) },
@@ -411,7 +796,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
-        body: JSON.stringify({
+        body: stringifyRequestBody({
           permissions: {
             [PERMISSIONS.USERS.VIEW]: true,
             'users:ghost': true,
@@ -467,7 +852,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
-        body: JSON.stringify({ permissions: nextPermissions }),
+        body: stringifyRequestBody({ permissions: nextPermissions }),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'target-1' }) },
@@ -489,7 +874,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
-        body: JSON.stringify({
+        body: stringifyRequestBody({
           permissions: {
             [PERMISSIONS.USERS.DELETE]: true,
           },
@@ -559,7 +944,7 @@ describe('users access hardening', () => {
       const route = await import('$app/api/users/[id]/route');
       const response = await route.PATCH(
         new Request('http://localhost/api/users/target-1', {
-          body: JSON.stringify({ permissions: nextPermissions }),
+          body: stringifyRequestBody({ permissions: nextPermissions }),
           method: 'PATCH',
         }) as never,
         { params: Promise.resolve({ id: 'target-1' }) },
@@ -586,7 +971,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
-        body: JSON.stringify({ isActive: true }),
+        body: stringifyRequestBody({ isActive: true }),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'target-1' }) },
@@ -610,7 +995,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
-        body: JSON.stringify({
+        body: stringifyRequestBody({
           staffProfile: {
             department: ' Staff ',
             displayName: ' Coach Lux ',
@@ -633,7 +1018,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
-        body: JSON.stringify({ firstName: null }),
+        body: stringifyRequestBody({ firstName: null }),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'target-1' }) },
@@ -647,7 +1032,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
-        body: JSON.stringify({}),
+        body: stringifyRequestBody({}),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'target-1' }) },
@@ -678,7 +1063,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/route');
     const response = await route.POST(
       new Request('http://localhost/api/users', {
-        body: JSON.stringify({
+        body: stringifyRequestBody({
           email: 'New.User@example.com',
           firstName: 'New',
           lastName: 'User',
@@ -729,7 +1114,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/route');
     const response = await route.POST(
       new Request('http://localhost/api/users', {
-        body: JSON.stringify({
+        body: stringifyRequestBody({
           email: 'race@example.com',
           firstName: 'Race',
           lastName: 'Condition',
@@ -755,7 +1140,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/route');
     const response = await route.POST(
       new Request('http://localhost/api/users', {
-        body: JSON.stringify({
+        body: stringifyRequestBody({
           email: 'failure@example.com',
           firstName: 'Failure',
           lastName: 'Case',
@@ -772,7 +1157,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/route');
     const response = await route.POST(
       new Request('http://localhost/api/users', {
-        body: JSON.stringify({
+        body: stringifyRequestBody({
           email: 'new.user@example.com',
           firstName: 'A'.repeat(51),
           lastName: 'User',
@@ -798,7 +1183,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
-        body: JSON.stringify({ lastName: 'Martin' }),
+        body: stringifyRequestBody({ lastName: 'Martin' }),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'target-1' }) },
@@ -834,7 +1219,11 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/protected-2', {
-        body: JSON.stringify({ isActive: false, role: 'USER' }),
+        body: stringifyRequestBody({
+          expectedUpdatedAt: USER_REVISION,
+          isActive: false,
+          role: 'USER',
+        }),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'protected-2' }) },
@@ -856,7 +1245,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/admin-1', {
-        body: JSON.stringify({ isActive: false }),
+        body: stringifyRequestBody({ isActive: false }),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'admin-1' }) },

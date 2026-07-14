@@ -27,6 +27,41 @@ type AuditResponse = {
   stats: UserAuditStats;
 };
 
+const SAFE_AUDIT_METADATA_KEYS = new Set([
+  'pageKey',
+  'pageLabel',
+  'poleKey',
+  'poleLabel',
+  'tabKey',
+  'tabLabel',
+]);
+
+const toAuditMetadata = (value: unknown): Record<string, unknown> | null => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+
+  return value as Record<string, unknown>;
+};
+
+const getVisibleAuditMetadata = (
+  value: unknown,
+  canViewFullDetails: boolean,
+): Record<string, unknown> | null => {
+  const metadata = toAuditMetadata(value);
+
+  if (!metadata || canViewFullDetails) return metadata;
+
+  const safeMetadata = Object.fromEntries(
+    Object.entries(metadata).filter(
+      ([key, entryValue]) =>
+        SAFE_AUDIT_METADATA_KEYS.has(key) &&
+        typeof entryValue === 'string' &&
+        entryValue.trim().length > 0,
+    ),
+  );
+
+  return Object.keys(safeMetadata).length > 0 ? safeMetadata : null;
+};
+
 // ============================================
 // GET /api/users/[id]/audit - Get user audit logs
 // ============================================
@@ -57,8 +92,6 @@ export async function GET(
       );
       if (!permCheck.success) return permCheck.response;
     }
-    const canViewSensitiveAudit = isOwnAudit || auth.user.isProtected;
-
     // Get pagination params
     const { searchParams } = new URL(request.url);
     const {
@@ -106,7 +139,10 @@ export async function GET(
           })
         : Promise.resolve([]),
       prisma.auditLog.count({
-        where: { action: 'LOGIN_FAILED', userId: id },
+        where: {
+          action: 'LOGIN_FAILED',
+          OR: [{ targetUserId: id }, { userId: id }],
+        },
       }),
       prisma.auditLog.count({
         where: { action: 'LOGIN_SUCCESS', userId: id },
@@ -121,18 +157,33 @@ export async function GET(
 
     return NextResponse.json({
       data: {
-        logs: logs.map((log) => ({
-          action: log.action,
-          category: log.category,
-          createdAt: log.createdAt,
-          description: log.description,
-          id: log.id,
-          ipAddress: canViewSensitiveAudit ? log.ipAddress : null,
-          metadata: log.metadata as Record<string, unknown> | null,
-          targetUserId: log.targetUserId,
-          userAgent: canViewSensitiveAudit ? log.userAgent : null,
-          userId: log.userId,
-        })),
+        logs: logs.map((log) => {
+          const canViewFullDetails =
+            auth.user.isProtected || (isOwnAudit && log.userId === id);
+          const canViewPersonalSecuritySource =
+            isOwnAudit &&
+            log.targetUserId === id &&
+            (log.action === 'LOGIN_FAILED' || log.action === 'ACCOUNT_LOCKED');
+
+          return {
+            action: log.action,
+            category: log.category,
+            createdAt: log.createdAt,
+            description: log.description,
+            id: log.id,
+            ipAddress:
+              canViewFullDetails || canViewPersonalSecuritySource
+                ? log.ipAddress
+                : null,
+            metadata: getVisibleAuditMetadata(log.metadata, canViewFullDetails),
+            targetUserId: log.targetUserId,
+            userAgent:
+              canViewFullDetails || canViewPersonalSecuritySource
+                ? log.userAgent
+                : null,
+            userId: log.userId,
+          };
+        }),
         pagination: {
           page,
           pageSize,

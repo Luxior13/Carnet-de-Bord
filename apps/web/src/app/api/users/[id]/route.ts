@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import {
   arePermissionOverridesEqual,
+  getAccessPermissionKeys,
   getAccountPermissionKeys,
   getAllPermissionKeys,
   getUnknownPermissionKeys,
@@ -42,6 +43,102 @@ const USERS_PAGE_AUDIT_LOCATION = {
 } as const;
 
 const ACCOUNT_PERMISSION_KEY_SET = new Set(getAccountPermissionKeys());
+const ACCESS_PERMISSION_KEY_SET = new Set(getAccessPermissionKeys());
+
+type PermissionScope = 'access' | 'account';
+
+const getPermissionScopeKeySet = (
+  permissionScope: PermissionScope,
+): ReadonlySet<string> =>
+  permissionScope === 'account'
+    ? ACCOUNT_PERMISSION_KEY_SET
+    : ACCESS_PERMISSION_KEY_SET;
+
+const mergePermissionOverridesForScope = (
+  existingPermissions: Record<string, boolean> | null,
+  requestedPermissions: Record<string, boolean> | null,
+  permissionScope: PermissionScope,
+): Record<string, boolean> | null => {
+  const scopePermissionKeys = getPermissionScopeKeySet(permissionScope);
+  const mergedPermissions = new Map(
+    Object.entries(normalizePermissionOverrides(existingPermissions) ?? {}),
+  );
+
+  for (const permissionKey of scopePermissionKeys) {
+    mergedPermissions.delete(permissionKey);
+  }
+
+  for (const [permissionKey, enabled] of Object.entries(
+    normalizePermissionOverrides(requestedPermissions) ?? {},
+  )) {
+    if (scopePermissionKeys.has(permissionKey)) {
+      mergedPermissions.set(permissionKey, enabled);
+    }
+  }
+
+  return normalizePermissionOverrides(
+    Object.fromEntries(mergedPermissions) as Record<string, boolean>,
+  );
+};
+
+const getPermissionOverridesForActor = (
+  permissions: Record<string, boolean> | null,
+  actor: UserType,
+): Record<string, boolean> | null => {
+  const normalizedPermissions = normalizePermissionOverrides(permissions);
+
+  if (actor.isProtected) return normalizedPermissions;
+
+  const visiblePermissionKeys = new Set<string>();
+
+  if (
+    hasPermission(actor.role, PERMISSIONS.USERS.VIEW_ACCESS, actor.permissions)
+  ) {
+    for (const permissionKey of ACCESS_PERMISSION_KEY_SET) {
+      visiblePermissionKeys.add(permissionKey);
+    }
+  }
+
+  if (
+    hasPermission(
+      actor.role,
+      PERMISSIONS.USERS.VIEW_ACCOUNT_POLICY,
+      actor.permissions,
+    )
+  ) {
+    for (const permissionKey of ACCOUNT_PERMISSION_KEY_SET) {
+      visiblePermissionKeys.add(permissionKey);
+    }
+  }
+
+  if (visiblePermissionKeys.size === 0) return null;
+
+  return normalizePermissionOverrides(
+    Object.fromEntries(
+      Object.entries(normalizedPermissions ?? {}).filter(([permissionKey]) =>
+        visiblePermissionKeys.has(permissionKey),
+      ),
+    ),
+  );
+};
+
+const mapUserForActor = (
+  user: Parameters<typeof mapUserToUserType>[0],
+  actor: UserType,
+): UserType => {
+  const clientUser = mapUserToUserType(user);
+
+  return {
+    ...clientUser,
+    permissions: getPermissionOverridesForActor(clientUser.permissions, actor),
+  };
+};
+
+const isPrismaOptimisticConflict = (error: unknown): boolean =>
+  !!error &&
+  typeof error === 'object' &&
+  'code' in error &&
+  error.code === 'P2025';
 
 const toPermissionMap = (value: unknown): Map<string, boolean> => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -106,21 +203,9 @@ export async function GET(
       );
     }
 
-    const canViewAccess =
-      auth.user.isProtected ||
-      hasPermission(
-        auth.user.role,
-        PERMISSIONS.USERS.VIEW_ACCESS,
-        auth.user.permissions,
-      );
-    const clientUser = mapUserToUserType(user);
-
     return NextResponse.json({
       data: {
-        user: {
-          ...clientUser,
-          permissions: canViewAccess ? clientUser.permissions : null,
-        },
+        user: mapUserForActor(user, auth.user),
       },
       success: true,
     });
@@ -150,6 +235,11 @@ const permissionsSchema = z
 const updateUserSchema = z
   .object({
     email: emailSchema.optional(),
+    expectedUpdatedAt: z
+      .string()
+      .datetime({ offset: true })
+      .transform((value) => new Date(value))
+      .optional(),
     firstName: trimmedStringMinMax(
       1,
       50,
@@ -164,9 +254,61 @@ const updateUserSchema = z
       'Nom trop long',
     ).optional(),
     permissions: permissionsSchema,
+    permissionScope: z.enum(['access', 'account']).optional(),
     role: z.enum(['ADMIN', 'USER']).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((value, context) => {
+    if (
+      (value.permissions !== undefined || value.role !== undefined) &&
+      value.expectedUpdatedAt === undefined
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'La version de la fiche est requise pour modifier les accès',
+        path: ['expectedUpdatedAt'],
+      });
+    }
+
+    if (
+      value.permissionScope !== undefined &&
+      value.permissions === undefined
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Le scope exige un payload de permissions',
+        path: ['permissionScope'],
+      });
+    }
+
+    if (value.permissionScope === 'account' && value.role !== undefined) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Le rôle appartient au scope d'accès",
+        path: ['role'],
+      });
+    }
+
+    if (
+      value.permissions === undefined ||
+      value.permissionScope === undefined
+    ) {
+      return;
+    }
+
+    const scopePermissionKeys = getPermissionScopeKeySet(value.permissionScope);
+    const outOfScopePermissionKeys = Object.keys(
+      value.permissions ?? {},
+    ).filter((permissionKey) => !scopePermissionKeys.has(permissionKey));
+
+    if (outOfScopePermissionKeys.length > 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Permission hors scope: ${outOfScopePermissionKeys.join(', ')}`,
+        path: ['permissions'],
+      });
+    }
+  });
 
 export async function PATCH(
   request: NextRequest,
@@ -201,17 +343,19 @@ export async function PATCH(
 
     const {
       email,
+      expectedUpdatedAt,
       firstName,
       isActive,
       lastName,
       permissions: requestedPermissions,
+      permissionScope,
       role,
     } = validation.data;
-    const permissions =
+    const normalizedRequestedPermissions =
       requestedPermissions === undefined
         ? undefined
         : normalizePermissionOverrides(requestedPermissions);
-    const isPermissionsUpdate = permissions !== undefined;
+    const isPermissionsUpdate = requestedPermissions !== undefined;
     const isProfileUpdate = firstName !== undefined || lastName !== undefined;
     const isLoginUpdate = email !== undefined;
     const isStatusUpdate = typeof isActive === 'boolean';
@@ -268,12 +412,41 @@ export async function PATCH(
       if (!rolePermCheck.success) return rolePermCheck.response;
     }
 
-    if (isPermissionsUpdate) {
-      const editPermCheck = requirePermission(
+    if (isPermissionsUpdate && permissionScope !== undefined) {
+      const scopedPermissionCheck = requirePermission(
         auth.user,
-        PERMISSIONS.USERS.EDIT_PERMISSIONS,
+        permissionScope === 'account'
+          ? PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY
+          : PERMISSIONS.USERS.EDIT_PERMISSIONS,
       );
-      if (!editPermCheck.success) return editPermCheck.response;
+      if (!scopedPermissionCheck.success) {
+        return scopedPermissionCheck.response;
+      }
+    }
+
+    if (isPermissionsUpdate && permissionScope === undefined) {
+      const canUseLegacyPermissionPayload =
+        auth.user.isProtected ||
+        hasPermission(
+          auth.user.role,
+          PERMISSIONS.USERS.EDIT_PERMISSIONS,
+          auth.user.permissions,
+        ) ||
+        hasPermission(
+          auth.user.role,
+          PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY,
+          auth.user.permissions,
+        );
+
+      if (!canUseLegacyPermissionPayload) {
+        const legacyPermissionCheck = requirePermission(
+          auth.user,
+          PERMISSIONS.USERS.EDIT_PERMISSIONS,
+        );
+        if (!legacyPermissionCheck.success) {
+          return legacyPermissionCheck.response;
+        }
+      }
     }
 
     // Get existing user
@@ -292,6 +465,72 @@ export async function PATCH(
         },
         { status: 404 },
       );
+    }
+
+    if (
+      expectedUpdatedAt &&
+      expectedUpdatedAt.getTime() !== existingUser.updatedAt.getTime()
+    ) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.CONFLICT,
+            message:
+              'Cette fiche a été modifiée entre-temps. Rechargez-la avant de réessayer.',
+          },
+          success: false,
+        },
+        { status: 409 },
+      );
+    }
+
+    const existingPermissionOverrides = normalizePermissionOverrides(
+      existingUser.permissions as Record<string, boolean> | null,
+    );
+    const permissions = isPermissionsUpdate
+      ? permissionScope
+        ? mergePermissionOverridesForScope(
+            existingPermissionOverrides,
+            normalizedRequestedPermissions ?? null,
+            permissionScope,
+          )
+        : (normalizedRequestedPermissions ?? null)
+      : undefined;
+    const requestedChangedPermissionKeys = isPermissionsUpdate
+      ? getChangedPermissionKeys(existingPermissionOverrides, permissions)
+      : [];
+
+    if (isPermissionsUpdate && permissionScope === undefined) {
+      const requiredLegacyPermissions = new Set<string>();
+
+      for (const permissionKey of requestedChangedPermissionKeys) {
+        if (ACCOUNT_PERMISSION_KEY_SET.has(permissionKey)) {
+          requiredLegacyPermissions.add(
+            PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY,
+          );
+        }
+        if (ACCESS_PERMISSION_KEY_SET.has(permissionKey)) {
+          requiredLegacyPermissions.add(PERMISSIONS.USERS.EDIT_PERMISSIONS);
+        }
+      }
+
+      // A legacy no-op or null payload has no scope signal. Requiring both
+      // capabilities prevents omission of permissionScope from becoming a
+      // bypass for either delegated administration boundary.
+      if (requiredLegacyPermissions.size === 0) {
+        requiredLegacyPermissions.add(PERMISSIONS.USERS.EDIT_PERMISSIONS);
+        requiredLegacyPermissions.add(PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY);
+      }
+
+      for (const permissionKey of requiredLegacyPermissions) {
+        const legacyPermissionCheck = requirePermission(
+          auth.user,
+          permissionKey,
+        );
+        if (!legacyPermissionCheck.success) {
+          return legacyPermissionCheck.response;
+        }
+      }
     }
 
     // Authorization checks
@@ -377,20 +616,17 @@ export async function PATCH(
     }
 
     if (!auth.user.isProtected && (isPermissionsUpdate || isRoleUpdate)) {
-      const beforePermissions = existingUser.permissions as Record<
-        string,
-        boolean
-      > | null;
+      const beforePermissions = existingPermissionOverrides;
       const afterPermissions =
         permissions !== undefined ? permissions : beforePermissions;
       const afterRole = role ?? existingUser.role;
+      const afterPermissionsMap = toPermissionMap(afterPermissions);
       const unauthorizedPermissionKeys = new Set(
-        Object.entries(afterPermissions ?? {}).flatMap(
-          ([permissionKey, enabled]) =>
-            enabled &&
-            !hasPermission(auth.user.role, permissionKey, auth.user.permissions)
-              ? [permissionKey]
-              : [],
+        requestedChangedPermissionKeys.flatMap((permissionKey) =>
+          afterPermissionsMap.get(permissionKey) === true &&
+          !hasPermission(auth.user.role, permissionKey, auth.user.permissions)
+            ? [permissionKey]
+            : [],
         ),
       );
 
@@ -534,13 +770,11 @@ export async function PATCH(
       updateData.isActive = isActive;
     }
     if (permissions !== undefined) {
-      const existingPerms = existingUser.permissions as Record<
-        string,
-        boolean
-      > | null;
       // Only track if actually changed
-      if (!arePermissionOverridesEqual(permissions, existingPerms)) {
-        beforeValues.permissions = existingPerms;
+      if (
+        !arePermissionOverridesEqual(permissions, existingPermissionOverrides)
+      ) {
+        beforeValues.permissions = existingPermissionOverrides;
         afterValues.permissions = permissions;
         updateData.permissions = permissions;
       }
@@ -549,14 +783,14 @@ export async function PATCH(
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({
         data: {
-          user: mapUserToUserType(existingUser),
+          user: mapUserForActor(existingUser, auth.user),
         },
         success: true,
       });
     }
 
     const changedKeys = Object.keys(afterValues);
-    const hasAccessChange =
+    const hasAuthorizationChange =
       changedKeys.includes('permissions') || changedKeys.includes('role');
 
     // Build target name for audit log
@@ -577,7 +811,7 @@ export async function PATCH(
         ACCOUNT_PERMISSION_KEY_SET.has(permissionKey),
       );
     const permissionAuditTab = hasOnlyAccountPermissionChanges
-      ? { tabKey: 'account', tabLabel: 'Compte personnel' }
+      ? { tabKey: 'account', tabLabel: 'Autonomie du compte' }
       : { tabKey: 'access', tabLabel: 'Accès' };
 
     const updatedEmail =
@@ -618,7 +852,7 @@ export async function PATCH(
         targetUserId: id,
         userId: auth.user.id,
       };
-    } else if (hasAccessChange) {
+    } else if (hasAuthorizationChange) {
       auditData = {
         action: 'PERMISSION_UPDATE',
         category: 'PERMISSION',
@@ -653,11 +887,21 @@ export async function PATCH(
       };
     }
 
-    const shouldInvalidateSessions = isActive === false || hasAccessChange;
+    const hasAccessPermissionChange = changedPermissionKeys.some(
+      (permissionKey) => ACCESS_PERMISSION_KEY_SET.has(permissionKey),
+    );
+    const shouldInvalidateSessions =
+      (changedKeys.includes('isActive') && isActive === false) ||
+      changedKeys.includes('email') ||
+      changedKeys.includes('role') ||
+      hasAccessPermissionChange;
     const updatedUser = await prisma.$transaction(async (transaction) => {
       const nextUser = await transaction.user.update({
         data: updateData,
-        where: { id },
+        where: {
+          id,
+          updatedAt: expectedUpdatedAt ?? existingUser.updatedAt,
+        },
       });
 
       if (shouldInvalidateSessions) {
@@ -674,11 +918,25 @@ export async function PATCH(
 
     return NextResponse.json({
       data: {
-        user: mapUserToUserType(updatedUser),
+        user: mapUserForActor(updatedUser, auth.user),
       },
       success: true,
     });
   } catch (error) {
+    if (isPrismaOptimisticConflict(error)) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.CONFLICT,
+            message:
+              'Cette fiche a été modifiée entre-temps. Rechargez-la avant de réessayer.',
+          },
+          success: false,
+        },
+        { status: 409 },
+      );
+    }
+
     if (isPrismaUniqueConstraintError(error)) {
       return NextResponse.json(
         {

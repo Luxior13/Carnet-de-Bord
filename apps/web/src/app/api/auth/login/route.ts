@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { normalizePermissionOverrides } from '$constants/permissions.constants';
 import { apiErrors, parseJsonBody } from '$server/api-response';
 import {
   authenticateUser,
@@ -74,7 +75,9 @@ async function recordLoginAudit(data: {
       ...(data.reason ? { reason: data.reason } : {}),
     },
     targetUserId: data.userId ?? null,
-    userId: data.userId ?? null,
+    // A failed attempt is produced by an unauthenticated source, not by the
+    // owner of the account being targeted.
+    userId: data.action === 'LOGIN_SUCCESS' ? (data.userId ?? null) : null,
   });
 }
 
@@ -195,7 +198,9 @@ export async function POST(
       lockedUntil: result.user.lockedUntil,
       mustChangePassword: result.user.mustChangePassword,
       passwordChangedAt: result.user.passwordChangedAt,
-      permissions: result.user.permissions as Record<string, boolean> | null,
+      permissions: normalizePermissionOverrides(
+        result.user.permissions as Record<string, boolean> | null,
+      ),
       role: result.user.role,
     };
 
