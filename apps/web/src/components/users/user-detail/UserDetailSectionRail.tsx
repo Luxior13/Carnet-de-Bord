@@ -128,7 +128,7 @@ export const UserDetailSectionRail = <
         aria-label={ariaLabel}
         className="sticky top-2 z-20 -mx-1 2xl:hidden"
       >
-        <div className="scrollbar-gutter-stable overflow-x-auto px-1 pb-1">
+        <div className="scrollbar-gutter-both-edges overflow-x-auto px-1 pb-1">
           <div className="border-sidebar-border/70 bg-surface/95 inline-flex min-w-full gap-1 rounded-lg border p-1 shadow-[var(--shadow-panel)] backdrop-blur">
             {visibleSections.map((section) =>
               renderSectionLink(section, 'mobile'),

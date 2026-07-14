@@ -136,6 +136,10 @@
   );
 }
 
+@utility scrollbar-gutter-both-edges {
+  scrollbar-gutter: stable both-edges;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -174,10 +178,6 @@
 
   .private-background-column {
     max-width: var(--private-content-width);
-  }
-
-  .scrollbar-gutter-stable {
-    scrollbar-gutter: stable both-edges;
   }
 
   .sidebar-pattern::before {

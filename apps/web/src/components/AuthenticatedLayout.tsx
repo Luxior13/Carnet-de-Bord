@@ -117,7 +117,7 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
             'relative z-10 min-h-0 flex-1',
             fullHeight
               ? 'overflow-hidden'
-              : 'scrollbar-gutter-stable overflow-x-hidden overflow-y-auto',
+              : 'scrollbar-gutter-both-edges overflow-x-hidden overflow-y-auto',
           )}
           tabIndex={-1}
         >
