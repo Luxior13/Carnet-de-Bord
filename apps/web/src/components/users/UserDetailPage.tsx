@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
+import { AdminMfaResetDialog } from '$components/users/user-detail/AdminMfaResetDialog';
 import { UserAccessTab } from '$components/users/user-detail/UserAccessTab';
 import { UserAccountTab } from '$components/users/user-detail/UserAccountTab';
 import {
@@ -314,7 +315,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const permissionPageKey = normalizePermissionPageKey(
     searchParams.get('permissionPage'),
   );
-  const { isLoading: isCurrentUserLoading, userData: currentUser } = useUser();
+  const {
+    applyUserUpdate,
+    isLoading: isCurrentUserLoading,
+    userData: currentUser,
+  } = useUser();
   const [user, setUser] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -342,6 +347,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const [isSaving, setIsSaving] = useState(false);
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showResetMfa, setShowResetMfa] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [tempPassword, setTempPassword] = useState<string | null>(null);
   const [showRevokeSessionsConfirm, setShowRevokeSessionsConfirm] =
@@ -544,6 +550,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     !isSelf &&
     !user.isProtected &&
     !isTargetAdminAccessRestricted;
+  const canResetTargetMfa =
+    !!user &&
+    isProtectedActor &&
+    !isSelf &&
+    !user.isProtected &&
+    user.role === UserRole.USER &&
+    user.mfaEnabledAt !== null;
   const canViewTargetSessions =
     !!user &&
     canViewUserSessions &&
@@ -572,6 +585,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const canViewTargetActivity = !!user && (isSelf || canViewUserActivity);
   const canFetchUserAudit = currentUser?.id === userId || canViewUserActivity;
   const canViewTargetSecurity =
+    canResetTargetMfa ||
     canResetTargetPassword ||
     canViewTargetSessions ||
     canRevokeTargetSessions ||
@@ -1220,6 +1234,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       role: updatedUser.role,
     });
     setPermissions(updatedUser.permissions);
+
+    // The administration page and /mon-compte share the authenticated user
+    // through UserContext. Keep that source of truth current when the root
+    // edits its own fiche instead of waiting for a later session refresh.
+    if (updatedUser.id === currentUser?.id) {
+      applyUserUpdate(updatedUser);
+    }
   };
 
   const handleCancelProfile = (): void => {
@@ -1521,6 +1542,14 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     }
   };
 
+  const handleResetMfaComplete = (updatedUser: UserType): void => {
+    syncUserState(updatedUser);
+    setShowResetMfa(false);
+    refreshAuditAfterMutation();
+    void fetchSecuritySessions();
+    toast.success('Double authentification réinitialisée');
+  };
+
   const handleRevokeSecuritySessions = async (): Promise<void> => {
     if (!canRevokeTargetSessions) {
       toast.error('Permission insuffisante pour révoquer les sessions');
@@ -1716,6 +1745,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             isActive={editForm.isActive}
             setIsActive={(isActive) => setEditForm({ ...editForm, isActive })}
             canEditStatus={canEditTargetStatus}
+            canResetMfa={canResetTargetMfa}
             canResetPassword={canResetTargetPassword}
             canRevokeSessions={canRevokeTargetSessions}
             canViewSessions={canViewTargetSessions}
@@ -1725,6 +1755,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             isRevokingSessions={isRevokingSecuritySessions}
             onSaveStatus={handleSaveSecurity}
             onClearTempPassword={() => setTempPassword(null)}
+            onResetMfa={() => setShowResetMfa(true)}
             onResetPassword={() => setShowResetConfirm(true)}
             onRevokeSession={handleRevokeSecuritySession}
             onRevokeSessions={() => setShowRevokeSessionsConfirm(true)}
@@ -2017,6 +2048,18 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+      <AdminMfaResetDialog
+        actorLoginName={currentUser?.loginName ?? ''}
+        onCancel={() => setShowResetMfa(false)}
+        onComplete={handleResetMfaComplete}
+        open={showResetMfa}
+        targetLabel={
+          user.firstName && user.lastName
+            ? `${user.firstName} ${user.lastName} (${user.loginName})`
+            : user.loginName
+        }
+        targetUserId={user.id}
+      />
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
         <AlertDialogContent className="border-border overflow-hidden rounded-lg p-0">
           <div className="p-6">

@@ -161,6 +161,7 @@ export const AccountPageContent: FC = () => {
   const canManageSessions = canUseAccountPermission(
     PERMISSIONS.ACCOUNT.MANAGE_SESSIONS,
   );
+  const canManageMfa = canUseAccountPermission(PERMISSIONS.ACCOUNT.MANAGE_MFA);
   const canViewActivity = canUseAccountPermission(
     PERMISSIONS.ACCOUNT.VIEW_ACTIVITY,
   );
@@ -171,7 +172,12 @@ export const AccountPageContent: FC = () => {
         ? ACCOUNT_SECTIONS.filter((section) => {
             if (section.id === 'profile') return canViewProfile;
             if (section.id === 'security') {
-              return canViewSecurity || canChangePassword || canManageSessions;
+              return (
+                canViewSecurity ||
+                canChangePassword ||
+                canManageMfa ||
+                canManageSessions
+              );
             }
             if (section.id === 'activity') return canViewActivity;
 
@@ -180,6 +186,7 @@ export const AccountPageContent: FC = () => {
         : ACCOUNT_SECTIONS,
     [
       canChangePassword,
+      canManageMfa,
       canManageSessions,
       canViewActivity,
       canViewProfile,
@@ -487,12 +494,16 @@ export const AccountPageContent: FC = () => {
             />
           </div>
         )}
-        {(canViewSecurity || canChangePassword || canManageSessions) && (
+        {(canViewSecurity ||
+          canChangePassword ||
+          canManageMfa ||
+          canManageSessions) && (
           <div hidden={activeSection !== 'security'}>
             <SecuritySection
               userData={userData}
               onUpdate={handleAccountUpdate}
               canChangePassword={canChangePassword}
+              canManageMfa={canManageMfa}
               canManageSessions={canManageSessions}
               canViewSecurity={canViewSecurity}
             />

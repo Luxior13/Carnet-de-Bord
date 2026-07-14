@@ -29,6 +29,7 @@ describe('hasPermission', () => {
     expect(hasPermission('USER', PERMISSIONS.ACCOUNT.CHANGE_PASSWORD)).toBe(
       true,
     );
+    expect(hasPermission('USER', PERMISSIONS.ACCOUNT.MANAGE_MFA)).toBe(true);
     expect(hasPermission('ADMIN', PERMISSIONS.USERS.CREATE)).toBe(true);
     expect(hasPermission('ADMIN', PERMISSIONS.USERS.EXPORT)).toBe(true);
     expect(
@@ -266,6 +267,11 @@ describe('hasPermission', () => {
       }),
     ).toBe(true);
     expect(
+      hasPermission('USER', PERMISSIONS.ACCOUNT.MANAGE_MFA, {
+        [PERMISSIONS.ACCOUNT.MANAGE_MFA]: false,
+      }),
+    ).toBe(true);
+    expect(
       hasPermission('USER', PERMISSIONS.ACCOUNT.UPDATE_CONTACT, {
         [PERMISSIONS.ACCOUNT.UPDATE_CONTACT]: false,
       }),
@@ -387,6 +393,7 @@ describe('permission catalogue', () => {
       'account:update_contact',
       'account:view_security',
       'account:change_password',
+      'account:manage_mfa',
       'account:manage_sessions',
       'account:view_activity',
     ]);
@@ -416,6 +423,7 @@ describe('permission catalogue', () => {
     expect(
       normalizePermissionOverrides({
         [PERMISSIONS.ACCOUNT.CHANGE_PASSWORD]: false,
+        [PERMISSIONS.ACCOUNT.MANAGE_MFA]: false,
         [PERMISSIONS.ACCOUNT.UPDATE_CONTACT]: false,
         [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
         [PERMISSIONS.ACCOUNT.VIEW_ACTIVITY]: false,
@@ -424,6 +432,9 @@ describe('permission catalogue', () => {
       }),
     ).toEqual({ [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false });
     expect(isPermissionAlwaysEnabled(PERMISSIONS.ACCOUNT.CHANGE_PASSWORD)).toBe(
+      true,
+    );
+    expect(isPermissionAlwaysEnabled(PERMISSIONS.ACCOUNT.MANAGE_MFA)).toBe(
       true,
     );
     expect(isPermissionAlwaysEnabled(PERMISSIONS.ACCOUNT.UPDATE_CONTACT)).toBe(
@@ -437,6 +448,7 @@ describe('permission catalogue', () => {
   it('reports essential permissions as effective while preserving optional denies', () => {
     const effectivePermissions = getEffectivePermissions('USER', {
       [PERMISSIONS.ACCOUNT.CHANGE_PASSWORD]: false,
+      [PERMISSIONS.ACCOUNT.MANAGE_MFA]: false,
       [PERMISSIONS.ACCOUNT.UPDATE_CONTACT]: false,
       [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
       [PERMISSIONS.ACCOUNT.VIEW_ACTIVITY]: false,
@@ -449,6 +461,7 @@ describe('permission catalogue', () => {
     expect(effectivePermissions[PERMISSIONS.ACCOUNT.CHANGE_PASSWORD]).toBe(
       true,
     );
+    expect(effectivePermissions[PERMISSIONS.ACCOUNT.MANAGE_MFA]).toBe(true);
     expect(effectivePermissions[PERMISSIONS.ACCOUNT.UPDATE_CONTACT]).toBe(true);
     expect(effectivePermissions[PERMISSIONS.ACCOUNT.UPDATE_PROFILE]).toBe(
       false,

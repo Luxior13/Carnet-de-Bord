@@ -290,6 +290,30 @@ const ACTION_CONFIG = new Map<string, ActionConfig>(
       icon: LogOut,
       label: 'Déconnexion',
     },
+    MFA_DISABLED: {
+      category: 'security',
+      color: 'border-amber-500/35 bg-amber-500/10 text-amber-300',
+      icon: Shield,
+      label: 'Double authentification désactivée',
+    },
+    MFA_ENABLED: {
+      category: 'security',
+      color: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
+      icon: Shield,
+      label: 'Application d’authentification configurée',
+    },
+    MFA_RECOVERY_CODE_USED: {
+      category: 'security',
+      color: 'border-amber-500/35 bg-amber-500/10 text-amber-300',
+      icon: Key,
+      label: 'Code de secours utilisé',
+    },
+    MFA_RECOVERY_CODES_REGENERATED: {
+      category: 'security',
+      color: 'border-chart-2/35 bg-chart-2/10 text-chart-2',
+      icon: RefreshCw,
+      label: 'Codes de secours régénérés',
+    },
     PASSWORD_CHANGE: {
       category: 'security',
       color: 'border-amber-500/35 bg-amber-500/10 text-amber-300',
@@ -814,6 +838,10 @@ const getActivityLocation = (log: JournalLog): ActivityLocationInfo => {
   if (isSelfTargetedActivity(log)) {
     if (log.action === 'USER_UPDATE') return ACCOUNT_PROFILE_LOCATION;
     if (
+      log.action === 'MFA_DISABLED' ||
+      log.action === 'MFA_ENABLED' ||
+      log.action === 'MFA_RECOVERY_CODE_USED' ||
+      log.action === 'MFA_RECOVERY_CODES_REGENERATED' ||
       log.action === 'PASSWORD_CHANGE' ||
       log.action === 'SESSION_INVALIDATE'
     ) {

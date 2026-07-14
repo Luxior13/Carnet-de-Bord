@@ -8,6 +8,7 @@
     "db:migrate:baseline": "bun run scripts/baseline-existing-database.ts",
     "db:migrate:deploy": "bun run scripts/safe-migrate-deploy.ts",
     "db:migrate:status": "prisma migrate status",
+    "db:root:mfa:recover": "bun run scripts/reset-root-mfa.ts",
     "deploy": "bun run db:migrate:deploy",
     "seed": "bun run prisma/seed.ts",
     "lint": "eslint \"{src,scripts}/**/*.{js,jsx,ts,tsx}\"",

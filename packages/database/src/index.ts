@@ -18,7 +18,22 @@ if (process.env.NODE_ENV !== 'production') {
 export type PrismaClientType = typeof prisma;
 
 // Types
-export type { AuditLog, RateLimit, Session, User } from '@prisma/client';
+export type {
+  AuditLog,
+  MfaLoginChallenge,
+  MfaRecoveryCode,
+  RateLimit,
+  Session,
+  TotpCredential,
+  TotpEnrollment,
+  User,
+} from '@prisma/client';
 
 // Enums
-export { AuditAction, AuditCategory, UserRole } from '@prisma/client';
+export {
+  AuditAction,
+  AuditCategory,
+  MfaAuthenticationMethod,
+  MfaChallengePurpose,
+  UserRole,
+} from '@prisma/client';

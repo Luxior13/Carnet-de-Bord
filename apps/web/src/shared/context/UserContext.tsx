@@ -15,11 +15,19 @@ import { toast } from 'sonner';
 
 import { Button } from '$components/ui/button';
 import {
+  type ApiResponse,
   type ApiSuccessResponse,
   ErrorCode,
   RoutesApi,
 } from '$types/api.types';
-import { type LoginCredentials, type UserType } from '$types/auth.types';
+import {
+  type AuthenticatedLoginData,
+  type AuthSessionResponse,
+  type LoginCredentials,
+  type LoginResponseData,
+  type LoginResult,
+  type UserType,
+} from '$types/auth.types';
 import { apiFetch } from '$utils/api.utils';
 
 // Auto-logout after 30 minutes of inactivity
@@ -52,37 +60,38 @@ const publishSessionActivity = (activityAt: number): void => {
   }
 };
 
-type SessionResponse = {
-  expiresAt: string;
-  idleExpiresAt: string;
-  lastSeenAt: string;
-  rememberMe: boolean;
-};
-
 type ContextType = {
   applyUserUpdate: (user: UserType) => void;
+  cancelMfaChallenge: () => Promise<void>;
+  clearError: () => void;
+  completeAuthentication: (data: AuthenticatedLoginData) => void;
   error: string | null;
   extendSession: () => Promise<void>;
   isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<boolean>;
+  login: (credentials: LoginCredentials) => Promise<LoginResult | null>;
   logout: () => Promise<void>;
   mustChangePassword: boolean;
   refreshUser: () => Promise<void>;
   showSessionWarning: boolean;
   userData: UserType | null;
+  verifyMfa: (code: string) => Promise<boolean>;
 };
 
 const UserContext = createContext<ContextType>({
   applyUserUpdate: () => {},
+  cancelMfaChallenge: async () => {},
+  clearError: () => {},
+  completeAuthentication: () => {},
   error: null,
   extendSession: async () => {},
   isLoading: true,
-  login: async () => false,
+  login: async () => null,
   logout: async () => {},
   mustChangePassword: false,
   refreshUser: async () => {},
   showSessionWarning: false,
   userData: null,
+  verifyMfa: async () => false,
 });
 
 type UserProviderProps = {
@@ -110,6 +119,25 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
     setError(null);
   }, []);
 
+  const clearError = useCallback((): void => {
+    setError(null);
+  }, []);
+
+  const completeAuthentication = useCallback(
+    (data: AuthenticatedLoginData): void => {
+      const activityAt = Date.now();
+
+      applyUserUpdate(data.user);
+      setMustChangePassword(data.mustChangePassword);
+      setSessionRememberMe(data.session.rememberMe);
+      lastActivityRef.current = activityAt;
+      lastServerActivitySyncRef.current = activityAt;
+      publishSessionActivity(activityAt);
+      toast.success('Connexion réussie');
+    },
+    [applyUserUpdate],
+  );
+
   const fetchUser = useCallback(
     async (silent = false): Promise<void> => {
       try {
@@ -118,7 +146,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
 
         const response = await fetch(RoutesApi.me);
         const data: ApiSuccessResponse<{
-          session: SessionResponse | null;
+          session: AuthSessionResponse | null;
           user: UserType;
         }> = await response.json();
 
@@ -210,9 +238,8 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
   }, [router]);
 
   const login = useCallback(
-    async (credentials: LoginCredentials): Promise<boolean> => {
+    async (credentials: LoginCredentials): Promise<LoginResult | null> => {
       try {
-        setIsLoading(true);
         setError(null);
 
         const response = await apiFetch(RoutesApi.login, {
@@ -220,30 +247,22 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
           headers: { 'Content-Type': 'application/json' },
           method: 'POST',
         });
-        const data: ApiSuccessResponse<{
-          mustChangePassword: boolean;
-          session: SessionResponse;
-          user: UserType;
-        }> = await response.json();
+        const data = (await response.json()) as ApiResponse<LoginResponseData>;
 
-        if (data.success) {
-          const activityAt = Date.now();
-          setUserData(data.data.user);
-          setMustChangePassword(data.data.mustChangePassword);
-          setSessionRememberMe(data.data.session.rememberMe);
-          lastActivityRef.current = activityAt;
-          lastServerActivitySyncRef.current = activityAt;
-          publishSessionActivity(activityAt);
-          toast.success('Connexion réussie');
+        if (response.ok && data.success) {
+          if (data.data.status === 'authenticated') {
+            completeAuthentication(data.data);
 
-          return true;
+            return { status: 'authenticated' };
+          }
+
+          return data.data;
         }
 
-        const errorData = data as unknown as {
-          error?: { code?: string; message?: string };
-        };
-        const errorCode = errorData.error?.code;
-        const errorMessage = errorData.error?.message || 'Erreur de connexion';
+        const errorCode = data.success ? undefined : data.error.code;
+        const errorMessage = data.success
+          ? 'Erreur de connexion'
+          : data.error.message || 'Erreur de connexion';
 
         setError(errorMessage);
 
@@ -255,19 +274,66 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
           toast.error(errorMessage);
         }
 
-        return false;
+        return null;
       } catch {
         const errorMessage = 'Erreur de connexion';
         setError(errorMessage);
         toast.error(errorMessage);
 
-        return false;
-      } finally {
-        setIsLoading(false);
+        return null;
       }
     },
-    [],
+    [completeAuthentication],
   );
+
+  const verifyMfa = useCallback(
+    async (code: string): Promise<boolean> => {
+      try {
+        setError(null);
+        const response = await apiFetch(RoutesApi.mfaVerify, {
+          body: JSON.stringify({ code }),
+          headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+        });
+        const data =
+          (await response.json()) as ApiResponse<AuthenticatedLoginData>;
+
+        if (
+          response.ok &&
+          data.success &&
+          data.data.status === 'authenticated'
+        ) {
+          completeAuthentication(data.data);
+
+          return true;
+        }
+
+        setError(
+          data.success
+            ? 'Code incorrect ou expiré'
+            : data.error.message || 'Code incorrect ou expiré',
+        );
+
+        return false;
+      } catch {
+        setError('Impossible de vérifier le code');
+
+        return false;
+      }
+    },
+    [completeAuthentication],
+  );
+
+  const cancelMfaChallenge = useCallback(async (): Promise<void> => {
+    setError(null);
+
+    try {
+      await apiFetch(RoutesApi.mfaChallenge, { method: 'DELETE' });
+    } catch {
+      // The challenge is deliberately short-lived. Returning to the login
+      // form must remain possible even if its best-effort deletion fails.
+    }
+  }, []);
 
   useEffect(() => {
     void fetchUser();
@@ -435,6 +501,9 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
     <UserContext.Provider
       value={{
         applyUserUpdate,
+        cancelMfaChallenge,
+        clearError,
+        completeAuthentication,
         error,
         extendSession,
         isLoading,
@@ -444,6 +513,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
         refreshUser,
         showSessionWarning,
         userData,
+        verifyMfa,
       }}
     >
       {children}

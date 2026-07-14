@@ -18,6 +18,12 @@ export type LoginRateLimitKeys = {
   pair: string;
 };
 
+export type MfaRateLimitKeys = {
+  account: string;
+  challenge: string;
+  ip: string;
+};
+
 type RateLimitResult = {
   allowed: boolean;
   remainingAttempts: number;
@@ -54,6 +60,16 @@ const LOGIN_POLICIES = {
   pair: DEFAULT_POLICY,
 } satisfies Record<keyof LoginRateLimitKeys, RateLimitPolicy>;
 
+const MFA_POLICIES = {
+  account: DEFAULT_POLICY,
+  challenge: DEFAULT_POLICY,
+  ip: {
+    blockDurationMs: 30 * 60 * 1000,
+    maxAttempts: 30,
+    windowMs: 15 * 60 * 1000,
+  },
+} satisfies Record<keyof MfaRateLimitKeys, RateLimitPolicy>;
+
 const CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
 let nextCleanupAt = 0;
 
@@ -85,6 +101,23 @@ export function createLoginRateLimitKeys(
       'pair',
       `${canonicalIp}\0${canonicalLoginName}`,
     )}`,
+  };
+}
+
+export function createMfaRateLimitKeys(
+  ip: string | null,
+  userId: string,
+  challengeTokenHash: string,
+): MfaRateLimitKeys {
+  const canonicalIp = normalizeIp(ip);
+
+  return {
+    account: `auth-mfa:account:${hashKeyPart('mfa-account', userId)}`,
+    challenge: `auth-mfa:challenge:${hashKeyPart(
+      'mfa-challenge',
+      challengeTokenHash,
+    )}`,
+    ip: `auth-mfa:ip:${hashKeyPart('mfa-ip', canonicalIp)}`,
   };
 }
 
@@ -387,6 +420,66 @@ export async function reserveLoginRateLimits(
 }
 
 /**
+ * Reserves account, source-IP and challenge quotas before an OTP or recovery
+ * proof is evaluated. The account bucket prevents bypassing the six-digit
+ * limit by repeatedly obtaining fresh challenges with a known password.
+ */
+export async function reserveMfaRateLimits(
+  keys: MfaRateLimitKeys,
+): Promise<RateLimitResult> {
+  scheduleExpiredEntriesCleanup(new Date());
+
+  try {
+    return await prisma.$transaction(async (transaction) => {
+      const reservations: RateLimitResult[] = [];
+      const deniedReservations: RateLimitResult[] = [];
+      const orderedBuckets = [
+        [keys.ip, MFA_POLICIES.ip],
+        [keys.account, MFA_POLICIES.account],
+        [keys.challenge, MFA_POLICIES.challenge],
+      ] as const;
+
+      for (const [key, policy] of orderedBuckets) {
+        const reservation = await reserveRateLimitAttempt(
+          transaction,
+          key,
+          policy,
+        );
+
+        if (!reservation.allowed) {
+          deniedReservations.push(reservation);
+        } else {
+          reservations.push(reservation);
+        }
+      }
+
+      if (deniedReservations.length > 0) {
+        throw new LoginRateLimitDeniedError({
+          allowed: false,
+          remainingAttempts: 0,
+          retryAfter: Math.max(
+            ...deniedReservations.map(
+              (reservation) => reservation.retryAfter ?? 1,
+            ),
+          ),
+        });
+      }
+
+      return {
+        allowed: true,
+        remainingAttempts: Math.min(
+          ...reservations.map((reservation) => reservation.remainingAttempts),
+        ),
+      };
+    });
+  } catch (error) {
+    if (error instanceof LoginRateLimitDeniedError) return error.result;
+
+    throw error;
+  }
+}
+
+/**
  * Atomically consumes one password-verification attempt for an authenticated
  * sensitive action. Keeping the policy private gives every caller the same
  * protection and prevents accidentally weakening an endpoint.
@@ -415,15 +508,15 @@ export async function recordLoginAttempt(
 }
 
 /**
- * A valid password releases only this request's account and pair reservations.
- * Earlier or concurrent failures remain counted, and the IP reservation is
- * deliberately retained because it represents bcrypt work already consumed.
+ * A valid password releases exactly this request's reservation from every
+ * login bucket. Atomic decrements preserve earlier and concurrent failures,
+ * while successful logins cannot gradually exhaust the shared IP allowance.
  */
 export async function recordSuccessfulLogin(
   keys: LoginRateLimitKeys,
 ): Promise<void> {
   await prisma.$transaction(async (transaction) => {
-    for (const key of [keys.account, keys.pair]) {
+    for (const key of [keys.ip, keys.account, keys.pair]) {
       await transaction.rateLimit.updateMany({
         data: {
           blockedUntil: null,

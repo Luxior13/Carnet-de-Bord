@@ -19,9 +19,16 @@ const NO_STORE_HEADERS = {
 type SchemaCheckRow = {
   auditLogColumns: number;
   loginNameReservationColumns: number;
+  mfaAuditActions: number;
+  mfaAuthenticationMethods: number;
+  mfaChallengePurposes: number;
+  mfaLoginChallengeColumns: number;
+  mfaRecoveryCodeColumns: number;
   protectedAccounts: number;
   rateLimitColumns: number;
   sessionColumns: number;
+  totpCredentialColumns: number;
+  totpEnrollmentColumns: number;
   userColumns: number;
   validProtectedRootAccounts: number;
 };
@@ -90,14 +97,15 @@ export async function createReadinessResponse(): Promise<
                   'contactEmailVerifiedAt', 'passwordHash', 'role', 'permissions',
                   'isActive', 'isProtected', 'mustChangePassword',
                   'failedLoginAttempts', 'lockedUntil', 'securityVersion',
-                  'deletedAt'
+                  'deletedAt', 'mfaEnabledAt'
                 )
             )::int AS "userColumns",
             COUNT(*) FILTER (
               WHERE table_name = 'Session'
                 AND column_name IN (
                   'id', 'userId', 'token', 'expiresAt', 'idleExpiresAt',
-                  'lastSeenAt', 'rememberMe', 'securityVersion'
+                  'lastSeenAt', 'rememberMe', 'securityVersion',
+                  'mfaVerifiedAt', 'mfaMethod'
                 )
             )::int AS "sessionColumns",
             COUNT(*) FILTER (
@@ -115,8 +123,71 @@ export async function createReadinessResponse(): Promise<
               WHERE table_name = 'RateLimit'
                 AND column_name IN (
                   'key', 'count', 'firstAttempt', 'blockedUntil'
-                )
+              )
             )::int AS "rateLimitColumns",
+            COUNT(*) FILTER (
+              WHERE table_name = 'TotpCredential'
+                AND column_name IN (
+                  'userId', 'secretCiphertext', 'secretIv', 'secretAuthTag',
+                  'secretKeyVersion', 'lastUsedTimeStep', 'lastUsedAt',
+                  'createdAt', 'updatedAt'
+                )
+            )::int AS "totpCredentialColumns",
+            COUNT(*) FILTER (
+              WHERE table_name = 'TotpEnrollment'
+                AND column_name IN (
+                  'userId', 'secretCiphertext', 'secretIv', 'secretAuthTag',
+                  'secretKeyVersion', 'expiresAt', 'createdAt', 'updatedAt'
+                )
+            )::int AS "totpEnrollmentColumns",
+            COUNT(*) FILTER (
+              WHERE table_name = 'MfaRecoveryCode'
+                AND column_name IN (
+                  'id', 'userId', 'codeHash', 'salt', 'usedAt', 'createdAt'
+                )
+            )::int AS "mfaRecoveryCodeColumns",
+            COUNT(*) FILTER (
+              WHERE table_name = 'MfaLoginChallenge'
+                AND column_name IN (
+                  'id', 'userId', 'tokenHash', 'purpose', 'securityVersion',
+                  'credentialUpdatedAt', 'rememberMe', 'attempts',
+                  'expiresAt', 'createdAt', 'updatedAt'
+                )
+            )::int AS "mfaLoginChallengeColumns",
+            (
+              SELECT count(*)::int
+              FROM pg_enum enum_value
+              JOIN pg_type enum_type ON enum_type.oid = enum_value.enumtypid
+              JOIN pg_namespace enum_namespace
+                ON enum_namespace.oid = enum_type.typnamespace
+              WHERE enum_namespace.nspname = current_schema()
+                AND enum_type.typname = 'AuditAction'
+                AND enum_value.enumlabel IN (
+                  'MFA_ENABLED', 'MFA_DISABLED',
+                  'MFA_RECOVERY_CODE_USED',
+                  'MFA_RECOVERY_CODES_REGENERATED'
+                )
+            ) AS "mfaAuditActions",
+            (
+              SELECT count(*)::int
+              FROM pg_enum enum_value
+              JOIN pg_type enum_type ON enum_type.oid = enum_value.enumtypid
+              JOIN pg_namespace enum_namespace
+                ON enum_namespace.oid = enum_type.typnamespace
+              WHERE enum_namespace.nspname = current_schema()
+                AND enum_type.typname = 'MfaAuthenticationMethod'
+                AND enum_value.enumlabel IN ('TOTP', 'RECOVERY_CODE')
+            ) AS "mfaAuthenticationMethods",
+            (
+              SELECT count(*)::int
+              FROM pg_enum enum_value
+              JOIN pg_type enum_type ON enum_type.oid = enum_value.enumtypid
+              JOIN pg_namespace enum_namespace
+                ON enum_namespace.oid = enum_type.typnamespace
+              WHERE enum_namespace.nspname = current_schema()
+                AND enum_type.typname = 'MfaChallengePurpose'
+                AND enum_value.enumlabel IN ('LOGIN', 'SETUP')
+            ) AS "mfaChallengePurposes",
             (
               SELECT count(*)::int
               FROM "User"
@@ -136,12 +207,19 @@ export async function createReadinessResponse(): Promise<
         const schema = rows[0];
 
         if (
-          schema?.userColumns !== 14 ||
-          schema.sessionColumns !== 8 ||
+          schema?.userColumns !== 15 ||
+          schema.sessionColumns !== 10 ||
           schema.auditLogColumns !== 6 ||
           schema.loginNameReservationColumns !== 3 ||
+          schema.mfaAuditActions !== 4 ||
+          schema.mfaAuthenticationMethods !== 2 ||
+          schema.mfaChallengePurposes !== 2 ||
+          schema.mfaLoginChallengeColumns !== 11 ||
+          schema.mfaRecoveryCodeColumns !== 6 ||
           schema.protectedAccounts !== 1 ||
           schema.rateLimitColumns !== 4 ||
+          schema.totpCredentialColumns !== 9 ||
+          schema.totpEnrollmentColumns !== 8 ||
           schema.validProtectedRootAccounts !== 1
         ) {
           throw new SchemaNotReadyError();

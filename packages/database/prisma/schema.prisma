@@ -12,6 +12,16 @@ enum UserRole {
   USER
 }
 
+enum MfaChallengePurpose {
+  LOGIN
+  SETUP
+}
+
+enum MfaAuthenticationMethod {
+  TOTP
+  RECOVERY_CODE
+}
+
 model User {
   id                     String    @id @default(cuid())
   loginName              String    @unique
@@ -31,6 +41,7 @@ model User {
   lockedUntil            DateTime?
   lastLoginAt            DateTime?
   passwordChangedAt      DateTime?
+  mfaEnabledAt           DateTime?
   securityVersion        Int       @default(0)
   deletedAt              DateTime?
   createdAt              DateTime  @default(now())
@@ -41,6 +52,10 @@ model User {
   targetedAuditLogs     AuditLog[]             @relation("AuditTarget")
   archivedStaffProfile  ArchivedStaffProfile?
   loginNameReservations LoginNameReservation[]
+  totpCredential        TotpCredential?
+  totpEnrollment        TotpEnrollment?
+  mfaRecoveryCodes      MfaRecoveryCode[]
+  mfaLoginChallenge     MfaLoginChallenge?
 
   @@index([contactEmail])
   @@index([role])
@@ -51,6 +66,7 @@ model User {
   @@index([deletedAt, lockedUntil])
   @@index([deletedAt, mustChangePassword])
   @@index([deletedAt, role])
+  @@index([mfaEnabledAt])
   @@index([loginName(ops: raw("gin_trgm_ops"))], type: Gin, map: "User_loginName_trgm_idx")
   @@index([contactEmail(ops: raw("gin_trgm_ops"))], type: Gin, map: "User_contactEmail_trgm_idx")
   @@index([firstName(ops: raw("gin_trgm_ops"))], type: Gin, map: "User_firstName_trgm_idx")
@@ -71,14 +87,16 @@ model LoginNameReservation {
 }
 
 model Session {
-  id              String   @id @default(cuid())
+  id              String                   @id @default(cuid())
   userId          String
-  securityVersion Int      @default(0)
-  token           String   @unique
+  securityVersion Int                      @default(0)
+  token           String                   @unique
   expiresAt       DateTime
-  idleExpiresAt   DateTime @default(dbgenerated("(CURRENT_TIMESTAMP + '00:30:00'::interval)"))
-  lastSeenAt      DateTime @default(now())
-  rememberMe      Boolean  @default(false)
+  idleExpiresAt   DateTime                 @default(dbgenerated("(CURRENT_TIMESTAMP + '00:30:00'::interval)"))
+  lastSeenAt      DateTime                 @default(now())
+  rememberMe      Boolean                  @default(false)
+  mfaVerifiedAt   DateTime?
+  mfaMethod       MfaAuthenticationMethod?
   userAgent       String?
   ipAddress       String?
 
@@ -94,6 +112,78 @@ model Session {
   @@index([token])
 }
 
+/// Encrypted active TOTP seed. Secrets never live on the User row so ordinary
+/// user reads cannot accidentally expose authentication material.
+model TotpCredential {
+  userId           String    @id
+  secretCiphertext String
+  secretIv         String
+  secretAuthTag    String
+  secretKeyVersion Int       @default(1)
+  lastUsedTimeStep BigInt?
+  lastUsedAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([lastUsedAt])
+}
+
+/// Short-lived replacement seed. Keeping enrollment separate means an active
+/// authenticator continues working until the new one is successfully proven.
+model TotpEnrollment {
+  userId           String   @id
+  secretCiphertext String
+  secretIv         String
+  secretAuthTag    String
+  secretKeyVersion Int      @default(1)
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+/// Recovery codes are high-entropy, single-use values. Only salted hashes are
+/// stored; plaintext codes are returned once when generated.
+model MfaRecoveryCode {
+  id        String    @id @default(cuid())
+  userId    String
+  codeHash  String
+  salt      String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, codeHash])
+  @@index([userId, usedAt])
+}
+
+/// Password-first login state. The browser receives only a random HttpOnly
+/// token whose hash is stored here; no application session exists yet.
+model MfaLoginChallenge {
+  id                  String              @id @default(cuid())
+  userId              String              @unique
+  tokenHash           String              @unique
+  purpose             MfaChallengePurpose
+  securityVersion     Int
+  credentialUpdatedAt DateTime?
+  rememberMe          Boolean             @default(false)
+  attempts            Int                 @default(0)
+  expiresAt           DateTime
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([purpose, expiresAt])
+}
+
 enum AuditAction {
   LOGIN_SUCCESS
   LOGIN_FAILED
@@ -102,6 +192,10 @@ enum AuditAction {
   PASSWORD_RESET
   ACCOUNT_LOCKED
   SESSION_INVALIDATE
+  MFA_ENABLED
+  MFA_DISABLED
+  MFA_RECOVERY_CODE_USED
+  MFA_RECOVERY_CODES_REGENERATED
   USER_CREATE
   USER_UPDATE
   USER_DELETE

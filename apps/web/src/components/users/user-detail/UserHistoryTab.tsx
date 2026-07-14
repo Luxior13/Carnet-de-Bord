@@ -159,6 +159,30 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
     icon: LogOut,
     label: 'Déconnexion',
   },
+  MFA_DISABLED: {
+    category: 'security',
+    color: 'text-amber-400 bg-amber-500/10',
+    icon: Shield,
+    label: 'Double authentification désactivée',
+  },
+  MFA_ENABLED: {
+    category: 'security',
+    color: 'text-primary bg-primary/10',
+    icon: Shield,
+    label: 'Application d’authentification configurée',
+  },
+  MFA_RECOVERY_CODE_USED: {
+    category: 'security',
+    color: 'text-amber-400 bg-amber-500/10',
+    icon: Key,
+    label: 'Code de secours utilisé',
+  },
+  MFA_RECOVERY_CODES_REGENERATED: {
+    category: 'security',
+    color: 'text-primary bg-primary/10',
+    icon: RefreshCw,
+    label: 'Codes de secours régénérés',
+  },
   PASSWORD_CHANGE: {
     category: 'security',
     color: 'text-amber-400 bg-amber-500/10',
@@ -433,6 +457,10 @@ const getInferredActivityTab = (log: AuditLogEntry): ActivityTabInfo => {
 
   if (
     log.action === 'ACCOUNT_LOCKED' ||
+    log.action === 'MFA_DISABLED' ||
+    log.action === 'MFA_ENABLED' ||
+    log.action === 'MFA_RECOVERY_CODE_USED' ||
+    log.action === 'MFA_RECOVERY_CODES_REGENERATED' ||
     log.action === 'PASSWORD_CHANGE' ||
     log.action === 'PASSWORD_RESET' ||
     log.action === 'SESSION_INVALIDATE'
@@ -542,6 +570,10 @@ const AUTH_ACTIVITY_ACTIONS = new Set([
   'LOGIN_FAILED',
   'LOGIN_SUCCESS',
   'LOGOUT',
+  'MFA_DISABLED',
+  'MFA_ENABLED',
+  'MFA_RECOVERY_CODE_USED',
+  'MFA_RECOVERY_CODES_REGENERATED',
   'PASSWORD_CHANGE',
 ]);
 
@@ -703,6 +735,10 @@ const getActivityLocation = (log: AuditLogEntry): ActivityLocationInfo => {
   if (isSelfTargetedActivity(log)) {
     if (log.action === 'USER_UPDATE') return ACCOUNT_PROFILE_LOCATION;
     if (
+      log.action === 'MFA_DISABLED' ||
+      log.action === 'MFA_ENABLED' ||
+      log.action === 'MFA_RECOVERY_CODE_USED' ||
+      log.action === 'MFA_RECOVERY_CODES_REGENERATED' ||
       log.action === 'PASSWORD_CHANGE' ||
       log.action === 'SESSION_INVALIDATE'
     ) {

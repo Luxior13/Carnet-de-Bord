@@ -11,6 +11,7 @@ import {
   isSecurityVersionMismatchError,
   setSessionTokenCookie,
 } from '$server/auth';
+import { clearMfaChallengeCookie, createMfaChallenge } from '$server/mfa';
 import {
   createLoginRateLimitKeys,
   recordSuccessfulLogin,
@@ -48,16 +49,22 @@ const AUTH_CONNECTION_AUDIT_LOCATION = {
   tabLabel: 'Connexions',
 } as const;
 
-type LoginResponseData = {
-  mustChangePassword: boolean;
-  session: {
-    expiresAt: string;
-    idleExpiresAt: string;
-    lastSeenAt: string;
-    rememberMe: boolean;
-  };
-  user: UserType;
-};
+type LoginResponseData =
+  | {
+      challengeExpiresAt: string;
+      status: 'mfa_required' | 'mfa_setup_required';
+    }
+  | {
+      mustChangePassword: boolean;
+      session: {
+        expiresAt: string;
+        idleExpiresAt: string;
+        lastSeenAt: string;
+        rememberMe: boolean;
+      };
+      status: 'authenticated';
+      user: UserType;
+    };
 
 async function recordLoginAudit(data: {
   action: 'LOGIN_FAILED' | 'LOGIN_SUCCESS';
@@ -110,6 +117,10 @@ export async function POST(
 
     // Independent buckets prevent rotating either IPs or login names from
     // providing an unlimited supply of fresh password checks.
+    // The account bucket also remains mandatory for the claimed root login:
+    // bypassing it before authentication would let a distributed attacker
+    // turn rotating source IPs into an unbounded password oracle. The root
+    // user row itself is never persistently locked by failed attempts.
     const clientIp = getClientIp(request.headers) ?? 'unknown';
     const rateLimitKeys = createLoginRateLimitKeys(clientIp, loginName);
     const rateLimit = await reserveLoginRateLimits(rateLimitKeys);
@@ -162,17 +173,70 @@ export async function POST(
 
     await recordSuccessfulLogin(rateLimitKeys);
 
-    // Create session
-    const token = generateSessionToken();
     const canUseLongSession =
       !result.user.isProtected && result.user.role !== 'ADMIN';
+    const effectiveRememberMe = rememberMe && canUseLongSession;
+    const hasEnabledMfa = result.user.mfaEnabledAt !== null;
+    const hasTotpCredential = result.user.totpCredential !== null;
+    const requiresRootSetup =
+      result.user.isProtected && !hasEnabledMfa && !hasTotpCredential;
+
+    if (requiresRootSetup || (hasEnabledMfa && hasTotpCredential)) {
+      const purpose = requiresRootSetup ? 'SETUP' : 'LOGIN';
+      const challenge = await createMfaChallenge({
+        credentialUpdatedAt: result.user.totpCredential?.updatedAt ?? null,
+        purpose,
+        rememberMe: effectiveRememberMe,
+        securityVersion: result.user.securityVersion,
+        userId: result.user.id,
+      });
+
+      return NextResponse.json({
+        data: {
+          challengeExpiresAt: challenge.expiresAt.toISOString(),
+          status: requiresRootSetup
+            ? ('mfa_setup_required' as const)
+            : ('mfa_required' as const),
+        },
+        success: true,
+      });
+    }
+
+    // Every half-configured account fails closed. Only the protected root with
+    // both MFA markers absent enters the mandatory bootstrap branch above.
+    if (hasEnabledMfa !== hasTotpCredential) {
+      await recordLoginAudit({
+        action: 'LOGIN_FAILED',
+        description: `Connexion interrompue: ${result.user.loginName}`,
+        loginName: result.user.loginName,
+        reason: 'MFA_STATE_INCONSISTENT',
+        userId: result.user.id,
+      });
+
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.INVALID_CREDENTIALS,
+            message: 'Identifiant ou mot de passe incorrect',
+          },
+          success: false,
+        },
+        { status: 401 },
+      );
+    }
+
+    await clearMfaChallengeCookie();
+
+    // Create a password-only session only for an ordinary account whose MFA
+    // state is consistently disabled.
+    const token = generateSessionToken();
     let session;
     try {
       session = await createSession(
         token,
         result.user.id,
         result.user.securityVersion,
-        rememberMe && canUseLongSession,
+        effectiveRememberMe,
         {
           action: 'LOGIN_SUCCESS',
           category: 'AUTH',
@@ -222,6 +286,7 @@ export async function POST(
       lastName: result.user.lastName,
       lockedUntil: result.user.lockedUntil,
       loginName: result.user.loginName,
+      mfaEnabledAt: result.user.mfaEnabledAt,
       mustChangePassword: result.user.mustChangePassword,
       passwordChangedAt: result.user.passwordChangedAt,
       permissions: normalizePermissionOverrides(
@@ -239,6 +304,7 @@ export async function POST(
           lastSeenAt: session.lastSeenAt.toISOString(),
           rememberMe: session.rememberMe,
         },
+        status: 'authenticated',
         user,
       },
       success: true,

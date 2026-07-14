@@ -14,11 +14,54 @@ export async function createDatabaseBackup(
   prisma: PrismaClient,
 ): Promise<BackupResult> {
   const tables = await getPublicTables(prisma);
-  const [users, sessions, auditLogs, rateLimits] = await Promise.all([
-    prisma.user.findMany({ orderBy: { id: 'asc' } }),
-    prisma.session.findMany({ orderBy: { id: 'asc' } }),
-    prisma.auditLog.findMany({ orderBy: { id: 'asc' } }),
-    prisma.rateLimit.findMany({ orderBy: { id: 'asc' } }),
+  // Read rows without Prisma's generated scalar selection so this safety
+  // backup also works immediately before a pending migration adds columns.
+  // Optional MFA tables are absent on databases that have not applied the
+  // TOTP migration yet.
+  const [
+    users,
+    loginNameReservations,
+    sessions,
+    auditLogs,
+    rateLimits,
+    totpCredentials,
+    mfaRecoveryCodes,
+  ] = await Promise.all([
+    tables.has('User')
+      ? prisma.$queryRaw<Record<string, unknown>[]>`
+          SELECT * FROM "public"."User" ORDER BY "id" ASC
+        `
+      : [],
+    tables.has('LoginNameReservation')
+      ? prisma.$queryRaw<Record<string, unknown>[]>`
+          SELECT * FROM "public"."LoginNameReservation" ORDER BY "loginName" ASC
+        `
+      : [],
+    tables.has('Session')
+      ? prisma.$queryRaw<Record<string, unknown>[]>`
+          SELECT * FROM "public"."Session" ORDER BY "id" ASC
+        `
+      : [],
+    tables.has('AuditLog')
+      ? prisma.$queryRaw<Record<string, unknown>[]>`
+          SELECT * FROM "public"."AuditLog" ORDER BY "id" ASC
+        `
+      : [],
+    tables.has('RateLimit')
+      ? prisma.$queryRaw<Record<string, unknown>[]>`
+          SELECT * FROM "public"."RateLimit" ORDER BY "id" ASC
+        `
+      : [],
+    tables.has('TotpCredential')
+      ? prisma.$queryRaw<Record<string, unknown>[]>`
+          SELECT * FROM "public"."TotpCredential" ORDER BY "userId" ASC
+        `
+      : [],
+    tables.has('MfaRecoveryCode')
+      ? prisma.$queryRaw<Record<string, unknown>[]>`
+          SELECT * FROM "public"."MfaRecoveryCode" ORDER BY "id" ASC
+        `
+      : [],
   ]);
 
   let staffProfiles: Record<string, unknown>[] = [];
@@ -47,10 +90,13 @@ export async function createDatabaseBackup(
   const payload = {
     auditLogs,
     createdAt: new Date().toISOString(),
+    loginNameReservations,
+    mfaRecoveryCodes,
     rateLimits,
     sessions,
     staffProfiles,
     staffProfileSource,
+    totpCredentials,
     users,
   };
 
@@ -58,17 +104,29 @@ export async function createDatabaseBackup(
   // eslint-disable-next-line security/detect-non-literal-fs-filename
   await mkdir(backupDirectory, { recursive: true });
   // eslint-disable-next-line security/detect-non-literal-fs-filename
-  await writeFile(filePath, JSON.stringify(payload, null, 2), {
-    encoding: 'utf8',
-    mode: 0o600,
-  });
+  await writeFile(
+    filePath,
+    JSON.stringify(
+      payload,
+      (_key, value: unknown) =>
+        typeof value === 'bigint' ? value.toString() : value,
+      2,
+    ),
+    {
+      encoding: 'utf8',
+      mode: 0o600,
+    },
+  );
 
   return {
     counts: {
       AuditLog: auditLogs.length,
+      LoginNameReservation: loginNameReservations.length,
+      MfaRecoveryCode: mfaRecoveryCodes.length,
       RateLimit: rateLimits.length,
       Session: sessions.length,
       StaffProfile: staffProfiles.length,
+      TotpCredential: totpCredentials.length,
       User: users.length,
     },
     filePath,

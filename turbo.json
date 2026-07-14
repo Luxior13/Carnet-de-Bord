@@ -1,7 +1,13 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "stream",
-  "globalEnv": ["DATABASE_URL", "NEXT_PUBLIC_WEB_URL", "NODE_ENV", "WEB_URL"],
+  "globalEnv": [
+    "DATABASE_URL",
+    "MFA_ENCRYPTION_KEY_V1",
+    "NEXT_PUBLIC_WEB_URL",
+    "NODE_ENV",
+    "WEB_URL"
+  ],
   "globalPassThroughEnv": [
     "CONFIRM_DATABASE_BASELINE",
     "E2E_DATABASE_URL",

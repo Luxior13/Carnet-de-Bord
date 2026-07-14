@@ -26,9 +26,11 @@ vi.mock('$server/prisma', () => ({
 
 import {
   createLoginRateLimitKeys,
+  createMfaRateLimitKeys,
   recordLoginAttempt,
   recordSuccessfulLogin,
   reserveLoginRateLimits,
+  reserveMfaRateLimits,
   reserveSensitiveActionRateLimit,
 } from '$server/rate-limiter';
 
@@ -98,6 +100,46 @@ describe('login rate limiter', () => {
       expect(key).not.toContain('member.one');
       expect(key.length).toBeLessThan(100);
     }
+  });
+
+  it('binds opaque MFA buckets independently to account, IP and challenge', () => {
+    const first = createMfaRateLimitKeys(
+      '203.0.113.7',
+      'user-1',
+      'challenge-1',
+    );
+    const nextChallenge = createMfaRateLimitKeys(
+      '203.0.113.7',
+      'user-1',
+      'challenge-2',
+    );
+    const nextIp = createMfaRateLimitKeys(
+      '198.51.100.4',
+      'user-1',
+      'challenge-1',
+    );
+
+    expect(first.account).toBe(nextChallenge.account);
+    expect(first.ip).toBe(nextChallenge.ip);
+    expect(first.challenge).not.toBe(nextChallenge.challenge);
+    expect(first.account).toBe(nextIp.account);
+    expect(first.challenge).toBe(nextIp.challenge);
+    expect(first.ip).not.toBe(nextIp.ip);
+    for (const key of Object.values(first)) {
+      expect(key).not.toContain('203.0.113.7');
+      expect(key).not.toContain('user-1');
+      expect(key).not.toContain('challenge-1');
+    }
+  });
+
+  it('reserves all three MFA buckets in one transaction', async () => {
+    const keys = createMfaRateLimitKeys('203.0.113.7', 'user-1', 'challenge-1');
+
+    const result = await reserveMfaRateLimits(keys);
+
+    expect(result).toEqual({ allowed: true, remainingAttempts: 4 });
+    expect(mocks.transaction).toHaveBeenCalledTimes(1);
+    expect(mocks.queryRaw).toHaveBeenCalledTimes(3);
   });
 
   it('reserves all login buckets in one transaction before bcrypt', async () => {
@@ -249,15 +291,15 @@ describe('login rate limiter', () => {
     expect(mocks.queryRaw).toHaveBeenCalledTimes(2);
   });
 
-  it('releases one focused reservation on success but preserves the IP bucket', async () => {
+  it('releases exactly one reservation from every bucket on success', async () => {
     const keys = createLoginRateLimitKeys('203.0.113.7', 'member.one');
 
     await recordSuccessfulLogin(keys);
 
     expect(mocks.transaction).toHaveBeenCalledTimes(1);
-    expect(mocks.rateLimitDeleteMany).toHaveBeenCalledTimes(2);
-    expect(mocks.rateLimitUpdateMany).toHaveBeenCalledTimes(2);
-    for (const key of [keys.account, keys.pair]) {
+    expect(mocks.rateLimitDeleteMany).toHaveBeenCalledTimes(3);
+    expect(mocks.rateLimitUpdateMany).toHaveBeenCalledTimes(3);
+    for (const key of [keys.ip, keys.account, keys.pair]) {
       expect(mocks.rateLimitDeleteMany).toHaveBeenCalledWith({
         where: { count: { lte: 0 }, key },
       });
@@ -266,14 +308,5 @@ describe('login rate limiter', () => {
         where: { count: { gt: 0 }, key },
       });
     }
-    const focusedMutationArguments = [
-      ...mocks.rateLimitDeleteMany.mock.calls,
-      ...mocks.rateLimitUpdateMany.mock.calls,
-    ];
-    expect(
-      focusedMutationArguments.some(([argument]) =>
-        JSON.stringify(argument).includes(keys.ip),
-      ),
-    ).toBe(false);
   });
 });

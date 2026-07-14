@@ -9,6 +9,7 @@ import type { Prisma } from '@prisma/client';
 import {
   type AuditAction,
   type AuditCategory,
+  type MfaAuthenticationMethod,
   type User,
   type UserRole,
 } from '@repo/database';
@@ -94,17 +95,23 @@ const SESSION_USER_SELECT = {
   lastName: true,
   lockedUntil: true,
   loginName: true,
+  mfaEnabledAt: true,
   mustChangePassword: true,
   passwordChangedAt: true,
   permissions: true,
   role: true,
   securityVersion: true,
+  totpCredential: {
+    select: { userId: true },
+  },
 } satisfies Prisma.UserSelect;
 
 const SESSION_WITH_USER_SELECT = {
   expiresAt: true,
   idleExpiresAt: true,
   lastSeenAt: true,
+  mfaMethod: true,
+  mfaVerifiedAt: true,
   rememberMe: true,
   securityVersion: true,
   token: true,
@@ -261,6 +268,20 @@ export class ProtectedAccountMutationError extends Error {
   }
 }
 
+type CreateSessionSecurityOptions = {
+  additionalAudits?: RequiredAuditLogInput[];
+  advanceSecurityVersion?: boolean;
+  disableMfa?: boolean;
+  mfaMethod?: MfaAuthenticationMethod;
+  precondition?: (
+    transaction: Prisma.TransactionClient,
+    authenticatedAt: Date,
+  ) => Promise<void>;
+  requireMfaEnabled?: boolean;
+  revokeExistingSessions?: boolean;
+  sourceSessionToken?: string;
+};
+
 /**
  * Creates a new session in the database
  */
@@ -270,6 +291,7 @@ export const createSession = async (
   authenticatedSecurityVersion: number,
   rememberMe = false,
   audit?: RequiredAuditLogInput,
+  securityOptions: CreateSessionSecurityOptions = {},
 ): Promise<{
   expiresAt: Date;
   idleExpiresAt: Date;
@@ -283,10 +305,38 @@ export const createSession = async (
     ? SESSION_LONG_DURATION_DAYS
     : SESSION_SHORT_DURATION_DAYS;
   const loginAt = new Date();
-  const expiresAt = new Date(
+  const defaultExpiresAt = new Date(
     loginAt.getTime() + 1000 * 60 * 60 * 24 * durationDays,
   );
-  const idleExpiresAt = getIdleExpiration(loginAt, expiresAt, rememberMe);
+  const defaultIdleExpiresAt = getIdleExpiration(
+    loginAt,
+    defaultExpiresAt,
+    rememberMe,
+  );
+  const nextSecurityVersion =
+    authenticatedSecurityVersion +
+    (securityOptions.advanceSecurityVersion ? 1 : 0);
+
+  if (
+    securityOptions.disableMfa &&
+    (securityOptions.mfaMethod ||
+      !securityOptions.advanceSecurityVersion ||
+      !securityOptions.requireMfaEnabled ||
+      !securityOptions.revokeExistingSessions)
+  ) {
+    throw new TypeError(
+      'MFA disable session rotation requires a version advance, enabled MFA and full session revocation',
+    );
+  }
+  if (
+    securityOptions.sourceSessionToken &&
+    (!securityOptions.advanceSecurityVersion ||
+      !securityOptions.revokeExistingSessions)
+  ) {
+    throw new TypeError(
+      'Session replacement requires a version advance and full session revocation',
+    );
+  }
 
   // Session creation, last-login state and its success audit must either all
   // commit or all roll back because they describe the same authentication.
@@ -295,11 +345,27 @@ export const createSession = async (
     // password reset or access change therefore either revokes this session
     // after commit, or makes this transaction fail before issuing it.
     const userUpdate = await transaction.user.updateMany({
-      data: { lastLoginAt: loginAt },
+      data: {
+        ...(securityOptions.sourceSessionToken ? {} : { lastLoginAt: loginAt }),
+        ...(securityOptions.advanceSecurityVersion
+          ? { securityVersion: { increment: 1 } }
+          : {}),
+      },
       where: {
         deletedAt: null,
         id: userId,
         isActive: true,
+        // Password-only sessions are never valid for the protected root and
+        // cannot be issued after MFA is enabled. Setup confirmation supplies
+        // an MFA method and activates the root inside the same transaction.
+        ...(securityOptions.mfaMethod
+          ? {}
+          : securityOptions.disableMfa
+            ? { isProtected: false, mfaEnabledAt: { not: null } }
+            : { isProtected: false, mfaEnabledAt: null }),
+        ...(securityOptions.requireMfaEnabled
+          ? { mfaEnabledAt: { not: null } }
+          : {}),
         securityVersion: authenticatedSecurityVersion,
       },
     });
@@ -308,22 +374,100 @@ export const createSession = async (
       throw new SecurityVersionMismatchError();
     }
 
+    let sessionExpiresAt = defaultExpiresAt;
+    let sessionIdleExpiresAt = defaultIdleExpiresAt;
+    let sessionIpAddress = requestContext.ipAddress;
+    let sessionRememberMe = rememberMe;
+    let sessionUserAgent = requestContext.userAgent;
+
+    if (securityOptions.sourceSessionToken) {
+      const sourceSession = await transaction.session.updateMany({
+        data: { lastSeenAt: loginAt },
+        where: {
+          expiresAt: { gt: loginAt },
+          idleExpiresAt: { gt: loginAt },
+          securityVersion: authenticatedSecurityVersion,
+          token: securityOptions.sourceSessionToken,
+          userId,
+        },
+      });
+      if (sourceSession.count !== 1) {
+        throw new SecurityVersionMismatchError();
+      }
+
+      const sourceSessionState = await transaction.session.findUnique({
+        select: {
+          expiresAt: true,
+          idleExpiresAt: true,
+          ipAddress: true,
+          rememberMe: true,
+          userAgent: true,
+        },
+        where: { token: securityOptions.sourceSessionToken },
+      });
+      if (!sourceSessionState) {
+        throw new SecurityVersionMismatchError();
+      }
+
+      sessionExpiresAt = sourceSessionState.expiresAt;
+      sessionIdleExpiresAt = sourceSessionState.idleExpiresAt;
+      sessionIpAddress = sourceSessionState.ipAddress;
+      sessionRememberMe = sourceSessionState.rememberMe;
+      sessionUserAgent = sourceSessionState.userAgent;
+    }
+
+    if (securityOptions.precondition) {
+      await securityOptions.precondition(transaction, loginAt);
+    }
+
+    if (securityOptions.disableMfa) {
+      const disabledUser = await transaction.user.updateMany({
+        data: { mfaEnabledAt: null },
+        where: {
+          id: userId,
+          isProtected: false,
+          mfaEnabledAt: { not: null },
+          securityVersion: nextSecurityVersion,
+        },
+      });
+      if (disabledUser.count !== 1) {
+        throw new SecurityVersionMismatchError();
+      }
+    }
+
+    if (securityOptions.revokeExistingSessions) {
+      await transaction.session.deleteMany({ where: { userId } });
+    }
+
     const createdSession = await transaction.session.create({
       data: {
-        expiresAt,
-        idleExpiresAt,
-        ipAddress: requestContext.ipAddress,
+        expiresAt: sessionExpiresAt,
+        idleExpiresAt: sessionIdleExpiresAt,
+        ipAddress: sessionIpAddress,
         lastSeenAt: loginAt,
-        rememberMe,
-        securityVersion: authenticatedSecurityVersion,
+        rememberMe: sessionRememberMe,
+        ...(securityOptions.mfaMethod
+          ? {
+              mfaMethod: securityOptions.mfaMethod,
+              mfaVerifiedAt: loginAt,
+            }
+          : {}),
+        securityVersion: nextSecurityVersion,
         token: sessionId,
-        userAgent: requestContext.userAgent,
+        userAgent: sessionUserAgent,
         userId,
       },
     });
 
     if (audit) {
       await createAuditLog({ ...audit, ...requestContext }, transaction);
+    }
+
+    for (const additionalAudit of securityOptions.additionalAudits ?? []) {
+      await createAuditLog(
+        { ...additionalAudit, ...requestContext },
+        transaction,
+      );
     }
 
     return createdSession;
@@ -370,6 +514,25 @@ const validateSessionToken = async (
         securityVersion: session.securityVersion,
         token: session.token,
       },
+    });
+
+    return { session: null, user: null };
+  }
+
+  const hasEnabledMfa = session.user.mfaEnabledAt !== null;
+  const hasTotpCredential = session.user.totpCredential !== null;
+
+  // Imported or corrupted half-configured states fail closed for every
+  // account. An MFA-enabled account must also never inherit a password-only
+  // session, and the protected root cannot operate before clean bootstrap.
+  if (
+    hasEnabledMfa !== hasTotpCredential ||
+    (session.user.isProtected && !hasEnabledMfa) ||
+    (hasEnabledMfa &&
+      (session.mfaVerifiedAt === null || session.mfaMethod === null))
+  ) {
+    await prisma.session.deleteMany({
+      where: { token: session.token },
     });
 
     return { session: null, user: null };
@@ -573,13 +736,16 @@ type AuthenticatedUser = Pick<
   | 'lastName'
   | 'loginName'
   | 'lockedUntil'
+  | 'mfaEnabledAt'
   | 'mustChangePassword'
   | 'passwordChangedAt'
   | 'passwordHash'
   | 'permissions'
   | 'role'
   | 'securityVersion'
->;
+> & {
+  totpCredential: { updatedAt: Date } | null;
+};
 
 const AUTHENTICATION_USER_SELECT = {
   contactEmail: true,
@@ -594,12 +760,16 @@ const AUTHENTICATION_USER_SELECT = {
   lastName: true,
   lockedUntil: true,
   loginName: true,
+  mfaEnabledAt: true,
   mustChangePassword: true,
   passwordChangedAt: true,
   passwordHash: true,
   permissions: true,
   role: true,
   securityVersion: true,
+  totpCredential: {
+    select: { updatedAt: true },
+  },
 } satisfies Prisma.UserSelect;
 
 /**
@@ -964,6 +1134,7 @@ type ClientSafeUser = Pick<
   | 'lastName'
   | 'loginName'
   | 'lockedUntil'
+  | 'mfaEnabledAt'
   | 'mustChangePassword'
   | 'passwordChangedAt'
   | 'permissions'
@@ -984,6 +1155,7 @@ export const mapUserToUserType = (user: ClientSafeUser): UserType => ({
   lastName: user.lastName,
   lockedUntil: user.lockedUntil,
   loginName: user.loginName,
+  mfaEnabledAt: user.mfaEnabledAt,
   mustChangePassword: user.mustChangePassword,
   passwordChangedAt: user.passwordChangedAt,
   permissions: normalizePermissionOverrides(

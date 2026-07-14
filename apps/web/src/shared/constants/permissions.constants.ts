@@ -6,6 +6,7 @@ import type { NavigationSpaceTone } from '$constants/navigation-theme.constants'
 export const PERMISSIONS = {
   ACCOUNT: {
     CHANGE_PASSWORD: 'account:change_password',
+    MANAGE_MFA: 'account:manage_mfa',
     MANAGE_SESSIONS: 'account:manage_sessions',
     UPDATE_CONTACT: 'account:update_contact',
     UPDATE_PROFILE: 'account:update_profile',
@@ -263,6 +264,17 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
         key: PERMISSIONS.ACCOUNT.CHANGE_PASSWORD,
         label: 'Changer son mot de passe',
         module: 'Mot de passe',
+        risk: 'sensitive',
+      },
+      {
+        action: 'manage',
+        alwaysEnabled: true,
+        dependencies: [PERMISSIONS.ACCOUNT.VIEW_SECURITY],
+        description:
+          'Configurer son application d’authentification et ses codes de récupération',
+        key: PERMISSIONS.ACCOUNT.MANAGE_MFA,
+        label: 'Gérer sa double authentification',
+        module: 'Double authentification',
         risk: 'sensitive',
       },
       {

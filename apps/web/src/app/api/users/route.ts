@@ -54,6 +54,7 @@ const USER_LIST_SELECT = {
   lastName: true,
   lockedUntil: true,
   loginName: true,
+  mfaEnabledAt: true,
   mustChangePassword: true,
   passwordChangedAt: true,
   role: true,

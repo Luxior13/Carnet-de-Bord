@@ -5,8 +5,10 @@ import { ErrorCode } from '$types/api.types';
 
 const mocks = vi.hoisted(() => ({
   authenticateUser: vi.fn(),
+  clearMfaChallengeCookie: vi.fn(),
   createAuditLogWithHeaders: vi.fn(),
   createLoginRateLimitKeys: vi.fn(),
+  createMfaChallenge: vi.fn(),
   createSession: vi.fn(),
   generateSessionToken: vi.fn(),
   isSecurityVersionMismatchError: vi.fn(),
@@ -20,6 +22,31 @@ const LOGIN_RATE_LIMIT_KEYS = {
   ip: 'ip-key',
   pair: 'pair-key',
 };
+
+const buildAuthenticatedUser = (
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> => ({
+  contactEmail: 'user@example.com',
+  contactEmailVerifiedAt: new Date('2026-01-02T00:00:00.000Z'),
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  failedLoginAttempts: 0,
+  firstName: 'Jean',
+  id: 'user-1',
+  isActive: true,
+  isProtected: false,
+  lastLoginAt: null,
+  lastName: 'Dupont',
+  lockedUntil: null,
+  loginName: 'user.name',
+  mfaEnabledAt: null,
+  mustChangePassword: false,
+  passwordChangedAt: null,
+  permissions: null,
+  role: 'USER',
+  securityVersion: 3,
+  totpCredential: null,
+  ...overrides,
+});
 
 vi.mock('server-only', () => ({}));
 
@@ -36,6 +63,11 @@ vi.mock('$server/logger', () => ({
   logger: { error: vi.fn() },
 }));
 
+vi.mock('$server/mfa', () => ({
+  clearMfaChallengeCookie: mocks.clearMfaChallengeCookie,
+  createMfaChallenge: mocks.createMfaChallenge,
+}));
+
 vi.mock('$server/rate-limiter', () => ({
   createLoginRateLimitKeys: mocks.createLoginRateLimitKeys,
   recordSuccessfulLogin: mocks.recordSuccessfulLogin,
@@ -50,6 +82,12 @@ describe('POST /api/auth/login', () => {
       remainingAttempts: 5,
     });
     mocks.createAuditLogWithHeaders.mockResolvedValue(undefined);
+    mocks.clearMfaChallengeCookie.mockResolvedValue(undefined);
+    mocks.createMfaChallenge.mockResolvedValue({
+      expiresAt: new Date('2026-07-13T12:05:00.000Z'),
+      token: 'raw-mfa-challenge',
+      tokenHash: 'hashed-mfa-challenge',
+    });
     mocks.createLoginRateLimitKeys.mockReturnValue(LOGIN_RATE_LIMIT_KEYS);
     mocks.isSecurityVersionMismatchError.mockReturnValue(false);
     mocks.recordSuccessfulLogin.mockResolvedValue(undefined);
@@ -256,11 +294,13 @@ describe('POST /api/auth/login', () => {
         lastName: 'Dupont',
         lockedUntil: null,
         loginName: 'user.name',
+        mfaEnabledAt: null,
         mustChangePassword: false,
         passwordChangedAt: null,
         permissions: null,
         role: 'USER',
         securityVersion: 3,
+        totpCredential: null,
       },
     });
     mocks.generateSessionToken.mockReturnValue('raw-session-token');
@@ -315,11 +355,13 @@ describe('POST /api/auth/login', () => {
         lastName: 'Dupont',
         lockedUntil: null,
         loginName: 'user.name',
+        mfaEnabledAt: null,
         mustChangePassword: false,
         passwordChangedAt: null,
         permissions: null,
         role: 'USER',
         securityVersion: 3,
+        totpCredential: null,
       },
     });
     mocks.generateSessionToken.mockReturnValue('raw-session-token');
@@ -362,6 +404,7 @@ describe('POST /api/auth/login', () => {
       lastSeenAt: lastSeenAt.toISOString(),
       rememberMe: true,
     });
+    expect(body.data.status).toBe('authenticated');
     expect(body.data.user).toMatchObject({
       contactEmail: 'user@example.com',
       loginName: 'user.name',
@@ -383,4 +426,138 @@ describe('POST /api/auth/login', () => {
       LOGIN_RATE_LIMIT_KEYS,
     );
   });
+
+  it('returns mfa_required without issuing a session when MFA is enabled', async () => {
+    const credentialUpdatedAt = new Date('2026-07-10T12:00:00.000Z');
+    mocks.authenticateUser.mockResolvedValue({
+      success: true,
+      user: buildAuthenticatedUser({
+        mfaEnabledAt: new Date('2026-07-10T12:00:00.000Z'),
+        totpCredential: { updatedAt: credentialUpdatedAt },
+      }),
+    });
+    const { POST } = await import('$app/api/auth/login/route');
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/auth/login', {
+        body: JSON.stringify({
+          loginName: 'user.name',
+          password: 'Secret1!',
+          rememberMe: true,
+        }),
+        method: 'POST',
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toEqual({
+      challengeExpiresAt: '2026-07-13T12:05:00.000Z',
+      status: 'mfa_required',
+    });
+    expect(mocks.createMfaChallenge).toHaveBeenCalledWith({
+      credentialUpdatedAt,
+      purpose: 'LOGIN',
+      rememberMe: true,
+      securityVersion: 3,
+      userId: 'user-1',
+    });
+    expect(mocks.generateSessionToken).not.toHaveBeenCalled();
+    expect(mocks.createSession).not.toHaveBeenCalled();
+    expect(mocks.setSessionTokenCookie).not.toHaveBeenCalled();
+    expect(mocks.clearMfaChallengeCookie).not.toHaveBeenCalled();
+  });
+
+  it('returns mfa_setup_required for the protected root without MFA', async () => {
+    mocks.authenticateUser.mockResolvedValue({
+      success: true,
+      user: buildAuthenticatedUser({
+        id: 'root-user',
+        isProtected: true,
+        loginName: 'root.owner',
+        role: 'ADMIN',
+        securityVersion: 9,
+      }),
+    });
+    const { POST } = await import('$app/api/auth/login/route');
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/auth/login', {
+        body: JSON.stringify({
+          loginName: 'root.owner',
+          password: 'Secret1!',
+          rememberMe: true,
+        }),
+        method: 'POST',
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.status).toBe('mfa_setup_required');
+    expect(mocks.createMfaChallenge).toHaveBeenCalledWith({
+      credentialUpdatedAt: null,
+      purpose: 'SETUP',
+      rememberMe: false,
+      securityVersion: 9,
+      userId: 'root-user',
+    });
+    expect(mocks.createSession).not.toHaveBeenCalled();
+    expect(mocks.setSessionTokenCookie).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      label: 'enabled timestamp without a credential',
+      mfaEnabledAt: new Date('2026-07-10T12:00:00.000Z'),
+      totpCredential: null,
+    },
+    {
+      label: 'credential without an enabled timestamp',
+      mfaEnabledAt: null,
+      totpCredential: { updatedAt: new Date('2026-07-10T12:00:00.000Z') },
+    },
+  ])(
+    'fails closed for an inconsistent protected-root MFA state: $label',
+    async ({ mfaEnabledAt, totpCredential }) => {
+      mocks.authenticateUser.mockResolvedValue({
+        success: true,
+        user: buildAuthenticatedUser({
+          id: 'root-user',
+          isProtected: true,
+          loginName: 'root.owner',
+          mfaEnabledAt,
+          role: 'ADMIN',
+          totpCredential,
+        }),
+      });
+      const { POST } = await import('$app/api/auth/login/route');
+
+      const response = await POST(
+        new NextRequest('http://localhost/api/auth/login', {
+          body: JSON.stringify({
+            loginName: 'root.owner',
+            password: 'Secret1!',
+          }),
+          method: 'POST',
+        }),
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(body.error.code).toBe(ErrorCode.INVALID_CREDENTIALS);
+      expect(mocks.createMfaChallenge).not.toHaveBeenCalled();
+      expect(mocks.createSession).not.toHaveBeenCalled();
+      expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'LOGIN_FAILED',
+          metadata: expect.objectContaining({
+            reason: 'MFA_STATE_INCONSISTENT',
+          }),
+          targetUserId: 'root-user',
+          userId: null,
+        }),
+      );
+    },
+  );
 });

@@ -7,8 +7,11 @@ import {
   Loader2,
   LogOut,
   Monitor,
+  QrCode,
+  RefreshCw,
   Shield,
   ShieldCheck,
+  ShieldOff,
   Smartphone,
   X,
 } from 'lucide-react';
@@ -16,7 +19,17 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { ChangePasswordDialog } from '$components/ChangePasswordDialog';
-import type { UserType } from '$types/auth.types';
+import {
+  MfaActionDialog,
+  type MfaActionMode,
+} from '$features/auth/components/MfaActionDialog';
+import { MfaSetupDialog } from '$features/auth/components/MfaSetupDialog';
+import { type ApiResponse, RoutesApi } from '$types/api.types';
+import type {
+  MfaSetupConfirmationData,
+  MfaStatus,
+  UserType,
+} from '$types/auth.types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,9 +65,10 @@ type SessionInfo = {
 
 type SecuritySectionProps = {
   canChangePassword: boolean;
+  canManageMfa: boolean;
   canManageSessions: boolean;
   canViewSecurity: boolean;
-  onUpdate: () => Promise<void>;
+  onUpdate: (updatedUser?: UserType) => Promise<void>;
   userData: UserType;
 };
 
@@ -222,18 +236,71 @@ const SessionRow: FC<SessionRowProps> = ({ isRevoking, onRevoke, session }) => {
 
 export const SecuritySection: FC<SecuritySectionProps> = ({
   canChangePassword,
+  canManageMfa,
   canManageSessions,
   canViewSecurity,
   onUpdate,
   userData,
 }) => {
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [mfaStatus, setMfaStatus] = useState<MfaStatus | null>(null);
+  const [loadingMfaStatus, setLoadingMfaStatus] = useState(true);
+  const [mfaStatusError, setMfaStatusError] = useState<string | null>(null);
+  const [mfaSetupMode, setMfaSetupMode] = useState<
+    'activate' | 'replace' | null
+  >(null);
+  const [mfaActionMode, setMfaActionMode] = useState<MfaActionMode | null>(
+    null,
+  );
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [sessionsError, setSessionsError] = useState<string | null>(null);
   const [revokingAll, setRevokingAll] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
+
+  const fetchMfaStatus = useCallback(
+    async (signal?: AbortSignal): Promise<void> => {
+      if (!canViewSecurity && !canManageMfa) {
+        setMfaStatus(null);
+        setMfaStatusError(null);
+        setLoadingMfaStatus(false);
+
+        return;
+      }
+
+      if (!signal?.aborted) {
+        setLoadingMfaStatus(true);
+        setMfaStatusError(null);
+      }
+
+      try {
+        const response = await fetch(RoutesApi.mfa, {
+          cache: 'no-store',
+          signal,
+        });
+        const data = (await response.json()) as ApiResponse<MfaStatus>;
+
+        if (!signal?.aborted && response.ok && data.success) {
+          setMfaStatus(data.data);
+        } else if (!signal?.aborted) {
+          setMfaStatusError(
+            data.success
+              ? 'Impossible de charger la double authentification'
+              : data.error.message ||
+                  'Impossible de charger la double authentification',
+          );
+        }
+      } catch {
+        if (!signal?.aborted) {
+          setMfaStatusError('Impossible de charger la double authentification');
+        }
+      } finally {
+        if (!signal?.aborted) setLoadingMfaStatus(false);
+      }
+    },
+    [canManageMfa, canViewSecurity],
+  );
 
   const fetchSessions = useCallback(
     async (signal?: AbortSignal): Promise<void> => {
@@ -282,7 +349,17 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
     return (): void => {
       controller.abort();
     };
-  }, [fetchSessions]);
+  }, [fetchSessions, userData.mfaEnabledAt]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    void fetchMfaStatus(controller.signal);
+
+    return (): void => {
+      controller.abort();
+    };
+  }, [fetchMfaStatus, userData.mfaEnabledAt]);
 
   const handleRevokeAllSessions = async (): Promise<void> => {
     try {
@@ -327,6 +404,33 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
     }
   };
 
+  const handleMfaSetupComplete = async (
+    data: MfaSetupConfirmationData,
+  ): Promise<void> => {
+    await onUpdate(data.user);
+    await Promise.all([
+      fetchMfaStatus(),
+      ...(canManageSessions ? [fetchSessions()] : []),
+    ]);
+    setMfaSetupMode(null);
+    toast.success(
+      mfaSetupMode === 'replace'
+        ? 'Application d’authentification remplacée'
+        : 'Double authentification activée',
+    );
+  };
+
+  const handleMfaActionComplete = async (
+    updatedUser?: UserType,
+  ): Promise<void> => {
+    await onUpdate(updatedUser);
+    await Promise.all([
+      fetchMfaStatus(),
+      ...(canManageSessions ? [fetchSessions()] : []),
+    ]);
+    setMfaActionMode(null);
+  };
+
   const currentSession = sessions.find((session) => session.isCurrent);
   const otherSessions = sessions.filter((session) => !session.isCurrent);
   const passwordStatusLabel = userData.mustChangePassword
@@ -350,18 +454,31 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       ? 'Indisponible'
       : String(otherSessions.length);
   const canViewPasswordSecurity = canViewSecurity || canChangePassword;
+  const canViewMfaSecurity = canViewSecurity || canManageMfa;
+  const mfaEnabledAt =
+    mfaStatus?.enabledAt ??
+    (userData.mfaEnabledAt
+      ? new Date(userData.mfaEnabledAt).toISOString()
+      : null);
+  const isMfaEnabled = !!mfaEnabledAt;
+  const isMfaRequired = mfaStatus?.required ?? userData.isProtected;
+  const mfaStatusLabel = loadingMfaStatus
+    ? 'Chargement'
+    : mfaStatusError
+      ? 'Indisponible'
+      : isMfaEnabled
+        ? 'Active'
+        : 'À activer';
 
   return (
     <>
       <div className="space-y-3">
         <div
           className={cn(
-            'grid gap-3',
-            canViewPasswordSecurity && canManageSessions
-              ? 'md:grid-cols-3'
-              : canViewPasswordSecurity
-                ? 'md:grid-cols-1'
-                : 'md:grid-cols-2',
+            'grid gap-3 sm:grid-cols-2',
+            canViewPasswordSecurity && canViewMfaSecurity && canManageSessions
+              ? 'xl:grid-cols-4'
+              : 'xl:grid-cols-3',
           )}
         >
           {canViewPasswordSecurity && (
@@ -371,6 +488,21 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               value={passwordStatusLabel}
               description={`Dernier changement : ${passwordChangedLabel}`}
               tone={userData.mustChangePassword ? 'warning' : 'primary'}
+            />
+          )}
+          {canViewMfaSecurity && (
+            <SecurityMetric
+              description={
+                isMfaEnabled
+                  ? `Activée ${formatRelativeAccountTime(mfaEnabledAt)}`
+                  : isMfaRequired
+                    ? 'Obligatoire pour ce compte protégé'
+                    : 'Protection supplémentaire disponible'
+              }
+              icon={<QrCode className="size-4" />}
+              label="Double authentification"
+              tone={isMfaEnabled ? 'primary' : 'warning'}
+              value={mfaStatusLabel}
             />
           )}
           {canManageSessions && (
@@ -458,6 +590,153 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                   <Shield className="size-4" />
                   Changer le mot de passe
                 </Button>
+              </CardFooter>
+            )}
+          </Card>
+        )}
+        {canViewMfaSecurity && (
+          <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
+            <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
+              <SectionTitle icon={<QrCode className="size-3.5" />}>
+                Double authentification
+              </SectionTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 p-3 sm:p-4">
+              {loadingMfaStatus ? (
+                <Skeleton className="h-32 rounded-md" />
+              ) : mfaStatusError ? (
+                <div
+                  className="border-destructive/35 bg-destructive/10 text-destructive flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 text-sm"
+                  role="alert"
+                >
+                  <span>{mfaStatusError}</span>
+                  <Button
+                    onClick={() => void fetchMfaStatus()}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    Réessayer
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="border-border/60 bg-popover space-y-3 rounded-md border p-3">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-muted-foreground text-sm">
+                        État
+                      </span>
+                      <Badge
+                        className={
+                          isMfaEnabled
+                            ? undefined
+                            : 'border-amber-500/40 text-amber-400'
+                        }
+                        variant={isMfaEnabled ? 'secondary' : 'outline'}
+                      >
+                        {isMfaEnabled ? 'Active' : 'À activer'}
+                      </Badge>
+                    </div>
+                    {mfaEnabledAt && (
+                      <>
+                        <Separator className="bg-border/60" />
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-muted-foreground text-sm">
+                            Activée le
+                          </span>
+                          <span className="text-foreground text-right text-sm">
+                            {formatSessionDateTime(mfaEnabledAt)}
+                          </span>
+                        </div>
+                        <Separator className="bg-border/60" />
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-muted-foreground text-sm">
+                            Codes de secours disponibles
+                          </span>
+                          <span className="text-foreground text-sm font-semibold">
+                            {mfaStatus?.recoveryCodesRemaining ?? '—'}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div
+                    className={cn(
+                      'flex items-start gap-2 rounded-md border p-3 text-sm leading-6',
+                      isMfaRequired && !isMfaEnabled
+                        ? 'border-amber-500/30 bg-amber-500/10 text-amber-100'
+                        : 'border-sidebar-ring/25 bg-sidebar-ring/[0.08] text-muted-foreground',
+                    )}
+                  >
+                    <ShieldCheck className="text-sidebar-ring mt-1 size-4 shrink-0" />
+                    <p>
+                      {isMfaRequired
+                        ? isMfaEnabled
+                          ? 'Cette protection est obligatoire pour le compte superadmin et ne peut pas être désactivée.'
+                          : 'Cette protection doit être activée pour continuer à utiliser le compte superadmin.'
+                        : isMfaEnabled
+                          ? 'Un code de votre application est demandé après le mot de passe.'
+                          : 'Ajoutez une seconde preuve à votre mot de passe pour sécuriser vos connexions.'}
+                    </p>
+                  </div>
+                  {isMfaEnabled && mfaStatus?.recoveryCodesRemaining === 0 && (
+                    <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm leading-6 text-amber-100">
+                      Aucun code de secours n’est disponible. Générez-en de
+                      nouveaux et conservez-les hors de votre téléphone.
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+            {canManageMfa && !loadingMfaStatus && !mfaStatusError && (
+              <CardFooter className="border-sidebar-border/65 bg-surface-muted flex-wrap justify-end gap-2 border-t p-3 sm:p-4">
+                {isMfaEnabled ? (
+                  <>
+                    <Button
+                      className="gap-2"
+                      onClick={() => setMfaActionMode('recovery-codes')}
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      <RefreshCw className="size-4" />
+                      Nouveaux codes de secours
+                    </Button>
+                    <Button
+                      className="gap-2"
+                      onClick={() => setMfaSetupMode('replace')}
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      <QrCode className="size-4" />
+                      Remplacer l’application
+                    </Button>
+                    {!isMfaRequired && (
+                      <Button
+                        className="gap-2"
+                        onClick={() => setMfaActionMode('disable')}
+                        size="sm"
+                        type="button"
+                        variant="destructive"
+                      >
+                        <ShieldOff className="size-4" />
+                        Désactiver
+                      </Button>
+                    )}
+                  </>
+                ) : (
+                  <Button
+                    className="gap-2"
+                    onClick={() => setMfaSetupMode('activate')}
+                    size="sm"
+                    type="button"
+                  >
+                    <QrCode className="size-4" />
+                    Configurer l’application
+                  </Button>
+                )}
               </CardFooter>
             )}
           </Card>
@@ -563,6 +842,24 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           toast.success('Mot de passe modifié avec succès');
         }}
       />
+      {mfaSetupMode && (
+        <MfaSetupDialog
+          loginName={userData.loginName}
+          mode={mfaSetupMode}
+          onCancel={() => setMfaSetupMode(null)}
+          onComplete={handleMfaSetupComplete}
+          open
+        />
+      )}
+      {mfaActionMode && (
+        <MfaActionDialog
+          loginName={userData.loginName}
+          mode={mfaActionMode}
+          onCancel={() => setMfaActionMode(null)}
+          onComplete={handleMfaActionComplete}
+          open
+        />
+      )}
       <AlertDialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
         <AlertDialogContent className="border-sidebar-border overflow-hidden rounded-md p-0">
           <div className="p-6">

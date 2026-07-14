@@ -3,6 +3,11 @@ export enum RoutesApi {
   login = '/api/auth/login',
   logout = '/api/auth/logout',
   me = '/api/auth/me',
+  mfa = '/api/auth/mfa',
+  mfaChallenge = '/api/auth/mfa/challenge',
+  mfaRecoveryCodes = '/api/auth/mfa/recovery-codes',
+  mfaSetup = '/api/auth/mfa/setup',
+  mfaVerify = '/api/auth/mfa/verify',
   users = '/api/users',
 }
 

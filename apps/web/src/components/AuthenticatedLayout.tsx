@@ -8,6 +8,7 @@ import { ChangePasswordDialog } from '$components/ChangePasswordDialog';
 import { Header } from '$components/layout/Header';
 import Sidebar from '$components/Sidebar';
 import { useUser } from '$context/UserContext';
+import { MfaSetupDialog } from '$features/auth/components/MfaSetupDialog';
 import { type BreadcrumbEntry } from '$ui/breadcrumb';
 import { Button } from '$ui/button';
 import { SidebarInset, SidebarProvider } from '$ui/sidebar';
@@ -26,8 +27,11 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
   fullHeight = false,
 }) => {
   const router = useRouter();
-  const { error, isLoading, refreshUser, userData } = useUser();
+  const { applyUserUpdate, error, isLoading, refreshUser, userData } =
+    useUser();
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const requiresMfaSetup =
+    !!userData?.isProtected && userData.mfaEnabledAt === null;
 
   useEffect(() => {
     if (!isLoading && !userData && !error) {
@@ -39,10 +43,12 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
   }, [error, isLoading, userData, router]);
 
   useEffect(() => {
-    if (userData?.mustChangePassword) {
+    if (requiresMfaSetup) {
+      setShowPasswordDialog(false);
+    } else if (userData?.mustChangePassword) {
       setShowPasswordDialog(true);
     }
-  }, [userData?.mustChangePassword]);
+  }, [requiresMfaSetup, userData?.mustChangePassword]);
 
   const handlePasswordChanged = async (): Promise<void> => {
     await refreshUser();
@@ -105,6 +111,13 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
       <ChangePasswordDialog
         open={showPasswordDialog}
         onSuccess={handlePasswordChanged}
+      />
+      <MfaSetupDialog
+        allowCancel={false}
+        loginName={userData.loginName}
+        mode="activate"
+        onComplete={(data) => applyUserUpdate(data.user)}
+        open={requiresMfaSetup}
       />
       <Sidebar />
       <SidebarInset className="relative isolate h-full bg-transparent">

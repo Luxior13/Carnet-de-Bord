@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => {
     session: {
       create: vi.fn(),
       deleteMany: vi.fn(),
+      findUnique: vi.fn(),
       updateMany: vi.fn(),
     },
     user: {
@@ -100,17 +101,21 @@ const SESSION_USER = {
   lastName: 'Dupont',
   lockedUntil: null,
   loginName: 'user.name',
+  mfaEnabledAt: null as Date | null,
   mustChangePassword: false,
   passwordChangedAt: new Date('2026-01-01T00:00:00.000Z'),
   permissions: null,
   role: 'USER' as const,
   securityVersion: 3,
+  totpCredential: null as { userId: string } | null,
 };
 
 type StoredSession = {
   expiresAt: Date;
   idleExpiresAt: Date;
   lastSeenAt: Date;
+  mfaMethod: null | 'RECOVERY_CODE' | 'TOTP';
+  mfaVerifiedAt: Date | null;
   rememberMe: boolean;
   securityVersion: number;
   token: string;
@@ -124,6 +129,8 @@ const buildStoredSession = (
   expiresAt: new Date('2026-07-14T12:00:00.000Z'),
   idleExpiresAt: new Date('2026-07-13T12:30:00.000Z'),
   lastSeenAt: new Date('2026-07-13T12:00:00.000Z'),
+  mfaMethod: null,
+  mfaVerifiedAt: null,
   rememberMe: false,
   securityVersion: 3,
   token: 'stored-session-hash',
@@ -222,6 +229,8 @@ describe('auth security transactions', () => {
         deletedAt: null,
         id: 'user-1',
         isActive: true,
+        isProtected: false,
+        mfaEnabledAt: null,
         securityVersion: 3,
       },
     });
@@ -293,6 +302,133 @@ describe('auth security transactions', () => {
     expect(mocks.transaction.auditLog.create).not.toHaveBeenCalled();
   });
 
+  it('runs the MFA proof precondition before creating an MFA-bound session', async () => {
+    const authenticatedAt = new Date('2026-07-13T12:00:00.000Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(authenticatedAt);
+    const precondition = vi.fn(async () => undefined);
+
+    await createSession('raw-session-token', 'user-1', 3, false, undefined, {
+      mfaMethod: 'TOTP',
+      precondition,
+      requireMfaEnabled: true,
+    });
+
+    expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith({
+      data: { lastLoginAt: authenticatedAt },
+      where: {
+        deletedAt: null,
+        id: 'user-1',
+        isActive: true,
+        mfaEnabledAt: { not: null },
+        securityVersion: 3,
+      },
+    });
+    expect(precondition).toHaveBeenCalledWith(
+      mocks.transaction,
+      authenticatedAt,
+    );
+    expect(precondition.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.transaction.session.create.mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(mocks.transaction.session.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        mfaMethod: 'TOTP',
+        mfaVerifiedAt: authenticatedAt,
+        securityVersion: 3,
+        userId: 'user-1',
+      }),
+    });
+  });
+
+  it('does not create a session when the MFA proof precondition fails', async () => {
+    const preconditionError = new Error('proof already consumed');
+
+    await expect(
+      createSession('raw-session-token', 'user-1', 3, false, undefined, {
+        mfaMethod: 'TOTP',
+        precondition: vi.fn(async () => {
+          throw preconditionError;
+        }),
+        requireMfaEnabled: true,
+      }),
+    ).rejects.toBe(preconditionError);
+
+    expect(mocks.transaction.session.create).not.toHaveBeenCalled();
+    expect(mocks.transaction.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it('rotates a source session without extending its deadlines or last-login time', async () => {
+    const rotatedAt = new Date('2026-07-13T12:00:00.000Z');
+    const sourceExpiresAt = new Date('2026-07-13T20:00:00.000Z');
+    const sourceIdleExpiresAt = new Date('2026-07-13T12:20:00.000Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(rotatedAt);
+    mocks.transaction.session.findUnique.mockResolvedValueOnce({
+      expiresAt: sourceExpiresAt,
+      idleExpiresAt: sourceIdleExpiresAt,
+      ipAddress: '192.0.2.10',
+      rememberMe: true,
+      userAgent: 'Original Browser',
+    });
+    mocks.transaction.session.create.mockResolvedValueOnce({
+      expiresAt: sourceExpiresAt,
+      idleExpiresAt: sourceIdleExpiresAt,
+      lastSeenAt: rotatedAt,
+      rememberMe: true,
+    });
+
+    const result = await createSession(
+      'replacement-token',
+      'user-1',
+      3,
+      false,
+      undefined,
+      {
+        advanceSecurityVersion: true,
+        mfaMethod: 'TOTP',
+        requireMfaEnabled: true,
+        revokeExistingSessions: true,
+        sourceSessionToken: 'source-session-hash',
+      },
+    );
+
+    expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith({
+      data: { securityVersion: { increment: 1 } },
+      where: expect.objectContaining({
+        id: 'user-1',
+        mfaEnabledAt: { not: null },
+        securityVersion: 3,
+      }),
+    });
+    expect(mocks.transaction.session.updateMany).toHaveBeenCalledWith({
+      data: { lastSeenAt: rotatedAt },
+      where: {
+        expiresAt: { gt: rotatedAt },
+        idleExpiresAt: { gt: rotatedAt },
+        securityVersion: 3,
+        token: 'source-session-hash',
+        userId: 'user-1',
+      },
+    });
+    expect(mocks.transaction.session.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        expiresAt: sourceExpiresAt,
+        idleExpiresAt: sourceIdleExpiresAt,
+        ipAddress: '192.0.2.10',
+        rememberMe: true,
+        securityVersion: 4,
+        userAgent: 'Original Browser',
+      }),
+    });
+    expect(result).toMatchObject({
+      expiresAt: sourceExpiresAt,
+      idleExpiresAt: sourceIdleExpiresAt,
+      rememberMe: true,
+      token: 'replacement-token',
+    });
+  });
+
   it.each([
     {
       label: 'absolute limit',
@@ -349,6 +485,70 @@ describe('auth security transactions', () => {
     });
     expect(mocks.prisma.session.updateMany).not.toHaveBeenCalled();
     expect(mocks.cookieStore.delete).toHaveBeenCalledWith('session');
+  });
+
+  it('rejects every password-only session for the protected root', async () => {
+    mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
+    mocks.prisma.session.findUnique.mockResolvedValueOnce(
+      buildStoredSession({
+        user: {
+          ...SESSION_USER,
+          id: 'root-user',
+          isProtected: true,
+          mfaEnabledAt: null,
+        },
+        userId: 'root-user',
+      }),
+    );
+
+    await expect(getAuthSession(false)).resolves.toEqual({
+      session: null,
+      user: null,
+    });
+    expect(mocks.prisma.session.deleteMany).toHaveBeenCalledWith({
+      where: { token: 'stored-session-hash' },
+    });
+  });
+
+  it('rejects a password-only session after MFA has been enabled', async () => {
+    mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
+    mocks.prisma.session.findUnique.mockResolvedValueOnce(
+      buildStoredSession({
+        user: {
+          ...SESSION_USER,
+          mfaEnabledAt: new Date('2026-07-10T12:00:00.000Z'),
+        },
+      }),
+    );
+
+    await expect(getAuthSession(false)).resolves.toEqual({
+      session: null,
+      user: null,
+    });
+    expect(mocks.prisma.session.deleteMany).toHaveBeenCalledWith({
+      where: { token: 'stored-session-hash' },
+    });
+  });
+
+  it('rejects a session when a credential exists without the enabled marker', async () => {
+    mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
+    mocks.prisma.session.findUnique.mockResolvedValueOnce(
+      buildStoredSession({
+        user: {
+          ...SESSION_USER,
+          mfaEnabledAt: null,
+          totpCredential: { userId: 'user-1' },
+        },
+      }),
+    );
+
+    await expect(getAuthSession(false)).resolves.toEqual({
+      session: null,
+      user: null,
+    });
+    expect(mocks.prisma.session.deleteMany).toHaveBeenCalledWith({
+      where: { token: 'stored-session-hash' },
+    });
   });
 
   it('touches an active session after one minute without extending its absolute limit', async () => {

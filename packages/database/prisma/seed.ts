@@ -201,6 +201,9 @@ async function seedSuperadmin() {
         isActive: true,
         isProtected: true,
         loginName: adminLoginName,
+        // A newly created root must prove possession of its authenticator on
+        // first login. The seed never pre-provisions or prints a TOTP secret.
+        mfaEnabledAt: null,
         mustChangePassword: true,
         passwordHash,
         role: UserRole.ADMIN,

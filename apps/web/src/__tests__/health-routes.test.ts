@@ -26,10 +26,17 @@ vi.mock('$server/prisma', () => ({
 const readySchema = {
   auditLogColumns: 6,
   loginNameReservationColumns: 3,
+  mfaAuditActions: 4,
+  mfaAuthenticationMethods: 2,
+  mfaChallengePurposes: 2,
+  mfaLoginChallengeColumns: 11,
+  mfaRecoveryCodeColumns: 6,
   protectedAccounts: 1,
   rateLimitColumns: 4,
-  sessionColumns: 8,
-  userColumns: 14,
+  sessionColumns: 10,
+  totpCredentialColumns: 9,
+  totpEnrollmentColumns: 8,
+  userColumns: 15,
   validProtectedRootAccounts: 1,
 };
 
@@ -78,6 +85,14 @@ describe('operational health routes', () => {
     expect(query).toContain("'idleExpiresAt'");
     expect(query).toContain("'lastSeenAt'");
     expect(query).toContain("'securityVersion'");
+    expect(query).toContain("'mfaEnabledAt'");
+    expect(query).toContain("'mfaVerifiedAt'");
+    expect(query).toContain("'mfaMethod'");
+    expect(query).toContain("'TotpCredential'");
+    expect(query).toContain("'TotpEnrollment'");
+    expect(query).toContain("'MfaRecoveryCode'");
+    expect(query).toContain("'MfaLoginChallenge'");
+    expect(query).toContain("'MFA_RECOVERY_CODES_REGENERATED'");
     expect(query).toContain("'LoginNameReservation'");
     expect(query).toContain('"isProtected" = true');
     expect(response.headers.get('cache-control')).toContain('no-store');
@@ -116,6 +131,28 @@ describe('operational health routes', () => {
         status: 503,
       }),
     );
+  });
+
+  it.each([
+    'mfaAuditActions',
+    'mfaAuthenticationMethods',
+    'mfaChallengePurposes',
+    'mfaLoginChallengeColumns',
+    'mfaRecoveryCodeColumns',
+    'totpCredentialColumns',
+    'totpEnrollmentColumns',
+  ] as const)('is not ready when %s are missing', async (field) => {
+    mocks.transaction.$queryRaw.mockResolvedValueOnce([
+      { ...readySchema, [field]: 0 },
+    ]);
+    const { GET } = await import('$app/api/health/ready/route');
+    const response = await GET();
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      checks: { database: 'connected', schema: 'not_ready' },
+      status: 'unhealthy',
+    });
   });
 
   it('is not ready without exactly one protected account', async () => {

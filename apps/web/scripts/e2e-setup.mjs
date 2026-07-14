@@ -210,6 +210,7 @@ try {
     isProtected: true,
     lockedUntil: null,
     loginName: adminLoginName,
+    mfaEnabledAt: null,
     mustChangePassword: false,
     passwordChangedAt: null,
     passwordHash,
@@ -226,18 +227,32 @@ try {
         existingAdmin.id,
       );
 
+      // Every E2E run exercises the real protected-account bootstrap. Remove
+      // all previous second-factor state before resetting the marker on User;
+      // otherwise a later run against this isolated database could test
+      // the ordinary MFA challenge instead of first-time enrollment.
+      await transaction.session.deleteMany({
+        where: { userId: existingAdmin.id },
+      });
+      await transaction.mfaLoginChallenge.deleteMany({
+        where: { userId: existingAdmin.id },
+      });
+      await transaction.mfaRecoveryCode.deleteMany({
+        where: { userId: existingAdmin.id },
+      });
+      await transaction.totpEnrollment.deleteMany({
+        where: { userId: existingAdmin.id },
+      });
+      await transaction.totpCredential.deleteMany({
+        where: { userId: existingAdmin.id },
+      });
+
       const updatedAdmin = await transaction.user.update({
         data: {
           ...accountData,
           securityVersion: { increment: 1 },
         },
         where: { id: existingAdmin.id },
-      });
-
-      // The setup resets credentials, so no session from an earlier E2E run
-      // may survive even when the login name itself did not change.
-      await transaction.session.deleteMany({
-        where: { userId: existingAdmin.id },
       });
 
       return updatedAdmin;

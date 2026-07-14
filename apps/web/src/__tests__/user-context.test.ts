@@ -7,7 +7,11 @@ import type {
 } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { UserType } from '$types/auth.types';
+import type {
+  LoginCredentials,
+  LoginResult,
+  UserType,
+} from '$types/auth.types';
 
 type Cleanup = Exclude<ReturnType<EffectCallback>, void>;
 
@@ -236,12 +240,15 @@ class FakeWindow {
 
 type ContextValue = {
   applyUserUpdate: (user: UserType) => void;
+  cancelMfaChallenge: () => Promise<void>;
   extendSession: () => Promise<void>;
   isLoading: boolean;
+  login: (credentials: LoginCredentials) => Promise<LoginResult | null>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   showSessionWarning: boolean;
   userData: UserType | null;
+  verifyMfa: (code: string) => Promise<boolean>;
 };
 
 const NOW = new Date('2026-07-13T10:00:00.000Z');
@@ -260,6 +267,7 @@ const user = {
   lastName: 'Martin',
   lockedUntil: null,
   loginName: 'agent',
+  mfaEnabledAt: null,
   mustChangePassword: false,
   passwordChangedAt: NOW,
   permissions: null,
@@ -289,6 +297,13 @@ const jsonResponse = (
 
 const heartbeatResponse = (status = 200): Response =>
   ({ ok: status >= 200 && status < 300, status }) as Response;
+
+const apiJsonResponse = (data: unknown, status = 200): Response =>
+  ({
+    json: vi.fn().mockResolvedValue(data),
+    ok: status >= 200 && status < 300,
+    status,
+  }) as unknown as Response;
 
 const flushPromises = async (): Promise<void> => {
   for (let index = 0; index < 8; index += 1) await Promise.resolve();
@@ -330,6 +345,21 @@ describe('UserContext session activity', () => {
     rememberMe = false,
   ): Promise<void> => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(rememberMe));
+    runtime.render(() => UserProvider({ children: null }) as ReactElement);
+    await flushPromises();
+    runtime.render();
+  };
+
+  const mountAnonymousProvider = async (): Promise<void> => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      apiJsonResponse(
+        {
+          error: { code: 'UNAUTHORIZED', message: 'Non authentifié' },
+          success: false,
+        },
+        401,
+      ),
+    );
     runtime.render(() => UserProvider({ children: null }) as ReactElement);
     await flushPromises();
     runtime.render();
@@ -409,6 +439,80 @@ describe('UserContext session activity', () => {
 
     expect(getContext(runtime).isLoading).toBe(false);
     expect(getContext(runtime).userData?.contactEmail).toBe('next@example.com');
+  });
+
+  it('keeps the login page mounted while a second factor is pending', async () => {
+    await mountAnonymousProvider();
+    mocks.apiFetch.mockResolvedValueOnce(
+      apiJsonResponse({
+        data: {
+          challengeExpiresAt: '2026-07-13T10:05:00.000Z',
+          status: 'mfa_required',
+        },
+        success: true,
+      }),
+    );
+
+    const result = await getContext(runtime).login({
+      loginName: 'agent',
+      password: 'correct-password',
+      rememberMe: false,
+    });
+    runtime.render();
+
+    expect(result).toEqual({
+      challengeExpiresAt: '2026-07-13T10:05:00.000Z',
+      status: 'mfa_required',
+    });
+    expect(getContext(runtime).isLoading).toBe(false);
+    expect(getContext(runtime).userData).toBeNull();
+    expect(mocks.toastSuccess).not.toHaveBeenCalled();
+  });
+
+  it('creates the client session only after successful MFA verification', async () => {
+    await mountAnonymousProvider();
+    const authenticatedUser = {
+      ...user,
+      mfaEnabledAt: NOW,
+    };
+    mocks.apiFetch.mockResolvedValueOnce(
+      apiJsonResponse({
+        data: {
+          mustChangePassword: false,
+          session: {
+            expiresAt: '2026-07-13T11:00:00.000Z',
+            idleExpiresAt: '2026-07-13T10:30:00.000Z',
+            lastSeenAt: NOW.toISOString(),
+            rememberMe: false,
+          },
+          status: 'authenticated',
+          user: authenticatedUser,
+        },
+        success: true,
+      }),
+    );
+
+    const success = await getContext(runtime).verifyMfa('123456');
+    runtime.render();
+
+    expect(success).toBe(true);
+    expect(getContext(runtime).isLoading).toBe(false);
+    expect(getContext(runtime).userData?.mfaEnabledAt).toEqual(NOW);
+    expect(mocks.toastSuccess).toHaveBeenCalledWith('Connexion réussie');
+  });
+
+  it('cancels a pending MFA challenge without starting a global load', async () => {
+    await mountAnonymousProvider();
+    mocks.apiFetch.mockResolvedValueOnce(apiJsonResponse({ success: true }));
+
+    await getContext(runtime).cancelMfaChallenge();
+    runtime.render();
+
+    expect(mocks.apiFetch).toHaveBeenCalledWith('/api/auth/mfa/challenge', {
+      method: 'DELETE',
+    });
+    expect(getContext(runtime).isLoading).toBe(false);
+    expect(getContext(runtime).userData).toBeNull();
   });
 
   it('keeps the mounted account when a silent refresh temporarily fails', async () => {

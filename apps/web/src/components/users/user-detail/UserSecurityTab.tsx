@@ -9,6 +9,7 @@ import {
   LogOut,
   Monitor,
   Power,
+  QrCode,
   RotateCcw,
   Save,
   ShieldAlert,
@@ -33,6 +34,7 @@ import { cn } from '$utils/css.utils';
 type UserSecurityTabProps = {
   canDeleteUser: boolean;
   canEditStatus: boolean;
+  canResetMfa: boolean;
   canResetPassword: boolean;
   canRevokeSessions: boolean;
   canSaveStatus: boolean;
@@ -47,6 +49,7 @@ type UserSecurityTabProps = {
   onCancelStatus: () => void;
   onClearTempPassword: () => void;
   onDeleteUser: () => void;
+  onResetMfa: () => void;
   onResetPassword: () => void;
   onRetrySessions: () => void;
   onRevokeSession: (sessionId: string) => void;
@@ -325,6 +328,7 @@ const SessionRow: FC<{
 export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   canDeleteUser,
   canEditStatus,
+  canResetMfa,
   canResetPassword,
   canRevokeSessions,
   canSaveStatus,
@@ -339,6 +343,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   onCancelStatus,
   onClearTempPassword,
   onDeleteUser,
+  onResetMfa,
   onResetPassword,
   onRetrySessions,
   onRevokeSession,
@@ -375,6 +380,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       : 'Aucun verrouillage';
   const isAnySessionRevoking =
     isRevokingSessions || isRevokingSessionId !== null;
+  const isMfaEnabled = user.mfaEnabledAt !== null;
 
   const handleCopyTempPassword = async (): Promise<void> => {
     if (!tempPassword) return;
@@ -444,7 +450,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardContent>
         </Card>
       )}
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         <SecurityMetric
           icon={<Power className="size-4" />}
           label="Compte"
@@ -481,6 +487,17 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                 ? 'warning'
                 : 'primary'
           }
+        />
+        <SecurityMetric
+          icon={<QrCode className="size-4" />}
+          label="Double authentification"
+          value={isMfaEnabled ? 'Active' : 'Non activée'}
+          description={
+            isMfaEnabled
+              ? `Depuis le ${formatDate(user.mfaEnabledAt)}`
+              : 'Aucun authentificateur associé'
+          }
+          tone={isMfaEnabled ? 'primary' : 'neutral'}
         />
         <SecurityMetric
           icon={<Laptop className="size-4" />}
@@ -578,6 +595,60 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             >
               <RotateCcw className="h-4 w-4" />
               Réinitialiser le mot de passe
+            </Button>
+          </CardFooter>
+        )}
+      </Card>
+      <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
+        <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
+          <SectionTitle icon={<QrCode className="size-3.5" />}>
+            Double authentification
+          </SectionTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4">
+          <SecurityInfoBlock
+            icon={<QrCode className="size-4" />}
+            label="État MFA"
+            value={
+              isMfaEnabled ? (
+                <Badge variant="secondary">Active</Badge>
+              ) : (
+                <Badge variant="outline">Non activée</Badge>
+              )
+            }
+            tone={isMfaEnabled ? 'primary' : 'neutral'}
+          >
+            {isMfaEnabled
+              ? `Activée le ${formatDate(user.mfaEnabledAt)}`
+              : 'Ce membre se connecte actuellement avec son mot de passe.'}
+          </SecurityInfoBlock>
+          <SecurityInfoBlock
+            icon={<ShieldAlert className="size-4" />}
+            label="Récupération administrateur"
+            value={
+              canResetMfa
+                ? 'Disponible'
+                : isMfaEnabled
+                  ? 'Réservée au compte racine'
+                  : 'Non requise'
+            }
+            tone={canResetMfa ? 'warning' : 'neutral'}
+          >
+            Réservée au compte racine lorsque le téléphone et tous les codes de
+            secours du membre sont perdus.
+          </SecurityInfoBlock>
+        </CardContent>
+        {canResetMfa && (
+          <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
+            <Button
+              className="gap-2 border-amber-500/40 text-amber-300 hover:bg-amber-500/10 hover:text-amber-200"
+              onClick={onResetMfa}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <RotateCcw className="size-4" />
+              Réinitialiser la double authentification
             </Button>
           </CardFooter>
         )}

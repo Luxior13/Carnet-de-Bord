@@ -31,6 +31,7 @@ export type UserType = {
   lastName: string;
   lockedUntil: Date | null;
   loginName: string;
+  mfaEnabledAt: Date | null;
   mustChangePassword: boolean;
   passwordChangedAt: Date | null;
   permissions: PermissionsData | null;
@@ -69,6 +70,55 @@ export type LoginCredentials = {
   loginName: string;
   password: string;
   rememberMe?: boolean;
+};
+
+export type AuthSessionResponse = {
+  expiresAt: string;
+  idleExpiresAt: string;
+  lastSeenAt: string;
+  rememberMe: boolean;
+};
+
+export type AuthenticatedLoginData = {
+  mustChangePassword: boolean;
+  session: AuthSessionResponse;
+  status: 'authenticated';
+  user: UserType;
+};
+
+export type PendingMfaLoginData = {
+  challengeExpiresAt: string;
+  status: 'mfa_required' | 'mfa_setup_required';
+};
+
+export type LoginResponseData = AuthenticatedLoginData | PendingMfaLoginData;
+
+export type LoginResult = { status: 'authenticated' } | PendingMfaLoginData;
+
+export type MfaStatus = {
+  enabledAt: string | null;
+  recoveryCodesRemaining: number;
+  required: boolean;
+};
+
+export type MfaSetupStartData = {
+  expiresAt: string;
+  manualKey: string;
+  qrCodeDataUrl: string;
+  replacing: boolean;
+};
+
+export type MfaSetupConfirmationData = {
+  mustChangePassword?: boolean;
+  recoveryCodes: string[];
+  session?: AuthSessionResponse;
+  status?: 'authenticated';
+  user: UserType;
+};
+
+export type MfaRecoveryCodesRegenerationRequest = {
+  currentPassword: string;
+  currentTotpCode: string;
 };
 
 // Password change request
