@@ -95,10 +95,21 @@ export async function GET(
       );
     }
 
-    if (
-      (targetUser.isProtected || targetUser.role === 'ADMIN') &&
-      !auth.user.isProtected
-    ) {
+    if (targetUser.isProtected) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message:
+              'Les sessions du compte racine sont privées et ne peuvent être gérées que depuis Mon compte',
+          },
+          success: false,
+        },
+        { status: 403 },
+      );
+    }
+
+    if (targetUser.role === 'ADMIN' && !auth.user.isProtected) {
       return NextResponse.json(
         {
           error: {
@@ -205,10 +216,21 @@ export async function DELETE(
       );
     }
 
-    if (
-      (targetUser.isProtected || targetUser.role === 'ADMIN') &&
-      !auth.user.isProtected
-    ) {
+    if (targetUser.isProtected) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message:
+              'Les sessions du compte racine sont privées et ne peuvent être gérées que depuis Mon compte',
+          },
+          success: false,
+        },
+        { status: 403 },
+      );
+    }
+
+    if (targetUser.role === 'ADMIN' && !auth.user.isProtected) {
       return NextResponse.json(
         {
           error: {

@@ -507,18 +507,18 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const isTargetAdminAccessRestricted =
     !!user && user.role === UserRole.ADMIN && !isProtectedActor;
   const canEditTargetProfile =
-    !!user && canUpdateUsers && (!user.isProtected || isProtectedActor);
+    !!user && canUpdateUsers && (!user.isProtected || isSelf);
   const canEditTargetLogin =
     !!user &&
     !isSelf &&
     isProtectedActor &&
-    (!user.isProtected || isProtectedActor) &&
+    !user.isProtected &&
     !isTargetAdminAccessRestricted;
   const canEditTargetContact =
     !!user &&
     !isSelf &&
     canUpdateUserContact &&
-    (!user.isProtected || isProtectedActor) &&
+    !user.isProtected &&
     !isTargetAdminAccessRestricted;
   const canViewTargetContact = isSelf || canViewUserContact;
   const canViewTargetAccess =
@@ -542,19 +542,19 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     !!user &&
     canResetPasswords &&
     !isSelf &&
-    (!user.isProtected || isProtectedActor) &&
+    !user.isProtected &&
     !isTargetAdminAccessRestricted;
   const canViewTargetSessions =
     !!user &&
     canViewUserSessions &&
     !isSelf &&
-    (!user.isProtected || isProtectedActor) &&
+    !user.isProtected &&
     !isTargetAdminAccessRestricted;
   const canRevokeTargetSessions =
     !!user &&
     canRevokeUserSessions &&
     !isSelf &&
-    (!user.isProtected || isProtectedActor) &&
+    !user.isProtected &&
     !isTargetAdminAccessRestricted;
   const canDeleteTargetUser =
     !!user &&
@@ -567,7 +567,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const canEditTargetStatus =
     !!user &&
     canManageUserStatus &&
-    (!user.isProtected || isProtectedActor) &&
+    !user.isProtected &&
     !isTargetAdminAccessRestricted;
   const canViewTargetActivity = !!user && (isSelf || canViewUserActivity);
   const canFetchUserAudit = currentUser?.id === userId || canViewUserActivity;

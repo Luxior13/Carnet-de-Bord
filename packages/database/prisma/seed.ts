@@ -92,11 +92,15 @@ async function ensureLoginNameReservation(
 // ============================================
 
 async function seedSuperadmin() {
+  const configuredUserId = process.env.SEED_SUPERADMIN_USER_ID?.trim() || null;
   const configuredLoginName = process.env.SEED_SUPERADMIN_LOGIN_NAME?.trim();
 
-  if (!configuredLoginName && process.env.NODE_ENV === 'production') {
+  if (
+    (!configuredLoginName || !configuredUserId) &&
+    process.env.NODE_ENV === 'production'
+  ) {
     throw new Error(
-      'SEED_SUPERADMIN_LOGIN_NAME is required in production environments.',
+      'SEED_SUPERADMIN_USER_ID and SEED_SUPERADMIN_LOGIN_NAME are required in production environments.',
     );
   }
 
@@ -110,86 +114,55 @@ async function seedSuperadmin() {
   const adminContactEmail = normalizeOptionalContactEmail(
     configuredContactEmail,
   );
-  const existing = await prisma.user.findFirst({
-    where: { isProtected: true, role: UserRole.ADMIN },
+  const protectedAccounts = await prisma.user.findMany({
+    orderBy: { createdAt: 'asc' },
+    take: 2,
+    where: { isProtected: true },
   });
+  if (protectedAccounts.length > 1) {
+    throw new Error(
+      'Multiple protected accounts exist. Resolve root ownership before running the seed.',
+    );
+  }
+
+  const existing = protectedAccounts[0];
+
+  if (existing && configuredUserId && existing.id !== configuredUserId) {
+    throw new Error(
+      'The protected root account does not match SEED_SUPERADMIN_USER_ID. Refusing to adopt another identity.',
+    );
+  }
+
+  if (
+    existing &&
+    (existing.role !== UserRole.ADMIN ||
+      !existing.isActive ||
+      existing.deletedAt !== null)
+  ) {
+    throw new Error(
+      'The protected root account must be active, undeleted and administrative.',
+    );
+  }
 
   if (existing) {
-    const shouldUpdateContactEmail = Boolean(configuredContactEmail?.trim());
-    const shouldUpdateLoginName = existing.loginName !== adminLoginName;
-    const shouldUpdateContact =
-      shouldUpdateContactEmail && existing.contactEmail !== adminContactEmail;
-
-    const updated = await prisma.$transaction(async (transaction) => {
-      await ensureLoginNameReservation(
-        transaction,
-        adminLoginName,
-        existing.id,
+    if (existing.loginName !== adminLoginName) {
+      throw new Error(
+        'The protected root login name does not match SEED_SUPERADMIN_LOGIN_NAME. The seed never renames an existing root account.',
       );
+    }
 
-      if (!shouldUpdateLoginName && !shouldUpdateContact) {
-        return existing;
-      }
-
-      const nextAdmin = await transaction.user.update({
-        data: {
-          ...(shouldUpdateContact
-            ? {
-                contactEmail: adminContactEmail,
-                contactEmailVerifiedAt: null,
-              }
-            : {}),
-          ...(shouldUpdateLoginName
-            ? {
-                loginName: adminLoginName,
-                securityVersion: { increment: 1 },
-              }
-            : {}),
-        },
-        where: { id: existing.id },
-      });
-
-      if (shouldUpdateLoginName) {
-        await transaction.session.deleteMany({
-          where: { userId: existing.id },
-        });
-        await transaction.auditLog.create({
-          data: {
-            action: 'USER_UPDATE',
-            category: 'SYSTEM',
-            description: `Identifiant superadmin modifie par le seed: ${existing.loginName} -> ${adminLoginName}`,
-            metadata: {
-              after: { loginName: adminLoginName },
-              before: { loginName: existing.loginName },
-              changes: ['loginName'],
-              source: 'database-seed',
-            },
-            targetUserId: existing.id,
-          },
-        });
-      }
-
-      if (shouldUpdateContact) {
-        await transaction.auditLog.create({
-          data: {
-            action: 'USER_UPDATE',
-            category: 'SYSTEM',
-            description:
-              'Adresse de contact superadmin mise a jour par le seed',
-            metadata: {
-              changes: ['contactEmail'],
-              source: 'database-seed',
-            },
-            targetUserId: existing.id,
-          },
-        });
-      }
-
-      return nextAdmin;
+    const reservation = await prisma.loginNameReservation.findUnique({
+      where: { loginName: existing.loginName },
     });
 
-    console.log('Superadmin deja existant:', updated.loginName);
-    return updated;
+    if (!reservation || reservation.userId !== existing.id) {
+      throw new Error(
+        'The protected root login name reservation is missing or belongs to another user. Refusing to repair identity data from the seed.',
+      );
+    }
+
+    console.log('Superadmin deja existant:', existing.loginName);
+    return existing;
   }
   const configuredPassword =
     process.env.SEED_SUPERADMIN_PASSWORD ?? process.env.SEED_ADMIN_PASSWORD;
@@ -223,6 +196,7 @@ async function seedSuperadmin() {
       data: {
         contactEmail: adminContactEmail,
         firstName: 'Superadmin',
+        ...(configuredUserId ? { id: configuredUserId } : {}),
         lastName: 'System',
         isActive: true,
         isProtected: true,

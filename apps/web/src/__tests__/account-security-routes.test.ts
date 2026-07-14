@@ -650,6 +650,36 @@ describe('account security routes', () => {
       expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
       expect(mockResetUserPassword).not.toHaveBeenCalled();
     });
+
+    it('rejects resetting the root password even for another protected actor', async () => {
+      mockRequireAuth.mockResolvedValueOnce({
+        session: null,
+        success: true,
+        user: {
+          id: 'protected-actor',
+          isProtected: true,
+          permissions: null,
+          role: 'ADMIN',
+        },
+      });
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        id: 'root-1',
+        isProtected: true,
+        loginName: 'root.owner',
+        role: 'ADMIN',
+      });
+
+      const route = await import('$app/api/users/[id]/reset-password/route');
+      const response = await route.POST(
+        new NextRequest('http://localhost/api/users/root-1/reset-password', {
+          method: 'POST',
+        }),
+        { params: Promise.resolve({ id: 'root-1' }) },
+      );
+
+      expect(response.status).toBe(403);
+      expect(mockResetUserPassword).not.toHaveBeenCalled();
+    });
   });
 
   describe('GET /api/users/[id]/sessions', () => {
@@ -748,6 +778,34 @@ describe('account security routes', () => {
       expect(response.status).toBe(403);
       expect(body.success).toBe(false);
       expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+      expect(mockPrisma.session.findMany).not.toHaveBeenCalled();
+    });
+
+    it('keeps root sessions private from every other actor', async () => {
+      mockRequireAuth.mockResolvedValueOnce({
+        session: null,
+        success: true,
+        user: {
+          id: 'protected-actor',
+          isProtected: true,
+          permissions: null,
+          role: 'ADMIN',
+        },
+      });
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        id: 'root-1',
+        isProtected: true,
+        loginName: 'root.owner',
+        role: 'ADMIN',
+      });
+
+      const route = await import('$app/api/users/[id]/sessions/route');
+      const response = await route.GET(
+        new NextRequest('http://localhost/api/users/root-1/sessions'),
+        { params: Promise.resolve({ id: 'root-1' }) },
+      );
+
+      expect(response.status).toBe(403);
       expect(mockPrisma.session.findMany).not.toHaveBeenCalled();
     });
   });
@@ -869,6 +927,36 @@ describe('account security routes', () => {
       expect(response.status).toBe(403);
       expect(body.success).toBe(false);
       expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+      expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('rejects revoking root sessions for every other actor', async () => {
+      mockRequireAuth.mockResolvedValueOnce({
+        session: null,
+        success: true,
+        user: {
+          id: 'protected-actor',
+          isProtected: true,
+          permissions: null,
+          role: 'ADMIN',
+        },
+      });
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        id: 'root-1',
+        isProtected: true,
+        loginName: 'root.owner',
+        role: 'ADMIN',
+      });
+
+      const route = await import('$app/api/users/[id]/sessions/route');
+      const response = await route.DELETE(
+        new NextRequest('http://localhost/api/users/root-1/sessions', {
+          method: 'DELETE',
+        }),
+        { params: Promise.resolve({ id: 'root-1' }) },
+      );
+
+      expect(response.status).toBe(403);
       expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
     });
   });

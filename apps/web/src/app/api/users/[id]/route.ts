@@ -518,6 +518,47 @@ export async function PATCH(
       );
     }
 
+    // The singleton root is owned by its authenticated identity. No other
+    // account, permission override or future protected role may mutate it.
+    if (existingUser.isProtected && existingUser.id !== auth.user.id) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message:
+              'Le compte racine ne peut pas être modifié par un autre utilisateur',
+          },
+          success: false,
+        },
+        { status: 403 },
+      );
+    }
+
+    // The owner keeps safe personal profile changes. Root identity, contact,
+    // status, role and access policy require an offline recovery operation so
+    // a compromised browser session cannot rewrite authority.
+    if (
+      existingUser.isProtected &&
+      existingUser.id === auth.user.id &&
+      (isContactUpdate ||
+        isLoginUpdate ||
+        isPermissionsUpdate ||
+        isRoleUpdate ||
+        isStatusUpdate)
+    ) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message:
+              "Les paramètres sensibles du compte racine ne sont pas modifiables depuis l'application",
+          },
+          success: false,
+        },
+        { status: 403 },
+      );
+    }
+
     // Self-service identity changes need their own re-authentication and
     // verification workflow. The delegated administration endpoint must not
     // become a way to bypass that boundary, even for a privileged actor.

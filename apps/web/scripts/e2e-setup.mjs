@@ -8,6 +8,7 @@ import { PrismaClient, UserRole } from '@prisma/client';
 const TEST_DATABASE_MARKER = /(?:^|[_-])(?:e2e|test)(?:[_-]|$)/i;
 const CONTACT_EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
 const LOGIN_NAME_PATTERN = /^[a-z0-9](?:[a-z0-9._-]{1,30})[a-z0-9]$/;
+const E2E_ROOT_USER_ID = 'e2e-only-superadmin';
 
 function parseDatabaseTarget(rawValue, variableName) {
   let url;
@@ -78,9 +79,13 @@ if (!databaseUrl) {
   );
 }
 
-if (!adminLoginName || !LOGIN_NAME_PATTERN.test(adminLoginName)) {
+if (
+  !adminLoginName ||
+  !LOGIN_NAME_PATTERN.test(adminLoginName) ||
+  !adminLoginName.startsWith('e2e-')
+) {
   throw new Error(
-    'E2E_SUPERADMIN_LOGIN_NAME must be a valid lowercase login name.',
+    'E2E_SUPERADMIN_LOGIN_NAME must be a valid lowercase login name prefixed with "e2e-".',
   );
 }
 
@@ -163,9 +168,40 @@ const prisma = new PrismaClient({
 
 try {
   const passwordHash = await bcrypt.hash(adminPassword, 12);
-  const existingAdmin = await prisma.user.findFirst({
-    where: { isProtected: true, role: UserRole.ADMIN },
+  const protectedAccounts = await prisma.user.findMany({
+    select: { id: true, loginName: true },
+    where: { isProtected: true },
   });
+  if (
+    protectedAccounts.length > 1 ||
+    protectedAccounts.some((account) => account.id !== E2E_ROOT_USER_ID)
+  ) {
+    throw new Error(
+      'E2E database contains a protected identity not owned by this isolated test harness. Refusing to modify it.',
+    );
+  }
+
+  const existingAdmin = await prisma.user.findUnique({
+    where: { id: E2E_ROOT_USER_ID },
+  });
+
+  if (
+    existingAdmin &&
+    (!existingAdmin.isProtected ||
+      existingAdmin.role !== UserRole.ADMIN ||
+      !existingAdmin.isActive ||
+      existingAdmin.deletedAt !== null)
+  ) {
+    throw new Error(
+      'The E2E protected account must be active, undeleted and administrative.',
+    );
+  }
+
+  if (existingAdmin && existingAdmin.loginName !== adminLoginName) {
+    throw new Error(
+      'E2E database already belongs to a different protected identity. Recreate the isolated test database.',
+    );
+  }
   const accountData = {
     contactEmail: adminContactEmail,
     contactEmailVerifiedAt: null,
@@ -211,6 +247,7 @@ try {
       data: {
         ...accountData,
         firstName: 'E2E',
+        id: E2E_ROOT_USER_ID,
         lastName: 'Admin',
       },
     });

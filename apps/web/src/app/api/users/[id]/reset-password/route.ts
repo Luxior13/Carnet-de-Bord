@@ -89,9 +89,23 @@ export async function POST(
       );
     }
 
-    // Protected accounts can only be reset by a protected actor
+    if (existingUser.isProtected) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message:
+              'Le mot de passe du compte racine ne peut être modifié que par son propriétaire',
+          },
+          success: false,
+        },
+        { status: 403 },
+      );
+    }
+
+    // Administrative accounts require the root actor.
     if (
-      (existingUser.isProtected || existingUser.role === 'ADMIN') &&
+      existingUser.role === 'ADMIN' &&
       existingUser.id !== auth.user.id &&
       !auth.user.isProtected
     ) {

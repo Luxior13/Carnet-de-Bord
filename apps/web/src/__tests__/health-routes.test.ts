@@ -26,9 +26,11 @@ vi.mock('$server/prisma', () => ({
 const readySchema = {
   auditLogColumns: 6,
   loginNameReservationColumns: 3,
+  protectedAccounts: 1,
   rateLimitColumns: 4,
   sessionColumns: 8,
   userColumns: 14,
+  validProtectedRootAccounts: 1,
 };
 
 describe('operational health routes', () => {
@@ -77,6 +79,7 @@ describe('operational health routes', () => {
     expect(query).toContain("'lastSeenAt'");
     expect(query).toContain("'securityVersion'");
     expect(query).toContain("'LoginNameReservation'");
+    expect(query).toContain('"isProtected" = true');
     expect(response.headers.get('cache-control')).toContain('no-store');
   });
 
@@ -113,6 +116,48 @@ describe('operational health routes', () => {
         status: 503,
       }),
     );
+  });
+
+  it('is not ready without exactly one protected account', async () => {
+    mocks.transaction.$queryRaw.mockResolvedValueOnce([
+      { ...readySchema, protectedAccounts: 0 },
+    ]);
+    const { GET } = await import('$app/api/health/ready/route');
+    const response = await GET();
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      checks: { database: 'connected', schema: 'not_ready' },
+      status: 'unhealthy',
+    });
+  });
+
+  it('is not ready when the protected account is not a valid root', async () => {
+    mocks.transaction.$queryRaw.mockResolvedValueOnce([
+      { ...readySchema, validProtectedRootAccounts: 0 },
+    ]);
+    const { GET } = await import('$app/api/health/ready/route');
+    const response = await GET();
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      checks: { database: 'connected', schema: 'not_ready' },
+      status: 'unhealthy',
+    });
+  });
+
+  it('is not ready when another protected account exists', async () => {
+    mocks.transaction.$queryRaw.mockResolvedValueOnce([
+      { ...readySchema, protectedAccounts: 2 },
+    ]);
+    const { GET } = await import('$app/api/health/ready/route');
+    const response = await GET();
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      checks: { database: 'connected', schema: 'not_ready' },
+      status: 'unhealthy',
+    });
   });
 
   it('does not leak database errors and throttles repeated failure logs', async () => {

@@ -250,6 +250,18 @@ export const isSecurityVersionMismatchError = (
   error instanceof SecurityVersionMismatchError;
 
 /**
+ * Raised when an administrative password reset targets the protected root
+ * account. The root owner can still change their own password through the
+ * authenticated password-change flow.
+ */
+export class ProtectedAccountMutationError extends Error {
+  constructor() {
+    super('The protected root account cannot be mutated administratively');
+    this.name = 'ProtectedAccountMutationError';
+  }
+}
+
+/**
  * Creates a new session in the database
  */
 export const createSession = async (
@@ -593,7 +605,9 @@ const AUTHENTICATION_USER_SELECT = {
 /**
  * Authenticates a user with its canonical login name and password
  * Uses constant-time comparison to prevent timing attacks
- * Implements account lockout after MAX_FAILED_ATTEMPTS failures
+ * Implements account lockout after MAX_FAILED_ATTEMPTS failures. The
+ * protected root account relies on the independent login rate limiter so an
+ * unauthenticated attacker cannot persistently mutate or lock the root row.
  */
 export const authenticateUser = async (
   loginName: string,
@@ -643,6 +657,14 @@ export const authenticateUser = async (
 
   // Password is invalid
   if (!isValid) {
+    if (user.isProtected) {
+      return {
+        error: 'INVALID_CREDENTIALS',
+        success: false,
+        userId: user.id,
+      };
+    }
+
     const requestContext = await getRequestContext();
     const updatedLoginState = await prisma.$transaction(async (transaction) => {
       const failedState = await transaction.user.update({
@@ -875,7 +897,7 @@ export const resetUserPassword = async (
   const requestContext = audit ? await getRequestContext() : null;
 
   await prisma.$transaction(async (transaction) => {
-    await transaction.user.update({
+    const userUpdate = await transaction.user.updateMany({
       data: {
         failedLoginAttempts: 0,
         lockedUntil: null,
@@ -884,8 +906,12 @@ export const resetUserPassword = async (
         passwordHash,
         securityVersion: { increment: 1 },
       },
-      where: { id: userId },
+      where: { id: userId, isProtected: false },
     });
+
+    if (userUpdate.count !== 1) {
+      throw new ProtectedAccountMutationError();
+    }
 
     await transaction.session.deleteMany({
       where: { userId },

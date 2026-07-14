@@ -19,9 +19,11 @@ const NO_STORE_HEADERS = {
 type SchemaCheckRow = {
   auditLogColumns: number;
   loginNameReservationColumns: number;
+  protectedAccounts: number;
   rateLimitColumns: number;
   sessionColumns: number;
   userColumns: number;
+  validProtectedRootAccounts: number;
 };
 
 type ReadinessResponse = {
@@ -114,7 +116,20 @@ export async function createReadinessResponse(): Promise<
                 AND column_name IN (
                   'key', 'count', 'firstAttempt', 'blockedUntil'
                 )
-            )::int AS "rateLimitColumns"
+            )::int AS "rateLimitColumns",
+            (
+              SELECT count(*)::int
+              FROM "User"
+              WHERE "isProtected" = true
+            ) AS "protectedAccounts",
+            (
+              SELECT count(*)::int
+              FROM "User"
+              WHERE "isProtected" = true
+                AND "role" = 'ADMIN'
+                AND "isActive" = true
+                AND "deletedAt" IS NULL
+            ) AS "validProtectedRootAccounts"
           FROM information_schema.columns
           WHERE table_schema = current_schema()
         `;
@@ -125,7 +140,9 @@ export async function createReadinessResponse(): Promise<
           schema.sessionColumns !== 8 ||
           schema.auditLogColumns !== 6 ||
           schema.loginNameReservationColumns !== 3 ||
-          schema.rateLimitColumns !== 4
+          schema.protectedAccounts !== 1 ||
+          schema.rateLimitColumns !== 4 ||
+          schema.validProtectedRootAccounts !== 1
         ) {
           throw new SchemaNotReadyError();
         }

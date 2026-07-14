@@ -1546,6 +1546,68 @@ describe('users access hardening', () => {
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 
+  it('blocks every other actor from changing the root profile', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'other-protected-actor',
+        isProtected: true,
+        passwordHash: undefined,
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(
+      buildUser({
+        id: 'root-owner',
+        isProtected: true,
+        role: 'ADMIN',
+      }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/root-owner', {
+        body: stringifyRequestBody({ lastName: 'Intruder' }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'root-owner' }) },
+    );
+
+    expect(response.status).toBe(403);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('blocks sensitive root changes even from the root session', async () => {
+    const root = buildUser({
+      id: 'root-owner',
+      isProtected: true,
+      role: 'ADMIN',
+    });
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: { ...root, deletedAt: undefined, passwordHash: undefined },
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(root);
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/root-owner', {
+        body: stringifyRequestBody({
+          expectedUpdatedAt: USER_REVISION,
+          isActive: false,
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'root-owner' }) },
+    );
+
+    expect(response.status).toBe(403);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
   it('keeps protected accounts active and administrative even for protected actors', async () => {
     mockRequireAuth.mockResolvedValueOnce({
       session: null,

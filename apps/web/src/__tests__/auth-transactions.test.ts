@@ -81,6 +81,7 @@ import {
   createSession,
   createUser,
   getAuthSession,
+  ProtectedAccountMutationError,
   resetUserPassword,
   SecurityVersionMismatchError,
   updateUserPassword,
@@ -631,19 +632,40 @@ describe('auth security transactions', () => {
     });
 
     expect(temporaryPassword).toHaveLength(14);
-    expect(mocks.transaction.user.update).toHaveBeenCalledWith(
+    expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           failedLoginAttempts: 0,
           mustChangePassword: true,
           securityVersion: { increment: 1 },
         }),
+        where: { id: 'user-1', isProtected: false },
       }),
     );
     expect(mocks.transaction.session.deleteMany).toHaveBeenCalledWith({
       where: { userId: 'user-1' },
     });
     expect(mocks.transaction.auditLog.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses a direct administrative password reset of the protected root account', async () => {
+    mocks.transaction.user.updateMany.mockResolvedValueOnce({ count: 0 });
+
+    await expect(
+      resetUserPassword('root-user', {
+        ...audit,
+        action: 'PASSWORD_RESET',
+        targetUserId: 'root-user',
+      }),
+    ).rejects.toBeInstanceOf(ProtectedAccountMutationError);
+
+    expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'root-user', isProtected: false },
+      }),
+    );
+    expect(mocks.transaction.session.deleteMany).not.toHaveBeenCalled();
+    expect(mocks.transaction.auditLog.create).not.toHaveBeenCalled();
   });
 
   it('propagates a required audit failure through the transaction', async () => {
@@ -717,6 +739,42 @@ describe('auth security transactions', () => {
         userId: null,
       }),
     });
+  });
+
+  it('does not persist failed-attempt or lock mutations on the protected root account', async () => {
+    mocks.bcryptCompare.mockResolvedValueOnce(false);
+    mocks.prisma.user.findUnique.mockResolvedValueOnce({
+      contactEmail: 'root@example.com',
+      contactEmailVerifiedAt: null,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      failedLoginAttempts: 0,
+      firstName: 'Lucas',
+      id: 'root-user',
+      isActive: true,
+      isProtected: true,
+      lastLoginAt: null,
+      lastName: 'These',
+      lockedUntil: null,
+      loginName: 'superadmin',
+      mustChangePassword: false,
+      passwordChangedAt: null,
+      passwordHash: 'stored-hash',
+      permissions: null,
+      role: 'ADMIN',
+      securityVersion: 3,
+    });
+
+    const result = await authenticateUser('superadmin', 'Wrong1!');
+
+    expect(result).toEqual({
+      error: 'INVALID_CREDENTIALS',
+      success: false,
+      userId: 'root-user',
+    });
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+    expect(mocks.prisma.user.update).not.toHaveBeenCalled();
+    expect(mocks.transaction.user.update).not.toHaveBeenCalled();
+    expect(mocks.transaction.auditLog.create).not.toHaveBeenCalled();
   });
 
   it('returns cleaned login state after an expired lock with one update', async () => {

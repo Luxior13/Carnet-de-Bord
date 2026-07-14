@@ -23,6 +23,8 @@ model User {
   role                   UserRole  @default(USER)
   permissions            Json?
   isActive               Boolean   @default(true)
+  /// Singleton application root. Database constraints require this account
+  /// to remain active, undeleted and administrative.
   isProtected            Boolean   @default(false)
   mustChangePassword     Boolean   @default(false)
   failedLoginAttempts    Int       @default(0)
