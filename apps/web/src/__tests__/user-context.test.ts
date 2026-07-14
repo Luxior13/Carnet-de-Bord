@@ -295,8 +295,13 @@ const jsonResponse = (
     status: 200,
   }) as unknown as Response;
 
-const heartbeatResponse = (status = 200): Response =>
-  ({ ok: status >= 200 && status < 300, status }) as Response;
+const heartbeatResponse = (
+  status = 200,
+  responseUser: UserType = user,
+): Response =>
+  status >= 200 && status < 300
+    ? jsonResponse(false, responseUser)
+    : ({ ok: false, status } as Response);
 
 const apiJsonResponse = (data: unknown, status = 200): Response =>
   ({
@@ -408,6 +413,31 @@ describe('UserContext session activity', () => {
     fakeWindow.emit('touchstart');
     await flushPromises();
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies profile changes returned by the silent session heartbeat', async () => {
+    await mountAuthenticatedProvider();
+    vi.mocked(fetch).mockClear();
+    vi.mocked(fetch).mockResolvedValue(
+      heartbeatResponse(200, {
+        ...user,
+        firstName: 'Nouveau',
+        lastName: 'Profil',
+      }),
+    );
+
+    vi.advanceTimersByTime(60_000);
+    fakeWindow.emit('keydown');
+    await flushPromises();
+    runtime.render();
+
+    expect(getContext(runtime).userData).toMatchObject({
+      firstName: 'Nouveau',
+      lastName: 'Profil',
+    });
+    expect(fetch).toHaveBeenCalledWith('/api/auth/me', {
+      cache: 'no-store',
+    });
   });
 
   it('refreshes the current user silently without clearing the mounted account', async () => {

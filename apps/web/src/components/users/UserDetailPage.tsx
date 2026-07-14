@@ -1234,13 +1234,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       role: updatedUser.role,
     });
     setPermissions(updatedUser.permissions);
-
-    // The administration page and /mon-compte share the authenticated user
-    // through UserContext. Keep that source of truth current when the root
-    // edits its own fiche instead of waiting for a later session refresh.
-    if (updatedUser.id === currentUser?.id) {
-      applyUserUpdate(updatedUser);
-    }
   };
 
   const handleCancelProfile = (): void => {
@@ -1343,6 +1336,18 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
       if (response.ok && data.success) {
         syncUserState(data.data.user);
+        if (currentUser && data.data.user.id === currentUser.id) {
+          // The administrative response is shaped for the actor and may hide
+          // permission overrides. Update only the self-profile fields here so
+          // the shared authenticated context remains complete and
+          // /mon-compte changes immediately without a loading transition.
+          applyUserUpdate({
+            ...currentUser,
+            firstName: data.data.user.firstName,
+            lastName: data.data.user.lastName,
+            updatedAt: data.data.user.updatedAt ?? currentUser.updatedAt,
+          });
+        }
         refreshAuditAfterMutation();
         toast.success('Utilisateur mis à jour');
       } else {

@@ -148,6 +148,52 @@ async function expectPersistedMfaState(): Promise<void> {
   expect(rootAccount?.sessions[0]?.mfaVerifiedAt).toBeInstanceOf(Date);
 }
 
+async function expectSelfProfileSyncWithoutReload(page: Page): Promise<void> {
+  const rootAccount = await prisma.user.findUnique({
+    select: { firstName: true, id: true, lastName: true },
+    where: { loginName: TEST_LOGIN_NAME },
+  });
+  if (!rootAccount) throw new Error('E2E root account not found');
+
+  const nextFirstName =
+    rootAccount.firstName === 'ProfilSynchroA'
+      ? 'ProfilSynchroB'
+      : 'ProfilSynchroA';
+  const nextLastName = 'NavigationClient';
+  const nextDisplayName = `${nextFirstName} ${nextLastName}`;
+
+  await page.goto(
+    `/administration/utilisateurs/${rootAccount.id}?section=profile`,
+  );
+  await page.locator('#user-first-name').fill(nextFirstName);
+  await page.locator('#user-last-name').fill(nextLastName);
+
+  const [profileResponse] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.request().method() === 'PATCH' &&
+        response.url().endsWith(`/api/users/${rootAccount.id}`),
+    ),
+    page.getByRole('button', { exact: true, name: 'Enregistrer' }).click(),
+  ]);
+  expect(profileResponse.ok()).toBe(true);
+
+  // The sidebar and /mon-compte share the persistent UserProvider. Navigate
+  // through the real client-side link so a full reload cannot hide a stale
+  // authenticated-user context regression.
+  const accountMenu = page.getByRole('button', {
+    name: `Menu utilisateur de ${nextDisplayName}`,
+  });
+  await expect(accountMenu).toBeVisible();
+  await accountMenu.click();
+  await page.getByRole('menuitem', { name: /Mon compte/ }).click();
+
+  await expect(page).toHaveURL(/\/mon-compte/);
+  await expect(
+    page.getByRole('heading', { exact: true, name: nextDisplayName }),
+  ).toBeVisible();
+}
+
 test('authenticates and reaches the admin surfaces', async ({ page }) => {
   await login(page);
   await expectPersistedMfaState();
@@ -173,6 +219,5 @@ test('authenticates and reaches the admin surfaces', async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Créer' })).toBeVisible();
 
-  await page.goto('/mon-compte');
-  await expect(page.getByRole('heading', { name: 'Mon compte' })).toBeVisible();
+  await expectSelfProfileSyncWithoutReload(page);
 });

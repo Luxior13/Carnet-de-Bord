@@ -144,7 +144,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
         if (!silent) setIsLoading(true);
         setError(null);
 
-        const response = await fetch(RoutesApi.me);
+        const response = await fetch(RoutesApi.me, { cache: 'no-store' });
         const data: ApiSuccessResponse<{
           session: AuthSessionResponse | null;
           user: UserType;
@@ -226,7 +226,15 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
 
       if (!response.ok) return false;
 
+      const data = (await response.json()) as ApiResponse<{
+        session: AuthSessionResponse | null;
+        user: UserType;
+      }>;
+      if (!data.success || !data.data.user) return false;
+
       const activityAt = Date.now();
+      applyUserUpdate(data.data.user);
+      setSessionRememberMe(data.data.session?.rememberMe ?? false);
       lastActivityRef.current = activityAt;
       lastServerActivitySyncRef.current = activityAt;
       publishSessionActivity(activityAt);
@@ -235,7 +243,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
     } catch {
       return false;
     }
-  }, [router]);
+  }, [applyUserUpdate, router]);
 
   const login = useCallback(
     async (credentials: LoginCredentials): Promise<LoginResult | null> => {
