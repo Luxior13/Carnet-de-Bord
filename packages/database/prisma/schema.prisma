@@ -13,30 +13,34 @@ enum UserRole {
 }
 
 model User {
-  id                  String    @id @default(cuid())
-  email               String    @unique
-  passwordHash        String
-  firstName           String
-  lastName            String
-  role                UserRole  @default(USER)
-  permissions         Json?
-  isActive            Boolean   @default(true)
-  isProtected         Boolean   @default(false)
-  mustChangePassword  Boolean   @default(false)
-  failedLoginAttempts Int       @default(0)
-  lockedUntil         DateTime?
-  lastLoginAt         DateTime?
-  passwordChangedAt   DateTime?
-  deletedAt           DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id                     String    @id @default(cuid())
+  loginName              String    @unique
+  contactEmail           String?
+  contactEmailVerifiedAt DateTime?
+  passwordHash           String
+  firstName              String
+  lastName               String
+  role                   UserRole  @default(USER)
+  permissions            Json?
+  isActive               Boolean   @default(true)
+  isProtected            Boolean   @default(false)
+  mustChangePassword     Boolean   @default(false)
+  failedLoginAttempts    Int       @default(0)
+  lockedUntil            DateTime?
+  lastLoginAt            DateTime?
+  passwordChangedAt      DateTime?
+  securityVersion        Int       @default(0)
+  deletedAt              DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
-  sessions             Session[]
-  auditLogs            AuditLog[]            @relation("AuditActor")
-  targetedAuditLogs    AuditLog[]            @relation("AuditTarget")
-  archivedStaffProfile ArchivedStaffProfile?
+  sessions              Session[]
+  auditLogs             AuditLog[]             @relation("AuditActor")
+  targetedAuditLogs     AuditLog[]             @relation("AuditTarget")
+  archivedStaffProfile  ArchivedStaffProfile?
+  loginNameReservations LoginNameReservation[]
 
-  @@index([email])
+  @@index([contactEmail])
   @@index([role])
   @@index([deletedAt])
   @@index([deletedAt, createdAt])
@@ -45,21 +49,36 @@ model User {
   @@index([deletedAt, lockedUntil])
   @@index([deletedAt, mustChangePassword])
   @@index([deletedAt, role])
-  @@index([email(ops: raw("gin_trgm_ops"))], type: Gin, map: "User_email_trgm_idx")
+  @@index([loginName(ops: raw("gin_trgm_ops"))], type: Gin, map: "User_loginName_trgm_idx")
+  @@index([contactEmail(ops: raw("gin_trgm_ops"))], type: Gin, map: "User_contactEmail_trgm_idx")
   @@index([firstName(ops: raw("gin_trgm_ops"))], type: Gin, map: "User_firstName_trgm_idx")
   @@index([lastName(ops: raw("gin_trgm_ops"))], type: Gin, map: "User_lastName_trgm_idx")
 }
 
+/// Permanent ownership history for authentication identifiers. A login name
+/// remains attached to its original user even when that user changes names or
+/// is soft-deleted, so it can never be reassigned to another identity.
+model LoginNameReservation {
+  loginName String   @id
+  userId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+}
+
 model Session {
-  id            String   @id @default(cuid())
-  userId        String
-  token         String   @unique
-  expiresAt     DateTime
-  idleExpiresAt DateTime @default(dbgenerated("(CURRENT_TIMESTAMP + '00:30:00'::interval)"))
-  lastSeenAt    DateTime @default(now())
-  rememberMe    Boolean  @default(false)
-  userAgent     String?
-  ipAddress     String?
+  id              String   @id @default(cuid())
+  userId          String
+  securityVersion Int      @default(0)
+  token           String   @unique
+  expiresAt       DateTime
+  idleExpiresAt   DateTime @default(dbgenerated("(CURRENT_TIMESTAMP + '00:30:00'::interval)"))
+  lastSeenAt      DateTime @default(now())
+  rememberMe      Boolean  @default(false)
+  userAgent       String?
+  ipAddress       String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

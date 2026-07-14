@@ -37,9 +37,15 @@ const SAFE_CONTEXT_METADATA = {
 
 const SENSITIVE_METADATA = {
   ...SAFE_CONTEXT_METADATA,
-  after: { email: 'new@example.com' },
-  before: { email: 'old@example.com' },
-  changes: ['email'],
+  after: {
+    contactEmail: 'new@example.com',
+    loginName: 'new.login',
+  },
+  before: {
+    contactEmail: 'old@example.com',
+    loginName: 'old.login',
+  },
+  changes: ['loginName', 'contactEmail'],
   requestId: 'private-request-id',
   targetName: 'Target User',
 };

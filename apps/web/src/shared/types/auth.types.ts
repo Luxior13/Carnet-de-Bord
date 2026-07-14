@@ -12,14 +12,16 @@ export type SessionType = {
   idleExpiresAt: Date;
   lastSeenAt: Date;
   rememberMe: boolean;
+  securityVersion: number;
   token: string;
   userId: string;
 };
 
 // User type for client (without sensitive data)
 export type UserType = {
+  contactEmail: string | null;
+  contactEmailVerifiedAt: Date | null;
   createdAt: Date;
-  email: string;
   failedLoginAttempts: number;
   firstName: string;
   id: string;
@@ -28,6 +30,7 @@ export type UserType = {
   lastLoginAt: Date | null;
   lastName: string;
   lockedUntil: Date | null;
+  loginName: string;
   mustChangePassword: boolean;
   passwordChangedAt: Date | null;
   permissions: PermissionsData | null;
@@ -63,7 +66,7 @@ export type ServerAuthResponseType = {
 
 // Login credentials
 export type LoginCredentials = {
-  email: string;
+  loginName: string;
   password: string;
   rememberMe?: boolean;
 };
@@ -76,19 +79,21 @@ export type PasswordChangeRequest = {
 
 // User creation request (admin only)
 export type CreateUserRequest = {
-  email: string;
+  contactEmail?: string | null;
   firstName: string;
   lastName: string;
+  loginName: string;
   role: UserRole;
 };
 
 // User update request
 export type UpdateUserRequest = {
-  email?: string;
+  contactEmail?: string | null;
   expectedUpdatedAt?: string;
   firstName?: string;
   isActive?: boolean;
   lastName?: string;
+  loginName?: string;
   permissions?: PermissionsData | null;
   permissionScope?: 'access' | 'account';
   role?: UserRole;

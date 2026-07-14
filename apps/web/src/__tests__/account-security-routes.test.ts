@@ -5,6 +5,8 @@ import { PERMISSIONS } from '$constants/permissions.constants';
 import { ErrorCode } from '$types/api.types';
 
 const mockGetAuthSession = vi.fn();
+const mockDeleteSessionCookie = vi.fn();
+const mockIsSecurityVersionMismatchError = vi.fn();
 const mockRequireAuth = vi.fn();
 const mockRequirePermission = vi.fn();
 const mockUpdateUserPassword = vi.fn();
@@ -39,8 +41,10 @@ vi.mock('$server/api-auth', () => ({
 
 vi.mock('$server/auth', () => ({
   createAuditLogWithHeaders: mockCreateAuditLogWithHeaders,
+  deleteSessionCookie: mockDeleteSessionCookie,
   getAuthSession: mockGetAuthSession,
   invalidateOtherUserSessions: mockInvalidateOtherUserSessions,
+  isSecurityVersionMismatchError: mockIsSecurityVersionMismatchError,
   mapUserToUserType: mockMapUserToUserType,
   resetUserPassword: mockResetUserPassword,
   updateUserPassword: mockUpdateUserPassword,
@@ -71,6 +75,7 @@ describe('account security routes', () => {
         idleExpiresAt: new Date('2026-03-01T00:30:00.000Z'),
         lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
         rememberMe: false,
+        securityVersion: 3,
         token: 'session-hash',
         userId: 'user-1',
       },
@@ -89,6 +94,7 @@ describe('account security routes', () => {
         idleExpiresAt: new Date('2026-03-01T00:30:00.000Z'),
         lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
         rememberMe: false,
+        securityVersion: 3,
         token: 'session-hash',
         userId: 'user-1',
       },
@@ -118,6 +124,8 @@ describe('account security routes', () => {
     mockMapUserToUserType.mockImplementation((user: unknown) => user);
     mockRequirePermission.mockReturnValue({ success: true });
     mockCreateAuditLogWithHeaders.mockResolvedValue(undefined);
+    mockDeleteSessionCookie.mockResolvedValue(undefined);
+    mockIsSecurityVersionMismatchError.mockReturnValue(false);
   });
 
   describe('GET /api/auth/me', () => {
@@ -278,6 +286,7 @@ describe('account security routes', () => {
           idleExpiresAt: new Date('2026-03-01T00:30:00.000Z'),
           lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
           rememberMe: false,
+          securityVersion: 3,
           token: 'session-hash',
           userId: 'user-1',
         },
@@ -311,7 +320,10 @@ describe('account security routes', () => {
       expect(mockUpdateUserPassword).toHaveBeenCalledWith(
         'user-1',
         'NewPassword1!',
-        expect.objectContaining({ currentSessionToken: 'session-hash' }),
+        expect.objectContaining({
+          currentSessionToken: 'session-hash',
+          expectedSecurityVersion: 3,
+        }),
       );
     });
 
@@ -421,6 +433,7 @@ describe('account security routes', () => {
           idleExpiresAt: new Date('2026-03-01T00:30:00.000Z'),
           lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
           rememberMe: false,
+          securityVersion: 3,
           token: 'session-hash',
           userId: 'user-1',
         },
@@ -461,11 +474,40 @@ describe('account security routes', () => {
             userId: 'user-1',
           }),
           currentSessionToken: 'session-hash',
+          expectedSecurityVersion: 3,
           rateLimitKey: 'password-change:user-1',
         }),
       );
       expect(mockInvalidateOtherUserSessions).not.toHaveBeenCalled();
       expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
+    });
+
+    it('expires the client session when password state changed concurrently', async () => {
+      const staleSecurityError = new Error('stale security state');
+      mockVerifyPassword
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false);
+      mockUpdateUserPassword.mockRejectedValueOnce(staleSecurityError);
+      mockIsSecurityVersionMismatchError.mockImplementation(
+        (error) => error === staleSecurityError,
+      );
+
+      const route = await import('$app/api/auth/change-password/route');
+      const response = await route.POST(
+        new Request('http://localhost/api/auth/change-password', {
+          body: JSON.stringify({
+            confirmPassword: 'NewPassword1!',
+            currentPassword: 'CurrentPassword1!',
+            newPassword: 'NewPassword1!',
+          }),
+          method: 'POST',
+        }),
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(body.error.code).toBe(ErrorCode.UNAUTHORIZED);
+      expect(mockDeleteSessionCookie).toHaveBeenCalledTimes(1);
     });
 
     it('returns a validation error for malformed payloads', async () => {
@@ -566,9 +608,9 @@ describe('account security routes', () => {
   describe('POST /api/users/[id]/reset-password', () => {
     it('rejects resetting your own password from user management', async () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({
-        email: 'self@example.com',
         id: 'user-1',
         isProtected: false,
+        loginName: 'self.user',
       });
 
       const route = await import('$app/api/users/[id]/reset-password/route');
@@ -588,9 +630,9 @@ describe('account security routes', () => {
 
     it('rejects resetting an admin password for non-protected users', async () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({
-        email: 'admin@example.com',
         id: 'admin-1',
         isProtected: false,
+        loginName: 'admin.user',
         role: 'ADMIN',
       });
 
@@ -613,9 +655,9 @@ describe('account security routes', () => {
   describe('GET /api/users/[id]/sessions', () => {
     it('lists target user active sessions for session viewers', async () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({
-        email: 'target@example.com',
         id: 'target-1',
         isProtected: false,
+        loginName: 'target.user',
       });
       mockPrisma.session.findMany.mockResolvedValueOnce([
         {
@@ -670,9 +712,9 @@ describe('account security routes', () => {
 
     it('rejects listing your own sessions through user management', async () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({
-        email: 'self@example.com',
         id: 'user-1',
         isProtected: false,
+        loginName: 'self.user',
       });
 
       const route = await import('$app/api/users/[id]/sessions/route');
@@ -690,9 +732,9 @@ describe('account security routes', () => {
 
     it('rejects listing admin sessions for non-protected users', async () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({
-        email: 'admin@example.com',
         id: 'admin-1',
         isProtected: false,
+        loginName: 'admin.user',
         role: 'ADMIN',
       });
 
@@ -713,9 +755,9 @@ describe('account security routes', () => {
   describe('DELETE /api/users/[id]/sessions', () => {
     it('revokes all target user sessions', async () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({
-        email: 'target@example.com',
         id: 'target-1',
         isProtected: false,
+        loginName: 'target.user',
       });
       mockPrisma.session.deleteMany.mockResolvedValueOnce({ count: 2 });
 
@@ -752,11 +794,11 @@ describe('account security routes', () => {
 
     it('revokes one target user session when a session id is provided', async () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({
-        email: 'target@example.com',
         firstName: 'Target',
         id: 'target-1',
         isProtected: false,
         lastName: 'User',
+        loginName: 'target.user',
       });
       mockPrisma.session.findFirst.mockResolvedValueOnce({
         id: 'session-1',
@@ -809,9 +851,9 @@ describe('account security routes', () => {
 
     it('rejects revoking admin sessions for non-protected users', async () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({
-        email: 'admin@example.com',
         id: 'admin-1',
         isProtected: false,
+        loginName: 'admin.user',
         role: 'ADMIN',
       });
 

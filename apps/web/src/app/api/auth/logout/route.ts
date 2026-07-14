@@ -43,7 +43,7 @@ export async function POST(): Promise<
     await createAuditLogWithHeaders({
       action: 'LOGOUT',
       category: 'AUTH',
-      description: `Deconnexion: ${auth.user.email}`,
+      description: `Déconnexion: ${auth.user.loginName}`,
       metadata: AUTH_CONNECTION_AUDIT_LOCATION,
       targetUserId: auth.user.id,
       userId: auth.user.id,

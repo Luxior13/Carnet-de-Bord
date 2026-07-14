@@ -6,6 +6,8 @@ import bcrypt from 'bcryptjs';
 import { PrismaClient, UserRole } from '@prisma/client';
 
 const TEST_DATABASE_MARKER = /(?:^|[_-])(?:e2e|test)(?:[_-]|$)/i;
+const CONTACT_EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
+const LOGIN_NAME_PATTERN = /^[a-z0-9](?:[a-z0-9._-]{1,30})[a-z0-9]$/;
 
 function parseDatabaseTarget(rawValue, variableName) {
   let url;
@@ -45,8 +47,29 @@ function parseDatabaseTarget(rawValue, variableName) {
   };
 }
 
+async function ensureLoginNameReservation(transaction, loginName, userId) {
+  const reservation = await transaction.loginNameReservation.findUnique({
+    where: { loginName },
+  });
+
+  if (reservation && reservation.userId !== userId) {
+    throw new Error(
+      `E2E login name "${loginName}" is permanently reserved by another user.`,
+    );
+  }
+
+  if (!reservation) {
+    await transaction.loginNameReservation.create({
+      data: { loginName, userId },
+    });
+  }
+}
+
 const databaseUrl = process.env.E2E_DATABASE_URL;
-const adminEmail = process.env.E2E_SUPERADMIN_EMAIL?.trim().toLowerCase();
+const adminLoginName =
+  process.env.E2E_SUPERADMIN_LOGIN_NAME?.trim().toLowerCase();
+const adminContactEmail =
+  process.env.E2E_SUPERADMIN_CONTACT_EMAIL?.trim().toLowerCase() || null;
 const adminPassword = process.env.E2E_SUPERADMIN_PASSWORD;
 
 if (!databaseUrl) {
@@ -55,8 +78,20 @@ if (!databaseUrl) {
   );
 }
 
-if (!adminEmail || !adminEmail.includes('@')) {
-  throw new Error('E2E_SUPERADMIN_EMAIL must be a valid test account email.');
+if (!adminLoginName || !LOGIN_NAME_PATTERN.test(adminLoginName)) {
+  throw new Error(
+    'E2E_SUPERADMIN_LOGIN_NAME must be a valid lowercase login name.',
+  );
+}
+
+if (
+  adminContactEmail &&
+  (adminContactEmail.length > 254 ||
+    !CONTACT_EMAIL_PATTERN.test(adminContactEmail))
+) {
+  throw new Error(
+    'E2E_SUPERADMIN_CONTACT_EMAIL must be a valid email address when set.',
+  );
 }
 
 if (!adminPassword || adminPassword.length < 12) {
@@ -128,37 +163,68 @@ const prisma = new PrismaClient({
 
 try {
   const passwordHash = await bcrypt.hash(adminPassword, 12);
+  const existingAdmin = await prisma.user.findFirst({
+    where: { isProtected: true, role: UserRole.ADMIN },
+  });
+  const accountData = {
+    contactEmail: adminContactEmail,
+    contactEmailVerifiedAt: null,
+    failedLoginAttempts: 0,
+    isActive: true,
+    isProtected: true,
+    lockedUntil: null,
+    loginName: adminLoginName,
+    mustChangePassword: false,
+    passwordChangedAt: null,
+    passwordHash,
+    role: UserRole.ADMIN,
+  };
 
-  const result = await prisma.user.upsert({
-    create: {
-      email: adminEmail,
-      firstName: 'E2E',
-      failedLoginAttempts: 0,
-      isActive: true,
-      isProtected: true,
-      lastName: 'Admin',
-      lockedUntil: null,
-      mustChangePassword: false,
-      passwordHash,
-      role: UserRole.ADMIN,
-      passwordChangedAt: null,
-    },
-    update: {
-      failedLoginAttempts: 0,
-      isActive: true,
-      isProtected: true,
-      lockedUntil: null,
-      mustChangePassword: false,
-      passwordHash,
-      passwordChangedAt: null,
-      role: UserRole.ADMIN,
-    },
-    where: {
-      email: adminEmail,
-    },
+  const result = await prisma.$transaction(async (transaction) => {
+    if (existingAdmin) {
+      // Reserve the requested name before a possible rename. Returning to a
+      // former name owned by this same identity remains valid.
+      await ensureLoginNameReservation(
+        transaction,
+        adminLoginName,
+        existingAdmin.id,
+      );
+
+      const updatedAdmin = await transaction.user.update({
+        data: {
+          ...accountData,
+          securityVersion: { increment: 1 },
+        },
+        where: { id: existingAdmin.id },
+      });
+
+      // The setup resets credentials, so no session from an earlier E2E run
+      // may survive even when the login name itself did not change.
+      await transaction.session.deleteMany({
+        where: { userId: existingAdmin.id },
+      });
+
+      return updatedAdmin;
+    }
+
+    const createdAdmin = await transaction.user.create({
+      data: {
+        ...accountData,
+        firstName: 'E2E',
+        lastName: 'Admin',
+      },
+    });
+
+    await ensureLoginNameReservation(
+      transaction,
+      adminLoginName,
+      createdAdmin.id,
+    );
+
+    return createdAdmin;
   });
 
-  console.log(`E2E setup: admin account ready (${result.email})`);
+  console.log(`E2E setup: admin account ready (${result.loginName})`);
 } finally {
   await prisma.$disconnect();
 }

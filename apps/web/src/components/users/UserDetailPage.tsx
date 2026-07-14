@@ -90,6 +90,7 @@ type PendingNavigation =
     };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
+const LOGIN_NAME_PATTERN = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/;
 
 const USER_AUDIT_PAGE_SIZE = 200;
 const USER_AUDIT_MAX_PREFETCH_PAGES = 5;
@@ -331,10 +332,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const hasLoadedAuditSummaryRef = useRef(false);
 
   const [editForm, setEditForm] = useState({
-    email: '',
+    contactEmail: '',
     firstName: '',
     isActive: true,
     lastName: '',
+    loginName: '',
     role: 'USER' as UserRole,
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -387,13 +389,22 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         currentUser.permissions,
       )
     : false;
-  const canUpdateUserLogin = currentUser
+  const canUpdateUserContact = currentUser
     ? isProtectedActor ||
       hasPermission(
         currentUser.role,
-        PERMISSIONS.USERS.UPDATE_LOGIN,
+        PERMISSIONS.USERS.UPDATE_CONTACT,
         currentUser.permissions,
       )
+    : false;
+  const canViewUserContact = currentUser
+    ? isProtectedActor ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.VIEW_CONTACT,
+        currentUser.permissions,
+      ) ||
+      canUpdateUserContact
     : false;
   const canManageUserStatus = currentUser
     ? isProtectedActor ||
@@ -497,11 +508,19 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     !!user && user.role === UserRole.ADMIN && !isProtectedActor;
   const canEditTargetProfile =
     !!user && canUpdateUsers && (!user.isProtected || isProtectedActor);
-  const canEditTargetEmail =
+  const canEditTargetLogin =
     !!user &&
-    canUpdateUserLogin &&
+    !isSelf &&
+    isProtectedActor &&
     (!user.isProtected || isProtectedActor) &&
     !isTargetAdminAccessRestricted;
+  const canEditTargetContact =
+    !!user &&
+    !isSelf &&
+    canUpdateUserContact &&
+    (!user.isProtected || isProtectedActor) &&
+    !isTargetAdminAccessRestricted;
+  const canViewTargetContact = isSelf || canViewUserContact;
   const canViewTargetAccess =
     !!user &&
     (canViewUserAccess || canEditUserPermissions || canManageUserRoles);
@@ -577,11 +596,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   );
   const profileErrors = useMemo(() => {
     return {
-      email: !editForm.email.trim()
-        ? 'Email obligatoire'
-        : EMAIL_PATTERN.test(editForm.email.trim())
+      contactEmail:
+        !editForm.contactEmail.trim() ||
+        EMAIL_PATTERN.test(editForm.contactEmail.trim())
           ? null
-          : 'Email invalide',
+          : 'Email de contact invalide',
       firstName: !editForm.firstName.trim()
         ? 'Prénom obligatoire'
         : editForm.firstName.trim().length > 50
@@ -592,10 +611,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         : editForm.lastName.trim().length > 50
           ? 'Nom trop long'
           : null,
+      loginName: LOGIN_NAME_PATTERN.test(
+        editForm.loginName.trim().toLowerCase(),
+      )
+        ? null
+        : 'Identifiant invalide : 3 à 32 caractères, lettres, chiffres, points, tirets ou underscores',
     };
   }, [editForm]);
   const hasProfileErrors =
-    (canEditTargetEmail && !!profileErrors.email) ||
+    (canEditTargetContact && !!profileErrors.contactEmail) ||
+    (canEditTargetLogin && !!profileErrors.loginName) ||
     (canEditTargetProfile &&
       (!!profileErrors.firstName || !!profileErrors.lastName));
   const hasProfileIdentityChanges =
@@ -604,9 +629,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       editForm.lastName.trim() !== user.lastName);
   const hasProfileLoginChanges =
     !!user &&
-    canEditTargetEmail &&
-    editForm.email.trim().toLowerCase() !== user.email;
-  const hasProfileChanges = hasProfileIdentityChanges || hasProfileLoginChanges;
+    canEditTargetLogin &&
+    editForm.loginName.trim().toLowerCase() !== user.loginName;
+  const hasProfileContactChanges =
+    !!user &&
+    canEditTargetContact &&
+    (editForm.contactEmail.trim().toLowerCase() || null) !== user.contactEmail;
+  const hasProfileChanges =
+    hasProfileIdentityChanges ||
+    hasProfileLoginChanges ||
+    hasProfileContactChanges;
   const hasRoleChanges = !!user && editForm.role !== user.role;
   const hasAccessPermissionChanges =
     !!user &&
@@ -637,7 +669,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     hasSecurityChanges;
   const canSaveProfile =
     ((hasProfileIdentityChanges && canEditTargetProfile) ||
-      (hasProfileLoginChanges && canEditTargetEmail)) &&
+      (hasProfileLoginChanges && canEditTargetLogin) ||
+      (hasProfileContactChanges && canEditTargetContact)) &&
     !hasProfileErrors;
   const canSaveAccess =
     (hasRoleChanges && canEditTargetRole) ||
@@ -676,9 +709,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       if (sectionId === 'profile') {
         setEditForm((currentForm) => ({
           ...currentForm,
-          email: user.email,
+          contactEmail: user.contactEmail ?? '',
           firstName: user.firstName,
           lastName: user.lastName,
+          loginName: user.loginName,
         }));
 
         return;
@@ -766,10 +800,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           const loadedUser = data.data.user as UserType;
           setUser(loadedUser);
           setEditForm({
-            email: loadedUser.email,
+            contactEmail: loadedUser.contactEmail ?? '',
             firstName: loadedUser.firstName,
             isActive: loadedUser.isActive,
             lastName: loadedUser.lastName,
+            loginName: loadedUser.loginName,
             role: loadedUser.role,
           });
           setPermissions(loadedUser.permissions);
@@ -1177,10 +1212,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const syncUserState = (updatedUser: UserType): void => {
     setUser(updatedUser);
     setEditForm({
-      email: updatedUser.email,
+      contactEmail: updatedUser.contactEmail ?? '',
       firstName: updatedUser.firstName,
       isActive: updatedUser.isActive,
       lastName: updatedUser.lastName,
+      loginName: updatedUser.loginName,
       role: updatedUser.role,
     });
     setPermissions(updatedUser.permissions);
@@ -1191,9 +1227,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
     setEditForm((currentForm) => ({
       ...currentForm,
-      email: user.email,
+      contactEmail: user.contactEmail ?? '',
       firstName: user.firstName,
       lastName: user.lastName,
+      loginName: user.loginName,
     }));
   };
 
@@ -1235,7 +1272,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   };
 
   const handleSaveProfile = async (): Promise<void> => {
-    if (!canEditTargetProfile && !canEditTargetEmail) {
+    if (!canEditTargetProfile && !canEditTargetContact && !canEditTargetLogin) {
       toast.error('Permission insuffisante pour modifier cet utilisateur');
 
       return;
@@ -1262,7 +1299,15 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
               }
             : {}),
-          ...(canEditTargetEmail ? { email: editForm.email.trim() } : {}),
+          ...(canEditTargetContact
+            ? {
+                contactEmail:
+                  editForm.contactEmail.trim().toLowerCase() || null,
+              }
+            : {}),
+          ...(canEditTargetLogin
+            ? { loginName: editForm.loginName.trim().toLowerCase() }
+            : {}),
           ...(canEditTargetProfile
             ? {
                 firstName: editForm.firstName.trim(),
@@ -1581,20 +1626,29 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
     switch (activeSection) {
       case 'resume':
-        return <UserResumeTab user={user} auditStats={auditStats} />;
+        return (
+          <UserResumeTab
+            auditStats={auditStats}
+            canViewContact={canViewTargetContact}
+            user={user}
+          />
+        );
       case 'profile':
         return (
           <UserProfileTab
             form={{
-              email: editForm.email,
+              contactEmail: editForm.contactEmail,
               firstName: editForm.firstName,
               lastName: editForm.lastName,
+              loginName: editForm.loginName,
             }}
             setForm={(form: ProfileForm) =>
               setEditForm((currentForm) => ({ ...currentForm, ...form }))
             }
             canEdit={canEditTargetProfile}
-            canEditEmail={canEditTargetEmail}
+            canEditContact={canEditTargetContact}
+            canEditLogin={canEditTargetLogin}
+            canViewContact={canViewTargetContact}
             isSaving={isSaving}
             onSave={handleSaveProfile}
             onCancel={handleCancelProfile}
@@ -1709,7 +1763,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           />
         );
       default:
-        return <UserResumeTab user={user} auditStats={auditStats} />;
+        return (
+          <UserResumeTab
+            auditStats={auditStats}
+            canViewContact={canViewTargetContact}
+            user={user}
+          />
+        );
     }
   };
 
@@ -1805,7 +1865,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           <div className="min-w-0 space-y-3">
             <UsersAdminHero
               title={`${user.firstName} ${user.lastName}`}
-              description={user.email}
+              description={`Identifiant : ${user.loginName}`}
               actions={
                 <Button
                   type="button"

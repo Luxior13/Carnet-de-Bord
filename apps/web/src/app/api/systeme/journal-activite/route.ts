@@ -29,6 +29,14 @@ const CONNECTION_ACTIONS: AuditAction[] = [
   AuditAction.LOGOUT,
 ];
 const CONNECTION_ACTION_VALUES = new Set<string>(CONNECTION_ACTIONS);
+const SAFE_AUDIT_METADATA_KEYS = new Set([
+  'pageKey',
+  'pageLabel',
+  'poleKey',
+  'poleLabel',
+  'tabKey',
+  'tabLabel',
+]);
 
 type JournalLog = {
   action: AuditAction;
@@ -88,9 +96,9 @@ const getTextFilter = (value: string | null): string | undefined => {
 const getUserName = (
   user:
     | {
-        email: string;
         firstName: string;
         lastName: string;
+        loginName: string;
       }
     | undefined,
 ): string | null => {
@@ -98,7 +106,25 @@ const getUserName = (
 
   return user.firstName && user.lastName
     ? `${user.firstName} ${user.lastName}`
-    : user.email;
+    : user.loginName;
+};
+
+const getVisibleMetadata = (
+  metadata: Record<string, unknown> | null,
+  canViewSensitiveAudit: boolean,
+): Record<string, unknown> | null => {
+  if (!metadata || canViewSensitiveAudit) return metadata;
+
+  const safeMetadata = Object.fromEntries(
+    Object.entries(metadata).filter(
+      ([key, value]) =>
+        SAFE_AUDIT_METADATA_KEYS.has(key) &&
+        typeof value === 'string' &&
+        value.trim().length > 0,
+    ),
+  );
+
+  return Object.keys(safeMetadata).length > 0 ? safeMetadata : null;
 };
 
 export async function GET(
@@ -196,10 +222,10 @@ export async function GET(
     );
     const users = await prisma.user.findMany({
       select: {
-        email: true,
         firstName: true,
         id: true,
         lastName: true,
+        loginName: true,
       },
       where: { id: { in: [...userIds] } },
     });
@@ -227,7 +253,7 @@ export async function GET(
               description: log.description,
               id: log.id,
               ipAddress: canViewSensitiveAudit ? log.ipAddress : null,
-              metadata,
+              metadata: getVisibleMetadata(metadata, canViewSensitiveAudit),
               targetName:
                 metadataTargetName ??
                 getUserName(

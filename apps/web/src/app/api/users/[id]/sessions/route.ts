@@ -28,20 +28,20 @@ const USERS_SECURITY_AUDIT_LOCATION = {
 const getTargetUserForSessionManagement = async (
   id: string,
 ): Promise<{
-  email: string;
   firstName: string;
   id: string;
   isProtected: boolean;
   lastName: string;
+  loginName: string;
   role: string;
 } | null> => {
   return prisma.user.findUnique({
     select: {
-      email: true,
       firstName: true,
       id: true,
       isProtected: true,
       lastName: true,
+      loginName: true,
       role: true,
     },
     where: { deletedAt: null, id },
@@ -225,7 +225,7 @@ export async function DELETE(
     const targetName =
       targetUser.firstName && targetUser.lastName
         ? `${targetUser.firstName} ${targetUser.lastName}`
-        : targetUser.email;
+        : targetUser.loginName;
 
     if (sessionId) {
       const session = await prisma.session.findFirst({
@@ -258,7 +258,7 @@ export async function DELETE(
           {
             action: 'SESSION_INVALIDATE',
             category: 'AUTH',
-            description: `Session révoquée pour: ${targetUser.email}`,
+            description: `Session révoquée pour: ${targetUser.loginName}`,
             metadata: {
               revocationScope: 'single',
               revokedSessions: 1,
@@ -288,7 +288,7 @@ export async function DELETE(
         {
           action: 'SESSION_INVALIDATE',
           category: 'AUTH',
-          description: `Sessions révoquées pour: ${targetUser.email}`,
+          description: `Sessions révoquées pour: ${targetUser.loginName}`,
           metadata: {
             revocationScope: 'all',
             revokedSessions: deleteResult.count,

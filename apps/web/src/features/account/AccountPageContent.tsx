@@ -88,7 +88,9 @@ const buildAccountSectionHref = (
 };
 
 const getAccountDisplayName = (userData: UserType): string => {
-  return `${userData.firstName} ${userData.lastName}`.trim() || userData.email;
+  return (
+    `${userData.firstName} ${userData.lastName}`.trim() || userData.loginName
+  );
 };
 
 type AccountHeaderProps = {
@@ -98,7 +100,7 @@ type AccountHeaderProps = {
 const AccountHeader: FC<AccountHeaderProps> = ({ userData }) => (
   <PageHero
     title={getAccountDisplayName(userData)}
-    description={userData.email}
+    description={`Identifiant : ${userData.loginName}`}
     meta={
       <>
         <Badge variant="secondary">{getAccessLabel(userData)}</Badge>

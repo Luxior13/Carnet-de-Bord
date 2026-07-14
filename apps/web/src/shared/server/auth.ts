@@ -82,8 +82,9 @@ const isLegacyPlaintextSessionToken = (token: string): boolean => {
 };
 
 const SESSION_USER_SELECT = {
+  contactEmail: true,
+  contactEmailVerifiedAt: true,
   createdAt: true,
-  email: true,
   failedLoginAttempts: true,
   firstName: true,
   id: true,
@@ -92,10 +93,12 @@ const SESSION_USER_SELECT = {
   lastLoginAt: true,
   lastName: true,
   lockedUntil: true,
+  loginName: true,
   mustChangePassword: true,
   passwordChangedAt: true,
   permissions: true,
   role: true,
+  securityVersion: true,
 } satisfies Prisma.UserSelect;
 
 const SESSION_WITH_USER_SELECT = {
@@ -103,6 +106,7 @@ const SESSION_WITH_USER_SELECT = {
   idleExpiresAt: true,
   lastSeenAt: true,
   rememberMe: true,
+  securityVersion: true,
   token: true,
   user: {
     select: SESSION_USER_SELECT,
@@ -229,11 +233,29 @@ export const verifyPassword = async (
 // ============================================
 
 /**
+ * Raised when an authentication operation was started from an obsolete
+ * security state. Callers must make the client authenticate again instead of
+ * retrying the mutation with the stale session.
+ */
+export class SecurityVersionMismatchError extends Error {
+  constructor() {
+    super('User security state changed during authentication');
+    this.name = 'SecurityVersionMismatchError';
+  }
+}
+
+export const isSecurityVersionMismatchError = (
+  error: unknown,
+): error is SecurityVersionMismatchError =>
+  error instanceof SecurityVersionMismatchError;
+
+/**
  * Creates a new session in the database
  */
 export const createSession = async (
   token: string,
   userId: string,
+  authenticatedSecurityVersion: number,
   rememberMe = false,
   audit?: RequiredAuditLogInput,
 ): Promise<{
@@ -257,6 +279,23 @@ export const createSession = async (
   // Session creation, last-login state and its success audit must either all
   // commit or all roll back because they describe the same authentication.
   const session = await prisma.$transaction(async (transaction) => {
+    // This conditional write both checks and locks the user row. A concurrent
+    // password reset or access change therefore either revokes this session
+    // after commit, or makes this transaction fail before issuing it.
+    const userUpdate = await transaction.user.updateMany({
+      data: { lastLoginAt: loginAt },
+      where: {
+        deletedAt: null,
+        id: userId,
+        isActive: true,
+        securityVersion: authenticatedSecurityVersion,
+      },
+    });
+
+    if (userUpdate.count !== 1) {
+      throw new SecurityVersionMismatchError();
+    }
+
     const createdSession = await transaction.session.create({
       data: {
         expiresAt,
@@ -264,15 +303,11 @@ export const createSession = async (
         ipAddress: requestContext.ipAddress,
         lastSeenAt: loginAt,
         rememberMe,
+        securityVersion: authenticatedSecurityVersion,
         token: sessionId,
         userAgent: requestContext.userAgent,
         userId,
       },
-    });
-
-    await transaction.user.update({
-      data: { lastLoginAt: loginAt },
-      where: { id: userId },
     });
 
     if (audit) {
@@ -314,6 +349,17 @@ const validateSessionToken = async (
   }
 
   if (!session) {
+    return { session: null, user: null };
+  }
+
+  if (session.securityVersion !== session.user.securityVersion) {
+    await prisma.session.deleteMany({
+      where: {
+        securityVersion: session.securityVersion,
+        token: session.token,
+      },
+    });
+
     return { session: null, user: null };
   }
 
@@ -360,6 +406,7 @@ const validateSessionToken = async (
         expiresAt: { gt: activityAt },
         idleExpiresAt: { gt: activityAt },
         lastSeenAt: { lte: activityCutoff },
+        securityVersion: session.securityVersion,
         token: session.token,
       },
     });
@@ -378,6 +425,7 @@ const validateSessionToken = async (
       idleExpiresAt: session.idleExpiresAt,
       lastSeenAt: session.lastSeenAt,
       rememberMe: session.rememberMe,
+      securityVersion: session.securityVersion,
       token: session.token,
       userId: session.userId,
     },
@@ -501,8 +549,9 @@ const LOCKOUT_DURATION_MINUTES = 30;
 
 type AuthenticatedUser = Pick<
   User,
+  | 'contactEmail'
+  | 'contactEmailVerifiedAt'
   | 'createdAt'
-  | 'email'
   | 'failedLoginAttempts'
   | 'firstName'
   | 'id'
@@ -510,17 +559,20 @@ type AuthenticatedUser = Pick<
   | 'isProtected'
   | 'lastLoginAt'
   | 'lastName'
+  | 'loginName'
   | 'lockedUntil'
   | 'mustChangePassword'
   | 'passwordChangedAt'
   | 'passwordHash'
   | 'permissions'
   | 'role'
+  | 'securityVersion'
 >;
 
 const AUTHENTICATION_USER_SELECT = {
+  contactEmail: true,
+  contactEmailVerifiedAt: true,
   createdAt: true,
-  email: true,
   failedLoginAttempts: true,
   firstName: true,
   id: true,
@@ -529,20 +581,22 @@ const AUTHENTICATION_USER_SELECT = {
   lastLoginAt: true,
   lastName: true,
   lockedUntil: true,
+  loginName: true,
   mustChangePassword: true,
   passwordChangedAt: true,
   passwordHash: true,
   permissions: true,
   role: true,
+  securityVersion: true,
 } satisfies Prisma.UserSelect;
 
 /**
- * Authenticates a user with email and password
+ * Authenticates a user with its canonical login name and password
  * Uses constant-time comparison to prevent timing attacks
  * Implements account lockout after MAX_FAILED_ATTEMPTS failures
  */
 export const authenticateUser = async (
-  email: string,
+  loginName: string,
   password: string,
 ): Promise<
   | { success: true; user: AuthenticatedUser }
@@ -556,7 +610,7 @@ export const authenticateUser = async (
 > => {
   const user = await prisma.user.findUnique({
     select: AUTHENTICATION_USER_SELECT,
-    where: { deletedAt: null, email: email.toLowerCase().trim() },
+    where: { deletedAt: null, loginName: loginName.toLowerCase().trim() },
   });
 
   // Always perform password verification to prevent timing attacks
@@ -688,9 +742,10 @@ export const authenticateUser = async (
  */
 export const createUser = async (
   data: {
-    email: string;
+    contactEmail?: string | null;
     firstName: string;
     lastName: string;
+    loginName: string;
     password: string;
     role: UserRole;
   },
@@ -698,16 +753,28 @@ export const createUser = async (
 ): Promise<User> => {
   const passwordHash = await hashPassword(data.password);
   const requestContext = auditFactory ? await getRequestContext() : null;
+  const normalizedLoginName = data.loginName.toLowerCase().trim();
 
   return prisma.$transaction(async (transaction) => {
     const user = await transaction.user.create({
       data: {
-        email: data.email.toLowerCase().trim(),
+        contactEmail: data.contactEmail?.toLowerCase().trim() || null,
         firstName: data.firstName.trim(),
         lastName: data.lastName.trim(),
+        loginName: normalizedLoginName,
         mustChangePassword: true,
         passwordHash,
         role: data.role,
+      },
+    });
+
+    // The reservation is in the same transaction as the user. If this login
+    // name belonged to an older identity, its primary-key conflict rolls the
+    // user creation back instead of silently recycling the identifier.
+    await transaction.loginNameReservation.create({
+      data: {
+        loginName: normalizedLoginName,
+        userId: user.id,
       },
     });
 
@@ -724,7 +791,8 @@ export const createUser = async (
 
 type UpdateUserPasswordOptions = {
   audit?: RequiredAuditLogInput;
-  currentSessionToken?: string;
+  currentSessionToken: string;
+  expectedSecurityVersion: number;
   rateLimitKey?: string;
 };
 
@@ -734,32 +802,51 @@ type UpdateUserPasswordOptions = {
 export const updateUserPassword = async (
   userId: string,
   newPassword: string,
-  options: UpdateUserPasswordOptions = {},
+  options: UpdateUserPasswordOptions,
 ): Promise<void> => {
   const passwordHash = await hashPassword(newPassword);
   const requestContext = options.audit ? await getRequestContext() : null;
 
   await prisma.$transaction(async (transaction) => {
-    await transaction.user.update({
+    const userUpdate = await transaction.user.updateMany({
       data: {
         mustChangePassword: false,
         passwordChangedAt: new Date(),
         passwordHash,
+        securityVersion: { increment: 1 },
       },
-      where: { id: userId },
+      where: {
+        id: userId,
+        securityVersion: options.expectedSecurityVersion,
+      },
     });
 
-    if (options.currentSessionToken) {
-      const hashedToken = hashSessionToken(options.currentSessionToken);
-      await transaction.session.deleteMany({
-        where: {
-          token: {
-            notIn: [options.currentSessionToken, hashedToken],
-          },
-          userId,
-        },
-      });
+    if (userUpdate.count !== 1) {
+      throw new SecurityVersionMismatchError();
     }
+
+    const nextSecurityVersion = options.expectedSecurityVersion + 1;
+    const hashedToken = hashSessionToken(options.currentSessionToken);
+    const currentSessionTokens = [options.currentSessionToken, hashedToken];
+    const currentSessionUpdate = await transaction.session.updateMany({
+      data: { securityVersion: nextSecurityVersion },
+      where: {
+        securityVersion: options.expectedSecurityVersion,
+        token: { in: currentSessionTokens },
+        userId,
+      },
+    });
+
+    if (currentSessionUpdate.count !== 1) {
+      throw new SecurityVersionMismatchError();
+    }
+
+    await transaction.session.deleteMany({
+      where: {
+        token: { notIn: currentSessionTokens },
+        userId,
+      },
+    });
 
     if (options.rateLimitKey) {
       await transaction.rateLimit.deleteMany({
@@ -795,6 +882,7 @@ export const resetUserPassword = async (
         mustChangePassword: true,
         passwordChangedAt: null,
         passwordHash,
+        securityVersion: { increment: 1 },
       },
       where: { id: userId },
     });
@@ -838,8 +926,9 @@ export const getUserById = async (id: string): Promise<User | null> => {
  */
 type ClientSafeUser = Pick<
   User,
+  | 'contactEmail'
+  | 'contactEmailVerifiedAt'
   | 'createdAt'
-  | 'email'
   | 'failedLoginAttempts'
   | 'firstName'
   | 'id'
@@ -847,6 +936,7 @@ type ClientSafeUser = Pick<
   | 'isProtected'
   | 'lastLoginAt'
   | 'lastName'
+  | 'loginName'
   | 'lockedUntil'
   | 'mustChangePassword'
   | 'passwordChangedAt'
@@ -856,8 +946,9 @@ type ClientSafeUser = Pick<
   Partial<Pick<User, 'updatedAt'>>;
 
 export const mapUserToUserType = (user: ClientSafeUser): UserType => ({
+  contactEmail: user.contactEmail,
+  contactEmailVerifiedAt: user.contactEmailVerifiedAt,
   createdAt: user.createdAt,
-  email: user.email,
   failedLoginAttempts: user.failedLoginAttempts,
   firstName: user.firstName,
   id: user.id,
@@ -866,6 +957,7 @@ export const mapUserToUserType = (user: ClientSafeUser): UserType => ({
   lastLoginAt: user.lastLoginAt,
   lastName: user.lastName,
   lockedUntil: user.lockedUntil,
+  loginName: user.loginName,
   mustChangePassword: user.mustChangePassword,
   passwordChangedAt: user.passwordChangedAt,
   permissions: normalizePermissionOverrides(

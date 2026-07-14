@@ -18,6 +18,7 @@ const NO_STORE_HEADERS = {
 
 type SchemaCheckRow = {
   auditLogColumns: number;
+  loginNameReservationColumns: number;
   rateLimitColumns: number;
   sessionColumns: number;
   userColumns: number;
@@ -83,16 +84,18 @@ export async function createReadinessResponse(): Promise<
             COUNT(*) FILTER (
               WHERE table_name = 'User'
                 AND column_name IN (
-                  'id', 'email', 'passwordHash', 'role', 'permissions',
+                  'id', 'loginName', 'contactEmail',
+                  'contactEmailVerifiedAt', 'passwordHash', 'role', 'permissions',
                   'isActive', 'isProtected', 'mustChangePassword',
-                  'failedLoginAttempts', 'lockedUntil', 'deletedAt'
+                  'failedLoginAttempts', 'lockedUntil', 'securityVersion',
+                  'deletedAt'
                 )
             )::int AS "userColumns",
             COUNT(*) FILTER (
               WHERE table_name = 'Session'
                 AND column_name IN (
                   'id', 'userId', 'token', 'expiresAt', 'idleExpiresAt',
-                  'lastSeenAt', 'rememberMe'
+                  'lastSeenAt', 'rememberMe', 'securityVersion'
                 )
             )::int AS "sessionColumns",
             COUNT(*) FILTER (
@@ -102,6 +105,10 @@ export async function createReadinessResponse(): Promise<
                   'metadata'
                 )
             )::int AS "auditLogColumns",
+            COUNT(*) FILTER (
+              WHERE table_name = 'LoginNameReservation'
+                AND column_name IN ('loginName', 'userId', 'createdAt')
+            )::int AS "loginNameReservationColumns",
             COUNT(*) FILTER (
               WHERE table_name = 'RateLimit'
                 AND column_name IN (
@@ -114,9 +121,10 @@ export async function createReadinessResponse(): Promise<
         const schema = rows[0];
 
         if (
-          schema?.userColumns !== 11 ||
-          schema.sessionColumns !== 7 ||
+          schema?.userColumns !== 14 ||
+          schema.sessionColumns !== 8 ||
           schema.auditLogColumns !== 6 ||
+          schema.loginNameReservationColumns !== 3 ||
           schema.rateLimitColumns !== 4
         ) {
           throw new SchemaNotReadyError();

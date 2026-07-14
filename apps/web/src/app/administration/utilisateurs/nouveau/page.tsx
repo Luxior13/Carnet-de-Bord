@@ -3,6 +3,7 @@
 import { UserRole } from '@repo/database';
 import {
   ArrowLeft,
+  AtSign,
   CheckCircle2,
   Copy,
   KeyRound,
@@ -48,25 +49,28 @@ import { Separator } from '$ui/separator';
 import { apiFetch } from '$utils/api.utils';
 
 type NewUserForm = {
-  email: string;
+  contactEmail: string;
   firstName: string;
   lastName: string;
+  loginName: string;
   role: UserRole;
 };
 
 type NewUserFormErrors = Partial<
-  Record<'email' | 'firstName' | 'lastName', string>
+  Record<'contactEmail' | 'firstName' | 'lastName' | 'loginName', string>
 >;
 
 const EMPTY_USER_FORM: NewUserForm = {
-  email: '',
+  contactEmail: '',
   firstName: '',
   lastName: '',
+  loginName: '',
   role: UserRole.USER,
 };
 
 const inputClassName = 'border-border/80 bg-input';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
+const LOGIN_NAME_PATTERN = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/;
 
 const NewUserContent: FC = () => {
   const { userData } = useUser();
@@ -107,7 +111,8 @@ const NewUserContent: FC = () => {
 
   const validateForm = (): boolean => {
     const nextErrors: NewUserFormErrors = {};
-    const normalizedEmail = form.email.trim();
+    const normalizedContactEmail = form.contactEmail.trim();
+    const normalizedLoginName = form.loginName.trim().toLowerCase();
 
     if (!form.firstName.trim()) {
       nextErrors.firstName = 'Prénom obligatoire';
@@ -119,10 +124,19 @@ const NewUserContent: FC = () => {
     } else if (form.lastName.trim().length > 50) {
       nextErrors.lastName = 'Nom trop long';
     }
-    if (!normalizedEmail) {
-      nextErrors.email = 'Email obligatoire';
-    } else if (!EMAIL_PATTERN.test(normalizedEmail)) {
-      nextErrors.email = 'Adresse email invalide';
+    if (!normalizedLoginName) {
+      nextErrors.loginName = 'Identifiant obligatoire';
+    } else if (
+      normalizedLoginName.length < 3 ||
+      normalizedLoginName.length > 32
+    ) {
+      nextErrors.loginName = "L'identifiant doit contenir 3 à 32 caractères";
+    } else if (!LOGIN_NAME_PATTERN.test(normalizedLoginName)) {
+      nextErrors.loginName =
+        'Utilisez uniquement des lettres, chiffres, points, tirets ou underscores, avec une lettre ou un chiffre au début et à la fin';
+    }
+    if (normalizedContactEmail && !EMAIL_PATTERN.test(normalizedContactEmail)) {
+      nextErrors.contactEmail = 'Adresse email invalide';
     }
 
     setErrors(nextErrors);
@@ -156,12 +170,16 @@ const NewUserContent: FC = () => {
 
     setIsCreating(true);
     try {
+      const normalizedContactEmail = form.contactEmail.trim().toLowerCase();
       const response = await apiFetch('/api/users', {
         body: JSON.stringify({
-          ...form,
-          email: form.email.trim().toLowerCase(),
+          ...(normalizedContactEmail
+            ? { contactEmail: normalizedContactEmail }
+            : {}),
           firstName: form.firstName.trim(),
           lastName: form.lastName.trim(),
+          loginName: form.loginName.trim().toLowerCase(),
+          role: form.role,
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
@@ -196,8 +214,8 @@ const NewUserContent: FC = () => {
     ? `${createdUser.firstName} ${createdUser.lastName}`
     : 'Nouvel utilisateur';
   const headerSubtitle = createdUser
-    ? createdUser.email
-    : form.email.trim() || 'Compte en préparation';
+    ? createdUser.loginName
+    : form.loginName.trim() || 'Compte en préparation';
   const headerRole = createdUser?.role ?? form.role;
 
   return (
@@ -259,8 +277,8 @@ const NewUserContent: FC = () => {
                   Compte créé
                 </CardTitle>
                 <CardDescription>
-                  Le compte est prêt. Transmettez le mot de passe temporaire,
-                  puis ouvrez la fiche si vous devez compléter son profil.
+                  Le compte est prêt. Transmettez son identifiant et le mot de
+                  passe temporaire, puis complétez sa fiche si nécessaire.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 p-3 sm:p-4">
@@ -295,6 +313,28 @@ const NewUserContent: FC = () => {
                     title="Accès"
                   >
                     <div className="space-y-2 text-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="text-muted-foreground">
+                          Identifiant
+                        </span>
+                        <code className="text-foreground min-w-0 text-right text-xs break-all">
+                          {createdUser.loginName}
+                        </code>
+                      </div>
+                      {createdUser.contactEmail && (
+                        <>
+                          <Separator className="bg-border/60" />
+                          <div className="flex items-start justify-between gap-3">
+                            <span className="text-muted-foreground">
+                              Contact
+                            </span>
+                            <span className="text-foreground min-w-0 text-right text-xs break-all">
+                              {createdUser.contactEmail}
+                            </span>
+                          </div>
+                        </>
+                      )}
+                      <Separator className="bg-border/60" />
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-muted-foreground">Rôle</span>
                         <Badge
@@ -351,8 +391,8 @@ const NewUserContent: FC = () => {
                 <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
                   <CardTitle className="text-sm">Création du compte</CardTitle>
                   <CardDescription>
-                    Renseignez l&apos;identité, puis choisissez le niveau
-                    d&apos;accès initial.
+                    Renseignez l&apos;identité, la connexion et le contact, puis
+                    choisissez le niveau d&apos;accès initial.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3 p-3 sm:p-4">
@@ -437,40 +477,104 @@ const NewUserContent: FC = () => {
                       </div>
                       <div className="space-y-1.5">
                         <Label
-                          htmlFor="newEmail"
+                          htmlFor="newLoginName"
                           className="text-muted-foreground text-xs"
                           required
                         >
-                          Email de connexion
+                          Identifiant de connexion
+                        </Label>
+                        <div className="relative">
+                          <AtSign className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+                          <Input
+                            aria-describedby={
+                              errors.loginName
+                                ? 'newLoginName-error'
+                                : 'newLoginName-hint'
+                            }
+                            aria-invalid={!!errors.loginName}
+                            autoCapitalize="none"
+                            autoComplete="username"
+                            autoCorrect="off"
+                            id="newLoginName"
+                            maxLength={32}
+                            name="loginName"
+                            required
+                            spellCheck={false}
+                            type="text"
+                            value={form.loginName}
+                            placeholder="jean.dupont"
+                            onChange={(event) =>
+                              updateField(
+                                'loginName',
+                                event.target.value.toLowerCase(),
+                              )
+                            }
+                            className={`${inputClassName} pl-9`}
+                          />
+                        </div>
+                        {errors.loginName ? (
+                          <p
+                            className="text-destructive text-xs"
+                            id="newLoginName-error"
+                            role="alert"
+                          >
+                            {errors.loginName}
+                          </p>
+                        ) : (
+                          <p
+                            className="text-muted-foreground text-xs"
+                            id="newLoginName-hint"
+                          >
+                            3 à 32 caractères : lettres, chiffres, point, tiret
+                            ou underscore.
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label
+                          htmlFor="newContactEmail"
+                          className="text-muted-foreground text-xs"
+                        >
+                          Email de contact{' '}
+                          <span className="font-normal">(facultatif)</span>
                         </Label>
                         <div className="relative">
                           <Mail className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
                           <Input
                             aria-describedby={
-                              errors.email ? 'newEmail-error' : undefined
+                              errors.contactEmail
+                                ? 'newContactEmail-error'
+                                : 'newContactEmail-hint'
                             }
-                            aria-invalid={!!errors.email}
+                            aria-invalid={!!errors.contactEmail}
                             autoComplete="email"
-                            id="newEmail"
+                            id="newContactEmail"
                             maxLength={254}
-                            name="email"
-                            required
+                            name="contactEmail"
                             type="email"
-                            value={form.email}
+                            value={form.contactEmail}
                             placeholder="jean.dupont@example.com"
                             onChange={(event) =>
-                              updateField('email', event.target.value)
+                              updateField('contactEmail', event.target.value)
                             }
                             className={`${inputClassName} pl-9`}
                           />
                         </div>
-                        {errors.email && (
+                        {errors.contactEmail ? (
                           <p
                             className="text-destructive text-xs"
-                            id="newEmail-error"
+                            id="newContactEmail-error"
                             role="alert"
                           >
-                            {errors.email}
+                            {errors.contactEmail}
+                          </p>
+                        ) : (
+                          <p
+                            className="text-muted-foreground text-xs"
+                            id="newContactEmail-hint"
+                          >
+                            Distinct de l&apos;identifiant ; prévu pour les
+                            futurs messages et la récupération du compte.
                           </p>
                         )}
                       </div>
@@ -528,9 +632,9 @@ const NewUserContent: FC = () => {
                       type="submit"
                       disabled={
                         isCreating ||
-                        !form.email ||
                         !form.firstName ||
-                        !form.lastName
+                        !form.lastName ||
+                        !form.loginName
                       }
                     >
                       {isCreating ? (

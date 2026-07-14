@@ -168,6 +168,20 @@ describe('hasPermission', () => {
       }),
     ).toBe(true);
     expect(
+      hasPermission('USER', PERMISSIONS.USERS.UPDATE_CONTACT, {
+        [PERMISSIONS.USERS.UPDATE_CONTACT]: true,
+        [PERMISSIONS.USERS.VIEW]: true,
+        [PERMISSIONS.USERS.VIEW_CONTACT]: false,
+      }),
+    ).toBe(false);
+    expect(
+      hasPermission('USER', PERMISSIONS.USERS.UPDATE_CONTACT, {
+        [PERMISSIONS.USERS.UPDATE_CONTACT]: true,
+        [PERMISSIONS.USERS.VIEW]: true,
+        [PERMISSIONS.USERS.VIEW_CONTACT]: true,
+      }),
+    ).toBe(true);
+    expect(
       hasPermission('USER', PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY, {
         [PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY]: true,
         [PERMISSIONS.USERS.VIEW]: true,
@@ -335,8 +349,9 @@ describe('permission catalogue', () => {
       'system:automation',
       'users:view',
       'users:create',
+      'users:view_contact',
       'users:update_profile',
-      'users:update_login',
+      'users:update_contact',
       'users:manage_status',
       'users:view_access',
       'users:manage_roles',

@@ -1,136 +1,389 @@
 import 'server-only';
 
+import { createHash, randomUUID } from 'node:crypto';
+
+import type { Prisma } from '@prisma/client';
+
 import { prisma } from './prisma';
 
-/**
- * Rate Limiter for Login Attempts (Database-backed)
- *
- * Configuration:
- * - 5 failed attempts allowed per 15-minute window
- * - 30-minute block after exceeding limit
- * - Persistent storage in PostgreSQL
- */
+type RateLimitPolicy = {
+  blockDurationMs: number;
+  maxAttempts: number;
+  windowMs: number;
+};
 
-const CONFIG = {
-  /** Duration of block after exceeding limit (30 minutes) */
+export type LoginRateLimitKeys = {
+  account: string;
+  ip: string;
+  pair: string;
+};
+
+type RateLimitResult = {
+  allowed: boolean;
+  remainingAttempts: number;
+  retryAfter?: number;
+};
+
+type RateLimitReservationClient = Pick<Prisma.TransactionClient, '$queryRaw'>;
+
+class LoginRateLimitDeniedError extends Error {
+  constructor(readonly result: RateLimitResult) {
+    super('Login rate-limit reservation denied');
+    this.name = 'LoginRateLimitDeniedError';
+  }
+}
+
+const DEFAULT_POLICY: RateLimitPolicy = {
   blockDurationMs: 30 * 60 * 1000,
-  /** Maximum failed attempts before blocking */
   maxAttempts: 5,
-  /** Time window for counting attempts (15 minutes) */
   windowMs: 15 * 60 * 1000,
-} as const;
+};
 
-const CLEANUP_INTERVAL_MS = 60 * 1000;
-const MAX_KEY_PART_LENGTH = 254;
+/**
+ * The pair bucket stops focused brute force, the account bucket stops a
+ * distributed attack, and the wider IP allowance stops identifier rotation
+ * without making a shared office/NAT too easy to lock accidentally.
+ */
+const LOGIN_POLICIES = {
+  account: DEFAULT_POLICY,
+  ip: {
+    blockDurationMs: 30 * 60 * 1000,
+    maxAttempts: 30,
+    windowMs: 15 * 60 * 1000,
+  },
+  pair: DEFAULT_POLICY,
+} satisfies Record<keyof LoginRateLimitKeys, RateLimitPolicy>;
+
+const CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
 let nextCleanupAt = 0;
 
-const cleanupExpiredEntries = async (now: Date): Promise<void> => {
+const hashKeyPart = (scope: string, value: string): string =>
+  createHash('sha256')
+    .update(`team-control:${scope}\0${value}`, 'utf8')
+    .digest('hex');
+
+const normalizeIp = (ip: string | null): string => ip?.trim() || 'unknown';
+
+const normalizeLoginName = (loginName: string): string =>
+  loginName.toLowerCase().trim();
+
+/**
+ * Builds bounded, opaque keys. Neither the source IP nor the login name is
+ * stored in clear text in the rate-limit table.
+ */
+export function createLoginRateLimitKeys(
+  ip: string | null,
+  loginName: string,
+): LoginRateLimitKeys {
+  const canonicalIp = normalizeIp(ip);
+  const canonicalLoginName = normalizeLoginName(loginName);
+
+  return {
+    account: `auth-login:account:${hashKeyPart('account', canonicalLoginName)}`,
+    ip: `auth-login:ip:${hashKeyPart('ip', canonicalIp)}`,
+    pair: `auth-login:pair:${hashKeyPart(
+      'pair',
+      `${canonicalIp}\0${canonicalLoginName}`,
+    )}`,
+  };
+}
+
+/**
+ * Stale rows do not affect correctness: checks ignore expired windows and the
+ * next failed attempt resets its row atomically. Cleanup is therefore an
+ * infrequent, non-blocking maintenance task instead of work awaited by every
+ * login request.
+ */
+const scheduleExpiredEntriesCleanup = (now: Date): void => {
   if (now.getTime() < nextCleanupAt) return;
 
-  // Advance before awaiting so concurrent requests do not all launch the same
-  // table-wide cleanup query.
   nextCleanupAt = now.getTime() + CLEANUP_INTERVAL_MS;
-  try {
-    await prisma.rateLimit.deleteMany({
+  void prisma.rateLimit
+    .deleteMany({
       where: {
         OR: [
           { blockedUntil: { lt: now, not: null } },
           {
             blockedUntil: null,
             firstAttempt: {
-              lt: new Date(now.getTime() - CONFIG.windowMs),
+              lt: new Date(now.getTime() - DEFAULT_POLICY.windowMs),
             },
           },
         ],
       },
+    })
+    .catch(() => {
+      // Cleanup is best-effort and must not turn authentication into a 500.
+      nextCleanupAt = 0;
     });
-  } catch (error) {
-    nextCleanupAt = 0;
-    throw error;
-  }
 };
 
-/**
- * Creates a unique identifier for rate limiting from IP and email
- */
-export function createRateLimitKey(ip: string | null, email: string): string {
-  const sanitizedEmail = email
-    .toLowerCase()
-    .trim()
-    .slice(0, MAX_KEY_PART_LENGTH);
-  const sanitizedIp = (ip?.trim() || 'unknown').slice(0, MAX_KEY_PART_LENGTH);
-
-  return `${sanitizedIp}:${sanitizedEmail}`;
-}
-
-export async function checkRateLimit(identifier: string): Promise<{
-  allowed: boolean;
-  remainingAttempts: number;
-  retryAfter?: number;
-}> {
+export async function checkRateLimit(
+  identifier: string,
+  policy: RateLimitPolicy = DEFAULT_POLICY,
+): Promise<RateLimitResult> {
   const now = new Date();
-
-  await cleanupExpiredEntries(now);
+  scheduleExpiredEntriesCleanup(now);
 
   const entry = await prisma.rateLimit.findUnique({
     where: { key: identifier },
   });
 
-  // Check if blocked
-  if (entry?.blockedUntil) {
-    if (now < entry.blockedUntil) {
-      return {
-        allowed: false,
-        remainingAttempts: 0,
-        retryAfter: Math.ceil(
-          (entry.blockedUntil.getTime() - now.getTime()) / 1000,
-        ),
-      };
-    }
-    // Block expired, delete entry
-    await prisma.rateLimit.delete({ where: { key: identifier } });
-
+  if (!entry) {
     return {
       allowed: true,
-      remainingAttempts: CONFIG.maxAttempts,
+      remainingAttempts: policy.maxAttempts,
     };
   }
 
-  // Check window
-  if (entry) {
-    const windowExpired =
-      now.getTime() - entry.firstAttempt.getTime() >= CONFIG.windowMs;
+  if (entry.blockedUntil && now < entry.blockedUntil) {
+    return {
+      allowed: false,
+      remainingAttempts: 0,
+      retryAfter: Math.max(
+        1,
+        Math.ceil((entry.blockedUntil.getTime() - now.getTime()) / 1000),
+      ),
+    };
+  }
 
-    if (!windowExpired) {
-      if (entry.count >= CONFIG.maxAttempts) {
-        // Block the user
-        const blockedUntil = new Date(now.getTime() + CONFIG.blockDurationMs);
-        await prisma.rateLimit.update({
-          data: { blockedUntil },
-          where: { key: identifier },
-        });
+  const windowExpired =
+    now.getTime() - entry.firstAttempt.getTime() >= policy.windowMs;
 
-        return {
-          allowed: false,
-          remainingAttempts: 0,
-          retryAfter: Math.ceil(CONFIG.blockDurationMs / 1000),
-        };
-      }
+  if (windowExpired || entry.blockedUntil) {
+    return {
+      allowed: true,
+      remainingAttempts: policy.maxAttempts,
+    };
+  }
 
-      return {
-        allowed: true,
-        remainingAttempts: CONFIG.maxAttempts - entry.count,
-      };
-    }
-
-    // Window expired, delete entry
-    await prisma.rateLimit.delete({ where: { key: identifier } });
+  // This also safely handles rows produced by an older implementation where
+  // the threshold was reached before blockedUntil was persisted.
+  if (entry.count >= policy.maxAttempts) {
+    return {
+      allowed: false,
+      remainingAttempts: 0,
+      retryAfter: Math.ceil(policy.blockDurationMs / 1000),
+    };
   }
 
   return {
     allowed: true,
-    remainingAttempts: CONFIG.maxAttempts,
+    remainingAttempts: Math.max(0, policy.maxAttempts - entry.count),
   };
+}
+
+/**
+ * Records a failure in one SQL statement. PostgreSQL serializes the
+ * ON CONFLICT update for a given key, so parallel failures cannot overwrite
+ * each other's increments. Expired rows are reset in that same statement.
+ */
+const recordFailedAttempt = async (
+  identifier: string,
+  policy: RateLimitPolicy,
+): Promise<void> => {
+  const now = new Date();
+  const windowStartedAfter = new Date(now.getTime() - policy.windowMs);
+  const blockedUntil = new Date(now.getTime() + policy.blockDurationMs);
+
+  await prisma.$executeRaw`
+    INSERT INTO "RateLimit" (
+      "id", "key", "count", "firstAttempt", "blockedUntil", "createdAt", "updatedAt"
+    )
+    VALUES (${randomUUID()}, ${identifier}, 1, ${now}, NULL, ${now}, ${now})
+    ON CONFLICT ("key") DO UPDATE SET
+      "count" = CASE
+        WHEN (
+          ("RateLimit"."blockedUntil" IS NOT NULL AND "RateLimit"."blockedUntil" <= ${now})
+          OR (
+            "RateLimit"."blockedUntil" IS NULL
+            AND "RateLimit"."firstAttempt" <= ${windowStartedAfter}
+          )
+        ) THEN 1
+        ELSE "RateLimit"."count" + 1
+      END,
+      "firstAttempt" = CASE
+        WHEN (
+          ("RateLimit"."blockedUntil" IS NOT NULL AND "RateLimit"."blockedUntil" <= ${now})
+          OR (
+            "RateLimit"."blockedUntil" IS NULL
+            AND "RateLimit"."firstAttempt" <= ${windowStartedAfter}
+          )
+        ) THEN ${now}
+        ELSE "RateLimit"."firstAttempt"
+      END,
+      "blockedUntil" = CASE
+        WHEN "RateLimit"."blockedUntil" > ${now}
+          THEN "RateLimit"."blockedUntil"
+        WHEN (
+          ("RateLimit"."blockedUntil" IS NOT NULL AND "RateLimit"."blockedUntil" <= ${now})
+          OR (
+            "RateLimit"."blockedUntil" IS NULL
+            AND "RateLimit"."firstAttempt" <= ${windowStartedAfter}
+          )
+        ) THEN NULL
+        WHEN "RateLimit"."count" + 1 >= ${policy.maxAttempts}
+          THEN ${blockedUntil}
+        ELSE NULL
+      END,
+      "updatedAt" = ${now}
+  `;
+};
+
+/**
+ * Atomically reserves one expensive password verification. PostgreSQL locks
+ * the conflicting key while executing the UPSERT, so parallel requests cannot
+ * all observe the same remaining slot. The request that reaches the threshold
+ * is admitted; the next one is rejected without mutating the row.
+ */
+const reserveRateLimitAttempt = async (
+  client: RateLimitReservationClient,
+  identifier: string,
+  policy: RateLimitPolicy,
+): Promise<RateLimitResult> => {
+  const now = new Date();
+  const windowStartedAfter = new Date(now.getTime() - policy.windowMs);
+  const blockedUntil = new Date(now.getTime() + policy.blockDurationMs);
+  const initialBlockedUntil = policy.maxAttempts === 1 ? blockedUntil : null;
+  const entries = await client.$queryRaw<
+    { blockedUntil: Date | null; count: number }[]
+  >`
+    INSERT INTO "RateLimit" (
+      "id", "key", "count", "firstAttempt", "blockedUntil", "createdAt", "updatedAt"
+    )
+    VALUES (
+      ${randomUUID()}, ${identifier}, 1, ${now}, ${initialBlockedUntil}, ${now}, ${now}
+    )
+    ON CONFLICT ("key") DO UPDATE SET
+      "count" = CASE
+        WHEN (
+          "RateLimit"."blockedUntil" IS NOT NULL
+          OR "RateLimit"."firstAttempt" <= ${windowStartedAfter}
+        ) THEN 1
+        ELSE "RateLimit"."count" + 1
+      END,
+      "firstAttempt" = CASE
+        WHEN (
+          "RateLimit"."blockedUntil" IS NOT NULL
+          OR "RateLimit"."firstAttempt" <= ${windowStartedAfter}
+        ) THEN ${now}
+        ELSE "RateLimit"."firstAttempt"
+      END,
+      "blockedUntil" = CASE
+        WHEN (
+          "RateLimit"."blockedUntil" IS NOT NULL
+          OR "RateLimit"."firstAttempt" <= ${windowStartedAfter}
+        ) THEN ${initialBlockedUntil}
+        WHEN "RateLimit"."count" + 1 >= ${policy.maxAttempts}
+          THEN ${blockedUntil}
+        ELSE NULL
+      END,
+      "updatedAt" = ${now}
+    WHERE
+      (
+        "RateLimit"."blockedUntil" IS NULL
+        OR "RateLimit"."blockedUntil" <= ${now}
+      )
+      AND (
+        "RateLimit"."blockedUntil" IS NOT NULL
+        OR "RateLimit"."firstAttempt" <= ${windowStartedAfter}
+        OR "RateLimit"."count" < ${policy.maxAttempts}
+      )
+    RETURNING "count", "blockedUntil"
+  `;
+  const entry = entries[0];
+
+  if (entry) {
+    return {
+      allowed: true,
+      remainingAttempts: Math.max(0, policy.maxAttempts - entry.count),
+    };
+  }
+
+  const blockedEntries = await client.$queryRaw<
+    { blockedUntil: Date | null; firstAttempt: Date }[]
+  >`
+    SELECT "blockedUntil", "firstAttempt"
+    FROM "RateLimit"
+    WHERE "key" = ${identifier}
+    LIMIT 1
+  `;
+  const blockedEntry = blockedEntries[0];
+  const retryAt =
+    blockedEntry?.blockedUntil ??
+    (blockedEntry
+      ? new Date(blockedEntry.firstAttempt.getTime() + policy.windowMs)
+      : blockedUntil);
+
+  return {
+    allowed: false,
+    remainingAttempts: 0,
+    retryAfter: Math.max(
+      1,
+      Math.ceil((retryAt.getTime() - now.getTime()) / 1000),
+    ),
+  };
+};
+
+/**
+ * Reserves the IP, account and pair buckets in one transaction before bcrypt.
+ * A refusal or database error rolls every earlier reservation back, preventing
+ * partial quota consumption and closing the read-then-write concurrency gap.
+ */
+export async function reserveLoginRateLimits(
+  keys: LoginRateLimitKeys,
+): Promise<RateLimitResult> {
+  scheduleExpiredEntriesCleanup(new Date());
+
+  try {
+    return await prisma.$transaction(async (transaction) => {
+      const reservations: RateLimitResult[] = [];
+      const deniedReservations: RateLimitResult[] = [];
+      const orderedBuckets = [
+        [keys.ip, LOGIN_POLICIES.ip],
+        [keys.account, LOGIN_POLICIES.account],
+        [keys.pair, LOGIN_POLICIES.pair],
+      ] as const;
+
+      for (const [key, policy] of orderedBuckets) {
+        const reservation = await reserveRateLimitAttempt(
+          transaction,
+          key,
+          policy,
+        );
+
+        if (!reservation.allowed) {
+          deniedReservations.push(reservation);
+          continue;
+        }
+
+        reservations.push(reservation);
+      }
+
+      if (deniedReservations.length > 0) {
+        throw new LoginRateLimitDeniedError({
+          allowed: false,
+          remainingAttempts: 0,
+          retryAfter: Math.max(
+            ...deniedReservations.map(
+              (reservation) => reservation.retryAfter ?? 1,
+            ),
+          ),
+        });
+      }
+
+      return {
+        allowed: true,
+        remainingAttempts: Math.min(
+          ...reservations.map((reservation) => reservation.remainingAttempts),
+        ),
+      };
+    });
+  } catch (error) {
+    if (error instanceof LoginRateLimitDeniedError) return error.result;
+
+    throw error;
+  }
 }
 
 export async function recordLoginAttempt(
@@ -138,50 +391,34 @@ export async function recordLoginAttempt(
   success: boolean,
 ): Promise<void> {
   if (success) {
-    // Reset on successful login
     await prisma.rateLimit.deleteMany({ where: { key: identifier } });
 
     return;
   }
 
-  const now = new Date();
-  const entry = await prisma.rateLimit.findUnique({
-    where: { key: identifier },
-  });
+  await recordFailedAttempt(identifier, DEFAULT_POLICY);
+}
 
-  if (entry) {
-    const windowExpired =
-      now.getTime() - entry.firstAttempt.getTime() >= CONFIG.windowMs;
-
-    if (!windowExpired) {
-      await prisma.rateLimit.update({
-        data: { count: { increment: 1 } },
-        where: { key: identifier },
+/**
+ * A valid password releases only this request's account and pair reservations.
+ * Earlier or concurrent failures remain counted, and the IP reservation is
+ * deliberately retained because it represents bcrypt work already consumed.
+ */
+export async function recordSuccessfulLogin(
+  keys: LoginRateLimitKeys,
+): Promise<void> {
+  await prisma.$transaction(async (transaction) => {
+    for (const key of [keys.account, keys.pair]) {
+      await transaction.rateLimit.updateMany({
+        data: {
+          blockedUntil: null,
+          count: { decrement: 1 },
+        },
+        where: { count: { gt: 0 }, key },
       });
-
-      return;
+      await transaction.rateLimit.deleteMany({
+        where: { count: { lte: 0 }, key },
+      });
     }
-
-    // Window expired, reset
-    await prisma.rateLimit.update({
-      data: {
-        blockedUntil: null,
-        count: 1,
-        firstAttempt: now,
-      },
-      where: { key: identifier },
-    });
-
-    return;
-  }
-
-  await prisma.rateLimit.upsert({
-    create: {
-      count: 1,
-      firstAttempt: now,
-      key: identifier,
-    },
-    update: { count: { increment: 1 } },
-    where: { key: identifier },
   });
 }

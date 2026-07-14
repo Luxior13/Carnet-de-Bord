@@ -6,8 +6,8 @@ import {
   EyeOff,
   Loader2,
   Lock,
-  Mail,
   ShieldCheck,
+  UserRound,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -28,7 +28,8 @@ import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { getSafeReturnPath } from '$utils/navigation.utils';
 
-const LAST_LOGIN_EMAIL_STORAGE_KEY = 'team-control:last-login-email';
+const LAST_LOGIN_NAME_STORAGE_KEY = 'team-control:last-login-name';
+const LEGACY_LAST_LOGIN_EMAIL_STORAGE_KEY = 'team-control:last-login-email';
 const LEGACY_LOGIN_EMAILS_STORAGE_KEY = 'team-control:login-emails';
 
 function LoginPage(): React.ReactNode {
@@ -40,7 +41,7 @@ function LoginPage(): React.ReactNode {
     userData,
   } = useUser();
 
-  const [email, setEmail] = useState('');
+  const [loginName, setLoginName] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -64,21 +65,25 @@ function LoginPage(): React.ReactNode {
     );
     setIsReturnPathReady(true);
 
-    const lastSavedEmail = window.localStorage.getItem(
-      LAST_LOGIN_EMAIL_STORAGE_KEY,
+    const lastSavedLoginName = window.localStorage.getItem(
+      LAST_LOGIN_NAME_STORAGE_KEY,
     );
+    window.localStorage.removeItem(LEGACY_LAST_LOGIN_EMAIL_STORAGE_KEY);
     window.localStorage.removeItem(LEGACY_LOGIN_EMAILS_STORAGE_KEY);
 
-    if (lastSavedEmail) {
-      setEmail(lastSavedEmail.trim().toLowerCase());
+    if (lastSavedLoginName) {
+      setLoginName(lastSavedLoginName.trim().toLowerCase());
     }
   }, []);
 
-  const saveLoginEmail = (emailToSave: string): void => {
-    const normalizedEmail = emailToSave.trim().toLowerCase();
-    if (!normalizedEmail) return;
+  const saveLoginName = (loginNameToSave: string): void => {
+    const normalizedLoginName = loginNameToSave.trim().toLowerCase();
+    if (!normalizedLoginName) return;
 
-    window.localStorage.setItem(LAST_LOGIN_EMAIL_STORAGE_KEY, normalizedEmail);
+    window.localStorage.setItem(
+      LAST_LOGIN_NAME_STORAGE_KEY,
+      normalizedLoginName,
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -87,15 +92,15 @@ function LoginPage(): React.ReactNode {
     setIsSubmitting(true);
 
     try {
-      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedLoginName = loginName.trim().toLowerCase();
       const success = await login({
-        email: normalizedEmail,
+        loginName: normalizedLoginName,
         password,
         rememberMe,
       });
 
       if (success) {
-        saveLoginEmail(normalizedEmail);
+        saveLoginName(normalizedLoginName);
         router.replace(returnPath);
       }
     } catch {
@@ -168,20 +173,23 @@ function LoginPage(): React.ReactNode {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email" required>
-                Email
+              <Label htmlFor="loginName" required>
+                Identifiant de connexion
               </Label>
               <div className="relative">
-                <Mail className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                <UserRound className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                 <Input
-                  id="email"
+                  id="loginName"
                   name="username"
-                  type="email"
+                  type="text"
                   autoComplete="username"
-                  inputMode="email"
-                  placeholder="email@exemple.fr"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  maxLength={32}
+                  placeholder="jean.dupont"
+                  spellCheck={false}
+                  value={loginName}
+                  onChange={(e) => setLoginName(e.target.value)}
                   className="h-10 pl-10"
                   required
                   disabled={isSubmitting}
@@ -248,7 +256,7 @@ function LoginPage(): React.ReactNode {
             <Button
               type="submit"
               className="h-10 w-full"
-              disabled={isSubmitting || !email || !password}
+              disabled={isSubmitting || !loginName || !password}
             >
               {isSubmitting ? (
                 <>

@@ -365,10 +365,13 @@ const CATEGORY_LABELS = new Map<ActionCategoryKey, string>([
 ]);
 
 const FIELD_LABELS = new Map<string, string>([
-  ['email', 'Email'],
+  ['contactEmail', 'Email de contact'],
+  ['contactEmailVerifiedAt', 'Email de contact vérifié le'],
+  ['email', 'Ancien email de connexion'],
   ['firstName', 'Prénom'],
   ['isActive', 'Actif'],
   ['lastName', 'Nom'],
+  ['loginName', 'Identifiant de connexion'],
   ['passwordChange', 'Mot de passe'],
   ['passwordReset', 'Mot de passe'],
   ['permissions', 'Permissions'],

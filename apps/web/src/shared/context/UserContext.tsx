@@ -227,7 +227,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
         setError(errorMessage);
 
         if (errorCode === ErrorCode.INVALID_CREDENTIALS) {
-          toast.error('Email ou mot de passe incorrect');
+          toast.error('Identifiant ou mot de passe incorrect');
         } else if (errorCode === ErrorCode.ACCOUNT_DISABLED) {
           toast.error('Ce compte est désactivé');
         } else {

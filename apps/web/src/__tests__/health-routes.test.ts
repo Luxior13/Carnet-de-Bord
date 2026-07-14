@@ -25,9 +25,10 @@ vi.mock('$server/prisma', () => ({
 
 const readySchema = {
   auditLogColumns: 6,
+  loginNameReservationColumns: 3,
   rateLimitColumns: 4,
-  sessionColumns: 7,
-  userColumns: 11,
+  sessionColumns: 8,
+  userColumns: 14,
 };
 
 describe('operational health routes', () => {
@@ -74,6 +75,8 @@ describe('operational health routes', () => {
     expect(query).toContain('current_schema()');
     expect(query).toContain("'idleExpiresAt'");
     expect(query).toContain("'lastSeenAt'");
+    expect(query).toContain("'securityVersion'");
+    expect(query).toContain("'LoginNameReservation'");
     expect(response.headers.get('cache-control')).toContain('no-store');
   });
 

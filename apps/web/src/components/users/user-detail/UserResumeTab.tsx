@@ -1,5 +1,6 @@
 import {
   Activity,
+  AtSign,
   Calendar,
   Check,
   Clock,
@@ -19,6 +20,7 @@ import { Separator } from '$ui/separator';
 
 type UserResumeTabProps = {
   auditStats: UserAuditStats | null;
+  canViewContact: boolean;
   user: UserType;
 };
 
@@ -60,7 +62,11 @@ const ResumeStatCard: FC<{
   </Card>
 );
 
-export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
+export const UserResumeTab: FC<UserResumeTabProps> = ({
+  auditStats,
+  canViewContact,
+  user,
+}) => {
   const formatDate = (date: Date | string | null): string => {
     if (!date) return 'Jamais';
 
@@ -109,12 +115,38 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({ auditStats, user }) => {
         <CardContent className="space-y-3 p-3 sm:p-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Mail size={16} className="text-muted-foreground" />
-              <span className="text-muted-foreground">Email</span>
+              <AtSign size={16} className="text-muted-foreground" />
+              <span className="text-muted-foreground">
+                Identifiant de connexion
+              </span>
             </div>
-            <span className="text-foreground min-w-0 text-right text-sm break-all">
-              {user.email}
+            <span className="text-foreground min-w-0 text-right font-mono text-sm break-all">
+              {user.loginName}
             </span>
+          </div>
+          <Separator className="bg-border/60" />
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Mail size={16} className="text-muted-foreground" />
+              <span className="text-muted-foreground">Email de contact</span>
+            </div>
+            <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+              <span className="text-foreground min-w-0 text-right text-sm break-all">
+                {canViewContact
+                  ? (user.contactEmail ?? 'Non renseigné')
+                  : 'Masqué — permission requise'}
+              </span>
+              {canViewContact && user.contactEmail && (
+                <Badge
+                  variant={
+                    user.contactEmailVerifiedAt ? 'secondary' : 'outline'
+                  }
+                  className="text-[0.65rem]"
+                >
+                  {user.contactEmailVerifiedAt ? 'Vérifié' : 'Non vérifié'}
+                </Badge>
+              )}
+            </div>
           </div>
           <Separator className="bg-border/60" />
           <div className="flex items-center justify-between gap-4">

@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, Loader2, Mail, Save, User } from 'lucide-react';
+import { AlertTriangle, AtSign, Loader2, Mail, Save, User } from 'lucide-react';
 import React, { type FC } from 'react';
 
 import { SectionPanel } from '$components/layout/SectionPanel';
@@ -12,21 +12,25 @@ import { Label } from '$ui/label';
 import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 
 export type ProfileForm = {
-  email: string;
+  contactEmail: string;
   firstName: string;
   lastName: string;
+  loginName: string;
 };
 
 type ProfileErrors = {
-  email: string | null;
+  contactEmail: string | null;
   firstName: string | null;
   lastName: string | null;
+  loginName: string | null;
 };
 
 type UserProfileTabProps = {
   canEdit: boolean;
-  canEditEmail: boolean;
+  canEditContact: boolean;
+  canEditLogin: boolean;
   canSave: boolean;
+  canViewContact: boolean;
   errors: ProfileErrors;
   form: ProfileForm;
   hasChanges: boolean;
@@ -49,8 +53,10 @@ const FieldError: FC<{ children: React.ReactNode; id: string }> = ({
 
 export const UserProfileTab: FC<UserProfileTabProps> = ({
   canEdit,
-  canEditEmail,
+  canEditContact,
+  canEditLogin,
   canSave,
+  canViewContact,
   errors,
   form,
   hasChanges,
@@ -59,9 +65,12 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   onSave,
   setForm,
 }) => {
-  const emailHint = canEditEmail
-    ? "Modifier cet email change l'identifiant utilisé à la connexion."
-    : "Email en lecture seule pour votre niveau d'accès.";
+  const loginHint = canEditLogin
+    ? "Modifier l'identifiant déconnectera l'utilisateur de ses sessions actives."
+    : 'Cet identifiant est en lecture seule depuis cette fiche.';
+  const contactHint = canEditContact
+    ? "Adresse facultative, distincte de l'identifiant de connexion. Toute nouvelle adresse restera non vérifiée."
+    : "L'email de contact est en lecture seule depuis cette fiche.";
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -73,7 +82,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
       <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
         <CardHeader className="border-sidebar-border/65 bg-surface-muted flex-row items-center justify-between border-b p-3 sm:p-4">
           <CardTitle className="text-sm">Compte utilisateur</CardTitle>
-          {!canEdit && !canEditEmail && (
+          {!canEdit && !canEditContact && !canEditLogin && (
             <Badge
               variant="outline"
               className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
@@ -149,43 +158,109 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
               </div>
             </SectionPanel>
             <SectionPanel
-              icon={<Mail className="size-3.5" />}
-              title="Connexion"
+              icon={<AtSign className="size-3.5" />}
+              title="Connexion et contact"
             >
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="user-email"
-                  className="text-muted-foreground text-xs"
-                  required
-                >
-                  Email de connexion
-                </Label>
-                <Input
-                  id="user-email"
-                  type="email"
-                  value={form.email}
-                  maxLength={254}
-                  {...passwordManagerIgnoreAttributes}
-                  placeholder="jean.dupont@exemple.fr"
-                  onChange={(event) =>
-                    setForm({ ...form, email: event.target.value })
-                  }
-                  disabled={!canEditEmail}
-                  aria-invalid={!!errors.email}
-                  aria-describedby={
-                    errors.email ? 'user-email-error' : 'user-email-hint'
-                  }
-                  className={inputClassName}
-                />
-                {errors.email ? (
-                  <FieldError id="user-email-error">{errors.email}</FieldError>
-                ) : (
-                  <div
-                    id="user-email-hint"
-                    className="text-muted-foreground flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-2.5 py-2 text-xs"
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="user-login-name"
+                    className="text-muted-foreground text-xs"
+                    required
                   >
-                    <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-400" />
-                    <span>{emailHint}</span>
+                    Identifiant de connexion
+                  </Label>
+                  <Input
+                    aria-describedby={
+                      errors.loginName
+                        ? 'user-login-name-error'
+                        : 'user-login-name-hint'
+                    }
+                    aria-invalid={!!errors.loginName}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    disabled={!canEditLogin}
+                    id="user-login-name"
+                    maxLength={32}
+                    {...passwordManagerIgnoreAttributes}
+                    placeholder="jean.dupont"
+                    spellCheck={false}
+                    type="text"
+                    value={form.loginName}
+                    onChange={(event) =>
+                      setForm({
+                        ...form,
+                        loginName: event.target.value.toLowerCase(),
+                      })
+                    }
+                    className={`${inputClassName} font-mono`}
+                  />
+                  {errors.loginName ? (
+                    <FieldError id="user-login-name-error">
+                      {errors.loginName}
+                    </FieldError>
+                  ) : (
+                    <div
+                      id="user-login-name-hint"
+                      className="text-muted-foreground flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-2.5 py-2 text-xs"
+                    >
+                      <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-400" />
+                      <span>{loginHint}</span>
+                    </div>
+                  )}
+                </div>
+                {canViewContact ? (
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="user-contact-email"
+                      className="text-muted-foreground text-xs"
+                    >
+                      Email de contact{' '}
+                      <span className="font-normal">(facultatif)</span>
+                    </Label>
+                    <div className="relative">
+                      <Mail className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+                      <Input
+                        aria-describedby={
+                          errors.contactEmail
+                            ? 'user-contact-email-error'
+                            : 'user-contact-email-hint'
+                        }
+                        aria-invalid={!!errors.contactEmail}
+                        disabled={!canEditContact}
+                        id="user-contact-email"
+                        maxLength={254}
+                        {...passwordManagerIgnoreAttributes}
+                        placeholder="Non renseigné"
+                        type="email"
+                        value={form.contactEmail}
+                        onChange={(event) =>
+                          setForm({ ...form, contactEmail: event.target.value })
+                        }
+                        className={`${inputClassName} pl-9`}
+                      />
+                    </div>
+                    {errors.contactEmail ? (
+                      <FieldError id="user-contact-email-error">
+                        {errors.contactEmail}
+                      </FieldError>
+                    ) : (
+                      <p
+                        id="user-contact-email-hint"
+                        className="text-muted-foreground text-xs"
+                      >
+                        {contactHint}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <p className="text-muted-foreground text-xs font-medium">
+                      Email de contact
+                    </p>
+                    <div className="bg-muted/30 text-muted-foreground rounded-md border px-3 py-2 text-sm">
+                      Masqué — permission requise
+                    </div>
                   </div>
                 )}
               </div>

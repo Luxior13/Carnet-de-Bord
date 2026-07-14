@@ -799,9 +799,14 @@ export const UsersListPage: FC = () => {
                               />
                             )}
                           </div>
-                          <p className="text-muted-foreground truncate text-xs">
-                            {user.email}
+                          <p className="text-muted-foreground truncate font-mono text-xs">
+                            {user.loginName}
                           </p>
+                          {user.contactEmail && (
+                            <p className="text-muted-foreground/80 truncate text-xs">
+                              {user.contactEmail}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </TableCell>
@@ -908,9 +913,14 @@ export const UsersListPage: FC = () => {
                           />
                         )}
                       </div>
-                      <p className="text-muted-foreground truncate text-sm">
-                        {user.email}
+                      <p className="text-muted-foreground truncate font-mono text-sm">
+                        {user.loginName}
                       </p>
+                      {user.contactEmail && (
+                        <p className="text-muted-foreground/80 truncate text-xs">
+                          {user.contactEmail}
+                        </p>
+                      )}
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <Badge

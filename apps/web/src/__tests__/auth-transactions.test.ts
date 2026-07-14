@@ -3,14 +3,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => {
   const transaction = {
     auditLog: { create: vi.fn() },
+    loginNameReservation: { create: vi.fn() },
     rateLimit: { deleteMany: vi.fn() },
     session: {
       create: vi.fn(),
       deleteMany: vi.fn(),
+      updateMany: vi.fn(),
     },
     user: {
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
   };
 
@@ -79,12 +82,14 @@ import {
   createUser,
   getAuthSession,
   resetUserPassword,
+  SecurityVersionMismatchError,
   updateUserPassword,
 } from '$server/auth';
 
 const SESSION_USER = {
+  contactEmail: 'user@example.com',
+  contactEmailVerifiedAt: new Date('2026-01-02T00:00:00.000Z'),
   createdAt: new Date('2026-01-01T00:00:00.000Z'),
-  email: 'user@example.com',
   failedLoginAttempts: 0,
   firstName: 'Jean',
   id: 'user-1',
@@ -93,10 +98,12 @@ const SESSION_USER = {
   lastLoginAt: new Date('2026-07-01T00:00:00.000Z'),
   lastName: 'Dupont',
   lockedUntil: null,
+  loginName: 'user.name',
   mustChangePassword: false,
   passwordChangedAt: new Date('2026-01-01T00:00:00.000Z'),
   permissions: null,
   role: 'USER' as const,
+  securityVersion: 3,
 };
 
 type StoredSession = {
@@ -104,6 +111,7 @@ type StoredSession = {
   idleExpiresAt: Date;
   lastSeenAt: Date;
   rememberMe: boolean;
+  securityVersion: number;
   token: string;
   user: typeof SESSION_USER;
   userId: string;
@@ -116,6 +124,7 @@ const buildStoredSession = (
   idleExpiresAt: new Date('2026-07-13T12:30:00.000Z'),
   lastSeenAt: new Date('2026-07-13T12:00:00.000Z'),
   rememberMe: false,
+  securityVersion: 3,
   token: 'stored-session-hash',
   user: SESSION_USER,
   userId: 'user-1',
@@ -154,7 +163,9 @@ describe('auth security transactions', () => {
       rememberMe: false,
     });
     mocks.transaction.session.deleteMany.mockResolvedValue({ count: 2 });
+    mocks.transaction.session.updateMany.mockResolvedValue({ count: 1 });
     mocks.transaction.user.update.mockResolvedValue({ id: 'user-1' });
+    mocks.transaction.user.updateMany.mockResolvedValue({ count: 1 });
     mocks.prisma.session.deleteMany.mockResolvedValue({ count: 1 });
     mocks.prisma.session.updateMany.mockResolvedValue({ count: 1 });
   });
@@ -176,13 +187,19 @@ describe('auth security transactions', () => {
       rememberMe: false,
     });
 
-    const result = await createSession('raw-session-token', 'user-1', false, {
-      action: 'LOGIN_SUCCESS',
-      category: 'AUTH',
-      description: 'Connexion réussie',
-      metadata: { pageKey: 'authentication' },
-      userId: 'user-1',
-    });
+    const result = await createSession(
+      'raw-session-token',
+      'user-1',
+      3,
+      false,
+      {
+        action: 'LOGIN_SUCCESS',
+        category: 'AUTH',
+        description: 'Connexion réussie',
+        metadata: { pageKey: 'authentication' },
+        userId: 'user-1',
+      },
+    );
 
     expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(mocks.transaction.session.create).toHaveBeenCalledWith({
@@ -192,14 +209,20 @@ describe('auth security transactions', () => {
         ipAddress: '203.0.113.9',
         lastSeenAt: loginAt,
         rememberMe: false,
+        securityVersion: 3,
         token: expect.not.stringMatching(/^raw-session-token$/),
         userAgent: 'Regression Browser',
         userId: 'user-1',
       }),
     });
-    expect(mocks.transaction.user.update).toHaveBeenCalledWith({
+    expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith({
       data: { lastLoginAt: expect.any(Date) },
-      where: { id: 'user-1' },
+      where: {
+        deletedAt: null,
+        id: 'user-1',
+        isActive: true,
+        securityVersion: 3,
+      },
     });
     expect(mocks.transaction.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -236,6 +259,7 @@ describe('auth security transactions', () => {
     const result = await createSession(
       'remembered-session-token',
       'user-1',
+      3,
       true,
     );
 
@@ -245,6 +269,7 @@ describe('auth security transactions', () => {
         idleExpiresAt,
         lastSeenAt: loginAt,
         rememberMe: true,
+        securityVersion: 3,
       }),
     });
     expect(result).toEqual({
@@ -254,6 +279,17 @@ describe('auth security transactions', () => {
       rememberMe: true,
       token: 'remembered-session-token',
     });
+  });
+
+  it('does not issue a session when the authenticated security version became stale', async () => {
+    mocks.transaction.user.updateMany.mockResolvedValueOnce({ count: 0 });
+
+    await expect(
+      createSession('raw-session-token', 'user-1', 3),
+    ).rejects.toBeInstanceOf(SecurityVersionMismatchError);
+
+    expect(mocks.transaction.session.create).not.toHaveBeenCalled();
+    expect(mocks.transaction.auditLog.create).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -291,6 +327,29 @@ describe('auth security transactions', () => {
     expect(mocks.cookieStore.delete).toHaveBeenCalledWith('session');
   });
 
+  it('deletes a session issued under an obsolete security version', async () => {
+    mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
+    mocks.prisma.session.findUnique.mockResolvedValueOnce(
+      buildStoredSession({
+        user: { ...SESSION_USER, securityVersion: 4 },
+      }),
+    );
+
+    await expect(getAuthSession(false)).resolves.toEqual({
+      session: null,
+      user: null,
+    });
+
+    expect(mocks.prisma.session.deleteMany).toHaveBeenCalledWith({
+      where: {
+        securityVersion: 3,
+        token: 'stored-session-hash',
+      },
+    });
+    expect(mocks.prisma.session.updateMany).not.toHaveBeenCalled();
+    expect(mocks.cookieStore.delete).toHaveBeenCalledWith('session');
+  });
+
   it('touches an active session after one minute without extending its absolute limit', async () => {
     const activityAt = new Date('2026-07-13T12:00:00.000Z');
     const expiresAt = new Date('2026-07-14T12:00:00.000Z');
@@ -317,6 +376,7 @@ describe('auth security transactions', () => {
         expiresAt: { gt: activityAt },
         idleExpiresAt: { gt: activityAt },
         lastSeenAt: { lte: new Date('2026-07-13T11:59:00.000Z') },
+        securityVersion: 3,
         token: 'stored-session-hash',
       },
     });
@@ -403,18 +463,29 @@ describe('auth security transactions', () => {
     await updateUserPassword('user-1', ' NewPassword1! ', {
       audit,
       currentSessionToken: 'current-session-hash',
+      expectedSecurityVersion: 3,
       rateLimitKey: 'password-change:user-1',
     });
 
     expect(mocks.bcryptHash).toHaveBeenCalledWith(' NewPassword1! ', 12);
     expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
-    expect(mocks.transaction.user.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          passwordHash: 'hash: NewPassword1! ',
-        }),
+    expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        passwordHash: 'hash: NewPassword1! ',
+        securityVersion: { increment: 1 },
       }),
-    );
+      where: { id: 'user-1', securityVersion: 3 },
+    });
+    expect(mocks.transaction.session.updateMany).toHaveBeenCalledWith({
+      data: { securityVersion: 4 },
+      where: {
+        securityVersion: 3,
+        token: {
+          in: ['current-session-hash', expect.stringMatching(/^[0-9a-f]{64}$/)],
+        },
+        userId: 'user-1',
+      },
+    });
     expect(mocks.transaction.session.deleteMany).toHaveBeenCalledWith({
       where: {
         token: {
@@ -432,11 +503,39 @@ describe('auth security transactions', () => {
     expect(mocks.transaction.auditLog.create).toHaveBeenCalledTimes(1);
   });
 
+  it('rejects a password change started from an obsolete security version', async () => {
+    mocks.transaction.user.updateMany.mockResolvedValueOnce({ count: 0 });
+
+    await expect(
+      updateUserPassword('user-1', 'NewPassword1!', {
+        currentSessionToken: 'current-session-hash',
+        expectedSecurityVersion: 3,
+      }),
+    ).rejects.toBeInstanceOf(SecurityVersionMismatchError);
+
+    expect(mocks.transaction.session.updateMany).not.toHaveBeenCalled();
+    expect(mocks.transaction.session.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects a password change if its current session disappeared', async () => {
+    mocks.transaction.session.updateMany.mockResolvedValueOnce({ count: 0 });
+
+    await expect(
+      updateUserPassword('user-1', 'NewPassword1!', {
+        currentSessionToken: 'current-session-hash',
+        expectedSecurityVersion: 3,
+      }),
+    ).rejects.toBeInstanceOf(SecurityVersionMismatchError);
+
+    expect(mocks.transaction.session.deleteMany).not.toHaveBeenCalled();
+  });
+
   it('creates the user and its audit in one transaction', async () => {
     const createdUser = {
+      contactEmail: 'new@example.com',
+      contactEmailVerifiedAt: null,
       createdAt: new Date('2026-07-12T00:00:00.000Z'),
       deletedAt: null,
-      email: 'new@example.com',
       failedLoginAttempts: 0,
       firstName: 'New',
       id: 'new-user',
@@ -445,27 +544,30 @@ describe('auth security transactions', () => {
       lastLoginAt: null,
       lastName: 'User',
       lockedUntil: null,
+      loginName: 'new.user',
       mustChangePassword: true,
       passwordChangedAt: null,
       passwordHash: 'hash:TempPassword1!',
       permissions: null,
       role: 'USER' as const,
+      securityVersion: 0,
       updatedAt: new Date('2026-07-12T00:00:00.000Z'),
     };
     mocks.transaction.user.create.mockResolvedValueOnce(createdUser);
 
     const result = await createUser(
       {
-        email: 'NEW@example.com',
+        contactEmail: 'NEW@example.com',
         firstName: ' New ',
         lastName: ' User ',
+        loginName: 'NEW.USER',
         password: 'TempPassword1!',
         role: 'USER',
       },
       (user) => ({
         action: 'USER_CREATE',
         category: 'USER',
-        description: `Utilisateur créé: ${user.email}`,
+        description: `Utilisateur créé: ${user.loginName}`,
         targetUserId: user.id,
         userId: 'admin-1',
       }),
@@ -474,12 +576,19 @@ describe('auth security transactions', () => {
     expect(result).toBe(createdUser);
     expect(mocks.transaction.user.create).toHaveBeenCalledWith({
       data: {
-        email: 'new@example.com',
+        contactEmail: 'new@example.com',
         firstName: 'New',
         lastName: 'User',
+        loginName: 'new.user',
         mustChangePassword: true,
         passwordHash: 'hash:TempPassword1!',
         role: 'USER',
+      },
+    });
+    expect(mocks.transaction.loginNameReservation.create).toHaveBeenCalledWith({
+      data: {
+        loginName: 'new.user',
+        userId: 'new-user',
       },
     });
     expect(mocks.transaction.auditLog.create).toHaveBeenCalledWith({
@@ -488,6 +597,31 @@ describe('auth security transactions', () => {
         targetUserId: 'new-user',
       }),
     });
+  });
+
+  it('aborts user creation when the login name has a permanent reservation', async () => {
+    mocks.transaction.user.create.mockResolvedValueOnce({ id: 'new-user' });
+    mocks.transaction.loginNameReservation.create.mockRejectedValueOnce(
+      Object.assign(new Error('Unique constraint'), { code: 'P2002' }),
+    );
+
+    await expect(
+      createUser({
+        firstName: 'New',
+        lastName: 'User',
+        loginName: 'retired.login',
+        password: 'TempPassword1!',
+        role: 'USER',
+      }),
+    ).rejects.toMatchObject({ code: 'P2002' });
+
+    expect(mocks.transaction.loginNameReservation.create).toHaveBeenCalledWith({
+      data: {
+        loginName: 'retired.login',
+        userId: 'new-user',
+      },
+    });
+    expect(mocks.transaction.auditLog.create).not.toHaveBeenCalled();
   });
 
   it('resets password and revokes every session in the same transaction', async () => {
@@ -502,6 +636,7 @@ describe('auth security transactions', () => {
         data: expect.objectContaining({
           failedLoginAttempts: 0,
           mustChangePassword: true,
+          securityVersion: { increment: 1 },
         }),
       }),
     );
@@ -517,15 +652,20 @@ describe('auth security transactions', () => {
     );
 
     await expect(
-      updateUserPassword('user-1', 'NewPassword1!', { audit }),
+      updateUserPassword('user-1', 'NewPassword1!', {
+        audit,
+        currentSessionToken: 'current-session-hash',
+        expectedSecurityVersion: 3,
+      }),
     ).rejects.toThrow('audit unavailable');
   });
 
   it('locks and audits the fifth failed login atomically', async () => {
     mocks.bcryptCompare.mockResolvedValueOnce(false);
     mocks.prisma.user.findUnique.mockResolvedValueOnce({
+      contactEmail: 'user@example.com',
+      contactEmailVerifiedAt: null,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
-      email: 'user@example.com',
       failedLoginAttempts: 4,
       firstName: 'Jean',
       id: 'user-1',
@@ -534,17 +674,25 @@ describe('auth security transactions', () => {
       lastLoginAt: null,
       lastName: 'Dupont',
       lockedUntil: null,
+      loginName: 'user.name',
       mustChangePassword: false,
       passwordChangedAt: null,
       passwordHash: 'stored-hash',
       permissions: null,
       role: 'USER',
+      securityVersion: 3,
     });
     mocks.transaction.user.update
       .mockResolvedValueOnce({ failedLoginAttempts: 5 })
       .mockResolvedValueOnce({ id: 'user-1' });
 
-    const result = await authenticateUser('user@example.com', 'Wrong1!');
+    const result = await authenticateUser('USER.NAME', 'Wrong1!');
+
+    expect(mocks.prisma.user.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { deletedAt: null, loginName: 'user.name' },
+      }),
+    );
 
     expect(result).toMatchObject({
       error: 'ACCOUNT_LOCKED',
@@ -574,8 +722,9 @@ describe('auth security transactions', () => {
   it('returns cleaned login state after an expired lock with one update', async () => {
     mocks.bcryptCompare.mockResolvedValueOnce(true);
     mocks.prisma.user.findUnique.mockResolvedValueOnce({
+      contactEmail: 'user@example.com',
+      contactEmailVerifiedAt: null,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
-      email: 'user@example.com',
       failedLoginAttempts: 5,
       firstName: 'Jean',
       id: 'user-1',
@@ -584,15 +733,17 @@ describe('auth security transactions', () => {
       lastLoginAt: null,
       lastName: 'Dupont',
       lockedUntil: new Date('2020-01-01T00:00:00.000Z'),
+      loginName: 'user.name',
       mustChangePassword: false,
       passwordChangedAt: null,
       passwordHash: 'stored-hash',
       permissions: null,
       role: 'USER',
+      securityVersion: 3,
     });
     mocks.prisma.user.update.mockResolvedValueOnce({ id: 'user-1' });
 
-    const result = await authenticateUser('user@example.com', 'Correct1!');
+    const result = await authenticateUser('user.name', 'Correct1!');
 
     expect(result.success).toBe(true);
     if (result.success) {

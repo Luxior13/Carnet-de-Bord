@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   emailSchema,
+  loginNameSchema,
   optionalEmailSchema,
   optionalProfileString,
   optionalTrimmedString,
@@ -11,6 +12,26 @@ import {
   trimmedStringMin,
   trimmedStringMinMax,
 } from '../shared/utils/zod.utils';
+
+describe('loginNameSchema', () => {
+  it('normalizes a valid stable login name', () => {
+    const result = loginNameSchema.safeParse('  Member.One_2  ');
+
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toBe('member.one_2');
+  });
+
+  it.each([
+    'ab',
+    'a'.repeat(33),
+    '.member',
+    'member-',
+    'member name',
+    'mémber',
+  ])('rejects an unsafe login name: %s', (loginName) => {
+    expect(loginNameSchema.safeParse(loginName).success).toBe(false);
+  });
+});
 
 describe('emailSchema', () => {
   it('validates a correct email', () => {

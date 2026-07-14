@@ -29,11 +29,22 @@ import {
   ErrorCode,
 } from '$types/api.types';
 import type { UserType } from '$types/auth.types';
-import { emailSchema, trimmedStringMinMax } from '$utils/zod.utils';
+import {
+  loginNameSchema,
+  optionalEmailSchema,
+  trimmedStringMinMax,
+} from '$utils/zod.utils';
 
 type RouteParams = {
   params: Promise<{ id: string }>;
 };
+
+class LoginNameReservationConflictError extends Error {
+  constructor() {
+    super('Login name is permanently reserved by another user');
+    this.name = 'LoginNameReservationConflictError';
+  }
+}
 
 const USERS_PAGE_AUDIT_LOCATION = {
   pageKey: 'users',
@@ -127,9 +138,25 @@ const mapUserForActor = (
   actor: UserType,
 ): UserType => {
   const clientUser = mapUserToUserType(user);
+  const canViewContact =
+    actor.id === clientUser.id ||
+    actor.isProtected ||
+    hasPermission(
+      actor.role,
+      PERMISSIONS.USERS.VIEW_CONTACT,
+      actor.permissions,
+    ) ||
+    hasPermission(
+      actor.role,
+      PERMISSIONS.USERS.UPDATE_CONTACT,
+      actor.permissions,
+    );
 
   return {
     ...clientUser,
+    ...(canViewContact
+      ? {}
+      : { contactEmail: null, contactEmailVerifiedAt: null }),
     permissions: getPermissionOverridesForActor(clientUser.permissions, actor),
   };
 };
@@ -234,7 +261,7 @@ const permissionsSchema = z
 
 const updateUserSchema = z
   .object({
-    email: emailSchema.optional(),
+    contactEmail: optionalEmailSchema,
     expectedUpdatedAt: z
       .string()
       .datetime({ offset: true })
@@ -253,6 +280,7 @@ const updateUserSchema = z
       'Nom requis',
       'Nom trop long',
     ).optional(),
+    loginName: loginNameSchema.optional(),
     permissions: permissionsSchema,
     permissionScope: z.enum(['access', 'account']).optional(),
     role: z.enum(['ADMIN', 'USER']).optional(),
@@ -260,12 +288,16 @@ const updateUserSchema = z
   .strict()
   .superRefine((value, context) => {
     if (
-      (value.permissions !== undefined || value.role !== undefined) &&
+      (value.permissions !== undefined ||
+        value.role !== undefined ||
+        value.loginName !== undefined ||
+        value.contactEmail !== undefined) &&
       value.expectedUpdatedAt === undefined
     ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'La version de la fiche est requise pour modifier les accès',
+        message:
+          'La version de la fiche est requise pour modifier les informations sensibles',
         path: ['expectedUpdatedAt'],
       });
     }
@@ -342,11 +374,12 @@ export async function PATCH(
     }
 
     const {
-      email,
+      contactEmail,
       expectedUpdatedAt,
       firstName,
       isActive,
       lastName,
+      loginName,
       permissions: requestedPermissions,
       permissionScope,
       role,
@@ -357,12 +390,14 @@ export async function PATCH(
         : normalizePermissionOverrides(requestedPermissions);
     const isPermissionsUpdate = requestedPermissions !== undefined;
     const isProfileUpdate = firstName !== undefined || lastName !== undefined;
-    const isLoginUpdate = email !== undefined;
+    const isContactUpdate = contactEmail !== undefined;
+    const isLoginUpdate = loginName !== undefined;
     const isStatusUpdate = typeof isActive === 'boolean';
     const isRoleUpdate = role !== undefined;
 
     if (
       !isProfileUpdate &&
+      !isContactUpdate &&
       !isLoginUpdate &&
       !isStatusUpdate &&
       !isRoleUpdate &&
@@ -389,11 +424,27 @@ export async function PATCH(
     }
 
     if (isLoginUpdate) {
-      const loginPermCheck = requirePermission(
+      if (!auth.user.isProtected) {
+        return NextResponse.json(
+          {
+            error: {
+              code: ErrorCode.FORBIDDEN,
+              message:
+                'Seul un superadmin peut modifier un identifiant de connexion',
+            },
+            success: false,
+          },
+          { status: 403 },
+        );
+      }
+    }
+
+    if (isContactUpdate) {
+      const contactPermCheck = requirePermission(
         auth.user,
-        PERMISSIONS.USERS.UPDATE_LOGIN,
+        PERMISSIONS.USERS.UPDATE_CONTACT,
       );
-      if (!loginPermCheck.success) return loginPermCheck.response;
+      if (!contactPermCheck.success) return contactPermCheck.response;
     }
 
     if (isStatusUpdate) {
@@ -464,6 +515,26 @@ export async function PATCH(
           success: false,
         },
         { status: 404 },
+      );
+    }
+
+    // Self-service identity changes need their own re-authentication and
+    // verification workflow. The delegated administration endpoint must not
+    // become a way to bypass that boundary, even for a privileged actor.
+    if (
+      existingUser.id === auth.user.id &&
+      (isLoginUpdate || isContactUpdate)
+    ) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message:
+              "Votre identifiant et votre adresse de contact ne peuvent pas être modifiés depuis l'administration",
+          },
+          success: false,
+        },
+        { status: 403 },
       );
     }
 
@@ -566,7 +637,8 @@ export async function PATCH(
     if (
       existingUser.role === 'ADMIN' &&
       !auth.user.isProtected &&
-      (email !== undefined ||
+      (contactEmail !== undefined ||
+        loginName !== undefined ||
         typeof isActive === 'boolean' ||
         isPermissionsUpdate ||
         role !== undefined)
@@ -710,37 +782,25 @@ export async function PATCH(
       );
     }
 
-    // Check email uniqueness if changing
-    if (email && email.toLowerCase().trim() !== existingUser.email) {
-      const existingEmail = await prisma.user.findUnique({
-        where: { email: email.toLowerCase().trim() },
-      });
-
-      if (existingEmail) {
-        return NextResponse.json(
-          {
-            error: {
-              code: ErrorCode.VALIDATION_ERROR,
-              message: 'Cet email est déjà utilisé',
-            },
-            success: false,
-          },
-          { status: 400 },
-        );
-      }
-    }
-
     // Build update data and track changes
     const updateData: Record<string, unknown> = {};
     const beforeValues: Record<string, unknown> = {};
     const afterValues: Record<string, unknown> = {};
 
-    if (email) {
-      const newEmail = email.toLowerCase().trim();
-      if (newEmail !== existingUser.email) {
-        beforeValues.email = existingUser.email;
-        afterValues.email = newEmail;
-        updateData.email = newEmail;
+    if (loginName && loginName !== existingUser.loginName) {
+      beforeValues.loginName = existingUser.loginName;
+      afterValues.loginName = loginName;
+      updateData.loginName = loginName;
+    }
+    if (contactEmail !== undefined) {
+      const newContactEmail = contactEmail ?? null;
+      if (newContactEmail !== existingUser.contactEmail) {
+        beforeValues.contactEmail = existingUser.contactEmail;
+        afterValues.contactEmail = newContactEmail;
+        updateData.contactEmail = newContactEmail;
+        // An administrator can record a contact address, but only a future
+        // proof-of-control flow may mark it as verified.
+        updateData.contactEmailVerifiedAt = null;
       }
     }
     if (firstName) {
@@ -797,7 +857,7 @@ export async function PATCH(
     const targetName =
       existingUser.firstName && existingUser.lastName
         ? `${existingUser.firstName} ${existingUser.lastName}`
-        : existingUser.email;
+        : existingUser.loginName;
     const changedPermissionKeys = changedKeys.includes('permissions')
       ? getChangedPermissionKeys(
           beforeValues.permissions,
@@ -814,17 +874,17 @@ export async function PATCH(
       ? { tabKey: 'account', tabLabel: 'Autonomie du compte' }
       : { tabKey: 'access', tabLabel: 'Accès' };
 
-    const updatedEmail =
-      typeof updateData.email === 'string'
-        ? updateData.email
-        : existingUser.email;
+    const updatedLoginName =
+      typeof updateData.loginName === 'string'
+        ? updateData.loginName
+        : existingUser.loginName;
     let auditData: AuditLogInput;
 
     if (isActive === false) {
       auditData = {
         action: 'USER_DEACTIVATE',
         category: 'USER',
-        description: `Utilisateur désactivé: ${updatedEmail}`,
+        description: `Utilisateur désactivé: ${updatedLoginName}`,
         metadata: {
           after: afterValues,
           before: beforeValues,
@@ -840,7 +900,7 @@ export async function PATCH(
       auditData = {
         action: 'USER_ACTIVATE',
         category: 'USER',
-        description: `Utilisateur activé: ${updatedEmail}`,
+        description: `Utilisateur activé: ${updatedLoginName}`,
         metadata: {
           after: afterValues,
           before: beforeValues,
@@ -856,7 +916,7 @@ export async function PATCH(
       auditData = {
         action: 'PERMISSION_UPDATE',
         category: 'PERMISSION',
-        description: `Permissions modifiées: ${updatedEmail}`,
+        description: `Permissions modifiées: ${updatedLoginName}`,
         metadata: {
           after: afterValues,
           before: beforeValues,
@@ -872,7 +932,7 @@ export async function PATCH(
       auditData = {
         action: 'USER_UPDATE',
         category: 'USER',
-        description: `Utilisateur modifié: ${updatedEmail}`,
+        description: `Utilisateur modifié: ${updatedLoginName}`,
         metadata: {
           after: afterValues,
           before: beforeValues,
@@ -892,10 +952,34 @@ export async function PATCH(
     );
     const shouldInvalidateSessions =
       (changedKeys.includes('isActive') && isActive === false) ||
-      changedKeys.includes('email') ||
+      changedKeys.includes('loginName') ||
       changedKeys.includes('role') ||
       hasAccessPermissionChange;
+
+    if (shouldInvalidateSessions) {
+      updateData.securityVersion = { increment: 1 };
+    }
+
     const updatedUser = await prisma.$transaction(async (transaction) => {
+      if (changedKeys.includes('loginName')) {
+        const reservation = await transaction.loginNameReservation.findUnique({
+          where: { loginName: updatedLoginName },
+        });
+
+        if (reservation && reservation.userId !== id) {
+          throw new LoginNameReservationConflictError();
+        }
+
+        // Returning to one of this user's former names is allowed. A brand-new
+        // name is reserved before the User update, and the whole reservation
+        // rolls back if optimistic concurrency or auditing later fails.
+        if (!reservation) {
+          await transaction.loginNameReservation.create({
+            data: { loginName: updatedLoginName, userId: id },
+          });
+        }
+      }
+
       const nextUser = await transaction.user.update({
         data: updateData,
         where: {
@@ -923,6 +1007,19 @@ export async function PATCH(
       success: true,
     });
   } catch (error) {
+    if (error instanceof LoginNameReservationConflictError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.VALIDATION_ERROR,
+            message: 'Cet identifiant est déjà utilisé',
+          },
+          success: false,
+        },
+        { status: 409 },
+      );
+    }
+
     if (isPrismaOptimisticConflict(error)) {
       return NextResponse.json(
         {
@@ -942,7 +1039,7 @@ export async function PATCH(
         {
           error: {
             code: ErrorCode.VALIDATION_ERROR,
-            message: 'Cet email est déjà utilisé',
+            message: 'Cet identifiant est déjà utilisé',
           },
           success: false,
         },
@@ -1035,7 +1132,11 @@ export async function DELETE(
 
     await prisma.$transaction(async (transaction) => {
       await transaction.user.update({
-        data: { deletedAt: new Date(), isActive: false },
+        data: {
+          deletedAt: new Date(),
+          isActive: false,
+          securityVersion: { increment: 1 },
+        },
         where: { id },
       });
 
@@ -1045,10 +1146,10 @@ export async function DELETE(
         {
           action: 'USER_DELETE',
           category: 'USER',
-          description: `Utilisateur supprimé: ${existingUser.email}`,
+          description: `Utilisateur supprimé: ${existingUser.loginName}`,
           metadata: {
             deletedUserId: id,
-            email: existingUser.email,
+            loginName: existingUser.loginName,
             ...USERS_PAGE_AUDIT_LOCATION,
             tabKey: 'resume',
             tabLabel: 'Résumé',

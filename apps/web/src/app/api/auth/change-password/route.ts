@@ -4,7 +4,9 @@ import { z } from 'zod';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { apiErrors, parseJsonBody } from '$server/api-response';
 import {
+  deleteSessionCookie,
   getAuthSession,
+  isSecurityVersionMismatchError,
   updateUserPassword,
   verifyPassword,
 } from '$server/auth';
@@ -233,12 +235,28 @@ export async function POST(
         targetUserId: user.id,
         userId: user.id,
       },
-      currentSessionToken: session?.token,
+      currentSessionToken: session.token,
+      expectedSecurityVersion: session.securityVersion,
       rateLimitKey,
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (isSecurityVersionMismatchError(error)) {
+      await deleteSessionCookie();
+
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.UNAUTHORIZED,
+            message: 'Votre session a expiré. Veuillez vous reconnecter.',
+          },
+          success: false,
+        },
+        { status: 401 },
+      );
+    }
+
     return apiErrors.internal('CHANGE_PASSWORD', error);
   }
 }

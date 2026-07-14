@@ -8,12 +8,13 @@ import {
   createAuditLogWithHeaders,
   createSession,
   generateSessionToken,
+  isSecurityVersionMismatchError,
   setSessionTokenCookie,
 } from '$server/auth';
 import {
-  checkRateLimit,
-  createRateLimitKey,
-  recordLoginAttempt,
+  createLoginRateLimitKeys,
+  recordSuccessfulLogin,
+  reserveLoginRateLimits,
 } from '$server/rate-limiter';
 import { getClientIp } from '$server/request-context';
 import {
@@ -23,11 +24,11 @@ import {
 } from '$types/api.types';
 import type { UserType } from '$types/auth.types';
 import { isPasswordWithinBcryptLimit } from '$utils/password.utils';
-import { emailSchema } from '$utils/zod.utils';
+import { loginNameSchema } from '$utils/zod.utils';
 
 const loginSchema = z
   .object({
-    email: emailSchema,
+    loginName: loginNameSchema,
     password: z
       .string()
       .min(1, 'Mot de passe requis')
@@ -61,7 +62,7 @@ type LoginResponseData = {
 async function recordLoginAudit(data: {
   action: 'LOGIN_FAILED' | 'LOGIN_SUCCESS';
   description: string;
-  email: string;
+  loginName: string;
   reason?: string;
   userId?: string | null;
 }): Promise<void> {
@@ -70,7 +71,7 @@ async function recordLoginAudit(data: {
     category: 'AUTH',
     description: data.description,
     metadata: {
-      email: data.email,
+      loginName: data.loginName,
       ...AUTH_CONNECTION_AUDIT_LOCATION,
       ...(data.reason ? { reason: data.reason } : {}),
     },
@@ -105,12 +106,13 @@ export async function POST(
       );
     }
 
-    const { email, password, rememberMe } = validation.data;
+    const { loginName, password, rememberMe } = validation.data;
 
-    // Rate limiting based on IP + email combination
+    // Independent buckets prevent rotating either IPs or login names from
+    // providing an unlimited supply of fresh password checks.
     const clientIp = getClientIp(request.headers) ?? 'unknown';
-    const rateLimitKey = createRateLimitKey(clientIp, email);
-    const rateLimit = await checkRateLimit(rateLimitKey);
+    const rateLimitKeys = createLoginRateLimitKeys(clientIp, loginName);
+    const rateLimit = await reserveLoginRateLimits(rateLimitKeys);
 
     if (!rateLimit.allowed) {
       return NextResponse.json(
@@ -133,15 +135,13 @@ export async function POST(
       );
     }
 
-    const result = await authenticateUser(email, password);
+    const result = await authenticateUser(loginName, password);
 
     if (!result.success) {
-      // Record failed attempt
-      await recordLoginAttempt(rateLimitKey, false);
       await recordLoginAudit({
         action: 'LOGIN_FAILED',
-        description: `Connexion échouée: ${email}`,
-        email,
+        description: `Connexion échouée: ${loginName}`,
+        loginName,
         reason: result.error,
         userId: result.userId,
       });
@@ -152,7 +152,7 @@ export async function POST(
             // Disabled, locked, unknown and wrong-password accounts share the
             // same public response to prevent account enumeration.
             code: ErrorCode.INVALID_CREDENTIALS,
-            message: 'Email ou mot de passe incorrect',
+            message: 'Identifiant ou mot de passe incorrect',
           },
           success: false,
         },
@@ -160,34 +160,59 @@ export async function POST(
       );
     }
 
-    // Record successful attempt (resets counter)
-    await recordLoginAttempt(rateLimitKey, true);
+    await recordSuccessfulLogin(rateLimitKeys);
 
     // Create session
     const token = generateSessionToken();
     const canUseLongSession =
       !result.user.isProtected && result.user.role !== 'ADMIN';
-    const session = await createSession(
-      token,
-      result.user.id,
-      rememberMe && canUseLongSession,
-      {
-        action: 'LOGIN_SUCCESS',
-        category: 'AUTH',
-        description: `Connexion réussie: ${result.user.email}`,
-        metadata: {
-          email: result.user.email,
-          ...AUTH_CONNECTION_AUDIT_LOCATION,
+    let session;
+    try {
+      session = await createSession(
+        token,
+        result.user.id,
+        result.user.securityVersion,
+        rememberMe && canUseLongSession,
+        {
+          action: 'LOGIN_SUCCESS',
+          category: 'AUTH',
+          description: `Connexion réussie: ${result.user.loginName}`,
+          metadata: {
+            loginName: result.user.loginName,
+            ...AUTH_CONNECTION_AUDIT_LOCATION,
+          },
+          targetUserId: result.user.id,
+          userId: result.user.id,
         },
-        targetUserId: result.user.id,
+      );
+    } catch (error) {
+      if (!isSecurityVersionMismatchError(error)) throw error;
+
+      await recordLoginAudit({
+        action: 'LOGIN_FAILED',
+        description: `Connexion interrompue: ${result.user.loginName}`,
+        loginName: result.user.loginName,
+        reason: 'SECURITY_STATE_CHANGED',
         userId: result.user.id,
-      },
-    );
+      });
+
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.INVALID_CREDENTIALS,
+            message: 'Identifiant ou mot de passe incorrect',
+          },
+          success: false,
+        },
+        { status: 401 },
+      );
+    }
     await setSessionTokenCookie(session.token, session.expiresAt);
 
     const user: UserType = {
+      contactEmail: result.user.contactEmail,
+      contactEmailVerifiedAt: result.user.contactEmailVerifiedAt,
       createdAt: result.user.createdAt,
-      email: result.user.email,
       failedLoginAttempts: result.user.failedLoginAttempts,
       firstName: result.user.firstName,
       id: result.user.id,
@@ -196,6 +221,7 @@ export async function POST(
       lastLoginAt: result.user.lastLoginAt,
       lastName: result.user.lastName,
       lockedUntil: result.user.lockedUntil,
+      loginName: result.user.loginName,
       mustChangePassword: result.user.mustChangePassword,
       passwordChangedAt: result.user.passwordChangedAt,
       permissions: normalizePermissionOverrides(

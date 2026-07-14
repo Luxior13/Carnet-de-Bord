@@ -475,7 +475,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                       {userDisplayName}
                     </p>
                     <p className="text-sidebar-foreground/65 mt-0.5 truncate text-xs">
-                      {userData.email}
+                      {userData.loginName}
                     </p>
                   </div>
                 </div>

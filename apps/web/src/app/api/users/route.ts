@@ -3,7 +3,7 @@ import { UserRole } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { PERMISSIONS } from '$constants/permissions.constants';
+import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import {
   apiErrors,
@@ -23,7 +23,11 @@ import {
   ErrorCode,
 } from '$types/api.types';
 import type { UsersListResponse, UserType } from '$types/auth.types';
-import { emailSchema, trimmedStringMinMax } from '$utils/zod.utils';
+import {
+  loginNameSchema,
+  optionalEmailSchema,
+  trimmedStringMinMax,
+} from '$utils/zod.utils';
 
 const USER_SORT_OPTIONS = ['name', 'recent', 'created'] as const;
 type UserSortOption = (typeof USER_SORT_OPTIONS)[number];
@@ -38,8 +42,9 @@ const USERS_PAGE_AUDIT_LOCATION = {
 } as const;
 
 const USER_LIST_SELECT = {
+  contactEmail: true,
+  contactEmailVerifiedAt: true,
   createdAt: true,
-  email: true,
   failedLoginAttempts: true,
   firstName: true,
   id: true,
@@ -48,6 +53,7 @@ const USER_LIST_SELECT = {
   lastLoginAt: true,
   lastName: true,
   lockedUntil: true,
+  loginName: true,
   mustChangePassword: true,
   passwordChangedAt: true,
   role: true,
@@ -103,6 +109,18 @@ export async function GET(
 
     const permCheck = requirePermission(auth.user, PERMISSIONS.USERS.VIEW);
     if (!permCheck.success) return permCheck.response;
+    const canViewContact =
+      auth.user.isProtected ||
+      hasPermission(
+        auth.user.role,
+        PERMISSIONS.USERS.VIEW_CONTACT,
+        auth.user.permissions,
+      ) ||
+      hasPermission(
+        auth.user.role,
+        PERMISSIONS.USERS.UPDATE_CONTACT,
+        auth.user.permissions,
+      );
 
     const { searchParams } = new URL(request.url);
     const { limit, page, skip } = parsePagination(searchParams, 25, {
@@ -118,11 +136,19 @@ export async function GET(
     const where: Prisma.UserWhereInput = { deletedAt: null };
 
     if (search) {
-      where.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
+      const searchFilters: Prisma.UserWhereInput[] = [
+        { loginName: { contains: search, mode: 'insensitive' } },
         { firstName: { contains: search, mode: 'insensitive' } },
         { lastName: { contains: search, mode: 'insensitive' } },
       ];
+
+      if (canViewContact) {
+        searchFilters.push({
+          contactEmail: { contains: search, mode: 'insensitive' },
+        });
+      }
+
+      where.OR = searchFilters;
     }
 
     if (role) {
@@ -219,9 +245,20 @@ export async function GET(
           totalPages: Math.ceil(total / limit),
         },
         stats,
-        users: users.map((user) =>
-          mapUserToUserType({ ...user, permissions: null }),
-        ),
+        users: users.map((user) => {
+          const mappedUser = mapUserToUserType({
+            ...user,
+            permissions: null,
+          });
+
+          return canViewContact
+            ? mappedUser
+            : {
+                ...mappedUser,
+                contactEmail: null,
+                contactEmailVerifiedAt: null,
+              };
+        }),
       },
       success: true,
     });
@@ -232,9 +269,10 @@ export async function GET(
 
 const createUserSchema = z
   .object({
-    email: emailSchema,
+    contactEmail: optionalEmailSchema,
     firstName: trimmedStringMinMax(1, 50, 'Prénom requis', 'Prénom trop long'),
     lastName: trimmedStringMinMax(1, 50, 'Nom requis', 'Nom trop long'),
+    loginName: loginNameSchema,
     role: z.enum(['ADMIN', 'USER']),
   })
   .strict();
@@ -272,7 +310,8 @@ export async function POST(
       );
     }
 
-    const { email, firstName, lastName, role } = validation.data;
+    const { contactEmail, firstName, lastName, loginName, role } =
+      validation.data;
 
     if (role === 'ADMIN' && !auth.user.isProtected) {
       return NextResponse.json(
@@ -289,7 +328,7 @@ export async function POST(
     }
 
     const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+      where: { loginName },
     });
 
     if (existingUser) {
@@ -297,7 +336,7 @@ export async function POST(
         {
           error: {
             code: ErrorCode.VALIDATION_ERROR,
-            message: 'Cet email est déjà utilisé',
+            message: 'Cet identifiant est déjà utilisé',
           },
           success: false,
         },
@@ -308,18 +347,20 @@ export async function POST(
     const temporaryPassword = generateTemporaryPassword();
     const newUser = await createUser(
       {
-        email,
+        contactEmail: contactEmail ?? null,
         firstName,
         lastName,
+        loginName,
         password: temporaryPassword,
         role,
       },
       (createdUser) => ({
         action: 'USER_CREATE',
         category: 'USER',
-        description: `Utilisateur créé: ${createdUser.email}`,
+        description: `Utilisateur créé: ${createdUser.loginName}`,
         metadata: {
           createdUserId: createdUser.id,
+          loginName: createdUser.loginName,
           ...USERS_PAGE_AUDIT_LOCATION,
           role: createdUser.role,
           tabKey: 'creation',
@@ -343,7 +384,7 @@ export async function POST(
         {
           error: {
             code: ErrorCode.VALIDATION_ERROR,
-            message: 'Cet email est déjà utilisé',
+            message: 'Cet identifiant est déjà utilisé',
           },
           success: false,
         },

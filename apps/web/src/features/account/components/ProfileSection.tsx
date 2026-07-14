@@ -1,6 +1,15 @@
 'use client';
 
-import { Edit, Loader2, LockKeyhole, Mail, Save, User, X } from 'lucide-react';
+import {
+  AtSign,
+  Edit,
+  Loader2,
+  LockKeyhole,
+  Mail,
+  Save,
+  User,
+  X,
+} from 'lucide-react';
 import React, { type FC, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -126,7 +135,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
     <AccountPanel
       icon={<User className="size-4" />}
       title="Profil"
-      description="Identité et adresse de connexion"
+      description="Identité, connexion et contact"
       actions={
         !isEditing &&
         canEditProfile && (
@@ -152,15 +161,35 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                 {userData.firstName} {userData.lastName}
               </p>
               <p className="text-sidebar-foreground/65 mt-1 flex items-center gap-2 text-sm">
-                <Mail className="size-4 shrink-0" />
-                <span className="truncate">{userData.email}</span>
+                <AtSign className="size-4 shrink-0" />
+                <span className="truncate">{userData.loginName}</span>
               </p>
-              <Badge
-                variant={getRoleColor(userData.role)}
-                className="mt-3 rounded-full"
-              >
-                {getAccessLabel(userData)}
-              </Badge>
+              <p className="text-sidebar-foreground/65 mt-1 flex items-center gap-2 text-sm">
+                <Mail className="size-4 shrink-0" />
+                <span className="truncate">
+                  {userData.contactEmail ?? 'Aucun email de contact'}
+                </span>
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Badge
+                  variant={getRoleColor(userData.role)}
+                  className="rounded-full"
+                >
+                  {getAccessLabel(userData)}
+                </Badge>
+                {userData.contactEmail && (
+                  <Badge
+                    variant={
+                      userData.contactEmailVerifiedAt ? 'secondary' : 'outline'
+                    }
+                    className="rounded-full"
+                  >
+                    {userData.contactEmailVerifiedAt
+                      ? 'Email vérifié'
+                      : 'Email non vérifié'}
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
           <div className="sm:text-right">
@@ -193,14 +222,44 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
               </div>
               <div className="hover:bg-sidebar-accent/[0.06] grid gap-1 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
                 <dt className="text-sidebar-foreground text-sm font-bold tracking-normal">
-                  Email
+                  Identifiant de connexion
                 </dt>
                 <dd className="min-w-0">
-                  <p className="text-sidebar-foreground truncate text-sm font-medium">
-                    {userData.email}
+                  <p className="text-sidebar-foreground truncate font-mono text-sm font-medium">
+                    {userData.loginName}
                   </p>
                   <p className="text-sidebar-foreground/50 mt-1 text-xs">
-                    L&apos;adresse email ne peut pas être modifiée.
+                    Cet identifiant est distinct de votre adresse email.
+                  </p>
+                </dd>
+              </div>
+              <div className="hover:bg-sidebar-accent/[0.06] grid gap-1 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
+                <dt className="text-sidebar-foreground text-sm font-bold tracking-normal">
+                  Email de contact
+                </dt>
+                <dd className="min-w-0">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <p className="text-sidebar-foreground min-w-0 truncate text-sm font-medium">
+                      {userData.contactEmail ?? 'Non renseigné'}
+                    </p>
+                    {userData.contactEmail && (
+                      <Badge
+                        variant={
+                          userData.contactEmailVerifiedAt
+                            ? 'secondary'
+                            : 'outline'
+                        }
+                        className="rounded-full text-[0.65rem]"
+                      >
+                        {userData.contactEmailVerifiedAt
+                          ? 'Vérifié'
+                          : 'Non vérifié'}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sidebar-foreground/50 mt-1 text-xs">
+                    Facultatif et actuellement modifiable uniquement par un
+                    administrateur habilité.
                   </p>
                 </dd>
               </div>
@@ -287,20 +346,44 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                   )}
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="profile-email-readonly">Email</Label>
-                <Input
-                  autoComplete="email"
-                  id="profile-email-readonly"
-                  name="email"
-                  type="email"
-                  value={userData.email}
-                  disabled
-                  className="bg-secondary/50 rounded-lg"
-                />
-                <p className="text-sidebar-foreground/50 text-xs">
-                  L&apos;adresse email ne peut pas être modifiée.
-                </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="profile-login-name-readonly">
+                    Identifiant de connexion
+                  </Label>
+                  <Input
+                    autoCapitalize="none"
+                    autoComplete="username"
+                    id="profile-login-name-readonly"
+                    name="username"
+                    type="text"
+                    value={userData.loginName}
+                    disabled
+                    className="bg-secondary/50 rounded-lg font-mono"
+                  />
+                  <p className="text-sidebar-foreground/50 text-xs">
+                    L&apos;identifiant de connexion ne peut pas être modifié
+                    ici.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="profile-contact-email-readonly">
+                    Email de contact
+                  </Label>
+                  <Input
+                    autoComplete="email"
+                    id="profile-contact-email-readonly"
+                    name="email"
+                    placeholder="Non renseigné"
+                    type="email"
+                    value={userData.contactEmail ?? ''}
+                    disabled
+                    className="bg-secondary/50 rounded-lg"
+                  />
+                  <p className="text-sidebar-foreground/50 text-xs">
+                    L&apos;email de contact ne peut pas être modifié ici.
+                  </p>
+                </div>
               </div>
             </div>
             <div className="border-sidebar-border/60 bg-surface-muted/95 sticky bottom-3 z-20 flex flex-col gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">

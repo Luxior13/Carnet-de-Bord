@@ -244,8 +244,9 @@ const NOW = new Date('2026-07-13T10:00:00.000Z');
 const SESSION_ACTIVITY_STORAGE_KEY = 'team-control:last-session-activity';
 
 const user = {
+  contactEmail: 'agent@example.com',
+  contactEmailVerifiedAt: null,
   createdAt: NOW,
-  email: 'agent@example.com',
   failedLoginAttempts: 0,
   firstName: 'Alex',
   id: 'user-1',
@@ -254,6 +255,7 @@ const user = {
   lastLoginAt: NOW,
   lastName: 'Martin',
   lockedUntil: null,
+  loginName: 'agent',
   mustChangePassword: false,
   passwordChangedAt: NOW,
   permissions: null,

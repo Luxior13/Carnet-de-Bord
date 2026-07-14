@@ -52,11 +52,11 @@ export async function POST(
     // Get existing user
     const existingUser = await prisma.user.findUnique({
       select: {
-        email: true,
         firstName: true,
         id: true,
         isProtected: true,
         lastName: true,
+        loginName: true,
         role: true,
       },
       where: { deletedAt: null, id },
@@ -111,13 +111,13 @@ export async function POST(
     const targetName =
       existingUser.firstName && existingUser.lastName
         ? `${existingUser.firstName} ${existingUser.lastName}`
-        : existingUser.email;
+        : existingUser.loginName;
 
     // Password reset, lock reset, session revocation and audit are atomic.
     const temporaryPassword = await resetUserPassword(id, {
       action: 'PASSWORD_RESET',
       category: 'AUTH',
-      description: `Mot de passe réinitialisé pour: ${existingUser.email}`,
+      description: `Mot de passe réinitialisé pour: ${existingUser.loginName}`,
       metadata: {
         passwordReset: true,
         ...USERS_SECURITY_AUDIT_LOCATION,

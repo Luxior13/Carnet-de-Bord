@@ -10,12 +10,12 @@ function requireEnvironmentVariable(name: string): string {
   return value;
 }
 
-const TEST_EMAIL = requireEnvironmentVariable('E2E_SUPERADMIN_EMAIL');
+const TEST_LOGIN_NAME = requireEnvironmentVariable('E2E_SUPERADMIN_LOGIN_NAME');
 const TEST_PASSWORD = requireEnvironmentVariable('E2E_SUPERADMIN_PASSWORD');
 
 async function login(page: Page): Promise<void> {
   await page.goto('/login');
-  await page.getByLabel('Email').fill(TEST_EMAIL);
+  await page.getByLabel('Identifiant de connexion').fill(TEST_LOGIN_NAME);
   await page.locator('#password').fill(TEST_PASSWORD);
   await page.getByRole('button', { name: 'Se connecter' }).click();
   await expect(page).toHaveURL(/\/$/, { timeout: 15_000 });

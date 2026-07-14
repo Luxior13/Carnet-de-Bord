@@ -1,6 +1,28 @@
 import { z } from 'zod';
 
 /**
+ * Canonical login name used for authentication.
+ *
+ * Input is trimmed and ASCII uppercase characters are normalized to lowercase.
+ * Keeping the accepted alphabet deliberately small avoids Unicode confusables in
+ * an identifier that is typed frequently and used in security controls.
+ */
+export const loginNameSchema = z
+  .string()
+  .transform((val) => val.trim())
+  .pipe(
+    z
+      .string()
+      .min(3, 'Identifiant trop court')
+      .max(32, 'Identifiant trop long')
+      .regex(
+        /^[a-z0-9][\w.-]*[a-z0-9]$/i,
+        "L'identifiant doit commencer et finir par une lettre ou un chiffre et ne contenir que des lettres, chiffres, points, tirets ou underscores",
+      ),
+  )
+  .transform((val) => val.toLowerCase());
+
+/**
  * Zod schema for email with automatic sanitization.
  * - Trims whitespace first
  * - Validates email format
@@ -19,7 +41,13 @@ export const optionalEmailSchema = z
   .string()
   .optional()
   .nullable()
-  .transform((val) => (val ? val.trim() : val))
+  .transform((val) => {
+    if (val === undefined || val === null) return val;
+
+    const trimmedValue = val.trim();
+
+    return trimmedValue.length > 0 ? trimmedValue : null;
+  })
   .pipe(
     z
       .string()

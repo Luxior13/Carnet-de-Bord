@@ -16,8 +16,9 @@ vi.mock('$server/auth', () => ({
 const buildAuthUser = (
   overrides: Record<string, unknown> = {},
 ): Record<string, unknown> => ({
+  contactEmail: 'user@example.com',
+  contactEmailVerifiedAt: null,
   createdAt: new Date('2026-03-01T00:00:00.000Z'),
-  email: 'user@example.com',
   failedLoginAttempts: 0,
   firstName: 'Jean',
   id: 'user-1',
@@ -26,6 +27,7 @@ const buildAuthUser = (
   lastLoginAt: null,
   lastName: 'Dupont',
   lockedUntil: null,
+  loginName: 'user.test',
   mustChangePassword: false,
   passwordChangedAt: null,
   permissions: {},
