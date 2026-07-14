@@ -494,6 +494,7 @@ export const AccountPageContent: FC = () => {
               }
               isLoading={shouldShowAuditLoading}
               onRetry={() => void fetchAccountAuditLogs()}
+              perspective="personal"
               totalAuditLogs={auditTotalLogs ?? auditLogs.length}
               userId={userData.id}
             />

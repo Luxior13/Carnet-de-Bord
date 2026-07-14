@@ -64,6 +64,7 @@ type UserHistoryTabProps = {
   isAuditTruncated?: boolean;
   isLoading: boolean;
   onRetry?: () => void;
+  perspective?: ActivityPerspective;
   totalAuditLogs?: number;
   userId: string;
 };
@@ -72,6 +73,7 @@ type ActionCategoryKey =
   'access' | 'auth' | 'lifecycle' | 'other' | 'profile' | 'security' | 'system';
 type ActivityScope = 'all' | 'by' | 'on';
 type ActivityScopeIconKey = 'by' | 'linked' | 'on';
+type ActivityPerspective = 'managed' | 'personal';
 const DEFAULT_ACTIVITY_SCOPE: ActivityScope = 'on';
 const ALL_FILTER_VALUE = 'all';
 
@@ -238,7 +240,7 @@ const ACTIVITY_SCOPE_VISUALS: Record<
   by: {
     className: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
     icon: UserCheck,
-    label: 'Réalisé par ce compte',
+    label: 'Actions de cet utilisateur',
     value: 'by',
   },
   linked: {
@@ -251,7 +253,7 @@ const ACTIVITY_SCOPE_VISUALS: Record<
   on: {
     className: 'border-chart-2/35 bg-chart-2/10 text-chart-2',
     icon: Shield,
-    label: 'Concernant ce compte',
+    label: 'Sur ce compte',
     value: 'on',
   },
 };
@@ -302,41 +304,82 @@ const isSelfTargetedActivity = (log: AuditLogEntry): boolean =>
 const getLogSourceLabel = (
   log: AuditLogEntry,
   viewedUserId: string,
+  perspective: ActivityPerspective,
 ): string => {
   const isByUser = isLogByViewedUser(log, viewedUserId);
   const isOnUser = isLogOnViewedUser(log, viewedUserId);
 
-  if (isByUser && isOnUser) return 'Réalisé par et concernant ce compte';
-  if (isByUser) return 'Réalisé par ce compte';
-  if (isOnUser) return 'Concernant ce compte';
+  if (perspective === 'personal') {
+    if (isByUser && isOnUser) return 'Action réalisée sur mon compte';
+    if (isByUser) return "Action que j'ai réalisée";
+    if (isOnUser) return 'Événement sur mon compte';
 
-  return 'Activité liée';
+    return 'Activité liée à mon compte';
+  }
+
+  if (isByUser && isOnUser) {
+    return 'Action réalisée par cet utilisateur sur son compte';
+  }
+  if (isByUser) return 'Action réalisée par cet utilisateur';
+  if (isOnUser) return 'Événement sur ce compte';
+
+  return 'Activité liée à cet utilisateur';
+};
+
+const getActivityScopeVisual = (
+  scope: ActivityScopeIconKey,
+  perspective: ActivityPerspective,
+): ActivityScopeVisual => {
+  const visual =
+    scope === 'by'
+      ? ACTIVITY_SCOPE_VISUALS.by
+      : scope === 'on'
+        ? ACTIVITY_SCOPE_VISUALS.on
+        : ACTIVITY_SCOPE_VISUALS.linked;
+
+  if (perspective !== 'personal') return visual;
+
+  const personalLabel =
+    scope === 'by'
+      ? 'Mes actions'
+      : scope === 'on'
+        ? 'Sur mon compte'
+        : 'Activité liée à mon compte';
+
+  return { ...visual, label: personalLabel };
 };
 
 const getLogScopeVisuals = (
   log: AuditLogEntry,
   viewedUserId: string,
+  perspective: ActivityPerspective,
 ): ActivityScopeVisual[] => {
   const scopes: ActivityScopeVisual[] = [];
 
   if (isLogOnViewedUser(log, viewedUserId)) {
-    scopes.push(ACTIVITY_SCOPE_VISUALS.on);
+    scopes.push(getActivityScopeVisual('on', perspective));
   }
 
   if (isLogByViewedUser(log, viewedUserId)) {
-    scopes.push(ACTIVITY_SCOPE_VISUALS.by);
+    scopes.push(getActivityScopeVisual('by', perspective));
   }
 
-  return scopes.length > 0 ? scopes : [ACTIVITY_SCOPE_VISUALS.linked];
+  return scopes.length > 0
+    ? scopes
+    : [getActivityScopeVisual('linked', perspective)];
 };
 
 const getActivityScopeOptionVisuals = (
   scope: ActivityScope,
+  perspective: ActivityPerspective,
 ): ActivityScopeVisual[] => {
-  if (scope === 'by') return [ACTIVITY_SCOPE_VISUALS.by];
-  if (scope === 'on') return [ACTIVITY_SCOPE_VISUALS.on];
+  if (scope === 'by') return [getActivityScopeVisual('by', perspective)];
+  if (scope === 'on') return [getActivityScopeVisual('on', perspective)];
 
-  return [ACTIVITY_SCOPE_VISUALS.on, ACTIVITY_SCOPE_VISUALS.by];
+  return [
+    getActivityScopeVisual('on', perspective),
+    getActivityScopeVisual('by', perspective),
+  ];
 };
 
 const FALLBACK_SYSTEM_POLE: ActivityPoleInfo = {
@@ -756,27 +799,50 @@ const buildLocationFilterOptions = (
   ];
 };
 
-const ACTIVITY_SCOPE_OPTIONS: Array<{
+type ActivityScopeOption = {
   description: string;
   label: string;
   value: ActivityScope;
-}> = [
-  {
-    description: 'Modifications, accès, sessions et sécurité',
-    label: 'Concernant ce compte',
-    value: 'on',
-  },
-  {
-    description: 'Connexions et actions effectuées',
-    label: 'Réalisées par ce compte',
-    value: 'by',
-  },
-  {
-    description: 'Toutes les traces liées à cet utilisateur',
-    label: 'Tout le journal',
-    value: 'all',
-  },
-];
+};
+
+const getActivityScopeOptions = (
+  perspective: ActivityPerspective,
+): ActivityScopeOption[] =>
+  perspective === 'personal'
+    ? [
+        {
+          description: 'Sécurité, sessions et modifications de mon compte',
+          label: 'Sur mon compte',
+          value: 'on',
+        },
+        {
+          description: "Connexions et actions que j'ai effectuées",
+          label: 'Mes actions',
+          value: 'by',
+        },
+        {
+          description: 'Tous les événements liés à mon compte',
+          label: 'Toute mon activité',
+          value: 'all',
+        },
+      ]
+    : [
+        {
+          description: 'Sécurité, sessions et modifications du compte',
+          label: 'Sur ce compte',
+          value: 'on',
+        },
+        {
+          description: "Connexions et actions effectuées par l'utilisateur",
+          label: 'Actions de cet utilisateur',
+          value: 'by',
+        },
+        {
+          description: 'Tous les événements liés à cet utilisateur',
+          label: "Toute l'activité",
+          value: 'all',
+        },
+      ];
 
 const PERMISSION_CHANGE_FIELD_PREFIX = 'permissions.';
 
@@ -1523,6 +1589,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   isAuditTruncated = false,
   isLoading,
   onRetry,
+  perspective = 'managed',
   totalAuditLogs,
   userId,
 }) => {
@@ -1535,6 +1602,14 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   const [showCount, setShowCount] = useState(20);
   const [openLogId, setOpenLogId] = useState<string | null>(null);
   const isPageFilterLocked = poleFilter === ALL_FILTER_VALUE;
+  const isPersonalPerspective = perspective === 'personal';
+  const activityScopeOptions = getActivityScopeOptions(perspective);
+  const journalTitle = isPersonalPerspective
+    ? "Mon journal d'activité"
+    : "Journal d'activité";
+  const journalDescription = isPersonalPerspective
+    ? '« Sur mon compte » regroupe les événements qui visent votre compte ; « Mes actions », ceux que vous avez déclenchés. Un même événement peut apparaître dans les deux vues.'
+    : "« Sur ce compte » regroupe les événements qui visent l'utilisateur ; « Actions de cet utilisateur », ceux qu'il a déclenchés. Un même événement peut apparaître dans les deux vues.";
 
   const poleOptions = useMemo(
     () => buildLocationFilterOptions(auditLogs, 'pole', 'Tous les pôles'),
@@ -1667,9 +1742,13 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
       : selectedPageOption.label;
   const selectedPageDescription =
     selectedPageLocation?.description ??
-    (poleFilter === ALL_FILTER_VALUE
-      ? 'Journal consolidé de tous les pôles et toutes les pages.'
-      : `Journal consolidé des pages du pôle ${selectedPoleOption.label}.`);
+    (isPersonalPerspective
+      ? poleFilter === ALL_FILTER_VALUE
+        ? 'Tous les événements de votre compte, quelle que soit leur origine.'
+        : `Événements de votre compte dans ${selectedPoleOption.label}.`
+      : poleFilter === ALL_FILTER_VALUE
+        ? 'Journal consolidé de tous les pôles et toutes les pages.'
+        : `Journal consolidé des pages du pôle ${selectedPoleOption.label}.`);
   const selectedPageVisualOption =
     effectivePageFilter === ALL_FILTER_VALUE
       ? selectedPoleOption
@@ -1725,7 +1804,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
       'Page',
       'Onglet',
       'IP',
-      'Portée',
+      isPersonalPerspective ? 'Lien avec mon compte' : 'Lien avec le compte',
     ];
     const rows = logsToExport.map((log) => {
       const config = getActionConfig(log);
@@ -1739,7 +1818,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
         location.pageLabel,
         location.tabLabel,
         log.ipAddress || '',
-        getLogSourceLabel(log, userId),
+        getLogSourceLabel(log, userId, perspective),
       ];
     });
 
@@ -1754,7 +1833,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `activité_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `${isPersonalPerspective ? 'mon-activite' : 'activite-utilisateur'}_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
 
@@ -1816,8 +1895,9 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
             Aucune activité
           </h3>
           <p className="text-muted-foreground mt-2 max-w-xs text-center text-sm">
-            Les connexions, changements de profil, accès et actions de sécurité
-            apparaîtront ici.
+            {isPersonalPerspective
+              ? 'Vos connexions, changements de profil et actions de sécurité apparaîtront ici.'
+              : 'Les connexions, changements de profil, accès et actions de sécurité apparaîtront ici.'}
           </p>
         </CardContent>
       </Card>
@@ -1855,7 +1935,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
               <div className="min-w-0 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-foreground font-semibold">
-                    Journal d&apos;activité
+                    {journalTitle}
                   </h3>
                   <Badge variant="secondary" className="text-xs">
                     {filteredLogs.length}/{auditLogs.length} affichés
@@ -1879,9 +1959,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                   )}
                 </div>
                 <p className="text-muted-foreground max-w-3xl text-sm leading-6">
-                  Les événements sont regroupés avec les mêmes pôles et pages
-                  que l&apos;onglet Accès. La portée indique si le compte est
-                  concerné ou s&apos;il a réalisé l&apos;action.
+                  {journalDescription}
                 </p>
               </div>
               <div className="flex min-w-0 flex-wrap gap-2 xl:justify-end">
@@ -2053,10 +2131,11 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
             </div>
             <div className="space-y-4 p-4">
               <div className="grid gap-2 md:grid-cols-3">
-                {ACTIVITY_SCOPE_OPTIONS.map((scope) => {
+                {activityScopeOptions.map((scope) => {
                   const isActiveScope = activityScope === scope.value;
                   const scopeVisuals = getActivityScopeOptionVisuals(
                     scope.value,
+                    perspective,
                   );
 
                   return (
@@ -2115,7 +2194,11 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                         const category = getDateCategory(log.createdAt);
                         const showSeparator = category !== lastCategory;
                         const location = getActivityLocation(log);
-                        const scopeVisuals = getLogScopeVisuals(log, userId);
+                        const scopeVisuals = getLogScopeVisuals(
+                          log,
+                          userId,
+                          perspective,
+                        );
                         lastCategory = category;
 
                         return (

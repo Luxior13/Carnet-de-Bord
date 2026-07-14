@@ -1703,6 +1703,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             }
             isLoading={isLoadingAudit}
             onRetry={() => void fetchAuditData(true)}
+            perspective="managed"
             totalAuditLogs={auditTotalLogs ?? auditStats?.totalActions}
             userId={userId}
           />
