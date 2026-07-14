@@ -386,6 +386,21 @@ export async function reserveLoginRateLimits(
   }
 }
 
+/**
+ * Atomically consumes one password-verification attempt for an authenticated
+ * sensitive action. Keeping the policy private gives every caller the same
+ * protection and prevents accidentally weakening an endpoint.
+ */
+export async function reserveSensitiveActionRateLimit(
+  identifier: string,
+): Promise<RateLimitResult> {
+  scheduleExpiredEntriesCleanup(new Date());
+
+  return prisma.$transaction((transaction) =>
+    reserveRateLimitAttempt(transaction, identifier, DEFAULT_POLICY),
+  );
+}
+
 export async function recordLoginAttempt(
   identifier: string,
   success: boolean,

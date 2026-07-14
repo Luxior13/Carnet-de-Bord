@@ -11,7 +11,10 @@ import {
   verifyPassword,
 } from '$server/auth';
 import { prisma } from '$server/prisma';
-import { checkRateLimit, recordLoginAttempt } from '$server/rate-limiter';
+import {
+  recordLoginAttempt,
+  reserveSensitiveActionRateLimit,
+} from '$server/rate-limiter';
 import { type ApiErrorResponse, ErrorCode } from '$types/api.types';
 import { validatePassword } from '$utils/password.utils';
 
@@ -67,7 +70,7 @@ export async function POST(
     }
 
     const { confirmPassword, currentPassword, newPassword } = validation.data;
-    const rateLimitKey = `password-change:${user.id}`;
+    const rateLimitKey = `account-reauth:${user.id}`;
 
     if (
       !user.mustChangePassword &&
@@ -154,23 +157,25 @@ export async function POST(
         );
       }
 
-      const rateLimit = await checkRateLimit(rateLimitKey);
+      const rateLimit = await reserveSensitiveActionRateLimit(rateLimitKey);
 
       if (!rateLimit.allowed) {
+        const retryAfter = rateLimit.retryAfter ?? 1800;
+
         return NextResponse.json(
           {
             error: {
               code: ErrorCode.RATE_LIMITED,
               message:
                 'Trop de tentatives. Réessayez dans ' +
-                Math.ceil((rateLimit.retryAfter || 0) / 60) +
+                Math.ceil(retryAfter / 60) +
                 ' minutes.',
             },
             success: false,
           },
           {
             headers: {
-              'Retry-After': String(rateLimit.retryAfter || 1800),
+              'Retry-After': String(retryAfter),
             },
             status: 429,
           },
@@ -183,8 +188,6 @@ export async function POST(
       );
 
       if (!isCurrentPasswordValid) {
-        await recordLoginAttempt(rateLimitKey, false);
-
         return NextResponse.json(
           {
             error: {
@@ -196,6 +199,11 @@ export async function POST(
           { status: 400 },
         );
       }
+
+      // A correct proof releases the shared account reauthentication quota.
+      // The transactional cleanup in updateUserPassword remains an idempotent
+      // safety net if this request proceeds to the password mutation.
+      await recordLoginAttempt(rateLimitKey, true);
     }
 
     const isSamePassword = await verifyPassword(

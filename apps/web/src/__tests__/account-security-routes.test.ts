@@ -15,8 +15,8 @@ const mockResetUserPassword = vi.fn();
 const mockVerifyPassword = vi.fn();
 const mockCreateAuditLogWithHeaders = vi.fn();
 const mockMapUserToUserType = vi.fn((user: unknown): unknown => user);
-const mockCheckRateLimit = vi.fn();
 const mockRecordLoginAttempt = vi.fn();
+const mockReserveSensitiveActionRateLimit = vi.fn();
 
 const mockPrisma = {
   $transaction: vi.fn(),
@@ -52,8 +52,8 @@ vi.mock('$server/auth', () => ({
 }));
 
 vi.mock('$server/rate-limiter', () => ({
-  checkRateLimit: mockCheckRateLimit,
   recordLoginAttempt: mockRecordLoginAttempt,
+  reserveSensitiveActionRateLimit: mockReserveSensitiveActionRateLimit,
 }));
 
 vi.mock('$server/prisma', () => ({
@@ -116,7 +116,7 @@ describe('account security routes', () => {
     mockUpdateUserPassword.mockResolvedValue(undefined);
     mockInvalidateOtherUserSessions.mockResolvedValue(undefined);
     mockResetUserPassword.mockResolvedValue('TempPassword1!');
-    mockCheckRateLimit.mockResolvedValue({
+    mockReserveSensitiveActionRateLimit.mockResolvedValue({
       allowed: true,
       remainingAttempts: 5,
     });
@@ -323,7 +323,12 @@ describe('account security routes', () => {
         expect.objectContaining({
           currentSessionToken: 'session-hash',
           expectedSecurityVersion: 3,
+          rateLimitKey: 'account-reauth:user-1',
         }),
+      );
+      expect(mockRecordLoginAttempt).toHaveBeenCalledWith(
+        'account-reauth:user-1',
+        true,
       );
     });
 
@@ -366,15 +371,20 @@ describe('account security routes', () => {
       expect(response.status).toBe(400);
       expect(body.success).toBe(false);
       expect(body.error.message).toBe('Le mot de passe actuel est incorrect');
-      expect(mockRecordLoginAttempt).toHaveBeenCalledWith(
-        'password-change:user-1',
-        false,
+      expect(mockReserveSensitiveActionRateLimit).toHaveBeenCalledWith(
+        'account-reauth:user-1',
       );
+      expect(
+        mockReserveSensitiveActionRateLimit.mock.invocationCallOrder[0],
+      ).toBeLessThan(
+        mockVerifyPassword.mock.invocationCallOrder[0] ?? Infinity,
+      );
+      expect(mockRecordLoginAttempt).not.toHaveBeenCalled();
       expect(mockUpdateUserPassword).not.toHaveBeenCalled();
     });
 
     it('rate limits repeated current password checks', async () => {
-      mockCheckRateLimit.mockResolvedValueOnce({
+      mockReserveSensitiveActionRateLimit.mockResolvedValueOnce({
         allowed: false,
         remainingAttempts: 0,
         retryAfter: 120,
@@ -396,7 +406,11 @@ describe('account security routes', () => {
       expect(response.status).toBe(429);
       expect(body.success).toBe(false);
       expect(body.error.code).toBe(ErrorCode.RATE_LIMITED);
+      expect(mockReserveSensitiveActionRateLimit).toHaveBeenCalledWith(
+        'account-reauth:user-1',
+      );
       expect(mockVerifyPassword).not.toHaveBeenCalled();
+      expect(mockRecordLoginAttempt).not.toHaveBeenCalled();
       expect(mockUpdateUserPassword).not.toHaveBeenCalled();
     });
 
@@ -422,6 +436,10 @@ describe('account security routes', () => {
       expect(body.success).toBe(false);
       expect(body.error.message).toBe(
         "Le nouveau mot de passe doit être différent de l'actuel",
+      );
+      expect(mockRecordLoginAttempt).toHaveBeenCalledWith(
+        'account-reauth:user-1',
+        true,
       );
       expect(mockUpdateUserPassword).not.toHaveBeenCalled();
     });
@@ -475,9 +493,10 @@ describe('account security routes', () => {
           }),
           currentSessionToken: 'session-hash',
           expectedSecurityVersion: 3,
-          rateLimitKey: 'password-change:user-1',
+          rateLimitKey: 'account-reauth:user-1',
         }),
       );
+      expect(mockReserveSensitiveActionRateLimit).not.toHaveBeenCalled();
       expect(mockInvalidateOtherUserSessions).not.toHaveBeenCalled();
       expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
     });

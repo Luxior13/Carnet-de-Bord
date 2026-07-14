@@ -22,6 +22,7 @@ import {
 } from '$constants/permissions.constants';
 import { formatAccountDate } from '$features/account/account.utils';
 import { AccountPanel } from '$features/account/components/AccountPanel';
+import { ContactEmailDialog } from '$features/account/components/ContactEmailDialog';
 import type { UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
@@ -30,7 +31,7 @@ import { Label } from '$ui/label';
 import { apiFetch } from '$utils/api.utils';
 
 type ProfileSectionProps = {
-  onUpdate: () => Promise<void>;
+  onUpdate: (updatedUser?: UserType) => Promise<void>;
   userData: UserType;
 };
 
@@ -45,6 +46,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [showContactEmailDialog, setShowContactEmailDialog] = useState(false);
 
   useEffect(() => {
     setFirstName(userData.firstName);
@@ -71,6 +73,13 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
     hasPermission(
       userData.role,
       PERMISSIONS.ACCOUNT.UPDATE_PROFILE,
+      userData.permissions,
+    );
+  const canEditContact =
+    userData.isProtected ||
+    hasPermission(
+      userData.role,
+      PERMISSIONS.ACCOUNT.UPDATE_CONTACT,
       userData.permissions,
     );
   const canSaveProfile =
@@ -113,7 +122,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
 
       if (response.ok && data.success) {
         toast.success('Profil mis à jour avec succès');
-        await onUpdate();
+        await onUpdate(data.data.user as UserType);
         setIsEditing(false);
       } else {
         toast.error(data.error?.message || 'Erreur lors de la mise à jour');
@@ -229,7 +238,9 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                     {userData.loginName}
                   </p>
                   <p className="text-sidebar-foreground/50 mt-1 text-xs">
-                    Cet identifiant est distinct de votre adresse email.
+                    {userData.isProtected
+                      ? 'Identifiant racine permanent, modifiable uniquement par une procédure de récupération hors ligne.'
+                      : 'Distinct de votre adresse email. Seul un administrateur habilité peut le modifier.'}
                   </p>
                 </dd>
               </div>
@@ -237,30 +248,44 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                 <dt className="text-sidebar-foreground text-sm font-bold tracking-normal">
                   Email de contact
                 </dt>
-                <dd className="min-w-0">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <p className="text-sidebar-foreground min-w-0 truncate text-sm font-medium">
-                      {userData.contactEmail ?? 'Non renseigné'}
+                <dd className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <p className="text-sidebar-foreground min-w-0 truncate text-sm font-medium">
+                        {userData.contactEmail ?? 'Non renseigné'}
+                      </p>
+                      {userData.contactEmail && (
+                        <Badge
+                          variant={
+                            userData.contactEmailVerifiedAt
+                              ? 'secondary'
+                              : 'outline'
+                          }
+                          className="rounded-full text-[0.65rem]"
+                        >
+                          {userData.contactEmailVerifiedAt
+                            ? 'Vérifié'
+                            : 'Non vérifié'}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sidebar-foreground/50 mt-1 text-xs">
+                      Facultatif, distinct de l&apos;identifiant et jamais
+                      utilisé pour vous connecter.
                     </p>
-                    {userData.contactEmail && (
-                      <Badge
-                        variant={
-                          userData.contactEmailVerifiedAt
-                            ? 'secondary'
-                            : 'outline'
-                        }
-                        className="rounded-full text-[0.65rem]"
-                      >
-                        {userData.contactEmailVerifiedAt
-                          ? 'Vérifié'
-                          : 'Non vérifié'}
-                      </Badge>
-                    )}
                   </div>
-                  <p className="text-sidebar-foreground/50 mt-1 text-xs">
-                    Facultatif et actuellement modifiable uniquement par un
-                    administrateur habilité.
-                  </p>
+                  {canEditContact && (
+                    <Button
+                      className="w-fit shrink-0 rounded-lg"
+                      onClick={() => setShowContactEmailDialog(true)}
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      <Mail className="size-4" />
+                      {userData.contactEmail ? 'Modifier' : 'Ajouter'}
+                    </Button>
+                  )}
                 </dd>
               </div>
             </dl>
@@ -362,8 +387,9 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                     className="bg-secondary/50 rounded-lg font-mono"
                   />
                   <p className="text-sidebar-foreground/50 text-xs">
-                    L&apos;identifiant de connexion ne peut pas être modifié
-                    ici.
+                    {userData.isProtected
+                      ? "L'identifiant racine ne peut pas être modifié depuis l'application."
+                      : 'Seul un administrateur habilité peut modifier cet identifiant.'}
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -381,7 +407,8 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                     className="bg-secondary/50 rounded-lg"
                   />
                   <p className="text-sidebar-foreground/50 text-xs">
-                    L&apos;email de contact ne peut pas être modifié ici.
+                    Utilisez l&apos;action dédiée après avoir enregistré le nom
+                    et le prénom.
                   </p>
                 </div>
               </div>
@@ -422,6 +449,13 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
           </form>
         )}
       </div>
+      <ContactEmailDialog
+        contactEmail={userData.contactEmail}
+        loginName={userData.loginName}
+        onCancel={() => setShowContactEmailDialog(false)}
+        onSuccess={onUpdate}
+        open={showContactEmailDialog}
+      />
     </AccountPanel>
   );
 };

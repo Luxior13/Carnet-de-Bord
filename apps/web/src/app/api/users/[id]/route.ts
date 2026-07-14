@@ -534,9 +534,9 @@ export async function PATCH(
       );
     }
 
-    // The owner keeps safe personal profile changes. Root identity, contact,
-    // status, role and access policy require an offline recovery operation so
-    // a compromised browser session cannot rewrite authority.
+    // The owner keeps safe personal profile changes. Contact changes use the
+    // dedicated self-service re-authentication flow; root identity, status,
+    // role and access policy remain reserved for offline recovery.
     if (
       existingUser.isProtected &&
       existingUser.id === auth.user.id &&

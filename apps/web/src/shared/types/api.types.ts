@@ -1,4 +1,5 @@
 export enum RoutesApi {
+  contactEmail = '/api/auth/contact-email',
   login = '/api/auth/login',
   logout = '/api/auth/logout',
   me = '/api/auth/me',

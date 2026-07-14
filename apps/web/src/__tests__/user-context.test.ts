@@ -235,7 +235,11 @@ class FakeWindow {
 }
 
 type ContextValue = {
+  applyUserUpdate: (user: UserType) => void;
   extendSession: () => Promise<void>;
+  isLoading: boolean;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   showSessionWarning: boolean;
   userData: UserType | null;
 };
@@ -262,7 +266,10 @@ const user = {
   role: 'USER',
 } as UserType;
 
-const jsonResponse = (rememberMe: boolean): Response =>
+const jsonResponse = (
+  rememberMe: boolean,
+  responseUser: UserType = user,
+): Response =>
   ({
     json: vi.fn().mockResolvedValue({
       data: {
@@ -272,7 +279,7 @@ const jsonResponse = (rememberMe: boolean): Response =>
           lastSeenAt: NOW.toISOString(),
           rememberMe,
         },
-        user,
+        user: responseUser,
       },
       success: true,
     }),
@@ -371,6 +378,126 @@ describe('UserContext session activity', () => {
     fakeWindow.emit('touchstart');
     await flushPromises();
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('refreshes the current user silently without clearing the mounted account', async () => {
+    await mountAuthenticatedProvider();
+    vi.mocked(fetch).mockClear();
+    let resolveRefresh!: (response: Response) => void;
+    const pendingRefresh = new Promise<Response>((resolve) => {
+      resolveRefresh = resolve;
+    });
+    vi.mocked(fetch).mockReturnValueOnce(pendingRefresh);
+
+    const refreshPromise = getContext(runtime).refreshUser();
+    runtime.render();
+
+    expect(getContext(runtime).isLoading).toBe(false);
+    expect(getContext(runtime).userData?.contactEmail).toBe(
+      'agent@example.com',
+    );
+
+    resolveRefresh(
+      jsonResponse(false, {
+        ...user,
+        contactEmail: 'next@example.com',
+      }),
+    );
+    await refreshPromise;
+    await flushPromises();
+    runtime.render();
+
+    expect(getContext(runtime).isLoading).toBe(false);
+    expect(getContext(runtime).userData?.contactEmail).toBe('next@example.com');
+  });
+
+  it('keeps the mounted account when a silent refresh temporarily fails', async () => {
+    await mountAuthenticatedProvider();
+    vi.mocked(fetch).mockClear();
+    vi.mocked(fetch).mockRejectedValueOnce(
+      new Error('temporary network error'),
+    );
+
+    await getContext(runtime).refreshUser();
+    await flushPromises();
+    runtime.render();
+
+    expect(getContext(runtime).isLoading).toBe(false);
+    expect(getContext(runtime).userData?.id).toBe('user-1');
+    expect(getContext(runtime).userData?.contactEmail).toBe(
+      'agent@example.com',
+    );
+  });
+
+  it('uses a loading state when retrying an initial session failure', async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new Error('initial network error'));
+    runtime.render(() => UserProvider({ children: null }) as ReactElement);
+    await flushPromises();
+    runtime.render();
+
+    expect(getContext(runtime).userData).toBeNull();
+    expect(getContext(runtime).isLoading).toBe(false);
+
+    let resolveRetry!: (response: Response) => void;
+    const pendingRetry = new Promise<Response>((resolve) => {
+      resolveRetry = resolve;
+    });
+    vi.mocked(fetch).mockReturnValueOnce(pendingRetry);
+
+    const retryPromise = getContext(runtime).refreshUser();
+    runtime.render();
+
+    expect(getContext(runtime).userData).toBeNull();
+    expect(getContext(runtime).isLoading).toBe(true);
+
+    resolveRetry(jsonResponse(false));
+    await retryPromise;
+    await flushPromises();
+    runtime.render();
+
+    expect(getContext(runtime).isLoading).toBe(false);
+    expect(getContext(runtime).userData?.id).toBe('user-1');
+  });
+
+  it('applies a successful account mutation without another request', async () => {
+    await mountAuthenticatedProvider();
+    vi.mocked(fetch).mockClear();
+
+    getContext(runtime).applyUserUpdate({
+      ...user,
+      contactEmail: 'updated@example.com',
+    });
+    runtime.render();
+
+    expect(fetch).not.toHaveBeenCalled();
+    expect(getContext(runtime).userData?.contactEmail).toBe(
+      'updated@example.com',
+    );
+  });
+
+  it('unmounts the authenticated account while logout is pending', async () => {
+    await mountAuthenticatedProvider();
+    let resolveLogout!: (response: { ok: boolean }) => void;
+    const pendingLogout = new Promise<{ ok: boolean }>((resolve) => {
+      resolveLogout = resolve;
+    });
+    mocks.apiFetch.mockReturnValueOnce(pendingLogout);
+
+    const logoutPromise = getContext(runtime).logout();
+    runtime.render();
+
+    expect(getContext(runtime).isLoading).toBe(true);
+    expect(getContext(runtime).userData).toBeNull();
+    expect(mocks.apiFetch).toHaveBeenCalledWith('/api/auth/logout', {
+      method: 'POST',
+    });
+
+    resolveLogout({ ok: true });
+    await logoutPromise;
+    runtime.render();
+
+    expect(mocks.routerPush).toHaveBeenCalledWith('/login');
+    expect(getContext(runtime).isLoading).toBe(false);
   });
 
   it('uses the server heartbeat when the user clicks Rester connecte', async () => {

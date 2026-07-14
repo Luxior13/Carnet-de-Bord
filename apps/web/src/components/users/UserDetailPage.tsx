@@ -1773,7 +1773,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     }
   };
 
-  if (isCurrentUserLoading) {
+  if (isCurrentUserLoading && !currentUser) {
     return (
       <AuthenticatedLayout
         breadcrumbs={[

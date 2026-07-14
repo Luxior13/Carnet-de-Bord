@@ -60,6 +60,7 @@ type SessionResponse = {
 };
 
 type ContextType = {
+  applyUserUpdate: (user: UserType) => void;
   error: string | null;
   extendSession: () => Promise<void>;
   isLoading: boolean;
@@ -72,6 +73,7 @@ type ContextType = {
 };
 
 const UserContext = createContext<ContextType>({
+  applyUserUpdate: () => {},
   error: null,
   extendSession: async () => {},
   isLoading: true,
@@ -102,60 +104,79 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
   const logoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const resetSessionTimersRef = useRef<() => void>(() => {});
 
-  const fetchUser = useCallback(async (): Promise<void> => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await fetch(RoutesApi.me);
-      const data: ApiSuccessResponse<{
-        session: SessionResponse | null;
-        user: UserType;
-      }> = await response.json();
-
-      if (!response.ok && response.status !== 401 && response.status !== 403) {
-        throw new Error('Session check failed');
-      }
-
-      if (data.success && data.data.user) {
-        const activityAt = Date.now();
-        setUserData(data.data.user);
-        setMustChangePassword(data.data.user.mustChangePassword);
-        setSessionRememberMe(data.data.session?.rememberMe ?? false);
-        lastActivityRef.current = activityAt;
-        lastServerActivitySyncRef.current = activityAt;
-        publishSessionActivity(activityAt);
-      } else {
-        setUserData(null);
-        setMustChangePassword(false);
-        setSessionRememberMe(false);
-      }
-    } catch {
-      setUserData(null);
-      setMustChangePassword(false);
-      setSessionRememberMe(false);
-      setError('Impossible de vérifier votre session');
-    } finally {
-      setIsLoading(false);
-    }
+  const applyUserUpdate = useCallback((nextUser: UserType): void => {
+    setUserData(nextUser);
+    setMustChangePassword(nextUser.mustChangePassword);
+    setError(null);
   }, []);
 
+  const fetchUser = useCallback(
+    async (silent = false): Promise<void> => {
+      try {
+        if (!silent) setIsLoading(true);
+        setError(null);
+
+        const response = await fetch(RoutesApi.me);
+        const data: ApiSuccessResponse<{
+          session: SessionResponse | null;
+          user: UserType;
+        }> = await response.json();
+
+        if (
+          !response.ok &&
+          response.status !== 401 &&
+          response.status !== 403
+        ) {
+          throw new Error('Session check failed');
+        }
+
+        if (data.success && data.data.user) {
+          const activityAt = Date.now();
+          applyUserUpdate(data.data.user);
+          setSessionRememberMe(data.data.session?.rememberMe ?? false);
+          lastActivityRef.current = activityAt;
+          lastServerActivitySyncRef.current = activityAt;
+          publishSessionActivity(activityAt);
+        } else {
+          setUserData(null);
+          setMustChangePassword(false);
+          setSessionRememberMe(false);
+        }
+      } catch {
+        if (!silent) {
+          setUserData(null);
+          setMustChangePassword(false);
+          setSessionRememberMe(false);
+        }
+        setError('Impossible de vérifier votre session');
+      } finally {
+        if (!silent) setIsLoading(false);
+      }
+    },
+    [applyUserUpdate],
+  );
+
+  const refreshUser = useCallback(async (): Promise<void> => {
+    // Preserve an already mounted account, but use the normal loading state
+    // when retrying an initial session failure so the layout cannot redirect
+    // to /login while the retry is still pending.
+    await fetchUser(userData !== null);
+  }, [fetchUser, userData]);
+
   const logout = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    setUserData(null);
+    setMustChangePassword(false);
+    setSessionRememberMe(false);
+    setError(null);
+
     try {
-      setIsLoading(true);
       await apiFetch(RoutesApi.logout, { method: 'POST' });
-      setUserData(null);
-      setMustChangePassword(false);
-      setSessionRememberMe(false);
       toast.success('Déconnexion réussie');
-      router.push('/login');
     } catch {
       toast.error('Erreur lors de la déconnexion');
-      setUserData(null);
-      setMustChangePassword(false);
-      setSessionRememberMe(false);
-      router.push('/login');
     } finally {
+      router.push('/login');
       setIsLoading(false);
     }
   }, [router]);
@@ -249,7 +270,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
   );
 
   useEffect(() => {
-    fetchUser();
+    void fetchUser();
   }, [fetchUser]);
 
   // Function to extend session (reset timers)
@@ -413,13 +434,14 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
   return (
     <UserContext.Provider
       value={{
+        applyUserUpdate,
         error,
         extendSession,
         isLoading,
         login,
         logout,
         mustChangePassword,
-        refreshUser: fetchUser,
+        refreshUser,
         showSessionWarning,
         userData,
       }}

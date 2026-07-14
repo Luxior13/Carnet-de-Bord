@@ -29,6 +29,7 @@ import {
   recordLoginAttempt,
   recordSuccessfulLogin,
   reserveLoginRateLimits,
+  reserveSensitiveActionRateLimit,
 } from '$server/rate-limiter';
 
 describe('login rate limiter', () => {
@@ -209,6 +210,43 @@ describe('login rate limiter', () => {
 
     expect(mocks.executeRaw).toHaveBeenCalledTimes(20);
     expect(mocks.rateLimitFindUnique).not.toHaveBeenCalled();
+  });
+
+  it('atomically reserves one sensitive password check', async () => {
+    const result = await reserveSensitiveActionRateLimit(
+      'account-reauth:user-1',
+    );
+
+    expect(result).toEqual({ allowed: true, remainingAttempts: 4 });
+    expect(mocks.transaction).toHaveBeenCalledTimes(1);
+    expect(mocks.queryRaw).toHaveBeenCalledTimes(1);
+    const statement = (
+      mocks.queryRaw.mock.calls[0]?.[0] as readonly string[]
+    ).join('');
+    expect(statement).toContain('ON CONFLICT ("key") DO UPDATE');
+    expect(statement).toContain('"RateLimit"."count" < ');
+    expect(statement).toContain('RETURNING "count", "blockedUntil"');
+  });
+
+  it('rejects a sensitive password check atomically when its key is blocked', async () => {
+    mocks.queryRaw.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      {
+        blockedUntil: new Date('2026-07-14T12:10:00.000Z'),
+        firstAttempt: new Date('2026-07-14T11:59:00.000Z'),
+      },
+    ]);
+
+    const result = await reserveSensitiveActionRateLimit(
+      'account-reauth:user-1',
+    );
+
+    expect(result).toEqual({
+      allowed: false,
+      remainingAttempts: 0,
+      retryAfter: 600,
+    });
+    expect(mocks.transaction).toHaveBeenCalledTimes(1);
+    expect(mocks.queryRaw).toHaveBeenCalledTimes(2);
   });
 
   it('releases one focused reservation on success but preserves the IP bucket', async () => {

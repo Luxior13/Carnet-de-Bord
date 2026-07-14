@@ -7,6 +7,7 @@ export const PERMISSIONS = {
   ACCOUNT: {
     CHANGE_PASSWORD: 'account:change_password',
     MANAGE_SESSIONS: 'account:manage_sessions',
+    UPDATE_CONTACT: 'account:update_contact',
     UPDATE_PROFILE: 'account:update_profile',
     VIEW_ACTIVITY: 'account:view_activity',
     VIEW_PROFILE: 'account:view_profile',
@@ -224,6 +225,17 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
         label: 'Modifier son prénom et son nom',
         module: 'Profil',
         risk: 'default',
+      },
+      {
+        action: 'update',
+        alwaysEnabled: true,
+        dependencies: [PERMISSIONS.ACCOUNT.VIEW_PROFILE],
+        description:
+          'Modifier sa propre adresse de contact après confirmation du mot de passe',
+        key: PERMISSIONS.ACCOUNT.UPDATE_CONTACT,
+        label: 'Modifier son adresse de contact',
+        module: 'Contact',
+        risk: 'sensitive',
       },
     ],
     tone: 'internal',

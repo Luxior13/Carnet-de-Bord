@@ -132,7 +132,7 @@ export const AccountPageContent: FC = () => {
   const searchParams = useSearchParams();
   const currentQueryString = searchParams.toString();
   const requestedSection = normalizeAccountSection(searchParams.get('section'));
-  const { refreshUser, userData } = useUser();
+  const { applyUserUpdate, refreshUser, userData } = useUser();
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [auditTotalLogs, setAuditTotalLogs] = useState<number | null>(null);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
@@ -349,14 +349,27 @@ export const AccountPageContent: FC = () => {
     );
   };
 
-  const handleAccountUpdate = useCallback(async (): Promise<void> => {
-    await refreshUser();
-    hasLoadedAuditLogsRef.current = false;
+  const handleAccountUpdate = useCallback(
+    async (updatedUser?: UserType): Promise<void> => {
+      if (updatedUser) {
+        applyUserUpdate(updatedUser);
+      } else {
+        await refreshUser();
+      }
+      hasLoadedAuditLogsRef.current = false;
 
-    if (activeSection === 'activity' && canViewActivity) {
-      void fetchAccountAuditLogs();
-    }
-  }, [activeSection, canViewActivity, fetchAccountAuditLogs, refreshUser]);
+      if (activeSection === 'activity' && canViewActivity) {
+        void fetchAccountAuditLogs();
+      }
+    },
+    [
+      activeSection,
+      applyUserUpdate,
+      canViewActivity,
+      fetchAccountAuditLogs,
+      refreshUser,
+    ],
+  );
 
   if (!userData) {
     return (

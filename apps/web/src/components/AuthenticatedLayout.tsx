@@ -49,7 +49,9 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
     setShowPasswordDialog(false);
   };
 
-  if (isLoading) {
+  // Keep the authenticated shell mounted during a silent user refresh. This
+  // prevents full-page flashes after profile, contact or password updates.
+  if (isLoading && !userData) {
     return (
       <div
         className="relative isolate flex min-h-svh items-center justify-center overflow-hidden"
