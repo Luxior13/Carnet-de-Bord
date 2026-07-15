@@ -870,6 +870,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [snapshotAt, setSnapshotAt] = useState<string | null>(null);
   const [sensitiveDetailsVisible, setSensitiveDetailsVisible] = useState(false);
+  const [visibilityResolved, setVisibilityResolved] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [pendingExportFormat, setPendingExportFormat] =
     useState<JournalExportFormat | null>(null);
@@ -991,6 +992,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
         setNextCursor(body.data.nextCursor);
         setSnapshotAt(body.data.snapshotAt ?? null);
         setSensitiveDetailsVisible(body.data.sensitiveDetailsVisible ?? false);
+        setVisibilityResolved(true);
         setFailedCursor(null);
         setUpdatedAt(new Date());
         hasLoadedOnceRef.current = true;
@@ -1697,8 +1699,19 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                     : ''}
                 </p>
               </div>
-              {sensitiveDetailsVisible && (
-                <Badge variant="outline">Détails sensibles visibles</Badge>
+              {hasLoadedOnce && visibilityResolved && (
+                <Badge
+                  title={
+                    sensitiveDetailsVisible
+                      ? 'Les détails techniques et confidentiels sont visibles.'
+                      : 'Les changements de nom et de statut restent visibles. Les identifiants, emails, rôles, permissions, adresses IP et détails techniques sont masqués.'
+                  }
+                  variant="outline"
+                >
+                  {sensitiveDetailsVisible
+                    ? 'Détails sensibles visibles'
+                    : 'Détails sensibles masqués'}
+                </Badge>
               )}
             </div>
 

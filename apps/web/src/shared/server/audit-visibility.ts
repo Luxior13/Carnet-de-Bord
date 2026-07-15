@@ -4,7 +4,7 @@ import type { AuditAction, AuditCategory } from '@repo/database';
 
 import { isKnownPermissionKey } from '$constants/permissions.constants';
 
-const PUBLIC_METADATA_KEYS = new Set([
+const PUBLIC_LOCATION_METADATA_KEYS = new Set([
   'pageKey',
   'pageLabel',
   'poleKey',
@@ -13,13 +13,17 @@ const PUBLIC_METADATA_KEYS = new Set([
   'tabLabel',
 ]);
 
+const PUBLIC_METADATA_KEYS = new Set([
+  ...PUBLIC_LOCATION_METADATA_KEYS,
+  'after',
+  'before',
+  'changes',
+]);
+
 const SENSITIVE_METADATA_KEYS = new Set([
   ...PUBLIC_METADATA_KEYS,
   'adminRecovery',
-  'after',
   'authenticationMethod',
-  'before',
-  'changes',
   'contactEmailVerificationReset',
   'createdUserId',
   'deletedUserId',
@@ -53,6 +57,7 @@ const DIFF_FIELD_KEYS = new Set([
   'permissions',
   'role',
 ]);
+const PUBLIC_DIFF_FIELD_KEYS = new Set(['firstName', 'isActive', 'lastName']);
 const STRING_DIFF_FIELD_KEYS = new Set([
   'contactEmail',
   'firstName',
@@ -169,13 +174,16 @@ const sanitizeDiffFieldValue = (field: string, value: unknown): unknown => {
   return undefined;
 };
 
-const sanitizeDiffObject = (value: unknown): Record<string, unknown> | null => {
+const sanitizeDiffObject = (
+  value: unknown,
+  allowedFieldKeys: ReadonlySet<string> = DIFF_FIELD_KEYS,
+): Record<string, unknown> | null => {
   const diff = toRecord(value);
   if (!diff) return null;
 
   const sanitizedDiff = Object.fromEntries(
     Object.entries(diff).flatMap(([field, entryValue]) => {
-      if (!DIFF_FIELD_KEYS.has(field)) return [];
+      if (!allowedFieldKeys.has(field)) return [];
 
       const change = toRecord(entryValue);
       if (change && ('from' in change || 'to' in change)) {
@@ -202,15 +210,20 @@ const sanitizeDiffObject = (value: unknown): Record<string, unknown> | null => {
   return Object.keys(sanitizedDiff).length > 0 ? sanitizedDiff : null;
 };
 
-const sanitizeChanges = (value: unknown): unknown => {
+const sanitizeChanges = (
+  value: unknown,
+  allowedFieldKeys: ReadonlySet<string> = DIFF_FIELD_KEYS,
+): unknown => {
   if (Array.isArray(value)) {
-    return value.filter(
+    const sanitizedChanges = value.filter(
       (entry): entry is string =>
-        typeof entry === 'string' && DIFF_FIELD_KEYS.has(entry),
+        typeof entry === 'string' && allowedFieldKeys.has(entry),
     );
+
+    return sanitizedChanges.length > 0 ? sanitizedChanges : undefined;
   }
 
-  return sanitizeDiffObject(value);
+  return sanitizeDiffObject(value, allowedFieldKeys);
 };
 
 /**
@@ -233,19 +246,32 @@ export const sanitizeAuditMetadata = (
       if (!allowedKeys.has(key)) return [];
       if (
         !canViewSensitiveDetails &&
+        PUBLIC_LOCATION_METADATA_KEYS.has(key) &&
         (typeof entryValue !== 'string' || entryValue.trim().length === 0)
       ) {
         return [];
       }
 
       const sanitizedValue =
-        canViewSensitiveDetails && (key === 'after' || key === 'before')
-          ? sanitizeDiffObject(entryValue)
-          : canViewSensitiveDetails && key === 'changes'
-            ? sanitizeChanges(entryValue)
+        key === 'after' || key === 'before'
+          ? sanitizeDiffObject(
+              entryValue,
+              canViewSensitiveDetails
+                ? DIFF_FIELD_KEYS
+                : PUBLIC_DIFF_FIELD_KEYS,
+            )
+          : key === 'changes'
+            ? sanitizeChanges(
+                entryValue,
+                canViewSensitiveDetails
+                  ? DIFF_FIELD_KEYS
+                  : PUBLIC_DIFF_FIELD_KEYS,
+              )
             : sanitizeMetadataValue(entryValue, 1);
 
-      return sanitizedValue === undefined ? [] : [[key, sanitizedValue]];
+      return sanitizedValue === undefined || sanitizedValue === null
+        ? []
+        : [[key, sanitizedValue]];
     }),
   );
 

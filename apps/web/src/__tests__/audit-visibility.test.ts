@@ -11,11 +11,39 @@ beforeAll(async () => {
 });
 
 describe('audit visibility', () => {
-  it('keeps only public location labels for a regular audit viewer', () => {
+  it('keeps safe profile diffs and location labels for a regular viewer', () => {
     expect(
       auditVisibility.sanitizeAuditMetadata(
         {
-          after: { firstName: 'Après' },
+          after: {
+            contactEmail: 'private@example.com',
+            firstName: 'Après',
+            isActive: true,
+            lastName: 'Public',
+            loginName: 'private.login',
+            passwordHash: 'never-visible',
+            permissions: { 'system:audit': true },
+            role: 'ADMIN',
+          },
+          before: {
+            contactEmail: 'old-private@example.com',
+            firstName: 'Avant',
+            isActive: false,
+            lastName: 'Ancien',
+            loginName: 'old.private.login',
+            passwordHash: 'old-never-visible',
+            permissions: { 'system:audit': false },
+            role: 'USER',
+          },
+          changes: [
+            'contactEmail',
+            'firstName',
+            'isActive',
+            'lastName',
+            'loginName',
+            'permissions',
+            'role',
+          ],
           pageKey: 'users',
           pageLabel: 'Utilisateurs',
           poleKey: { nested: 'invalid' },
@@ -25,6 +53,9 @@ describe('audit visibility', () => {
         false,
       ),
     ).toEqual({
+      after: { firstName: 'Après', isActive: true, lastName: 'Public' },
+      before: { firstName: 'Avant', isActive: false, lastName: 'Ancien' },
+      changes: ['firstName', 'isActive', 'lastName'],
       pageKey: 'users',
       pageLabel: 'Utilisateurs',
     });

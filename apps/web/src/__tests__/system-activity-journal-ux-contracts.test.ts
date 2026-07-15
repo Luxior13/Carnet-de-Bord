@@ -48,6 +48,8 @@ describe('system activity journal UX contracts', () => {
     expect(displaySource).toContain('...Object.keys(after ?? {})');
     expect(displaySource).toContain('return String(value)');
     expect(displaySource).not.toContain('.slice(0, 42)');
+    expect(pageSource).toContain('Détails sensibles masqués');
+    expect(pageSource).toContain('hasLoadedOnce && visibilityResolved');
   });
 
   it('covers current sensitive system actions with a readable fallback', () => {

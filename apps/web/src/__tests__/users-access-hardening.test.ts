@@ -99,9 +99,17 @@ const SYSTEM_SAFE_AUDIT_METADATA = {
 };
 const SYSTEM_SENSITIVE_AUDIT_METADATA = {
   ...SYSTEM_SAFE_AUDIT_METADATA,
-  after: { contactEmail: 'new@example.com' },
-  before: { contactEmail: 'old@example.com' },
-  changes: ['contactEmail'],
+  after: {
+    contactEmail: 'new@example.com',
+    firstName: 'Jeanne',
+    isActive: true,
+  },
+  before: {
+    contactEmail: 'old@example.com',
+    firstName: 'Jean',
+    isActive: false,
+  },
+  changes: ['contactEmail', 'firstName', 'isActive'],
   requestId: 'private-request-id',
 };
 
@@ -3034,12 +3042,18 @@ describe('users access hardening', () => {
     expect(body.data.logs[0]).toMatchObject({
       actorName: 'Alice Admin',
       ipAddress: null,
-      metadata: SYSTEM_SAFE_AUDIT_METADATA,
+      metadata: {
+        ...SYSTEM_SAFE_AUDIT_METADATA,
+        after: { firstName: 'Jeanne', isActive: true },
+        before: { firstName: 'Jean', isActive: false },
+        changes: ['firstName', 'isActive'],
+      },
       targetName: 'Bob User',
     });
-    expect(body.data.logs[0].metadata).not.toHaveProperty('before');
-    expect(body.data.logs[0].metadata).not.toHaveProperty('after');
-    expect(body.data.logs[0].metadata).not.toHaveProperty('changes');
+    expect(body.data.logs[0].metadata.after).not.toHaveProperty('contactEmail');
+    expect(body.data.logs[0].metadata.before).not.toHaveProperty(
+      'contactEmail',
+    );
     expect(body.data.logs[1]).toMatchObject({
       actorName: null,
       ipAddress: null,
@@ -3470,9 +3484,17 @@ describe('users access hardening', () => {
     expect(body.data.logs[0].ipAddress).toBe('1.2.3.4');
     expect(body.data.logs[0].metadata).toEqual({
       ...SYSTEM_SAFE_AUDIT_METADATA,
-      after: { contactEmail: 'new@example.com' },
-      before: { contactEmail: 'old@example.com' },
-      changes: ['contactEmail'],
+      after: {
+        contactEmail: 'new@example.com',
+        firstName: 'Jeanne',
+        isActive: true,
+      },
+      before: {
+        contactEmail: 'old@example.com',
+        firstName: 'Jean',
+        isActive: false,
+      },
+      changes: ['contactEmail', 'firstName', 'isActive'],
     });
     expect(body.data.logs[0].metadata).not.toHaveProperty('requestId');
   });
