@@ -1,6 +1,9 @@
 import React, { Suspense } from 'react';
 
-import { UserDetailPage } from '$components/users/UserDetailPage';
+import {
+  UserDetailPage,
+  UserDetailPageSkeleton,
+} from '$components/users/UserDetailPage';
 
 type AdministrationUserDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -12,8 +15,8 @@ export default async function AdministrationUserDetailPage({
   const { id } = await params;
 
   return (
-    <Suspense fallback={null}>
-      <UserDetailPage userId={id} />
+    <Suspense fallback={<UserDetailPageSkeleton />}>
+      <UserDetailPage key={id} userId={id} />
     </Suspense>
   );
 }

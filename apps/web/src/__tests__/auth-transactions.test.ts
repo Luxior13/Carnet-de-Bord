@@ -77,6 +77,7 @@ vi.mock('$server/prisma', () => ({
   prisma: mocks.prisma,
 }));
 
+import { PERMISSIONS } from '$constants/permissions.constants';
 import {
   authenticateUser,
   createSession,
@@ -104,7 +105,7 @@ const SESSION_USER = {
   mfaEnabledAt: null as Date | null,
   mustChangePassword: false,
   passwordChangedAt: new Date('2026-01-01T00:00:00.000Z'),
-  permissions: null,
+  permissions: null as Record<string, boolean> | null,
   role: 'USER' as const,
   securityVersion: 3,
   totpCredential: null as { userId: string } | null,
@@ -508,6 +509,32 @@ describe('auth security transactions', () => {
     expect(mocks.prisma.session.deleteMany).toHaveBeenCalledWith({
       where: { token: 'stored-session-hash' },
     });
+  });
+
+  it('rejects a USER session without MFA when critical access becomes effective', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-13T12:00:00.000Z'));
+    mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
+    mocks.prisma.session.findUnique.mockResolvedValueOnce(
+      buildStoredSession({
+        user: {
+          ...SESSION_USER,
+          permissions: {
+            [PERMISSIONS.USERS.UPDATE_LOGIN]: true,
+            [PERMISSIONS.USERS.VIEW]: true,
+          },
+        },
+      }),
+    );
+
+    await expect(getAuthSession(false)).resolves.toEqual({
+      session: null,
+      user: null,
+    });
+    expect(mocks.prisma.session.deleteMany).toHaveBeenCalledWith({
+      where: { token: 'stored-session-hash' },
+    });
+    expect(mocks.prisma.session.updateMany).not.toHaveBeenCalled();
   });
 
   it('rejects a password-only session after MFA has been enabled', async () => {

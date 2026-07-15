@@ -3,8 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
-import { resetUserPassword } from '$server/auth';
+import {
+  isSecurityVersionMismatchError,
+  resetUserPassword,
+} from '$server/auth';
 import { prisma } from '$server/prisma';
+import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -58,6 +62,8 @@ export async function POST(
         lastName: true,
         loginName: true,
         role: true,
+        securityVersion: true,
+        updatedAt: true,
       },
       where: { deletedAt: null, id },
     });
@@ -122,30 +128,55 @@ export async function POST(
       );
     }
 
+    const proofCheck = requireRecentSensitiveActionProof(auth.session);
+    if (!proofCheck.success) return proofCheck.response;
+
     const targetName =
       existingUser.firstName && existingUser.lastName
         ? `${existingUser.firstName} ${existingUser.lastName}`
         : existingUser.loginName;
 
     // Password reset, lock reset, session revocation and audit are atomic.
-    const temporaryPassword = await resetUserPassword(id, {
-      action: 'PASSWORD_RESET',
-      category: 'AUTH',
-      description: `Mot de passe réinitialisé pour: ${existingUser.loginName}`,
-      metadata: {
-        passwordReset: true,
-        ...USERS_SECURITY_AUDIT_LOCATION,
-        targetName,
+    const temporaryPassword = await resetUserPassword(
+      id,
+      {
+        action: 'PASSWORD_RESET',
+        category: 'AUTH',
+        description: `Mot de passe réinitialisé pour: ${existingUser.loginName}`,
+        metadata: {
+          passwordReset: true,
+          ...USERS_SECURITY_AUDIT_LOCATION,
+          targetName,
+        },
+        targetUserId: id,
+        userId: auth.user.id,
       },
-      targetUserId: id,
-      userId: auth.user.id,
-    });
+      {
+        expectedRole: existingUser.role,
+        expectedSecurityVersion: existingUser.securityVersion,
+        expectedUpdatedAt: existingUser.updatedAt,
+      },
+    );
 
     return NextResponse.json({
       data: { temporaryPassword },
       success: true,
     });
   } catch (error) {
+    if (isSecurityVersionMismatchError(error)) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.CONFLICT,
+            message:
+              'La sécurité ou le rôle de ce compte a changé. Rechargez la fiche avant de réessayer.',
+          },
+          success: false,
+        },
+        { status: 409 },
+      );
+    }
+
     return apiErrors.internal('PASSWORD_RESET', error);
   }
 }

@@ -3,6 +3,7 @@
 import { UserRole } from '@repo/database';
 import {
   Check,
+  ChevronDown,
   CircleAlert,
   type LucideIcon,
   RotateCcw,
@@ -172,14 +173,6 @@ const getPermissionResultBadgeClassName = (
 
   return 'border-destructive/30 bg-destructive/10 text-destructive';
 };
-
-const getPermissionOriginLabel = (hasCustomChoice: boolean): string =>
-  hasCustomChoice ? 'Manuel' : 'Rôle';
-
-const getPermissionOriginBadgeClassName = (hasCustomChoice: boolean): string =>
-  hasCustomChoice
-    ? 'border-primary/40 bg-primary/10 text-primary-emphasis'
-    : 'border-border/70 text-muted-foreground';
 
 const getStateButtonClassName = (
   option: PermissionChoiceState,
@@ -494,14 +487,19 @@ const PermissionCard: FC<PermissionCardProps> = memo(
         <div className="grid gap-3 p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
           <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-1.5">
-              <h6 className="text-foreground text-sm font-semibold">
+              <h5 className="text-foreground text-sm font-semibold">
                 {permission.label}
-              </h6>
+              </h5>
               <Badge
-                variant="outline"
-                className="text-muted-foreground border-border/70 text-xs"
+                variant={
+                  view.resultState === 'allowed' ? 'secondary' : 'outline'
+                }
+                className={cn(
+                  'w-fit text-xs',
+                  getPermissionResultBadgeClassName(view.resultState),
+                )}
               >
-                {ACTION_LABELS[permission.action]}
+                {getPermissionResultLabel(view.resultState)}
               </Badge>
               {view.riskLabel && (
                 <Badge
@@ -514,37 +512,18 @@ const PermissionCard: FC<PermissionCardProps> = memo(
                   {view.riskLabel}
                 </Badge>
               )}
-              <Badge
-                variant="outline"
-                className={cn(
-                  'text-xs',
-                  getPermissionOriginBadgeClassName(view.hasCustomChoice),
-                )}
-              >
-                {getPermissionOriginLabel(view.hasCustomChoice)}
-              </Badge>
+              {view.hasCustomChoice && (
+                <Badge
+                  variant="outline"
+                  className="border-primary/40 bg-primary/10 text-primary-emphasis text-xs"
+                >
+                  Exception personnalisée
+                </Badge>
+              )}
             </div>
-            <p className="text-muted-foreground text-xs leading-5">
+            <p className="text-muted-foreground line-clamp-2 text-xs leading-5">
               {permission.description}
             </p>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <Badge
-                variant={
-                  view.resultState === 'allowed' ? 'secondary' : 'outline'
-                }
-                className={cn(
-                  'w-fit text-xs',
-                  getPermissionResultBadgeClassName(view.resultState),
-                )}
-              >
-                {getPermissionResultLabel(view.resultState)}
-              </Badge>
-              <span className="text-muted-foreground text-xs">
-                {view.hasCustomChoice
-                  ? `Surcharge : ${view.isEnabled ? 'autorisé' : 'refusé'}`
-                  : `Rôle : ${view.isRoleDefaultEnabled ? 'autorisé' : 'refusé'}`}
-              </span>
-            </div>
             {view.hasMissingDependencies ? (
               <p className="text-warning text-xs">
                 {view.isBlockedByPage
@@ -552,13 +531,26 @@ const PermissionCard: FC<PermissionCardProps> = memo(
                   : 'À autoriser aussi : '}
                 {view.missingDependencyLabels.join(', ')}
               </p>
-            ) : (
-              view.dependencyLabels.length > 0 && (
-                <p className="text-muted-foreground/85 text-xs">
-                  Accès lié : {view.dependencyLabels.join(', ')}
+            ) : null}
+            <details className="group/details w-fit max-w-full">
+              <summary className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer list-none items-center gap-1 text-xs font-medium transition-colors [&::-webkit-details-marker]:hidden">
+                Détails et héritage
+                <ChevronDown className="size-3.5 transition-transform group-open/details:rotate-180" />
+              </summary>
+              <div className="border-border/55 text-muted-foreground mt-2 space-y-1.5 border-l pl-3 text-xs leading-5">
+                <p>Action : {ACTION_LABELS[permission.action]}</p>
+                <p>
+                  Valeur du rôle :{' '}
+                  {view.isRoleDefaultEnabled ? 'autorisée' : 'refusée'}
                 </p>
-              )
-            )}
+                <p>
+                  Valeur appliquée : {view.isEnabled ? 'autorisée' : 'refusée'}
+                </p>
+                {view.dependencyLabels.length > 0 && (
+                  <p>Accès lié : {view.dependencyLabels.join(', ')}</p>
+                )}
+              </div>
+            </details>
           </div>
           <PermissionStatePicker
             canReset={view.hasCustomChoice}
@@ -853,6 +845,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
 
     return (
       <div className="space-y-3">
+        <h2 className="sr-only">Accès et permissions</h2>
         <section className="border-border/55 bg-surface-muted overflow-hidden rounded-lg border">
           <div className="flex flex-col gap-4 p-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0 space-y-2">
@@ -924,9 +917,9 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                 </span>
                 <div className="min-w-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="text-foreground font-semibold">
+                    <h3 className="text-foreground font-semibold">
                       {selectedCategory.label}
-                    </h4>
+                    </h3>
                     <Badge variant="secondary" className="text-xs">
                       {selectedCategoryResult?.ready ?? 0}/
                       {selectedCategoryResult?.total ?? 0} utilisables
@@ -1132,9 +1125,9 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                     <div key={group.module} className="space-y-2">
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <h5 className="text-foreground text-sm font-semibold">
+                          <h4 className="text-foreground text-sm font-semibold">
                             {group.module}
-                          </h5>
+                          </h4>
                           <p className="text-muted-foreground text-xs">
                             {group.permissions.length} action
                             {group.permissions.length > 1 ? 's' : ''}

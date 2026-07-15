@@ -11,6 +11,7 @@ export type SessionType = {
   expiresAt: Date;
   idleExpiresAt: Date;
   lastSeenAt: Date;
+  mfaVerifiedAt: Date | null;
   rememberMe: boolean;
   securityVersion: number;
   token: string;
@@ -36,6 +37,7 @@ export type UserType = {
   passwordChangedAt: Date | null;
   permissions: PermissionsData | null;
   role: UserRole;
+  securityDetailsVisible?: boolean;
   updatedAt?: Date | string;
 };
 
@@ -156,7 +158,7 @@ export type UserStatsType = {
   inactive: number;
   neverLoggedIn: number;
   newThisWeek: number;
-  pendingPasswordChange: number;
+  pendingPasswordChange: number | null;
   recentLogins: number;
   total: number;
 };
@@ -172,6 +174,7 @@ export type PaginationInfo = {
 // Users list response
 export type UsersListResponse = {
   pagination?: PaginationInfo;
+  securityDetailsVisible: boolean;
   stats: UserStatsType;
   users: UserType[];
 };

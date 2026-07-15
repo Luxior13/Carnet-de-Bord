@@ -1,4 +1,4 @@
-import { FileText, History, Key, Shield, User, UserCheck } from 'lucide-react';
+import { FileText, History, Key, Shield, User } from 'lucide-react';
 import React from 'react';
 
 export type UserDetailSectionId =
@@ -21,12 +21,7 @@ export const USER_DETAIL_SECTIONS: UserDetailSection[] = [
   {
     icon: <Shield className="h-4 w-4" />,
     id: 'access',
-    label: 'Acc\u00e8s',
-  },
-  {
-    icon: <UserCheck className="h-4 w-4" />,
-    id: 'account',
-    label: 'Autonomie',
+    label: 'Autorisations',
   },
   {
     icon: <Key className="h-4 w-4" />,
@@ -55,6 +50,8 @@ export const normalizeUserDetailSection = (
 export const getUserDetailSectionLabel = (
   sectionId: UserDetailSectionId,
 ): string => {
+  if (sectionId === 'account') return 'Compte personnel';
+
   return (
     USER_DETAIL_SECTIONS.find((section) => section.id === sectionId)?.label ||
     'R\u00e9sum\u00e9'

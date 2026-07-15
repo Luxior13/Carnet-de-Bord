@@ -29,6 +29,7 @@ const mockPrisma = {
   user: {
     findUnique: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(),
   },
 };
 
@@ -93,6 +94,7 @@ describe('account security routes', () => {
         expiresAt: new Date('2026-03-20T00:00:00.000Z'),
         idleExpiresAt: new Date('2026-03-01T00:30:00.000Z'),
         lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
+        mfaVerifiedAt: new Date(),
         rememberMe: false,
         securityVersion: 3,
         token: 'session-hash',
@@ -110,12 +112,14 @@ describe('account security routes', () => {
     mockPrisma.user.findUnique.mockResolvedValue({
       passwordHash: 'stored-hash',
     });
+    mockPrisma.user.updateMany.mockResolvedValue({ count: 1 });
     mockPrisma.session.deleteMany.mockResolvedValue({ count: 0 });
     mockPrisma.session.findMany.mockResolvedValue([]);
     mockVerifyPassword.mockResolvedValue(false);
     mockUpdateUserPassword.mockResolvedValue(undefined);
     mockInvalidateOtherUserSessions.mockResolvedValue(undefined);
     mockResetUserPassword.mockResolvedValue('TempPassword1!');
+    mockIsSecurityVersionMismatchError.mockReturnValue(false);
     mockReserveSensitiveActionRateLimit.mockResolvedValue({
       allowed: true,
       remainingAttempts: 5,
@@ -625,6 +629,103 @@ describe('account security routes', () => {
   });
 
   describe('POST /api/users/[id]/reset-password', () => {
+    it('binds the reset to the loaded role and security revision', async () => {
+      const updatedAt = new Date('2026-03-01T00:00:00.000Z');
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        firstName: 'Target',
+        id: 'target-1',
+        isProtected: false,
+        lastName: 'User',
+        loginName: 'target.user',
+        role: 'USER',
+        securityVersion: 4,
+        updatedAt,
+      });
+      const route = await import('$app/api/users/[id]/reset-password/route');
+
+      const response = await route.POST(
+        new NextRequest('http://localhost/api/users/target-1/reset-password', {
+          method: 'POST',
+        }),
+        { params: Promise.resolve({ id: 'target-1' }) },
+      );
+
+      expect(response.status).toBe(200);
+      expect(mockResetUserPassword).toHaveBeenCalledWith(
+        'target-1',
+        expect.objectContaining({ targetUserId: 'target-1' }),
+        {
+          expectedRole: 'USER',
+          expectedSecurityVersion: 4,
+          expectedUpdatedAt: updatedAt,
+        },
+      );
+    });
+
+    it('returns a conflict when the target changes before password reset', async () => {
+      const stateError = new Error('security version changed');
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        firstName: 'Target',
+        id: 'target-1',
+        isProtected: false,
+        lastName: 'User',
+        loginName: 'target.user',
+        role: 'USER',
+        securityVersion: 4,
+        updatedAt: new Date('2026-03-01T00:00:00.000Z'),
+      });
+      mockResetUserPassword.mockRejectedValueOnce(stateError);
+      mockIsSecurityVersionMismatchError.mockImplementationOnce(
+        (error) => error === stateError,
+      );
+      const route = await import('$app/api/users/[id]/reset-password/route');
+
+      const response = await route.POST(
+        new NextRequest('http://localhost/api/users/target-1/reset-password', {
+          method: 'POST',
+        }),
+        { params: Promise.resolve({ id: 'target-1' }) },
+      );
+
+      expect(response.status).toBe(409);
+    });
+
+    it('requires a recent MFA proof before an administrative password reset', async () => {
+      mockRequireAuth.mockResolvedValueOnce({
+        session: null,
+        success: true,
+        user: {
+          id: 'admin-1',
+          isProtected: false,
+          permissions: null,
+          role: 'ADMIN',
+        },
+      });
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        firstName: 'Target',
+        id: 'target-1',
+        isProtected: false,
+        lastName: 'User',
+        loginName: 'target.user',
+        role: 'USER',
+        securityVersion: 4,
+        updatedAt: new Date('2026-03-01T00:00:00.000Z'),
+      });
+      const route = await import('$app/api/users/[id]/reset-password/route');
+
+      const response = await route.POST(
+        new NextRequest('http://localhost/api/users/target-1/reset-password', {
+          method: 'POST',
+        }),
+        { params: Promise.resolve({ id: 'target-1' }) },
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body.error.code).toBe(ErrorCode.REAUTHENTICATION_REQUIRED);
+      expect(mockResetUserPassword).not.toHaveBeenCalled();
+    });
+
     it('rejects resetting your own password from user management', async () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({
         id: 'user-1',
@@ -707,6 +808,8 @@ describe('account security routes', () => {
         id: 'target-1',
         isProtected: false,
         loginName: 'target.user',
+        role: 'USER',
+        securityVersion: 3,
       });
       mockPrisma.session.findMany.mockResolvedValueOnce([
         {
@@ -741,6 +844,15 @@ describe('account security routes', () => {
             { expiresAt: { lte: expect.any(Date) } },
             { idleExpiresAt: { lte: expect.any(Date) } },
           ],
+          user: {
+            is: {
+              deletedAt: null,
+              id: 'target-1',
+              isProtected: false,
+              role: 'USER',
+              securityVersion: 3,
+            },
+          },
           userId: 'target-1',
         },
       });
@@ -753,6 +865,12 @@ describe('account security routes', () => {
           where: expect.objectContaining({
             expiresAt: { gt: expect.any(Date) },
             idleExpiresAt: { gt: expect.any(Date) },
+            user: expect.objectContaining({
+              is: expect.objectContaining({
+                role: 'USER',
+                securityVersion: 3,
+              }),
+            }),
             userId: 'target-1',
           }),
         }),
@@ -830,11 +948,47 @@ describe('account security routes', () => {
   });
 
   describe('DELETE /api/users/[id]/sessions', () => {
+    it('requires a recent MFA proof before revoking managed sessions', async () => {
+      mockRequireAuth.mockResolvedValueOnce({
+        session: null,
+        success: true,
+        user: {
+          id: 'admin-1',
+          isProtected: false,
+          permissions: null,
+          role: 'ADMIN',
+        },
+      });
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        id: 'target-1',
+        isProtected: false,
+        loginName: 'target.user',
+        role: 'USER',
+        securityVersion: 3,
+      });
+
+      const route = await import('$app/api/users/[id]/sessions/route');
+      const response = await route.DELETE(
+        new NextRequest('http://localhost/api/users/target-1/sessions', {
+          method: 'DELETE',
+        }),
+        { params: Promise.resolve({ id: 'target-1' }) },
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(body.error.code).toBe(ErrorCode.REAUTHENTICATION_REQUIRED);
+      expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+      expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
+    });
+
     it('revokes all target user sessions', async () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({
         id: 'target-1',
         isProtected: false,
         loginName: 'target.user',
+        role: 'USER',
+        securityVersion: 3,
       });
       mockPrisma.session.deleteMany.mockResolvedValueOnce({ count: 2 });
 
@@ -854,6 +1008,16 @@ describe('account security routes', () => {
         expect.any(Object),
         'users:revoke_sessions',
       );
+      expect(mockPrisma.user.updateMany).toHaveBeenCalledWith({
+        data: { securityVersion: { increment: 1 } },
+        where: {
+          deletedAt: null,
+          id: 'target-1',
+          isProtected: false,
+          role: 'USER',
+          securityVersion: 3,
+        },
+      });
       expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
         where: { userId: 'target-1' },
       });
@@ -869,6 +1033,31 @@ describe('account security routes', () => {
       );
     });
 
+    it('fails closed before deleting sessions when the target version changed', async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        id: 'target-1',
+        isProtected: false,
+        loginName: 'target.user',
+        role: 'USER',
+        securityVersion: 3,
+      });
+      mockPrisma.user.updateMany.mockResolvedValueOnce({ count: 0 });
+
+      const route = await import('$app/api/users/[id]/sessions/route');
+      const response = await route.DELETE(
+        new NextRequest('http://localhost/api/users/target-1/sessions', {
+          method: 'DELETE',
+        }),
+        { params: Promise.resolve({ id: 'target-1' }) },
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(409);
+      expect(body.error.code).toBe(ErrorCode.CONFLICT);
+      expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+      expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
+    });
+
     it('revokes one target user session when a session id is provided', async () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({
         firstName: 'Target',
@@ -876,13 +1065,10 @@ describe('account security routes', () => {
         isProtected: false,
         lastName: 'User',
         loginName: 'target.user',
+        role: 'USER',
+        securityVersion: 3,
       });
-      mockPrisma.session.findFirst.mockResolvedValueOnce({
-        id: 'session-1',
-      });
-      mockPrisma.session.delete.mockResolvedValueOnce({
-        id: 'session-1',
-      });
+      mockPrisma.session.deleteMany.mockResolvedValueOnce({ count: 1 });
 
       const route = await import('$app/api/users/[id]/sessions/route');
       const response = await route.DELETE(
@@ -899,17 +1085,23 @@ describe('account security routes', () => {
       expect(response.status).toBe(200);
       expect(body.success).toBe(true);
       expect(body.data.revokedSessions).toBe(1);
-      expect(mockPrisma.session.findFirst).toHaveBeenCalledWith({
-        select: { id: true },
+      expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
         where: {
           id: 'session-1',
+          user: {
+            is: {
+              deletedAt: null,
+              id: 'target-1',
+              isProtected: false,
+              role: 'USER',
+              securityVersion: 3,
+            },
+          },
           userId: 'target-1',
         },
       });
-      expect(mockPrisma.session.delete).toHaveBeenCalledWith({
-        where: { id: 'session-1' },
-      });
-      expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+      expect(mockPrisma.session.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.session.delete).not.toHaveBeenCalled();
       expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'SESSION_INVALIDATE',
@@ -924,6 +1116,44 @@ describe('account security routes', () => {
         }),
         { client: mockPrisma, required: true },
       );
+    });
+
+    it('does not audit a session revocation when the target state changed concurrently', async () => {
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        id: 'target-1',
+        isProtected: false,
+        loginName: 'target.user',
+        role: 'USER',
+        securityVersion: 3,
+      });
+      mockPrisma.session.deleteMany.mockResolvedValueOnce({ count: 0 });
+
+      const route = await import('$app/api/users/[id]/sessions/route');
+      const response = await route.DELETE(
+        new NextRequest(
+          'http://localhost/api/users/target-1/sessions?id=session-1',
+          { method: 'DELETE' },
+        ),
+        { params: Promise.resolve({ id: 'target-1' }) },
+      );
+
+      expect(response.status).toBe(404);
+      expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
+        where: {
+          id: 'session-1',
+          user: {
+            is: {
+              deletedAt: null,
+              id: 'target-1',
+              isProtected: false,
+              role: 'USER',
+              securityVersion: 3,
+            },
+          },
+          userId: 'target-1',
+        },
+      });
+      expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
     });
 
     it('rejects revoking admin sessions for non-protected users', async () => {

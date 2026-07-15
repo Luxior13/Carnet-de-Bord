@@ -210,14 +210,11 @@ describe('POST /api/users/[id]/reset-mfa', () => {
     expect(mocks.verifyMfaProof).not.toHaveBeenCalled();
   });
 
-  it.each([
-    { isProtected: true, role: 'ADMIN' },
-    { isProtected: false, role: 'ADMIN' },
-  ])('never resets protected or administrative targets: %o', async (target) => {
+  it('never resets the protected root target', async () => {
     mocks.prisma.user.findUnique.mockReset();
     mocks.prisma.user.findUnique
       .mockResolvedValueOnce(ROOT)
-      .mockResolvedValueOnce({ ...TARGET, ...target });
+      .mockResolvedValueOnce({ ...TARGET, isProtected: true, role: 'ADMIN' });
     const { POST } = await import('$app/api/users/[id]/reset-mfa/route');
 
     const response = await POST(
@@ -231,6 +228,36 @@ describe('POST /api/users/[id]/reset-mfa', () => {
     expect(response.status).toBe(403);
     expect(mocks.verifyPassword).not.toHaveBeenCalled();
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('lets the root recover an unprotected administrator with strong proof', async () => {
+    const adminTarget = { ...TARGET, role: 'ADMIN' as const };
+    mocks.prisma.user.findUnique.mockReset();
+    mocks.prisma.user.findUnique
+      .mockResolvedValueOnce(ROOT)
+      .mockResolvedValueOnce(adminTarget);
+    mocks.transaction.user.findUnique.mockResolvedValueOnce({
+      ...UPDATED_TARGET,
+      role: 'ADMIN',
+    });
+    const { POST } = await import('$app/api/users/[id]/reset-mfa/route');
+
+    const response = await POST(
+      createRequest({
+        currentPassword: 'Secret1!',
+        currentTotpCode: '123456',
+      }),
+      routeParams,
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.verifyPassword).toHaveBeenCalled();
+    expect(mocks.verifyMfaProof).toHaveBeenCalled();
+    expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ role: 'ADMIN' }),
+      }),
+    );
   });
 
   it('leaves the target untouched when the root TOTP is invalid', async () => {
@@ -273,7 +300,10 @@ describe('POST /api/users/[id]/reset-mfa', () => {
       }),
     );
     expect(mocks.transaction.session.updateMany).toHaveBeenCalledWith({
-      data: { lastSeenAt: expect.any(Date) },
+      data: {
+        lastSeenAt: expect.any(Date),
+        mfaVerifiedAt: expect.any(Date),
+      },
       where: expect.objectContaining({
         mfaMethod: { not: null },
         mfaVerifiedAt: { not: null },

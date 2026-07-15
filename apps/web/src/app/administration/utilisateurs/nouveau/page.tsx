@@ -21,9 +21,11 @@ import { toast } from 'sonner';
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { AccessDeniedState } from '$components/layout/PageState';
 import { SectionPanel } from '$components/layout/SectionPanel';
+import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
 import { UsersAdminHero } from '$components/users/UsersAdminHero';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
+import { ErrorCode } from '$types/api.types';
 import type { UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
@@ -86,6 +88,7 @@ const NewUserContent: FC = () => {
 
   const [form, setForm] = useState(EMPTY_USER_FORM);
   const [isCreating, setIsCreating] = useState(false);
+  const [showAdminCreationStepUp, setShowAdminCreationStepUp] = useState(false);
   const [errors, setErrors] = useState<NewUserFormErrors>({});
   const [createdUser, setCreatedUser] = useState<UserType | null>(null);
   const [temporaryPassword, setTemporaryPassword] = useState<string | null>(
@@ -191,6 +194,15 @@ const NewUserContent: FC = () => {
         setTemporaryPassword(data.data.temporaryPassword);
         toast.success('Utilisateur créé avec succès');
       } else {
+        if (
+          form.role === UserRole.ADMIN &&
+          data.error?.code === ErrorCode.REAUTHENTICATION_REQUIRED
+        ) {
+          setShowAdminCreationStepUp(true);
+
+          return;
+        }
+
         toast.error(data.error?.message || 'Erreur lors de la création');
       }
     } catch {
@@ -656,6 +668,19 @@ const NewUserContent: FC = () => {
           )}
         </div>
       </PageCanvas>
+      {userData && (
+        <AdminStepUpDialog
+          actorLoginName={userData.loginName}
+          description="Confirmez votre identité avant de créer un compte administrateur."
+          onCancel={() => setShowAdminCreationStepUp(false)}
+          onComplete={async () => {
+            setShowAdminCreationStepUp(false);
+            await handleCreateUser();
+          }}
+          open={showAdminCreationStepUp}
+          title="Confirmer la création administrateur"
+        />
+      )}
     </PageShell>
   );
 };

@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PERMISSIONS } from '$constants/permissions.constants';
+
 const mocks = vi.hoisted(() => ({
   clearMfaChallengeCookie: vi.fn(),
   consumeVerifiedMfaProof: vi.fn(),
@@ -137,6 +139,109 @@ const AUTH_USER = {
   isProtected: false,
   mfaEnabledAt: new Date('2026-07-01T12:00:00.000Z'),
 };
+const CRITICAL_USER_ID = 'critical-user';
+const CRITICAL_PERMISSIONS = {
+  [PERMISSIONS.USERS.UPDATE_LOGIN]: true,
+  [PERMISSIONS.USERS.VIEW]: true,
+};
+const BOOTSTRAP_CHALLENGE_EXPIRES_AT = new Date('2026-07-14T20:05:00.000Z');
+const BOOTSTRAP_ENROLLMENT = {
+  expiresAt: new Date('2026-07-14T20:10:00.000Z'),
+  secretAuthTag: 'bootstrap-auth-tag',
+  secretCiphertext: 'bootstrap-ciphertext',
+  secretIv: 'bootstrap-iv',
+  secretKeyVersion: 1,
+  updatedAt: new Date('2026-07-14T19:59:00.000Z'),
+};
+const BOOTSTRAP_SESSION = {
+  expiresAt: new Date('2026-07-15T20:00:00.000Z'),
+  idleExpiresAt: new Date('2026-07-14T20:30:00.000Z'),
+  lastSeenAt: NOW,
+  rememberMe: false,
+  token: 'critical-bootstrap-session',
+};
+
+const buildCriticalBootstrapChallenge = (
+  withEnrollment = false,
+): Record<string, unknown> => ({
+  credentialUpdatedAt: null,
+  expiresAt: BOOTSTRAP_CHALLENGE_EXPIRES_AT,
+  purpose: 'SETUP',
+  rememberMe: false,
+  securityVersion: 4,
+  user: {
+    deletedAt: null,
+    isActive: true,
+    isProtected: false,
+    loginName: 'critical.user',
+    mfaEnabledAt: null,
+    permissions: CRITICAL_PERMISSIONS,
+    role: 'USER',
+    securityVersion: 4,
+    totpCredential: null,
+    ...(withEnrollment ? { totpEnrollment: BOOTSTRAP_ENROLLMENT } : {}),
+  },
+  userId: CRITICAL_USER_ID,
+});
+
+const arrangeCriticalBootstrapConfirmation = (
+  lockedPermissions: Record<string, boolean> = CRITICAL_PERMISSIONS,
+): void => {
+  mocks.getMfaChallengeToken.mockResolvedValue('raw-critical-challenge');
+  mocks.prisma.mfaLoginChallenge.findUnique.mockResolvedValue(
+    buildCriticalBootstrapChallenge(true),
+  );
+  mocks.verifyTotpCode.mockResolvedValue(5_945_120n);
+  mocks.generateRecoveryCodes.mockReturnValue([
+    {
+      codeHash: 'critical-code-hash',
+      plaintext: 'AAAA-BBBB-CCCC-DDDD-EEEE-FFFF',
+      salt: 'critical-salt',
+    },
+  ]);
+  mocks.generateSessionToken.mockReturnValue(BOOTSTRAP_SESSION.token);
+  mocks.transaction.user.findUnique.mockResolvedValue({
+    deletedAt: null,
+    isActive: true,
+    mfaEnabledAt: null,
+    permissions: lockedPermissions,
+    role: 'USER',
+    securityVersion: 5,
+    totpCredential: null,
+  });
+  mocks.transaction.mfaLoginChallenge.deleteMany.mockResolvedValue({
+    count: 1,
+  });
+  mocks.transaction.totpEnrollment.deleteMany.mockResolvedValue({ count: 1 });
+  mocks.prisma.user.findUnique.mockResolvedValue({
+    id: CRITICAL_USER_ID,
+    mfaEnabledAt: NOW,
+  });
+  mocks.mapUserToUserType.mockReturnValue({
+    id: CRITICAL_USER_ID,
+    loginName: 'critical.user',
+    mustChangePassword: false,
+  });
+  mocks.createSession.mockImplementationOnce(
+    async (
+      _token: string,
+      _userId: string,
+      _securityVersion: number,
+      _rememberMe: boolean,
+      _audit: unknown,
+      options: {
+        precondition: (
+          transaction: typeof mocks.transaction,
+          authenticatedAt: Date,
+        ) => Promise<void>;
+      },
+    ) => {
+      await options.precondition(mocks.transaction, NOW);
+
+      return BOOTSTRAP_SESSION;
+    },
+  );
+};
 
 describe('/api/auth/mfa/setup invariants', () => {
   beforeEach(() => {
@@ -188,6 +293,200 @@ describe('/api/auth/mfa/setup invariants', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it('allows an unprotected administrator to bootstrap mandatory MFA after password login', async () => {
+    const challengeExpiresAt = new Date('2026-07-14T20:05:00.000Z');
+    mocks.getMfaChallengeToken.mockResolvedValue('raw-challenge');
+    mocks.prisma.mfaLoginChallenge.findUnique.mockResolvedValue({
+      credentialUpdatedAt: null,
+      expiresAt: challengeExpiresAt,
+      purpose: 'SETUP',
+      rememberMe: false,
+      securityVersion: 4,
+      user: {
+        deletedAt: null,
+        isActive: true,
+        isProtected: false,
+        loginName: 'admin.user',
+        mfaEnabledAt: null,
+        role: 'ADMIN',
+        securityVersion: 4,
+        totpCredential: null,
+      },
+      userId: 'admin-1',
+    });
+    mocks.transaction.user.findUnique.mockResolvedValue({
+      deletedAt: null,
+      isActive: true,
+      mfaEnabledAt: null,
+      role: 'ADMIN',
+      securityVersion: 4,
+      totpCredential: null,
+    });
+    mocks.transaction.mfaLoginChallenge.findUnique.mockResolvedValue({
+      expiresAt: challengeExpiresAt,
+      purpose: 'SETUP',
+      securityVersion: 4,
+      userId: 'admin-1',
+    });
+    const { POST } = await import('$app/api/auth/mfa/setup/route');
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/auth/mfa/setup', {
+        body: JSON.stringify({}),
+        method: 'POST',
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toMatchObject({
+      manualKey: 'NEW-TOTP-SECRET',
+      replacing: false,
+    });
+    expect(mocks.requireAuth).not.toHaveBeenCalled();
+    expect(mocks.transaction.mfaLoginChallenge.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          purpose: 'SETUP',
+          securityVersion: 4,
+          userId: 'admin-1',
+        }),
+      }),
+    );
+    expect(mocks.setMfaChallengeCookie).toHaveBeenCalledWith(
+      'raw-challenge',
+      expect.any(Date),
+    );
+  });
+
+  it('allows a USER with effective critical access to start mandatory MFA without a session', async () => {
+    mocks.getMfaChallengeToken.mockResolvedValue('raw-critical-challenge');
+    mocks.prisma.mfaLoginChallenge.findUnique.mockResolvedValue(
+      buildCriticalBootstrapChallenge(),
+    );
+    mocks.transaction.$queryRaw.mockResolvedValue([{ id: CRITICAL_USER_ID }]);
+    mocks.transaction.user.findUnique.mockResolvedValue({
+      deletedAt: null,
+      isActive: true,
+      mfaEnabledAt: null,
+      permissions: CRITICAL_PERMISSIONS,
+      role: 'USER',
+      securityVersion: 4,
+      totpCredential: null,
+    });
+    mocks.transaction.mfaLoginChallenge.findUnique.mockResolvedValue({
+      expiresAt: BOOTSTRAP_CHALLENGE_EXPIRES_AT,
+      purpose: 'SETUP',
+      securityVersion: 4,
+      userId: CRITICAL_USER_ID,
+    });
+    const { POST } = await import('$app/api/auth/mfa/setup/route');
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/auth/mfa/setup', {
+        body: JSON.stringify({}),
+        method: 'POST',
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toMatchObject({
+      manualKey: 'NEW-TOTP-SECRET',
+      replacing: false,
+    });
+    expect(mocks.requireAuth).not.toHaveBeenCalled();
+    expect(mocks.transaction.user.findUnique).toHaveBeenCalledWith({
+      select: expect.objectContaining({ permissions: true, role: true }),
+      where: { id: CRITICAL_USER_ID },
+    });
+    expect(mocks.transaction.mfaLoginChallenge.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          purpose: 'SETUP',
+          securityVersion: 4,
+          userId: CRITICAL_USER_ID,
+        }),
+      }),
+    );
+    expect(mocks.setMfaChallengeCookie).toHaveBeenCalledWith(
+      'raw-critical-challenge',
+      expect.any(Date),
+    );
+  });
+
+  it('confirms bootstrap and creates an MFA session for a USER with effective critical access', async () => {
+    arrangeCriticalBootstrapConfirmation();
+    const { PUT } = await import('$app/api/auth/mfa/setup/route');
+
+    const response = await PUT(
+      new NextRequest('http://localhost/api/auth/mfa/setup', {
+        body: JSON.stringify({ code: '123456' }),
+        method: 'PUT',
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.status).toBe('authenticated');
+    expect(mocks.requireAuth).not.toHaveBeenCalled();
+    expect(mocks.createSession).toHaveBeenCalledWith(
+      BOOTSTRAP_SESSION.token,
+      CRITICAL_USER_ID,
+      4,
+      false,
+      expect.objectContaining({
+        action: 'LOGIN_SUCCESS',
+        userId: CRITICAL_USER_ID,
+      }),
+      expect.objectContaining({
+        advanceSecurityVersion: true,
+        mfaMethod: 'TOTP',
+        precondition: expect.any(Function),
+        revokeExistingSessions: true,
+      }),
+    );
+    expect(mocks.transaction.totpCredential.upsert).toHaveBeenCalledWith({
+      create: expect.objectContaining({
+        lastUsedTimeStep: 5_945_120n,
+        userId: CRITICAL_USER_ID,
+      }),
+      update: expect.objectContaining({ lastUsedTimeStep: 5_945_120n }),
+      where: { userId: CRITICAL_USER_ID },
+    });
+    expect(mocks.transaction.user.update).toHaveBeenCalledWith({
+      data: { mfaEnabledAt: NOW },
+      where: { id: CRITICAL_USER_ID },
+    });
+    expect(mocks.setSessionTokenCookie).toHaveBeenCalledWith(
+      BOOTSTRAP_SESSION.token,
+      BOOTSTRAP_SESSION.expiresAt,
+    );
+  });
+
+  it('rejects confirmation when critical access disappears before the locked revalidation', async () => {
+    arrangeCriticalBootstrapConfirmation({
+      [PERMISSIONS.USERS.UPDATE_LOGIN]: true,
+      [PERMISSIONS.USERS.VIEW]: false,
+    });
+    const { PUT } = await import('$app/api/auth/mfa/setup/route');
+
+    const response = await PUT(
+      new NextRequest('http://localhost/api/auth/mfa/setup', {
+        body: JSON.stringify({ code: '123456' }),
+        method: 'PUT',
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    expect(mocks.requireAuth).not.toHaveBeenCalled();
+    expect(mocks.clearMfaChallengeCookie).toHaveBeenCalled();
+    expect(
+      mocks.transaction.mfaLoginChallenge.deleteMany,
+    ).not.toHaveBeenCalled();
+    expect(mocks.setSessionTokenCookie).not.toHaveBeenCalled();
   });
 
   it('keeps the active credential while staging a replacement and snapshots its consumed timestamp', async () => {

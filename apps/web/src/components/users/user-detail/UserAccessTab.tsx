@@ -8,6 +8,7 @@ import {
   LogOut,
   Save,
   Shield,
+  ShieldAlert,
   ShieldCheck,
 } from 'lucide-react';
 import React, { type FC } from 'react';
@@ -151,7 +152,22 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   return (
     <div>
       <Card className="border-border/60 overflow-visible rounded-lg py-0">
-        <CardContent className="p-2.5 sm:p-3">
+        <CardContent className="space-y-3 p-2.5 sm:p-3">
+          {canManagePermissions &&
+            user.securityDetailsVisible !== false &&
+            user.mfaEnabledAt === null && (
+              <div
+                className="border-warning/30 bg-warning/10 text-muted-foreground flex items-start gap-2.5 rounded-lg border p-3 text-sm leading-5"
+                role="note"
+              >
+                <ShieldAlert className="text-warning mt-0.5 size-4 shrink-0" />
+                <p>
+                  La double authentification doit être activée par ce membre
+                  avant de lui accorder un rôle administrateur ou un accès
+                  critique.
+                </p>
+              </div>
+            )}
           <PermissionsEditor
             role={role}
             permissions={permissions}
@@ -164,8 +180,11 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                 <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-7 shrink-0 items-center justify-center rounded-md border">
                   <Shield className="size-3.5" />
                 </span>
-                <Label htmlFor="user-role" className="sr-only">
-                  Rôle
+                <Label
+                  htmlFor="user-role"
+                  className="text-muted-foreground text-xs whitespace-nowrap"
+                >
+                  Rôle de base
                 </Label>
                 {user.isProtected ? (
                   <Input
@@ -175,22 +194,42 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                     className="border-border bg-popover h-8 min-w-0"
                   />
                 ) : (
-                  <Select
-                    value={role}
-                    onValueChange={(value) => setRole(value as UserRole)}
-                    disabled={!canEditRole}
-                  >
-                    <SelectTrigger
-                      id="user-role"
-                      className="border-border bg-popover h-8 min-w-36"
+                  <div className="space-y-1">
+                    <Select
+                      value={role}
+                      onValueChange={(value) => setRole(value as UserRole)}
+                      disabled={!canEditRole}
                     >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="USER">Utilisateur</SelectItem>
-                      <SelectItem value="ADMIN">Administrateur</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      <SelectTrigger
+                        id="user-role"
+                        aria-describedby={
+                          canEditRole && user.mfaEnabledAt === null
+                            ? 'user-role-mfa-requirement'
+                            : undefined
+                        }
+                        className="border-border bg-popover h-8 min-w-36"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USER">Utilisateur</SelectItem>
+                        <SelectItem
+                          disabled={user.mfaEnabledAt === null}
+                          value="ADMIN"
+                        >
+                          Administrateur
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {canEditRole && user.mfaEnabledAt === null && (
+                      <p
+                        className="text-warning max-w-56 text-xs leading-4"
+                        id="user-role-mfa-requirement"
+                      >
+                        Double authentification requise avant promotion.
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             }

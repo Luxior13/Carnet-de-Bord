@@ -1,3 +1,4 @@
+import type { UserRole } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
@@ -5,6 +6,7 @@ import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
 import { createAuditLogWithHeaders } from '$server/auth';
 import { prisma } from '$server/prisma';
+import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -15,6 +17,13 @@ import type { UserSessionInfo } from '$types/auth.types';
 type RouteParams = {
   params: Promise<{ id: string }>;
 };
+
+class TargetSessionStateChangedError extends Error {
+  constructor() {
+    super('Target session state changed');
+    this.name = 'TargetSessionStateChangedError';
+  }
+}
 
 const USERS_SECURITY_AUDIT_LOCATION = {
   pageKey: 'users',
@@ -33,7 +42,8 @@ const getTargetUserForSessionManagement = async (
   isProtected: boolean;
   lastName: string;
   loginName: string;
-  role: string;
+  role: UserRole;
+  securityVersion: number;
 } | null> => {
   return prisma.user.findUnique({
     select: {
@@ -43,10 +53,34 @@ const getTargetUserForSessionManagement = async (
       lastName: true,
       loginName: true,
       role: true,
+      securityVersion: true,
     },
     where: { deletedAt: null, id },
   });
 };
+
+const getStableTargetRelationFilter = (
+  targetUser: NonNullable<
+    Awaited<ReturnType<typeof getTargetUserForSessionManagement>>
+  >,
+  actorIsProtected: boolean,
+): {
+  is: {
+    deletedAt: null;
+    id: string;
+    isProtected: false;
+    role: UserRole;
+    securityVersion: number;
+  };
+} => ({
+  is: {
+    deletedAt: null,
+    id: targetUser.id,
+    isProtected: false,
+    role: actorIsProtected ? targetUser.role : 'USER',
+    securityVersion: targetUser.securityVersion,
+  },
+});
 
 export async function GET(
   _request: NextRequest,
@@ -123,30 +157,38 @@ export async function GET(
     }
 
     const now = new Date();
-    await prisma.session.deleteMany({
-      where: {
-        OR: [{ expiresAt: { lte: now } }, { idleExpiresAt: { lte: now } }],
-        userId: targetUser.id,
-      },
-    });
+    const stableTarget = getStableTargetRelationFilter(
+      targetUser,
+      auth.user.isProtected,
+    );
+    const sessions = await prisma.$transaction(async (transaction) => {
+      await transaction.session.deleteMany({
+        where: {
+          OR: [{ expiresAt: { lte: now } }, { idleExpiresAt: { lte: now } }],
+          user: stableTarget,
+          userId: targetUser.id,
+        },
+      });
 
-    const sessions = await prisma.session.findMany({
-      orderBy: { createdAt: 'desc' },
-      select: {
-        createdAt: true,
-        expiresAt: true,
-        id: true,
-        idleExpiresAt: true,
-        ipAddress: true,
-        lastSeenAt: true,
-        rememberMe: true,
-        userAgent: true,
-      },
-      where: {
-        expiresAt: { gt: now },
-        idleExpiresAt: { gt: now },
-        userId: targetUser.id,
-      },
+      return transaction.session.findMany({
+        orderBy: { createdAt: 'desc' },
+        select: {
+          createdAt: true,
+          expiresAt: true,
+          id: true,
+          idleExpiresAt: true,
+          ipAddress: true,
+          lastSeenAt: true,
+          rememberMe: true,
+          userAgent: true,
+        },
+        where: {
+          expiresAt: { gt: now },
+          idleExpiresAt: { gt: now },
+          user: stableTarget,
+          userId: targetUser.id,
+        },
+      });
     });
 
     return NextResponse.json({
@@ -243,38 +285,29 @@ export async function DELETE(
       );
     }
 
+    const proofCheck = requireRecentSensitiveActionProof(auth.session);
+    if (!proofCheck.success) return proofCheck.response;
+
     const sessionId = request.nextUrl.searchParams.get('id')?.trim() || null;
+    const stableTarget = getStableTargetRelationFilter(
+      targetUser,
+      auth.user.isProtected,
+    );
     const targetName =
       targetUser.firstName && targetUser.lastName
         ? `${targetUser.firstName} ${targetUser.lastName}`
         : targetUser.loginName;
 
     if (sessionId) {
-      const session = await prisma.session.findFirst({
-        select: { id: true },
-        where: {
-          id: sessionId,
-          userId: targetUser.id,
-        },
-      });
-
-      if (!session) {
-        return NextResponse.json(
-          {
-            error: {
-              code: ErrorCode.NOT_FOUND,
-              message: 'Session non trouvée',
-            },
-            success: false,
+      const revokedSession = await prisma.$transaction(async (transaction) => {
+        const deleteResult = await transaction.session.deleteMany({
+          where: {
+            id: sessionId,
+            user: stableTarget,
+            userId: targetUser.id,
           },
-          { status: 404 },
-        );
-      }
-
-      await prisma.$transaction(async (transaction) => {
-        await transaction.session.delete({
-          where: { id: session.id },
         });
+        if (deleteResult.count !== 1) return false;
 
         await createAuditLogWithHeaders(
           {
@@ -284,7 +317,7 @@ export async function DELETE(
             metadata: {
               revocationScope: 'single',
               revokedSessions: 1,
-              sessionId: session.id,
+              sessionId,
               ...USERS_SECURITY_AUDIT_LOCATION,
               targetName,
             },
@@ -293,7 +326,23 @@ export async function DELETE(
           },
           { client: transaction, required: true },
         );
+
+        return true;
       });
+
+      if (!revokedSession) {
+        return NextResponse.json(
+          {
+            error: {
+              code: ErrorCode.NOT_FOUND,
+              message:
+                'Session introuvable ou compte modifié depuis le chargement',
+            },
+            success: false,
+          },
+          { status: 404 },
+        );
+      }
 
       return NextResponse.json({
         data: { revokedSessions: 1 },
@@ -302,6 +351,20 @@ export async function DELETE(
     }
 
     const result = await prisma.$transaction(async (transaction) => {
+      const targetVersionAdvance = await transaction.user.updateMany({
+        data: { securityVersion: { increment: 1 } },
+        where: {
+          deletedAt: null,
+          id: targetUser.id,
+          isProtected: false,
+          role: auth.user.isProtected ? targetUser.role : 'USER',
+          securityVersion: targetUser.securityVersion,
+        },
+      });
+      if (targetVersionAdvance.count !== 1) {
+        throw new TargetSessionStateChangedError();
+      }
+
       const deleteResult = await transaction.session.deleteMany({
         where: { userId: targetUser.id },
       });
@@ -331,6 +394,20 @@ export async function DELETE(
       success: true,
     });
   } catch (error) {
+    if (error instanceof TargetSessionStateChangedError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.CONFLICT,
+            message:
+              'La sécurité ou le rôle de ce compte a changé. Rechargez la fiche avant de réessayer.',
+          },
+          success: false,
+        },
+        { status: 409 },
+      );
+    }
+
     return apiErrors.internal('USER_SESSIONS_DELETE', error);
   }
 }

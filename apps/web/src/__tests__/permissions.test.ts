@@ -14,6 +14,7 @@ import {
   normalizePermissionOverrides,
   PERMISSION_CATEGORIES,
   PERMISSIONS,
+  requiresMfaForAccess,
   ROLE_PERMISSIONS,
 } from '../shared/constants/permissions.constants';
 
@@ -311,6 +312,34 @@ describe('hasPermission', () => {
   });
 });
 
+describe('requiresMfaForAccess', () => {
+  it('requires MFA for administrators', () => {
+    expect(requiresMfaForAccess('ADMIN')).toBe(true);
+  });
+
+  it('does not require MFA for a standard user', () => {
+    expect(requiresMfaForAccess('USER')).toBe(false);
+  });
+
+  it('requires MFA when a critical delegated permission is effective', () => {
+    expect(
+      requiresMfaForAccess('USER', {
+        [PERMISSIONS.USERS.UPDATE_LOGIN]: true,
+        [PERMISSIONS.USERS.VIEW]: true,
+      }),
+    ).toBe(true);
+  });
+
+  it('ignores a critical override whose dependency is disabled', () => {
+    expect(
+      requiresMfaForAccess('USER', {
+        [PERMISSIONS.USERS.UPDATE_LOGIN]: true,
+        [PERMISSIONS.USERS.VIEW]: false,
+      }),
+    ).toBe(false);
+  });
+});
+
 describe('permission catalogue', () => {
   it('defines an acyclic dependency graph with known keys', () => {
     const permissionItems = [
@@ -387,8 +416,8 @@ describe('permission catalogue', () => {
       'users:update_contact',
       'users:update_login',
       'users:manage_status',
+      'users:view_security',
       'users:view_access',
-      'users:manage_roles',
       'users:edit_permissions',
       'users:view_account_policy',
       'users:manage_account_policy',
@@ -397,7 +426,6 @@ describe('permission catalogue', () => {
       'users:revoke_sessions',
       'users:view_activity',
       'users:delete',
-      'users:restore',
       'users:export',
       'treasury:view',
       'treasury:edit',
@@ -421,6 +449,10 @@ describe('permission catalogue', () => {
 
   it('detects unknown permission keys', () => {
     expect(isKnownPermissionKey(PERMISSIONS.USERS.VIEW)).toBe(true);
+    expect(isKnownPermissionKey(PERMISSIONS.USERS.MANAGE_ROLES)).toBe(false);
+    expect(isKnownPermissionKey(PERMISSIONS.USERS.RESTORE)).toBe(false);
+    expect(hasPermission('ADMIN', PERMISSIONS.USERS.MANAGE_ROLES)).toBe(false);
+    expect(hasPermission('ADMIN', PERMISSIONS.USERS.RESTORE)).toBe(false);
     expect(isKnownPermissionKey('users:ghost')).toBe(false);
     expect(
       getUnknownPermissionKeys({
@@ -504,7 +536,11 @@ describe('permission catalogue', () => {
       ...Object.values(PERMISSIONS.INCIDENTS),
       ...Object.values(PERMISSIONS.SYSTEM),
       ...Object.values(PERMISSIONS.TREASURY),
-      ...Object.values(PERMISSIONS.USERS),
+      ...Object.values(PERMISSIONS.USERS).filter(
+        (permissionKey) =>
+          permissionKey !== PERMISSIONS.USERS.MANAGE_ROLES &&
+          permissionKey !== PERMISSIONS.USERS.RESTORE,
+      ),
       ...Object.values(PERMISSIONS.SPORT),
     ]);
     expect(ROLE_PERMISSIONS.USER).toEqual([

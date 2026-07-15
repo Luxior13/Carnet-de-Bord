@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { normalizePermissionOverrides } from '$constants/permissions.constants';
+import {
+  normalizePermissionOverrides,
+  requiresMfaForAccess,
+} from '$constants/permissions.constants';
 import { apiErrors, parseJsonBody } from '$server/api-response';
 import {
   authenticateUser,
@@ -173,16 +176,22 @@ export async function POST(
 
     await recordSuccessfulLogin(rateLimitKeys);
 
-    const canUseLongSession =
-      !result.user.isProtected && result.user.role !== 'ADMIN';
-    const effectiveRememberMe = rememberMe && canUseLongSession;
     const hasEnabledMfa = result.user.mfaEnabledAt !== null;
     const hasTotpCredential = result.user.totpCredential !== null;
-    const requiresRootSetup =
-      result.user.isProtected && !hasEnabledMfa && !hasTotpCredential;
+    const requiresPrivilegedMfa =
+      result.user.role === 'ADMIN' ||
+      requiresMfaForAccess(
+        result.user.role,
+        result.user.permissions as Record<string, boolean> | null,
+      );
+    const canUseLongSession =
+      !result.user.isProtected && !requiresPrivilegedMfa;
+    const effectiveRememberMe = rememberMe && canUseLongSession;
+    const requiresPrivilegedSetup =
+      requiresPrivilegedMfa && !hasEnabledMfa && !hasTotpCredential;
 
-    if (requiresRootSetup || (hasEnabledMfa && hasTotpCredential)) {
-      const purpose = requiresRootSetup ? 'SETUP' : 'LOGIN';
+    if (requiresPrivilegedSetup || (hasEnabledMfa && hasTotpCredential)) {
+      const purpose = requiresPrivilegedSetup ? 'SETUP' : 'LOGIN';
       const challenge = await createMfaChallenge({
         credentialUpdatedAt: result.user.totpCredential?.updatedAt ?? null,
         purpose,
@@ -194,7 +203,7 @@ export async function POST(
       return NextResponse.json({
         data: {
           challengeExpiresAt: challenge.expiresAt.toISOString(),
-          status: requiresRootSetup
+          status: requiresPrivilegedSetup
             ? ('mfa_setup_required' as const)
             : ('mfa_required' as const),
         },
@@ -202,8 +211,8 @@ export async function POST(
       });
     }
 
-    // Every half-configured account fails closed. Only the protected root with
-    // both MFA markers absent enters the mandatory bootstrap branch above.
+    // Every half-configured account fails closed. Administrators with both MFA
+    // markers absent enter the mandatory bootstrap branch above.
     if (hasEnabledMfa !== hasTotpCredential) {
       await recordLoginAudit({
         action: 'LOGIN_FAILED',

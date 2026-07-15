@@ -30,6 +30,7 @@ const mockPrisma = {
     findUnique: vi.fn(),
     groupBy: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(),
   },
 };
 
@@ -66,11 +67,13 @@ const buildUser = (
   lastLoginAt: null,
   lastName: 'Dupont',
   loginName: 'user.test',
+  mfaEnabledAt: null,
   mustChangePassword: false,
   passwordChangedAt: null,
   passwordHash: 'hash',
   permissions: {},
   role: 'USER',
+  securityVersion: 3,
   updatedAt: new Date('2026-03-01T00:00:00.000Z'),
   ...overrides,
 });
@@ -108,7 +111,7 @@ describe('users access hardening', () => {
     );
 
     mockRequireAuth.mockResolvedValue({
-      session: null,
+      session: { mfaVerifiedAt: new Date() },
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -119,6 +122,7 @@ describe('users access hardening', () => {
     mockRequirePermission.mockReturnValue({ success: true });
     mockPrisma.loginNameReservation.findUnique.mockResolvedValue(null);
     mockPrisma.user.groupBy.mockResolvedValue([]);
+    mockPrisma.user.updateMany.mockResolvedValue({ count: 1 });
   });
 
   it('uses users:update_profile for profile updates without requiring edit_permissions', async () => {
@@ -166,7 +170,7 @@ describe('users access hardening', () => {
     const existingUser = buildUser({ id: 'target-1', role: 'USER' });
 
     mockRequireAuth.mockResolvedValueOnce({
-      session: null,
+      session: { mfaVerifiedAt: new Date() },
       success: true,
       user: actor,
     });
@@ -207,6 +211,42 @@ describe('users access hardening', () => {
     expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
       where: { userId: 'target-1' },
     });
+  });
+
+  it('requires a recent MFA proof before a sensitive account patch', async () => {
+    const actor = buildUser({
+      deletedAt: undefined,
+      id: 'admin-1',
+      passwordHash: undefined,
+      permissions: { [PERMISSIONS.USERS.UPDATE_LOGIN]: true },
+      role: 'ADMIN',
+    });
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: actor,
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(
+      buildUser({ id: 'target-1' }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          expectedUpdatedAt: USER_REVISION,
+          loginName: 'nouveau.login',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe(ErrorCode.REAUTHENTICATION_REQUIRED);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
   });
 
   it('rejects login-name updates when users:update_login is denied', async () => {
@@ -399,7 +439,7 @@ describe('users access hardening', () => {
   it('returns 409 when a concurrent login-name update hits the unique constraint', async () => {
     const existingUser = buildUser({ id: 'target-1' });
     mockRequireAuth.mockResolvedValueOnce({
-      session: null,
+      session: { mfaVerifiedAt: new Date() },
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -453,6 +493,57 @@ describe('users access hardening', () => {
     expect(body.data.user.permissions).toBeNull();
     expect(body.data.user.role).toBe('USER');
     expect(body.data.user.isActive).toBe(true);
+    expect(body.data.user).toMatchObject({
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      mfaEnabledAt: null,
+      mustChangePassword: false,
+      passwordChangedAt: null,
+      securityDetailsVisible: false,
+    });
+  });
+
+  it('returns account security details only with view-security permission', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'viewer-1',
+        passwordHash: undefined,
+        permissions: {
+          [PERMISSIONS.USERS.VIEW]: true,
+          [PERMISSIONS.USERS.VIEW_SECURITY]: true,
+        },
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(
+      buildUser({
+        failedLoginAttempts: 4,
+        id: 'target-1',
+        lockedUntil: new Date('2026-03-03T00:00:00.000Z'),
+        mfaEnabledAt: new Date('2026-03-02T00:00:00.000Z'),
+        mustChangePassword: true,
+        passwordChangedAt: new Date('2026-03-01T12:00:00.000Z'),
+      }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users/target-1') as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.user).toMatchObject({
+      failedLoginAttempts: 4,
+      lockedUntil: '2026-03-03T00:00:00.000Z',
+      mfaEnabledAt: '2026-03-02T00:00:00.000Z',
+      mustChangePassword: true,
+      passwordChangedAt: '2026-03-01T12:00:00.000Z',
+      securityDetailsVisible: true,
+    });
   });
 
   it('returns contact details from user detail with view_contact permission', async () => {
@@ -565,7 +656,7 @@ describe('users access hardening', () => {
 
   it('allows permissions-only updates with users:edit_permissions only', async () => {
     mockRequireAuth.mockResolvedValueOnce({
-      session: null,
+      session: { mfaVerifiedAt: new Date() },
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -630,7 +721,7 @@ describe('users access hardening', () => {
 
   it('audits personal account permission updates on the personal account tab', async () => {
     mockRequireAuth.mockResolvedValueOnce({
-      session: null,
+      session: { mfaVerifiedAt: new Date() },
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -806,7 +897,7 @@ describe('users access hardening', () => {
 
   it('does not reject an account-policy change because of an untouched access grant', async () => {
     mockRequireAuth.mockResolvedValueOnce({
-      session: null,
+      session: { mfaVerifiedAt: new Date() },
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -1012,7 +1103,7 @@ describe('users access hardening', () => {
   it('revokes existing sessions when the login name changes', async () => {
     const existingUser = buildUser({ id: 'target-1' });
     mockRequireAuth.mockResolvedValueOnce({
-      session: null,
+      session: { mfaVerifiedAt: new Date() },
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -1055,7 +1146,7 @@ describe('users access hardening', () => {
   it('rejects a login name permanently reserved by another user', async () => {
     const existingUser = buildUser({ id: 'target-1' });
     mockRequireAuth.mockResolvedValueOnce({
-      session: null,
+      session: { mfaVerifiedAt: new Date() },
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -1097,7 +1188,7 @@ describe('users access hardening', () => {
   it('allows a user to return to one of its own reserved login names', async () => {
     const existingUser = buildUser({ id: 'target-1' });
     mockRequireAuth.mockResolvedValueOnce({
-      session: null,
+      session: { mfaVerifiedAt: new Date() },
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -1210,6 +1301,212 @@ describe('users access hardening', () => {
     );
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
     expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('requires MFA before the root promotes a user to administrator', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'root-1',
+        isProtected: true,
+        passwordHash: undefined,
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(
+      buildUser({ id: 'target-1', mfaEnabledAt: null, role: 'USER' }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          expectedUpdatedAt: USER_REVISION,
+          role: 'ADMIN',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(409);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects promotion when only the MFA timestamp exists without a credential', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: { mfaVerifiedAt: new Date() },
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'root-1',
+        isProtected: true,
+        passwordHash: undefined,
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(
+      buildUser({
+        id: 'target-1',
+        mfaEnabledAt: new Date('2026-03-02T00:00:00.000Z'),
+        role: 'USER',
+        totpCredential: null,
+      }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          expectedUpdatedAt: USER_REVISION,
+          role: 'ADMIN',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(409);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('allows the root to promote a user after MFA enrollment', async () => {
+    const existingUser = buildUser({
+      id: 'target-1',
+      mfaEnabledAt: new Date('2026-03-02T00:00:00.000Z'),
+      role: 'USER',
+      totpCredential: { userId: 'target-1' },
+    });
+    mockRequireAuth.mockResolvedValueOnce({
+      session: { mfaVerifiedAt: new Date() },
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'root-1',
+        isProtected: true,
+        passwordHash: undefined,
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(existingUser);
+    mockPrisma.user.update.mockResolvedValueOnce({
+      ...existingUser,
+      role: 'ADMIN',
+    });
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          expectedUpdatedAt: USER_REVISION,
+          role: 'ADMIN',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          role: 'ADMIN',
+          securityVersion: { increment: 1 },
+        }),
+      }),
+    );
+  });
+
+  it('requires complete MFA before granting a critical delegated permission', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: { mfaVerifiedAt: new Date() },
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'root-1',
+        isProtected: true,
+        passwordHash: undefined,
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(
+      buildUser({ id: 'target-1', permissions: {}, role: 'USER' }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          permissions: {
+            [PERMISSIONS.USERS.DELETE]: true,
+            [PERMISSIONS.USERS.VIEW]: true,
+            [PERMISSIONS.USERS.VIEW_SECURITY]: true,
+          },
+          permissionScope: 'access',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(409);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('allows a critical delegated permission after complete MFA enrollment', async () => {
+    const existingUser = buildUser({
+      id: 'target-1',
+      mfaEnabledAt: new Date('2026-03-02T00:00:00.000Z'),
+      permissions: {},
+      role: 'USER',
+      totpCredential: { userId: 'target-1' },
+    });
+    const permissions = {
+      [PERMISSIONS.USERS.DELETE]: true,
+      [PERMISSIONS.USERS.VIEW]: true,
+      [PERMISSIONS.USERS.VIEW_SECURITY]: true,
+    };
+    mockRequireAuth.mockResolvedValueOnce({
+      session: { mfaVerifiedAt: new Date() },
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'root-1',
+        isProtected: true,
+        passwordHash: undefined,
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(existingUser);
+    mockPrisma.user.update.mockResolvedValueOnce({
+      ...existingUser,
+      permissions,
+    });
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({ permissions, permissionScope: 'access' }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          permissions,
+          securityVersion: { increment: 1 },
+        }),
+      }),
+    );
+    expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
+      where: { userId: 'target-1' },
+    });
   });
 
   it('requires users:update_contact to change another account contact email', async () => {
@@ -1695,6 +1992,90 @@ describe('users access hardening', () => {
     expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
   });
 
+  it('requires a recent MFA proof before the root creates an administrator', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'root-1',
+        isProtected: true,
+        passwordHash: undefined,
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(null);
+
+    const route = await import('$app/api/users/route');
+    const response = await route.POST(
+      new Request('http://localhost/api/users', {
+        body: stringifyRequestBody({
+          contactEmail: 'admin@example.com',
+          firstName: 'Admin',
+          lastName: 'Secondaire',
+          loginName: 'admin.secondaire',
+          role: 'ADMIN',
+        }),
+        method: 'POST',
+      }) as never,
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe(ErrorCode.REAUTHENTICATION_REQUIRED);
+    expect(mockGenerateTemporaryPassword).not.toHaveBeenCalled();
+    expect(mockCreateUser).not.toHaveBeenCalled();
+  });
+
+  it('lets the root create an administrator after a recent MFA proof', async () => {
+    const newAdmin = buildUser({
+      contactEmail: 'admin@example.com',
+      firstName: 'Admin',
+      id: 'admin-2',
+      lastName: 'Secondaire',
+      loginName: 'admin.secondaire',
+      mustChangePassword: true,
+      role: 'ADMIN',
+    });
+    mockRequireAuth.mockResolvedValueOnce({
+      session: { mfaVerifiedAt: new Date() },
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'root-1',
+        isProtected: true,
+        passwordHash: undefined,
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(null);
+    mockGenerateTemporaryPassword.mockReturnValueOnce('TempPassword1!');
+    mockCreateUser.mockResolvedValueOnce(newAdmin);
+
+    const route = await import('$app/api/users/route');
+    const response = await route.POST(
+      new Request('http://localhost/api/users', {
+        body: stringifyRequestBody({
+          contactEmail: 'admin@example.com',
+          firstName: 'Admin',
+          lastName: 'Secondaire',
+          loginName: 'admin.secondaire',
+          role: 'ADMIN',
+        }),
+        method: 'POST',
+      }) as never,
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockCreateUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        loginName: 'admin.secondaire',
+        role: 'ADMIN',
+      }),
+      expect.any(Function),
+    );
+  });
+
   it('returns 409 when concurrent user creation hits the login-name unique constraint', async () => {
     mockPrisma.user.findUnique.mockResolvedValueOnce(null);
     mockGenerateTemporaryPassword.mockReturnValue('TempPassword1!');
@@ -1913,6 +2294,27 @@ describe('users access hardening', () => {
     expect(mockInvalidateAllUserSessions).not.toHaveBeenCalled();
   });
 
+  it('blocks non-protected users from renaming an administrator', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(
+      buildUser({
+        id: 'admin-1',
+        role: 'ADMIN',
+      }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/admin-1', {
+        body: stringifyRequestBody({ firstName: 'Intruder' }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'admin-1' }) },
+    );
+
+    expect(response.status).toBe(403);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
   it('blocks non-protected users from deleting admin accounts', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(
       buildUser({
@@ -1938,14 +2340,42 @@ describe('users access hardening', () => {
     expect(mockInvalidateAllUserSessions).not.toHaveBeenCalled();
   });
 
+  it('requires a fresh MFA proof before deleting a user', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: {
+        mfaVerifiedAt: new Date(Date.now() - 6 * 60 * 1000),
+      },
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'viewer-1',
+        passwordHash: undefined,
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(
+      buildUser({ id: 'target-1' }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.DELETE(
+      new Request('http://localhost/api/users/target-1', {
+        method: 'DELETE',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe(ErrorCode.REAUTHENTICATION_REQUIRED);
+    expect(mockPrisma.user.updateMany).not.toHaveBeenCalled();
+    expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+    expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
+  });
+
   it('soft-deletes users, revokes sessions and writes audit in one transaction', async () => {
     const existingUser = buildUser({ id: 'target-1' });
     mockPrisma.user.findUnique.mockResolvedValueOnce(existingUser);
-    mockPrisma.user.update.mockResolvedValueOnce({
-      ...existingUser,
-      deletedAt: new Date(),
-      isActive: false,
-    });
+    mockPrisma.user.updateMany.mockResolvedValueOnce({ count: 1 });
     mockPrisma.session.deleteMany.mockResolvedValueOnce({ count: 2 });
 
     const route = await import('$app/api/users/[id]/route');
@@ -1958,13 +2388,20 @@ describe('users access hardening', () => {
 
     expect(response.status).toBe(200);
     expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
-    expect(mockPrisma.user.update).toHaveBeenCalledWith({
+    expect(mockPrisma.user.updateMany).toHaveBeenCalledWith({
       data: {
         deletedAt: expect.any(Date),
         isActive: false,
         securityVersion: { increment: 1 },
       },
-      where: { id: 'target-1' },
+      where: {
+        deletedAt: null,
+        id: 'target-1',
+        isProtected: false,
+        role: 'USER',
+        securityVersion: 3,
+        updatedAt: new Date(USER_REVISION),
+      },
     });
     expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
       where: { userId: 'target-1' },
@@ -1976,6 +2413,25 @@ describe('users access hardening', () => {
       }),
       { client: mockPrisma, required: true },
     );
+  });
+
+  it('fails closed when the target role or security version changes during deletion', async () => {
+    mockPrisma.user.findUnique.mockResolvedValueOnce(
+      buildUser({ id: 'target-1' }),
+    );
+    mockPrisma.user.updateMany.mockResolvedValueOnce({ count: 0 });
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.DELETE(
+      new Request('http://localhost/api/users/target-1', {
+        method: 'DELETE',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(409);
+    expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+    expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
   });
 
   it('redacts ip and user-agent for other users when viewer is not protected', async () => {
@@ -2072,6 +2528,19 @@ describe('users access hardening', () => {
   });
 
   it('applies the pending status filter at query level', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'viewer-1',
+        passwordHash: undefined,
+        permissions: {
+          [PERMISSIONS.USERS.VIEW]: true,
+          [PERMISSIONS.USERS.VIEW_SECURITY]: true,
+        },
+      }),
+    });
     mockPrisma.user.count.mockResolvedValue(1);
     mockPrisma.user.findMany
       .mockResolvedValueOnce([
@@ -2098,8 +2567,10 @@ describe('users access hardening', () => {
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
+    expect(body.data.securityDetailsVisible).toBe(true);
     expect(body.data.users).toHaveLength(1);
     expect(body.data.users[0].permissions).toBeNull();
+    expect(body.data.users[0].securityDetailsVisible).toBe(true);
     expect(mockPrisma.user.count).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ mustChangePassword: true }),
@@ -2111,6 +2582,54 @@ describe('users access hardening', () => {
         where: expect.objectContaining({ mustChangePassword: true }),
       }),
     );
+  });
+
+  it('rejects the pending-password filter without view-security permission', async () => {
+    const route = await import('$app/api/users/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users?status=pending') as never,
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+    expect(mockPrisma.user.count).not.toHaveBeenCalled();
+    expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
+  });
+
+  it('redacts list security fields and password stats without view-security permission', async () => {
+    mockPrisma.user.count.mockResolvedValue(1);
+    mockPrisma.user.findMany.mockResolvedValueOnce([
+      buildUser({
+        failedLoginAttempts: 4,
+        id: 'target-1',
+        lockedUntil: new Date('2026-03-03T00:00:00.000Z'),
+        mfaEnabledAt: new Date('2026-03-02T00:00:00.000Z'),
+        mustChangePassword: true,
+        passwordChangedAt: new Date('2026-03-01T12:00:00.000Z'),
+      }),
+    ]);
+
+    const route = await import('$app/api/users/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users') as never,
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.securityDetailsVisible).toBe(false);
+    expect(body.data.stats.pendingPasswordChange).toBeNull();
+    expect(body.data.users[0]).toMatchObject({
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      mfaEnabledAt: null,
+      mustChangePassword: false,
+      passwordChangedAt: null,
+      securityDetailsVisible: false,
+    });
+    expect(mockPrisma.user.count).not.toHaveBeenCalledWith({
+      where: expect.objectContaining({ mustChangePassword: true }),
+    });
   });
 
   it('normalizes invalid users list pagination params', async () => {

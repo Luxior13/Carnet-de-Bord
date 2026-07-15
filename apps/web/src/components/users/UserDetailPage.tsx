@@ -1,16 +1,7 @@
 'use client';
 
 import { UserRole } from '@repo/database';
-import {
-  Activity,
-  AlertTriangle,
-  ArrowLeft,
-  Calendar,
-  Clock,
-  Loader2,
-  type LucideIcon,
-  ShieldCheck,
-} from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, {
@@ -26,15 +17,22 @@ import { toast } from 'sonner';
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { AdminMfaResetDialog } from '$components/users/user-detail/AdminMfaResetDialog';
+import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
 import { UserAccessTab } from '$components/users/user-detail/UserAccessTab';
 import { UserAccountTab } from '$components/users/user-detail/UserAccountTab';
 import {
+  getUserDetailSectionLabel,
   normalizeUserDetailSection,
   USER_DETAIL_SECTIONS,
   type UserDetailSectionId,
 } from '$components/users/user-detail/UserDetailNavigation';
 import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailSectionRail';
-import { UserHistoryTab } from '$components/users/user-detail/UserHistoryTab';
+import {
+  DEFAULT_USER_HISTORY_FILTERS,
+  type UserHistoryFacets,
+  type UserHistoryFilters,
+  UserHistoryTab,
+} from '$components/users/user-detail/UserHistoryTab';
 import {
   type ProfileForm,
   UserProfileTab,
@@ -54,6 +52,7 @@ import {
   type PermissionsData,
 } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
+import { ErrorCode } from '$types/api.types';
 import type {
   AuditLogEntry,
   UserAuditStats,
@@ -73,6 +72,8 @@ import {
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent } from '$ui/card';
+import { Input } from '$ui/input';
+import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 import { apiFetch } from '$utils/api.utils';
@@ -91,11 +92,16 @@ type PendingNavigation =
       kind: 'section';
     };
 
+type PendingStepUpAction = {
+  description: string;
+  execute: () => Promise<void> | void;
+  title: string;
+};
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
 const LOGIN_NAME_PATTERN = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/;
 
-const USER_AUDIT_PAGE_SIZE = 200;
-const USER_AUDIT_MAX_PREFETCH_PAGES = 5;
+const USER_AUDIT_PAGE_SIZE = 50;
 const USER_AUDIT_SUMMARY_PAGE_SIZE = 1;
 const DEFAULT_PERMISSION_PAGE_KEY = PERMISSION_CATEGORIES[0]?.key ?? '';
 const ACCESS_PERMISSION_KEYS = getAccessPermissionKeys();
@@ -162,20 +168,6 @@ const selectPermissionOverridesForKeys = (
     : null;
 };
 
-const formatCompactDate = (date: Date | string | null): string => {
-  if (!date) return 'Jamais';
-
-  const parsedDate = new Date(date);
-
-  if (Number.isNaN(parsedDate.getTime())) return 'Jamais';
-
-  return parsedDate.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-};
-
 const buildUserDetailSectionHref = (
   pathname: string,
   currentQueryString: string,
@@ -201,6 +193,57 @@ const normalizePermissionPageKey = (pageKey: string | null): string => {
     ? pageKey
     : DEFAULT_PERMISSION_PAGE_KEY;
 };
+
+const appendUserAuditFilters = (
+  params: URLSearchParams,
+  filters: UserHistoryFilters,
+): void => {
+  params.set('scope', filters.activityScope);
+
+  if (filters.dateFilter !== 'all') {
+    params.set('period', filters.dateFilter);
+  }
+  if (filters.poleFilter !== 'all') {
+    params.set('poleKey', filters.poleFilter);
+  }
+  if (filters.pageFilter !== 'all') {
+    params.set('pageKey', filters.pageFilter);
+  }
+};
+
+const getUserAuditFiltersFromParams = (params: {
+  get: (name: string) => string | null;
+}): UserHistoryFilters => {
+  const requestedScope = params.get('scope');
+  const requestedPeriod = params.get('period');
+
+  return {
+    activityScope:
+      requestedScope === 'all' ||
+      requestedScope === 'by' ||
+      requestedScope === 'on'
+        ? requestedScope
+        : DEFAULT_USER_HISTORY_FILTERS.activityScope,
+    dateFilter:
+      requestedPeriod === '7' ||
+      requestedPeriod === '30' ||
+      requestedPeriod === '90'
+        ? requestedPeriod
+        : DEFAULT_USER_HISTORY_FILTERS.dateFilter,
+    pageFilter:
+      params.get('pageKey') || DEFAULT_USER_HISTORY_FILTERS.pageFilter,
+    poleFilter:
+      params.get('poleKey') || DEFAULT_USER_HISTORY_FILTERS.poleFilter,
+  };
+};
+
+const getUserAuditFiltersKey = (filters: UserHistoryFilters): string =>
+  [
+    filters.activityScope,
+    filters.dateFilter,
+    filters.poleFilter,
+    filters.pageFilter,
+  ].join('|');
 
 const isPlainLeftClick = (event: MouseEvent): boolean => {
   return (
@@ -237,28 +280,6 @@ const isInternalNavigationLink = (anchor: HTMLAnchorElement): boolean => {
   return anchor.origin === window.location.origin;
 };
 
-const UserDetailMetricCard: FC<{
-  icon: LucideIcon;
-  iconClassName?: string;
-  label: string;
-  value: string;
-}> = ({ icon: Icon, iconClassName, label, value }) => (
-  <div className="border-border/70 bg-surface flex min-w-0 items-center gap-3 rounded-lg border p-3 shadow-[var(--shadow-panel)]">
-    <span
-      className={[
-        'border-border/50 bg-surface-raised text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg border',
-        iconClassName ?? '',
-      ].join(' ')}
-    >
-      <Icon className="size-4" />
-    </span>
-    <div className="min-w-0">
-      <p className="text-muted-foreground text-xs">{label}</p>
-      <p className="truncate text-sm font-medium">{value}</p>
-    </div>
-  </div>
-);
-
 const DetailSkeleton: FC = () => (
   <PageShell className="py-0">
     <PageCanvas contentClassName="relative space-y-4">
@@ -291,17 +312,22 @@ const DetailSkeleton: FC = () => (
             </div>
           </CardContent>
         </Card>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Skeleton className="h-[4.125rem] rounded-lg" />
-          <Skeleton className="h-[4.125rem] rounded-lg" />
-          <Skeleton className="h-[4.125rem] rounded-lg" />
-          <Skeleton className="h-[4.125rem] rounded-lg" />
-        </div>
-        <Skeleton className="h-11 w-full rounded-lg lg:hidden" />
+        <Skeleton className="h-11 w-full rounded-lg 2xl:hidden" />
         <Skeleton className="min-h-96 w-full rounded-lg" />
       </div>
     </PageCanvas>
   </PageShell>
+);
+
+export const UserDetailPageSkeleton: FC = () => (
+  <AuthenticatedLayout
+    breadcrumbs={[
+      { label: 'Administration' },
+      { href: '/administration/utilisateurs', label: 'Utilisateurs' },
+    ]}
+  >
+    <DetailSkeleton />
+  </AuthenticatedLayout>
 );
 
 export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
@@ -315,6 +341,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const permissionPageKey = normalizePermissionPageKey(
     searchParams.get('permissionPage'),
   );
+  const requestedAuditFilters = useMemo(
+    () =>
+      getUserAuditFiltersFromParams(new URLSearchParams(currentQueryString)),
+    [currentQueryString],
+  );
   const {
     applyUserUpdate,
     isLoading: isCurrentUserLoading,
@@ -323,6 +354,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const [user, setUser] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [activeSection, setActiveSection] =
     useState<UserDetailSectionId>(requestedSection);
   const [pendingNavigation, setPendingNavigation] =
@@ -355,17 +387,30 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     useState(false);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [pendingStepUpAction, setPendingStepUpAction] =
+    useState<PendingStepUpAction | null>(null);
 
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [auditTotalLogs, setAuditTotalLogs] = useState<number | null>(null);
   const [auditStats, setAuditStats] = useState<UserAuditStats | null>(null);
+  const [auditFacets, setAuditFacets] = useState<UserHistoryFacets | null>(
+    null,
+  );
+  const [auditFilters, setAuditFilters] = useState<UserHistoryFilters>(() =>
+    getUserAuditFiltersFromParams(searchParams),
+  );
+  const [auditLoadedPage, setAuditLoadedPage] = useState(0);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
+  const [isLoadingMoreAudit, setIsLoadingMoreAudit] = useState(false);
   const [auditError, setAuditError] = useState<string | null>(null);
   const [securitySessions, setSecuritySessions] = useState<UserSessionInfo[]>(
     [],
   );
   const [isLoadingSecuritySessions, setIsLoadingSecuritySessions] =
+    useState(false);
+  const [hasLoadedSecuritySessions, setHasLoadedSecuritySessions] =
     useState(false);
   const [securitySessionsError, setSecuritySessionsError] = useState<
     string | null
@@ -477,6 +522,14 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         currentUser.permissions,
       )
     : false;
+  const canViewUserSecurity = currentUser
+    ? isProtectedActor ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.VIEW_SECURITY,
+        currentUser.permissions,
+      )
+    : false;
   const canRevokeUserSessions = currentUser
     ? isProtectedActor ||
       hasPermission(
@@ -522,7 +575,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const isTargetAdminAccessRestricted =
     !!user && user.role === UserRole.ADMIN && !isProtectedActor;
   const canEditTargetProfile =
-    !!user && !isSelf && canUpdateUsers && !user.isProtected;
+    !!user &&
+    !isSelf &&
+    canUpdateUsers &&
+    !user.isProtected &&
+    !isTargetAdminAccessRestricted;
   const canEditTargetLogin =
     !!user &&
     !isSelf &&
@@ -564,7 +621,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     isProtectedActor &&
     !isSelf &&
     !user.isProtected &&
-    user.role === UserRole.USER &&
     user.mfaEnabledAt !== null;
   const canViewTargetSessions =
     !!user &&
@@ -603,17 +659,20 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           : 'Cet identifiant est en lecture seule depuis cette fiche.';
   const canFetchUserAudit = currentUser?.id === userId || canViewUserActivity;
   const canViewTargetSecurity =
-    canResetTargetMfa ||
-    canResetTargetPassword ||
-    canViewTargetSessions ||
-    canRevokeTargetSessions ||
-    canEditTargetStatus ||
-    canDeleteTargetUser;
+    !!user &&
+    (canViewUserSecurity ||
+      canResetTargetMfa ||
+      canResetTargetPassword ||
+      canViewTargetSessions ||
+      canRevokeTargetSessions ||
+      canEditTargetStatus ||
+      canDeleteTargetUser);
   const visibleUserDetailSections = useMemo(
     () =>
       USER_DETAIL_SECTIONS.filter((section) => {
-        if (section.id === 'access') return canViewTargetAccess;
-        if (section.id === 'account') return canViewTargetPersonalAccount;
+        if (section.id === 'access') {
+          return canViewTargetAccess || canViewTargetPersonalAccount;
+        }
         if (section.id === 'security') return canViewTargetSecurity;
         if (section.id === 'history') return canViewTargetActivity;
 
@@ -726,6 +785,26 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     hasProfileChanges,
     hasSecurityChanges,
   ]);
+  const activeRailSection: UserDetailSectionId =
+    activeSection === 'account' ? 'access' : activeSection;
+  const railDirtySections = useMemo<UserDetailSectionId[]>(() => {
+    const sections = dirtySections.filter((section) => section !== 'account');
+
+    if (hasAccountChanges && !sections.includes('access')) {
+      sections.push('access');
+    }
+
+    return sections;
+  }, [dirtySections, hasAccountChanges]);
+  const resolveRailSection = useCallback(
+    (sectionId: UserDetailSectionId): UserDetailSectionId =>
+      sectionId === 'access' &&
+      !canViewTargetAccess &&
+      canViewTargetPersonalAccount
+        ? 'account'
+        : sectionId,
+    [canViewTargetAccess, canViewTargetPersonalAccount],
+  );
 
   const requestPendingNavigation = useCallback(
     (navigation: PendingNavigation): void => {
@@ -820,6 +899,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         if (!isBackgroundFetch) {
           setIsLoading(true);
           setErrorMessage(null);
+          setErrorStatus(null);
         }
 
         const response = await fetch(`/api/users/${userId}`, {
@@ -831,6 +911,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
         if (response.ok && data.success) {
           const loadedUser = data.data.user as UserType;
+          setErrorStatus(null);
           setUser(loadedUser);
           setEditForm({
             contactEmail: loadedUser.contactEmail ?? '',
@@ -842,6 +923,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           });
           setPermissions(loadedUser.permissions);
         } else if (!isBackgroundFetch) {
+          setErrorStatus(response.status);
           setErrorMessage(
             data.error?.message || "Impossible de charger l'utilisateur",
           );
@@ -850,6 +932,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         if (controller.signal.aborted) return;
 
         if (!isBackgroundFetch) {
+          setErrorStatus(0);
           setErrorMessage("Impossible de charger l'utilisateur");
         }
       } finally {
@@ -873,8 +956,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         setAuditLogs([]);
         setAuditTotalLogs(null);
         setAuditStats(null);
+        setAuditFacets(null);
+        setAuditLoadedPage(0);
         setAuditError(null);
         setIsLoadingAudit(false);
+        setIsLoadingMoreAudit(false);
         hasLoadedAuditLogsRef.current = false;
         hasLoadedAuditSummaryRef.current = false;
 
@@ -886,25 +972,25 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
       try {
         setIsLoadingAudit(true);
+        setIsLoadingMoreAudit(false);
         setAuditError(null);
         const requestedPageSize = includeLogs
           ? USER_AUDIT_PAGE_SIZE
           : USER_AUDIT_SUMMARY_PAGE_SIZE;
-        const buildAuditParams = (page: number): URLSearchParams => {
-          const params = new URLSearchParams({
-            page: String(page),
-            pageSize: String(requestedPageSize),
-          });
+        const auditParams = new URLSearchParams({
+          page: '1',
+          pageSize: String(requestedPageSize),
+        });
 
-          if (!includeLogs) {
-            params.set('includeLogs', 'false');
-          }
-
-          return params;
-        };
+        if (includeLogs) {
+          auditParams.set('includeFacets', 'true');
+          appendUserAuditFilters(auditParams, auditFilters);
+        } else {
+          auditParams.set('includeLogs', 'false');
+        }
 
         const response = await fetch(
-          `/api/users/${userId}/audit?${buildAuditParams(1).toString()}`,
+          `/api/users/${userId}/audit?${auditParams.toString()}`,
           {
             signal: controller.signal,
           },
@@ -914,11 +1000,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         if (controller.signal.aborted) return;
 
         if (response.ok && data.success) {
-          setAuditStats(data.data.stats);
+          if (data.data.stats) {
+            setAuditStats(data.data.stats);
+          }
           hasLoadedAuditSummaryRef.current = true;
 
           if (includeLogs) {
-            const loadedLogs = [...(data.data.logs as AuditLogEntry[])];
+            const loadedLogs = data.data.logs as AuditLogEntry[];
             const totalLogs = Number(
               data.data.pagination?.total ??
                 data.data.stats?.totalActions ??
@@ -927,46 +1015,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             const safeTotalLogs = Number.isFinite(totalLogs)
               ? totalLogs
               : loadedLogs.length;
-            const totalPages = Number(data.data.pagination?.totalPages ?? 1);
-            const pagesToFetch = Math.min(
-              totalPages,
-              USER_AUDIT_MAX_PREFETCH_PAGES,
-            );
-            let didFailToLoadEveryPage = false;
 
-            for (let page = 2; page <= pagesToFetch; page += 1) {
-              const pageResponse = await fetch(
-                `/api/users/${userId}/audit?${buildAuditParams(page).toString()}`,
-                {
-                  signal: controller.signal,
-                },
-              );
-              const pageData = await pageResponse.json();
-
-              if (controller.signal.aborted) return;
-              if (!pageResponse.ok || !pageData.success) {
-                didFailToLoadEveryPage = true;
-                setAuditError(
-                  pageData.error?.message ||
-                    "Impossible de charger tout l'historique",
-                );
-                break;
-              }
-
-              loadedLogs.push(...(pageData.data.logs as AuditLogEntry[]));
-            }
-
-            if (didFailToLoadEveryPage) {
-              setAuditLogs((previousLogs) =>
-                previousLogs.length > 0 ? previousLogs : loadedLogs,
-              );
-              setAuditTotalLogs((previousTotal) =>
-                previousTotal === null ? safeTotalLogs : previousTotal,
-              );
-            } else {
-              setAuditLogs(loadedLogs);
-              setAuditTotalLogs(safeTotalLogs);
-            }
+            setAuditLogs(loadedLogs);
+            setAuditTotalLogs(safeTotalLogs);
+            setAuditFacets(data.data.facets ?? null);
+            setAuditLoadedPage(1);
             hasLoadedAuditLogsRef.current = true;
           }
         } else {
@@ -985,7 +1038,109 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         setIsLoadingAudit(false);
       }
     },
-    [canFetchUserAudit, userId],
+    [auditFilters, canFetchUserAudit, userId],
+  );
+
+  const fetchMoreAuditData = useCallback(async (): Promise<void> => {
+    if (!canFetchUserAudit || isLoadingMoreAudit || auditLoadedPage < 1) return;
+    if (auditTotalLogs !== null && auditLogs.length >= auditTotalLogs) return;
+
+    auditAbortControllerRef.current?.abort();
+
+    const controller = new AbortController();
+    const nextPage = auditLoadedPage + 1;
+    const auditParams = new URLSearchParams({
+      includeFacets: 'false',
+      includeStats: 'false',
+      page: String(nextPage),
+      pageSize: String(USER_AUDIT_PAGE_SIZE),
+    });
+    appendUserAuditFilters(auditParams, auditFilters);
+    auditAbortControllerRef.current = controller;
+
+    try {
+      setIsLoadingMoreAudit(true);
+      setAuditError(null);
+
+      const response = await fetch(
+        `/api/users/${userId}/audit?${auditParams.toString()}`,
+        { signal: controller.signal },
+      );
+      const data = await response.json();
+
+      if (controller.signal.aborted) return;
+      if (!response.ok || !data.success) {
+        setAuditError(
+          data.error?.message || "Impossible de charger plus d'historique",
+        );
+
+        return;
+      }
+
+      const nextLogs = data.data.logs as AuditLogEntry[];
+      const totalLogs = Number(
+        data.data.pagination?.total ?? auditTotalLogs ?? auditLogs.length,
+      );
+
+      setAuditLogs((currentLogs) => {
+        const knownIds = new Set(currentLogs.map((entry) => entry.id));
+
+        return [
+          ...currentLogs,
+          ...nextLogs.filter((entry) => !knownIds.has(entry.id)),
+        ];
+      });
+      if (Number.isFinite(totalLogs)) {
+        setAuditTotalLogs(totalLogs);
+      }
+      setAuditLoadedPage(nextPage);
+    } catch {
+      if (controller.signal.aborted) return;
+
+      setAuditError("Impossible de charger plus d'historique");
+    } finally {
+      if (auditAbortControllerRef.current !== controller) return;
+
+      auditAbortControllerRef.current = null;
+      setIsLoadingMoreAudit(false);
+    }
+  }, [
+    auditFilters,
+    auditLoadedPage,
+    auditLogs.length,
+    auditTotalLogs,
+    canFetchUserAudit,
+    isLoadingMoreAudit,
+    userId,
+  ]);
+
+  const handleAuditFiltersChange = useCallback(
+    (nextFilters: UserHistoryFilters): void => {
+      auditAbortControllerRef.current?.abort();
+      auditAbortControllerRef.current = null;
+      hasLoadedAuditLogsRef.current = false;
+      setAuditFilters(nextFilters);
+      setAuditLogs([]);
+      setAuditTotalLogs(null);
+      setAuditFacets(null);
+      setAuditLoadedPage(0);
+      setAuditError(null);
+      setIsLoadingAudit(false);
+      setIsLoadingMoreAudit(false);
+
+      const nextParams = new URLSearchParams(currentQueryString);
+      nextParams.delete('scope');
+      nextParams.delete('period');
+      nextParams.delete('poleKey');
+      nextParams.delete('pageKey');
+      appendUserAuditFilters(nextParams, nextFilters);
+      window.history.replaceState(
+        null,
+        '',
+        `${pathname}?${nextParams.toString()}`,
+      );
+    },
+    [currentQueryString, pathname],
   );
 
   const fetchSecuritySessions = useCallback(async (): Promise<void> => {
@@ -996,6 +1151,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       setSecuritySessions([]);
       setSecuritySessionsError(null);
       setIsLoadingSecuritySessions(false);
+      setHasLoadedSecuritySessions(true);
 
       return;
     }
@@ -1028,6 +1184,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       if (sessionsAbortControllerRef.current !== controller) return;
 
       sessionsAbortControllerRef.current = null;
+      setHasLoadedSecuritySessions(true);
       setIsLoadingSecuritySessions(false);
     }
   }, [canViewTargetSessions, userId]);
@@ -1059,13 +1216,38 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     setAuditLogs([]);
     setAuditTotalLogs(null);
     setAuditStats(null);
+    setAuditFacets(null);
+    setAuditLoadedPage(0);
     setAuditError(null);
     setIsLoadingAudit(false);
+    setIsLoadingMoreAudit(false);
     setSecuritySessions([]);
     setSecuritySessionsError(null);
+    setHasLoadedSecuritySessions(false);
     setRevokingSecuritySessionId(null);
     setTempPassword(null);
   }, [userId]);
+
+  useEffect(() => {
+    if (
+      getUserAuditFiltersKey(requestedAuditFilters) ===
+      getUserAuditFiltersKey(auditFilters)
+    ) {
+      return;
+    }
+
+    auditAbortControllerRef.current?.abort();
+    auditAbortControllerRef.current = null;
+    hasLoadedAuditLogsRef.current = false;
+    setAuditFilters(requestedAuditFilters);
+    setAuditLogs([]);
+    setAuditTotalLogs(null);
+    setAuditFacets(null);
+    setAuditLoadedPage(0);
+    setAuditError(null);
+    setIsLoadingAudit(false);
+    setIsLoadingMoreAudit(false);
+  }, [auditFilters, requestedAuditFilters]);
 
   useEffect(() => {
     if (activeSection === 'history') {
@@ -1082,10 +1264,29 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   }, [activeSection, fetchAuditData]);
 
   useEffect(() => {
-    if (activeSection === 'security') {
+    if (activeSection === 'security' && !hasLoadedSecuritySessions) {
       void fetchSecuritySessions();
     }
-  }, [activeSection, fetchSecuritySessions]);
+  }, [activeSection, fetchSecuritySessions, hasLoadedSecuritySessions]);
+
+  useEffect(() => {
+    if (activeSection !== 'security') {
+      setTempPassword(null);
+    }
+  }, [activeSection]);
+
+  useEffect(() => {
+    if (!tempPassword) return;
+
+    const timeoutId = window.setTimeout(
+      () => {
+        setTempPassword(null);
+      },
+      2 * 60 * 1000,
+    );
+
+    return (): void => window.clearTimeout(timeoutId);
+  }, [tempPassword]);
 
   useEffect(() => {
     if (!hasUnsavedChanges) return;
@@ -1242,6 +1443,27 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     router.push(navigation.href);
   }, [activeSection, discardSectionChanges, pendingNavigation, router]);
 
+  const requestStepUpForResponse = (
+    data: unknown,
+    action: PendingStepUpAction,
+  ): boolean => {
+    const errorCode = (data as { error?: { code?: string } } | null | undefined)
+      ?.error?.code;
+
+    if (errorCode !== ErrorCode.REAUTHENTICATION_REQUIRED) return false;
+
+    setPendingStepUpAction(action);
+
+    return true;
+  };
+
+  const handleStepUpComplete = async (): Promise<void> => {
+    const action = pendingStepUpAction;
+
+    setPendingStepUpAction(null);
+    if (action) await action.execute();
+  };
+
   const syncUserState = (updatedUser: UserType): void => {
     setUser(updatedUser);
     setEditForm({
@@ -1378,6 +1600,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         refreshAuditAfterMutation();
         toast.success('Utilisateur mis à jour');
       } else {
+        if (
+          requestStepUpForResponse(data, {
+            description:
+              "La modification de l'identifiant de connexion ferme toutes les sessions du membre.",
+            execute: () => handleSaveProfile(true),
+            title: "Confirmer la modification de l'identifiant",
+          })
+        ) {
+          return;
+        }
         toast.error(data.error?.message || 'Erreur lors de la mise à jour');
       }
     } catch {
@@ -1435,6 +1667,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         refreshAuditAfterMutation();
         toast.success('Accès mis à jour');
       } else {
+        if (
+          requestStepUpForResponse(data, {
+            description:
+              'Ce changement peut modifier le rôle ou les permissions sensibles du membre et fermer ses sessions.',
+            execute: handleSaveAccess,
+            title: 'Confirmer la modification des accès',
+          })
+        ) {
+          return;
+        }
         toast.error(data.error?.message || 'Erreur lors de la mise à jour');
       }
     } catch {
@@ -1486,6 +1728,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         refreshAuditAfterMutation();
         toast.success('Autonomie du compte mise à jour');
       } else {
+        if (
+          requestStepUpForResponse(data, {
+            description:
+              'Cette modification change les actions que le membre peut effectuer sur son propre compte.',
+            execute: handleSaveAccount,
+            title: 'Confirmer la politique du compte',
+          })
+        ) {
+          return;
+        }
         toast.error(data.error?.message || 'Erreur lors de la mise à jour');
       }
     } catch {
@@ -1530,6 +1782,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         void fetchSecuritySessions();
         toast.success('Sécurité mise à jour');
       } else {
+        if (
+          requestStepUpForResponse(data, {
+            description:
+              "Ce changement peut désactiver le compte et fermer l'accès du membre.",
+            execute: handleSaveSecurity,
+            title: "Confirmer le changement d'état",
+          })
+        ) {
+          return;
+        }
         toast.error(data.error?.message || 'Erreur lors de la mise à jour');
       }
     } catch {
@@ -1562,6 +1824,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         refreshAuditAfterMutation();
         void fetchSecuritySessions();
       } else {
+        if (
+          requestStepUpForResponse(data, {
+            description:
+              'Un nouveau secret temporaire sera créé et toutes les sessions du membre seront fermées.',
+            execute: handleResetPassword,
+            title: 'Confirmer la réinitialisation du mot de passe',
+          })
+        ) {
+          return;
+        }
         toast.error(
           data.error?.message || 'Erreur lors de la réinitialisation',
         );
@@ -1600,7 +1872,18 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         toast.success('Sessions révoquées');
         refreshAuditAfterMutation();
         void fetchSecuritySessions();
+        void fetchUser({ background: true });
       } else {
+        if (
+          requestStepUpForResponse(data, {
+            description:
+              'Toutes les sessions actives du membre seront immédiatement fermées.',
+            execute: handleRevokeSecuritySessions,
+            title: 'Confirmer la révocation des sessions',
+          })
+        ) {
+          return;
+        }
         toast.error(data.error?.message || 'Erreur lors de la révocation');
       }
     } catch {
@@ -1638,6 +1921,15 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         refreshAuditAfterMutation();
         void fetchSecuritySessions();
       } else {
+        if (
+          requestStepUpForResponse(data, {
+            description: 'Cette session du membre sera immédiatement fermée.',
+            execute: () => handleRevokeSecuritySession(sessionId),
+            title: 'Confirmer la révocation de la session',
+          })
+        ) {
+          return;
+        }
         toast.error(data.error?.message || 'Erreur lors de la révocation');
       }
     } catch {
@@ -1666,6 +1958,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         toast.success('Utilisateur supprimé');
         router.push('/administration/utilisateurs');
       } else {
+        if (
+          requestStepUpForResponse(data, {
+            description:
+              'Le compte sera désactivé, retiré des listes actives et toutes ses sessions seront fermées.',
+            execute: handleDelete,
+            title: 'Confirmer la suppression du compte',
+          })
+        ) {
+          return;
+        }
         toast.error(data.error?.message || 'Erreur lors de la suppression');
       }
     } catch {
@@ -1676,79 +1978,81 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     }
   };
 
-  const trackedActionsLabel = isLoadingAudit
-    ? 'Chargement'
-    : canFetchUserAudit
-      ? String(auditStats?.totalActions ?? auditLogs.length)
-      : 'Restreint';
-
-  const renderContent = (): React.ReactNode => {
+  const renderAuthorizationContent = (
+    requestedView: 'access' | 'account',
+  ): React.ReactNode => {
     if (!user) return null;
 
-    switch (activeSection) {
-      case 'resume':
-        return (
-          <UserResumeTab
-            auditStats={auditStats}
-            canViewContact={canViewTargetContact}
-            user={user}
-          />
-        );
-      case 'profile':
-        return (
-          <div className="space-y-3">
-            {isSelf && (
-              <div className="border-primary/25 bg-primary/[0.08] flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
-                <div className="min-w-0">
-                  <p className="text-foreground text-sm font-medium">
-                    Votre fiche administrative est en lecture seule
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-xs leading-5">
-                    Utilisez votre espace personnel pour modifier votre identité
-                    et votre adresse de contact.
-                  </p>
-                </div>
-                <Button asChild className="shrink-0" size="sm">
-                  <Link href="/mon-compte">Gérer mon compte</Link>
-                </Button>
-              </div>
-            )}
-            <UserProfileTab
-              form={{
-                contactEmail: editForm.contactEmail,
-                firstName: editForm.firstName,
-                lastName: editForm.lastName,
-                loginName: editForm.loginName,
-              }}
-              setForm={(form: ProfileForm) =>
-                setEditForm((currentForm) => ({ ...currentForm, ...form }))
-              }
-              canEdit={canEditTargetProfile}
-              canEditContact={canEditTargetContact}
-              canEditLogin={canEditTargetLogin}
-              loginReadOnlyHint={loginReadOnlyHint}
-              canViewContact={canViewTargetContact}
-              isSaving={isSaving}
-              onSave={handleSaveProfile}
-              onCancel={handleCancelProfile}
-              hasChanges={hasProfileChanges}
-              canSave={canSaveProfile}
-              errors={profileErrors}
-            />
-          </div>
-        );
-      case 'access':
-        if (!canViewTargetAccess) {
-          return (
-            <AccessDeniedState description="Vous n'avez pas la permission de consulter les accès de cet utilisateur." />
-          );
-        }
+    if (!canViewTargetAccess && !canViewTargetPersonalAccount) {
+      return (
+        <AccessDeniedState description="Vous n'avez pas la permission de consulter les autorisations de cet utilisateur." />
+      );
+    }
 
-        return (
+    const selectedView =
+      requestedView === 'access' && canViewTargetAccess
+        ? 'access'
+        : requestedView === 'account' && canViewTargetPersonalAccount
+          ? 'account'
+          : canViewTargetAccess
+            ? 'access'
+            : 'account';
+
+    return (
+      <section
+        aria-labelledby="user-authorizations-title"
+        className="space-y-3"
+      >
+        <h2 id="user-authorizations-title" className="sr-only">
+          Autorisations
+        </h2>
+        {canViewTargetAccess && canViewTargetPersonalAccount && (
+          <div
+            aria-label="Catégorie d'autorisations"
+            className="border-border/70 bg-surface-muted/75 inline-flex min-h-11 w-full items-center gap-1 rounded-lg border p-1 sm:w-auto"
+            role="group"
+          >
+            <Button
+              aria-pressed={selectedView === 'access'}
+              className="min-h-9 flex-1 sm:flex-none"
+              onClick={() => handleSectionChange('access')}
+              size="sm"
+              type="button"
+              variant={selectedView === 'access' ? 'secondary' : 'ghost'}
+            >
+              Accès au site
+              {hasAccessChanges && (
+                <span
+                  aria-label="Modifications non enregistrées"
+                  className="bg-warning size-1.5 rounded-full"
+                />
+              )}
+            </Button>
+            <Button
+              aria-pressed={selectedView === 'account'}
+              className="min-h-9 flex-1 sm:flex-none"
+              onClick={() => handleSectionChange('account')}
+              size="sm"
+              type="button"
+              variant={selectedView === 'account' ? 'secondary' : 'ghost'}
+            >
+              Compte personnel
+              {hasAccountChanges && (
+                <span
+                  aria-label="Modifications non enregistrées"
+                  className="bg-warning size-1.5 rounded-full"
+                />
+              )}
+            </Button>
+          </div>
+        )}
+        {selectedView === 'access' ? (
           <UserAccessTab
             user={user}
             role={editForm.role}
-            setRole={(role) => setEditForm({ ...editForm, role })}
+            setRole={(role) =>
+              setEditForm((currentForm) => ({ ...currentForm, role }))
+            }
             permissions={permissions}
             setPermissions={setPermissions}
             canEditRole={canEditTargetRole}
@@ -1761,15 +2065,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             hasChanges={hasAccessChanges}
             canSave={canSaveAccess}
           />
-        );
-      case 'account':
-        if (!canViewTargetPersonalAccount) {
-          return (
-            <AccessDeniedState description="Vous n'avez pas la permission de consulter l'autonomie de ce compte." />
-          );
-        }
-
-        return (
+        ) : (
           <UserAccountTab
             user={user}
             role={editForm.role}
@@ -1782,7 +2078,65 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             hasChanges={hasAccountChanges}
             canSave={canSaveAccount}
           />
+        )}
+      </section>
+    );
+  };
+
+  const auditExportParams = new URLSearchParams({ format: 'csv' });
+  appendUserAuditFilters(auditExportParams, auditFilters);
+  const auditExportHref = `/api/users/${userId}/audit?${auditExportParams.toString()}`;
+  const hasMoreAuditLogs =
+    auditTotalLogs !== null && auditLogs.length < auditTotalLogs;
+  const shouldShowAuditLoading =
+    isLoadingAudit ||
+    (!hasLoadedAuditLogsRef.current &&
+      auditError === null &&
+      auditLogs.length === 0);
+
+  const renderContent = (): React.ReactNode => {
+    if (!user) return null;
+
+    switch (activeSection) {
+      case 'resume':
+        return (
+          <UserResumeTab
+            auditStats={auditStats}
+            canViewActivity={canFetchUserAudit}
+            canViewContact={canViewTargetContact}
+            user={user}
+          />
         );
+      case 'profile':
+        return (
+          <UserProfileTab
+            form={{
+              contactEmail: editForm.contactEmail,
+              firstName: editForm.firstName,
+              lastName: editForm.lastName,
+              loginName: editForm.loginName,
+            }}
+            setForm={(form: ProfileForm) =>
+              setEditForm((currentForm) => ({ ...currentForm, ...form }))
+            }
+            canEdit={canEditTargetProfile}
+            canEditContact={canEditTargetContact}
+            canEditLogin={canEditTargetLogin}
+            loginReadOnlyHint={loginReadOnlyHint}
+            canViewContact={canViewTargetContact}
+            isSelf={isSelf}
+            isSaving={isSaving}
+            onSave={handleSaveProfile}
+            onCancel={handleCancelProfile}
+            hasChanges={hasProfileChanges}
+            canSave={canSaveProfile}
+            errors={profileErrors}
+          />
+        );
+      case 'access':
+        return renderAuthorizationContent('access');
+      case 'account':
+        return renderAuthorizationContent('account');
       case 'security':
         if (!canViewTargetSecurity) {
           return (
@@ -1801,7 +2155,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             canRevokeSessions={canRevokeTargetSessions}
             canViewSessions={canViewTargetSessions}
             isSaving={isSaving}
-            isLoadingSessions={isLoadingSecuritySessions}
+            isLoadingSessions={
+              isLoadingSecuritySessions ||
+              (canViewTargetSessions && !hasLoadedSecuritySessions)
+            }
             isRevokingSessionId={revokingSecuritySessionId}
             isRevokingSessions={isRevokingSecuritySessions}
             onSaveStatus={handleSaveSecurity}
@@ -1834,13 +2191,18 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             auditLogs={auditLogs}
             canExport={canExportUsers}
             error={auditError}
-            isAuditTruncated={
-              auditTotalLogs !== null && auditLogs.length < auditTotalLogs
-            }
-            isLoading={isLoadingAudit}
+            exportHref={canExportUsers ? auditExportHref : undefined}
+            facets={auditFacets}
+            filters={auditFilters}
+            hasMoreAuditLogs={hasMoreAuditLogs}
+            isAuditTruncated={hasMoreAuditLogs}
+            isLoading={shouldShowAuditLoading}
+            isLoadingMore={isLoadingMoreAudit}
+            onFiltersChange={handleAuditFiltersChange}
+            onLoadMore={() => void fetchMoreAuditData()}
             onRetry={() => void fetchAuditData(true)}
-            perspective="managed"
-            totalAuditLogs={auditTotalLogs ?? auditStats?.totalActions}
+            perspective={isSelf ? 'personal' : 'managed'}
+            totalAuditLogs={auditTotalLogs ?? auditLogs.length}
             userId={userId}
           />
         );
@@ -1848,6 +2210,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         return (
           <UserResumeTab
             auditStats={auditStats}
+            canViewActivity={canFetchUserAudit}
             canViewContact={canViewTargetContact}
             user={user}
           />
@@ -1856,16 +2219,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   };
 
   if (isCurrentUserLoading && !currentUser) {
-    return (
-      <AuthenticatedLayout
-        breadcrumbs={[
-          { label: 'Administration' },
-          { href: '/administration/utilisateurs', label: 'Utilisateurs' },
-        ]}
-      >
-        <DetailSkeleton />
-      </AuthenticatedLayout>
-    );
+    return <UserDetailPageSkeleton />;
   }
 
   if (!canViewUsers) {
@@ -1886,19 +2240,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   }
 
   if (isLoading) {
-    return (
-      <AuthenticatedLayout
-        breadcrumbs={[
-          { label: 'Administration' },
-          { href: '/administration/utilisateurs', label: 'Utilisateurs' },
-        ]}
-      >
-        <DetailSkeleton />
-      </AuthenticatedLayout>
-    );
+    return <UserDetailPageSkeleton />;
   }
 
   if (errorMessage || !user) {
+    const isNotFound = errorStatus === 404;
+
     return (
       <AuthenticatedLayout
         breadcrumbs={[
@@ -1906,13 +2253,42 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           { href: '/administration/utilisateurs', label: 'Utilisateurs' },
         ]}
       >
-        <PageState
-          actionHref="/administration/utilisateurs"
-          actionLabel="Retour aux utilisateurs"
-          description={errorMessage || "Impossible de charger l'utilisateur."}
-          title="Utilisateur introuvable"
-          tone="destructive"
-        />
+        {errorStatus === 403 ? (
+          <AccessDeniedState
+            actionHref="/administration/utilisateurs"
+            actionLabel="Retour aux utilisateurs"
+            description="Vous n'avez pas la permission de consulter cet utilisateur."
+          />
+        ) : (
+          <PageState
+            actionHref={isNotFound ? '/administration/utilisateurs' : undefined}
+            actionLabel={isNotFound ? 'Retour aux utilisateurs' : 'Réessayer'}
+            description={
+              isNotFound
+                ? "Ce compte n'existe pas ou a été supprimé."
+                : errorMessage || "Impossible de charger l'utilisateur."
+            }
+            onAction={
+              isNotFound
+                ? undefined
+                : (): void => {
+                    void fetchUser();
+                  }
+            }
+            secondaryActionHref={
+              isNotFound ? undefined : '/administration/utilisateurs'
+            }
+            secondaryActionLabel={
+              isNotFound ? undefined : 'Retour aux utilisateurs'
+            }
+            title={
+              isNotFound
+                ? 'Utilisateur introuvable'
+                : 'Impossible de charger la fiche'
+            }
+            tone="destructive"
+          />
+        )}
       </AuthenticatedLayout>
     );
   }
@@ -1931,17 +2307,23 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       <PageShell className="py-0">
         <PageCanvas contentClassName="relative space-y-5">
           <UserDetailSectionRail
-            activeSection={activeSection}
+            activeSection={activeRailSection}
             className="2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:w-44"
-            dirtySections={dirtySections}
+            dirtySections={railDirtySections}
             getSectionHref={(sectionId) =>
               buildUserDetailSectionHref(
                 pathname,
                 currentQueryString,
-                sectionId,
+                resolveRailSection(sectionId),
               )
             }
-            onSectionChange={handleSectionChange}
+            onSectionChange={(sectionId) => {
+              if (sectionId === 'access' && activeRailSection === 'access') {
+                return;
+              }
+
+              handleSectionChange(resolveRailSection(sectionId));
+            }}
             sections={visibleUserDetailSections}
           />
           <div className="min-w-0 space-y-3">
@@ -1971,12 +2353,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                       variant="outline"
                       className="border-warning/40 text-warning"
                     >
-                      Protégé
+                      Compte racine
                     </Badge>
                   )}
-                  {user.isActive ? (
-                    <Badge variant="secondary">Actif</Badge>
-                  ) : (
+                  {!user.isActive && (
                     <Badge
                       variant="outline"
                       className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
@@ -1995,60 +2375,44 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 </>
               }
             />
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="border-border/70 bg-surface flex items-center gap-3 rounded-lg border p-3 shadow-[var(--shadow-panel)]">
-                <span className="border-border/50 bg-surface-raised text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg border">
-                  <Clock className="size-4" />
-                </span>
+            {isSelf && (
+              <div className="border-primary/25 bg-primary/[0.08] flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
                 <div className="min-w-0">
-                  <p className="text-muted-foreground text-xs">
-                    Dernière connexion
+                  <p className="text-foreground text-sm font-medium">
+                    Votre fiche administrative est en lecture seule
                   </p>
-                  <p className="truncate text-sm font-medium">
-                    {formatCompactDate(user.lastLoginAt)}
+                  <p className="text-muted-foreground mt-1 text-xs leading-5">
+                    Consultez ici les informations de gestion. Utilisez Mon
+                    compte pour modifier vos informations personnelles et votre
+                    sécurité.
                   </p>
                 </div>
+                <Button asChild className="shrink-0" size="sm">
+                  <Link href="/mon-compte">Gérer mon compte</Link>
+                </Button>
               </div>
-              <div className="border-border/70 bg-surface flex items-center gap-3 rounded-lg border p-3 shadow-[var(--shadow-panel)]">
-                <span className="border-border/50 bg-surface-raised text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg border">
-                  <Calendar className="size-4" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-muted-foreground text-xs">Créé</p>
-                  <p className="truncate text-sm font-medium">
-                    {formatCompactDate(user.createdAt)}
-                  </p>
-                </div>
-              </div>
-              <div className="border-border/70 bg-surface flex items-center gap-3 rounded-lg border p-3 shadow-[var(--shadow-panel)]">
-                <span className="border-border/50 bg-surface-raised text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg border">
-                  <Activity className="size-4" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-muted-foreground text-xs">Activité</p>
-                  <p className="truncate text-sm font-medium">
-                    {trackedActionsLabel}
-                  </p>
-                </div>
-              </div>
-              <UserDetailMetricCard
-                icon={ShieldCheck}
-                label="Accès"
-                value={getAccessLabel(user)}
-              />
-            </div>
+            )}
+            <p aria-live="polite" className="sr-only">
+              Section {getUserDetailSectionLabel(activeSection)} affichée
+            </p>
             <UserDetailSectionRail
-              activeSection={activeSection}
-              dirtySections={dirtySections}
+              activeSection={activeRailSection}
+              dirtySections={railDirtySections}
               getSectionHref={(sectionId) =>
                 buildUserDetailSectionHref(
                   pathname,
                   currentQueryString,
-                  sectionId,
+                  resolveRailSection(sectionId),
                 )
               }
               layout="mobile"
-              onSectionChange={handleSectionChange}
+              onSectionChange={(sectionId) => {
+                if (sectionId === 'access' && activeRailSection === 'access') {
+                  return;
+                }
+
+                handleSectionChange(resolveRailSection(sectionId));
+              }}
               sections={visibleUserDetailSections}
             />
             <div className="min-w-0">{renderContent()}</div>
@@ -2148,6 +2512,14 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         }
         targetUserId={user.id}
       />
+      <AdminStepUpDialog
+        actorLoginName={currentUser?.loginName ?? ''}
+        description={pendingStepUpAction?.description ?? ''}
+        onCancel={() => setPendingStepUpAction(null)}
+        onComplete={handleStepUpComplete}
+        open={pendingStepUpAction !== null}
+        title={pendingStepUpAction?.title ?? 'Confirmer votre identité'}
+      />
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
         <AlertDialogContent className="border-border overflow-hidden rounded-lg p-0">
           <div className="p-6">
@@ -2218,7 +2590,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           </div>
         </AlertDialogContent>
       </AlertDialog>
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      <AlertDialog
+        open={showDeleteConfirm}
+        onOpenChange={(open) => {
+          setShowDeleteConfirm(open);
+          if (!open) setDeleteConfirmation('');
+        }}
+      >
         <AlertDialogContent className="border-border overflow-hidden rounded-lg p-0">
           <div className="p-6">
             <AlertDialogHeader>
@@ -2229,17 +2607,35 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 Supprimer cet utilisateur ?
               </AlertDialogTitle>
               <AlertDialogDescription className="text-muted-foreground">
-                Le compte sera désactivé, masqué des listes actives et toutes
-                ses sessions seront invalidées.
+                Le compte de{' '}
+                <strong>
+                  {user.firstName} {user.lastName}
+                </strong>{' '}
+                sera désactivé, masqué des listes actives et toutes ses sessions
+                seront invalidées.
               </AlertDialogDescription>
             </AlertDialogHeader>
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="delete-user-confirmation">
+                Saisissez <strong>{user.loginName}</strong> pour confirmer
+              </Label>
+              <Input
+                autoComplete="off"
+                id="delete-user-confirmation"
+                onChange={(event) => setDeleteConfirmation(event.target.value)}
+                placeholder={user.loginName}
+                value={deleteConfirmation}
+              />
+            </div>
             <AlertDialogFooter className="mt-4">
               <AlertDialogCancel className="border-border">
                 Annuler
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDelete}
-                disabled={isDeleting}
+                disabled={
+                  isDeleting || deleteConfirmation.trim() !== user.loginName
+                }
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 {isDeleting && (

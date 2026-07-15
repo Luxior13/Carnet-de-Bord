@@ -28,15 +28,13 @@ export const UsersAdminHero: FC<UsersAdminHeroProps> = ({
       actions={actions}
       description={description}
       eyebrow={
-        <>
-          <Badge variant="outline" className={tone.soft}>
-            Système
-          </Badge>
-          {meta}
-        </>
+        <Badge variant="outline" className={tone.soft}>
+          Système
+        </Badge>
       }
       icon={icon}
       iconClassName={iconClassName}
+      meta={meta}
       title={title}
       tone="system"
     />

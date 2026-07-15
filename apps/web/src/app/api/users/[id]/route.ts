@@ -10,6 +10,7 @@ import {
   hasPermission,
   normalizePermissionOverrides,
   PERMISSIONS,
+  requiresMfaForAccess,
 } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import {
@@ -23,6 +24,7 @@ import {
   mapUserToUserType,
 } from '$server/auth';
 import { prisma } from '$server/prisma';
+import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -43,6 +45,13 @@ class LoginNameReservationConflictError extends Error {
   constructor() {
     super('Login name is permanently reserved by another user');
     this.name = 'LoginNameReservationConflictError';
+  }
+}
+
+class UserStateChangedError extends Error {
+  constructor() {
+    super('User state changed during a sensitive mutation');
+    this.name = 'UserStateChangedError';
   }
 }
 
@@ -151,12 +160,30 @@ const mapUserForActor = (
       PERMISSIONS.USERS.UPDATE_CONTACT,
       actor.permissions,
     );
+  const canViewSecurity =
+    actor.id === clientUser.id ||
+    actor.isProtected ||
+    hasPermission(
+      actor.role,
+      PERMISSIONS.USERS.VIEW_SECURITY,
+      actor.permissions,
+    );
 
   return {
     ...clientUser,
     ...(canViewContact
       ? {}
       : { contactEmail: null, contactEmailVerifiedAt: null }),
+    ...(canViewSecurity
+      ? { securityDetailsVisible: true }
+      : {
+          failedLoginAttempts: 0,
+          lockedUntil: null,
+          mfaEnabledAt: null,
+          mustChangePassword: false,
+          passwordChangedAt: null,
+          securityDetailsVisible: false,
+        }),
     permissions: getPermissionOverridesForActor(clientUser.permissions, actor),
   };
 };
@@ -494,6 +521,7 @@ export async function PATCH(
 
     // Get existing user
     const existingUser = await prisma.user.findUnique({
+      include: { totpCredential: { select: { userId: true } } },
       where: { deletedAt: null, id },
     });
 
@@ -667,21 +695,40 @@ export async function PATCH(
       );
     }
 
+    const resultingRole = role ?? existingUser.role;
+    const resultingPermissions =
+      permissions === undefined ? existingPermissionOverrides : permissions;
+    const resultingAccessRequiresMfa =
+      resultingRole === 'ADMIN' ||
+      requiresMfaForAccess(resultingRole, resultingPermissions);
+    const hasCompleteMfa =
+      existingUser.mfaEnabledAt !== null &&
+      Boolean(existingUser.totpCredential);
+
     if (
-      existingUser.role === 'ADMIN' &&
-      !auth.user.isProtected &&
-      (contactEmail !== undefined ||
-        loginName !== undefined ||
-        typeof isActive === 'boolean' ||
-        isPermissionsUpdate ||
-        role !== undefined)
+      (isRoleUpdate || isPermissionsUpdate) &&
+      resultingAccessRequiresMfa &&
+      !hasCompleteMfa
     ) {
       return NextResponse.json(
         {
           error: {
-            code: ErrorCode.FORBIDDEN,
+            code: ErrorCode.CONFLICT,
             message:
-              "Seul un superadmin peut modifier les accès d'un administrateur",
+              "L'utilisateur doit activer complètement sa double authentification avant de recevoir des accès critiques",
+          },
+          success: false,
+        },
+        { status: 409 },
+      );
+    }
+
+    if (existingUser.role === 'ADMIN' && !auth.user.isProtected) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message: 'Seul le compte racine peut modifier un administrateur',
           },
           success: false,
         },
@@ -885,6 +932,15 @@ export async function PATCH(
     const changedKeys = Object.keys(afterValues);
     const hasAuthorizationChange =
       changedKeys.includes('permissions') || changedKeys.includes('role');
+    const requiresRecentProof =
+      hasAuthorizationChange ||
+      changedKeys.includes('isActive') ||
+      changedKeys.includes('loginName');
+
+    if (requiresRecentProof) {
+      const proofCheck = requireRecentSensitiveActionProof(auth.session);
+      if (!proofCheck.success) return proofCheck.response;
+    }
 
     // Build target name for audit log
     const targetName =
@@ -1017,6 +1073,7 @@ export async function PATCH(
         data: updateData,
         where: {
           id,
+          securityVersion: existingUser.securityVersion,
           updatedAt: expectedUpdatedAt ?? existingUser.updatedAt,
         },
       });
@@ -1163,15 +1220,26 @@ export async function DELETE(
       );
     }
 
+    const proofCheck = requireRecentSensitiveActionProof(auth.session);
+    if (!proofCheck.success) return proofCheck.response;
+
     await prisma.$transaction(async (transaction) => {
-      await transaction.user.update({
+      const deletedUser = await transaction.user.updateMany({
         data: {
           deletedAt: new Date(),
           isActive: false,
           securityVersion: { increment: 1 },
         },
-        where: { id },
+        where: {
+          deletedAt: null,
+          id,
+          isProtected: false,
+          ...(auth.user.isProtected ? {} : { role: 'USER' as const }),
+          securityVersion: existingUser.securityVersion,
+          updatedAt: existingUser.updatedAt,
+        },
       });
+      if (deletedUser.count !== 1) throw new UserStateChangedError();
 
       await transaction.session.deleteMany({ where: { userId: id } });
 
@@ -1199,6 +1267,20 @@ export async function DELETE(
       success: true,
     });
   } catch (error) {
+    if (error instanceof UserStateChangedError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.CONFLICT,
+            message:
+              'La sécurité ou le rôle de ce compte a changé. Rechargez la fiche avant de réessayer.',
+          },
+          success: false,
+        },
+        { status: 409 },
+      );
+    }
+
     return apiErrors.internal('USER_DELETE', error);
   }
 }

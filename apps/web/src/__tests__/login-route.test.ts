@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PERMISSIONS } from '$constants/permissions.constants';
 import { ErrorCode } from '$types/api.types';
 
 const mocks = vi.hoisted(() => ({
@@ -501,6 +502,80 @@ describe('POST /api/auth/login', () => {
       rememberMe: false,
       securityVersion: 9,
       userId: 'root-user',
+    });
+    expect(mocks.createSession).not.toHaveBeenCalled();
+    expect(mocks.setSessionTokenCookie).not.toHaveBeenCalled();
+  });
+
+  it('also requires MFA setup for an unprotected administrator', async () => {
+    mocks.authenticateUser.mockResolvedValue({
+      success: true,
+      user: buildAuthenticatedUser({
+        id: 'admin-user',
+        isProtected: false,
+        loginName: 'admin.user',
+        role: 'ADMIN',
+        securityVersion: 5,
+      }),
+    });
+    const { POST } = await import('$app/api/auth/login/route');
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/auth/login', {
+        body: JSON.stringify({
+          loginName: 'admin.user',
+          password: 'Secret1!',
+        }),
+        method: 'POST',
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.status).toBe('mfa_setup_required');
+    expect(mocks.createMfaChallenge).toHaveBeenCalledWith({
+      credentialUpdatedAt: null,
+      purpose: 'SETUP',
+      rememberMe: false,
+      securityVersion: 5,
+      userId: 'admin-user',
+    });
+    expect(mocks.createSession).not.toHaveBeenCalled();
+    expect(mocks.setSessionTokenCookie).not.toHaveBeenCalled();
+  });
+
+  it('requires MFA setup and disables remember-me for a USER with effective critical access', async () => {
+    mocks.authenticateUser.mockResolvedValue({
+      success: true,
+      user: buildAuthenticatedUser({
+        permissions: {
+          [PERMISSIONS.USERS.UPDATE_LOGIN]: true,
+          [PERMISSIONS.USERS.VIEW]: true,
+        },
+      }),
+    });
+    const { POST } = await import('$app/api/auth/login/route');
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/auth/login', {
+        body: JSON.stringify({
+          loginName: 'user.name',
+          password: 'Secret1!',
+          rememberMe: true,
+        }),
+        method: 'POST',
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.status).toBe('mfa_setup_required');
+    expect(mocks.createMfaChallenge).toHaveBeenCalledWith({
+      credentialUpdatedAt: null,
+      purpose: 'SETUP',
+      rememberMe: false,
+      securityVersion: 3,
+      userId: 'user-1',
     });
     expect(mocks.createSession).not.toHaveBeenCalled();
     expect(mocks.setSessionTokenCookie).not.toHaveBeenCalled();

@@ -15,6 +15,9 @@ type PageStateProps = {
   actionLabel?: string;
   description: ReactNode;
   icon?: ReactNode;
+  onAction?: () => void;
+  secondaryActionHref?: string;
+  secondaryActionLabel?: string;
   title: ReactNode;
   tone?: PageStateTone;
 };
@@ -29,6 +32,9 @@ export const PageState: FC<PageStateProps> = ({
   actionLabel,
   description,
   icon,
+  onAction,
+  secondaryActionHref,
+  secondaryActionLabel,
   title,
   tone = 'default',
 }) => {
@@ -50,10 +56,27 @@ export const PageState: FC<PageStateProps> = ({
                     {description}
                   </p>
                 </div>
-                {actionHref && actionLabel && (
-                  <Button asChild variant="outline">
-                    <Link href={actionHref}>{actionLabel}</Link>
-                  </Button>
+                {(actionLabel ||
+                  (secondaryActionHref && secondaryActionLabel)) && (
+                  <div className="flex flex-wrap gap-2">
+                    {actionLabel && actionHref && (
+                      <Button asChild variant="outline">
+                        <Link href={actionHref}>{actionLabel}</Link>
+                      </Button>
+                    )}
+                    {actionLabel && !actionHref && onAction && (
+                      <Button type="button" onClick={onAction}>
+                        {actionLabel}
+                      </Button>
+                    )}
+                    {secondaryActionHref && secondaryActionLabel && (
+                      <Button asChild variant="outline">
+                        <Link href={secondaryActionHref}>
+                          {secondaryActionLabel}
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

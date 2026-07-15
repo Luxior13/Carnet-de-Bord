@@ -2,6 +2,7 @@
 
 import {
   AlertTriangle,
+  ChevronDown,
   Clipboard,
   KeyRound,
   Laptop,
@@ -18,13 +19,23 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import React, { type FC } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import type { UserSessionInfo, UserType } from '$types/auth.types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '$ui/alert-dialog';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
 import { Label } from '$ui/label';
 import { Skeleton } from '$ui/skeleton';
 import { Switch } from '$ui/switch';
@@ -174,54 +185,18 @@ const parseUserAgent = (userAgent: string | null): ParsedUserAgent => {
 const SectionTitle: FC<{
   children: React.ReactNode;
   icon: React.ReactNode;
-}> = ({ children, icon }) => (
-  <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
+  id: string;
+}> = ({ children, icon, id }) => (
+  <h3
+    id={id}
+    className="text-foreground flex items-center gap-2 text-sm font-semibold"
+  >
     <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-7 items-center justify-center rounded-lg border">
       {icon}
     </span>
     {children}
-  </CardTitle>
+  </h3>
 );
-
-const SecurityMetric: FC<{
-  description: string;
-  icon: React.ReactNode;
-  label: string;
-  tone?: 'danger' | 'neutral' | 'primary' | 'warning';
-  value: string;
-}> = ({ description, icon, label, tone = 'neutral', value }) => {
-  const toneClassName =
-    tone === 'danger'
-      ? 'border-destructive/35 bg-destructive/10 text-destructive'
-      : tone === 'warning'
-        ? 'border-warning/35 bg-warning/10 text-warning'
-        : tone === 'primary'
-          ? 'border-primary/35 bg-primary/15 text-primary-emphasis'
-          : 'border-border/70 bg-background/45 text-muted-foreground';
-
-  return (
-    <Card className="border-border/70 overflow-hidden rounded-md py-0">
-      <CardContent className="p-3 sm:p-4">
-        <div className="flex items-start gap-3">
-          <span
-            className={`${toneClassName} flex size-9 shrink-0 items-center justify-center rounded-lg border`}
-          >
-            {icon}
-          </span>
-          <div className="min-w-0">
-            <p className="text-muted-foreground text-xs">{label}</p>
-            <p className="text-foreground mt-0.5 truncate text-sm font-semibold">
-              {value}
-            </p>
-            <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
-              {description}
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
 
 const SecurityInfoBlock: FC<{
   children?: React.ReactNode;
@@ -264,10 +239,10 @@ const SecurityInfoBlock: FC<{
 const SessionRow: FC<{
   disabled: boolean;
   isRevoking: boolean;
-  onRevokeSession: (sessionId: string) => void;
+  onRequestRevoke: (session: UserSessionInfo) => void;
   session: UserSessionInfo;
   showRevokeAction: boolean;
-}> = ({ disabled, isRevoking, onRevokeSession, session, showRevokeAction }) => {
+}> = ({ disabled, isRevoking, onRequestRevoke, session, showRevokeAction }) => {
   const { browser, device, isMobile } = parseUserAgent(session.userAgent);
   const DeviceIcon = isMobile ? Smartphone : Monitor;
 
@@ -291,35 +266,41 @@ const SessionRow: FC<{
           <span>Active {formatRelativeTime(session.lastSeenAt)}</span>
           <span>Ouverte {formatRelativeTime(session.createdAt)}</span>
           <span>
-            Inactivité jusqu’au {formatSessionDateTime(session.idleExpiresAt)}
-          </span>
-          <span>Limite absolue {formatSessionDateTime(session.expiresAt)}</span>
-          <span>
             {session.ipAddress ? `IP ${session.ipAddress}` : 'IP inconnue'}
           </span>
         </div>
+        <details className="group/session mt-1.5 w-fit max-w-full">
+          <summary className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer list-none items-center gap-1 text-xs transition-colors [&::-webkit-details-marker]:hidden">
+            Voir les limites de session
+            <ChevronDown className="size-3.5 transition-transform group-open/session:rotate-180" />
+          </summary>
+          <div className="text-muted-foreground mt-1 flex flex-col gap-1 text-xs">
+            <span>
+              Inactivité jusqu’au {formatSessionDateTime(session.idleExpiresAt)}
+            </span>
+            <span>
+              Limite absolue {formatSessionDateTime(session.expiresAt)}
+            </span>
+          </div>
+        </details>
       </div>
       {showRevokeAction && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="self-end rounded-lg sm:self-auto"
-              onClick={() => onRevokeSession(session.id)}
-              disabled={disabled}
-              aria-label={`Révoquer la session ${device} ${browser}`}
-            >
-              {isRevoking ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <X className="size-4" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="left">Révoquer cette session</TooltipContent>
-        </Tooltip>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="self-end rounded-lg sm:self-auto"
+          onClick={() => onRequestRevoke(session)}
+          disabled={disabled}
+          aria-label={`Révoquer la session ${device} ${browser}`}
+        >
+          {isRevoking ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <LogOut className="size-4" />
+          )}
+          {isRevoking ? 'Révocation…' : 'Révoquer'}
+        </Button>
       )}
     </div>
   );
@@ -358,29 +339,22 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   const isSelf = currentUserId === user.id;
   const lockedUntil = toValidDate(user.lockedUntil);
   const isLocked = !!lockedUntil && lockedUntil > new Date();
-  const sessionCountLabel = isLoadingSessions
-    ? 'Chargement'
-    : sessionsError
-      ? 'Indisponible'
-      : canViewSessions
-        ? String(sessions.length)
-        : 'Restreint';
-  const passwordStatusLabel = user.mustChangePassword
-    ? 'À changer'
-    : user.passwordChangedAt
-      ? 'À jour'
-      : 'Jamais modifié';
   const passwordChangedLabel = user.passwordChangedAt
     ? formatDate(user.passwordChangedAt)
     : 'Jamais';
-  const lockStatusLabel = isLocked
-    ? 'Verrouillé'
-    : user.failedLoginAttempts > 0
-      ? 'Sous surveillance'
-      : 'Aucun verrouillage';
   const isAnySessionRevoking =
     isRevokingSessions || isRevokingSessionId !== null;
   const isMfaEnabled = user.mfaEnabledAt !== null;
+  const [sessionPendingRevocation, setSessionPendingRevocation] =
+    useState<UserSessionInfo | null>(null);
+  const tempPasswordAnnouncementRef = useRef<HTMLDivElement>(null);
+  const pendingSessionAgent = sessionPendingRevocation
+    ? parseUserAgent(sessionPendingRevocation.userAgent)
+    : null;
+
+  useEffect(() => {
+    if (tempPassword) tempPasswordAnnouncementRef.current?.focus();
+  }, [tempPassword]);
 
   const handleCopyTempPassword = async (): Promise<void> => {
     if (!tempPassword) return;
@@ -394,9 +368,22 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   };
 
   return (
-    <div className="space-y-3">
+    <section
+      aria-busy={isLoadingSessions || isAnySessionRevoking}
+      aria-labelledby="user-security-heading"
+      className="space-y-3"
+    >
+      <h2 id="user-security-heading" className="sr-only">
+        Sécurité du compte
+      </h2>
       {tempPassword && (
-        <Card className="border-warning/25 bg-warning/10 overflow-hidden rounded-lg py-0">
+        <Card
+          aria-live="assertive"
+          className="border-warning/25 bg-warning/10 overflow-hidden rounded-lg py-0 outline-none focus-visible:ring-2"
+          ref={tempPasswordAnnouncementRef}
+          role="status"
+          tabIndex={-1}
+        >
           <CardContent className="p-3 sm:p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1 space-y-2">
@@ -450,78 +437,97 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardContent>
         </Card>
       )}
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-        <SecurityMetric
-          icon={<Power className="size-4" />}
-          label="Compte"
-          value={isActive ? 'Actif' : 'Inactif'}
-          description={isActive ? 'Connexion autorisée' : 'Connexion bloquée'}
-          tone={isActive ? 'primary' : 'danger'}
-        />
-        <SecurityMetric
-          icon={<KeyRound className="size-4" />}
-          label="Mot de passe"
-          value={passwordStatusLabel}
-          description={`Dernier changement : ${passwordChangedLabel}`}
-          tone={user.mustChangePassword ? 'warning' : 'primary'}
-        />
-        <SecurityMetric
-          icon={
-            isLocked ? (
-              <ShieldAlert className="size-4" />
-            ) : (
-              <ShieldCheck className="size-4" />
-            )
-          }
-          label="Verrouillage"
-          value={lockStatusLabel}
-          description={
-            isLocked
-              ? `Jusqu'au ${formatDate(lockedUntil)}`
-              : `${user.failedLoginAttempts} tentative(s) échouée(s)`
-          }
-          tone={
-            isLocked
-              ? 'danger'
-              : user.failedLoginAttempts > 0
-                ? 'warning'
-                : 'primary'
-          }
-        />
-        <SecurityMetric
-          icon={<QrCode className="size-4" />}
-          label="Double authentification"
-          value={isMfaEnabled ? 'Active' : 'Non activée'}
-          description={
-            isMfaEnabled
-              ? `Depuis le ${formatDate(user.mfaEnabledAt)}`
-              : 'Aucun authentificateur associé'
-          }
-          tone={isMfaEnabled ? 'primary' : 'neutral'}
-        />
-        <SecurityMetric
-          icon={<Laptop className="size-4" />}
-          label="Sessions"
-          value={sessionCountLabel}
-          description={
-            canViewSessions
-              ? sessions.length > 0
-                ? 'Connexions actives à surveiller'
-                : 'Aucune session active'
-              : 'Gestion réservée aux rôles autorisés'
-          }
-          tone={
-            canViewSessions
-              ? sessions.length > 0
-                ? 'primary'
-                : 'neutral'
-              : 'neutral'
-          }
-        />
-      </div>
-      <Card className="border-border/70 overflow-hidden rounded-md py-0">
+      <Card
+        aria-labelledby="user-security-status-heading"
+        className="border-border/70 overflow-hidden rounded-md py-0"
+      >
         <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
-          <SectionTitle icon={<KeyRound className="size-3.5" />}>
+          <SectionTitle
+            id="user-security-status-heading"
+            icon={<Power className="size-3.5" />}
+          >
+            État du compte
+          </SectionTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 p-3 sm:p-4">
+          <div
+            className={cn(
+              'border-border/60 bg-popover flex items-center justify-between gap-4 rounded-md border p-3',
+              !isActive && 'border-destructive/30 bg-destructive/5',
+            )}
+          >
+            <div>
+              <Label
+                htmlFor="user-active-switch"
+                className="text-foreground text-sm font-medium"
+              >
+                Compte actif
+              </Label>
+              <p
+                id="user-active-switch-description"
+                className="text-muted-foreground text-xs"
+              >
+                Les comptes inactifs ne peuvent pas se connecter.
+              </p>
+            </div>
+            <Switch
+              id="user-active-switch"
+              checked={isActive}
+              onCheckedChange={setIsActive}
+              disabled={!canEditStatus || isSelf}
+              aria-describedby="user-active-switch-description"
+            />
+          </div>
+          {isSelf && (
+            <div className="text-muted-foreground border-warning/25 bg-warning/10 flex items-start gap-2 rounded-md border px-3 py-2 text-xs">
+              <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
+              Vous ne pouvez pas désactiver votre propre compte depuis cette
+              fiche.
+            </div>
+          )}
+        </CardContent>
+        {canEditStatus && !isSelf && (
+          <CardFooter className="border-border/65 bg-surface-muted flex-col items-stretch justify-between gap-3 border-t p-3 sm:flex-row sm:items-center sm:p-4">
+            <p className="text-muted-foreground text-xs">
+              {hasStatusChanges ? 'Modification non enregistrée' : 'À jour'}
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onCancelStatus}
+                disabled={!hasStatusChanges || isSaving}
+              >
+                Annuler
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={onSaveStatus}
+                disabled={isSaving || !canSaveStatus}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {isSaving ? (
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-1.5 h-4 w-4" />
+                )}
+                Enregistrer
+              </Button>
+            </div>
+          </CardFooter>
+        )}
+      </Card>
+      <Card
+        aria-labelledby="user-security-password-heading"
+        className="border-border/70 overflow-hidden rounded-md py-0"
+      >
+        <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
+          <SectionTitle
+            id="user-security-password-heading"
+            icon={<KeyRound className="size-3.5" />}
+          >
             Mot de passe & verrouillage
           </SectionTitle>
         </CardHeader>
@@ -565,16 +571,20 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           >
             {isLocked
               ? `Jusqu'au ${formatDate(lockedUntil)}`
-              : `${user.failedLoginAttempts} tentative(s) échouée(s)`}
+              : user.failedLoginAttempts > 0
+                ? `${user.failedLoginAttempts} tentative(s) échouée(s)`
+                : 'Aucun verrouillage en cours'}
           </SecurityInfoBlock>
-          <SecurityInfoBlock
-            icon={<AlertTriangle className="size-4" />}
-            label="Tentatives échouées"
-            value={String(user.failedLoginAttempts)}
-            tone={user.failedLoginAttempts > 0 ? 'warning' : 'neutral'}
-          >
-            Compteur utilisé pour détecter les blocages de connexion.
-          </SecurityInfoBlock>
+          {user.failedLoginAttempts > 0 && (
+            <SecurityInfoBlock
+              icon={<AlertTriangle className="size-4" />}
+              label="Tentatives échouées"
+              value={String(user.failedLoginAttempts)}
+              tone="warning"
+            >
+              Compteur utilisé pour détecter les blocages de connexion.
+            </SecurityInfoBlock>
+          )}
           <SecurityInfoBlock
             icon={<Laptop className="size-4" />}
             label="Impact d'une réinitialisation"
@@ -599,9 +609,15 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardFooter>
         )}
       </Card>
-      <Card className="border-border/70 overflow-hidden rounded-md py-0">
+      <Card
+        aria-labelledby="user-security-mfa-heading"
+        className="border-border/70 overflow-hidden rounded-md py-0"
+      >
         <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
-          <SectionTitle icon={<QrCode className="size-3.5" />}>
+          <SectionTitle
+            id="user-security-mfa-heading"
+            icon={<QrCode className="size-3.5" />}
+          >
             Double authentification
           </SectionTitle>
         </CardHeader>
@@ -634,8 +650,8 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             }
             tone={canResetMfa ? 'warning' : 'neutral'}
           >
-            Réservée au compte racine lorsque le téléphone et tous les codes de
-            secours du membre sont perdus.
+            Réservée au compte racine lorsque l&apos;appareil
+            d&apos;authentification et tous les codes de secours sont perdus.
           </SecurityInfoBlock>
         </CardContent>
         {canResetMfa && (
@@ -653,9 +669,15 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardFooter>
         )}
       </Card>
-      <Card className="border-border/70 overflow-hidden rounded-md py-0">
+      <Card
+        aria-labelledby="user-security-sessions-heading"
+        className="border-border/70 overflow-hidden rounded-md py-0"
+      >
         <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
-          <SectionTitle icon={<Monitor className="size-3.5" />}>
+          <SectionTitle
+            id="user-security-sessions-heading"
+            icon={<Monitor className="size-3.5" />}
+          >
             Sessions actives
           </SectionTitle>
         </CardHeader>
@@ -709,7 +731,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                   session={session}
                   isRevoking={isRevokingSessionId === session.id}
                   disabled={isAnySessionRevoking}
-                  onRevokeSession={onRevokeSession}
+                  onRequestRevoke={setSessionPendingRevocation}
                   showRevokeAction={canRevokeSessions}
                 />
               ))}
@@ -736,87 +758,19 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardFooter>
         )}
       </Card>
-      <Card className="border-border/70 overflow-hidden rounded-md py-0">
-        <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
-          <SectionTitle icon={<Power className="size-3.5" />}>
-            État du compte
-          </SectionTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 p-3 sm:p-4">
-          <div
-            className={cn(
-              'border-border/60 bg-popover flex items-center justify-between gap-4 rounded-md border p-3',
-              !isActive && 'border-destructive/30 bg-destructive/5',
-            )}
-          >
-            <div>
-              <Label
-                htmlFor="user-active-switch"
-                className="text-foreground text-sm font-medium"
-              >
-                Compte actif
-              </Label>
-              <p
-                id="user-active-switch-description"
-                className="text-muted-foreground text-xs"
-              >
-                Les comptes inactifs ne peuvent pas se connecter.
-              </p>
-            </div>
-            <Switch
-              id="user-active-switch"
-              checked={isActive}
-              onCheckedChange={setIsActive}
-              disabled={!canEditStatus || isSelf}
-              aria-describedby="user-active-switch-description"
-            />
-          </div>
-          {isSelf && (
-            <div className="text-muted-foreground border-warning/25 bg-warning/10 flex items-start gap-2 rounded-md border px-3 py-2 text-xs">
-              <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
-              Vous ne pouvez pas désactiver votre propre compte depuis cette
-              fiche.
-            </div>
-          )}
-        </CardContent>
-        <CardFooter className="border-border/65 bg-surface-muted justify-between gap-3 border-t p-3 sm:p-4">
-          <p className="text-muted-foreground text-xs">
-            {hasStatusChanges ? 'Modification non enregistrée' : 'À jour'}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onCancelStatus}
-              disabled={!hasStatusChanges || isSaving}
-            >
-              Annuler
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={onSaveStatus}
-              disabled={isSaving || !canSaveStatus}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              {isSaving ? (
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="mr-1.5 h-4 w-4" />
-              )}
-              Enregistrer
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
       {canDeleteUser && (
-        <Card className="border-destructive/30 bg-destructive/5 overflow-hidden rounded-lg py-0">
+        <Card
+          aria-labelledby="user-security-danger-heading"
+          className="border-destructive/30 bg-destructive/5 overflow-hidden rounded-lg py-0"
+        >
           <CardHeader className="border-destructive/20 bg-destructive/10 border-b p-3 sm:p-4">
-            <CardTitle className="text-destructive flex items-center gap-2 text-sm">
+            <h3
+              id="user-security-danger-heading"
+              className="text-destructive flex items-center gap-2 text-sm font-semibold"
+            >
               <Trash2 className="size-4" />
               Zone danger
-            </CardTitle>
+            </h3>
           </CardHeader>
           <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
             <div>
@@ -837,6 +791,39 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardContent>
         </Card>
       )}
-    </div>
+      <AlertDialog
+        open={sessionPendingRevocation !== null}
+        onOpenChange={(open) => {
+          if (!open) setSessionPendingRevocation(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Révoquer cette session ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingSessionAgent
+                ? `${pendingSessionAgent.device} — ${pendingSessionAgent.browser}`
+                : 'Cette session'}{' '}
+              sera immédiatement déconnectée. L&apos;utilisateur devra saisir de
+              nouveau ses identifiants.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Conserver la session</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                const sessionId = sessionPendingRevocation?.id;
+
+                setSessionPendingRevocation(null);
+                if (sessionId) onRevokeSession(sessionId);
+              }}
+            >
+              Révoquer la session
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </section>
   );
 };

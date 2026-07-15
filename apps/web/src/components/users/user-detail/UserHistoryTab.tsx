@@ -61,10 +61,14 @@ type UserHistoryTabProps = {
   auditLogs: AuditLogEntry[];
   canExport?: boolean;
   error?: string | null;
+  exportHref?: string;
+  facets?: UserHistoryFacets | null;
+  filters?: UserHistoryFilters;
   hasMoreAuditLogs?: boolean;
   isAuditTruncated?: boolean;
   isLoading: boolean;
   isLoadingMore?: boolean;
+  onFiltersChange?: (filters: UserHistoryFilters) => void;
   onLoadMore?: () => void;
   onRetry?: () => void;
   perspective?: ActivityPerspective;
@@ -74,11 +78,43 @@ type UserHistoryTabProps = {
 
 type ActionCategoryKey =
   'access' | 'auth' | 'lifecycle' | 'other' | 'profile' | 'security' | 'system';
-type ActivityScope = 'all' | 'by' | 'on';
+export type ActivityScope = 'all' | 'by' | 'on';
 type ActivityScopeIconKey = 'by' | 'linked' | 'on';
 type ActivityPerspective = 'managed' | 'personal';
 const DEFAULT_ACTIVITY_SCOPE: ActivityScope = 'on';
 const ALL_FILTER_VALUE = 'all';
+
+export type UserHistoryFilters = {
+  activityScope: ActivityScope;
+  dateFilter: string;
+  pageFilter: string;
+  poleFilter: string;
+};
+
+export type UserHistoryFacet = {
+  count: number;
+  poleValue?: string | null;
+  value: string;
+};
+
+export type UserHistoryFacets = {
+  pages: {
+    options: UserHistoryFacet[];
+    total: number;
+  };
+  poles: {
+    options: UserHistoryFacet[];
+    total: number;
+  };
+  scopes: Record<ActivityScope, number>;
+};
+
+export const DEFAULT_USER_HISTORY_FILTERS: UserHistoryFilters = {
+  activityScope: DEFAULT_ACTIVITY_SCOPE,
+  dateFilter: ALL_FILTER_VALUE,
+  pageFilter: ALL_FILTER_VALUE,
+  poleFilter: ALL_FILTER_VALUE,
+};
 
 type ActionConfig = {
   category: ActionCategoryKey;
@@ -834,6 +870,88 @@ const buildLocationFilterOptions = (
     ...options
       .slice(1)
       .sort((first, second) => first.label.localeCompare(second.label, 'fr')),
+  ];
+};
+
+const formatFacetFallbackLabel = (value: string): string => {
+  const label = value.replaceAll(/[-_.]+/g, ' ').trim();
+
+  return label.length > 0
+    ? `${label.charAt(0).toLocaleUpperCase('fr')}${label.slice(1)}`
+    : 'Autre';
+};
+
+const buildServerLocationFilterOptions = (
+  facets: readonly UserHistoryFacet[],
+  logs: readonly AuditLogEntry[],
+  level: 'page' | 'pole',
+  allLabel: string,
+  total: number,
+  poleKey?: string,
+): ActivityFilterOption[] => {
+  const locations = logs.map(getActivityLocation);
+  const options = facets
+    .filter(
+      (facet) =>
+        level === 'pole' ||
+        !poleKey ||
+        poleKey === ALL_FILTER_VALUE ||
+        facet.poleValue === poleKey,
+    )
+    .map((facet): ActivityFilterOption => {
+      const loadedLocation = locations.find((location) =>
+        level === 'pole'
+          ? location.poleKey === facet.value
+          : location.pageKey === facet.value &&
+            (!facet.poleValue || location.poleKey === facet.poleValue),
+      );
+      const permissionPole = PERMISSION_POLES.find(
+        (pole) =>
+          pole.key === (level === 'pole' ? facet.value : facet.poleValue),
+      );
+      const permissionCategory =
+        level === 'page'
+          ? PERMISSION_CATEGORIES.find(
+              (category) => category.key === facet.value,
+            )
+          : undefined;
+
+      return {
+        count: facet.count,
+        icon:
+          level === 'pole'
+            ? (permissionPole?.icon ??
+              loadedLocation?.icon ??
+              getLocationIcon(facet.value))
+            : (loadedLocation?.icon ??
+              getLocationIcon(facet.poleValue ?? facet.value)),
+        label:
+          level === 'pole'
+            ? (permissionPole?.label ??
+              loadedLocation?.poleLabel ??
+              formatFacetFallbackLabel(facet.value))
+            : (permissionCategory?.label ??
+              loadedLocation?.pageLabel ??
+              formatFacetFallbackLabel(facet.value)),
+        tone:
+          permissionPole?.tone ??
+          loadedLocation?.tone ??
+          OTHER_ACTIVITY_LOCATION.tone,
+        value: facet.value,
+      };
+    });
+
+  return [
+    {
+      count: total,
+      icon: 'Search',
+      label: allLabel,
+      tone: 'internal',
+      value: ALL_FILTER_VALUE,
+    },
+    ...options.sort((first, second) =>
+      first.label.localeCompare(second.label, 'fr'),
+    ),
   ];
 };
 
@@ -1627,24 +1745,33 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   auditLogs,
   canExport = false,
   error = null,
+  exportHref,
+  facets,
+  filters,
   hasMoreAuditLogs = false,
   isAuditTruncated = false,
   isLoading,
   isLoadingMore = false,
+  onFiltersChange,
   onLoadMore,
   onRetry,
   perspective = 'managed',
   totalAuditLogs,
   userId,
 }) => {
-  const [poleFilter, setPoleFilter] = useState(ALL_FILTER_VALUE);
-  const [pageFilter, setPageFilter] = useState(ALL_FILTER_VALUE);
-  const [activityScope, setActivityScope] = useState<ActivityScope>(
+  const [localPoleFilter, setLocalPoleFilter] = useState(ALL_FILTER_VALUE);
+  const [localPageFilter, setLocalPageFilter] = useState(ALL_FILTER_VALUE);
+  const [localActivityScope, setLocalActivityScope] = useState<ActivityScope>(
     DEFAULT_ACTIVITY_SCOPE,
   );
-  const [dateFilter, setDateFilter] = useState('all');
+  const [localDateFilter, setLocalDateFilter] = useState(ALL_FILTER_VALUE);
   const [showCount, setShowCount] = useState(20);
   const [openLogId, setOpenLogId] = useState<string | null>(null);
+  const isServerFiltering = !!filters && !!onFiltersChange;
+  const poleFilter = filters?.poleFilter ?? localPoleFilter;
+  const pageFilter = filters?.pageFilter ?? localPageFilter;
+  const activityScope = filters?.activityScope ?? localActivityScope;
+  const dateFilter = filters?.dateFilter ?? localDateFilter;
   const isPageFilterLocked = poleFilter === ALL_FILTER_VALUE;
   const isPersonalPerspective = perspective === 'personal';
   const activityScopeOptions = getActivityScopeOptions(perspective);
@@ -1655,10 +1782,19 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
     ? '« Sur mon compte » regroupe les événements qui visent votre compte ; « Mes actions », ceux que vous avez déclenchés. Un même événement peut apparaître dans les deux vues.'
     : "« Sur ce compte » regroupe les événements qui visent l'utilisateur ; « Actions de cet utilisateur », ceux qu'il a déclenchés. Un même événement peut apparaître dans les deux vues.";
 
-  const poleOptions = useMemo(
-    () => buildLocationFilterOptions(auditLogs, 'pole', 'Tous les pôles'),
-    [auditLogs],
-  );
+  const poleOptions = useMemo(() => {
+    if (isServerFiltering && facets) {
+      return buildServerLocationFilterOptions(
+        facets.poles.options,
+        auditLogs,
+        'pole',
+        'Tous les pôles',
+        facets.poles.total,
+      );
+    }
+
+    return buildLocationFilterOptions(auditLogs, 'pole', 'Tous les pôles');
+  }, [auditLogs, facets, isServerFiltering]);
 
   const pageOptions = useMemo(() => {
     if (isPageFilterLocked) {
@@ -1673,27 +1809,45 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
       ];
     }
 
+    if (isServerFiltering && facets) {
+      return buildServerLocationFilterOptions(
+        facets.pages.options,
+        auditLogs,
+        'page',
+        'Toutes les pages',
+        facets.pages.total,
+        poleFilter,
+      );
+    }
+
     return buildLocationFilterOptions(
       auditLogs,
       'page',
       'Toutes les pages',
       poleFilter,
     );
-  }, [auditLogs, isPageFilterLocked, poleFilter]);
+  }, [auditLogs, facets, isPageFilterLocked, isServerFiltering, poleFilter]);
   const effectivePageFilter = isPageFilterLocked
     ? ALL_FILTER_VALUE
     : pageFilter;
 
   const scopeCounts = useMemo(
-    () => ({
-      all: auditLogs.length,
-      by: auditLogs.filter((log) => isLogByViewedUser(log, userId)).length,
-      on: auditLogs.filter((log) => isLogOnViewedUser(log, userId)).length,
-    }),
-    [auditLogs, userId],
+    () =>
+      isServerFiltering && facets
+        ? facets.scopes
+        : {
+            all: auditLogs.length,
+            by: auditLogs.filter((log) => isLogByViewedUser(log, userId))
+              .length,
+            on: auditLogs.filter((log) => isLogOnViewedUser(log, userId))
+              .length,
+          },
+    [auditLogs, facets, isServerFiltering, userId],
   );
 
   const filteredLogs = useMemo(() => {
+    if (isServerFiltering) return auditLogs;
+
     const now = new Date();
 
     return auditLogs.filter((log) => {
@@ -1738,12 +1892,14 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
     auditLogs,
     dateFilter,
     effectivePageFilter,
+    isServerFiltering,
     poleFilter,
     userId,
   ]);
 
   const displayedLogs = filteredLogs.slice(0, showCount);
-  const hasMore = filteredLogs.length > showCount;
+  const renderedLogs = isServerFiltering ? filteredLogs : displayedLogs;
+  const hasMore = !isServerFiltering && filteredLogs.length > showCount;
   const loadedAuditLogsCount = auditLogs.length;
   const effectiveTotalAuditLogs = totalAuditLogs ?? loadedAuditLogsCount;
   const hasTruncatedAuditLogs =
@@ -1808,14 +1964,26 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   };
 
   const handleActivityScopeChange = (scope: ActivityScope): void => {
-    setActivityScope(scope);
+    setLocalActivityScope(scope);
+    onFiltersChange?.({
+      activityScope: scope,
+      dateFilter,
+      pageFilter: effectivePageFilter,
+      poleFilter,
+    });
     setShowCount(20);
     setOpenLogId(null);
   };
 
   const handlePoleFilterChange = (value: string): void => {
-    setPoleFilter(value);
-    setPageFilter(ALL_FILTER_VALUE);
+    setLocalPoleFilter(value);
+    setLocalPageFilter(ALL_FILTER_VALUE);
+    onFiltersChange?.({
+      activityScope,
+      dateFilter,
+      pageFilter: ALL_FILTER_VALUE,
+      poleFilter: value,
+    });
     setShowCount(20);
     setOpenLogId(null);
   };
@@ -1823,22 +1991,51 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   const handlePageFilterChange = (value: string): void => {
     if (isPageFilterLocked) return;
 
-    setPageFilter(value);
+    setLocalPageFilter(value);
+    onFiltersChange?.({
+      activityScope,
+      dateFilter,
+      pageFilter: value,
+      poleFilter,
+    });
+    setShowCount(20);
+    setOpenLogId(null);
+  };
+
+  const handleDateFilterChange = (value: string): void => {
+    setLocalDateFilter(value);
+    onFiltersChange?.({
+      activityScope,
+      dateFilter: value,
+      pageFilter: effectivePageFilter,
+      poleFilter,
+    });
     setShowCount(20);
     setOpenLogId(null);
   };
 
   const handleResetFilters = (): void => {
-    setPoleFilter(ALL_FILTER_VALUE);
-    setPageFilter(ALL_FILTER_VALUE);
-    setActivityScope(DEFAULT_ACTIVITY_SCOPE);
-    setDateFilter('all');
+    setLocalPoleFilter(ALL_FILTER_VALUE);
+    setLocalPageFilter(ALL_FILTER_VALUE);
+    setLocalActivityScope(DEFAULT_ACTIVITY_SCOPE);
+    setLocalDateFilter(ALL_FILTER_VALUE);
+    onFiltersChange?.(DEFAULT_USER_HISTORY_FILTERS);
     setShowCount(20);
     setOpenLogId(null);
   };
 
-  // Export to CSV (limited to 500 rows)
+  // Personal activity can still export the locally loaded subset. Managed
+  // activity uses the server URL so the complete filtered journal is exported.
   const handleExport = (): void => {
+    if (exportHref) {
+      const link = document.createElement('a');
+      link.href = exportHref;
+      link.click();
+      toast.success('Export complet lancé');
+
+      return;
+    }
+
     const maxExport = 500;
     const logsToExport = filteredLogs.slice(0, maxExport);
 
@@ -1932,7 +2129,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   }
 
   // Empty
-  if (auditLogs.length === 0) {
+  if (auditLogs.length === 0 && !isServerFiltering) {
     return (
       <Card className="border-border/70 min-h-[360px] items-center justify-center rounded-md py-0">
         {isPersonalPerspective && <h2 className="sr-only">Activité</h2>}
@@ -2014,7 +2211,10 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                 </div>
                 <div className="flex min-w-0 flex-wrap gap-2 xl:justify-end">
                   <div className="min-w-44">
-                    <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <Select
+                      value={dateFilter}
+                      onValueChange={handleDateFilterChange}
+                    >
                       <SelectTrigger
                         aria-label="Filtrer par période"
                         className={activitySelectTriggerClassName}
@@ -2126,7 +2326,10 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                     >
                       Période
                     </label>
-                    <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <Select
+                      value={dateFilter}
+                      onValueChange={handleDateFilterChange}
+                    >
                       <SelectTrigger
                         id="personal-activity-period"
                         className={activitySelectTriggerClassName}
@@ -2469,7 +2672,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                     {((): React.ReactNode => {
                       let lastCategory: DateCategory | null = null;
 
-                      return displayedLogs.map((log) => {
+                      return renderedLogs.map((log) => {
                         const config = getActionConfig(log);
                         const category = getDateCategory(log.createdAt);
                         const showSeparator = category !== lastCategory;
@@ -2520,7 +2723,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                     )}
                   </div>
                 )}
-                {isPersonalPerspective && !hasMore && hasMoreAuditLogs && (
+                {!hasMore && hasMoreAuditLogs && (
                   <div className="pt-2 text-center">
                     <Button
                       variant="outline"

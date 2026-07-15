@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { PERMISSIONS } from '$constants/permissions.constants';
+import {
+  PERMISSIONS,
+  type PermissionsData,
+  requiresMfaForAccess,
+} from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors, parseJsonBody } from '$server/api-response';
 import {
@@ -95,6 +99,13 @@ const SECURITY_AUDIT_LOCATION = {
   tabLabel: 'Sécurité',
 } as const;
 
+const requiresMandatoryMfa = (user: {
+  permissions: unknown;
+  role: 'ADMIN' | 'USER';
+}): boolean =>
+  user.role === 'ADMIN' ||
+  requiresMfaForAccess(user.role, user.permissions as PermissionsData | null);
+
 const invalidChallengeResponse = (): NextResponse<ApiErrorResponse> =>
   NextResponse.json(
     {
@@ -162,11 +173,11 @@ export async function POST(
           where: { tokenHash: existingTokenHash },
         })
       : null;
-    const isValidRootBootstrap = Boolean(
+    const isValidPrivilegedBootstrap = Boolean(
       bootstrapChallenge &&
       bootstrapChallenge.purpose === 'SETUP' &&
       bootstrapChallenge.expiresAt > now &&
-      bootstrapChallenge.user.isProtected &&
+      requiresMandatoryMfa(bootstrapChallenge.user) &&
       bootstrapChallenge.user.isActive &&
       bootstrapChallenge.user.deletedAt === null &&
       bootstrapChallenge.user.securityVersion ===
@@ -185,7 +196,11 @@ export async function POST(
     let credentialUpdatedAt: Date | null;
     let proof: Awaited<ReturnType<typeof verifyMfaProof>> | null | undefined;
 
-    if (isValidRootBootstrap && bootstrapChallenge && existingChallengeToken) {
+    if (
+      isValidPrivilegedBootstrap &&
+      bootstrapChallenge &&
+      existingChallengeToken
+    ) {
       userId = bootstrapChallenge.userId;
       loginName = bootstrapChallenge.user.loginName;
       securityVersion = bootstrapChallenge.securityVersion;
@@ -342,8 +357,9 @@ export async function POST(
         select: {
           deletedAt: true,
           isActive: true,
-          isProtected: true,
           mfaEnabledAt: true,
+          permissions: true,
+          role: true,
           securityVersion: true,
           totpCredential: { select: { updatedAt: true } },
         },
@@ -358,7 +374,7 @@ export async function POST(
         throw new InvalidMfaChallengeError();
       }
 
-      if (isValidRootBootstrap) {
+      if (isValidPrivilegedBootstrap) {
         const lockedChallenge = await transaction.mfaLoginChallenge.findUnique({
           select: {
             expiresAt: true,
@@ -369,7 +385,7 @@ export async function POST(
           where: { tokenHash: challengeTokenHash },
         });
         if (
-          !lockedUser.isProtected ||
+          !requiresMandatoryMfa(lockedUser) ||
           lockedUser.mfaEnabledAt !== null ||
           lockedUser.totpCredential !== null ||
           !lockedChallenge ||
@@ -523,14 +539,14 @@ export async function PUT(
       return invalidChallengeResponse();
     }
 
-    const isRootBootstrap =
-      challenge.user.isProtected &&
+    const isPrivilegedBootstrap =
+      requiresMandatoryMfa(challenge.user) &&
       challenge.user.mfaEnabledAt === null &&
       challenge.user.totpCredential === null &&
       challenge.credentialUpdatedAt === null;
     let sourceSessionToken: string | undefined;
 
-    if (!isRootBootstrap) {
+    if (!isPrivilegedBootstrap) {
       const auth = await requireAuth();
       if (!auth.success) return auth.response;
       const permission = requirePermission(
@@ -587,7 +603,7 @@ export async function PUT(
     const replacing = challenge.user.totpCredential !== null;
     const recoveryCodes = generateRecoveryCodes(challenge.userId);
     const sessionToken = generateSessionToken();
-    const loginAudit = isRootBootstrap
+    const loginAudit = isPrivilegedBootstrap
       ? {
           action: 'LOGIN_SUCCESS' as const,
           category: 'AUTH' as const,
@@ -631,6 +647,32 @@ export async function PUT(
         advanceSecurityVersion: true,
         mfaMethod: 'TOTP',
         precondition: async (transaction, authenticatedAt) => {
+          if (isPrivilegedBootstrap) {
+            const bootstrapUser = await transaction.user.findUnique({
+              select: {
+                deletedAt: true,
+                isActive: true,
+                mfaEnabledAt: true,
+                permissions: true,
+                role: true,
+                securityVersion: true,
+                totpCredential: { select: { userId: true } },
+              },
+              where: { id: challenge.userId },
+            });
+            if (
+              !bootstrapUser ||
+              bootstrapUser.deletedAt !== null ||
+              !bootstrapUser.isActive ||
+              bootstrapUser.securityVersion !== challenge.securityVersion + 1 ||
+              !requiresMandatoryMfa(bootstrapUser) ||
+              bootstrapUser.mfaEnabledAt !== null ||
+              bootstrapUser.totpCredential !== null
+            ) {
+              throw new InvalidMfaChallengeError();
+            }
+          }
+
           const challengeDelete =
             await transaction.mfaLoginChallenge.deleteMany({
               where: {

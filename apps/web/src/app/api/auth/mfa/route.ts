@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { PERMISSIONS } from '$constants/permissions.constants';
+import {
+  PERMISSIONS,
+  requiresMfaForAccess,
+} from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors, parseJsonBody } from '$server/api-response';
 import {
@@ -122,7 +125,9 @@ export async function GET(): Promise<
       data: {
         enabledAt: auth.user.mfaEnabledAt?.toISOString() ?? null,
         recoveryCodesRemaining,
-        required: auth.user.isProtected,
+        required:
+          auth.user.role === 'ADMIN' ||
+          requiresMfaForAccess(auth.user.role, auth.user.permissions),
       },
       success: true,
     });
@@ -145,13 +150,16 @@ export async function DELETE(
     );
     if (!permission.success) return permission.response;
 
-    if (auth.user.isProtected) {
+    if (
+      auth.user.role === 'ADMIN' ||
+      requiresMfaForAccess(auth.user.role, auth.user.permissions)
+    ) {
       return NextResponse.json(
         {
           error: {
             code: ErrorCode.FORBIDDEN,
             message:
-              'La double authentification du compte racine ne peut pas être désactivée',
+              "La double authentification d'un compte administrateur ou disposant d'accès critiques ne peut pas être désactivée",
           },
           success: false,
         },

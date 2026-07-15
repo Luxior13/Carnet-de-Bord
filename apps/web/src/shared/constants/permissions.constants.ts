@@ -100,6 +100,7 @@ export const PERMISSIONS = {
     VIEW_ACCOUNT_POLICY: 'users:view_account_policy',
     VIEW_ACTIVITY: 'users:view_activity',
     VIEW_CONTACT: 'users:view_contact',
+    VIEW_SECURITY: 'users:view_security',
     VIEW_SESSIONS: 'users:view_sessions',
   },
 } as const;
@@ -773,7 +774,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       },
       {
         action: 'manage',
-        dependencies: [PERMISSIONS.USERS.VIEW],
+        dependencies: [PERMISSIONS.USERS.VIEW, PERMISSIONS.USERS.VIEW_SECURITY],
         description: 'Activer ou désactiver les comptes utilisateurs',
         key: PERMISSIONS.USERS.MANAGE_STATUS,
         label: 'Gérer le statut',
@@ -783,20 +784,21 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       {
         action: 'view',
         dependencies: [PERMISSIONS.USERS.VIEW],
+        description:
+          'Voir le verrouillage, le mot de passe et la double authentification',
+        key: PERMISSIONS.USERS.VIEW_SECURITY,
+        label: 'Voir la sécurité des comptes',
+        module: 'Sécurité',
+        risk: 'sensitive',
+      },
+      {
+        action: 'view',
+        dependencies: [PERMISSIONS.USERS.VIEW],
         description: 'Voir le rôle et les permissions détaillées',
         key: PERMISSIONS.USERS.VIEW_ACCESS,
         label: 'Voir les accès',
         module: 'Accès',
         risk: 'sensitive',
-      },
-      {
-        action: 'manage',
-        dependencies: [PERMISSIONS.USERS.VIEW_ACCESS],
-        description: 'Modifier les rôles fonctionnels des comptes',
-        key: PERMISSIONS.USERS.MANAGE_ROLES,
-        label: 'Gérer les rôles',
-        module: 'Accès',
-        risk: 'critical',
       },
       {
         action: 'manage',
@@ -829,7 +831,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       },
       {
         action: 'reset',
-        dependencies: [PERMISSIONS.USERS.VIEW],
+        dependencies: [PERMISSIONS.USERS.VIEW_SECURITY],
         description: 'Générer un mot de passe temporaire',
         key: PERMISSIONS.USERS.RESET_PASSWORD,
         label: 'Réinitialiser les mots de passe',
@@ -838,7 +840,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       },
       {
         action: 'view',
-        dependencies: [PERMISSIONS.USERS.VIEW],
+        dependencies: [PERMISSIONS.USERS.VIEW_SECURITY],
         description: 'Consulter les sessions actives des comptes',
         key: PERMISSIONS.USERS.VIEW_SESSIONS,
         label: 'Voir les sessions',
@@ -865,19 +867,10 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       },
       {
         action: 'delete',
-        dependencies: [PERMISSIONS.USERS.VIEW],
+        dependencies: [PERMISSIONS.USERS.VIEW_SECURITY],
         description: 'Supprimer ou désactiver durablement un compte',
         key: PERMISSIONS.USERS.DELETE,
         label: 'Supprimer des utilisateurs',
-        module: 'Cycle de vie',
-        risk: 'critical',
-      },
-      {
-        action: 'restore',
-        dependencies: [PERMISSIONS.USERS.VIEW],
-        description: 'Restaurer un compte supprimé si la fonction est activée',
-        key: PERMISSIONS.USERS.RESTORE,
-        label: 'Restaurer des utilisateurs',
         module: 'Cycle de vie',
         risk: 'critical',
       },
@@ -1000,6 +993,13 @@ const ACCESS_PERMISSION_KEYS = PERMISSION_CATEGORIES.flatMap((category) =>
   category.permissions.map((permission) => permission.key),
 );
 
+const CRITICAL_ACCESS_PERMISSION_KEYS = PERMISSION_CATEGORIES.flatMap(
+  (category) =>
+    category.permissions.flatMap((permission) =>
+      permission.risk === 'critical' ? [permission.key] : [],
+    ),
+);
+
 const ACCOUNT_PERMISSION_KEYS = ACCOUNT_PERMISSION_CATEGORIES.flatMap(
   (category) => category.permissions.map((permission) => permission.key),
 );
@@ -1070,7 +1070,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     ...Object.values(PERMISSIONS.INCIDENTS),
     ...Object.values(PERMISSIONS.SYSTEM),
     ...Object.values(PERMISSIONS.TREASURY),
-    ...Object.values(PERMISSIONS.USERS),
+    ...Object.values(PERMISSIONS.USERS).filter(
+      (permissionKey) =>
+        permissionKey !== PERMISSIONS.USERS.MANAGE_ROLES &&
+        permissionKey !== PERMISSIONS.USERS.RESTORE,
+    ),
     ...Object.values(PERMISSIONS.SPORT),
   ],
   USER: [...Object.values(PERMISSIONS.ACCOUNT), PERMISSIONS.DASHBOARD.VIEW],
@@ -1118,6 +1122,19 @@ export const hasPermission = (
 
   return hasPermissionWithDependencies(permissionKey);
 };
+
+/**
+ * Critical delegated access is protected by MFA independently from the
+ * account's coarse role. Dependencies are evaluated so a dormant override
+ * does not force MFA until it becomes effective.
+ */
+export const requiresMfaForAccess = (
+  role: UserRole,
+  customPermissions?: PermissionsData | null,
+): boolean =>
+  CRITICAL_ACCESS_PERMISSION_KEYS.some((permissionKey) =>
+    hasPermission(role, permissionKey, customPermissions),
+  );
 
 export const getRoleBasePermissions = (
   role: UserRole,

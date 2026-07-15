@@ -111,9 +111,7 @@ describe('/mon-compte UX contracts', () => {
     expect(activitySource).toContain(
       'const displayedLogs = filteredLogs.slice(0, showCount)',
     );
-    expect(activitySource).toContain(
-      'isPersonalPerspective && !hasMore && hasMoreAuditLogs',
-    );
+    expect(activitySource).toContain('!hasMore && hasMoreAuditLogs');
   });
 
   it('gives mobile section tabs a 44 px touch target', () => {

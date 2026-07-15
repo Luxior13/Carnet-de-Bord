@@ -221,7 +221,7 @@ function LoginPage(): React.ReactNode {
     step === 'mfa'
       ? 'Vérification en deux étapes'
       : step === 'setup'
-        ? 'Protéger le compte superadmin'
+        ? 'Protéger le compte administrateur'
         : 'Connexion';
   const description =
     step === 'mfa'

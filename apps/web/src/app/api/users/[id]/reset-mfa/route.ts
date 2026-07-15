@@ -186,7 +186,7 @@ export async function POST(
       );
     }
 
-    if (target.isProtected || target.role !== 'USER' || target.id === root.id) {
+    if (target.isProtected || target.id === root.id) {
       return NextResponse.json(
         {
           error: {
@@ -274,7 +274,10 @@ export async function POST(
       // Recheck and lock the exact authenticated session. A password-only or
       // concurrently revoked root session cannot authorize this operation.
       const sessionLock = await transaction.session.updateMany({
-        data: { lastSeenAt: authenticatedAt },
+        data: {
+          lastSeenAt: authenticatedAt,
+          mfaVerifiedAt: authenticatedAt,
+        },
         where: {
           expiresAt: { gt: authenticatedAt },
           idleExpiresAt: { gt: authenticatedAt },
@@ -299,7 +302,7 @@ export async function POST(
           id: target.id,
           isProtected: false,
           mfaEnabledAt: { not: null },
-          role: 'USER',
+          role: target.role,
           securityVersion: target.securityVersion,
         },
       });

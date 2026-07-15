@@ -1,25 +1,22 @@
 import {
   Activity,
-  AtSign,
   Calendar,
   Check,
   Clock,
   Key,
   type LucideIcon,
   Mail,
-  Shield,
   X,
 } from 'lucide-react';
 import React, { type FC } from 'react';
 
-import { getAccessLabel, getRoleColor } from '$constants/permissions.constants';
 import type { UserAuditStats, UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '$ui/card';
-import { Separator } from '$ui/separator';
+import { Card, CardContent, CardHeader } from '$ui/card';
 
 type UserResumeTabProps = {
   auditStats: UserAuditStats | null;
+  canViewActivity: boolean;
   canViewContact: boolean;
   user: UserType;
 };
@@ -41,7 +38,7 @@ const ResumeStatCard: FC<{
   icon: LucideIcon;
   label: string;
   tone?: ResumeStatTone;
-  value: number;
+  value: number | string;
 }> = ({ icon: Icon, label, tone = 'neutral', value }) => (
   <Card className="border-border/70 overflow-hidden rounded-md py-0">
     <CardContent className="p-3 sm:p-4">
@@ -64,6 +61,7 @@ const ResumeStatCard: FC<{
 
 export const UserResumeTab: FC<UserResumeTabProps> = ({
   auditStats,
+  canViewActivity,
   canViewContact,
   user,
 }) => {
@@ -84,142 +82,88 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({
   };
 
   return (
-    <div className="space-y-3">
+    <section className="space-y-3" aria-labelledby="user-summary-heading">
+      <h2 id="user-summary-heading" className="sr-only">
+        Résumé du compte
+      </h2>
       {/* Quick Stats */}
-      {auditStats && (
+      {canViewActivity && (
         <div className="grid gap-3 sm:grid-cols-3">
           <ResumeStatCard
             icon={Activity}
             label="Actions totales"
-            value={auditStats.totalActions}
+            value={auditStats?.totalActions ?? '—'}
             tone="primary"
           />
           <ResumeStatCard
             icon={Check}
             label="Connexions réussies"
-            value={auditStats.successfulLogins}
+            value={auditStats?.successfulLogins ?? '—'}
           />
           <ResumeStatCard
             icon={X}
             label="Tentatives échouées"
-            value={auditStats.failedLogins}
-            tone="warning"
+            value={auditStats?.failedLogins ?? '—'}
+            tone={(auditStats?.failedLogins ?? 0) > 0 ? 'warning' : 'neutral'}
           />
         </div>
       )}
       {/* User Details */}
       <Card className="border-border/70 overflow-hidden rounded-md py-0">
         <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
-          <CardTitle className="text-sm">Informations compte</CardTitle>
+          <h3 className="text-sm font-semibold">Informations du compte</h3>
         </CardHeader>
-        <CardContent className="space-y-3 p-3 sm:p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <AtSign size={16} className="text-muted-foreground" />
-              <span className="text-muted-foreground">
-                Identifiant de connexion
-              </span>
-            </div>
-            <span className="text-foreground min-w-0 text-right font-mono text-sm break-all">
-              {user.loginName}
-            </span>
-          </div>
-          <Separator className="bg-border/60" />
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Mail size={16} className="text-muted-foreground" />
-              <span className="text-muted-foreground">Email de contact</span>
-            </div>
-            <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-              <span className="text-foreground min-w-0 text-right text-sm break-all">
+        <CardContent className="p-3 sm:p-4">
+          <dl className="divide-border/60 divide-y">
+            <div className="grid gap-1 py-3 sm:grid-cols-[12rem_minmax(0,1fr)] sm:items-start sm:gap-4">
+              <dt className="text-muted-foreground flex items-center gap-2 text-sm">
+                <Mail size={16} className="text-muted-foreground" />
+                Email de contact
+              </dt>
+              <dd className="text-foreground min-w-0 text-sm break-all sm:text-right">
                 {canViewContact
                   ? (user.contactEmail ?? 'Non renseigné')
                   : 'Masqué — permission requise'}
-              </span>
-              {canViewContact && user.contactEmail && (
-                <Badge
-                  variant={
-                    user.contactEmailVerifiedAt ? 'secondary' : 'outline'
-                  }
-                  className="text-[0.65rem]"
-                >
-                  {user.contactEmailVerifiedAt ? 'Vérifié' : 'Non vérifié'}
-                </Badge>
+              </dd>
+            </div>
+            <div className="grid gap-1 py-3 sm:grid-cols-[12rem_minmax(0,1fr)] sm:items-start sm:gap-4">
+              <dt className="text-muted-foreground flex items-center gap-2 text-sm">
+                <Clock size={16} className="text-muted-foreground" />
+                Dernière connexion
+              </dt>
+              <dd className="text-foreground text-sm sm:text-right">
+                {formatDate(user.lastLoginAt)}
+              </dd>
+            </div>
+            {user.securityDetailsVisible !== false &&
+              user.mustChangePassword && (
+                <div className="grid gap-1 py-3 sm:grid-cols-[12rem_minmax(0,1fr)] sm:items-start sm:gap-4">
+                  <dt className="text-muted-foreground flex items-center gap-2 text-sm">
+                    <Key size={16} className="text-muted-foreground" />
+                    Mot de passe
+                  </dt>
+                  <dd className="sm:text-right">
+                    <Badge
+                      variant="outline"
+                      className="border-warning/40 text-warning"
+                    >
+                      À changer
+                    </Badge>
+                  </dd>
+                </div>
               )}
+            <div className="grid gap-1 py-3 sm:grid-cols-[12rem_minmax(0,1fr)] sm:items-start sm:gap-4">
+              <dt className="text-muted-foreground flex items-center gap-2 text-sm">
+                <Calendar size={16} className="text-muted-foreground" />
+                Créé le
+              </dt>
+              <dd className="text-foreground text-sm sm:text-right">
+                {formatDate(user.createdAt)}
+              </dd>
             </div>
-          </div>
-          <Separator className="bg-border/60" />
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Shield size={16} className="text-muted-foreground" />
-              <span className="text-muted-foreground">Rôle</span>
-            </div>
-            <Badge variant={getRoleColor(user.role)}>
-              {getAccessLabel(user)}
-            </Badge>
-          </div>
-          <Separator className="bg-border/60" />
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Clock size={16} className="text-muted-foreground" />
-              <span className="text-muted-foreground">Dernière connexion</span>
-            </div>
-            <span className="text-foreground text-right text-sm">
-              {formatDate(user.lastLoginAt)}
-            </span>
-          </div>
-          <Separator className="bg-border/60" />
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Key size={16} className="text-muted-foreground" />
-              <span className="text-muted-foreground">Mot de passe</span>
-            </div>
-            {user.mustChangePassword ? (
-              <Badge
-                variant="outline"
-                className="border-warning/40 text-warning"
-              >
-                À changer
-              </Badge>
-            ) : (
-              <span className="text-muted-foreground text-sm">
-                Changé le {formatDate(user.passwordChangedAt)}
-              </span>
-            )}
-          </div>
-          <Separator className="bg-border/60" />
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Activity size={16} className="text-muted-foreground" />
-              <span className="text-muted-foreground">Statut</span>
-            </div>
-            {user.isActive ? (
-              <Badge variant="secondary">
-                <Check size={12} className="mr-1" />
-                Actif
-              </Badge>
-            ) : (
-              <Badge
-                variant="outline"
-                className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
-              >
-                <X size={12} className="mr-1" />
-                Inactif
-              </Badge>
-            )}
-          </div>
-          <Separator className="bg-border/60" />
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Calendar size={16} className="text-muted-foreground" />
-              <span className="text-muted-foreground">Créé le</span>
-            </div>
-            <span className="text-foreground text-right text-sm">
-              {formatDate(user.createdAt)}
-            </span>
-          </div>
+          </dl>
         </CardContent>
       </Card>
-    </div>
+    </section>
   );
 };

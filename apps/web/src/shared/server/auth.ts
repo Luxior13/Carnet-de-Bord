@@ -20,6 +20,7 @@ import {
   hasPermission,
   normalizePermissionOverrides,
   type PermissionsData,
+  requiresMfaForAccess,
 } from '$constants/permissions.constants';
 import { env } from '$env';
 import type { ServerAuthResponseType, UserType } from '$types/auth.types';
@@ -521,13 +522,19 @@ const validateSessionToken = async (
 
   const hasEnabledMfa = session.user.mfaEnabledAt !== null;
   const hasTotpCredential = session.user.totpCredential !== null;
+  const requiresPrivilegedMfa =
+    session.user.role === 'ADMIN' ||
+    requiresMfaForAccess(
+      session.user.role,
+      session.user.permissions as PermissionsData | null,
+    );
 
   // Imported or corrupted half-configured states fail closed for every
   // account. An MFA-enabled account must also never inherit a password-only
-  // session, and the protected root cannot operate before clean bootstrap.
+  // session, and an administrator cannot operate before clean bootstrap.
   if (
     hasEnabledMfa !== hasTotpCredential ||
-    (session.user.isProtected && !hasEnabledMfa) ||
+    (requiresPrivilegedMfa && !hasEnabledMfa) ||
     (hasEnabledMfa &&
       (session.mfaVerifiedAt === null || session.mfaMethod === null))
   ) {
@@ -599,6 +606,7 @@ const validateSessionToken = async (
       expiresAt: session.expiresAt,
       idleExpiresAt: session.idleExpiresAt,
       lastSeenAt: session.lastSeenAt,
+      mfaVerifiedAt: session.mfaVerifiedAt,
       rememberMe: session.rememberMe,
       securityVersion: session.securityVersion,
       token: session.token,
@@ -1061,6 +1069,11 @@ export const updateUserPassword = async (
 export const resetUserPassword = async (
   userId: string,
   audit?: RequiredAuditLogInput,
+  precondition: {
+    expectedRole?: UserRole;
+    expectedSecurityVersion?: number;
+    expectedUpdatedAt?: Date;
+  } = {},
 ): Promise<string> => {
   const tempPassword = generateTemporaryPassword();
   const passwordHash = await hashPassword(tempPassword);
@@ -1076,10 +1089,30 @@ export const resetUserPassword = async (
         passwordHash,
         securityVersion: { increment: 1 },
       },
-      where: { id: userId, isProtected: false },
+      where: {
+        id: userId,
+        isProtected: false,
+        ...(precondition.expectedRole
+          ? { role: precondition.expectedRole }
+          : {}),
+        ...(precondition.expectedSecurityVersion === undefined
+          ? {}
+          : { securityVersion: precondition.expectedSecurityVersion }),
+        ...(precondition.expectedUpdatedAt
+          ? { updatedAt: precondition.expectedUpdatedAt }
+          : {}),
+      },
     });
 
     if (userUpdate.count !== 1) {
+      if (
+        precondition.expectedRole ||
+        precondition.expectedSecurityVersion !== undefined ||
+        precondition.expectedUpdatedAt
+      ) {
+        throw new SecurityVersionMismatchError();
+      }
+
       throw new ProtectedAccountMutationError();
     }
 
@@ -1162,6 +1195,7 @@ export const mapUserToUserType = (user: ClientSafeUser): UserType => ({
     user.permissions as PermissionsData | null,
   ),
   role: user.role,
+  securityDetailsVisible: true,
   ...(user.updatedAt ? { updatedAt: user.updatedAt } : {}),
 });
 

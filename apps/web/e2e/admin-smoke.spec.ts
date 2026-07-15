@@ -150,7 +150,7 @@ async function expectPersistedMfaState(): Promise<void> {
 
 async function expectSelfProfileSyncWithoutReload(page: Page): Promise<void> {
   const rootAccount = await prisma.user.findUnique({
-    select: { firstName: true, id: true, lastName: true },
+    select: { firstName: true, lastName: true },
     where: { loginName: TEST_LOGIN_NAME },
   });
   if (!rootAccount) throw new Error('E2E root account not found');
@@ -162,33 +162,27 @@ async function expectSelfProfileSyncWithoutReload(page: Page): Promise<void> {
   const nextLastName = 'NavigationClient';
   const nextDisplayName = `${nextFirstName} ${nextLastName}`;
 
-  await page.goto(
-    `/administration/utilisateurs/${rootAccount.id}?section=profile`,
-  );
-  await page.locator('#user-first-name').fill(nextFirstName);
-  await page.locator('#user-last-name').fill(nextLastName);
+  await page.goto('/mon-compte?section=profile');
+  await page.getByRole('button', { name: "Modifier l'identité" }).click();
+  await page.locator('#edit-firstName').fill(nextFirstName);
+  await page.locator('#edit-lastName').fill(nextLastName);
 
   const [profileResponse] = await Promise.all([
     page.waitForResponse(
       (response) =>
         response.request().method() === 'PATCH' &&
-        response.url().endsWith(`/api/users/${rootAccount.id}`),
+        response.url().endsWith('/api/auth/me'),
     ),
     page.getByRole('button', { exact: true, name: 'Enregistrer' }).click(),
   ]);
   expect(profileResponse.ok()).toBe(true);
 
-  // The sidebar and /mon-compte share the persistent UserProvider. Navigate
-  // through the real client-side link so a full reload cannot hide a stale
-  // authenticated-user context regression.
+  // The sidebar and /mon-compte share the persistent UserProvider, so both
+  // labels must update without relying on a full page reload.
   const accountMenu = page.getByRole('button', {
     name: `Menu utilisateur de ${nextDisplayName}`,
   });
   await expect(accountMenu).toBeVisible();
-  await accountMenu.click();
-  await page.getByRole('menuitem', { name: /Mon compte/ }).click();
-
-  await expect(page).toHaveURL(/\/mon-compte/);
   await expect(
     page.getByRole('heading', { exact: true, name: nextDisplayName }),
   ).toBeVisible();

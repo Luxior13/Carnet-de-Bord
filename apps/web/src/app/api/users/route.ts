@@ -17,6 +17,7 @@ import {
   mapUserToUserType,
 } from '$server/auth';
 import { prisma } from '$server/prisma';
+import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -122,6 +123,13 @@ export async function GET(
         PERMISSIONS.USERS.UPDATE_CONTACT,
         auth.user.permissions,
       );
+    const canViewSecurity =
+      auth.user.isProtected ||
+      hasPermission(
+        auth.user.role,
+        PERMISSIONS.USERS.VIEW_SECURITY,
+        auth.user.permissions,
+      );
 
     const { searchParams } = new URL(request.url);
     const { limit, page, skip } = parsePagination(searchParams, 25, {
@@ -133,6 +141,20 @@ export async function GET(
     const role = normalizeUserRole(searchParams.get('role'));
     const sort = normalizeUserSort(searchParams.get('sort'));
     const status = normalizeUserStatus(searchParams.get('status'));
+
+    if (status === 'pending' && !canViewSecurity) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message:
+              'La permission de voir la sÃ©curitÃ© des comptes est requise pour ce filtre',
+          },
+          success: false,
+        },
+        { status: 403 },
+      );
+    }
 
     const where: Prisma.UserWhereInput = { deletedAt: null };
 
@@ -205,7 +227,9 @@ export async function GET(
       }),
       countActiveUsers({ lastLoginAt: null }),
       countActiveUsers({ createdAt: { gte: oneWeekAgo } }),
-      countActiveUsers({ mustChangePassword: true }),
+      canViewSecurity
+        ? countActiveUsers({ mustChangePassword: true })
+        : Promise.resolve(null),
       countActiveUsers({ lastLoginAt: { gte: oneDayAgo } }),
     ]);
 
@@ -245,6 +269,7 @@ export async function GET(
           total,
           totalPages: Math.ceil(total / limit),
         },
+        securityDetailsVisible: canViewSecurity,
         stats,
         users: users.map((user) => {
           const mappedUser = mapUserToUserType({
@@ -252,13 +277,22 @@ export async function GET(
             permissions: null,
           });
 
-          return canViewContact
-            ? mappedUser
-            : {
-                ...mappedUser,
-                contactEmail: null,
-                contactEmailVerifiedAt: null,
-              };
+          return {
+            ...mappedUser,
+            ...(canViewContact
+              ? {}
+              : { contactEmail: null, contactEmailVerifiedAt: null }),
+            ...(canViewSecurity
+              ? { securityDetailsVisible: true }
+              : {
+                  failedLoginAttempts: 0,
+                  lockedUntil: null,
+                  mfaEnabledAt: null,
+                  mustChangePassword: false,
+                  passwordChangedAt: null,
+                  securityDetailsVisible: false,
+                }),
+          };
         }),
       },
       success: true,
@@ -343,6 +377,11 @@ export async function POST(
         },
         { status: 400 },
       );
+    }
+
+    if (role === 'ADMIN') {
+      const proofCheck = requireRecentSensitiveActionProof(auth.session);
+      if (!proofCheck.success) return proofCheck.response;
     }
 
     const temporaryPassword = generateTemporaryPassword();

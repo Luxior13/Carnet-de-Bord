@@ -25,7 +25,13 @@ import React, {
 
 import { ContentState } from '$components/layout/ContentState';
 import { UserAvatar } from '$components/users/UserAvatar';
-import { getAccessLabel, getRoleColor } from '$constants/permissions.constants';
+import {
+  getAccessLabel,
+  getRoleColor,
+  hasPermission,
+  PERMISSIONS,
+} from '$constants/permissions.constants';
+import { useUser } from '$context/UserContext';
 import type {
   PaginationInfo,
   UserStatsType,
@@ -238,9 +244,19 @@ export const UsersListPage: FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentQueryString = searchParams.toString();
+  const { userData: currentUser } = useUser();
+  const canRequestSecurityDetails =
+    !!currentUser &&
+    (currentUser.isProtected ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.VIEW_SECURITY,
+        currentUser.permissions,
+      ));
 
   const [users, setUsers] = useState<UserType[]>([]);
   const [stats, setStats] = useState<UserStatsType | null>(null);
+  const [securityDetailsVisible, setSecurityDetailsVisible] = useState(false);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -272,6 +288,10 @@ export const UsersListPage: FC = () => {
   const [currentPage, setCurrentPage] = useState(() =>
     normalizePage(searchParams.get('page')),
   );
+  const effectiveFilterStatus: FilterStatus =
+    currentUser && !canRequestSecurityDetails && filterStatus === 'pending'
+      ? 'all'
+      : filterStatus;
 
   const fetchUsers = useCallback(
     async (
@@ -324,6 +344,7 @@ export const UsersListPage: FC = () => {
 
           setUsers(data.data.users);
           setStats(data.data.stats);
+          setSecurityDetailsVisible(data.data.securityDetailsVisible === true);
           setPagination(nextPagination);
           setLastSuccessfulLoadAt(new Date());
         } else {
@@ -380,7 +401,7 @@ export const UsersListPage: FC = () => {
       role: filterRole,
       search: debouncedSearch,
       sort: sortBy,
-      status: filterStatus,
+      status: effectiveFilterStatus,
     });
     const nextQueryString = params.toString();
 
@@ -397,22 +418,41 @@ export const UsersListPage: FC = () => {
     currentQueryString,
     debouncedSearch,
     filterRole,
-    filterStatus,
+    effectiveFilterStatus,
     pathname,
     sortBy,
   ]);
 
   // Fetch on mount and when filters change
   useEffect((): void => {
-    fetchUsers(currentPage, debouncedSearch, filterStatus, filterRole, sortBy);
+    fetchUsers(
+      currentPage,
+      debouncedSearch,
+      effectiveFilterStatus,
+      filterRole,
+      sortBy,
+    );
   }, [
     fetchUsers,
     currentPage,
     debouncedSearch,
-    filterStatus,
+    effectiveFilterStatus,
     filterRole,
     sortBy,
   ]);
+
+  useEffect((): void => {
+    if (
+      !currentUser ||
+      canRequestSecurityDetails ||
+      filterStatus !== 'pending'
+    ) {
+      return;
+    }
+
+    setFilterStatus('all');
+    setCurrentPage(1);
+  }, [canRequestSecurityDetails, currentUser, filterStatus]);
 
   // Handle search with debounce
   useEffect((): (() => void) => {
@@ -458,7 +498,11 @@ export const UsersListPage: FC = () => {
   };
 
   const openUserDetail = (userId: string): void => {
-    router.push(`/administration/utilisateurs/${userId}`);
+    router.push(
+      userId === currentUser?.id
+        ? '/mon-compte'
+        : `/administration/utilisateurs/${userId}`,
+    );
   };
 
   const handleOpenUserKeyDown = (
@@ -533,7 +577,7 @@ export const UsersListPage: FC = () => {
                 void fetchUsers(
                   currentPage,
                   debouncedSearch,
-                  filterStatus,
+                  effectiveFilterStatus,
                   filterRole,
                   sortBy,
                 )
@@ -562,15 +606,21 @@ export const UsersListPage: FC = () => {
       )}
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div
+          className={`grid grid-cols-2 gap-3 ${
+            securityDetailsVisible ? 'md:grid-cols-4' : 'md:grid-cols-3'
+          }`}
+        >
           <UsersStatCard icon={Users} label="Total" value={stats.total} />
           <UsersStatCard icon={UserCheck} label="Actifs" value={stats.active} />
-          <UsersStatCard
-            icon={Key}
-            label="MDP temporaire"
-            value={stats.pendingPasswordChange}
-            tone="warning"
-          />
+          {securityDetailsVisible && stats.pendingPasswordChange !== null && (
+            <UsersStatCard
+              icon={Key}
+              label="MDP temporaire"
+              value={stats.pendingPasswordChange}
+              tone="warning"
+            />
+          )}
           <UsersStatCard
             icon={Clock}
             label="Cnx 24h"
@@ -647,9 +697,11 @@ export const UsersListPage: FC = () => {
                   <TabsTrigger value="inactive" className="h-7 px-2.5 text-xs">
                     Inactifs
                   </TabsTrigger>
-                  <TabsTrigger value="pending" className="h-7 px-2.5 text-xs">
-                    MDP
-                  </TabsTrigger>
+                  {canRequestSecurityDetails && (
+                    <TabsTrigger value="pending" className="h-7 px-2.5 text-xs">
+                      MDP
+                    </TabsTrigger>
+                  )}
                 </ScrollableTabsList>
               </Tabs>
             </div>
@@ -726,7 +778,7 @@ export const UsersListPage: FC = () => {
                 <TableHead>Utilisateur</TableHead>
                 <TableHead>Rôle</TableHead>
                 <TableHead>Statut</TableHead>
-                <TableHead>Mot de passe</TableHead>
+                {securityDetailsVisible && <TableHead>Mot de passe</TableHead>}
                 <TableHead>Dernière connexion</TableHead>
                 <TableHead className="w-24 text-right">Action</TableHead>
               </TableRow>
@@ -734,7 +786,10 @@ export const UsersListPage: FC = () => {
             <TableBody>
               {displayedUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-44 text-center">
+                  <TableCell
+                    colSpan={securityDetailsVisible ? 6 : 5}
+                    className="h-44 text-center"
+                  >
                     <ContentState
                       className="min-h-0 border-0 bg-transparent p-0"
                       icon={<UserMinus className="size-5" />}
@@ -813,20 +868,22 @@ export const UsersListPage: FC = () => {
                     <TableCell>
                       <UserStatusBadge isActive={user.isActive} />
                     </TableCell>
-                    <TableCell>
-                      {user.mustChangePassword ? (
-                        <Badge
-                          variant="outline"
-                          className="border-warning/40 text-warning"
-                        >
-                          <Key size={10} className="mr-1" />À changer
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">
-                          À jour
-                        </span>
-                      )}
-                    </TableCell>
+                    {securityDetailsVisible && (
+                      <TableCell>
+                        {user.mustChangePassword ? (
+                          <Badge
+                            variant="outline"
+                            className="border-warning/40 text-warning"
+                          >
+                            <Key size={10} className="mr-1" />À changer
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">
+                            À jour
+                          </span>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell className="text-muted-foreground text-xs">
                       {formatRelativeTime(user.lastLoginAt)}
                     </TableCell>
@@ -840,7 +897,7 @@ export const UsersListPage: FC = () => {
                           openUserDetail(user.id);
                         }}
                       >
-                        Ouvrir
+                        {user.id === currentUser?.id ? 'Mon compte' : 'Ouvrir'}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -916,7 +973,7 @@ export const UsersListPage: FC = () => {
                       {!user.isActive && (
                         <UserStatusBadge isActive={user.isActive} />
                       )}
-                      {user.mustChangePassword && (
+                      {securityDetailsVisible && user.mustChangePassword && (
                         <Badge
                           variant="outline"
                           className="border-warning/40 text-warning text-xs"
