@@ -123,14 +123,6 @@ export const NAV_SPACES: NavigationSpace[] = [
           },
           {
             availability: 'live',
-            description:
-              'Profil, mot de passe, sessions et activité personnelle.',
-            href: '/mon-compte',
-            icon: 'UserCheck',
-            label: 'Mon compte',
-          },
-          {
-            availability: 'live',
             description: 'Fonctionnalités prévues et état de leur préparation.',
             href: '/feuille-de-route',
             icon: 'ClipboardList',

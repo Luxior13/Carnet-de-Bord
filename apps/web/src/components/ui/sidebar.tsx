@@ -1,7 +1,7 @@
 'use client';
 
 import { Slot } from '@radix-ui/react-slot';
-import { PanelLeft } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '$ui/button';
@@ -12,15 +12,19 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
 const SIDEBAR_ID = 'app-sidebar';
-const SIDEBAR_WIDTH = '17.5rem';
+const SIDEBAR_WIDTH = '16.5rem';
 const SIDEBAR_WIDTH_ICON = '3.5rem';
 const SIDEBAR_WIDTH_MOBILE = '18rem';
+const SIDEBAR_DESKTOP_OPEN_STORAGE_KEY = 'team-control:sidebar:desktop-open';
 const SIDEBAR_SCROLL_STORAGE_PREFIX = 'sidebar_scroll:';
 const SIDEBAR_SCROLL_SAVE_DELAY_MS = 120;
 const MOBILE_BREAKPOINT = 1024;
+const MOBILE_MEDIA_QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`;
 
 type SidebarContextProps = {
+  desktopStateReady: boolean;
   isMobile: boolean;
+  isMobileResolved: boolean;
   open: boolean;
   openMobile: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -31,16 +35,27 @@ type SidebarContextProps = {
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
 
-function useIsMobile(): boolean {
-  const [isMobile, setIsMobile] = React.useState(false);
+let cachedDesktopOpen: boolean | null = null;
+
+type MobileViewport = {
+  isMobile: boolean;
+  isResolved: boolean;
+};
+
+function useMobileViewport(): MobileViewport {
+  const [viewport, setViewport] = React.useState<MobileViewport>({
+    isMobile: false,
+    isResolved: false,
+  });
 
   React.useEffect((): (() => void) => {
-    const mediaQuery = window.matchMedia(
-      `(max-width: ${MOBILE_BREAKPOINT - 1}px)`,
-    );
+    const mediaQuery = window.matchMedia(MOBILE_MEDIA_QUERY);
 
     const updateIsMobile = (): void => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+      setViewport({
+        isMobile: mediaQuery.matches,
+        isResolved: true,
+      });
     };
 
     mediaQuery.addEventListener('change', updateIsMobile);
@@ -49,7 +64,7 @@ function useIsMobile(): boolean {
     return () => mediaQuery.removeEventListener('change', updateIsMobile);
   }, []);
 
-  return isMobile;
+  return viewport;
 }
 
 function useSidebar(): SidebarContextProps {
@@ -63,43 +78,163 @@ function useSidebar(): SidebarContextProps {
 }
 
 type SidebarProviderProps = React.ComponentProps<'div'> & {
-  defaultOpen?: never;
-  onOpenChange?: never;
-  open?: never;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  open?: boolean;
 };
 
 function SidebarProvider({
   children,
   className,
+  defaultOpen = true,
+  onOpenChange,
+  open: controlledOpen,
   style,
   ...props
 }: SidebarProviderProps): React.ReactNode {
-  const isMobile = useIsMobile();
+  const { isMobile, isResolved: isMobileResolved } = useMobileViewport();
   const [openMobile, setOpenMobile] = React.useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(
+    () => cachedDesktopOpen ?? defaultOpen,
+  );
+  const [desktopStateReady, setDesktopStateReady] = React.useState(
+    () => controlledOpen !== undefined || cachedDesktopOpen !== null,
+  );
+  const open = controlledOpen ?? uncontrolledOpen;
+  const openRef = React.useRef(open);
+  const isControlled = controlledOpen !== undefined;
+
+  React.useEffect(() => {
+    openRef.current = open;
+  }, [open]);
+
+  React.useLayoutEffect(() => {
+    if (isControlled) return;
+
+    let nextOpen = cachedDesktopOpen;
+
+    try {
+      if (nextOpen === null) {
+        const storedOpen = window.localStorage.getItem(
+          SIDEBAR_DESKTOP_OPEN_STORAGE_KEY,
+        );
+
+        if (storedOpen === 'true' || storedOpen === 'false') {
+          nextOpen = storedOpen === 'true';
+        }
+      }
+    } catch {
+      // Keep the provided default when storage is unavailable.
+    }
+
+    nextOpen ??= defaultOpen;
+    cachedDesktopOpen = nextOpen;
+    openRef.current = nextOpen;
+    setUncontrolledOpen(nextOpen);
+  }, [defaultOpen, isControlled]);
+
+  React.useEffect((): (() => void) => {
+    if (desktopStateReady) return () => undefined;
+
+    const frameId = window.requestAnimationFrame(() => {
+      setDesktopStateReady(true);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [desktopStateReady]);
+
+  React.useEffect((): (() => void) | undefined => {
+    if (isControlled) return undefined;
+
+    const handleStorage = (event: StorageEvent): void => {
+      if (
+        event.key !== SIDEBAR_DESKTOP_OPEN_STORAGE_KEY ||
+        (event.newValue !== 'true' && event.newValue !== 'false')
+      ) {
+        return;
+      }
+
+      const nextOpen = event.newValue === 'true';
+
+      cachedDesktopOpen = nextOpen;
+      openRef.current = nextOpen;
+      setUncontrolledOpen(nextOpen);
+    };
+
+    window.addEventListener('storage', handleStorage);
+
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [isControlled]);
+
+  React.useEffect(() => {
+    if (!isMobile) setOpenMobile(false);
+  }, [isMobile]);
 
   const setOpen = React.useCallback<
     React.Dispatch<React.SetStateAction<boolean>>
-  >(() => undefined, []);
+  >(
+    (value) => {
+      const nextOpen =
+        typeof value === 'function' ? value(openRef.current) : value;
+
+      openRef.current = nextOpen;
+      cachedDesktopOpen = nextOpen;
+
+      if (!isControlled) setUncontrolledOpen(nextOpen);
+
+      onOpenChange?.(nextOpen);
+
+      try {
+        window.localStorage.setItem(
+          SIDEBAR_DESKTOP_OPEN_STORAGE_KEY,
+          String(nextOpen),
+        );
+      } catch {
+        // The interaction still works when storage is unavailable.
+      }
+    },
+    [isControlled, onOpenChange],
+  );
 
   const toggleSidebar = React.useCallback((): void => {
-    if (isMobile) {
-      setOpenMobile((value) => !value);
-    }
-  }, [isMobile]);
+    const useMobileSidebar =
+      typeof window === 'undefined'
+        ? isMobile
+        : window.matchMedia(MOBILE_MEDIA_QUERY).matches;
 
-  const state = 'expanded';
+    if (useMobileSidebar) {
+      setOpenMobile((value) => !value);
+
+      return;
+    }
+
+    setOpen((value) => !value);
+  }, [isMobile, setOpen]);
+
+  const state = open ? 'expanded' : 'collapsed';
 
   const contextValue = React.useMemo<SidebarContextProps>(
     (): SidebarContextProps => ({
+      desktopStateReady,
       isMobile,
-      open: true,
+      isMobileResolved,
+      open,
       openMobile,
       setOpen,
       setOpenMobile,
       state,
       toggleSidebar,
     }),
-    [isMobile, openMobile, setOpen, toggleSidebar],
+    [
+      desktopStateReady,
+      isMobile,
+      isMobileResolved,
+      open,
+      openMobile,
+      setOpen,
+      state,
+      toggleSidebar,
+    ],
   );
 
   return (
@@ -141,7 +276,8 @@ function Sidebar({
   variant = 'sidebar',
   ...props
 }: SidebarProps): React.ReactNode {
-  const { isMobile, openMobile, setOpenMobile, state } = useSidebar();
+  const { desktopStateReady, isMobile, openMobile, setOpenMobile, state } =
+    useSidebar();
 
   if (collapsible === 'none') {
     return (
@@ -169,7 +305,7 @@ function Sidebar({
           id={id ?? SIDEBAR_ID}
           side={side}
           className={cn(
-            'sidebar-pattern bg-sidebar text-sidebar-foreground w-[var(--sidebar-width-mobile)] overflow-hidden p-0 [&>button]:hidden',
+            'sidebar-pattern bg-sidebar text-sidebar-foreground w-[var(--sidebar-width-mobile)] overflow-hidden p-0 [&_[data-sidebar=header]]:pr-14 [&>button]:z-10 [&>button]:size-11 [&>button]:opacity-100',
           )}
         >
           <SheetTitle className="sr-only">Menu</SheetTitle>
@@ -191,7 +327,9 @@ function Sidebar({
       data-variant={variant}
       id={id ?? SIDEBAR_ID}
       className={cn(
-        'sidebar-pattern group/sidebar bg-sidebar text-sidebar-foreground relative hidden h-full shrink-0 flex-col overflow-hidden border-r transition-[width] duration-200 ease-linear lg:flex',
+        'sidebar-pattern group/sidebar bg-sidebar text-sidebar-foreground relative hidden h-full shrink-0 flex-col overflow-hidden border-r lg:flex',
+        desktopStateReady &&
+          'transition-[width] duration-200 ease-linear motion-reduce:transition-none',
         'border-sidebar-border',
         state === 'collapsed' && collapsible === 'icon'
           ? 'w-[var(--sidebar-width-icon)]'
@@ -212,26 +350,43 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>): React.ReactNode {
-  const { isMobile, open, openMobile, toggleSidebar } = useSidebar();
+  const { isMobile, isMobileResolved, open, openMobile, toggleSidebar } =
+    useSidebar();
+  const isExpanded = isMobileResolved
+    ? isMobile
+      ? openMobile
+      : open
+    : undefined;
+  const actionLabel = !isMobileResolved
+    ? 'Basculer la navigation'
+    : isMobile
+      ? isExpanded
+        ? 'Fermer la navigation'
+        : 'Ouvrir la navigation'
+      : isExpanded
+        ? 'Replier la barre latérale'
+        : 'Déployer la barre latérale';
+  const TriggerIcon = isExpanded ? PanelLeftClose : PanelLeftOpen;
 
   return (
     <Button
       aria-controls={SIDEBAR_ID}
-      aria-expanded={isMobile ? openMobile : open}
+      aria-expanded={isExpanded}
+      aria-label={actionLabel}
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       type="button"
       variant="ghost"
       size="icon"
-      className={cn('size-10 lg:hidden', className)}
+      className={cn('size-11 lg:size-10', className)}
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
       }}
       {...props}
     >
-      <PanelLeft className="size-4" />
-      <span className="sr-only">Basculer la barre latérale</span>
+      <TriggerIcon className="size-4" />
+      <span className="sr-only">{actionLabel}</span>
     </Button>
   );
 }
@@ -303,18 +458,41 @@ function SidebarContent({
   React.useEffect((): (() => void) | undefined => {
     const viewport = viewportRef.current;
 
-    if (!viewport || !storageKey) return undefined;
+    if (!viewport) return undefined;
 
     let scrollTop = 0;
 
-    try {
-      scrollTop = Number(window.sessionStorage.getItem(storageKey) ?? 0);
-    } catch {
-      scrollTop = 0;
+    if (storageKey) {
+      try {
+        scrollTop = Number(window.sessionStorage.getItem(storageKey) ?? 0);
+      } catch {
+        scrollTop = 0;
+      }
     }
 
     const restoreScroll = (): void => {
       viewport.scrollTop = Number.isFinite(scrollTop) ? scrollTop : 0;
+
+      const activeItem = [
+        '[aria-current="page"]',
+        '[aria-current="location"]',
+        '[data-active="true"]',
+      ]
+        .map((selector) => viewport.querySelector<HTMLElement>(selector))
+        .find(
+          (candidate) => candidate && candidate.getClientRects().length > 0,
+        );
+
+      if (!activeItem) return;
+
+      const viewportRect = viewport.getBoundingClientRect();
+      const activeItemRect = activeItem.getBoundingClientRect();
+
+      if (activeItemRect.top < viewportRect.top) {
+        viewport.scrollTop -= viewportRect.top - activeItemRect.top;
+      } else if (activeItemRect.bottom > viewportRect.bottom) {
+        viewport.scrollTop += activeItemRect.bottom - viewportRect.bottom;
+      }
     };
     const frameId = window.requestAnimationFrame(restoreScroll);
 
@@ -422,7 +600,7 @@ function SidebarGroupLabel({
       data-sidebar="group-label"
       data-slot="sidebar-group-label"
       className={cn(
-        'text-sidebar-foreground/65 flex h-6 shrink-0 items-center overflow-hidden rounded-md px-2 text-xs font-semibold uppercase transition-opacity duration-150 group-data-[collapsible=icon]/sidebar:h-0 group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150',
+        'text-sidebar-foreground/65 flex h-6 shrink-0 items-center overflow-hidden rounded-md px-2 text-xs font-semibold transition-opacity duration-150 group-data-[collapsible=icon]/sidebar:h-0 group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150',
         className,
       )}
       {...props}
@@ -440,7 +618,7 @@ function SidebarGroupAction({
       data-slot="sidebar-group-action"
       type="button"
       className={cn(
-        'text-sidebar-foreground/65 hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground absolute top-1 right-1 flex size-10 items-center justify-center rounded-lg border border-transparent transition-colors group-data-[collapsible=icon]/sidebar:hidden lg:top-3 lg:right-3 lg:size-7',
+        'text-sidebar-foreground/65 hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring absolute top-1 right-1 flex size-11 items-center justify-center rounded-lg border border-transparent transition-colors outline-none group-data-[collapsible=icon]/sidebar:hidden focus-visible:ring-2 lg:top-3 lg:right-3 lg:size-7',
         className,
       )}
       {...props}
@@ -523,8 +701,8 @@ function SidebarMenuButton({
       className={cn(
         'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/65 flex w-full max-w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-md border border-transparent px-3 text-left text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
         'data-[active=true]:border-sidebar-ring/45 data-[active=true]:bg-sidebar-accent/70 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring data-[active=true]:font-semibold',
-        size === 'sm' && 'h-10 text-xs lg:h-9',
-        size === 'default' && 'h-10',
+        size === 'sm' && 'h-11 text-xs lg:h-9',
+        size === 'default' && 'h-11 lg:h-10',
         size === 'lg' && 'h-12',
         'group-data-[collapsible=icon]/sidebar:h-10 group-data-[collapsible=icon]/sidebar:w-10 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:p-0 lg:group-data-[collapsible=icon]/sidebar:h-9 lg:group-data-[collapsible=icon]/sidebar:w-9 group-data-[collapsible=icon]/sidebar:[&>span]:max-w-0 group-data-[collapsible=icon]/sidebar:[&>span]:opacity-0 group-data-[collapsible=icon]/sidebar:[&>span]:delay-0 group-data-[state=expanded]/sidebar:[&>span]:delay-150',
         className,
@@ -557,7 +735,7 @@ function SidebarMenuAction({
       data-slot="sidebar-menu-action"
       type="button"
       className={cn(
-        'text-sidebar-foreground/65 hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground absolute top-0 right-0 flex size-10 items-center justify-center rounded-md border border-transparent transition-colors group-data-[collapsible=icon]/sidebar:hidden lg:top-1.5 lg:right-1 lg:size-6',
+        'text-sidebar-foreground/65 hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring absolute top-0 right-0 flex size-11 items-center justify-center rounded-md border border-transparent transition-colors outline-none group-data-[collapsible=icon]/sidebar:hidden focus-visible:ring-2 lg:top-1.5 lg:right-1 lg:size-6',
         className,
       )}
       {...props}
@@ -653,7 +831,7 @@ function SidebarMenuSubButton({
       data-sidebar="menu-sub-button"
       data-slot="sidebar-menu-sub-button"
       className={cn(
-        'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/60 flex h-10 w-full min-w-0 items-center gap-2 overflow-hidden rounded-md border border-transparent px-2.5 text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 lg:h-8 [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+        'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/60 flex h-11 w-full min-w-0 items-center gap-2 overflow-hidden rounded-md border border-transparent px-2.5 text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 lg:h-8 [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
         'data-[active=true]:bg-sidebar-accent/65 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring data-[active=true]:border-sidebar-ring/30 data-[active=true]:border data-[active=true]:font-semibold',
         className,
       )}

@@ -56,7 +56,7 @@ describe('navigation availability', () => {
   it('shows only operational destinations in the default navigation', () => {
     const hrefs = getVisibleHrefs();
 
-    expect(hrefs).toEqual(['/', '/mon-compte', '/feuille-de-route']);
+    expect(hrefs).toEqual(['/', '/feuille-de-route']);
     expect(hrefs).not.toContain('/tableau-de-bord/mes-taches');
     expect(hrefs).not.toContain('/vie-interne');
     expect(hrefs).not.toContain('/recherche');
@@ -88,7 +88,7 @@ describe('navigation availability', () => {
     expect(tasks && getNavigationAvailability(tasks)).toBe('planned');
   });
 
-  it('opens only live known destinations from shell affordances', () => {
+  it('blocks planned destinations while allowing account and dynamic routes', () => {
     const user = buildUser({
       [PERMISSIONS.NOTIFICATIONS.VIEW]: true,
     });
@@ -182,7 +182,7 @@ describe('navigation availability', () => {
       '/vie-interne/membres',
     ).flatMap((section) => flattenHrefs(section.items));
 
-    expect(sidebarHrefs).toEqual(['/', '/mon-compte', '/feuille-de-route']);
+    expect(sidebarHrefs).toEqual(['/', '/feuille-de-route']);
     expect(sidebarHrefs).not.toContain('/vie-interne/membres');
   });
 
@@ -232,7 +232,6 @@ describe('navigation availability', () => {
 
     expect(liveHrefs).toEqual([
       '/',
-      '/mon-compte',
       '/feuille-de-route',
       '/systeme',
       '/administration/utilisateurs',
