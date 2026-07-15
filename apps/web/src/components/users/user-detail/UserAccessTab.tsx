@@ -72,7 +72,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
     );
 
     return (
-      <Card className="border-sidebar-border/60 overflow-hidden rounded-lg py-0">
+      <Card className="border-border/60 overflow-hidden rounded-lg py-0">
         <CardContent className="space-y-4 p-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex min-w-0 items-start gap-3">
@@ -97,8 +97,8 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                 </p>
               </div>
             </div>
-            <div className="border-sidebar-border/60 bg-surface-control flex items-center gap-2 rounded-lg border px-2 py-1">
-              <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-7 shrink-0 items-center justify-center rounded-md border">
+            <div className="border-border/60 bg-surface-control flex items-center gap-2 rounded-lg border px-2 py-1">
+              <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-7 shrink-0 items-center justify-center rounded-md border">
                 <Shield className="size-3.5" />
               </span>
               <Input
@@ -109,7 +109,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             </div>
           </div>
           <div className="grid gap-3 md:grid-cols-3">
-            <div className="border-sidebar-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
+            <div className="border-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
               <ShieldCheck className="text-success size-5 shrink-0" />
               <div className="min-w-0">
                 <p className="text-foreground text-sm font-semibold">
@@ -120,7 +120,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                 </p>
               </div>
             </div>
-            <div className="border-sidebar-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
+            <div className="border-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
               <Crown className="text-warning size-5 shrink-0" />
               <div className="min-w-0">
                 <p className="text-foreground text-sm font-semibold">
@@ -131,8 +131,8 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                 </p>
               </div>
             </div>
-            <div className="border-sidebar-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
-              <LockKeyhole className="text-primary size-5 shrink-0" />
+            <div className="border-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
+              <LockKeyhole className="text-primary-emphasis size-5 shrink-0" />
               <div className="min-w-0">
                 <p className="text-foreground text-sm font-semibold">
                   Non modifiable
@@ -150,7 +150,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
 
   return (
     <div>
-      <Card className="border-sidebar-border/60 overflow-visible rounded-lg py-0">
+      <Card className="border-border/60 overflow-visible rounded-lg py-0">
         <CardContent className="p-2.5 sm:p-3">
           <PermissionsEditor
             role={role}
@@ -160,8 +160,8 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             onSelectedPageChange={onPermissionPageChange}
             disabled={!canManagePermissions}
             headerControls={
-              <div className="border-sidebar-border/60 bg-surface-control flex items-center gap-2 rounded-lg border px-2 py-1">
-                <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-7 shrink-0 items-center justify-center rounded-md border">
+              <div className="border-border/60 bg-surface-control flex items-center gap-2 rounded-lg border px-2 py-1">
+                <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-7 shrink-0 items-center justify-center rounded-md border">
                   <Shield className="size-3.5" />
                 </span>
                 <Label htmlFor="user-role" className="sr-only">
@@ -196,7 +196,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             }
           />
         </CardContent>
-        <CardFooter className="border-sidebar-border/60 bg-surface-muted/95 sticky bottom-3 z-20 flex-col items-stretch justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center">
+        <CardFooter className="border-border/60 bg-surface-muted/95 sticky bottom-3 z-20 flex-col items-stretch justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center">
           <div className="space-y-1">
             <p className="text-muted-foreground text-xs">
               {hasChanges ? 'Modifications non enregistrées' : 'À jour'}

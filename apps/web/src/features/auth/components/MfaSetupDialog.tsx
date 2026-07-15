@@ -56,11 +56,10 @@ export const MfaSetupDialog: FC<MfaSetupDialogProps> = ({
         onEscapeKeyDown={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => event.preventDefault()}
       >
-        <div className="bg-primary h-1 w-full" />
         <div className="p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ServiceIcon className="bg-primary/10 text-primary">
+              <ServiceIcon className="bg-primary/10 text-primary-emphasis">
                 <ShieldCheck className="size-4" />
               </ServiceIcon>
               {isReplacing

@@ -60,13 +60,13 @@ type PermissionModuleGroup = {
 };
 
 const permissionSelectTriggerClassName =
-  'border-sidebar-border/70 bg-surface text-sidebar-foreground hover:bg-sidebar-accent/25 focus-visible:border-sidebar-ring/45 focus-visible:ring-sidebar-ring/35 h-11 w-full shadow-none';
+  'border-border-control bg-input text-foreground hover:bg-accent/25 focus-visible:border-primary/45 focus-visible:ring-ring/35 h-11 w-full shadow-none';
 
 const permissionSelectContentClassName =
-  'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]';
+  'border-border bg-surface-raised/98 text-foreground rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]';
 
 const permissionSelectItemClassName =
-  'focus:bg-sidebar-accent/55 focus:text-sidebar-accent-foreground rounded-md py-2';
+  'focus:bg-accent/55 focus:text-accent-foreground rounded-md py-2';
 
 type SelectVisualOptionProps = {
   icon: Parameters<typeof getNavigationIcon>[0];
@@ -178,7 +178,7 @@ const getPermissionOriginLabel = (hasCustomChoice: boolean): string =>
 
 const getPermissionOriginBadgeClassName = (hasCustomChoice: boolean): string =>
   hasCustomChoice
-    ? 'border-primary/40 bg-primary/10 text-primary'
+    ? 'border-primary/40 bg-primary/10 text-primary-emphasis'
     : 'border-border/70 text-muted-foreground';
 
 const getStateButtonClassName = (
@@ -338,7 +338,7 @@ const getPermissionAccessBadgeClassName = (
     return 'border-warning/40 bg-warning/15 text-warning';
   }
 
-  return 'border-sidebar-border/65 bg-sidebar-accent/20 text-sidebar-foreground/62';
+  return 'border-border/65 bg-accent/20 text-muted-foreground';
 };
 
 const getCategoryAccessPermission = (
@@ -455,7 +455,7 @@ const SelectVisualOption: FC<SelectVisualOptionProps> = ({
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {result && accessStatus && (
         <span className="ml-auto flex shrink-0 items-center gap-1.5">
-          <span className="border-sidebar-border/65 bg-background/35 text-sidebar-foreground/70 rounded-md border px-1.5 py-0.5 text-xs leading-none font-semibold">
+          <span className="border-border/65 bg-background/35 text-muted-foreground rounded-md border px-1.5 py-0.5 text-xs leading-none font-semibold">
             {result.ready}/{result.total}
           </span>
           <span
@@ -485,7 +485,7 @@ const PermissionCard: FC<PermissionCardProps> = memo(
     return (
       <div
         className={cn(
-          'border-sidebar-border/60 bg-surface/80 overflow-hidden rounded-lg border border-l-2',
+          'border-border/60 bg-surface/80 overflow-hidden rounded-lg border border-l-2',
           getRiskBorderClassName(permission.risk),
           view.hasMissingDependencies && 'bg-warning/10',
           !view.isEnabled && !view.hasMissingDependencies && 'bg-popover/55',
@@ -853,7 +853,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
 
     return (
       <div className="space-y-3">
-        <section className="border-sidebar-border/55 bg-surface-muted overflow-hidden rounded-lg border">
+        <section className="border-border/55 bg-surface-muted overflow-hidden rounded-lg border">
           <div className="flex flex-col gap-4 p-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
@@ -863,7 +863,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                 {customPermissionCount > 0 && (
                   <Badge
                     variant="outline"
-                    className="border-primary/40 text-primary text-xs"
+                    className="border-primary/40 text-primary-emphasis text-xs"
                   >
                     {customPermissionCount} exception
                     {customPermissionCount > 1 ? 's' : ''}
@@ -908,8 +908,8 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
           </div>
         </section>
         {selectedCategory && (
-          <section className="border-sidebar-border/60 bg-surface overflow-hidden rounded-lg border">
-            <div className="border-sidebar-border/55 bg-surface-muted grid gap-4 border-b p-4 xl:grid-cols-[minmax(0,1fr)_40rem] xl:items-start">
+          <section className="border-border/60 bg-surface overflow-hidden rounded-lg border">
+            <div className="border-border/55 bg-surface-muted grid gap-4 border-b p-4 xl:grid-cols-[minmax(0,1fr)_40rem] xl:items-start">
               <div className="flex min-w-0 items-start gap-3">
                 <span
                   className={cn(
@@ -1110,7 +1110,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   </Button>
                 )}
                 {selectedPageIsAllowed ? (
-                  <div className="border-sidebar-border/60 bg-surface-muted flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2">
+                  <div className="border-border/60 bg-surface-muted flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2">
                     <ShieldCheck className="text-success size-4 shrink-0" />
                     <p className="text-muted-foreground text-xs">
                       Les actions autorisées seront utilisables sur cette page.
@@ -1157,8 +1157,8 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   ))}
                 </div>
               ) : (
-                <div className="border-sidebar-border/60 bg-surface-muted flex flex-col items-center justify-center rounded-lg border p-6 text-center">
-                  <ShieldCheck className="text-primary size-7" />
+                <div className="border-border/60 bg-surface-muted flex flex-col items-center justify-center rounded-lg border p-6 text-center">
+                  <ShieldCheck className="text-primary-emphasis size-7" />
                   <p className="text-foreground mt-3 text-sm font-medium">
                     Aucune action supplémentaire
                   </p>

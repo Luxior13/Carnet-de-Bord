@@ -125,7 +125,6 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
         className="overflow-hidden p-0 sm:max-w-md"
         hideCloseButton={!canCancel}
       >
-        <div className="bg-primary h-1 w-full" />
         <div className="p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">

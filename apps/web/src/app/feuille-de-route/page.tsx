@@ -89,7 +89,7 @@ export default function RoadmapPage(): React.ReactNode {
 
                           return (
                             <Card
-                              className="border-sidebar-border/70 rounded-md py-0"
+                              className="border-border/70 rounded-md py-0"
                               key={item.href}
                             >
                               <CardHeader className="p-4 pb-2">

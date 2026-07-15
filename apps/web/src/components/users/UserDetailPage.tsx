@@ -242,10 +242,10 @@ const UserDetailMetricCard: FC<{
   label: string;
   value: string;
 }> = ({ icon: Icon, iconClassName, label, value }) => (
-  <div className="border-sidebar-border/70 bg-surface flex min-w-0 items-center gap-3 rounded-lg border p-3 shadow-[var(--shadow-panel)]">
+  <div className="border-border/70 bg-surface flex min-w-0 items-center gap-3 rounded-lg border p-3 shadow-[var(--shadow-panel)]">
     <span
       className={[
-        'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border',
+        'border-border/50 bg-surface-raised text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg border',
         iconClassName ?? '',
       ].join(' ')}
     >
@@ -262,7 +262,7 @@ const DetailSkeleton: FC = () => (
   <PageShell className="py-0">
     <PageCanvas contentClassName="relative space-y-4">
       <div className="hidden 2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:block 2xl:w-44">
-        <div className="border-sidebar-border/70 bg-surface sticky top-4 rounded-lg border p-1 shadow-[var(--shadow-panel)]">
+        <div className="border-border/70 bg-surface sticky top-4 rounded-lg border p-1 shadow-[var(--shadow-panel)]">
           <Skeleton className="mx-2 my-2 h-4 w-14" />
           <div className="space-y-1">
             {Array.from({ length: 5 }).map((_, index) => (
@@ -273,7 +273,6 @@ const DetailSkeleton: FC = () => (
       </div>
       <div className="min-w-0 space-y-4">
         <Card className="shrink-0 overflow-hidden py-0">
-          <div className="bg-primary h-1 w-full" />
           <CardContent className="p-3 sm:p-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 items-center gap-3">
@@ -1977,8 +1976,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               }
             />
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="border-sidebar-border/70 bg-surface flex items-center gap-3 rounded-lg border p-3 shadow-[var(--shadow-panel)]">
-                <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
+              <div className="border-border/70 bg-surface flex items-center gap-3 rounded-lg border p-3 shadow-[var(--shadow-panel)]">
+                <span className="border-border/50 bg-surface-raised text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg border">
                   <Clock className="size-4" />
                 </span>
                 <div className="min-w-0">
@@ -1990,8 +1989,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                   </p>
                 </div>
               </div>
-              <div className="border-sidebar-border/70 bg-surface flex items-center gap-3 rounded-lg border p-3 shadow-[var(--shadow-panel)]">
-                <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
+              <div className="border-border/70 bg-surface flex items-center gap-3 rounded-lg border p-3 shadow-[var(--shadow-panel)]">
+                <span className="border-border/50 bg-surface-raised text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg border">
                   <Calendar className="size-4" />
                 </span>
                 <div className="min-w-0">
@@ -2001,8 +2000,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                   </p>
                 </div>
               </div>
-              <div className="border-sidebar-border/70 bg-surface flex items-center gap-3 rounded-lg border p-3 shadow-[var(--shadow-panel)]">
-                <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
+              <div className="border-border/70 bg-surface flex items-center gap-3 rounded-lg border p-3 shadow-[var(--shadow-panel)]">
+                <span className="border-border/50 bg-surface-raised text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg border">
                   <Activity className="size-4" />
                 </span>
                 <div className="min-w-0">

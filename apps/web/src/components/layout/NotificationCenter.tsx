@@ -38,7 +38,8 @@ const QUICK_LINKS = [
   },
 ] as const;
 
-const defaultAccentClassName = 'border-primary/35 bg-primary/10 text-primary';
+const defaultAccentClassName =
+  'border-primary/35 bg-primary/10 text-primary-emphasis';
 
 export const NotificationCenter: FC<NotificationCenterProps> = ({
   notifications = [],
@@ -69,7 +70,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
               ? `Ouvrir les notifications (${unreadNotificationsCount} non lues)`
               : 'Ouvrir les notifications'
           }
-          className="border-sidebar-border/70 bg-surface-control text-muted-foreground hover:border-sidebar-ring/35 hover:bg-surface-subtle hover:text-foreground relative shadow-none"
+          className="border-border-control bg-surface-control text-muted-foreground hover:border-primary/35 hover:bg-surface-subtle hover:text-foreground relative shadow-none"
           size="icon"
           variant="outline"
         >
@@ -84,10 +85,10 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
       </PopoverTrigger>
       <PopoverContent
         align="end"
-        className="border-sidebar-border/80 bg-surface-raised/98 w-[min(calc(100vw-2rem),22rem)] overflow-hidden p-0 shadow-[var(--shadow-panel-strong)]"
+        className="border-border/80 bg-surface-raised/98 w-[min(calc(100vw-2rem),22rem)] overflow-hidden p-0 shadow-[var(--shadow-panel-strong)]"
         sideOffset={8}
       >
-        <div className="border-sidebar-border/65 border-b px-4 py-3">
+        <div className="border-border/65 border-b px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-foreground text-sm font-semibold">
@@ -100,7 +101,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
               </p>
             </div>
             {unreadNotificationsCount > 0 && (
-              <span className="border-primary/30 bg-primary/10 text-primary rounded-full border px-2 py-0.5 text-xs font-semibold">
+              <span className="border-primary/30 bg-primary/10 text-primary-emphasis rounded-full border px-2 py-0.5 text-xs font-semibold">
                 {unreadNotificationsCount}
               </span>
             )}
@@ -114,7 +115,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
 
               return (
                 <Link
-                  className="hover:bg-sidebar-accent/55 focus-visible:ring-sidebar-ring/50 flex gap-3 rounded-md px-2 py-2.5 transition-colors outline-none focus-visible:ring-2"
+                  className="hover:bg-accent/55 focus-visible:ring-ring/50 flex gap-3 rounded-md px-2 py-2.5 transition-colors outline-none focus-visible:ring-2"
                   href={notification.href}
                   key={notification.id}
                 >
@@ -150,7 +151,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
           </div>
         ) : (
           <div className="flex flex-col items-center px-4 py-7 text-center">
-            <span className="border-sidebar-border/70 bg-sidebar-accent/20 text-muted-foreground flex size-10 items-center justify-center rounded-lg border">
+            <span className="border-border/70 bg-accent/20 text-muted-foreground flex size-10 items-center justify-center rounded-lg border">
               <Bell className="size-4" />
             </span>
             <p className="text-foreground mt-3 text-sm font-semibold">
@@ -164,7 +165,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
         {visibleQuickLinks.length > 0 && (
           <div
             className={cn(
-              'border-sidebar-border/65 grid border-t',
+              'border-border/65 grid border-t',
               visibleQuickLinks.length > 1 ? 'grid-cols-2' : 'grid-cols-1',
             )}
           >
@@ -174,9 +175,9 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
               return (
                 <Link
                   className={cn(
-                    'hover:bg-sidebar-accent/55 text-muted-foreground hover:text-foreground flex h-10 items-center justify-center gap-2 text-xs font-semibold transition-colors',
+                    'hover:bg-accent/55 text-muted-foreground hover:text-foreground flex h-10 items-center justify-center gap-2 text-xs font-semibold transition-colors',
                     index < visibleQuickLinks.length - 1 &&
-                      'border-sidebar-border/65 border-r',
+                      'border-border/65 border-r',
                   )}
                   href={link.href}
                   key={link.href}

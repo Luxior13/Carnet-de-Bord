@@ -85,7 +85,7 @@ const SectionTitle: FC<{
   icon: React.ReactNode;
 }> = ({ children, icon }) => (
   <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
-    <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-7 items-center justify-center rounded-lg border">
+    <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-7 items-center justify-center rounded-lg border">
       {icon}
     </span>
     {children}
@@ -105,11 +105,11 @@ const SecurityMetric: FC<SecurityMetricProps> = ({
       : tone === 'warning'
         ? 'border-warning/35 bg-warning/10 text-warning'
         : tone === 'primary'
-          ? 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring'
-          : 'border-sidebar-border/70 bg-background/45 text-muted-foreground';
+          ? 'border-primary/35 bg-primary/15 text-primary-emphasis'
+          : 'border-border/70 bg-background/45 text-muted-foreground';
 
   return (
-    <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
+    <Card className="border-border/70 overflow-hidden rounded-md py-0">
       <CardContent className="p-3 sm:p-4">
         <div className="flex items-start gap-3">
           <span
@@ -175,10 +175,10 @@ const SessionRow: FC<SessionRowProps> = ({ isRevoking, onRevoke, session }) => {
     <div
       className={cn(
         'border-border/60 bg-popover flex items-center gap-3 rounded-md border p-3',
-        session.isCurrent && 'border-sidebar-ring/35 bg-sidebar-accent/[0.1]',
+        session.isCurrent && 'border-primary/35 bg-accent/[0.1]',
       )}
     >
-      <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border">
+      <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-9 shrink-0 items-center justify-center rounded-lg border">
         <DeviceIcon className="size-4" />
       </span>
       <div className="min-w-0 flex-1">
@@ -537,8 +537,8 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           )}
         </div>
         {canViewPasswordSecurity && (
-          <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
-            <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
+          <Card className="border-border/70 overflow-hidden rounded-md py-0">
+            <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
               <SectionTitle icon={<KeyRound className="size-3.5" />}>
                 Mot de passe
               </SectionTitle>
@@ -579,7 +579,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               </div>
             </CardContent>
             {canChangePassword && (
-              <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
+              <CardFooter className="border-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -595,8 +595,8 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           </Card>
         )}
         {canViewMfaSecurity && (
-          <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
-            <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
+          <Card className="border-border/70 overflow-hidden rounded-md py-0">
+            <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
               <SectionTitle icon={<QrCode className="size-3.5" />}>
                 Double authentification
               </SectionTitle>
@@ -666,10 +666,10 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                       'flex items-start gap-2 rounded-md border p-3 text-sm leading-6',
                       isMfaRequired && !isMfaEnabled
                         ? 'border-warning/30 bg-warning/10 text-warning'
-                        : 'border-sidebar-ring/25 bg-sidebar-ring/[0.08] text-muted-foreground',
+                        : 'border-primary/25 bg-primary/[0.08] text-muted-foreground',
                     )}
                   >
-                    <ShieldCheck className="text-sidebar-ring mt-1 size-4 shrink-0" />
+                    <ShieldCheck className="text-primary-emphasis mt-1 size-4 shrink-0" />
                     <p>
                       {isMfaRequired
                         ? isMfaEnabled
@@ -690,7 +690,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               )}
             </CardContent>
             {canManageMfa && !loadingMfaStatus && !mfaStatusError && (
-              <CardFooter className="border-sidebar-border/65 bg-surface-muted flex-wrap justify-end gap-2 border-t p-3 sm:p-4">
+              <CardFooter className="border-border/65 bg-surface-muted flex-wrap justify-end gap-2 border-t p-3 sm:p-4">
                 {isMfaEnabled ? (
                   <>
                     <Button
@@ -742,8 +742,8 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           </Card>
         )}
         {canManageSessions && (
-          <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
-            <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
+          <Card className="border-border/70 overflow-hidden rounded-md py-0">
+            <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
               <SectionTitle icon={<Monitor className="size-3.5" />}>
                 Sessions actives
               </SectionTitle>
@@ -812,7 +812,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               )}
             </CardContent>
             {otherSessions.length > 0 && (
-              <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
+              <CardFooter className="border-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -861,10 +861,10 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         />
       )}
       <AlertDialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
-        <AlertDialogContent className="border-sidebar-border overflow-hidden rounded-md p-0">
+        <AlertDialogContent className="border-border overflow-hidden rounded-md p-0">
           <div className="p-6">
             <AlertDialogHeader>
-              <AlertDialogTitle className="text-sidebar-foreground flex items-center gap-2">
+              <AlertDialogTitle className="text-foreground flex items-center gap-2">
                 <div className="bg-destructive/10 flex h-8 w-8 items-center justify-center rounded-lg">
                   <AlertTriangle size={16} className="text-destructive" />
                 </div>

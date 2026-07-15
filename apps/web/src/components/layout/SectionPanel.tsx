@@ -30,15 +30,15 @@ export const SectionPanel: FC<SectionPanelProps> = ({
     >
       <div className="border-border/70 bg-surface-muted/75 flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="border-sidebar-ring/30 bg-sidebar-ring/10 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-md border">
+          <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-9 shrink-0 items-center justify-center rounded-md border">
             {icon}
           </span>
           <div className="min-w-0">
-            <h3 className="text-sidebar-foreground text-sm font-semibold tracking-normal">
+            <h3 className="text-foreground text-sm font-semibold tracking-normal">
               {title}
             </h3>
             {description && (
-              <p className="text-sidebar-foreground/58 mt-1 text-sm leading-6">
+              <p className="text-muted-foreground mt-1 text-sm leading-6">
                 {description}
               </p>
             )}

@@ -65,7 +65,10 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
         aria-label="Chargement"
       >
         <div aria-hidden="true" className="site-background-column" />
-        <Loader2 className="text-primary h-8 w-8 animate-spin" aria-hidden />
+        <Loader2
+          className="text-primary-emphasis h-8 w-8 animate-spin"
+          aria-hidden
+        />
         <span className="sr-only">Chargement en cours...</span>
       </div>
     );

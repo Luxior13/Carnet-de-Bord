@@ -22,7 +22,7 @@ type PageStateProps = {
 const getToneClassName = (tone: PageStateTone): string =>
   tone === 'destructive'
     ? 'bg-destructive/10 text-destructive'
-    : 'bg-primary/10 text-primary';
+    : 'bg-primary/10 text-primary-emphasis';
 
 export const PageState: FC<PageStateProps> = ({
   actionHref,

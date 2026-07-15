@@ -308,9 +308,9 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
 
       <div className="border-primary/25 bg-primary/[0.08] flex items-start gap-3 rounded-md border p-3 text-sm leading-6">
         {isBootstrap ? (
-          <QrCode className="text-primary mt-1 size-4 shrink-0" />
+          <QrCode className="text-primary-emphasis mt-1 size-4 shrink-0" />
         ) : (
-          <ShieldCheck className="text-primary mt-1 size-4 shrink-0" />
+          <ShieldCheck className="text-primary-emphasis mt-1 size-4 shrink-0" />
         )}
         <p>
           {isBootstrap

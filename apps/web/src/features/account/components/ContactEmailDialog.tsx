@@ -142,11 +142,10 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
       }}
     >
       <DialogContent className="overflow-hidden p-0 sm:max-w-md">
-        <div className="bg-primary h-1 w-full" />
         <div className="p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ServiceIcon className="bg-primary/10 text-primary">
+              <ServiceIcon className="bg-primary/10 text-primary-emphasis">
                 <Mail className="size-4" />
               </ServiceIcon>
               Modifier l&apos;adresse de contact
@@ -228,8 +227,8 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
               />
             </div>
 
-            <div className="border-sidebar-ring/25 bg-sidebar-ring/[0.08] text-muted-foreground flex items-start gap-2 rounded-md border p-3 text-xs leading-5">
-              <ShieldCheck className="text-sidebar-ring mt-0.5 size-4 shrink-0" />
+            <div className="border-primary/25 bg-primary/[0.08] text-muted-foreground flex items-start gap-2 rounded-md border p-3 text-xs leading-5">
+              <ShieldCheck className="text-primary-emphasis mt-0.5 size-4 shrink-0" />
               <p>
                 Votre identifiant <strong>{loginName}</strong>, votre mot de
                 passe et vos sessions ne seront pas modifiés.

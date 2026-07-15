@@ -24,7 +24,7 @@ const getToneClasses = (kind: ContentStateKind): string => {
     return 'border-warning/35 bg-warning/10 text-warning';
   }
 
-  return 'border-sidebar-border/65 bg-surface-muted/45 text-foreground';
+  return 'border-border/65 bg-surface-muted/45 text-foreground';
 };
 
 const getDefaultIcon = (kind: ContentStateKind): ReactNode => {

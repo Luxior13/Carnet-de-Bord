@@ -21,7 +21,7 @@ export const StatCard: FC<StatCardProps> = ({
   className,
   description,
   icon: Icon,
-  iconColor = 'text-sidebar-ring',
+  iconColor = 'text-muted-foreground',
   title,
   trend,
   value,
@@ -29,18 +29,16 @@ export const StatCard: FC<StatCardProps> = ({
   return (
     <Card
       className={cn(
-        'border-border/80 bg-surface overflow-hidden rounded-md border',
+        'border-border/45 bg-surface-muted overflow-hidden rounded-md shadow-none',
         className,
       )}
     >
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
-            <p className="text-sidebar-foreground/65 text-sm font-medium">
-              {title}
-            </p>
+            <p className="text-muted-foreground text-sm font-medium">{title}</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-sidebar-foreground text-2xl font-bold tracking-normal">
+              <span className="text-foreground text-2xl font-bold tracking-normal">
                 {value}
               </span>
               {trend && (
@@ -56,17 +54,10 @@ export const StatCard: FC<StatCardProps> = ({
               )}
             </div>
             {description && (
-              <p className="text-sidebar-foreground/55 text-xs">
-                {description}
-              </p>
+              <p className="text-muted-foreground text-xs">{description}</p>
             )}
           </div>
-          <div
-            className={cn(
-              'border-sidebar-ring/30 bg-sidebar-ring/10 text-sidebar-ring flex h-10 w-10 items-center justify-center rounded-md border',
-              iconColor.includes('text-') ? '' : iconColor,
-            )}
-          >
+          <div className="border-border/50 bg-surface-raised text-muted-foreground flex h-10 w-10 items-center justify-center rounded-md border">
             <Icon className={cn('h-5 w-5', iconColor)} />
           </div>
         </div>

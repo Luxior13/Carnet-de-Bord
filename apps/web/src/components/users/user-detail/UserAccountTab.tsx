@@ -157,7 +157,7 @@ const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
   onChange,
   permission,
 }) => (
-  <div className="border-sidebar-border/60 bg-popover flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
+  <div className="border-border/60 bg-popover flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
     <div className="min-w-0 space-y-1">
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         <p className="text-foreground text-sm font-semibold">
@@ -281,7 +281,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
 
   if (user.isProtected) {
     return (
-      <Card className="border-sidebar-border/60 overflow-hidden rounded-lg py-0">
+      <Card className="border-border/60 overflow-hidden rounded-lg py-0">
         <CardContent className="space-y-4 p-4">
           <div className="flex min-w-0 items-start gap-3">
             <span className="border-warning/35 bg-warning/10 text-warning flex size-11 shrink-0 items-center justify-center rounded-lg border">
@@ -311,11 +311,11 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
   }
 
   return (
-    <Card className="border-sidebar-border/60 overflow-hidden rounded-lg py-0">
-      <CardHeader className="border-sidebar-border/60 bg-surface-muted border-b p-4">
+    <Card className="border-border/60 overflow-hidden rounded-lg py-0">
+      <CardHeader className="border-border/60 bg-surface-muted border-b p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex min-w-0 items-start gap-3">
-            <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-10 shrink-0 items-center justify-center rounded-lg border">
+            <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-10 shrink-0 items-center justify-center rounded-lg border">
               <UserCheck className="size-5" />
             </span>
             <div className="min-w-0">
@@ -328,8 +328,8 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
               </p>
             </div>
           </div>
-          <div className="border-sidebar-border/60 bg-surface-control flex items-center gap-2 rounded-lg border px-3 py-2">
-            <ShieldCheck className="text-primary size-4 shrink-0" />
+          <div className="border-border/60 bg-surface-control flex items-center gap-2 rounded-lg border px-3 py-2">
+            <ShieldCheck className="text-primary-emphasis size-4 shrink-0" />
             <div className="min-w-0">
               <p className="text-foreground text-sm font-medium">
                 {configurablePermissionCount} option
@@ -353,7 +353,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
         <section className="border-primary/25 bg-primary/[0.04] space-y-3 rounded-lg border p-3 sm:p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex min-w-0 items-start gap-3">
-              <span className="border-primary/30 bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg border">
+              <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-9 shrink-0 items-center justify-center rounded-lg border">
                 <LockKeyhole className="size-4" />
               </span>
               <div className="min-w-0">
@@ -376,7 +376,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
             {ESSENTIAL_ACCOUNT_PERMISSION_ITEMS.map((permission) => (
               <div
                 key={permission.key}
-                className="border-sidebar-border/60 bg-popover min-w-0 rounded-md border p-3"
+                className="border-border/60 bg-popover min-w-0 rounded-md border p-3"
               >
                 <div className="flex min-w-0 items-start justify-between gap-2">
                   <p className="text-foreground text-sm font-semibold">
@@ -444,7 +444,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
           ))}
         </section>
       </CardContent>
-      <CardFooter className="border-sidebar-border/60 bg-surface-muted/95 sticky bottom-3 z-20 flex-col items-stretch justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center">
+      <CardFooter className="border-border/60 bg-surface-muted/95 sticky bottom-3 z-20 flex-col items-stretch justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center">
         <p className="text-muted-foreground text-xs">
           {!canManagePermissions
             ? 'Lecture seule — autorisation de gestion requise'

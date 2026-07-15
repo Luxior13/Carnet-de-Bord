@@ -28,21 +28,21 @@ export const AccountPanel: FC<AccountPanelProps> = ({
 
   return (
     <section className={cn('relative', className)} aria-labelledby={titleId}>
-      <Card className="border-sidebar-border/70 bg-surface">
+      <Card className="border-border/70 bg-surface">
         <CardHeader className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-9 shrink-0 items-center justify-center rounded-lg border shadow-none">
+            <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-9 shrink-0 items-center justify-center rounded-lg border shadow-none">
               {icon}
             </span>
             <div className="min-w-0">
               <h2
                 id={titleId}
-                className="text-sidebar-foreground truncate text-sm font-bold tracking-normal"
+                className="text-foreground truncate text-sm font-bold tracking-normal"
               >
                 {title}
               </h2>
               {description && (
-                <p className="text-sidebar-foreground/58 mt-0.5 truncate text-xs leading-5">
+                <p className="text-muted-foreground mt-0.5 truncate text-xs leading-5">
                   {description}
                 </p>
               )}

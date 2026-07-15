@@ -28,13 +28,13 @@ type ResumeStatTone = 'neutral' | 'primary' | 'warning';
 
 const getResumeStatToneClassName = (tone: ResumeStatTone): string => {
   if (tone === 'primary') {
-    return 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring';
+    return 'border-primary/35 bg-primary/15 text-primary-emphasis';
   }
   if (tone === 'warning') {
     return 'border-warning/35 bg-warning/10 text-warning';
   }
 
-  return 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring';
+  return 'border-border/50 bg-surface-raised text-muted-foreground';
 };
 
 const ResumeStatCard: FC<{
@@ -43,7 +43,7 @@ const ResumeStatCard: FC<{
   tone?: ResumeStatTone;
   value: number;
 }> = ({ icon: Icon, label, tone = 'neutral', value }) => (
-  <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
+  <Card className="border-border/70 overflow-hidden rounded-md py-0">
     <CardContent className="p-3 sm:p-4">
       <div className="flex items-center gap-3">
         <div
@@ -108,8 +108,8 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({
         </div>
       )}
       {/* User Details */}
-      <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
-        <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
+      <Card className="border-border/70 overflow-hidden rounded-md py-0">
+        <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
           <CardTitle className="text-sm">Informations compte</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">

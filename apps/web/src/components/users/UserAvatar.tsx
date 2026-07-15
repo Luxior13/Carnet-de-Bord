@@ -62,7 +62,7 @@ export const UserAvatar: FC<UserAvatarProps> = ({ className, user }) => {
       role="img"
       aria-label={`Avatar de ${displayName}`}
       className={cn(
-        'bg-sidebar-primary text-sidebar-primary-foreground relative flex shrink-0 items-center justify-center overflow-hidden shadow-none',
+        'bg-primary text-primary-foreground relative flex shrink-0 items-center justify-center overflow-hidden shadow-none',
         className,
       )}
     >

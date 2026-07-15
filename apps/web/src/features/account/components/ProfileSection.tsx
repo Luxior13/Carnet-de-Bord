@@ -152,7 +152,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
             type="button"
             variant="outline"
             size="sm"
-            className="border-sidebar-border/70 bg-background/35 hover:bg-sidebar-accent/20 rounded-lg"
+            className="border-border/70 bg-background/35 hover:bg-accent/20 rounded-lg"
             onClick={() => setIsEditing(true)}
           >
             <Edit className="size-4" />
@@ -162,18 +162,18 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
       }
     >
       <div className="space-y-5">
-        <div className="border-sidebar-border/55 flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="border-border/55 flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-4">
             <UserAvatar user={userData} className="size-16 rounded-lg" />
             <div className="min-w-0">
-              <p className="text-sidebar-foreground truncate text-xl font-semibold tracking-normal">
+              <p className="text-foreground truncate text-xl font-semibold tracking-normal">
                 {userData.firstName} {userData.lastName}
               </p>
-              <p className="text-sidebar-foreground/65 mt-1 flex items-center gap-2 text-sm">
+              <p className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
                 <AtSign className="size-4 shrink-0" />
                 <span className="truncate">{userData.loginName}</span>
               </p>
-              <p className="text-sidebar-foreground/65 mt-1 flex items-center gap-2 text-sm">
+              <p className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
                 <Mail className="size-4 shrink-0" />
                 <span className="truncate">
                   {userData.contactEmail ?? 'Aucun email de contact'}
@@ -202,39 +202,39 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
             </div>
           </div>
           <div className="sm:text-right">
-            <p className="text-sidebar-foreground text-xs font-bold tracking-normal">
+            <p className="text-foreground text-xs font-bold tracking-normal">
               Compte créé
             </p>
-            <p className="text-sidebar-foreground/58 text-xs">
+            <p className="text-muted-foreground text-xs">
               {formatAccountDate(userData.createdAt)}
             </p>
           </div>
         </div>
         {!isEditing ? (
           <>
-            <dl className="divide-sidebar-border/45 divide-y">
-              <div className="hover:bg-sidebar-accent/[0.06] grid gap-1 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
-                <dt className="text-sidebar-foreground text-sm font-bold tracking-normal">
+            <dl className="divide-border/45 divide-y">
+              <div className="hover:bg-surface-raised/70 grid gap-1 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
+                <dt className="text-foreground text-sm font-bold tracking-normal">
                   Prénom
                 </dt>
-                <dd className="text-sidebar-foreground min-w-0 text-sm font-medium">
+                <dd className="text-foreground min-w-0 text-sm font-medium">
                   {userData.firstName}
                 </dd>
               </div>
-              <div className="hover:bg-sidebar-accent/[0.06] grid gap-1 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
-                <dt className="text-sidebar-foreground text-sm font-bold tracking-normal">
+              <div className="hover:bg-surface-raised/70 grid gap-1 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
+                <dt className="text-foreground text-sm font-bold tracking-normal">
                   Nom
                 </dt>
-                <dd className="text-sidebar-foreground min-w-0 text-sm font-medium">
+                <dd className="text-foreground min-w-0 text-sm font-medium">
                   {userData.lastName}
                 </dd>
               </div>
-              <div className="hover:bg-sidebar-accent/[0.06] grid gap-1 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
-                <dt className="text-sidebar-foreground text-sm font-bold tracking-normal">
+              <div className="hover:bg-surface-raised/70 grid gap-1 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
+                <dt className="text-foreground text-sm font-bold tracking-normal">
                   Identifiant de connexion
                 </dt>
                 <dd className="min-w-0">
-                  <p className="text-sidebar-foreground truncate font-mono text-sm font-medium">
+                  <p className="text-foreground truncate font-mono text-sm font-medium">
                     {userData.loginName}
                   </p>
                   <p className="text-muted-foreground mt-1 text-xs">
@@ -244,14 +244,14 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                   </p>
                 </dd>
               </div>
-              <div className="hover:bg-sidebar-accent/[0.06] grid gap-1 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
-                <dt className="text-sidebar-foreground text-sm font-bold tracking-normal">
+              <div className="hover:bg-surface-raised/70 grid gap-1 py-3 transition-colors sm:grid-cols-[10rem_1fr]">
+                <dt className="text-foreground text-sm font-bold tracking-normal">
                   Email de contact
                 </dt>
                 <dd className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <p className="text-sidebar-foreground min-w-0 truncate text-sm font-medium">
+                      <p className="text-foreground min-w-0 truncate text-sm font-medium">
                         {userData.contactEmail ?? 'Non renseigné'}
                       </p>
                       {userData.contactEmail && (
@@ -301,7 +301,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
           <form
             autoComplete="on"
             id={PROFILE_FORM_ID}
-            className="border-sidebar-border/60 bg-background/45 rounded-lg border"
+            className="border-border/60 bg-background/45 rounded-lg border"
             onSubmit={(event) => {
               event.preventDefault();
               void handleSaveProfile();
@@ -413,7 +413,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                 </div>
               </div>
             </div>
-            <div className="border-sidebar-border/60 bg-surface-muted/95 sticky bottom-3 z-20 flex flex-col gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+            <div className="border-border/60 bg-surface-muted/95 sticky bottom-3 z-20 flex flex-col gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
               <p className="text-muted-foreground text-xs">
                 {hasProfileChanges
                   ? 'Modifications non enregistrées'

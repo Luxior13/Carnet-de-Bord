@@ -1241,15 +1241,15 @@ export const getAccessLabel = (user: {
   return user.isProtected ? PROTECTED_ROLE_LABEL : getRoleLabel(user.role);
 };
 
-export const DEFAULT_ROLE_COLOR: 'default' | 'secondary' = 'secondary';
+type RoleBadgeVariant = 'outline' | 'secondary';
 
-export const ROLE_COLORS: Record<UserRole, 'default' | 'secondary'> = {
-  ADMIN: 'default',
+export const DEFAULT_ROLE_COLOR: RoleBadgeVariant = 'secondary';
+
+export const ROLE_COLORS: Record<UserRole, RoleBadgeVariant> = {
+  ADMIN: 'outline',
   USER: 'secondary',
 };
 
-export const getRoleColor = (
-  role: UserRole | string,
-): 'default' | 'secondary' => {
+export const getRoleColor = (role: UserRole | string): RoleBadgeVariant => {
   return ROLE_COLORS[role as UserRole] || DEFAULT_ROLE_COLOR;
 };

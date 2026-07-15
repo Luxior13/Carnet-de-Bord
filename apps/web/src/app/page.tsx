@@ -158,10 +158,10 @@ const getMetricToneClassName = (tone: DashboardMetricTone): string => {
   }
 
   if (tone === 'primary') {
-    return 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring';
+    return 'border-primary/35 bg-primary/15 text-primary-emphasis';
   }
 
-  return 'border-sidebar-border/70 bg-secondary/80 text-muted-foreground';
+  return 'border-border/70 bg-secondary/80 text-muted-foreground';
 };
 
 const getActivityLabel = (activity: DashboardActivityItem): string => {
@@ -192,7 +192,7 @@ const DashboardMetricCard: FC<DashboardMetric> = ({
   tone = 'neutral',
   value,
 }) => (
-  <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
+  <Card className="border-border/70 overflow-hidden rounded-md py-0">
     <CardContent className="p-3 sm:p-4">
       <div className="flex items-start gap-3">
         <span
@@ -228,7 +228,7 @@ const ShortcutButton: FC<{
     >
       <Link href={shortcut.href}>
         <span className="flex min-w-0 items-center gap-3">
-          <ServiceIcon className="bg-primary/10 text-primary size-9">
+          <ServiceIcon className="bg-primary/10 text-primary-emphasis size-9">
             <Icon className="size-4" />
           </ServiceIcon>
           <span className="min-w-0">
@@ -286,7 +286,7 @@ const DashboardActivityList: FC<{
         <React.Fragment key={activity.id}>
           {index > 0 && <Separator className="bg-border/60" />}
           <div className="flex min-w-0 items-start gap-3 py-3">
-            <span className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border">
+            <span className="border-primary/35 bg-primary/15 text-primary-emphasis mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border">
               <Activity className="size-3.5" />
             </span>
             <div className="min-w-0 flex-1">
@@ -649,8 +649,8 @@ export default function HomePage(): React.ReactNode {
               )}
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)] xl:items-start">
                 <div className="space-y-4">
-                  <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
-                    <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-4">
+                  <Card className="border-border/70 overflow-hidden rounded-md py-0">
+                    <CardHeader className="border-border/65 bg-surface-muted border-b p-4">
                       <CardTitle className="text-sm">Raccourcis</CardTitle>
                       <CardDescription>
                         Accès utiles selon votre rôle actuel.
@@ -672,8 +672,8 @@ export default function HomePage(): React.ReactNode {
                     </CardContent>
                   </Card>
                   {canViewDashboard && canViewRecentActivity && (
-                    <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
-                      <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-4">
+                    <Card className="border-border/70 overflow-hidden rounded-md py-0">
+                      <CardHeader className="border-border/65 bg-surface-muted border-b p-4">
                         <CardTitle className="text-sm">
                           Activité récente
                         </CardTitle>
@@ -691,8 +691,8 @@ export default function HomePage(): React.ReactNode {
                     </Card>
                   )}
                 </div>
-                <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
-                  <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-4">
+                <Card className="border-border/70 overflow-hidden rounded-md py-0">
+                  <CardHeader className="border-border/65 bg-surface-muted border-b p-4">
                     <CardTitle className="text-sm">
                       Sécurité du compte
                     </CardTitle>
@@ -706,7 +706,7 @@ export default function HomePage(): React.ReactNode {
                         className={
                           userData?.mustChangePassword
                             ? 'border-warning/35 bg-warning/10 text-warning size-9'
-                            : 'bg-primary/10 text-primary size-9'
+                            : 'bg-primary/10 text-primary-emphasis size-9'
                         }
                       >
                         <ShieldCheck className="size-4" />
@@ -753,7 +753,7 @@ export default function HomePage(): React.ReactNode {
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-end border-t p-4">
+                  <CardFooter className="border-border/65 bg-surface-muted justify-end border-t p-4">
                     <Button asChild variant="outline" size="sm">
                       <Link href="/mon-compte">
                         <UserRound className="size-4" />

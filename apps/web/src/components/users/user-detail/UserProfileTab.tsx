@@ -81,8 +81,8 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
 
   return (
     <form {...passwordManagerIgnoreAttributes} onSubmit={handleSubmit}>
-      <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
-        <CardHeader className="border-sidebar-border/65 bg-surface-muted flex-row items-center justify-between border-b p-3 sm:p-4">
+      <Card className="border-border/70 overflow-hidden rounded-md py-0">
+        <CardHeader className="border-border/65 bg-surface-muted flex-row items-center justify-between border-b p-3 sm:p-4">
           <CardTitle className="text-sm">Compte utilisateur</CardTitle>
           {!canEdit && !canEditContact && !canEditLogin && (
             <Badge
@@ -269,7 +269,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
             </SectionPanel>
           </div>
         </CardContent>
-        <CardFooter className="border-sidebar-border/60 bg-surface-muted/95 sticky bottom-3 z-20 justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:p-4">
+        <CardFooter className="border-border/60 bg-surface-muted/95 sticky bottom-3 z-20 justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:p-4">
           <p className="text-muted-foreground text-xs">
             {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
           </p>

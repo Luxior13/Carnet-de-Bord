@@ -211,7 +211,7 @@ function LoginPage(): React.ReactNode {
         <div aria-hidden="true" className="site-background-column" />
         <Loader2
           aria-hidden
-          className="text-primary relative z-10 size-8 animate-spin"
+          className="text-primary-emphasis relative z-10 size-8 animate-spin"
         />
       </div>
     );
@@ -243,11 +243,10 @@ function LoginPage(): React.ReactNode {
             className="bg-card/95 absolute inset-0 z-20 flex flex-col items-center justify-center gap-3"
             role="status"
           >
-            <Loader2 className="text-primary size-7 animate-spin" />
+            <Loader2 className="text-primary-emphasis size-7 animate-spin" />
             <p className="text-sm font-medium">Ouverture de votre espace...</p>
           </div>
         )}
-        <div className="bg-primary h-1 w-full" />
         <CardHeader className="space-y-4">
           <div className="flex items-center gap-3">
             <span className="bg-primary flex size-10 items-center justify-center rounded-lg shadow-none">
@@ -268,7 +267,7 @@ function LoginPage(): React.ReactNode {
             </div>
           </div>
           <div className="space-y-2">
-            <div className="bg-primary/10 text-primary inline-flex items-center gap-2 rounded-md px-2.5 py-1 text-xs font-medium">
+            <div className="bg-primary/10 text-primary-emphasis inline-flex items-center gap-2 rounded-md px-2.5 py-1 text-xs font-medium">
               {step === 'mfa' ? (
                 <KeyRound className="size-4" />
               ) : (
@@ -484,13 +483,13 @@ function LoginPage(): React.ReactNode {
           )}
         </CardContent>
 
-        <div className="border-sidebar-border/65 bg-surface-muted grid grid-cols-3 gap-2 border-t p-3 text-xs sm:p-4">
+        <div className="border-border/65 bg-surface-muted grid grid-cols-3 gap-2 border-t p-3 text-xs sm:p-4">
           {['Vue globale', 'Comptes', 'Sécurité'].map((item) => (
             <div
               className="bg-popover text-muted-foreground flex min-w-0 flex-col items-center justify-center gap-1.5 rounded-md border px-2 py-2 text-center sm:flex-row sm:gap-2 sm:px-3"
               key={item}
             >
-              <CheckCircle2 className="text-primary size-4" />
+              <CheckCircle2 className="text-primary-emphasis size-4" />
               <span>{item}</span>
             </div>
           ))}

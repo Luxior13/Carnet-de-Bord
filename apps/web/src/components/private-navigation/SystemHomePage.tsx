@@ -77,12 +77,12 @@ export function SystemHomePage(): React.ReactNode {
 
                   return (
                     <Card
-                      className="border-sidebar-border/70 rounded-md py-0"
+                      className="border-border/70 rounded-md py-0"
                       key={item.href}
                     >
                       <CardHeader className="p-4 pb-2">
                         <div className="flex items-center gap-3">
-                          <ServiceIcon className="bg-primary/10 text-primary size-9">
+                          <ServiceIcon className="bg-primary/10 text-primary-emphasis size-9">
                             <Icon className="size-4" />
                           </ServiceIcon>
                           <div className="min-w-0">

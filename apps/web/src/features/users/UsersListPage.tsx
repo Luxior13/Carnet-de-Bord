@@ -168,7 +168,7 @@ const buildUsersPageUrlParams = ({
   return params;
 };
 
-type UsersStatTone = 'neutral' | 'primary' | 'warning';
+type UsersStatTone = 'neutral' | 'warning';
 
 type UsersStatToneClassNames = {
   icon: string;
@@ -178,13 +178,6 @@ type UsersStatToneClassNames = {
 const getUsersStatToneClassNames = (
   tone: UsersStatTone,
 ): UsersStatToneClassNames => {
-  if (tone === 'primary') {
-    return {
-      icon: 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring',
-      value: 'text-foreground',
-    };
-  }
-
   if (tone === 'warning') {
     return {
       icon: 'border-warning/35 bg-warning/10 text-warning',
@@ -193,7 +186,7 @@ const getUsersStatToneClassNames = (
   }
 
   return {
-    icon: 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring',
+    icon: 'border-border/50 bg-surface-raised text-muted-foreground',
     value: 'text-foreground',
   };
 };
@@ -220,7 +213,7 @@ const UsersStatCard: FC<{
   const toneClassNames = getUsersStatToneClassNames(tone);
 
   return (
-    <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
+    <Card className="border-border/45 bg-surface-muted overflow-hidden rounded-md py-0 shadow-none">
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div
@@ -570,12 +563,7 @@ export const UsersListPage: FC = () => {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <UsersStatCard
-            icon={Users}
-            label="Total"
-            value={stats.total}
-            tone="primary"
-          />
+          <UsersStatCard icon={Users} label="Total" value={stats.total} />
           <UsersStatCard icon={UserCheck} label="Actifs" value={stats.active} />
           <UsersStatCard
             icon={Key}
@@ -587,7 +575,6 @@ export const UsersListPage: FC = () => {
             icon={Clock}
             label="Cnx 24h"
             value={stats.recentLogins}
-            tone="primary"
           />
         </div>
       )}
@@ -780,7 +767,7 @@ export const UsersListPage: FC = () => {
                     role="button"
                     tabIndex={0}
                     aria-label={`Voir ${user.firstName} ${user.lastName}`}
-                    className="hover:bg-accent/50 focus:bg-accent/50 cursor-pointer focus:outline-none"
+                    className="focus-visible:bg-primary/10 focus-visible:ring-primary/70 cursor-pointer focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
                     onClick={() => openUserDetail(user.id)}
                     onKeyDown={(event) => handleOpenUserKeyDown(event, user.id)}
                   >
@@ -894,7 +881,7 @@ export const UsersListPage: FC = () => {
                 role="button"
                 tabIndex={0}
                 aria-label={`Voir ${user.firstName} ${user.lastName}`}
-                className="hover:bg-accent/50 focus:bg-accent/50 cursor-pointer p-4 focus:outline-none"
+                className="hover:bg-surface-raised/70 focus-visible:bg-primary/10 focus-visible:ring-primary/70 cursor-pointer p-4 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
                 onClick={() => openUserDetail(user.id)}
                 onKeyDown={(event) => handleOpenUserKeyDown(event, user.id)}
               >

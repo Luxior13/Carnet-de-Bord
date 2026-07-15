@@ -8,7 +8,7 @@ const ServiceIcon: FC<ServiceIconProps> = ({ className, ...props }) => {
   return (
     <div
       className={cn(
-        'border-sidebar-ring/30 bg-sidebar-ring/10 text-sidebar-ring flex size-10 shrink-0 items-center justify-center rounded-md border',
+        'border-primary/30 bg-primary/10 text-primary-emphasis flex size-10 shrink-0 items-center justify-center rounded-md border',
         className,
       )}
       {...props}

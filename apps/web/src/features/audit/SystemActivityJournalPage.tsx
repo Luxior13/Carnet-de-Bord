@@ -221,7 +221,7 @@ const JOURNAL_POLE_OPTIONS: ActivityFilterOption[] = [
 ];
 
 const ALL_CONNECTION_EVENT_OPTION: ConnectionEventFilterOption = {
-  color: 'border-sidebar-border/70 bg-surface-muted text-muted-foreground',
+  color: 'border-border/70 bg-surface-muted text-muted-foreground',
   icon: Shield,
   label: 'Tous les événements',
   value: ALL_FILTER_VALUE,
@@ -242,7 +242,7 @@ const CONNECTION_EVENT_OPTIONS: ConnectionEventFilterOption[] = [
     value: 'LOGIN_FAILED',
   },
   {
-    color: 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring',
+    color: 'border-primary/35 bg-primary/15 text-primary-emphasis',
     icon: LogOut,
     label: 'Déconnexions',
     value: 'LOGOUT',
@@ -256,13 +256,13 @@ const CONNECTION_EVENT_OPTIONS: ConnectionEventFilterOption[] = [
 ];
 
 const activitySelectTriggerClassName =
-  'border-sidebar-border/70 bg-surface text-sidebar-foreground hover:bg-sidebar-accent/25 focus-visible:border-sidebar-ring/45 focus-visible:ring-sidebar-ring/35 h-11 w-full shadow-none';
+  'border-border-control bg-input text-foreground hover:bg-accent/25 focus-visible:border-primary/45 focus-visible:ring-ring/35 h-11 w-full shadow-none';
 
 const activitySelectContentClassName =
-  'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]';
+  'border-border bg-surface-raised/98 text-foreground rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]';
 
 const activitySelectItemClassName =
-  'focus:bg-sidebar-accent/55 focus:text-sidebar-accent-foreground rounded-md py-2';
+  'focus:bg-accent/55 focus:text-accent-foreground rounded-md py-2';
 
 const ACTION_CONFIG = new Map<string, ActionConfig>(
   Object.entries({
@@ -286,7 +286,7 @@ const ACTION_CONFIG = new Map<string, ActionConfig>(
     },
     LOGOUT: {
       category: 'auth',
-      color: 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring',
+      color: 'border-primary/35 bg-primary/15 text-primary-emphasis',
       icon: LogOut,
       label: 'Déconnexion',
     },
@@ -373,7 +373,7 @@ const ACTION_CONFIG = new Map<string, ActionConfig>(
 
 const DEFAULT_ACTION_CONFIG: ActionConfig = {
   category: 'other',
-  color: 'border-sidebar-border/70 bg-surface-muted text-muted-foreground',
+  color: 'border-border/70 bg-surface-muted text-muted-foreground',
   icon: History,
   label: 'Action',
 };
@@ -914,8 +914,7 @@ const getScopeVisuals = (log: JournalLog): ScopeVisual[] => {
     ? visuals
     : [
         {
-          className:
-            'border-sidebar-border/70 bg-surface-muted text-muted-foreground',
+          className: 'border-border/70 bg-surface-muted text-muted-foreground',
           icon: History,
           label: 'Activité système',
           value: 'system',
@@ -951,7 +950,7 @@ const ChangeItem: FC<ChangeDiff> = ({ after, before, fieldKey }) => {
   const afterValue = formatChangeValue(fieldKey, after);
 
   return (
-    <div className="border-sidebar-border/60 bg-background/40 grid gap-2 rounded-md border px-2.5 py-2 text-xs sm:grid-cols-[minmax(13rem,16rem)_minmax(0,1fr)] sm:items-center">
+    <div className="border-border/60 bg-background/40 grid gap-2 rounded-md border px-2.5 py-2 text-xs sm:grid-cols-[minmax(13rem,16rem)_minmax(0,1fr)] sm:items-center">
       <span
         className="text-foreground min-w-0 truncate font-semibold"
         title={label}
@@ -959,7 +958,7 @@ const ChangeItem: FC<ChangeDiff> = ({ after, before, fieldKey }) => {
         {label}
       </span>
       {isFactOnly ? (
-        <span className="bg-primary/10 text-primary min-w-0 rounded px-1.5 py-0.5 font-medium break-words">
+        <span className="bg-primary/10 text-primary-emphasis min-w-0 rounded px-1.5 py-0.5 font-medium break-words">
           {afterValue}
         </span>
       ) : (
@@ -971,10 +970,10 @@ const ChangeItem: FC<ChangeDiff> = ({ after, before, fieldKey }) => {
             {beforeValue}
           </span>
           <ArrowRight size={12} className="text-muted-foreground shrink-0" />
-          <span className="text-primary/80 text-xs font-medium uppercase">
+          <span className="text-primary-emphasis text-xs font-medium uppercase">
             Après
           </span>
-          <span className="bg-primary/10 text-primary max-w-full rounded px-1.5 py-0.5 break-words">
+          <span className="bg-primary/10 text-primary-emphasis max-w-full rounded px-1.5 py-0.5 break-words">
             {afterValue}
           </span>
         </div>
@@ -1001,10 +1000,10 @@ const JournalCard: FC<{
   return (
     <article
       className={cn(
-        'border-sidebar-border/60 bg-surface-muted/35 relative overflow-hidden rounded-lg border transition-colors',
+        'border-border/60 bg-surface-muted/35 relative overflow-hidden rounded-lg border transition-colors',
         isOpen
-          ? 'border-sidebar-ring/35 bg-popover/75'
-          : 'hover:border-sidebar-border hover:bg-surface-muted/60',
+          ? 'border-primary/35 bg-popover/75'
+          : 'hover:border-border hover:bg-surface-muted/60',
       )}
     >
       <span
@@ -1051,7 +1050,7 @@ const JournalCard: FC<{
                 {changes.length > 0 && (
                   <Badge
                     variant="secondary"
-                    className="border-primary/20 bg-primary/15 text-primary px-1.5 py-0 text-xs"
+                    className="border-primary/20 bg-primary/15 text-primary-emphasis px-1.5 py-0 text-xs"
                   >
                     {changes.length}{' '}
                     {changes.length > 1 ? 'changements' : 'changement'}
@@ -1164,17 +1163,17 @@ const JournalCard: FC<{
         </div>
       </button>
       {isOpen && (
-        <div className="border-sidebar-border/65 bg-background/25 border-t px-3 py-3 sm:px-4">
+        <div className="border-border/65 bg-background/25 border-t px-3 py-3 sm:px-4">
           <div className="space-y-3 md:ml-[3.25rem]">
             {changes.length > 0 && (
-              <section className="border-sidebar-ring/35 bg-sidebar-ring/10 rounded-lg border p-3">
+              <section className="border-primary/35 bg-primary/10 rounded-lg border p-3">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <p className="text-foreground text-xs font-semibold">
                     Changements
                   </p>
                   <Badge
                     variant="secondary"
-                    className="bg-primary/10 text-primary text-xs"
+                    className="bg-primary/10 text-primary-emphasis text-xs"
                   >
                     {changes.length}
                   </Badge>
@@ -1197,7 +1196,7 @@ const JournalCard: FC<{
                 Détails techniques
                 <ChevronDown className="size-3 transition-transform group-open/technical:rotate-180" />
               </summary>
-              <div className="border-sidebar-border/60 bg-surface-muted/35 mt-2 rounded-lg border px-3 py-2">
+              <div className="border-border/60 bg-surface-muted/35 mt-2 rounded-lg border px-3 py-2">
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                   <span className="text-muted-foreground">
                     Action{' '}
@@ -1461,7 +1460,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
             title={item.label}
             tone={space.tone}
           />
-          <section className="border-sidebar-border/70 bg-surface rounded-lg border p-4 shadow-[var(--shadow-panel)]">
+          <section className="border-border/70 bg-surface rounded-lg border p-4 shadow-[var(--shadow-panel)]">
             <div className="space-y-3">
               <div className="space-y-3">
                 <p className="text-foreground text-sm font-semibold">
@@ -1479,7 +1478,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                         aria-pressed={isActiveType}
                         onClick={() => handleLogTypeChange(option.value)}
                         className={cn(
-                          'border-sidebar-border/60 bg-surface-muted hover:bg-sidebar-accent/25 flex min-w-0 items-center gap-3 rounded-lg border p-3 text-left transition-colors',
+                          'border-border/60 bg-surface-muted hover:bg-accent/25 flex min-w-0 items-center gap-3 rounded-lg border p-3 text-left transition-colors',
                           isActiveType && 'border-primary/45 bg-primary/10',
                         )}
                       >
@@ -1487,8 +1486,8 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                           className={cn(
                             'flex size-8 shrink-0 items-center justify-center rounded-md border',
                             isActiveType
-                              ? 'border-primary/35 bg-primary/15 text-primary'
-                              : 'border-sidebar-border/70 bg-background/45 text-muted-foreground',
+                              ? 'border-primary/35 bg-primary/15 text-primary-emphasis'
+                              : 'border-border/70 bg-background/45 text-muted-foreground',
                           )}
                         >
                           <TypeIcon className="size-4" />
@@ -1689,7 +1688,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
             </div>
           </section>
           <section className="space-y-2">
-            <div className="border-sidebar-border/60 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_18rem_10rem_1.5rem] rounded-lg border px-4 py-2 text-xs font-medium md:grid">
+            <div className="border-border/60 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_18rem_10rem_1.5rem] rounded-lg border px-4 py-2 text-xs font-medium md:grid">
               <span>Événement</span>
               <span>Emplacement</span>
               <span className="text-right">Date</span>

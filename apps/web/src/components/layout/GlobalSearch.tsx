@@ -126,7 +126,7 @@ export const QuickNavigation: FC = () => {
       <DialogTrigger asChild>
         <button
           aria-label="Ouvrir la navigation rapide"
-          className="border-sidebar-border/70 bg-surface-control text-muted-foreground hover:border-sidebar-ring/35 hover:text-foreground flex h-10 min-w-10 shrink-0 items-center justify-center gap-2 rounded-md border px-2.5 text-sm transition-colors lg:h-9 lg:min-w-64 lg:justify-start"
+          className="border-border-control bg-input text-muted-foreground hover:border-primary/35 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/35 flex h-10 min-w-10 shrink-0 items-center justify-center gap-2 rounded-md border px-2.5 text-sm transition-[border-color,color,box-shadow] outline-none focus-visible:ring-[3px] lg:h-9 lg:min-w-64 lg:justify-start"
           type="button"
         >
           <Search className="size-4" />
@@ -134,7 +134,7 @@ export const QuickNavigation: FC = () => {
         </button>
       </DialogTrigger>
       <DialogContent
-        className="border-sidebar-border/80 bg-surface-raised/98 max-w-2xl overflow-hidden p-0 shadow-[var(--shadow-panel-strong)]"
+        className="border-border/80 bg-surface-raised/98 max-w-2xl overflow-hidden p-0 shadow-[var(--shadow-panel-strong)]"
         fullscreenOnMobile
         hideCloseButton
       >
@@ -144,7 +144,7 @@ export const QuickNavigation: FC = () => {
             Accès rapide aux pages opérationnelles autorisées.
           </DialogDescription>
         </DialogHeader>
-        <div className="border-sidebar-border/65 flex items-center gap-3 border-b px-4 py-3">
+        <div className="border-border/65 flex items-center gap-3 border-b px-4 py-3">
           <Search className="text-muted-foreground size-4 shrink-0" />
           <Input
             aria-label="Rechercher dans les pages opérationnelles"
@@ -167,7 +167,7 @@ export const QuickNavigation: FC = () => {
 
                 return (
                   <Link
-                    className="hover:bg-sidebar-accent/55 focus-visible:ring-sidebar-ring/50 group flex min-w-0 items-center gap-3 rounded-md px-2.5 py-2.5 transition-colors outline-none focus-visible:ring-2"
+                    className="hover:bg-accent/55 focus-visible:ring-ring/50 group flex min-w-0 items-center gap-3 rounded-md px-2.5 py-2.5 transition-colors outline-none focus-visible:ring-2"
                     href={result.href}
                     key={result.href}
                     onClick={closeSearch}
@@ -198,7 +198,7 @@ export const QuickNavigation: FC = () => {
             </div>
           ) : (
             <div className="flex flex-col items-center px-4 py-10 text-center">
-              <span className="border-sidebar-border/70 bg-sidebar-accent/20 text-muted-foreground flex size-10 items-center justify-center rounded-lg border">
+              <span className="border-border/70 bg-accent/20 text-muted-foreground flex size-10 items-center justify-center rounded-lg border">
                 <Search className="size-4" />
               </span>
               <p className="text-foreground mt-3 text-sm font-semibold">

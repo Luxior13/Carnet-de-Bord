@@ -158,9 +158,7 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
         className="max-h-[calc(100svh-2rem)] overflow-y-auto p-0 sm:max-w-lg"
         hideCloseButton={!!recoveryCodes}
       >
-        <div
-          className={isDisabling ? 'bg-destructive h-1' : 'bg-primary h-1'}
-        />
+        {isDisabling && <div className="bg-destructive h-1" />}
         <div className="p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -168,7 +166,7 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
                 className={
                   isDisabling
                     ? 'bg-destructive/10 text-destructive'
-                    : 'bg-primary/10 text-primary'
+                    : 'bg-primary/10 text-primary-emphasis'
                 }
               >
                 {isDisabling ? (

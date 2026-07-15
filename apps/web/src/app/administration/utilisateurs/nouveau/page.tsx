@@ -271,8 +271,8 @@ const NewUserContent: FC = () => {
             }
           />
           {createdUser && temporaryPassword ? (
-            <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
-              <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
+            <Card className="border-border/70 overflow-hidden rounded-md py-0">
+              <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
                 <CardTitle aria-live="polite" className="text-sm" role="status">
                   Compte créé
                 </CardTitle>
@@ -365,7 +365,7 @@ const NewUserContent: FC = () => {
                   </SectionPanel>
                 </div>
               </CardContent>
-              <CardFooter className="border-sidebar-border/65 bg-surface-muted flex flex-wrap gap-2 border-t p-4">
+              <CardFooter className="border-border/65 bg-surface-muted flex flex-wrap gap-2 border-t p-4">
                 <Button asChild>
                   <Link href={`/administration/utilisateurs/${createdUser.id}`}>
                     Ouvrir la fiche
@@ -387,8 +387,8 @@ const NewUserContent: FC = () => {
                 void handleCreateUser();
               }}
             >
-              <Card className="border-sidebar-border/70 overflow-hidden rounded-md py-0">
-                <CardHeader className="border-sidebar-border/65 bg-surface-muted border-b p-3 sm:p-4">
+              <Card className="border-border/70 overflow-hidden rounded-md py-0">
+                <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
                   <CardTitle className="text-sm">Création du compte</CardTitle>
                   <CardDescription>
                     Renseignez l&apos;identité, la connexion et le contact, puis
@@ -620,7 +620,7 @@ const NewUserContent: FC = () => {
                     </SectionPanel>
                   </div>
                 </CardContent>
-                <CardFooter className="border-sidebar-border/65 bg-surface-muted flex justify-between gap-3 border-t p-4">
+                <CardFooter className="border-border/65 bg-surface-muted flex justify-between gap-3 border-t p-4">
                   <p className="text-muted-foreground hidden text-xs sm:block">
                     Le profil pourra être complété après création.
                   </p>

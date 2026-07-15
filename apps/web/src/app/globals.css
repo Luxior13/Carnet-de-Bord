@@ -14,6 +14,7 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-primary-emphasis: var(--primary-emphasis);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -75,55 +76,56 @@
    <html> solely to activate Tailwind/Radix dark variants. */
 :root {
   color-scheme: dark;
-  --background: #101113;
-  --foreground: #eef1f4;
-  --surface-subtle: #15171a;
-  --surface: #1a1d21;
-  --surface-muted: #22262b;
-  --surface-raised: #282d33;
-  --surface-control: rgba(21, 23, 26, 0.86);
+  --background: #12151a;
+  --foreground: #f2f4f7;
+  --surface-subtle: #171b21;
+  --surface: #222831;
+  --surface-muted: #2b333f;
+  --surface-raised: #353e4c;
+  --surface-control: #171b21;
   --card: var(--surface);
   --card-foreground: var(--foreground);
   --popover: var(--surface-raised);
   --popover-foreground: var(--foreground);
   --primary: #8b9cf6;
+  --primary-emphasis: #a9b5ff;
   --primary-foreground: #080b16;
   --secondary: var(--surface-muted);
-  --secondary-foreground: #e3e8ed;
+  --secondary-foreground: var(--foreground);
   --muted: var(--surface-subtle);
-  --muted-foreground: #a7b0ba;
-  --accent: #2a3035;
-  --accent-foreground: #f4f6f8;
-  --destructive: #f27988;
+  --muted-foreground: #adb7c3;
+  --accent: var(--surface-muted);
+  --accent-foreground: var(--foreground);
+  --destructive: #ff9eaa;
   --destructive-fill: #bd4054;
   --destructive-foreground: #fff7f8;
-  --success: #69c58a;
+  --success: #7bd69a;
   --success-foreground: #07130d;
-  --warning: #d7b35d;
+  --warning: #e3c56f;
   --warning-foreground: #171006;
-  --info: #7da7d9;
+  --info: #9bc2ee;
   --info-foreground: #071019;
-  --border: #343a42;
-  --border-control: #5f6974;
+  --border: #3e4856;
+  --border-control: #667286;
   --input: var(--surface-subtle);
   --ring: #a5b4fc;
   --radius: 0.5rem;
-  --sidebar: #141619;
-  --sidebar-foreground: #e2e7eb;
+  --sidebar: #0d1014;
+  --sidebar-foreground: #e4e9ef;
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--surface-muted);
-  --sidebar-accent-foreground: var(--accent-foreground);
-  --sidebar-border: #323840;
+  --sidebar-accent: #1c222a;
+  --sidebar-accent-foreground: var(--sidebar-foreground);
+  --sidebar-border: #2c343e;
   --sidebar-ring: var(--ring);
   --public-column-width: 66rem;
   --private-content-width: 76rem;
   --private-content-width-wide: 92rem;
   --private-content-padding: clamp(1rem, 1.8vw, 1.75rem);
-  --public-column-border: rgba(238, 241, 244, 0.06);
-  --public-column-shadow: 0 24px 64px -54px rgba(0, 0, 0, 0.92);
-  --column-surface-start: rgba(26, 29, 33, 0.86);
-  --column-surface-end: rgba(16, 17, 19, 0.94);
+  --public-column-border: rgba(242, 244, 247, 0.08);
+  --public-column-shadow: 0 24px 64px -48px rgba(0, 0, 0, 0.94);
+  --column-surface-start: #1b2027;
+  --column-surface-end: #171b21;
   --nav-dashboard: #6db8b1;
   --nav-dashboard-icon: #9bded8;
   --nav-dashboard-foreground: #c6f2ee;
@@ -142,18 +144,18 @@
   --nav-treasury: #79bd70;
   --nav-treasury-icon: #b4e5ad;
   --nav-treasury-foreground: #d8f2d3;
-  --sidebar-pattern-primary: rgba(238, 241, 244, 0.035);
-  --sidebar-pattern-secondary: rgba(139, 156, 246, 0.028);
-  --sidebar-pattern-mask-start: rgba(0, 0, 0, 0.64);
-  --sidebar-pattern-mask-end: rgba(0, 0, 0, 0.42);
+  --sidebar-pattern-primary: rgba(242, 244, 247, 0.04);
+  --sidebar-pattern-secondary: rgba(139, 156, 246, 0.035);
+  --sidebar-pattern-mask-start: rgba(0, 0, 0, 0.72);
+  --sidebar-pattern-mask-end: rgba(0, 0, 0, 0.48);
   --sidebar-scrollbar-thumb: rgba(165, 180, 252, 0.58);
   --sidebar-scrollbar-thumb-hover: rgba(165, 180, 252, 0.78);
   --shadow-panel:
-    0 16px 34px -30px rgba(0, 0, 0, 0.88),
-    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+    0 16px 34px -28px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
   --shadow-panel-strong:
-    0 22px 50px -38px rgba(0, 0, 0, 0.94),
-    inset 0 1px 0 rgba(255, 255, 255, 0.032);
+    0 22px 50px -34px rgba(0, 0, 0, 0.96),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
   --site-background-column-bg: linear-gradient(
     180deg,
     var(--column-surface-start),

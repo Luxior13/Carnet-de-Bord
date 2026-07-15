@@ -82,7 +82,7 @@ export const UserDetailSectionRail = <
             ? 'h-10 gap-2 px-2 text-sm'
             : 'h-9 min-w-[4.75rem] flex-1 justify-center gap-1.5 px-2 text-xs',
           isActive
-            ? 'border-sidebar-ring/35 bg-sidebar-ring/15 text-foreground shadow-none'
+            ? 'border-primary/35 bg-primary/15 text-foreground shadow-none'
             : 'text-muted-foreground hover:bg-surface-muted/85 hover:text-foreground',
         )}
       >
@@ -91,7 +91,7 @@ export const UserDetailSectionRail = <
             'flex shrink-0 items-center justify-center rounded-md transition-colors',
             isDesktop ? 'size-7' : 'size-5',
             isActive
-              ? 'bg-sidebar-ring/20 text-sidebar-ring'
+              ? 'bg-primary/20 text-primary-emphasis'
               : 'bg-surface-muted text-muted-foreground group-hover:text-foreground',
           )}
         >
@@ -129,7 +129,7 @@ export const UserDetailSectionRail = <
         className="sticky top-2 z-20 -mx-1 2xl:hidden"
       >
         <div className="overflow-x-auto px-1 pb-1">
-          <div className="border-sidebar-border/70 bg-surface/95 inline-flex min-w-full gap-1 rounded-lg border p-1 shadow-[var(--shadow-panel)] backdrop-blur">
+          <div className="border-border/70 bg-surface/95 inline-flex min-w-full gap-1 rounded-lg border p-1 shadow-[var(--shadow-panel)] backdrop-blur">
             {visibleSections.map((section) =>
               renderSectionLink(section, 'mobile'),
             )}
@@ -141,7 +141,7 @@ export const UserDetailSectionRail = <
 
   return (
     <nav aria-label={ariaLabel} className={cn('hidden 2xl:block', className)}>
-      <div className="border-sidebar-border/70 bg-surface/90 sticky top-4 rounded-lg border p-1 shadow-[var(--shadow-panel)] backdrop-blur">
+      <div className="border-border/70 bg-surface/90 sticky top-4 rounded-lg border p-1 shadow-[var(--shadow-panel)] backdrop-blur">
         <div className="text-muted-foreground px-2 py-2 text-xs font-medium">
           {heading}
         </div>

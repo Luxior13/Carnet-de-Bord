@@ -15,7 +15,7 @@ export type NavigationSpaceToneClasses = {
 };
 
 const baseHero =
-  'border-sidebar-border/70 bg-surface text-foreground shadow-[var(--shadow-panel)]';
+  'border-border/70 bg-surface text-foreground shadow-[var(--shadow-panel)]';
 const baseRow =
   'hover:bg-sidebar-accent/45 focus:bg-sidebar-accent/55 focus:text-sidebar-foreground';
 const baseActiveItem =

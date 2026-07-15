@@ -149,7 +149,7 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   },
   LOGIN_SUCCESS: {
     category: 'auth',
-    color: 'text-primary bg-primary/10',
+    color: 'text-primary-emphasis bg-primary/10',
     icon: CheckCircle,
     label: 'Connexion réussie',
   },
@@ -167,7 +167,7 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   },
   MFA_ENABLED: {
     category: 'security',
-    color: 'text-primary bg-primary/10',
+    color: 'text-primary-emphasis bg-primary/10',
     icon: Shield,
     label: 'Application d’authentification configurée',
   },
@@ -179,7 +179,7 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   },
   MFA_RECOVERY_CODES_REGENERATED: {
     category: 'security',
-    color: 'text-primary bg-primary/10',
+    color: 'text-primary-emphasis bg-primary/10',
     icon: RefreshCw,
     label: 'Codes de secours régénérés',
   },
@@ -198,7 +198,7 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   // User actions
   PERMISSION_UPDATE: {
     category: 'access',
-    color: 'text-primary bg-primary/10',
+    color: 'text-primary-emphasis bg-primary/10',
     icon: Shield,
     label: 'Permissions modifiées',
   },
@@ -210,13 +210,13 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   },
   USER_ACTIVATE: {
     category: 'lifecycle',
-    color: 'text-primary bg-primary/10',
+    color: 'text-primary-emphasis bg-primary/10',
     icon: UserCheck,
     label: 'Utilisateur activé',
   },
   USER_CREATE: {
     category: 'lifecycle',
-    color: 'text-primary bg-primary/10',
+    color: 'text-primary-emphasis bg-primary/10',
     icon: UserPlus,
     label: 'Utilisateur créé',
   },
@@ -234,7 +234,7 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   },
   USER_UPDATE: {
     category: 'profile',
-    color: 'text-primary bg-primary/10',
+    color: 'text-primary-emphasis bg-primary/10',
     icon: Pencil,
     label: 'Utilisateur modifié',
   },
@@ -268,8 +268,7 @@ const ACTIVITY_SCOPE_VISUALS: Record<
     value: 'by',
   },
   linked: {
-    className:
-      'border-sidebar-border/70 bg-surface-muted text-muted-foreground',
+    className: 'border-border/70 bg-surface-muted text-muted-foreground',
     icon: History,
     label: 'Activité liée',
     value: 'linked',
@@ -1159,13 +1158,13 @@ const escapeCsvCell = (value: string): string => {
 };
 
 const activitySelectTriggerClassName =
-  'border-sidebar-border/70 bg-surface text-sidebar-foreground hover:bg-sidebar-accent/25 focus-visible:border-sidebar-ring/45 focus-visible:ring-sidebar-ring/35 h-11 w-full shadow-none';
+  'border-border-control bg-input text-foreground hover:bg-accent/25 focus-visible:border-primary/45 focus-visible:ring-ring/35 h-11 w-full shadow-none';
 
 const activitySelectContentClassName =
-  'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]';
+  'border-border bg-surface-raised/98 text-foreground rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]';
 
 const activitySelectItemClassName =
-  'focus:bg-sidebar-accent/55 focus:text-sidebar-accent-foreground rounded-md py-2';
+  'focus:bg-accent/55 focus:text-accent-foreground rounded-md py-2';
 
 const getChangeDiffs = (
   metadata: Record<string, unknown> | null,
@@ -1325,7 +1324,7 @@ const ChangeItem: FC<{
   const isFactOnly = FACT_ONLY_CHANGE_KEYS.has(fieldKey);
 
   return (
-    <div className="border-sidebar-border/60 bg-background/40 grid gap-2 rounded-md border px-2.5 py-2 text-xs sm:grid-cols-[minmax(13rem,16rem)_minmax(0,1fr)] sm:items-center">
+    <div className="border-border/60 bg-background/40 grid gap-2 rounded-md border px-2.5 py-2 text-xs sm:grid-cols-[minmax(13rem,16rem)_minmax(0,1fr)] sm:items-center">
       <span
         className="text-foreground min-w-0 truncate font-semibold"
         title={label}
@@ -1333,7 +1332,7 @@ const ChangeItem: FC<{
         {label}
       </span>
       {isFactOnly ? (
-        <span className="bg-primary/10 text-primary min-w-0 rounded px-1.5 py-0.5 font-medium break-words">
+        <span className="bg-primary/10 text-primary-emphasis min-w-0 rounded px-1.5 py-0.5 font-medium break-words">
           {afterStr}
         </span>
       ) : (
@@ -1345,10 +1344,10 @@ const ChangeItem: FC<{
             {beforeStr}
           </span>
           <ArrowRight size={12} className="text-muted-foreground shrink-0" />
-          <span className="text-primary/80 text-xs font-medium uppercase">
+          <span className="text-primary-emphasis text-xs font-medium uppercase">
             Après
           </span>
-          <span className="bg-primary/10 text-primary max-w-full rounded px-1.5 py-0.5 break-words">
+          <span className="bg-primary/10 text-primary-emphasis max-w-full rounded px-1.5 py-0.5 break-words">
             {afterStr}
           </span>
         </div>
@@ -1381,10 +1380,10 @@ const ActivityListRow: FC<{
   return (
     <article
       className={cn(
-        'border-sidebar-border/60 bg-surface-muted/35 relative overflow-hidden rounded-lg border transition-colors',
+        'border-border/60 bg-surface-muted/35 relative overflow-hidden rounded-lg border transition-colors',
         isOpen
-          ? 'border-sidebar-ring/35 bg-popover/75'
-          : 'hover:border-sidebar-border hover:bg-surface-muted/60',
+          ? 'border-primary/35 bg-popover/75'
+          : 'hover:border-border hover:bg-surface-muted/60',
       )}
     >
       <span
@@ -1431,7 +1430,7 @@ const ActivityListRow: FC<{
                 {hasChanges && (
                   <Badge
                     variant="secondary"
-                    className="border-primary/20 bg-primary/15 text-primary px-1.5 py-0 text-xs"
+                    className="border-primary/20 bg-primary/15 text-primary-emphasis px-1.5 py-0 text-xs"
                   >
                     {changes.length}{' '}
                     {changes.length > 1 ? 'changements' : 'changement'}
@@ -1544,17 +1543,17 @@ const ActivityListRow: FC<{
         </div>
       </button>
       {isOpen && (
-        <div className="border-sidebar-border/65 bg-background/25 border-t px-3 py-3 sm:px-4">
+        <div className="border-border/65 bg-background/25 border-t px-3 py-3 sm:px-4">
           <div className="space-y-3 md:ml-[3.25rem]">
             {hasChanges && (
-              <section className="border-sidebar-ring/35 bg-sidebar-ring/10 rounded-lg border p-3">
+              <section className="border-primary/35 bg-primary/10 rounded-lg border p-3">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <p className="text-foreground text-xs font-semibold">
                     Changements
                   </p>
                   <Badge
                     variant="secondary"
-                    className="bg-primary/10 text-primary text-xs"
+                    className="bg-primary/10 text-primary-emphasis text-xs"
                   >
                     {changes.length}
                   </Badge>
@@ -1577,7 +1576,7 @@ const ActivityListRow: FC<{
                 Détails techniques
                 <ChevronDown className="size-3 transition-transform group-open/technical:rotate-180" />
               </summary>
-              <div className="border-sidebar-border/60 bg-surface-muted/35 mt-2 rounded-lg border px-3 py-2">
+              <div className="border-border/60 bg-surface-muted/35 mt-2 rounded-lg border px-3 py-2">
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                   <span className="text-muted-foreground">
                     Action{' '}
@@ -1925,9 +1924,9 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   // Empty
   if (auditLogs.length === 0) {
     return (
-      <Card className="border-sidebar-border/70 min-h-[360px] items-center justify-center rounded-md py-0">
+      <Card className="border-border/70 min-h-[360px] items-center justify-center rounded-md py-0">
         <CardContent className="flex flex-col items-center p-8">
-          <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex size-20 items-center justify-center rounded-md border">
+          <div className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-20 items-center justify-center rounded-md border">
             <History className="size-10" />
           </div>
           <h3 className="text-foreground mt-6 text-lg font-semibold">
@@ -1951,7 +1950,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   return (
     <Card
       aria-busy={isLoading}
-      className="border-sidebar-border/60 overflow-visible rounded-lg py-0"
+      className="border-border/60 overflow-visible rounded-lg py-0"
     >
       <CardContent className="p-2.5 sm:p-3">
         <div className="space-y-3">
@@ -1969,7 +1968,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
               )}
             </div>
           )}
-          <section className="border-sidebar-border/55 bg-surface-muted overflow-hidden rounded-lg border">
+          <section className="border-border/55 bg-surface-muted overflow-hidden rounded-lg border">
             <div className="flex flex-col gap-4 p-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="min-w-0 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
@@ -1991,7 +1990,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                   {hasActiveFilters && (
                     <Badge
                       variant="outline"
-                      className="border-primary/40 text-primary text-xs"
+                      className="border-primary/40 text-primary-emphasis text-xs"
                     >
                       Filtres actifs
                     </Badge>
@@ -2051,8 +2050,8 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
               </div>
             </div>
           </section>
-          <section className="border-sidebar-border/60 bg-surface overflow-hidden rounded-lg border">
-            <div className="border-sidebar-border/55 bg-surface-muted grid gap-4 border-b p-4 xl:grid-cols-[minmax(0,1fr)_40rem] xl:items-start">
+          <section className="border-border/60 bg-surface overflow-hidden rounded-lg border">
+            <div className="border-border/55 bg-surface-muted grid gap-4 border-b p-4 xl:grid-cols-[minmax(0,1fr)_40rem] xl:items-start">
               <div className="flex min-w-0 items-start gap-3">
                 <span
                   className={cn(
@@ -2184,7 +2183,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                       aria-pressed={isActiveScope}
                       onClick={() => handleActivityScopeChange(scope.value)}
                       className={cn(
-                        'border-sidebar-border/60 bg-surface-muted hover:bg-sidebar-accent/25 flex min-w-0 items-center gap-3 rounded-lg border p-3 text-left transition-colors',
+                        'border-border/60 bg-surface-muted hover:bg-accent/25 flex min-w-0 items-center gap-3 rounded-lg border p-3 text-left transition-colors',
                         isActiveScope && 'border-primary/45 bg-primary/10',
                       )}
                     >
@@ -2208,15 +2207,15 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                 })}
               </div>
               <div className="space-y-2">
-                <div className="border-sidebar-border/60 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_18rem_10rem_1.5rem] rounded-lg border px-4 py-2 text-xs font-medium md:grid">
+                <div className="border-border/60 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_18rem_10rem_1.5rem] rounded-lg border px-4 py-2 text-xs font-medium md:grid">
                   <span>Événement</span>
                   <span>Emplacement</span>
                   <span className="text-right">Date</span>
                   <span />
                 </div>
                 {filteredLogs.length === 0 ? (
-                  <div className="border-sidebar-border/60 flex flex-col items-center justify-center rounded-lg border py-16">
-                    <div className="border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring flex h-16 w-16 items-center justify-center rounded-md border">
+                  <div className="border-border/60 flex flex-col items-center justify-center rounded-lg border py-16">
+                    <div className="border-primary/35 bg-primary/15 text-primary-emphasis flex h-16 w-16 items-center justify-center rounded-md border">
                       <Filter className="h-8 w-8" />
                     </div>
                     <p className="text-muted-foreground mt-4 text-sm">
@@ -2284,7 +2283,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
           </section>
         </div>
       </CardContent>
-      <CardFooter className="border-sidebar-border/60 text-muted-foreground bg-surface-muted/95 justify-center rounded-b-lg border-t px-4 py-3 text-center text-xs">
+      <CardFooter className="border-border/60 text-muted-foreground bg-surface-muted/95 justify-center rounded-b-lg border-t px-4 py-3 text-center text-xs">
         {filteredLogs.length} événement{filteredLogs.length > 1 ? 's' : ''}
         {hasActiveFilters && ' (filtre)'}
       </CardFooter>
