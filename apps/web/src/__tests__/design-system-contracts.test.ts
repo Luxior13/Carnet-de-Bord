@@ -25,6 +25,15 @@ const userDetailSectionRailSource = readSourceFile(
   '../components/users/user-detail/UserDetailSectionRail.tsx',
 );
 
+const getGlobalColorToken = (token: string): string | undefined => {
+  const declaration = globalStylesSource
+    .split('\n')
+    .map((line) => line.trim())
+    .find((line) => line.startsWith(`${token}:`));
+
+  return declaration?.slice(token.length + 1, -1).trim();
+};
+
 describe('design system contracts', () => {
   it('uses the accessible destructive fill for filled actions', () => {
     const buttonClasses = buttonVariants({ variant: 'destructive' });
@@ -80,6 +89,27 @@ describe('design system contracts', () => {
 
     expect(getNavigationSpaceBadgeClasses('Plus tard')).not.toContain('[#');
     expect(getNavigationSpaceBadgeClasses('Restreint')).not.toContain('[#');
+  });
+
+  it('keeps the brand primary distinct from statuses and navigation spaces', () => {
+    const primary = getGlobalColorToken('--primary');
+
+    expect(primary).toBeTruthy();
+
+    for (const token of [
+      '--success',
+      '--warning',
+      '--info',
+      '--destructive',
+      '--nav-dashboard',
+      '--nav-internal',
+      '--nav-legal',
+      '--nav-sport',
+      '--nav-system',
+      '--nav-treasury',
+    ]) {
+      expect(getGlobalColorToken(token)).not.toBe(primary);
+    }
   });
 
   it('keeps generic actions touch-friendly below the desktop breakpoint', () => {

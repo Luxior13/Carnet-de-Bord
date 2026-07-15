@@ -86,8 +86,8 @@
   --card-foreground: var(--foreground);
   --popover: var(--surface-raised);
   --popover-foreground: var(--foreground);
-  --primary: #6db8b1;
-  --primary-foreground: #071313;
+  --primary: #8b9cf6;
+  --primary-foreground: #080b16;
   --secondary: var(--surface-muted);
   --secondary-foreground: #e3e8ed;
   --muted: var(--surface-subtle);
@@ -106,7 +106,7 @@
   --border: #343a42;
   --border-control: #5f6974;
   --input: var(--surface-subtle);
-  --ring: #75c6be;
+  --ring: #a5b4fc;
   --radius: 0.5rem;
   --sidebar: #141619;
   --sidebar-foreground: #e2e7eb;
@@ -143,11 +143,11 @@
   --nav-treasury-icon: #b4e5ad;
   --nav-treasury-foreground: #d8f2d3;
   --sidebar-pattern-primary: rgba(238, 241, 244, 0.035);
-  --sidebar-pattern-secondary: rgba(109, 184, 177, 0.028);
+  --sidebar-pattern-secondary: rgba(139, 156, 246, 0.028);
   --sidebar-pattern-mask-start: rgba(0, 0, 0, 0.64);
   --sidebar-pattern-mask-end: rgba(0, 0, 0, 0.42);
-  --sidebar-scrollbar-thumb: rgba(117, 198, 190, 0.58);
-  --sidebar-scrollbar-thumb-hover: rgba(117, 198, 190, 0.78);
+  --sidebar-scrollbar-thumb: rgba(165, 180, 252, 0.58);
+  --sidebar-scrollbar-thumb-hover: rgba(165, 180, 252, 0.78);
   --shadow-panel:
     0 16px 34px -30px rgba(0, 0, 0, 0.88),
     inset 0 1px 0 rgba(255, 255, 255, 0.025);
