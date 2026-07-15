@@ -39,11 +39,24 @@
   --color-border-control: var(--border-control);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
+  --color-nav-dashboard: var(--nav-dashboard);
+  --color-nav-dashboard-icon: var(--nav-dashboard-icon);
+  --color-nav-dashboard-foreground: var(--nav-dashboard-foreground);
+  --color-nav-internal: var(--nav-internal);
+  --color-nav-internal-icon: var(--nav-internal-icon);
+  --color-nav-internal-foreground: var(--nav-internal-foreground);
+  --color-nav-legal: var(--nav-legal);
+  --color-nav-legal-icon: var(--nav-legal-icon);
+  --color-nav-legal-foreground: var(--nav-legal-foreground);
+  --color-nav-sport: var(--nav-sport);
+  --color-nav-sport-icon: var(--nav-sport-icon);
+  --color-nav-sport-foreground: var(--nav-sport-foreground);
+  --color-nav-system: var(--nav-system);
+  --color-nav-system-icon: var(--nav-system-icon);
+  --color-nav-system-foreground: var(--nav-system-foreground);
+  --color-nav-treasury: var(--nav-treasury);
+  --color-nav-treasury-icon: var(--nav-treasury-icon);
+  --color-nav-treasury-foreground: var(--nav-treasury-foreground);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -58,8 +71,9 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-:root,
-.dark {
+/* The application is intentionally dark-only. The .dark class remains on
+   <html> solely to activate Tailwind/Radix dark variants. */
+:root {
   color-scheme: dark;
   --background: #101113;
   --foreground: #eef1f4;
@@ -69,9 +83,9 @@
   --surface-raised: #282d33;
   --surface-control: rgba(21, 23, 26, 0.86);
   --card: var(--surface);
-  --card-foreground: #eef1f4;
+  --card-foreground: var(--foreground);
   --popover: var(--surface-raised);
-  --popover-foreground: #eef1f4;
+  --popover-foreground: var(--foreground);
   --primary: #6db8b1;
   --primary-foreground: #071313;
   --secondary: var(--surface-muted);
@@ -93,18 +107,13 @@
   --border-control: #5f6974;
   --input: var(--surface-subtle);
   --ring: #75c6be;
-  --chart-1: var(--ring);
-  --chart-2: #7da7d9;
-  --chart-3: #82c66f;
-  --chart-4: #d7b35d;
-  --chart-5: #e05d6f;
   --radius: 0.5rem;
   --sidebar: #141619;
   --sidebar-foreground: #e2e7eb;
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
   --sidebar-accent: var(--surface-muted);
-  --sidebar-accent-foreground: #f4f6f8;
+  --sidebar-accent-foreground: var(--accent-foreground);
   --sidebar-border: #323840;
   --sidebar-ring: var(--ring);
   --public-column-width: 66rem;
@@ -113,16 +122,32 @@
   --private-content-padding: clamp(1rem, 1.8vw, 1.75rem);
   --public-column-border: rgba(238, 241, 244, 0.06);
   --public-column-shadow: 0 24px 64px -54px rgba(0, 0, 0, 0.92);
-  --page-overlay-start: rgba(16, 17, 19, 0.92);
-  --page-overlay-end: rgba(16, 17, 19, 0.98);
   --column-surface-start: rgba(26, 29, 33, 0.86);
   --column-surface-end: rgba(16, 17, 19, 0.94);
+  --nav-dashboard: #6db8b1;
+  --nav-dashboard-icon: #9bded8;
+  --nav-dashboard-foreground: #c6f2ee;
+  --nav-internal: #65a9c8;
+  --nav-internal-icon: #a8d8ec;
+  --nav-internal-foreground: #d0eef8;
+  --nav-legal: #d0aa5f;
+  --nav-legal-icon: #ecd294;
+  --nav-legal-foreground: #f3dfb3;
+  --nav-sport: #d9798e;
+  --nav-sport-icon: #f2b4c1;
+  --nav-sport-foreground: #f6d0d8;
+  --nav-system: #8ea0bb;
+  --nav-system-icon: #c5cfdd;
+  --nav-system-foreground: #d9e1eb;
+  --nav-treasury: #79bd70;
+  --nav-treasury-icon: #b4e5ad;
+  --nav-treasury-foreground: #d8f2d3;
   --sidebar-pattern-primary: rgba(238, 241, 244, 0.035);
   --sidebar-pattern-secondary: rgba(109, 184, 177, 0.028);
   --sidebar-pattern-mask-start: rgba(0, 0, 0, 0.64);
   --sidebar-pattern-mask-end: rgba(0, 0, 0, 0.42);
-  --sidebar-scrollbar-thumb: rgba(109, 184, 177, 0.35);
-  --sidebar-scrollbar-thumb-hover: rgba(117, 198, 190, 0.58);
+  --sidebar-scrollbar-thumb: rgba(117, 198, 190, 0.58);
+  --sidebar-scrollbar-thumb-hover: rgba(117, 198, 190, 0.78);
   --shadow-panel:
     0 16px 34px -30px rgba(0, 0, 0, 0.88),
     inset 0 1px 0 rgba(255, 255, 255, 0.025);
@@ -146,18 +171,19 @@
   }
 
   html {
-    @apply bg-background overflow-x-hidden;
+    @apply bg-background;
   }
 
   body {
-    @apply bg-background text-foreground min-h-svh overflow-x-hidden antialiased;
-    background-image: linear-gradient(
-      180deg,
-      var(--page-overlay-start),
-      var(--page-overlay-end)
-    );
+    @apply bg-background text-foreground min-h-svh antialiased;
   }
 
+  ::selection {
+    @apply bg-primary text-primary-foreground;
+  }
+}
+
+@layer components {
   .site-background-column {
     pointer-events: none;
     position: fixed;
@@ -217,7 +243,7 @@
   }
 
   .sidebar-scrollbar::-webkit-scrollbar-thumb {
-    border: 0.1875rem solid transparent;
+    border: 0.125rem solid transparent;
     border-radius: 999px;
     background: var(--sidebar-scrollbar-thumb);
     background-clip: content-box;
@@ -228,6 +254,8 @@
     background-clip: content-box;
   }
 
+  /* The current shell stays expanded, but the shared sidebar component still
+     supports icon-collapse mode. Keep its scrollbar visually hidden there. */
   [data-sidebar='sidebar'][data-collapsible='icon'] .sidebar-scrollbar {
     scrollbar-width: none;
   }
@@ -236,25 +264,6 @@
     .sidebar-scrollbar::-webkit-scrollbar {
     display: none;
   }
-
-  ::selection {
-    @apply bg-primary text-primary-foreground;
-  }
-}
-
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 180ms ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -267,7 +276,20 @@
   *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+}
+
+@media (forced-colors: active) {
+  *:focus-visible {
+    outline: 2px solid CanvasText !important;
+    outline-offset: 2px !important;
+  }
+
+  .sidebar-scrollbar {
+    scrollbar-color: auto;
   }
 }

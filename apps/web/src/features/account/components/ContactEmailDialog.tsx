@@ -237,7 +237,7 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
             </div>
 
             {isRemovingContact && (
-              <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-200">
+              <div className="border-warning/30 bg-warning/10 text-warning rounded-md border p-3 text-xs leading-5">
                 Confirmer supprimera l&apos;adresse de contact actuellement
                 enregistrée. Votre identifiant restera inchangé.
               </div>

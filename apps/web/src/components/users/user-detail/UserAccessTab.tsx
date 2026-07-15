@@ -76,7 +76,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
         <CardContent className="space-y-4 p-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex min-w-0 items-start gap-3">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-amber-500/35 bg-amber-500/10 text-amber-300">
+              <span className="border-warning/35 bg-warning/10 text-warning flex size-11 shrink-0 items-center justify-center rounded-lg border">
                 <Crown className="size-5" />
               </span>
               <div className="min-w-0">
@@ -86,7 +86,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                   </h3>
                   <Badge
                     variant="outline"
-                    className="border-amber-500/40 text-amber-300"
+                    className="border-warning/40 text-warning"
                   >
                     {getAccessLabel(user)}
                   </Badge>
@@ -110,7 +110,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             <div className="border-sidebar-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
-              <ShieldCheck className="text-chart-3 size-5 shrink-0" />
+              <ShieldCheck className="text-success size-5 shrink-0" />
               <div className="min-w-0">
                 <p className="text-foreground text-sm font-semibold">
                   Toutes les pages
@@ -121,7 +121,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
               </div>
             </div>
             <div className="border-sidebar-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
-              <Crown className="size-5 shrink-0 text-amber-300" />
+              <Crown className="text-warning size-5 shrink-0" />
               <div className="min-w-0">
                 <p className="text-foreground text-sm font-semibold">
                   {totalPermissions} permissions
@@ -202,7 +202,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
               {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
             </p>
             {hasChanges && (
-              <p className="flex items-center gap-1.5 text-xs text-amber-300">
+              <p className="text-warning flex items-center gap-1.5 text-xs">
                 <LogOut className="size-3.5 shrink-0" />
                 Enregistrer déconnectera cet utilisateur de toutes ses sessions.
               </p>

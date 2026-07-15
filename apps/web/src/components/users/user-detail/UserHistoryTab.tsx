@@ -161,7 +161,7 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   },
   MFA_DISABLED: {
     category: 'security',
-    color: 'text-amber-400 bg-amber-500/10',
+    color: 'text-warning bg-warning/10',
     icon: Shield,
     label: 'Double authentification désactivée',
   },
@@ -173,7 +173,7 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   },
   MFA_RECOVERY_CODE_USED: {
     category: 'security',
-    color: 'text-amber-400 bg-amber-500/10',
+    color: 'text-warning bg-warning/10',
     icon: Key,
     label: 'Code de secours utilisé',
   },
@@ -185,13 +185,13 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   },
   PASSWORD_CHANGE: {
     category: 'security',
-    color: 'text-amber-400 bg-amber-500/10',
+    color: 'text-warning bg-warning/10',
     icon: Key,
     label: 'Mot de passe modifié',
   },
   PASSWORD_RESET: {
     category: 'security',
-    color: 'text-amber-400 bg-amber-500/10',
+    color: 'text-warning bg-warning/10',
     icon: RefreshCw,
     label: 'Mot de passe réinitialisé',
   },
@@ -204,7 +204,7 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   },
   SESSION_INVALIDATE: {
     category: 'security',
-    color: 'text-amber-400 bg-amber-500/10',
+    color: 'text-warning bg-warning/10',
     icon: LogIn,
     label: 'Session révoquée',
   },
@@ -222,7 +222,7 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   },
   USER_DEACTIVATE: {
     category: 'lifecycle',
-    color: 'text-amber-400 bg-amber-500/10',
+    color: 'text-warning bg-warning/10',
     icon: UserMinus,
     label: 'Utilisateur désactivé',
   },
@@ -262,7 +262,7 @@ const ACTIVITY_SCOPE_VISUALS: Record<
   ActivityScopeVisual
 > = {
   by: {
-    className: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
+    className: 'border-success/35 bg-success/10 text-success',
     icon: UserCheck,
     label: 'Actions de cet utilisateur',
     value: 'by',
@@ -275,7 +275,7 @@ const ACTIVITY_SCOPE_VISUALS: Record<
     value: 'linked',
   },
   on: {
-    className: 'border-chart-2/35 bg-chart-2/10 text-chart-2',
+    className: 'border-info/35 bg-info/10 text-info',
     icon: Shield,
     label: 'Sur ce compte',
     value: 'on',
@@ -303,7 +303,7 @@ const getActionConfig = (log: AuditLogEntry): ActionConfig => {
   if (category === 'system') {
     return {
       category,
-      color: 'text-sky-300 bg-sky-500/10',
+      color: 'text-info bg-info/10',
       icon: Globe,
       label: log.description || DEFAULT_CONFIG.label,
     };
@@ -1982,7 +1982,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                   {hasTruncatedAuditLogs && (
                     <Badge
                       variant="outline"
-                      className="border-amber-500/40 text-xs text-amber-400"
+                      className="border-warning/40 text-warning text-xs"
                     >
                       Derniers {loadedAuditLogsCount}/{effectiveTotalAuditLogs}{' '}
                       chargés

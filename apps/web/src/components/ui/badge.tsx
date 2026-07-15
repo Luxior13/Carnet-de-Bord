@@ -5,7 +5,7 @@ import React, { type ComponentProps, type FC } from 'react';
 import { cn } from '$utils/css.utils';
 
 const badgeVariants = cva(
-  'inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-md border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] aria-invalid:border-destructive aria-invalid:ring-destructive/20 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:aria-invalid:ring-destructive/40 [&.bg-amber-500]:border-warning/80 [&.bg-amber-500]:bg-warning [&.bg-amber-500]:text-warning-foreground [&.bg-destructive]:bg-destructive-fill [&.bg-destructive]:text-destructive-foreground [&.bg-destructive:hover]:bg-destructive-fill/90 [&>svg]:pointer-events-none [&>svg]:size-3 [&]:text-xs',
+  'inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-md border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] aria-invalid:border-destructive aria-invalid:ring-destructive/20 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:aria-invalid:ring-destructive/40 [&.bg-destructive]:bg-destructive-fill [&.bg-destructive]:text-destructive-foreground [&.bg-destructive:hover]:bg-destructive-fill/90 [&>svg]:pointer-events-none [&>svg]:size-3 [&]:text-xs',
   {
     defaultVariants: {
       variant: 'default',

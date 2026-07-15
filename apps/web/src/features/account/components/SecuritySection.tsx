@@ -103,7 +103,7 @@ const SecurityMetric: FC<SecurityMetricProps> = ({
     tone === 'danger'
       ? 'border-destructive/35 bg-destructive/10 text-destructive'
       : tone === 'warning'
-        ? 'border-amber-500/35 bg-amber-500/10 text-amber-400'
+        ? 'border-warning/35 bg-warning/10 text-warning'
         : tone === 'primary'
           ? 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring'
           : 'border-sidebar-border/70 bg-background/45 text-muted-foreground';
@@ -550,7 +550,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                   {userData.mustChangePassword ? (
                     <Badge
                       variant="outline"
-                      className="border-amber-500/40 text-amber-400"
+                      className="border-warning/40 text-warning"
                     >
                       À changer
                     </Badge>
@@ -630,7 +630,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                         className={
                           isMfaEnabled
                             ? undefined
-                            : 'border-amber-500/40 text-amber-400'
+                            : 'border-warning/40 text-warning'
                         }
                         variant={isMfaEnabled ? 'secondary' : 'outline'}
                       >
@@ -665,7 +665,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                     className={cn(
                       'flex items-start gap-2 rounded-md border p-3 text-sm leading-6',
                       isMfaRequired && !isMfaEnabled
-                        ? 'border-amber-500/30 bg-amber-500/10 text-amber-100'
+                        ? 'border-warning/30 bg-warning/10 text-warning'
                         : 'border-sidebar-ring/25 bg-sidebar-ring/[0.08] text-muted-foreground',
                     )}
                   >
@@ -681,7 +681,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                     </p>
                   </div>
                   {isMfaEnabled && mfaStatus?.recoveryCodesRemaining === 0 && (
-                    <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm leading-6 text-amber-100">
+                    <div className="border-warning/30 bg-warning/10 text-warning rounded-md border p-3 text-sm leading-6">
                       Aucun code de secours n’est disponible. Générez-en de
                       nouveaux et conservez-les hors de votre téléphone.
                     </div>

@@ -106,11 +106,11 @@ export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = ({
       }}
     >
       <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto p-0 sm:max-w-lg">
-        <div className="h-1 bg-amber-500" />
+        <div className="bg-warning h-1" />
         <div className="p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ServiceIcon className="bg-amber-500/10 text-amber-400">
+              <ServiceIcon className="bg-warning/10 text-warning">
                 <ShieldAlert className="size-4" />
               </ServiceIcon>
               Réinitialiser la double authentification
@@ -133,7 +133,7 @@ export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = ({
               </div>
             )}
 
-            <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm leading-6 text-amber-100">
+            <div className="border-warning/30 bg-warning/10 text-warning rounded-md border p-3 text-sm leading-6">
               Utilisez cette récupération uniquement si le membre a perdu son
               téléphone et tous ses codes de secours. Il pourra se reconnecter
               avec son mot de passe, puis réactiver cette protection depuis Mon
@@ -188,7 +188,7 @@ export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = ({
                 Annuler
               </Button>
               <Button
-                className="flex-1 bg-amber-500 text-white hover:bg-amber-500/90"
+                className="bg-warning text-warning-foreground hover:bg-warning/90 flex-1"
                 disabled={isSubmitting || !canSubmit}
                 type="submit"
               >

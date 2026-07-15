@@ -129,7 +129,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
         <div className="p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ServiceIcon className="bg-amber-500/10 text-amber-300">
+              <ServiceIcon className="bg-warning/10 text-warning">
                 <KeyRound className="size-4" />
               </ServiceIcon>
               {canCancel
@@ -223,10 +223,10 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                   <p
                     className={cn(
                       'text-xs font-medium',
-                      passwordValidation.score <= 1 && 'text-red-400',
-                      passwordValidation.score === 2 && 'text-orange-400',
-                      passwordValidation.score === 3 && 'text-yellow-300',
-                      passwordValidation.score === 4 && 'text-green-400',
+                      passwordValidation.score <= 1 && 'text-destructive',
+                      passwordValidation.score === 2 && 'text-warning',
+                      passwordValidation.score === 3 && 'text-warning',
+                      passwordValidation.score === 4 && 'text-success',
                     )}
                   >
                     Force du mot de passe : {strengthLabel}

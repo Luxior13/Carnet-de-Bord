@@ -154,7 +154,7 @@ const getMetricToneClassName = (tone: DashboardMetricTone): string => {
   }
 
   if (tone === 'warning') {
-    return 'border-amber-500/35 bg-amber-500/10 text-amber-400';
+    return 'border-warning/35 bg-warning/10 text-warning';
   }
 
   if (tone === 'primary') {
@@ -601,7 +601,7 @@ export default function HomePage(): React.ReactNode {
                   {userData.mustChangePassword && (
                     <Badge
                       variant="outline"
-                      className="border-amber-500/40 text-amber-400"
+                      className="border-warning/40 text-warning"
                     >
                       Mot de passe à changer
                     </Badge>
@@ -705,7 +705,7 @@ export default function HomePage(): React.ReactNode {
                       <ServiceIcon
                         className={
                           userData?.mustChangePassword
-                            ? 'size-9 border-amber-500/35 bg-amber-500/10 text-amber-400'
+                            ? 'border-warning/35 bg-warning/10 text-warning size-9'
                             : 'bg-primary/10 text-primary size-9'
                         }
                       >

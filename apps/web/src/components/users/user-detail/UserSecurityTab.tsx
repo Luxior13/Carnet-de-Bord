@@ -194,7 +194,7 @@ const SecurityMetric: FC<{
     tone === 'danger'
       ? 'border-destructive/35 bg-destructive/10 text-destructive'
       : tone === 'warning'
-        ? 'border-amber-500/35 bg-amber-500/10 text-amber-400'
+        ? 'border-warning/35 bg-warning/10 text-warning'
         : tone === 'primary'
           ? 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring'
           : 'border-sidebar-border/70 bg-background/45 text-muted-foreground';
@@ -234,7 +234,7 @@ const SecurityInfoBlock: FC<{
     tone === 'danger'
       ? 'border-destructive/35 bg-destructive/10 text-destructive'
       : tone === 'warning'
-        ? 'border-amber-500/35 bg-amber-500/10 text-amber-400'
+        ? 'border-warning/35 bg-warning/10 text-warning'
         : tone === 'primary'
           ? 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring'
           : 'border-sidebar-border/70 bg-background/45 text-muted-foreground';
@@ -396,13 +396,13 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   return (
     <div className="space-y-3">
       {tempPassword && (
-        <Card className="overflow-hidden rounded-lg border-amber-500/25 bg-amber-500/10 py-0">
+        <Card className="border-warning/25 bg-warning/10 overflow-hidden rounded-lg py-0">
           <CardContent className="p-3 sm:p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex items-center gap-2">
-                  <KeyRound className="size-4 text-amber-400" />
-                  <p className="text-sm font-semibold text-amber-300">
+                  <KeyRound className="text-warning size-4" />
+                  <p className="text-warning text-sm font-semibold">
                     Nouveau mot de passe temporaire
                   </p>
                 </div>
@@ -533,7 +533,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               user.mustChangePassword ? (
                 <Badge
                   variant="outline"
-                  className="border-amber-500/40 text-amber-400"
+                  className="border-warning/40 text-warning"
                 >
                   À changer
                 </Badge>
@@ -641,7 +641,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
         {canResetMfa && (
           <CardFooter className="border-sidebar-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
             <Button
-              className="gap-2 border-amber-500/40 text-amber-300 hover:bg-amber-500/10 hover:text-amber-200"
+              className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning gap-2"
               onClick={onResetMfa}
               size="sm"
               type="button"
@@ -772,8 +772,8 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             />
           </div>
           {isSelf && (
-            <div className="text-muted-foreground flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs">
-              <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-400" />
+            <div className="text-muted-foreground border-warning/25 bg-warning/10 flex items-start gap-2 rounded-md border px-3 py-2 text-xs">
+              <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
               Vous ne pouvez pas désactiver votre propre compte depuis cette
               fiche.
             </div>

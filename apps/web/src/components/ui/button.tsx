@@ -5,7 +5,7 @@ import React, { type ComponentProps, type FC } from 'react';
 import { cn } from '$utils/css.utils';
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md border border-transparent text-sm font-medium transition-[background-color,border-color,color,box-shadow] outline-none disabled:pointer-events-none disabled:opacity-50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/35 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&.bg-amber-500]:border-warning/80 [&.bg-amber-500]:bg-warning [&.bg-amber-500]:text-warning-foreground [&.bg-destructive]:border-destructive-fill/80 [&.bg-destructive]:bg-destructive-fill [&.bg-destructive:hover]:bg-destructive-fill/90 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md border border-transparent text-sm font-medium transition-[background-color,border-color,color,box-shadow] outline-none disabled:pointer-events-none disabled:opacity-50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/35 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&.bg-destructive]:border-destructive-fill/80 [&.bg-destructive]:bg-destructive-fill [&.bg-destructive:hover]:bg-destructive-fill/90 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     defaultVariants: {
       size: 'default',

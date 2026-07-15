@@ -109,7 +109,7 @@ export const UserDetailSectionRail = <
             <span
               aria-hidden="true"
               className={cn(
-                'ring-surface shrink-0 rounded-full bg-amber-400 ring-2',
+                'bg-warning ring-surface shrink-0 rounded-full ring-2',
                 isDesktop
                   ? 'ml-auto size-2'
                   : 'absolute top-1 right-1 size-1.5',
@@ -128,7 +128,7 @@ export const UserDetailSectionRail = <
         aria-label={ariaLabel}
         className="sticky top-2 z-20 -mx-1 2xl:hidden"
       >
-        <div className="scrollbar-gutter-both-edges overflow-x-auto px-1 pb-1">
+        <div className="overflow-x-auto px-1 pb-1">
           <div className="border-sidebar-border/70 bg-surface/95 inline-flex min-w-full gap-1 rounded-lg border p-1 shadow-[var(--shadow-panel)] backdrop-blur">
             {visibleSections.map((section) =>
               renderSectionLink(section, 'mobile'),

@@ -204,9 +204,9 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                   ) : (
                     <div
                       id="user-login-name-hint"
-                      className="text-muted-foreground flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-2.5 py-2 text-xs"
+                      className="text-muted-foreground border-warning/25 bg-warning/10 flex items-start gap-2 rounded-md border px-2.5 py-2 text-xs"
                     >
-                      <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-400" />
+                      <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
                       <span>{loginHint}</span>
                     </div>
                   )}

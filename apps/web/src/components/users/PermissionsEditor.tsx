@@ -133,14 +133,14 @@ const OVERRIDE_STATE_OPTIONS: Array<{
 
 const getRiskBadgeClassName = (risk: PermissionRisk): string => {
   if (risk === 'critical') return 'border-destructive/40 text-destructive';
-  if (risk === 'sensitive') return 'border-amber-500/40 text-amber-400';
+  if (risk === 'sensitive') return 'border-warning/40 text-warning';
 
   return 'border-border/70 text-muted-foreground';
 };
 
 const getRiskBorderClassName = (risk: PermissionRisk): string => {
   if (risk === 'critical') return 'border-l-destructive/70';
-  if (risk === 'sensitive') return 'border-l-amber-400/70';
+  if (risk === 'sensitive') return 'border-l-warning/70';
 
   return 'border-l-primary/45';
 };
@@ -159,15 +159,15 @@ const getPermissionResultBadgeClassName = (
   resultState: PermissionResultState,
 ): string => {
   if (resultState === 'page-blocked') {
-    return 'border-amber-500/45 bg-amber-500/15 text-amber-300';
+    return 'border-warning/45 bg-warning/15 text-warning';
   }
 
   if (resultState === 'incomplete') {
-    return 'border-amber-500/45 bg-amber-500/15 text-amber-300';
+    return 'border-warning/45 bg-warning/15 text-warning';
   }
 
   if (resultState === 'allowed') {
-    return 'border-chart-3/35 bg-chart-3/15 text-chart-3';
+    return 'border-success/35 bg-success/15 text-success';
   }
 
   return 'border-destructive/30 bg-destructive/10 text-destructive';
@@ -190,7 +190,7 @@ const getStateButtonClassName = (
   }
 
   if (option === 'allow') {
-    return 'border-chart-3/35 bg-chart-3/15 text-chart-3 shadow-none';
+    return 'border-success/35 bg-success/15 text-success shadow-none';
   }
 
   return 'border-destructive/40 bg-destructive/15 text-destructive shadow-none';
@@ -331,11 +331,11 @@ const getPermissionAccessBadgeClassName = (
   status: PermissionAccessStatus,
 ): string => {
   if (status === 'full') {
-    return 'border-chart-3/35 bg-chart-3/15 text-chart-3';
+    return 'border-success/35 bg-success/15 text-success';
   }
 
   if (status === 'partial') {
-    return 'border-amber-500/40 bg-amber-500/15 text-amber-300';
+    return 'border-warning/40 bg-warning/15 text-warning';
   }
 
   return 'border-sidebar-border/65 bg-sidebar-accent/20 text-sidebar-foreground/62';
@@ -487,7 +487,7 @@ const PermissionCard: FC<PermissionCardProps> = memo(
         className={cn(
           'border-sidebar-border/60 bg-surface/80 overflow-hidden rounded-lg border border-l-2',
           getRiskBorderClassName(permission.risk),
-          view.hasMissingDependencies && 'bg-amber-500/10',
+          view.hasMissingDependencies && 'bg-warning/10',
           !view.isEnabled && !view.hasMissingDependencies && 'bg-popover/55',
         )}
       >
@@ -546,7 +546,7 @@ const PermissionCard: FC<PermissionCardProps> = memo(
               </span>
             </div>
             {view.hasMissingDependencies ? (
-              <p className="text-xs text-amber-300">
+              <p className="text-warning text-xs">
                 {view.isBlockedByPage
                   ? 'La page est bloquée par : '
                   : 'À autoriser aussi : '}
@@ -934,7 +934,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                     {(selectedCategoryResult?.incomplete ?? 0) > 0 && (
                       <Badge
                         variant="outline"
-                        className="border-amber-500/40 text-xs text-amber-300"
+                        className="border-warning/40 text-warning text-xs"
                       >
                         {selectedCategoryResult?.incomplete} à compléter
                       </Badge>
@@ -1040,8 +1040,8 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   className={cn(
                     'grid gap-3 rounded-lg border p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center',
                     selectedPageIsAllowed
-                      ? 'border-chart-3/30 bg-chart-3/10'
-                      : 'border-amber-500/35 bg-amber-500/10',
+                      ? 'border-success/30 bg-success/10'
+                      : 'border-warning/35 bg-warning/10',
                   )}
                 >
                   <div className="min-w-0 space-y-1.5">
@@ -1051,8 +1051,8 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                         className={cn(
                           'text-xs',
                           selectedPageIsAllowed
-                            ? 'border-chart-3/35 text-chart-3'
-                            : 'border-amber-500/40 text-amber-300',
+                            ? 'border-success/35 text-success'
+                            : 'border-warning/40 text-warning',
                         )}
                       >
                         {selectedPageIsAllowed
@@ -1068,7 +1068,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                       Les actions ci-dessous en dépendent.
                     </p>
                     {isSelectedPageDefaultDenied && (
-                      <p className="text-xs text-amber-300">
+                      <p className="text-warning text-xs">
                         Déjà bloquée par le rôle : choisir Refuser ne crée pas
                         de modification à enregistrer.
                       </p>
@@ -1111,15 +1111,15 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                 )}
                 {selectedPageIsAllowed ? (
                   <div className="border-sidebar-border/60 bg-surface-muted flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2">
-                    <ShieldCheck className="text-chart-3 size-4 shrink-0" />
+                    <ShieldCheck className="text-success size-4 shrink-0" />
                     <p className="text-muted-foreground text-xs">
                       Les actions autorisées seront utilisables sur cette page.
                     </p>
                   </div>
                 ) : (
-                  <div className="flex min-w-0 items-center gap-2 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2">
-                    <CircleAlert className="size-4 shrink-0 text-amber-300" />
-                    <p className="text-xs text-amber-200">
+                  <div className="border-warning/35 bg-warning/10 flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2">
+                    <CircleAlert className="text-warning size-4 shrink-0" />
+                    <p className="text-warning text-xs">
                       La page est bloquée : les actions fines restent visibles
                       mais ne seront pas utilisables.
                     </p>

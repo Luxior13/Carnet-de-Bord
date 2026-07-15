@@ -132,15 +132,11 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
             'relative z-10 min-h-0 flex-1',
             fullHeight
               ? 'overflow-hidden'
-              : 'scrollbar-gutter-both-edges overflow-x-hidden overflow-y-auto',
+              : 'scrollbar-gutter-both-edges overflow-y-auto',
           )}
           tabIndex={-1}
         >
-          {fullHeight ? (
-            children
-          ) : (
-            <div className="animate-fade-in-up">{children}</div>
-          )}
+          {children}
         </main>
       </SidebarInset>
     </SidebarProvider>

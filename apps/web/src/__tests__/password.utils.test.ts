@@ -125,16 +125,16 @@ describe('getPasswordStrengthColor', () => {
     expect(getPasswordStrengthColor(1)).toBe('bg-destructive');
   });
 
-  it('returns bg-amber-500 for score 2', () => {
-    expect(getPasswordStrengthColor(2)).toBe('bg-amber-500');
+  it('returns bg-warning for score 2', () => {
+    expect(getPasswordStrengthColor(2)).toBe('bg-warning');
   });
 
-  it('returns bg-chart-4 for score 3', () => {
-    expect(getPasswordStrengthColor(3)).toBe('bg-chart-4');
+  it('returns bg-warning for score 3', () => {
+    expect(getPasswordStrengthColor(3)).toBe('bg-warning');
   });
 
-  it('returns bg-chart-3 for score 4', () => {
-    expect(getPasswordStrengthColor(4)).toBe('bg-chart-3');
+  it('returns bg-success for score 4', () => {
+    expect(getPasswordStrengthColor(4)).toBe('bg-success');
   });
 
   it('returns bg-muted-foreground for invalid scores', () => {

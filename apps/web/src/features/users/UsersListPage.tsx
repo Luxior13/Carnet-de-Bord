@@ -187,8 +187,8 @@ const getUsersStatToneClassNames = (
 
   if (tone === 'warning') {
     return {
-      icon: 'border-amber-500/35 bg-amber-500/10 text-amber-400',
-      value: 'text-amber-400',
+      icon: 'border-warning/35 bg-warning/10 text-warning',
+      value: 'text-warning',
     };
   }
 
@@ -795,7 +795,7 @@ export const UsersListPage: FC = () => {
                             {user.isProtected && (
                               <Shield
                                 size={14}
-                                className="shrink-0 text-amber-500"
+                                className="text-warning shrink-0"
                               />
                             )}
                           </div>
@@ -830,7 +830,7 @@ export const UsersListPage: FC = () => {
                       {user.mustChangePassword ? (
                         <Badge
                           variant="outline"
-                          className="border-amber-500/40 text-amber-400"
+                          className="border-warning/40 text-warning"
                         >
                           <Key size={10} className="mr-1" />À changer
                         </Badge>
@@ -907,10 +907,7 @@ export const UsersListPage: FC = () => {
                           {user.firstName} {user.lastName}
                         </h3>
                         {user.isProtected && (
-                          <Shield
-                            size={14}
-                            className="shrink-0 text-amber-500"
-                          />
+                          <Shield size={14} className="text-warning shrink-0" />
                         )}
                       </div>
                       <p className="text-muted-foreground truncate font-mono text-sm">
@@ -935,7 +932,7 @@ export const UsersListPage: FC = () => {
                       {user.mustChangePassword && (
                         <Badge
                           variant="outline"
-                          className="border-amber-500/40 text-xs text-amber-400"
+                          className="border-warning/40 text-warning text-xs"
                         >
                           MDP temporaire
                         </Badge>

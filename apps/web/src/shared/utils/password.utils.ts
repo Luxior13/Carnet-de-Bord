@@ -96,11 +96,11 @@ export function getPasswordStrengthColor(score: number): string {
     case 1:
       return 'bg-destructive';
     case 2:
-      return 'bg-amber-500';
+      return 'bg-warning';
     case 3:
-      return 'bg-chart-4';
+      return 'bg-warning';
     case 4:
-      return 'bg-chart-3';
+      return 'bg-success';
     default:
       return 'bg-muted-foreground';
   }

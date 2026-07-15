@@ -31,7 +31,7 @@ const getResumeStatToneClassName = (tone: ResumeStatTone): string => {
     return 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring';
   }
   if (tone === 'warning') {
-    return 'border-amber-500/35 bg-amber-500/10 text-amber-400';
+    return 'border-warning/35 bg-warning/10 text-warning';
   }
 
   return 'border-sidebar-ring/35 bg-sidebar-ring/15 text-sidebar-ring';
@@ -177,7 +177,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({
             {user.mustChangePassword ? (
               <Badge
                 variant="outline"
-                className="border-amber-500/40 text-amber-400"
+                className="border-warning/40 text-warning"
               >
                 À changer
               </Badge>

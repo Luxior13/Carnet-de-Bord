@@ -230,7 +230,7 @@ const ALL_CONNECTION_EVENT_OPTION: ConnectionEventFilterOption = {
 const CONNECTION_EVENT_OPTIONS: ConnectionEventFilterOption[] = [
   ALL_CONNECTION_EVENT_OPTION,
   {
-    color: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
+    color: 'border-success/35 bg-success/10 text-success',
     icon: LogIn,
     label: 'Connexions réussies',
     value: 'LOGIN_SUCCESS',
@@ -280,7 +280,7 @@ const ACTION_CONFIG = new Map<string, ActionConfig>(
     },
     LOGIN_SUCCESS: {
       category: 'auth',
-      color: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
+      color: 'border-success/35 bg-success/10 text-success',
       icon: LogIn,
       label: 'Connexion réussie',
     },
@@ -292,67 +292,67 @@ const ACTION_CONFIG = new Map<string, ActionConfig>(
     },
     MFA_DISABLED: {
       category: 'security',
-      color: 'border-amber-500/35 bg-amber-500/10 text-amber-300',
+      color: 'border-warning/35 bg-warning/10 text-warning',
       icon: Shield,
       label: 'Double authentification désactivée',
     },
     MFA_ENABLED: {
       category: 'security',
-      color: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
+      color: 'border-success/35 bg-success/10 text-success',
       icon: Shield,
       label: 'Application d’authentification configurée',
     },
     MFA_RECOVERY_CODE_USED: {
       category: 'security',
-      color: 'border-amber-500/35 bg-amber-500/10 text-amber-300',
+      color: 'border-warning/35 bg-warning/10 text-warning',
       icon: Key,
       label: 'Code de secours utilisé',
     },
     MFA_RECOVERY_CODES_REGENERATED: {
       category: 'security',
-      color: 'border-chart-2/35 bg-chart-2/10 text-chart-2',
+      color: 'border-info/35 bg-info/10 text-info',
       icon: RefreshCw,
       label: 'Codes de secours régénérés',
     },
     PASSWORD_CHANGE: {
       category: 'security',
-      color: 'border-amber-500/35 bg-amber-500/10 text-amber-300',
+      color: 'border-warning/35 bg-warning/10 text-warning',
       icon: Key,
       label: 'Mot de passe modifié',
     },
     PASSWORD_RESET: {
       category: 'security',
-      color: 'border-amber-500/35 bg-amber-500/10 text-amber-300',
+      color: 'border-warning/35 bg-warning/10 text-warning',
       icon: RefreshCw,
       label: 'Mot de passe réinitialisé',
     },
     PERMISSION_UPDATE: {
       category: 'access',
-      color: 'border-chart-2/35 bg-chart-2/10 text-chart-2',
+      color: 'border-info/35 bg-info/10 text-info',
       icon: Shield,
       label: 'Permissions modifiées',
     },
     SESSION_INVALIDATE: {
       category: 'security',
-      color: 'border-amber-500/35 bg-amber-500/10 text-amber-300',
+      color: 'border-warning/35 bg-warning/10 text-warning',
       icon: RefreshCw,
       label: 'Sessions invalidées',
     },
     USER_ACTIVATE: {
       category: 'lifecycle',
-      color: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
+      color: 'border-success/35 bg-success/10 text-success',
       icon: CheckCircle,
       label: 'Utilisateur activé',
     },
     USER_CREATE: {
       category: 'lifecycle',
-      color: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
+      color: 'border-success/35 bg-success/10 text-success',
       icon: UserPlus,
       label: 'Utilisateur créé',
     },
     USER_DEACTIVATE: {
       category: 'lifecycle',
-      color: 'border-amber-500/35 bg-amber-500/10 text-amber-300',
+      color: 'border-warning/35 bg-warning/10 text-warning',
       icon: UserMinus,
       label: 'Utilisateur désactivé',
     },
@@ -364,7 +364,7 @@ const ACTION_CONFIG = new Map<string, ActionConfig>(
     },
     USER_UPDATE: {
       category: 'profile',
-      color: 'border-chart-2/35 bg-chart-2/10 text-chart-2',
+      color: 'border-info/35 bg-info/10 text-info',
       icon: Pencil,
       label: 'Utilisateur modifié',
     },
@@ -895,7 +895,7 @@ const getScopeVisuals = (log: JournalLog): ScopeVisual[] => {
 
   if (log.actorName || log.userId) {
     visuals.push({
-      className: 'border-chart-3/35 bg-chart-3/10 text-chart-3',
+      className: 'border-success/35 bg-success/10 text-success',
       icon: UserCheck,
       label: `Réalisé par ${log.actorName ?? log.userId}`,
       value: 'actor',
@@ -903,7 +903,7 @@ const getScopeVisuals = (log: JournalLog): ScopeVisual[] => {
   }
   if (log.targetName || log.targetUserId) {
     visuals.push({
-      className: 'border-chart-2/35 bg-chart-2/10 text-chart-2',
+      className: 'border-info/35 bg-info/10 text-info',
       icon: Shield,
       label: `Concernant ${log.targetName ?? log.targetUserId}`,
       value: 'target',

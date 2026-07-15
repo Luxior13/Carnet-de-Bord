@@ -136,7 +136,7 @@ const PrivateFeaturePage: FC<PrivateFeaturePageProps> = ({ item, space }) => {
                       </Badge>
                       <Badge
                         variant="outline"
-                        className="border-amber-500/40 bg-amber-500/10 text-amber-300"
+                        className="border-warning/40 bg-warning/10 text-warning"
                       >
                         {item.status ?? 'Fonctionnalité en préparation'}
                       </Badge>
@@ -158,7 +158,7 @@ const PrivateFeaturePage: FC<PrivateFeaturePageProps> = ({ item, space }) => {
               </div>
             </section>
             <div
-              className="text-foreground rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3"
+              className="text-foreground border-warning/30 bg-warning/10 rounded-md border px-4 py-3"
               role="status"
             >
               <p className="text-sm font-semibold">

@@ -43,10 +43,7 @@ function ScrollableTabsList({
   return (
     <div
       data-slot="tabs-scroll-container"
-      className={cn(
-        'scrollbar-gutter-both-edges -mx-1 overflow-x-auto px-1 pb-1',
-        viewportClassName,
-      )}
+      className={cn('-mx-1 overflow-x-auto px-1 pb-1', viewportClassName)}
     >
       <TabsList
         className={cn('w-max min-w-full sm:min-w-0', className)}

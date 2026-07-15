@@ -237,7 +237,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                   <p className="text-sidebar-foreground truncate font-mono text-sm font-medium">
                     {userData.loginName}
                   </p>
-                  <p className="text-sidebar-foreground/50 mt-1 text-xs">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     {userData.isProtected
                       ? 'Identifiant racine permanent, modifiable uniquement par une procédure de récupération hors ligne.'
                       : 'Distinct de votre adresse email. Seul un administrateur habilité peut le modifier.'}
@@ -269,7 +269,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sidebar-foreground/50 mt-1 text-xs">
+                    <p className="text-muted-foreground mt-1 text-xs">
                       Facultatif, distinct de l&apos;identifiant et jamais
                       utilisé pour vous connecter.
                     </p>
@@ -290,8 +290,8 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
               </div>
             </dl>
             {!canEditProfile && (
-              <div className="text-muted-foreground flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs">
-                <LockKeyhole className="mt-0.5 size-3.5 shrink-0 text-amber-400" />
+              <div className="text-muted-foreground border-warning/25 bg-warning/10 flex items-start gap-2 rounded-md border px-3 py-2 text-xs">
+                <LockKeyhole className="text-warning mt-0.5 size-3.5 shrink-0" />
                 La modification du prénom et du nom est verrouillée sur ce
                 compte.
               </div>
@@ -386,7 +386,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                     disabled
                     className="bg-secondary/50 rounded-lg font-mono"
                   />
-                  <p className="text-sidebar-foreground/50 text-xs">
+                  <p className="text-muted-foreground text-xs">
                     {userData.isProtected
                       ? "L'identifiant racine ne peut pas être modifié depuis l'application."
                       : 'Seul un administrateur habilité peut modifier cet identifiant.'}
@@ -406,7 +406,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                     disabled
                     className="bg-secondary/50 rounded-lg"
                   />
-                  <p className="text-sidebar-foreground/50 text-xs">
+                  <p className="text-muted-foreground text-xs">
                     Utilisez l&apos;action dédiée après avoir enregistré le nom
                     et le prénom.
                   </p>

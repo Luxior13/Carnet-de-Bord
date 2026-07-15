@@ -263,7 +263,7 @@ const NewUserContent: FC = () => {
                 )}
                 <Badge
                   variant="outline"
-                  className="border-amber-500/40 text-amber-400"
+                  className="border-warning/40 text-warning"
                 >
                   Mot de passe temporaire
                 </Badge>
@@ -287,7 +287,7 @@ const NewUserContent: FC = () => {
                     icon={<KeyRound className="size-3.5" />}
                     title="Mot de passe temporaire"
                   >
-                    <div className="rounded-md border border-amber-500/25 bg-amber-500/10 p-3">
+                    <div className="border-warning/25 bg-warning/10 rounded-md border p-3">
                       <p className="text-muted-foreground mb-3 text-xs">
                         À communiquer une seule fois. L&apos;utilisateur devra
                         le changer à sa première connexion.
@@ -356,7 +356,7 @@ const NewUserContent: FC = () => {
                         </span>
                         <Badge
                           variant="outline"
-                          className="border-amber-500/40 text-amber-400"
+                          className="border-warning/40 text-warning"
                         >
                           À changer
                         </Badge>
@@ -613,7 +613,7 @@ const NewUserContent: FC = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="text-muted-foreground rounded-md border border-amber-500/25 bg-amber-500/10 px-2.5 py-2 text-xs">
+                      <div className="text-muted-foreground border-warning/25 bg-warning/10 rounded-md border px-2.5 py-2 text-xs">
                         Le compte sera créé avec un mot de passe temporaire à
                         changer à la première connexion.
                       </div>

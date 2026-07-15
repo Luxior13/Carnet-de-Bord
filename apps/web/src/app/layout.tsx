@@ -38,14 +38,11 @@ type RootLayoutProps = {
 
 const RootLayout: FC<RootLayoutProps> = ({ children }) => {
   return (
-    <html lang="fr" className="dark">
-      <body
-        className={cn(
-          geistSans.variable,
-          geistMono.variable,
-          'bg-background min-h-svh antialiased',
-        )}
-      >
+    <html
+      lang="fr"
+      className={cn('dark', geistSans.variable, geistMono.variable)}
+    >
+      <body>
         <Toaster closeButton={true} />
         <UserProvider>{children}</UserProvider>
       </body>

@@ -1950,7 +1950,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                   {user.isProtected && (
                     <Badge
                       variant="outline"
-                      className="border-amber-500/40 text-amber-400"
+                      className="border-warning/40 text-warning"
                     >
                       Protégé
                     </Badge>
@@ -1968,7 +1968,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                   {user.mustChangePassword && (
                     <Badge
                       variant="outline"
-                      className="border-amber-500/40 text-amber-400"
+                      className="border-warning/40 text-warning"
                     >
                       Mot de passe à changer
                     </Badge>
@@ -2052,8 +2052,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
-                  <AlertTriangle size={16} className="text-amber-400" />
+                <div className="bg-warning/10 flex h-8 w-8 items-center justify-center rounded-lg">
+                  <AlertTriangle size={16} className="text-warning" />
                 </div>
                 Quitter sans enregistrer ?
               </AlertDialogTitle>
@@ -2088,8 +2088,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
-                  <AlertTriangle size={16} className="text-amber-400" />
+                <div className="bg-warning/10 flex h-8 w-8 items-center justify-center rounded-lg">
+                  <AlertTriangle size={16} className="text-warning" />
                 </div>
                 Modifier l&apos;identifiant de connexion ?
               </AlertDialogTitle>
@@ -2105,7 +2105,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 Annuler
               </AlertDialogCancel>
               <AlertDialogAction
-                className="bg-amber-500 text-white hover:bg-amber-500/90"
+                className="bg-warning text-warning-foreground hover:bg-warning/90"
                 onClick={() => {
                   setShowLoginChangeConfirm(false);
                   void handleSaveProfile(true);
@@ -2134,8 +2134,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
-                  <AlertTriangle size={16} className="text-amber-400" />
+                <div className="bg-warning/10 flex h-8 w-8 items-center justify-center rounded-lg">
+                  <AlertTriangle size={16} className="text-warning" />
                 </div>
                 Réinitialiser le mot de passe ?
               </AlertDialogTitle>
@@ -2152,7 +2152,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               <AlertDialogAction
                 onClick={handleResetPassword}
                 disabled={isResetting}
-                className="bg-amber-500 text-white hover:bg-amber-500/90"
+                className="bg-warning text-warning-foreground hover:bg-warning/90"
               >
                 {isResetting && (
                   <Loader2 size={16} className="mr-2 animate-spin" />
@@ -2171,8 +2171,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
-                  <AlertTriangle size={16} className="text-amber-400" />
+                <div className="bg-warning/10 flex h-8 w-8 items-center justify-center rounded-lg">
+                  <AlertTriangle size={16} className="text-warning" />
                 </div>
                 Révoquer les sessions ?
               </AlertDialogTitle>
@@ -2188,7 +2188,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               <AlertDialogAction
                 onClick={handleRevokeSecuritySessions}
                 disabled={isRevokingSecuritySessions}
-                className="bg-amber-500 text-white hover:bg-amber-500/90"
+                className="bg-warning text-warning-foreground hover:bg-warning/90"
               >
                 {isRevokingSecuritySessions && (
                   <Loader2 size={16} className="mr-2 animate-spin" />

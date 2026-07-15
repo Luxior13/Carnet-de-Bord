@@ -11,7 +11,7 @@ export const USER_DETAIL_RAIL_STYLE_REFERENCE = {
     'text-muted-foreground hover:bg-accent hover:text-foreground',
   nav: 'space-y-1 p-3',
   navItem: 'h-9 w-full justify-start gap-2.5 rounded-md px-3',
-  protectedIcon: 'shrink-0 text-amber-500',
+  protectedIcon: 'shrink-0 text-warning',
   returnButton: 'w-full justify-start',
   subtitle: 'text-muted-foreground truncate text-xs',
   title: 'truncate text-base font-semibold',

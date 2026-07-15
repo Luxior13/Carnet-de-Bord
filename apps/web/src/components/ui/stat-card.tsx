@@ -47,7 +47,7 @@ export const StatCard: FC<StatCardProps> = ({
                 <span
                   className={cn(
                     'text-xs font-medium',
-                    trend.isPositive ? 'text-green-500' : 'text-red-500',
+                    trend.isPositive ? 'text-success' : 'text-destructive',
                   )}
                 >
                   {trend.isPositive ? '+' : ''}

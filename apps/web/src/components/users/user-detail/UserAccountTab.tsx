@@ -170,10 +170,7 @@ const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
           {hasCustomChoice ? 'Choix personnalisé' : 'Hérité du rôle'}
         </Badge>
         {missingDependencyLabels.length > 0 && (
-          <Badge
-            variant="outline"
-            className="border-amber-500/40 text-amber-300"
-          >
+          <Badge variant="outline" className="border-warning/40 text-warning">
             À compléter
           </Badge>
         )}
@@ -182,7 +179,7 @@ const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
         {permission.description}
       </p>
       {missingDependencyLabels.length > 0 && (
-        <p className="text-xs leading-5 text-amber-300/90">
+        <p className="text-warning/90 text-xs leading-5">
           Prérequis : {missingDependencyLabels.join(', ')}
         </p>
       )}
@@ -287,7 +284,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
       <Card className="border-sidebar-border/60 overflow-hidden rounded-lg py-0">
         <CardContent className="space-y-4 p-4">
           <div className="flex min-w-0 items-start gap-3">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-amber-500/35 bg-amber-500/10 text-amber-300">
+            <span className="border-warning/35 bg-warning/10 text-warning flex size-11 shrink-0 items-center justify-center rounded-lg border">
               <Crown className="size-5" />
             </span>
             <div className="min-w-0">
@@ -297,7 +294,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
                 </h3>
                 <Badge
                   variant="outline"
-                  className="border-amber-500/40 text-amber-300"
+                  className="border-warning/40 text-warning"
                 >
                   {getAccessLabel(user)}
                 </Badge>
