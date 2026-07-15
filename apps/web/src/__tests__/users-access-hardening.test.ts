@@ -303,6 +303,45 @@ describe('users access hardening', () => {
     expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
   });
 
+  it('keeps self identity updates on the dedicated personal-account route', async () => {
+    const actor = buildUser({
+      deletedAt: undefined,
+      id: 'admin-1',
+      isProtected: false,
+      passwordHash: undefined,
+      permissions: { [PERMISSIONS.USERS.UPDATE_PROFILE]: true },
+      role: 'ADMIN',
+    });
+
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: actor,
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(
+      buildUser({ id: 'admin-1', role: 'ADMIN' }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/admin-1', {
+        body: stringifyRequestBody({ firstName: 'Nouveau' }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'admin-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+    expect(body.error.message).toContain('Utilisez Mon compte');
+    expect(mockRequirePermission).toHaveBeenCalledWith(
+      actor,
+      PERMISSIONS.USERS.UPDATE_PROFILE,
+    );
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
   it.each([
     {
       label: 'another administrator',

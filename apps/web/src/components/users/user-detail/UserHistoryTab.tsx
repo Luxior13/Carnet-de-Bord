@@ -61,8 +61,11 @@ type UserHistoryTabProps = {
   auditLogs: AuditLogEntry[];
   canExport?: boolean;
   error?: string | null;
+  hasMoreAuditLogs?: boolean;
   isAuditTruncated?: boolean;
   isLoading: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
   onRetry?: () => void;
   perspective?: ActivityPerspective;
   totalAuditLogs?: number;
@@ -846,6 +849,11 @@ const getActivityScopeOptions = (
   perspective === 'personal'
     ? [
         {
+          description: 'Tous les événements liés à mon compte',
+          label: 'Tout',
+          value: 'all',
+        },
+        {
           description: 'Sécurité, sessions et modifications de mon compte',
           label: 'Sur mon compte',
           value: 'on',
@@ -854,11 +862,6 @@ const getActivityScopeOptions = (
           description: "Connexions et actions que j'ai effectuées",
           label: 'Mes actions',
           value: 'by',
-        },
-        {
-          description: 'Tous les événements liés à mon compte',
-          label: 'Toute mon activité',
-          value: 'all',
         },
       ]
     : [
@@ -1624,8 +1627,11 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   auditLogs,
   canExport = false,
   error = null,
+  hasMoreAuditLogs = false,
   isAuditTruncated = false,
   isLoading,
+  isLoadingMore = false,
+  onLoadMore,
   onRetry,
   perspective = 'managed',
   totalAuditLogs,
@@ -1747,6 +1753,8 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
     effectivePageFilter !== ALL_FILTER_VALUE ||
     activityScope !== DEFAULT_ACTIVITY_SCOPE ||
     dateFilter !== 'all';
+  const hasAdvancedLocationFilters =
+    poleFilter !== ALL_FILTER_VALUE || effectivePageFilter !== ALL_FILTER_VALUE;
   const selectedPoleOption =
     poleOptions.find((option) => option.value === poleFilter) ??
     poleOptions[0] ??
@@ -1886,6 +1894,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   if (isLoading && auditLogs.length === 0) {
     return (
       <div className="space-y-4">
+        {isPersonalPerspective && <h2 className="sr-only">Activité</h2>}
         <Skeleton className="h-32 rounded-md" />
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => (
@@ -1899,6 +1908,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   if (error && auditLogs.length === 0) {
     return (
       <Card className="border-destructive/35 bg-destructive/5 min-h-[280px] items-center justify-center rounded-md py-0">
+        {isPersonalPerspective && <h2 className="sr-only">Activité</h2>}
         <CardContent
           className="flex flex-col items-center p-8 text-center"
           role="alert"
@@ -1925,6 +1935,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   if (auditLogs.length === 0) {
     return (
       <Card className="border-border/70 min-h-[360px] items-center justify-center rounded-md py-0">
+        {isPersonalPerspective && <h2 className="sr-only">Activité</h2>}
         <CardContent className="flex flex-col items-center p-8">
           <div className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-20 items-center justify-center rounded-md border">
             <History className="size-10" />
@@ -1949,7 +1960,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
 
   return (
     <Card
-      aria-busy={isLoading}
+      aria-busy={isLoading || isLoadingMore}
       className="border-border/60 overflow-visible rounded-lg py-0"
     >
       <CardContent className="p-2.5 sm:p-3">
@@ -1968,251 +1979,482 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
               )}
             </div>
           )}
-          <section className="border-border/55 bg-surface-muted overflow-hidden rounded-lg border">
-            <div className="flex flex-col gap-4 p-4 xl:flex-row xl:items-center xl:justify-between">
-              <div className="min-w-0 space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-foreground font-semibold">
-                    {journalTitle}
-                  </h3>
-                  <Badge variant="secondary" className="text-xs">
-                    {filteredLogs.length}/{auditLogs.length} affichés
-                  </Badge>
-                  {hasTruncatedAuditLogs && (
-                    <Badge
-                      variant="outline"
-                      className="border-warning/40 text-warning text-xs"
-                    >
-                      Derniers {loadedAuditLogsCount}/{effectiveTotalAuditLogs}{' '}
-                      chargés
-                    </Badge>
-                  )}
-                  {hasActiveFilters && (
-                    <Badge
-                      variant="outline"
-                      className="border-primary/40 text-primary-emphasis text-xs"
-                    >
-                      Filtres actifs
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-muted-foreground max-w-3xl text-sm leading-6">
-                  {journalDescription}
-                </p>
-              </div>
-              <div className="flex min-w-0 flex-wrap gap-2 xl:justify-end">
-                <div className="min-w-44">
-                  <Select value={dateFilter} onValueChange={setDateFilter}>
-                    <SelectTrigger
-                      aria-label="Filtrer par période"
-                      className={activitySelectTriggerClassName}
-                    >
-                      <SelectValue placeholder="Période" />
-                    </SelectTrigger>
-                    <SelectContent className={activitySelectContentClassName}>
-                      {DATE_FILTERS.map((filter) => (
-                        <SelectItem
-                          key={filter.value}
-                          value={filter.value}
-                          className={activitySelectItemClassName}
-                        >
-                          {filter.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    'text-muted-foreground h-11 gap-1.5',
-                    !hasActiveFilters && 'invisible',
-                  )}
-                  disabled={!hasActiveFilters}
-                  onClick={handleResetFilters}
-                >
-                  <RefreshCw className="size-3.5" />
-                  Réinitialiser
-                </Button>
-                {canExport && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-11 gap-1.5"
-                    onClick={handleExport}
-                    disabled={filteredLogs.length === 0}
-                  >
-                    <Download className="size-3.5" />
-                    Exporter
-                  </Button>
-                )}
-              </div>
-            </div>
-          </section>
-          <section className="border-border/60 bg-surface overflow-hidden rounded-lg border">
-            <div className="border-border/55 bg-surface-muted grid gap-4 border-b p-4 xl:grid-cols-[minmax(0,1fr)_40rem] xl:items-start">
-              <div className="flex min-w-0 items-start gap-3">
-                <span
-                  className={cn(
-                    'flex size-11 shrink-0 items-center justify-center rounded-lg border',
-                    selectedPageToneClasses.icon,
-                  )}
-                >
-                  <SelectedPageIcon className="size-5" />
-                </span>
+          {!isPersonalPerspective && (
+            <section className="border-border/55 bg-surface-muted overflow-hidden rounded-lg border">
+              <div className="flex flex-col gap-4 p-4 xl:flex-row xl:items-center xl:justify-between">
                 <div className="min-w-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="text-foreground font-semibold">
-                      {selectedPageTitle}
-                    </h4>
+                    <h3 className="text-foreground font-semibold">
+                      {journalTitle}
+                    </h3>
                     <Badge variant="secondary" className="text-xs">
-                      {filteredLogs.length} événement
-                      {filteredLogs.length > 1 ? 's' : ''}
+                      {filteredLogs.length}/{auditLogs.length} affichés
                     </Badge>
+                    {hasTruncatedAuditLogs && (
+                      <Badge
+                        variant="outline"
+                        className="border-warning/40 text-warning text-xs"
+                      >
+                        Derniers {loadedAuditLogsCount}/
+                        {effectiveTotalAuditLogs} chargés
+                      </Badge>
+                    )}
+                    {hasActiveFilters && (
+                      <Badge
+                        variant="outline"
+                        className="border-primary/40 text-primary-emphasis text-xs"
+                      >
+                        Filtres actifs
+                      </Badge>
+                    )}
                   </div>
-                  <p className="text-muted-foreground max-w-2xl text-sm leading-6">
-                    {selectedPageDescription}
+                  <p className="text-muted-foreground max-w-3xl text-sm leading-6">
+                    {journalDescription}
                   </p>
                 </div>
-              </div>
-              <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
-                <div className="min-w-0 space-y-2">
-                  <label
-                    htmlFor="activity-pole"
-                    className="text-muted-foreground text-xs font-medium"
-                  >
-                    Pôle
-                  </label>
-                  <Select
-                    value={poleFilter}
-                    onValueChange={handlePoleFilterChange}
-                  >
-                    <SelectTrigger
-                      id="activity-pole"
-                      className={activitySelectTriggerClassName}
-                    >
-                      <SelectValue>
-                        <ActivitySelectVisualOption
-                          icon={selectedPoleOption.icon}
-                          label={selectedPoleOption.label}
-                          count={selectedPoleOption.count}
-                          tone={selectedPoleOption.tone}
-                        />
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className={activitySelectContentClassName}>
-                      {poleOptions.map((filter) => (
-                        <SelectItem
-                          key={filter.value}
-                          value={filter.value}
-                          className={activitySelectItemClassName}
-                        >
-                          <ActivitySelectVisualOption
-                            icon={filter.icon}
-                            label={filter.label}
-                            count={filter.count}
-                            tone={filter.tone}
-                          />
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="min-w-0 space-y-2">
-                  <label
-                    htmlFor="activity-page"
-                    className="text-muted-foreground text-xs font-medium"
-                  >
-                    Page
-                  </label>
-                  <Select
-                    value={effectivePageFilter}
-                    onValueChange={handlePageFilterChange}
-                    disabled={isPageFilterLocked}
-                  >
-                    <SelectTrigger
-                      id="activity-page"
-                      className={cn(
-                        activitySelectTriggerClassName,
-                        isPageFilterLocked && 'opacity-70',
-                      )}
-                    >
-                      <SelectValue>
-                        <ActivitySelectVisualOption
-                          icon={selectedPageOption.icon}
-                          label={selectedPageOption.label}
-                          count={selectedPageOption.count}
-                          tone={selectedPageOption.tone}
-                        />
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className={activitySelectContentClassName}>
-                      {pageOptions.map((filter) => (
-                        <SelectItem
-                          key={filter.value}
-                          value={filter.value}
-                          className={activitySelectItemClassName}
-                        >
-                          <ActivitySelectVisualOption
-                            icon={filter.icon}
-                            label={filter.label}
-                            count={filter.count}
-                            tone={filter.tone}
-                          />
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-4 p-4">
-              <div className="grid gap-2 md:grid-cols-3">
-                {activityScopeOptions.map((scope) => {
-                  const isActiveScope = activityScope === scope.value;
-                  const scopeVisuals = getActivityScopeOptionVisuals(
-                    scope.value,
-                    perspective,
-                  );
-
-                  return (
-                    <button
-                      key={scope.value}
-                      type="button"
-                      aria-pressed={isActiveScope}
-                      onClick={() => handleActivityScopeChange(scope.value)}
-                      className={cn(
-                        'border-border/60 bg-surface-muted hover:bg-accent/25 flex min-w-0 items-center gap-3 rounded-lg border p-3 text-left transition-colors',
-                        isActiveScope && 'border-primary/45 bg-primary/10',
-                      )}
-                    >
-                      <ActivityScopeIconGroup scopes={scopeVisuals} size="md" />
-                      <span className="min-w-0 flex-1">
-                        <span className="text-foreground block truncate text-sm font-semibold">
-                          {scope.label}
-                        </span>
-                        <span className="text-muted-foreground block truncate text-xs">
-                          {scope.description}
-                        </span>
-                      </span>
-                      <Badge
-                        variant={isActiveScope ? 'secondary' : 'outline'}
-                        className="shrink-0"
+                <div className="flex min-w-0 flex-wrap gap-2 xl:justify-end">
+                  <div className="min-w-44">
+                    <Select value={dateFilter} onValueChange={setDateFilter}>
+                      <SelectTrigger
+                        aria-label="Filtrer par période"
+                        className={activitySelectTriggerClassName}
                       >
-                        {getScopeCount(scope.value)}
-                      </Badge>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="space-y-2">
-                <div className="border-border/60 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_18rem_10rem_1.5rem] rounded-lg border px-4 py-2 text-xs font-medium md:grid">
-                  <span>Événement</span>
-                  <span>Emplacement</span>
-                  <span className="text-right">Date</span>
-                  <span />
+                        <SelectValue placeholder="Période" />
+                      </SelectTrigger>
+                      <SelectContent className={activitySelectContentClassName}>
+                        {DATE_FILTERS.map((filter) => (
+                          <SelectItem
+                            key={filter.value}
+                            value={filter.value}
+                            className={activitySelectItemClassName}
+                          >
+                            {filter.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      'text-muted-foreground h-11 gap-1.5',
+                      !hasActiveFilters && 'invisible',
+                    )}
+                    disabled={!hasActiveFilters}
+                    onClick={handleResetFilters}
+                  >
+                    <RefreshCw className="size-3.5" />
+                    Réinitialiser
+                  </Button>
+                  {canExport && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-11 gap-1.5"
+                      onClick={handleExport}
+                      disabled={filteredLogs.length === 0}
+                    >
+                      <Download className="size-3.5" />
+                      Exporter
+                    </Button>
+                  )}
                 </div>
+              </div>
+            </section>
+          )}
+          <section className="border-border/60 bg-surface overflow-hidden rounded-lg border">
+            {isPersonalPerspective ? (
+              <div className="border-border/55 bg-surface-muted space-y-4 border-b p-4">
+                <div className="space-y-1">
+                  <h2 className="text-foreground text-lg font-semibold">
+                    Activité
+                  </h2>
+                  <p className="text-muted-foreground text-sm leading-6">
+                    Consultez les événements liés à votre compte et les actions
+                    que vous avez réalisées.
+                  </p>
+                  {hasTruncatedAuditLogs && (
+                    <p className="text-warning text-xs">
+                      Seuls les {loadedAuditLogsCount} événements les plus
+                      récents sur {effectiveTotalAuditLogs} sont chargés.
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <span
+                      id="personal-activity-scope-label"
+                      className="text-muted-foreground block text-xs font-medium"
+                    >
+                      Afficher
+                    </span>
+                    <div
+                      aria-labelledby="personal-activity-scope-label"
+                      className="border-border/60 bg-background/35 grid grid-cols-3 rounded-lg border p-1"
+                      role="group"
+                    >
+                      {activityScopeOptions.map((scope) => {
+                        const isActiveScope = activityScope === scope.value;
+
+                        return (
+                          <button
+                            key={scope.value}
+                            type="button"
+                            aria-pressed={isActiveScope}
+                            onClick={() =>
+                              handleActivityScopeChange(scope.value)
+                            }
+                            className={cn(
+                              'text-muted-foreground hover:text-foreground min-h-11 rounded-md px-2 text-xs font-medium transition-colors sm:text-sm',
+                              isActiveScope &&
+                                'bg-primary/15 text-primary-emphasis shadow-sm',
+                            )}
+                          >
+                            {scope.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="min-w-44 space-y-2 xl:w-52">
+                    <label
+                      htmlFor="personal-activity-period"
+                      className="text-muted-foreground block text-xs font-medium"
+                    >
+                      Période
+                    </label>
+                    <Select value={dateFilter} onValueChange={setDateFilter}>
+                      <SelectTrigger
+                        id="personal-activity-period"
+                        className={activitySelectTriggerClassName}
+                      >
+                        <SelectValue placeholder="Période" />
+                      </SelectTrigger>
+                      <SelectContent className={activitySelectContentClassName}>
+                        {DATE_FILTERS.map((filter) => (
+                          <SelectItem
+                            key={filter.value}
+                            value={filter.value}
+                            className={activitySelectItemClassName}
+                          >
+                            {filter.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <details className="group/filters border-border/60 bg-background/25 rounded-lg border">
+                  <summary className="text-muted-foreground hover:text-foreground flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-sm font-medium transition-colors [&::-webkit-details-marker]:hidden">
+                    <Filter className="size-4" />
+                    Filtres avancés
+                    {hasAdvancedLocationFilters && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-primary/15 text-primary-emphasis ml-1 text-xs"
+                      >
+                        Actifs
+                      </Badge>
+                    )}
+                    <ChevronDown className="ml-auto size-4 transition-transform group-open/filters:rotate-180" />
+                  </summary>
+                  <div className="border-border/55 grid gap-3 border-t p-3 sm:grid-cols-2">
+                    <div className="min-w-0 space-y-2">
+                      <label
+                        htmlFor="personal-activity-pole"
+                        className="text-muted-foreground text-xs font-medium"
+                      >
+                        Pôle
+                      </label>
+                      <Select
+                        value={poleFilter}
+                        onValueChange={handlePoleFilterChange}
+                      >
+                        <SelectTrigger
+                          id="personal-activity-pole"
+                          className={activitySelectTriggerClassName}
+                        >
+                          <SelectValue>
+                            <ActivitySelectVisualOption
+                              icon={selectedPoleOption.icon}
+                              label={selectedPoleOption.label}
+                              count={selectedPoleOption.count}
+                              tone={selectedPoleOption.tone}
+                            />
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent
+                          className={activitySelectContentClassName}
+                        >
+                          {poleOptions.map((filter) => (
+                            <SelectItem
+                              key={filter.value}
+                              value={filter.value}
+                              className={activitySelectItemClassName}
+                            >
+                              <ActivitySelectVisualOption
+                                icon={filter.icon}
+                                label={filter.label}
+                                count={filter.count}
+                                tone={filter.tone}
+                              />
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="min-w-0 space-y-2">
+                      <label
+                        htmlFor="personal-activity-page"
+                        className="text-muted-foreground text-xs font-medium"
+                      >
+                        Page
+                      </label>
+                      <Select
+                        value={effectivePageFilter}
+                        onValueChange={handlePageFilterChange}
+                        disabled={isPageFilterLocked}
+                      >
+                        <SelectTrigger
+                          id="personal-activity-page"
+                          className={cn(
+                            activitySelectTriggerClassName,
+                            isPageFilterLocked && 'opacity-70',
+                          )}
+                        >
+                          <SelectValue>
+                            <ActivitySelectVisualOption
+                              icon={selectedPageOption.icon}
+                              label={selectedPageOption.label}
+                              count={selectedPageOption.count}
+                              tone={selectedPageOption.tone}
+                            />
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent
+                          className={activitySelectContentClassName}
+                        >
+                          {pageOptions.map((filter) => (
+                            <SelectItem
+                              key={filter.value}
+                              value={filter.value}
+                              className={activitySelectItemClassName}
+                            >
+                              <ActivitySelectVisualOption
+                                icon={filter.icon}
+                                label={filter.label}
+                                count={filter.count}
+                                tone={filter.tone}
+                              />
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </details>
+
+                <div className="flex flex-wrap justify-end gap-2">
+                  {hasActiveFilters && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground h-11 gap-1.5"
+                      onClick={handleResetFilters}
+                    >
+                      <RefreshCw className="size-3.5" />
+                      Réinitialiser
+                    </Button>
+                  )}
+                  {canExport && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-11 gap-1.5"
+                      onClick={handleExport}
+                      disabled={filteredLogs.length === 0}
+                    >
+                      <Download className="size-3.5" />
+                      Exporter
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="border-border/55 bg-surface-muted grid gap-4 border-b p-4 xl:grid-cols-[minmax(0,1fr)_40rem] xl:items-start">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span
+                    className={cn(
+                      'flex size-11 shrink-0 items-center justify-center rounded-lg border',
+                      selectedPageToneClasses.icon,
+                    )}
+                  >
+                    <SelectedPageIcon className="size-5" />
+                  </span>
+                  <div className="min-w-0 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="text-foreground font-semibold">
+                        {selectedPageTitle}
+                      </h4>
+                      <Badge variant="secondary" className="text-xs">
+                        {filteredLogs.length} événement
+                        {filteredLogs.length > 1 ? 's' : ''}
+                      </Badge>
+                    </div>
+                    <p className="text-muted-foreground max-w-2xl text-sm leading-6">
+                      {selectedPageDescription}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
+                  <div className="min-w-0 space-y-2">
+                    <label
+                      htmlFor="activity-pole"
+                      className="text-muted-foreground text-xs font-medium"
+                    >
+                      Pôle
+                    </label>
+                    <Select
+                      value={poleFilter}
+                      onValueChange={handlePoleFilterChange}
+                    >
+                      <SelectTrigger
+                        id="activity-pole"
+                        className={activitySelectTriggerClassName}
+                      >
+                        <SelectValue>
+                          <ActivitySelectVisualOption
+                            icon={selectedPoleOption.icon}
+                            label={selectedPoleOption.label}
+                            count={selectedPoleOption.count}
+                            tone={selectedPoleOption.tone}
+                          />
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className={activitySelectContentClassName}>
+                        {poleOptions.map((filter) => (
+                          <SelectItem
+                            key={filter.value}
+                            value={filter.value}
+                            className={activitySelectItemClassName}
+                          >
+                            <ActivitySelectVisualOption
+                              icon={filter.icon}
+                              label={filter.label}
+                              count={filter.count}
+                              tone={filter.tone}
+                            />
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="min-w-0 space-y-2">
+                    <label
+                      htmlFor="activity-page"
+                      className="text-muted-foreground text-xs font-medium"
+                    >
+                      Page
+                    </label>
+                    <Select
+                      value={effectivePageFilter}
+                      onValueChange={handlePageFilterChange}
+                      disabled={isPageFilterLocked}
+                    >
+                      <SelectTrigger
+                        id="activity-page"
+                        className={cn(
+                          activitySelectTriggerClassName,
+                          isPageFilterLocked && 'opacity-70',
+                        )}
+                      >
+                        <SelectValue>
+                          <ActivitySelectVisualOption
+                            icon={selectedPageOption.icon}
+                            label={selectedPageOption.label}
+                            count={selectedPageOption.count}
+                            tone={selectedPageOption.tone}
+                          />
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className={activitySelectContentClassName}>
+                        {pageOptions.map((filter) => (
+                          <SelectItem
+                            key={filter.value}
+                            value={filter.value}
+                            className={activitySelectItemClassName}
+                          >
+                            <ActivitySelectVisualOption
+                              icon={filter.icon}
+                              label={filter.label}
+                              count={filter.count}
+                              tone={filter.tone}
+                            />
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="space-y-4 p-4">
+              {!isPersonalPerspective && (
+                <div className="grid gap-2 md:grid-cols-3">
+                  {activityScopeOptions.map((scope) => {
+                    const isActiveScope = activityScope === scope.value;
+                    const scopeVisuals = getActivityScopeOptionVisuals(
+                      scope.value,
+                      perspective,
+                    );
+
+                    return (
+                      <button
+                        key={scope.value}
+                        type="button"
+                        aria-pressed={isActiveScope}
+                        onClick={() => handleActivityScopeChange(scope.value)}
+                        className={cn(
+                          'border-border/60 bg-surface-muted hover:bg-accent/25 flex min-w-0 items-center gap-3 rounded-lg border p-3 text-left transition-colors',
+                          isActiveScope && 'border-primary/45 bg-primary/10',
+                        )}
+                      >
+                        <ActivityScopeIconGroup
+                          scopes={scopeVisuals}
+                          size="md"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="text-foreground block truncate text-sm font-semibold">
+                            {scope.label}
+                          </span>
+                          <span className="text-muted-foreground block truncate text-xs">
+                            {scope.description}
+                          </span>
+                        </span>
+                        <Badge
+                          variant={isActiveScope ? 'secondary' : 'outline'}
+                          className="shrink-0"
+                        >
+                          {getScopeCount(scope.value)}
+                        </Badge>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="space-y-2">
+                {!isPersonalPerspective && (
+                  <div className="border-border/60 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_18rem_10rem_1.5rem] rounded-lg border px-4 py-2 text-xs font-medium md:grid">
+                    <span>Événement</span>
+                    <span>Emplacement</span>
+                    <span className="text-right">Date</span>
+                    <span />
+                  </div>
+                )}
                 {filteredLogs.length === 0 ? (
                   <div className="border-border/60 flex flex-col items-center justify-center rounded-lg border py-16">
                     <div className="border-primary/35 bg-primary/15 text-primary-emphasis flex h-16 w-16 items-center justify-center rounded-md border">
@@ -2278,15 +2520,35 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                     )}
                   </div>
                 )}
+                {isPersonalPerspective && !hasMore && hasMoreAuditLogs && (
+                  <div className="pt-2 text-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-border min-h-11 rounded-lg"
+                      onClick={onLoadMore}
+                      disabled={isLoadingMore || !onLoadMore}
+                    >
+                      {isLoadingMore && (
+                        <RefreshCw className="size-4 animate-spin" />
+                      )}
+                      {isLoadingMore
+                        ? 'Chargement…'
+                        : 'Charger des événements plus anciens'}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </section>
         </div>
       </CardContent>
-      <CardFooter className="border-border/60 text-muted-foreground bg-surface-muted/95 justify-center rounded-b-lg border-t px-4 py-3 text-center text-xs">
-        {filteredLogs.length} événement{filteredLogs.length > 1 ? 's' : ''}
-        {hasActiveFilters && ' (filtre)'}
-      </CardFooter>
+      {!isPersonalPerspective && (
+        <CardFooter className="border-border/60 text-muted-foreground bg-surface-muted/95 justify-center rounded-b-lg border-t px-4 py-3 text-center text-xs">
+          {filteredLogs.length} événement{filteredLogs.length > 1 ? 's' : ''}
+          {hasActiveFilters && ' (filtre)'}
+        </CardFooter>
+      )}
     </Card>
   );
 };

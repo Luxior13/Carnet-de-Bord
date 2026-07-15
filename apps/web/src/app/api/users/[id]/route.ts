@@ -526,9 +526,8 @@ export async function PATCH(
       );
     }
 
-    // The owner keeps safe personal profile changes. Contact changes use the
-    // dedicated self-service re-authentication flow; root identity, status,
-    // role and access policy remain reserved for offline recovery.
+    // Root identity, contact, status, role and access policy remain reserved
+    // for the dedicated self-service or offline recovery flows.
     if (
       existingUser.isProtected &&
       existingUser.id === auth.user.id &&
@@ -551,19 +550,20 @@ export async function PATCH(
       );
     }
 
-    // Self-service identity changes need their own re-authentication and
-    // verification workflow. The delegated administration endpoint must not
-    // become a way to bypass that boundary, even for a privileged actor.
+    // Personal identity and contact changes have one canonical route:
+    // /api/auth/me (and the re-authenticated contact endpoint). The delegated
+    // administration endpoint must not become a second self-service path,
+    // even for a privileged actor.
     if (
       existingUser.id === auth.user.id &&
-      (isLoginUpdate || isContactUpdate)
+      (isProfileUpdate || isLoginUpdate || isContactUpdate)
     ) {
       return NextResponse.json(
         {
           error: {
             code: ErrorCode.FORBIDDEN,
             message:
-              "Votre identifiant et votre adresse de contact ne peuvent pas être modifiés depuis l'administration",
+              "Votre profil personnel ne peut pas être modifié depuis l'administration. Utilisez Mon compte.",
           },
           success: false,
         },

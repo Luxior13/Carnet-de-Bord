@@ -3,7 +3,6 @@
 import {
   AlertTriangle,
   KeyRound,
-  Laptop,
   Loader2,
   LogOut,
   Monitor,
@@ -13,7 +12,6 @@ import {
   ShieldCheck,
   ShieldOff,
   Smartphone,
-  X,
 } from 'lucide-react';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -42,10 +40,9 @@ import {
 } from '$ui/alert-dialog';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
 import { Separator } from '$ui/separator';
 import { Skeleton } from '$ui/skeleton';
-import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { apiFetch } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 
@@ -72,65 +69,21 @@ type SecuritySectionProps = {
   userData: UserType;
 };
 
-type SecurityMetricProps = {
-  description: string;
-  icon: React.ReactNode;
-  label: string;
-  tone?: 'danger' | 'neutral' | 'primary' | 'warning';
-  value: string;
-};
-
 const SectionTitle: FC<{
   children: React.ReactNode;
   icon: React.ReactNode;
-}> = ({ children, icon }) => (
-  <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
+  id: string;
+}> = ({ children, icon, id }) => (
+  <h3
+    id={id}
+    className="text-foreground flex items-center gap-2 text-sm font-semibold"
+  >
     <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-7 items-center justify-center rounded-lg border">
       {icon}
     </span>
     {children}
-  </CardTitle>
+  </h3>
 );
-
-const SecurityMetric: FC<SecurityMetricProps> = ({
-  description,
-  icon,
-  label,
-  tone = 'neutral',
-  value,
-}) => {
-  const toneClassName =
-    tone === 'danger'
-      ? 'border-destructive/35 bg-destructive/10 text-destructive'
-      : tone === 'warning'
-        ? 'border-warning/35 bg-warning/10 text-warning'
-        : tone === 'primary'
-          ? 'border-primary/35 bg-primary/15 text-primary-emphasis'
-          : 'border-border/70 bg-background/45 text-muted-foreground';
-
-  return (
-    <Card className="border-border/70 overflow-hidden rounded-md py-0">
-      <CardContent className="p-3 sm:p-4">
-        <div className="flex items-start gap-3">
-          <span
-            className={`${toneClassName} flex size-9 shrink-0 items-center justify-center rounded-lg border`}
-          >
-            {icon}
-          </span>
-          <div className="min-w-0">
-            <p className="text-muted-foreground text-xs">{label}</p>
-            <p className="text-foreground mt-0.5 truncate text-sm font-semibold">
-              {value}
-            </p>
-            <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
-              {description}
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
 
 const formatSessionDateTime = (date: string | null): string => {
   if (!date) return 'Date inconnue';
@@ -162,7 +115,7 @@ const getSessionTitle = (session: SessionInfo): string => {
 
 type SessionRowProps = {
   isRevoking?: boolean;
-  onRevoke?: (sessionId: string) => void;
+  onRevoke?: (session: SessionInfo) => void;
   session: SessionInfo;
 };
 
@@ -174,61 +127,84 @@ const SessionRow: FC<SessionRowProps> = ({ isRevoking, onRevoke, session }) => {
   return (
     <div
       className={cn(
-        'border-border/60 bg-popover flex items-center gap-3 rounded-md border p-3',
+        'border-border/60 bg-popover flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-start',
         session.isCurrent && 'border-primary/35 bg-accent/[0.1]',
       )}
     >
-      <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-9 shrink-0 items-center justify-center rounded-lg border">
-        <DeviceIcon className="size-4" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <p className="text-foreground truncate text-sm font-medium">
-            {device} - {browser}
+      <div className="flex min-w-0 flex-1 items-start gap-3">
+        <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-9 shrink-0 items-center justify-center rounded-lg border">
+          <DeviceIcon className="size-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <p className="text-foreground truncate text-sm font-medium">
+              {device} · {browser}
+            </p>
+            {session.isCurrent && (
+              <Badge variant="secondary" className="rounded-full">
+                Session actuelle
+              </Badge>
+            )}
+            {session.rememberMe && (
+              <Badge variant="outline" className="rounded-full">
+                Rester connecté
+              </Badge>
+            )}
+          </div>
+          <p className="text-muted-foreground mt-1 text-xs">
+            Dernière activité {formatRelativeAccountTime(session.lastSeenAt)}
           </p>
-          {session.isCurrent && (
-            <Badge variant="secondary" className="rounded-full">
-              Actuelle
-            </Badge>
-          )}
-          {session.rememberMe && (
-            <Badge variant="outline" className="rounded-full">
-              Longue session
-            </Badge>
-          )}
-        </div>
-        <div className="text-muted-foreground mt-1 flex min-w-0 flex-wrap gap-x-3 gap-y-1 text-xs">
-          <span>
-            Active {formatRelativeAccountTime(session.lastSeenAt)} · inactivité
-            jusqu’au {formatSessionDateTime(session.idleExpiresAt)}
-          </span>
-          <span>Limite absolue {formatSessionDateTime(session.expiresAt)}</span>
-          <span>
-            {session.ipAddress ? `IP ${session.ipAddress}` : 'IP inconnue'}
-          </span>
+          <details className="border-border/60 mt-2 border-t pt-2 text-xs">
+            <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2">
+              Détails techniques
+            </summary>
+            <dl className="mt-2 grid gap-x-4 gap-y-2 sm:grid-cols-2">
+              <div>
+                <dt className="text-muted-foreground">Adresse IP</dt>
+                <dd className="text-foreground mt-0.5 break-all">
+                  {session.ipAddress ?? 'Inconnue'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Créée le</dt>
+                <dd className="text-foreground mt-0.5">
+                  {formatSessionDateTime(session.createdAt)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">
+                  Expiration après inactivité
+                </dt>
+                <dd className="text-foreground mt-0.5">
+                  {formatSessionDateTime(session.idleExpiresAt)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Expiration maximale</dt>
+                <dd className="text-foreground mt-0.5">
+                  {formatSessionDateTime(session.expiresAt)}
+                </dd>
+              </div>
+            </dl>
+          </details>
         </div>
       </div>
       {canRevoke && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="shrink-0 rounded-lg"
-              onClick={() => onRevoke(session.id)}
-              disabled={isRevoking}
-              aria-label="Déconnecter cette session"
-            >
-              {isRevoking ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <X className="size-4" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="left">Déconnecter cette session</TooltipContent>
-        </Tooltip>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="text-destructive hover:text-destructive w-full shrink-0 gap-2 sm:w-auto"
+          onClick={() => onRevoke(session)}
+          disabled={isRevoking}
+        >
+          {isRevoking ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <LogOut className="size-4" />
+          )}
+          Déconnecter
+        </Button>
       )}
     </div>
   );
@@ -257,6 +233,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   const [sessionsError, setSessionsError] = useState<string | null>(null);
   const [revokingAll, setRevokingAll] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [sessionToRevoke, setSessionToRevoke] = useState<SessionInfo | null>(
+    null,
+  );
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
 
   const fetchMfaStatus = useCallback(
@@ -401,6 +380,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       toast.error('Erreur lors de la déconnexion');
     } finally {
       setRevokingId(null);
+      setSessionToRevoke(null);
     }
   };
 
@@ -433,26 +413,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
 
   const currentSession = sessions.find((session) => session.isCurrent);
   const otherSessions = sessions.filter((session) => !session.isCurrent);
-  const passwordStatusLabel = userData.mustChangePassword
-    ? 'À changer'
-    : userData.passwordChangedAt
-      ? 'À jour'
-      : 'Jamais modifié';
   const passwordChangedLabel = userData.passwordChangedAt
     ? formatRelativeAccountTime(userData.passwordChangedAt)
     : 'Jamais';
-  const currentSessionLabel = loadingSessions
-    ? 'Chargement'
-    : sessionsError
-      ? 'Indisponible'
-      : currentSession
-        ? getSessionTitle(currentSession)
-        : 'Non détectée';
-  const otherSessionsLabel = loadingSessions
-    ? 'Chargement'
-    : sessionsError
-      ? 'Indisponible'
-      : String(otherSessions.length);
   const canViewPasswordSecurity = canViewSecurity || canChangePassword;
   const canViewMfaSecurity = canViewSecurity || canManageMfa;
   const mfaEnabledAt =
@@ -462,84 +425,31 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       : null);
   const isMfaEnabled = !!mfaEnabledAt;
   const isMfaRequired = mfaStatus?.required ?? userData.isProtected;
-  const mfaStatusLabel = loadingMfaStatus
-    ? 'Chargement'
-    : mfaStatusError
-      ? 'Indisponible'
-      : isMfaEnabled
-        ? 'Active'
-        : 'À activer';
 
   return (
     <>
-      <div className="space-y-3">
-        <div
-          className={cn(
-            'grid gap-3 sm:grid-cols-2',
-            canViewPasswordSecurity && canViewMfaSecurity && canManageSessions
-              ? 'xl:grid-cols-4'
-              : 'xl:grid-cols-3',
-          )}
-        >
-          {canViewPasswordSecurity && (
-            <SecurityMetric
-              icon={<KeyRound className="size-4" />}
-              label="Mot de passe"
-              value={passwordStatusLabel}
-              description={`Dernier changement : ${passwordChangedLabel}`}
-              tone={userData.mustChangePassword ? 'warning' : 'primary'}
-            />
-          )}
-          {canViewMfaSecurity && (
-            <SecurityMetric
-              description={
-                isMfaEnabled
-                  ? `Activée ${formatRelativeAccountTime(mfaEnabledAt)}`
-                  : isMfaRequired
-                    ? 'Obligatoire pour ce compte protégé'
-                    : 'Protection supplémentaire disponible'
-              }
-              icon={<QrCode className="size-4" />}
-              label="Double authentification"
-              tone={isMfaEnabled ? 'primary' : 'warning'}
-              value={mfaStatusLabel}
-            />
-          )}
-          {canManageSessions && (
-            <>
-              <SecurityMetric
-                icon={<Laptop className="size-4" />}
-                label="Session actuelle"
-                value={currentSessionLabel}
-                description={
-                  sessionsError
-                    ? 'Impossible de charger les sessions'
-                    : currentSession
-                      ? `Active ${formatRelativeAccountTime(currentSession.lastSeenAt)}`
-                      : 'Appareil utilisé maintenant'
-                }
-                tone={currentSession ? 'primary' : 'neutral'}
-              />
-              <SecurityMetric
-                icon={<ShieldCheck className="size-4" />}
-                label="Autres sessions"
-                value={otherSessionsLabel}
-                description={
-                  sessionsError
-                    ? 'Impossible de charger les sessions'
-                    : otherSessions.length > 0
-                      ? 'Appareils connectés à surveiller'
-                      : 'Aucun autre appareil connecté'
-                }
-                tone={otherSessions.length > 0 ? 'warning' : 'primary'}
-              />
-            </>
-          )}
-        </div>
+      <section aria-labelledby="account-security-heading" className="space-y-3">
+        <header className="space-y-1 px-1">
+          <h2
+            id="account-security-heading"
+            className="text-foreground text-lg font-semibold"
+          >
+            Sécurité
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Protégez votre accès et contrôlez les appareils connectés.
+          </p>
+        </header>
         {canViewPasswordSecurity && (
-          <Card className="border-border/70 overflow-hidden rounded-md py-0">
+          <Card
+            aria-labelledby="account-password-heading"
+            className="border-border/70 overflow-hidden rounded-md py-0"
+          >
             <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
-              <SectionTitle icon={<KeyRound className="size-3.5" />}>
+              <SectionTitle
+                icon={<KeyRound className="size-3.5" />}
+                id="account-password-heading"
+              >
                 Mot de passe
               </SectionTitle>
             </CardHeader>
@@ -567,15 +477,22 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                     {passwordChangedLabel}
                   </span>
                 </div>
-                <Separator className="bg-border/60" />
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-muted-foreground text-sm">
-                    Tentatives échouées
-                  </span>
-                  <span className="text-foreground text-sm">
-                    {userData.failedLoginAttempts}
-                  </span>
-                </div>
+                {userData.failedLoginAttempts > 0 && (
+                  <>
+                    <Separator className="bg-border/60" />
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-muted-foreground text-sm">
+                        Connexions refusées
+                      </span>
+                      <span className="text-warning text-right text-sm font-medium">
+                        {userData.failedLoginAttempts}{' '}
+                        {userData.failedLoginAttempts > 1
+                          ? 'tentatives échouées actuellement comptabilisées'
+                          : 'tentative échouée actuellement comptabilisée'}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </CardContent>
             {canChangePassword && (
@@ -595,15 +512,27 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           </Card>
         )}
         {canViewMfaSecurity && (
-          <Card className="border-border/70 overflow-hidden rounded-md py-0">
+          <Card
+            aria-busy={loadingMfaStatus}
+            aria-labelledby="account-mfa-heading"
+            className="border-border/70 overflow-hidden rounded-md py-0"
+          >
             <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
-              <SectionTitle icon={<QrCode className="size-3.5" />}>
-                Double authentification
+              <SectionTitle
+                icon={<QrCode className="size-3.5" />}
+                id="account-mfa-heading"
+              >
+                Application d’authentification
               </SectionTitle>
             </CardHeader>
             <CardContent className="space-y-3 p-3 sm:p-4">
               {loadingMfaStatus ? (
-                <Skeleton className="h-32 rounded-md" />
+                <div aria-live="polite" role="status">
+                  <span className="sr-only">
+                    Chargement de la double authentification
+                  </span>
+                  <Skeleton className="h-32 rounded-md" />
+                </div>
               ) : mfaStatusError ? (
                 <div
                   className="border-destructive/35 bg-destructive/10 text-destructive flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 text-sm"
@@ -711,7 +640,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                       variant="outline"
                     >
                       <QrCode className="size-4" />
-                      Remplacer l’application
+                      Changer d’application
                     </Button>
                     {!isMfaRequired && (
                       <Button
@@ -742,17 +671,27 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           </Card>
         )}
         {canManageSessions && (
-          <Card className="border-border/70 overflow-hidden rounded-md py-0">
+          <Card
+            aria-busy={loadingSessions}
+            aria-labelledby="account-sessions-heading"
+            className="border-border/70 overflow-hidden rounded-md py-0"
+          >
             <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
-              <SectionTitle icon={<Monitor className="size-3.5" />}>
+              <SectionTitle
+                icon={<Monitor className="size-3.5" />}
+                id="account-sessions-heading"
+              >
                 Sessions actives
               </SectionTitle>
             </CardHeader>
             <CardContent className="space-y-4 p-3 sm:p-4">
               {loadingSessions ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-16 rounded-md" />
-                  <Skeleton className="h-16 rounded-md" />
+                <div aria-live="polite" className="space-y-2" role="status">
+                  <span className="sr-only">
+                    Chargement des sessions actives
+                  </span>
+                  <Skeleton className="h-24 rounded-md" />
+                  <Skeleton className="h-24 rounded-md" />
                 </div>
               ) : sessionsError ? (
                 <div
@@ -796,7 +735,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                             key={session.id}
                             session={session}
                             isRevoking={revokingId === session.id}
-                            onRevoke={handleRevokeSession}
+                            onRevoke={setSessionToRevoke}
                           />
                         ))}
                       </div>
@@ -832,7 +771,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
             )}
           </Card>
         )}
-      </div>
+      </section>
       <ChangePasswordDialog
         open={showPasswordDialog}
         onCancel={() => setShowPasswordDialog(false)}
@@ -860,6 +799,48 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           open
         />
       )}
+      <AlertDialog
+        open={sessionToRevoke !== null}
+        onOpenChange={(open) => {
+          if (!open && !revokingId) setSessionToRevoke(null);
+        }}
+      >
+        <AlertDialogContent className="border-border overflow-hidden rounded-md p-0">
+          <div className="p-6">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-foreground flex items-center gap-2">
+                <div className="bg-destructive/10 flex h-8 w-8 items-center justify-center rounded-lg">
+                  <AlertTriangle size={16} className="text-destructive" />
+                </div>
+                Déconnecter cet appareil ?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {sessionToRevoke
+                  ? `${getSessionTitle(sessionToRevoke)} ne pourra plus utiliser cette session.`
+                  : 'Cette session sera immédiatement déconnectée.'}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-4">
+              <AlertDialogCancel disabled={!!revokingId}>
+                Annuler
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(event) => {
+                  event.preventDefault();
+                  if (sessionToRevoke) {
+                    void handleRevokeSession(sessionToRevoke.id);
+                  }
+                }}
+                disabled={!sessionToRevoke || !!revokingId}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {revokingId && <Loader2 className="size-4 animate-spin" />}
+                Déconnecter
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
       <AlertDialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
         <AlertDialogContent className="border-border overflow-hidden rounded-md p-0">
           <div className="p-6">

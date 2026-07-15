@@ -80,7 +80,7 @@ export const UserDetailSectionRail = <
           'group focus-visible:border-ring focus-visible:ring-ring/50 relative flex min-w-0 items-center rounded-md border border-transparent font-medium transition-colors outline-none focus-visible:ring-[3px]',
           isDesktop
             ? 'h-10 gap-2 px-2 text-sm'
-            : 'h-9 min-w-[4.75rem] flex-1 justify-center gap-1.5 px-2 text-xs',
+            : 'h-11 min-w-[4.75rem] flex-1 justify-center gap-1.5 px-2 text-xs',
           isActive
             ? 'border-primary/35 bg-primary/15 text-foreground shadow-none'
             : 'text-muted-foreground hover:bg-surface-muted/85 hover:text-foreground',

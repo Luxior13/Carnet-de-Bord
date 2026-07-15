@@ -11,6 +11,7 @@ import {
   type LucideIcon,
   ShieldCheck,
 } from 'lucide-react';
+import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, {
   type FC,
@@ -521,7 +522,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const isTargetAdminAccessRestricted =
     !!user && user.role === UserRole.ADMIN && !isProtectedActor;
   const canEditTargetProfile =
-    !!user && canUpdateUsers && (!user.isProtected || isSelf);
+    !!user && !isSelf && canUpdateUsers && !user.isProtected;
   const canEditTargetLogin =
     !!user &&
     !isSelf &&
@@ -656,6 +657,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       (!!profileErrors.firstName || !!profileErrors.lastName));
   const hasProfileIdentityChanges =
     !!user &&
+    canEditTargetProfile &&
     (editForm.firstName.trim() !== user.firstName ||
       editForm.lastName.trim() !== user.lastName);
   const hasProfileLoginChanges =
@@ -1694,28 +1696,46 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         );
       case 'profile':
         return (
-          <UserProfileTab
-            form={{
-              contactEmail: editForm.contactEmail,
-              firstName: editForm.firstName,
-              lastName: editForm.lastName,
-              loginName: editForm.loginName,
-            }}
-            setForm={(form: ProfileForm) =>
-              setEditForm((currentForm) => ({ ...currentForm, ...form }))
-            }
-            canEdit={canEditTargetProfile}
-            canEditContact={canEditTargetContact}
-            canEditLogin={canEditTargetLogin}
-            loginReadOnlyHint={loginReadOnlyHint}
-            canViewContact={canViewTargetContact}
-            isSaving={isSaving}
-            onSave={handleSaveProfile}
-            onCancel={handleCancelProfile}
-            hasChanges={hasProfileChanges}
-            canSave={canSaveProfile}
-            errors={profileErrors}
-          />
+          <div className="space-y-3">
+            {isSelf && (
+              <div className="border-primary/25 bg-primary/[0.08] flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+                <div className="min-w-0">
+                  <p className="text-foreground text-sm font-medium">
+                    Votre fiche administrative est en lecture seule
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs leading-5">
+                    Utilisez votre espace personnel pour modifier votre identité
+                    et votre adresse de contact.
+                  </p>
+                </div>
+                <Button asChild className="shrink-0" size="sm">
+                  <Link href="/mon-compte">Gérer mon compte</Link>
+                </Button>
+              </div>
+            )}
+            <UserProfileTab
+              form={{
+                contactEmail: editForm.contactEmail,
+                firstName: editForm.firstName,
+                lastName: editForm.lastName,
+                loginName: editForm.loginName,
+              }}
+              setForm={(form: ProfileForm) =>
+                setEditForm((currentForm) => ({ ...currentForm, ...form }))
+              }
+              canEdit={canEditTargetProfile}
+              canEditContact={canEditTargetContact}
+              canEditLogin={canEditTargetLogin}
+              loginReadOnlyHint={loginReadOnlyHint}
+              canViewContact={canViewTargetContact}
+              isSaving={isSaving}
+              onSave={handleSaveProfile}
+              onCancel={handleCancelProfile}
+              hasChanges={hasProfileChanges}
+              canSave={canSaveProfile}
+              errors={profileErrors}
+            />
+          </div>
         );
       case 'access':
         if (!canViewTargetAccess) {

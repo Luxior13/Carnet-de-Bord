@@ -1,13 +1,7 @@
 'use client';
 
-import {
-  Activity,
-  CalendarDays,
-  Clock3,
-  ShieldCheck,
-  User,
-} from 'lucide-react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { Activity, AlertTriangle, ShieldCheck, User } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, {
   type FC,
   useCallback,
@@ -29,20 +23,35 @@ import {
   PERMISSIONS,
 } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
-import {
-  formatAccountDate,
-  formatRelativeAccountTime,
-} from '$features/account/account.utils';
 import { ProfileSection } from '$features/account/components/ProfileSection';
 import { SecuritySection } from '$features/account/components/SecuritySection';
 import type { AuditLogEntry, UserType } from '$types/auth.types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '$ui/alert-dialog';
 import { Badge } from '$ui/badge';
 import { Skeleton } from '$ui/skeleton';
 
 type AccountSectionId = 'activity' | 'profile' | 'security';
 
-const ACCOUNT_AUDIT_PAGE_SIZE = 200;
-const ACCOUNT_AUDIT_MAX_PREFETCH_PAGES = 5;
+const ACCOUNT_AUDIT_PAGE_SIZE = 50;
+
+type PendingNavigation =
+  | {
+      href: string;
+      kind: 'href';
+    }
+  | {
+      href: string;
+      kind: 'section';
+    };
 
 const ACCOUNT_SECTIONS: Array<UserDetailSection<AccountSectionId>> = [
   {
@@ -87,6 +96,41 @@ const buildAccountSectionHref = (
   return nextQueryString ? `${pathname}?${nextQueryString}` : pathname;
 };
 
+const isPlainLeftClick = (event: MouseEvent): boolean => {
+  return (
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.shiftKey
+  );
+};
+
+const findAnchorElement = (
+  target: EventTarget | null,
+): HTMLAnchorElement | null => {
+  if (!(target instanceof Element)) return null;
+
+  return target.closest('a[href]');
+};
+
+const isInternalNavigationLink = (anchor: HTMLAnchorElement): boolean => {
+  const target = anchor.getAttribute('target');
+  const href = anchor.getAttribute('href');
+
+  if (!href) return false;
+  if (target && target !== '_self') return false;
+  if (
+    href.startsWith('#') ||
+    href.startsWith('mailto:') ||
+    href.startsWith('tel:')
+  ) {
+    return false;
+  }
+
+  return anchor.origin === window.location.origin;
+};
+
 const getAccountDisplayName = (userData: UserType): string => {
   return (
     `${userData.firstName} ${userData.lastName}`.trim() || userData.loginName
@@ -100,12 +144,16 @@ type AccountHeaderProps = {
 const AccountHeader: FC<AccountHeaderProps> = ({ userData }) => (
   <PageHero
     title={getAccountDisplayName(userData)}
-    description={`Identifiant : ${userData.loginName}`}
+    description={`Identifiant de connexion : ${userData.loginName}`}
+    eyebrow={
+      <span className="text-muted-foreground text-xs font-medium">
+        Mon compte
+      </span>
+    }
     meta={
       <>
         <Badge variant="secondary">{getAccessLabel(userData)}</Badge>
-        <Badge variant="outline">Compte privé</Badge>
-        {userData.isProtected && <Badge variant="warning">Protégé</Badge>}
+        {userData.isProtected && <Badge variant="warning">Compte racine</Badge>}
       </>
     }
     icon={<UserAvatar user={userData} className="size-full rounded-md" />}
@@ -117,18 +165,14 @@ const AccountHeader: FC<AccountHeaderProps> = ({ userData }) => (
 const AccountPageContentSkeleton: FC = () => (
   <div className="space-y-5" role="status" aria-label="Chargement">
     <Skeleton className="h-28 rounded-md" />
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.95fr)] lg:items-start">
-      <div className="space-y-4">
-        <Skeleton className="h-72 rounded-md" />
-        <Skeleton className="h-96 rounded-md" />
-      </div>
-      <Skeleton className="h-[34rem] rounded-md" />
-    </div>
+    <Skeleton className="h-12 rounded-md 2xl:hidden" />
+    <Skeleton className="h-[32rem] rounded-md" />
   </div>
 );
 
 export const AccountPageContent: FC = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const currentQueryString = searchParams.toString();
   const requestedSection = normalizeAccountSection(searchParams.get('section'));
@@ -136,7 +180,15 @@ export const AccountPageContent: FC = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [auditTotalLogs, setAuditTotalLogs] = useState<number | null>(null);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
+  const [isLoadingMoreAudit, setIsLoadingMoreAudit] = useState(false);
+  const [auditLoadedPage, setAuditLoadedPage] = useState(0);
   const [auditError, setAuditError] = useState<string | null>(null);
+  const [isProfileDirty, setIsProfileDirty] = useState(false);
+  const [profileResetKey, setProfileResetKey] = useState(0);
+  const [pendingNavigation, setPendingNavigation] =
+    useState<PendingNavigation | null>(null);
+  const [showUnsavedNavigationConfirm, setShowUnsavedNavigationConfirm] =
+    useState(false);
   const auditAbortControllerRef = useRef<AbortController | null>(null);
   const hasLoadedAuditLogsRef = useRef(false);
 
@@ -195,11 +247,28 @@ export const AccountPageContent: FC = () => {
     ],
   );
   const firstVisibleSection = visibleAccountSections[0]?.id ?? null;
-  const activeSection = visibleAccountSections.some(
+  const resolvedRequestedSection = visibleAccountSections.some(
     (section) => section.id === requestedSection,
   )
     ? requestedSection
     : (firstVisibleSection ?? requestedSection);
+  const [activeSection, setActiveSection] = useState<AccountSectionId>(
+    resolvedRequestedSection,
+  );
+  const [visitedSections, setVisitedSections] = useState<
+    ReadonlySet<AccountSectionId>
+  >(() => new Set([activeSection]));
+  const dirtySections = useMemo<readonly AccountSectionId[]>(
+    () => (isProfileDirty ? ['profile'] : []),
+    [isProfileDirty],
+  );
+  const requestPendingNavigation = useCallback(
+    (navigation: PendingNavigation): void => {
+      setPendingNavigation(navigation);
+      setShowUnsavedNavigationConfirm(true);
+    },
+    [],
+  );
 
   const fetchAccountAuditLogs = useCallback(async (): Promise<void> => {
     auditAbortControllerRef.current?.abort();
@@ -208,8 +277,10 @@ export const AccountPageContent: FC = () => {
     if (!userData?.id || !canViewActivity) {
       setAuditLogs([]);
       setAuditTotalLogs(null);
+      setAuditLoadedPage(0);
       setAuditError(null);
       setIsLoadingAudit(false);
+      setIsLoadingMoreAudit(false);
       hasLoadedAuditLogsRef.current = false;
 
       return;
@@ -220,17 +291,16 @@ export const AccountPageContent: FC = () => {
 
     try {
       setIsLoadingAudit(true);
+      setIsLoadingMoreAudit(false);
       setAuditError(null);
 
-      const buildAuditParams = (page: number): URLSearchParams => {
-        return new URLSearchParams({
-          page: String(page),
-          pageSize: String(ACCOUNT_AUDIT_PAGE_SIZE),
-        });
-      };
+      const auditParams = new URLSearchParams({
+        page: '1',
+        pageSize: String(ACCOUNT_AUDIT_PAGE_SIZE),
+      });
 
       const response = await fetch(
-        `/api/users/${userData.id}/audit?${buildAuditParams(1).toString()}`,
+        `/api/users/${userData.id}/audit?${auditParams.toString()}`,
         { signal: controller.signal },
       );
       const data = await response.json();
@@ -238,51 +308,17 @@ export const AccountPageContent: FC = () => {
       if (controller.signal.aborted) return;
 
       if (response.ok && data.success) {
-        const loadedLogs = [...(data.data.logs as AuditLogEntry[])];
+        const loadedLogs = data.data.logs as AuditLogEntry[];
         const totalLogs = Number(
           data.data.pagination?.total ?? loadedLogs.length,
         );
         const safeTotalLogs = Number.isFinite(totalLogs)
           ? totalLogs
           : loadedLogs.length;
-        const totalPages = Number(data.data.pagination?.totalPages ?? 1);
-        const pagesToFetch = Math.min(
-          totalPages,
-          ACCOUNT_AUDIT_MAX_PREFETCH_PAGES,
-        );
-        let didFailToLoadEveryPage = false;
 
-        for (let page = 2; page <= pagesToFetch; page += 1) {
-          const pageResponse = await fetch(
-            `/api/users/${userData.id}/audit?${buildAuditParams(page).toString()}`,
-            { signal: controller.signal },
-          );
-          const pageData = await pageResponse.json();
-
-          if (controller.signal.aborted) return;
-          if (!pageResponse.ok || !pageData.success) {
-            didFailToLoadEveryPage = true;
-            setAuditError(
-              pageData.error?.message ||
-                "Impossible de charger toute l'activité",
-            );
-            break;
-          }
-
-          loadedLogs.push(...(pageData.data.logs as AuditLogEntry[]));
-        }
-
-        if (didFailToLoadEveryPage) {
-          setAuditLogs((previousLogs) =>
-            previousLogs.length > 0 ? previousLogs : loadedLogs,
-          );
-          setAuditTotalLogs((previousTotal) =>
-            previousTotal === null ? safeTotalLogs : previousTotal,
-          );
-        } else {
-          setAuditLogs(loadedLogs);
-          setAuditTotalLogs(safeTotalLogs);
-        }
+        setAuditLogs(loadedLogs);
+        setAuditTotalLogs(safeTotalLogs);
+        setAuditLoadedPage(1);
       } else {
         setAuditError(
           data.error?.message || "Impossible de charger l'activité",
@@ -303,24 +339,135 @@ export const AccountPageContent: FC = () => {
     }
   }, [canViewActivity, userData?.id]);
 
+  const fetchMoreAccountAuditLogs = useCallback(async (): Promise<void> => {
+    if (!userData?.id || !canViewActivity || isLoadingMoreAudit) return;
+    if (auditLoadedPage < 1) return;
+    if (auditTotalLogs !== null && auditLogs.length >= auditTotalLogs) return;
+
+    auditAbortControllerRef.current?.abort();
+
+    const controller = new AbortController();
+    const nextPage = auditLoadedPage + 1;
+    const auditParams = new URLSearchParams({
+      page: String(nextPage),
+      pageSize: String(ACCOUNT_AUDIT_PAGE_SIZE),
+    });
+
+    auditAbortControllerRef.current = controller;
+
+    try {
+      setIsLoadingMoreAudit(true);
+      setAuditError(null);
+
+      const response = await fetch(
+        `/api/users/${userData.id}/audit?${auditParams.toString()}`,
+        { signal: controller.signal },
+      );
+      const data = await response.json();
+
+      if (controller.signal.aborted) return;
+
+      if (!response.ok || !data.success) {
+        setAuditError(
+          data.error?.message || "Impossible de charger plus d'activité",
+        );
+
+        return;
+      }
+
+      const nextLogs = data.data.logs as AuditLogEntry[];
+      const totalLogs = Number(
+        data.data.pagination?.total ?? auditTotalLogs ?? auditLogs.length,
+      );
+
+      setAuditLogs((currentLogs) => {
+        const knownIds = new Set(currentLogs.map((entry) => entry.id));
+        const uniqueNextLogs = nextLogs.filter(
+          (entry) => !knownIds.has(entry.id),
+        );
+
+        return [...currentLogs, ...uniqueNextLogs];
+      });
+      setAuditTotalLogs(
+        Number.isFinite(totalLogs) ? totalLogs : (auditTotalLogs ?? null),
+      );
+      setAuditLoadedPage(nextPage);
+    } catch {
+      if (controller.signal.aborted) return;
+
+      setAuditError("Impossible de charger plus d'activité");
+    } finally {
+      if (auditAbortControllerRef.current !== controller) return;
+
+      auditAbortControllerRef.current = null;
+      setIsLoadingMoreAudit(false);
+    }
+  }, [
+    auditLoadedPage,
+    auditLogs.length,
+    auditTotalLogs,
+    canViewActivity,
+    isLoadingMoreAudit,
+    userData?.id,
+  ]);
+
   useEffect(() => {
     if (!userData) return;
     if (!firstVisibleSection) return;
-    if (requestedSection === activeSection) return;
+    if (resolvedRequestedSection === activeSection) {
+      if (requestedSection === resolvedRequestedSection) return;
 
-    window.history.replaceState(
-      null,
-      '',
-      buildAccountSectionHref(pathname, currentQueryString, activeSection),
-    );
+      window.history.replaceState(
+        null,
+        '',
+        buildAccountSectionHref(
+          pathname,
+          currentQueryString,
+          resolvedRequestedSection,
+        ),
+      );
+
+      return;
+    }
+
+    if (isProfileDirty && activeSection === 'profile') {
+      requestPendingNavigation({
+        href: buildAccountSectionHref(
+          pathname,
+          currentQueryString,
+          resolvedRequestedSection,
+        ),
+        kind: 'section',
+      });
+      window.history.replaceState(
+        null,
+        '',
+        buildAccountSectionHref(pathname, currentQueryString, activeSection),
+      );
+
+      return;
+    }
+
+    setActiveSection(resolvedRequestedSection);
   }, [
     activeSection,
     currentQueryString,
     firstVisibleSection,
+    isProfileDirty,
     pathname,
+    requestPendingNavigation,
     requestedSection,
+    resolvedRequestedSection,
     userData,
   ]);
+
+  useEffect(() => {
+    setVisitedSections((currentSections) => {
+      if (currentSections.has(activeSection)) return currentSections;
+
+      return new Set([...currentSections, activeSection]);
+    });
+  }, [activeSection]);
 
   useEffect(() => {
     auditAbortControllerRef.current?.abort();
@@ -328,8 +475,18 @@ export const AccountPageContent: FC = () => {
     hasLoadedAuditLogsRef.current = false;
     setAuditLogs([]);
     setAuditTotalLogs(null);
+    setAuditLoadedPage(0);
     setAuditError(null);
     setIsLoadingAudit(false);
+    setIsLoadingMoreAudit(false);
+    setIsProfileDirty(false);
+    setVisitedSections(
+      new Set([
+        normalizeAccountSection(
+          new URLSearchParams(window.location.search).get('section'),
+        ),
+      ]),
+    );
   }, [userData?.id]);
 
   useEffect(() => {
@@ -346,15 +503,100 @@ export const AccountPageContent: FC = () => {
     void fetchAccountAuditLogs();
   }, [activeSection, canViewActivity, fetchAccountAuditLogs]);
 
-  const handleSectionChange = (sectionId: AccountSectionId): void => {
-    if (sectionId === activeSection) return;
+  useEffect(() => {
+    if (!isProfileDirty) return;
 
-    window.history.replaceState(
-      null,
-      '',
-      buildAccountSectionHref(pathname, currentQueryString, sectionId),
-    );
-  };
+    const handleBeforeUnload = (event: BeforeUnloadEvent): void => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return (): void => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isProfileDirty]);
+
+  useEffect(() => {
+    if (!isProfileDirty) return;
+
+    const handleDocumentClick = (event: MouseEvent): void => {
+      if (event.defaultPrevented || !isPlainLeftClick(event)) return;
+
+      const anchor = findAnchorElement(event.target);
+      if (!anchor || !isInternalNavigationLink(anchor)) return;
+
+      const nextUrl = new URL(anchor.href);
+      const currentUrl = new URL(window.location.href);
+
+      if (nextUrl.pathname === currentUrl.pathname) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      requestPendingNavigation({
+        href: `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
+        kind: 'href',
+      });
+    };
+
+    document.addEventListener('click', handleDocumentClick, true);
+
+    return (): void => {
+      document.removeEventListener('click', handleDocumentClick, true);
+    };
+  }, [isProfileDirty, requestPendingNavigation]);
+
+  const handleSectionChange = useCallback(
+    (sectionId: AccountSectionId): void => {
+      if (sectionId === activeSection) return;
+
+      const href = buildAccountSectionHref(
+        pathname,
+        currentQueryString,
+        sectionId,
+      );
+
+      if (isProfileDirty && activeSection === 'profile') {
+        requestPendingNavigation({ href, kind: 'section' });
+
+        return;
+      }
+
+      window.history.replaceState(null, '', href);
+    },
+    [
+      activeSection,
+      currentQueryString,
+      isProfileDirty,
+      pathname,
+      requestPendingNavigation,
+    ],
+  );
+
+  const handleCancelPendingNavigation = useCallback((): void => {
+    setShowUnsavedNavigationConfirm(false);
+    setPendingNavigation(null);
+  }, []);
+
+  const handleConfirmPendingNavigation = useCallback((): void => {
+    if (!pendingNavigation) return;
+
+    const navigation = pendingNavigation;
+
+    setShowUnsavedNavigationConfirm(false);
+    setPendingNavigation(null);
+    setIsProfileDirty(false);
+    setProfileResetKey((currentKey) => currentKey + 1);
+
+    if (navigation.kind === 'section') {
+      window.history.replaceState(null, '', navigation.href);
+
+      return;
+    }
+
+    router.push(navigation.href);
+  }, [pendingNavigation, router]);
 
   const handleAccountUpdate = useCallback(
     async (updatedUser?: UserType): Promise<void> => {
@@ -398,135 +640,141 @@ export const AccountPageContent: FC = () => {
     );
   }
 
-  const summaryItems = [
-    {
-      description: 'Date de création du compte',
-      icon: CalendarDays,
-      title: 'Compte depuis',
-      value: formatAccountDate(userData.createdAt),
-    },
-    {
-      description: 'Dernière activité connue',
-      icon: Clock3,
-      title: 'Dernière connexion',
-      value: userData.lastLoginAt
-        ? formatRelativeAccountTime(userData.lastLoginAt)
-        : 'Jamais',
-    },
-    {
-      description: 'Dernière modification',
-      icon: ShieldCheck,
-      title: 'Mot de passe',
-      value: userData.passwordChangedAt
-        ? formatRelativeAccountTime(userData.passwordChangedAt)
-        : 'Jamais',
-    },
-  ];
   const shouldShowAuditLoading =
     isLoadingAudit ||
     (activeSection === 'activity' && !hasLoadedAuditLogsRef.current);
+  const hasMoreAuditLogs =
+    auditTotalLogs !== null && auditLogs.length < auditTotalLogs;
+  const activeSectionLabel =
+    visibleAccountSections.find((section) => section.id === activeSection)
+      ?.label ?? 'Compte';
 
   return (
-    <div className="relative space-y-5">
-      <UserDetailSectionRail
-        activeSection={activeSection}
-        ariaLabel="Navigation du compte"
-        className="2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:w-44"
-        dirtySections={[]}
-        getSectionHref={(sectionId) =>
-          buildAccountSectionHref(pathname, currentQueryString, sectionId)
-        }
-        heading="Compte"
-        onSectionChange={handleSectionChange}
-        sections={visibleAccountSections}
-      />
-      <AccountHeader userData={userData} />
-      <section className="border-border/70 bg-surface overflow-hidden rounded-lg border shadow-[var(--shadow-panel)]">
-        <div className="divide-border/45 grid divide-y md:grid-cols-3 md:divide-x md:divide-y-0">
-          {summaryItems.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <div key={item.title} className="flex min-w-0 gap-3 p-4 sm:p-5">
-                <span className="border-border/50 bg-surface-raised text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg border">
-                  <Icon className="size-4" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-foreground text-sm font-bold tracking-normal">
-                    {item.title}
-                  </p>
-                  <p className="text-foreground mt-1 truncate text-lg font-semibold tracking-normal">
-                    {item.value}
-                  </p>
-                  <p className="text-muted-foreground mt-0.5 truncate text-xs">
-                    {item.description}
-                  </p>
-                </div>
+    <>
+      <div className="relative space-y-5">
+        <UserDetailSectionRail
+          activeSection={activeSection}
+          ariaLabel="Navigation du compte"
+          className="2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:w-44"
+          dirtySections={dirtySections}
+          getSectionHref={(sectionId) =>
+            buildAccountSectionHref(pathname, currentQueryString, sectionId)
+          }
+          heading="Compte"
+          onSectionChange={handleSectionChange}
+          sections={visibleAccountSections}
+        />
+        <AccountHeader userData={userData} />
+        <UserDetailSectionRail
+          activeSection={activeSection}
+          ariaLabel="Navigation du compte"
+          dirtySections={dirtySections}
+          getSectionHref={(sectionId) =>
+            buildAccountSectionHref(pathname, currentQueryString, sectionId)
+          }
+          layout="mobile"
+          onSectionChange={handleSectionChange}
+          sections={visibleAccountSections}
+        />
+        <p className="sr-only" aria-live="polite">
+          Section active : {activeSectionLabel}
+        </p>
+        <div className="min-w-0">
+          {visibleAccountSections.length === 0 && (
+            <ContentState
+              description="Les droits de compte personnel sont désactivés pour ce compte."
+              layout="panel"
+              title="Aucun onglet personnel disponible"
+            />
+          )}
+          {canViewProfile && visitedSections.has('profile') && (
+            <div hidden={activeSection !== 'profile'}>
+              <ProfileSection
+                key={`${userData.id}-${profileResetKey}`}
+                onDirtyChange={setIsProfileDirty}
+                onUpdate={handleAccountUpdate}
+                userData={userData}
+              />
+            </div>
+          )}
+          {(canViewSecurity ||
+            canChangePassword ||
+            canManageMfa ||
+            canManageSessions) &&
+            visitedSections.has('security') && (
+              <div hidden={activeSection !== 'security'}>
+                <SecuritySection
+                  key={userData.id}
+                  canChangePassword={canChangePassword}
+                  canManageMfa={canManageMfa}
+                  canManageSessions={canManageSessions}
+                  canViewSecurity={canViewSecurity}
+                  onUpdate={handleAccountUpdate}
+                  userData={userData}
+                />
               </div>
-            );
-          })}
+            )}
+          {canViewActivity && visitedSections.has('activity') && (
+            <div hidden={activeSection !== 'activity'}>
+              <UserHistoryTab
+                key={userData.id}
+                auditLogs={auditLogs}
+                canExport={canExportUserActivity}
+                error={auditError}
+                hasMoreAuditLogs={hasMoreAuditLogs}
+                isAuditTruncated={hasMoreAuditLogs}
+                isLoading={shouldShowAuditLoading}
+                isLoadingMore={isLoadingMoreAudit}
+                onLoadMore={() => void fetchMoreAccountAuditLogs()}
+                onRetry={() => void fetchAccountAuditLogs()}
+                perspective="personal"
+                totalAuditLogs={auditTotalLogs ?? auditLogs.length}
+                userId={userData.id}
+              />
+            </div>
+          )}
         </div>
-      </section>
-      <UserDetailSectionRail
-        activeSection={activeSection}
-        ariaLabel="Navigation du compte"
-        dirtySections={[]}
-        getSectionHref={(sectionId) =>
-          buildAccountSectionHref(pathname, currentQueryString, sectionId)
-        }
-        layout="mobile"
-        onSectionChange={handleSectionChange}
-        sections={visibleAccountSections}
-      />
-      <div className="min-w-0">
-        {visibleAccountSections.length === 0 && (
-          <ContentState
-            description="Les droits de compte personnel sont désactivés pour ce compte."
-            layout="panel"
-            title="Aucun onglet personnel disponible"
-          />
-        )}
-        {canViewProfile && (
-          <div hidden={activeSection !== 'profile'}>
-            <ProfileSection
-              userData={userData}
-              onUpdate={handleAccountUpdate}
-            />
-          </div>
-        )}
-        {(canViewSecurity ||
-          canChangePassword ||
-          canManageMfa ||
-          canManageSessions) && (
-          <div hidden={activeSection !== 'security'}>
-            <SecuritySection
-              userData={userData}
-              onUpdate={handleAccountUpdate}
-              canChangePassword={canChangePassword}
-              canManageMfa={canManageMfa}
-              canManageSessions={canManageSessions}
-              canViewSecurity={canViewSecurity}
-            />
-          </div>
-        )}
-        {canViewActivity && (
-          <div hidden={activeSection !== 'activity'}>
-            <UserHistoryTab
-              auditLogs={auditLogs}
-              canExport={canExportUserActivity}
-              error={auditError}
-              isAuditTruncated={
-                auditTotalLogs !== null && auditLogs.length < auditTotalLogs
-              }
-              isLoading={shouldShowAuditLoading}
-              onRetry={() => void fetchAccountAuditLogs()}
-              perspective="personal"
-              totalAuditLogs={auditTotalLogs ?? auditLogs.length}
-              userId={userData.id}
-            />
-          </div>
-        )}
       </div>
-    </div>
+      <AlertDialog
+        open={showUnsavedNavigationConfirm}
+        onOpenChange={(open) => {
+          if (open) {
+            setShowUnsavedNavigationConfirm(true);
+
+            return;
+          }
+
+          handleCancelPendingNavigation();
+        }}
+      >
+        <AlertDialogContent className="border-border overflow-hidden rounded-lg p-0">
+          <div className="p-6">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-foreground flex items-center gap-2">
+                <span className="bg-warning/10 flex size-8 items-center justify-center rounded-lg">
+                  <AlertTriangle className="text-warning size-4" />
+                </span>
+                Quitter sans enregistrer ?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
+                Les modifications du profil seront perdues. Vous pouvez rester
+                sur la page pour les enregistrer ou les annuler vous-même.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-4">
+              <AlertDialogCancel onClick={handleCancelPendingNavigation}>
+                Rester
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={handleConfirmPendingNavigation}
+              >
+                Quitter sans enregistrer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
