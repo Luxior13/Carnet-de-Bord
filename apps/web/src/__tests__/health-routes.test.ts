@@ -24,9 +24,15 @@ vi.mock('$server/prisma', () => ({
 }));
 
 const readySchema = {
-  auditLogColumns: 6,
+  auditEventKinds: 2,
+  auditLogColumns: 18,
+  auditOutcomes: 3,
+  auditSeverities: 3,
+  auditSnapshotTriggers: 1,
+  auditStreams: 5,
+  durableAuditActions: 4,
   loginNameReservationColumns: 3,
-  mfaAuditActions: 4,
+  mfaAuditActions: 5,
   mfaAuthenticationMethods: 2,
   mfaChallengePurposes: 2,
   mfaLoginChallengeColumns: 11,
@@ -93,6 +99,16 @@ describe('operational health routes', () => {
     expect(query).toContain("'MfaRecoveryCode'");
     expect(query).toContain("'MfaLoginChallenge'");
     expect(query).toContain("'MFA_RECOVERY_CODES_REGENERATED'");
+    expect(query).toContain("'MFA_RESET'");
+    expect(query).toContain("'AUDIT_EXPORT'");
+    expect(query).toContain("'STEP_UP_SUCCESS'");
+    expect(query).toContain("'STEP_UP_FAILED'");
+    expect(query).toContain("'actorDisplayNameSnapshot'");
+    expect(query).toContain("'AuditEventKind'");
+    expect(query).toContain("'AuditStream'");
+    expect(query).toContain("'AuditOutcome'");
+    expect(query).toContain("'AuditSeverity'");
+    expect(query).toContain("'AuditLog_immutable_identity_snapshots'");
     expect(query).toContain("'LoginNameReservation'");
     expect(query).toContain('"isProtected" = true');
     expect(response.headers.get('cache-control')).toContain('no-store');
@@ -134,6 +150,13 @@ describe('operational health routes', () => {
   });
 
   it.each([
+    'auditEventKinds',
+    'auditLogColumns',
+    'auditOutcomes',
+    'auditSeverities',
+    'auditSnapshotTriggers',
+    'auditStreams',
+    'durableAuditActions',
     'mfaAuditActions',
     'mfaAuthenticationMethods',
     'mfaChallengePurposes',

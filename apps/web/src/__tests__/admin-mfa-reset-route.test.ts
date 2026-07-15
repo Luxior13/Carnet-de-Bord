@@ -350,7 +350,7 @@ describe('POST /api/users/[id]/reset-mfa', () => {
     });
     expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
       expect.objectContaining({
-        action: 'MFA_DISABLED',
+        action: 'MFA_RESET',
         targetUserId: 'target-user',
         userId: 'root-user',
       }),

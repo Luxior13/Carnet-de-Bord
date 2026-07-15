@@ -234,6 +234,26 @@ describe('hasPermission', () => {
         [PERMISSIONS.SYSTEM.VIEW]: true,
       }),
     ).toBe(true);
+    expect(hasPermission('ADMIN', PERMISSIONS.SYSTEM.AUDIT_SENSITIVE)).toBe(
+      false,
+    );
+    expect(
+      hasPermission('ADMIN', PERMISSIONS.SYSTEM.AUDIT_SENSITIVE, {
+        [PERMISSIONS.SYSTEM.AUDIT_SENSITIVE]: true,
+      }),
+    ).toBe(true);
+    expect(
+      hasPermission('USER', PERMISSIONS.SYSTEM.AUDIT_SENSITIVE, {
+        [PERMISSIONS.SYSTEM.AUDIT]: false,
+        [PERMISSIONS.SYSTEM.AUDIT_SENSITIVE]: true,
+        [PERMISSIONS.SYSTEM.VIEW]: true,
+      }),
+    ).toBe(false);
+    expect(
+      requiresMfaForAccess('ADMIN', {
+        [PERMISSIONS.SYSTEM.AUDIT_SENSITIVE]: true,
+      }),
+    ).toBe(true);
   });
 
   it('requires pole view permissions before granting module actions', () => {
@@ -404,6 +424,7 @@ describe('permission catalogue', () => {
       'incidents:update',
       'system:view',
       'system:audit',
+      'system:audit_sensitive',
       'system:settings',
       'system:validate',
       'system:exports',
@@ -534,7 +555,9 @@ describe('permission catalogue', () => {
       ...Object.values(PERMISSIONS.DOCUMENTS),
       ...Object.values(PERMISSIONS.CONTRACTS),
       ...Object.values(PERMISSIONS.INCIDENTS),
-      ...Object.values(PERMISSIONS.SYSTEM),
+      ...Object.values(PERMISSIONS.SYSTEM).filter(
+        (permissionKey) => permissionKey !== PERMISSIONS.SYSTEM.AUDIT_SENSITIVE,
+      ),
       ...Object.values(PERMISSIONS.TREASURY),
       ...Object.values(PERMISSIONS.USERS).filter(
         (permissionKey) =>

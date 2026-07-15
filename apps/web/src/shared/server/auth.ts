@@ -26,6 +26,11 @@ import { env } from '$env';
 import type { ServerAuthResponseType, UserType } from '$types/auth.types';
 import { isPasswordWithinBcryptLimit } from '$utils/password.utils';
 
+import {
+  AUDIT_EVENT_VERSION,
+  getAuditEventClassification,
+  toAuditIdentitySnapshot,
+} from './audit-event';
 import { logger } from './logger';
 import { prisma } from './prisma';
 import { getClientIp, getRequestId, getUserAgent } from './request-context';
@@ -52,7 +57,7 @@ export type AuditLogInput = {
   userId?: string | null;
 };
 
-type AuditClient = Pick<Prisma.TransactionClient, 'auditLog'>;
+type AuditClient = Pick<Prisma.TransactionClient, 'auditLog' | 'user'>;
 
 type RequiredAuditLogInput = Omit<AuditLogInput, 'ipAddress' | 'userAgent'>;
 
@@ -61,7 +66,7 @@ type AuditWriteOptions = {
   required?: boolean;
 };
 
-const getRequestContext = async (): Promise<{
+export const getAuditRequestContext = async (): Promise<{
   ipAddress: string | null;
   requestId: string | null;
   userAgent: string | null;
@@ -301,7 +306,7 @@ export const createSession = async (
   token: string;
 }> => {
   const sessionId = hashSessionToken(token);
-  const requestContext = await getRequestContext();
+  const requestContext = await getAuditRequestContext();
   const durationDays = rememberMe
     ? SESSION_LONG_DURATION_DAYS
     : SESSION_SHORT_DURATION_DAYS;
@@ -843,7 +848,7 @@ export const authenticateUser = async (
       };
     }
 
-    const requestContext = await getRequestContext();
+    const requestContext = await getAuditRequestContext();
     const updatedLoginState = await prisma.$transaction(async (transaction) => {
       const failedState = await transaction.user.update({
         data: lockExpired
@@ -952,7 +957,7 @@ export const createUser = async (
   auditFactory?: (user: User) => RequiredAuditLogInput,
 ): Promise<User> => {
   const passwordHash = await hashPassword(data.password);
-  const requestContext = auditFactory ? await getRequestContext() : null;
+  const requestContext = auditFactory ? await getAuditRequestContext() : null;
   const normalizedLoginName = data.loginName.toLowerCase().trim();
 
   return prisma.$transaction(async (transaction) => {
@@ -1005,7 +1010,7 @@ export const updateUserPassword = async (
   options: UpdateUserPasswordOptions,
 ): Promise<void> => {
   const passwordHash = await hashPassword(newPassword);
-  const requestContext = options.audit ? await getRequestContext() : null;
+  const requestContext = options.audit ? await getAuditRequestContext() : null;
 
   await prisma.$transaction(async (transaction) => {
     const userUpdate = await transaction.user.updateMany({
@@ -1077,7 +1082,7 @@ export const resetUserPassword = async (
 ): Promise<string> => {
   const tempPassword = generateTemporaryPassword();
   const passwordHash = await hashPassword(tempPassword);
-  const requestContext = audit ? await getRequestContext() : null;
+  const requestContext = audit ? await getAuditRequestContext() : null;
 
   await prisma.$transaction(async (transaction) => {
     const userUpdate = await transaction.user.updateMany({
@@ -1233,10 +1238,49 @@ const getAuditLocationKey = (
     : null;
 };
 
+const AUDIT_SNAPSHOT_USER_SELECT = {
+  firstName: true,
+  id: true,
+  lastName: true,
+  loginName: true,
+  role: true,
+} as const satisfies Prisma.UserSelect;
+
+const getAuditIdentitySnapshots = async (
+  data: Pick<AuditLogInput, 'targetUserId' | 'userId'>,
+  client: AuditClient,
+): Promise<{
+  actor: ReturnType<typeof toAuditIdentitySnapshot> | null;
+  target: ReturnType<typeof toAuditIdentitySnapshot> | null;
+}> => {
+  const userIds = [
+    ...new Set([data.userId, data.targetUserId].filter(Boolean)),
+  ] as string[];
+
+  if (userIds.length === 0) return { actor: null, target: null };
+
+  const users = await client.user.findMany({
+    select: AUDIT_SNAPSHOT_USER_SELECT,
+    where: { id: { in: userIds } },
+  });
+  const snapshotsById = new Map(
+    users.map((user) => [user.id, toAuditIdentitySnapshot(user)]),
+  );
+
+  return {
+    actor: data.userId ? (snapshotsById.get(data.userId) ?? null) : null,
+    target: data.targetUserId
+      ? (snapshotsById.get(data.targetUserId) ?? null)
+      : null,
+  };
+};
+
 export const createAuditLog = async (
   data: AuditLogInput,
   client: AuditClient = prisma,
 ): Promise<void> => {
+  const classification = getAuditEventClassification(data.action);
+  const snapshots = await getAuditIdentitySnapshots(data, client);
   const metadata = data.requestId
     ? { ...(data.metadata ?? {}), requestId: data.requestId }
     : data.metadata;
@@ -1244,13 +1288,25 @@ export const createAuditLog = async (
   await client.auditLog.create({
     data: {
       action: data.action,
+      actorDisplayNameSnapshot: snapshots.actor?.displayName ?? null,
+      actorLoginNameSnapshot: snapshots.actor?.loginName ?? null,
+      actorRoleSnapshot: snapshots.actor?.role ?? null,
       category: data.category,
       description: data.description,
+      eventKind: classification.eventKind,
+      eventVersion: AUDIT_EVENT_VERSION,
       ipAddress: data.ipAddress ?? null,
       metadata: metadata as Prisma.InputJsonValue | undefined,
+      outcome: classification.outcome,
       pageKey: getAuditLocationKey(data.metadata, 'pageKey'),
       poleKey: getAuditLocationKey(data.metadata, 'poleKey'),
+      requestId: data.requestId ?? null,
+      severity: classification.severity,
+      stream: classification.stream,
       tabKey: getAuditLocationKey(data.metadata, 'tabKey'),
+      targetDisplayNameSnapshot: snapshots.target?.displayName ?? null,
+      targetLoginNameSnapshot: snapshots.target?.loginName ?? null,
+      targetRoleSnapshot: snapshots.target?.role ?? null,
       targetUserId: data.targetUserId ?? null,
       userAgent: data.userAgent ?? null,
       userId: data.userId ?? null,
@@ -1268,7 +1324,7 @@ export const createAuditLogWithHeaders = async (
   let requestId: string | undefined;
 
   try {
-    const requestContext = await getRequestContext();
+    const requestContext = await getAuditRequestContext();
     requestId = requestContext.requestId ?? undefined;
 
     await createAuditLog(

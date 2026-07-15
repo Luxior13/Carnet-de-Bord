@@ -33,6 +33,10 @@ export type {
 export {
   AuditAction,
   AuditCategory,
+  AuditEventKind,
+  AuditOutcome,
+  AuditSeverity,
+  AuditStream,
   MfaAuthenticationMethod,
   MfaChallengePurpose,
   UserRole,

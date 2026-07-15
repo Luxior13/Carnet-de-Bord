@@ -337,7 +337,7 @@ export async function POST(
 
       await createAuditLogWithHeaders(
         {
-          action: 'MFA_DISABLED',
+          action: 'MFA_RESET',
           category: 'AUTH',
           description: `Double authentification réinitialisée par le compte racine pour: ${target.loginName}`,
           metadata: {

@@ -5,7 +5,9 @@ import { ErrorCode } from '$types/api.types';
 
 const mockRequireAuth = vi.fn();
 const mockRequirePermission = vi.fn();
+const mockCreateAuditLog = vi.fn();
 const mockCreateAuditLogWithHeaders = vi.fn();
+const mockGetAuditRequestContext = vi.fn();
 const mockCreateUser = vi.fn();
 const mockGenerateTemporaryPassword = vi.fn();
 const mockInvalidateAllUserSessions = vi.fn();
@@ -36,15 +38,23 @@ const mockPrisma = {
 
 vi.mock('server-only', () => ({}));
 
+vi.mock('$env', () => ({
+  env: {
+    MFA_ENCRYPTION_KEY_V1: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
+  },
+}));
+
 vi.mock('$server/api-auth', () => ({
   requireAuth: mockRequireAuth,
   requirePermission: mockRequirePermission,
 }));
 
 vi.mock('$server/auth', () => ({
+  createAuditLog: mockCreateAuditLog,
   createAuditLogWithHeaders: mockCreateAuditLogWithHeaders,
   createUser: mockCreateUser,
   generateTemporaryPassword: mockGenerateTemporaryPassword,
+  getAuditRequestContext: mockGetAuditRequestContext,
   invalidateAllUserSessions: mockInvalidateAllUserSessions,
   mapUserToUserType: (user: unknown): unknown => user,
 }));
@@ -120,6 +130,12 @@ describe('users access hardening', () => {
       }),
     });
     mockRequirePermission.mockReturnValue({ success: true });
+    mockCreateAuditLog.mockResolvedValue(undefined);
+    mockGetAuditRequestContext.mockResolvedValue({
+      ipAddress: '203.0.113.5',
+      requestId: 'request-test',
+      userAgent: 'TestAgent',
+    });
     mockPrisma.loginNameReservation.findUnique.mockResolvedValue(null);
     mockPrisma.user.groupBy.mockResolvedValue([]);
     mockPrisma.user.updateMany.mockResolvedValue({ count: 1 });
@@ -2450,7 +2466,6 @@ describe('users access hardening', () => {
         userId: 'target-1',
       },
     ]);
-
     const route = await import('$app/api/users/[id]/audit/route');
     const response = await route.GET(
       new Request('http://localhost/api/users/target-1/audit') as never,
@@ -2466,6 +2481,108 @@ describe('users access hardening', () => {
       expect.any(Object),
       PERMISSIONS.USERS.VIEW_ACTIVITY,
     );
+  });
+
+  it('uses system:audit_sensitive consistently for another user journal', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: { mfaVerifiedAt: new Date() },
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'auditor-1',
+        isProtected: false,
+        passwordHash: undefined,
+        permissions: { [PERMISSIONS.SYSTEM.AUDIT_SENSITIVE]: true },
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValue(buildUser({ id: 'target-1' }));
+    mockPrisma.auditLog.count.mockResolvedValue(1);
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      {
+        action: 'USER_UPDATE',
+        category: 'USER',
+        createdAt: new Date('2026-03-02T00:00:00.000Z'),
+        description: 'Adresse privée modifiée',
+        id: 'log-sensitive',
+        ipAddress: '1.2.3.4',
+        metadata: {
+          before: { apiKey: 'never-visible', firstName: 'Jean' },
+          pageKey: 'users',
+          requestId: 'legacy-private-request',
+        },
+        targetUserId: 'target-1',
+        userAgent: 'TestAgent',
+        userId: 'auditor-1',
+      },
+    ]);
+
+    const route = await import('$app/api/users/[id]/audit/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users/target-1/audit') as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.logs[0]).toMatchObject({
+      description: 'Adresse privée modifiée',
+      ipAddress: '1.2.3.4',
+      metadata: { before: { firstName: 'Jean' }, pageKey: 'users' },
+      userAgent: 'TestAgent',
+    });
+    expect(body.data.logs[0].metadata).not.toHaveProperty('requestId');
+  });
+
+  it('does not expose old admin actions on other accounts through own history', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'former-admin',
+        passwordHash: undefined,
+        permissions: {},
+        role: 'USER',
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValue(
+      buildUser({ id: 'former-admin' }),
+    );
+    mockPrisma.auditLog.count.mockResolvedValue(1);
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      {
+        action: 'USER_UPDATE',
+        category: 'USER',
+        createdAt: new Date('2026-03-02T00:00:00.000Z'),
+        description: 'Adresse modifiée: private@example.com',
+        id: 'old-admin-action',
+        ipAddress: '1.2.3.4',
+        metadata: {
+          before: { contactEmail: 'private@example.com' },
+          pageKey: 'users',
+        },
+        targetUserId: 'someone-else',
+        userAgent: 'PrivateAgent',
+        userId: 'former-admin',
+      },
+    ]);
+
+    const route = await import('$app/api/users/[id]/audit/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users/former-admin/audit') as never,
+      { params: Promise.resolve({ id: 'former-admin' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.logs[0]).toMatchObject({
+      description: 'Compte utilisateur modifié',
+      ipAddress: null,
+      metadata: { pageKey: 'users' },
+      userAgent: null,
+    });
+    expect(body.data.logs[0].metadata).not.toHaveProperty('before');
   });
 
   it('allows users to view their own audit logs with personal activity permission', async () => {
@@ -2862,13 +2979,15 @@ describe('users access hardening', () => {
     mockPrisma.user.findMany.mockReset();
     mockPrisma.auditLog.findMany.mockResolvedValueOnce([
       {
-        action: 'LOGIN_SUCCESS',
+        action: 'USER_UPDATE',
+        actorDisplayNameSnapshot: 'Alice Admin',
         category: 'AUTH',
         createdAt: new Date('2026-03-03T10:00:00.000Z'),
         description: 'Connexion reussie',
         id: 'log-3',
         ipAddress: '1.2.3.4',
         metadata: SYSTEM_SENSITIVE_AUDIT_METADATA,
+        targetDisplayNameSnapshot: 'Bob User',
         targetUserId: 'target-1',
         userId: 'actor-1',
       },
@@ -2880,6 +2999,7 @@ describe('users access hardening', () => {
         id: 'log-2',
         ipAddress: '5.6.7.8',
         metadata: { targetName: 'Nom archive' },
+        targetDisplayNameSnapshot: 'Nom archive',
         targetUserId: 'deleted-target',
         userId: null,
       },
@@ -2895,25 +3015,11 @@ describe('users access hardening', () => {
         userId: 'actor-1',
       },
     ]);
-    mockPrisma.user.findMany.mockResolvedValueOnce([
-      {
-        firstName: 'Alice',
-        id: 'actor-1',
-        lastName: 'Admin',
-        loginName: 'alice.admin',
-      },
-      {
-        firstName: 'Bob',
-        id: 'target-1',
-        lastName: 'User',
-        loginName: 'bob.user',
-      },
-    ]);
-
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([]);
     const route = await import('$app/api/systeme/journal-activite/route');
     const response = await route.GET(
       new Request(
-        'http://localhost/api/systeme/journal-activite?limit=2&period=7d&category=AUTH&action=LOGIN_SUCCESS&cursor=log-4',
+        'http://localhost/api/systeme/journal-activite?limit=2&period=7d&category=AUTH&action=USER_UPDATE',
       ) as never,
     );
     const body = await response.json();
@@ -2922,7 +3028,9 @@ describe('users access hardening', () => {
     expect(response.headers.get('Cache-Control')).toBe('no-store');
     expect(body.success).toBe(true);
     expect(body.data.logs).toHaveLength(2);
-    expect(body.data.nextCursor).toBe('log-2');
+    expect(body.data.nextCursor).toEqual(expect.any(String));
+    expect(body.data.nextCursor).not.toBe('log-2');
+    expect(body.data.snapshotAt).toEqual(expect.any(String));
     expect(body.data.logs[0]).toMatchObject({
       actorName: 'Alice Admin',
       ipAddress: null,
@@ -2943,27 +3051,45 @@ describe('users access hardening', () => {
     );
     expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        cursor: { id: 'log-4' },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        skip: 1,
         take: 3,
         where: {
           AND: expect.arrayContaining([
-            { action: 'LOGIN_SUCCESS' },
+            { action: 'USER_UPDATE' },
             { category: 'AUTH' },
+            { eventKind: 'ACTIVITY' },
             expect.objectContaining({
-              createdAt: expect.objectContaining({ gte: expect.any(Date) }),
+              createdAt: expect.objectContaining({
+                gte: expect.any(Date),
+                lte: expect.any(Date),
+              }),
             }),
           ]),
         },
       }),
     );
-    expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+    const nextResponse = await route.GET(
+      new Request(
+        `http://localhost/api/systeme/journal-activite?limit=2&period=7d&category=AUTH&action=USER_UPDATE&cursor=${encodeURIComponent(body.data.nextCursor)}`,
+      ) as never,
+    );
+
+    expect(nextResponse.status).toBe(200);
+    expect(mockPrisma.auditLog.findMany).toHaveBeenNthCalledWith(
+      2,
       expect.objectContaining({
         where: {
-          id: {
-            in: expect.arrayContaining(['actor-1', 'target-1']),
-          },
+          AND: expect.arrayContaining([
+            {
+              OR: [
+                { createdAt: { lt: new Date('2026-03-03T09:00:00.000Z') } },
+                {
+                  createdAt: new Date('2026-03-03T09:00:00.000Z'),
+                  id: { lt: 'log-2' },
+                },
+              ],
+            },
+          ]),
         },
       }),
     );
@@ -3014,10 +3140,8 @@ describe('users access hardening', () => {
     mockPrisma.user.findMany.mockReset();
     mockPrisma.auditLog.findMany
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
     mockPrisma.user.findMany
-      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
 
@@ -3027,7 +3151,7 @@ describe('users access hardening', () => {
       new Request('http://localhost/api/systeme/journal-activite') as never,
     );
 
-    await route.GET(
+    const invalidResponse = await route.GET(
       new Request(
         'http://localhost/api/systeme/journal-activite?logType=connections&action=USER_UPDATE&category=USER&poleKey=system&pageKey=authentication',
       ) as never,
@@ -3039,22 +3163,12 @@ describe('users access hardening', () => {
       ) as never,
     );
 
+    expect(invalidResponse.status).toBe(400);
     expect(mockPrisma.auditLog.findMany).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         where: {
-          AND: expect.arrayContaining([
-            {
-              action: {
-                notIn: [
-                  'ACCOUNT_LOCKED',
-                  'LOGIN_FAILED',
-                  'LOGIN_SUCCESS',
-                  'LOGOUT',
-                ],
-              },
-            },
-          ]),
+          AND: expect.arrayContaining([{ eventKind: 'ACTIVITY' }]),
         },
       }),
     );
@@ -3063,42 +3177,255 @@ describe('users access hardening', () => {
       expect.objectContaining({
         where: {
           AND: expect.arrayContaining([
-            {
-              action: {
-                in: [
-                  'ACCOUNT_LOCKED',
-                  'LOGIN_FAILED',
-                  'LOGIN_SUCCESS',
-                  'LOGOUT',
-                ],
-              },
-            },
+            { action: 'LOGIN_FAILED' },
+            { eventKind: 'CONNECTION' },
           ]),
         },
       }),
     );
-    const connectionsCall = mockPrisma.auditLog.findMany.mock.calls[1]?.[0] as
-      { where?: { AND?: unknown[] } } | undefined;
-    const connectionsFilters = connectionsCall?.where?.AND ?? [];
+    expect(mockPrisma.auditLog.findMany).toHaveBeenCalledTimes(2);
+  });
 
-    expect(connectionsFilters).not.toEqual(
-      expect.arrayContaining([{ action: 'USER_UPDATE' }]),
+  it('rejects invalid, repeated and inconsistent journal filters', async () => {
+    mockPrisma.auditLog.findMany.mockReset();
+    const route = await import('$app/api/systeme/journal-activite/route');
+    const requests = [
+      'period=typo',
+      'period=30d&period=7d',
+      'unknownFilter=value',
+      'action=LOGIN_SUCCESS',
+      'logType=connections&connectionAction=USER_UPDATE',
+      'period=30d&from=2026-01-01T00%3A00%3A00.000Z',
+      'period=30d&to=2026-01-02T00%3A00%3A00.000Z',
+      'period=custom&from=2026-01-01T00%3A00%3A00.000Z',
+      'period=custom&from=2024-01-01T00%3A00%3A00.000Z&to=2026-01-02T00%3A00%3A00.000Z',
+    ];
+
+    for (const query of requests) {
+      const response = await route.GET(
+        new Request(
+          `http://localhost/api/systeme/journal-activite?${query}`,
+        ) as never,
+      );
+
+      expect(response.status).toBe(400);
+    }
+
+    expect(mockPrisma.auditLog.findMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects a cursor when the active journal filters have changed', async () => {
+    mockPrisma.auditLog.findMany.mockReset();
+    mockPrisma.user.findMany.mockReset();
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      {
+        action: 'USER_UPDATE',
+        category: 'USER',
+        createdAt: new Date('2026-03-03T10:00:00.000Z'),
+        description: 'Utilisateur modifie',
+        id: 'log-2',
+        ipAddress: null,
+        metadata: null,
+        targetUserId: null,
+        userId: null,
+      },
+      {
+        action: 'USER_UPDATE',
+        category: 'USER',
+        createdAt: new Date('2026-03-03T09:00:00.000Z'),
+        description: 'Utilisateur modifie',
+        id: 'log-1',
+        ipAddress: null,
+        metadata: null,
+        targetUserId: null,
+        userId: null,
+      },
+    ]);
+    const route = await import('$app/api/systeme/journal-activite/route');
+    const firstResponse = await route.GET(
+      new Request(
+        'http://localhost/api/systeme/journal-activite?limit=1&period=30d',
+      ) as never,
     );
-    expect(connectionsFilters).not.toEqual(
-      expect.arrayContaining([{ category: 'USER' }]),
+    const firstBody = await firstResponse.json();
+    const changedFilterResponse = await route.GET(
+      new Request(
+        `http://localhost/api/systeme/journal-activite?limit=1&period=7d&cursor=${encodeURIComponent(firstBody.data.nextCursor)}`,
+      ) as never,
     );
-    expect(connectionsFilters).not.toEqual(
-      expect.arrayContaining([{ poleKey: 'system' }]),
+    const futureCursorPayload = JSON.parse(
+      Buffer.from(
+        String(firstBody.data.nextCursor).split('.')[0] ?? '',
+        'base64url',
+      ).toString('utf8'),
+    ) as Record<string, unknown>;
+    futureCursorPayload.snapshotAt = '2099-01-01T00:00:00.000Z';
+    const futureCursor = Buffer.from(
+      JSON.stringify(futureCursorPayload),
+      'utf8',
+    ).toString('base64url');
+    const futureCursorResponse = await route.GET(
+      new Request(
+        `http://localhost/api/systeme/journal-activite?limit=1&period=30d&cursor=${encodeURIComponent(futureCursor)}`,
+      ) as never,
     );
-    expect(connectionsFilters).not.toEqual(
-      expect.arrayContaining([{ pageKey: 'authentication' }]),
+
+    expect(firstResponse.status).toBe(200);
+    expect(changedFilterResponse.status).toBe(400);
+    expect(futureCursorResponse.status).toBe(400);
+    expect(mockPrisma.auditLog.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('requires export permission and a recent step-up before exporting', async () => {
+    const route = await import('$app/api/systeme/journal-activite/route');
+
+    mockRequirePermission
+      .mockReturnValueOnce({ success: true })
+      .mockReturnValueOnce({
+        response: Response.json(
+          {
+            error: { code: ErrorCode.FORBIDDEN, message: 'Accès refusé' },
+            success: false,
+          },
+          { status: 403 },
+        ),
+        success: false,
+      });
+    const forbiddenResponse = await route.GET(
+      new Request(
+        'http://localhost/api/systeme/journal-activite?format=csv&period=all',
+      ) as never,
     );
-    expect(mockPrisma.auditLog.findMany).toHaveBeenNthCalledWith(
-      3,
+
+    expect(forbiddenResponse.status).toBe(403);
+    expect(mockPrisma.auditLog.findMany).not.toHaveBeenCalled();
+
+    mockRequireAuth.mockResolvedValueOnce({
+      session: { mfaVerifiedAt: null },
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'viewer-1',
+        passwordHash: undefined,
+      }),
+    });
+    mockRequirePermission.mockReturnValue({ success: true });
+    const stepUpResponse = await route.GET(
+      new Request(
+        'http://localhost/api/systeme/journal-activite?format=json&period=all',
+      ) as never,
+    );
+    const stepUpBody = await stepUpResponse.json();
+
+    expect(stepUpResponse.status).toBe(403);
+    expect(stepUpBody.error.code).toBe(ErrorCode.REAUTHENTICATION_REQUIRED);
+    expect(mockPrisma.auditLog.findMany).not.toHaveBeenCalled();
+  });
+
+  it('streams injection-safe filtered exports and audits the operation', async () => {
+    mockPrisma.auditLog.findMany.mockReset();
+    mockCreateAuditLog.mockReset();
+    mockPrisma.auditLog.count.mockResolvedValueOnce(1);
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      {
+        action: 'USER_UPDATE',
+        actorDisplayNameSnapshot: ' \n=2+2',
+        actorLoginNameSnapshot: 'actor',
+        actorRoleSnapshot: 'ADMIN',
+        category: 'USER',
+        createdAt: new Date('2026-03-03T10:00:00.000Z'),
+        description: '=private description',
+        eventKind: 'ACTIVITY',
+        eventVersion: 1,
+        id: 'log-1',
+        ipAddress: '1.2.3.4',
+        metadata: { pageKey: 'users', passwordHash: 'never-export' },
+        outcome: 'SUCCESS',
+        pageKey: 'users',
+        poleKey: 'system',
+        requestId: 'request-private',
+        severity: 'INFO',
+        stream: 'IDENTITY',
+        tabKey: 'profile',
+        targetDisplayNameSnapshot: null,
+        targetLoginNameSnapshot: null,
+        targetRoleSnapshot: null,
+        targetUserId: null,
+        userAgent: 'private-agent',
+        userId: null,
+      },
+    ]);
+    const route = await import('$app/api/systeme/journal-activite/route');
+    const response = await route.GET(
+      new Request(
+        'http://localhost/api/systeme/journal-activite?format=csv&period=all&action=USER_UPDATE',
+      ) as never,
+    );
+
+    expect(mockCreateAuditLog).not.toHaveBeenCalled();
+
+    const csv = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toContain('text/csv');
+    expect(csv).toContain('"\' \n=2+2"');
+    expect(csv).toContain('Compte utilisateur modifié');
+    expect(csv).not.toContain('private description');
+    expect(csv).not.toContain('never-export');
+    expect(csv).not.toContain('request-private');
+    expect(csv).not.toContain('private-agent');
+    expect(response.headers.get('X-Export-Truncated')).toBe('false');
+    expect(mockCreateAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: {
-          AND: expect.arrayContaining([{ action: 'LOGIN_FAILED' }]),
-        },
+        action: 'AUDIT_EXPORT',
+        category: 'SYSTEM',
+        ipAddress: '203.0.113.5',
+        metadata: expect.objectContaining({
+          format: 'csv',
+          rowCount: 1,
+          truncated: false,
+        }),
+        requestId: 'request-test',
+        userId: 'viewer-1',
+      }),
+    );
+  });
+
+  it('streams a valid JSON export manifest for the active filters', async () => {
+    mockPrisma.auditLog.findMany.mockReset();
+    mockPrisma.auditLog.count.mockResolvedValueOnce(0);
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([]);
+    const route = await import('$app/api/systeme/journal-activite/route');
+    const response = await route.GET(
+      new Request(
+        'http://localhost/api/systeme/journal-activite?format=json&period=custom&from=2026-03-01T00%3A00%3A00.000Z&to=2026-03-02T00%3A00%3A00.000Z&search=alice',
+      ) as never,
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toContain('application/json');
+    expect(body).toMatchObject({
+      filters: {
+        from: '2026-03-01T00:00:00.000Z',
+        period: 'custom',
+        search: 'alice',
+        to: '2026-03-02T00:00:00.000Z',
+      },
+      logs: [],
+      rowCount: 0,
+      truncated: false,
+    });
+    expect(body.generatedAt).toEqual(expect.any(String));
+    expect(body.snapshotAt).toBe('2026-03-02T00:00:00.000Z');
+    expect(mockCreateAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'AUDIT_EXPORT',
+        metadata: expect.objectContaining({
+          format: 'json',
+          rowCount: 0,
+          truncated: false,
+        }),
       }),
     );
   });
@@ -3139,7 +3466,14 @@ describe('users access hardening', () => {
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
+    expect(body.data.sensitiveDetailsVisible).toBe(true);
     expect(body.data.logs[0].ipAddress).toBe('1.2.3.4');
-    expect(body.data.logs[0].metadata).toEqual(SYSTEM_SENSITIVE_AUDIT_METADATA);
+    expect(body.data.logs[0].metadata).toEqual({
+      ...SYSTEM_SAFE_AUDIT_METADATA,
+      after: { contactEmail: 'new@example.com' },
+      before: { contactEmail: 'old@example.com' },
+      changes: ['contactEmail'],
+    });
+    expect(body.data.logs[0].metadata).not.toHaveProperty('requestId');
   });
 });

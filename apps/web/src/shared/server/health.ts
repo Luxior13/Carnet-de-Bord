@@ -17,7 +17,13 @@ const NO_STORE_HEADERS = {
 } as const;
 
 type SchemaCheckRow = {
+  auditEventKinds: number;
   auditLogColumns: number;
+  auditOutcomes: number;
+  auditSeverities: number;
+  auditSnapshotTriggers: number;
+  auditStreams: number;
+  durableAuditActions: number;
   loginNameReservationColumns: number;
   mfaAuditActions: number;
   mfaAuthenticationMethods: number;
@@ -112,7 +118,11 @@ export async function createReadinessResponse(): Promise<
               WHERE table_name = 'AuditLog'
                 AND column_name IN (
                   'id', 'action', 'category', 'userId', 'targetUserId',
-                  'metadata'
+                  'metadata', 'actorDisplayNameSnapshot',
+                  'actorLoginNameSnapshot', 'actorRoleSnapshot',
+                  'targetDisplayNameSnapshot', 'targetLoginNameSnapshot',
+                  'targetRoleSnapshot', 'eventVersion', 'requestId',
+                  'eventKind', 'stream', 'outcome', 'severity'
                 )
             )::int AS "auditLogColumns",
             COUNT(*) FILTER (
@@ -165,9 +175,78 @@ export async function createReadinessResponse(): Promise<
                 AND enum_value.enumlabel IN (
                   'MFA_ENABLED', 'MFA_DISABLED',
                   'MFA_RECOVERY_CODE_USED',
-                  'MFA_RECOVERY_CODES_REGENERATED'
+                  'MFA_RECOVERY_CODES_REGENERATED', 'MFA_RESET'
                 )
             ) AS "mfaAuditActions",
+            (
+              SELECT count(*)::int
+              FROM pg_enum enum_value
+              JOIN pg_type enum_type ON enum_type.oid = enum_value.enumtypid
+              JOIN pg_namespace enum_namespace
+                ON enum_namespace.oid = enum_type.typnamespace
+              WHERE enum_namespace.nspname = current_schema()
+                AND enum_type.typname = 'AuditAction'
+                AND enum_value.enumlabel IN (
+                  'MFA_RESET', 'AUDIT_EXPORT',
+                  'STEP_UP_SUCCESS', 'STEP_UP_FAILED'
+                )
+            ) AS "durableAuditActions",
+            (
+              SELECT count(*)::int
+              FROM pg_enum enum_value
+              JOIN pg_type enum_type ON enum_type.oid = enum_value.enumtypid
+              JOIN pg_namespace enum_namespace
+                ON enum_namespace.oid = enum_type.typnamespace
+              WHERE enum_namespace.nspname = current_schema()
+                AND enum_type.typname = 'AuditEventKind'
+                AND enum_value.enumlabel IN ('ACTIVITY', 'CONNECTION')
+            ) AS "auditEventKinds",
+            (
+              SELECT count(*)::int
+              FROM pg_enum enum_value
+              JOIN pg_type enum_type ON enum_type.oid = enum_value.enumtypid
+              JOIN pg_namespace enum_namespace
+                ON enum_namespace.oid = enum_type.typnamespace
+              WHERE enum_namespace.nspname = current_schema()
+                AND enum_type.typname = 'AuditStream'
+                AND enum_value.enumlabel IN (
+                  'AUTHENTICATION', 'SECURITY', 'IDENTITY',
+                  'AUTHORIZATION', 'SYSTEM'
+                )
+            ) AS "auditStreams",
+            (
+              SELECT count(*)::int
+              FROM pg_enum enum_value
+              JOIN pg_type enum_type ON enum_type.oid = enum_value.enumtypid
+              JOIN pg_namespace enum_namespace
+                ON enum_namespace.oid = enum_type.typnamespace
+              WHERE enum_namespace.nspname = current_schema()
+                AND enum_type.typname = 'AuditOutcome'
+                AND enum_value.enumlabel IN ('SUCCESS', 'FAILURE', 'NEUTRAL')
+            ) AS "auditOutcomes",
+            (
+              SELECT count(*)::int
+              FROM pg_enum enum_value
+              JOIN pg_type enum_type ON enum_type.oid = enum_value.enumtypid
+              JOIN pg_namespace enum_namespace
+                ON enum_namespace.oid = enum_type.typnamespace
+              WHERE enum_namespace.nspname = current_schema()
+                AND enum_type.typname = 'AuditSeverity'
+                AND enum_value.enumlabel IN ('INFO', 'WARNING', 'CRITICAL')
+            ) AS "auditSeverities",
+            (
+              SELECT count(*)::int
+              FROM pg_trigger audit_trigger
+              JOIN pg_class audit_table
+                ON audit_table.oid = audit_trigger.tgrelid
+              JOIN pg_namespace audit_namespace
+                ON audit_namespace.oid = audit_table.relnamespace
+              WHERE audit_namespace.nspname = current_schema()
+                AND audit_table.relname = 'AuditLog'
+                AND audit_trigger.tgname = 'AuditLog_immutable_identity_snapshots'
+                AND NOT audit_trigger.tgisinternal
+                AND audit_trigger.tgenabled <> 'D'
+            ) AS "auditSnapshotTriggers",
             (
               SELECT count(*)::int
               FROM pg_enum enum_value
@@ -209,9 +288,15 @@ export async function createReadinessResponse(): Promise<
         if (
           schema?.userColumns !== 15 ||
           schema.sessionColumns !== 10 ||
-          schema.auditLogColumns !== 6 ||
+          schema.auditEventKinds !== 2 ||
+          schema.auditLogColumns !== 18 ||
+          schema.auditOutcomes !== 3 ||
+          schema.auditSeverities !== 3 ||
+          schema.auditSnapshotTriggers !== 1 ||
+          schema.auditStreams !== 5 ||
+          schema.durableAuditActions !== 4 ||
           schema.loginNameReservationColumns !== 3 ||
-          schema.mfaAuditActions !== 4 ||
+          schema.mfaAuditActions !== 5 ||
           schema.mfaAuthenticationMethods !== 2 ||
           schema.mfaChallengePurposes !== 2 ||
           schema.mfaLoginChallengeColumns !== 11 ||

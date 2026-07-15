@@ -395,6 +395,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [auditTotalLogs, setAuditTotalLogs] = useState<number | null>(null);
   const [auditStats, setAuditStats] = useState<UserAuditStats | null>(null);
+  const [isExportingAudit, setIsExportingAudit] = useState(false);
   const [auditFacets, setAuditFacets] = useState<UserHistoryFacets | null>(
     null,
   );
@@ -2086,6 +2087,69 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const auditExportParams = new URLSearchParams({ format: 'csv' });
   appendUserAuditFilters(auditExportParams, auditFilters);
   const auditExportHref = `/api/users/${userId}/audit?${auditExportParams.toString()}`;
+
+  async function handleAuditExport(): Promise<void> {
+    if (isExportingAudit) return;
+
+    try {
+      setIsExportingAudit(true);
+      const response = await fetch(auditExportHref, { cache: 'no-store' });
+
+      if (!response.ok) {
+        let errorBody: unknown = null;
+        try {
+          errorBody = await response.clone().json();
+        } catch {
+          // Infrastructure errors are not guaranteed to be JSON.
+        }
+
+        if (
+          requestStepUpForResponse(errorBody, {
+            description:
+              'L’export contient l’historique de sécurité de ce compte.',
+            execute: handleAuditExport,
+            title: 'Confirmer l’export du journal',
+          })
+        ) {
+          return;
+        }
+
+        const errorMessage = (
+          errorBody as { error?: { message?: unknown } } | null
+        )?.error?.message;
+        throw new Error(
+          typeof errorMessage === 'string'
+            ? errorMessage
+            : 'Impossible d’exporter l’activité de cet utilisateur',
+        );
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = `activite-utilisateur_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+
+      if (response.headers.get('X-Export-Truncated') === 'true') {
+        toast.warning('Export limité aux 50 000 événements les plus récents');
+      } else {
+        toast.success('Export complet prêt');
+      }
+    } catch (exportError) {
+      toast.error(
+        exportError instanceof Error
+          ? exportError.message
+          : 'Impossible d’exporter l’activité de cet utilisateur',
+      );
+    } finally {
+      setIsExportingAudit(false);
+    }
+  }
+
   const hasMoreAuditLogs =
     auditTotalLogs !== null && auditLogs.length < auditTotalLogs;
   const shouldShowAuditLoading =
@@ -2191,14 +2255,21 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             auditLogs={auditLogs}
             canExport={canExportUsers}
             error={auditError}
-            exportHref={canExportUsers ? auditExportHref : undefined}
             facets={auditFacets}
             filters={auditFilters}
             hasMoreAuditLogs={hasMoreAuditLogs}
             isAuditTruncated={hasMoreAuditLogs}
+            isExporting={isExportingAudit}
             isLoading={shouldShowAuditLoading}
             isLoadingMore={isLoadingMoreAudit}
             onFiltersChange={handleAuditFiltersChange}
+            onExport={
+              canExportUsers
+                ? (): void => {
+                    void handleAuditExport();
+                  }
+                : undefined
+            }
             onLoadMore={() => void fetchMoreAuditData()}
             onRetry={() => void fetchAuditData(true)}
             perspective={isSelf ? 'personal' : 'managed'}

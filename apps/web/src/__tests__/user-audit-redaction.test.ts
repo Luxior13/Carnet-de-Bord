@@ -22,6 +22,11 @@ vi.mock('$server/api-auth', () => ({
   requirePermission: mockRequirePermission,
 }));
 
+vi.mock('$server/auth', () => ({
+  createAuditLog: vi.fn(),
+  getAuditRequestContext: vi.fn(),
+}));
+
 vi.mock('$server/prisma', () => ({
   prisma: mockPrisma,
 }));
@@ -35,7 +40,7 @@ const SAFE_CONTEXT_METADATA = {
   tabLabel: 'Profile',
 };
 
-const SENSITIVE_METADATA = {
+const VISIBLE_SENSITIVE_METADATA = {
   ...SAFE_CONTEXT_METADATA,
   after: {
     contactEmail: 'new@example.com',
@@ -46,8 +51,12 @@ const SENSITIVE_METADATA = {
     loginName: 'old.login',
   },
   changes: ['loginName', 'contactEmail'],
-  requestId: 'private-request-id',
   targetName: 'Target User',
+};
+
+const SENSITIVE_METADATA = {
+  ...VISIBLE_SENSITIVE_METADATA,
+  requestId: 'private-request-id',
 };
 
 const buildLog = (
@@ -115,7 +124,7 @@ describe('user audit detail redaction', () => {
     expect(response.status).toBe(200);
     expect(body.data.logs[0]).toMatchObject({
       ipAddress: '203.0.113.10',
-      metadata: SENSITIVE_METADATA,
+      metadata: VISIBLE_SENSITIVE_METADATA,
       userAgent: 'Sensitive browser details',
       userId: 'target-1',
     });
@@ -205,7 +214,7 @@ describe('user audit detail redaction', () => {
     expect(response.status).toBe(200);
     expect(body.data.logs[0]).toMatchObject({
       ipAddress: '203.0.113.10',
-      metadata: SENSITIVE_METADATA,
+      metadata: VISIBLE_SENSITIVE_METADATA,
       userAgent: 'Sensitive browser details',
     });
   });

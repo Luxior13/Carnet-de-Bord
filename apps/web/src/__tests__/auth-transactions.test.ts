@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => {
     },
     user: {
       create: vi.fn(),
+      findMany: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
     },
@@ -36,6 +37,7 @@ const mocks = vi.hoisted(() => {
         updateMany: vi.fn(),
       },
       user: {
+        findMany: vi.fn(),
         findUnique: vi.fn(),
         update: vi.fn(),
       },
@@ -173,6 +175,35 @@ describe('auth security transactions', () => {
     });
     mocks.transaction.session.deleteMany.mockResolvedValue({ count: 2 });
     mocks.transaction.session.updateMany.mockResolvedValue({ count: 1 });
+    mocks.transaction.user.findMany.mockImplementation(
+      async ({ where }: { where: { id: { in: string[] } } }) => {
+        const users = [
+          {
+            firstName: 'Jean',
+            id: 'user-1',
+            lastName: 'Dupont',
+            loginName: 'user.name',
+            role: 'USER' as const,
+          },
+          {
+            firstName: 'Ada',
+            id: 'admin-1',
+            lastName: 'Admin',
+            loginName: 'admin',
+            role: 'ADMIN' as const,
+          },
+          {
+            firstName: 'New',
+            id: 'new-user',
+            lastName: 'User',
+            loginName: 'new.user',
+            role: 'USER' as const,
+          },
+        ];
+
+        return users.filter((user) => where.id.in.includes(user.id));
+      },
+    );
     mocks.transaction.user.update.mockResolvedValue({ id: 'user-1' });
     mocks.transaction.user.updateMany.mockResolvedValue({ count: 1 });
     mocks.prisma.session.deleteMany.mockResolvedValue({ count: 1 });
@@ -238,10 +269,19 @@ describe('auth security transactions', () => {
     expect(mocks.transaction.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         action: 'LOGIN_SUCCESS',
+        actorDisplayNameSnapshot: 'Jean Dupont',
+        actorLoginNameSnapshot: 'user.name',
+        actorRoleSnapshot: 'USER',
+        eventKind: 'CONNECTION',
+        eventVersion: 1,
         ipAddress: '203.0.113.9',
         metadata: expect.objectContaining({
           requestId: '123e4567-e89b-42d3-a456-426614174000',
         }),
+        outcome: 'SUCCESS',
+        requestId: '123e4567-e89b-42d3-a456-426614174000',
+        severity: 'INFO',
+        stream: 'AUTHENTICATION',
         userId: 'user-1',
       }),
     });

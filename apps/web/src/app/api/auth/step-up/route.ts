@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { requireAuth } from '$server/api-auth';
 import { apiErrors, parseJsonBody } from '$server/api-response';
-import { verifyPassword } from '$server/auth';
+import { createAuditLogWithHeaders, verifyPassword } from '$server/auth';
 import {
   consumeVerifiedMfaProof,
   MFA_TOTP_CODE_PATTERN,
@@ -25,6 +25,33 @@ import { isPasswordWithinBcryptLimit } from '$utils/password.utils';
 
 type StepUpResponse = {
   expiresAt: string;
+};
+
+const STEP_UP_AUDIT_LOCATION = {
+  pageKey: 'authentication',
+  pageLabel: 'Authentification',
+  poleKey: 'system',
+  poleLabel: 'Système',
+  tabKey: 'step-up',
+  tabLabel: 'Confirmation renforcée',
+} as const;
+
+const recordStepUpFailure = async (
+  userId: string,
+  reason: string,
+): Promise<void> => {
+  await createAuditLogWithHeaders({
+    action: 'STEP_UP_FAILED',
+    category: 'AUTH',
+    description: 'Confirmation renforcée échouée',
+    metadata: {
+      ...STEP_UP_AUDIT_LOCATION,
+      authenticationMethod: 'TOTP',
+      reason,
+    },
+    targetUserId: userId,
+    userId,
+  });
 };
 
 const stepUpSchema = z
@@ -62,9 +89,12 @@ export async function POST(
 ): Promise<
   NextResponse<ApiSuccessResponse<StepUpResponse> | ApiErrorResponse>
 > {
+  let authenticatedUserId: string | null = null;
+
   try {
     const auth = await requireAuth();
     if (!auth.success) return auth.response;
+    authenticatedUserId = auth.user.id;
     if (!auth.session) {
       return NextResponse.json(
         {
@@ -100,6 +130,8 @@ export async function POST(
       !storedUser.totpCredential ||
       storedUser.securityVersion !== currentSession.securityVersion
     ) {
+      await recordStepUpFailure(auth.user.id, 'SECURITY_STATE_CHANGED');
+
       return NextResponse.json(
         {
           error: {
@@ -124,6 +156,8 @@ export async function POST(
       storedUser.passwordHash,
     );
     if (!passwordValid) {
+      await recordStepUpFailure(storedUser.id, 'PASSWORD_INVALID');
+
       return NextResponse.json(
         {
           error: {
@@ -150,6 +184,8 @@ export async function POST(
       userId: storedUser.id,
     });
     if (!proof || proof.method !== 'TOTP') {
+      await recordStepUpFailure(storedUser.id, 'TOTP_INVALID');
+
       return NextResponse.json(
         {
           error: {
@@ -188,6 +224,21 @@ export async function POST(
         userId: storedUser.id,
       });
 
+      await createAuditLogWithHeaders(
+        {
+          action: 'STEP_UP_SUCCESS',
+          category: 'AUTH',
+          description: 'Confirmation renforcée réussie',
+          metadata: {
+            ...STEP_UP_AUDIT_LOCATION,
+            authenticationMethod: 'TOTP',
+          },
+          targetUserId: storedUser.id,
+          userId: storedUser.id,
+        },
+        { client: transaction, required: true },
+      );
+
       await transaction.rateLimit.deleteMany({
         where: { key: { in: [passwordRateLimitKey, totpRateLimitKey] } },
       });
@@ -203,6 +254,10 @@ export async function POST(
     });
   } catch (error) {
     if (error instanceof MfaReplayDetectedError) {
+      if (authenticatedUserId) {
+        await recordStepUpFailure(authenticatedUserId, 'PROOF_REPLAYED');
+      }
+
       return NextResponse.json(
         {
           error: {

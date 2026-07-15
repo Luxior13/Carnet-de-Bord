@@ -1,11 +1,18 @@
 import type { Prisma } from '@prisma/client';
+import { AuditAction, AuditCategory } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { PAGINATION } from '$constants/pagination.constants';
-import { PERMISSIONS } from '$constants/permissions.constants';
+import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors, parsePagination } from '$server/api-response';
+import {
+  getVisibleAuditDescription,
+  sanitizeAuditMetadata,
+} from '$server/audit-visibility';
+import { createAuditLog, getAuditRequestContext } from '$server/auth';
 import { prisma } from '$server/prisma';
+import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -56,16 +63,9 @@ type AuditResponse = {
   stats: UserAuditStats | null;
 };
 
-const SAFE_AUDIT_METADATA_KEYS = new Set([
-  'pageKey',
-  'pageLabel',
-  'poleKey',
-  'poleLabel',
-  'tabKey',
-  'tabLabel',
-]);
 const ALLOWED_PERIOD_DAYS = new Set([7, 30, 90]);
 const AUDIT_EXPORT_BATCH_SIZE = 500;
+const AUDIT_EXPORT_MAX_ROWS = 50_000;
 
 const AUDIT_LOG_SELECT = {
   action: true,
@@ -86,52 +86,6 @@ const AUDIT_LOG_SELECT = {
 type AuditLogRecord = Prisma.AuditLogGetPayload<{
   select: typeof AUDIT_LOG_SELECT;
 }>;
-
-const PUBLIC_AUDIT_DESCRIPTIONS: Record<AuditLogRecord['action'], string> = {
-  ACCOUNT_LOCKED: 'Compte verrouillé',
-  LOGIN_FAILED: 'Tentative de connexion échouée',
-  LOGIN_SUCCESS: 'Connexion réussie',
-  LOGOUT: 'Déconnexion',
-  MFA_DISABLED: 'Double authentification désactivée',
-  MFA_ENABLED: 'Double authentification activée',
-  MFA_RECOVERY_CODE_USED: 'Code de secours utilisé',
-  MFA_RECOVERY_CODES_REGENERATED: 'Codes de secours renouvelés',
-  PASSWORD_CHANGE: 'Mot de passe modifié',
-  PASSWORD_RESET: 'Mot de passe réinitialisé',
-  PERMISSION_UPDATE: 'Autorisations modifiées',
-  SESSION_INVALIDATE: 'Sessions révoquées',
-  USER_ACTIVATE: 'Compte activé',
-  USER_CREATE: 'Compte utilisateur créé',
-  USER_DEACTIVATE: 'Compte désactivé',
-  USER_DELETE: 'Compte utilisateur supprimé',
-  USER_UPDATE: 'Compte utilisateur modifié',
-};
-
-const toAuditMetadata = (value: unknown): Record<string, unknown> | null => {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-
-  return value as Record<string, unknown>;
-};
-
-const getVisibleAuditMetadata = (
-  value: unknown,
-  canViewFullDetails: boolean,
-): Record<string, unknown> | null => {
-  const metadata = toAuditMetadata(value);
-
-  if (!metadata || canViewFullDetails) return metadata;
-
-  const safeMetadata = Object.fromEntries(
-    Object.entries(metadata).filter(
-      ([key, entryValue]) =>
-        SAFE_AUDIT_METADATA_KEYS.has(key) &&
-        typeof entryValue === 'string' &&
-        entryValue.trim().length > 0,
-    ),
-  );
-
-  return Object.keys(safeMetadata).length > 0 ? safeMetadata : null;
-};
 
 const getTextFilter = (value: string | null): string | undefined => {
   if (!value || value === 'all') return undefined;
@@ -205,14 +159,17 @@ const buildAuditWhere = (
 const getVisibleAuditLog = (
   log: AuditLogRecord,
   options: {
+    canViewSensitiveDetails: boolean;
     isOwnAudit: boolean;
-    isProtectedViewer: boolean;
     viewedUserId: string;
   },
 ): AuditLogEntry => {
+  const isOwnPersonalEvent =
+    options.isOwnAudit &&
+    log.userId === options.viewedUserId &&
+    (log.targetUserId === null || log.targetUserId === options.viewedUserId);
   const canViewFullDetails =
-    options.isProtectedViewer ||
-    (options.isOwnAudit && log.userId === options.viewedUserId);
+    options.canViewSensitiveDetails || isOwnPersonalEvent;
   const canViewPersonalSecuritySource =
     options.isOwnAudit &&
     log.targetUserId === options.viewedUserId &&
@@ -222,15 +179,18 @@ const getVisibleAuditLog = (
     action: log.action,
     category: log.category,
     createdAt: log.createdAt,
-    description: canViewFullDetails
-      ? log.description
-      : PUBLIC_AUDIT_DESCRIPTIONS[log.action],
+    description: getVisibleAuditDescription({
+      action: log.action,
+      canViewSensitiveDetails: canViewFullDetails,
+      category: log.category,
+      description: log.description,
+    }),
     id: log.id,
     ipAddress:
       canViewFullDetails || canViewPersonalSecuritySource
         ? log.ipAddress
         : null,
-    metadata: getVisibleAuditMetadata(log.metadata, canViewFullDetails),
+    metadata: sanitizeAuditMetadata(log.metadata, canViewFullDetails),
     targetUserId: log.targetUserId,
     userAgent:
       canViewFullDetails || canViewPersonalSecuritySource
@@ -255,7 +215,9 @@ const getMetadataText = (
 
 const escapeCsvCell = (value: unknown): string => {
   const rawValue = value === null || value === undefined ? '' : String(value);
-  const safeValue = /^[=+@-]/.test(rawValue) ? `'${rawValue}` : rawValue;
+  const safeValue = /^[=+@-]/.test(rawValue.trimStart())
+    ? `'${rawValue}`
+    : rawValue;
 
   return `"${safeValue.replaceAll('"', '""')}"`;
 };
@@ -263,67 +225,112 @@ const escapeCsvCell = (value: unknown): string => {
 const createAuditCsvResponse = (
   where: Prisma.AuditLogWhereInput,
   options: {
+    canViewSensitiveDetails: boolean;
     isOwnAudit: boolean;
-    isProtectedViewer: boolean;
+    onComplete: (summary: {
+      rowCount: number;
+      truncated: boolean;
+    }) => Promise<void>;
+    truncated: boolean;
     viewedUserId: string;
   },
 ): Response => {
   const encoder = new TextEncoder();
+  let cancelled = false;
+  let cursor: string | undefined;
+  let exportedRows = 0;
+  let finished = false;
+  let initialized = false;
+  let shouldFinalize = false;
   const stream = new ReadableStream<Uint8Array>({
-    async start(controller): Promise<void> {
+    cancel(): void {
+      cancelled = true;
+      finished = true;
+    },
+    async pull(controller): Promise<void> {
+      if (cancelled || finished) return;
+
       try {
-        controller.enqueue(
-          encoder.encode(
-            '\ufeffDate;Action;Catégorie;Description;Pôle;Page;Onglet;Adresse IP;Acteur;Compte concerné\r\n',
-          ),
-        );
+        if (!initialized) {
+          initialized = true;
+          controller.enqueue(
+            encoder.encode(
+              '\ufeffDate;Action;Catégorie;Description;Pôle;Page;Onglet;Adresse IP;Acteur;Compte concerné\r\n',
+            ),
+          );
 
-        let cursor: string | undefined;
-
-        while (true) {
-          const logs = await prisma.auditLog.findMany({
-            cursor: cursor ? { id: cursor } : undefined,
-            orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-            select: AUDIT_LOG_SELECT,
-            skip: cursor ? 1 : 0,
-            take: AUDIT_EXPORT_BATCH_SIZE,
-            where,
-          });
-
-          if (logs.length === 0) break;
-
-          const rows = logs.map((log) => {
-            const visibleLog = getVisibleAuditLog(log, options);
-            const poleLabel =
-              getMetadataText(visibleLog.metadata, 'poleLabel') ?? log.poleKey;
-            const pageLabel =
-              getMetadataText(visibleLog.metadata, 'pageLabel') ?? log.pageKey;
-            const tabLabel =
-              getMetadataText(visibleLog.metadata, 'tabLabel') ?? log.tabKey;
-
-            return [
-              visibleLog.createdAt.toISOString(),
-              visibleLog.action,
-              visibleLog.category,
-              visibleLog.description,
-              poleLabel,
-              pageLabel,
-              tabLabel,
-              visibleLog.ipAddress,
-              visibleLog.userId,
-              visibleLog.targetUserId,
-            ]
-              .map(escapeCsvCell)
-              .join(';');
-          });
-
-          controller.enqueue(encoder.encode(`${rows.join('\r\n')}\r\n`));
-          cursor = logs.at(-1)?.id;
-          if (logs.length < AUDIT_EXPORT_BATCH_SIZE || !cursor) break;
+          return;
         }
 
-        controller.close();
+        if (shouldFinalize) {
+          finished = true;
+          await options.onComplete({
+            rowCount: exportedRows,
+            truncated: options.truncated,
+          });
+          if (!cancelled) controller.close();
+
+          return;
+        }
+
+        const remainingRows = AUDIT_EXPORT_MAX_ROWS - exportedRows;
+        if (remainingRows <= 0) {
+          shouldFinalize = true;
+
+          return;
+        }
+
+        const take = Math.min(AUDIT_EXPORT_BATCH_SIZE, remainingRows);
+        const logs = await prisma.auditLog.findMany({
+          cursor: cursor ? { id: cursor } : undefined,
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          select: AUDIT_LOG_SELECT,
+          skip: cursor ? 1 : 0,
+          take,
+          where,
+        });
+
+        if (cancelled) return;
+        if (logs.length === 0) {
+          shouldFinalize = true;
+
+          return;
+        }
+
+        const rows = logs.map((log) => {
+          const visibleLog = getVisibleAuditLog(log, options);
+          const poleLabel =
+            getMetadataText(visibleLog.metadata, 'poleLabel') ?? log.poleKey;
+          const pageLabel =
+            getMetadataText(visibleLog.metadata, 'pageLabel') ?? log.pageKey;
+          const tabLabel =
+            getMetadataText(visibleLog.metadata, 'tabLabel') ?? log.tabKey;
+
+          return [
+            visibleLog.createdAt.toISOString(),
+            visibleLog.action,
+            visibleLog.category,
+            visibleLog.description,
+            poleLabel,
+            pageLabel,
+            tabLabel,
+            visibleLog.ipAddress,
+            visibleLog.userId,
+            visibleLog.targetUserId,
+          ]
+            .map(escapeCsvCell)
+            .join(';');
+        });
+
+        controller.enqueue(encoder.encode(`${rows.join('\r\n')}\r\n`));
+        exportedRows += logs.length;
+        cursor = logs.at(-1)?.id;
+        shouldFinalize =
+          logs.length < take ||
+          !cursor ||
+          exportedRows >= AUDIT_EXPORT_MAX_ROWS;
       } catch (error) {
+        finished = true;
         controller.error(error);
       }
     },
@@ -336,6 +343,8 @@ const createAuditCsvResponse = (
       'Content-Disposition': `attachment; filename="activite-utilisateur-${date}.csv"`,
       'Content-Type': 'text/csv; charset=utf-8',
       'X-Content-Type-Options': 'nosniff',
+      'X-Export-Max-Rows': String(AUDIT_EXPORT_MAX_ROWS),
+      'X-Export-Truncated': String(options.truncated),
     },
   });
 };
@@ -457,6 +466,11 @@ export async function GET(
       if (!exportCheck.success) return exportCheck.response;
     }
 
+    if (wantsCsvExport) {
+      const proofCheck = requireRecentSensitiveActionProof(auth.session);
+      if (!proofCheck.success) return proofCheck.response;
+    }
+
     const user = await prisma.user.findUnique({
       select: { id: true },
       where: { id },
@@ -477,14 +491,64 @@ export async function GET(
 
     const filters = getAuditFilters(searchParams);
     const whereClause = buildAuditWhere(id, filters);
+    const canViewSensitiveDetails =
+      auth.user.isProtected ||
+      hasPermission(
+        auth.user.role,
+        PERMISSIONS.SYSTEM.AUDIT_SENSITIVE,
+        auth.user.permissions,
+      );
     const visibilityOptions = {
+      canViewSensitiveDetails,
       isOwnAudit,
-      isProtectedViewer: auth.user.isProtected,
       viewedUserId: id,
     };
 
     if (wantsCsvExport) {
-      return createAuditCsvResponse(whereClause, visibilityOptions);
+      const generatedAt = new Date();
+      const exportWhereClause: Prisma.AuditLogWhereInput = {
+        AND: [whereClause, { createdAt: { lte: generatedAt } }],
+      };
+      const rowCount = await prisma.auditLog.count({
+        where: exportWhereClause,
+      });
+      const truncated = rowCount > AUDIT_EXPORT_MAX_ROWS;
+      const auditRequestContext = await getAuditRequestContext();
+      const exportFilters = {
+        ...(filters.pageKey ? { pageKey: filters.pageKey } : {}),
+        ...(filters.periodDays ? { periodDays: filters.periodDays } : {}),
+        ...(filters.poleKey ? { poleKey: filters.poleKey } : {}),
+        scope: filters.scope,
+      };
+
+      return createAuditCsvResponse(exportWhereClause, {
+        ...visibilityOptions,
+        onComplete: async (summary) => {
+          await createAuditLog({
+            action: AuditAction.AUDIT_EXPORT,
+            category: AuditCategory.SYSTEM,
+            description: "Export du journal d'activité d'un utilisateur (CSV)",
+            ...auditRequestContext,
+            metadata: {
+              filters: exportFilters,
+              format: 'csv',
+              generatedAt: generatedAt.toISOString(),
+              pageKey: 'users',
+              pageLabel: 'Utilisateurs & permissions',
+              poleKey: 'system',
+              poleLabel: 'Système',
+              rowCount: summary.rowCount,
+              snapshotAt: generatedAt.toISOString(),
+              tabKey: 'activity',
+              tabLabel: 'Activité',
+              truncated: summary.truncated,
+            },
+            targetUserId: id,
+            userId: auth.user.id,
+          });
+        },
+        truncated,
+      });
     }
 
     const {

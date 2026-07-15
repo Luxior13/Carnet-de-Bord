@@ -1,6 +1,10 @@
 import {
   AuditAction,
   AuditCategory,
+  AuditEventKind,
+  AuditOutcome,
+  AuditSeverity,
+  AuditStream,
   Prisma,
   PrismaClient,
   UserRole,
@@ -24,8 +28,10 @@ const REQUIRED_TABLES = [
 type RootRow = {
   deletedAt: Date | null;
   failedLoginAttempts: number;
+  firstName: string;
   id: string;
   isActive: boolean;
+  lastName: string;
   lockedUntil: Date | null;
   loginName: string;
   mfaEnabledAt: Date | null;
@@ -133,9 +139,7 @@ try {
     );
   }
 
-  const [mfaDisabledAuditAction] = await prisma.$queryRaw<
-    { exists: boolean }[]
-  >`
+  const [mfaResetAuditAction] = await prisma.$queryRaw<{ exists: boolean }[]>`
     SELECT EXISTS (
       SELECT 1
       FROM "pg_catalog"."pg_enum" enum_value
@@ -145,13 +149,13 @@ try {
         ON enum_namespace."oid" = enum_type."typnamespace"
       WHERE enum_namespace."nspname" = 'public'
         AND enum_type."typname" = 'AuditAction'
-        AND enum_value."enumlabel" = 'MFA_DISABLED'
+        AND enum_value."enumlabel" = 'MFA_RESET'
     ) AS "exists"
   `;
 
-  if (!mfaDisabledAuditAction?.exists) {
+  if (!mfaResetAuditAction?.exists) {
     throw new Error(
-      'Schéma MFA incomplet : la valeur AuditAction.MFA_DISABLED est absente. Appliquez les migrations.',
+      'Schéma MFA incomplet : la valeur AuditAction.MFA_RESET est absente. Appliquez les migrations.',
     );
   }
 
@@ -159,8 +163,10 @@ try {
     select: {
       deletedAt: true,
       failedLoginAttempts: true,
+      firstName: true,
       id: true,
       isActive: true,
+      lastName: true,
       lockedUntil: true,
       loginName: true,
       mfaEnabledAt: true,
@@ -189,7 +195,9 @@ try {
             "isActive",
             "deletedAt",
             "failedLoginAttempts",
+            "firstName",
             "lockedUntil",
+            "lastName",
             "mfaEnabledAt"
           FROM "public"."User"
           WHERE "isProtected" = true
@@ -248,10 +256,12 @@ try {
 
         await transaction.auditLog.create({
           data: {
-            action: AuditAction.MFA_DISABLED,
+            action: AuditAction.MFA_RESET,
             category: AuditCategory.AUTH,
             description:
               'Double authentification racine réinitialisée hors ligne',
+            eventKind: AuditEventKind.ACTIVITY,
+            eventVersion: 1,
             metadata: {
               deletedChallenges: deletedChallenges.count,
               deletedCredentials: deletedCredentials.count,
@@ -264,6 +274,14 @@ try {
               previousMfaEnabled: root.mfaEnabledAt !== null,
               recoveryMode: 'OFFLINE_ROOT_MFA_RESET',
             },
+            outcome: AuditOutcome.SUCCESS,
+            severity: AuditSeverity.CRITICAL,
+            stream: AuditStream.SECURITY,
+            targetDisplayNameSnapshot:
+              `${root.firstName.trim()} ${root.lastName.trim()}`.trim() ||
+              root.loginName,
+            targetLoginNameSnapshot: root.loginName,
+            targetRoleSnapshot: root.role,
             targetUserId: root.id,
           },
         });

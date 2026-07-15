@@ -60,6 +60,7 @@ export const PERMISSIONS = {
   SYSTEM: {
     ARCHIVES: 'system:archives',
     AUDIT: 'system:audit',
+    AUDIT_SENSITIVE: 'system:audit_sensitive',
     AUTOMATION: 'system:automation',
     EXPORTS: 'system:exports',
     SETTINGS: 'system:settings',
@@ -662,6 +663,16 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         risk: 'sensitive',
       },
       {
+        action: 'view',
+        dependencies: [PERMISSIONS.SYSTEM.AUDIT],
+        description:
+          "Consulter les détails techniques sensibles du journal d'activité",
+        key: PERMISSIONS.SYSTEM.AUDIT_SENSITIVE,
+        label: 'Voir les détails sensibles du journal',
+        module: 'Audit',
+        risk: 'critical',
+      },
+      {
         action: 'manage',
         dependencies: [PERMISSIONS.SYSTEM.VIEW],
         description: 'Modifier les paramètres globaux du site privé',
@@ -1068,7 +1079,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     ...Object.values(PERMISSIONS.DOCUMENTS),
     ...Object.values(PERMISSIONS.CONTRACTS),
     ...Object.values(PERMISSIONS.INCIDENTS),
-    ...Object.values(PERMISSIONS.SYSTEM),
+    ...Object.values(PERMISSIONS.SYSTEM).filter(
+      (permissionKey) => permissionKey !== PERMISSIONS.SYSTEM.AUDIT_SENSITIVE,
+    ),
     ...Object.values(PERMISSIONS.TREASURY),
     ...Object.values(PERMISSIONS.USERS).filter(
       (permissionKey) =>

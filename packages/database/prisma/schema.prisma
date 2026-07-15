@@ -196,12 +196,16 @@ enum AuditAction {
   MFA_DISABLED
   MFA_RECOVERY_CODE_USED
   MFA_RECOVERY_CODES_REGENERATED
+  MFA_RESET
+  STEP_UP_SUCCESS
+  STEP_UP_FAILED
   USER_CREATE
   USER_UPDATE
   USER_DELETE
   USER_ACTIVATE
   USER_DEACTIVATE
   PERMISSION_UPDATE
+  AUDIT_EXPORT
 }
 
 enum AuditCategory {
@@ -211,22 +215,59 @@ enum AuditCategory {
   SYSTEM
 }
 
+enum AuditEventKind {
+  ACTIVITY
+  CONNECTION
+}
+
+enum AuditStream {
+  AUTHENTICATION
+  SECURITY
+  IDENTITY
+  AUTHORIZATION
+  SYSTEM
+}
+
+enum AuditOutcome {
+  SUCCESS
+  FAILURE
+  NEUTRAL
+}
+
+enum AuditSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
 model AuditLog {
-  id           String        @id @default(cuid())
-  userId       String?
-  user         User?         @relation("AuditActor", fields: [userId], references: [id], onDelete: SetNull)
-  targetUserId String?
-  targetUser   User?         @relation("AuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
-  action       AuditAction
-  category     AuditCategory
-  description  String
-  metadata     Json?
-  poleKey      String?
-  pageKey      String?
-  tabKey       String?
-  ipAddress    String?
-  userAgent    String?
-  createdAt    DateTime      @default(now())
+  id                         String        @id @default(cuid())
+  userId                     String?
+  user                       User?         @relation("AuditActor", fields: [userId], references: [id], onDelete: SetNull)
+  actorDisplayNameSnapshot   String?
+  actorLoginNameSnapshot     String?
+  actorRoleSnapshot          UserRole?
+  targetUserId               String?
+  targetUser                 User?         @relation("AuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  targetDisplayNameSnapshot  String?
+  targetLoginNameSnapshot    String?
+  targetRoleSnapshot         UserRole?
+  action                     AuditAction
+  category                   AuditCategory
+  eventKind                  AuditEventKind @default(ACTIVITY)
+  stream                     AuditStream    @default(SYSTEM)
+  outcome                    AuditOutcome   @default(SUCCESS)
+  severity                   AuditSeverity  @default(INFO)
+  eventVersion               Int            @default(1)
+  description                String
+  metadata                   Json?
+  poleKey                    String?
+  pageKey                    String?
+  tabKey                     String?
+  requestId                  String?
+  ipAddress                  String?
+  userAgent                  String?
+  createdAt                  DateTime       @default(now())
 
   @@index([userId])
   @@index([userId, action])
@@ -238,6 +279,11 @@ model AuditLog {
   @@index([poleKey, createdAt, id])
   @@index([poleKey, pageKey, createdAt, id])
   @@index([pageKey, createdAt, id])
+  @@index([eventKind, createdAt, id])
+  @@index([stream, createdAt, id])
+  @@index([outcome, createdAt, id])
+  @@index([severity, createdAt, id])
+  @@index([requestId])
   @@index([action])
   @@index([action, createdAt, id])
   @@index([category])

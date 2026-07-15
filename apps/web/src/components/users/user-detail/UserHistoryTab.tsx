@@ -66,8 +66,10 @@ type UserHistoryTabProps = {
   filters?: UserHistoryFilters;
   hasMoreAuditLogs?: boolean;
   isAuditTruncated?: boolean;
+  isExporting?: boolean;
   isLoading: boolean;
   isLoadingMore?: boolean;
+  onExport?: () => void;
   onFiltersChange?: (filters: UserHistoryFilters) => void;
   onLoadMore?: () => void;
   onRetry?: () => void;
@@ -1750,8 +1752,10 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   filters,
   hasMoreAuditLogs = false,
   isAuditTruncated = false,
+  isExporting = false,
   isLoading,
   isLoadingMore = false,
+  onExport,
   onFiltersChange,
   onLoadMore,
   onRetry,
@@ -2027,6 +2031,12 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   // Personal activity can still export the locally loaded subset. Managed
   // activity uses the server URL so the complete filtered journal is exported.
   const handleExport = (): void => {
+    if (onExport) {
+      onExport();
+
+      return;
+    }
+
     if (exportHref) {
       const link = document.createElement('a');
       link.href = exportHref;
@@ -2253,10 +2263,14 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                       size="sm"
                       className="h-11 gap-1.5"
                       onClick={handleExport}
-                      disabled={filteredLogs.length === 0}
+                      disabled={filteredLogs.length === 0 || isExporting}
                     >
-                      <Download className="size-3.5" />
-                      Exporter
+                      {isExporting ? (
+                        <RefreshCw className="size-3.5 animate-spin" />
+                      ) : (
+                        <Download className="size-3.5" />
+                      )}
+                      {isExporting ? 'Préparation…' : 'Exporter'}
                     </Button>
                   )}
                 </div>
@@ -2479,10 +2493,14 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                       size="sm"
                       className="h-11 gap-1.5"
                       onClick={handleExport}
-                      disabled={filteredLogs.length === 0}
+                      disabled={filteredLogs.length === 0 || isExporting}
                     >
-                      <Download className="size-3.5" />
-                      Exporter
+                      {isExporting ? (
+                        <RefreshCw className="size-3.5 animate-spin" />
+                      ) : (
+                        <Download className="size-3.5" />
+                      )}
+                      {isExporting ? 'Préparation…' : 'Exporter'}
                     </Button>
                   )}
                 </div>

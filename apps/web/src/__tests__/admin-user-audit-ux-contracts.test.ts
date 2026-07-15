@@ -28,16 +28,19 @@ describe('managed user audit UX contracts', () => {
     expect(userDetailSource).toContain('setAuditLoadedPage(1)');
   });
 
-  it('supports progressive loading, server filters and complete export', () => {
+  it('supports progressive loading, server filters and protected export', () => {
     expect(userDetailSource).toContain('fetchMoreAuditData');
     expect(userDetailSource).toContain("includeStats: 'false'");
     expect(userDetailSource).toContain('appendUserAuditFilters');
     expect(userDetailSource).toContain(
       'onFiltersChange={handleAuditFiltersChange}',
     );
-    expect(userDetailSource).toContain('exportHref={');
+    expect(userDetailSource).toContain('fetch(auditExportHref');
+    expect(userDetailSource).toContain('requestStepUpForResponse');
+    expect(userDetailSource).toContain('X-Export-Truncated');
+    expect(userDetailSource).toContain('onExport={');
     expect(historySource).toContain('isServerFiltering');
-    expect(historySource).toContain('Export complet lancé');
+    expect(historySource).toContain('isExporting');
   });
 
   it('shows a loading state before the first audit effect can run', () => {

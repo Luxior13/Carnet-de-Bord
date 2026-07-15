@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => {
 
   return {
     consumeVerifiedMfaProof: vi.fn(),
+    createAuditLogWithHeaders: vi.fn(),
     MfaReplayDetectedError,
     prisma: {
       $transaction: vi.fn(
@@ -38,6 +39,7 @@ vi.mock('$server/api-auth', () => ({
 }));
 
 vi.mock('$server/auth', () => ({
+  createAuditLogWithHeaders: mocks.createAuditLogWithHeaders,
   verifyPassword: mocks.verifyPassword,
 }));
 
@@ -219,6 +221,14 @@ describe('POST /api/auth/step-up', () => {
     expect(body.error.code).toBe(ErrorCode.INVALID_CREDENTIALS);
     expect(mocks.verifyMfaProof).not.toHaveBeenCalled();
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+    expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'STEP_UP_FAILED',
+        metadata: expect.objectContaining({ reason: 'PASSWORD_INVALID' }),
+        targetUserId: 'admin-user',
+        userId: 'admin-user',
+      }),
+    );
   });
 
   it('rejects an invalid TOTP without updating the session', async () => {
@@ -236,6 +246,14 @@ describe('POST /api/auth/step-up', () => {
     );
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.consumeVerifiedMfaProof).not.toHaveBeenCalled();
+    expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'STEP_UP_FAILED',
+        metadata: expect.objectContaining({ reason: 'TOTP_INVALID' }),
+        targetUserId: 'admin-user',
+        userId: 'admin-user',
+      }),
+    );
   });
 
   it('atomically refreshes the current session proof and consumes the TOTP', async () => {
@@ -271,6 +289,17 @@ describe('POST /api/auth/step-up', () => {
         proof,
         userId: 'admin-user',
       },
+    );
+    expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'STEP_UP_SUCCESS',
+        metadata: expect.objectContaining({
+          authenticationMethod: 'TOTP',
+        }),
+        targetUserId: 'admin-user',
+        userId: 'admin-user',
+      }),
+      { client: mocks.transaction, required: true },
     );
     expect(mocks.transaction.rateLimit.deleteMany).toHaveBeenCalledWith({
       where: {
