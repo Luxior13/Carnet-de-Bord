@@ -329,6 +329,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     useState<PendingNavigation | null>(null);
   const [showUnsavedNavigationConfirm, setShowUnsavedNavigationConfirm] =
     useState(false);
+  const [showLoginChangeConfirm, setShowLoginChangeConfirm] = useState(false);
   const skipSectionNavigationGuardRef = useRef(false);
   const userAbortControllerRef = useRef<AbortController | null>(null);
   const auditAbortControllerRef = useRef<AbortController | null>(null);
@@ -400,6 +401,14 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       hasPermission(
         currentUser.role,
         PERMISSIONS.USERS.UPDATE_CONTACT,
+        currentUser.permissions,
+      )
+    : false;
+  const canUpdateUserLogin = currentUser
+    ? isProtectedActor ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.UPDATE_LOGIN,
         currentUser.permissions,
       )
     : false;
@@ -517,7 +526,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const canEditTargetLogin =
     !!user &&
     !isSelf &&
-    isProtectedActor &&
+    canUpdateUserLogin &&
     !user.isProtected &&
     !isTargetAdminAccessRestricted;
   const canEditTargetContact =
@@ -583,6 +592,15 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     !user.isProtected &&
     !isTargetAdminAccessRestricted;
   const canViewTargetActivity = !!user && (isSelf || canViewUserActivity);
+  const loginReadOnlyHint = isSelf
+    ? "Votre propre identifiant ne se modifie pas depuis l'administration."
+    : user?.isProtected
+      ? "L'identifiant du compte superadmin est protégé."
+      : isTargetAdminAccessRestricted
+        ? "Seul le superadmin peut modifier l'identifiant d'un administrateur."
+        : !canUpdateUserLogin
+          ? 'La permission Modifier les identifiants de connexion est requise.'
+          : 'Cet identifiant est en lecture seule depuis cette fiche.';
   const canFetchUserAudit = currentUser?.id === userId || canViewUserActivity;
   const canViewTargetSecurity =
     canResetTargetMfa ||
@@ -1285,7 +1303,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     }));
   };
 
-  const handleSaveProfile = async (): Promise<void> => {
+  const handleSaveProfile = async (
+    isLoginChangeConfirmed = false,
+  ): Promise<void> => {
     if (!canEditTargetProfile && !canEditTargetContact && !canEditTargetLogin) {
       toast.error('Permission insuffisante pour modifier cet utilisateur');
 
@@ -1300,6 +1320,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
     if (!hasProfileChanges) {
       toast.info('Aucune modification à enregistrer');
+
+      return;
+    }
+
+    if (hasProfileLoginChanges && !isLoginChangeConfirmed) {
+      setShowLoginChangeConfirm(true);
 
       return;
     }
@@ -1682,6 +1708,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             canEdit={canEditTargetProfile}
             canEditContact={canEditTargetContact}
             canEditLogin={canEditTargetLogin}
+            loginReadOnlyHint={loginReadOnlyHint}
             canViewContact={canViewTargetContact}
             isSaving={isSaving}
             onSave={handleSaveProfile}
@@ -2048,6 +2075,43 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 Quitter sans enregistrer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog
+        open={showLoginChangeConfirm}
+        onOpenChange={setShowLoginChangeConfirm}
+      >
+        <AlertDialogContent className="border-border overflow-hidden rounded-lg p-0">
+          <div className="p-6">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-foreground flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
+                  <AlertTriangle size={16} className="text-amber-400" />
+                </div>
+                Modifier l&apos;identifiant de connexion ?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
+                Toutes les sessions de cet utilisateur seront fermées. Il devra
+                ensuite utiliser le nouvel identifiant{' '}
+                <strong>{editForm.loginName.trim().toLowerCase()}</strong> pour
+                se reconnecter.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-4">
+              <AlertDialogCancel className="border-border">
+                Annuler
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-amber-500 text-white hover:bg-amber-500/90"
+                onClick={() => {
+                  setShowLoginChangeConfirm(false);
+                  void handleSaveProfile(true);
+                }}
+              >
+                Modifier et déconnecter
               </AlertDialogAction>
             </AlertDialogFooter>
           </div>

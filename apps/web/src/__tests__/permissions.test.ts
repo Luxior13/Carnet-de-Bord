@@ -32,6 +32,7 @@ describe('hasPermission', () => {
     expect(hasPermission('USER', PERMISSIONS.ACCOUNT.MANAGE_MFA)).toBe(true);
     expect(hasPermission('ADMIN', PERMISSIONS.USERS.CREATE)).toBe(true);
     expect(hasPermission('ADMIN', PERMISSIONS.USERS.EXPORT)).toBe(true);
+    expect(hasPermission('ADMIN', PERMISSIONS.USERS.UPDATE_LOGIN)).toBe(true);
     expect(
       hasPermission('ADMIN', PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY),
     ).toBe(true);
@@ -41,6 +42,7 @@ describe('hasPermission', () => {
     expect(hasPermission('USER', PERMISSIONS.DASHBOARD.VIEW)).toBe(true);
     expect(hasPermission('USER', PERMISSIONS.USERS.CREATE)).toBe(false);
     expect(hasPermission('USER', PERMISSIONS.USERS.EXPORT)).toBe(false);
+    expect(hasPermission('USER', PERMISSIONS.USERS.UPDATE_LOGIN)).toBe(false);
     expect(hasPermission('USER', PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY)).toBe(
       false,
     );
@@ -70,6 +72,11 @@ describe('hasPermission', () => {
     expect(
       hasPermission('ADMIN', PERMISSIONS.USERS.EXPORT, {
         [PERMISSIONS.USERS.EXPORT]: false,
+      }),
+    ).toBe(false);
+    expect(
+      hasPermission('ADMIN', PERMISSIONS.USERS.UPDATE_LOGIN, {
+        [PERMISSIONS.USERS.UPDATE_LOGIN]: false,
       }),
     ).toBe(false);
   });
@@ -183,6 +190,18 @@ describe('hasPermission', () => {
         [PERMISSIONS.USERS.UPDATE_CONTACT]: true,
         [PERMISSIONS.USERS.VIEW]: true,
         [PERMISSIONS.USERS.VIEW_CONTACT]: true,
+      }),
+    ).toBe(true);
+    expect(
+      hasPermission('USER', PERMISSIONS.USERS.UPDATE_LOGIN, {
+        [PERMISSIONS.USERS.UPDATE_LOGIN]: true,
+        [PERMISSIONS.USERS.VIEW]: false,
+      }),
+    ).toBe(false);
+    expect(
+      hasPermission('USER', PERMISSIONS.USERS.UPDATE_LOGIN, {
+        [PERMISSIONS.USERS.UPDATE_LOGIN]: true,
+        [PERMISSIONS.USERS.VIEW]: true,
       }),
     ).toBe(true);
     expect(
@@ -366,6 +385,7 @@ describe('permission catalogue', () => {
       'users:view_contact',
       'users:update_profile',
       'users:update_contact',
+      'users:update_login',
       'users:manage_status',
       'users:view_access',
       'users:manage_roles',

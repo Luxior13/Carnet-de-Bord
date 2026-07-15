@@ -154,6 +154,209 @@ describe('users access hardening', () => {
     );
   });
 
+  it('uses users:update_login to let a non-protected admin rename a standard user', async () => {
+    const actor = buildUser({
+      deletedAt: undefined,
+      id: 'admin-1',
+      isProtected: false,
+      passwordHash: undefined,
+      permissions: { [PERMISSIONS.USERS.UPDATE_LOGIN]: true },
+      role: 'ADMIN',
+    });
+    const existingUser = buildUser({ id: 'target-1', role: 'USER' });
+
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: actor,
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(existingUser);
+    mockPrisma.user.update.mockResolvedValueOnce({
+      ...existingUser,
+      loginName: 'nouveau.login',
+    });
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          expectedUpdatedAt: USER_REVISION,
+          loginName: 'nouveau.login',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockRequirePermission).toHaveBeenCalledWith(
+      actor,
+      PERMISSIONS.USERS.UPDATE_LOGIN,
+    );
+    expect(mockPrisma.loginNameReservation.create).toHaveBeenCalledWith({
+      data: { loginName: 'nouveau.login', userId: 'target-1' },
+    });
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          loginName: 'nouveau.login',
+          securityVersion: { increment: 1 },
+        }),
+      }),
+    );
+    expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
+      where: { userId: 'target-1' },
+    });
+  });
+
+  it('rejects login-name updates when users:update_login is denied', async () => {
+    const actor = buildUser({
+      deletedAt: undefined,
+      id: 'admin-1',
+      isProtected: false,
+      passwordHash: undefined,
+      permissions: { [PERMISSIONS.USERS.UPDATE_LOGIN]: false },
+      role: 'ADMIN',
+    });
+
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: actor,
+    });
+    mockRequirePermission.mockImplementation((_user, permissionKey) =>
+      permissionKey === PERMISSIONS.USERS.UPDATE_LOGIN
+        ? {
+            response: Response.json(
+              {
+                error: { code: ErrorCode.FORBIDDEN, message: 'Interdit' },
+                success: false,
+              },
+              { status: 403 },
+            ),
+            success: false,
+          }
+        : { success: true },
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          expectedUpdatedAt: USER_REVISION,
+          loginName: 'nouveau.login',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+    expect(mockRequirePermission).toHaveBeenCalledWith(
+      actor,
+      PERMISSIONS.USERS.UPDATE_LOGIN,
+    );
+    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('keeps self login-name updates forbidden despite users:update_login', async () => {
+    const actor = buildUser({
+      deletedAt: undefined,
+      id: 'admin-1',
+      isProtected: false,
+      passwordHash: undefined,
+      permissions: { [PERMISSIONS.USERS.UPDATE_LOGIN]: true },
+      role: 'ADMIN',
+    });
+
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: actor,
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(
+      buildUser({ id: 'admin-1', role: 'ADMIN' }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/admin-1', {
+        body: stringifyRequestBody({
+          expectedUpdatedAt: USER_REVISION,
+          loginName: 'mon.nouvel.identifiant',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'admin-1' }) },
+    );
+
+    expect(response.status).toBe(403);
+    expect(mockRequirePermission).toHaveBeenCalledWith(
+      actor,
+      PERMISSIONS.USERS.UPDATE_LOGIN,
+    );
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      label: 'another administrator',
+      target: buildUser({ id: 'target-admin', role: 'ADMIN' }),
+    },
+    {
+      label: 'the protected root account',
+      target: buildUser({
+        id: 'root-1',
+        isProtected: true,
+        role: 'ADMIN',
+      }),
+    },
+  ])(
+    'keeps login-name updates forbidden for $label despite users:update_login',
+    async ({ target }) => {
+      const actor = buildUser({
+        deletedAt: undefined,
+        id: 'admin-1',
+        isProtected: false,
+        passwordHash: undefined,
+        permissions: { [PERMISSIONS.USERS.UPDATE_LOGIN]: true },
+        role: 'ADMIN',
+      });
+
+      mockRequireAuth.mockResolvedValueOnce({
+        session: null,
+        success: true,
+        user: actor,
+      });
+      mockPrisma.user.findUnique.mockResolvedValueOnce(target);
+
+      const route = await import('$app/api/users/[id]/route');
+      const response = await route.PATCH(
+        new Request(`http://localhost/api/users/${String(target.id)}`, {
+          body: stringifyRequestBody({
+            expectedUpdatedAt: USER_REVISION,
+            loginName: 'nouveau.login',
+          }),
+          method: 'PATCH',
+        }) as never,
+        { params: Promise.resolve({ id: String(target.id) }) },
+      );
+
+      expect(response.status).toBe(403);
+      expect(mockRequirePermission).toHaveBeenCalledWith(
+        actor,
+        PERMISSIONS.USERS.UPDATE_LOGIN,
+      );
+      expect(mockPrisma.user.update).not.toHaveBeenCalled();
+      expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+    },
+  );
+
   it('returns 409 when a concurrent login-name update hits the unique constraint', async () => {
     const existingUser = buildUser({ id: 'target-1' });
     mockRequireAuth.mockResolvedValueOnce({

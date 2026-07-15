@@ -35,6 +35,7 @@ type UserProfileTabProps = {
   form: ProfileForm;
   hasChanges: boolean;
   isSaving: boolean;
+  loginReadOnlyHint: string;
   onCancel: () => void;
   onSave: () => void;
   setForm: (form: ProfileForm) => void;
@@ -61,13 +62,14 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   form,
   hasChanges,
   isSaving,
+  loginReadOnlyHint,
   onCancel,
   onSave,
   setForm,
 }) => {
   const loginHint = canEditLogin
     ? "Modifier l'identifiant déconnectera l'utilisateur de ses sessions actives."
-    : 'Cet identifiant est en lecture seule depuis cette fiche.';
+    : loginReadOnlyHint;
   const contactHint = canEditContact
     ? "Adresse facultative, distincte de l'identifiant de connexion. Toute nouvelle adresse restera non vérifiée."
     : "L'email de contact est en lecture seule depuis cette fiche.";

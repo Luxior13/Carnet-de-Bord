@@ -424,19 +424,11 @@ export async function PATCH(
     }
 
     if (isLoginUpdate) {
-      if (!auth.user.isProtected) {
-        return NextResponse.json(
-          {
-            error: {
-              code: ErrorCode.FORBIDDEN,
-              message:
-                'Seul un superadmin peut modifier un identifiant de connexion',
-            },
-            success: false,
-          },
-          { status: 403 },
-        );
-      }
+      const loginPermCheck = requirePermission(
+        auth.user,
+        PERMISSIONS.USERS.UPDATE_LOGIN,
+      );
+      if (!loginPermCheck.success) return loginPermCheck.response;
     }
 
     if (isContactUpdate) {

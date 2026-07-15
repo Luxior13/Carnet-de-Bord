@@ -93,6 +93,7 @@ export const PERMISSIONS = {
     RESTORE: 'users:restore',
     REVOKE_SESSIONS: 'users:revoke_sessions',
     UPDATE_CONTACT: 'users:update_contact',
+    UPDATE_LOGIN: 'users:update_login',
     UPDATE_PROFILE: 'users:update_profile',
     VIEW: 'users:view',
     VIEW_ACCESS: 'users:view_access',
@@ -759,6 +760,16 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: "Modifier l'adresse de contact",
         module: 'Profil',
         risk: 'sensitive',
+      },
+      {
+        action: 'update',
+        dependencies: [PERMISSIONS.USERS.VIEW],
+        description:
+          "Modifier l'identifiant d'un autre compte utilisateur standard et fermer toutes ses sessions",
+        key: PERMISSIONS.USERS.UPDATE_LOGIN,
+        label: 'Modifier les identifiants de connexion',
+        module: 'Connexion',
+        risk: 'critical',
       },
       {
         action: 'manage',
