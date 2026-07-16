@@ -2890,25 +2890,23 @@ describe('users access hardening', () => {
     );
   });
 
-  it('returns personal dashboard data without querying managed users', async () => {
+  it('returns null for dashboard sections the user cannot access', async () => {
     const route = await import('$app/api/dashboard/route');
     const response = await route.GET();
     const body = await response.json();
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
-    expect(body.data.users).toEqual({
-      active: 1,
-      inactive: 0,
-      recentLogins: 0,
-      total: 1,
-    });
-    expect(body.data.recentActivity).toEqual([]);
+    expect(body.data.generatedAt).toEqual(expect.any(String));
+    expect(body.data).not.toHaveProperty('users');
+    expect(body.data.security).toBeNull();
+    expect(body.data.recentActivity).toBeNull();
     expect(mockPrisma.user.groupBy).not.toHaveBeenCalled();
+    expect(mockPrisma.user.count).not.toHaveBeenCalled();
     expect(mockPrisma.auditLog.findMany).not.toHaveBeenCalled();
   });
 
-  it('keeps user stats but hides recent activity without audit permission', async () => {
+  it('does not load directory counters for a simple user-view permission', async () => {
     mockRequireAuth.mockResolvedValueOnce({
       session: null,
       success: true,
@@ -2919,39 +2917,171 @@ describe('users access hardening', () => {
         permissions: { [PERMISSIONS.USERS.VIEW]: true },
       }),
     });
-    mockPrisma.user.groupBy.mockResolvedValueOnce([
-      { _count: { _all: 3 }, isActive: true },
-      { _count: { _all: 1 }, isActive: false },
-    ]);
-    mockPrisma.user.count
-      .mockResolvedValueOnce(2)
-      .mockResolvedValueOnce(1)
-      .mockResolvedValueOnce(3);
     const route = await import('$app/api/dashboard/route');
     const response = await route.GET();
     const body = await response.json();
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
-    expect(body.data.users).toEqual({
-      active: 3,
-      inactive: 1,
-      recentLogins: 3,
-      total: 4,
-    });
-    expect(body.data.security).toEqual({
-      lockedUsers: 1,
-      pendingPassword: 2,
-    });
-    expect(body.data.recentActivity).toEqual([]);
+    expect(body.data).not.toHaveProperty('users');
+    expect(body.data.security).toBeNull();
+    expect(body.data.recentActivity).toBeNull();
     expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
-    expect(mockPrisma.user.groupBy).toHaveBeenCalledWith(
+    expect(mockPrisma.user.groupBy).not.toHaveBeenCalled();
+    expect(mockPrisma.user.count).not.toHaveBeenCalled();
+    expect(mockPrisma.auditLog.findMany).not.toHaveBeenCalled();
+  });
+
+  it('only exposes active-account security signals with security permission', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'security-viewer-1',
+        passwordHash: undefined,
+        permissions: {
+          [PERMISSIONS.USERS.VIEW]: true,
+          [PERMISSIONS.USERS.VIEW_SECURITY]: true,
+        },
+      }),
+    });
+    mockPrisma.user.count
+      .mockResolvedValueOnce(4)
+      .mockResolvedValueOnce(1)
+      .mockResolvedValueOnce(3);
+
+    const route = await import('$app/api/dashboard/route');
+    const response = await route.GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.security).toEqual({
+      lockedActiveUsers: 1,
+      mfaEnrollmentPendingActiveUsers: 3,
+      temporaryPasswordActiveUsers: 4,
+    });
+    expect(mockPrisma.user.count).toHaveBeenNthCalledWith(1, {
+      where: {
+        deletedAt: null,
+        isActive: true,
+        mustChangePassword: true,
+      },
+    });
+    expect(mockPrisma.user.count).toHaveBeenNthCalledWith(2, {
+      where: {
+        deletedAt: null,
+        isActive: true,
+        lockedUntil: { gt: expect.any(Date) },
+      },
+    });
+    expect(mockPrisma.user.count).toHaveBeenNthCalledWith(3, {
+      where: {
+        deletedAt: null,
+        isActive: true,
+        mfaEnabledAt: null,
+      },
+    });
+  });
+
+  it('scopes dashboard user activity and redacts sensitive descriptions', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'activity-viewer-1',
+        passwordHash: undefined,
+        permissions: {
+          [PERMISSIONS.USERS.VIEW]: true,
+          [PERMISSIONS.USERS.VIEW_ACTIVITY]: true,
+        },
+      }),
+    });
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      {
+        action: 'PASSWORD_RESET',
+        actorDisplayNameSnapshot: 'Admin archive',
+        category: 'AUTH',
+        createdAt: new Date('2026-07-16T10:00:00.000Z'),
+        description: 'Mot de passe réinitialisé pour un identifiant secret',
+        id: 'dashboard-log-1',
+      },
+    ]);
+
+    const route = await import('$app/api/dashboard/route');
+    const response = await route.GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith({
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      select: {
+        action: true,
+        actorDisplayNameSnapshot: true,
+        category: true,
+        createdAt: true,
+        description: true,
+        id: true,
+      },
+      take: 3,
+      where: {
+        category: { in: ['AUTH', 'PERMISSION', 'USER'] },
+        eventKind: 'ACTIVITY',
+      },
+    });
+    expect(body.data.recentActivity).toEqual([
+      {
+        action: 'PASSWORD_RESET',
+        category: 'AUTH',
+        createdAt: '2026-07-16T10:00:00.000Z',
+        description: 'Mot de passe réinitialisé',
+        id: 'dashboard-log-1',
+        userName: 'Admin archive',
+      },
+    ]);
+  });
+
+  it('loads global dashboard activity independently from the user directory', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'audit-viewer-1',
+        passwordHash: undefined,
+        permissions: {
+          [PERMISSIONS.SYSTEM.AUDIT]: true,
+          [PERMISSIONS.SYSTEM.VIEW]: true,
+        },
+      }),
+    });
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      {
+        action: 'SYSTEM_SETTINGS_UPDATE',
+        actorDisplayNameSnapshot: null,
+        category: 'SYSTEM',
+        createdAt: new Date('2026-07-16T11:00:00.000Z'),
+        description: 'Configuration technique sensible modifiée',
+        id: 'dashboard-log-2',
+      },
+    ]);
+
+    const route = await import('$app/api/dashboard/route');
+    const response = await route.GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).not.toHaveProperty('users');
+    expect(body.data.security).toBeNull();
+    expect(body.data.recentActivity).toHaveLength(1);
+    expect(mockPrisma.user.groupBy).not.toHaveBeenCalled();
+    expect(mockPrisma.user.count).not.toHaveBeenCalled();
+    expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        by: ['isActive'],
-        where: { deletedAt: null },
+        where: { eventKind: 'ACTIVITY' },
       }),
     );
-    expect(mockPrisma.auditLog.findMany).not.toHaveBeenCalled();
   });
 
   it('normalizes invalid audit pagination params', async () => {

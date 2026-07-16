@@ -8,15 +8,11 @@ export type DashboardActivityItem = {
 };
 
 export type DashboardStats = {
-  recentActivity: DashboardActivityItem[];
+  generatedAt: string;
+  recentActivity: DashboardActivityItem[] | null;
   security: {
-    lockedUsers: number;
-    pendingPassword: number;
-  };
-  users: {
-    active: number;
-    inactive: number;
-    recentLogins: number;
-    total: number;
-  };
+    lockedActiveUsers: number;
+    mfaEnrollmentPendingActiveUsers: number;
+    temporaryPasswordActiveUsers: number;
+  } | null;
 };

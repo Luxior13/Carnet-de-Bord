@@ -1,8 +1,10 @@
+import { AuditCategory, AuditEventKind } from '@repo/database';
 import { NextResponse } from 'next/server';
 
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
+import { getVisibleAuditDescription } from '$server/audit-visibility';
 import { prisma } from '$server/prisma';
 import {
   type ApiErrorResponse,
@@ -20,118 +22,130 @@ export async function GET(): Promise<
     const permCheck = requirePermission(auth.user, PERMISSIONS.DASHBOARD.VIEW);
     if (!permCheck.success) return permCheck.response;
 
-    const canViewUsers =
+    const canViewUserSecurity =
       auth.user.isProtected ||
       hasPermission(
         auth.user.role,
-        PERMISSIONS.USERS.VIEW,
+        PERMISSIONS.USERS.VIEW_SECURITY,
         auth.user.permissions,
       );
-    const canViewRecentActivity =
+    const canViewUserActivity =
       auth.user.isProtected ||
       hasPermission(
         auth.user.role,
         PERMISSIONS.USERS.VIEW_ACTIVITY,
         auth.user.permissions,
-      ) ||
+      );
+    const canViewSystemAudit =
+      auth.user.isProtected ||
       hasPermission(
         auth.user.role,
         PERMISSIONS.SYSTEM.AUDIT,
         auth.user.permissions,
       );
+    const canViewSensitiveAuditDetails =
+      auth.user.isProtected ||
+      hasPermission(
+        auth.user.role,
+        PERMISSIONS.SYSTEM.AUDIT_SENSITIVE,
+        auth.user.permissions,
+      );
+    const canViewRecentActivity = canViewUserActivity || canViewSystemAudit;
 
-    if (!canViewUsers) {
-      return NextResponse.json({
-        data: {
-          recentActivity: [],
-          security: {
-            lockedUsers: 0,
-            pendingPassword: 0,
-          },
-          users: {
-            active: auth.user.isActive ? 1 : 0,
-            inactive: auth.user.isActive ? 0 : 1,
-            recentLogins: auth.user.lastLoginAt ? 1 : 0,
-            total: 1,
-          },
-        },
-        success: true,
-      });
-    }
-
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const now = new Date();
 
     const userWhere = { deletedAt: null };
 
     const [
-      statusCounts,
-      pendingPassword,
-      lockedUsers,
-      recentLogins,
+      temporaryPasswordActiveUsers,
+      lockedActiveUsers,
+      mfaEnrollmentPendingActiveUsers,
       recentLogs,
     ] = await Promise.all([
-      prisma.user.groupBy({
-        _count: { _all: true },
-        by: ['isActive'],
-        where: userWhere,
-      }),
-      prisma.user.count({
-        where: { ...userWhere, mustChangePassword: true },
-      }),
-      prisma.user.count({
-        where: { ...userWhere, lockedUntil: { gt: now } },
-      }),
-      prisma.user.count({
-        where: { ...userWhere, lastLoginAt: { gte: oneDayAgo } },
-      }),
+      canViewUserSecurity
+        ? prisma.user.count({
+            where: {
+              ...userWhere,
+              isActive: true,
+              mustChangePassword: true,
+            },
+          })
+        : Promise.resolve(null),
+      canViewUserSecurity
+        ? prisma.user.count({
+            where: {
+              ...userWhere,
+              isActive: true,
+              lockedUntil: { gt: now },
+            },
+          })
+        : Promise.resolve(null),
+      canViewUserSecurity
+        ? prisma.user.count({
+            where: {
+              ...userWhere,
+              isActive: true,
+              mfaEnabledAt: null,
+            },
+          })
+        : Promise.resolve(null),
       canViewRecentActivity
         ? prisma.auditLog.findMany({
-            orderBy: { createdAt: 'desc' },
+            orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
             select: {
               action: true,
+              actorDisplayNameSnapshot: true,
               category: true,
               createdAt: true,
               description: true,
               id: true,
-              user: {
-                select: { firstName: true, lastName: true },
-              },
             },
-            take: 8,
+            take: 3,
+            where: {
+              eventKind: AuditEventKind.ACTIVITY,
+              ...(canViewSystemAudit
+                ? {}
+                : {
+                    category: {
+                      in: [
+                        AuditCategory.AUTH,
+                        AuditCategory.PERMISSION,
+                        AuditCategory.USER,
+                      ],
+                    },
+                  }),
+            },
           })
-        : Promise.resolve([]),
+        : Promise.resolve(null),
     ]);
 
-    const activeUsers =
-      statusCounts.find((statusCount) => statusCount.isActive)?._count._all ??
-      0;
-    const inactiveUsers =
-      statusCounts.find((statusCount) => !statusCount.isActive)?._count._all ??
-      0;
-    const totalUsers = activeUsers + inactiveUsers;
-
     const stats: DashboardStats = {
-      recentActivity: recentLogs.map((log) => ({
-        action: log.action,
-        category: log.category,
-        createdAt: log.createdAt.toISOString(),
-        description: log.description,
-        id: log.id,
-        userName: log.user
-          ? `${log.user.firstName} ${log.user.lastName}`
+      generatedAt: now.toISOString(),
+      recentActivity: recentLogs
+        ? recentLogs.map((log) => ({
+            action: log.action,
+            category: log.category,
+            createdAt: log.createdAt.toISOString(),
+            description: getVisibleAuditDescription({
+              action: log.action,
+              canViewSensitiveDetails: canViewSensitiveAuditDetails,
+              category: log.category,
+              description: log.description,
+            }),
+            id: log.id,
+            userName: log.actorDisplayNameSnapshot,
+          }))
+        : null,
+      security:
+        temporaryPasswordActiveUsers !== null &&
+        lockedActiveUsers !== null &&
+        mfaEnrollmentPendingActiveUsers !== null
+          ? {
+              lockedActiveUsers,
+              mfaEnrollmentPendingActiveUsers,
+              temporaryPasswordActiveUsers,
+            }
           : null,
-      })),
-      security: {
-        lockedUsers,
-        pendingPassword,
-      },
-      users: {
-        active: activeUsers,
-        inactive: inactiveUsers,
-        recentLogins,
-        total: totalUsers,
-      },
     };
 
     return NextResponse.json({
