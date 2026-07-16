@@ -31,12 +31,27 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
+  --color-overlay: var(--overlay);
   --color-surface: var(--surface);
+  --color-surface-canvas: var(--surface-canvas);
+  --color-surface-page: var(--surface-page);
+  --color-surface-panel: var(--surface-panel);
+  --color-surface-panel-raised: var(--surface-panel-raised);
+  --color-surface-panel-header: var(--surface-panel-header);
+  --color-surface-inset: var(--surface-inset);
+  --color-surface-floating: var(--surface-floating);
+  --color-surface-control-hover: var(--surface-control-hover);
+  --color-surface-control-focus: var(--surface-control-focus);
+  --color-surface-tile-hover: var(--surface-tile-hover);
   --color-surface-muted: var(--surface-muted);
   --color-surface-raised: var(--surface-raised);
   --color-surface-subtle: var(--surface-subtle);
   --color-surface-control: var(--surface-control);
   --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  --color-border-divider: var(--border-divider);
   --color-border-control: var(--border-control);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -72,60 +87,90 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* The application is intentionally dark-only. The .dark class remains on
-   <html> solely to activate Tailwind/Radix dark variants. */
+/* Dark is the default theme. Components consume semantic tokens so a future
+   light theme can replace this palette without changing component classes. */
 :root {
   color-scheme: dark;
-  --background: #12151a;
-  --foreground: #f2f4f7;
-  --surface-subtle: #171b21;
-  --surface: #222831;
-  --surface-muted: #2b333f;
-  --surface-raised: #353e4c;
-  --surface-control: #171b21;
+
+  /* Canonical midnight surface scale. */
+  --surface-canvas: #060a11;
+  --surface-page: #0b111b;
+  --surface-inset: #0e1622;
+  --surface-panel: #142033;
+  --surface-panel-raised: #18243a;
+  --surface-panel-header: #1d2c48;
+  --surface-floating: #1b2942;
+  --surface-control-hover: #101827;
+  --surface-control-focus: #142034;
+  --surface-tile-hover: #20304d;
+
+  /* Canonical text and border scale. */
+  --text-primary: #f3f6fb;
+  --text-secondary: #c4cedc;
+  --text-muted: #8e9baf;
+  --text-disabled: #69778b;
+  --overlay: #02060c;
+  --border-steel: #94aacf;
+  --border-subtle: rgba(148, 170, 207, 0.14);
+  --border-default: rgba(148, 170, 207, 0.22);
+  --border-strong: rgba(148, 170, 207, 0.34);
+  --border-divider: rgba(148, 170, 207, 0.16);
+
+  /* Backward-compatible semantic aliases used throughout the application. */
+  --background: var(--surface-canvas);
+  --foreground: var(--text-primary);
+  --surface-subtle: var(--surface-page);
+  --surface: var(--surface-panel);
+  --surface-muted: var(--surface-panel-raised);
+  --surface-raised: var(--surface-floating);
+  --surface-control: var(--surface-page);
   --card: var(--surface);
   --card-foreground: var(--foreground);
   --popover: var(--surface-raised);
   --popover-foreground: var(--foreground);
   --primary: #8b9cf6;
-  --primary-emphasis: #a9b5ff;
-  --primary-foreground: #080b16;
+  --primary-emphasis: #dce2ff;
+  --primary-foreground: #07111f;
   --secondary: var(--surface-muted);
   --secondary-foreground: var(--foreground);
-  --muted: var(--surface-subtle);
-  --muted-foreground: #adb7c3;
-  --accent: var(--surface-muted);
+  --muted: var(--surface-inset);
+  --muted-foreground: var(--text-muted);
+  --accent: color-mix(in srgb, var(--primary) 12%, var(--surface-panel));
   --accent-foreground: var(--foreground);
-  --destructive: #ff9eaa;
-  --destructive-fill: #bd4054;
+  --destructive: #f47784;
+  --destructive-fill: #b84455;
   --destructive-foreground: #fff7f8;
-  --success: #7bd69a;
-  --success-foreground: #07130d;
-  --warning: #e3c56f;
-  --warning-foreground: #171006;
-  --info: #9bc2ee;
-  --info-foreground: #071019;
-  --border: #3e4856;
-  --border-control: #667286;
-  --input: var(--surface-subtle);
-  --ring: #a5b4fc;
+  --success: #51d6a0;
+  --success-foreground: #04150e;
+  --warning: #f2b95c;
+  --warning-foreground: #1b1002;
+  --info: #7dc1f3;
+  --info-foreground: #04121c;
+  --border: color-mix(in srgb, var(--border-steel) 34%, var(--surface-panel));
+  --border-control: #586780;
+  --input: var(--surface-control);
+  --ring: #a9b5ff;
   --radius: 0.5rem;
-  --sidebar: #0d1014;
-  --sidebar-foreground: #e4e9ef;
+  --sidebar: var(--surface-page);
+  --sidebar-foreground: var(--text-secondary);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: #1c222a;
-  --sidebar-accent-foreground: var(--sidebar-foreground);
-  --sidebar-border: #2c343e;
+  --sidebar-accent: var(--surface-panel-raised);
+  --sidebar-accent-foreground: var(--text-primary);
+  --sidebar-border: color-mix(
+    in srgb,
+    var(--border-steel) 28%,
+    var(--surface-page)
+  );
   --sidebar-ring: var(--ring);
   --public-column-width: 66rem;
   --private-content-width: 76rem;
   --private-content-width-wide: 92rem;
   --private-content-padding: clamp(1rem, 1.8vw, 1.75rem);
-  --public-column-border: rgba(242, 244, 247, 0.08);
-  --public-column-shadow: 0 24px 64px -48px rgba(0, 0, 0, 0.94);
-  --column-surface-start: #1b2027;
-  --column-surface-end: #171b21;
+  --public-column-border: var(--border-subtle);
+  --public-column-shadow: 0 30px 72px -40px rgba(0, 0, 0, 0.98);
+  --column-surface-start: var(--surface-inset);
+  --column-surface-end: var(--surface-page);
   --nav-dashboard: #6db8b1;
   --nav-dashboard-icon: #9bded8;
   --nav-dashboard-foreground: #c6f2ee;
@@ -144,18 +189,18 @@
   --nav-treasury: #79bd70;
   --nav-treasury-icon: #b4e5ad;
   --nav-treasury-foreground: #d8f2d3;
-  --sidebar-pattern-primary: rgba(242, 244, 247, 0.04);
-  --sidebar-pattern-secondary: rgba(139, 156, 246, 0.035);
-  --sidebar-pattern-mask-start: rgba(0, 0, 0, 0.72);
-  --sidebar-pattern-mask-end: rgba(0, 0, 0, 0.48);
-  --sidebar-scrollbar-thumb: rgba(165, 180, 252, 0.58);
-  --sidebar-scrollbar-thumb-hover: rgba(165, 180, 252, 0.78);
+  --sidebar-pattern-primary: rgba(196, 206, 220, 0.025);
+  --sidebar-pattern-secondary: rgba(139, 156, 246, 0.018);
+  --sidebar-pattern-mask-start: rgba(0, 0, 0, 0.6);
+  --sidebar-pattern-mask-end: rgba(0, 0, 0, 0.32);
+  --sidebar-scrollbar-thumb: rgba(139, 156, 246, 0.55);
+  --sidebar-scrollbar-thumb-hover: rgba(183, 194, 255, 0.78);
   --shadow-panel:
-    0 16px 34px -28px rgba(0, 0, 0, 0.9),
-    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    0 18px 40px -30px rgba(0, 0, 0, 0.92),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --shadow-panel-strong:
-    0 22px 50px -34px rgba(0, 0, 0, 0.96),
-    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    0 30px 72px -34px rgba(0, 0, 0, 0.98),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055);
   --site-background-column-bg: linear-gradient(
     180deg,
     var(--column-surface-start),
@@ -265,6 +310,22 @@
   [data-sidebar='sidebar'][data-collapsible='icon']
     .sidebar-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --border-subtle: rgba(148, 170, 207, 0.26);
+    --border-default: rgba(148, 170, 207, 0.4);
+    --border-strong: rgba(148, 170, 207, 0.62);
+    --border: color-mix(in srgb, var(--border-steel) 48%, var(--surface-panel));
+    --border-control: #70809a;
+    --muted-foreground: var(--text-secondary);
+    --sidebar-border: color-mix(
+      in srgb,
+      var(--border-steel) 44%,
+      var(--surface-page)
+    );
   }
 }
 

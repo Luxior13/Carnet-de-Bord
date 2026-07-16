@@ -1281,13 +1281,13 @@ const escapeCsvCell = (value: string): string => {
 };
 
 const activitySelectTriggerClassName =
-  'border-border-control bg-input text-foreground hover:bg-accent/25 focus-visible:border-primary/45 focus-visible:ring-ring/35 h-11 w-full shadow-none';
+  'border-border-control bg-surface-control text-foreground hover:border-border-strong hover:bg-surface-control-hover focus-visible:border-primary/45 focus-visible:bg-surface-control-focus focus-visible:ring-ring/35 h-11 w-full rounded-lg shadow-none';
 
 const activitySelectContentClassName =
-  'border-border bg-surface-raised/98 text-foreground rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]';
+  'border-border-strong bg-popover text-foreground rounded-xl p-1.5 shadow-[var(--shadow-panel-strong)]';
 
 const activitySelectItemClassName =
-  'focus:bg-accent/55 focus:text-accent-foreground rounded-md py-2';
+  'focus:bg-surface-tile-hover focus:text-accent-foreground rounded-lg py-2';
 
 const getChangeDiffs = (
   metadata: Record<string, unknown> | null,
@@ -1505,7 +1505,7 @@ const ActivityListRow: FC<{
       className={cn(
         'border-border/60 bg-surface-muted/35 relative overflow-hidden rounded-lg border transition-colors [contain-intrinsic-size:auto_5rem] [content-visibility:auto]',
         isOpen
-          ? 'border-primary/35 bg-popover/75'
+          ? 'border-primary/35 bg-surface-inset/75'
           : 'hover:border-border hover:bg-surface-muted/60',
       )}
     >
@@ -2114,7 +2114,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
 
   if (error && auditLogs.length === 0) {
     return (
-      <Card className="border-destructive/35 bg-destructive/5 min-h-[280px] items-center justify-center rounded-md py-0">
+      <Card className="border-destructive/35 bg-destructive/5 min-h-[280px] items-center justify-center rounded-lg py-0">
         {isPersonalPerspective && <h2 className="sr-only">Activité</h2>}
         <CardContent
           className="flex flex-col items-center p-8 text-center"
@@ -2141,7 +2141,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   // Empty
   if (auditLogs.length === 0 && !isServerFiltering) {
     return (
-      <Card className="border-border/70 min-h-[360px] items-center justify-center rounded-md py-0">
+      <Card className="border-border/70 min-h-[360px] items-center justify-center rounded-lg py-0">
         {isPersonalPerspective && <h2 className="sr-only">Activité</h2>}
         <CardContent className="flex flex-col items-center p-8">
           <div className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-20 items-center justify-center rounded-md border">

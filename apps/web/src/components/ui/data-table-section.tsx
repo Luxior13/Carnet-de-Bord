@@ -54,11 +54,11 @@ const DataTableSection: FC<DataTableSectionProps> = ({
 }) => (
   <Card
     className={cn(
-      'border-border/55 bg-surface overflow-hidden rounded-md py-0',
+      'border-border-default bg-surface overflow-hidden rounded-xl py-0',
       className,
     )}
   >
-    <CardHeader className="border-border/40 bg-surface-muted p-4">
+    <CardHeader className="border-border-divider bg-surface-panel-header p-4">
       <div className="flex flex-col gap-1">
         <div className="min-w-0">
           <CardTitle className="text-base">{title}</CardTitle>
@@ -93,7 +93,7 @@ const DataTableSection: FC<DataTableSectionProps> = ({
       )}
     </CardContent>
     {pagination && (
-      <CardFooter className="border-border/40 bg-surface-muted p-0">
+      <CardFooter className="border-border-divider bg-surface-inset p-0">
         <Pagination
           {...pagination}
           className={cn(
@@ -116,7 +116,7 @@ const DataTableMobileList: FC<DataTableSlotProps> = ({
 }) => (
   <div
     className={cn(
-      'divide-border/35 bg-surface [&>*:nth-child(even)]:bg-surface-subtle/55 divide-y lg:hidden',
+      'divide-border-divider bg-surface [&>*:nth-child(even)]:bg-surface-inset/70 divide-y lg:hidden',
       className,
     )}
   >
@@ -132,7 +132,7 @@ const DataTableEmptyState: FC<DataTableEmptyStateProps> = ({
 }) => (
   <div
     className={cn(
-      'bg-surface-subtle/50 flex flex-col items-center justify-center gap-2 px-4 py-10 text-center',
+      'bg-surface-inset/70 flex flex-col items-center justify-center gap-2 px-4 py-10 text-center',
       className,
     )}
   >

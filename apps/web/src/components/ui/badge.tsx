@@ -5,7 +5,7 @@ import React, { type ComponentProps, type FC } from 'react';
 import { cn } from '$utils/css.utils';
 
 const badgeVariants = cva(
-  'inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-md border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] aria-invalid:border-destructive aria-invalid:ring-destructive/20 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:aria-invalid:ring-destructive/40 [&.bg-destructive]:bg-destructive-fill [&.bg-destructive]:text-destructive-foreground [&.bg-destructive:hover]:bg-destructive-fill/90 [&>svg]:pointer-events-none [&>svg]:size-3 [&]:text-xs',
+  'inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-lg border px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[background-color,border-color,color,box-shadow] aria-invalid:border-destructive aria-invalid:ring-destructive/20 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:aria-invalid:ring-destructive/40 [&.bg-destructive]:bg-destructive-fill [&.bg-destructive]:text-destructive-foreground [&.bg-destructive:hover]:bg-destructive-fill/90 [&>svg]:pointer-events-none [&>svg]:size-3 [&]:text-xs',
   {
     defaultVariants: {
       variant: 'default',
@@ -13,14 +13,14 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          'border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90',
+          'border-primary/30 bg-primary/10 text-primary-emphasis [a&]:hover:border-primary/45 [a&]:hover:bg-primary/15',
         destructive:
           'border-transparent bg-destructive-fill text-destructive-foreground [a&]:hover:bg-destructive-fill/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40',
         info: 'border-transparent bg-info text-info-foreground [a&]:hover:bg-info/90',
         outline:
-          'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
+          'border-border-default text-foreground [a&]:hover:border-border-strong [a&]:hover:bg-surface-tile-hover [a&]:hover:text-accent-foreground',
         secondary:
-          'border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
+          'border-border-subtle bg-surface-inset text-secondary-foreground [a&]:hover:border-border-default [a&]:hover:bg-surface-tile-hover',
         success:
           'border-transparent bg-success text-success-foreground [a&]:hover:bg-success/90',
         warning:

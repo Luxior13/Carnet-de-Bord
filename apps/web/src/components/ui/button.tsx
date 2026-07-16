@@ -5,7 +5,7 @@ import React, { type ComponentProps, type FC } from 'react';
 import { cn } from '$utils/css.utils';
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md border border-transparent text-sm font-medium transition-[background-color,border-color,color,box-shadow] outline-none disabled:pointer-events-none disabled:opacity-50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/35 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&.bg-destructive]:border-destructive-fill/80 [&.bg-destructive]:bg-destructive-fill [&.bg-destructive:hover]:bg-destructive-fill/90 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent text-sm font-medium transition-[background-color,border-color,color,box-shadow] outline-none disabled:pointer-events-none disabled:opacity-50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/35 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&.bg-destructive]:border-destructive-fill/80 [&.bg-destructive]:bg-destructive-fill [&.bg-destructive:hover]:bg-destructive-fill/90 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     defaultVariants: {
       size: 'default',
@@ -15,8 +15,8 @@ const buttonVariants = cva(
       size: {
         default: 'h-10 px-4 py-2 has-[>svg]:px-3 lg:h-9',
         icon: 'size-10 lg:size-9',
-        lg: 'h-11 rounded-md px-6 has-[>svg]:px-4 lg:h-10',
-        sm: 'h-10 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5 lg:h-8',
+        lg: 'h-11 rounded-lg px-6 has-[>svg]:px-4 lg:h-10',
+        sm: 'h-10 rounded-lg gap-1.5 px-3 has-[>svg]:px-2.5 lg:h-8',
       },
       variant: {
         default:
@@ -24,13 +24,13 @@ const buttonVariants = cva(
         destructive:
           'border-destructive-fill/80 bg-destructive-fill text-destructive-foreground shadow-none hover:bg-destructive-fill/90 focus-visible:ring-destructive/25 dark:focus-visible:ring-destructive/35',
         ghost:
-          'text-muted-foreground hover:border-border/70 hover:bg-accent hover:text-accent-foreground',
+          'text-muted-foreground hover:border-border-default hover:bg-surface-tile-hover hover:text-accent-foreground',
         info: 'border-info/80 bg-info text-info-foreground shadow-none hover:bg-info/90 focus-visible:ring-info/30',
         link: 'text-primary-emphasis underline-offset-4 hover:underline',
         outline:
-          'border-border/80 bg-surface-control text-foreground shadow-none hover:border-ring/35 hover:bg-accent hover:text-accent-foreground',
+          'border-border-default bg-surface-control text-foreground shadow-none hover:border-border-strong hover:bg-surface-control-hover hover:text-accent-foreground focus-visible:bg-surface-control-focus',
         secondary:
-          'border-border/70 bg-secondary text-secondary-foreground shadow-none hover:border-ring/25 hover:bg-secondary/80',
+          'border-border-subtle bg-surface-inset text-secondary-foreground shadow-none hover:border-border-default hover:bg-surface-tile-hover',
         success:
           'border-success/80 bg-success text-success-foreground shadow-none hover:bg-success/90 focus-visible:ring-success/30',
         warning:

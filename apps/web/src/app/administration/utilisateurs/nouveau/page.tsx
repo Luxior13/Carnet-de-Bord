@@ -283,7 +283,7 @@ const NewUserContent: FC = () => {
             }
           />
           {createdUser && temporaryPassword ? (
-            <Card className="border-border/70 overflow-hidden rounded-md py-0">
+            <Card className="border-border/70 overflow-hidden rounded-lg py-0">
               <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
                 <CardTitle aria-live="polite" className="text-sm" role="status">
                   Compte créé
@@ -305,7 +305,7 @@ const NewUserContent: FC = () => {
                         le changer à sa première connexion.
                       </p>
                       <div className="flex items-center gap-2">
-                        <code className="border-border bg-popover text-foreground min-w-0 flex-1 overflow-x-auto rounded-md border px-3 py-2 font-mono text-sm">
+                        <code className="border-border bg-surface-inset text-foreground min-w-0 flex-1 overflow-x-auto rounded-md border px-3 py-2 font-mono text-sm">
                           {temporaryPassword}
                         </code>
                         <Button
@@ -399,7 +399,7 @@ const NewUserContent: FC = () => {
                 void handleCreateUser();
               }}
             >
-              <Card className="border-border/70 overflow-hidden rounded-md py-0">
+              <Card className="border-border/70 overflow-hidden rounded-lg py-0">
                 <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
                   <CardTitle className="text-sm">Création du compte</CardTitle>
                   <CardDescription>

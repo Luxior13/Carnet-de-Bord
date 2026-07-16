@@ -241,11 +241,11 @@ const JOURNAL_POLE_OPTIONS: ActivityFilterOption[] = [
 ];
 
 const selectTriggerClassName =
-  'border-border-control bg-input text-foreground hover:bg-accent/25 focus-visible:border-primary/45 focus-visible:ring-ring/35 h-10 w-full shadow-none';
+  'border-border-control bg-surface-control text-foreground hover:border-border-strong hover:bg-surface-control-hover focus-visible:border-primary/45 focus-visible:bg-surface-control-focus focus-visible:ring-ring/35 h-10 w-full rounded-lg shadow-none';
 const selectContentClassName =
-  'border-border bg-surface-raised/98 text-foreground rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]';
+  'border-border-strong bg-popover text-foreground rounded-xl p-1.5 shadow-[var(--shadow-panel-strong)]';
 const selectItemClassName =
-  'focus:bg-accent/55 focus:text-accent-foreground rounded-md py-2';
+  'focus:bg-surface-tile-hover focus:text-accent-foreground rounded-lg py-2';
 
 const getPageOptions = (poleKey: string): ActivityFilterOption[] => {
   const options: ActivityFilterOption[] = [
@@ -621,7 +621,7 @@ const JournalCard: FC<{
       className={cn(
         'border-border/60 bg-surface-muted/35 overflow-hidden rounded-lg border transition-colors',
         isOpen
-          ? 'border-primary/35 bg-popover/75'
+          ? 'border-primary/35 bg-surface-inset/75'
           : 'hover:border-border hover:bg-surface-muted/60',
       )}
       data-log-id={log.id}

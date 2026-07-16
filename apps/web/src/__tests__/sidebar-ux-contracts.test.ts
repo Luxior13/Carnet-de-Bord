@@ -94,10 +94,10 @@ describe('sidebar UX contracts', () => {
       'spaces.map((space) => renderSpaceItem(space))',
     );
     expect(sidebarSource).not.toContain('Autres pôles');
-    expect(sidebarSource).toContain('border-sidebar-border/90 bg-surface');
+    expect(sidebarSource).toContain('border-border-strong bg-surface');
     expect(sidebarSource).toContain('aria-label="Pôles disponibles"');
-    expect(sidebarSource).toContain('bg-surface-control/70');
-    expect(sidebarSource).toContain('hover:border-sidebar-border/80');
+    expect(sidebarSource).toContain('bg-surface-inset');
+    expect(sidebarSource).toContain('hover:border-border-default');
     expect(sidebarSource).toContain('text-sidebar-foreground/55');
     expect(sidebarSource).toContain('text-sidebar-foreground/45');
   });

@@ -254,7 +254,7 @@ export const QuickNavigation: FC = () => {
       <DialogTrigger asChild>
         <button
           aria-label="Ouvrir la navigation rapide"
-          className="border-border-control bg-input text-muted-foreground hover:border-primary/35 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/35 flex h-10 min-w-10 shrink-0 items-center justify-center gap-2 rounded-md border px-2.5 text-sm transition-[border-color,color,box-shadow] outline-none focus-visible:ring-[3px] lg:h-9 lg:min-w-64 lg:justify-start"
+          className="border-border-control bg-surface-control text-muted-foreground hover:border-primary/35 hover:bg-surface-control-hover hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/35 flex h-10 min-w-10 shrink-0 items-center justify-center gap-2 rounded-lg border px-2.5 text-sm transition-[background-color,border-color,color,box-shadow] outline-none focus-visible:ring-[3px] lg:h-9 lg:min-w-64 lg:justify-start"
           type="button"
         >
           <Search aria-hidden="true" className="size-4" />
@@ -262,7 +262,7 @@ export const QuickNavigation: FC = () => {
         </button>
       </DialogTrigger>
       <DialogContent
-        className="border-border/80 bg-surface h-dvh max-w-2xl grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 shadow-[var(--shadow-panel-strong)] sm:h-auto sm:max-h-[min(38rem,85vh)]"
+        className="border-border-default bg-surface-panel h-dvh max-w-2xl grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 shadow-[var(--shadow-panel-strong)] sm:h-auto sm:max-h-[min(38rem,85vh)] sm:rounded-xl"
         fullscreenOnMobile
         hideCloseButton
       >
@@ -272,7 +272,7 @@ export const QuickNavigation: FC = () => {
             Accès rapide aux pages disponibles et autorisées.
           </DialogDescription>
         </DialogHeader>
-        <div className="group/search border-border/65 bg-surface-raised/95 flex items-center gap-2 border-b px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 sm:pt-2">
+        <div className="group/search border-border-divider bg-surface-panel-raised/95 flex items-center gap-2 border-b px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 sm:pt-2">
           <Search
             aria-hidden="true"
             className="text-muted-foreground group-focus-within/search:text-primary-emphasis ml-1 size-4 shrink-0 transition-colors"
@@ -300,7 +300,7 @@ export const QuickNavigation: FC = () => {
           {query && (
             <button
               aria-label="Effacer la recherche"
-              className="text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-ring/50 flex size-11 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-2"
+              className="text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground focus-visible:ring-ring/50 flex size-11 shrink-0 items-center justify-center rounded-lg outline-none focus-visible:ring-2"
               onClick={() => {
                 setQuery('');
                 setActiveResultHref(null);
@@ -311,11 +311,11 @@ export const QuickNavigation: FC = () => {
               <CircleX aria-hidden="true" className="size-4" />
             </button>
           )}
-          <div className="border-border/65 ml-1 border-l pl-1">
+          <div className="border-border-divider ml-1 border-l pl-1">
             <DialogClose asChild>
               <button
                 aria-label="Fermer la navigation rapide"
-                className="text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-ring/50 flex size-11 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-2"
+                className="text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground focus-visible:ring-ring/50 flex size-11 shrink-0 items-center justify-center rounded-lg outline-none focus-visible:ring-2"
                 type="button"
               >
                 <X aria-hidden="true" className="size-4" />
@@ -328,7 +328,7 @@ export const QuickNavigation: FC = () => {
             {results.length} résultat{results.length !== 1 ? 's' : ''}
           </span>
           {!normalizedQuery && results.length > 0 && (
-            <p className="text-muted-foreground px-2 pt-1 pb-2 text-xs font-medium">
+            <p className="text-muted-foreground px-2 pt-1 pb-2 text-[11px] font-semibold tracking-[0.12em] uppercase">
               Pages suggérées
             </p>
           )}
@@ -357,10 +357,10 @@ export const QuickNavigation: FC = () => {
                   }
                   aria-selected={isActive}
                   className={cn(
-                    'group focus-visible:ring-ring/50 flex w-full min-w-0 items-center gap-3 rounded-md px-2.5 py-2.5 text-left transition-colors outline-none focus-visible:ring-2',
+                    'group focus-visible:ring-ring/50 flex w-full min-w-0 items-center gap-3 rounded-lg px-2.5 py-2.5 text-left transition-colors outline-none focus-visible:ring-2',
                     isActive
                       ? 'bg-primary/10 ring-primary/30 ring-1 ring-inset'
-                      : 'hover:bg-accent/55',
+                      : 'hover:bg-surface-tile-hover',
                   )}
                   id={optionId}
                   key={result.href}
@@ -373,7 +373,7 @@ export const QuickNavigation: FC = () => {
                 >
                   <span
                     className={cn(
-                      'flex size-9 shrink-0 items-center justify-center rounded-md border',
+                      'flex size-9 shrink-0 items-center justify-center rounded-lg border',
                       tone.icon,
                     )}
                   >
@@ -418,7 +418,7 @@ export const QuickNavigation: FC = () => {
           </div>
           {results.length === 0 && (
             <div className="flex flex-col items-center px-4 py-10 text-center">
-              <span className="border-border/70 bg-accent/20 text-muted-foreground flex size-10 items-center justify-center rounded-lg border">
+              <span className="border-border-subtle bg-surface-inset text-muted-foreground flex size-10 items-center justify-center rounded-lg border">
                 <Search aria-hidden="true" className="size-4" />
               </span>
               <p className="text-foreground mt-3 text-sm font-semibold">
@@ -430,21 +430,21 @@ export const QuickNavigation: FC = () => {
             </div>
           )}
         </div>
-        <div className="border-border/65 bg-surface-muted/55 text-muted-foreground hidden items-center gap-4 border-t px-4 py-2 text-[11px] sm:flex">
+        <div className="border-border-divider bg-surface-inset/85 text-muted-foreground hidden items-center gap-4 border-t px-4 py-2 text-[11px] sm:flex">
           <span className="flex items-center gap-1.5">
-            <kbd className="border-border/70 bg-surface-raised rounded border px-1.5 py-0.5 font-mono">
+            <kbd className="border-border-subtle bg-surface-control rounded-md border px-1.5 py-0.5 font-mono">
               ↑↓
             </kbd>
             Parcourir
           </span>
           <span className="flex items-center gap-1.5">
-            <kbd className="border-border/70 bg-surface-raised rounded border px-1.5 py-0.5 font-mono">
+            <kbd className="border-border-subtle bg-surface-control rounded-md border px-1.5 py-0.5 font-mono">
               Entrée
             </kbd>
             Ouvrir
           </span>
           <span className="ml-auto flex items-center gap-1.5">
-            <kbd className="border-border/70 bg-surface-raised rounded border px-1.5 py-0.5 font-mono">
+            <kbd className="border-border-subtle bg-surface-control rounded-md border px-1.5 py-0.5 font-mono">
               Échap
             </kbd>
             Fermer

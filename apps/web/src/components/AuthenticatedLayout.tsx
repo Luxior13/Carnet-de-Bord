@@ -79,7 +79,7 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
         <main className="relative isolate flex min-h-svh items-center justify-center overflow-hidden p-4">
           <div aria-hidden="true" className="site-background-column" />
           <div
-            className="bg-card relative z-10 max-w-md rounded-md border p-6 text-center shadow-[var(--shadow-panel)]"
+            className="border-border-default bg-surface-panel relative z-10 max-w-md rounded-xl border p-6 text-center shadow-[var(--shadow-panel)]"
             role="alert"
           >
             <AlertTriangle className="text-destructive mx-auto size-8" />
@@ -106,7 +106,7 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
       {/* Skip to main content link for accessibility */}
       <a
         href="#main-content"
-        className="focus:bg-primary focus:text-primary-foreground focus:ring-ring/50 sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-md focus:px-4 focus:py-2 focus:ring-2 focus:outline-none"
+        className="focus:bg-primary focus:text-primary-foreground focus:ring-ring/50 sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-lg focus:px-4 focus:py-2 focus:ring-2 focus:outline-none"
       >
         Aller au contenu principal
       </a>

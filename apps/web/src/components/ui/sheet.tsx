@@ -21,7 +21,7 @@ const SheetOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     className={cn(
-      'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/65 duration-200',
+      'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 bg-overlay/65 fixed inset-0 z-50 duration-200',
       className,
     )}
     {...props}
@@ -31,7 +31,7 @@ const SheetOverlay = React.forwardRef<
 SheetOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 const sheetVariants = cva(
-  'fixed z-50 gap-4 bg-popover text-popover-foreground p-6 shadow-[var(--shadow-panel-strong)] transition ease-out data-[state=closed]:duration-200 data-[state=open]:duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out',
+  'border-border-strong bg-surface text-popover-foreground fixed z-50 gap-4 border p-6 shadow-[var(--shadow-panel-strong)] transition ease-out data-[state=closed]:duration-200 data-[state=open]:duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out',
   {
     defaultVariants: {
       side: 'right',
@@ -39,11 +39,11 @@ const sheetVariants = cva(
     variants: {
       side: {
         bottom:
-          'inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
-        left: 'inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm',
+          'inset-x-0 bottom-0 rounded-t-xl border-x-0 border-b-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
+        left: 'inset-y-0 left-0 h-full w-3/4 rounded-r-xl border-y-0 border-l-0 data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm',
         right:
-          'inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm',
-        top: 'inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top',
+          'inset-y-0 right-0 h-full w-3/4 rounded-l-xl border-y-0 border-r-0 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm',
+        top: 'inset-x-0 top-0 rounded-b-xl border-x-0 border-t-0 data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top',
       },
     },
   },
@@ -65,7 +65,7 @@ const SheetContent = React.forwardRef<
       className={cn(sheetVariants({ side }), className)}
       {...props}
     >
-      <DialogPrimitive.Close className="focus-visible:ring-ring focus-visible:ring-offset-background data-[state=open]:bg-accent hover:bg-accent hover:text-accent-foreground absolute top-2 right-2 inline-flex size-10 items-center justify-center rounded-md opacity-70 transition-[background-color,color,opacity,box-shadow] hover:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none">
+      <DialogPrimitive.Close className="focus-visible:ring-ring focus-visible:ring-offset-background data-[state=open]:bg-surface-tile-hover hover:bg-surface-tile-hover hover:text-accent-foreground absolute top-2 right-2 inline-flex size-10 items-center justify-center rounded-lg opacity-70 transition-[background-color,color,opacity,box-shadow] hover:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none">
         <X className="h-4 w-4" />
         <span className="sr-only">Fermer</span>
       </DialogPrimitive.Close>

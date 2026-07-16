@@ -215,7 +215,7 @@ const SecurityInfoBlock: FC<{
           : 'border-border/70 bg-background/45 text-muted-foreground';
 
   return (
-    <div className="border-border/60 bg-popover rounded-md border p-3">
+    <div className="border-border/60 bg-surface-inset rounded-md border p-3">
       <div className="flex items-start gap-3">
         <span
           className={`${toneClassName} flex size-8 shrink-0 items-center justify-center rounded-lg border`}
@@ -247,7 +247,7 @@ const SessionRow: FC<{
   const DeviceIcon = isMobile ? Smartphone : Monitor;
 
   return (
-    <div className="border-border/60 bg-popover flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center">
+    <div className="border-border/60 bg-surface-inset flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center">
       <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-9 shrink-0 items-center justify-center rounded-lg border">
         <DeviceIcon className="size-4" />
       </span>
@@ -393,7 +393,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                     Nouveau mot de passe temporaire
                   </p>
                 </div>
-                <code className="text-foreground bg-popover block rounded-md border px-3 py-2 font-mono text-sm">
+                <code className="text-foreground bg-surface-inset block rounded-md border px-3 py-2 font-mono text-sm">
                   {tempPassword}
                 </code>
                 <p className="text-muted-foreground text-xs">
@@ -439,7 +439,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       )}
       <Card
         aria-labelledby="user-security-status-heading"
-        className="border-border/70 overflow-hidden rounded-md py-0"
+        className="border-border/70 overflow-hidden rounded-lg py-0"
       >
         <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
           <SectionTitle
@@ -452,7 +452,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
         <CardContent className="space-y-3 p-3 sm:p-4">
           <div
             className={cn(
-              'border-border/60 bg-popover flex items-center justify-between gap-4 rounded-md border p-3',
+              'border-border/60 bg-surface-inset flex items-center justify-between gap-4 rounded-md border p-3',
               !isActive && 'border-destructive/30 bg-destructive/5',
             )}
           >
@@ -521,7 +521,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       </Card>
       <Card
         aria-labelledby="user-security-password-heading"
-        className="border-border/70 overflow-hidden rounded-md py-0"
+        className="border-border/70 overflow-hidden rounded-lg py-0"
       >
         <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
           <SectionTitle
@@ -611,7 +611,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       </Card>
       <Card
         aria-labelledby="user-security-mfa-heading"
-        className="border-border/70 overflow-hidden rounded-md py-0"
+        className="border-border/70 overflow-hidden rounded-lg py-0"
       >
         <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
           <SectionTitle
@@ -676,7 +676,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       </Card>
       <Card
         aria-labelledby="user-security-sessions-heading"
-        className="border-border/70 overflow-hidden rounded-md py-0"
+        className="border-border/70 overflow-hidden rounded-lg py-0"
       >
         <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
           <SectionTitle
@@ -688,7 +688,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">
           {!canViewSessions ? (
-            <div className="border-border/60 bg-popover rounded-md border p-3">
+            <div className="border-border/60 bg-surface-inset rounded-md border p-3">
               <p className="text-muted-foreground text-sm">
                 Vous n&apos;avez pas la permission de consulter ou révoquer les
                 sessions de cet utilisateur.
@@ -711,7 +711,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               </Button>
             </div>
           ) : sessions.length === 0 ? (
-            <div className="border-border/60 bg-popover rounded-md border p-3">
+            <div className="border-border/60 bg-surface-inset rounded-md border p-3">
               <p className="text-muted-foreground text-sm">
                 Aucune session active.
               </p>

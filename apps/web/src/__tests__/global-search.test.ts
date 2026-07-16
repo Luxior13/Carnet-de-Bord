@@ -146,8 +146,9 @@ describe('global page search', () => {
   });
 
   it('keeps the dialog hierarchy and mobile safe areas explicit', () => {
-    expect(globalSearchSource).toContain('bg-surface h-dvh');
-    expect(globalSearchSource).toContain('bg-surface-raised/95');
+    expect(globalSearchSource).toContain('bg-surface-panel h-dvh');
+    expect(globalSearchSource).toContain('bg-surface-panel-raised/95');
+    expect(globalSearchSource).toContain('bg-surface-inset/85');
     expect(globalSearchSource).toContain('bg-primary/10 ring-primary/30');
     expect(globalSearchSource).toContain('Pages suggérées');
     expect(globalSearchSource).toContain('safe-area-inset-top');

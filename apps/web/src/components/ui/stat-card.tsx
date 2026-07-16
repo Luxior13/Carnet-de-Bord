@@ -29,7 +29,7 @@ export const StatCard: FC<StatCardProps> = ({
   return (
     <Card
       className={cn(
-        'border-border/45 bg-surface-muted overflow-hidden rounded-md shadow-none',
+        'border-border-subtle bg-surface overflow-hidden rounded-xl',
         className,
       )}
     >
@@ -57,7 +57,7 @@ export const StatCard: FC<StatCardProps> = ({
               <p className="text-muted-foreground text-xs">{description}</p>
             )}
           </div>
-          <div className="border-border/50 bg-surface-raised text-muted-foreground flex h-10 w-10 items-center justify-center rounded-md border">
+          <div className="border-border-default bg-surface-inset text-muted-foreground flex h-10 w-10 items-center justify-center rounded-lg border">
             <Icon className={cn('h-5 w-5', iconColor)} />
           </div>
         </div>

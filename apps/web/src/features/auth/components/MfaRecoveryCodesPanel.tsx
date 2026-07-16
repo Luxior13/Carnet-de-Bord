@@ -70,7 +70,7 @@ export const MfaRecoveryCodesPanel: FC<MfaRecoveryCodesPanelProps> = ({
       >
         {codes.map((code) => (
           <li
-            className="bg-popover rounded border px-3 py-2 text-center font-mono text-sm tracking-wider"
+            className="bg-surface-inset rounded border px-3 py-2 text-center font-mono text-sm tracking-wider"
             key={code}
           >
             {code}

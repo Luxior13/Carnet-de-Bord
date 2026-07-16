@@ -35,7 +35,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/68 duration-200',
+        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 bg-overlay/68 fixed inset-0 z-50 duration-200',
         className,
       )}
       {...props}
@@ -70,14 +70,15 @@ function DialogContent({
       >
         <DialogPrimitive.Content
           className={cn(
-            'border-border/80 bg-popover text-popover-foreground data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=open]:animate-in pointer-events-auto relative grid w-full max-w-lg border p-5 shadow-[var(--shadow-panel-strong)] duration-200 sm:rounded-md',
+            'border-border-strong bg-surface text-popover-foreground data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=open]:animate-in pointer-events-auto relative grid w-full max-w-lg border p-5 shadow-[var(--shadow-panel-strong)] duration-200',
+            fullscreenOnMobile ? 'sm:rounded-xl' : 'rounded-xl',
             className,
           )}
           {...props}
         >
           {children}
           {!hideCloseButton && (
-            <DialogPrimitive.Close className="focus-visible:ring-ring focus-visible:ring-offset-background data-[state=open]:bg-accent data-[state=open]:text-muted-foreground hover:bg-accent hover:text-accent-foreground absolute top-2 right-2 inline-flex size-10 items-center justify-center rounded-md opacity-70 transition-[background-color,color,opacity,box-shadow] hover:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none">
+            <DialogPrimitive.Close className="focus-visible:ring-ring focus-visible:ring-offset-background data-[state=open]:bg-surface-tile-hover data-[state=open]:text-muted-foreground hover:bg-surface-tile-hover hover:text-accent-foreground absolute top-2 right-2 inline-flex size-10 items-center justify-center rounded-lg opacity-70 transition-[background-color,color,opacity,box-shadow] hover:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none">
               <XIcon className="h-4 w-4" />
               <span className="sr-only">Fermer</span>
             </DialogPrimitive.Close>

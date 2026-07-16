@@ -14,10 +14,10 @@ const Toaster: FC<ToasterProps> = ({ ...props }) => {
           actionButton:
             'group-[.toast]:bg-primary group-[.toast]:text-primary-foreground font-medium',
           cancelButton:
-            'group-[.toast]:bg-muted group-[.toast]:text-muted-foreground font-medium',
+            'group-[.toast]:border-border-default group-[.toast]:bg-surface-inset group-[.toast]:text-muted-foreground font-medium',
           description: 'group-[.toast]:text-muted-foreground',
           toast:
-            'group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-[var(--shadow-panel)]',
+            'group toast group-[.toaster]:border-border-strong group-[.toaster]:bg-surface-floating group-[.toaster]:text-foreground group-[.toaster]:rounded-xl group-[.toaster]:shadow-[var(--shadow-panel-strong)]',
         },
       }}
       {...props}

@@ -699,7 +699,7 @@ function SidebarMenuButton({
       data-size={size}
       data-slot="sidebar-menu-button"
       className={cn(
-        'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/65 flex w-full max-w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-md border border-transparent px-3 text-left text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
+        'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/65 flex w-full max-w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-lg border border-transparent px-3 text-left text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
         'data-[active=true]:border-sidebar-ring/45 data-[active=true]:bg-sidebar-accent/70 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring data-[active=true]:font-semibold',
         size === 'sm' && 'h-11 text-xs lg:h-9',
         size === 'default' && 'h-11 lg:h-10',
@@ -735,7 +735,7 @@ function SidebarMenuAction({
       data-slot="sidebar-menu-action"
       type="button"
       className={cn(
-        'text-sidebar-foreground/65 hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring absolute top-0 right-0 flex size-11 items-center justify-center rounded-md border border-transparent transition-colors outline-none group-data-[collapsible=icon]/sidebar:hidden focus-visible:ring-2 lg:top-1.5 lg:right-1 lg:size-6',
+        'text-sidebar-foreground/65 hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring absolute top-0 right-0 flex size-11 items-center justify-center rounded-lg border border-transparent transition-colors outline-none group-data-[collapsible=icon]/sidebar:hidden focus-visible:ring-2 lg:top-1.5 lg:right-1 lg:size-6',
         className,
       )}
       {...props}
@@ -831,7 +831,7 @@ function SidebarMenuSubButton({
       data-sidebar="menu-sub-button"
       data-slot="sidebar-menu-sub-button"
       className={cn(
-        'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/60 flex h-11 w-full min-w-0 items-center gap-2 overflow-hidden rounded-md border border-transparent px-2.5 text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 lg:h-8 [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+        'hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-sidebar-foreground/60 flex h-11 w-full min-w-0 items-center gap-2 overflow-hidden rounded-lg border border-transparent px-2.5 text-sm font-medium transition-[background-color,color,border-color,box-shadow] outline-none focus-visible:ring-2 lg:h-8 [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
         'data-[active=true]:bg-sidebar-accent/65 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring data-[active=true]:border-sidebar-ring/30 data-[active=true]:border data-[active=true]:font-semibold',
         className,
       )}

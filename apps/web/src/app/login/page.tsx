@@ -410,7 +410,7 @@ function LoginPage(): React.ReactNode {
                   {displayedError}
                 </div>
               )}
-              <div className="bg-popover rounded-md border p-3 text-sm">
+              <div className="bg-surface-inset rounded-md border p-3 text-sm">
                 Connexion pour <strong>{loginName.trim().toLowerCase()}</strong>
               </div>
               <MfaCodeInput
@@ -489,7 +489,7 @@ function LoginPage(): React.ReactNode {
         <div className="border-border/65 bg-surface-muted grid grid-cols-3 gap-2 border-t p-3 text-xs sm:p-4">
           {['Vue globale', 'Comptes', 'Sécurité'].map((item) => (
             <div
-              className="bg-popover text-muted-foreground flex min-w-0 flex-col items-center justify-center gap-1.5 rounded-md border px-2 py-2 text-center sm:flex-row sm:gap-2 sm:px-3"
+              className="bg-surface-inset text-muted-foreground flex min-w-0 flex-col items-center justify-center gap-1.5 rounded-md border px-2 py-2 text-center sm:flex-row sm:gap-2 sm:px-3"
               key={item}
             >
               <CheckCircle2 className="text-primary-emphasis size-4" />

@@ -192,7 +192,7 @@ const getUsersStatToneClassNames = (
   }
 
   return {
-    icon: 'border-border/50 bg-surface-raised text-muted-foreground',
+    icon: 'border-border-default bg-surface-inset text-muted-foreground',
     value: 'text-foreground',
   };
 };
@@ -219,7 +219,7 @@ const UsersStatCard: FC<{
   const toneClassNames = getUsersStatToneClassNames(tone);
 
   return (
-    <Card className="border-border/45 bg-surface-muted overflow-hidden rounded-md py-0 shadow-none">
+    <Card className="border-border-subtle bg-surface overflow-hidden rounded-xl py-0 shadow-[var(--shadow-panel)]">
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div

@@ -40,7 +40,7 @@ const ResumeStatCard: FC<{
   tone?: ResumeStatTone;
   value: number | string;
 }> = ({ icon: Icon, label, tone = 'neutral', value }) => (
-  <Card className="border-border/70 overflow-hidden rounded-md py-0">
+  <Card className="border-border/70 overflow-hidden rounded-lg py-0">
     <CardContent className="p-3 sm:p-4">
       <div className="flex items-center gap-3">
         <div
@@ -127,7 +127,7 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({
         </div>
       )}
       {/* User Details */}
-      <Card className="border-border/70 overflow-hidden rounded-md py-0">
+      <Card className="border-border/70 overflow-hidden rounded-lg py-0">
         <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
           <h3 className="text-sm font-semibold">Informations du compte</h3>
         </CardHeader>

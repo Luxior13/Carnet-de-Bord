@@ -158,7 +158,7 @@ const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
   onChange,
   permission,
 }) => (
-  <div className="border-border/60 bg-popover flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+  <div className="border-border/60 bg-surface-inset flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
     <div className="min-w-0 space-y-1">
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         <h5 className="text-foreground text-sm font-semibold">

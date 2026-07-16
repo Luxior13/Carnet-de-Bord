@@ -61,13 +61,13 @@ type PermissionModuleGroup = {
 };
 
 const permissionSelectTriggerClassName =
-  'border-border-control bg-input text-foreground hover:bg-accent/25 focus-visible:border-primary/45 focus-visible:ring-ring/35 h-11 w-full shadow-none';
+  'border-border-control bg-surface-control text-foreground hover:border-border-strong hover:bg-surface-control-hover focus-visible:border-primary/45 focus-visible:bg-surface-control-focus focus-visible:ring-ring/35 h-11 w-full rounded-lg shadow-none';
 
 const permissionSelectContentClassName =
-  'border-border bg-surface-raised/98 text-foreground rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]';
+  'border-border-strong bg-popover text-foreground rounded-xl p-1.5 shadow-[var(--shadow-panel-strong)]';
 
 const permissionSelectItemClassName =
-  'focus:bg-accent/55 focus:text-accent-foreground rounded-md py-2';
+  'focus:bg-surface-tile-hover focus:text-accent-foreground rounded-lg py-2';
 
 type SelectVisualOptionProps = {
   icon: Parameters<typeof getNavigationIcon>[0];
@@ -366,7 +366,7 @@ const PermissionStatePicker: FC<PermissionStatePickerProps> = memo(
     return (
       <div className="flex min-w-0 items-center gap-1.5">
         <div
-          className="border-border/70 bg-popover grid min-w-0 flex-1 grid-cols-2 gap-1 rounded-lg border p-1 sm:min-w-[12.5rem] sm:flex-none"
+          className="border-border/70 bg-surface-control grid min-w-0 flex-1 grid-cols-2 gap-1 rounded-lg border p-1 sm:min-w-[12.5rem] sm:flex-none"
           role="group"
           aria-label={`Choix de la permission ${permissionLabel}`}
         >
@@ -481,7 +481,9 @@ const PermissionCard: FC<PermissionCardProps> = memo(
           'border-border/60 bg-surface/80 overflow-hidden rounded-lg border border-l-2',
           getRiskBorderClassName(permission.risk),
           view.hasMissingDependencies && 'bg-warning/10',
-          !view.isEnabled && !view.hasMissingDependencies && 'bg-popover/55',
+          !view.isEnabled &&
+            !view.hasMissingDependencies &&
+            'bg-surface-inset/55',
         )}
       >
         <div className="grid gap-3 p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">

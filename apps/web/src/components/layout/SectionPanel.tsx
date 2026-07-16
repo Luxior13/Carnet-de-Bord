@@ -24,13 +24,13 @@ export const SectionPanel: FC<SectionPanelProps> = ({
   return (
     <section
       className={cn(
-        'border-border/80 bg-surface overflow-hidden rounded-md border shadow-[var(--shadow-panel)]',
+        'border-border-default bg-surface-panel overflow-hidden rounded-xl border shadow-[var(--shadow-panel)]',
         className,
       )}
     >
-      <div className="border-border/70 bg-surface-muted/75 flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="border-border-divider bg-surface-panel-raised flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-9 shrink-0 items-center justify-center rounded-md border">
+          <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-9 shrink-0 items-center justify-center rounded-lg border">
             {icon}
           </span>
           <div className="min-w-0">

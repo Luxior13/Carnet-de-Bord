@@ -61,23 +61,23 @@ type SidebarProps = {
 };
 
 const SIDEBAR_POPOVER_PANEL_CLASS =
-  'border-sidebar-border/90 bg-surface text-sidebar-foreground flex max-h-[var(--radix-dropdown-menu-content-available-height)] flex-col overflow-hidden rounded-xl p-0 shadow-[var(--shadow-panel-strong)]';
+  'border-border-strong bg-surface text-sidebar-foreground flex max-h-[var(--radix-dropdown-menu-content-available-height)] flex-col overflow-hidden rounded-xl border p-0 shadow-[var(--shadow-panel-strong)]';
 const SIDEBAR_POPOVER_SCROLL_CLASS =
   'min-h-0 flex-1 overflow-y-auto overscroll-contain p-2.5';
 const SIDEBAR_POPOVER_SECTION_CLASS =
-  'border-sidebar-border/60 bg-surface-control/70 space-y-0.5 rounded-xl border p-1';
+  'border-border-subtle bg-surface-inset space-y-0.5 rounded-xl border p-1';
 const SIDEBAR_POPOVER_SECTION_LABEL_CLASS =
   'text-sidebar-foreground/45 px-1.5 pb-1.5 text-[10px] font-semibold tracking-[0.16em] uppercase';
 const SIDEBAR_POPOVER_ACTION_BASE_CLASS =
   'group/menu-action focus:text-sidebar-foreground flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-lg border border-transparent px-2 py-1.5 text-left text-[13px] font-semibold text-sidebar-foreground/75 transition-colors duration-150';
 const SIDEBAR_POPOVER_ACTION_CLASS =
-  'hover:border-sidebar-border/80 hover:bg-surface-muted/60 hover:text-sidebar-foreground focus:border-primary/35 focus:bg-primary/10';
+  'hover:border-border-default hover:bg-surface-tile-hover hover:text-sidebar-foreground focus:border-primary/35 focus:bg-primary/10';
 const SIDEBAR_POPOVER_DANGER_ACTION_CLASS =
   'hover:border-destructive/35 hover:bg-destructive/10 hover:text-destructive focus:border-destructive/35 focus:bg-destructive/10 focus:text-destructive';
 const SIDEBAR_POPOVER_ICON_BASE_CLASS =
   'flex size-7 shrink-0 items-center justify-center rounded-lg border transition-colors duration-150';
 const SIDEBAR_POPOVER_ICON_ACTION_CLASS =
-  'border-sidebar-border/50 bg-surface text-sidebar-foreground/55 group-hover/menu-action:border-primary/30 group-hover/menu-action:bg-primary/10 group-hover/menu-action:text-primary-emphasis group-focus/menu-action:border-primary/30 group-focus/menu-action:bg-primary/10 group-focus/menu-action:text-primary-emphasis';
+  'border-border-subtle bg-surface text-sidebar-foreground/55 group-hover/menu-action:border-primary/30 group-hover/menu-action:bg-primary/10 group-hover/menu-action:text-primary-emphasis group-focus/menu-action:border-primary/30 group-focus/menu-action:bg-primary/10 group-focus/menu-action:text-primary-emphasis';
 const SIDEBAR_POPOVER_ICON_DANGER_CLASS =
   'border-transparent bg-surface text-sidebar-foreground/55 group-hover/menu-action:border-destructive/30 group-hover/menu-action:bg-destructive/10 group-hover/menu-action:text-destructive group-focus/menu-action:border-destructive/30 group-focus/menu-action:bg-destructive/10 group-focus/menu-action:text-destructive';
 const SIDEBAR_POPOVER_CHEVRON_CLASS =
@@ -135,14 +135,14 @@ const SpaceSwitcher: FC<{
     if (!isCollapsed) setIsTooltipOpen(false);
   }, [isCollapsed]);
   const rowClassName = cn(
-    'flex h-11 w-full min-w-0 items-center gap-2.5 rounded-md border border-transparent bg-transparent px-2 text-left transition-[background-color,border-color,box-shadow] outline-none lg:h-10',
+    'flex h-11 w-full min-w-0 items-center gap-2.5 rounded-lg border border-transparent bg-transparent px-2 text-left transition-[background-color,border-color,box-shadow] outline-none lg:h-10',
     'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-3',
   );
   const rowContent = (
     <>
       <span
         className={cn(
-          'flex size-8 shrink-0 items-center justify-center rounded-md border',
+          'flex size-8 shrink-0 items-center justify-center rounded-lg border',
           activeTone.icon,
         )}
       >
@@ -445,7 +445,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               <DropdownMenuContent
                 align="start"
                 aria-label={item.label}
-                className="border-sidebar-border bg-surface-raised/98 text-sidebar-foreground w-64 overflow-hidden rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]"
+                className="border-border-strong bg-popover text-sidebar-foreground w-64 overflow-hidden rounded-xl border p-2 shadow-[var(--shadow-panel-strong)]"
                 side="right"
                 sideOffset={8}
               >
@@ -455,7 +455,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 <DropdownMenuItem
                   asChild
                   className={cn(
-                    'focus:text-sidebar-foreground cursor-pointer rounded-md px-2.5 py-2 text-sm',
+                    'focus:text-sidebar-foreground cursor-pointer rounded-lg px-2.5 py-2 text-sm',
                     activeTone.row,
                     isExactActive && activeTone.activeItem,
                   )}
@@ -469,7 +469,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                     <span className="truncate">Vue d’ensemble</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-sidebar-border/70 mx-1 my-1" />
+                <DropdownMenuSeparator className="bg-border-divider mx-1 my-1" />
                 {children.map((child) => {
                   const ChildIcon = getNavigationIcon(child.icon);
                   const isChildExactActive = pathname === child.href;
@@ -484,7 +484,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                       key={child.href}
                       asChild
                       className={cn(
-                        'focus:text-sidebar-foreground cursor-pointer rounded-md px-2.5 py-2 text-sm',
+                        'focus:text-sidebar-foreground cursor-pointer rounded-lg px-2.5 py-2 text-sm',
                         activeTone.row,
                         isChildActive && activeTone.activeItem,
                       )}
@@ -593,7 +593,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
           onClick={() => setOpenMobile(false)}
           title={isCollapsed ? SITE_CONFIG.name : undefined}
           className={cn(
-            'hover:bg-sidebar-accent/30 focus-visible:ring-sidebar-ring hover:border-sidebar-border/45 flex h-11 w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-md border border-transparent px-2 text-left transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-2 lg:h-9',
+            'hover:bg-sidebar-accent/30 focus-visible:ring-sidebar-ring hover:border-sidebar-border/45 flex h-11 w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-lg border border-transparent px-2 text-left transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-2 lg:h-9',
             'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-3',
           )}
         >
@@ -676,11 +676,11 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 aria-label={`Menu utilisateur de ${userDisplayName}`}
                 title={isCollapsed ? userDisplayName : undefined}
                 className={cn(
-                  'group/account-menu border-sidebar-border/65 bg-surface-control hover:border-sidebar-ring/25 hover:bg-surface-subtle focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/35 data-[state=open]:bg-surface-subtle flex h-11 min-w-0 items-center gap-2.5 overflow-hidden rounded-md border px-2 text-left transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-2 lg:h-10',
+                  'group/account-menu border-sidebar-border/65 bg-surface-control hover:border-sidebar-ring/25 hover:bg-surface-subtle focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/35 data-[state=open]:bg-surface-subtle flex h-11 min-w-0 items-center gap-2.5 overflow-hidden rounded-lg border px-2 text-left transition-[background-color,border-color,box-shadow] outline-none focus-visible:ring-2 lg:h-10',
                   'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-3',
                 )}
               >
-                <UserAvatar user={userData} className="size-8 rounded-md" />
+                <UserAvatar user={userData} className="size-8 rounded-lg" />
                 <span className="min-w-0 flex-1 overflow-hidden transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:max-w-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150">
                   <span className="block truncate text-sm font-medium">
                     {userDisplayName}
@@ -703,7 +703,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 'w-[min(19rem,calc(100vw-2rem))]',
               )}
             >
-              <div className="border-sidebar-border/75 from-surface-muted/60 to-surface relative overflow-hidden border-b bg-gradient-to-br px-3.5 py-3">
+              <div className="border-border-divider from-surface-muted/60 to-surface relative overflow-hidden border-b bg-gradient-to-br px-3.5 py-3">
                 <span
                   aria-hidden="true"
                   className="from-primary absolute inset-x-0 top-0 h-px bg-gradient-to-r to-transparent opacity-80"
@@ -776,7 +776,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 </DropdownMenuGroup>
               </div>
 
-              <div className="border-sidebar-border/75 bg-surface-control/60 border-t p-2">
+              <div className="border-border-divider bg-surface-inset border-t p-2">
                 <DropdownMenuItem
                   onSelect={() => {
                     setOpenMobile(false);

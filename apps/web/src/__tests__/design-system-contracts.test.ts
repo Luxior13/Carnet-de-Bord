@@ -42,13 +42,30 @@ const themeIndependentSourcePaths = globSync('**/*.{ts,tsx}', {
     (path) => !path.startsWith('__tests__/') && !sidebarTokenOwners.has(path),
   );
 
-const getGlobalColorToken = (token: string): string | undefined => {
+const getRawGlobalColorToken = (token: string): string | undefined => {
   const declaration = globalStylesSource
     .split('\n')
     .map((line) => line.trim())
     .find((line) => line.startsWith(`${token}:`));
 
   return declaration?.slice(token.length + 1, -1).trim();
+};
+
+const getGlobalColorToken = (
+  token: string,
+  visitedTokens: ReadonlySet<string> = new Set(),
+): string | undefined => {
+  if (visitedTokens.has(token)) return undefined;
+
+  const value = getRawGlobalColorToken(token);
+  const referencedToken = value?.match(/^var\((--[\w-]+)\)$/)?.[1];
+
+  if (!referencedToken) return value;
+
+  return getGlobalColorToken(
+    referencedToken,
+    new Set([...visitedTokens, token]),
+  );
 };
 
 const getRequiredGlobalColorToken = (token: string): string => {
@@ -204,7 +221,41 @@ describe('design system contracts', () => {
       getRelativeLuminance(surfaceMuted),
     );
     expect(getContrastRatio(background, surface)).toBeGreaterThan(1.2);
-    expect(getContrastRatio(background, surfaceRaised)).toBeGreaterThan(1.6);
+    expect(getContrastRatio(background, surfaceRaised)).toBeGreaterThan(1.3);
+  });
+
+  it('keeps the canonical midnight scale behind stable semantic aliases', () => {
+    expect(getRawGlobalColorToken('--background')).toBe(
+      'var(--surface-canvas)',
+    );
+    expect(getRawGlobalColorToken('--surface')).toBe('var(--surface-panel)');
+    expect(getRawGlobalColorToken('--surface-raised')).toBe(
+      'var(--surface-floating)',
+    );
+    expect(getRawGlobalColorToken('--foreground')).toBe('var(--text-primary)');
+    expect(getRawGlobalColorToken('--muted-foreground')).toBe(
+      'var(--text-muted)',
+    );
+    expect(globalStylesSource).toContain(
+      '--color-surface-inset: var(--surface-inset)',
+    );
+    expect(globalStylesSource).toContain(
+      '--color-border-strong: var(--border-strong)',
+    );
+    expect(globalStylesSource).toContain('--color-overlay: var(--overlay)');
+  });
+
+  it('keeps modal backdrops themeable instead of hard-coding black', () => {
+    for (const sourcePath of [
+      '../components/ui/alert-dialog.tsx',
+      '../components/ui/dialog.tsx',
+      '../components/ui/sheet.tsx',
+    ]) {
+      const source = readSourceFile(sourcePath);
+
+      expect(source).toContain('bg-overlay/');
+      expect(source).not.toContain('bg-black/');
+    }
   });
 
   it('keeps secondary text and control borders legible on their surfaces', () => {

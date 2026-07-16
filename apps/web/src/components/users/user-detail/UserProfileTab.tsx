@@ -162,18 +162,18 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
 
   if (isSelf) {
     return (
-      <Card className="border-border/70 overflow-hidden rounded-md py-0">
+      <Card className="border-border/70 overflow-hidden rounded-lg py-0">
         <CardHeader className="border-border/65 bg-surface-muted border-b p-4">
           <h2 className="text-sm font-semibold">Profil administratif</h2>
         </CardHeader>
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2">
-          <div className="border-border/60 bg-popover rounded-md border p-3">
+          <div className="border-border/60 bg-surface-inset rounded-md border p-3">
             <p className="text-muted-foreground text-xs">Identité</p>
             <p className="text-foreground mt-1 text-sm font-medium">
               {form.firstName} {form.lastName}
             </p>
           </div>
-          <div className="border-border/60 bg-popover rounded-md border p-3">
+          <div className="border-border/60 bg-surface-inset rounded-md border p-3">
             <p className="text-muted-foreground text-xs">
               Identifiant de connexion
             </p>
@@ -182,7 +182,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
             </p>
           </div>
           {canViewContact && (
-            <div className="border-border/60 bg-popover rounded-md border p-3 sm:col-span-2">
+            <div className="border-border/60 bg-surface-inset rounded-md border p-3 sm:col-span-2">
               <p className="text-muted-foreground text-xs">Email de contact</p>
               <p className="text-foreground mt-1 text-sm break-all">
                 {form.contactEmail || 'Non renseigné'}
@@ -196,7 +196,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
 
   if (!isEditing) {
     return (
-      <Card className="border-border/70 overflow-hidden rounded-md py-0">
+      <Card className="border-border/70 overflow-hidden rounded-lg py-0">
         <CardHeader className="border-border/65 bg-surface-muted flex-row items-center justify-between gap-3 border-b p-3 sm:p-4">
           <h2 className="text-sm font-semibold">Profil utilisateur</h2>
           {canEditAnything ? (
@@ -252,7 +252,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
 
   return (
     <form {...passwordManagerIgnoreAttributes} onSubmit={handleSubmit}>
-      <Card className="border-border/70 overflow-hidden rounded-md py-0">
+      <Card className="border-border/70 overflow-hidden rounded-lg py-0">
         <CardHeader className="border-border/65 bg-surface-muted flex-row items-center justify-between border-b p-3 sm:p-4">
           <h2 className="text-sm font-semibold">Profil utilisateur</h2>
           {!canEdit && !canEditContact && !canEditLogin && (

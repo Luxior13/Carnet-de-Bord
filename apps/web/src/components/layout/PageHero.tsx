@@ -35,8 +35,8 @@ export const PageHero: FC<PageHeroProps> = ({
   return (
     <section
       className={cn(
-        'overflow-hidden rounded-lg border shadow-[var(--shadow-panel)]',
         toneClasses.hero,
+        'border-border-default bg-surface-panel overflow-hidden rounded-xl border shadow-[var(--shadow-panel)]',
         className,
       )}
       {...props}
@@ -45,11 +45,15 @@ export const PageHero: FC<PageHeroProps> = ({
         aria-hidden="true"
         className={cn('h-1 w-full', toneClasses.accent)}
       />
-      <div className="flex flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="from-surface-panel-raised/50 via-surface-panel to-surface-panel flex flex-col gap-4 bg-gradient-to-br p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-start gap-3 sm:gap-4">
           {icon && (
             <ServiceIcon
-              className={cn('mt-0.5 size-11', toneClasses.icon, iconClassName)}
+              className={cn(
+                'mt-0.5 size-11 rounded-lg',
+                toneClasses.icon,
+                iconClassName,
+              )}
             >
               {icon}
             </ServiceIcon>

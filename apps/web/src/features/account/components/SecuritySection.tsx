@@ -123,7 +123,7 @@ const SessionRow: FC<SessionRowProps> = ({ isRevoking, onRevoke, session }) => {
   return (
     <div
       className={cn(
-        'border-border/60 bg-popover flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-start',
+        'border-border/60 bg-surface-inset flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-start',
         session.isCurrent && 'border-primary/35 bg-accent/[0.1]',
       )}
     >
@@ -437,7 +437,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         {canViewPasswordSecurity && (
           <Card
             aria-labelledby="account-password-heading"
-            className="border-border/70 overflow-hidden rounded-md py-0"
+            className="border-border/70 overflow-hidden rounded-lg py-0"
           >
             <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
               <SectionTitle
@@ -448,7 +448,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               </SectionTitle>
             </CardHeader>
             <CardContent className="space-y-3 p-3 sm:p-4">
-              <div className="border-border/60 bg-popover space-y-3 rounded-md border p-3">
+              <div className="border-border/60 bg-surface-inset space-y-3 rounded-md border p-3">
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground text-sm">État</span>
                   {userData.mustChangePassword ? (
@@ -509,7 +509,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           <Card
             aria-busy={loadingMfaStatus}
             aria-labelledby="account-mfa-heading"
-            className="border-border/70 overflow-hidden rounded-md py-0"
+            className="border-border/70 overflow-hidden rounded-lg py-0"
           >
             <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
               <SectionTitle
@@ -544,7 +544,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 </div>
               ) : (
                 <>
-                  <div className="border-border/60 bg-popover space-y-3 rounded-md border p-3">
+                  <div className="border-border/60 bg-surface-inset space-y-3 rounded-md border p-3">
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-muted-foreground text-sm">
                         État
@@ -652,7 +652,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           <Card
             aria-busy={loadingSessions}
             aria-labelledby="account-sessions-heading"
-            className="border-border/70 overflow-hidden rounded-md py-0"
+            className="border-border/70 overflow-hidden rounded-lg py-0"
           >
             <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
               <SectionTitle
@@ -687,7 +687,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                   </Button>
                 </div>
               ) : sessions.length === 0 ? (
-                <div className="border-border/60 bg-popover rounded-md border p-3">
+                <div className="border-border/60 bg-surface-inset rounded-md border p-3">
                   <p className="text-muted-foreground text-sm">
                     Aucune session active n&apos;a été trouvée.
                   </p>
@@ -719,7 +719,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <div className="border-border/60 bg-popover rounded-md border p-3">
+                    <div className="border-border/60 bg-surface-inset rounded-md border p-3">
                       <p className="text-muted-foreground text-sm">
                         Aucune autre session active.
                       </p>
@@ -782,7 +782,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           if (!open && !revokingId) setSessionToRevoke(null);
         }}
       >
-        <AlertDialogContent className="border-border overflow-hidden rounded-md p-0">
+        <AlertDialogContent className="overflow-hidden p-0">
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">
@@ -819,7 +819,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         </AlertDialogContent>
       </AlertDialog>
       <AlertDialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
-        <AlertDialogContent className="border-border overflow-hidden rounded-md p-0">
+        <AlertDialogContent className="overflow-hidden p-0">
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">

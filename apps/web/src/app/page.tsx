@@ -196,7 +196,7 @@ const DashboardAttentionCard: FC<{
   ].filter((item) => item.count > 0);
 
   return (
-    <Card className="border-warning/25 overflow-hidden rounded-md py-0">
+    <Card className="border-warning/25 overflow-hidden rounded-lg py-0">
       <CardHeader className="border-border/65 bg-surface-muted border-b p-4">
         <h2 className="text-sm font-semibold">À traiter</h2>
         <CardDescription>
@@ -246,7 +246,7 @@ const DashboardActivityCard: FC<{
   activities: DashboardActivityItem[];
   canOpenJournal: boolean;
 }> = ({ activities, canOpenJournal }) => (
-  <Card className="border-border/70 overflow-hidden rounded-md py-0">
+  <Card className="border-border/70 overflow-hidden rounded-lg py-0">
     <CardHeader className="border-border/65 bg-surface-muted border-b p-4">
       <h2 className="text-sm font-semibold">Activité récente</h2>
       <CardDescription>Les trois derniers événements utiles.</CardDescription>

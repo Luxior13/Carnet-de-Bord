@@ -68,14 +68,14 @@ export function SystemHomePage(): React.ReactNode {
                   return (
                     <Link
                       aria-label={actionLabel}
-                      className="group focus-visible:ring-ring/45 focus-visible:ring-offset-background block h-full rounded-md outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                      className="group focus-visible:ring-ring/45 focus-visible:ring-offset-background block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                       href={item.href}
                       key={item.href}
                     >
-                      <Card className="border-border/70 group-hover:border-ring/35 group-focus-visible:border-ring/40 h-full transition-[border-color,background-color,box-shadow] group-hover:shadow-[var(--shadow-panel-strong)] motion-reduce:transition-none">
+                      <Card className="border-border-default bg-surface-panel group-hover:border-ring/35 group-hover:bg-surface-panel-raised/35 group-focus-visible:border-ring/40 h-full rounded-xl transition-[border-color,background-color,box-shadow] group-hover:shadow-[var(--shadow-panel-strong)] motion-reduce:transition-none">
                         <CardContent className="flex h-full flex-col p-4 sm:p-5">
                           <div className="flex items-start gap-3">
-                            <ServiceIcon className="bg-primary/10 text-primary-emphasis size-9">
+                            <ServiceIcon className="bg-primary/10 text-primary-emphasis size-9 rounded-lg">
                               <Icon className="size-4" />
                             </ServiceIcon>
                             <div className="min-w-0 flex-1">

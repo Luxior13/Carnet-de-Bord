@@ -105,7 +105,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
               <Input
                 value="Super-administrateur"
                 disabled
-                className="border-border bg-popover h-8 min-w-0"
+                className="border-border bg-surface-control h-8 min-w-0"
               />
             </div>
           </div>
@@ -191,7 +191,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                     id="user-role"
                     value="Super-administrateur"
                     disabled
-                    className="border-border bg-popover h-8 min-w-0"
+                    className="border-border bg-surface-control h-8 min-w-0"
                   />
                 ) : (
                   <div className="space-y-1">
@@ -207,7 +207,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                             ? 'user-role-mfa-requirement'
                             : undefined
                         }
-                        className="border-border bg-popover h-8 min-w-36"
+                        className="border-border bg-surface-control h-8 min-w-36"
                       >
                         <SelectValue />
                       </SelectTrigger>
