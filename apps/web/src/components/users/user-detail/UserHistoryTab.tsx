@@ -113,7 +113,7 @@ export type UserHistoryFacets = {
 
 export const DEFAULT_USER_HISTORY_FILTERS: UserHistoryFilters = {
   activityScope: DEFAULT_ACTIVITY_SCOPE,
-  dateFilter: ALL_FILTER_VALUE,
+  dateFilter: '90',
   pageFilter: ALL_FILTER_VALUE,
   poleFilter: ALL_FILTER_VALUE,
 };
@@ -1503,7 +1503,7 @@ const ActivityListRow: FC<{
   return (
     <article
       className={cn(
-        'border-border/60 bg-surface-muted/35 relative overflow-hidden rounded-lg border transition-colors',
+        'border-border/60 bg-surface-muted/35 relative overflow-hidden rounded-lg border transition-colors [contain-intrinsic-size:auto_5rem] [content-visibility:auto]',
         isOpen
           ? 'border-primary/35 bg-popover/75'
           : 'hover:border-border hover:bg-surface-muted/60',

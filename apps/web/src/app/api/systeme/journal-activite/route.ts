@@ -35,6 +35,7 @@ const MAX_LIMIT = 100;
 const EXPORT_BATCH_SIZE = 500;
 const MAX_EXPORT_ROWS = 50_000;
 const MAX_CUSTOM_RANGE_MS = 366 * 24 * 60 * 60 * 1000;
+const CURSOR_CLOCK_SKEW_MS = 60_000;
 const CURSOR_VERSION = 1 as const;
 const CURSOR_SIGNING_KEY = createHash('sha256')
   .update('team-control:audit-cursor:v1:', 'utf8')
@@ -59,6 +60,14 @@ const ISO_DATE_TIME_SCHEMA = z
   .pipe(z.iso.datetime({ offset: true }));
 const IDENTIFIER_SCHEMA = z.string().trim().min(1).max(191);
 const LOCATION_KEY_SCHEMA = z.string().trim().min(1).max(100);
+const SEARCH_SCHEMA = z
+  .string()
+  .trim()
+  .max(120)
+  .refine(
+    (value) => (value.match(/[\p{L}\p{N}]/gu)?.length ?? 0) >= 3,
+    'La recherche doit contenir au moins 3 lettres ou chiffres',
+  );
 
 const JOURNAL_QUERY_SCHEMA = z
   .object({
@@ -75,7 +84,7 @@ const JOURNAL_QUERY_SCHEMA = z
     pageKey: LOCATION_KEY_SCHEMA.optional(),
     period: z.enum(['24h', '7d', '30d', '90d', 'all', 'custom']).default('30d'),
     poleKey: LOCATION_KEY_SCHEMA.optional(),
-    search: z.string().trim().min(1).max(120).optional(),
+    search: SEARCH_SCHEMA.optional(),
     severity: z.enum(AuditSeverity).optional(),
     stream: z.enum(AuditStream).optional(),
     targetUserId: IDENTIFIER_SCHEMA.optional(),
@@ -374,7 +383,10 @@ const decodeCursor = (
     }
     const cursorCreatedAt = Date.parse(cursor.data.createdAt);
     const cursorSnapshotAt = Date.parse(cursor.data.snapshotAt);
-    if (cursorCreatedAt > cursorSnapshotAt || cursorSnapshotAt > Date.now()) {
+    if (
+      cursorCreatedAt > cursorSnapshotAt ||
+      cursorSnapshotAt > Date.now() + CURSOR_CLOCK_SKEW_MS
+    ) {
       return null;
     }
 
@@ -408,19 +420,57 @@ const getCreatedAfter = (
   return new Date(snapshotAt.getTime() - PERIOD_DURATIONS[query.period]);
 };
 
-const buildSearchFilter = (search: string): Prisma.AuditLogWhereInput => ({
-  OR: [
-    { actorDisplayNameSnapshot: { contains: search, mode: 'insensitive' } },
-    { actorLoginNameSnapshot: { contains: search, mode: 'insensitive' } },
-    { targetDisplayNameSnapshot: { contains: search, mode: 'insensitive' } },
-    { targetLoginNameSnapshot: { contains: search, mode: 'insensitive' } },
-  ],
-});
+const buildSearchFilter = (
+  search: string,
+  canViewSensitiveDetails: boolean,
+): Prisma.AuditLogWhereInput => {
+  // Prisma translates `contains` to LIKE/ILIKE. Escape its wildcard
+  // characters so a crafted term cannot turn an identity lookup into an
+  // unbounded match over the complete audit table.
+  const literalSearch = search
+    .replaceAll('\\', '\\\\')
+    .replaceAll('%', '\\%')
+    .replaceAll('_', '\\_');
+
+  return {
+    OR: [
+      {
+        actorDisplayNameSnapshot: {
+          contains: literalSearch,
+          mode: 'insensitive',
+        },
+      },
+      {
+        targetDisplayNameSnapshot: {
+          contains: literalSearch,
+          mode: 'insensitive',
+        },
+      },
+      ...(canViewSensitiveDetails
+        ? [
+            {
+              actorLoginNameSnapshot: {
+                contains: literalSearch,
+                mode: 'insensitive' as const,
+              },
+            },
+            {
+              targetLoginNameSnapshot: {
+                contains: literalSearch,
+                mode: 'insensitive' as const,
+              },
+            },
+          ]
+        : []),
+    ],
+  };
+};
 
 const buildJournalWhere = (
   query: JournalQuery,
   snapshotAt: Date,
   cursor: JournalCursor | null,
+  canViewSensitiveDetails: boolean,
 ): Prisma.AuditLogWhereInput => {
   const createdAfter = getCreatedAfter(query, snapshotAt);
   const eventKind =
@@ -445,7 +495,9 @@ const buildJournalWhere = (
   if (query.outcome) andFilters.push({ outcome: query.outcome });
   if (query.pageKey) andFilters.push({ pageKey: query.pageKey });
   if (query.poleKey) andFilters.push({ poleKey: query.poleKey });
-  if (query.search) andFilters.push(buildSearchFilter(query.search));
+  if (query.search) {
+    andFilters.push(buildSearchFilter(query.search, canViewSensitiveDetails));
+  }
   if (query.severity) andFilters.push({ severity: query.severity });
   if (query.stream) andFilters.push({ stream: query.stream });
   if (query.targetUserId) {
@@ -596,7 +648,12 @@ const createExportResponse = (options: {
   const generatedAt = new Date().toISOString();
   const snapshotAtValue = options.snapshotAt.toISOString();
   const filters = getExportFilters(options.query);
-  const baseWhere = buildJournalWhere(options.query, options.snapshotAt, null);
+  const baseWhere = buildJournalWhere(
+    options.query,
+    options.snapshotAt,
+    null,
+    options.canViewSensitiveDetails,
+  );
   let exportedRows = 0;
   let position: JournalCursor | null = null;
   let isFirstJsonLog = true;
@@ -822,11 +879,42 @@ export async function GET(
       const proofCheck = requireRecentSensitiveActionProof(auth.session);
       if (!proofCheck.success) return proofCheck.response;
 
-      const baseWhere = buildJournalWhere(query, snapshotAt, null);
+      const baseWhere = buildJournalWhere(
+        query,
+        snapshotAt,
+        null,
+        canViewSensitiveDetails,
+      );
       const [matchingRows, auditRequestContext] = await Promise.all([
-        prisma.auditLog.count({ where: baseWhere }),
+        prisma.auditLog.count({
+          take: MAX_EXPORT_ROWS + 1,
+          where: baseWhere,
+        }),
         getAuditRequestContext(),
       ]);
+
+      await createAuditLog({
+        action: AuditAction.AUDIT_EXPORT,
+        category: AuditCategory.SYSTEM,
+        description: `Export du journal d'activité demandé (${exportFormat.toUpperCase()})`,
+        ...auditRequestContext,
+        metadata: {
+          filters: getExportFilters(query),
+          format: exportFormat,
+          pageKey: 'activity-journal',
+          pageLabel: "Journal d'activité",
+          phase: 'started',
+          poleKey: 'system',
+          poleLabel: 'Système',
+          rowCount: 0,
+          snapshotAt: snapshotAt.toISOString(),
+          tabKey: query.logType,
+          tabLabel: query.logType === 'connections' ? 'Connexions' : 'Activité',
+          truncated: matchingRows > MAX_EXPORT_ROWS,
+        },
+        targetUserId: null,
+        userId: auth.user.id,
+      });
 
       return createExportResponse({
         canViewSensitiveDetails,
@@ -844,6 +932,7 @@ export async function GET(
               generatedAt: new Date().toISOString(),
               pageKey: 'activity-journal',
               pageLabel: "Journal d'activité",
+              phase: 'completed',
               poleKey: 'system',
               poleLabel: 'Système',
               rowCount,
@@ -862,7 +951,12 @@ export async function GET(
       });
     }
 
-    const where = buildJournalWhere(query, snapshotAt, cursor);
+    const where = buildJournalWhere(
+      query,
+      snapshotAt,
+      cursor,
+      canViewSensitiveDetails,
+    );
     const batch = await loadVisibleBatch(
       where,
       query.limit,

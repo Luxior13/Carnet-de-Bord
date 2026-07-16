@@ -20,6 +20,7 @@ type SchemaCheckRow = {
   auditEventKinds: number;
   auditLogColumns: number;
   auditOutcomes: number;
+  auditScaleIndexes: number;
   auditSeverities: number;
   auditSnapshotTriggers: number;
   auditStreams: number;
@@ -236,6 +237,27 @@ export async function createReadinessResponse(): Promise<
             ) AS "auditSeverities",
             (
               SELECT count(*)::int
+              FROM pg_index audit_index_state
+              JOIN pg_class audit_index
+                ON audit_index.oid = audit_index_state.indexrelid
+              JOIN pg_class audit_table
+                ON audit_table.oid = audit_index_state.indrelid
+              JOIN pg_namespace audit_namespace
+                ON audit_namespace.oid = audit_table.relnamespace
+              WHERE audit_namespace.nspname = current_schema()
+                AND audit_table.relname = 'AuditLog'
+                AND audit_index.relname IN (
+                  'AuditLog_actorDisplayNameSnapshot_trgm_idx',
+                  'AuditLog_actorLoginNameSnapshot_trgm_idx',
+                  'AuditLog_targetDisplayNameSnapshot_trgm_idx',
+                  'AuditLog_targetLoginNameSnapshot_trgm_idx',
+                  'AuditLog_targetUserId_action_idx'
+                )
+                AND audit_index_state.indisvalid
+                AND audit_index_state.indisready
+            ) AS "auditScaleIndexes",
+            (
+              SELECT count(*)::int
               FROM pg_trigger audit_trigger
               JOIN pg_class audit_table
                 ON audit_table.oid = audit_trigger.tgrelid
@@ -292,6 +314,7 @@ export async function createReadinessResponse(): Promise<
           schema.auditLogColumns !== 18 ||
           schema.auditOutcomes !== 3 ||
           schema.auditSeverities !== 3 ||
+          schema.auditScaleIndexes !== 5 ||
           schema.auditSnapshotTriggers !== 1 ||
           schema.auditStreams !== 5 ||
           schema.durableAuditActions !== 4 ||

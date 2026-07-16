@@ -46,7 +46,9 @@ describe('/mon-compte UX contracts', () => {
   it('loads personal activity in pages of 50 and exposes explicit pagination', () => {
     expect(accountPageSource).toMatch(/const ACCOUNT_AUDIT_PAGE_SIZE\s*=\s*50/);
     expect(accountPageSource).toContain('fetchMoreAccountAuditLogs');
-    expect(accountPageSource).toContain('page: String(nextPage)');
+    expect(accountPageSource).toContain('cursor: auditNextCursor');
+    expect(accountPageSource).toContain("includeStats: 'false'");
+    expect(accountPageSource).not.toContain('page: String(nextPage)');
     expect(accountPageSource).toContain('hasMoreAuditLogs={hasMoreAuditLogs}');
     expect(accountPageSource).toContain(
       'onLoadMore={() => void fetchMoreAccountAuditLogs()}',

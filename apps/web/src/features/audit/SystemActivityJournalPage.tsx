@@ -272,6 +272,12 @@ const getPageOptions = (poleKey: string): ActivityFilterOption[] => {
       tone: 'system',
       value: 'authentication',
     });
+    options.push({
+      icon: 'History',
+      label: "Journal d'activité",
+      tone: 'system',
+      value: 'activity-journal',
+    });
   }
 
   options.push(
@@ -286,6 +292,14 @@ const getPageOptions = (poleKey: string): ActivityFilterOption[] => {
   );
 
   return options;
+};
+
+const normalizeJournalSearch = (value: string): string => {
+  const normalizedValue = value.trim().slice(0, 120);
+  const searchableCharacterCount =
+    normalizedValue.match(/[\p{L}\p{N}]/gu)?.length ?? 0;
+
+  return searchableCharacterCount >= 3 ? normalizedValue : '';
 };
 
 const getFiltersFromSearchParams = (
@@ -312,7 +326,7 @@ const getFiltersFromSearchParams = (
         ? period
         : DEFAULT_FILTERS.period,
     poleKey: params.get('poleKey') || DEFAULT_FILTERS.poleKey,
-    search: (params.get('search') ?? '').trim().slice(0, 120),
+    search: normalizeJournalSearch(params.get('search') ?? ''),
     targetUserId: params.get('targetUserId') || '',
     to: isCustomPeriod ? to : '',
   };
@@ -893,10 +907,10 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
   const selectedPage = pageOptions.find(
     (option) => option.value === filters.pageKey,
   ) ?? {
-    icon: 'Search' as const,
-    label: 'Toutes les pages',
+    icon: 'FileText' as const,
+    label: filters.pageKey.replaceAll('-', ' ').replaceAll('/', ' / '),
     tone: 'internal' as const,
-    value: ALL_FILTER_VALUE,
+    value: filters.pageKey,
   };
 
   const navigateToFilters = useCallback(
@@ -938,7 +952,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
   }, [filters.from, filters.search, filters.to]);
 
   useEffect(() => {
-    const normalizedSearch = searchInput.trim().slice(0, 120);
+    const normalizedSearch = normalizeJournalSearch(searchInput);
     if (normalizedSearch === filters.search) return;
 
     const timeout = window.setTimeout(() => {
@@ -1351,7 +1365,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                     id="journal-search"
                     maxLength={120}
                     onChange={(event) => setSearchInput(event.target.value)}
-                    placeholder="Rechercher un membre ou une action…"
+                    placeholder="Rechercher un membre (3 caractères minimum)…"
                     type="search"
                     value={searchInput}
                   />

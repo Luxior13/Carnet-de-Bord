@@ -57,7 +57,10 @@ export type AuditLogInput = {
   userId?: string | null;
 };
 
-type AuditClient = Pick<Prisma.TransactionClient, 'auditLog' | 'user'>;
+type AuditClient = {
+  auditLog: Pick<Prisma.TransactionClient['auditLog'], 'create'>;
+  user: Pick<Prisma.TransactionClient['user'], 'findMany'>;
+};
 
 type RequiredAuditLogInput = Omit<AuditLogInput, 'ipAddress' | 'userAgent'>;
 
@@ -1222,6 +1225,39 @@ export const checkUserPermission = (
 // AUDIT LOGGING
 // ============================================
 
+const AUDIT_DESCRIPTION_MAX_BYTES = 4 * 1024;
+const AUDIT_METADATA_MAX_BYTES = 64 * 1024;
+const AUDIT_LOCATION_KEY_MAX_LENGTH = 100;
+const AUDIT_LOCATION_KEY_PATTERN = /^[a-z0-9][a-z0-9._/-]*$/;
+const AUDIT_IP_ADDRESS_MAX_LENGTH = 64;
+const AUDIT_REQUEST_ID_MAX_LENGTH = 191;
+const AUDIT_USER_AGENT_MAX_LENGTH = 1_024;
+
+const validateAuditDescription = (description: string): string => {
+  if (
+    description.trim().length === 0 ||
+    Buffer.byteLength(description, 'utf8') > AUDIT_DESCRIPTION_MAX_BYTES
+  ) {
+    throw new RangeError('Audit description is empty or too large');
+  }
+
+  return description;
+};
+
+const validateAuditMetadataSize = (
+  metadata: Record<string, unknown> | undefined,
+): void => {
+  if (!metadata) return;
+
+  const serializedMetadata = JSON.stringify(metadata);
+  if (
+    !serializedMetadata ||
+    Buffer.byteLength(serializedMetadata, 'utf8') > AUDIT_METADATA_MAX_BYTES
+  ) {
+    throw new RangeError('Audit metadata exceeds the 64 KiB limit');
+  }
+};
+
 /**
  * Creates an audit log entry
  */
@@ -1233,9 +1269,17 @@ const getAuditLocationKey = (
     ([entryKey]) => entryKey === key,
   )?.[1];
 
-  return typeof value === 'string' && value.trim().length > 0
-    ? value.trim()
-    : null;
+  if (typeof value !== 'string' || value.trim().length === 0) return null;
+
+  const normalizedValue = value.trim();
+  if (
+    normalizedValue.length > AUDIT_LOCATION_KEY_MAX_LENGTH ||
+    !AUDIT_LOCATION_KEY_PATTERN.test(normalizedValue)
+  ) {
+    throw new RangeError(`Invalid audit location key: ${key}`);
+  }
+
+  return normalizedValue;
 };
 
 const AUDIT_SNAPSHOT_USER_SELECT = {
@@ -1280,10 +1324,16 @@ export const createAuditLog = async (
   client: AuditClient = prisma,
 ): Promise<void> => {
   const classification = getAuditEventClassification(data.action);
-  const snapshots = await getAuditIdentitySnapshots(data, client);
-  const metadata = data.requestId
-    ? { ...(data.metadata ?? {}), requestId: data.requestId }
+  const requestId = data.requestId?.slice(0, AUDIT_REQUEST_ID_MAX_LENGTH);
+  const metadata = requestId
+    ? { ...(data.metadata ?? {}), requestId }
     : data.metadata;
+  const description = validateAuditDescription(data.description);
+  const pageKey = getAuditLocationKey(data.metadata, 'pageKey');
+  const poleKey = getAuditLocationKey(data.metadata, 'poleKey');
+  const tabKey = getAuditLocationKey(data.metadata, 'tabKey');
+  validateAuditMetadataSize(metadata);
+  const snapshots = await getAuditIdentitySnapshots(data, client);
 
   await client.auditLog.create({
     data: {
@@ -1292,23 +1342,23 @@ export const createAuditLog = async (
       actorLoginNameSnapshot: snapshots.actor?.loginName ?? null,
       actorRoleSnapshot: snapshots.actor?.role ?? null,
       category: data.category,
-      description: data.description,
+      description,
       eventKind: classification.eventKind,
       eventVersion: AUDIT_EVENT_VERSION,
-      ipAddress: data.ipAddress ?? null,
+      ipAddress: data.ipAddress?.slice(0, AUDIT_IP_ADDRESS_MAX_LENGTH) ?? null,
       metadata: metadata as Prisma.InputJsonValue | undefined,
       outcome: classification.outcome,
-      pageKey: getAuditLocationKey(data.metadata, 'pageKey'),
-      poleKey: getAuditLocationKey(data.metadata, 'poleKey'),
-      requestId: data.requestId ?? null,
+      pageKey,
+      poleKey,
+      requestId: requestId ?? null,
       severity: classification.severity,
       stream: classification.stream,
-      tabKey: getAuditLocationKey(data.metadata, 'tabKey'),
+      tabKey,
       targetDisplayNameSnapshot: snapshots.target?.displayName ?? null,
       targetLoginNameSnapshot: snapshots.target?.loginName ?? null,
       targetRoleSnapshot: snapshots.target?.role ?? null,
       targetUserId: data.targetUserId ?? null,
-      userAgent: data.userAgent ?? null,
+      userAgent: data.userAgent?.slice(0, AUDIT_USER_AGENT_MAX_LENGTH) ?? null,
       userId: data.userId ?? null,
     },
   });

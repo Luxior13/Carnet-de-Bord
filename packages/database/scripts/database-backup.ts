@@ -1,4 +1,12 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import {
+  chmod,
+  type FileHandle,
+  mkdir,
+  open,
+  rename,
+  rm,
+} from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import type { PrismaClient } from '@prisma/client';
@@ -10,74 +18,213 @@ type BackupResult = {
   filePath: string;
 };
 
-export async function createDatabaseBackup(
-  prisma: PrismaClient,
+type CursorRow = {
+  cursor: string;
+};
+
+type TableSnapshot = {
+  cursorColumn: string;
+  tableName: string;
+  upperCursor: string | null;
+};
+
+type BackupQueryClient = Pick<PrismaClient, '$queryRaw' | '$queryRawUnsafe'>;
+
+const BACKUP_PAGE_SIZE = 500;
+
+const quoteIdentifier = (identifier: string): string => {
+  if (!/^[A-Za-z][A-Za-z0-9]*$/u.test(identifier)) {
+    throw new Error(`Invalid database identifier: ${identifier}`);
+  }
+
+  return `"${identifier}"`;
+};
+
+const getUpperCursor = async (
+  prisma: BackupQueryClient,
+  tableName: string,
+  cursorColumn: string,
+): Promise<string | null> => {
+  const quotedTable = quoteIdentifier(tableName);
+  const quotedCursor = quoteIdentifier(cursorColumn);
+  const rows = await prisma.$queryRawUnsafe<CursorRow[]>(
+    `SELECT ${quotedCursor}::text AS "cursor"
+     FROM "public".${quotedTable}
+     ORDER BY ${quotedCursor} DESC
+     LIMIT 1`,
+  );
+
+  return rows[0]?.cursor ?? null;
+};
+
+const getTableSnapshot = async (
+  prisma: BackupQueryClient,
+  tables: ReadonlySet<string>,
+  tableName: string,
+  cursorColumn: string,
+): Promise<TableSnapshot> => ({
+  cursorColumn,
+  tableName,
+  upperCursor: tables.has(tableName)
+    ? await getUpperCursor(prisma, tableName, cursorColumn)
+    : null,
+});
+
+const writeChunk = async (
+  fileHandle: FileHandle,
+  value: string,
+): Promise<void> => {
+  const buffer = Buffer.from(value, 'utf8');
+  let offset = 0;
+
+  while (offset < buffer.length) {
+    const { bytesWritten } = await fileHandle.write(
+      buffer,
+      offset,
+      buffer.length - offset,
+      null,
+    );
+
+    if (bytesWritten === 0) {
+      throw new Error('Unable to continue writing the database backup');
+    }
+
+    offset += bytesWritten;
+  }
+};
+
+const stringifyJson = (value: unknown, indentation = 0): string => {
+  const json = JSON.stringify(
+    value,
+    (_key, nestedValue: unknown) =>
+      typeof nestedValue === 'bigint' ? nestedValue.toString() : nestedValue,
+    indentation,
+  );
+
+  if (json === undefined) {
+    throw new Error('Unable to serialize a database backup value');
+  }
+
+  return json;
+};
+
+const writeJsonArray = async (
+  prisma: BackupQueryClient,
+  fileHandle: FileHandle,
+  snapshot: TableSnapshot,
+): Promise<number> => {
+  if (snapshot.upperCursor === null) {
+    await writeChunk(fileHandle, '[]');
+
+    return 0;
+  }
+
+  const quotedTable = quoteIdentifier(snapshot.tableName);
+  const quotedCursor = quoteIdentifier(snapshot.cursorColumn);
+  let cursor: string | null = null;
+  let rowCount = 0;
+  let isFirstRow = true;
+
+  await writeChunk(fileHandle, '[\n');
+
+  while (true) {
+    // The table and cursor identifiers come exclusively from the static table
+    // definitions below. Cursor values remain parameterized.
+    const rows: Record<string, unknown>[] =
+      cursor === null
+        ? await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+            `SELECT *
+             FROM "public".${quotedTable}
+             WHERE ${quotedCursor} <= $1
+             ORDER BY ${quotedCursor} ASC
+             LIMIT $2`,
+            snapshot.upperCursor,
+            BACKUP_PAGE_SIZE,
+          )
+        : await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+            `SELECT *
+             FROM "public".${quotedTable}
+             WHERE ${quotedCursor} > $1
+               AND ${quotedCursor} <= $2
+             ORDER BY ${quotedCursor} ASC
+             LIMIT $3`,
+            cursor,
+            snapshot.upperCursor,
+            BACKUP_PAGE_SIZE,
+          );
+
+    if (rows.length === 0) break;
+
+    for (const row of rows) {
+      const serializedRow = stringifyJson(row, 2).replaceAll('\n', '\n    ');
+
+      await writeChunk(
+        fileHandle,
+        `${isFirstRow ? '' : ',\n'}    ${serializedRow}`,
+      );
+      isFirstRow = false;
+      rowCount += 1;
+    }
+
+    const nextCursor = rows.at(-1)?.[snapshot.cursorColumn];
+
+    if (typeof nextCursor !== 'string') {
+      throw new Error(
+        `Invalid cursor in ${snapshot.tableName}.${snapshot.cursorColumn}`,
+      );
+    }
+
+    cursor = nextCursor;
+    if (rows.length < BACKUP_PAGE_SIZE || cursor === snapshot.upperCursor) {
+      break;
+    }
+  }
+
+  await writeChunk(fileHandle, '\n  ]');
+
+  return rowCount;
+};
+
+async function writeDatabaseBackup(
+  prisma: BackupQueryClient,
 ): Promise<BackupResult> {
   const tables = await getPublicTables(prisma);
-  // Read rows without Prisma's generated scalar selection so this safety
-  // backup also works immediately before a pending migration adds columns.
-  // Optional MFA tables are absent on databases that have not applied the
-  // TOTP migration yet.
-  const [
-    users,
-    loginNameReservations,
-    sessions,
-    auditLogs,
-    rateLimits,
-    totpCredentials,
-    mfaRecoveryCodes,
-  ] = await Promise.all([
-    tables.has('User')
-      ? prisma.$queryRaw<Record<string, unknown>[]>`
-          SELECT * FROM "public"."User" ORDER BY "id" ASC
-        `
-      : [],
-    tables.has('LoginNameReservation')
-      ? prisma.$queryRaw<Record<string, unknown>[]>`
-          SELECT * FROM "public"."LoginNameReservation" ORDER BY "loginName" ASC
-        `
-      : [],
-    tables.has('Session')
-      ? prisma.$queryRaw<Record<string, unknown>[]>`
-          SELECT * FROM "public"."Session" ORDER BY "id" ASC
-        `
-      : [],
-    tables.has('AuditLog')
-      ? prisma.$queryRaw<Record<string, unknown>[]>`
-          SELECT * FROM "public"."AuditLog" ORDER BY "id" ASC
-        `
-      : [],
-    tables.has('RateLimit')
-      ? prisma.$queryRaw<Record<string, unknown>[]>`
-          SELECT * FROM "public"."RateLimit" ORDER BY "id" ASC
-        `
-      : [],
-    tables.has('TotpCredential')
-      ? prisma.$queryRaw<Record<string, unknown>[]>`
-          SELECT * FROM "public"."TotpCredential" ORDER BY "userId" ASC
-        `
-      : [],
-    tables.has('MfaRecoveryCode')
-      ? prisma.$queryRaw<Record<string, unknown>[]>`
-          SELECT * FROM "public"."MfaRecoveryCode" ORDER BY "id" ASC
-        `
-      : [],
-  ]);
-
-  let staffProfiles: Record<string, unknown>[] = [];
   let staffProfileSource: 'ArchivedStaffProfile' | 'StaffProfile' | null = null;
 
   if (tables.has('ArchivedStaffProfile')) {
     staffProfileSource = 'ArchivedStaffProfile';
-    staffProfiles = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-      `SELECT * FROM "public"."ArchivedStaffProfile" ORDER BY "id" ASC`,
-    );
   } else if (tables.has('StaffProfile')) {
     staffProfileSource = 'StaffProfile';
-    staffProfiles = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
-      `SELECT * FROM "public"."StaffProfile" ORDER BY "id" ASC`,
-    );
   }
+
+  // Capture small high-water marks before reading any rows. Every scan is then
+  // finite even when the application keeps inserting audit events during a
+  // long-running backup.
+  const [
+    auditLogs,
+    loginNameReservations,
+    mfaRecoveryCodes,
+    rateLimits,
+    sessions,
+    staffProfiles,
+    totpCredentials,
+    users,
+  ] = await Promise.all([
+    getTableSnapshot(prisma, tables, 'AuditLog', 'id'),
+    getTableSnapshot(prisma, tables, 'LoginNameReservation', 'loginName'),
+    getTableSnapshot(prisma, tables, 'MfaRecoveryCode', 'id'),
+    getTableSnapshot(prisma, tables, 'RateLimit', 'id'),
+    getTableSnapshot(prisma, tables, 'Session', 'id'),
+    staffProfileSource === null
+      ? Promise.resolve<TableSnapshot>({
+          cursorColumn: 'id',
+          tableName: 'StaffProfile',
+          upperCursor: null,
+        })
+      : getTableSnapshot(prisma, tables, staffProfileSource, 'id'),
+    getTableSnapshot(prisma, tables, 'TotpCredential', 'userId'),
+    getTableSnapshot(prisma, tables, 'User', 'id'),
+  ]);
 
   const workspaceRoot = resolve(import.meta.dirname, '..', '..', '..');
   const backupDirectory = resolve(
@@ -86,49 +233,115 @@ export async function createDatabaseBackup(
     'database-backups',
   );
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const filePath = resolve(backupDirectory, `carnet-pro-${timestamp}.json`);
-  const payload = {
-    auditLogs,
-    createdAt: new Date().toISOString(),
-    loginNameReservations,
-    mfaRecoveryCodes,
-    rateLimits,
-    sessions,
-    staffProfiles,
-    staffProfileSource,
-    totpCredentials,
-    users,
+  const filePath = resolve(
+    backupDirectory,
+    `carnet-pro-${timestamp}-${randomUUID()}.json`,
+  );
+  const temporaryFilePath = `${filePath}.tmp`;
+  const createdAt = new Date().toISOString();
+  const counts: Record<string, number> = {
+    AuditLog: 0,
+    LoginNameReservation: 0,
+    MfaRecoveryCode: 0,
+    RateLimit: 0,
+    Session: 0,
+    StaffProfile: 0,
+    TotpCredential: 0,
+    User: 0,
   };
+  let fileHandle: FileHandle | null = null;
+  let published = false;
 
-  // Paths are generated exclusively from the repository root and an ISO timestamp.
+  // Paths are generated exclusively from the repository root, an ISO
+  // timestamp and a random UUID.
   // eslint-disable-next-line security/detect-non-literal-fs-filename
-  await mkdir(backupDirectory, { recursive: true });
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
-  await writeFile(
-    filePath,
-    JSON.stringify(
-      payload,
-      (_key, value: unknown) =>
-        typeof value === 'bigint' ? value.toString() : value,
-      2,
-    ),
+  await mkdir(backupDirectory, { mode: 0o700, recursive: true });
+
+  try {
+    // Exclusive creation prevents accidentally reusing a stale temporary file.
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    fileHandle = await open(temporaryFilePath, 'wx', 0o600);
+
+    await writeChunk(fileHandle, '{\n  "auditLogs": ');
+    counts.AuditLog = await writeJsonArray(prisma, fileHandle, auditLogs);
+    await writeChunk(
+      fileHandle,
+      `,\n  "createdAt": ${stringifyJson(createdAt)},\n  "loginNameReservations": `,
+    );
+    counts.LoginNameReservation = await writeJsonArray(
+      prisma,
+      fileHandle,
+      loginNameReservations,
+    );
+    await writeChunk(fileHandle, ',\n  "mfaRecoveryCodes": ');
+    counts.MfaRecoveryCode = await writeJsonArray(
+      prisma,
+      fileHandle,
+      mfaRecoveryCodes,
+    );
+    await writeChunk(fileHandle, ',\n  "rateLimits": ');
+    counts.RateLimit = await writeJsonArray(prisma, fileHandle, rateLimits);
+    await writeChunk(fileHandle, ',\n  "sessions": ');
+    counts.Session = await writeJsonArray(prisma, fileHandle, sessions);
+    await writeChunk(fileHandle, ',\n  "staffProfiles": ');
+    counts.StaffProfile = await writeJsonArray(
+      prisma,
+      fileHandle,
+      staffProfiles,
+    );
+    await writeChunk(
+      fileHandle,
+      `,\n  "staffProfileSource": ${stringifyJson(staffProfileSource)},\n  "totpCredentials": `,
+    );
+    counts.TotpCredential = await writeJsonArray(
+      prisma,
+      fileHandle,
+      totpCredentials,
+    );
+    await writeChunk(fileHandle, ',\n  "users": ');
+    counts.User = await writeJsonArray(prisma, fileHandle, users);
+    await writeChunk(fileHandle, '\n}\n');
+
+    // Flush and lock down the temporary file before publishing it atomically.
+    await fileHandle.sync();
+    await fileHandle.chmod(0o600);
+    await fileHandle.close();
+    fileHandle = null;
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    await rename(temporaryFilePath, filePath);
+    published = true;
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    await chmod(filePath, 0o600);
+
+    return { counts, filePath };
+  } catch (error) {
+    if (fileHandle !== null) {
+      await fileHandle.close().catch(() => undefined);
+    }
+
+    await rm(temporaryFilePath, { force: true }).catch(() => undefined);
+
+    if (published) {
+      await rm(filePath, { force: true }).catch(() => undefined);
+    }
+
+    throw error;
+  }
+}
+
+export async function createDatabaseBackup(
+  prisma: PrismaClient,
+): Promise<BackupResult> {
+  // One repeatable-read snapshot keeps relations between users, sessions and
+  // audit entries coherent while the application continues accepting writes.
+  // The generous timeout is intentional: a streamed production backup can
+  // legitimately run for much longer than a regular interactive transaction.
+  return prisma.$transaction(
+    (transaction) => writeDatabaseBackup(transaction),
     {
-      encoding: 'utf8',
-      mode: 0o600,
+      isolationLevel: 'RepeatableRead',
+      maxWait: 10_000,
+      timeout: 6 * 60 * 60 * 1_000,
     },
   );
-
-  return {
-    counts: {
-      AuditLog: auditLogs.length,
-      LoginNameReservation: loginNameReservations.length,
-      MfaRecoveryCode: mfaRecoveryCodes.length,
-      RateLimit: rateLimits.length,
-      Session: sessions.length,
-      StaffProfile: staffProfiles.length,
-      TotpCredential: totpCredentials.length,
-      User: users.length,
-    },
-    filePath,
-  };
 }

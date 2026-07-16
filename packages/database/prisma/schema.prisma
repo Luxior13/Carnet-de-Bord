@@ -269,12 +269,9 @@ model AuditLog {
   userAgent                  String?
   createdAt                  DateTime       @default(now())
 
-  @@index([userId])
   @@index([userId, action])
-  @@index([userId, createdAt])
   @@index([userId, createdAt, id])
-  @@index([targetUserId])
-  @@index([targetUserId, createdAt])
+  @@index([targetUserId, action])
   @@index([targetUserId, createdAt, id])
   @@index([poleKey, createdAt, id])
   @@index([poleKey, pageKey, createdAt, id])
@@ -284,12 +281,13 @@ model AuditLog {
   @@index([outcome, createdAt, id])
   @@index([severity, createdAt, id])
   @@index([requestId])
-  @@index([action])
   @@index([action, createdAt, id])
-  @@index([category])
   @@index([category, createdAt, id])
-  @@index([createdAt])
   @@index([createdAt, id])
+  @@index([actorDisplayNameSnapshot(ops: raw("gin_trgm_ops"))], type: Gin, map: "AuditLog_actorDisplayNameSnapshot_trgm_idx")
+  @@index([actorLoginNameSnapshot(ops: raw("gin_trgm_ops"))], type: Gin, map: "AuditLog_actorLoginNameSnapshot_trgm_idx")
+  @@index([targetDisplayNameSnapshot(ops: raw("gin_trgm_ops"))], type: Gin, map: "AuditLog_targetDisplayNameSnapshot_trgm_idx")
+  @@index([targetLoginNameSnapshot(ops: raw("gin_trgm_ops"))], type: Gin, map: "AuditLog_targetLoginNameSnapshot_trgm_idx")
 }
 
 /// Read-only archive of the legacy StaffProfile table.

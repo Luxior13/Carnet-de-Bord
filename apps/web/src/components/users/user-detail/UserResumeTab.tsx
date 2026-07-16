@@ -59,6 +59,15 @@ const ResumeStatCard: FC<{
   </Card>
 );
 
+const formatAuditCount = (
+  value: number | undefined,
+  capped: boolean | undefined,
+): string => {
+  if (value === undefined) return '—';
+
+  return `${value.toLocaleString('fr-FR')}${capped ? '+' : ''}`;
+};
+
 export const UserResumeTab: FC<UserResumeTabProps> = ({
   auditStats,
   canViewActivity,
@@ -92,18 +101,27 @@ export const UserResumeTab: FC<UserResumeTabProps> = ({
           <ResumeStatCard
             icon={Activity}
             label="Actions totales"
-            value={auditStats?.totalActions ?? '—'}
+            value={formatAuditCount(
+              auditStats?.totalActions,
+              auditStats?.totalActionsCapped,
+            )}
             tone="primary"
           />
           <ResumeStatCard
             icon={Check}
             label="Connexions réussies"
-            value={auditStats?.successfulLogins ?? '—'}
+            value={formatAuditCount(
+              auditStats?.successfulLogins,
+              auditStats?.successfulLoginsCapped,
+            )}
           />
           <ResumeStatCard
             icon={X}
             label="Tentatives échouées"
-            value={auditStats?.failedLogins ?? '—'}
+            value={formatAuditCount(
+              auditStats?.failedLogins,
+              auditStats?.failedLoginsCapped,
+            )}
             tone={(auditStats?.failedLogins ?? 0) > 0 ? 'warning' : 'neutral'}
           />
         </div>

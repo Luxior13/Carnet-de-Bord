@@ -3,6 +3,8 @@ import { resolve } from 'node:path';
 
 import type { PrismaClient } from '@prisma/client';
 
+type DatabaseQueryClient = Pick<PrismaClient, '$queryRaw' | '$queryRawUnsafe'>;
+
 export const databaseRoot = resolve(import.meta.dirname, '..');
 export const prismaSchemaPath = resolve(
   databaseRoot,
@@ -25,7 +27,7 @@ type TableName = {
 };
 
 export async function getPublicTables(
-  prisma: PrismaClient,
+  prisma: DatabaseQueryClient,
 ): Promise<Set<string>> {
   const rows = await prisma.$queryRaw<TableName[]>`
     SELECT table_name
@@ -38,7 +40,7 @@ export async function getPublicTables(
 }
 
 export async function getAppliedMigrations(
-  prisma: PrismaClient,
+  prisma: DatabaseQueryClient,
 ): Promise<MigrationRecord[]> {
   const relation = await prisma.$queryRaw<RelationName[]>`
     SELECT to_regclass('public."_prisma_migrations"')::text AS relation_name

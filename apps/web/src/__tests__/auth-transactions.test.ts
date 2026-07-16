@@ -82,6 +82,7 @@ vi.mock('$server/prisma', () => ({
 import { PERMISSIONS } from '$constants/permissions.constants';
 import {
   authenticateUser,
+  createAuditLog,
   createSession,
   createUser,
   getAuthSession,
@@ -291,6 +292,56 @@ describe('auth security transactions', () => {
       lastSeenAt: loginAt,
       rememberMe: false,
       token: 'raw-session-token',
+    });
+  });
+
+  it('bounds audit payloads before touching the database', async () => {
+    await expect(
+      createAuditLog(
+        {
+          action: 'USER_UPDATE',
+          category: 'USER',
+          description: 'Valid description',
+          metadata: { pageKey: 'Invalid page key' },
+        },
+        mocks.transaction,
+      ),
+    ).rejects.toThrow('Invalid audit location key');
+    await expect(
+      createAuditLog(
+        {
+          action: 'USER_UPDATE',
+          category: 'USER',
+          description: 'Valid description',
+          metadata: { payload: 'x'.repeat(65 * 1024) },
+        },
+        mocks.transaction,
+      ),
+    ).rejects.toThrow('64 KiB');
+
+    expect(mocks.transaction.user.findMany).not.toHaveBeenCalled();
+    expect(mocks.transaction.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it('truncates untrusted audit request headers to bounded columns', async () => {
+    await createAuditLog(
+      {
+        action: 'USER_UPDATE',
+        category: 'USER',
+        description: 'Valid description',
+        ipAddress: '1'.repeat(100),
+        requestId: 'r'.repeat(300),
+        userAgent: 'u'.repeat(2_000),
+      },
+      mocks.transaction,
+    );
+
+    expect(mocks.transaction.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        ipAddress: '1'.repeat(64),
+        requestId: 'r'.repeat(191),
+        userAgent: 'u'.repeat(1_024),
+      }),
     });
   });
 

@@ -27,6 +27,7 @@ const readySchema = {
   auditEventKinds: 2,
   auditLogColumns: 18,
   auditOutcomes: 3,
+  auditScaleIndexes: 5,
   auditSeverities: 3,
   auditSnapshotTriggers: 1,
   auditStreams: 5,
@@ -108,6 +109,10 @@ describe('operational health routes', () => {
     expect(query).toContain("'AuditStream'");
     expect(query).toContain("'AuditOutcome'");
     expect(query).toContain("'AuditSeverity'");
+    expect(query).toContain("'AuditLog_actorDisplayNameSnapshot_trgm_idx'");
+    expect(query).toContain("'AuditLog_targetUserId_action_idx'");
+    expect(query).toContain('audit_index_state.indisvalid');
+    expect(query).toContain('audit_index_state.indisready');
     expect(query).toContain("'AuditLog_immutable_identity_snapshots'");
     expect(query).toContain("'LoginNameReservation'");
     expect(query).toContain('"isProtected" = true');
@@ -154,6 +159,7 @@ describe('operational health routes', () => {
     'auditLogColumns',
     'auditOutcomes',
     'auditSeverities',
+    'auditScaleIndexes',
     'auditSnapshotTriggers',
     'auditStreams',
     'durableAuditActions',

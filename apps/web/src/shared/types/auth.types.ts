@@ -196,6 +196,9 @@ export type AuditLogEntry = {
 // User audit stats
 export type UserAuditStats = {
   failedLogins: number;
+  failedLoginsCapped: boolean;
   successfulLogins: number;
+  successfulLoginsCapped: boolean;
   totalActions: number;
+  totalActionsCapped: boolean;
 };

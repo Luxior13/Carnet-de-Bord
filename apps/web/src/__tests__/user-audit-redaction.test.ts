@@ -16,6 +16,11 @@ const mockPrisma = {
 };
 
 vi.mock('server-only', () => ({}));
+vi.mock('$env', () => ({
+  env: {
+    MFA_ENCRYPTION_KEY_V1: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
+  },
+}));
 
 vi.mock('$server/api-auth', () => ({
   requireAuth: mockRequireAuth,

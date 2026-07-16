@@ -178,10 +178,10 @@ export const AccountPageContent: FC = () => {
   const requestedSection = normalizeAccountSection(searchParams.get('section'));
   const { applyUserUpdate, refreshUser, userData } = useUser();
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
-  const [auditTotalLogs, setAuditTotalLogs] = useState<number | null>(null);
+  const [auditNextCursor, setAuditNextCursor] = useState<string | null>(null);
+  const [auditHasMore, setAuditHasMore] = useState(false);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
   const [isLoadingMoreAudit, setIsLoadingMoreAudit] = useState(false);
-  const [auditLoadedPage, setAuditLoadedPage] = useState(0);
   const [auditError, setAuditError] = useState<string | null>(null);
   const [isProfileDirty, setIsProfileDirty] = useState(false);
   const [profileResetKey, setProfileResetKey] = useState(0);
@@ -276,8 +276,8 @@ export const AccountPageContent: FC = () => {
 
     if (!userData?.id || !canViewActivity) {
       setAuditLogs([]);
-      setAuditTotalLogs(null);
-      setAuditLoadedPage(0);
+      setAuditNextCursor(null);
+      setAuditHasMore(false);
       setAuditError(null);
       setIsLoadingAudit(false);
       setIsLoadingMoreAudit(false);
@@ -295,7 +295,7 @@ export const AccountPageContent: FC = () => {
       setAuditError(null);
 
       const auditParams = new URLSearchParams({
-        page: '1',
+        includeStats: 'false',
         pageSize: String(ACCOUNT_AUDIT_PAGE_SIZE),
       });
 
@@ -309,16 +309,10 @@ export const AccountPageContent: FC = () => {
 
       if (response.ok && data.success) {
         const loadedLogs = data.data.logs as AuditLogEntry[];
-        const totalLogs = Number(
-          data.data.pagination?.total ?? loadedLogs.length,
-        );
-        const safeTotalLogs = Number.isFinite(totalLogs)
-          ? totalLogs
-          : loadedLogs.length;
 
         setAuditLogs(loadedLogs);
-        setAuditTotalLogs(safeTotalLogs);
-        setAuditLoadedPage(1);
+        setAuditNextCursor(data.data.nextCursor ?? null);
+        setAuditHasMore(data.data.hasMore === true);
       } else {
         setAuditError(
           data.error?.message || "Impossible de charger l'activité",
@@ -341,15 +335,15 @@ export const AccountPageContent: FC = () => {
 
   const fetchMoreAccountAuditLogs = useCallback(async (): Promise<void> => {
     if (!userData?.id || !canViewActivity || isLoadingMoreAudit) return;
-    if (auditLoadedPage < 1) return;
-    if (auditTotalLogs !== null && auditLogs.length >= auditTotalLogs) return;
+    if (!auditHasMore || !auditNextCursor) return;
 
     auditAbortControllerRef.current?.abort();
 
     const controller = new AbortController();
-    const nextPage = auditLoadedPage + 1;
     const auditParams = new URLSearchParams({
-      page: String(nextPage),
+      cursor: auditNextCursor,
+      includeFacets: 'false',
+      includeStats: 'false',
       pageSize: String(ACCOUNT_AUDIT_PAGE_SIZE),
     });
 
@@ -376,9 +370,6 @@ export const AccountPageContent: FC = () => {
       }
 
       const nextLogs = data.data.logs as AuditLogEntry[];
-      const totalLogs = Number(
-        data.data.pagination?.total ?? auditTotalLogs ?? auditLogs.length,
-      );
 
       setAuditLogs((currentLogs) => {
         const knownIds = new Set(currentLogs.map((entry) => entry.id));
@@ -388,10 +379,8 @@ export const AccountPageContent: FC = () => {
 
         return [...currentLogs, ...uniqueNextLogs];
       });
-      setAuditTotalLogs(
-        Number.isFinite(totalLogs) ? totalLogs : (auditTotalLogs ?? null),
-      );
-      setAuditLoadedPage(nextPage);
+      setAuditNextCursor(data.data.nextCursor ?? null);
+      setAuditHasMore(data.data.hasMore === true);
     } catch {
       if (controller.signal.aborted) return;
 
@@ -403,9 +392,8 @@ export const AccountPageContent: FC = () => {
       setIsLoadingMoreAudit(false);
     }
   }, [
-    auditLoadedPage,
-    auditLogs.length,
-    auditTotalLogs,
+    auditHasMore,
+    auditNextCursor,
     canViewActivity,
     isLoadingMoreAudit,
     userData?.id,
@@ -474,8 +462,8 @@ export const AccountPageContent: FC = () => {
     auditAbortControllerRef.current = null;
     hasLoadedAuditLogsRef.current = false;
     setAuditLogs([]);
-    setAuditTotalLogs(null);
-    setAuditLoadedPage(0);
+    setAuditNextCursor(null);
+    setAuditHasMore(false);
     setAuditError(null);
     setIsLoadingAudit(false);
     setIsLoadingMoreAudit(false);
@@ -643,8 +631,7 @@ export const AccountPageContent: FC = () => {
   const shouldShowAuditLoading =
     isLoadingAudit ||
     (activeSection === 'activity' && !hasLoadedAuditLogsRef.current);
-  const hasMoreAuditLogs =
-    auditTotalLogs !== null && auditLogs.length < auditTotalLogs;
+  const hasMoreAuditLogs = auditHasMore;
   const activeSectionLabel =
     visibleAccountSections.find((section) => section.id === activeSection)
       ?.label ?? 'Compte';
@@ -722,13 +709,12 @@ export const AccountPageContent: FC = () => {
                 canExport={canExportUserActivity}
                 error={auditError}
                 hasMoreAuditLogs={hasMoreAuditLogs}
-                isAuditTruncated={hasMoreAuditLogs}
                 isLoading={shouldShowAuditLoading}
                 isLoadingMore={isLoadingMoreAudit}
                 onLoadMore={() => void fetchMoreAccountAuditLogs()}
                 onRetry={() => void fetchAccountAuditLogs()}
                 perspective="personal"
-                totalAuditLogs={auditTotalLogs ?? auditLogs.length}
+                totalAuditLogs={auditLogs.length}
                 userId={userData.id}
               />
             </div>

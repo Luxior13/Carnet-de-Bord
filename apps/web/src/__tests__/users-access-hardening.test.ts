@@ -2646,7 +2646,12 @@ describe('users access hardening', () => {
     expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          OR: [{ userId: 'target-1' }, { targetUserId: 'target-1' }],
+          AND: [
+            {
+              OR: [{ userId: 'target-1' }, { targetUserId: 'target-1' }],
+            },
+            { createdAt: { lte: expect.any(Date) } },
+          ],
         },
       }),
     );
@@ -2970,15 +2975,17 @@ describe('users access hardening', () => {
     expect(body.data.pagination).toEqual({
       page: 1,
       pageSize: 50,
-      total: 0,
-      totalPages: 0,
+      total: null,
+      totalPages: null,
     });
     expect(mockPrisma.auditLog.findMany).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
-        skip: 0,
-        take: 50,
+        take: 51,
       }),
+    );
+    expect(mockPrisma.auditLog.findMany.mock.calls[0]?.[0]).not.toHaveProperty(
+      'skip',
     );
   });
 
@@ -3207,6 +3214,9 @@ describe('users access hardening', () => {
       'period=typo',
       'period=30d&period=7d',
       'unknownFilter=value',
+      'search=a',
+      'search=ab',
+      'search=%25%25%25',
       'action=LOGIN_SUCCESS',
       'logType=connections&connectionAction=USER_UPDATE',
       'period=30d&from=2026-01-01T00%3A00%3A00.000Z',
@@ -3288,6 +3298,76 @@ describe('users access hardening', () => {
     expect(changedFilterResponse.status).toBe(400);
     expect(futureCursorResponse.status).toBe(400);
     expect(mockPrisma.auditLog.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps login-name search behind sensitive audit access', async () => {
+    mockPrisma.auditLog.findMany.mockReset();
+    mockPrisma.auditLog.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+    const route = await import('$app/api/systeme/journal-activite/route');
+
+    const regularResponse = await route.GET(
+      new Request(
+        'http://localhost/api/systeme/journal-activite?search=alice',
+      ) as never,
+    );
+    const regularWhere = mockPrisma.auditLog.findMany.mock.calls[0]?.[0]
+      ?.where as { AND?: Array<{ OR?: unknown[] }> };
+    const regularSearch = regularWhere.AND?.find((filter) => filter.OR)?.OR;
+
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'protected-1',
+        isProtected: true,
+        passwordHash: undefined,
+      }),
+    });
+    const protectedResponse = await route.GET(
+      new Request(
+        'http://localhost/api/systeme/journal-activite?search=alice',
+      ) as never,
+    );
+    const protectedWhere = mockPrisma.auditLog.findMany.mock.calls[1]?.[0]
+      ?.where as { AND?: Array<{ OR?: unknown[] }> };
+    const protectedSearch = protectedWhere.AND?.find((filter) => filter.OR)?.OR;
+
+    expect(regularResponse.status).toBe(200);
+    expect(protectedResponse.status).toBe(200);
+    expect(regularSearch).toHaveLength(2);
+    expect(JSON.stringify(regularSearch)).not.toContain('LoginNameSnapshot');
+    expect(protectedSearch).toHaveLength(4);
+    expect(JSON.stringify(protectedSearch)).toContain('actorLoginNameSnapshot');
+    expect(JSON.stringify(protectedSearch)).toContain(
+      'targetLoginNameSnapshot',
+    );
+  });
+
+  it('treats SQL wildcard characters in journal search as literals', async () => {
+    mockPrisma.auditLog.findMany.mockReset();
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([]);
+    const route = await import('$app/api/systeme/journal-activite/route');
+    const response = await route.GET(
+      new Request(
+        'http://localhost/api/systeme/journal-activite?search=ali_ce%25',
+      ) as never,
+    );
+    const where = mockPrisma.auditLog.findMany.mock.calls[0]?.[0]?.where as {
+      AND?: Array<{
+        OR?: Array<{
+          actorDisplayNameSnapshot?: { contains?: string };
+        }>;
+      }>;
+    };
+    const searchFilter = where.AND?.find((filter) => filter.OR)?.OR;
+
+    expect(response.status).toBe(200);
+    expect(searchFilter?.[0]?.actorDisplayNameSnapshot?.contains).toBe(
+      'ali\\_ce\\%',
+    );
   });
 
   it('requires export permission and a recent step-up before exporting', async () => {
@@ -3376,7 +3456,13 @@ describe('users access hardening', () => {
       ) as never,
     );
 
-    expect(mockCreateAuditLog).not.toHaveBeenCalled();
+    expect(mockCreateAuditLog).toHaveBeenCalledTimes(1);
+    expect(mockCreateAuditLog).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        action: 'AUDIT_EXPORT',
+        metadata: expect.objectContaining({ phase: 'started', rowCount: 0 }),
+      }),
+    );
 
     const csv = await response.text();
 
@@ -3389,6 +3475,9 @@ describe('users access hardening', () => {
     expect(csv).not.toContain('request-private');
     expect(csv).not.toContain('private-agent');
     expect(response.headers.get('X-Export-Truncated')).toBe('false');
+    expect(mockPrisma.auditLog.count).toHaveBeenCalledWith(
+      expect.objectContaining({ take: 50_001 }),
+    );
     expect(mockCreateAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'AUDIT_EXPORT',
@@ -3396,6 +3485,7 @@ describe('users access hardening', () => {
         ipAddress: '203.0.113.5',
         metadata: expect.objectContaining({
           format: 'csv',
+          phase: 'completed',
           rowCount: 1,
           truncated: false,
         }),
@@ -3437,6 +3527,7 @@ describe('users access hardening', () => {
         action: 'AUDIT_EXPORT',
         metadata: expect.objectContaining({
           format: 'json',
+          phase: 'completed',
           rowCount: 0,
           truncated: false,
         }),

@@ -200,9 +200,7 @@ const appendUserAuditFilters = (
 ): void => {
   params.set('scope', filters.activityScope);
 
-  if (filters.dateFilter !== 'all') {
-    params.set('period', filters.dateFilter);
-  }
+  params.set('period', filters.dateFilter);
   if (filters.poleFilter !== 'all') {
     params.set('poleKey', filters.poleFilter);
   }
@@ -225,6 +223,7 @@ const getUserAuditFiltersFromParams = (params: {
         ? requestedScope
         : DEFAULT_USER_HISTORY_FILTERS.activityScope,
     dateFilter:
+      requestedPeriod === 'all' ||
       requestedPeriod === '7' ||
       requestedPeriod === '30' ||
       requestedPeriod === '90'
@@ -393,7 +392,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     useState<PendingStepUpAction | null>(null);
 
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
-  const [auditTotalLogs, setAuditTotalLogs] = useState<number | null>(null);
+  const [auditNextCursor, setAuditNextCursor] = useState<string | null>(null);
+  const [auditHasMore, setAuditHasMore] = useState(false);
   const [auditStats, setAuditStats] = useState<UserAuditStats | null>(null);
   const [isExportingAudit, setIsExportingAudit] = useState(false);
   const [auditFacets, setAuditFacets] = useState<UserHistoryFacets | null>(
@@ -402,7 +402,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const [auditFilters, setAuditFilters] = useState<UserHistoryFilters>(() =>
     getUserAuditFiltersFromParams(searchParams),
   );
-  const [auditLoadedPage, setAuditLoadedPage] = useState(0);
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
   const [isLoadingMoreAudit, setIsLoadingMoreAudit] = useState(false);
   const [auditError, setAuditError] = useState<string | null>(null);
@@ -955,10 +954,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
       if (!canFetchUserAudit) {
         setAuditLogs([]);
-        setAuditTotalLogs(null);
+        setAuditNextCursor(null);
+        setAuditHasMore(false);
         setAuditStats(null);
         setAuditFacets(null);
-        setAuditLoadedPage(0);
         setAuditError(null);
         setIsLoadingAudit(false);
         setIsLoadingMoreAudit(false);
@@ -979,12 +978,15 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           ? USER_AUDIT_PAGE_SIZE
           : USER_AUDIT_SUMMARY_PAGE_SIZE;
         const auditParams = new URLSearchParams({
-          page: '1',
           pageSize: String(requestedPageSize),
         });
 
         if (includeLogs) {
           auditParams.set('includeFacets', 'true');
+          auditParams.set(
+            'includeStats',
+            hasLoadedAuditSummaryRef.current ? 'false' : 'true',
+          );
           appendUserAuditFilters(auditParams, auditFilters);
         } else {
           auditParams.set('includeLogs', 'false');
@@ -1008,19 +1010,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
           if (includeLogs) {
             const loadedLogs = data.data.logs as AuditLogEntry[];
-            const totalLogs = Number(
-              data.data.pagination?.total ??
-                data.data.stats?.totalActions ??
-                loadedLogs.length,
-            );
-            const safeTotalLogs = Number.isFinite(totalLogs)
-              ? totalLogs
-              : loadedLogs.length;
 
             setAuditLogs(loadedLogs);
-            setAuditTotalLogs(safeTotalLogs);
+            setAuditNextCursor(data.data.nextCursor ?? null);
+            setAuditHasMore(data.data.hasMore === true);
             setAuditFacets(data.data.facets ?? null);
-            setAuditLoadedPage(1);
             hasLoadedAuditLogsRef.current = true;
           }
         } else {
@@ -1043,17 +1037,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   );
 
   const fetchMoreAuditData = useCallback(async (): Promise<void> => {
-    if (!canFetchUserAudit || isLoadingMoreAudit || auditLoadedPage < 1) return;
-    if (auditTotalLogs !== null && auditLogs.length >= auditTotalLogs) return;
+    if (!canFetchUserAudit || isLoadingMoreAudit) return;
+    if (!auditHasMore || !auditNextCursor) return;
 
     auditAbortControllerRef.current?.abort();
 
     const controller = new AbortController();
-    const nextPage = auditLoadedPage + 1;
     const auditParams = new URLSearchParams({
+      cursor: auditNextCursor,
       includeFacets: 'false',
       includeStats: 'false',
-      page: String(nextPage),
       pageSize: String(USER_AUDIT_PAGE_SIZE),
     });
     appendUserAuditFilters(auditParams, auditFilters);
@@ -1079,9 +1072,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       }
 
       const nextLogs = data.data.logs as AuditLogEntry[];
-      const totalLogs = Number(
-        data.data.pagination?.total ?? auditTotalLogs ?? auditLogs.length,
-      );
 
       setAuditLogs((currentLogs) => {
         const knownIds = new Set(currentLogs.map((entry) => entry.id));
@@ -1091,10 +1081,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           ...nextLogs.filter((entry) => !knownIds.has(entry.id)),
         ];
       });
-      if (Number.isFinite(totalLogs)) {
-        setAuditTotalLogs(totalLogs);
-      }
-      setAuditLoadedPage(nextPage);
+      setAuditNextCursor(data.data.nextCursor ?? null);
+      setAuditHasMore(data.data.hasMore === true);
     } catch {
       if (controller.signal.aborted) return;
 
@@ -1107,9 +1095,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     }
   }, [
     auditFilters,
-    auditLoadedPage,
-    auditLogs.length,
-    auditTotalLogs,
+    auditHasMore,
+    auditNextCursor,
     canFetchUserAudit,
     isLoadingMoreAudit,
     userId,
@@ -1122,9 +1109,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       hasLoadedAuditLogsRef.current = false;
       setAuditFilters(nextFilters);
       setAuditLogs([]);
-      setAuditTotalLogs(null);
+      setAuditNextCursor(null);
+      setAuditHasMore(false);
       setAuditFacets(null);
-      setAuditLoadedPage(0);
       setAuditError(null);
       setIsLoadingAudit(false);
       setIsLoadingMoreAudit(false);
@@ -1215,10 +1202,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     hasLoadedAuditLogsRef.current = false;
     hasLoadedAuditSummaryRef.current = false;
     setAuditLogs([]);
-    setAuditTotalLogs(null);
+    setAuditNextCursor(null);
+    setAuditHasMore(false);
     setAuditStats(null);
     setAuditFacets(null);
-    setAuditLoadedPage(0);
     setAuditError(null);
     setIsLoadingAudit(false);
     setIsLoadingMoreAudit(false);
@@ -1242,9 +1229,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     hasLoadedAuditLogsRef.current = false;
     setAuditFilters(requestedAuditFilters);
     setAuditLogs([]);
-    setAuditTotalLogs(null);
+    setAuditNextCursor(null);
+    setAuditHasMore(false);
     setAuditFacets(null);
-    setAuditLoadedPage(0);
     setAuditError(null);
     setIsLoadingAudit(false);
     setIsLoadingMoreAudit(false);
@@ -2150,8 +2137,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     }
   }
 
-  const hasMoreAuditLogs =
-    auditTotalLogs !== null && auditLogs.length < auditTotalLogs;
+  const hasMoreAuditLogs = auditHasMore;
   const shouldShowAuditLoading =
     isLoadingAudit ||
     (!hasLoadedAuditLogsRef.current &&
@@ -2258,7 +2244,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             facets={auditFacets}
             filters={auditFilters}
             hasMoreAuditLogs={hasMoreAuditLogs}
-            isAuditTruncated={hasMoreAuditLogs}
             isExporting={isExportingAudit}
             isLoading={shouldShowAuditLoading}
             isLoadingMore={isLoadingMoreAudit}
@@ -2273,7 +2258,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             onLoadMore={() => void fetchMoreAuditData()}
             onRetry={() => void fetchAuditData(true)}
             perspective={isSelf ? 'personal' : 'managed'}
-            totalAuditLogs={auditTotalLogs ?? auditLogs.length}
+            totalAuditLogs={auditLogs.length}
             userId={userId}
           />
         );

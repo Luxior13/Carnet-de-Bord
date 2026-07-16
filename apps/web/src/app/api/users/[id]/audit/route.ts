@@ -1,9 +1,13 @@
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+
 import type { Prisma } from '@prisma/client';
 import { AuditAction, AuditCategory } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 
 import { PAGINATION } from '$constants/pagination.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
+import { env } from '$env';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors, parsePagination } from '$server/api-response';
 import {
@@ -53,19 +57,42 @@ type AuditFacets = {
 
 type AuditResponse = {
   facets: AuditFacets | null;
+  hasMore: boolean;
   logs: AuditLogEntry[];
+  nextCursor: string | null;
   pagination: {
     page: number;
     pageSize: number;
-    total: number;
-    totalPages: number;
+    total: number | null;
+    totalPages: number | null;
   };
+  snapshotAt: string;
   stats: UserAuditStats | null;
 };
 
 const ALLOWED_PERIOD_DAYS = new Set([7, 30, 90]);
 const AUDIT_EXPORT_BATCH_SIZE = 500;
 const AUDIT_EXPORT_MAX_ROWS = 50_000;
+const AUDIT_STATS_MAX_COUNT = 100_000;
+const AUDIT_CURSOR_MAX_LENGTH = 2_048;
+const AUDIT_CURSOR_CLOCK_SKEW_MS = 60_000;
+const AUDIT_CURSOR_VERSION = 1 as const;
+const AUDIT_CURSOR_SIGNING_KEY = createHash('sha256')
+  .update('team-control:user-audit-cursor:v1:', 'utf8')
+  .update(Buffer.from(env.MFA_ENCRYPTION_KEY_V1, 'base64'))
+  .digest();
+
+const AUDIT_CURSOR_SCHEMA = z
+  .object({
+    createdAt: z.iso.datetime({ offset: true }),
+    filterHash: z.string().length(43),
+    id: z.string().trim().min(1).max(191),
+    snapshotAt: z.iso.datetime({ offset: true }),
+    v: z.literal(AUDIT_CURSOR_VERSION),
+  })
+  .strict();
+
+type AuditCursor = z.infer<typeof AUDIT_CURSOR_SCHEMA>;
 
 const AUDIT_LOG_SELECT = {
   action: true,
@@ -112,6 +139,83 @@ const getAuditFilters = (searchParams: URLSearchParams): AuditFilters => {
   };
 };
 
+const getAuditFilterFingerprint = (
+  viewedUserId: string,
+  filters: AuditFilters,
+): string =>
+  createHash('sha256')
+    .update(
+      JSON.stringify({
+        pageKey: filters.pageKey ?? null,
+        periodDays: filters.periodDays ?? null,
+        poleKey: filters.poleKey ?? null,
+        scope: filters.scope,
+        viewedUserId,
+      }),
+      'utf8',
+    )
+    .digest('base64url');
+
+const signAuditCursorPayload = (payload: string): string =>
+  createHmac('sha256', AUDIT_CURSOR_SIGNING_KEY)
+    .update(payload, 'utf8')
+    .digest('base64url');
+
+const encodeAuditCursor = (cursor: AuditCursor): string => {
+  const payload = Buffer.from(JSON.stringify(cursor), 'utf8').toString(
+    'base64url',
+  );
+
+  return `${payload}.${signAuditCursorPayload(payload)}`;
+};
+
+const decodeAuditCursor = (
+  value: string,
+  expectedFilterHash: string,
+): AuditCursor | null => {
+  try {
+    if (value.length > AUDIT_CURSOR_MAX_LENGTH) return null;
+
+    const parts = value.split('.');
+    if (parts.length !== 2) return null;
+
+    const [payload, suppliedSignature] = parts;
+    if (!payload || !suppliedSignature) return null;
+
+    const expectedSignature = signAuditCursorPayload(payload);
+    const suppliedBytes = Buffer.from(suppliedSignature, 'base64url');
+    const expectedBytes = Buffer.from(expectedSignature, 'base64url');
+    if (
+      suppliedBytes.length !== expectedBytes.length ||
+      !timingSafeEqual(suppliedBytes, expectedBytes)
+    ) {
+      return null;
+    }
+
+    const decoded = Buffer.from(payload, 'base64url').toString('utf8');
+    const parsedCursor = AUDIT_CURSOR_SCHEMA.safeParse(JSON.parse(decoded));
+    if (
+      !parsedCursor.success ||
+      parsedCursor.data.filterHash !== expectedFilterHash
+    ) {
+      return null;
+    }
+
+    const createdAt = Date.parse(parsedCursor.data.createdAt);
+    const snapshotAt = Date.parse(parsedCursor.data.snapshotAt);
+    if (
+      createdAt > snapshotAt ||
+      snapshotAt > Date.now() + AUDIT_CURSOR_CLOCK_SKEW_MS
+    ) {
+      return null;
+    }
+
+    return parsedCursor.data;
+  } catch {
+    return null;
+  }
+};
+
 const buildAuditWhere = (
   userId: string,
   filters: AuditFilters,
@@ -119,6 +223,7 @@ const buildAuditWhere = (
     includePage?: boolean;
     includePole?: boolean;
     includeScope?: boolean;
+    snapshotAt?: Date;
   } = {},
 ): Prisma.AuditLogWhereInput => {
   const {
@@ -126,23 +231,23 @@ const buildAuditWhere = (
     includePole = true,
     includeScope = true,
   } = options;
-  const userFilter: Prisma.AuditLogWhereInput = {
-    OR: [{ userId }, { targetUserId: userId }],
-  };
+  const userFilter: Prisma.AuditLogWhereInput =
+    includeScope && filters.scope === 'by'
+      ? { userId }
+      : includeScope && filters.scope === 'on'
+        ? { targetUserId: userId }
+        : { OR: [{ userId }, { targetUserId: userId }] };
   const additionalFilters: Prisma.AuditLogWhereInput[] = [];
 
   if (filters.periodDays) {
     additionalFilters.push({
       createdAt: {
-        gte: new Date(Date.now() - filters.periodDays * 24 * 60 * 60 * 1000),
+        gte: new Date(
+          (options.snapshotAt?.getTime() ?? Date.now()) -
+            filters.periodDays * 24 * 60 * 60 * 1000,
+        ),
       },
     });
-  }
-  if (includeScope && filters.scope === 'by') {
-    additionalFilters.push({ userId });
-  }
-  if (includeScope && filters.scope === 'on') {
-    additionalFilters.push({ targetUserId: userId });
   }
   if (includePole && filters.poleKey) {
     additionalFilters.push({ poleKey: filters.poleKey });
@@ -154,6 +259,34 @@ const buildAuditWhere = (
   return additionalFilters.length > 0
     ? { AND: [userFilter, ...additionalFilters] }
     : userFilter;
+};
+
+const constrainAuditToSnapshot = (
+  where: Prisma.AuditLogWhereInput,
+  snapshotAt: Date,
+): Prisma.AuditLogWhereInput => ({
+  AND: [where, { createdAt: { lte: snapshotAt } }],
+});
+
+const constrainAuditToCursor = (
+  where: Prisma.AuditLogWhereInput,
+  cursor: AuditCursor | null,
+): Prisma.AuditLogWhereInput => {
+  if (!cursor) return where;
+
+  const createdAt = new Date(cursor.createdAt);
+
+  return {
+    AND: [
+      where,
+      {
+        OR: [
+          { createdAt: { lt: createdAt } },
+          { createdAt, id: { lt: cursor.id } },
+        ],
+      },
+    ],
+  };
 };
 
 const getVisibleAuditLog = (
@@ -237,7 +370,7 @@ const createAuditCsvResponse = (
 ): Response => {
   const encoder = new TextEncoder();
   let cancelled = false;
-  let cursor: string | undefined;
+  let cursor: Pick<AuditLogRecord, 'createdAt' | 'id'> | null = null;
   let exportedRows = 0;
   let finished = false;
   let initialized = false;
@@ -281,13 +414,27 @@ const createAuditCsvResponse = (
         }
 
         const take = Math.min(AUDIT_EXPORT_BATCH_SIZE, remainingRows);
+        const pageWhere: Prisma.AuditLogWhereInput = cursor
+          ? {
+              AND: [
+                where,
+                {
+                  OR: [
+                    { createdAt: { lt: cursor.createdAt } },
+                    {
+                      createdAt: cursor.createdAt,
+                      id: { lt: cursor.id },
+                    },
+                  ],
+                },
+              ],
+            }
+          : where;
         const logs = await prisma.auditLog.findMany({
-          cursor: cursor ? { id: cursor } : undefined,
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           select: AUDIT_LOG_SELECT,
-          skip: cursor ? 1 : 0,
           take,
-          where,
+          where: pageWhere,
         });
 
         if (cancelled) return;
@@ -324,7 +471,7 @@ const createAuditCsvResponse = (
 
         controller.enqueue(encoder.encode(`${rows.join('\r\n')}\r\n`));
         exportedRows += logs.length;
-        cursor = logs.at(-1)?.id;
+        cursor = logs.at(-1) ?? null;
         shouldFinalize =
           logs.length < take ||
           !cursor ||
@@ -352,17 +499,30 @@ const createAuditCsvResponse = (
 const getAuditFacets = async (
   userId: string,
   filters: AuditFilters,
+  snapshotAt: Date,
 ): Promise<AuditFacets> => {
-  const scopeFacetWhere = buildAuditWhere(userId, filters, {
-    includeScope: false,
-  });
-  const poleFacetWhere = buildAuditWhere(userId, filters, {
-    includePage: false,
-    includePole: false,
-  });
-  const pageFacetWhere = buildAuditWhere(userId, filters, {
-    includePage: false,
-  });
+  const scopeFacetWhere = constrainAuditToSnapshot(
+    buildAuditWhere(userId, filters, {
+      includeScope: false,
+      snapshotAt,
+    }),
+    snapshotAt,
+  );
+  const poleFacetWhere = constrainAuditToSnapshot(
+    buildAuditWhere(userId, filters, {
+      includePage: false,
+      includePole: false,
+      snapshotAt,
+    }),
+    snapshotAt,
+  );
+  const pageFacetWhere = constrainAuditToSnapshot(
+    buildAuditWhere(userId, filters, {
+      includePage: false,
+      snapshotAt,
+    }),
+    snapshotAt,
+  );
   const [
     allScopeCount,
     byScopeCount,
@@ -490,7 +650,6 @@ export async function GET(
     }
 
     const filters = getAuditFilters(searchParams);
-    const whereClause = buildAuditWhere(id, filters);
     const canViewSensitiveDetails =
       auth.user.isProtected ||
       hasPermission(
@@ -506,10 +665,12 @@ export async function GET(
 
     if (wantsCsvExport) {
       const generatedAt = new Date();
-      const exportWhereClause: Prisma.AuditLogWhereInput = {
-        AND: [whereClause, { createdAt: { lte: generatedAt } }],
-      };
+      const exportWhereClause = constrainAuditToSnapshot(
+        buildAuditWhere(id, filters, { snapshotAt: generatedAt }),
+        generatedAt,
+      );
       const rowCount = await prisma.auditLog.count({
+        take: AUDIT_EXPORT_MAX_ROWS + 1,
         where: exportWhereClause,
       });
       const truncated = rowCount > AUDIT_EXPORT_MAX_ROWS;
@@ -520,6 +681,30 @@ export async function GET(
         ...(filters.poleKey ? { poleKey: filters.poleKey } : {}),
         scope: filters.scope,
       };
+
+      await createAuditLog({
+        action: AuditAction.AUDIT_EXPORT,
+        category: AuditCategory.SYSTEM,
+        description:
+          "Export du journal d'activité d'un utilisateur demandé (CSV)",
+        ...auditRequestContext,
+        metadata: {
+          filters: exportFilters,
+          format: 'csv',
+          pageKey: 'users',
+          pageLabel: 'Utilisateurs & permissions',
+          phase: 'started',
+          poleKey: 'system',
+          poleLabel: 'Système',
+          rowCount: 0,
+          snapshotAt: generatedAt.toISOString(),
+          tabKey: 'activity',
+          tabLabel: 'Activité',
+          truncated,
+        },
+        targetUserId: id,
+        userId: auth.user.id,
+      });
 
       return createAuditCsvResponse(exportWhereClause, {
         ...visibilityOptions,
@@ -535,6 +720,7 @@ export async function GET(
               generatedAt: generatedAt.toISOString(),
               pageKey: 'users',
               pageLabel: 'Utilisateurs & permissions',
+              phase: 'completed',
               poleKey: 'system',
               poleLabel: 'Système',
               rowCount: summary.rowCount,
@@ -551,78 +737,132 @@ export async function GET(
       });
     }
 
-    const {
-      limit: pageSize,
-      page,
-      skip,
-    } = parsePagination(searchParams, PAGINATION.DEFAULT_LIMIT, {
-      limitParam: 'pageSize',
-    });
+    const { limit: pageSize, page } = parsePagination(
+      searchParams,
+      PAGINATION.DEFAULT_LIMIT,
+      {
+        limitParam: 'pageSize',
+      },
+    );
     const includeLogs = searchParams.get('includeLogs') !== 'false';
+    const rawCursor = searchParams.get('cursor');
+    const filterHash = getAuditFilterFingerprint(id, filters);
+    const cursor = rawCursor ? decodeAuditCursor(rawCursor, filterHash) : null;
+
+    if (rawCursor && !cursor) {
+      return apiErrors.badRequest('Curseur de pagination invalide');
+    }
+    if (page > 1 && !cursor) {
+      return apiErrors.badRequest(
+        'Un curseur est requis pour charger les pages suivantes',
+      );
+    }
+    if (cursor && !includeLogs) {
+      return apiErrors.badRequest(
+        'Un curseur ne peut pas être utilisé sans charger les événements',
+      );
+    }
+
+    const snapshotAt = cursor ? new Date(cursor.snapshotAt) : new Date();
+    const isInitialPage = cursor === null;
     const includeStatsParam = searchParams.get('includeStats');
     const includeStats =
-      includeStatsParam === null ? page === 1 : includeStatsParam !== 'false';
-    const includeFacets = searchParams.get('includeFacets') === 'true';
-    const unfilteredWhere = buildAuditWhere(id, {
-      scope: 'all',
-    });
-    const totalPromise = prisma.auditLog.count({ where: whereClause });
-    const hasSelectedFilters =
-      filters.scope !== 'all' ||
-      filters.periodDays !== undefined ||
-      filters.poleKey !== undefined ||
-      filters.pageKey !== undefined;
-    const overallTotalPromise = includeStats
-      ? hasSelectedFilters
-        ? prisma.auditLog.count({ where: unfilteredWhere })
-        : totalPromise
-      : Promise.resolve(0);
-    const [total, logs, stats, facets] = await Promise.all([
-      totalPromise,
+      isInitialPage &&
+      (includeStatsParam === null || includeStatsParam !== 'false');
+    const includeFacets =
+      isInitialPage && searchParams.get('includeFacets') === 'true';
+    const selectedWhere = constrainAuditToSnapshot(
+      buildAuditWhere(id, filters, { snapshotAt }),
+      snapshotAt,
+    );
+    const listWhere = constrainAuditToCursor(selectedWhere, cursor);
+    const unfilteredWhere = constrainAuditToSnapshot(
+      buildAuditWhere(id, { scope: 'all' }, { snapshotAt }),
+      snapshotAt,
+    );
+    const [fetchedLogs, stats, facets] = await Promise.all([
       includeLogs
         ? prisma.auditLog.findMany({
             orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
             select: AUDIT_LOG_SELECT,
-            skip,
-            take: pageSize,
-            where: whereClause,
+            take: pageSize + 1,
+            where: listWhere,
           })
         : Promise.resolve([]),
       includeStats
         ? Promise.all([
-            overallTotalPromise,
             prisma.auditLog.count({
+              take: AUDIT_STATS_MAX_COUNT + 1,
+              where: unfilteredWhere,
+            }),
+            prisma.auditLog.count({
+              take: AUDIT_STATS_MAX_COUNT + 1,
               where: {
-                action: 'LOGIN_FAILED',
-                OR: [{ targetUserId: id }, { userId: id }],
+                AND: [
+                  {
+                    action: 'LOGIN_FAILED',
+                    OR: [{ targetUserId: id }, { userId: id }],
+                  },
+                  { createdAt: { lte: snapshotAt } },
+                ],
               },
             }),
             prisma.auditLog.count({
-              where: { action: 'LOGIN_SUCCESS', userId: id },
+              take: AUDIT_STATS_MAX_COUNT + 1,
+              where: {
+                action: 'LOGIN_SUCCESS',
+                createdAt: { lte: snapshotAt },
+                userId: id,
+              },
             }),
           ]).then(
             ([totalActions, failedLogins, successfulLogins]) =>
               ({
-                failedLogins,
-                successfulLogins,
-                totalActions,
+                failedLogins: Math.min(failedLogins, AUDIT_STATS_MAX_COUNT),
+                failedLoginsCapped: failedLogins > AUDIT_STATS_MAX_COUNT,
+                successfulLogins: Math.min(
+                  successfulLogins,
+                  AUDIT_STATS_MAX_COUNT,
+                ),
+                successfulLoginsCapped:
+                  successfulLogins > AUDIT_STATS_MAX_COUNT,
+                totalActions: Math.min(totalActions, AUDIT_STATS_MAX_COUNT),
+                totalActionsCapped: totalActions > AUDIT_STATS_MAX_COUNT,
               }) satisfies UserAuditStats,
           )
         : Promise.resolve(null),
-      includeFacets ? getAuditFacets(id, filters) : Promise.resolve(null),
+      includeFacets
+        ? getAuditFacets(id, filters, snapshotAt)
+        : Promise.resolve(null),
     ]);
+    const hasMore = includeLogs && fetchedLogs.length > pageSize;
+    const logs = hasMore ? fetchedLogs.slice(0, pageSize) : fetchedLogs;
+    const lastLog = logs.at(-1);
+    const nextCursor =
+      hasMore && lastLog
+        ? encodeAuditCursor({
+            createdAt: lastLog.createdAt.toISOString(),
+            filterHash,
+            id: lastLog.id,
+            snapshotAt: snapshotAt.toISOString(),
+            v: AUDIT_CURSOR_VERSION,
+          })
+        : null;
 
     return NextResponse.json(
       {
         data: {
           facets,
+          hasMore,
           logs: logs.map((log) => getVisibleAuditLog(log, visibilityOptions)),
+          nextCursor,
           pagination: {
-            page,
+            page: cursor ? Math.max(page, 2) : 1,
             pageSize,
-            total,
-            totalPages: Math.ceil(total / pageSize),
+            total: null,
+            totalPages: null,
           },
+          snapshotAt: snapshotAt.toISOString(),
           stats,
         },
         success: true,

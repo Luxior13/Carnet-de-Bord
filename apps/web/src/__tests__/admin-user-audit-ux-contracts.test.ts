@@ -25,12 +25,19 @@ describe('managed user audit UX contracts', () => {
       /for\s*\(let page = 2; page <= pagesToFetch/,
     );
     expect(userDetailSource).toContain('setAuditLogs(loadedLogs)');
-    expect(userDetailSource).toContain('setAuditLoadedPage(1)');
+    expect(userDetailSource).toContain(
+      'setAuditNextCursor(data.data.nextCursor ?? null)',
+    );
+    expect(userDetailSource).toContain(
+      'setAuditHasMore(data.data.hasMore === true)',
+    );
   });
 
   it('supports progressive loading, server filters and protected export', () => {
     expect(userDetailSource).toContain('fetchMoreAuditData');
     expect(userDetailSource).toContain("includeStats: 'false'");
+    expect(userDetailSource).toContain('cursor: auditNextCursor');
+    expect(userDetailSource).not.toContain('page: String(nextPage)');
     expect(userDetailSource).toContain('appendUserAuditFilters');
     expect(userDetailSource).toContain(
       'onFiltersChange={handleAuditFiltersChange}',

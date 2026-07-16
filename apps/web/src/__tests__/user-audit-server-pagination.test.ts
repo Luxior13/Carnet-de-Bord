@@ -18,6 +18,11 @@ const mockPrisma = {
 };
 
 vi.mock('server-only', () => ({}));
+vi.mock('$env', () => ({
+  env: {
+    MFA_ENCRYPTION_KEY_V1: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
+  },
+}));
 vi.mock('$server/api-auth', () => ({
   requireAuth: mockRequireAuth,
   requirePermission: mockRequirePermission,
@@ -30,6 +35,7 @@ vi.mock('$server/prisma', () => ({ prisma: mockPrisma }));
 
 const buildLog = (
   description = 'Profil mis à jour',
+  overrides: Record<string, unknown> = {},
 ): Record<string, unknown> => ({
   action: 'USER_UPDATE',
   category: 'USER',
@@ -51,6 +57,7 @@ const buildLog = (
   targetUserId: 'target-1',
   userAgent: 'Browser',
   userId: 'admin-1',
+  ...overrides,
 });
 
 describe('managed user audit server pagination', () => {
@@ -99,6 +106,11 @@ describe('managed user audit server pagination', () => {
 
     expect(response.status).toBe(200);
     expect(body.data.logs).toHaveLength(1);
+    expect(body.data).toMatchObject({
+      hasMore: false,
+      nextCursor: null,
+      snapshotAt: expect.any(String),
+    });
     expect(body.data.pagination).toMatchObject({ page: 1, pageSize: 50 });
     expect(body.data.facets).toEqual({
       pages: {
@@ -113,21 +125,158 @@ describe('managed user audit server pagination', () => {
     });
     expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        skip: 0,
-        take: 50,
+        take: 51,
         where: {
           AND: [
             {
-              OR: [{ userId: 'target-1' }, { targetUserId: 'target-1' }],
+              AND: [
+                { targetUserId: 'target-1' },
+                { createdAt: { gte: expect.any(Date) } },
+                { poleKey: 'system' },
+                { pageKey: 'users' },
+              ],
             },
-            { createdAt: { gte: expect.any(Date) } },
-            { targetUserId: 'target-1' },
-            { poleKey: 'system' },
-            { pageKey: 'users' },
+            { createdAt: { lte: expect.any(Date) } },
           ],
         },
       }),
     );
+    expect(mockPrisma.auditLog.findMany.mock.calls[0]?.[0]).not.toHaveProperty(
+      'skip',
+    );
+    expect(
+      mockPrisma.auditLog.count.mock.calls.filter(
+        ([query]) => query?.take === 100_001,
+      ),
+    ).toHaveLength(3);
+  });
+
+  it('uses a signed stable keyset cursor and performs no counts on load-more', async () => {
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      buildLog('Journal 3', {
+        createdAt: new Date('2026-07-15T10:00:00.000Z'),
+        id: 'log-c',
+      }),
+      buildLog('Journal 2', {
+        createdAt: new Date('2026-07-15T10:00:00.000Z'),
+        id: 'log-b',
+      }),
+      buildLog('Sentinelle', {
+        createdAt: new Date('2026-07-15T09:00:00.000Z'),
+        id: 'log-a',
+      }),
+    ]);
+    const route = await import('$app/api/users/[id]/audit/route');
+    const firstResponse = await route.GET(
+      new Request(
+        'http://localhost/api/users/target-1/audit?pageSize=2&includeStats=false',
+      ) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const firstBody = await firstResponse.json();
+
+    expect(firstResponse.status).toBe(200);
+    expect(firstBody.data.logs.map((log: { id: string }) => log.id)).toEqual([
+      'log-c',
+      'log-b',
+    ]);
+    expect(firstBody.data.hasMore).toBe(true);
+    expect(firstBody.data.nextCursor).toMatch(/^[^.]+\.[^.]+$/);
+    expect(firstBody.data.snapshotAt).toEqual(expect.any(String));
+    expect(mockPrisma.auditLog.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({ take: 3 }),
+    );
+
+    mockPrisma.auditLog.count.mockClear();
+    mockPrisma.auditLog.groupBy.mockReset();
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      buildLog('Journal 1', {
+        createdAt: new Date('2026-07-15T09:00:00.000Z'),
+        id: 'log-a',
+      }),
+    ]);
+
+    const nextResponse = await route.GET(
+      new Request(
+        `http://localhost/api/users/target-1/audit?pageSize=2&includeStats=true&includeFacets=true&cursor=${encodeURIComponent(firstBody.data.nextCursor)}`,
+      ) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const nextBody = await nextResponse.json();
+
+    expect(nextResponse.status).toBe(200);
+    expect(nextBody.data).toMatchObject({
+      facets: null,
+      hasMore: false,
+      nextCursor: null,
+      snapshotAt: firstBody.data.snapshotAt,
+      stats: null,
+    });
+    expect(mockPrisma.auditLog.count).not.toHaveBeenCalled();
+    expect(mockPrisma.auditLog.groupBy).not.toHaveBeenCalled();
+    expect(mockPrisma.auditLog.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        take: 3,
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            expect.objectContaining({
+              OR: [
+                {
+                  createdAt: {
+                    lt: new Date('2026-07-15T10:00:00.000Z'),
+                  },
+                },
+                {
+                  createdAt: new Date('2026-07-15T10:00:00.000Z'),
+                  id: { lt: 'log-b' },
+                },
+              ],
+            }),
+          ]),
+        }),
+      }),
+    );
+    expect(
+      mockPrisma.auditLog.findMany.mock.calls.at(-1)?.[0],
+    ).not.toHaveProperty('skip');
+  });
+
+  it('rejects tampered cursors and cursors replayed with other filters', async () => {
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      buildLog('Journal 2', { id: 'log-b' }),
+      buildLog('Sentinelle', {
+        createdAt: new Date('2026-07-15T09:00:00.000Z'),
+        id: 'log-a',
+      }),
+    ]);
+    const route = await import('$app/api/users/[id]/audit/route');
+    const firstResponse = await route.GET(
+      new Request(
+        'http://localhost/api/users/target-1/audit?pageSize=1&includeStats=false',
+      ) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const firstBody = await firstResponse.json();
+    const cursor = String(firstBody.data.nextCursor);
+
+    mockPrisma.auditLog.findMany.mockClear();
+
+    const tamperedResponse = await route.GET(
+      new Request(
+        `http://localhost/api/users/target-1/audit?pageSize=1&cursor=${encodeURIComponent(`${cursor}x`)}`,
+      ) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const replayedResponse = await route.GET(
+      new Request(
+        `http://localhost/api/users/target-1/audit?pageSize=1&scope=on&cursor=${encodeURIComponent(cursor)}`,
+      ) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(tamperedResponse.status).toBe(400);
+    expect(replayedResponse.status).toBe(400);
+    expect(mockPrisma.auditLog.findMany).not.toHaveBeenCalled();
   });
 
   it('streams the complete filtered CSV through the protected API', async () => {
@@ -142,7 +291,13 @@ describe('managed user audit server pagination', () => {
       { params: Promise.resolve({ id: 'target-1' }) },
     );
 
-    expect(mockCreateAuditLog).not.toHaveBeenCalled();
+    expect(mockCreateAuditLog).toHaveBeenCalledTimes(1);
+    expect(mockCreateAuditLog).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        action: 'AUDIT_EXPORT',
+        metadata: expect.objectContaining({ phase: 'started', rowCount: 0 }),
+      }),
+    );
     const csv = await response.text();
 
     expect(response.status).toBe(200);
@@ -157,6 +312,7 @@ describe('managed user audit server pagination', () => {
       PERMISSIONS.USERS.EXPORT,
     );
     expect(mockPrisma.auditLog.count).toHaveBeenCalledWith({
+      take: 50_001,
       where: {
         AND: [
           expect.objectContaining({ AND: expect.any(Array) }),
@@ -177,6 +333,7 @@ describe('managed user audit server pagination', () => {
         ipAddress: '203.0.113.20',
         metadata: expect.objectContaining({
           format: 'csv',
+          phase: 'completed',
           rowCount: 1,
           truncated: false,
         }),
@@ -218,7 +375,7 @@ describe('managed user audit server pagination', () => {
     expect(mockCreateAuditLog).not.toHaveBeenCalled();
   });
 
-  it('announces a truncated snapshot and does not audit a cancelled export', async () => {
+  it('announces a truncated snapshot and keeps an audit trace when cancelled', async () => {
     mockPrisma.auditLog.count.mockResolvedValueOnce(50_001);
     const route = await import('$app/api/users/[id]/audit/route');
     const response = await route.GET(
@@ -233,7 +390,16 @@ describe('managed user audit server pagination', () => {
 
     await response.body?.cancel();
 
-    expect(mockCreateAuditLog).not.toHaveBeenCalled();
+    expect(mockCreateAuditLog).toHaveBeenCalledTimes(1);
+    expect(mockCreateAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'AUDIT_EXPORT',
+        metadata: expect.objectContaining({
+          phase: 'started',
+          truncated: true,
+        }),
+      }),
+    );
   });
 
   it('requires the dedicated export permission for another account', async () => {
