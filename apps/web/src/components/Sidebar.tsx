@@ -52,6 +52,7 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from '$ui/sidebar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
 type SidebarProps = {
@@ -103,6 +104,12 @@ const SpaceSwitcher: FC<{
   const activeTone = getNavigationSpaceToneClasses(activeSpace.tone);
   const isCollapsed = !isMobile && sidebarState === 'collapsed';
   const hasAlternatives = spaces.length > 1;
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isCollapsed) setIsTooltipOpen(false);
+  }, [isCollapsed]);
   const rowClassName = cn(
     'flex h-11 w-full min-w-0 items-center gap-2.5 rounded-md border border-transparent bg-transparent px-2 text-left transition-[background-color,border-color,box-shadow] outline-none lg:h-10',
     'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:border-transparent group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-3',
@@ -127,42 +134,59 @@ const SpaceSwitcher: FC<{
     return (
       <div
         className={rowClassName}
-        title={isCollapsed ? activeSpace.label : undefined}
+        title={isCollapsed ? `Pôle actuel : ${activeSpace.label}` : undefined}
       >
         {rowContent}
       </div>
     );
   }
 
+  const switcherButton = (
+    <button
+      type="button"
+      aria-label={`Changer de pôle. Pôle actuel : ${activeSpace.label}`}
+      className={cn(
+        rowClassName,
+        'group/space-switcher hover:border-sidebar-border/60 hover:bg-sidebar-accent/30 focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/35 data-[state=open]:bg-sidebar-accent/35 focus-visible:ring-2',
+      )}
+    >
+      {rowContent}
+      <ChevronDown className="text-sidebar-foreground/60 size-4 shrink-0 transition-transform group-data-[collapsible=icon]/sidebar:hidden group-data-[state=open]/space-switcher:rotate-180 motion-reduce:transition-none" />
+    </button>
+  );
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          aria-label={`Changer d'espace. Espace actuel : ${activeSpace.label}`}
-          title={isCollapsed ? activeSpace.label : undefined}
-          className={cn(
-            rowClassName,
-            'group/space-switcher hover:border-sidebar-border/60 hover:bg-sidebar-accent/30 focus-visible:ring-sidebar-ring data-[state=open]:border-sidebar-ring/35 data-[state=open]:bg-sidebar-accent/35 focus-visible:ring-2',
-          )}
+    <DropdownMenu
+      onOpenChange={(nextOpen) => {
+        setIsMenuOpen(nextOpen);
+        if (nextOpen) setIsTooltipOpen(false);
+      }}
+    >
+      {isCollapsed ? (
+        <Tooltip
+          open={isTooltipOpen && !isMenuOpen}
+          onOpenChange={(nextOpen) => {
+            if (!isMenuOpen) setIsTooltipOpen(nextOpen);
+          }}
         >
-          {rowContent}
-          <ChevronDown className="text-sidebar-foreground/60 size-4 shrink-0 transition-transform group-data-[collapsible=icon]/sidebar:hidden group-data-[state=open]/space-switcher:rotate-180 motion-reduce:transition-none" />
-        </button>
-      </DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>
+            <TooltipTrigger asChild>{switcherButton}</TooltipTrigger>
+          </DropdownMenuTrigger>
+          <TooltipContent side="right" sideOffset={8}>
+            Changer de pôle — {activeSpace.label}
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        <DropdownMenuTrigger asChild>{switcherButton}</DropdownMenuTrigger>
+      )}
       <DropdownMenuContent
         side={isCollapsed ? 'right' : 'bottom'}
         align="start"
         sideOffset={8}
-        className={cn(
-          'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]',
-          isCollapsed
-            ? 'w-80'
-            : 'w-[var(--radix-dropdown-menu-trigger-width)] min-w-64',
-        )}
+        className="border-sidebar-border bg-surface-raised/98 text-sidebar-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(20rem,calc(100vw-2rem))] overflow-y-auto rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]"
       >
         <DropdownMenuLabel className="text-sidebar-foreground/60 px-2 py-1.5 text-xs font-medium">
-          Changer d’espace
+          Changer de pôle
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-sidebar-border/70 mx-1 my-1" />
         {spaces.map((space) => {
@@ -175,9 +199,9 @@ const SpaceSwitcher: FC<{
               key={space.id}
               asChild
               className={cn(
-                'focus:text-sidebar-foreground cursor-pointer rounded-lg p-2.5',
+                'focus:text-sidebar-foreground cursor-pointer rounded-md p-2.5',
                 tone.row,
-                isActive && tone.activeItem,
+                isActive && tone.soft,
               )}
             >
               <Link

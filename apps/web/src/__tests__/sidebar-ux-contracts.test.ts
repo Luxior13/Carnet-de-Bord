@@ -58,7 +58,7 @@ describe('sidebar UX contracts', () => {
   it('keeps identity and account actions compact without duplicate navigation', () => {
     expect(sidebarSource).not.toContain('SITE_CONFIG.subtitle');
     expect(sidebarSource).not.toContain('Pôle actif');
-    expect(sidebarSource).toContain('Espace');
+    expect(sidebarSource).toContain('Changer de pôle');
     expect(sidebarSource).toContain('href="/mon-compte"');
     expect(sidebarSource).toContain('Déconnexion');
     expect(navigationSource).not.toMatch(
@@ -75,5 +75,13 @@ describe('sidebar UX contracts', () => {
     );
     expect(sidebarSource).toContain('className="text-sidebar-ring');
     expect(sidebarSource).toContain('aria-current={isActive');
+  });
+
+  it('keeps the pole switcher readable in expanded, collapsed and mobile layouts', () => {
+    expect(sidebarSource).toContain('w-[min(20rem,calc(100vw-2rem))]');
+    expect(sidebarSource).toContain('isActive && tone.soft');
+    expect(sidebarSource).toContain('Changer de pôle — {activeSpace.label}');
+    expect(sidebarSource).toContain('open={isTooltipOpen && !isMenuOpen}');
+    expect(sidebarSource).not.toContain('Changer d’espace');
   });
 });
