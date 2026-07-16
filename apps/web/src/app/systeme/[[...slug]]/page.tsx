@@ -1,9 +1,11 @@
 import { notFound } from 'next/navigation';
 import React from 'react';
 
-import PrivateFeaturePage from '$components/private-navigation/PrivateFeaturePage';
 import { SystemHomePage } from '$components/private-navigation/SystemHomePage';
-import { getNavigationPageBySlug } from '$constants/app.constants';
+import {
+  getNavigationAvailability,
+  getNavigationPageBySlug,
+} from '$constants/app.constants';
 import { SystemActivityJournalPage } from '$features/audit/SystemActivityJournalPage';
 
 type SystemePageProps = {
@@ -21,11 +23,11 @@ export default async function SystemePage({
 
   const match = getNavigationPageBySlug('system', slug);
 
-  if (!match) notFound();
+  if (!match || getNavigationAvailability(match.item) !== 'live') notFound();
 
   if (match.item.href === '/systeme/journal-activite') {
     return <SystemActivityJournalPage item={match.item} space={match.space} />;
   }
 
-  return <PrivateFeaturePage item={match.item} space={match.space} />;
+  notFound();
 }

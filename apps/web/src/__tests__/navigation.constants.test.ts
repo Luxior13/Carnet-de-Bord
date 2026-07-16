@@ -5,6 +5,7 @@ import {
   canOpenNavigationHref,
   getActiveNavigationSpace,
   getDesktopSidebarSections,
+  getLiveNavigationSpaceTools,
   getNavigationAvailability,
   getNavigationItemByHref,
   getNavigationPageBySlug,
@@ -151,6 +152,49 @@ describe('navigation availability', () => {
     expect(liveHrefs).not.toContain('/systeme/parametres');
     expect(plannedHrefs).toContain('/systeme/parametres');
     expect(plannedHrefs).not.toContain('/systeme/journal-activite');
+  });
+
+  it('derives system hub tools from live authorized navigation entries', () => {
+    const userTools = getLiveNavigationSpaceTools(
+      'system',
+      buildUser({ [PERMISSIONS.USERS.VIEW]: true }),
+    );
+    const auditTools = getLiveNavigationSpaceTools(
+      'system',
+      buildUser({
+        [PERMISSIONS.SYSTEM.AUDIT]: true,
+        [PERMISSIONS.SYSTEM.VIEW]: true,
+      }),
+    );
+    const allTools = getLiveNavigationSpaceTools(
+      'system',
+      buildUser({
+        [PERMISSIONS.SYSTEM.AUDIT]: true,
+        [PERMISSIONS.SYSTEM.VIEW]: true,
+        [PERMISSIONS.USERS.VIEW]: true,
+      }),
+    );
+
+    expect(userTools.map((item) => item.href)).toEqual([
+      '/administration/utilisateurs',
+    ]);
+    expect(auditTools.map((item) => item.href)).toEqual([
+      '/systeme/journal-activite',
+    ]);
+    expect(allTools.map((item) => item.href)).toEqual([
+      '/administration/utilisateurs',
+      '/systeme/journal-activite',
+    ]);
+    expect(getLiveNavigationSpaceTools('system', buildUser())).toEqual([]);
+    expect(
+      getLiveNavigationSpaceTools('system', buildUser({}, true)).map(
+        (item) => item.href,
+      ),
+    ).toEqual(['/administration/utilisateurs', '/systeme/journal-activite']);
+    expect(allTools.map((item) => item.href)).not.toContain('/systeme');
+    expect(allTools.map((item) => item.href)).not.toContain(
+      '/systeme/parametres',
+    );
   });
 
   it('keeps finance, legal and sport destinations on the roadmap', () => {

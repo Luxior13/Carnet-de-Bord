@@ -35,6 +35,7 @@ export type NavItem = {
   children?: NavItem[];
   description?: string;
   href: string;
+  hubActionLabel?: string;
   icon: NavigationIconName;
   label: string;
   requiredPermissions?: readonly string[];
@@ -538,6 +539,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             availability: 'live',
             description: 'Comptes, rôles et permissions existants.',
             href: '/administration/utilisateurs',
+            hubActionLabel: 'Accéder aux utilisateurs',
             icon: 'Users',
             label: 'Utilisateurs & permissions',
             requiredPermissions: usersAccess,
@@ -574,6 +576,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             availability: 'live',
             description: 'Historique admin et actions sensibles.',
             href: '/systeme/journal-activite',
+            hubActionLabel: 'Consulter le journal',
             icon: 'History',
             label: "Journal d'activité",
             requiredPermissions: systemAuditAccess,
@@ -833,6 +836,24 @@ export function flattenNavItems(items: readonly NavItem[]): NavItem[] {
 
 export function getNavigationSpaceItems(space: NavigationSpace): NavItem[] {
   return flattenNavItems(space.sections.flatMap((section) => section.items));
+}
+
+export function getLiveNavigationSpaceTools(
+  spaceId: string,
+  user: NavigationUser,
+): NavItem[] {
+  const space = NAV_SPACES.find((item) => item.id === spaceId);
+
+  if (!space) return [];
+
+  return getNavigationSpaceItems(
+    filterNavigationSpace(space, user, 'live'),
+  ).filter(
+    (item) =>
+      item.href !== space.href &&
+      getNavigationAvailability(item) === 'live' &&
+      canAccessNavigationItem(user, item),
+  );
 }
 
 export function getNavigationItemByHref(href: string): NavItem | null {
