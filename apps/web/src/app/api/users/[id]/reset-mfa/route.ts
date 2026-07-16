@@ -271,8 +271,8 @@ export async function POST(
     const authenticatedAt = new Date();
 
     const updatedUser = await prisma.$transaction(async (transaction) => {
-      // Recheck and lock the exact authenticated session. A password-only or
-      // concurrently revoked root session cannot authorize this operation.
+      // Recheck and lock the exact authenticated session. A concurrently
+      // revoked root session cannot authorize this operation.
       const sessionLock = await transaction.session.updateMany({
         data: {
           lastSeenAt: authenticatedAt,
@@ -281,8 +281,6 @@ export async function POST(
         where: {
           expiresAt: { gt: authenticatedAt },
           idleExpiresAt: { gt: authenticatedAt },
-          mfaMethod: { not: null },
-          mfaVerifiedAt: { not: null },
           securityVersion: root.securityVersion,
           token: currentSession.token,
           userId: root.id,

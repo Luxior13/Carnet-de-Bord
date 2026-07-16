@@ -41,6 +41,7 @@ const readySchema = {
   protectedAccounts: 1,
   rateLimitColumns: 4,
   sessionColumns: 10,
+  sessionMfaRequiredColumns: 2,
   totpCredentialColumns: 9,
   totpEnrollmentColumns: 8,
   userColumns: 15,
@@ -95,6 +96,7 @@ describe('operational health routes', () => {
     expect(query).toContain("'mfaEnabledAt'");
     expect(query).toContain("'mfaVerifiedAt'");
     expect(query).toContain("'mfaMethod'");
+    expect(query).toContain("is_nullable = 'NO'");
     expect(query).toContain("'TotpCredential'");
     expect(query).toContain("'TotpEnrollment'");
     expect(query).toContain("'MfaRecoveryCode'");

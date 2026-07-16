@@ -1,20 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import {
-  normalizePermissionOverrides,
-  requiresMfaForAccess,
-} from '$constants/permissions.constants';
 import { apiErrors, parseJsonBody } from '$server/api-response';
-import {
-  authenticateUser,
-  createAuditLogWithHeaders,
-  createSession,
-  generateSessionToken,
-  isSecurityVersionMismatchError,
-  setSessionTokenCookie,
-} from '$server/auth';
-import { clearMfaChallengeCookie, createMfaChallenge } from '$server/mfa';
+import { authenticateUser, createAuditLogWithHeaders } from '$server/auth';
+import { createMfaChallenge } from '$server/mfa';
 import {
   createLoginRateLimitKeys,
   recordSuccessfulLogin,
@@ -26,7 +15,6 @@ import {
   type ApiSuccessResponse,
   ErrorCode,
 } from '$types/api.types';
-import type { UserType } from '$types/auth.types';
 import { isPasswordWithinBcryptLimit } from '$utils/password.utils';
 import { loginNameSchema } from '$utils/zod.utils';
 
@@ -52,22 +40,10 @@ const AUTH_CONNECTION_AUDIT_LOCATION = {
   tabLabel: 'Connexions',
 } as const;
 
-type LoginResponseData =
-  | {
-      challengeExpiresAt: string;
-      status: 'mfa_required' | 'mfa_setup_required';
-    }
-  | {
-      mustChangePassword: boolean;
-      session: {
-        expiresAt: string;
-        idleExpiresAt: string;
-        lastSeenAt: string;
-        rememberMe: boolean;
-      };
-      status: 'authenticated';
-      user: UserType;
-    };
+type LoginResponseData = {
+  challengeExpiresAt: string;
+  status: 'mfa_required' | 'mfa_setup_required';
+};
 
 async function recordLoginAudit(data: {
   action: 'LOGIN_FAILED' | 'LOGIN_SUCCESS';
@@ -178,41 +154,6 @@ export async function POST(
 
     const hasEnabledMfa = result.user.mfaEnabledAt !== null;
     const hasTotpCredential = result.user.totpCredential !== null;
-    const requiresPrivilegedMfa =
-      result.user.role === 'ADMIN' ||
-      requiresMfaForAccess(
-        result.user.role,
-        result.user.permissions as Record<string, boolean> | null,
-      );
-    const canUseLongSession =
-      !result.user.isProtected && !requiresPrivilegedMfa;
-    const effectiveRememberMe = rememberMe && canUseLongSession;
-    const requiresPrivilegedSetup =
-      requiresPrivilegedMfa && !hasEnabledMfa && !hasTotpCredential;
-
-    if (requiresPrivilegedSetup || (hasEnabledMfa && hasTotpCredential)) {
-      const purpose = requiresPrivilegedSetup ? 'SETUP' : 'LOGIN';
-      const challenge = await createMfaChallenge({
-        credentialUpdatedAt: result.user.totpCredential?.updatedAt ?? null,
-        purpose,
-        rememberMe: effectiveRememberMe,
-        securityVersion: result.user.securityVersion,
-        userId: result.user.id,
-      });
-
-      return NextResponse.json({
-        data: {
-          challengeExpiresAt: challenge.expiresAt.toISOString(),
-          status: requiresPrivilegedSetup
-            ? ('mfa_setup_required' as const)
-            : ('mfa_required' as const),
-        },
-        success: true,
-      });
-    }
-
-    // Every half-configured account fails closed. Administrators with both MFA
-    // markers absent enter the mandatory bootstrap branch above.
     if (hasEnabledMfa !== hasTotpCredential) {
       await recordLoginAudit({
         action: 'LOGIN_FAILED',
@@ -233,88 +174,22 @@ export async function POST(
         { status: 401 },
       );
     }
-
-    await clearMfaChallengeCookie();
-
-    // Create a password-only session only for an ordinary account whose MFA
-    // state is consistently disabled.
-    const token = generateSessionToken();
-    let session;
-    try {
-      session = await createSession(
-        token,
-        result.user.id,
-        result.user.securityVersion,
-        effectiveRememberMe,
-        {
-          action: 'LOGIN_SUCCESS',
-          category: 'AUTH',
-          description: `Connexion réussie: ${result.user.loginName}`,
-          metadata: {
-            loginName: result.user.loginName,
-            ...AUTH_CONNECTION_AUDIT_LOCATION,
-          },
-          targetUserId: result.user.id,
-          userId: result.user.id,
-        },
-      );
-    } catch (error) {
-      if (!isSecurityVersionMismatchError(error)) throw error;
-
-      await recordLoginAudit({
-        action: 'LOGIN_FAILED',
-        description: `Connexion interrompue: ${result.user.loginName}`,
-        loginName: result.user.loginName,
-        reason: 'SECURITY_STATE_CHANGED',
-        userId: result.user.id,
-      });
-
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.INVALID_CREDENTIALS,
-            message: 'Identifiant ou mot de passe incorrect',
-          },
-          success: false,
-        },
-        { status: 401 },
-      );
-    }
-    await setSessionTokenCookie(session.token, session.expiresAt);
-
-    const user: UserType = {
-      contactEmail: result.user.contactEmail,
-      contactEmailVerifiedAt: result.user.contactEmailVerifiedAt,
-      createdAt: result.user.createdAt,
-      failedLoginAttempts: result.user.failedLoginAttempts,
-      firstName: result.user.firstName,
-      id: result.user.id,
-      isActive: result.user.isActive,
-      isProtected: result.user.isProtected,
-      lastLoginAt: result.user.lastLoginAt,
-      lastName: result.user.lastName,
-      lockedUntil: result.user.lockedUntil,
-      loginName: result.user.loginName,
-      mfaEnabledAt: result.user.mfaEnabledAt,
-      mustChangePassword: result.user.mustChangePassword,
-      passwordChangedAt: result.user.passwordChangedAt,
-      permissions: normalizePermissionOverrides(
-        result.user.permissions as Record<string, boolean> | null,
-      ),
-      role: result.user.role,
-    };
+    const requiresSetup = !hasEnabledMfa;
+    const effectiveRememberMe = rememberMe && !result.user.isProtected;
+    const challenge = await createMfaChallenge({
+      credentialUpdatedAt: result.user.totpCredential?.updatedAt ?? null,
+      purpose: requiresSetup ? 'SETUP' : 'LOGIN',
+      rememberMe: effectiveRememberMe,
+      securityVersion: result.user.securityVersion,
+      userId: result.user.id,
+    });
 
     return NextResponse.json({
       data: {
-        mustChangePassword: result.user.mustChangePassword,
-        session: {
-          expiresAt: session.expiresAt.toISOString(),
-          idleExpiresAt: session.idleExpiresAt.toISOString(),
-          lastSeenAt: session.lastSeenAt.toISOString(),
-          rememberMe: session.rememberMe,
-        },
-        status: 'authenticated',
-        user,
+        challengeExpiresAt: challenge.expiresAt.toISOString(),
+        status: requiresSetup
+          ? ('mfa_setup_required' as const)
+          : ('mfa_required' as const),
       },
       success: true,
     });

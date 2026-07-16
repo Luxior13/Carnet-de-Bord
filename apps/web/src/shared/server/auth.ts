@@ -20,7 +20,6 @@ import {
   hasPermission,
   normalizePermissionOverrides,
   type PermissionsData,
-  requiresMfaForAccess,
 } from '$constants/permissions.constants';
 import { env } from '$env';
 import type { ServerAuthResponseType, UserType } from '$types/auth.types';
@@ -280,13 +279,12 @@ export class ProtectedAccountMutationError extends Error {
 type CreateSessionSecurityOptions = {
   additionalAudits?: RequiredAuditLogInput[];
   advanceSecurityVersion?: boolean;
-  disableMfa?: boolean;
-  mfaMethod?: MfaAuthenticationMethod;
-  precondition?: (
+  mfaMethod: MfaAuthenticationMethod;
+  precondition: (
     transaction: Prisma.TransactionClient,
     authenticatedAt: Date,
   ) => Promise<void>;
-  requireMfaEnabled?: boolean;
+  requireMfaEnabled: boolean;
   revokeExistingSessions?: boolean;
   sourceSessionToken?: string;
 };
@@ -298,9 +296,9 @@ export const createSession = async (
   token: string,
   userId: string,
   authenticatedSecurityVersion: number,
-  rememberMe = false,
-  audit?: RequiredAuditLogInput,
-  securityOptions: CreateSessionSecurityOptions = {},
+  rememberMe: boolean,
+  audit: RequiredAuditLogInput | undefined,
+  securityOptions: CreateSessionSecurityOptions,
 ): Promise<{
   expiresAt: Date;
   idleExpiresAt: Date;
@@ -326,17 +324,6 @@ export const createSession = async (
     authenticatedSecurityVersion +
     (securityOptions.advanceSecurityVersion ? 1 : 0);
 
-  if (
-    securityOptions.disableMfa &&
-    (securityOptions.mfaMethod ||
-      !securityOptions.advanceSecurityVersion ||
-      !securityOptions.requireMfaEnabled ||
-      !securityOptions.revokeExistingSessions)
-  ) {
-    throw new TypeError(
-      'MFA disable session rotation requires a version advance, enabled MFA and full session revocation',
-    );
-  }
   if (
     securityOptions.sourceSessionToken &&
     (!securityOptions.advanceSecurityVersion ||
@@ -364,14 +351,9 @@ export const createSession = async (
         deletedAt: null,
         id: userId,
         isActive: true,
-        // Password-only sessions are never valid for the protected root and
-        // cannot be issued after MFA is enabled. Setup confirmation supplies
-        // an MFA method and activates the root inside the same transaction.
-        ...(securityOptions.mfaMethod
-          ? {}
-          : securityOptions.disableMfa
-            ? { isProtected: false, mfaEnabledAt: { not: null } }
-            : { isProtected: false, mfaEnabledAt: null }),
+        // A protected recovery account must never receive a persistent
+        // session, even if a future caller forwards an unsafe preference.
+        ...(rememberMe ? { isProtected: false } : {}),
         ...(securityOptions.requireMfaEnabled
           ? { mfaEnabledAt: { not: null } }
           : {}),
@@ -395,6 +377,7 @@ export const createSession = async (
         where: {
           expiresAt: { gt: loginAt },
           idleExpiresAt: { gt: loginAt },
+          rememberMe,
           securityVersion: authenticatedSecurityVersion,
           token: securityOptions.sourceSessionToken,
           userId,
@@ -425,24 +408,7 @@ export const createSession = async (
       sessionUserAgent = sourceSessionState.userAgent;
     }
 
-    if (securityOptions.precondition) {
-      await securityOptions.precondition(transaction, loginAt);
-    }
-
-    if (securityOptions.disableMfa) {
-      const disabledUser = await transaction.user.updateMany({
-        data: { mfaEnabledAt: null },
-        where: {
-          id: userId,
-          isProtected: false,
-          mfaEnabledAt: { not: null },
-          securityVersion: nextSecurityVersion,
-        },
-      });
-      if (disabledUser.count !== 1) {
-        throw new SecurityVersionMismatchError();
-      }
-    }
+    await securityOptions.precondition(transaction, loginAt);
 
     if (securityOptions.revokeExistingSessions) {
       await transaction.session.deleteMany({ where: { userId } });
@@ -454,13 +420,9 @@ export const createSession = async (
         idleExpiresAt: sessionIdleExpiresAt,
         ipAddress: sessionIpAddress,
         lastSeenAt: loginAt,
+        mfaMethod: securityOptions.mfaMethod,
+        mfaVerifiedAt: loginAt,
         rememberMe: sessionRememberMe,
-        ...(securityOptions.mfaMethod
-          ? {
-              mfaMethod: securityOptions.mfaMethod,
-              mfaVerifiedAt: loginAt,
-            }
-          : {}),
         securityVersion: nextSecurityVersion,
         token: sessionId,
         userAgent: sessionUserAgent,
@@ -530,21 +492,15 @@ const validateSessionToken = async (
 
   const hasEnabledMfa = session.user.mfaEnabledAt !== null;
   const hasTotpCredential = session.user.totpCredential !== null;
-  const requiresPrivilegedMfa =
-    session.user.role === 'ADMIN' ||
-    requiresMfaForAccess(
-      session.user.role,
-      session.user.permissions as PermissionsData | null,
-    );
 
-  // Imported or corrupted half-configured states fail closed for every
-  // account. An MFA-enabled account must also never inherit a password-only
-  // session, and an administrator cannot operate before clean bootstrap.
+  // MFA is mandatory for every human account. Imported, legacy or corrupted
+  // states fail closed, and no password-only session may survive rollout.
   if (
-    hasEnabledMfa !== hasTotpCredential ||
-    (requiresPrivilegedMfa && !hasEnabledMfa) ||
-    (hasEnabledMfa &&
-      (session.mfaVerifiedAt === null || session.mfaMethod === null))
+    !hasEnabledMfa ||
+    !hasTotpCredential ||
+    session.mfaVerifiedAt === null ||
+    session.mfaMethod === null ||
+    (session.user.isProtected && session.rememberMe)
   ) {
     await prisma.session.deleteMany({
       where: { token: session.token },

@@ -95,8 +95,8 @@ model Session {
   idleExpiresAt   DateTime                 @default(dbgenerated("(CURRENT_TIMESTAMP + '00:30:00'::interval)"))
   lastSeenAt      DateTime                 @default(now())
   rememberMe      Boolean                  @default(false)
-  mfaVerifiedAt   DateTime?
-  mfaMethod       MfaAuthenticationMethod?
+  mfaVerifiedAt   DateTime
+  mfaMethod       MfaAuthenticationMethod
   userAgent       String?
   ipAddress       String?
 

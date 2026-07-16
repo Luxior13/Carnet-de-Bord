@@ -10,17 +10,13 @@ import {
   RefreshCw,
   Shield,
   ShieldCheck,
-  ShieldOff,
   Smartphone,
 } from 'lucide-react';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { ChangePasswordDialog } from '$components/ChangePasswordDialog';
-import {
-  MfaActionDialog,
-  type MfaActionMode,
-} from '$features/auth/components/MfaActionDialog';
+import { MfaActionDialog } from '$features/auth/components/MfaActionDialog';
 import { MfaSetupDialog } from '$features/auth/components/MfaSetupDialog';
 import { type ApiResponse, RoutesApi } from '$types/api.types';
 import type {
@@ -147,7 +143,7 @@ const SessionRow: FC<SessionRowProps> = ({ isRevoking, onRevoke, session }) => {
             )}
             {session.rememberMe && (
               <Badge variant="outline" className="rounded-full">
-                Rester connecté
+                Appareil de confiance
               </Badge>
             )}
           </div>
@@ -225,9 +221,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   const [mfaSetupMode, setMfaSetupMode] = useState<
     'activate' | 'replace' | null
   >(null);
-  const [mfaActionMode, setMfaActionMode] = useState<MfaActionMode | null>(
-    null,
-  );
+  const [showRecoveryCodesDialog, setShowRecoveryCodesDialog] = useState(false);
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [sessionsError, setSessionsError] = useState<string | null>(null);
@@ -408,7 +402,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       fetchMfaStatus(),
       ...(canManageSessions ? [fetchSessions()] : []),
     ]);
-    setMfaActionMode(null);
+    setShowRecoveryCodesDialog(false);
   };
 
   const currentSession = sessions.find((session) => session.isCurrent);
@@ -424,7 +418,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       ? new Date(userData.mfaEnabledAt).toISOString()
       : null);
   const isMfaEnabled = !!mfaEnabledAt;
-  const isMfaRequired = mfaStatus?.required ?? userData.isProtected;
+  const isMfaRequired = mfaStatus?.required ?? true;
 
   return (
     <>
@@ -600,13 +594,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                   >
                     <ShieldCheck className="text-primary-emphasis mt-1 size-4 shrink-0" />
                     <p>
-                      {isMfaRequired
-                        ? isMfaEnabled
-                          ? 'Cette protection est obligatoire pour le compte superadmin et ne peut pas être désactivée.'
-                          : 'Cette protection doit être activée pour continuer à utiliser le compte superadmin.'
-                        : isMfaEnabled
-                          ? 'Un code de votre application est demandé après le mot de passe.'
-                          : 'Ajoutez une seconde preuve à votre mot de passe pour sécuriser vos connexions.'}
+                      {isMfaEnabled
+                        ? 'Cette protection est obligatoire pour tous les comptes et ne peut pas être désactivée.'
+                        : 'Cette protection doit être configurée avant de pouvoir accéder au site.'}
                     </p>
                   </div>
                   {isMfaEnabled && mfaStatus?.recoveryCodesRemaining === 0 && (
@@ -624,7 +614,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                   <>
                     <Button
                       className="gap-2"
-                      onClick={() => setMfaActionMode('recovery-codes')}
+                      onClick={() => setShowRecoveryCodesDialog(true)}
                       size="sm"
                       type="button"
                       variant="outline"
@@ -642,18 +632,6 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                       <QrCode className="size-4" />
                       Changer d’application
                     </Button>
-                    {!isMfaRequired && (
-                      <Button
-                        className="gap-2"
-                        onClick={() => setMfaActionMode('disable')}
-                        size="sm"
-                        type="button"
-                        variant="destructive"
-                      >
-                        <ShieldOff className="size-4" />
-                        Désactiver
-                      </Button>
-                    )}
                   </>
                 ) : (
                   <Button
@@ -790,11 +768,10 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           open
         />
       )}
-      {mfaActionMode && (
+      {showRecoveryCodesDialog && (
         <MfaActionDialog
           loginName={userData.loginName}
-          mode={mfaActionMode}
-          onCancel={() => setMfaActionMode(null)}
+          onCancel={() => setShowRecoveryCodesDialog(false)}
           onComplete={handleMfaActionComplete}
           open
         />

@@ -1,6 +1,6 @@
 'use client';
 
-import { KeyRound, Loader2, ShieldOff } from 'lucide-react';
+import { KeyRound, Loader2 } from 'lucide-react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -22,14 +22,8 @@ import { Label } from '$ui/label';
 import { ServiceIcon } from '$ui/service-icon';
 import { apiFetch } from '$utils/api.utils';
 
-import {
-  isCompleteMfaCode,
-  MfaCodeInput,
-  type MfaCodeKind,
-} from './MfaCodeInput';
+import { isCompleteMfaCode, MfaCodeInput } from './MfaCodeInput';
 import { MfaRecoveryCodesPanel } from './MfaRecoveryCodesPanel';
-
-export type MfaActionMode = 'disable' | 'recovery-codes';
 
 type MfaActionResponse = {
   recoveryCodes?: string[];
@@ -38,7 +32,6 @@ type MfaActionResponse = {
 
 type MfaActionDialogProps = {
   loginName?: string;
-  mode: MfaActionMode;
   onCancel: () => void;
   onComplete: (user?: UserType) => Promise<void> | void;
   open: boolean;
@@ -46,36 +39,30 @@ type MfaActionDialogProps = {
 
 export const MfaActionDialog: FC<MfaActionDialogProps> = ({
   loginName,
-  mode,
   onCancel,
   onComplete,
   open,
 }) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [currentCode, setCurrentCode] = useState('');
-  const [codeKind, setCodeKind] = useState<MfaCodeKind>('totp');
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [responseUser, setResponseUser] = useState<UserType | undefined>();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const currentCodeInputRef = useRef<HTMLInputElement>(null);
-  const isDisabling = mode === 'disable';
-  const effectiveCodeKind = isDisabling ? codeKind : 'totp';
   const canSubmit =
-    currentPassword.length > 0 &&
-    isCompleteMfaCode(currentCode, effectiveCodeKind);
+    currentPassword.length > 0 && isCompleteMfaCode(currentCode, 'totp');
 
   useEffect(() => {
     if (!open) return;
 
     setCurrentPassword('');
     setCurrentCode('');
-    setCodeKind('totp');
     setRecoveryCodes(null);
     setResponseUser(undefined);
     setError(null);
     setIsSubmitting(false);
-  }, [mode, open]);
+  }, [open]);
 
   const handleSubmit = async (
     event: React.FormEvent<HTMLFormElement>,
@@ -86,19 +73,15 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
     try {
       setIsSubmitting(true);
       setError(null);
-      const requestBody:
-        | MfaRecoveryCodesRegenerationRequest
-        | { currentCode: string; currentPassword: string } = isDisabling
-        ? { currentCode, currentPassword }
-        : { currentPassword, currentTotpCode: currentCode };
-      const response = await apiFetch(
-        isDisabling ? RoutesApi.mfa : RoutesApi.mfaRecoveryCodes,
-        {
-          body: JSON.stringify(requestBody),
-          headers: { 'Content-Type': 'application/json' },
-          method: isDisabling ? 'DELETE' : 'POST',
-        },
-      );
+      const requestBody: MfaRecoveryCodesRegenerationRequest = {
+        currentPassword,
+        currentTotpCode: currentCode,
+      };
+      const response = await apiFetch(RoutesApi.mfaRecoveryCodes, {
+        body: JSON.stringify(requestBody),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      });
       const data = (await response.json()) as ApiResponse<MfaActionResponse>;
 
       if (!response.ok || !data.success) {
@@ -113,22 +96,14 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
         return;
       }
 
-      if (!isDisabling) {
-        if (!data.data.recoveryCodes?.length) {
-          setError('Aucun code de secours n’a été généré');
-
-          return;
-        }
-
-        setResponseUser(data.data.user);
-        setRecoveryCodes(data.data.recoveryCodes);
+      if (!data.data.recoveryCodes?.length) {
+        setError('Aucun code de secours n’a été généré');
 
         return;
       }
 
-      await onComplete(data.data.user);
-      toast.success('Double authentification désactivée');
-      onCancel();
+      setResponseUser(data.data.user);
+      setRecoveryCodes(data.data.recoveryCodes);
     } catch {
       setError('Impossible de confirmer cette action');
     } finally {
@@ -158,33 +133,19 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
         className="max-h-[calc(100svh-2rem)] overflow-y-auto p-0 sm:max-w-lg"
         hideCloseButton={!!recoveryCodes}
       >
-        {isDisabling && <div className="bg-destructive h-1" />}
         <div className="p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ServiceIcon
-                className={
-                  isDisabling
-                    ? 'bg-destructive/10 text-destructive'
-                    : 'bg-primary/10 text-primary-emphasis'
-                }
-              >
-                {isDisabling ? (
-                  <ShieldOff className="size-4" />
-                ) : (
-                  <KeyRound className="size-4" />
-                )}
+              <ServiceIcon className="bg-primary/10 text-primary-emphasis">
+                <KeyRound className="size-4" />
               </ServiceIcon>
-              {isDisabling
-                ? 'Désactiver la double authentification'
-                : recoveryCodes
-                  ? 'Nouveaux codes de secours'
-                  : 'Générer de nouveaux codes'}
+              {recoveryCodes
+                ? 'Nouveaux codes de secours'
+                : 'Générer de nouveaux codes'}
             </DialogTitle>
             <DialogDescription>
-              {isDisabling
-                ? 'Votre compte ne demandera plus de second code à la connexion.'
-                : 'Confirmez avec votre application d’authentification. Les anciens codes seront immédiatement invalidés.'}
+              Confirmez avec votre application d’authentification. Les anciens
+              codes seront immédiatement invalidés.
             </DialogDescription>
           </DialogHeader>
 
@@ -204,13 +165,6 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
                     role="alert"
                   >
                     {error}
-                  </div>
-                )}
-
-                {isDisabling && (
-                  <div className="border-destructive/30 bg-destructive/10 rounded-md border p-3 text-sm leading-6">
-                    Cette action réduit la protection du compte et déconnectera
-                    les autres sessions.
                   </div>
                 )}
 
@@ -248,28 +202,10 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
                   disabled={isSubmitting}
                   id="mfa-action-current-code"
                   inputRef={currentCodeInputRef}
-                  kind={effectiveCodeKind}
+                  kind="totp"
                   onChange={setCurrentCode}
                   value={currentCode}
                 />
-                {isDisabling && (
-                  <Button
-                    className="h-auto p-0 text-xs"
-                    onClick={() => {
-                      setCurrentCode('');
-                      setCodeKind((kind) =>
-                        kind === 'totp' ? 'recovery' : 'totp',
-                      );
-                    }}
-                    type="button"
-                    variant="link"
-                  >
-                    {codeKind === 'totp'
-                      ? 'Utiliser un code de secours'
-                      : 'Utiliser le code de l’application'}
-                  </Button>
-                )}
-
                 <div className="flex gap-2">
                   <Button
                     className="flex-1"
@@ -284,15 +220,12 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
                     className="flex-1"
                     disabled={isSubmitting || !canSubmit}
                     type="submit"
-                    variant={isDisabling ? 'destructive' : 'default'}
                   >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="size-4 animate-spin" />
                         Vérification...
                       </>
-                    ) : isDisabling ? (
-                      'Désactiver'
                     ) : (
                       'Générer'
                     )}

@@ -7,7 +7,6 @@ import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { ChangePasswordDialog } from '$components/ChangePasswordDialog';
 import { Header } from '$components/layout/Header';
 import Sidebar from '$components/Sidebar';
-import { requiresMfaForAccess } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import { MfaSetupDialog } from '$features/auth/components/MfaSetupDialog';
 import { type BreadcrumbEntry } from '$ui/breadcrumb';
@@ -31,11 +30,7 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
   const { applyUserUpdate, error, isLoading, refreshUser, userData } =
     useUser();
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  const requiresMfaSetup =
-    !!userData &&
-    userData.mfaEnabledAt === null &&
-    (userData.role === 'ADMIN' ||
-      requiresMfaForAccess(userData.role, userData.permissions));
+  const requiresMfaSetup = !!userData && userData.mfaEnabledAt === null;
 
   useEffect(() => {
     if (!isLoading && !userData && !error) {

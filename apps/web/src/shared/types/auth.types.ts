@@ -93,9 +93,9 @@ export type PendingMfaLoginData = {
   status: 'mfa_required' | 'mfa_setup_required';
 };
 
-export type LoginResponseData = AuthenticatedLoginData | PendingMfaLoginData;
+export type LoginResponseData = PendingMfaLoginData;
 
-export type LoginResult = { status: 'authenticated' } | PendingMfaLoginData;
+export type LoginResult = PendingMfaLoginData;
 
 export type MfaStatus = {
   enabledAt: string | null;

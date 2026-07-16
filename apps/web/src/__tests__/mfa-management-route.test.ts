@@ -94,19 +94,11 @@ describe('/api/auth/mfa management invariants', () => {
     );
     const { DELETE } = await import('$app/api/auth/mfa/route');
 
-    const response = await DELETE(
-      new NextRequest('http://localhost/api/auth/mfa', {
-        body: JSON.stringify({
-          currentCode: '123456',
-          currentPassword: 'Secret1!',
-        }),
-        method: 'DELETE',
-      }),
-    );
+    const response = await DELETE();
     const body = await response.json();
 
     expect(response.status).toBe(403);
-    expect(body.error.message).toContain('administrateur');
+    expect(body.error.message).toContain('obligatoire');
     expect(mocks.prisma.user.findUnique).not.toHaveBeenCalled();
     expect(mocks.createSession).not.toHaveBeenCalled();
   });
@@ -157,31 +149,37 @@ describe('/api/auth/mfa management invariants', () => {
     });
   });
 
-  it('refuses to disable MFA for a USER with effective critical access', async () => {
+  it('reports MFA as mandatory for an ordinary USER', async () => {
+    const enabledAt = new Date('2026-07-10T12:00:00.000Z');
+    mocks.requireAuth.mockResolvedValue(buildAuth({ mfaEnabledAt: enabledAt }));
+    mocks.prisma.totpCredential.findUnique.mockResolvedValue({
+      userId: 'user-1',
+    });
+    const { GET } = await import('$app/api/auth/mfa/route');
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toMatchObject({
+      enabledAt: enabledAt.toISOString(),
+      required: true,
+    });
+  });
+
+  it('refuses to disable MFA for an ordinary USER', async () => {
     mocks.requireAuth.mockResolvedValue(
       buildAuth({
         mfaEnabledAt: new Date('2026-07-10T12:00:00.000Z'),
-        permissions: {
-          [PERMISSIONS.USERS.UPDATE_LOGIN]: true,
-          [PERMISSIONS.USERS.VIEW]: true,
-        },
       }),
     );
     const { DELETE } = await import('$app/api/auth/mfa/route');
 
-    const response = await DELETE(
-      new NextRequest('http://localhost/api/auth/mfa', {
-        body: JSON.stringify({
-          currentCode: '123456',
-          currentPassword: 'Secret1!',
-        }),
-        method: 'DELETE',
-      }),
-    );
+    const response = await DELETE();
     const body = await response.json();
 
     expect(response.status).toBe(403);
-    expect(body.error.message).toContain('accès critiques');
+    expect(body.error.message).toContain('obligatoire');
     expect(mocks.prisma.user.findUnique).not.toHaveBeenCalled();
     expect(mocks.createSession).not.toHaveBeenCalled();
   });

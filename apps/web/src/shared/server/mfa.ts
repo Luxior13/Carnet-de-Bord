@@ -422,7 +422,7 @@ export const deleteCurrentMfaChallenge = async (): Promise<void> => {
       `;
       if (lockedUsers.length !== 1) return;
 
-      // The protected-root bootstrap may reuse this token while extending its
+      // A mandatory MFA bootstrap may reuse this token while extending its
       // enrollment. Re-read after the lock so cleanup follows the committed
       // challenge deadline rather than the stale pre-lock snapshot.
       const currentChallenge = await transaction.mfaLoginChallenge.findUnique({

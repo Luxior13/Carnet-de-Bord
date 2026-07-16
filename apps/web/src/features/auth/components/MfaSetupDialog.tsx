@@ -69,7 +69,7 @@ export const MfaSetupDialog: FC<MfaSetupDialogProps> = ({
             <DialogDescription>
               {isReplacing
                 ? 'Préparez la nouvelle application sans désactiver la protection actuelle.'
-                : 'Ajoutez une application Authenticator puis conservez vos codes de secours.'}
+                : 'Cette protection est obligatoire. Ajoutez une application Authenticator puis conservez vos codes de secours.'}
             </DialogDescription>
           </DialogHeader>
           {open && (

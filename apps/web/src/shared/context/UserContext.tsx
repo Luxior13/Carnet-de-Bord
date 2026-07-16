@@ -258,12 +258,6 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
         const data = (await response.json()) as ApiResponse<LoginResponseData>;
 
         if (response.ok && data.success) {
-          if (data.data.status === 'authenticated') {
-            completeAuthentication(data.data);
-
-            return { status: 'authenticated' };
-          }
-
           return data.data;
         }
 
@@ -291,7 +285,7 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
         return null;
       }
     },
-    [completeAuthentication],
+    [],
   );
 
   const verifyMfa = useCallback(

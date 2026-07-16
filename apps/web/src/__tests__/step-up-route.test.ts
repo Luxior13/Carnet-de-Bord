@@ -275,7 +275,6 @@ describe('POST /api/auth/step-up', () => {
       where: {
         expiresAt: { gt: NOW },
         idleExpiresAt: { gt: NOW },
-        mfaMethod: { not: null },
         securityVersion: 7,
         token: SESSION_TOKEN,
         userId: 'admin-user',

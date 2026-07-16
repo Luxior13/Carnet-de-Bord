@@ -629,24 +629,29 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               isMfaEnabled ? (
                 <Badge variant="secondary">Active</Badge>
               ) : (
-                <Badge variant="outline">Non activée</Badge>
+                <Badge
+                  className="border-warning/40 text-warning"
+                  variant="outline"
+                >
+                  Configuration obligatoire
+                </Badge>
               )
             }
-            tone={isMfaEnabled ? 'primary' : 'neutral'}
+            tone={isMfaEnabled ? 'primary' : 'warning'}
           >
             {isMfaEnabled
               ? `Activée le ${formatDate(user.mfaEnabledAt)}`
-              : 'Ce membre se connecte actuellement avec son mot de passe.'}
+              : 'L’accès au site reste bloqué jusqu’à la configuration d’une application d’authentification.'}
           </SecurityInfoBlock>
           <SecurityInfoBlock
             icon={<ShieldAlert className="size-4" />}
-            label="Récupération administrateur"
+            label="Récupération superadmin"
             value={
               canResetMfa
                 ? 'Disponible'
                 : isMfaEnabled
                   ? 'Réservée au compte racine'
-                  : 'Non requise'
+                  : 'En attente de configuration'
             }
             tone={canResetMfa ? 'warning' : 'neutral'}
           >

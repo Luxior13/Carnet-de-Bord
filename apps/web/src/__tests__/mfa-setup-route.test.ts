@@ -139,11 +139,7 @@ const AUTH_USER = {
   isProtected: false,
   mfaEnabledAt: new Date('2026-07-01T12:00:00.000Z'),
 };
-const CRITICAL_USER_ID = 'critical-user';
-const CRITICAL_PERMISSIONS = {
-  [PERMISSIONS.USERS.UPDATE_LOGIN]: true,
-  [PERMISSIONS.USERS.VIEW]: true,
-};
+const BOOTSTRAP_USER_ID = 'ordinary-user';
 const BOOTSTRAP_CHALLENGE_EXPIRES_AT = new Date('2026-07-14T20:05:00.000Z');
 const BOOTSTRAP_ENROLLMENT = {
   expiresAt: new Date('2026-07-14T20:10:00.000Z'),
@@ -157,46 +153,46 @@ const BOOTSTRAP_SESSION = {
   expiresAt: new Date('2026-07-15T20:00:00.000Z'),
   idleExpiresAt: new Date('2026-07-14T20:30:00.000Z'),
   lastSeenAt: NOW,
-  rememberMe: false,
-  token: 'critical-bootstrap-session',
+  rememberMe: true,
+  token: 'ordinary-bootstrap-session',
 };
 
-const buildCriticalBootstrapChallenge = (
+const buildMandatoryBootstrapChallenge = (
   withEnrollment = false,
 ): Record<string, unknown> => ({
   credentialUpdatedAt: null,
   expiresAt: BOOTSTRAP_CHALLENGE_EXPIRES_AT,
   purpose: 'SETUP',
-  rememberMe: false,
+  rememberMe: true,
   securityVersion: 4,
   user: {
     deletedAt: null,
     isActive: true,
     isProtected: false,
-    loginName: 'critical.user',
+    loginName: 'ordinary.user',
     mfaEnabledAt: null,
-    permissions: CRITICAL_PERMISSIONS,
+    permissions: null,
     role: 'USER',
     securityVersion: 4,
     totpCredential: null,
     ...(withEnrollment ? { totpEnrollment: BOOTSTRAP_ENROLLMENT } : {}),
   },
-  userId: CRITICAL_USER_ID,
+  userId: BOOTSTRAP_USER_ID,
 });
 
-const arrangeCriticalBootstrapConfirmation = (
-  lockedPermissions: Record<string, boolean> = CRITICAL_PERMISSIONS,
+const arrangeMandatoryBootstrapConfirmation = (
+  lockedPermissions: Record<string, boolean> | null = null,
 ): void => {
-  mocks.getMfaChallengeToken.mockResolvedValue('raw-critical-challenge');
+  mocks.getMfaChallengeToken.mockResolvedValue('raw-ordinary-challenge');
   mocks.prisma.mfaLoginChallenge.findUnique.mockResolvedValue(
-    buildCriticalBootstrapChallenge(true),
+    buildMandatoryBootstrapChallenge(true),
   );
   mocks.verifyTotpCode.mockResolvedValue(5_945_120n);
   mocks.generateRecoveryCodes.mockReturnValue([
     {
-      codeHash: 'critical-code-hash',
+      codeHash: 'ordinary-code-hash',
       plaintext: 'AAAA-BBBB-CCCC-DDDD-EEEE-FFFF',
-      salt: 'critical-salt',
+      salt: 'ordinary-salt',
     },
   ]);
   mocks.generateSessionToken.mockReturnValue(BOOTSTRAP_SESSION.token);
@@ -214,12 +210,12 @@ const arrangeCriticalBootstrapConfirmation = (
   });
   mocks.transaction.totpEnrollment.deleteMany.mockResolvedValue({ count: 1 });
   mocks.prisma.user.findUnique.mockResolvedValue({
-    id: CRITICAL_USER_ID,
+    id: BOOTSTRAP_USER_ID,
     mfaEnabledAt: NOW,
   });
   mocks.mapUserToUserType.mockReturnValue({
-    id: CRITICAL_USER_ID,
-    loginName: 'critical.user',
+    id: BOOTSTRAP_USER_ID,
+    loginName: 'ordinary.user',
     mustChangePassword: false,
   });
   mocks.createSession.mockImplementationOnce(
@@ -361,17 +357,17 @@ describe('/api/auth/mfa/setup invariants', () => {
     );
   });
 
-  it('allows a USER with effective critical access to start mandatory MFA without a session', async () => {
-    mocks.getMfaChallengeToken.mockResolvedValue('raw-critical-challenge');
+  it('allows an ordinary USER to start mandatory MFA without a session', async () => {
+    mocks.getMfaChallengeToken.mockResolvedValue('raw-ordinary-challenge');
     mocks.prisma.mfaLoginChallenge.findUnique.mockResolvedValue(
-      buildCriticalBootstrapChallenge(),
+      buildMandatoryBootstrapChallenge(),
     );
-    mocks.transaction.$queryRaw.mockResolvedValue([{ id: CRITICAL_USER_ID }]);
+    mocks.transaction.$queryRaw.mockResolvedValue([{ id: BOOTSTRAP_USER_ID }]);
     mocks.transaction.user.findUnique.mockResolvedValue({
       deletedAt: null,
       isActive: true,
       mfaEnabledAt: null,
-      permissions: CRITICAL_PERMISSIONS,
+      permissions: null,
       role: 'USER',
       securityVersion: 4,
       totpCredential: null,
@@ -380,7 +376,7 @@ describe('/api/auth/mfa/setup invariants', () => {
       expiresAt: BOOTSTRAP_CHALLENGE_EXPIRES_AT,
       purpose: 'SETUP',
       securityVersion: 4,
-      userId: CRITICAL_USER_ID,
+      userId: BOOTSTRAP_USER_ID,
     });
     const { POST } = await import('$app/api/auth/mfa/setup/route');
 
@@ -399,26 +395,27 @@ describe('/api/auth/mfa/setup invariants', () => {
     });
     expect(mocks.requireAuth).not.toHaveBeenCalled();
     expect(mocks.transaction.user.findUnique).toHaveBeenCalledWith({
-      select: expect.objectContaining({ permissions: true, role: true }),
-      where: { id: CRITICAL_USER_ID },
+      select: expect.not.objectContaining({ permissions: true, role: true }),
+      where: { id: BOOTSTRAP_USER_ID },
     });
     expect(mocks.transaction.mfaLoginChallenge.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         create: expect.objectContaining({
           purpose: 'SETUP',
+          rememberMe: true,
           securityVersion: 4,
-          userId: CRITICAL_USER_ID,
+          userId: BOOTSTRAP_USER_ID,
         }),
       }),
     );
     expect(mocks.setMfaChallengeCookie).toHaveBeenCalledWith(
-      'raw-critical-challenge',
+      'raw-ordinary-challenge',
       expect.any(Date),
     );
   });
 
-  it('confirms bootstrap and creates an MFA session for a USER with effective critical access', async () => {
-    arrangeCriticalBootstrapConfirmation();
+  it('confirms bootstrap and creates a trusted MFA session for an ordinary USER', async () => {
+    arrangeMandatoryBootstrapConfirmation();
     const { PUT } = await import('$app/api/auth/mfa/setup/route');
 
     const response = await PUT(
@@ -434,12 +431,12 @@ describe('/api/auth/mfa/setup invariants', () => {
     expect(mocks.requireAuth).not.toHaveBeenCalled();
     expect(mocks.createSession).toHaveBeenCalledWith(
       BOOTSTRAP_SESSION.token,
-      CRITICAL_USER_ID,
+      BOOTSTRAP_USER_ID,
       4,
-      false,
+      true,
       expect.objectContaining({
         action: 'LOGIN_SUCCESS',
-        userId: CRITICAL_USER_ID,
+        userId: BOOTSTRAP_USER_ID,
       }),
       expect.objectContaining({
         advanceSecurityVersion: true,
@@ -451,14 +448,14 @@ describe('/api/auth/mfa/setup invariants', () => {
     expect(mocks.transaction.totpCredential.upsert).toHaveBeenCalledWith({
       create: expect.objectContaining({
         lastUsedTimeStep: 5_945_120n,
-        userId: CRITICAL_USER_ID,
+        userId: BOOTSTRAP_USER_ID,
       }),
       update: expect.objectContaining({ lastUsedTimeStep: 5_945_120n }),
-      where: { userId: CRITICAL_USER_ID },
+      where: { userId: BOOTSTRAP_USER_ID },
     });
     expect(mocks.transaction.user.update).toHaveBeenCalledWith({
       data: { mfaEnabledAt: NOW },
-      where: { id: CRITICAL_USER_ID },
+      where: { id: BOOTSTRAP_USER_ID },
     });
     expect(mocks.setSessionTokenCookie).toHaveBeenCalledWith(
       BOOTSTRAP_SESSION.token,
@@ -466,8 +463,8 @@ describe('/api/auth/mfa/setup invariants', () => {
     );
   });
 
-  it('rejects confirmation when critical access disappears before the locked revalidation', async () => {
-    arrangeCriticalBootstrapConfirmation({
+  it('keeps mandatory bootstrap valid when permissions change before locked revalidation', async () => {
+    arrangeMandatoryBootstrapConfirmation({
       [PERMISSIONS.USERS.UPDATE_LOGIN]: true,
       [PERMISSIONS.USERS.VIEW]: false,
     });
@@ -480,13 +477,17 @@ describe('/api/auth/mfa/setup invariants', () => {
       }),
     );
 
-    expect(response.status).toBe(401);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.status).toBe('authenticated');
     expect(mocks.requireAuth).not.toHaveBeenCalled();
     expect(mocks.clearMfaChallengeCookie).toHaveBeenCalled();
-    expect(
-      mocks.transaction.mfaLoginChallenge.deleteMany,
-    ).not.toHaveBeenCalled();
-    expect(mocks.setSessionTokenCookie).not.toHaveBeenCalled();
+    expect(mocks.transaction.mfaLoginChallenge.deleteMany).toHaveBeenCalled();
+    expect(mocks.setSessionTokenCookie).toHaveBeenCalledWith(
+      BOOTSTRAP_SESSION.token,
+      BOOTSTRAP_SESSION.expiresAt,
+    );
   });
 
   it('keeps the active credential while staging a replacement and snapshots its consumed timestamp', async () => {

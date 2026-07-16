@@ -34,6 +34,7 @@ type SchemaCheckRow = {
   protectedAccounts: number;
   rateLimitColumns: number;
   sessionColumns: number;
+  sessionMfaRequiredColumns: number;
   totpCredentialColumns: number;
   totpEnrollmentColumns: number;
   userColumns: number;
@@ -115,6 +116,11 @@ export async function createReadinessResponse(): Promise<
                   'mfaVerifiedAt', 'mfaMethod'
                 )
             )::int AS "sessionColumns",
+            COUNT(*) FILTER (
+              WHERE table_name = 'Session'
+                AND column_name IN ('mfaVerifiedAt', 'mfaMethod')
+                AND is_nullable = 'NO'
+            )::int AS "sessionMfaRequiredColumns",
             COUNT(*) FILTER (
               WHERE table_name = 'AuditLog'
                 AND column_name IN (
@@ -310,6 +316,7 @@ export async function createReadinessResponse(): Promise<
         if (
           schema?.userColumns !== 15 ||
           schema.sessionColumns !== 10 ||
+          schema.sessionMfaRequiredColumns !== 2 ||
           schema.auditEventKinds !== 2 ||
           schema.auditLogColumns !== 18 ||
           schema.auditOutcomes !== 3 ||

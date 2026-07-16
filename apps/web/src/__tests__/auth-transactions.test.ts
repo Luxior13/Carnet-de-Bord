@@ -79,7 +79,6 @@ vi.mock('$server/prisma', () => ({
   prisma: mocks.prisma,
 }));
 
-import { PERMISSIONS } from '$constants/permissions.constants';
 import {
   authenticateUser,
   createAuditLog,
@@ -105,13 +104,13 @@ const SESSION_USER = {
   lastName: 'Dupont',
   lockedUntil: null,
   loginName: 'user.name',
-  mfaEnabledAt: null as Date | null,
+  mfaEnabledAt: new Date('2026-07-10T12:00:00.000Z') as Date | null,
   mustChangePassword: false,
   passwordChangedAt: new Date('2026-01-01T00:00:00.000Z'),
   permissions: null as Record<string, boolean> | null,
   role: 'USER' as const,
   securityVersion: 3,
-  totpCredential: null as { userId: string } | null,
+  totpCredential: { userId: 'user-1' } as { userId: string } | null,
 };
 
 type StoredSession = {
@@ -133,8 +132,8 @@ const buildStoredSession = (
   expiresAt: new Date('2026-07-14T12:00:00.000Z'),
   idleExpiresAt: new Date('2026-07-13T12:30:00.000Z'),
   lastSeenAt: new Date('2026-07-13T12:00:00.000Z'),
-  mfaMethod: null,
-  mfaVerifiedAt: null,
+  mfaMethod: 'TOTP',
+  mfaVerifiedAt: new Date('2026-07-13T12:00:00.000Z'),
   rememberMe: false,
   securityVersion: 3,
   token: 'stored-session-hash',
@@ -155,6 +154,8 @@ const audit = {
   targetUserId: 'user-1',
   userId: 'user-1',
 };
+
+const acceptSessionPrecondition = (): Promise<void> => Promise.resolve();
 
 describe('auth security transactions', () => {
   beforeEach(() => {
@@ -215,7 +216,7 @@ describe('auth security transactions', () => {
     vi.useRealTimers();
   });
 
-  it('creates a normal session with a one-day absolute limit and a thirty-minute idle limit', async () => {
+  it('creates a short MFA session with a one-day absolute limit and a thirty-minute idle limit', async () => {
     const loginAt = new Date('2026-07-13T12:00:00.000Z');
     const expiresAt = new Date('2026-07-14T12:00:00.000Z');
     const idleExpiresAt = new Date('2026-07-13T12:30:00.000Z');
@@ -240,6 +241,11 @@ describe('auth security transactions', () => {
         metadata: { pageKey: 'authentication' },
         userId: 'user-1',
       },
+      {
+        mfaMethod: 'TOTP',
+        precondition: acceptSessionPrecondition,
+        requireMfaEnabled: true,
+      },
     );
 
     expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
@@ -249,6 +255,8 @@ describe('auth security transactions', () => {
         idleExpiresAt,
         ipAddress: '203.0.113.9',
         lastSeenAt: loginAt,
+        mfaMethod: 'TOTP',
+        mfaVerifiedAt: loginAt,
         rememberMe: false,
         securityVersion: 3,
         token: expect.not.stringMatching(/^raw-session-token$/),
@@ -262,8 +270,7 @@ describe('auth security transactions', () => {
         deletedAt: null,
         id: 'user-1',
         isActive: true,
-        isProtected: false,
-        mfaEnabledAt: null,
+        mfaEnabledAt: { not: null },
         securityVersion: 3,
       },
     });
@@ -363,6 +370,12 @@ describe('auth security transactions', () => {
       'user-1',
       3,
       true,
+      undefined,
+      {
+        mfaMethod: 'TOTP',
+        precondition: acceptSessionPrecondition,
+        requireMfaEnabled: true,
+      },
     );
 
     expect(mocks.transaction.session.create).toHaveBeenCalledWith({
@@ -383,11 +396,38 @@ describe('auth security transactions', () => {
     });
   });
 
+  it('fails closed when a protected account requests a remembered session', async () => {
+    mocks.transaction.user.updateMany.mockResolvedValueOnce({ count: 0 });
+
+    await expect(
+      createSession('root-session-token', 'root-user', 9, true, undefined, {
+        mfaMethod: 'TOTP',
+        precondition: acceptSessionPrecondition,
+        requireMfaEnabled: true,
+      }),
+    ).rejects.toBeInstanceOf(SecurityVersionMismatchError);
+
+    expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith({
+      data: { lastLoginAt: expect.any(Date) },
+      where: expect.objectContaining({
+        id: 'root-user',
+        isProtected: false,
+        mfaEnabledAt: { not: null },
+        securityVersion: 9,
+      }),
+    });
+    expect(mocks.transaction.session.create).not.toHaveBeenCalled();
+  });
+
   it('does not issue a session when the authenticated security version became stale', async () => {
     mocks.transaction.user.updateMany.mockResolvedValueOnce({ count: 0 });
 
     await expect(
-      createSession('raw-session-token', 'user-1', 3),
+      createSession('raw-session-token', 'user-1', 3, false, undefined, {
+        mfaMethod: 'TOTP',
+        precondition: acceptSessionPrecondition,
+        requireMfaEnabled: true,
+      }),
     ).rejects.toBeInstanceOf(SecurityVersionMismatchError);
 
     expect(mocks.transaction.session.create).not.toHaveBeenCalled();
@@ -474,11 +514,12 @@ describe('auth security transactions', () => {
       'replacement-token',
       'user-1',
       3,
-      false,
+      true,
       undefined,
       {
         advanceSecurityVersion: true,
         mfaMethod: 'TOTP',
+        precondition: acceptSessionPrecondition,
         requireMfaEnabled: true,
         revokeExistingSessions: true,
         sourceSessionToken: 'source-session-hash',
@@ -498,6 +539,7 @@ describe('auth security transactions', () => {
       where: {
         expiresAt: { gt: rotatedAt },
         idleExpiresAt: { gt: rotatedAt },
+        rememberMe: true,
         securityVersion: 3,
         token: 'source-session-hash',
         userId: 'user-1',
@@ -519,6 +561,32 @@ describe('auth security transactions', () => {
       rememberMe: true,
       token: 'replacement-token',
     });
+  });
+
+  it('prevents a protected account from importing a remembered source session', async () => {
+    mocks.transaction.session.updateMany.mockResolvedValueOnce({ count: 0 });
+
+    await expect(
+      createSession('replacement-token', 'root-user', 9, false, undefined, {
+        advanceSecurityVersion: true,
+        mfaMethod: 'TOTP',
+        precondition: acceptSessionPrecondition,
+        requireMfaEnabled: true,
+        revokeExistingSessions: true,
+        sourceSessionToken: 'remembered-root-session',
+      }),
+    ).rejects.toBeInstanceOf(SecurityVersionMismatchError);
+
+    expect(mocks.transaction.session.updateMany).toHaveBeenCalledWith({
+      data: { lastSeenAt: expect.any(Date) },
+      where: expect.objectContaining({
+        rememberMe: false,
+        token: 'remembered-root-session',
+        userId: 'root-user',
+      }),
+    });
+    expect(mocks.transaction.session.findUnique).not.toHaveBeenCalled();
+    expect(mocks.transaction.session.create).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -583,11 +651,14 @@ describe('auth security transactions', () => {
     mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
     mocks.prisma.session.findUnique.mockResolvedValueOnce(
       buildStoredSession({
+        mfaMethod: null,
+        mfaVerifiedAt: null,
         user: {
           ...SESSION_USER,
           id: 'root-user',
           isProtected: true,
           mfaEnabledAt: null,
+          totpCredential: null,
         },
         userId: 'root-user',
       }),
@@ -602,19 +673,44 @@ describe('auth security transactions', () => {
     });
   });
 
-  it('rejects a USER session without MFA when critical access becomes effective', async () => {
+  it('rejects an ordinary USER session without MFA', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-07-13T12:00:00.000Z'));
     mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
     mocks.prisma.session.findUnique.mockResolvedValueOnce(
       buildStoredSession({
+        mfaMethod: null,
+        mfaVerifiedAt: null,
         user: {
           ...SESSION_USER,
-          permissions: {
-            [PERMISSIONS.USERS.UPDATE_LOGIN]: true,
-            [PERMISSIONS.USERS.VIEW]: true,
-          },
+          mfaEnabledAt: null,
+          totpCredential: null,
         },
+      }),
+    );
+
+    await expect(getAuthSession(false)).resolves.toEqual({
+      session: null,
+      user: null,
+    });
+    expect(mocks.prisma.session.deleteMany).toHaveBeenCalledWith({
+      where: { token: 'stored-session-hash' },
+    });
+    expect(mocks.prisma.session.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects a remembered MFA session for the protected root', async () => {
+    mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
+    mocks.prisma.session.findUnique.mockResolvedValueOnce(
+      buildStoredSession({
+        rememberMe: true,
+        user: {
+          ...SESSION_USER,
+          id: 'root-user',
+          isProtected: true,
+          totpCredential: { userId: 'root-user' },
+        },
+        userId: 'root-user',
       }),
     );
 
@@ -632,6 +728,8 @@ describe('auth security transactions', () => {
     mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
     mocks.prisma.session.findUnique.mockResolvedValueOnce(
       buildStoredSession({
+        mfaMethod: null,
+        mfaVerifiedAt: null,
         user: {
           ...SESSION_USER,
           mfaEnabledAt: new Date('2026-07-10T12:00:00.000Z'),

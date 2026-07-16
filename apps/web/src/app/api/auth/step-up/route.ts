@@ -209,7 +209,6 @@ export async function POST(
         where: {
           expiresAt: { gt: authenticatedAt },
           idleExpiresAt: { gt: authenticatedAt },
-          mfaMethod: { not: null },
           securityVersion: storedUser.securityVersion,
           token: currentSession.token,
           userId: storedUser.id,

@@ -128,8 +128,6 @@ function LoginPage(): React.ReactNode {
       setPassword('');
       saveLoginName(normalizedLoginName);
 
-      if (result.status === 'authenticated') return;
-
       setChallengeExpiresAt(result.challengeExpiresAt);
       setMfaCode('');
       setMfaCodeKind('totp');
@@ -221,13 +219,13 @@ function LoginPage(): React.ReactNode {
     step === 'mfa'
       ? 'Vérification en deux étapes'
       : step === 'setup'
-        ? 'Protéger le compte administrateur'
+        ? 'Protéger votre compte'
         : 'Connexion';
   const description =
     step === 'mfa'
       ? 'Ouvrez votre application d’authentification pour terminer la connexion.'
       : step === 'setup'
-        ? 'Cette configuration est obligatoire et ne sera demandée qu’une seule fois.'
+        ? 'Cette configuration est obligatoire pour accéder au site et ne sera demandée qu’une seule fois.'
         : 'Accédez à l’espace privé, aux comptes et à l’administration.';
 
   return (
@@ -372,12 +370,17 @@ function LoginPage(): React.ReactNode {
                   className="text-muted-foreground cursor-pointer text-sm font-normal"
                   htmlFor="rememberMe"
                 >
-                  Rester connecté
+                  Faire confiance à cet appareil
                 </Label>
               </div>
               <p className="text-muted-foreground text-xs leading-5">
+                Session de 30 jours maximum, avec 7 jours d’inactivité. Cette
+                option est désactivée pour le compte superadmin et doit être
+                utilisée uniquement sur un appareil personnel.
+              </p>
+              <p className="text-muted-foreground text-xs leading-5">
                 Mot de passe oublié ou accès bloqué&nbsp;? La récupération est
-                gérée par un administrateur habilité de votre équipe.
+                gérée par le propriétaire superadmin.
               </p>
               <Button
                 className="h-10 w-full"

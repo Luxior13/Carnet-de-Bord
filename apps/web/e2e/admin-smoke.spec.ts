@@ -54,7 +54,7 @@ async function generateStableTotp(page: Page, secret: string): Promise<string> {
 async function completeRequiredMfaSetup(page: Page): Promise<void> {
   await expect(
     page.getByRole('heading', {
-      name: 'Protéger le compte superadmin',
+      name: 'Protéger votre compte',
     }),
   ).toBeVisible();
   await expect(

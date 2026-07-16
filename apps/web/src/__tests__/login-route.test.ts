@@ -278,100 +278,10 @@ describe('POST /api/auth/login', () => {
     });
   });
 
-  it('does not issue a cookie when security state changes after authentication', async () => {
-    const staleSecurityError = new Error('stale security state');
+  it('forces an ordinary account without MFA through setup and preserves device trust', async () => {
     mocks.authenticateUser.mockResolvedValue({
       success: true,
-      user: {
-        contactEmail: null,
-        contactEmailVerifiedAt: null,
-        createdAt: new Date('2026-01-01T00:00:00.000Z'),
-        failedLoginAttempts: 0,
-        firstName: 'Jean',
-        id: 'user-1',
-        isActive: true,
-        isProtected: false,
-        lastLoginAt: null,
-        lastName: 'Dupont',
-        lockedUntil: null,
-        loginName: 'user.name',
-        mfaEnabledAt: null,
-        mustChangePassword: false,
-        passwordChangedAt: null,
-        permissions: null,
-        role: 'USER',
-        securityVersion: 3,
-        totpCredential: null,
-      },
-    });
-    mocks.generateSessionToken.mockReturnValue('raw-session-token');
-    mocks.createSession.mockRejectedValueOnce(staleSecurityError);
-    mocks.isSecurityVersionMismatchError.mockImplementation(
-      (error) => error === staleSecurityError,
-    );
-    const { POST } = await import('$app/api/auth/login/route');
-
-    const response = await POST(
-      new NextRequest('http://localhost/api/auth/login', {
-        body: JSON.stringify({
-          loginName: 'user.name',
-          password: 'Secret1!',
-        }),
-        method: 'POST',
-      }),
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(body.error.code).toBe(ErrorCode.INVALID_CREDENTIALS);
-    expect(mocks.setSessionTokenCookie).not.toHaveBeenCalled();
-    expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: 'LOGIN_FAILED',
-        metadata: expect.objectContaining({
-          reason: 'SECURITY_STATE_CHANGED',
-        }),
-        targetUserId: 'user-1',
-        userId: null,
-      }),
-    );
-  });
-
-  it('returns both idle and absolute deadlines after a successful login', async () => {
-    const expiresAt = new Date('2026-08-12T12:00:00.000Z');
-    const idleExpiresAt = new Date('2026-07-20T12:00:00.000Z');
-    const lastSeenAt = new Date('2026-07-13T12:00:00.000Z');
-    mocks.authenticateUser.mockResolvedValue({
-      success: true,
-      user: {
-        contactEmail: 'user@example.com',
-        contactEmailVerifiedAt: new Date('2026-01-02T00:00:00.000Z'),
-        createdAt: new Date('2026-01-01T00:00:00.000Z'),
-        failedLoginAttempts: 0,
-        firstName: 'Jean',
-        id: 'user-1',
-        isActive: true,
-        isProtected: false,
-        lastLoginAt: null,
-        lastName: 'Dupont',
-        lockedUntil: null,
-        loginName: 'user.name',
-        mfaEnabledAt: null,
-        mustChangePassword: false,
-        passwordChangedAt: null,
-        permissions: null,
-        role: 'USER',
-        securityVersion: 3,
-        totpCredential: null,
-      },
-    });
-    mocks.generateSessionToken.mockReturnValue('raw-session-token');
-    mocks.createSession.mockResolvedValue({
-      expiresAt,
-      idleExpiresAt,
-      lastSeenAt,
-      rememberMe: true,
-      token: 'raw-session-token',
+      user: buildAuthenticatedUser(),
     });
     const { POST } = await import('$app/api/auth/login/route');
 
@@ -388,41 +298,16 @@ describe('POST /api/auth/login', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(mocks.createSession).toHaveBeenCalledWith(
-      'raw-session-token',
-      'user-1',
-      3,
-      true,
-      expect.objectContaining({ action: 'LOGIN_SUCCESS' }),
-    );
-    expect(mocks.setSessionTokenCookie).toHaveBeenCalledWith(
-      'raw-session-token',
-      expiresAt,
-    );
-    expect(body.data.session).toEqual({
-      expiresAt: expiresAt.toISOString(),
-      idleExpiresAt: idleExpiresAt.toISOString(),
-      lastSeenAt: lastSeenAt.toISOString(),
+    expect(body.data.status).toBe('mfa_setup_required');
+    expect(mocks.createMfaChallenge).toHaveBeenCalledWith({
+      credentialUpdatedAt: null,
+      purpose: 'SETUP',
       rememberMe: true,
+      securityVersion: 3,
+      userId: 'user-1',
     });
-    expect(body.data.status).toBe('authenticated');
-    expect(body.data.user).toMatchObject({
-      contactEmail: 'user@example.com',
-      loginName: 'user.name',
-    });
-    expect(mocks.createSession).toHaveBeenCalledWith(
-      'raw-session-token',
-      'user-1',
-      3,
-      true,
-      expect.objectContaining({
-        description: 'Connexion réussie: user.name',
-        metadata: expect.objectContaining({ loginName: 'user.name' }),
-      }),
-    );
-    expect(
-      mocks.createSession.mock.calls.at(-1)?.[4]?.metadata,
-    ).not.toHaveProperty('email');
+    expect(mocks.createSession).not.toHaveBeenCalled();
+    expect(mocks.setSessionTokenCookie).not.toHaveBeenCalled();
     expect(mocks.recordSuccessfulLogin).toHaveBeenCalledWith(
       LOGIN_RATE_LIMIT_KEYS,
     );
@@ -507,7 +392,45 @@ describe('POST /api/auth/login', () => {
     expect(mocks.setSessionTokenCookie).not.toHaveBeenCalled();
   });
 
-  it('also requires MFA setup for an unprotected administrator', async () => {
+  it('never grants device trust to the protected root with MFA configured', async () => {
+    const credentialUpdatedAt = new Date('2026-07-10T12:00:00.000Z');
+    mocks.authenticateUser.mockResolvedValue({
+      success: true,
+      user: buildAuthenticatedUser({
+        id: 'root-user',
+        isProtected: true,
+        loginName: 'root.owner',
+        mfaEnabledAt: credentialUpdatedAt,
+        role: 'ADMIN',
+        securityVersion: 9,
+        totpCredential: { updatedAt: credentialUpdatedAt },
+      }),
+    });
+    const { POST } = await import('$app/api/auth/login/route');
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/auth/login', {
+        body: JSON.stringify({
+          loginName: 'root.owner',
+          password: 'Secret1!',
+          rememberMe: true,
+        }),
+        method: 'POST',
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.createMfaChallenge).toHaveBeenCalledWith({
+      credentialUpdatedAt,
+      purpose: 'LOGIN',
+      rememberMe: false,
+      securityVersion: 9,
+      userId: 'root-user',
+    });
+    expect(mocks.createSession).not.toHaveBeenCalled();
+  });
+
+  it('requires MFA setup and allows device trust for an unprotected administrator', async () => {
     mocks.authenticateUser.mockResolvedValue({
       success: true,
       user: buildAuthenticatedUser({
@@ -525,6 +448,7 @@ describe('POST /api/auth/login', () => {
         body: JSON.stringify({
           loginName: 'admin.user',
           password: 'Secret1!',
+          rememberMe: true,
         }),
         method: 'POST',
       }),
@@ -536,7 +460,7 @@ describe('POST /api/auth/login', () => {
     expect(mocks.createMfaChallenge).toHaveBeenCalledWith({
       credentialUpdatedAt: null,
       purpose: 'SETUP',
-      rememberMe: false,
+      rememberMe: true,
       securityVersion: 5,
       userId: 'admin-user',
     });
@@ -544,7 +468,7 @@ describe('POST /api/auth/login', () => {
     expect(mocks.setSessionTokenCookie).not.toHaveBeenCalled();
   });
 
-  it('requires MFA setup and disables remember-me for a USER with effective critical access', async () => {
+  it('keeps device trust available for a USER with effective critical access', async () => {
     mocks.authenticateUser.mockResolvedValue({
       success: true,
       user: buildAuthenticatedUser({
@@ -573,7 +497,7 @@ describe('POST /api/auth/login', () => {
     expect(mocks.createMfaChallenge).toHaveBeenCalledWith({
       credentialUpdatedAt: null,
       purpose: 'SETUP',
-      rememberMe: false,
+      rememberMe: true,
       securityVersion: 3,
       userId: 'user-1',
     });

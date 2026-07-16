@@ -314,7 +314,7 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
         )}
         <p>
           {isBootstrap
-            ? 'Le compte superadmin doit être protégé par une application d’authentification avant de continuer. Les sessions longues restent désactivées pour ce compte.'
+            ? 'Tous les comptes doivent être protégés par une application d’authentification avant de pouvoir accéder au site.'
             : isReplacing
               ? 'L’ancienne application restera valide jusqu’à la confirmation de la nouvelle.'
               : 'Confirmez votre mot de passe avant de lier votre application d’authentification.'}

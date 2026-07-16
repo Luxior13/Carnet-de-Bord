@@ -305,8 +305,6 @@ describe('POST /api/users/[id]/reset-mfa', () => {
         mfaVerifiedAt: expect.any(Date),
       },
       where: expect.objectContaining({
-        mfaMethod: { not: null },
-        mfaVerifiedAt: { not: null },
         securityVersion: 7,
         token: 'root-session-hash',
         userId: 'root-user',
