@@ -61,6 +61,9 @@ describe('sidebar UX contracts', () => {
     expect(sidebarSource).toContain('Changer de pôle');
     expect(sidebarSource).toContain('href="/mon-compte"');
     expect(sidebarSource).toContain('Déconnexion');
+    expect(sidebarSource).toContain('@{userData.loginName}');
+    expect(sidebarSource).toContain('aria-label="Accès au compte"');
+    expect(sidebarSource).toContain('Profil, sécurité et activité');
     expect(navigationSource).not.toMatch(
       /href:\s*['"]\/mon-compte['"][\s\S]{0,160}label:\s*['"]Mon compte['"]/,
     );
@@ -73,15 +76,50 @@ describe('sidebar UX contracts', () => {
     expect(sidebarSource).toContain(
       'group-data-[state=open]/account-menu:rotate-180',
     );
-    expect(sidebarSource).toContain('className="text-sidebar-ring');
+    expect(sidebarSource).toContain('bg-primary/15 text-primary-emphasis');
+    expect(sidebarSource).toContain('Actuel');
     expect(sidebarSource).toContain('aria-current={isActive');
   });
 
   it('keeps the pole switcher readable in expanded, collapsed and mobile layouts', () => {
     expect(sidebarSource).toContain('w-[min(20rem,calc(100vw-2rem))]');
-    expect(sidebarSource).toContain('isActive && tone.soft');
+    expect(sidebarSource).toContain('border-primary/40 bg-primary/10');
     expect(sidebarSource).toContain('Changer de pôle — {activeSpace.label}');
     expect(sidebarSource).toContain('open={isTooltipOpen && !isMenuOpen}');
     expect(sidebarSource).not.toContain('Changer d’espace');
+  });
+
+  it('keeps pole placement stable and expresses hierarchy with color', () => {
+    expect(sidebarSource).toContain(
+      'spaces.map((space) => renderSpaceItem(space))',
+    );
+    expect(sidebarSource).not.toContain('Autres pôles');
+    expect(sidebarSource).toContain('border-sidebar-border/90 bg-surface');
+    expect(sidebarSource).toContain('aria-label="Pôles disponibles"');
+    expect(sidebarSource).toContain('bg-surface-control/70');
+    expect(sidebarSource).toContain('hover:border-sidebar-border/80');
+    expect(sidebarSource).toContain('text-sidebar-foreground/55');
+    expect(sidebarSource).toContain('text-sidebar-foreground/45');
+  });
+
+  it('uses the same layered visual language for both sidebar popovers', () => {
+    expect(sidebarSource).toContain('w-[min(19rem,calc(100vw-2rem))]');
+    expect(sidebarSource).toContain('from-surface-muted/60 to-surface');
+    expect(sidebarSource).toContain('border-primary/35 bg-primary/10');
+    expect(sidebarSource).toContain('hover:border-destructive/35');
+  });
+
+  it('matches the reference proportions without importing its palette', () => {
+    expect(sidebarSource).toContain('rounded-xl');
+    expect(sidebarSource).toContain('size-11');
+    expect(sidebarSource).toContain('size-7');
+    expect(sidebarSource).toContain('min-h-10');
+    expect(sidebarSource).toContain('text-[13px]');
+    expect(sidebarSource).toContain('tracking-[0.16em]');
+    expect(sidebarSource).toContain('collisionPadding={8}');
+    expect(sidebarSource).toContain('overflow-y-auto overscroll-contain');
+    expect(sidebarSource).not.toContain('#121c2b');
+    expect(sidebarSource).not.toContain('#18243a');
+    expect(sidebarSource).not.toContain('#0e1622');
   });
 });

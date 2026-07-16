@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, ChevronDown, ChevronRight, LogOut, User } from 'lucide-react';
+import { ChevronDown, ChevronRight, LogOut, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -30,6 +30,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -58,6 +59,29 @@ import { cn } from '$utils/css.utils';
 type SidebarProps = {
   className?: string;
 };
+
+const SIDEBAR_POPOVER_PANEL_CLASS =
+  'border-sidebar-border/90 bg-surface text-sidebar-foreground flex max-h-[var(--radix-dropdown-menu-content-available-height)] flex-col overflow-hidden rounded-xl p-0 shadow-[var(--shadow-panel-strong)]';
+const SIDEBAR_POPOVER_SCROLL_CLASS =
+  'min-h-0 flex-1 overflow-y-auto overscroll-contain p-2.5';
+const SIDEBAR_POPOVER_SECTION_CLASS =
+  'border-sidebar-border/60 bg-surface-control/70 space-y-0.5 rounded-xl border p-1';
+const SIDEBAR_POPOVER_SECTION_LABEL_CLASS =
+  'text-sidebar-foreground/45 px-1.5 pb-1.5 text-[10px] font-semibold tracking-[0.16em] uppercase';
+const SIDEBAR_POPOVER_ACTION_BASE_CLASS =
+  'group/menu-action focus:text-sidebar-foreground flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-lg border border-transparent px-2 py-1.5 text-left text-[13px] font-semibold text-sidebar-foreground/75 transition-colors duration-150';
+const SIDEBAR_POPOVER_ACTION_CLASS =
+  'hover:border-sidebar-border/80 hover:bg-surface-muted/60 hover:text-sidebar-foreground focus:border-primary/35 focus:bg-primary/10';
+const SIDEBAR_POPOVER_DANGER_ACTION_CLASS =
+  'hover:border-destructive/35 hover:bg-destructive/10 hover:text-destructive focus:border-destructive/35 focus:bg-destructive/10 focus:text-destructive';
+const SIDEBAR_POPOVER_ICON_BASE_CLASS =
+  'flex size-7 shrink-0 items-center justify-center rounded-lg border transition-colors duration-150';
+const SIDEBAR_POPOVER_ICON_ACTION_CLASS =
+  'border-sidebar-border/50 bg-surface text-sidebar-foreground/55 group-hover/menu-action:border-primary/30 group-hover/menu-action:bg-primary/10 group-hover/menu-action:text-primary-emphasis group-focus/menu-action:border-primary/30 group-focus/menu-action:bg-primary/10 group-focus/menu-action:text-primary-emphasis';
+const SIDEBAR_POPOVER_ICON_DANGER_CLASS =
+  'border-transparent bg-surface text-sidebar-foreground/55 group-hover/menu-action:border-destructive/30 group-hover/menu-action:bg-destructive/10 group-hover/menu-action:text-destructive group-focus/menu-action:border-destructive/30 group-focus/menu-action:bg-destructive/10 group-focus/menu-action:text-destructive';
+const SIDEBAR_POPOVER_CHEVRON_CLASS =
+  'text-sidebar-foreground/40 size-3.5 shrink-0 transition-[color,opacity,transform] duration-150 group-hover/menu-action:translate-x-0.5 group-hover/menu-action:text-sidebar-foreground/70';
 
 function isActivePath(pathname: string, href: string, exact = false): boolean {
   if (exact) return pathname === href;
@@ -155,6 +179,85 @@ const SpaceSwitcher: FC<{
     </button>
   );
 
+  const renderSpaceItem = (space: NavigationSpace): React.ReactNode => {
+    const SpaceIcon = getNavigationIcon(space.icon);
+    const isActive = activeSpace.id === space.id;
+    const tone = getNavigationSpaceToneClasses(space.tone);
+
+    return (
+      <DropdownMenuItem
+        key={space.id}
+        asChild
+        className={cn(
+          SIDEBAR_POPOVER_ACTION_BASE_CLASS,
+          'min-h-12',
+          isActive
+            ? 'border-primary/40 bg-primary/10 text-sidebar-foreground hover:bg-primary/15 focus:border-primary/50 focus:bg-primary/15'
+            : SIDEBAR_POPOVER_ACTION_CLASS,
+        )}
+      >
+        <Link
+          aria-current={isActive ? 'location' : undefined}
+          href={space.href}
+          onClick={() => setOpenMobile(false)}
+          className="min-w-0"
+        >
+          <span
+            className={cn(
+              SIDEBAR_POPOVER_ICON_BASE_CLASS,
+              'group-hover/menu-action:border-primary/30 group-hover/menu-action:bg-primary/10 group-focus/menu-action:border-primary/30 group-focus/menu-action:bg-primary/10',
+              tone.icon,
+            )}
+          >
+            <SpaceIcon className="size-4 text-current" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span
+                className={cn(
+                  'truncate',
+                  isActive ? 'font-semibold' : 'font-medium',
+                )}
+              >
+                {space.label}
+              </span>
+              {space.badge && (
+                <span
+                  className={cn(
+                    'inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-xs leading-none font-medium',
+                    getNavigationSpaceBadgeClasses(space.badge),
+                  )}
+                >
+                  {space.badge}
+                </span>
+              )}
+            </span>
+            <span
+              className={cn(
+                'mt-0.5 block truncate text-[11px] leading-4',
+                isActive
+                  ? 'text-sidebar-foreground/70'
+                  : 'text-sidebar-foreground/55',
+              )}
+            >
+              {space.summary}
+            </span>
+          </span>
+          {isActive ? (
+            <span className="border-primary/35 bg-primary/15 text-primary-emphasis inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold">
+              Actuel
+            </span>
+          ) : (
+            <ChevronRight
+              aria-hidden="true"
+              className={SIDEBAR_POPOVER_CHEVRON_CLASS}
+            />
+          )}
+        </Link>
+      </DropdownMenuItem>
+    );
+  };
+
   return (
     <DropdownMenu
       onOpenChange={(nextOpen) => {
@@ -180,74 +283,27 @@ const SpaceSwitcher: FC<{
         <DropdownMenuTrigger asChild>{switcherButton}</DropdownMenuTrigger>
       )}
       <DropdownMenuContent
+        aria-label="Changer de pôle"
         side={isCollapsed ? 'right' : 'bottom'}
         align="start"
         sideOffset={8}
-        className="border-sidebar-border bg-surface-raised/98 text-sidebar-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(20rem,calc(100vw-2rem))] overflow-y-auto rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]"
+        collisionPadding={8}
+        className={cn(
+          SIDEBAR_POPOVER_PANEL_CLASS,
+          'w-[min(20rem,calc(100vw-2rem))]',
+        )}
       >
-        <DropdownMenuLabel className="text-sidebar-foreground/60 px-2 py-1.5 text-xs font-medium">
-          Changer de pôle
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-sidebar-border/70 mx-1 my-1" />
-        {spaces.map((space) => {
-          const SpaceIcon = getNavigationIcon(space.icon);
-          const isActive = activeSpace.id === space.id;
-          const tone = getNavigationSpaceToneClasses(space.tone);
-
-          return (
-            <DropdownMenuItem
-              key={space.id}
-              asChild
-              className={cn(
-                'focus:text-sidebar-foreground cursor-pointer rounded-md p-2.5',
-                tone.row,
-                isActive && tone.soft,
-              )}
-            >
-              <Link
-                aria-current={isActive ? 'location' : undefined}
-                href={space.href}
-                onClick={() => setOpenMobile(false)}
-                className="flex min-w-0 items-center gap-3"
-              >
-                <span
-                  className={cn(
-                    'flex size-8 shrink-0 items-center justify-center rounded-lg border',
-                    tone.icon,
-                  )}
-                >
-                  <SpaceIcon className="size-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex min-w-0 items-center gap-1.5">
-                    <span className="truncate text-sm font-medium">
-                      {space.label}
-                    </span>
-                    {space.badge && (
-                      <span
-                        className={cn(
-                          'inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-xs leading-none font-medium',
-                          getNavigationSpaceBadgeClasses(space.badge),
-                        )}
-                      >
-                        {space.badge}
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-sidebar-foreground/60 mt-0.5 block truncate text-xs leading-4">
-                    {space.summary}
-                  </span>
-                </span>
-                {isActive && (
-                  <Check
-                    aria-hidden="true"
-                    className="text-sidebar-ring size-4 shrink-0"
-                  />
-                )}
-              </Link>
-            </DropdownMenuItem>
-          );
-        })}
+        <div className={SIDEBAR_POPOVER_SCROLL_CLASS}>
+          <DropdownMenuLabel className={SIDEBAR_POPOVER_SECTION_LABEL_CLASS}>
+            Changer de pôle
+          </DropdownMenuLabel>
+          <DropdownMenuGroup
+            aria-label="Pôles disponibles"
+            className={SIDEBAR_POPOVER_SECTION_CLASS}
+          >
+            {spaces.map((space) => renderSpaceItem(space))}
+          </DropdownMenuGroup>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -298,6 +354,13 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
     ? `${userData.firstName} ${userData.lastName}`
     : '';
   const userAccessLabel = userData ? getAccessLabel(userData) : '';
+  const accountAriaCurrent =
+    pathname === '/mon-compte'
+      ? 'page'
+      : pathname.startsWith('/mon-compte/')
+        ? 'location'
+        : undefined;
+  const isAccountActive = Boolean(accountAriaCurrent);
 
   useEffect(() => {
     setOpenGroupHref(activeGroupHref);
@@ -630,46 +693,114 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
+              aria-label={`Compte de ${userDisplayName}`}
               side={isCollapsed ? 'right' : 'top'}
-              align={isCollapsed ? 'end' : 'center'}
-              sideOffset={6}
+              align={isCollapsed ? 'end' : 'start'}
+              sideOffset={8}
+              collisionPadding={8}
               className={cn(
-                'border-sidebar-border bg-surface-raised/98 text-sidebar-foreground overflow-hidden rounded-md p-1.5 shadow-[var(--shadow-panel-strong)]',
-                isCollapsed
-                  ? 'w-64'
-                  : 'w-[var(--radix-dropdown-menu-trigger-width)]',
+                SIDEBAR_POPOVER_PANEL_CLASS,
+                'w-[min(19rem,calc(100vw-2rem))]',
               )}
             >
-              <DropdownMenuItem
-                asChild
-                className="focus:text-sidebar-foreground focus:bg-sidebar-accent/35 h-11 cursor-pointer gap-2.5 rounded-md px-2.5 text-sm lg:h-10"
-              >
-                <Link
-                  aria-current={
-                    pathname === '/mon-compte'
-                      ? 'page'
-                      : pathname.startsWith('/mon-compte/')
-                        ? 'location'
-                        : undefined
-                  }
-                  href="/mon-compte"
-                  onClick={() => setOpenMobile(false)}
+              <div className="border-sidebar-border/75 from-surface-muted/60 to-surface relative overflow-hidden border-b bg-gradient-to-br px-3.5 py-3">
+                <span
+                  aria-hidden="true"
+                  className="from-primary absolute inset-x-0 top-0 h-px bg-gradient-to-r to-transparent opacity-80"
+                />
+                <div className="flex min-w-0 items-center gap-3">
+                  <UserAvatar
+                    user={userData}
+                    className="ring-sidebar-border size-11 rounded-xl ring-1"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="text-sidebar-foreground block truncate text-sm leading-5 font-bold">
+                      {userDisplayName}
+                    </span>
+                    <span className="text-sidebar-foreground/50 block truncate text-xs leading-5">
+                      @{userData.loginName} · {userAccessLabel}
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              <div className={SIDEBAR_POPOVER_SCROLL_CLASS}>
+                <DropdownMenuLabel
+                  className={SIDEBAR_POPOVER_SECTION_LABEL_CLASS}
                 >
-                  <User className="size-4 shrink-0" />
-                  <span className="truncate font-medium">Mon compte</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-sidebar-border/70 mx-1 my-1" />
-              <DropdownMenuItem
-                onClick={() => {
-                  setOpenMobile(false);
-                  void logout();
-                }}
-                className="focus:bg-destructive/15 focus:text-destructive text-destructive h-11 cursor-pointer gap-2.5 rounded-md px-2.5 text-sm lg:h-10"
-              >
-                <LogOut className="size-4 shrink-0" />
-                <span className="truncate font-medium">Déconnexion</span>
-              </DropdownMenuItem>
+                  Compte
+                </DropdownMenuLabel>
+                <DropdownMenuGroup
+                  aria-label="Accès au compte"
+                  className={SIDEBAR_POPOVER_SECTION_CLASS}
+                >
+                  <DropdownMenuItem
+                    asChild
+                    className={cn(
+                      SIDEBAR_POPOVER_ACTION_BASE_CLASS,
+                      'min-h-12',
+                      isAccountActive
+                        ? 'border-primary/35 bg-primary/10 text-sidebar-foreground focus:bg-primary/15'
+                        : SIDEBAR_POPOVER_ACTION_CLASS,
+                    )}
+                  >
+                    <Link
+                      aria-current={accountAriaCurrent}
+                      href="/mon-compte"
+                      onClick={() => setOpenMobile(false)}
+                      className="min-w-0"
+                    >
+                      <span
+                        className={cn(
+                          SIDEBAR_POPOVER_ICON_BASE_CLASS,
+                          SIDEBAR_POPOVER_ICON_ACTION_CLASS,
+                        )}
+                      >
+                        <User
+                          aria-hidden="true"
+                          className="size-4 text-current"
+                        />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate">Mon compte</span>
+                        <span className="text-sidebar-foreground/50 block truncate text-[11px] leading-4 font-normal">
+                          Profil, sécurité et activité
+                        </span>
+                      </span>
+                      <ChevronRight
+                        aria-hidden="true"
+                        className={SIDEBAR_POPOVER_CHEVRON_CLASS}
+                      />
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </div>
+
+              <div className="border-sidebar-border/75 bg-surface-control/60 border-t p-2">
+                <DropdownMenuItem
+                  onSelect={() => {
+                    setOpenMobile(false);
+                    void logout();
+                  }}
+                  className={cn(
+                    SIDEBAR_POPOVER_ACTION_BASE_CLASS,
+                    SIDEBAR_POPOVER_DANGER_ACTION_CLASS,
+                  )}
+                >
+                  <span
+                    className={cn(
+                      SIDEBAR_POPOVER_ICON_BASE_CLASS,
+                      SIDEBAR_POPOVER_ICON_DANGER_CLASS,
+                    )}
+                  >
+                    <LogOut
+                      aria-hidden="true"
+                      className="size-4 text-current"
+                    />
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">Déconnexion</span>
+                </DropdownMenuItem>
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
