@@ -11,6 +11,12 @@ const readSourceFile = (relativePath: string): string => {
 const inboxSource = readSourceFile(
   '../features/notifications/NotificationInboxPage.tsx',
 );
+const legacyPageSource = readSourceFile(
+  '../app/tableau-de-bord/mes-notifications/page.tsx',
+);
+const notificationConstantsSource = readSourceFile(
+  '../shared/constants/notification.constants.ts',
+);
 const routeSource = readSourceFile('../app/api/notifications/route.ts');
 const itemRouteSource = readSourceFile(
   '../app/api/notifications/[id]/route.ts',
@@ -19,9 +25,7 @@ const navigationSource = readSourceFile('../shared/constants/app.constants.ts');
 
 describe('notification inbox UX contracts', () => {
   it('promotes the personal inbox as a live permission-protected destination', () => {
-    expect(navigationSource).toContain(
-      "href: '/tableau-de-bord/mes-notifications'",
-    );
+    expect(navigationSource).toContain("href: '/mes-notifications'");
     expect(navigationSource).toContain('featureId: FEATURES.notifications.id');
     expect(navigationSource).toContain("availability: 'live'");
   });
@@ -55,5 +59,23 @@ describe('notification inbox UX contracts', () => {
 
   it('synchronizes inbox actions with the header bell', () => {
     expect(inboxSource).toContain('notifyNotificationsChanged();');
+  });
+
+  it('keeps the inbox inside the shared private content column', () => {
+    expect(inboxSource).toContain('<PageShell className="py-0">');
+    expect(inboxSource).not.toContain('width="narrow"');
+    expect(inboxSource).not.toContain('width="wide"');
+    expect(inboxSource).toContain('[overflow-wrap:anywhere]');
+  });
+
+  it('uses a pole-independent canonical URL and redirects the legacy URL', () => {
+    expect(notificationConstantsSource).toContain(
+      "NOTIFICATION_INBOX_HREF = '/mes-notifications'",
+    );
+    expect(notificationConstantsSource).toContain(
+      "'/tableau-de-bord/mes-notifications' as const",
+    );
+    expect(legacyPageSource).toContain('permanentRedirect(');
+    expect(legacyPageSource).toContain('NOTIFICATION_INBOX_HREF');
   });
 });

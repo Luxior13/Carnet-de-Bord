@@ -1,7 +1,7 @@
-import React from 'react';
+import { permanentRedirect } from 'next/navigation';
 
-import { NotificationInboxPage } from '$features/notifications/NotificationInboxPage';
+import { NOTIFICATION_INBOX_HREF } from '$constants/notification.constants';
 
-export default function NotificationsPage(): React.ReactNode {
-  return <NotificationInboxPage />;
+export default function LegacyNotificationsPage(): never {
+  permanentRedirect(NOTIFICATION_INBOX_HREF);
 }

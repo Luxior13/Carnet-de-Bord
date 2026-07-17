@@ -179,7 +179,7 @@ const NotificationRow: FC<NotificationRowProps> = ({
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-foreground text-sm font-semibold sm:text-base">
+                  <h2 className="text-foreground text-sm font-semibold [overflow-wrap:anywhere] sm:text-base">
                     {item.title}
                   </h2>
                   {isUnread && !isArchived && (
@@ -188,7 +188,7 @@ const NotificationRow: FC<NotificationRowProps> = ({
                   {isArchived && <Badge variant="secondary">Archivée</Badge>}
                   <Badge variant={severity.badge}>{severity.label}</Badge>
                 </div>
-                <p className="text-muted-foreground mt-2 text-sm leading-6">
+                <p className="text-muted-foreground mt-2 text-sm leading-6 [overflow-wrap:anywhere]">
                   {item.body}
                 </p>
                 <time
@@ -476,7 +476,7 @@ export const NotificationInboxPage: FC = () => {
         { href: NOTIFICATION_INBOX_HREF, label: 'Mes notifications' },
       ]}
     >
-      <PageShell className="py-0" width="narrow">
+      <PageShell className="py-0">
         <PageCanvas contentClassName="space-y-5">
           <PageHero
             actions={

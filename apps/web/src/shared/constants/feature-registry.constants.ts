@@ -47,7 +47,7 @@ export const FEATURES = {
     },
     availability: 'live',
     description: 'Boîte personnelle de notifications internes.',
-    href: '/tableau-de-bord/mes-notifications',
+    href: '/mes-notifications',
     icon: 'Bell',
     id: 'notifications',
     label: 'Mes notifications',

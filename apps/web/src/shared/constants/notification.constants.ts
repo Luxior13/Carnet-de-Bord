@@ -1,4 +1,6 @@
-export const NOTIFICATION_INBOX_HREF =
+export const NOTIFICATION_INBOX_HREF = '/mes-notifications' as const;
+
+export const LEGACY_NOTIFICATION_INBOX_HREF =
   '/tableau-de-bord/mes-notifications' as const;
 
 export const NOTIFICATIONS_CHANGED_EVENT =

@@ -113,7 +113,7 @@ export const NAV_SPACES: NavigationSpace[] = [
     icon: 'LayoutDashboard',
     id: 'dashboard',
     label: 'Tableau de bord',
-    matchHrefs: ['/tableau-de-bord', '/recherche'],
+    matchHrefs: ['/tableau-de-bord', '/mes-notifications', '/recherche'],
     routeBaseHref: '/tableau-de-bord',
     sections: [
       {
@@ -147,7 +147,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             availability: 'live',
             description: 'Historique personnel des notifications internes.',
             featureId: FEATURES.notifications.id,
-            href: '/tableau-de-bord/mes-notifications',
+            href: '/mes-notifications',
             icon: 'Bell',
             label: 'Mes notifications',
             requiredPermissions: notificationsAccess,
