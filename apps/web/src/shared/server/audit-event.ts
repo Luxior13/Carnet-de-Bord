@@ -60,6 +60,10 @@ const AUDIT_EVENT_CLASSIFICATIONS = {
     AuditStream.SYSTEM,
     AuditSeverity.CRITICAL,
   ),
+  [AuditAction.BACKGROUND_JOB_UPDATE]: activity(
+    AuditStream.SYSTEM,
+    AuditSeverity.WARNING,
+  ),
   [AuditAction.LOGIN_FAILED]: connection(
     AuditOutcome.FAILURE,
     AuditSeverity.WARNING,
@@ -83,6 +87,7 @@ const AUDIT_EVENT_CLASSIFICATIONS = {
     AuditStream.SECURITY,
     AuditSeverity.CRITICAL,
   ),
+  [AuditAction.NOTIFICATION_SEND]: activity(AuditStream.SYSTEM),
   [AuditAction.PASSWORD_CHANGE]: activity(AuditStream.SECURITY),
   [AuditAction.PASSWORD_RESET]: activity(
     AuditStream.SECURITY,
@@ -103,6 +108,10 @@ const AUDIT_EVENT_CLASSIFICATIONS = {
     stream: AuditStream.SECURITY,
   },
   [AuditAction.STEP_UP_SUCCESS]: activity(AuditStream.SECURITY),
+  [AuditAction.SYSTEM_SETTING_UPDATE]: activity(
+    AuditStream.SYSTEM,
+    AuditSeverity.CRITICAL,
+  ),
   [AuditAction.USER_ACTIVATE]: activity(AuditStream.IDENTITY),
   [AuditAction.USER_CREATE]: activity(AuditStream.IDENTITY),
   [AuditAction.USER_DEACTIVATE]: activity(

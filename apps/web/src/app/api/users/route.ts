@@ -3,6 +3,7 @@ import { UserRole } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { matchesProtectedUserPublicIdentity } from '$constants/protected-user.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
@@ -37,12 +38,7 @@ type UserSortOption = (typeof USER_SORT_OPTIONS)[number];
 const USER_STATUS_OPTIONS = ['active', 'inactive', 'pending'] as const;
 type UserStatusOption = (typeof USER_STATUS_OPTIONS)[number];
 const USER_SEARCH_MAX_LENGTH = 100;
-const USERS_PAGE_AUDIT_LOCATION = {
-  pageKey: 'users',
-  pageLabel: 'Utilisateurs & permissions',
-  poleKey: 'system',
-  poleLabel: 'Système',
-} as const;
+const USERS_PAGE_AUDIT_LOCATION = FEATURES.users.audit;
 
 const USER_LIST_SELECT = {
   contactEmail: true,

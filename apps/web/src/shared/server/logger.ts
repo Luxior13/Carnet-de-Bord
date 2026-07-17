@@ -19,6 +19,42 @@ type LogContext = {
   userId?: string;
 };
 
+const SENSITIVE_LOG_KEY_PATTERN =
+  /authorization|cookie|password|recovery.?code|secret|token/i;
+const MAX_LOG_DEPTH = 5;
+const MAX_LOG_ARRAY_LENGTH = 50;
+const MAX_LOG_STRING_LENGTH = 4_000;
+
+const sanitizeLogValue = (value: unknown, depth = 0): unknown => {
+  if (depth >= MAX_LOG_DEPTH) return '[max-depth]';
+  if (typeof value === 'string') return value.slice(0, MAX_LOG_STRING_LENGTH);
+  if (
+    value === null ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return value;
+  }
+  if (value instanceof Date) return value.toISOString();
+  if (Array.isArray(value)) {
+    return value
+      .slice(0, MAX_LOG_ARRAY_LENGTH)
+      .map((item) => sanitizeLogValue(item, depth + 1));
+  }
+  if (typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nestedValue]) => [
+        key,
+        SENSITIVE_LOG_KEY_PATTERN.test(key)
+          ? '[redacted]'
+          : sanitizeLogValue(nestedValue, depth + 1),
+      ]),
+    );
+  }
+
+  return String(value).slice(0, MAX_LOG_STRING_LENGTH);
+};
+
 function formatError(error: unknown): string {
   if (error instanceof Error) {
     return `${error.name}: ${error.message}${error.stack ? `\n${error.stack}` : ''}`;
@@ -41,7 +77,9 @@ function log(level: LogLevel, message: string, context?: LogContext): void {
   if (context?.requestId) logEntry.requestId = context.requestId;
   if (context?.status) logEntry.status = context.status;
   if (context?.userId) logEntry.userId = context.userId;
-  if (context?.metadata) logEntry.metadata = context.metadata;
+  if (context?.metadata) {
+    logEntry.metadata = sanitizeLogValue(context.metadata);
+  }
   if (context?.error !== undefined) logEntry.error = formatError(context.error);
 
   // In development, use colored console output
@@ -67,7 +105,9 @@ function log(level: LogLevel, message: string, context?: LogContext): void {
       ...(context?.requestId ? { requestId: context.requestId } : {}),
       ...(context?.status ? { status: context.status } : {}),
       ...(context?.userId ? { userId: context.userId } : {}),
-      ...(context?.metadata ? { metadata: context.metadata } : {}),
+      ...(context?.metadata
+        ? { metadata: sanitizeLogValue(context.metadata) }
+        : {}),
     };
     switch (level) {
       case 'error':

@@ -31,6 +31,8 @@ const readySchema = {
   auditSeverities: 3,
   auditSnapshotTriggers: 1,
   auditStreams: 5,
+  backgroundJobColumns: 15,
+  backgroundJobStatuses: 5,
   durableAuditActions: 4,
   loginNameReservationColumns: 3,
   mfaAuditActions: 5,
@@ -38,10 +40,16 @@ const readySchema = {
   mfaChallengePurposes: 2,
   mfaLoginChallengeColumns: 11,
   mfaRecoveryCodeColumns: 6,
+  notificationColumns: 10,
+  notificationRecipientColumns: 6,
+  notificationSeverities: 4,
+  platformAuditActions: 3,
+  platformScaleIndexes: 10,
   protectedAccounts: 1,
   rateLimitColumns: 4,
   sessionColumns: 10,
   sessionMfaRequiredColumns: 2,
+  systemSettingColumns: 7,
   totpCredentialColumns: 9,
   totpEnrollmentColumns: 8,
   userColumns: 15,
@@ -101,6 +109,17 @@ describe('operational health routes', () => {
     expect(query).toContain("'TotpEnrollment'");
     expect(query).toContain("'MfaRecoveryCode'");
     expect(query).toContain("'MfaLoginChallenge'");
+    expect(query).toContain("'Notification'");
+    expect(query).toContain("'NotificationRecipient'");
+    expect(query).toContain("'SystemSetting'");
+    expect(query).toContain("'BackgroundJob'");
+    expect(query).toContain("'NotificationSeverity'");
+    expect(query).toContain("'BackgroundJobStatus'");
+    expect(query).toContain("'NOTIFICATION_SEND'");
+    expect(query).toContain("'BackgroundJob_status_runAt_priority_id_idx'");
+    expect(query).toContain(
+      "'NotificationRecipient_userId_archivedAt_createdAt_notificationId_idx'",
+    );
     expect(query).toContain("'MFA_RECOVERY_CODES_REGENERATED'");
     expect(query).toContain("'MFA_RESET'");
     expect(query).toContain("'AUDIT_EXPORT'");
@@ -157,6 +176,8 @@ describe('operational health routes', () => {
   });
 
   it.each([
+    'backgroundJobColumns',
+    'backgroundJobStatuses',
     'auditEventKinds',
     'auditLogColumns',
     'auditOutcomes',
@@ -170,6 +191,12 @@ describe('operational health routes', () => {
     'mfaChallengePurposes',
     'mfaLoginChallengeColumns',
     'mfaRecoveryCodeColumns',
+    'notificationColumns',
+    'notificationRecipientColumns',
+    'notificationSeverities',
+    'platformAuditActions',
+    'platformScaleIndexes',
+    'systemSettingColumns',
     'totpCredentialColumns',
     'totpEnrollmentColumns',
   ] as const)('is not ready when %s are missing', async (field) => {

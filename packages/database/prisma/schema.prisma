@@ -22,6 +22,21 @@ enum MfaAuthenticationMethod {
   RECOVERY_CODE
 }
 
+enum NotificationSeverity {
+  INFO
+  SUCCESS
+  WARNING
+  CRITICAL
+}
+
+enum BackgroundJobStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
 model User {
   id                     String    @id @default(cuid())
   loginName              String    @unique
@@ -47,15 +62,18 @@ model User {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  sessions              Session[]
-  auditLogs             AuditLog[]             @relation("AuditActor")
-  targetedAuditLogs     AuditLog[]             @relation("AuditTarget")
-  archivedStaffProfile  ArchivedStaffProfile?
-  loginNameReservations LoginNameReservation[]
-  totpCredential        TotpCredential?
-  totpEnrollment        TotpEnrollment?
-  mfaRecoveryCodes      MfaRecoveryCode[]
-  mfaLoginChallenge     MfaLoginChallenge?
+  sessions               Session[]
+  auditLogs              AuditLog[]              @relation("AuditActor")
+  targetedAuditLogs      AuditLog[]              @relation("AuditTarget")
+  archivedStaffProfile   ArchivedStaffProfile?
+  loginNameReservations  LoginNameReservation[]
+  totpCredential         TotpCredential?
+  totpEnrollment         TotpEnrollment?
+  mfaRecoveryCodes       MfaRecoveryCode[]
+  mfaLoginChallenge      MfaLoginChallenge?
+  createdNotifications   Notification[]          @relation("NotificationCreator")
+  notificationRecipients NotificationRecipient[]
+  updatedSystemSettings  SystemSetting[]         @relation("SystemSettingUpdater")
 
   @@index([contactEmail])
   @@index([role])
@@ -87,14 +105,14 @@ model LoginNameReservation {
 }
 
 model Session {
-  id              String                   @id @default(cuid())
+  id              String                  @id @default(cuid())
   userId          String
-  securityVersion Int                      @default(0)
-  token           String                   @unique
+  securityVersion Int                     @default(0)
+  token           String                  @unique
   expiresAt       DateTime
-  idleExpiresAt   DateTime                 @default(dbgenerated("(CURRENT_TIMESTAMP + '00:30:00'::interval)"))
-  lastSeenAt      DateTime                 @default(now())
-  rememberMe      Boolean                  @default(false)
+  idleExpiresAt   DateTime                @default(dbgenerated("(CURRENT_TIMESTAMP + '00:30:00'::interval)"))
+  lastSeenAt      DateTime                @default(now())
+  rememberMe      Boolean                 @default(false)
   mfaVerifiedAt   DateTime
   mfaMethod       MfaAuthenticationMethod
   userAgent       String?
@@ -206,6 +224,9 @@ enum AuditAction {
   USER_DEACTIVATE
   PERMISSION_UPDATE
   AUDIT_EXPORT
+  NOTIFICATION_SEND
+  SYSTEM_SETTING_UPDATE
+  BACKGROUND_JOB_UPDATE
 }
 
 enum AuditCategory {
@@ -241,33 +262,33 @@ enum AuditSeverity {
 }
 
 model AuditLog {
-  id                         String        @id @default(cuid())
-  userId                     String?
-  user                       User?         @relation("AuditActor", fields: [userId], references: [id], onDelete: SetNull)
-  actorDisplayNameSnapshot   String?
-  actorLoginNameSnapshot     String?
-  actorRoleSnapshot          UserRole?
-  targetUserId               String?
-  targetUser                 User?         @relation("AuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
-  targetDisplayNameSnapshot  String?
-  targetLoginNameSnapshot    String?
-  targetRoleSnapshot         UserRole?
-  action                     AuditAction
-  category                   AuditCategory
-  eventKind                  AuditEventKind @default(ACTIVITY)
-  stream                     AuditStream    @default(SYSTEM)
-  outcome                    AuditOutcome   @default(SUCCESS)
-  severity                   AuditSeverity  @default(INFO)
-  eventVersion               Int            @default(1)
-  description                String
-  metadata                   Json?
-  poleKey                    String?
-  pageKey                    String?
-  tabKey                     String?
-  requestId                  String?
-  ipAddress                  String?
-  userAgent                  String?
-  createdAt                  DateTime       @default(now())
+  id                        String         @id @default(cuid())
+  userId                    String?
+  user                      User?          @relation("AuditActor", fields: [userId], references: [id], onDelete: SetNull)
+  actorDisplayNameSnapshot  String?
+  actorLoginNameSnapshot    String?
+  actorRoleSnapshot         UserRole?
+  targetUserId              String?
+  targetUser                User?          @relation("AuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  targetDisplayNameSnapshot String?
+  targetLoginNameSnapshot   String?
+  targetRoleSnapshot        UserRole?
+  action                    AuditAction
+  category                  AuditCategory
+  eventKind                 AuditEventKind @default(ACTIVITY)
+  stream                    AuditStream    @default(SYSTEM)
+  outcome                   AuditOutcome   @default(SUCCESS)
+  severity                  AuditSeverity  @default(INFO)
+  eventVersion              Int            @default(1)
+  description               String
+  metadata                  Json?
+  poleKey                   String?
+  pageKey                   String?
+  tabKey                    String?
+  requestId                 String?
+  ipAddress                 String?
+  userAgent                 String?
+  createdAt                 DateTime       @default(now())
 
   @@index([userId, action])
   @@index([userId, createdAt, id])
@@ -326,4 +347,83 @@ model RateLimit {
 
   @@index([key])
   @@index([blockedUntil])
+}
+
+/// Durable in-application notification. Delivery is separated from the
+/// per-user read state so one message can be fanned out without duplication.
+model Notification {
+  id          String               @id @default(cuid())
+  type        String
+  title       String
+  body        String
+  href        String?
+  severity    NotificationSeverity @default(INFO)
+  dedupeKey   String?              @unique
+  createdById String?
+  expiresAt   DateTime?
+  createdAt   DateTime             @default(now())
+
+  createdBy  User?                   @relation("NotificationCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  recipients NotificationRecipient[]
+
+  @@index([createdAt, id])
+  @@index([expiresAt])
+  @@index([type, createdAt, id])
+}
+
+model NotificationRecipient {
+  id             String    @id @default(cuid())
+  notificationId String
+  userId         String
+  readAt         DateTime?
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([notificationId, userId])
+  @@index([userId, archivedAt, createdAt, notificationId])
+  @@index([userId, readAt, archivedAt])
+}
+
+/// Non-secret runtime configuration. Credentials and encryption material must
+/// remain in the deployment secret manager and never be stored in this table.
+model SystemSetting {
+  key         String   @id
+  value       Json
+  description String?
+  version     Int      @default(1)
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  updatedBy User? @relation("SystemSettingUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([updatedAt])
+  @@index([updatedById])
+}
+
+/// Provider-neutral durable work queue. Workers claim due jobs atomically and
+/// recover leases after a crash; dedupeKey makes producers idempotent.
+model BackgroundJob {
+  id          String              @id @default(cuid())
+  type        String
+  payload     Json
+  status      BackgroundJobStatus @default(PENDING)
+  priority    Int                 @default(0)
+  runAt       DateTime            @default(now())
+  attempts    Int                 @default(0)
+  maxAttempts Int                 @default(5)
+  lockedAt    DateTime?
+  lockedBy    String?
+  lastError   String?
+  completedAt DateTime?
+  dedupeKey   String?             @unique
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([status, runAt, priority, id])
+  @@index([lockedAt])
+  @@index([type, status, createdAt])
 }

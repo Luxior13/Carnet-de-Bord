@@ -24,6 +24,8 @@ type SchemaCheckRow = {
   auditSeverities: number;
   auditSnapshotTriggers: number;
   auditStreams: number;
+  backgroundJobColumns: number;
+  backgroundJobStatuses: number;
   durableAuditActions: number;
   loginNameReservationColumns: number;
   mfaAuditActions: number;
@@ -31,10 +33,16 @@ type SchemaCheckRow = {
   mfaChallengePurposes: number;
   mfaLoginChallengeColumns: number;
   mfaRecoveryCodeColumns: number;
+  notificationColumns: number;
+  notificationRecipientColumns: number;
+  notificationSeverities: number;
+  platformAuditActions: number;
+  platformScaleIndexes: number;
   protectedAccounts: number;
   rateLimitColumns: number;
   sessionColumns: number;
   sessionMfaRequiredColumns: number;
+  systemSettingColumns: number;
   totpCredentialColumns: number;
   totpEnrollmentColumns: number;
   userColumns: number;
@@ -171,6 +179,36 @@ export async function createReadinessResponse(): Promise<
                   'expiresAt', 'createdAt', 'updatedAt'
                 )
             )::int AS "mfaLoginChallengeColumns",
+            COUNT(*) FILTER (
+              WHERE table_name = 'Notification'
+                AND column_name IN (
+                  'id', 'type', 'title', 'body', 'href', 'severity',
+                  'dedupeKey', 'createdById', 'expiresAt', 'createdAt'
+                )
+            )::int AS "notificationColumns",
+            COUNT(*) FILTER (
+              WHERE table_name = 'NotificationRecipient'
+                AND column_name IN (
+                  'id', 'notificationId', 'userId', 'readAt',
+                  'archivedAt', 'createdAt'
+                )
+            )::int AS "notificationRecipientColumns",
+            COUNT(*) FILTER (
+              WHERE table_name = 'SystemSetting'
+                AND column_name IN (
+                  'key', 'value', 'description', 'version',
+                  'updatedById', 'createdAt', 'updatedAt'
+                )
+            )::int AS "systemSettingColumns",
+            COUNT(*) FILTER (
+              WHERE table_name = 'BackgroundJob'
+                AND column_name IN (
+                  'id', 'type', 'payload', 'status', 'priority', 'runAt',
+                  'attempts', 'maxAttempts', 'lockedAt', 'lockedBy',
+                  'lastError', 'completedAt', 'dedupeKey', 'createdAt',
+                  'updatedAt'
+                )
+            )::int AS "backgroundJobColumns",
             (
               SELECT count(*)::int
               FROM pg_enum enum_value
@@ -198,6 +236,19 @@ export async function createReadinessResponse(): Promise<
                   'STEP_UP_SUCCESS', 'STEP_UP_FAILED'
                 )
             ) AS "durableAuditActions",
+            (
+              SELECT count(*)::int
+              FROM pg_enum enum_value
+              JOIN pg_type enum_type ON enum_type.oid = enum_value.enumtypid
+              JOIN pg_namespace enum_namespace
+                ON enum_namespace.oid = enum_type.typnamespace
+              WHERE enum_namespace.nspname = current_schema()
+                AND enum_type.typname = 'AuditAction'
+                AND enum_value.enumlabel IN (
+                  'NOTIFICATION_SEND', 'SYSTEM_SETTING_UPDATE',
+                  'BACKGROUND_JOB_UPDATE'
+                )
+            ) AS "platformAuditActions",
             (
               SELECT count(*)::int
               FROM pg_enum enum_value
@@ -264,6 +315,31 @@ export async function createReadinessResponse(): Promise<
             ) AS "auditScaleIndexes",
             (
               SELECT count(*)::int
+              FROM pg_index platform_index_state
+              JOIN pg_class platform_index
+                ON platform_index.oid = platform_index_state.indexrelid
+              JOIN pg_class platform_table
+                ON platform_table.oid = platform_index_state.indrelid
+              JOIN pg_namespace platform_namespace
+                ON platform_namespace.oid = platform_table.relnamespace
+              WHERE platform_namespace.nspname = current_schema()
+                AND platform_index.relname IN (
+                  'Notification_createdAt_id_idx',
+                  'Notification_expiresAt_idx',
+                  'Notification_type_createdAt_id_idx',
+                  'NotificationRecipient_userId_archivedAt_createdAt_notificationId_idx',
+                  'NotificationRecipient_userId_readAt_archivedAt_idx',
+                  'SystemSetting_updatedAt_idx',
+                  'SystemSetting_updatedById_idx',
+                  'BackgroundJob_status_runAt_priority_id_idx',
+                  'BackgroundJob_lockedAt_idx',
+                  'BackgroundJob_type_status_createdAt_idx'
+                )
+                AND platform_index_state.indisvalid
+                AND platform_index_state.indisready
+            ) AS "platformScaleIndexes",
+            (
+              SELECT count(*)::int
               FROM pg_trigger audit_trigger
               JOIN pg_class audit_table
                 ON audit_table.oid = audit_trigger.tgrelid
@@ -297,6 +373,30 @@ export async function createReadinessResponse(): Promise<
             ) AS "mfaChallengePurposes",
             (
               SELECT count(*)::int
+              FROM pg_enum enum_value
+              JOIN pg_type enum_type ON enum_type.oid = enum_value.enumtypid
+              JOIN pg_namespace enum_namespace
+                ON enum_namespace.oid = enum_type.typnamespace
+              WHERE enum_namespace.nspname = current_schema()
+                AND enum_type.typname = 'NotificationSeverity'
+                AND enum_value.enumlabel IN (
+                  'INFO', 'SUCCESS', 'WARNING', 'CRITICAL'
+                )
+            ) AS "notificationSeverities",
+            (
+              SELECT count(*)::int
+              FROM pg_enum enum_value
+              JOIN pg_type enum_type ON enum_type.oid = enum_value.enumtypid
+              JOIN pg_namespace enum_namespace
+                ON enum_namespace.oid = enum_type.typnamespace
+              WHERE enum_namespace.nspname = current_schema()
+                AND enum_type.typname = 'BackgroundJobStatus'
+                AND enum_value.enumlabel IN (
+                  'PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCELLED'
+                )
+            ) AS "backgroundJobStatuses",
+            (
+              SELECT count(*)::int
               FROM "User"
               WHERE "isProtected" = true
             ) AS "protectedAccounts",
@@ -314,7 +414,9 @@ export async function createReadinessResponse(): Promise<
         const schema = rows[0];
 
         if (
-          schema?.userColumns !== 15 ||
+          schema?.backgroundJobColumns !== 15 ||
+          schema.backgroundJobStatuses !== 5 ||
+          schema.userColumns !== 15 ||
           schema.sessionColumns !== 10 ||
           schema.sessionMfaRequiredColumns !== 2 ||
           schema.auditEventKinds !== 2 ||
@@ -331,8 +433,14 @@ export async function createReadinessResponse(): Promise<
           schema.mfaChallengePurposes !== 2 ||
           schema.mfaLoginChallengeColumns !== 11 ||
           schema.mfaRecoveryCodeColumns !== 6 ||
+          schema.notificationColumns !== 10 ||
+          schema.notificationRecipientColumns !== 6 ||
+          schema.notificationSeverities !== 4 ||
+          schema.platformAuditActions !== 3 ||
+          schema.platformScaleIndexes !== 10 ||
           schema.protectedAccounts !== 1 ||
           schema.rateLimitColumns !== 4 ||
+          schema.systemSettingColumns !== 7 ||
           schema.totpCredentialColumns !== 9 ||
           schema.totpEnrollmentColumns !== 8 ||
           schema.validProtectedRootAccounts !== 1

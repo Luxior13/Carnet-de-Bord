@@ -129,6 +129,28 @@ async function login(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/$/, { timeout: 15_000 });
 }
 
+async function expectAccessiblePageStructure(page: Page): Promise<void> {
+  await expect(page.locator('main')).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+  const unnamedInteractiveElements = await page
+    .locator('button, a[href], input, select, textarea')
+    .evaluateAll((elements) =>
+      elements.filter((element) => {
+        const label =
+          element.getAttribute('aria-label') ||
+          element.getAttribute('title') ||
+          element.textContent?.trim();
+
+        return !label;
+      }).length,
+    );
+  expect(unnamedInteractiveElements).toBe(0);
+  const hasHorizontalOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth + 1,
+  );
+  expect(hasHorizontalOverflow).toBe(false);
+}
+
 async function expectPersistedMfaState(): Promise<void> {
   const rootAccount = await prisma.user.findUnique({
     select: {
@@ -200,12 +222,14 @@ test('authenticates and reaches the admin surfaces', async ({ page }) => {
       .getByRole('main')
       .getByRole('link', { exact: true, name: 'Mon compte' }),
   ).toBeVisible();
+  await expectAccessiblePageStructure(page);
 
   await page.goto('/administration/utilisateurs');
   await expect(
     page.getByRole('heading', { name: 'Utilisateurs' }),
   ).toBeVisible();
   await expect(page.getByText('Annuaire utilisateurs')).toBeVisible();
+  await expectAccessiblePageStructure(page);
 
   await page.goto('/administration/utilisateurs/nouveau');
   await expect(

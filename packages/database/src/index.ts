@@ -20,10 +20,14 @@ export type PrismaClientType = typeof prisma;
 // Types
 export type {
   AuditLog,
+  BackgroundJob,
   MfaLoginChallenge,
   MfaRecoveryCode,
+  Notification,
+  NotificationRecipient,
   RateLimit,
   Session,
+  SystemSetting,
   TotpCredential,
   TotpEnrollment,
   User,
@@ -37,7 +41,9 @@ export {
   AuditOutcome,
   AuditSeverity,
   AuditStream,
+  BackgroundJobStatus,
   MfaAuthenticationMethod,
   MfaChallengePurpose,
+  NotificationSeverity,
   UserRole,
 } from '@prisma/client';

@@ -26,3 +26,26 @@ existing application schema with no migration history. A genuinely empty
 database is allowed and receives the full migration chain.
 
 Always test migrations on a clone and an empty database before production.
+
+## Backup and restore drill
+
+`bun run db:backup` writes a versioned snapshot and a SHA-256 sidecar with
+owner-only permissions. The snapshot contains authentication material and must
+be moved immediately to encrypted, access-controlled storage.
+
+Restoration is deliberately restricted to a migrated, completely empty
+database. Verify the snapshot and target first:
+
+```powershell
+bun run db:restore -- --file="C:\secure\backup.json" --dry-run
+```
+
+After reviewing the reported target and row counts, perform the offline restore:
+
+```powershell
+bun run db:restore -- --file="C:\secure\backup.json" --confirm-empty-restore=RESTORE-INTO-EMPTY-DATABASE
+```
+
+Run this drill regularly on an isolated database and verify application login,
+MFA, notifications, audit history and background jobs before declaring the
+backup usable.

@@ -70,6 +70,12 @@ const MFA_POLICIES = {
   },
 } satisfies Record<keyof MfaRateLimitKeys, RateLimitPolicy>;
 
+const AUTHENTICATED_API_POLICY: RateLimitPolicy = {
+  blockDurationMs: 60 * 1000,
+  maxAttempts: 300,
+  windowMs: 60 * 1000,
+};
+
 const CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
 let nextCleanupAt = 0;
 
@@ -356,6 +362,21 @@ const reserveRateLimitAttempt = async (
       Math.ceil((retryAt.getTime() - now.getTime()) / 1000),
     ),
   };
+};
+
+/**
+ * Durable per-account API budget shared by every application instance. The
+ * edge limiter remains a cheap first line of defence; this reservation closes
+ * the multi-instance bypass after the session has been authenticated.
+ */
+export const reserveAuthenticatedApiRateLimit = async (
+  userId: string,
+): Promise<RateLimitResult> => {
+  const key = `api:account:${hashKeyPart('api-account', userId)}`;
+
+  return prisma.$transaction((transaction) =>
+    reserveRateLimitAttempt(transaction, key, AUTHENTICATED_API_POLICY),
+  );
 };
 
 /**

@@ -2,12 +2,16 @@
 
 import { Bell, BellRing, type LucideIcon, Settings, Timer } from 'lucide-react';
 import Link from 'next/link';
-import React, { type FC, useMemo } from 'react';
+import React, { type FC, useCallback, useMemo } from 'react';
 
 import { canOpenNavigationHref } from '$constants/app.constants';
+import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
+import { useAsyncResource } from '$hooks/useAsyncResource';
+import type { NotificationListData } from '$types/platform.types';
 import { Button } from '$ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '$ui/popover';
+import { apiFetchJson, jsonRequest } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 
 export type NotificationCenterItem = {
@@ -42,15 +46,47 @@ const defaultAccentClassName =
   'border-primary/35 bg-primary/10 text-primary-emphasis';
 
 export const NotificationCenter: FC<NotificationCenterProps> = ({
-  notifications = [],
+  notifications,
 }) => {
   const { userData } = useUser();
+  const canViewNotifications =
+    !!userData &&
+    (userData.isProtected ||
+      hasPermission(
+        userData.role,
+        PERMISSIONS.NOTIFICATIONS.VIEW,
+        userData.permissions,
+      ));
+  const loadNotifications = useCallback(
+    (signal: AbortSignal) =>
+      apiFetchJson<NotificationListData>('/api/notifications?limit=10', {
+        signal,
+      }),
+    [],
+  );
+  const notificationResource = useAsyncResource(loadNotifications, {
+    enabled: notifications === undefined && canViewNotifications,
+  });
+  const resolvedNotifications = useMemo<NotificationCenterItem[]>(
+    () =>
+      notifications ??
+      notificationResource.data?.items.map((notification) => ({
+        description: notification.body,
+        href: notification.href ?? '/',
+        id: notification.id,
+        meta: new Date(notification.createdAt).toLocaleDateString('fr-FR'),
+        read: notification.readAt !== null,
+        title: notification.title,
+      })) ??
+      [],
+    [notificationResource.data?.items, notifications],
+  );
   const visibleNotifications = useMemo(
     () =>
-      notifications.filter((notification) =>
+      resolvedNotifications.filter((notification) =>
         canOpenNavigationHref(userData, notification.href),
       ),
-    [notifications, userData],
+    [resolvedNotifications, userData],
   );
   const visibleQuickLinks = useMemo(
     () =>
@@ -118,6 +154,13 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                   className="hover:bg-surface-tile-hover focus-visible:ring-ring/50 flex gap-3 rounded-lg px-2 py-2.5 transition-colors outline-none focus-visible:ring-2"
                   href={notification.href}
                   key={notification.id}
+                  onClick={() => {
+                    if (notification.read) return;
+                    void apiFetchJson(
+                      `/api/notifications/${notification.id}`,
+                      jsonRequest('PATCH', { action: 'read' }),
+                    ).catch(() => undefined);
+                  }}
                 >
                   <span
                     className={cn(

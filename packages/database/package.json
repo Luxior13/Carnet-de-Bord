@@ -5,6 +5,7 @@
   "scripts": {
     "build": "prisma generate",
     "db:backup": "bun run scripts/backup-database.ts",
+    "db:restore": "bun run scripts/restore-database.ts",
     "db:migrate:baseline": "bun run scripts/baseline-existing-database.ts",
     "db:migrate:deploy": "bun run scripts/safe-migrate-deploy.ts",
     "db:migrate:status": "prisma migrate status",

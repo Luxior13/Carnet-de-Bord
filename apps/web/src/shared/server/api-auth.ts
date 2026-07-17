@@ -6,6 +6,7 @@ import { type ApiErrorResponse, ErrorCode } from '$types/api.types';
 import type { SessionType, UserType } from '$types/auth.types';
 
 import { getAuthSession } from './auth';
+import { reserveAuthenticatedApiRateLimit } from './rate-limiter';
 
 type RequireAuthSuccess = {
   response?: never;
@@ -92,6 +93,25 @@ export async function requireAuth(
           success: false,
         },
         { status: 403 },
+      ),
+      success: false,
+    };
+  }
+
+  const apiRateLimit = await reserveAuthenticatedApiRateLimit(user.id);
+  if (!apiRateLimit.allowed) {
+    const retryAfter = apiRateLimit.retryAfter ?? 60;
+
+    return {
+      response: NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.RATE_LIMITED,
+            message: 'Trop de requêtes. Réessayez dans un instant.',
+          },
+          success: false,
+        },
+        { headers: { 'Retry-After': String(retryAfter) }, status: 429 },
       ),
       success: false,
     };

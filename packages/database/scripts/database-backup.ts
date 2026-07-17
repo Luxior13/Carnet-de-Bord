@@ -1,4 +1,5 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
+import { createReadStream } from 'node:fs';
 import {
   chmod,
   type FileHandle,
@@ -6,6 +7,7 @@ import {
   open,
   rename,
   rm,
+  writeFile,
 } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -14,8 +16,10 @@ import type { PrismaClient } from '@prisma/client';
 import { getPublicTables } from './database-tools';
 
 type BackupResult = {
+  checksumPath: string;
   counts: Record<string, number>;
   filePath: string;
+  sha256: string;
 };
 
 type CursorRow = {
@@ -31,6 +35,18 @@ type TableSnapshot = {
 type BackupQueryClient = Pick<PrismaClient, '$queryRaw' | '$queryRawUnsafe'>;
 
 const BACKUP_PAGE_SIZE = 500;
+export const DATABASE_BACKUP_FORMAT_VERSION = 2;
+
+const hashFile = async (filePath: string): Promise<string> => {
+  const hash = createHash('sha256');
+  // The path is generated internally and never comes from user input.
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  for await (const chunk of createReadStream(filePath)) {
+    hash.update(chunk as Buffer);
+  }
+
+  return hash.digest('hex');
+};
 
 const quoteIdentifier = (identifier: string): string => {
   if (!/^[A-Za-z][A-Za-z0-9]*$/u.test(identifier)) {
@@ -202,17 +218,27 @@ async function writeDatabaseBackup(
   // long-running backup.
   const [
     auditLogs,
+    backgroundJobs,
     loginNameReservations,
+    mfaLoginChallenges,
     mfaRecoveryCodes,
+    notificationRecipients,
+    notifications,
     rateLimits,
     sessions,
     staffProfiles,
+    systemSettings,
     totpCredentials,
+    totpEnrollments,
     users,
   ] = await Promise.all([
     getTableSnapshot(prisma, tables, 'AuditLog', 'id'),
+    getTableSnapshot(prisma, tables, 'BackgroundJob', 'id'),
     getTableSnapshot(prisma, tables, 'LoginNameReservation', 'loginName'),
+    getTableSnapshot(prisma, tables, 'MfaLoginChallenge', 'id'),
     getTableSnapshot(prisma, tables, 'MfaRecoveryCode', 'id'),
+    getTableSnapshot(prisma, tables, 'NotificationRecipient', 'id'),
+    getTableSnapshot(prisma, tables, 'Notification', 'id'),
     getTableSnapshot(prisma, tables, 'RateLimit', 'id'),
     getTableSnapshot(prisma, tables, 'Session', 'id'),
     staffProfileSource === null
@@ -222,7 +248,9 @@ async function writeDatabaseBackup(
           upperCursor: null,
         })
       : getTableSnapshot(prisma, tables, staffProfileSource, 'id'),
+    getTableSnapshot(prisma, tables, 'SystemSetting', 'key'),
     getTableSnapshot(prisma, tables, 'TotpCredential', 'userId'),
+    getTableSnapshot(prisma, tables, 'TotpEnrollment', 'userId'),
     getTableSnapshot(prisma, tables, 'User', 'id'),
   ]);
 
@@ -238,15 +266,22 @@ async function writeDatabaseBackup(
     `carnet-pro-${timestamp}-${randomUUID()}.json`,
   );
   const temporaryFilePath = `${filePath}.tmp`;
+  const checksumPath = `${filePath}.sha256`;
   const createdAt = new Date().toISOString();
   const counts: Record<string, number> = {
     AuditLog: 0,
+    BackgroundJob: 0,
     LoginNameReservation: 0,
+    MfaLoginChallenge: 0,
     MfaRecoveryCode: 0,
+    Notification: 0,
+    NotificationRecipient: 0,
     RateLimit: 0,
     Session: 0,
     StaffProfile: 0,
+    SystemSetting: 0,
     TotpCredential: 0,
+    TotpEnrollment: 0,
     User: 0,
   };
   let fileHandle: FileHandle | null = null;
@@ -262,8 +297,17 @@ async function writeDatabaseBackup(
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     fileHandle = await open(temporaryFilePath, 'wx', 0o600);
 
-    await writeChunk(fileHandle, '{\n  "auditLogs": ');
+    await writeChunk(
+      fileHandle,
+      `{\n  "formatVersion": ${DATABASE_BACKUP_FORMAT_VERSION},\n  "auditLogs": `,
+    );
     counts.AuditLog = await writeJsonArray(prisma, fileHandle, auditLogs);
+    await writeChunk(fileHandle, ',\n  "backgroundJobs": ');
+    counts.BackgroundJob = await writeJsonArray(
+      prisma,
+      fileHandle,
+      backgroundJobs,
+    );
     await writeChunk(
       fileHandle,
       `,\n  "createdAt": ${stringifyJson(createdAt)},\n  "loginNameReservations": `,
@@ -273,11 +317,29 @@ async function writeDatabaseBackup(
       fileHandle,
       loginNameReservations,
     );
+    await writeChunk(fileHandle, ',\n  "mfaLoginChallenges": ');
+    counts.MfaLoginChallenge = await writeJsonArray(
+      prisma,
+      fileHandle,
+      mfaLoginChallenges,
+    );
     await writeChunk(fileHandle, ',\n  "mfaRecoveryCodes": ');
     counts.MfaRecoveryCode = await writeJsonArray(
       prisma,
       fileHandle,
       mfaRecoveryCodes,
+    );
+    await writeChunk(fileHandle, ',\n  "notifications": ');
+    counts.Notification = await writeJsonArray(
+      prisma,
+      fileHandle,
+      notifications,
+    );
+    await writeChunk(fileHandle, ',\n  "notificationRecipients": ');
+    counts.NotificationRecipient = await writeJsonArray(
+      prisma,
+      fileHandle,
+      notificationRecipients,
     );
     await writeChunk(fileHandle, ',\n  "rateLimits": ');
     counts.RateLimit = await writeJsonArray(prisma, fileHandle, rateLimits);
@@ -289,6 +351,12 @@ async function writeDatabaseBackup(
       fileHandle,
       staffProfiles,
     );
+    await writeChunk(fileHandle, ',\n  "systemSettings": ');
+    counts.SystemSetting = await writeJsonArray(
+      prisma,
+      fileHandle,
+      systemSettings,
+    );
     await writeChunk(
       fileHandle,
       `,\n  "staffProfileSource": ${stringifyJson(staffProfileSource)},\n  "totpCredentials": `,
@@ -297,6 +365,12 @@ async function writeDatabaseBackup(
       prisma,
       fileHandle,
       totpCredentials,
+    );
+    await writeChunk(fileHandle, ',\n  "totpEnrollments": ');
+    counts.TotpEnrollment = await writeJsonArray(
+      prisma,
+      fileHandle,
+      totpEnrollments,
     );
     await writeChunk(fileHandle, ',\n  "users": ');
     counts.User = await writeJsonArray(prisma, fileHandle, users);
@@ -312,8 +386,16 @@ async function writeDatabaseBackup(
     published = true;
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     await chmod(filePath, 0o600);
+    const sha256 = await hashFile(filePath);
+    // The checksum path is derived from the internally generated backup path.
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    await writeFile(checksumPath, `${sha256}  ${filePath}\n`, {
+      encoding: 'utf8',
+      flag: 'wx',
+      mode: 0o600,
+    });
 
-    return { counts, filePath };
+    return { checksumPath, counts, filePath, sha256 };
   } catch (error) {
     if (fileHandle !== null) {
       await fileHandle.close().catch(() => undefined);
@@ -323,6 +405,7 @@ async function writeDatabaseBackup(
 
     if (published) {
       await rm(filePath, { force: true }).catch(() => undefined);
+      await rm(checksumPath, { force: true }).catch(() => undefined);
     }
 
     throw error;

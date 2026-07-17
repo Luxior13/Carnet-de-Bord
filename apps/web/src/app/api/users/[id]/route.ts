@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { FEATURES } from '$constants/feature-registry.constants';
 import {
   arePermissionOverridesEqual,
   getAccessPermissionKeys,
@@ -56,12 +57,7 @@ class UserStateChangedError extends Error {
   }
 }
 
-const USERS_PAGE_AUDIT_LOCATION = {
-  pageKey: 'users',
-  pageLabel: 'Utilisateurs & permissions',
-  poleKey: 'system',
-  poleLabel: 'Système',
-} as const;
+const USERS_PAGE_AUDIT_LOCATION = FEATURES.users.audit;
 
 const ACCOUNT_PERMISSION_KEY_SET = new Set(getAccountPermissionKeys());
 const ACCESS_PERMISSION_KEY_SET = new Set(getAccessPermissionKeys());

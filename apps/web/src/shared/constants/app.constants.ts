@@ -1,3 +1,7 @@
+import {
+  type FeatureId,
+  FEATURES,
+} from '$constants/feature-registry.constants';
 import type { NavigationIconName } from '$constants/navigation-icon.constants';
 import type { NavigationSpaceTone } from '$constants/navigation-theme.constants';
 import {
@@ -34,6 +38,7 @@ export type NavItem = {
   availability?: NavigationAvailability;
   children?: NavItem[];
   description?: string;
+  featureId?: FeatureId;
   href: string;
   hubActionLabel?: string;
   icon: NavigationIconName;
@@ -117,6 +122,7 @@ export const NAV_SPACES: NavigationSpace[] = [
           {
             availability: 'live',
             description: 'Vue globale du site privé selon les permissions.',
+            featureId: FEATURES.dashboard.id,
             href: '/',
             icon: 'LayoutDashboard',
             label: "Vue d'ensemble",
@@ -125,6 +131,7 @@ export const NAV_SPACES: NavigationSpace[] = [
           {
             availability: 'live',
             description: 'Fonctionnalités prévues et état de leur préparation.',
+            featureId: FEATURES.roadmap.id,
             href: '/feuille-de-route',
             icon: 'ClipboardList',
             label: 'Feuille de route',
@@ -530,6 +537,7 @@ export const NAV_SPACES: NavigationSpace[] = [
           {
             availability: 'live',
             description: 'Accueil du pôle système.',
+            featureId: FEATURES.systemHome.id,
             href: '/systeme',
             icon: 'Settings',
             label: "Vue d'ensemble",
@@ -538,6 +546,7 @@ export const NAV_SPACES: NavigationSpace[] = [
           {
             availability: 'live',
             description: 'Comptes, rôles et permissions existants.',
+            featureId: FEATURES.users.id,
             href: '/administration/utilisateurs',
             hubActionLabel: 'Accéder aux utilisateurs',
             icon: 'Users',
@@ -575,6 +584,7 @@ export const NAV_SPACES: NavigationSpace[] = [
           {
             availability: 'live',
             description: 'Historique admin et actions sensibles.',
+            featureId: FEATURES.systemActivity.id,
             href: '/systeme/journal-activite',
             hubActionLabel: 'Consulter le journal',
             icon: 'History',

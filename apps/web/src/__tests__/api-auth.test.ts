@@ -3,14 +3,27 @@ import { describe, expect, it, vi } from 'vitest';
 import { requireAuth } from '$server/api-auth';
 import { ErrorCode } from '$types/api.types';
 
-const { mockGetAuthSession } = vi.hoisted(() => ({
-  mockGetAuthSession: vi.fn(),
-}));
+const { mockGetAuthSession, mockReserveAuthenticatedApiRateLimit } = vi.hoisted(
+  () => ({
+    mockGetAuthSession: vi.fn(),
+    mockReserveAuthenticatedApiRateLimit: vi.fn(() =>
+      Promise.resolve({
+        allowed: true,
+        remainingAttempts: 299,
+        retryAfter: undefined as number | undefined,
+      }),
+    ),
+  }),
+);
 
 vi.mock('server-only', () => ({}));
 
 vi.mock('$server/auth', () => ({
   getAuthSession: mockGetAuthSession,
+}));
+
+vi.mock('$server/rate-limiter', () => ({
+  reserveAuthenticatedApiRateLimit: mockReserveAuthenticatedApiRateLimit,
 }));
 
 const buildAuthUser = (
@@ -77,5 +90,28 @@ describe('requireAuth', () => {
     });
 
     expect(auth.success).toBe(true);
+  });
+
+  it('enforces the durable authenticated API budget', async () => {
+    mockGetAuthSession.mockResolvedValueOnce({
+      session: null,
+      user: buildAuthUser(),
+    });
+    mockReserveAuthenticatedApiRateLimit.mockResolvedValueOnce({
+      allowed: false,
+      remainingAttempts: 0,
+      retryAfter: 42,
+    });
+
+    const auth = await requireAuth();
+
+    expect(auth.success).toBe(false);
+    if (!auth.success) {
+      expect(auth.response.status).toBe(429);
+      expect(auth.response.headers.get('Retry-After')).toBe('42');
+      expect((await auth.response.json()).error.code).toBe(
+        ErrorCode.RATE_LIMITED,
+      );
+    }
   });
 });

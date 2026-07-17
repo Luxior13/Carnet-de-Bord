@@ -48,3 +48,10 @@ export type PaginationMeta = {
   total: number;
   totalPages: number;
 };
+
+export type CursorPaginationMeta = {
+  hasMore: boolean;
+  limit: number;
+  nextCursor: string | null;
+  snapshotAt: string;
+};

@@ -3,6 +3,8 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
+    "check:architecture": "bun scripts/check-architecture-budget.mjs",
+    "check:performance": "bun scripts/check-performance-budget.mjs",
     "start": "next start -p 3001",
     "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",
     "lint:fix": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix",
@@ -10,7 +12,8 @@
     "test:e2e": "bun run e2e:setup && playwright test",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "worker": "bun --conditions=react-server scripts/run-worker.ts"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "15.5.20",
