@@ -38,6 +38,21 @@ export const FEATURES = {
     label: "Vue d'ensemble",
     requiredPermissions: [PERMISSIONS.DASHBOARD.VIEW],
   }),
+  notifications: defineFeature({
+    audit: {
+      pageKey: 'notifications',
+      pageLabel: 'Mes notifications',
+      poleKey: 'dashboard',
+      poleLabel: 'Tableau de bord',
+    },
+    availability: 'live',
+    description: 'Boîte personnelle de notifications internes.',
+    href: '/tableau-de-bord/mes-notifications',
+    icon: 'Bell',
+    id: 'notifications',
+    label: 'Mes notifications',
+    requiredPermissions: [PERMISSIONS.NOTIFICATIONS.VIEW],
+  }),
   roadmap: defineFeature({
     audit: {
       pageKey: 'roadmap',

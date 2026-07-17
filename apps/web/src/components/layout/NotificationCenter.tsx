@@ -1,10 +1,15 @@
 'use client';
 
-import { Bell, BellRing, type LucideIcon, Settings, Timer } from 'lucide-react';
+import { Bell, BellRing, type LucideIcon, Settings } from 'lucide-react';
 import Link from 'next/link';
-import React, { type FC, useCallback, useMemo } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo } from 'react';
 
 import { canOpenNavigationHref } from '$constants/app.constants';
+import {
+  NOTIFICATION_INBOX_HREF,
+  NOTIFICATIONS_CHANGED_EVENT,
+  notifyNotificationsChanged,
+} from '$constants/notification.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import { useAsyncResource } from '$hooks/useAsyncResource';
@@ -31,9 +36,9 @@ type NotificationCenterProps = {
 
 const QUICK_LINKS = [
   {
-    href: '/tableau-de-bord/mes-rappels',
-    icon: Timer,
-    label: 'Mes rappels',
+    href: NOTIFICATION_INBOX_HREF,
+    icon: Bell,
+    label: 'Toutes les notifications',
   },
   {
     href: '/vie-interne/notifications-rappels',
@@ -67,12 +72,27 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
   const notificationResource = useAsyncResource(loadNotifications, {
     enabled: notifications === undefined && canViewNotifications,
   });
+  const refreshNotificationResource = notificationResource.refresh;
+  useEffect(() => {
+    if (notifications !== undefined || !canViewNotifications) return;
+
+    const refreshNotifications = (): void => {
+      void refreshNotificationResource();
+    };
+    window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, refreshNotifications);
+
+    return (): void =>
+      window.removeEventListener(
+        NOTIFICATIONS_CHANGED_EVENT,
+        refreshNotifications,
+      );
+  }, [canViewNotifications, notifications, refreshNotificationResource]);
   const resolvedNotifications = useMemo<NotificationCenterItem[]>(
     () =>
       notifications ??
       notificationResource.data?.items.map((notification) => ({
         description: notification.body,
-        href: notification.href ?? '/',
+        href: notification.href ?? NOTIFICATION_INBOX_HREF,
         id: notification.id,
         meta: new Date(notification.createdAt).toLocaleDateString('fr-FR'),
         read: notification.readAt !== null,
@@ -83,9 +103,12 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
   );
   const visibleNotifications = useMemo(
     () =>
-      resolvedNotifications.filter((notification) =>
-        canOpenNavigationHref(userData, notification.href),
-      ),
+      resolvedNotifications.map((notification) => ({
+        ...notification,
+        href: canOpenNavigationHref(userData, notification.href)
+          ? notification.href
+          : NOTIFICATION_INBOX_HREF,
+      })),
     [resolvedNotifications, userData],
   );
   const visibleQuickLinks = useMemo(
@@ -93,9 +116,11 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
       QUICK_LINKS.filter((link) => canOpenNavigationHref(userData, link.href)),
     [userData],
   );
-  const unreadNotificationsCount = visibleNotifications.filter(
-    (notification) => !notification.read,
-  ).length;
+  const unreadNotificationsCount =
+    notifications === undefined
+      ? (notificationResource.data?.unreadCount ?? 0)
+      : visibleNotifications.filter((notification) => !notification.read)
+          .length;
 
   if (!canViewNotifications) return null;
 
@@ -161,7 +186,11 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                     void apiFetchJson(
                       `/api/notifications/${notification.id}`,
                       jsonRequest('PATCH', { action: 'read' }),
-                    ).catch(() => undefined);
+                    )
+                      .then(() => {
+                        notifyNotificationsChanged();
+                      })
+                      .catch(() => undefined);
                   }}
                 >
                   <span

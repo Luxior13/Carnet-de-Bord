@@ -144,10 +144,12 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: tasksAccess,
           },
           {
-            description: 'Rappels personnels et structurels.',
-            href: '/tableau-de-bord/mes-rappels',
+            availability: 'live',
+            description: 'Historique personnel des notifications internes.',
+            featureId: FEATURES.notifications.id,
+            href: '/tableau-de-bord/mes-notifications',
             icon: 'Bell',
-            label: 'Mes rappels',
+            label: 'Mes notifications',
             requiredPermissions: notificationsAccess,
           },
           {

@@ -10,7 +10,7 @@ import type { ApiErrorResponse, ApiSuccessResponse } from '$types/api.types';
 type RouteParams = { params: Promise<{ id: string }> };
 
 const notificationActionSchema = z
-  .object({ action: z.enum(['archive', 'read', 'unread']) })
+  .object({ action: z.enum(['archive', 'read', 'restore', 'unread']) })
   .strict();
 
 export async function PATCH(
@@ -37,7 +37,9 @@ export async function PATCH(
       data:
         parsed.data.action === 'archive'
           ? { archivedAt: now, readAt: now }
-          : { readAt: parsed.data.action === 'read' ? now : null },
+          : parsed.data.action === 'restore'
+            ? { archivedAt: null }
+            : { readAt: parsed.data.action === 'read' ? now : null },
       where: { notificationId: id, userId: auth.user.id },
     });
     if (result.count !== 1) {

@@ -28,6 +28,11 @@ import type {
 
 const NOTIFICATION_RESOURCE = 'notifications';
 const NOTIFICATION_MAX_LIMIT = 50;
+const notificationListStatusSchema = z.enum(['all', 'archived', 'unread']);
+
+const notificationBulkActionSchema = z
+  .object({ action: z.literal('read_all') })
+  .strict();
 
 const sendNotificationSchema = z
   .object({
@@ -68,9 +73,17 @@ export async function GET(
     if (!permission.success) return permission.response;
 
     const { searchParams } = new URL(request.url);
-    const unreadOnly = searchParams.get('unread') === 'true';
+    const requestedStatus =
+      searchParams.get('status') ??
+      (searchParams.get('unread') === 'true' ? 'unread' : 'all');
+    const parsedStatus =
+      notificationListStatusSchema.safeParse(requestedStatus);
+    if (!parsedStatus.success) {
+      return apiErrors.validation('Filtre de notifications invalide');
+    }
+    const status = parsedStatus.data;
     const limit = parseCursorPageSize(searchParams, 20, NOTIFICATION_MAX_LIMIT);
-    const filterHash = hashCursorFilters({ unreadOnly });
+    const filterHash = hashCursorFilters({ status });
     const rawCursor = searchParams.get('cursor');
     const cursor = rawCursor
       ? decodeKeysetCursor(rawCursor, {
@@ -90,12 +103,12 @@ export async function GET(
     }
 
     const where: Prisma.NotificationRecipientWhereInput = {
-      archivedAt: null,
+      archivedAt: status === 'archived' ? { not: null } : null,
       createdAt: { lte: snapshotAt },
       notification: {
         OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
-      ...(unreadOnly ? { readAt: null } : {}),
+      ...(status === 'unread' ? { readAt: null } : {}),
       userId: auth.user.id,
       ...(cursorCreatedAt && cursorId
         ? {
@@ -114,6 +127,7 @@ export async function GET(
       prisma.notificationRecipient.findMany({
         orderBy: [{ createdAt: 'desc' }, { notificationId: 'desc' }],
         select: {
+          archivedAt: true,
           createdAt: true,
           notification: {
             select: {
@@ -143,6 +157,7 @@ export async function GET(
       }),
     ]);
     const mappedItems: NotificationItem[] = recipients.map((recipient) => ({
+      archivedAt: recipient.archivedAt?.toISOString() ?? null,
       body: recipient.notification.body,
       createdAt: recipient.createdAt.toISOString(),
       href: recipient.notification.href,
@@ -171,6 +186,45 @@ export async function GET(
     });
   } catch (error) {
     return apiErrors.internal('NOTIFICATIONS_LIST', error, request);
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+): Promise<
+  NextResponse<ApiSuccessResponse<{ updatedCount: number }> | ApiErrorResponse>
+> {
+  try {
+    const auth = await requireAuth();
+    if (!auth.success) return auth.response;
+    const permission = requirePermission(
+      auth.user,
+      PERMISSIONS.NOTIFICATIONS.VIEW,
+    );
+    if (!permission.success) return permission.response;
+    const parsedBody = await parseJsonBody(request);
+    if (!parsedBody.success) return parsedBody.response;
+    const parsed = notificationBulkActionSchema.safeParse(parsedBody.data);
+    if (!parsed.success) return apiErrors.validation('Action invalide');
+
+    const result = await prisma.notificationRecipient.updateMany({
+      data: { readAt: new Date() },
+      where: {
+        archivedAt: null,
+        notification: {
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+        },
+        readAt: null,
+        userId: auth.user.id,
+      },
+    });
+
+    return NextResponse.json({
+      data: { updatedCount: result.count },
+      success: true,
+    });
+  } catch (error) {
+    return apiErrors.internal('NOTIFICATIONS_READ_ALL', error, request);
   }
 }
 

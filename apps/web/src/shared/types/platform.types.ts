@@ -1,6 +1,7 @@
 import type { BackgroundJobStatus, NotificationSeverity } from '@repo/database';
 
 export type NotificationItem = {
+  archivedAt: string | null;
   body: string;
   createdAt: string;
   href: string | null;

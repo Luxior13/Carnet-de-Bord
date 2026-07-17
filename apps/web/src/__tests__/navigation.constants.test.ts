@@ -96,7 +96,10 @@ describe('navigation availability', () => {
 
     expect(canOpenNavigationHref(user, '/')).toBe(true);
     expect(canOpenNavigationHref(user, '/mon-compte')).toBe(true);
-    expect(canOpenNavigationHref(user, '/tableau-de-bord/mes-rappels')).toBe(
+    expect(
+      canOpenNavigationHref(user, '/tableau-de-bord/mes-notifications'),
+    ).toBe(true);
+    expect(canOpenNavigationHref(user, '/tableau-de-bord/mes-taches')).toBe(
       false,
     );
     expect(canOpenNavigationHref(user, '/resource/dynamic-id')).toBe(true);
@@ -277,6 +280,7 @@ describe('navigation availability', () => {
     expect(liveHrefs).toEqual([
       '/',
       '/feuille-de-route',
+      '/tableau-de-bord/mes-notifications',
       '/systeme',
       '/administration/utilisateurs',
       '/systeme/journal-activite',
