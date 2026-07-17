@@ -77,6 +77,11 @@ import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 import { apiFetch } from '$utils/api.utils';
+import {
+  getUserDisplayName,
+  getUserLoginDisplay,
+  isUserIdentityMasked,
+} from '$utils/user-display.utils';
 
 type UserDetailPageProps = {
   userId: string;
@@ -572,6 +577,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     : false;
 
   const isSelf = currentUser?.id === user?.id;
+  const isTargetIdentityMasked = !!user && isUserIdentityMasked(user);
   const isTargetAdminAccessRestricted =
     !!user && user.role === UserRole.ADMIN && !isProtectedActor;
   const canEditTargetProfile =
@@ -595,9 +601,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const canViewTargetContact = isSelf || canViewUserContact;
   const canViewTargetAccess =
     !!user &&
+    !isTargetIdentityMasked &&
     (canViewUserAccess || canEditUserPermissions || canManageUserRoles);
   const canViewTargetPersonalAccount =
-    !!user && (canViewUserAccountPolicy || canManageUserAccountPolicy);
+    !!user &&
+    !isTargetIdentityMasked &&
+    (canViewUserAccountPolicy || canManageUserAccountPolicy);
   const canManageTargetAccessPermissions =
     !!user &&
     canEditUserPermissions &&
@@ -647,7 +656,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     canManageUserStatus &&
     !user.isProtected &&
     !isTargetAdminAccessRestricted;
-  const canViewTargetActivity = !!user && (isSelf || canViewUserActivity);
+  const canViewTargetActivity =
+    !!user && !isTargetIdentityMasked && (isSelf || canViewUserActivity);
   const loginReadOnlyHint = isSelf
     ? "Votre propre identifiant ne se modifie pas depuis l'administration."
     : user?.isProtected
@@ -657,9 +667,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         : !canUpdateUserLogin
           ? 'La permission Modifier les identifiants de connexion est requise.'
           : 'Cet identifiant est en lecture seule depuis cette fiche.';
-  const canFetchUserAudit = currentUser?.id === userId || canViewUserActivity;
+  const canFetchUserAudit =
+    !isTargetIdentityMasked &&
+    (currentUser?.id === userId || canViewUserActivity);
   const canViewTargetSecurity =
     !!user &&
+    !isTargetIdentityMasked &&
     (canViewUserSecurity ||
       canResetTargetMfa ||
       canResetTargetPassword ||
@@ -2356,7 +2369,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         { href: '/administration/utilisateurs', label: 'Utilisateurs' },
         {
           href: `/administration/utilisateurs/${user.id}`,
-          label: `${user.firstName} ${user.lastName}`,
+          label: getUserDisplayName(user),
         },
       ]}
     >
@@ -2384,8 +2397,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           />
           <div className="min-w-0 space-y-3">
             <UsersAdminHero
-              title={`${user.firstName} ${user.lastName}`}
-              description={`Identifiant : ${user.loginName}`}
+              title={getUserDisplayName(user)}
+              description={`Identifiant : ${getUserLoginDisplay(user)}`}
               actions={
                 <Button
                   type="button"
@@ -2431,6 +2444,19 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 </>
               }
             />
+            {isTargetIdentityMasked && (
+              <div className="border-warning/30 bg-warning/10 text-foreground flex gap-3 rounded-lg border p-3 sm:p-4">
+                <AlertTriangle className="text-warning mt-0.5 size-4 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">Compte système protégé</p>
+                  <p className="text-muted-foreground mt-1 text-xs leading-5">
+                    Ce compte reste visible pour la cohérence administrative,
+                    mais son identité technique, ses accès, sa sécurité et son
+                    activité sont réservés à son propriétaire.
+                  </p>
+                </div>
+              </div>
+            )}
             {isSelf && (
               <div className="border-primary/25 bg-primary/[0.08] flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
                 <div className="min-w-0">

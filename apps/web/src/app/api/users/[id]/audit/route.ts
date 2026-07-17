@@ -632,7 +632,7 @@ export async function GET(
     }
 
     const user = await prisma.user.findUnique({
-      select: { id: true },
+      select: { id: true, isProtected: true },
       where: { id },
     });
 
@@ -646,6 +646,20 @@ export async function GET(
           success: false,
         },
         { status: 404 },
+      );
+    }
+
+    if (user.isProtected && !isOwnAudit) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message:
+              "L'activité du compte racine est privée et ne peut être consultée que par son propriétaire",
+          },
+          success: false,
+        },
+        { status: 403 },
       );
     }
 

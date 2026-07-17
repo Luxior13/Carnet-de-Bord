@@ -570,6 +570,103 @@ describe('users access hardening', () => {
     });
   });
 
+  it('keeps the protected account visible but redacts its identity for another user', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'admin-1',
+        passwordHash: undefined,
+        permissions: {
+          [PERMISSIONS.USERS.VIEW]: true,
+          [PERMISSIONS.USERS.VIEW_ACCESS]: true,
+          [PERMISSIONS.USERS.VIEW_CONTACT]: true,
+          [PERMISSIONS.USERS.VIEW_SECURITY]: true,
+        },
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(
+      buildUser({
+        contactEmail: 'root-secret@example.com',
+        failedLoginAttempts: 2,
+        firstName: 'Identite',
+        id: 'root-1',
+        isProtected: true,
+        lastLoginAt: new Date('2026-03-03T00:00:00.000Z'),
+        lastName: 'Secrete',
+        loginName: 'root.secret',
+        permissions: { [PERMISSIONS.SYSTEM.SETTINGS]: true },
+        role: 'ADMIN',
+      }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users/root-1') as never,
+      { params: Promise.resolve({ id: 'root-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.user).toMatchObject({
+      contactEmail: null,
+      contactEmailVerifiedAt: null,
+      failedLoginAttempts: 0,
+      firstName: 'Compte',
+      identityDetailsVisible: false,
+      lastLoginAt: null,
+      lastName: 'racine',
+      lockedUntil: null,
+      loginName: '••••••••',
+      mfaEnabledAt: null,
+      mustChangePassword: false,
+      passwordChangedAt: null,
+      permissions: null,
+      securityDetailsVisible: false,
+    });
+    expect(JSON.stringify(body)).not.toContain('root.secret');
+    expect(JSON.stringify(body)).not.toContain('root-secret@example.com');
+    expect(JSON.stringify(body)).not.toContain('Identite');
+  });
+
+  it('returns the protected identity to its owner', async () => {
+    const rootUser = buildUser({
+      contactEmail: 'root@example.com',
+      deletedAt: undefined,
+      firstName: 'Root',
+      id: 'root-1',
+      isProtected: true,
+      lastName: 'Owner',
+      loginName: 'root.owner',
+      passwordHash: undefined,
+      role: 'ADMIN',
+    });
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: rootUser,
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(rootUser);
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users/root-1') as never,
+      { params: Promise.resolve({ id: 'root-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.user).toMatchObject({
+      contactEmail: 'root@example.com',
+      firstName: 'Root',
+      identityDetailsVisible: true,
+      lastName: 'Owner',
+      loginName: 'root.owner',
+    });
+  });
+
   it('returns contact details from user detail with view_contact permission', async () => {
     mockRequireAuth.mockResolvedValueOnce({
       session: null,
@@ -2672,22 +2769,12 @@ describe('users access hardening', () => {
       }),
     });
     mockPrisma.user.count.mockResolvedValue(1);
-    mockPrisma.user.findMany
-      .mockResolvedValueOnce([
-        buildUser({
-          id: 'pending-1',
-          mustChangePassword: true,
-        }),
-      ])
-      .mockResolvedValueOnce([
-        {
-          createdAt: new Date('2026-03-01T00:00:00.000Z'),
-          isActive: true,
-          lastLoginAt: null,
-          mustChangePassword: true,
-          role: 'USER',
-        },
-      ]);
+    mockPrisma.user.findMany.mockResolvedValueOnce([
+      buildUser({
+        id: 'pending-1',
+        mustChangePassword: true,
+      }),
+    ]);
 
     const route = await import('$app/api/users/route');
     const response = await route.GET(
@@ -2727,6 +2814,102 @@ describe('users access hardening', () => {
     expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
   });
 
+  it('keeps the protected account in the users list with a public identity only', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'admin-1',
+        passwordHash: undefined,
+        permissions: {
+          [PERMISSIONS.USERS.VIEW]: true,
+          [PERMISSIONS.USERS.VIEW_CONTACT]: true,
+          [PERMISSIONS.USERS.VIEW_SECURITY]: true,
+        },
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.count.mockResolvedValue(1);
+    mockPrisma.user.findMany.mockResolvedValueOnce([
+      buildUser({
+        contactEmail: 'root-secret@example.com',
+        firstName: 'Hidden',
+        id: 'root-1',
+        isProtected: true,
+        lastName: 'Identity',
+        loginName: 'root.secret',
+        role: 'ADMIN',
+      }),
+    ]);
+
+    const route = await import('$app/api/users/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users') as never,
+    );
+    const body = await response.json();
+    const listQuery = mockPrisma.user.findMany.mock.calls[0]?.[0];
+
+    expect(response.status).toBe(200);
+    expect(body.data.users).toHaveLength(1);
+    expect(body.data.users[0]).toMatchObject({
+      contactEmail: null,
+      firstName: 'Compte',
+      identityDetailsVisible: false,
+      lastLoginAt: null,
+      lastName: 'racine',
+      loginName: '••••••••',
+      permissions: null,
+      securityDetailsVisible: false,
+    });
+    expect(listQuery.orderBy[0]).toEqual({ isProtected: 'desc' });
+    expect(JSON.stringify(body)).not.toContain('root.secret');
+    expect(JSON.stringify(body)).not.toContain('root-secret@example.com');
+  });
+
+  it('does not search protected accounts through their private identity', async () => {
+    mockPrisma.user.count.mockResolvedValue(0);
+    mockPrisma.user.findMany.mockResolvedValueOnce([]);
+
+    const route = await import('$app/api/users/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users?search=root.secret') as never,
+    );
+    const listQuery = mockPrisma.user.findMany.mock.calls[0]?.[0];
+
+    expect(response.status).toBe(200);
+    expect(listQuery.where.OR).toEqual([
+      {
+        AND: [
+          { isProtected: false },
+          {
+            OR: expect.arrayContaining([
+              expect.objectContaining({
+                loginName: expect.objectContaining({
+                  contains: 'root.secret',
+                }),
+              }),
+            ]),
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('finds the protected account through its public superadmin label', async () => {
+    mockPrisma.user.count.mockResolvedValue(0);
+    mockPrisma.user.findMany.mockResolvedValueOnce([]);
+
+    const route = await import('$app/api/users/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users?search=superadmin') as never,
+    );
+    const listQuery = mockPrisma.user.findMany.mock.calls[0]?.[0];
+
+    expect(response.status).toBe(200);
+    expect(listQuery.where.OR).toContainEqual({ isProtected: true });
+  });
+
   it('redacts list security fields and password stats without view-security permission', async () => {
     mockPrisma.user.count.mockResolvedValue(1);
     mockPrisma.user.findMany.mockResolvedValueOnce([
@@ -2764,9 +2947,7 @@ describe('users access hardening', () => {
 
   it('normalizes invalid users list pagination params', async () => {
     mockPrisma.user.count.mockResolvedValue(0);
-    mockPrisma.user.findMany
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([]);
+    mockPrisma.user.findMany.mockResolvedValueOnce([]);
 
     const route = await import('$app/api/users/route');
     const response = await route.GET(
@@ -2804,24 +2985,22 @@ describe('users access hardening', () => {
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
-    expect(mockPrisma.user.findMany).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        where: expect.objectContaining({
-          OR: expect.arrayContaining([
-            expect.objectContaining({
-              loginName: expect.objectContaining({
-                contains: 'a'.repeat(100),
-              }),
-            }),
-            expect.objectContaining({
-              firstName: expect.objectContaining({
-                contains: 'a'.repeat(100),
-              }),
-            }),
-          ]),
+    const listQuery = mockPrisma.user.findMany.mock.calls[0]?.[0];
+    const privateIdentitySearch = listQuery.where.OR[0].AND[1].OR;
+
+    expect(privateIdentitySearch).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          loginName: expect.objectContaining({
+            contains: 'a'.repeat(100),
+          }),
         }),
-      }),
+        expect.objectContaining({
+          firstName: expect.objectContaining({
+            contains: 'a'.repeat(100),
+          }),
+        }),
+      ]),
     );
   });
 
@@ -2846,8 +3025,9 @@ describe('users access hardening', () => {
       contactEmail: null,
       contactEmailVerifiedAt: null,
     });
+    const privateIdentitySearch = listQuery.where.OR[0].AND[1].OR;
     expect(
-      listQuery.where.OR.some(
+      privateIdentitySearch.some(
         (filter: Record<string, unknown>) => 'contactEmail' in filter,
       ),
     ).toBe(false);
@@ -2881,13 +3061,43 @@ describe('users access hardening', () => {
 
     expect(response.status).toBe(200);
     expect(body.data.users[0].contactEmail).toBe('visible@example.com');
-    expect(listQuery.where.OR).toEqual(
+    expect(listQuery.where.OR[0].AND[1].OR).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           contactEmail: expect.objectContaining({ contains: 'visible' }),
         }),
       ]),
     );
+  });
+
+  it('keeps protected-account activity private from delegated administrators', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'admin-1',
+        passwordHash: undefined,
+        permissions: { [PERMISSIONS.USERS.VIEW_ACTIVITY]: true },
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce({
+      id: 'root-1',
+      isProtected: true,
+    });
+
+    const route = await import('$app/api/users/[id]/audit/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users/root-1/audit') as never,
+      { params: Promise.resolve({ id: 'root-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
+    expect(mockPrisma.auditLog.findMany).not.toHaveBeenCalled();
+    expect(mockPrisma.auditLog.count).not.toHaveBeenCalled();
   });
 
   it('returns null for dashboard sections the user cannot access', async () => {

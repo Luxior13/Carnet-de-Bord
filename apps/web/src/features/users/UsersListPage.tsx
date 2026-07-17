@@ -69,6 +69,11 @@ import {
   TableRow,
 } from '$ui/table';
 import { ScrollableTabsList, Tabs, TabsTrigger } from '$ui/tabs';
+import {
+  getUserDisplayName,
+  getUserLoginDisplay,
+  isUserIdentityMasked,
+} from '$utils/user-display.utils';
 
 type FilterStatus = 'all' | 'active' | 'inactive' | 'pending';
 type FilterRole = 'all' | UserRole;
@@ -821,7 +826,7 @@ export const UsersListPage: FC = () => {
                     key={user.id}
                     role="button"
                     tabIndex={0}
-                    aria-label={`Voir ${user.firstName} ${user.lastName}`}
+                    aria-label={`Voir ${getUserDisplayName(user)}`}
                     className="focus-visible:bg-primary/10 focus-visible:ring-primary/70 cursor-pointer focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
                     onClick={() => openUserDetail(user.id)}
                     onKeyDown={(event) => handleOpenUserKeyDown(event, user.id)}
@@ -832,7 +837,7 @@ export const UsersListPage: FC = () => {
                         <div className="min-w-0">
                           <div className="flex min-w-0 items-center gap-2">
                             <span className="text-foreground truncate font-medium">
-                              {user.firstName} {user.lastName}
+                              {getUserDisplayName(user)}
                             </span>
                             {user.isProtected && (
                               <Shield
@@ -842,8 +847,13 @@ export const UsersListPage: FC = () => {
                             )}
                           </div>
                           <p className="text-muted-foreground truncate font-mono text-xs">
-                            {user.loginName}
+                            {getUserLoginDisplay(user)}
                           </p>
+                          {isUserIdentityMasked(user) && (
+                            <p className="text-warning mt-0.5 text-xs">
+                              Identité protégée
+                            </p>
+                          )}
                           {user.contactEmail && (
                             <p className="text-muted-foreground/80 truncate text-xs">
                               {user.contactEmail}
@@ -937,7 +947,7 @@ export const UsersListPage: FC = () => {
                 key={user.id}
                 role="button"
                 tabIndex={0}
-                aria-label={`Voir ${user.firstName} ${user.lastName}`}
+                aria-label={`Voir ${getUserDisplayName(user)}`}
                 className="hover:bg-surface-raised/70 focus-visible:bg-primary/10 focus-visible:ring-primary/70 cursor-pointer p-4 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
                 onClick={() => openUserDetail(user.id)}
                 onKeyDown={(event) => handleOpenUserKeyDown(event, user.id)}
@@ -948,15 +958,20 @@ export const UsersListPage: FC = () => {
                     <div className="min-w-0">
                       <div className="flex min-w-0 items-center gap-2">
                         <h3 className="text-foreground truncate font-medium">
-                          {user.firstName} {user.lastName}
+                          {getUserDisplayName(user)}
                         </h3>
                         {user.isProtected && (
                           <Shield size={14} className="text-warning shrink-0" />
                         )}
                       </div>
                       <p className="text-muted-foreground truncate font-mono text-sm">
-                        {user.loginName}
+                        {getUserLoginDisplay(user)}
                       </p>
+                      {isUserIdentityMasked(user) && (
+                        <p className="text-warning text-xs">
+                          Identité protégée
+                        </p>
+                      )}
                       {user.contactEmail && (
                         <p className="text-muted-foreground/80 truncate text-xs">
                           {user.contactEmail}

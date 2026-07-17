@@ -25,6 +25,7 @@ import {
 } from '$server/auth';
 import { prisma } from '$server/prisma';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
+import { protectUserIdentityForActor } from '$server/user-visibility';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -169,23 +170,29 @@ const mapUserForActor = (
       actor.permissions,
     );
 
-  return {
-    ...clientUser,
-    ...(canViewContact
-      ? {}
-      : { contactEmail: null, contactEmailVerifiedAt: null }),
-    ...(canViewSecurity
-      ? { securityDetailsVisible: true }
-      : {
-          failedLoginAttempts: 0,
-          lockedUntil: null,
-          mfaEnabledAt: null,
-          mustChangePassword: false,
-          passwordChangedAt: null,
-          securityDetailsVisible: false,
-        }),
-    permissions: getPermissionOverridesForActor(clientUser.permissions, actor),
-  };
+  return protectUserIdentityForActor(
+    {
+      ...clientUser,
+      ...(canViewContact
+        ? {}
+        : { contactEmail: null, contactEmailVerifiedAt: null }),
+      ...(canViewSecurity
+        ? { securityDetailsVisible: true }
+        : {
+            failedLoginAttempts: 0,
+            lockedUntil: null,
+            mfaEnabledAt: null,
+            mustChangePassword: false,
+            passwordChangedAt: null,
+            securityDetailsVisible: false,
+          }),
+      permissions: getPermissionOverridesForActor(
+        clientUser.permissions,
+        actor,
+      ),
+    },
+    actor,
+  );
 };
 
 const isPrismaOptimisticConflict = (error: unknown): boolean =>

@@ -26,6 +26,7 @@ export type UserType = {
   failedLoginAttempts: number;
   firstName: string;
   id: string;
+  identityDetailsVisible?: boolean;
   isActive: boolean;
   isProtected: boolean;
   lastLoginAt: Date | null;

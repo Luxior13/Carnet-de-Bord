@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
+import { matchesProtectedUserPublicIdentity } from '$constants/protected-user.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import {
   apiErrors,
@@ -18,6 +19,7 @@ import {
 } from '$server/auth';
 import { prisma } from '$server/prisma';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
+import { protectUserIdentityForActor } from '$server/user-visibility';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -85,19 +87,29 @@ function normalizeUserStatus(value: string | null): UserStatusOption | null {
 
 function getUserOrderBy(
   sort: UserSortOption,
+  protectedAccountFirst = false,
 ): Prisma.UserOrderByWithRelationInput[] {
+  const protectedOrder: Prisma.UserOrderByWithRelationInput[] =
+    protectedAccountFirst ? [{ isProtected: 'desc' }] : [];
+
   if (sort === 'recent') {
     return [
+      ...protectedOrder,
       { lastLoginAt: { nulls: 'last', sort: 'desc' } },
       { createdAt: 'desc' },
     ];
   }
 
   if (sort === 'created') {
-    return [{ createdAt: 'desc' }];
+    return [...protectedOrder, { createdAt: 'desc' }];
   }
 
-  return [{ lastName: 'asc' }, { firstName: 'asc' }, { createdAt: 'desc' }];
+  return [
+    ...protectedOrder,
+    { lastName: 'asc' },
+    { firstName: 'asc' },
+    { createdAt: 'desc' },
+  ];
 }
 
 export async function GET(
@@ -171,7 +183,18 @@ export async function GET(
         });
       }
 
-      where.OR = searchFilters;
+      if (auth.user.isProtected) {
+        where.OR = searchFilters;
+      } else {
+        where.OR = [
+          {
+            AND: [{ isProtected: false }, { OR: searchFilters }],
+          },
+          ...(matchesProtectedUserPublicIdentity(search)
+            ? [{ isProtected: true }]
+            : []),
+        ];
+      }
     }
 
     if (role) {
@@ -208,7 +231,7 @@ export async function GET(
     ] = await Promise.all([
       prisma.user.count({ where }),
       prisma.user.findMany({
-        orderBy: getUserOrderBy(sort),
+        orderBy: getUserOrderBy(sort, !auth.user.isProtected),
         select: USER_LIST_SELECT,
         skip,
         take: limit,
@@ -277,22 +300,25 @@ export async function GET(
             permissions: null,
           });
 
-          return {
-            ...mappedUser,
-            ...(canViewContact
-              ? {}
-              : { contactEmail: null, contactEmailVerifiedAt: null }),
-            ...(canViewSecurity
-              ? { securityDetailsVisible: true }
-              : {
-                  failedLoginAttempts: 0,
-                  lockedUntil: null,
-                  mfaEnabledAt: null,
-                  mustChangePassword: false,
-                  passwordChangedAt: null,
-                  securityDetailsVisible: false,
-                }),
-          };
+          return protectUserIdentityForActor(
+            {
+              ...mappedUser,
+              ...(canViewContact
+                ? {}
+                : { contactEmail: null, contactEmailVerifiedAt: null }),
+              ...(canViewSecurity
+                ? { securityDetailsVisible: true }
+                : {
+                    failedLoginAttempts: 0,
+                    lockedUntil: null,
+                    mfaEnabledAt: null,
+                    mustChangePassword: false,
+                    passwordChangedAt: null,
+                    securityDetailsVisible: false,
+                  }),
+            },
+            auth.user,
+          );
         }),
       },
       success: true,
