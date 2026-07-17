@@ -18,7 +18,6 @@ const dashboardAliasSource = readSourceFile(
 
 const plannedRouteSources = [
   '../app/bureau-juridique/[[...slug]]/page.tsx',
-  '../app/recherche/page.tsx',
   '../app/sport-team-control/[[...slug]]/page.tsx',
   '../app/tresorerie/[[...slug]]/page.tsx',
   '../app/vie-interne/[[...slug]]/page.tsx',

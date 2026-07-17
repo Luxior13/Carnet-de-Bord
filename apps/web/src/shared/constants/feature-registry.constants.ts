@@ -68,6 +68,21 @@ export const FEATURES = {
     label: 'Feuille de route',
     requiredPermissions: [],
   }),
+  search: defineFeature({
+    audit: {
+      pageKey: 'search',
+      pageLabel: 'Recherche avancée',
+      poleKey: 'dashboard',
+      poleLabel: 'Tableau de bord',
+    },
+    availability: 'live',
+    description: 'Recherche complète dans les destinations autorisées.',
+    href: '/recherche',
+    icon: 'Search',
+    id: 'search',
+    label: 'Recherche avancée',
+    requiredPermissions: [PERMISSIONS.DASHBOARD.VIEW],
+  }),
   systemActivity: defineFeature({
     audit: {
       pageKey: 'system-activity',

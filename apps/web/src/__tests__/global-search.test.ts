@@ -35,6 +35,12 @@ const globalSearchSource = readFileSync(
   new URL('../components/layout/GlobalSearch.tsx', import.meta.url),
   'utf8',
 );
+// Static, test-owned path only.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const searchCatalogSource = readFileSync(
+  new URL('../features/search/search-catalog.ts', import.meta.url),
+  'utf8',
+);
 
 describe('global page search', () => {
   it('normalizes accents, ligatures, punctuation and repeated spaces', () => {
@@ -126,14 +132,22 @@ describe('global page search', () => {
       'aria-label="Fermer la navigation rapide"',
     );
     expect(globalSearchSource).toContain('size-11');
-    expect(globalSearchSource).toContain(
+    expect(searchCatalogSource).toContain(
       "getNavigationAvailability(item) !== 'live'",
     );
-    expect(globalSearchSource).toContain(
+    expect(searchCatalogSource).toContain(
       '!canAccessNavigationItem(user, item)',
     );
-    expect(globalSearchSource).toContain("href: '/mon-compte'");
+    expect(searchCatalogSource).toContain("href: '/mon-compte'");
     expect(globalSearchSource).toContain('aria-label="Effacer la recherche"');
+  });
+
+  it('links the quick dialog to the shareable advanced search', () => {
+    expect(globalSearchSource).toContain('advancedSearchHref');
+    expect(globalSearchSource).toContain('Recherche avancée');
+    expect(globalSearchSource).toMatch(
+      /\/recherche\?q=.*encodeURIComponent\(query\.trim\(\)\)/,
+    );
   });
 
   it('preserves selection by destination and marks one current result', () => {

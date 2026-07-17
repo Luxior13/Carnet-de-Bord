@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowRight, CircleX, Search, X } from 'lucide-react';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import React, {
   type FC,
@@ -15,22 +16,20 @@ import React, {
 
 import {
   normalizeSearchValue,
-  type RankedSearchItem,
   rankSearchResults,
 } from '$components/layout/global-search.utils';
 import {
-  canAccessNavigationItem,
   getActiveNavigationSpace,
-  getDefaultNavigationSpace,
-  getNavigationAvailability,
-  getNavigationSpaceItems,
   getVisibleNavigationSpaces,
-  type NavigationSpace,
-  type NavItem,
 } from '$constants/app.constants';
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
 import { getNavigationSpaceToneClasses } from '$constants/navigation-theme.constants';
 import { useUser } from '$context/UserContext';
+import {
+  buildSearchCatalog,
+  getSuggestedSearchItems,
+  type SearchCatalogItem,
+} from '$features/search/search-catalog';
 import {
   Dialog,
   DialogClose,
@@ -42,74 +41,6 @@ import {
 } from '$ui/dialog';
 import { Input } from '$ui/input';
 import { cn } from '$utils/css.utils';
-
-type SearchResult = RankedSearchItem & {
-  description?: string;
-  groupLabel: string;
-  href: string;
-  icon: NavItem['icon'];
-  label: string;
-  space: NavigationSpace;
-};
-
-function createSearchResult(
-  item: Pick<NavItem, 'description' | 'href' | 'icon' | 'label'>,
-  space: NavigationSpace,
-  groupLabel = space.label,
-): SearchResult {
-  return {
-    description: item.description,
-    groupLabel,
-    href: item.href,
-    icon: item.icon,
-    label: item.label,
-    labelSearchText: normalizeSearchValue(item.label),
-    searchText: normalizeSearchValue(
-      `${groupLabel} ${space.summary} ${item.label} ${item.description ?? ''}`,
-    ),
-    space,
-    spaceSearchText: normalizeSearchValue(groupLabel),
-  };
-}
-
-function buildSearchResults(
-  spaces: readonly NavigationSpace[],
-  user: Parameters<typeof canAccessNavigationItem>[0],
-): SearchResult[] {
-  const seenHrefs = new Set<string>();
-  const results: SearchResult[] = [];
-
-  for (const space of spaces) {
-    for (const item of getNavigationSpaceItems(space)) {
-      if (
-        seenHrefs.has(item.href) ||
-        getNavigationAvailability(item) !== 'live' ||
-        !canAccessNavigationItem(user, item)
-      ) {
-        continue;
-      }
-
-      seenHrefs.add(item.href);
-      results.push(createSearchResult(item, space));
-    }
-  }
-
-  return results;
-}
-
-function getEmptyQueryResults(
-  results: readonly SearchResult[],
-  activeSpace: NavigationSpace,
-): SearchResult[] {
-  const activeSpaceResults = results.filter(
-    (result) => result.space.id === activeSpace.id,
-  );
-  const otherResults = results.filter(
-    (result) => result.space.id !== activeSpace.id,
-  );
-
-  return [...activeSpaceResults, ...otherResults].slice(0, 8);
-}
 
 export const QuickNavigation: FC = () => {
   const pathname = usePathname();
@@ -129,40 +60,21 @@ export const QuickNavigation: FC = () => {
     () => getActiveNavigationSpace(pathname, spaces),
     [pathname, spaces],
   );
-  const allResults = useMemo(() => {
-    const navigationResults = buildSearchResults(spaces, userData);
-
-    if (
-      !userData ||
-      navigationResults.some((result) => result.href === '/mon-compte')
-    ) {
-      return navigationResults;
-    }
-
-    const accountSpace =
-      spaces.find((space) => space.id === 'dashboard') ??
-      getDefaultNavigationSpace();
-    const accountResult = createSearchResult(
-      {
-        description: 'Profil, sécurité, sessions et activité personnelle.',
-        href: '/mon-compte',
-        icon: 'UserCheck',
-        label: 'Mon compte',
-      },
-      accountSpace,
-      'Compte personnel',
-    );
-
-    return [...navigationResults, accountResult];
-  }, [spaces, userData]);
+  const allResults = useMemo(
+    () => buildSearchCatalog(spaces, userData),
+    [spaces, userData],
+  );
   const normalizedQuery = normalizeSearchValue(query);
   const results = useMemo(() => {
     if (!normalizedQuery) {
-      return getEmptyQueryResults(allResults, activeSpace);
+      return getSuggestedSearchItems(allResults, activeSpace);
     }
 
     return rankSearchResults(allResults, normalizedQuery, 10);
   }, [activeSpace, allResults, normalizedQuery]);
+  const advancedSearchHref = normalizedQuery
+    ? `/recherche?q=${encodeURIComponent(query.trim())}`
+    : '/recherche';
   const activeIndex = useMemo(() => {
     const selectedIndex = activeResultHref
       ? results.findIndex((result) => result.href === activeResultHref)
@@ -197,7 +109,7 @@ export const QuickNavigation: FC = () => {
   }, []);
 
   const navigateToResult = useCallback(
-    (result: SearchResult): void => {
+    (result: SearchCatalogItem): void => {
       closeSearch();
       if (result.href !== pathname) router.push(result.href);
     },
@@ -430,25 +342,39 @@ export const QuickNavigation: FC = () => {
             </div>
           )}
         </div>
-        <div className="border-border-divider bg-surface-inset/85 text-muted-foreground hidden items-center gap-4 border-t px-4 py-2 text-[11px] sm:flex">
-          <span className="flex items-center gap-1.5">
-            <kbd className="border-border-subtle bg-surface-control rounded-md border px-1.5 py-0.5 font-mono">
-              ↑↓
-            </kbd>
-            Parcourir
-          </span>
-          <span className="flex items-center gap-1.5">
-            <kbd className="border-border-subtle bg-surface-control rounded-md border px-1.5 py-0.5 font-mono">
-              Entrée
-            </kbd>
-            Ouvrir
-          </span>
-          <span className="ml-auto flex items-center gap-1.5">
-            <kbd className="border-border-subtle bg-surface-control rounded-md border px-1.5 py-0.5 font-mono">
-              Échap
-            </kbd>
-            Fermer
-          </span>
+        <div className="border-border-divider bg-surface-inset/85 text-muted-foreground border-t text-[11px]">
+          <div className="flex items-center justify-between gap-3 px-3 py-2 sm:px-4">
+            <span>Besoin de plus de filtres ?</span>
+            <DialogClose asChild>
+              <Link
+                className="text-primary-emphasis focus-visible:ring-ring/50 inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold outline-none hover:underline focus-visible:ring-2"
+                href={advancedSearchHref}
+              >
+                Recherche avancée
+                <ArrowRight className="size-3.5" />
+              </Link>
+            </DialogClose>
+          </div>
+          <div className="border-border-divider hidden items-center gap-4 border-t px-4 py-2 sm:flex">
+            <span className="flex items-center gap-1.5">
+              <kbd className="border-border-subtle bg-surface-control rounded-md border px-1.5 py-0.5 font-mono">
+                ↑↓
+              </kbd>
+              Parcourir
+            </span>
+            <span className="flex items-center gap-1.5">
+              <kbd className="border-border-subtle bg-surface-control rounded-md border px-1.5 py-0.5 font-mono">
+                Entrée
+              </kbd>
+              Ouvrir
+            </span>
+            <span className="ml-auto flex items-center gap-1.5">
+              <kbd className="border-border-subtle bg-surface-control rounded-md border px-1.5 py-0.5 font-mono">
+                Échap
+              </kbd>
+              Fermer
+            </span>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

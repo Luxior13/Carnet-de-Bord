@@ -57,10 +57,10 @@ describe('navigation availability', () => {
   it('shows only operational destinations in the default navigation', () => {
     const hrefs = getVisibleHrefs();
 
-    expect(hrefs).toEqual(['/', '/feuille-de-route']);
+    expect(hrefs).toEqual(['/', '/feuille-de-route', '/recherche']);
     expect(hrefs).not.toContain('/tableau-de-bord/mes-taches');
     expect(hrefs).not.toContain('/vie-interne');
-    expect(hrefs).not.toContain('/recherche');
+    expect(hrefs).toContain('/recherche');
   });
 
   it('keeps permitted planned destinations out of the main navigation', () => {
@@ -229,7 +229,7 @@ describe('navigation availability', () => {
       '/vie-interne/membres',
     ).flatMap((section) => flattenHrefs(section.items));
 
-    expect(sidebarHrefs).toEqual(['/', '/feuille-de-route']);
+    expect(sidebarHrefs).toEqual(['/', '/feuille-de-route', '/recherche']);
     expect(sidebarHrefs).not.toContain('/vie-interne/membres');
   });
 
@@ -281,6 +281,7 @@ describe('navigation availability', () => {
       '/',
       '/feuille-de-route',
       '/tableau-de-bord/mes-notifications',
+      '/recherche',
       '/systeme',
       '/administration/utilisateurs',
       '/systeme/journal-activite',

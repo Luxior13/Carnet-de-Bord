@@ -113,7 +113,7 @@ export const NAV_SPACES: NavigationSpace[] = [
     icon: 'LayoutDashboard',
     id: 'dashboard',
     label: 'Tableau de bord',
-    matchHrefs: ['/tableau-de-bord'],
+    matchHrefs: ['/tableau-de-bord', '/recherche'],
     routeBaseHref: '/tableau-de-bord',
     sections: [
       {
@@ -174,11 +174,13 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: notificationsAccess,
           },
           {
+            availability: 'live',
             description:
-              'Recherche transversale future dans les données autorisées.',
+              'Recherche complète dans les destinations disponibles et autorisées.',
+            featureId: FEATURES.search.id,
             href: '/recherche',
             icon: 'Search',
-            label: 'Recherche étendue',
+            label: 'Recherche avancée',
             requiredPermissions: dashboardAccess,
           },
         ],
