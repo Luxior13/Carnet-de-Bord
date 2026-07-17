@@ -96,15 +96,25 @@ const UserContext = createContext<ContextType>({
 
 type UserProviderProps = {
   children: ReactNode;
+  initialSessionRememberMe?: boolean;
+  initialUser?: UserType | null;
 };
 
-export const UserProvider: FC<UserProviderProps> = ({ children }) => {
+export const UserProvider: FC<UserProviderProps> = ({
+  children,
+  initialSessionRememberMe = false,
+  initialUser = null,
+}) => {
   const router = useRouter();
-  const [userData, setUserData] = useState<UserType | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [userData, setUserData] = useState<UserType | null>(initialUser);
+  const [isLoading, setIsLoading] = useState<boolean>(initialUser === null);
   const [error, setError] = useState<string | null>(null);
-  const [mustChangePassword, setMustChangePassword] = useState<boolean>(false);
-  const [sessionRememberMe, setSessionRememberMe] = useState<boolean>(false);
+  const [mustChangePassword, setMustChangePassword] = useState<boolean>(
+    initialUser?.mustChangePassword ?? false,
+  );
+  const [sessionRememberMe, setSessionRememberMe] = useState<boolean>(
+    initialUser ? initialSessionRememberMe : false,
+  );
   const [showSessionWarning, setShowSessionWarning] = useState<boolean>(false);
   const lastActivityRef = useRef<number>(Date.now());
   const lastServerActivitySyncRef = useRef<number>(Date.now());
@@ -338,8 +348,10 @@ export const UserProvider: FC<UserProviderProps> = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    if (initialUser) return;
+
     void fetchUser();
-  }, [fetchUser]);
+  }, [fetchUser, initialUser]);
 
   // Function to extend session (reset timers)
   const extendSession = useCallback(async (): Promise<void> => {

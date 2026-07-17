@@ -646,12 +646,15 @@ export const invalidateOtherUserSessions = async (
   });
 };
 
-/**
- * Gets the authenticated session from cookie
- */
-export const getAuthSession = async (
-  refreshCookie = true,
-): Promise<ServerAuthResponseType> => {
+type AuthSessionReadOptions = {
+  clearInvalidCookie: boolean;
+  refreshCookie: boolean;
+};
+
+const readAuthSession = async ({
+  clearInvalidCookie,
+  refreshCookie,
+}: AuthSessionReadOptions): Promise<ServerAuthResponseType> => {
   const ck = await cookies();
   const token = ck.get(SESSION_COOKIE_NAME)?.value;
 
@@ -662,7 +665,7 @@ export const getAuthSession = async (
   const { session, user } = await validateSessionToken(token);
 
   if (!session || !user) {
-    ck.delete(SESSION_COOKIE_NAME);
+    if (clearInvalidCookie) ck.delete(SESSION_COOKIE_NAME);
 
     return { session: null, user: null };
   }
@@ -670,7 +673,7 @@ export const getAuthSession = async (
   // Check if user is still active
   if (!user.isActive) {
     await invalidateSession(token);
-    ck.delete(SESSION_COOKIE_NAME);
+    if (clearInvalidCookie) ck.delete(SESSION_COOKIE_NAME);
 
     return { session: null, user: null };
   }
@@ -681,6 +684,24 @@ export const getAuthSession = async (
 
   return { session, user };
 };
+
+/**
+ * Gets the authenticated session from a route handler. Invalid cookies are
+ * cleared and active cookies may be refreshed because route handlers are
+ * allowed to mutate response cookies.
+ */
+export const getAuthSession = async (
+  refreshCookie = true,
+): Promise<ServerAuthResponseType> =>
+  readAuthSession({ clearInvalidCookie: true, refreshCookie });
+
+/**
+ * Read-only cookie variant for Server Components and layouts. Next.js does
+ * not allow them to mutate cookies, but the database session remains the
+ * authoritative source and invalid server-side state is still revoked.
+ */
+export const getPageAuthSession = async (): Promise<ServerAuthResponseType> =>
+  readAuthSession({ clearInvalidCookie: false, refreshCookie: false });
 
 // ============================================
 // AUTHENTICATION

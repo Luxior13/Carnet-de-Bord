@@ -85,6 +85,7 @@ import {
   createSession,
   createUser,
   getAuthSession,
+  getPageAuthSession,
   ProtectedAccountMutationError,
   resetUserPassword,
   SecurityVersionMismatchError,
@@ -645,6 +646,19 @@ describe('auth security transactions', () => {
     });
     expect(mocks.prisma.session.updateMany).not.toHaveBeenCalled();
     expect(mocks.cookieStore.delete).toHaveBeenCalledWith('session');
+  });
+
+  it('does not mutate an invalid cookie while checking a Server Component page', async () => {
+    mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
+    mocks.prisma.session.findUnique.mockResolvedValueOnce(null);
+
+    await expect(getPageAuthSession()).resolves.toEqual({
+      session: null,
+      user: null,
+    });
+
+    expect(mocks.cookieStore.delete).not.toHaveBeenCalled();
+    expect(mocks.cookieStore.set).not.toHaveBeenCalled();
   });
 
   it('rejects every password-only session for the protected root', async () => {

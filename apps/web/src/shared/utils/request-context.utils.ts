@@ -6,6 +6,7 @@ const REQUEST_ID_PATTERN =
 export const REQUEST_ID_HEADER = 'x-request-id';
 export const REQUEST_METHOD_HEADER = 'x-request-method';
 export const REQUEST_PATH_HEADER = 'x-request-path';
+export const REQUEST_TARGET_HEADER = 'x-request-target';
 
 type HeaderReader = Pick<Headers, 'get'>;
 

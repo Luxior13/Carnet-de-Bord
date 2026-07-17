@@ -1,29 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { isPublicPagePath } from '$constants/security.constants';
 import { checkRateLimit } from '$server/api-rate-limiter';
 import {
   getClientIp,
   REQUEST_ID_HEADER,
   REQUEST_METHOD_HEADER,
   REQUEST_PATH_HEADER,
+  REQUEST_TARGET_HEADER,
 } from '$utils/request-context.utils';
 
 const CSRF_COOKIE = 'csrf-token';
 const CSRF_HEADER = 'x-csrf-token';
 const SESSION_COOKIE = 'session';
 const CSRF_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
-const PROTECTED_PAGE_PATH_PREFIXES = [
-  '/',
-  '/administration',
-  '/bureau-juridique',
-  '/mon-compte',
-  '/recherche',
-  '/sport-team-control',
-  '/systeme',
-  '/tableau-de-bord',
-  '/tresorerie',
-  '/vie-interne',
-] as const;
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const HEALTH_API_PATHS = new Set([
   '/api/health',
@@ -31,12 +21,6 @@ const HEALTH_API_PATHS = new Set([
   '/api/health/ready',
 ]);
 const API_CACHE_CONTROL = 'private, no-store, max-age=0, must-revalidate';
-
-function isProtectedPagePath(pathname: string): boolean {
-  return PROTECTED_PAGE_PATH_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  );
-}
 
 function generateToken(): string {
   const bytes = new Uint8Array(32);
@@ -69,6 +53,10 @@ function createDownstreamResponse(
   requestHeaders.set(REQUEST_ID_HEADER, requestId);
   requestHeaders.set(REQUEST_METHOD_HEADER, request.method);
   requestHeaders.set(REQUEST_PATH_HEADER, request.nextUrl.pathname);
+  requestHeaders.set(
+    REQUEST_TARGET_HEADER,
+    `${request.nextUrl.pathname}${request.nextUrl.search}`,
+  );
 
   return NextResponse.next({ request: { headers: requestHeaders } });
 }
@@ -212,7 +200,7 @@ export function middleware(request: NextRequest): NextResponse {
 
   // Non-API routes
   if (
-    isProtectedPagePath(request.nextUrl.pathname) &&
+    !isPublicPagePath(request.nextUrl.pathname) &&
     !request.cookies.get(SESSION_COOKIE)?.value
   ) {
     const loginUrl = request.nextUrl.clone();
@@ -247,8 +235,5 @@ export function middleware(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: [
-    '/api/:path*',
-    '/((?!_next/static|_next/image|favicon.ico|assets/.*|.*\\..*).*)',
-  ],
+  matcher: ['/api/:path*', '/((?!_next/|favicon.ico|assets/.*|.*\\..*).*)'],
 };

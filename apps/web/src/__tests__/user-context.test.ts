@@ -415,6 +415,21 @@ describe('UserContext session activity', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
+  it('hydrates a server-authenticated account without another session request', () => {
+    runtime.render(
+      () =>
+        UserProvider({
+          children: null,
+          initialSessionRememberMe: true,
+          initialUser: user,
+        }) as ReactElement,
+    );
+
+    expect(fetch).not.toHaveBeenCalled();
+    expect(getContext(runtime).isLoading).toBe(false);
+    expect(getContext(runtime).userData?.id).toBe('user-1');
+  });
+
   it('applies profile changes returned by the silent session heartbeat', async () => {
     await mountAuthenticatedProvider();
     vi.mocked(fetch).mockClear();

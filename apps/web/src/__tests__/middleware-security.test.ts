@@ -38,6 +38,36 @@ describe('middleware security', () => {
     );
   });
 
+  it('protects an unknown future page by default', () => {
+    const response = middleware(
+      new NextRequest('http://localhost/nouveau-module/rapport?year=2027'),
+    );
+    const location = new URL(response.headers.get('location') ?? '');
+
+    expect(response.status).toBe(307);
+    expect(location.pathname).toBe('/login');
+    expect(location.searchParams.get('next')).toBe(
+      '/nouveau-module/rapport?year=2027',
+    );
+  });
+
+  it('keeps only the explicit login page public', () => {
+    const response = middleware(new NextRequest('http://localhost/login'));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('location')).toBeNull();
+    expect(response.headers.get('set-cookie')).toContain('csrf-token=');
+  });
+
+  it('does not make nested paths public through the login allowlist', () => {
+    const response = middleware(
+      new NextRequest('http://localhost/login/administration'),
+    );
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toContain('/login?next=');
+  });
+
   it('rejects mutation API requests without a CSRF token', () => {
     const response = middleware(
       new NextRequest('http://localhost/api/auth/login', {
@@ -140,5 +170,11 @@ describe('middleware security', () => {
     expect(config.matcher).toContain('/api/:path*');
     expect(mockCheckRateLimit).toHaveBeenCalledTimes(1);
     expect(response.headers.get('cache-control')).toContain('no-store');
+  });
+
+  it('excludes every Next.js internal path from page middleware coverage', () => {
+    expect(config.matcher).toContain(
+      '/((?!_next/|favicon.ico|assets/.*|.*\\..*).*)',
+    );
   });
 });
