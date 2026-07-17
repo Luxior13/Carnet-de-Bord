@@ -97,6 +97,8 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
     (notification) => !notification.read,
   ).length;
 
+  if (!canViewNotifications) return null;
+
   return (
     <Popover>
       <PopoverTrigger asChild>

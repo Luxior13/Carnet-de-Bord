@@ -1,6 +1,7 @@
 import React, { type FC } from 'react';
 
 import { QuickNavigation } from '$components/layout/GlobalSearch';
+import { NotificationCenter } from '$components/layout/NotificationCenter';
 import { type BreadcrumbEntry, BreadcrumbTrail } from '$ui/breadcrumb';
 import { SidebarTrigger } from '$ui/sidebar';
 
@@ -29,6 +30,7 @@ export const Header: FC<HeaderProps> = ({ breadcrumbs = [], title }) => {
       </div>
       <div className="flex min-w-0 shrink-0 items-center gap-2">
         <QuickNavigation />
+        <NotificationCenter />
       </div>
     </header>
   );
