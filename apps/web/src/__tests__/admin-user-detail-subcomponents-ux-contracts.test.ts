@@ -52,12 +52,32 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(profileSource).toContain('sm:flex-row sm:items-center');
   });
 
-  it('keeps guaranteed personal-account capabilities compact and secondary', () => {
+  it('keeps account autonomy compact, direct and progressively disclosed', () => {
     expect(accountSource).toContain('<details');
-    expect(accountSource).toContain('Autorisations essentielles garanties');
-    expect(accountSource).toContain('Compte personnel');
+    expect(accountSource).toContain('Autonomie du compte');
+    expect(accountSource).toContain('Droits essentiels toujours disponibles');
     expect(accountSource).toContain('Option configurable');
     expect(accountSource).toContain('Personnalisé');
+    expect(accountSource).not.toContain('configurablePermissionCount');
+    expect(accountSource).not.toContain(
+      'CONFIGURABLE_ACCOUNT_PERMISSION_CATEGORIES',
+    );
+    expect(accountSource).toContain(
+      'CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.map',
+    );
+    expect(accountSource).toContain('<h4 className=');
+    expect(accountSource).not.toContain('<h5');
+    expect(accountSource).toContain('aria-labelledby="account-autonomy-title"');
+    expect(accountSource).toContain(
+      'disabled={!canManagePermissions || isSaving}',
+    );
+    expect(accountSource).toContain(
+      'canManagePermissions && (hasChanges || hasConfigurableOverrides)',
+    );
+    expect(accountSource).not.toContain('sticky bottom-3');
+    expect(
+      accountSource.indexOf('CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.map'),
+    ).toBeLessThan(accountSource.indexOf('<details'));
   });
 
   it('focuses security on modules and confirms individual session revocation', () => {

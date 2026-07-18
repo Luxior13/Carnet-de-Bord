@@ -8,7 +8,6 @@ import {
   LockKeyhole,
   RotateCcw,
   Save,
-  ShieldCheck,
   UserCheck,
 } from 'lucide-react';
 import React, { type FC, useMemo } from 'react';
@@ -45,6 +44,7 @@ type ConfigurablePermissionRowProps = {
   canManagePermissions: boolean;
   hasCustomChoice: boolean;
   isAllowed: boolean;
+  isSaving: boolean;
   missingDependencyLabels: string[];
   onChange: (checked: boolean) => void;
   permission: PermissionItem;
@@ -69,15 +69,6 @@ const ESSENTIAL_ACCOUNT_PERMISSION_ITEMS = ACCOUNT_PERMISSION_ITEMS.filter(
 const CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS = ACCOUNT_PERMISSION_ITEMS.filter(
   (permission) => !permission.alwaysEnabled,
 );
-
-const CONFIGURABLE_ACCOUNT_PERMISSION_CATEGORIES =
-  ACCOUNT_PERMISSION_CATEGORIES.flatMap((category) => {
-    const permissions = category.permissions.filter(
-      (permission) => !permission.alwaysEnabled,
-    );
-
-    return permissions.length > 0 ? [{ ...category, permissions }] : [];
-  });
 
 const ACCOUNT_PERMISSION_ITEM_MAP = new Map(
   ACCOUNT_PERMISSION_ITEMS.map((permission) => [permission.key, permission]),
@@ -154,19 +145,20 @@ const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
   canManagePermissions,
   hasCustomChoice,
   isAllowed,
+  isSaving,
   missingDependencyLabels,
   onChange,
   permission,
 }) => (
-  <div className="border-border/60 bg-surface-inset flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+  <div className="border-border/55 grid gap-3 border-t py-3 first:border-t-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:py-4">
     <div className="min-w-0 space-y-1">
       <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <h5 className="text-foreground text-sm font-semibold">
+        <h4 className="text-foreground text-sm font-semibold">
           {permission.label}
-        </h5>
+        </h4>
         <Badge
           variant={isAllowed ? 'secondary' : 'outline'}
-          className="rounded-full"
+          className="rounded-full text-xs"
         >
           {isAllowed ? 'Autorisé' : 'Refusé'} ·{' '}
           {hasCustomChoice ? 'Personnalisé' : 'Rôle'}
@@ -192,10 +184,10 @@ const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
     <Switch
       checked={isAllowed}
       onCheckedChange={onChange}
-      disabled={!canManagePermissions}
+      disabled={!canManagePermissions || isSaving}
       aria-label={permission.label}
       aria-describedby={`account-permission-${permission.key}-description`}
-      className="self-start sm:self-center"
+      className="justify-self-start sm:justify-self-end"
     />
   </div>
 );
@@ -225,12 +217,6 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
     [roleBasePermissions],
   );
   const accountPermissionKeys = useMemo(() => getAccountPermissionKeys(), []);
-  const configurablePermissionCount =
-    CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.length;
-  const allowedConfigurablePermissionCount =
-    CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.filter((permission) =>
-      hasPermission(role, permission.key, permissions),
-    ).length;
   const hasConfigurableOverrides = CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.some(
     (permission) => permissionsMap.has(permission.key),
   );
@@ -296,7 +282,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-foreground font-semibold">
-                  Compte personnel
+                  Autonomie du compte
                 </h2>
                 <Badge
                   variant="outline"
@@ -317,167 +303,157 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
   }
 
   return (
-    <Card className="border-border/60 overflow-hidden rounded-lg py-0">
+    <Card
+      aria-labelledby="account-autonomy-title"
+      className="border-border/60 overflow-hidden rounded-lg py-0"
+    >
       <CardHeader className="border-border/60 bg-surface-muted border-b p-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
             <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-10 shrink-0 items-center justify-center rounded-lg border">
               <UserCheck className="size-5" />
             </span>
             <div className="min-w-0">
-              <h2 className="text-foreground text-base font-semibold">
-                Compte personnel
+              <h2
+                className="text-foreground text-base font-semibold"
+                id="account-autonomy-title"
+              >
+                Autonomie du compte
               </h2>
               <p className="text-muted-foreground mt-1 max-w-3xl text-sm leading-6">
-                Actions que cet utilisateur peut effectuer lui-même depuis Mon
+                Définissez ce que ce membre peut modifier lui-même depuis Mon
                 compte.
               </p>
             </div>
           </div>
-          <div className="border-border/60 bg-surface-control flex items-center gap-2 rounded-lg border px-3 py-2">
-            <ShieldCheck className="text-primary-emphasis size-4 shrink-0" />
-            <div className="min-w-0">
-              <p className="text-foreground text-sm font-medium">
-                {configurablePermissionCount} option
-                {configurablePermissionCount > 1 ? 's' : ''} configurable
-                {configurablePermissionCount > 1 ? 's' : ''}
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {allowedConfigurablePermissionCount} autorisée
-                {allowedConfigurablePermissionCount > 1 ? 's' : ''}
-              </p>
-            </div>
-          </div>
           {!canManagePermissions && (
-            <Badge variant="secondary" className="w-fit rounded-full">
+            <Badge
+              aria-label="Autonomie du compte en lecture seule"
+              className="w-fit shrink-0 rounded-full"
+              variant="secondary"
+            >
               Lecture seule
             </Badge>
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4 p-3 sm:p-4">
-        <details className="group border-primary/25 bg-primary/[0.04] overflow-hidden rounded-lg border">
-          <summary className="hover:bg-primary/[0.06] flex min-h-12 cursor-pointer list-none items-center gap-3 px-3 py-2.5 transition-colors sm:px-4 [&::-webkit-details-marker]:hidden">
-            <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-9 shrink-0 items-center justify-center rounded-lg border">
-              <LockKeyhole className="size-4" />
-            </span>
+      <CardContent className="space-y-4 p-4 sm:p-5">
+        <section aria-labelledby="account-autonomy-options-title">
+          <div className="space-y-1 pb-2">
+            <h3
+              className="text-foreground text-sm font-semibold"
+              id="account-autonomy-options-title"
+            >
+              {CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.length > 1
+                ? 'Options configurables'
+                : 'Option configurable'}
+            </h3>
+            <p className="text-muted-foreground text-xs leading-5">
+              Sans choix personnalisé, la valeur prévue par le rôle reste
+              appliquée.
+            </p>
+          </div>
+          <div>
+            {CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.map((permission) => (
+              <ConfigurablePermissionRow
+                key={permission.key}
+                permission={permission}
+                canManagePermissions={canManagePermissions}
+                hasCustomChoice={permissionsMap.has(permission.key)}
+                isAllowed={hasPermission(role, permission.key, permissions)}
+                isSaving={isSaving}
+                missingDependencyLabels={(permission.dependencies ?? [])
+                  .filter(
+                    (dependencyKey) =>
+                      !hasPermission(role, dependencyKey, permissions),
+                  )
+                  .map(
+                    (dependencyKey) =>
+                      ACCOUNT_PERMISSION_LABEL_MAP.get(dependencyKey) ??
+                      dependencyKey,
+                  )}
+                onChange={(checked) =>
+                  handleSetPermission(permission.key, checked)
+                }
+              />
+            ))}
+          </div>
+        </section>
+
+        <details className="group border-border/55 border-t pt-3">
+          <summary className="focus-visible:ring-ring/40 -mx-1 flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-md px-1 text-left focus-visible:ring-2 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+            <LockKeyhole className="text-muted-foreground size-4 shrink-0" />
             <span className="min-w-0 flex-1">
-              <span className="text-foreground block text-sm font-semibold">
-                Autorisations essentielles garanties
+              <span className="text-foreground block text-sm font-medium">
+                Droits essentiels toujours disponibles
               </span>
-              <span className="text-muted-foreground mt-0.5 block text-xs leading-5">
-                Consultation et sécurisation du compte, toujours disponibles.
+              <span className="text-muted-foreground block text-xs leading-5">
+                Aide sur les actions que le système ne permet pas de retirer.
               </span>
             </span>
-            <Badge variant="outline" className="shrink-0 rounded-full">
-              {ESSENTIAL_ACCOUNT_PERMISSION_ITEMS.length}
-            </Badge>
             <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-180" />
           </summary>
-          <div className="border-primary/20 grid gap-x-6 gap-y-3 border-t px-4 py-3 sm:grid-cols-2">
+          <ul className="mt-3 grid gap-x-6 gap-y-3 pl-6 sm:grid-cols-2">
             {ESSENTIAL_ACCOUNT_PERMISSION_ITEMS.map((permission) => (
-              <div key={permission.key} className="min-w-0">
+              <li key={permission.key} className="min-w-0">
                 <p className="text-foreground text-sm font-medium">
                   {permission.label}
                 </p>
                 <p className="text-muted-foreground mt-0.5 text-xs leading-5">
                   {permission.description}
                 </p>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </details>
-
-        <section className="space-y-4">
-          <div className="space-y-1">
-            <h3 className="text-foreground text-sm font-semibold">
-              {configurablePermissionCount > 1
-                ? 'Options configurables'
-                : 'Option configurable'}
-            </h3>
-            <p className="text-muted-foreground text-xs leading-5">
-              Sans choix personnalisé, chaque option conserve la valeur prévue
-              par le rôle de l&apos;utilisateur.
-            </p>
-          </div>
-          {CONFIGURABLE_ACCOUNT_PERMISSION_CATEGORIES.map((category) => (
-            <div key={category.key} className="space-y-2">
-              <div className="space-y-1">
-                <h4 className="text-foreground text-sm font-semibold">
-                  {category.label}
-                </h4>
-                <p className="text-muted-foreground text-xs">
-                  {category.description}
-                </p>
-              </div>
-              <div className="space-y-2">
-                {category.permissions.map((permission) => (
-                  <ConfigurablePermissionRow
-                    key={permission.key}
-                    permission={permission}
-                    canManagePermissions={canManagePermissions}
-                    hasCustomChoice={permissionsMap.has(permission.key)}
-                    isAllowed={hasPermission(role, permission.key, permissions)}
-                    missingDependencyLabels={(permission.dependencies ?? [])
-                      .filter(
-                        (dependencyKey) =>
-                          !hasPermission(role, dependencyKey, permissions),
-                      )
-                      .map(
-                        (dependencyKey) =>
-                          ACCOUNT_PERMISSION_LABEL_MAP.get(dependencyKey) ??
-                          dependencyKey,
-                      )}
-                    onChange={(checked) =>
-                      handleSetPermission(permission.key, checked)
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </section>
       </CardContent>
-      {canManagePermissions && (
-        <CardFooter className="border-border/60 bg-surface-muted/95 sticky bottom-3 z-20 flex-col items-stretch justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center">
+      {canManagePermissions && (hasChanges || hasConfigurableOverrides) && (
+        <CardFooter className="border-border/60 bg-surface-muted flex-col items-stretch justify-between gap-3 rounded-b-lg border-t p-3 sm:flex-row sm:items-center">
           <p className="text-muted-foreground text-xs">
-            {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
+            {hasChanges
+              ? 'Modifications non enregistrées'
+              : 'Exception personnalisée active'}
           </p>
           <div className="flex flex-wrap justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleResetPersonalPermissions}
-              disabled={isSaving || !hasConfigurableOverrides}
-              title="Réinitialiser les options aux valeurs du rôle"
-            >
-              <RotateCcw className="size-4" />
-              Réinitialiser au rôle
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onCancel}
-              disabled={!hasChanges || isSaving}
-            >
-              Annuler
-            </Button>
-            <Button
-              type="button"
-              onClick={onSave}
-              disabled={isSaving || !canSave}
-              size="sm"
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              {isSaving ? (
-                <Loader2 size={16} className="mr-2 animate-spin" />
-              ) : (
-                <Save size={16} className="mr-2" />
-              )}
-              Enregistrer
-            </Button>
+            {hasConfigurableOverrides && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleResetPersonalPermissions}
+                disabled={isSaving}
+              >
+                <RotateCcw className="size-4" />
+                Réinitialiser au rôle
+              </Button>
+            )}
+            {hasChanges && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onCancel}
+                  disabled={isSaving}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  type="button"
+                  onClick={onSave}
+                  disabled={isSaving || !canSave}
+                  size="sm"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  {isSaving ? (
+                    <Loader2 size={16} className="mr-2 animate-spin" />
+                  ) : (
+                    <Save size={16} className="mr-2" />
+                  )}
+                  Enregistrer
+                </Button>
+              </>
+            )}
           </div>
         </CardFooter>
       )}
