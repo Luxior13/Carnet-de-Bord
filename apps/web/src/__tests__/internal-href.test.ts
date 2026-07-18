@@ -51,16 +51,16 @@ describe('known notification destinations', () => {
     '/',
     '/mon-compte?section=security',
     '/systeme/journal-activite?period=7d',
+    '/systeme/parametres',
     '/administration/utilisateurs/user-1?section=access',
   ])('accepts the live destination %s', (href) => {
     expect(isKnownInternalPageHref(href)).toBe(true);
   });
 
-  it.each([
-    '/future-module',
-    '/systeme/parametres',
-    '/administration/utilisateurs/user-1/unknown',
-  ])('rejects the unknown or planned destination %s', (href) => {
-    expect(isKnownInternalPageHref(href)).toBe(false);
-  });
+  it.each(['/future-module', '/administration/utilisateurs/user-1/unknown'])(
+    'rejects the unknown or planned destination %s',
+    (href) => {
+      expect(isKnownInternalPageHref(href)).toBe(false);
+    },
+  );
 });

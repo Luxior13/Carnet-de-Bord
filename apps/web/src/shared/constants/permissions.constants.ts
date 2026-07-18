@@ -254,11 +254,10 @@ const BASELINE_PERMISSION_ITEMS: PermissionItem[] = [
 ];
 
 /**
- * Operational APIs without a live administration screen. Their access is
- * role-bound until the corresponding UI becomes live, so they never appear
+ * Operational capabilities intentionally bound to a role. They never appear
  * in the per-user grant editor and cannot be overridden through it.
  */
-const ROLE_BOUND_API_PERMISSION_ITEMS: PermissionItem[] = [
+const ROLE_BOUND_PERMISSION_ITEMS: PermissionItem[] = [
   activePermission({
     action: 'send',
     description:
@@ -274,29 +273,27 @@ const ROLE_BOUND_API_PERMISSION_ITEMS: PermissionItem[] = [
   }),
   activePermission({
     action: 'view',
-    description:
-      "Consulter les paramètres globaux via l'API (interface à venir)",
+    description: "Consulter la configuration globale de l'application",
     grantable: false,
     key: PERMISSIONS.SETTINGS.VIEW,
     label: 'Consulter les paramètres système',
     module: 'Paramètres',
     risk: 'sensitive',
-    route: 'GET /api/systeme/parametres',
-    surface: 'api',
+    route: '/systeme/parametres',
+    surface: 'page',
   }),
   activePermission({
     action: 'update',
     dependencies: [PERMISSIONS.SETTINGS.VIEW],
     description:
-      "Modifier les paramètres globaux via l'API sécurisée (interface à venir)",
+      "Modifier l'interface globale et les durées de conservation ; une réduction demande le mot de passe",
     grantable: false,
     key: PERMISSIONS.SETTINGS.UPDATE,
     label: 'Modifier les paramètres système',
     module: 'Paramètres',
     risk: 'critical',
-    route: 'PUT /api/systeme/parametres/[key]',
-    stepUpOnUse: true,
-    surface: 'api',
+    route: '/systeme/parametres',
+    surface: 'page',
   }),
 ];
 
@@ -774,7 +771,7 @@ const ACCOUNT_PERMISSION_ITEMS = ACCOUNT_PERMISSION_CATEGORIES.flatMap(
 );
 const ALL_PERMISSION_ITEMS = [
   ...BASELINE_PERMISSION_ITEMS,
-  ...ROLE_BOUND_API_PERMISSION_ITEMS,
+  ...ROLE_BOUND_PERMISSION_ITEMS,
   ...ACCESS_PERMISSION_ITEMS,
   ...ACCOUNT_PERMISSION_ITEMS,
 ];

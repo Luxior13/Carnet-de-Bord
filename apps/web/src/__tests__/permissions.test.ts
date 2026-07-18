@@ -124,7 +124,7 @@ describe('hasPermission', () => {
     );
   });
 
-  it('keeps role-bound APIs outside per-user overrides', () => {
+  it('keeps role-bound capabilities outside per-user overrides', () => {
     const attemptedGrant = {
       [PERMISSIONS.NOTIFICATIONS.SEND]: true,
       [PERMISSIONS.SETTINGS.UPDATE]: true,
@@ -149,6 +149,19 @@ describe('hasPermission', () => {
         [PERMISSIONS.SETTINGS.UPDATE]: false,
       }),
     ).toBe(true);
+    expect(getPermissionItem(PERMISSIONS.SETTINGS.VIEW)).toMatchObject({
+      route: '/systeme/parametres',
+      surface: 'page',
+    });
+    expect(getPermissionItem(PERMISSIONS.SETTINGS.UPDATE)).toMatchObject({
+      dependencies: [PERMISSIONS.SETTINGS.VIEW],
+      requiresTargetMfa: true,
+      route: '/systeme/parametres',
+      surface: 'page',
+    });
+    expect(
+      getPermissionItem(PERMISSIONS.SETTINGS.UPDATE)?.stepUpOnUse,
+    ).toBeUndefined();
   });
 
   it('never grants unknown or roadmap-only capability names', () => {
@@ -474,7 +487,7 @@ describe('permission catalogue', () => {
     ]);
   });
 
-  it('limits the administrative grant editor to the two live pages', () => {
+  it('limits the administrative grant editor to delegable live pages', () => {
     expect(PERMISSION_CATEGORIES.map((category) => category.key)).toEqual([
       'users',
       'system-activity',

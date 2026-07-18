@@ -7,6 +7,7 @@ import {
   getNavigationPageBySlug,
 } from '$constants/app.constants';
 import { SystemActivityJournalPage } from '$features/audit/SystemActivityJournalPage';
+import { SystemSettingsPage } from '$features/settings/SystemSettingsPage';
 
 type SystemePageProps = {
   params: Promise<{ slug?: string[] }>;
@@ -27,6 +28,10 @@ export default async function SystemePage({
 
   if (match.item.href === '/systeme/journal-activite') {
     return <SystemActivityJournalPage item={match.item} space={match.space} />;
+  }
+
+  if (match.item.href === '/systeme/parametres') {
+    return <SystemSettingsPage item={match.item} space={match.space} />;
   }
 
   notFound();

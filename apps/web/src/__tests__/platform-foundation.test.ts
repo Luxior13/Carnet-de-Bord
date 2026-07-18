@@ -1,12 +1,17 @@
 import { readFileSync } from 'node:fs';
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 
+import {
+  requiresPasswordForSystemSettingChange,
+  SYSTEM_SETTING_CATALOG,
+} from '$constants/system-setting-catalog.constants';
 import {
   isSystemSettingKey,
   parseSystemSettingValue,
   SYSTEM_SETTING_DEFINITIONS,
 } from '$constants/system-settings.constants';
+import type { SystemSettingValue } from '$server/system-settings';
 
 const mocks = vi.hoisted(() => ({
   auditLogDeleteMany: vi.fn(),
@@ -232,6 +237,10 @@ describe('notification foundation', () => {
 });
 
 describe('system setting foundation', () => {
+  it('types every validated numeric setting as a number, not its default literal', () => {
+    expectTypeOf<SystemSettingValue>().toEqualTypeOf<number>();
+  });
+
   it('keeps a closed, validated and defaulted setting catalog', () => {
     expect(isSystemSettingKey('ui.defaultPageSize')).toBe(true);
     expect(isSystemSettingKey('unknown.setting')).toBe(false);
@@ -242,6 +251,44 @@ describe('system setting foundation', () => {
     expect(() =>
       parseSystemSettingValue('ui.defaultPageSize', 1_000),
     ).toThrow();
+  });
+
+  it('protects only destructive retention reductions with the password', () => {
+    expect(Object.keys(SYSTEM_SETTING_CATALOG)).toEqual([
+      'audit.retentionDays',
+      'jobs.retentionDays',
+      'notifications.retentionDays',
+      'ui.defaultPageSize',
+    ]);
+    expect(
+      requiresPasswordForSystemSettingChange('ui.defaultPageSize', 50, 10),
+    ).toBe(false);
+    expect(
+      requiresPasswordForSystemSettingChange(
+        'notifications.retentionDays',
+        180,
+        365,
+      ),
+    ).toBe(false);
+    expect(
+      requiresPasswordForSystemSettingChange(
+        'notifications.retentionDays',
+        180,
+        90,
+      ),
+    ).toBe(true);
+  });
+
+  it('never caches destructive retention cutoffs in a local process', async () => {
+    const { isSystemSettingLocallyCacheable } =
+      await import('$server/system-settings');
+
+    expect(isSystemSettingLocallyCacheable('ui.defaultPageSize')).toBe(true);
+    expect(isSystemSettingLocallyCacheable('audit.retentionDays')).toBe(false);
+    expect(isSystemSettingLocallyCacheable('jobs.retentionDays')).toBe(false);
+    expect(isSystemSettingLocallyCacheable('notifications.retentionDays')).toBe(
+      false,
+    );
   });
 
   it('fails optimistic updates when the stored version moved', async () => {

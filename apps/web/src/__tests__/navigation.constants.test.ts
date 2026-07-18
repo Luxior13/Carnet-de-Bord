@@ -24,7 +24,7 @@ import {
 type TestUser = {
   isProtected: boolean;
   permissions: Record<string, boolean>;
-  role: 'USER';
+  role: 'ADMIN' | 'USER';
 };
 
 function buildUser(
@@ -36,6 +36,14 @@ function buildUser(
     permissions,
     role: 'USER',
   } as const;
+}
+
+function buildAdmin(): TestUser {
+  return {
+    isProtected: false,
+    permissions: {},
+    role: 'ADMIN',
+  };
 }
 
 function flattenHrefs(items: readonly NavItem[]): string[] {
@@ -89,7 +97,7 @@ describe('navigation availability', () => {
     expect(hrefs).toContain('/bureau-juridique');
     expect(hrefs).toContain('/tresorerie/operations');
     expect(hrefs).toContain('/sport-team-control');
-    expect(hrefs).toContain('/systeme/parametres');
+    expect(hrefs).not.toContain('/systeme/parametres');
   });
 
   it('keeps roadmap capability names on planned navigation items', () => {
@@ -136,6 +144,18 @@ describe('navigation availability', () => {
     expect(canOpenNavigationHref(user, '/')).toBe(true);
     expect(canOpenNavigationHref(user, '/mon-compte')).toBe(true);
     expect(canOpenNavigationHref(user, '/mes-notifications')).toBe(true);
+    expect(canOpenNavigationHref(user, '/mon-compte?section=security')).toBe(
+      true,
+    );
+    expect(
+      canOpenNavigationHref(user, '/systeme/parametres?section=retention'),
+    ).toBe(false);
+    expect(
+      canOpenNavigationHref(
+        buildAdmin(),
+        '/systeme/parametres?section=retention',
+      ),
+    ).toBe(true);
     expect(canOpenNavigationHref(user, '/tableau-de-bord/mes-taches')).toBe(
       false,
     );
@@ -155,7 +175,7 @@ describe('navigation availability', () => {
     expect(hrefs).not.toContain('/systeme/journal-activite');
   });
 
-  it('opens the system hub for either live administrative family', () => {
+  it('opens the system hub for every live administrative family', () => {
     const systemHub = getNavigationItemByHref('/systeme');
 
     expect(systemHub).not.toBeNull();
@@ -173,20 +193,24 @@ describe('navigation availability', () => {
         systemHub,
       ),
     ).toBe(true);
+    expect(canAccessNavigationItem(buildAdmin(), systemHub)).toBe(true);
     expect(canAccessNavigationItem(buildUser(), systemHub)).toBe(false);
   });
 
-  it('shows the live journal while settings stay roadmap-only in navigation', () => {
+  it('shows system settings live for administrators and removes them from the roadmap', () => {
     const liveHrefs = getVisibleHrefs({ [PERMISSIONS.AUDIT.VIEW]: true });
-    const roadmapHrefs = getRoadmapHrefs({
-      [PERMISSIONS.SETTINGS.VIEW]: true,
-    });
+    const adminHrefs = getVisibleNavigationSpaces(buildAdmin()).flatMap(
+      (space) =>
+        space.sections.flatMap((section) => flattenHrefs(section.items)),
+    );
+    const roadmapHrefs = getRoadmapHrefs();
 
     expect(liveHrefs).toContain('/systeme');
     expect(liveHrefs).toContain('/systeme/journal-activite');
     expect(liveHrefs).not.toContain('/administration/utilisateurs');
     expect(liveHrefs).not.toContain('/systeme/parametres');
-    expect(roadmapHrefs).toContain('/systeme/parametres');
+    expect(adminHrefs).toContain('/systeme/parametres');
+    expect(roadmapHrefs).not.toContain('/systeme/parametres');
     expect(roadmapHrefs).not.toContain('/systeme/journal-activite');
   });
 
@@ -206,6 +230,7 @@ describe('navigation availability', () => {
         [PERMISSIONS.USERS.VIEW]: true,
       }),
     );
+    const adminTools = getLiveNavigationSpaceTools('system', buildAdmin());
 
     expect(userTools.map((item) => item.href)).toEqual([
       '/administration/utilisateurs',
@@ -217,12 +242,21 @@ describe('navigation availability', () => {
       '/administration/utilisateurs',
       '/systeme/journal-activite',
     ]);
+    expect(adminTools.map((item) => item.href)).toEqual([
+      '/administration/utilisateurs',
+      '/systeme/parametres',
+      '/systeme/journal-activite',
+    ]);
     expect(getLiveNavigationSpaceTools('system', buildUser())).toEqual([]);
     expect(
       getLiveNavigationSpaceTools('system', buildUser({}, true)).map(
         (item) => item.href,
       ),
-    ).toEqual(['/administration/utilisateurs', '/systeme/journal-activite']);
+    ).toEqual([
+      '/administration/utilisateurs',
+      '/systeme/parametres',
+      '/systeme/journal-activite',
+    ]);
   });
 
   it('keeps the desktop sidebar live on a direct planned route', () => {
@@ -281,6 +315,7 @@ describe('navigation availability', () => {
       '/recherche',
       '/systeme',
       '/administration/utilisateurs',
+      '/systeme/parametres',
       '/systeme/journal-activite',
     ]);
     expect(allHrefs).toEqual(rawHrefs);

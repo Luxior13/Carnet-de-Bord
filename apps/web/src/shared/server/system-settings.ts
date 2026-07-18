@@ -3,7 +3,6 @@ import 'server-only';
 import type { Prisma } from '@prisma/client';
 
 import {
-  isSystemSettingKey,
   SYSTEM_SETTING_DEFINITIONS,
   type SystemSettingKey,
 } from '$constants/system-settings.constants';
@@ -18,8 +17,15 @@ const settingCache = new Map<
   { expiresAt: number; value: unknown }
 >();
 
-export type SystemSettingValue<TKey extends SystemSettingKey> =
-  (typeof SYSTEM_SETTING_DEFINITIONS)[TKey]['defaultValue'];
+export const invalidateSystemSettingCache = (key: SystemSettingKey): void => {
+  settingCache.delete(key);
+};
+
+export const isSystemSettingLocallyCacheable = (
+  key: SystemSettingKey,
+): boolean => key === 'ui.defaultPageSize';
+
+export type SystemSettingValue = number;
 
 export class SystemSettingConflictError extends Error {
   constructor() {
@@ -37,14 +43,20 @@ export class SystemSettingConflictError extends Error {
 export const getSystemSettingValue = async <TKey extends SystemSettingKey>(
   key: TKey,
   client: SettingReadClient = prisma,
-): Promise<SystemSettingValue<TKey>> => {
+): Promise<SystemSettingValue> => {
   // TKey comes from the closed SystemSettingKey union.
   // eslint-disable-next-line security/detect-object-injection
   const definition = SYSTEM_SETTING_DEFINITIONS[key];
-  const canUseCache = client === prisma && process.env.NODE_ENV !== 'test';
+  // Retention values are intentionally never cached: after an administrator
+  // increases a duration, a worker in another process must not keep applying
+  // the older, shorter value and delete data that should now be retained.
+  const canUseCache =
+    isSystemSettingLocallyCacheable(key) &&
+    client === prisma &&
+    process.env.NODE_ENV !== 'test';
   const cached = canUseCache ? settingCache.get(key) : undefined;
   if (cached && cached.expiresAt > Date.now()) {
-    return cached.value as SystemSettingValue<TKey>;
+    return cached.value as SystemSettingValue;
   }
 
   const setting = await client.systemSetting.findUnique({
@@ -69,7 +81,7 @@ export const getSystemSettingValue = async <TKey extends SystemSettingKey>(
     });
   }
 
-  return value as SystemSettingValue<TKey>;
+  return value;
 };
 
 export const createSystemSetting = async (
@@ -102,7 +114,6 @@ export const createSystemSetting = async (
       version: true,
     },
   });
-  if (isSystemSettingKey(input.key)) settingCache.delete(input.key);
 
   return setting;
 };
@@ -149,7 +160,6 @@ export const updateSystemSetting = async (
   });
 
   if (!setting) throw new SystemSettingConflictError();
-  if (isSystemSettingKey(input.key)) settingCache.delete(input.key);
 
   return setting;
 };

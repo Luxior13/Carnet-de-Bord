@@ -13,6 +13,7 @@ const KNOWN_INTERNAL_PAGE_PATHS = new Set([
   '/recherche',
   '/systeme',
   '/systeme/journal-activite',
+  '/systeme/parametres',
 ]);
 const USER_DETAIL_PATH_PATTERN = /^\/administration\/utilisateurs\/[^/]+$/;
 
@@ -89,15 +90,24 @@ export const isSafeInternalHref = (value: string): boolean => {
   }
 };
 
+/** Returns the canonical pathname of a safe internal href, without its query
+ * string or fragment. This lets permission checks resolve navigation entries
+ * consistently for links such as `/systeme/parametres?section=retention`.
+ */
+export const getSafeInternalPathname = (value: string): string | null => {
+  if (!isSafeInternalHref(value)) return null;
+
+  return new URL(value, INTERNAL_HREF_BASE_URL).pathname;
+};
+
 /**
  * Notification links use a closed list of live pages. This prevents durable
  * messages from advertising stale, planned or mistyped destinations. Dynamic
  * user records are the only currently supported parameterized page.
  */
 export const isKnownInternalPageHref = (value: string): boolean => {
-  if (!isSafeInternalHref(value)) return false;
-
-  const pathname = new URL(value, INTERNAL_HREF_BASE_URL).pathname;
+  const pathname = getSafeInternalPathname(value);
+  if (!pathname) return false;
 
   return (
     KNOWN_INTERNAL_PAGE_PATHS.has(pathname) ||

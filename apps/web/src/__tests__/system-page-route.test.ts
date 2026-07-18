@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   }),
   SystemActivityJournalPage: vi.fn(() => null),
   SystemHomePage: vi.fn(() => null),
+  SystemSettingsPage: vi.fn(() => null),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -18,6 +19,10 @@ vi.mock('$components/private-navigation/SystemHomePage', () => ({
 
 vi.mock('$features/audit/SystemActivityJournalPage', () => ({
   SystemActivityJournalPage: mocks.SystemActivityJournalPage,
+}));
+
+vi.mock('$features/settings/SystemSettingsPage', () => ({
+  SystemSettingsPage: mocks.SystemSettingsPage,
 }));
 
 describe('/systeme route availability', () => {
@@ -55,7 +60,25 @@ describe('/systeme route availability', () => {
     expect(mocks.notFound).not.toHaveBeenCalled();
   });
 
-  it.each([['parametres'], ['modeles-documents']])(
+  it('renders the operational system settings page', async () => {
+    const { default: SystemePage } =
+      await import('$app/systeme/[[...slug]]/page');
+
+    const result = await SystemePage({
+      params: Promise.resolve({ slug: ['parametres'] }),
+    });
+
+    expect(result).toMatchObject({
+      props: {
+        item: expect.objectContaining({ href: '/systeme/parametres' }),
+        space: expect.objectContaining({ id: 'system' }),
+      },
+      type: mocks.SystemSettingsPage,
+    });
+    expect(mocks.notFound).not.toHaveBeenCalled();
+  });
+
+  it.each([['modeles-documents']])(
     'rejects the planned destination /systeme/%s',
     async (slug) => {
       const { default: SystemePage } =

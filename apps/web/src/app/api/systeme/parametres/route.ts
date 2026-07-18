@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
+import type { SystemSettingKey } from '$constants/system-setting-catalog.constants';
 import { SYSTEM_SETTING_DEFINITIONS } from '$constants/system-settings.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
@@ -19,38 +20,41 @@ export async function GET(
     const permission = requirePermission(auth.user, PERMISSIONS.SETTINGS.VIEW);
     if (!permission.success) return permission.response;
 
+    const settingKeys = Object.keys(
+      SYSTEM_SETTING_DEFINITIONS,
+    ) as SystemSettingKey[];
     const storedSettings = await prisma.systemSetting.findMany({
       select: {
-        description: true,
         key: true,
         updatedAt: true,
         value: true,
         version: true,
       },
+      where: { key: { in: settingKeys } },
     });
     const storedByKey = new Map(
       storedSettings.map((setting) => [setting.key, setting]),
     );
-    const settings = Object.entries(SYSTEM_SETTING_DEFINITIONS).map(
-      ([key, definition]) => {
-        const stored = storedByKey.get(key);
-        const storedValue = stored
-          ? definition.schema.safeParse(stored.value)
-          : null;
+    const settings = settingKeys.map((key) => {
+      // SystemSettingKey is derived from this closed catalogue.
+      // eslint-disable-next-line security/detect-object-injection
+      const definition = SYSTEM_SETTING_DEFINITIONS[key];
+      const stored = storedByKey.get(key);
+      const storedValue = stored
+        ? definition.schema.safeParse(stored.value)
+        : null;
 
-        return {
-          description: stored?.description ?? definition.description,
-          key,
-          updatedAt:
-            stored?.updatedAt.toISOString() ?? new Date(0).toISOString(),
-          value:
-            storedValue?.success === true
-              ? storedValue.data
-              : definition.defaultValue,
-          version: stored?.version ?? 0,
-        } satisfies SystemSettingItem;
-      },
-    );
+      return {
+        description: definition.description,
+        key,
+        updatedAt: stored?.updatedAt.toISOString() ?? new Date(0).toISOString(),
+        value:
+          storedValue?.success === true
+            ? storedValue.data
+            : definition.defaultValue,
+        version: stored?.version ?? 0,
+      } satisfies SystemSettingItem;
+    });
 
     return NextResponse.json({ data: settings, success: true });
   } catch (error) {

@@ -118,7 +118,28 @@ export const FEATURES = {
     id: 'system-home',
     label: "Vue d'ensemble",
     permissionMode: 'any',
-    requiredPermissions: [PERMISSIONS.USERS.VIEW, PERMISSIONS.AUDIT.VIEW],
+    requiredPermissions: [
+      PERMISSIONS.USERS.VIEW,
+      PERMISSIONS.AUDIT.VIEW,
+      PERMISSIONS.SETTINGS.VIEW,
+    ],
+  }),
+  systemSettings: defineFeature({
+    audit: {
+      pageKey: 'system-settings',
+      pageLabel: 'Paramètres système',
+      poleKey: 'system',
+      poleLabel: 'Système',
+    },
+    availability: 'live',
+    description:
+      "Configuration globale de l'interface et de la conservation des données.",
+    href: '/systeme/parametres',
+    icon: 'Settings',
+    id: 'system-settings',
+    label: 'Paramètres système',
+    permissionMode: 'all',
+    requiredPermissions: [PERMISSIONS.SETTINGS.VIEW],
   }),
   users: defineFeature({
     audit: {

@@ -1,5 +1,7 @@
 import type { BackgroundJobStatus, NotificationSeverity } from '@repo/shared';
 
+import type { SystemSettingKey } from '$constants/system-setting-catalog.constants';
+
 export type NotificationItem = {
   archivedAt: string | null;
   body: string;
@@ -24,7 +26,7 @@ export type NotificationListData = {
 
 export type SystemSettingItem = {
   description: string | null;
-  key: string;
+  key: SystemSettingKey;
   updatedAt: string;
   value: unknown;
   version: number;

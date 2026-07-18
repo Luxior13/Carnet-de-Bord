@@ -1,42 +1,37 @@
 import { z } from 'zod';
 
-const defineSystemSetting = <TSchema extends z.ZodType>(definition: {
-  defaultValue: z.infer<TSchema>;
-  description: string;
-  schema: TSchema;
-}): {
-  defaultValue: z.infer<TSchema>;
-  description: string;
-  schema: TSchema;
-} => definition;
+import {
+  SYSTEM_SETTING_CATALOG,
+  type SystemSettingCatalogItem,
+  type SystemSettingKey,
+} from '$constants/system-setting-catalog.constants';
+
+export {
+  isSystemSettingKey,
+  type SystemSettingKey,
+} from '$constants/system-setting-catalog.constants';
+
+const defineSystemSetting = <const TSetting extends SystemSettingCatalogItem>(
+  definition: TSetting,
+): TSetting & { schema: z.ZodNumber } => ({
+  ...definition,
+  schema: z.number().int().min(definition.min).max(definition.max),
+});
 
 export const SYSTEM_SETTING_DEFINITIONS = {
-  'audit.retentionDays': defineSystemSetting({
-    defaultValue: 1_095,
-    description: "Durée de conservation du journal d'activité en jours",
-    schema: z.number().int().min(365).max(3_650),
-  }),
-  'jobs.retentionDays': defineSystemSetting({
-    defaultValue: 30,
-    description: 'Durée de conservation des traitements terminés en jours',
-    schema: z.number().int().min(7).max(365),
-  }),
-  'notifications.retentionDays': defineSystemSetting({
-    defaultValue: 180,
-    description: 'Durée de conservation des notifications en jours',
-    schema: z.number().int().min(30).max(730),
-  }),
-  'ui.defaultPageSize': defineSystemSetting({
-    defaultValue: 25,
-    description: 'Nombre de lignes proposé par défaut dans les listes',
-    schema: z.number().int().min(10).max(100),
-  }),
+  'audit.retentionDays': defineSystemSetting(
+    SYSTEM_SETTING_CATALOG['audit.retentionDays'],
+  ),
+  'jobs.retentionDays': defineSystemSetting(
+    SYSTEM_SETTING_CATALOG['jobs.retentionDays'],
+  ),
+  'notifications.retentionDays': defineSystemSetting(
+    SYSTEM_SETTING_CATALOG['notifications.retentionDays'],
+  ),
+  'ui.defaultPageSize': defineSystemSetting(
+    SYSTEM_SETTING_CATALOG['ui.defaultPageSize'],
+  ),
 } as const;
-
-export type SystemSettingKey = keyof typeof SYSTEM_SETTING_DEFINITIONS;
-
-export const isSystemSettingKey = (key: string): key is SystemSettingKey =>
-  Object.hasOwn(SYSTEM_SETTING_DEFINITIONS, key);
 
 export const parseSystemSettingValue = (
   key: SystemSettingKey,

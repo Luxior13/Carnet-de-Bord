@@ -1,9 +1,4 @@
-import {
-  type FeatureId,
-  FEATURES,
-} from '$constants/feature-registry.constants';
-import type { NavigationIconName } from '$constants/navigation-icon.constants';
-import type { NavigationSpaceTone } from '$constants/navigation-theme.constants';
+import { FEATURES } from '$constants/feature-registry.constants';
 import {
   DEFAULT_ROLE_LABEL,
   getAccessLabel as getPermissionAccessLabel,
@@ -17,7 +12,14 @@ import {
   ROLE_LABELS,
 } from '$constants/permissions.constants';
 import type { UserType } from '$types/auth.types';
-import { isSafeInternalHref } from '$utils/internal-href.utils';
+import type {
+  NavigationAvailability,
+  NavigationAvailabilityFilter,
+  NavigationSpace,
+  NavItem,
+  NavSection,
+} from '$types/navigation.types';
+import { getSafeInternalPathname } from '$utils/internal-href.utils';
 export const SITE_CONFIG = {
   description: "Gestion privée d'équipe esport",
   logo: '/assets/noc.png',
@@ -27,50 +29,13 @@ export const SITE_CONFIG = {
 };
 
 export { DEFAULT_ROLE_LABEL, PROTECTED_ROLE_LABEL, ROLE_LABELS };
-
-export type NavigationAvailability = 'live' | 'planned';
-export type NavigationAvailabilityFilter = NavigationAvailability | 'all';
-
-// Navigation items for sidebar
-export type NavItem = {
-  /**
-   * Destinations are deliberately planned by default. A page must be
-   * explicitly promoted to `live` before it can enter the main navigation.
-   */
-  availability?: NavigationAvailability;
-  children?: NavItem[];
-  description?: string;
-  featureId?: FeatureId;
-  href: string;
-  hubActionLabel?: string;
-  icon: NavigationIconName;
-  label: string;
-  permissionMode?: 'all' | 'any';
-  requiredPermissions?: readonly string[];
-  status?: string;
-  subTabs?: readonly string[];
-};
-
-export type NavSection = {
-  id: string;
-  items: NavItem[];
-  label: string;
-  position?: 'top' | 'bottom';
-};
-
-export type NavigationSpace = {
-  badge?: string;
-  description: string;
-  href: string;
-  icon: NavigationIconName;
-  id: string;
-  label: string;
-  matchHrefs?: readonly string[];
-  routeBaseHref?: string;
-  sections: NavSection[];
-  summary: string;
-  tone: NavigationSpaceTone;
-};
+export type {
+  NavigationAvailability,
+  NavigationAvailabilityFilter,
+  NavigationSpace,
+  NavItem,
+  NavSection,
+} from '$types/navigation.types';
 
 const dashboardAccess = [PERMISSIONS.DASHBOARD.VIEW] as const;
 const documentsAccess = [ROADMAP_PERMISSIONS.DOCUMENTS.VIEW] as const;
@@ -109,6 +74,7 @@ const usersAccess = [PERMISSIONS.USERS.VIEW] as const;
 const systemHubAccess = [
   PERMISSIONS.USERS.VIEW,
   PERMISSIONS.AUDIT.VIEW,
+  PERMISSIONS.SETTINGS.VIEW,
 ] as const;
 type NavigationUser = Pick<
   UserType,
@@ -568,10 +534,13 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: usersAccess,
           },
           {
-            description: 'Configuration des jeux, statuts, catégories et tags.',
-            href: '/systeme/parametres',
-            icon: 'Settings',
-            label: 'Paramètres',
+            availability: 'live',
+            description: FEATURES.systemSettings.description,
+            featureId: FEATURES.systemSettings.id,
+            href: FEATURES.systemSettings.href,
+            hubActionLabel: 'Configurer le système',
+            icon: FEATURES.systemSettings.icon,
+            label: FEATURES.systemSettings.label,
             requiredPermissions: systemSettingsAccess,
           },
           {
@@ -769,8 +738,7 @@ export function canAccessNavigationItem(
   if (!user) return false;
   if (!item.requiredPermissions?.length) return true;
   if (user.isProtected) {
-    // Planned cards are descriptive. A live navigation typo must not be
-    // hidden by the protected-account bypass.
+    // A protected account must not hide a typo on a live navigation item.
     return (
       getNavigationAvailability(item) === 'planned' ||
       item.requiredPermissions.every(isKnownPermissionKey)
@@ -907,16 +875,13 @@ export function canOpenNavigationHref(
   user: NavigationUser,
   href: string,
 ): boolean {
-  if (!isSafeInternalHref(href)) return false;
-  const item = getNavigationItemByHref(href);
-  // Dynamic destinations (for example, a specific user record) are checked by
-  // their destination page. Known navigation entries are filtered here.
+  const pathname = getSafeInternalPathname(href);
+  if (!pathname) return false;
+  const item = getNavigationItemByHref(pathname);
   if (!item) return true;
 
   return getVisibleNavigationSpaces(user).some((space) =>
-    getNavigationSpaceItems(space).some(
-      (visibleItem) => visibleItem.href === href,
-    ),
+    getNavigationSpaceItems(space).some((nav) => nav.href === pathname),
   );
 }
 
