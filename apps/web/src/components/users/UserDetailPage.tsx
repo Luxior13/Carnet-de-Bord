@@ -52,7 +52,6 @@ import {
   getAccessLabel,
   getAccessPermissionKeys,
   getAccountPermissionKeys,
-  getPermissionItem,
   getRoleColor,
   hasPermission,
   PERMISSION_CATEGORIES,
@@ -432,8 +431,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   const [permissions, setPermissions] = useState<PermissionsData | null>(null);
   const [isSavingPermissions, setIsSavingPermissions] = useState(false);
-  const adminStepUp = useAdminStepUpController({ currentUser });
-  const { pendingStepUpAction, requestStepUpForResponse } = adminStepUp;
+  const adminStepUp = useAdminStepUpController();
+  const {
+    pendingStepUpAction,
+    requestPasswordReauthenticationForResponse,
+    requestStepUpForResponse,
+  } = adminStepUp;
 
   const isProtectedActor = currentUser?.isProtected === true;
   const canViewUsers = currentUser
@@ -798,13 +801,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         targetCriticalAccessReady: user.criticalAccessReady,
       })
     : null;
-  const accessChangesRequireCriticalMfa =
-    hasRoleChanges ||
-    (accessMutationAnalysis?.summary.delegationChangeCount ?? 0) > 0 ||
-    (accessMutationAnalysis?.summary.grantedPermissionKeys.some(
-      (permissionKey) => getPermissionItem(permissionKey)?.risk === 'critical',
-    ) ??
-      false);
   const hasAccountChanges = hasAccountPermissionChanges;
   const hasSecurityChanges = !!user && editForm.isActive !== user.isActive;
   const hasCurrentSectionChanges =
@@ -1699,7 +1695,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         toast.success('Autorisations mises à jour');
       } else {
         if (
-          requestStepUpForResponse(data, {
+          requestPasswordReauthenticationForResponse(data, {
             description:
               'Ce changement peut modifier le rôle ou les autorisations sensibles de l’utilisateur et fermer ses sessions.',
             execute: handleSaveAccess,
@@ -2079,8 +2075,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         )}
         {selectedView === 'access' ? (
           <UserAccessTab
-            adminModeExpiresAt={adminStepUp.adminModeExpiresAt}
-            adminModeRemainingLabel={adminStepUp.adminModeRemainingLabel}
             user={user}
             role={editForm.role}
             setRole={(role) =>
@@ -2102,13 +2096,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             onCancel={handleCancelAccess}
             hasChanges={hasAccessChanges}
             canSave={canSaveAccess}
-            isAdminModeActive={adminStepUp.isAdminModeActive}
-            isAdminModeStatusLoading={adminStepUp.isAdminModeStatusLoading}
-            isCriticalMfaActive={adminStepUp.isCriticalMfaActive}
-            isLockingAdminMode={adminStepUp.isLockingAdminMode}
-            onLockAdminMode={() => void adminStepUp.handleLockAdminMode()}
-            onUnlockAdminMode={adminStepUp.handleUnlockAdminMode}
-            requiresCriticalMfa={accessChangesRequireCriticalMfa}
           />
         ) : (
           <UserAccountTab

@@ -28,8 +28,7 @@ import {
 } from '$server/auth';
 import { prisma } from '$server/prisma';
 import {
-  requireRecentAdminModeProof,
-  requireRecentCriticalPermissionProof,
+  requireRecentPasswordReauthentication,
   requireRecentSensitiveActionProof,
 } from '$server/sensitive-action';
 import {
@@ -942,15 +941,11 @@ export async function PATCH(
     const changedKeys = Object.keys(afterValues);
     const hasAuthorizationChange =
       changedKeys.includes('permissions') || changedKeys.includes('role');
-    if (requiredProofLevel === 'password' || requiredProofLevel === 'mfa') {
-      const adminProofCheck = requireRecentAdminModeProof(auth.session);
-      if (!adminProofCheck.success) return adminProofCheck.response;
-    }
-    if (requiredProofLevel === 'mfa') {
-      const criticalProofCheck = requireRecentCriticalPermissionProof(
+    if (requiredProofLevel === 'password') {
+      const passwordProofCheck = requireRecentPasswordReauthentication(
         auth.session,
       );
-      if (!criticalProofCheck.success) return criticalProofCheck.response;
+      if (!passwordProofCheck.success) return passwordProofCheck.response;
     }
     if (changedKeys.includes('isActive') || changedKeys.includes('loginName')) {
       const proofCheck = requireRecentSensitiveActionProof(auth.session);

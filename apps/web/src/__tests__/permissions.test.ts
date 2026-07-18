@@ -419,7 +419,7 @@ describe('permission catalogue', () => {
     ).toBeUndefined();
   });
 
-  it('marks grant, revoke and delegation as critical step-up rights', () => {
+  it('marks access authorities as critical without blanket step-up friction', () => {
     for (const permissionKey of [
       PERMISSIONS.USERS.GRANT_ACCESS,
       PERMISSIONS.USERS.REVOKE_ACCESS,
@@ -428,8 +428,8 @@ describe('permission catalogue', () => {
       expect(getPermissionItem(permissionKey)).toMatchObject({
         requiresTargetMfa: true,
         risk: 'critical',
-        stepUpOnUse: true,
       });
+      expect(getPermissionItem(permissionKey)?.stepUpOnUse).toBeUndefined();
     }
   });
 

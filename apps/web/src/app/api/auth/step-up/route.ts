@@ -16,9 +16,9 @@ import {
   reserveSensitiveActionRateLimit,
 } from '$server/rate-limiter';
 import {
-  getAdminModeExpiration,
-  getCriticalProofExpiration,
-  requireRecentAdminModeProof,
+  getElevatedMfaProofExpiration,
+  getPasswordReauthenticationExpiration,
+  requireRecentPasswordReauthentication,
 } from '$server/sensitive-action';
 import {
   type ApiErrorResponse,
@@ -129,9 +129,9 @@ const getStepUpStatus = (
   now = new Date(),
 ): StepUpStatus => ({
   criticalMfaExpiresAt:
-    getCriticalProofExpiration(session, now)?.toISOString() ?? null,
+    getElevatedMfaProofExpiration(session, now)?.toISOString() ?? null,
   passwordExpiresAt:
-    getAdminModeExpiration(session, now)?.toISOString() ?? null,
+    getPasswordReauthenticationExpiration(session, now)?.toISOString() ?? null,
 });
 
 export async function GET(): Promise<
@@ -244,7 +244,8 @@ export async function POST(
     requestedKind = validation.data.kind;
 
     if (requestedKind === 'critical-mfa') {
-      const passwordProof = requireRecentAdminModeProof(currentSession);
+      const passwordProof =
+        requireRecentPasswordReauthentication(currentSession);
       if (!passwordProof.success) return passwordProof.response;
     }
 

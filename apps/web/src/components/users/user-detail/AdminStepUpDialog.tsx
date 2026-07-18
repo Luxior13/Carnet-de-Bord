@@ -115,12 +115,12 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
 
         if (
           proofKind === 'critical-mfa' &&
-          errorCode === ErrorCode.ADMIN_MODE_REQUIRED
+          errorCode === ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED
         ) {
           setCurrentPassword('');
           setCurrentTotpCode('');
           setError(
-            'Le mode administration a expiré. Confirmez à nouveau votre mot de passe et votre code MFA.',
+            'La confirmation du mot de passe a expiré. Confirmez à nouveau votre mot de passe et votre code MFA.',
           );
           onProofKindRequired?.('full');
 
@@ -189,10 +189,10 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
 
             <p className="border-primary/25 bg-primary/[0.08] text-muted-foreground rounded-md border p-3 text-sm leading-6">
               {proofKind === 'password'
-                ? 'Le mode administration restera actif pendant trente minutes sur cette session.'
+                ? 'La confirmation de votre mot de passe restera valable pendant trente minutes sur cette session.'
                 : proofKind === 'critical-mfa'
                   ? 'Cette confirmation MFA restera valable quinze minutes pour les autres élévations critiques.'
-                  : 'Cette confirmation protège l’action sensible et déverrouille aussi l’administration pendant trente minutes.'}
+                  : 'Cette confirmation protège l’action sensible ; le mot de passe restera reconnu pendant trente minutes.'}
             </p>
 
             <input
@@ -254,7 +254,7 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
               >
                 {isSubmitting && <Loader2 className="size-4 animate-spin" />}
                 {proofKind === 'password'
-                  ? 'Déverrouiller'
+                  ? 'Confirmer'
                   : 'Confirmer et continuer'}
               </Button>
             </div>

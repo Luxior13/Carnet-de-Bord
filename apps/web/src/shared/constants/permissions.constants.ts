@@ -569,7 +569,6 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         module: 'Autorisations',
         risk: 'critical',
         route: '/administration/utilisateurs/[id]?section=access',
-        stepUpOnUse: true,
         surface: 'page',
       }),
       activePermission({
@@ -583,7 +582,6 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         module: 'Autorisations',
         risk: 'critical',
         route: '/administration/utilisateurs/[id]?section=access',
-        stepUpOnUse: true,
         surface: 'page',
       }),
       activePermission({
@@ -600,7 +598,6 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         module: 'Délégation',
         risk: 'critical',
         route: '/administration/utilisateurs/[id]?section=access',
-        stepUpOnUse: true,
         surface: 'page',
       }),
       activePermission({

@@ -943,7 +943,9 @@ describe('users access hardening', () => {
     );
   });
 
-  it('requires password unlock before an ordinary access grant', async () => {
+  it('allows an ordinary access grant without password or critical MFA proof', async () => {
+    const existingUser = buildUser({ id: 'target-1', permissions: {} });
+    const nextPermissions = { [PERMISSIONS.USERS.VIEW]: true };
     mockRequireAuth.mockResolvedValueOnce({
       session: buildRecentSensitiveSession({
         criticalMfaVerifiedAt: null,
@@ -961,26 +963,29 @@ describe('users access hardening', () => {
         },
       }),
     });
-    mockPrisma.user.findUnique.mockResolvedValueOnce(
-      buildUser({ id: 'target-1', permissions: {} }),
-    );
+    mockPrisma.user.findUnique.mockResolvedValueOnce(existingUser);
+    mockPrisma.user.update.mockResolvedValueOnce({
+      ...existingUser,
+      permissions: nextPermissions,
+    });
 
     const route = await import('$app/api/users/[id]/route');
     const response = await route.PATCH(
       new Request('http://localhost/api/users/target-1', {
         body: stringifyRequestBody({
-          permissions: { [PERMISSIONS.USERS.VIEW]: true },
+          permissions: nextPermissions,
           permissionScope: 'access',
         }),
         method: 'PATCH',
       }) as never,
       { params: Promise.resolve({ id: 'target-1' }) },
     );
-    const body = await response.json();
-
-    expect(response.status).toBe(403);
-    expect(body.error.code).toBe(ErrorCode.ADMIN_MODE_REQUIRED);
-    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ permissions: nextPermissions }),
+      }),
+    );
   });
 
   it('rejects an access grant when users:grant_access is denied', async () => {
@@ -1265,7 +1270,7 @@ describe('users access hardening', () => {
       [PERMISSIONS.USERS.VIEW_ACCESS]: true,
     };
     mockRequireAuth.mockResolvedValueOnce({
-      session: buildRecentSensitiveSession(),
+      session: buildRecentSensitiveSession({ criticalMfaVerifiedAt: null }),
       success: true,
       user: actor,
     });
@@ -1920,7 +1925,7 @@ describe('users access hardening', () => {
     expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
   });
 
-  it('requires MFA before the root promotes a user to administrator', async () => {
+  it('requires target MFA enrollment before promotion to administrator', async () => {
     mockRequireAuth.mockResolvedValueOnce({
       session: null,
       success: true,
@@ -1989,6 +1994,48 @@ describe('users access hardening', () => {
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 
+  it('requires password unlock before changing a user role', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: buildRecentSensitiveSession({
+        criticalMfaVerifiedAt: null,
+        passwordReauthenticatedAt: null,
+      }),
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'root-1',
+        isProtected: true,
+        passwordHash: undefined,
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(
+      buildUser({
+        id: 'target-1',
+        mfaEnabledAt: new Date('2026-03-02T00:00:00.000Z'),
+        role: 'USER',
+        totpCredential: { userId: 'target-1' },
+      }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          expectedUpdatedAt: USER_REVISION,
+          role: 'ADMIN',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe(ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
   it('allows the root to promote a user after MFA enrollment', async () => {
     const existingUser = buildUser({
       id: 'target-1',
@@ -1997,7 +2044,7 @@ describe('users access hardening', () => {
       totpCredential: { userId: 'target-1' },
     });
     mockRequireAuth.mockResolvedValueOnce({
-      session: buildRecentSensitiveSession(),
+      session: buildRecentSensitiveSession({ criticalMfaVerifiedAt: null }),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -2042,7 +2089,7 @@ describe('users access hardening', () => {
       role: 'ADMIN',
     });
     mockRequireAuth.mockResolvedValueOnce({
-      session: buildRecentSensitiveSession(),
+      session: buildRecentSensitiveSession({ criticalMfaVerifiedAt: null }),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -2140,7 +2187,7 @@ describe('users access hardening', () => {
       [PERMISSIONS.USERS.VIEW_SECURITY]: true,
     };
     mockRequireAuth.mockResolvedValueOnce({
-      session: buildRecentSensitiveSession(),
+      session: buildRecentSensitiveSession({ criticalMfaVerifiedAt: null }),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -2179,7 +2226,7 @@ describe('users access hardening', () => {
     });
   });
 
-  it('requires critical MFA after password unlock for a critical elevation', async () => {
+  it('requires only password unlock for a critical permission change', async () => {
     const existingUser = buildUser({
       id: 'target-1',
       mfaEnabledAt: new Date('2026-03-02T00:00:00.000Z'),
@@ -2193,7 +2240,10 @@ describe('users access hardening', () => {
       [PERMISSIONS.USERS.VIEW_SECURITY]: true,
     };
     mockRequireAuth.mockResolvedValueOnce({
-      session: buildRecentSensitiveSession({ criticalMfaVerifiedAt: null }),
+      session: buildRecentSensitiveSession({
+        criticalMfaVerifiedAt: null,
+        passwordReauthenticatedAt: null,
+      }),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -2216,7 +2266,7 @@ describe('users access hardening', () => {
     const body = await response.json();
 
     expect(response.status).toBe(403);
-    expect(body.error.code).toBe(ErrorCode.CRITICAL_REAUTHENTICATION_REQUIRED);
+    expect(body.error.code).toBe(ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED);
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 

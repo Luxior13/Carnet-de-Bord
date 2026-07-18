@@ -31,7 +31,7 @@ type PermissionMutationAuthorizationSuccess = AuthorizationSuccess & {
   requiredProofLevel: AdminPermissionProofLevel;
 };
 
-export type AdminPermissionProofLevel = 'mfa' | 'none' | 'password';
+export type AdminPermissionProofLevel = 'none' | 'password';
 
 const ACCOUNT_PERMISSION_KEY_SET = new Set(getAccountPermissionKeys());
 const ACCESS_PERMISSION_KEY_SET = new Set(getAccessPermissionKeys());
@@ -67,45 +67,50 @@ export const classifyUserPermissionMutationProof = ({
   effectivelyRevokedPermissionKeys,
   requestedChangedPermissionKeys,
   roleChanged,
+  targetRole,
 }: {
   effectivelyGrantedPermissionKeys: readonly string[];
   effectivelyRevokedPermissionKeys: readonly string[];
   requestedChangedPermissionKeys: readonly string[];
   roleChanged: boolean;
+  targetRole: UserRole;
 }): AdminPermissionProofLevel => {
-  if (roleChanged) return 'mfa';
+  if (roleChanged) return 'password';
 
-  const effectivelyGrantedAccessPermissionKeys =
-    effectivelyGrantedPermissionKeys.filter((permissionKey) =>
-      ACCESS_PERMISSION_KEY_SET.has(permissionKey),
-    );
+  const effectivelyChangedAccessPermissionKeys = [
+    ...effectivelyGrantedPermissionKeys,
+    ...effectivelyRevokedPermissionKeys,
+  ].filter((permissionKey) => ACCESS_PERMISSION_KEY_SET.has(permissionKey));
   const changedAccessPermissionKeys = new Set(
     [
       ...requestedChangedPermissionKeys,
-      ...effectivelyGrantedPermissionKeys,
-      ...effectivelyRevokedPermissionKeys,
+      ...effectivelyChangedAccessPermissionKeys,
     ].filter((permissionKey) => ACCESS_PERMISSION_KEY_SET.has(permissionKey)),
   );
 
   if (changedAccessPermissionKeys.size === 0) return 'none';
+
+  // Only the protected root can mutate an ADMIN. Keep every access-policy
+  // change on that tier behind a recent password confirmation.
+  if (targetRole === 'ADMIN') return 'password';
 
   if (
     [...changedAccessPermissionKeys].some((permissionKey) =>
       ACCESS_AUTHORITY_PERMISSION_KEY_SET.has(permissionKey),
     )
   ) {
-    return 'mfa';
+    return 'password';
   }
 
   if (
-    effectivelyGrantedAccessPermissionKeys.some(
+    effectivelyChangedAccessPermissionKeys.some(
       (permissionKey) => getPermissionItem(permissionKey)?.risk === 'critical',
     )
   ) {
-    return 'mfa';
+    return 'password';
   }
 
-  return 'password';
+  return 'none';
 };
 
 /**
@@ -300,6 +305,7 @@ export const authorizeUserPermissionMutation = ({
       effectivelyRevokedPermissionKeys,
       requestedChangedPermissionKeys,
       roleChanged: isRoleUpdate && existingRole !== resultingRole,
+      targetRole: existingRole,
     }),
     success: true,
   };

@@ -137,29 +137,39 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(userAccessSource).toContain('mutationSummaryLabel');
   });
 
-  it('uses a predictable administration mode and reserves MFA for critical batches', () => {
-    expect(userAccessSource).toContain('Mode administration actif');
-    expect(userAccessSource).toContain('Modifications verrouillées');
-    expect(userAccessSource).toContain('adminModeRemainingLabel');
-    expect(userAccessSource).toContain(
-      'disabled={!canManagePermissions || !isAdminModeActive}',
-    );
-    expect(userAccessSource).toContain(
+  it('keeps permission controls editable and defers proof requests to the server response', () => {
+    expect(userAccessSource).not.toContain('Mode administration actif');
+    expect(userAccessSource).not.toContain('Modifications verrouillées');
+    expect(userAccessSource).not.toContain('adminModeRemainingLabel');
+    expect(userAccessSource).toContain('disabled={!canManagePermissions}');
+    expect(userAccessSource).toContain('disabled={isSaving || !canSave}');
+    expect(userAccessSource).not.toContain(
       'un code MFA sera demandé une seule fois',
     );
     expect(adminStepUpControllerSource).toContain(
-      'ErrorCode.ADMIN_MODE_REQUIRED',
+      'ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED',
     );
     expect(adminStepUpControllerSource).toContain(
       'ErrorCode.CRITICAL_REAUTHENTICATION_REQUIRED',
     );
-    expect(userDetailSource).toContain('onProofKindRequired=');
+    expect(adminStepUpControllerSource).toContain("? 'password'");
+    expect(userDetailSource).toContain(
+      'onProofKindRequired={adminStepUp.setPendingStepUpProofKind}',
+    );
+    expect(userDetailSource).toContain(
+      'requestPasswordReauthenticationForResponse(data',
+    );
+    expect(adminStepUpControllerSource).toContain(
+      "setPendingStepUpAction({ ...action, proofKind: 'password' })",
+    );
     expect(adminStepUpSource).toContain("proofKind === 'password'");
     expect(adminStepUpSource).toContain("proofKind === 'critical-mfa'");
     expect(adminStepUpSource).toContain('trente minutes');
     expect(adminStepUpSource).toContain('quinze minutes');
     expect(adminStepUpSource).toContain('submissionInFlightRef.current');
-    expect(adminStepUpSource).toContain('ErrorCode.ADMIN_MODE_REQUIRED');
+    expect(adminStepUpSource).toContain(
+      'ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED',
+    );
     expect(adminStepUpSource).toContain("onProofKindRequired?.('full')");
     expect(adminStepUpSource).toContain('passwordFailed');
   });

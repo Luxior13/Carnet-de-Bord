@@ -5,8 +5,8 @@ import { NextResponse } from 'next/server';
 import { type ApiErrorResponse, ErrorCode } from '$types/api.types';
 import type { SessionType } from '$types/auth.types';
 
-export const ADMIN_MODE_PROOF_MAX_AGE_MS = 30 * 60 * 1000;
-export const CRITICAL_PERMISSION_PROOF_MAX_AGE_MS = 15 * 60 * 1000;
+export const PASSWORD_REAUTHENTICATION_MAX_AGE_MS = 30 * 60 * 1000;
+export const ELEVATED_MFA_PROOF_MAX_AGE_MS = 15 * 60 * 1000;
 export const SENSITIVE_ACTION_PROOF_MAX_AGE_MS = 5 * 60 * 1000;
 
 const hasRecentProof = (
@@ -22,13 +22,13 @@ const hasRecentProof = (
   return age >= 0 && age <= maxAgeMs;
 };
 
-export const hasRecentAdminModeProof = (
+export const hasRecentPasswordReauthentication = (
   session: SessionType | null,
   now = new Date(),
 ): boolean =>
   hasRecentProof(
     session?.passwordReauthenticatedAt,
-    ADMIN_MODE_PROOF_MAX_AGE_MS,
+    PASSWORD_REAUTHENTICATION_MAX_AGE_MS,
     now,
   );
 
@@ -36,49 +36,50 @@ export const hasRecentSensitiveActionProof = (
   session: SessionType | null,
   now = new Date(),
 ): boolean =>
-  hasRecentAdminModeProof(session, now) &&
+  hasRecentPasswordReauthentication(session, now) &&
   hasRecentProof(
     session?.criticalMfaVerifiedAt,
     SENSITIVE_ACTION_PROOF_MAX_AGE_MS,
     now,
   );
 
-export const hasRecentCriticalPermissionProof = (
+export const hasRecentElevatedMfaProof = (
   session: SessionType | null,
   now = new Date(),
 ): boolean =>
-  hasRecentAdminModeProof(session, now) &&
+  hasRecentPasswordReauthentication(session, now) &&
   hasRecentProof(
     session?.criticalMfaVerifiedAt,
-    CRITICAL_PERMISSION_PROOF_MAX_AGE_MS,
+    ELEVATED_MFA_PROOF_MAX_AGE_MS,
     now,
   );
 
-export const getAdminModeExpiration = (
+export const getPasswordReauthenticationExpiration = (
   session: SessionType | null,
   now = new Date(),
 ): Date | null =>
-  hasRecentAdminModeProof(session, now) && session?.passwordReauthenticatedAt
+  hasRecentPasswordReauthentication(session, now) &&
+  session?.passwordReauthenticatedAt
     ? new Date(
         new Date(session.passwordReauthenticatedAt).getTime() +
-          ADMIN_MODE_PROOF_MAX_AGE_MS,
+          PASSWORD_REAUTHENTICATION_MAX_AGE_MS,
       )
     : null;
 
-export const getCriticalProofExpiration = (
+export const getElevatedMfaProofExpiration = (
   session: SessionType | null,
   now = new Date(),
 ): Date | null =>
-  hasRecentAdminModeProof(session, now) &&
-  hasRecentCriticalPermissionProof(session, now) &&
+  hasRecentPasswordReauthentication(session, now) &&
+  hasRecentElevatedMfaProof(session, now) &&
   session?.criticalMfaVerifiedAt
     ? new Date(
         new Date(session.criticalMfaVerifiedAt).getTime() +
-          CRITICAL_PERMISSION_PROOF_MAX_AGE_MS,
+          ELEVATED_MFA_PROOF_MAX_AGE_MS,
       )
     : null;
 
-export const requireRecentAdminModeProof = (
+export const requireRecentPasswordReauthentication = (
   session: SessionType | null,
 ):
   | { response?: never; success: true }
@@ -86,15 +87,15 @@ export const requireRecentAdminModeProof = (
       response: NextResponse<ApiErrorResponse>;
       success: false;
     } => {
-  if (hasRecentAdminModeProof(session)) return { success: true };
+  if (hasRecentPasswordReauthentication(session)) return { success: true };
 
   return {
     response: NextResponse.json(
       {
         error: {
-          code: ErrorCode.ADMIN_MODE_REQUIRED,
+          code: ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED,
           message:
-            'Déverrouillez le mode administration avec votre mot de passe pour continuer',
+            'Confirmez votre mot de passe pour enregistrer cette modification importante',
         },
         success: false,
       },
@@ -104,7 +105,7 @@ export const requireRecentAdminModeProof = (
   };
 };
 
-export const requireRecentCriticalPermissionProof = (
+export const requireRecentElevatedMfaProof = (
   session: SessionType | null,
 ):
   | { response?: never; success: true }
@@ -112,7 +113,7 @@ export const requireRecentCriticalPermissionProof = (
       response: NextResponse<ApiErrorResponse>;
       success: false;
     } => {
-  if (hasRecentCriticalPermissionProof(session)) return { success: true };
+  if (hasRecentElevatedMfaProof(session)) return { success: true };
 
   return {
     response: NextResponse.json(

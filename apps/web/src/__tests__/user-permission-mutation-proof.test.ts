@@ -21,6 +21,7 @@ const classify = (
     effectivelyRevokedPermissionKeys: [],
     requestedChangedPermissionKeys: [],
     roleChanged: false,
+    targetRole: 'USER',
     ...overrides,
   });
 
@@ -34,23 +35,23 @@ describe('user permission mutation proof classification', () => {
     ).toBe('none');
   });
 
-  it('requires the password mode for ordinary grants and revocations', () => {
+  it('keeps ordinary access grants and revocations frictionless', () => {
     expect(
       classify({
         effectivelyGrantedPermissionKeys: [PERMISSIONS.USERS.VIEW],
         requestedChangedPermissionKeys: [PERMISSIONS.USERS.VIEW],
       }),
-    ).toBe('password');
+    ).toBe('none');
     expect(
       classify({
-        effectivelyRevokedPermissionKeys: [PERMISSIONS.USERS.ARCHIVE],
-        requestedChangedPermissionKeys: [PERMISSIONS.USERS.ARCHIVE],
+        effectivelyRevokedPermissionKeys: [PERMISSIONS.USERS.VIEW_CONTACT],
+        requestedChangedPermissionKeys: [PERMISSIONS.USERS.VIEW_CONTACT],
       }),
-    ).toBe('password');
+    ).toBe('none');
   });
 
-  it('requires MFA for every role or delegation-authority change', () => {
-    expect(classify({ roleChanged: true })).toBe('mfa');
+  it('requires only the password mode for every role or authority change', () => {
+    expect(classify({ roleChanged: true })).toBe('password');
 
     for (const permissionKey of [
       PERMISSIONS.USERS.GRANT_ACCESS,
@@ -62,23 +63,39 @@ describe('user permission mutation proof classification', () => {
           effectivelyGrantedPermissionKeys: [permissionKey],
           requestedChangedPermissionKeys: [permissionKey],
         }),
-      ).toBe('mfa');
+      ).toBe('password');
       expect(
         classify({
           effectivelyRevokedPermissionKeys: [permissionKey],
           requestedChangedPermissionKeys: [permissionKey],
         }),
-      ).toBe('mfa');
+      ).toBe('password');
     }
   });
 
-  it('requires MFA for an effective critical elevation, including dependencies', () => {
+  it('requires only the password mode for effective critical grants and revocations', () => {
     expect(
       classify({
         effectivelyGrantedPermissionKeys: [PERMISSIONS.USERS.ARCHIVE],
         requestedChangedPermissionKeys: [PERMISSIONS.USERS.VIEW_SECURITY],
       }),
-    ).toBe('mfa');
+    ).toBe('password');
+    expect(
+      classify({
+        effectivelyRevokedPermissionKeys: [PERMISSIONS.USERS.ARCHIVE],
+        requestedChangedPermissionKeys: [PERMISSIONS.USERS.VIEW_SECURITY],
+      }),
+    ).toBe('password');
+  });
+
+  it('requires the password mode for every access-policy change on an administrator', () => {
+    expect(
+      classify({
+        effectivelyGrantedPermissionKeys: [PERMISSIONS.USERS.VIEW_CONTACT],
+        requestedChangedPermissionKeys: [PERMISSIONS.USERS.VIEW_CONTACT],
+        targetRole: 'ADMIN',
+      }),
+    ).toBe('password');
   });
 
   it('keeps the strongest level for mixed batches', () => {
@@ -93,7 +110,7 @@ describe('user permission mutation proof classification', () => {
           PERMISSIONS.USERS.VIEW,
         ],
       }),
-    ).toBe('password');
+    ).toBe('none');
     expect(
       classify({
         effectivelyGrantedPermissionKeys: [
@@ -105,6 +122,6 @@ describe('user permission mutation proof classification', () => {
           PERMISSIONS.USERS.ARCHIVE,
         ],
       }),
-    ).toBe('mfa');
+    ).toBe('password');
   });
 });

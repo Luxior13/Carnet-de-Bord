@@ -119,51 +119,51 @@ const createRequest = (body: Record<string, unknown>): NextRequest =>
     method: 'POST',
   });
 
-describe('administration proof freshness', () => {
+describe('step-up proof freshness', () => {
   it('accepts the exact password and critical-MFA boundaries', async () => {
     const {
-      ADMIN_MODE_PROOF_MAX_AGE_MS,
-      CRITICAL_PERMISSION_PROOF_MAX_AGE_MS,
-      hasRecentAdminModeProof,
-      hasRecentCriticalPermissionProof,
+      ELEVATED_MFA_PROOF_MAX_AGE_MS,
+      hasRecentElevatedMfaProof,
+      hasRecentPasswordReauthentication,
+      PASSWORD_REAUTHENTICATION_MAX_AGE_MS,
     } = await import('$server/sensitive-action');
     const session = buildSession({
       criticalMfaVerifiedAt: new Date(
-        NOW.getTime() - CRITICAL_PERMISSION_PROOF_MAX_AGE_MS,
+        NOW.getTime() - ELEVATED_MFA_PROOF_MAX_AGE_MS,
       ),
       passwordReauthenticatedAt: new Date(
-        NOW.getTime() - ADMIN_MODE_PROOF_MAX_AGE_MS,
+        NOW.getTime() - PASSWORD_REAUTHENTICATION_MAX_AGE_MS,
       ),
     });
 
-    expect(hasRecentAdminModeProof(session, NOW)).toBe(true);
-    expect(hasRecentCriticalPermissionProof(session, NOW)).toBe(true);
+    expect(hasRecentPasswordReauthentication(session, NOW)).toBe(true);
+    expect(hasRecentElevatedMfaProof(session, NOW)).toBe(true);
   });
 
-  it('rejects old, absent, and future-dated administration proofs', async () => {
+  it('rejects old, absent, and future-dated step-up proofs', async () => {
     const {
-      ADMIN_MODE_PROOF_MAX_AGE_MS,
-      CRITICAL_PERMISSION_PROOF_MAX_AGE_MS,
-      hasRecentAdminModeProof,
-      hasRecentCriticalPermissionProof,
+      ELEVATED_MFA_PROOF_MAX_AGE_MS,
+      hasRecentElevatedMfaProof,
+      hasRecentPasswordReauthentication,
+      PASSWORD_REAUTHENTICATION_MAX_AGE_MS,
     } = await import('$server/sensitive-action');
 
-    expect(hasRecentAdminModeProof(buildSession(), NOW)).toBe(false);
+    expect(hasRecentPasswordReauthentication(buildSession(), NOW)).toBe(false);
     expect(
-      hasRecentAdminModeProof(
+      hasRecentPasswordReauthentication(
         buildSession({
           passwordReauthenticatedAt: new Date(
-            NOW.getTime() - ADMIN_MODE_PROOF_MAX_AGE_MS - 1,
+            NOW.getTime() - PASSWORD_REAUTHENTICATION_MAX_AGE_MS - 1,
           ),
         }),
         NOW,
       ),
     ).toBe(false);
     expect(
-      hasRecentCriticalPermissionProof(
+      hasRecentElevatedMfaProof(
         buildSession({
           criticalMfaVerifiedAt: new Date(
-            NOW.getTime() - CRITICAL_PERMISSION_PROOF_MAX_AGE_MS - 1,
+            NOW.getTime() - ELEVATED_MFA_PROOF_MAX_AGE_MS - 1,
           ),
           passwordReauthenticatedAt: NOW,
         }),
@@ -171,7 +171,7 @@ describe('administration proof freshness', () => {
       ),
     ).toBe(false);
     expect(
-      hasRecentCriticalPermissionProof(
+      hasRecentElevatedMfaProof(
         buildSession({
           criticalMfaVerifiedAt: new Date(NOW.getTime() + 1),
           passwordReauthenticatedAt: NOW,
@@ -208,7 +208,7 @@ describe('/api/auth/step-up', () => {
     vi.useRealTimers();
   });
 
-  it('unlocks administration with the password only for thirty minutes', async () => {
+  it('confirms the password only and keeps it valid for thirty minutes', async () => {
     const { POST } = await import('$app/api/auth/step-up/route');
     const response = await POST(
       createRequest({ currentPassword: 'Secret1!', kind: 'password' }),
@@ -271,7 +271,7 @@ describe('/api/auth/step-up', () => {
     const body = await response.json();
 
     expect(response.status).toBe(403);
-    expect(body.error.code).toBe(ErrorCode.ADMIN_MODE_REQUIRED);
+    expect(body.error.code).toBe(ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED);
     expect(mocks.prisma.user.findUnique).not.toHaveBeenCalled();
     expect(mocks.verifyMfaProof).not.toHaveBeenCalled();
   });
@@ -339,7 +339,7 @@ describe('/api/auth/step-up', () => {
     ).not.toHaveProperty('mfaVerifiedAt');
   });
 
-  it('returns status and clears both administration proofs on lock', async () => {
+  it('returns status and clears both step-up proofs on explicit lock', async () => {
     const activeSession = buildSession({
       criticalMfaVerifiedAt: NOW,
       passwordReauthenticatedAt: NOW,
