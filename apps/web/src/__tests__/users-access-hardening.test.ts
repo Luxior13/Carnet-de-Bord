@@ -1639,26 +1639,33 @@ describe('users access hardening', () => {
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 
-  it('rejects role-bound API keys as individual overrides', async () => {
-    const route = await import('$app/api/users/[id]/route');
-    const response = await route.PATCH(
-      new Request('http://localhost/api/users/target-1', {
-        body: stringifyRequestBody({
-          permissions: { [PERMISSIONS.SETTINGS.UPDATE]: true },
-        }),
-        method: 'PATCH',
-      }) as never,
-      { params: Promise.resolve({ id: 'target-1' }) },
-    );
-    const body = await response.json();
+  it.each([
+    PERMISSIONS.SETTINGS.VIEW,
+    PERMISSIONS.SETTINGS.UPDATE,
+    'system:settings',
+  ])(
+    'rejects role-bound permission %s as an individual override',
+    async (permissionKey) => {
+      const route = await import('$app/api/users/[id]/route');
+      const response = await route.PATCH(
+        new Request('http://localhost/api/users/target-1', {
+          body: stringifyRequestBody({
+            permissions: { [permissionKey]: true },
+          }),
+          method: 'PATCH',
+        }) as never,
+        { params: Promise.resolve({ id: 'target-1' }) },
+      );
+      const body = await response.json();
 
-    expect(response.status).toBe(400);
-    expect(body.error.code).toBe(ErrorCode.VALIDATION_ERROR);
-    expect(body.error.details.permissions).toEqual([
-      `Permission non attribuable: ${PERMISSIONS.SETTINGS.UPDATE}`,
-    ]);
-    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
-  });
+      expect(response.status).toBe(400);
+      expect(body.error.code).toBe(ErrorCode.VALIDATION_ERROR);
+      expect(body.error.details.permissions).toEqual([
+        `Permission non attribuable: ${permissionKey}`,
+      ]);
+      expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+    },
+  );
 
   it('requires an explicit permission payload when a scope is provided', async () => {
     const route = await import('$app/api/users/[id]/route');

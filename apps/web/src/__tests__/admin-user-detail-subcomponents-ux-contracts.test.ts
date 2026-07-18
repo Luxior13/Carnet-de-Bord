@@ -29,6 +29,9 @@ const securitySource = readSourceFile(
 const permissionsSource = readSourceFile(
   '../components/users/PermissionsEditor.tsx',
 );
+const roleBoundPermissionStatusSource = readSourceFile(
+  '../components/users/RoleBoundPermissionStatus.tsx',
+);
 const permissionDecisionButtonSource = readSourceFile(
   '../components/users/PermissionDecisionButton.tsx',
 );
@@ -111,6 +114,19 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(permissionsSource).toContain('view.missingDependencyLabels');
     expect(permissionsSource).toContain('view.dependencyLabels');
     expect(permissionsSource).toContain('Exception personnalisée');
+    expect(permissionsSource).toContain(
+      "selectedCategory.assignment === 'role-bound'",
+    );
+    expect(permissionsSource).toContain(
+      'selectedCategoryAccessPermission.grantable',
+    );
+    expect(roleBoundPermissionStatusSource).toContain(
+      'Fourni par le rôle Administrateur',
+    );
+    expect(roleBoundPermissionStatusSource).toContain(
+      'Réservé aux administrateurs',
+    );
+    expect(userAccessSource).toContain('{PERMISSION_CATEGORIES.length}');
   });
 
   it('keeps denied permission controls keyboard-explainable', () => {

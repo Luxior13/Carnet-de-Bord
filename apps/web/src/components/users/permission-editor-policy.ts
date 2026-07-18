@@ -4,6 +4,7 @@ import {
   getDependentPermissionKeys,
   getEffectivePermissions,
   getPermissionItem,
+  isPermissionGrantable,
   PERMISSIONS,
   type PermissionsData,
 } from '$constants/permissions.constants';
@@ -70,6 +71,8 @@ export const buildPermissionOverrideChange = ({
 }): PermissionsData | null => {
   const nextPermissionsMap = new Map(permissionsMap);
   const setOverride = (key: string, enabled: boolean): void => {
+    if (!isPermissionGrantable(key)) return;
+
     if ((roleBasePermissionsMap.get(key) ?? false) === enabled) {
       nextPermissionsMap.delete(key);
     } else {
@@ -96,6 +99,10 @@ export const buildPermissionOverrideChange = ({
       denyWithDependents(dependent);
     }
   };
+
+  if (!isPermissionGrantable(permissionKey)) {
+    return toPermissionsData(nextPermissionsMap);
+  }
 
   if (state === 'allow') allowWithDependencies(permissionKey);
   else denyWithDependents(permissionKey);

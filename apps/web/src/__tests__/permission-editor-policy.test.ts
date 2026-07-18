@@ -68,6 +68,37 @@ describe('permission editor mutation policy', () => {
     });
   });
 
+  it('keeps role-bound permissions outside individual editor changes', () => {
+    const currentPermissions = new Map<string, boolean>([
+      [PERMISSIONS.USERS.VIEW, true],
+    ]);
+    const roleBasePermissionsMap = new Map(
+      Object.entries(getRoleBasePermissions('USER')),
+    );
+
+    for (const permissionKey of [
+      PERMISSIONS.SETTINGS.VIEW,
+      PERMISSIONS.SETTINGS.UPDATE,
+    ]) {
+      expect(
+        buildPermissionOverrideChange({
+          permissionKey,
+          permissionsMap: currentPermissions,
+          roleBasePermissionsMap,
+          state: 'allow',
+        }),
+      ).toEqual({ [PERMISSIONS.USERS.VIEW]: true });
+      expect(
+        buildPermissionOverrideChange({
+          permissionKey,
+          permissionsMap: currentPermissions,
+          roleBasePermissionsMap,
+          state: 'deny',
+        }),
+      ).toEqual({ [PERMISSIONS.USERS.VIEW]: true });
+    }
+  });
+
   it('permits an attribution-only actor to grant but not revoke access', () => {
     const policy = vi.fn((_: string, enabled: boolean) => ({
       allowed: enabled,

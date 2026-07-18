@@ -82,6 +82,10 @@ describe('feature registry', () => {
       FEATURES.users,
     );
     expect(getFeatureById('system-activity')).toBe(FEATURES.systemActivity);
+    expect(getFeatureById('system-settings')).toBe(FEATURES.systemSettings);
+    expect(getFeatureByHref('/systeme/parametres')).toBe(
+      FEATURES.systemSettings,
+    );
     expect(getFeatureByHref('/inconnu')).toBeNull();
   });
 });

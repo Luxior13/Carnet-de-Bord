@@ -14,6 +14,7 @@ import {
 } from '$components/users/permission-editor-policy';
 import { PermissionDecisionButton } from '$components/users/PermissionDecisionButton';
 import { PermissionStatePicker } from '$components/users/PermissionStatePicker';
+import { RoleBoundPermissionStatus } from '$components/users/RoleBoundPermissionStatus';
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
 import {
   getNavigationSpaceToneClasses,
@@ -355,11 +356,12 @@ type PermissionCardProps = {
   onChange: (permissionKey: string, state: PermissionChoiceState) => void;
   onReset: (permissionKey: string) => void;
   permission: PermissionItem;
+  role: UserRole;
   view: PermissionViewModel;
 };
 
 const PermissionCard: FC<PermissionCardProps> = memo(
-  ({ getDecision, onChange, onReset, permission, view }) => {
+  ({ getDecision, onChange, onReset, permission, role, view }) => {
     return (
       <div
         className={cn(
@@ -441,20 +443,27 @@ const PermissionCard: FC<PermissionCardProps> = memo(
               </div>
             </details>
           </div>
-          <PermissionStatePicker
-            allowDecision={getDecision(permission.key, 'allow')}
-            defaultState={view.defaultState}
-            denyDecision={getDecision(permission.key, 'deny')}
-            permissionLabel={permission.label}
-            resetDecision={
-              view.hasCustomChoice
-                ? getDecision(permission.key, 'reset')
-                : { allowed: false, reason: 'Aucune exception à réinitialiser' }
-            }
-            state={view.overrideState}
-            onChange={(state) => onChange(permission.key, state)}
-            onReset={() => onReset(permission.key)}
-          />
+          {permission.grantable ? (
+            <PermissionStatePicker
+              allowDecision={getDecision(permission.key, 'allow')}
+              defaultState={view.defaultState}
+              denyDecision={getDecision(permission.key, 'deny')}
+              permissionLabel={permission.label}
+              resetDecision={
+                view.hasCustomChoice
+                  ? getDecision(permission.key, 'reset')
+                  : {
+                      allowed: false,
+                      reason: 'Aucune exception à réinitialiser',
+                    }
+              }
+              state={view.overrideState}
+              onChange={(state) => onChange(permission.key, state)}
+              onReset={() => onReset(permission.key)}
+            />
+          ) : (
+            <RoleBoundPermissionStatus isEnabled={view.isEnabled} role={role} />
+          )}
         </div>
       </div>
     );
@@ -727,8 +736,9 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
     const selectedCategoryAccessPermissionKey =
       selectedCategoryAccessPermission?.key;
     const selectedCategoryOverrideCount =
-      selectedCategory?.permissions.filter((permission) =>
-        customPermissionKeys.has(permission.key),
+      selectedCategory?.permissions.filter(
+        (permission) =>
+          permission.grantable && customPermissionKeys.has(permission.key),
       ).length ?? 0;
     const resetAllDecision =
       customPermissionCount > 0
@@ -852,11 +862,11 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                 )}
               </div>
               <p className="text-muted-foreground max-w-3xl text-sm leading-6">
-                Le rôle définit les autorisations par défaut. Seules les pages
-                réellement en ligne dont les autorisations sont délégables
-                apparaissent ici. Tableau de bord, recherche, feuille de route,
-                notifications personnelles et Mon compte restent disponibles
-                pour tout compte actif.
+                Le rôle définit les autorisations par défaut. Toutes les pages
+                administratives en ligne apparaissent ici ; les autorisations
+                réservées à un rôle restent visibles en lecture seule. Tableau
+                de bord, recherche, feuille de route, notifications personnelles
+                et Mon compte restent disponibles pour tout compte actif.
               </p>
             </div>
             {(headerControls || customPermissionCount > 0) && (
@@ -906,6 +916,11 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                       {selectedCategoryResult?.ready ?? 0}/
                       {selectedCategoryResult?.total ?? 0} utilisables
                     </Badge>
+                    {selectedCategory.assignment === 'role-bound' && (
+                      <Badge variant="outline" className="text-xs">
+                        Géré par le rôle
+                      </Badge>
+                    )}
                     {(selectedCategoryResult?.incomplete ?? 0) > 0 && (
                       <Badge
                         variant="outline"
@@ -1049,41 +1064,48 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                       </p>
                     )}
                   </div>
-                  <PermissionStatePicker
-                    allowDecision={getPermissionControlDecision(
-                      selectedCategoryAccessPermission.key,
-                      'allow',
-                    )}
-                    defaultState={selectedPageAccessView.defaultState}
-                    denyDecision={getPermissionControlDecision(
-                      selectedCategoryAccessPermission.key,
-                      'deny',
-                    )}
-                    permissionLabel={selectedCategoryAccessPermission.label}
-                    resetDecision={
-                      selectedPageAccessView.hasCustomChoice
-                        ? getPermissionControlDecision(
-                            selectedCategoryAccessPermission.key,
-                            'reset',
-                          )
-                        : {
-                            allowed: false,
-                            reason: 'Aucune exception à réinitialiser',
-                          }
-                    }
-                    state={selectedPageAccessView.overrideState}
-                    onChange={(state) =>
-                      handleSetPermissionOverride(
+                  {selectedCategoryAccessPermission.grantable ? (
+                    <PermissionStatePicker
+                      allowDecision={getPermissionControlDecision(
                         selectedCategoryAccessPermission.key,
-                        state,
-                      )
-                    }
-                    onReset={() =>
-                      handleResetPermissionOverride(
+                        'allow',
+                      )}
+                      defaultState={selectedPageAccessView.defaultState}
+                      denyDecision={getPermissionControlDecision(
                         selectedCategoryAccessPermission.key,
-                      )
-                    }
-                  />
+                        'deny',
+                      )}
+                      permissionLabel={selectedCategoryAccessPermission.label}
+                      resetDecision={
+                        selectedPageAccessView.hasCustomChoice
+                          ? getPermissionControlDecision(
+                              selectedCategoryAccessPermission.key,
+                              'reset',
+                            )
+                          : {
+                              allowed: false,
+                              reason: 'Aucune exception à réinitialiser',
+                            }
+                      }
+                      state={selectedPageAccessView.overrideState}
+                      onChange={(state) =>
+                        handleSetPermissionOverride(
+                          selectedCategoryAccessPermission.key,
+                          state,
+                        )
+                      }
+                      onReset={() =>
+                        handleResetPermissionOverride(
+                          selectedCategoryAccessPermission.key,
+                        )
+                      }
+                    />
+                  ) : (
+                    <RoleBoundPermissionStatus
+                      isEnabled={selectedPageAccessView.isEnabled}
+                      role={role}
+                    />
+                  )}
                 </div>
               )}
               <div className="grid gap-3 md:grid-cols-2">
@@ -1140,6 +1162,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                             key={permission.key}
                             getDecision={getPermissionControlDecision}
                             permission={permission}
+                            role={role}
                             view={getPermissionViewModel(permission)}
                             onChange={handleSetPermissionOverride}
                             onReset={handleResetPermissionOverride}

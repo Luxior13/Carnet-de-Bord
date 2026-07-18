@@ -4,6 +4,7 @@ import {
   ACCOUNT_PERMISSION_CATEGORIES,
   arePermissionOverridesEqual,
   buildPermissionOverrides,
+  DELEGABLE_PERMISSION_CATEGORIES,
   enforcePermissionDependencies,
   getAccessPermissionKeys,
   getAllPermissionKeys,
@@ -147,6 +148,11 @@ describe('hasPermission', () => {
     expect(
       hasPermission('ADMIN', PERMISSIONS.SETTINGS.UPDATE, {
         [PERMISSIONS.SETTINGS.UPDATE]: false,
+      }),
+    ).toBe(true);
+    expect(
+      hasPermission('ADMIN', PERMISSIONS.SETTINGS.VIEW, {
+        [PERMISSIONS.SETTINGS.VIEW]: false,
       }),
     ).toBe(true);
     expect(getPermissionItem(PERMISSIONS.SETTINGS.VIEW)).toMatchObject({
@@ -487,19 +493,50 @@ describe('permission catalogue', () => {
     ]);
   });
 
-  it('limits the administrative grant editor to delegable live pages', () => {
+  it('shows every live administrative page without widening delegation', () => {
     expect(PERMISSION_CATEGORIES.map((category) => category.key)).toEqual([
       'users',
+      'system-settings',
       'system-activity',
     ]);
+    expect(
+      DELEGABLE_PERMISSION_CATEGORIES.map((category) => category.key),
+    ).toEqual(['users', 'system-activity']);
     expect(getAccessPermissionKeys()).toEqual(
-      PERMISSION_CATEGORIES.flatMap((category) =>
+      DELEGABLE_PERMISSION_CATEGORIES.flatMap((category) =>
         category.permissions.map((permission) => permission.key),
       ),
     );
     expect(
-      PERMISSION_CATEGORIES.flatMap((category) => category.permissions).every(
+      DELEGABLE_PERMISSION_CATEGORIES.flatMap(
+        (category) => category.permissions,
+      ).every(
         (permission) => permission.grantable && permission.surface === 'page',
+      ),
+    ).toBe(true);
+    expect(getAccessPermissionKeys()).not.toEqual(
+      expect.arrayContaining([
+        PERMISSIONS.SETTINGS.VIEW,
+        PERMISSIONS.SETTINGS.UPDATE,
+      ]),
+    );
+
+    const settingsCategory = PERMISSION_CATEGORIES.find(
+      (category) => category.key === 'system-settings',
+    );
+    expect(settingsCategory).toMatchObject({
+      accessPermissionKey: PERMISSIONS.SETTINGS.VIEW,
+      assignment: 'role-bound',
+      label: 'Paramètres système',
+      poleKey: 'system',
+      routes: ['/systeme/parametres'],
+    });
+    expect(
+      settingsCategory?.permissions.map((permission) => permission.key),
+    ).toEqual([PERMISSIONS.SETTINGS.VIEW, PERMISSIONS.SETTINGS.UPDATE]);
+    expect(
+      settingsCategory?.permissions.every(
+        (permission) => !permission.grantable,
       ),
     ).toBe(true);
   });
@@ -510,6 +547,7 @@ describe('permission catalogue', () => {
     ]);
     expect(PERMISSION_CATEGORIES.map((category) => category.label)).toEqual([
       'Utilisateurs',
+      'Paramètres système',
       "Journal d'activité",
     ]);
     expect(

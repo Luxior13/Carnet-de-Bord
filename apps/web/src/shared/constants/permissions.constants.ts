@@ -191,6 +191,7 @@ export type PermissionPoleKey = (typeof PERMISSION_POLES)[number]['key'];
 
 export type PermissionCategory = {
   accessPermissionKey: string;
+  assignment: 'delegable' | 'role-bound';
   description: string;
   icon: NavigationIconName;
   key: string;
@@ -253,24 +254,7 @@ const BASELINE_PERMISSION_ITEMS: PermissionItem[] = [
   }),
 ];
 
-/**
- * Operational capabilities intentionally bound to a role. They never appear
- * in the per-user grant editor and cannot be overridden through it.
- */
-const ROLE_BOUND_PERMISSION_ITEMS: PermissionItem[] = [
-  activePermission({
-    action: 'send',
-    description:
-      "Envoyer une notification interne via l'API sécurisée (interface à venir)",
-    grantable: false,
-    key: PERMISSIONS.NOTIFICATIONS.SEND,
-    label: 'Envoyer des notifications internes',
-    module: 'Notifications',
-    risk: 'critical',
-    route: 'POST /api/notifications',
-    stepUpOnUse: true,
-    surface: 'api',
-  }),
+const SETTINGS_PERMISSION_ITEMS: PermissionItem[] = [
   activePermission({
     action: 'view',
     description: "Consulter la configuration globale de l'application",
@@ -295,6 +279,27 @@ const ROLE_BOUND_PERMISSION_ITEMS: PermissionItem[] = [
     route: '/systeme/parametres',
     surface: 'page',
   }),
+];
+
+/**
+ * Operational capabilities intentionally bound to a role. They can be shown
+ * for transparency, but can never be overridden through an individual grant.
+ */
+const ROLE_BOUND_PERMISSION_ITEMS: PermissionItem[] = [
+  activePermission({
+    action: 'send',
+    description:
+      "Envoyer une notification interne via l'API sécurisée (interface à venir)",
+    grantable: false,
+    key: PERMISSIONS.NOTIFICATIONS.SEND,
+    label: 'Envoyer des notifications internes',
+    module: 'Notifications',
+    risk: 'critical',
+    route: 'POST /api/notifications',
+    stepUpOnUse: true,
+    surface: 'api',
+  }),
+  ...SETTINGS_PERMISSION_ITEMS,
 ];
 
 export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
@@ -431,10 +436,11 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
   },
 ];
 
-/** Only live administrative capabilities with individual overrides render here. */
+/** All live administrative pages shown in the per-user access overview. */
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   {
     accessPermissionKey: PERMISSIONS.USERS.VIEW,
+    assignment: 'delegable',
     description:
       'Annuaire, création, fiches, autorisations, sécurité et cycle de vie des comptes.',
     icon: 'Users',
@@ -711,7 +717,22 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
     tone: 'system',
   },
   {
+    accessPermissionKey: PERMISSIONS.SETTINGS.VIEW,
+    assignment: 'role-bound',
+    description:
+      "Configuration globale de l'interface et de la conservation des données.",
+    icon: 'Settings',
+    key: 'system-settings',
+    label: 'Paramètres système',
+    permissions: SETTINGS_PERMISSION_ITEMS,
+    poleKey: 'system',
+    routes: ['/systeme/parametres'],
+    surface: 'page',
+    tone: 'system',
+  },
+  {
     accessPermissionKey: PERMISSIONS.AUDIT.VIEW,
+    assignment: 'delegable',
     description:
       "Consultation, détails sensibles et export du journal d'activité global.",
     icon: 'History',
@@ -763,9 +784,12 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   },
 ];
 
-const ACCESS_PERMISSION_ITEMS = PERMISSION_CATEGORIES.flatMap(
-  (category) => category.permissions,
+export const DELEGABLE_PERMISSION_CATEGORIES = PERMISSION_CATEGORIES.filter(
+  (category) => category.assignment === 'delegable',
 );
+const ACCESS_PERMISSION_ITEMS = DELEGABLE_PERMISSION_CATEGORIES.flatMap(
+  (category) => category.permissions,
+).filter((permission) => permission.grantable);
 const ACCOUNT_PERMISSION_ITEMS = ACCOUNT_PERMISSION_CATEGORIES.flatMap(
   (category) => category.permissions,
 );
