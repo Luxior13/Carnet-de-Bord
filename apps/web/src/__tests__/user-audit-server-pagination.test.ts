@@ -309,7 +309,7 @@ describe('managed user audit server pagination', () => {
     expect(csv).toContain("' \n=HYPERLINK");
     expect(mockRequirePermission).toHaveBeenCalledWith(
       expect.any(Object),
-      PERMISSIONS.USERS.EXPORT,
+      PERMISSIONS.USERS.EXPORT_ACTIVITY,
     );
     expect(mockPrisma.auditLog.count).toHaveBeenCalledWith({
       take: 50_001,

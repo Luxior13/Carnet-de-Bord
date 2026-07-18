@@ -13,6 +13,7 @@ import {
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { env } from '$env';
 import { requireAuth, requirePermission } from '$server/api-auth';
@@ -37,6 +38,13 @@ const MAX_EXPORT_ROWS = 50_000;
 const MAX_CUSTOM_RANGE_MS = 366 * 24 * 60 * 60 * 1000;
 const CURSOR_CLOCK_SKEW_MS = 60_000;
 const CURSOR_VERSION = 1 as const;
+const SYSTEM_ACTIVITY_PAGE_KEYS = [
+  FEATURES.systemActivity.audit.pageKey,
+  'activity-journal',
+  'audit',
+] as const;
+const isSystemActivityPageKey = (pageKey: string): boolean =>
+  SYSTEM_ACTIVITY_PAGE_KEYS.some((candidate) => candidate === pageKey);
 const CURSOR_SIGNING_KEY = createHash('sha256')
   .update('team-control:audit-cursor:v1:', 'utf8')
   .update(Buffer.from(env.MFA_ENCRYPTION_KEY_V1, 'base64'))
@@ -493,7 +501,13 @@ const buildJournalWhere = (
   if (query.actorId) andFilters.push({ userId: query.actorId });
   if (query.category) andFilters.push({ category: query.category });
   if (query.outcome) andFilters.push({ outcome: query.outcome });
-  if (query.pageKey) andFilters.push({ pageKey: query.pageKey });
+  if (query.pageKey) {
+    andFilters.push({
+      pageKey: isSystemActivityPageKey(query.pageKey)
+        ? { in: [...SYSTEM_ACTIVITY_PAGE_KEYS] }
+        : query.pageKey,
+    });
+  }
   if (query.poleKey) andFilters.push({ poleKey: query.poleKey });
   if (query.search) {
     andFilters.push(buildSearchFilter(query.search, canViewSensitiveDetails));
@@ -843,7 +857,7 @@ export async function GET(
 
     const permissionCheck = requirePermission(
       auth.user,
-      PERMISSIONS.SYSTEM.AUDIT,
+      PERMISSIONS.AUDIT.VIEW,
     );
     if (!permissionCheck.success) return permissionCheck.response;
 
@@ -863,7 +877,7 @@ export async function GET(
       auth.user.isProtected ||
       hasPermission(
         auth.user.role,
-        PERMISSIONS.SYSTEM.AUDIT_SENSITIVE,
+        PERMISSIONS.AUDIT.VIEW_SENSITIVE,
         auth.user.permissions,
       );
     const snapshotAt = getSnapshotAt(query, cursor);
@@ -872,7 +886,7 @@ export async function GET(
       const exportFormat = query.format;
       const exportCheck = requirePermission(
         auth.user,
-        PERMISSIONS.SYSTEM.EXPORTS,
+        PERMISSIONS.AUDIT.EXPORT,
       );
       if (!exportCheck.success) return exportCheck.response;
 
@@ -901,11 +915,8 @@ export async function GET(
         metadata: {
           filters: getExportFilters(query),
           format: exportFormat,
-          pageKey: 'activity-journal',
-          pageLabel: "Journal d'activité",
+          ...FEATURES.systemActivity.audit,
           phase: 'started',
-          poleKey: 'system',
-          poleLabel: 'Système',
           rowCount: 0,
           snapshotAt: snapshotAt.toISOString(),
           tabKey: query.logType,
@@ -930,11 +941,8 @@ export async function GET(
               filters: getExportFilters(query),
               format: exportFormat,
               generatedAt: new Date().toISOString(),
-              pageKey: 'activity-journal',
-              pageLabel: "Journal d'activité",
+              ...FEATURES.systemActivity.audit,
               phase: 'completed',
-              poleKey: 'system',
-              poleLabel: 'Système',
               rowCount,
               snapshotAt: snapshotAt.toISOString(),
               tabKey: query.logType,

@@ -26,6 +26,26 @@ processus qui doivent accompagner l'application en production.
    trafic. La readiness contrôle le schéma, les enums, les index critiques et
    l'unicité du compte racine protégé.
 
+### Migration canonique des permissions du 18 juillet 2026
+
+La migration `20260718120000_canonical_live_permissions` est une migration de
+contrat : elle remplace les anciennes clés stockées et supprime les droits
+obsolètes. Elle ne doit jamais coexister avec un ancien binaire qui ne connaît
+que les anciennes clés.
+
+- Drainer le trafic, puis arrêter toutes les instances web et tous les workers
+  avant `db:migrate:deploy`.
+- Vérifier qu'aucun ancien processus ne peut redémarrer automatiquement pendant
+  la migration.
+- Déployer uniquement le nouveau web et le nouveau worker après le succès de la
+  migration, puis rouvrir le trafic après la readiness.
+- Pour une infrastructure rolling sans fenêtre de maintenance, ne pas exécuter
+  cette migration en l'état : livrer d'abord le code dual-read sur toutes les
+  instances, migrer après leur drainage complet, puis retirer les alias dans
+  une version ultérieure.
+
+La sauvegarde de l'étape 2 est obligatoire pour ce changement de données.
+
 ## Sauvegarde et restauration
 
 - Programmer une sauvegarde quotidienne et surveiller son code de sortie.

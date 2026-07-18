@@ -36,8 +36,13 @@ describe('system activity journal UX contracts', () => {
     );
   });
 
+  it('uses one canonical page option for the activity journal', () => {
+    expect(pageSource).toContain('normalizeJournalPageKey');
+    expect(pageSource).not.toContain("value: 'activity-journal'");
+  });
+
   it('protects export with permission visibility and step-up recovery', () => {
-    expect(pageSource).toContain('PERMISSIONS.SYSTEM.EXPORTS');
+    expect(pageSource).toContain('PERMISSIONS.AUDIT.EXPORT');
     expect(pageSource).toContain('ErrorCode.REAUTHENTICATION_REQUIRED');
     expect(pageSource).toContain('<AdminStepUpDialog');
     expect(pageSource).toContain('exportFormat: format');

@@ -19,7 +19,9 @@ import {
 } from '$constants/navigation-theme.constants';
 import {
   getAccessPermissionKeys,
+  getDependentPermissionKeys,
   getEffectivePermissions,
+  getPermissionItem,
   getRoleBasePermissions,
   PERMISSION_CATEGORIES,
   PERMISSION_POLES,
@@ -149,7 +151,7 @@ const getRiskBorderClassName = (risk: PermissionRisk): string => {
 const getPermissionResultLabel = (
   resultState: PermissionResultState,
 ): string => {
-  if (resultState === 'page-blocked') return 'Page bloquée';
+  if (resultState === 'page-blocked') return 'Page inaccessible';
   if (resultState === 'incomplete') return 'À compléter';
   if (resultState === 'allowed') return 'Autorisé';
 
@@ -221,12 +223,6 @@ const groupPermissionsByModule = (
   }));
 };
 
-const PERMISSION_ITEM_BY_KEY = new Map(
-  PERMISSION_CATEGORIES.flatMap((category) => category.permissions).map(
-    (permission) => [permission.key, permission] as const,
-  ),
-);
-
 const getMissingPermissionDependencies = (
   permission: PermissionItem,
   effectivePermissionsMap: Map<string, boolean>,
@@ -242,7 +238,7 @@ const getMissingPermissionDependencies = (
     if (visitedPermissionKeys.has(permissionKey)) return;
     visitedPermissionKeys.add(permissionKey);
 
-    const currentPermission = PERMISSION_ITEM_BY_KEY.get(permissionKey);
+    const currentPermission = getPermissionItem(permissionKey);
 
     for (const dependencyKey of currentPermission?.dependencies ?? []) {
       if (!(effectivePermissionsMap.get(dependencyKey) ?? false)) {
@@ -337,9 +333,8 @@ const getPermissionAccessBadgeClassName = (
 const getCategoryAccessPermission = (
   category: PermissionCategory,
 ): PermissionItem | undefined => {
-  return (
-    category.permissions.find((permission) => permission.action === 'view') ??
-    category.permissions[0]
+  return category.permissions.find(
+    (permission) => permission.key === category.accessPermissionKey,
   );
 };
 
@@ -368,7 +363,7 @@ const PermissionStatePicker: FC<PermissionStatePickerProps> = memo(
         <div
           className="border-border/70 bg-surface-control grid min-w-0 flex-1 grid-cols-2 gap-1 rounded-lg border p-1 sm:min-w-[12.5rem] sm:flex-none"
           role="group"
-          aria-label={`Choix de la permission ${permissionLabel}`}
+          aria-label={`Choix de l’autorisation ${permissionLabel}`}
         >
           {OVERRIDE_STATE_OPTIONS.map((option) => {
             const OptionIcon = option.icon;
@@ -529,7 +524,7 @@ const PermissionCard: FC<PermissionCardProps> = memo(
             {view.hasMissingDependencies ? (
               <p className="text-warning text-xs">
                 {view.isBlockedByPage
-                  ? 'La page est bloquée par : '
+                  ? 'La page est inaccessible sans : '
                   : 'À autoriser aussi : '}
                 {view.missingDependencyLabels.join(', ')}
               </p>
@@ -549,7 +544,9 @@ const PermissionCard: FC<PermissionCardProps> = memo(
                   Valeur appliquée : {view.isEnabled ? 'autorisée' : 'refusée'}
                 </p>
                 {view.dependencyLabels.length > 0 && (
-                  <p>Accès lié : {view.dependencyLabels.join(', ')}</p>
+                  <p>
+                    Autorisation requise : {view.dependencyLabels.join(', ')}
+                  </p>
                 )}
               </div>
             </details>
@@ -666,14 +663,36 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
       (permissionKey: string, state: PermissionChoiceState) => {
         const nextPermissionsMap = new Map(permissionsMap);
         const enabled = state === 'allow';
-        const roleBaseEnabled =
-          roleBasePermissionsMap.get(permissionKey) ?? false;
 
-        if (enabled === roleBaseEnabled) {
-          nextPermissionsMap.delete(permissionKey);
-        } else {
-          nextPermissionsMap.set(permissionKey, enabled);
-        }
+        const setOverride = (key: string, nextEnabled: boolean): void => {
+          const roleBaseEnabled = roleBasePermissionsMap.get(key) ?? false;
+
+          if (nextEnabled === roleBaseEnabled) nextPermissionsMap.delete(key);
+          else nextPermissionsMap.set(key, nextEnabled);
+        };
+        const visitedPermissionKeys = new Set<string>();
+        const applyWithDependencies = (key: string): void => {
+          if (visitedPermissionKeys.has(key)) return;
+          visitedPermissionKeys.add(key);
+
+          for (const dependency of getPermissionItem(key)?.dependencies ?? []) {
+            applyWithDependencies(dependency);
+          }
+
+          setOverride(key, true);
+        };
+        const denyWithDependents = (key: string): void => {
+          if (visitedPermissionKeys.has(key)) return;
+          visitedPermissionKeys.add(key);
+          setOverride(key, false);
+
+          for (const dependent of getDependentPermissionKeys(key)) {
+            denyWithDependents(dependent);
+          }
+        };
+
+        if (enabled) applyWithDependencies(permissionKey);
+        else denyWithDependents(permissionKey);
 
         onChange(toPermissionsData(nextPermissionsMap));
       },
@@ -847,13 +866,13 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
 
     return (
       <div className="space-y-3">
-        <h2 className="sr-only">Accès et permissions</h2>
+        <h2 className="sr-only">Autorisations administratives</h2>
         <section className="border-border/55 bg-surface-muted overflow-hidden rounded-lg border">
           <div className="flex flex-col gap-4 p-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-foreground font-semibold">
-                  Accès par page
+                  Autorisations administratives
                 </h3>
                 {customPermissionCount > 0 && (
                   <Badge
@@ -871,8 +890,11 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                 )}
               </div>
               <p className="text-muted-foreground max-w-3xl text-sm leading-6">
-                Le rôle définit la base. Les réglages ci-dessous ajoutent
-                seulement les exceptions nécessaires, page par page.
+                Le rôle définit les autorisations par défaut. Seules les pages
+                réellement en ligne dont les autorisations sont délégables
+                apparaissent ici. Tableau de bord, recherche, feuille de route,
+                notifications personnelles et Mon compte restent disponibles
+                pour tout compte actif.
               </p>
             </div>
             {(headerControls || customPermissionCount > 0) && (
@@ -1052,20 +1074,20 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                       >
                         {selectedPageIsAllowed
                           ? 'Page accessible'
-                          : 'Page bloquée'}
+                          : 'Page inaccessible'}
                       </Badge>
                       <span className="text-foreground text-sm font-semibold">
                         {selectedCategoryAccessPermission.label}
                       </span>
                     </div>
                     <p className="text-muted-foreground text-xs leading-5">
-                      Cette permission ouvre ou ferme l’accès global à la page.
-                      Les actions ci-dessous en dépendent.
+                      Cette autorisation contrôle l’accès à toute la page. Les
+                      autorisations ci-dessous en dépendent.
                     </p>
                     {isSelectedPageDefaultDenied && (
                       <p className="text-warning text-xs">
-                        Déjà bloquée par le rôle : choisir Refuser ne crée pas
-                        de modification à enregistrer.
+                        Accès déjà refusé par le rôle : choisir Refuser ne crée
+                        pas de modification à enregistrer.
                       </p>
                     )}
                   </div>
@@ -1108,15 +1130,16 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   <div className="border-border/60 bg-surface-muted flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2">
                     <ShieldCheck className="text-success size-4 shrink-0" />
                     <p className="text-muted-foreground text-xs">
-                      Les actions autorisées seront utilisables sur cette page.
+                      Les autorisations accordées seront utilisables sur cette
+                      page.
                     </p>
                   </div>
                 ) : (
                   <div className="border-warning/35 bg-warning/10 flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2">
                     <CircleAlert className="text-warning size-4 shrink-0" />
                     <p className="text-warning text-xs">
-                      La page est bloquée : les actions fines restent visibles
-                      mais ne seront pas utilisables.
+                      La page est inaccessible : les autorisations détaillées
+                      restent visibles mais ne seront pas utilisables.
                     </p>
                   </div>
                 )}
@@ -1131,7 +1154,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                             {group.module}
                           </h4>
                           <p className="text-muted-foreground text-xs">
-                            {group.permissions.length} action
+                            {group.permissions.length} autorisation
                             {group.permissions.length > 1 ? 's' : ''}
                           </p>
                         </div>
@@ -1155,10 +1178,11 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                 <div className="border-border/60 bg-surface-muted flex flex-col items-center justify-center rounded-lg border p-6 text-center">
                   <ShieldCheck className="text-primary-emphasis size-7" />
                   <p className="text-foreground mt-3 text-sm font-medium">
-                    Aucune action supplémentaire
+                    Aucune autorisation supplémentaire
                   </p>
                   <p className="text-muted-foreground mt-1 max-w-sm text-xs leading-5">
-                    Cette page se pilote uniquement avec son accès global.
+                    Cette page se pilote uniquement avec son autorisation
+                    d’accès.
                   </p>
                 </div>
               )}

@@ -1,6 +1,7 @@
 import type { UserRole } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 
+import { FEATURES } from '$constants/feature-registry.constants';
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
@@ -26,10 +27,7 @@ class TargetSessionStateChangedError extends Error {
 }
 
 const USERS_SECURITY_AUDIT_LOCATION = {
-  pageKey: 'users',
-  pageLabel: 'Utilisateurs & permissions',
-  poleKey: 'system',
-  poleLabel: 'Système',
+  ...FEATURES.users.audit,
   tabKey: 'security',
   tabLabel: 'Sécurité',
 } as const;

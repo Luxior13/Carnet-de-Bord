@@ -3,6 +3,13 @@ import { UserRole } from '@repo/database';
 import type { NavigationIconName } from '$constants/navigation-icon.constants';
 import type { NavigationSpaceTone } from '$constants/navigation-theme.constants';
 
+/**
+ * Canonical, effective permissions.
+ *
+ * A key only belongs here when the protected page or API is operational.
+ * Planned modules stay in the roadmap and receive permissions when their
+ * server-side policy, UI and tests are delivered together.
+ */
 export const PERMISSIONS = {
   ACCOUNT: {
     CHANGE_PASSWORD: 'account:change_password',
@@ -14,13 +21,58 @@ export const PERMISSIONS = {
     VIEW_PROFILE: 'account:view_profile',
     VIEW_SECURITY: 'account:view_security',
   },
+  AUDIT: {
+    EXPORT: 'audit:export',
+    VIEW: 'audit:view',
+    VIEW_SENSITIVE: 'audit:view_sensitive',
+  },
+  DASHBOARD: {
+    VIEW: 'dashboard:view',
+  },
+  NOTIFICATIONS: {
+    SEND: 'notifications:send',
+    VIEW: 'notifications:view',
+  },
+  SETTINGS: {
+    UPDATE: 'settings:update',
+    VIEW: 'settings:view',
+  },
+  USERS: {
+    ARCHIVE: 'users:archive',
+    CREATE: 'users:create',
+    EXPORT_ACTIVITY: 'users:export_activity',
+    RESET_PASSWORD: 'users:reset_password',
+    REVOKE_SESSIONS: 'users:revoke_sessions',
+    UPDATE_ACCESS: 'users:update_access',
+    UPDATE_ACCOUNT_POLICY: 'users:update_account_policy',
+    UPDATE_CONTACT: 'users:update_contact',
+    UPDATE_LOGIN: 'users:update_login',
+    UPDATE_PROFILE: 'users:update_profile',
+    UPDATE_STATUS: 'users:update_status',
+    VIEW: 'users:view',
+    VIEW_ACCESS: 'users:view_access',
+    VIEW_ACCOUNT_POLICY: 'users:view_account_policy',
+    VIEW_ACTIVITY: 'users:view_activity',
+    VIEW_CONTACT: 'users:view_contact',
+    VIEW_SECURITY: 'users:view_security',
+    VIEW_SESSIONS: 'users:view_sessions',
+  },
+} as const;
+
+/**
+ * Roadmap-only capability names. They are deliberately not known by
+ * `hasPermission`, not assignable and absent from every role preset.
+ */
+export const ROADMAP_PERMISSIONS = {
+  BACKUPS: {
+    VIEW: 'backups:view',
+  },
   CONTRACTS: {
     UPDATE: 'contracts:update',
     VIEW: 'contracts:view',
   },
   DASHBOARD: {
     MANAGE_WIDGETS: 'dashboard:manage_widgets',
-    VIEW: 'dashboard:view',
   },
   DOCUMENTS: {
     APPROVE: 'documents:approve',
@@ -49,8 +101,6 @@ export const PERMISSIONS = {
   },
   NOTIFICATIONS: {
     MANAGE: 'notifications:manage',
-    SEND: 'notifications:send',
-    VIEW: 'notifications:view',
   },
   SPORT: {
     PUBLIC_SYNC: 'sport:public_sync',
@@ -59,13 +109,8 @@ export const PERMISSIONS = {
   },
   SYSTEM: {
     ARCHIVES: 'system:archives',
-    AUDIT: 'system:audit',
-    AUDIT_SENSITIVE: 'system:audit_sensitive',
     AUTOMATION: 'system:automation',
-    EXPORTS: 'system:exports',
-    SETTINGS: 'system:settings',
     VALIDATE: 'system:validate',
-    VIEW: 'system:view',
   },
   TASKS: {
     ASSIGN: 'tasks:assign',
@@ -82,77 +127,11 @@ export const PERMISSIONS = {
     VALIDATE: 'treasury:validate',
     VIEW: 'treasury:view',
   },
-  USERS: {
-    CREATE: 'users:create',
-    DELETE: 'users:delete',
-    EDIT_PERMISSIONS: 'users:edit_permissions',
-    EXPORT: 'users:export',
-    MANAGE_ACCOUNT_POLICY: 'users:manage_account_policy',
-    MANAGE_ROLES: 'users:manage_roles',
-    MANAGE_STATUS: 'users:manage_status',
-    RESET_PASSWORD: 'users:reset_password',
-    RESTORE: 'users:restore',
-    REVOKE_SESSIONS: 'users:revoke_sessions',
-    UPDATE_CONTACT: 'users:update_contact',
-    UPDATE_LOGIN: 'users:update_login',
-    UPDATE_PROFILE: 'users:update_profile',
-    VIEW: 'users:view',
-    VIEW_ACCESS: 'users:view_access',
-    VIEW_ACCOUNT_POLICY: 'users:view_account_policy',
-    VIEW_ACTIVITY: 'users:view_activity',
-    VIEW_CONTACT: 'users:view_contact',
-    VIEW_SECURITY: 'users:view_security',
-    VIEW_SESSIONS: 'users:view_sessions',
-  },
 } as const;
 
-export type PermissionPole = {
-  icon: NavigationIconName;
-  key: string;
-  label: string;
-  tone: NavigationSpaceTone;
-};
-
-export const PERMISSION_POLES = [
-  {
-    icon: 'LayoutDashboard',
-    key: 'dashboard',
-    label: 'Tableau de bord',
-    tone: 'dashboard',
-  },
-  {
-    icon: 'Users',
-    key: 'internal',
-    label: 'Vie interne',
-    tone: 'internal',
-  },
-  {
-    icon: 'BriefcaseBusiness',
-    key: 'legal',
-    label: 'Bureau juridique',
-    tone: 'legal',
-  },
-  {
-    icon: 'Wallet',
-    key: 'treasury',
-    label: 'Trésorerie',
-    tone: 'treasury',
-  },
-  {
-    icon: 'Settings',
-    key: 'system',
-    label: 'Système',
-    tone: 'system',
-  },
-  {
-    icon: 'Activity',
-    key: 'sport',
-    label: 'Sport / Team Control',
-    tone: 'sport',
-  },
-] as const satisfies readonly PermissionPole[];
-
-export type PermissionPoleKey = (typeof PERMISSION_POLES)[number]['key'];
+export type PermissionStatus = 'active' | 'deprecated' | 'reserved';
+export type PermissionSurface = 'api' | 'page' | 'self';
+export type PermissionRisk = 'critical' | 'default' | 'sensitive';
 
 export type PermissionAction =
   | 'approve'
@@ -171,26 +150,51 @@ export type PermissionAction =
   | 'validate'
   | 'view';
 
-export type PermissionRisk = 'critical' | 'default' | 'sensitive';
-
 export type PermissionItem = {
   action: PermissionAction;
   alwaysEnabled?: boolean;
   dependencies?: string[];
   description: string;
+  grantable: boolean;
   key: string;
   label: string;
   module: string;
+  requiresTargetMfa: boolean;
   risk: PermissionRisk;
+  route: string;
+  status: PermissionStatus;
+  stepUpOnUse?: boolean;
+  surface: PermissionSurface;
 };
 
+export type PermissionPole = {
+  icon: NavigationIconName;
+  key: string;
+  label: string;
+  tone: NavigationSpaceTone;
+};
+
+export const PERMISSION_POLES = [
+  {
+    icon: 'Settings',
+    key: 'system',
+    label: 'Système',
+    tone: 'system',
+  },
+] as const satisfies readonly PermissionPole[];
+
+export type PermissionPoleKey = (typeof PERMISSION_POLES)[number]['key'];
+
 export type PermissionCategory = {
+  accessPermissionKey: string;
   description: string;
   icon: NavigationIconName;
   key: string;
   label: string;
   permissions: PermissionItem[];
   poleKey: PermissionPoleKey;
+  routes: string[];
+  surface: PermissionSurface;
   tone: NavigationSpaceTone;
 };
 
@@ -205,6 +209,93 @@ export type AccountPermissionCategory = {
 
 export type PermissionsData = Record<string, boolean>;
 
+const activePermission = (
+  permission: Omit<PermissionItem, 'requiresTargetMfa' | 'status'> &
+    Partial<Pick<PermissionItem, 'requiresTargetMfa'>>,
+): PermissionItem => ({
+  ...permission,
+  requiresTargetMfa:
+    permission.requiresTargetMfa ??
+    (permission.surface !== 'self' && permission.risk === 'critical'),
+  status: 'active',
+});
+
+const BASELINE_PERMISSION_ITEMS: PermissionItem[] = [
+  activePermission({
+    action: 'view',
+    alwaysEnabled: true,
+    description:
+      "Accéder à la page d'accueil privée et à ses données déjà autorisées",
+    grantable: false,
+    key: PERMISSIONS.DASHBOARD.VIEW,
+    label: 'Consulter le tableau de bord',
+    module: 'Socle',
+    risk: 'default',
+    route: '/',
+    surface: 'page',
+  }),
+  activePermission({
+    action: 'view',
+    alwaysEnabled: true,
+    description:
+      'Consulter et classer uniquement les notifications de son propre compte',
+    grantable: false,
+    key: PERMISSIONS.NOTIFICATIONS.VIEW,
+    label: 'Consulter ses notifications personnelles',
+    module: 'Socle',
+    risk: 'default',
+    route: '/mes-notifications',
+    surface: 'page',
+  }),
+];
+
+/**
+ * Operational APIs without a live administration screen. Their access is
+ * role-bound until the corresponding UI becomes live, so they never appear
+ * in the per-user grant editor and cannot be overridden through it.
+ */
+const ROLE_BOUND_API_PERMISSION_ITEMS: PermissionItem[] = [
+  activePermission({
+    action: 'send',
+    description:
+      "Envoyer une notification interne via l'API sécurisée (interface à venir)",
+    grantable: false,
+    key: PERMISSIONS.NOTIFICATIONS.SEND,
+    label: 'Envoyer des notifications internes',
+    module: 'Notifications',
+    risk: 'critical',
+    route: 'POST /api/notifications',
+    stepUpOnUse: true,
+    surface: 'api',
+  }),
+  activePermission({
+    action: 'view',
+    description:
+      "Consulter les paramètres globaux via l'API (interface à venir)",
+    grantable: false,
+    key: PERMISSIONS.SETTINGS.VIEW,
+    label: 'Consulter les paramètres système',
+    module: 'Paramètres',
+    risk: 'sensitive',
+    route: 'GET /api/systeme/parametres',
+    surface: 'api',
+  }),
+  activePermission({
+    action: 'update',
+    dependencies: [PERMISSIONS.SETTINGS.VIEW],
+    description:
+      "Modifier les paramètres globaux via l'API sécurisée (interface à venir)",
+    grantable: false,
+    key: PERMISSIONS.SETTINGS.UPDATE,
+    label: 'Modifier les paramètres système',
+    module: 'Paramètres',
+    risk: 'critical',
+    route: 'PUT /api/systeme/parametres/[key]',
+    stepUpOnUse: true,
+    surface: 'api',
+  }),
+];
+
 export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
   {
     description: 'Identité visible et modifiable depuis Mon compte.',
@@ -212,35 +303,44 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
     key: 'account-profile',
     label: 'Profil personnel',
     permissions: [
-      {
+      activePermission({
         action: 'view',
         alwaysEnabled: true,
         description: 'Consulter son profil depuis la page Mon compte',
+        grantable: false,
         key: PERMISSIONS.ACCOUNT.VIEW_PROFILE,
-        label: 'Voir son profil personnel',
+        label: 'Consulter son profil personnel',
         module: 'Profil',
         risk: 'default',
-      },
-      {
+        route: '/mon-compte',
+        surface: 'self',
+      }),
+      activePermission({
         action: 'update',
         dependencies: [PERMISSIONS.ACCOUNT.VIEW_PROFILE],
-        description: 'Modifier son prénom et son nom depuis la page Mon compte',
+        description: 'Modifier son prénom et son nom depuis Mon compte',
+        grantable: true,
         key: PERMISSIONS.ACCOUNT.UPDATE_PROFILE,
         label: 'Modifier son prénom et son nom',
         module: 'Profil',
         risk: 'default',
-      },
-      {
+        route: '/mon-compte',
+        surface: 'self',
+      }),
+      activePermission({
         action: 'update',
         alwaysEnabled: true,
         dependencies: [PERMISSIONS.ACCOUNT.VIEW_PROFILE],
         description:
           'Modifier sa propre adresse de contact après confirmation du mot de passe',
+        grantable: false,
         key: PERMISSIONS.ACCOUNT.UPDATE_CONTACT,
         label: 'Modifier son adresse de contact',
         module: 'Contact',
         risk: 'sensitive',
-      },
+        route: '/mon-compte',
+        surface: 'self',
+      }),
     ],
     tone: 'internal',
   },
@@ -250,47 +350,59 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
     key: 'account-security',
     label: 'Sécurité personnelle',
     permissions: [
-      {
+      activePermission({
         action: 'view',
         alwaysEnabled: true,
-        description: 'Voir les informations de sécurité de son compte',
+        description: 'Consulter les informations de sécurité de son compte',
+        grantable: false,
         key: PERMISSIONS.ACCOUNT.VIEW_SECURITY,
-        label: 'Voir sa sécurité',
+        label: 'Consulter la sécurité de son compte',
         module: 'Sécurité',
         risk: 'default',
-      },
-      {
+        route: '/mon-compte',
+        surface: 'self',
+      }),
+      activePermission({
         action: 'update',
         alwaysEnabled: true,
         dependencies: [PERMISSIONS.ACCOUNT.VIEW_SECURITY],
         description: 'Changer son mot de passe depuis Mon compte',
+        grantable: false,
         key: PERMISSIONS.ACCOUNT.CHANGE_PASSWORD,
         label: 'Changer son mot de passe',
         module: 'Mot de passe',
         risk: 'sensitive',
-      },
-      {
+        route: '/mon-compte',
+        surface: 'self',
+      }),
+      activePermission({
         action: 'manage',
         alwaysEnabled: true,
         dependencies: [PERMISSIONS.ACCOUNT.VIEW_SECURITY],
         description:
-          'Configurer son application d’authentification et ses codes de récupération',
+          "Configurer son application d'authentification et ses codes de récupération",
+        grantable: false,
         key: PERMISSIONS.ACCOUNT.MANAGE_MFA,
         label: 'Gérer sa double authentification',
         module: 'Double authentification',
         risk: 'sensitive',
-      },
-      {
+        route: '/mon-compte',
+        surface: 'self',
+      }),
+      activePermission({
         action: 'manage',
         alwaysEnabled: true,
         dependencies: [PERMISSIONS.ACCOUNT.VIEW_SECURITY],
         description:
           'Consulter les appareils connectés et révoquer ses autres sessions',
+        grantable: false,
         key: PERMISSIONS.ACCOUNT.MANAGE_SESSIONS,
         label: 'Gérer ses sessions actives',
         module: 'Sessions',
         risk: 'sensitive',
-      },
+        route: '/mon-compte',
+        surface: 'self',
+      }),
     ],
     tone: 'internal',
   },
@@ -300,740 +412,402 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
     key: 'account-activity',
     label: 'Activité personnelle',
     permissions: [
-      {
+      activePermission({
         action: 'view',
         alwaysEnabled: true,
         description:
           'Consulter le journal de sécurité et les actions liées à son propre compte',
+        grantable: false,
         key: PERMISSIONS.ACCOUNT.VIEW_ACTIVITY,
-        label: "Voir son journal d'activité",
+        label: "Consulter son journal d'activité",
         module: 'Activité',
         risk: 'default',
-      },
+        route: '/mon-compte',
+        surface: 'self',
+      }),
     ],
     tone: 'internal',
   },
 ];
 
+/** Only live, delegable administrative capabilities are rendered here. */
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   {
-    description: 'Vue globale du site privé selon les permissions.',
-    icon: 'LayoutDashboard',
-    key: 'dashboard',
-    label: "Vue d'ensemble",
-    permissions: [
-      {
-        action: 'view',
-        description: 'Accéder au tableau de bord et voir les statistiques',
-        key: PERMISSIONS.DASHBOARD.VIEW,
-        label: 'Voir le tableau de bord',
-        module: "Vue d'ensemble",
-        risk: 'default',
-      },
-      {
-        action: 'manage',
-        dependencies: [PERMISSIONS.DASHBOARD.VIEW],
-        description: 'Organiser les widgets et raccourcis du tableau de bord',
-        key: PERMISSIONS.DASHBOARD.MANAGE_WIDGETS,
-        label: 'Gérer les widgets',
-        module: 'Personnalisation',
-        risk: 'sensitive',
-      },
-    ],
-    poleKey: 'dashboard',
-    tone: 'dashboard',
-  },
-  {
-    description: 'Tâches, rappels et actions personnelles ou assignées.',
-    icon: 'ClipboardList',
-    key: 'tasks',
-    label: 'Tâches et actions',
-    permissions: [
-      {
-        action: 'view',
-        dependencies: [PERMISSIONS.DASHBOARD.VIEW],
-        description: 'Consulter les tâches visibles depuis le tableau de bord',
-        key: PERMISSIONS.TASKS.VIEW,
-        label: 'Voir les tâches',
-        module: 'Tâches',
-        risk: 'default',
-      },
-      {
-        action: 'create',
-        dependencies: [PERMISSIONS.TASKS.VIEW],
-        description: 'Créer de nouvelles tâches ou actions de suivi',
-        key: PERMISSIONS.TASKS.CREATE,
-        label: 'Créer des tâches',
-        module: 'Tâches',
-        risk: 'sensitive',
-      },
-      {
-        action: 'update',
-        dependencies: [PERMISSIONS.TASKS.VIEW],
-        description: 'Modifier le contenu, le statut ou les échéances',
-        key: PERMISSIONS.TASKS.UPDATE,
-        label: 'Modifier les tâches',
-        module: 'Tâches',
-        risk: 'sensitive',
-      },
-      {
-        action: 'assign',
-        dependencies: [PERMISSIONS.TASKS.VIEW],
-        description: 'Assigner des tâches à un membre ou à une équipe',
-        key: PERMISSIONS.TASKS.ASSIGN,
-        label: 'Assigner les tâches',
-        module: 'Attribution',
-        risk: 'sensitive',
-      },
-      {
-        action: 'delete',
-        dependencies: [PERMISSIONS.TASKS.VIEW],
-        description: 'Supprimer ou fermer durablement une tâche',
-        key: PERMISSIONS.TASKS.DELETE,
-        label: 'Supprimer les tâches',
-        module: 'Cycle de vie',
-        risk: 'critical',
-      },
-    ],
-    poleKey: 'dashboard',
-    tone: 'dashboard',
-  },
-  {
-    description: 'Notifications, rappels et messages transversaux.',
-    icon: 'Bell',
-    key: 'notifications',
-    label: 'Notifications et rappels',
-    permissions: [
-      {
-        action: 'view',
-        dependencies: [PERMISSIONS.DASHBOARD.VIEW],
-        description: 'Consulter les notifications et rappels visibles',
-        key: PERMISSIONS.NOTIFICATIONS.VIEW,
-        label: 'Voir les notifications',
-        module: 'Notifications',
-        risk: 'default',
-      },
-      {
-        action: 'manage',
-        dependencies: [PERMISSIONS.NOTIFICATIONS.VIEW],
-        description: 'Configurer les rappels et notifications internes',
-        key: PERMISSIONS.NOTIFICATIONS.MANAGE,
-        label: 'Gérer les notifications',
-        module: 'Configuration',
-        risk: 'sensitive',
-      },
-      {
-        action: 'send',
-        dependencies: [PERMISSIONS.NOTIFICATIONS.VIEW],
-        description: 'Envoyer des messages ou relances à la structure',
-        key: PERMISSIONS.NOTIFICATIONS.SEND,
-        label: 'Envoyer des notifications',
-        module: 'Envoi',
-        risk: 'critical',
-      },
-    ],
-    poleKey: 'dashboard',
-    tone: 'dashboard',
-  },
-  {
-    description: 'Vie quotidienne de la structure et informations internes.',
-    icon: 'Users',
-    key: 'internal',
-    label: 'Vie interne',
-    permissions: [
-      {
-        action: 'view',
-        description: 'Accéder au pôle vie interne et à ses informations',
-        key: PERMISSIONS.INTERNAL.VIEW,
-        label: 'Voir la vie interne',
-        module: 'Navigation',
-        risk: 'default',
-      },
-    ],
-    poleKey: 'internal',
-    tone: 'internal',
-  },
-  {
-    description: 'Membres, adhérents, onboarding et recrutement interne.',
-    icon: 'UserCheck',
-    key: 'members',
-    label: 'Membres et adhérents',
-    permissions: [
-      {
-        action: 'view',
-        dependencies: [PERMISSIONS.INTERNAL.VIEW],
-        description: 'Consulter les fiches des membres et des adhérents',
-        key: PERMISSIONS.MEMBERS.VIEW,
-        label: 'Voir les membres',
-        module: 'Membres',
-        risk: 'default',
-      },
-      {
-        action: 'update',
-        dependencies: [PERMISSIONS.MEMBERS.VIEW],
-        description:
-          'Modifier les parcours, statuts et informations des membres',
-        key: PERMISSIONS.MEMBERS.UPDATE,
-        label: 'Modifier les membres',
-        module: 'Membres',
-        risk: 'sensitive',
-      },
-    ],
-    poleKey: 'internal',
-    tone: 'internal',
-  },
-  {
-    description: 'Réunions, calendriers, débriefs et suivi collectif.',
-    icon: 'CalendarClock',
-    key: 'meetings',
-    label: 'Réunions et suivi',
-    permissions: [
-      {
-        action: 'view',
-        dependencies: [PERMISSIONS.INTERNAL.VIEW],
-        description: 'Consulter les réunions, calendriers et débriefs',
-        key: PERMISSIONS.MEETINGS.VIEW,
-        label: 'Voir les réunions',
-        module: 'Réunions',
-        risk: 'default',
-      },
-      {
-        action: 'update',
-        dependencies: [PERMISSIONS.MEETINGS.VIEW],
-        description: 'Organiser ou modifier les réunions et comptes rendus',
-        key: PERMISSIONS.MEETINGS.UPDATE,
-        label: 'Modifier les réunions',
-        module: 'Réunions',
-        risk: 'sensitive',
-      },
-    ],
-    poleKey: 'internal',
-    tone: 'internal',
-  },
-  {
-    description: 'Bureau, partenaires, contacts et décisions sensibles.',
-    icon: 'BriefcaseBusiness',
-    key: 'legal',
-    label: 'Bureau juridique',
-    permissions: [
-      {
-        action: 'view',
-        description: 'Accéder au pôle bureau et juridique',
-        key: PERMISSIONS.LEGAL.VIEW,
-        label: 'Voir le bureau juridique',
-        module: 'Navigation',
-        risk: 'sensitive',
-      },
-    ],
-    poleKey: 'legal',
-    tone: 'legal',
-  },
-  {
-    description: 'Documents, chartes, versions et acceptations.',
-    icon: 'FileText',
-    key: 'documents',
-    label: 'Documents et chartes',
-    permissions: [
-      {
-        action: 'view',
-        dependencies: [PERMISSIONS.LEGAL.VIEW],
-        description: 'Consulter les documents et chartes de la structure',
-        key: PERMISSIONS.DOCUMENTS.VIEW,
-        label: 'Voir les documents',
-        module: 'Documents',
-        risk: 'sensitive',
-      },
-      {
-        action: 'create',
-        dependencies: [PERMISSIONS.DOCUMENTS.VIEW],
-        description: 'Ajouter de nouveaux documents ou chartes',
-        key: PERMISSIONS.DOCUMENTS.CREATE,
-        label: 'Créer des documents',
-        module: 'Documents',
-        risk: 'sensitive',
-      },
-      {
-        action: 'update',
-        dependencies: [PERMISSIONS.DOCUMENTS.VIEW],
-        description: 'Modifier les documents, versions et modèles',
-        key: PERMISSIONS.DOCUMENTS.UPDATE,
-        label: 'Modifier les documents',
-        module: 'Documents',
-        risk: 'critical',
-      },
-      {
-        action: 'approve',
-        dependencies: [PERMISSIONS.DOCUMENTS.VIEW],
-        description: 'Valider ou approuver des documents sensibles',
-        key: PERMISSIONS.DOCUMENTS.APPROVE,
-        label: 'Approuver les documents',
-        module: 'Validations',
-        risk: 'critical',
-      },
-      {
-        action: 'archive',
-        dependencies: [PERMISSIONS.DOCUMENTS.VIEW],
-        description: 'Archiver les documents et anciennes versions',
-        key: PERMISSIONS.DOCUMENTS.ARCHIVE,
-        label: 'Archiver les documents',
-        module: 'Archives',
-        risk: 'critical',
-      },
-    ],
-    poleKey: 'legal',
-    tone: 'legal',
-  },
-  {
-    description: 'Contrats, sponsors et engagements administratifs.',
-    icon: 'FileCheck2',
-    key: 'contracts',
-    label: 'Contrats',
-    permissions: [
-      {
-        action: 'view',
-        dependencies: [PERMISSIONS.LEGAL.VIEW],
-        description: 'Consulter les contrats et engagements',
-        key: PERMISSIONS.CONTRACTS.VIEW,
-        label: 'Voir les contrats',
-        module: 'Contrats',
-        risk: 'sensitive',
-      },
-      {
-        action: 'update',
-        dependencies: [PERMISSIONS.CONTRACTS.VIEW],
-        description: 'Modifier les contrats et leur suivi',
-        key: PERMISSIONS.CONTRACTS.UPDATE,
-        label: 'Modifier les contrats',
-        module: 'Contrats',
-        risk: 'critical',
-      },
-    ],
-    poleKey: 'legal',
-    tone: 'legal',
-  },
-  {
-    description: 'Incidents, sanctions et suivi confidentiel.',
-    icon: 'ShieldCheck',
-    key: 'incidents',
-    label: 'Incidents et sanctions',
-    permissions: [
-      {
-        action: 'view',
-        dependencies: [PERMISSIONS.LEGAL.VIEW],
-        description: 'Consulter les incidents et sanctions',
-        key: PERMISSIONS.INCIDENTS.VIEW,
-        label: 'Voir les incidents',
-        module: 'Incidents',
-        risk: 'critical',
-      },
-      {
-        action: 'update',
-        dependencies: [PERMISSIONS.INCIDENTS.VIEW],
-        description: 'Modifier le suivi des incidents et sanctions',
-        key: PERMISSIONS.INCIDENTS.UPDATE,
-        label: 'Modifier les incidents',
-        module: 'Incidents',
-        risk: 'critical',
-      },
-    ],
-    poleKey: 'legal',
-    tone: 'legal',
-  },
-  {
-    description: 'Configuration, journal et opérations système.',
-    icon: 'Settings',
-    key: 'system',
-    label: 'Socle système',
-    permissions: [
-      {
-        action: 'view',
-        description: 'Accéder au pôle système et à son tableau de synthèse',
-        key: PERMISSIONS.SYSTEM.VIEW,
-        label: 'Voir le système',
-        module: 'Navigation',
-        risk: 'sensitive',
-      },
-      {
-        action: 'view',
-        dependencies: [PERMISSIONS.SYSTEM.VIEW],
-        description: "Consulter le journal d'activité système",
-        key: PERMISSIONS.SYSTEM.AUDIT,
-        label: "Voir le journal d'activité",
-        module: 'Audit',
-        risk: 'sensitive',
-      },
-      {
-        action: 'view',
-        dependencies: [PERMISSIONS.SYSTEM.AUDIT],
-        description:
-          "Consulter les détails techniques sensibles du journal d'activité",
-        key: PERMISSIONS.SYSTEM.AUDIT_SENSITIVE,
-        label: 'Voir les détails sensibles du journal',
-        module: 'Audit',
-        risk: 'critical',
-      },
-      {
-        action: 'manage',
-        dependencies: [PERMISSIONS.SYSTEM.VIEW],
-        description: 'Modifier les paramètres globaux du site privé',
-        key: PERMISSIONS.SYSTEM.SETTINGS,
-        label: 'Gérer les paramètres',
-        module: 'Paramètres',
-        risk: 'critical',
-      },
-      {
-        action: 'validate',
-        dependencies: [PERMISSIONS.SYSTEM.VIEW],
-        description: 'Valider les actions globales sensibles',
-        key: PERMISSIONS.SYSTEM.VALIDATE,
-        label: 'Valider les actions globales',
-        module: 'Validations',
-        risk: 'critical',
-      },
-      {
-        action: 'export',
-        dependencies: [PERMISSIONS.SYSTEM.VIEW],
-        description: 'Exporter les données globales et les sauvegardes',
-        key: PERMISSIONS.SYSTEM.EXPORTS,
-        label: 'Gérer les exports',
-        module: 'Exports',
-        risk: 'critical',
-      },
-      {
-        action: 'view',
-        dependencies: [PERMISSIONS.SYSTEM.VIEW],
-        description: 'Consulter les archives globales du site privé',
-        key: PERMISSIONS.SYSTEM.ARCHIVES,
-        label: 'Voir les archives',
-        module: 'Archives',
-        risk: 'sensitive',
-      },
-      {
-        action: 'manage',
-        dependencies: [PERMISSIONS.SYSTEM.VIEW],
-        description: 'Gérer les automatisations et modèles système',
-        key: PERMISSIONS.SYSTEM.AUTOMATION,
-        label: 'Gérer les automatisations',
-        module: 'Automatisations',
-        risk: 'critical',
-      },
-    ],
-    poleKey: 'system',
-    tone: 'system',
-  },
-  {
-    description: 'Gestion des utilisateurs, des accès et de la sécurité.',
+    accessPermissionKey: PERMISSIONS.USERS.VIEW,
+    description:
+      'Annuaire, création, fiches, autorisations, sécurité et cycle de vie des comptes.',
     icon: 'Users',
     key: 'users',
-    label: 'Utilisateurs & permissions',
+    label: 'Utilisateurs',
     permissions: [
-      {
+      activePermission({
         action: 'view',
         description:
-          'Consulter la liste, le résumé et les informations de base',
+          'Consulter la liste, le résumé et les informations de base des comptes',
+        grantable: true,
         key: PERMISSIONS.USERS.VIEW,
-        label: 'Voir les utilisateurs',
-        module: 'Lecture',
+        label: 'Consulter les utilisateurs',
+        module: 'Annuaire',
         risk: 'default',
-      },
-      {
+        route: '/administration/utilisateurs',
+        surface: 'page',
+      }),
+      activePermission({
         action: 'create',
         dependencies: [PERMISSIONS.USERS.VIEW],
-        description: 'Créer de nouveaux comptes utilisateurs standards',
+        description:
+          'Créer un compte utilisateur standard avec un mot de passe temporaire',
+        grantable: true,
         key: PERMISSIONS.USERS.CREATE,
-        label: 'Créer des utilisateurs',
-        module: 'Création',
+        label: 'Créer des utilisateurs standards',
+        module: 'Création de comptes',
         risk: 'sensitive',
-      },
-      {
+        route: '/administration/utilisateurs/nouveau',
+        surface: 'page',
+      }),
+      activePermission({
         action: 'view',
         dependencies: [PERMISSIONS.USERS.VIEW],
-        description: 'Voir les adresses de contact des utilisateurs',
+        description: 'Consulter les adresses de contact des utilisateurs',
+        grantable: true,
         key: PERMISSIONS.USERS.VIEW_CONTACT,
-        label: 'Voir les adresses de contact',
-        module: 'Profil',
+        label: 'Consulter les adresses de contact',
+        module: 'Profil et contact',
         risk: 'sensitive',
-      },
-      {
+        route: '/administration/utilisateurs/[id]?section=profile',
+        surface: 'page',
+      }),
+      activePermission({
         action: 'update',
         dependencies: [PERMISSIONS.USERS.VIEW],
-        description: 'Modifier le prénom et le nom des comptes',
+        description: 'Modifier le prénom et le nom des comptes standards',
+        grantable: true,
         key: PERMISSIONS.USERS.UPDATE_PROFILE,
-        label: 'Modifier le profil des utilisateurs',
-        module: 'Profil',
+        label: 'Modifier le profil',
+        module: 'Profil et contact',
         risk: 'sensitive',
-      },
-      {
+        route: '/administration/utilisateurs/[id]?section=profile',
+        surface: 'page',
+      }),
+      activePermission({
         action: 'update',
         dependencies: [PERMISSIONS.USERS.VIEW, PERMISSIONS.USERS.VIEW_CONTACT],
         description:
-          "Modifier l'adresse de contact, sans la considérer comme vérifiée",
+          "Modifier l'adresse de contact sans la considérer comme vérifiée",
+        grantable: true,
         key: PERMISSIONS.USERS.UPDATE_CONTACT,
         label: "Modifier l'adresse de contact",
-        module: 'Profil',
+        module: 'Profil et contact',
         risk: 'sensitive',
-      },
-      {
+        route: '/administration/utilisateurs/[id]?section=profile',
+        surface: 'page',
+      }),
+      activePermission({
         action: 'update',
         dependencies: [PERMISSIONS.USERS.VIEW],
         description:
-          "Modifier l'identifiant d'un autre compte utilisateur standard et fermer toutes ses sessions",
+          "Modifier l'identifiant de connexion d'un compte standard et fermer ses sessions",
+        grantable: true,
         key: PERMISSIONS.USERS.UPDATE_LOGIN,
-        label: 'Modifier les identifiants de connexion',
+        label: "Modifier l'identifiant de connexion",
         module: 'Connexion',
         risk: 'critical',
-      },
-      {
-        action: 'manage',
-        dependencies: [PERMISSIONS.USERS.VIEW, PERMISSIONS.USERS.VIEW_SECURITY],
-        description: 'Activer ou désactiver les comptes utilisateurs',
-        key: PERMISSIONS.USERS.MANAGE_STATUS,
-        label: 'Gérer le statut',
-        module: 'Sécurité',
-        risk: 'critical',
-      },
-      {
+        route: '/administration/utilisateurs/[id]?section=profile',
+        stepUpOnUse: true,
+        surface: 'page',
+      }),
+      activePermission({
         action: 'view',
         dependencies: [PERMISSIONS.USERS.VIEW],
         description:
-          'Voir le verrouillage, le mot de passe et la double authentification',
+          'Consulter le verrouillage, le mot de passe et la double authentification',
+        grantable: true,
         key: PERMISSIONS.USERS.VIEW_SECURITY,
-        label: 'Voir la sécurité des comptes',
+        label: 'Consulter la sécurité des comptes',
         module: 'Sécurité',
         risk: 'sensitive',
-      },
-      {
+        route: '/administration/utilisateurs/[id]?section=security',
+        surface: 'page',
+      }),
+      activePermission({
+        action: 'update',
+        dependencies: [PERMISSIONS.USERS.VIEW, PERMISSIONS.USERS.VIEW_SECURITY],
+        description: 'Activer ou désactiver un compte utilisateur standard',
+        grantable: true,
+        key: PERMISSIONS.USERS.UPDATE_STATUS,
+        label: 'Activer ou désactiver un compte',
+        module: 'Sécurité',
+        risk: 'critical',
+        route: '/administration/utilisateurs/[id]?section=security',
+        stepUpOnUse: true,
+        surface: 'page',
+      }),
+      activePermission({
         action: 'view',
         dependencies: [PERMISSIONS.USERS.VIEW],
-        description: 'Voir le rôle et les permissions détaillées',
+        description: 'Consulter les autorisations administratives détaillées',
+        grantable: true,
         key: PERMISSIONS.USERS.VIEW_ACCESS,
-        label: 'Voir les accès',
-        module: 'Accès',
+        label: 'Consulter les autorisations administratives',
+        module: 'Autorisations',
         risk: 'sensitive',
-      },
-      {
-        action: 'manage',
+        route: '/administration/utilisateurs/[id]?section=access',
+        surface: 'page',
+      }),
+      activePermission({
+        action: 'update',
         dependencies: [PERMISSIONS.USERS.VIEW_ACCESS],
-        description: 'Modifier les accès métier accordés aux comptes',
-        key: PERMISSIONS.USERS.EDIT_PERMISSIONS,
-        label: 'Gérer les accès métier',
-        module: 'Accès',
+        description:
+          "Modifier les autorisations administratives d'un compte standard, sans modifier son rôle",
+        grantable: true,
+        key: PERMISSIONS.USERS.UPDATE_ACCESS,
+        label: 'Modifier les autorisations administratives',
+        module: 'Autorisations',
         risk: 'critical',
-      },
-      {
+        route: '/administration/utilisateurs/[id]?section=access',
+        stepUpOnUse: true,
+        surface: 'page',
+      }),
+      activePermission({
         action: 'view',
         dependencies: [PERMISSIONS.USERS.VIEW],
         description:
-          "Voir les actions qu'un utilisateur peut effectuer sur son propre compte, sans consulter ses accès métier",
+          "Consulter les actions qu'un utilisateur peut effectuer sur son propre compte",
+        grantable: true,
         key: PERMISSIONS.USERS.VIEW_ACCOUNT_POLICY,
-        label: "Voir l'autonomie des comptes",
+        label: "Consulter l'autonomie du compte",
         module: 'Compte personnel',
         risk: 'sensitive',
-      },
-      {
-        action: 'manage',
+        route: '/administration/utilisateurs/[id]?section=account',
+        surface: 'page',
+      }),
+      activePermission({
+        action: 'update',
         dependencies: [PERMISSIONS.USERS.VIEW_ACCOUNT_POLICY],
         description:
-          "Définir les actions qu'un utilisateur peut effectuer sur son propre compte",
-        key: PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY,
-        label: "Gérer l'autonomie des comptes",
+          "Définir les actions optionnelles qu'un utilisateur peut effectuer sur son propre compte",
+        grantable: true,
+        key: PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY,
+        label: "Modifier l'autonomie du compte",
         module: 'Compte personnel',
         risk: 'sensitive',
-      },
-      {
+        route: '/administration/utilisateurs/[id]?section=account',
+        stepUpOnUse: true,
+        surface: 'page',
+      }),
+      activePermission({
         action: 'reset',
         dependencies: [PERMISSIONS.USERS.VIEW_SECURITY],
-        description: 'Générer un mot de passe temporaire',
+        description: 'Générer un mot de passe temporaire à usage unique',
+        grantable: true,
         key: PERMISSIONS.USERS.RESET_PASSWORD,
-        label: 'Réinitialiser les mots de passe',
+        label: 'Réinitialiser le mot de passe',
         module: 'Sécurité',
         risk: 'critical',
-      },
-      {
+        route: '/administration/utilisateurs/[id]?section=security',
+        stepUpOnUse: true,
+        surface: 'page',
+      }),
+      activePermission({
         action: 'view',
         dependencies: [PERMISSIONS.USERS.VIEW_SECURITY],
-        description: 'Consulter les sessions actives des comptes',
+        description: 'Consulter les sessions actives des comptes standards',
+        grantable: true,
         key: PERMISSIONS.USERS.VIEW_SESSIONS,
-        label: 'Voir les sessions',
+        label: 'Consulter les sessions actives',
         module: 'Sessions',
         risk: 'sensitive',
-      },
-      {
+        route: '/administration/utilisateurs/[id]?section=security',
+        surface: 'page',
+      }),
+      activePermission({
         action: 'revoke',
         dependencies: [PERMISSIONS.USERS.VIEW_SESSIONS],
         description: 'Révoquer une session ou toutes les sessions actives',
+        grantable: true,
         key: PERMISSIONS.USERS.REVOKE_SESSIONS,
         label: 'Révoquer les sessions',
         module: 'Sessions',
         risk: 'critical',
-      },
-      {
+        route: '/administration/utilisateurs/[id]?section=security',
+        stepUpOnUse: true,
+        surface: 'page',
+      }),
+      activePermission({
         action: 'view',
         dependencies: [PERMISSIONS.USERS.VIEW],
-        description: "Consulter l'activité liée aux comptes utilisateurs",
+        description: "Consulter l'activité liée à un compte utilisateur",
+        grantable: true,
         key: PERMISSIONS.USERS.VIEW_ACTIVITY,
-        label: "Voir l'activité",
+        label: "Consulter l'activité d'un utilisateur",
         module: 'Activité',
         risk: 'sensitive',
-      },
-      {
-        action: 'delete',
+        route: '/administration/utilisateurs/[id]?section=history',
+        surface: 'page',
+      }),
+      activePermission({
+        action: 'export',
+        dependencies: [PERMISSIONS.USERS.VIEW_ACTIVITY],
+        description: "Exporter en CSV le journal d'activité d'un utilisateur",
+        grantable: true,
+        key: PERMISSIONS.USERS.EXPORT_ACTIVITY,
+        label: "Exporter l'activité d'un utilisateur",
+        module: 'Activité',
+        risk: 'critical',
+        route: '/administration/utilisateurs/[id]?section=history',
+        stepUpOnUse: true,
+        surface: 'page',
+      }),
+      activePermission({
+        action: 'archive',
         dependencies: [PERMISSIONS.USERS.VIEW_SECURITY],
-        description: 'Supprimer ou désactiver durablement un compte',
-        key: PERMISSIONS.USERS.DELETE,
-        label: 'Supprimer des utilisateurs',
+        description:
+          'Archiver un compte standard par suppression logique réversible en base',
+        grantable: true,
+        key: PERMISSIONS.USERS.ARCHIVE,
+        label: 'Archiver un utilisateur',
         module: 'Cycle de vie',
         risk: 'critical',
-      },
-      {
-        action: 'export',
-        dependencies: [PERMISSIONS.USERS.VIEW],
-        description: 'Exporter la liste et les informations administratives',
-        key: PERMISSIONS.USERS.EXPORT,
-        label: 'Exporter les utilisateurs',
-        module: 'Exports',
-        risk: 'critical',
-      },
+        route: '/administration/utilisateurs/[id]?section=security',
+        stepUpOnUse: true,
+        surface: 'page',
+      }),
     ],
     poleKey: 'system',
+    routes: [
+      '/administration/utilisateurs',
+      '/administration/utilisateurs/nouveau',
+      '/administration/utilisateurs/[id]',
+    ],
+    surface: 'page',
     tone: 'system',
   },
   {
-    description: 'Vue globale financière.',
-    icon: 'Wallet',
-    key: 'treasury',
-    label: 'Tableau de bord financier',
-    permissions: [
-      {
-        action: 'view',
-        description: 'Consulter les tableaux, opérations et bilans financiers',
-        key: PERMISSIONS.TREASURY.VIEW,
-        label: 'Voir la trésorerie',
-        module: 'Finance',
-        risk: 'sensitive',
-      },
-      {
-        action: 'update',
-        dependencies: [PERMISSIONS.TREASURY.VIEW],
-        description: 'Modifier les données et opérations financières',
-        key: PERMISSIONS.TREASURY.EDIT,
-        label: 'Modifier la trésorerie',
-        module: 'Finance',
-        risk: 'critical',
-      },
-      {
-        action: 'export',
-        dependencies: [PERMISSIONS.TREASURY.VIEW],
-        description: 'Exporter les données et documents financiers',
-        key: PERMISSIONS.TREASURY.EXPORT,
-        label: 'Exporter la trésorerie',
-        module: 'Exports',
-        risk: 'sensitive',
-      },
-      {
-        action: 'validate',
-        dependencies: [PERMISSIONS.TREASURY.VIEW],
-        description: 'Valider les actions financières sensibles',
-        key: PERMISSIONS.TREASURY.VALIDATE,
-        label: 'Valider la trésorerie',
-        module: 'Validations',
-        risk: 'critical',
-      },
-      {
-        action: 'view',
-        dependencies: [PERMISSIONS.TREASURY.VIEW],
-        description: "Consulter l'historique et les traces financières",
-        key: PERMISSIONS.TREASURY.AUDIT,
-        label: 'Voir le journal financier',
-        module: 'Audit',
-        risk: 'sensitive',
-      },
-      {
-        action: 'archive',
-        dependencies: [PERMISSIONS.TREASURY.VIEW],
-        description: 'Consulter les anciennes périodes financières',
-        key: PERMISSIONS.TREASURY.ARCHIVES,
-        label: 'Voir les archives financières',
-        module: 'Archives',
-        risk: 'sensitive',
-      },
-    ],
-    poleKey: 'treasury',
-    tone: 'treasury',
-  },
-  {
+    accessPermissionKey: PERMISSIONS.AUDIT.VIEW,
     description:
-      'Lecture et synchronisation future avec le site esport public.',
-    icon: 'Activity',
-    key: 'sport',
-    label: 'Sport / Team Control',
+      "Consultation, détails sensibles et export du journal d'activité global.",
+    icon: 'History',
+    key: 'system-activity',
+    label: "Journal d'activité",
     permissions: [
-      {
+      activePermission({
         action: 'view',
-        description: 'Accéder au pôle sport et à ses données synchronisées',
-        key: PERMISSIONS.SPORT.VIEW,
-        label: 'Voir le sport',
-        module: 'Navigation',
-        risk: 'default',
-      },
-      {
-        action: 'update',
-        dependencies: [PERMISSIONS.SPORT.VIEW],
-        description: 'Modifier les données sportives internes',
-        key: PERMISSIONS.SPORT.UPDATE,
-        label: 'Modifier le sport',
-        module: 'Gestion sportive',
+        description: "Consulter le journal d'activité global du système",
+        grantable: true,
+        key: PERMISSIONS.AUDIT.VIEW,
+        label: "Consulter le journal d'activité global",
+        module: 'Consultation',
         risk: 'sensitive',
-      },
-      {
-        action: 'sync',
-        dependencies: [PERMISSIONS.SPORT.VIEW],
-        description: 'Synchroniser les données avec le site public esport',
-        key: PERMISSIONS.SPORT.PUBLIC_SYNC,
-        label: 'Synchroniser le public',
-        module: 'Synchronisation',
+        route: '/systeme/journal-activite',
+        surface: 'page',
+      }),
+      activePermission({
+        action: 'view',
+        dependencies: [PERMISSIONS.AUDIT.VIEW],
+        description:
+          'Consulter les adresses IP, identifiants et métadonnées techniques sensibles',
+        grantable: true,
+        key: PERMISSIONS.AUDIT.VIEW_SENSITIVE,
+        label: 'Consulter les détails sensibles du journal',
+        module: 'Données sensibles',
         risk: 'critical',
-      },
+        route: '/systeme/journal-activite',
+        surface: 'page',
+      }),
+      activePermission({
+        action: 'export',
+        dependencies: [PERMISSIONS.AUDIT.VIEW],
+        description: 'Exporter le journal global en CSV ou JSON',
+        grantable: true,
+        key: PERMISSIONS.AUDIT.EXPORT,
+        label: "Exporter le journal d'activité global",
+        module: 'Export',
+        risk: 'critical',
+        route: '/systeme/journal-activite',
+        stepUpOnUse: true,
+        surface: 'page',
+      }),
     ],
-    poleKey: 'sport',
-    tone: 'sport',
+    poleKey: 'system',
+    routes: ['/systeme/journal-activite'],
+    surface: 'page',
+    tone: 'system',
   },
 ];
 
-const ACCESS_PERMISSION_KEYS = PERMISSION_CATEGORIES.flatMap((category) =>
-  category.permissions.map((permission) => permission.key),
+const ACCESS_PERMISSION_ITEMS = PERMISSION_CATEGORIES.flatMap(
+  (category) => category.permissions,
 );
-
-const CRITICAL_ACCESS_PERMISSION_KEYS = PERMISSION_CATEGORIES.flatMap(
-  (category) =>
-    category.permissions.flatMap((permission) =>
-      permission.risk === 'critical' ? [permission.key] : [],
-    ),
+const ACCOUNT_PERMISSION_ITEMS = ACCOUNT_PERMISSION_CATEGORIES.flatMap(
+  (category) => category.permissions,
 );
-
-const ACCOUNT_PERMISSION_KEYS = ACCOUNT_PERMISSION_CATEGORIES.flatMap(
-  (category) => category.permissions.map((permission) => permission.key),
-);
-
-const ALL_PERMISSION_KEYS = [
-  ...ACCESS_PERMISSION_KEYS,
-  ...ACCOUNT_PERMISSION_KEYS,
+const ALL_PERMISSION_ITEMS = [
+  ...BASELINE_PERMISSION_ITEMS,
+  ...ROLE_BOUND_API_PERMISSION_ITEMS,
+  ...ACCESS_PERMISSION_ITEMS,
+  ...ACCOUNT_PERMISSION_ITEMS,
 ];
-
+const ALL_PERMISSION_KEYS = ALL_PERMISSION_ITEMS.map(
+  (permission) => permission.key,
+);
 const ALL_PERMISSION_KEYS_SET = new Set<string>(ALL_PERMISSION_KEYS);
+const ACCESS_PERMISSION_KEYS = ACCESS_PERMISSION_ITEMS.map(
+  (permission) => permission.key,
+);
+const ACCOUNT_PERMISSION_KEYS = ACCOUNT_PERMISSION_ITEMS.map(
+  (permission) => permission.key,
+);
 const PERMISSION_ITEM_MAP = new Map<string, PermissionItem>(
-  [
-    ...PERMISSION_CATEGORIES.flatMap((category) => category.permissions),
-    ...ACCOUNT_PERMISSION_CATEGORIES.flatMap(
-      (category) => category.permissions,
+  ALL_PERMISSION_ITEMS.map((permission) => [permission.key, permission]),
+);
+const DEPENDENT_PERMISSION_KEYS_MAP = ALL_PERMISSION_ITEMS.flatMap(
+  (permission) =>
+    (permission.dependencies ?? []).map(
+      (dependency) => [dependency, permission.key] as const,
     ),
-  ].map((permission) => [permission.key, permission]),
+).reduce((dependents, [dependency, permissionKey]) => {
+  dependents.set(dependency, [
+    ...(dependents.get(dependency) ?? []),
+    permissionKey,
+  ]);
+
+  return dependents;
+}, new Map<string, string[]>());
+const ALWAYS_ENABLED_PERMISSION_KEYS = new Set(
+  ALL_PERMISSION_ITEMS.filter((permission) => permission.alwaysEnabled).map(
+    (permission) => permission.key,
+  ),
+);
+const GRANTABLE_PERMISSION_KEYS = new Set(
+  ALL_PERMISSION_ITEMS.filter((permission) => permission.grantable).map(
+    (permission) => permission.key,
+  ),
+);
+const TARGET_MFA_PERMISSION_KEYS = ALL_PERMISSION_ITEMS.filter(
+  (permission) => permission.requiresTargetMfa,
+).map((permission) => permission.key);
+
+/** One-release compatibility layer: legacy keys are read, canonical keys are written. */
+export const LEGACY_PERMISSION_ALIASES: Readonly<
+  Record<string, readonly string[]>
+> = {
+  'system:audit': [PERMISSIONS.AUDIT.VIEW],
+  'system:audit_sensitive': [PERMISSIONS.AUDIT.VIEW_SENSITIVE],
+  'system:exports': [PERMISSIONS.AUDIT.EXPORT],
+  'system:settings': [PERMISSIONS.SETTINGS.VIEW, PERMISSIONS.SETTINGS.UPDATE],
+  'users:delete': [PERMISSIONS.USERS.ARCHIVE],
+  'users:edit_permissions': [PERMISSIONS.USERS.UPDATE_ACCESS],
+  'users:export': [PERMISSIONS.USERS.EXPORT_ACTIVITY],
+  'users:manage_account_policy': [PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY],
+  'users:manage_status': [PERMISSIONS.USERS.UPDATE_STATUS],
+};
+
+const LEGACY_PERMISSION_ALIAS_MAP = new Map<string, readonly string[]>(
+  Object.entries(LEGACY_PERMISSION_ALIASES),
 );
 
-const ALWAYS_ENABLED_PERMISSION_KEYS = new Set(
-  [...PERMISSION_ITEM_MAP.values()]
-    .filter((permission) => permission.alwaysEnabled)
-    .map((permission) => permission.key),
+const LEGACY_PERMISSION_KEYS_SET = new Set(
+  Object.keys(LEGACY_PERMISSION_ALIASES),
 );
 
 export const isKnownPermissionKey = (permissionKey: string): boolean =>
@@ -1042,14 +816,80 @@ export const isKnownPermissionKey = (permissionKey: string): boolean =>
 export const isPermissionAlwaysEnabled = (permissionKey: string): boolean =>
   ALWAYS_ENABLED_PERMISSION_KEYS.has(permissionKey);
 
+export const isPermissionGrantable = (permissionKey: string): boolean =>
+  GRANTABLE_PERMISSION_KEYS.has(permissionKey);
+
+/** Resolves a canonical key or a one-release legacy alias to active keys. */
+export const resolvePermissionKey = (
+  permissionKey: string,
+): readonly string[] =>
+  isKnownPermissionKey(permissionKey)
+    ? [permissionKey]
+    : (LEGACY_PERMISSION_ALIAS_MAP.get(permissionKey) ?? []);
+
+const ROADMAP_PERMISSION_KEYS = Object.values(ROADMAP_PERMISSIONS).flatMap(
+  (family) => Object.values(family),
+);
+const HISTORICAL_ONLY_PERMISSION_KEYS = [
+  'system:view',
+  'users:manage_roles',
+  'users:restore',
+] as const;
+const HISTORICAL_AUDIT_PERMISSION_KEYS_SET = new Set<string>([
+  ...ALL_PERMISSION_KEYS,
+  ...ROADMAP_PERMISSION_KEYS,
+  ...LEGACY_PERMISSION_KEYS_SET,
+  ...HISTORICAL_ONLY_PERMISSION_KEYS,
+]);
+
+/**
+ * Audit-only allowlist for immutable events produced by older catalogues.
+ * It must never be used to make an authorization decision.
+ */
+export const isHistoricalAuditPermissionKey = (
+  permissionKey: string,
+): boolean => HISTORICAL_AUDIT_PERMISSION_KEYS_SET.has(permissionKey);
+
+const getCanonicalPermissionEntries = (
+  permissions?: PermissionsData | null,
+): Array<[string, boolean]> => {
+  const entries = Object.entries(permissions ?? {}).filter(
+    (entry): entry is [string, boolean] => typeof entry[1] === 'boolean',
+  );
+  const explicitCanonicalKeys = new Set(
+    entries
+      .filter(([permissionKey]) => isKnownPermissionKey(permissionKey))
+      .map(([permissionKey]) => permissionKey),
+  );
+  const canonicalPermissions = new Map<string, boolean>();
+
+  for (const [permissionKey, enabled] of entries) {
+    const aliases = isKnownPermissionKey(permissionKey)
+      ? []
+      : resolvePermissionKey(permissionKey);
+
+    for (const canonicalKey of aliases) {
+      if (!explicitCanonicalKeys.has(canonicalKey)) {
+        canonicalPermissions.set(canonicalKey, enabled);
+      }
+    }
+  }
+
+  for (const [permissionKey, enabled] of entries) {
+    if (isKnownPermissionKey(permissionKey)) {
+      canonicalPermissions.set(permissionKey, enabled);
+    }
+  }
+
+  return [...canonicalPermissions.entries()];
+};
+
 export const normalizePermissionOverrides = (
   permissions?: PermissionsData | null,
 ): PermissionsData | null => {
   const normalizedPermissions = Object.fromEntries(
-    Object.entries(permissions ?? {}).filter(
-      ([permissionKey]) =>
-        isKnownPermissionKey(permissionKey) &&
-        !isPermissionAlwaysEnabled(permissionKey),
+    getCanonicalPermissionEntries(permissions).filter(([permissionKey]) =>
+      isPermissionGrantable(permissionKey),
     ),
   ) as PermissionsData;
 
@@ -1062,35 +902,43 @@ export const getUnknownPermissionKeys = (
   permissions?: PermissionsData | null,
 ): string[] => {
   return Object.keys(permissions ?? {}).filter(
-    (permissionKey) => !isKnownPermissionKey(permissionKey),
+    (permissionKey) =>
+      !isKnownPermissionKey(permissionKey) &&
+      !LEGACY_PERMISSION_KEYS_SET.has(permissionKey),
   );
+};
+
+/** Recognized keys that cannot be persisted as individual overrides. */
+export const getNonAssignablePermissionKeys = (
+  permissions?: PermissionsData | null,
+): string[] => {
+  return Object.keys(permissions ?? {}).filter((permissionKey) => {
+    const canonicalKeys = resolvePermissionKey(permissionKey);
+
+    return (
+      canonicalKeys.length > 0 &&
+      canonicalKeys.some((canonicalKey) => !isPermissionGrantable(canonicalKey))
+    );
+  });
 };
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   ADMIN: [
     ...Object.values(PERMISSIONS.ACCOUNT),
-    ...Object.values(PERMISSIONS.DASHBOARD),
-    ...Object.values(PERMISSIONS.TASKS),
-    ...Object.values(PERMISSIONS.NOTIFICATIONS),
-    ...Object.values(PERMISSIONS.INTERNAL),
-    ...Object.values(PERMISSIONS.MEMBERS),
-    ...Object.values(PERMISSIONS.MEETINGS),
-    ...Object.values(PERMISSIONS.LEGAL),
-    ...Object.values(PERMISSIONS.DOCUMENTS),
-    ...Object.values(PERMISSIONS.CONTRACTS),
-    ...Object.values(PERMISSIONS.INCIDENTS),
-    ...Object.values(PERMISSIONS.SYSTEM).filter(
-      (permissionKey) => permissionKey !== PERMISSIONS.SYSTEM.AUDIT_SENSITIVE,
+    PERMISSIONS.DASHBOARD.VIEW,
+    PERMISSIONS.NOTIFICATIONS.VIEW,
+    PERMISSIONS.NOTIFICATIONS.SEND,
+    PERMISSIONS.SETTINGS.VIEW,
+    PERMISSIONS.SETTINGS.UPDATE,
+    ...ACCESS_PERMISSION_KEYS.filter(
+      (permissionKey) => permissionKey !== PERMISSIONS.AUDIT.VIEW_SENSITIVE,
     ),
-    ...Object.values(PERMISSIONS.TREASURY),
-    ...Object.values(PERMISSIONS.USERS).filter(
-      (permissionKey) =>
-        permissionKey !== PERMISSIONS.USERS.MANAGE_ROLES &&
-        permissionKey !== PERMISSIONS.USERS.RESTORE,
-    ),
-    ...Object.values(PERMISSIONS.SPORT),
   ],
-  USER: [...Object.values(PERMISSIONS.ACCOUNT), PERMISSIONS.DASHBOARD.VIEW],
+  USER: [
+    ...Object.values(PERMISSIONS.ACCOUNT),
+    PERMISSIONS.DASHBOARD.VIEW,
+    PERMISSIONS.NOTIFICATIONS.VIEW,
+  ],
 };
 
 const ROLE_PERMISSIONS_MAP = new Map<UserRole, string[]>(
@@ -1102,50 +950,48 @@ export const hasPermission = (
   permissionKey: string,
   customPermissions?: PermissionsData | null,
 ): boolean => {
-  if (!isKnownPermissionKey(permissionKey)) {
-    return false;
-  }
+  if (!isKnownPermissionKey(permissionKey)) return false;
 
-  const customPermissionsMap = new Map(Object.entries(customPermissions ?? {}));
-  const visitedPermissionKeys = new Set<string>();
+  const customPermissionsMap = new Map(
+    Object.entries(normalizePermissionOverrides(customPermissions) ?? {}),
+  );
+  const resolvedPermissions = new Map<string, boolean>();
+  const resolvingPermissions = new Set<string>();
 
-  const hasPermissionWithDependencies = (
-    currentPermissionKey: string,
-  ): boolean => {
-    if (visitedPermissionKeys.has(currentPermissionKey)) return true;
-    visitedPermissionKeys.add(currentPermissionKey);
-
+  const resolvePermission = (currentPermissionKey: string): boolean => {
+    const cached = resolvedPermissions.get(currentPermissionKey);
+    if (cached !== undefined) return cached;
+    if (resolvingPermissions.has(currentPermissionKey)) return false;
     if (!isKnownPermissionKey(currentPermissionKey)) return false;
 
-    if (isPermissionAlwaysEnabled(currentPermissionKey)) return true;
-
-    const isDirectlyAllowed = customPermissionsMap.has(currentPermissionKey)
-      ? (customPermissionsMap.get(currentPermissionKey) ?? false)
-      : (ROLE_PERMISSIONS_MAP.get(role)?.includes(currentPermissionKey) ??
-        false);
-
-    if (!isDirectlyAllowed) return false;
-
+    resolvingPermissions.add(currentPermissionKey);
+    const directlyAllowed = isPermissionAlwaysEnabled(currentPermissionKey)
+      ? true
+      : customPermissionsMap.has(currentPermissionKey)
+        ? (customPermissionsMap.get(currentPermissionKey) ?? false)
+        : (ROLE_PERMISSIONS_MAP.get(role)?.includes(currentPermissionKey) ??
+          false);
     const permission = PERMISSION_ITEM_MAP.get(currentPermissionKey);
+    const allowed =
+      directlyAllowed &&
+      (permission?.dependencies ?? []).every((dependency) =>
+        resolvePermission(dependency),
+      );
 
-    return (permission?.dependencies ?? []).every((dependency) =>
-      hasPermissionWithDependencies(dependency),
-    );
+    resolvingPermissions.delete(currentPermissionKey);
+    resolvedPermissions.set(currentPermissionKey, allowed);
+
+    return allowed;
   };
 
-  return hasPermissionWithDependencies(permissionKey);
+  return resolvePermission(permissionKey);
 };
 
-/**
- * Critical delegated access is protected by MFA independently from the
- * account's coarse role. Dependencies are evaluated so a dormant override
- * does not force MFA until it becomes effective.
- */
 export const requiresMfaForAccess = (
   role: UserRole,
   customPermissions?: PermissionsData | null,
 ): boolean =>
-  CRITICAL_ACCESS_PERMISSION_KEYS.some((permissionKey) =>
+  TARGET_MFA_PERMISSION_KEYS.some((permissionKey) =>
     hasPermission(role, permissionKey, customPermissions),
   );
 
@@ -1157,7 +1003,11 @@ export const getRoleBasePermissions = (
   return Object.fromEntries(
     ALL_PERMISSION_KEYS.map(
       (permissionKey) =>
-        [permissionKey, rolePermissions.includes(permissionKey)] as const,
+        [
+          permissionKey,
+          isPermissionAlwaysEnabled(permissionKey) ||
+            rolePermissions.includes(permissionKey),
+        ] as const,
     ),
   );
 };
@@ -1166,49 +1016,78 @@ export const getEffectivePermissions = (
   role: UserRole,
   customPermissions?: PermissionsData | null,
 ): Record<string, boolean> => {
-  return Object.fromEntries([
-    ...Object.entries(getRoleBasePermissions(role)),
-    ...Object.entries(normalizePermissionOverrides(customPermissions) ?? {}),
-    ...[...ALWAYS_ENABLED_PERMISSION_KEYS].map(
-      (permissionKey) => [permissionKey, true] as const,
-    ),
-  ]) as Record<string, boolean>;
+  return Object.fromEntries(
+    ALL_PERMISSION_KEYS.map((permissionKey) => [
+      permissionKey,
+      hasPermission(role, permissionKey, customPermissions),
+    ]),
+  ) as Record<string, boolean>;
 };
 
-export const getAllPermissionKeys = (): string[] => {
-  return [...ALL_PERMISSION_KEYS];
-};
+export const getAllPermissionKeys = (): string[] => [...ALL_PERMISSION_KEYS];
 
-export const getAccessPermissionKeys = (): string[] => {
-  return [...ACCESS_PERMISSION_KEYS];
-};
+export const getAccessPermissionKeys = (): string[] => [
+  ...ACCESS_PERMISSION_KEYS,
+];
 
-export const getAccountPermissionKeys = (): string[] => {
-  return [...ACCOUNT_PERMISSION_KEYS];
-};
+export const getAccountPermissionKeys = (): string[] => [
+  ...ACCOUNT_PERMISSION_KEYS,
+];
 
 export const getPermissionItem = (
   permissionKey: string,
-): PermissionItem | undefined => {
-  return PERMISSION_ITEM_MAP.get(permissionKey);
+): PermissionItem | undefined => PERMISSION_ITEM_MAP.get(permissionKey);
+
+export const getDependentPermissionKeys = (
+  permissionKey: string,
+): readonly string[] => DEPENDENT_PERMISSION_KEYS_MAP.get(permissionKey) ?? [];
+
+export const getPermissionDisplayLabel = (permissionKey: string): string => {
+  const canonicalPermissionKey = resolvePermissionKey(permissionKey)[0];
+
+  return (
+    (canonicalPermissionKey
+      ? getPermissionItem(canonicalPermissionKey)?.label
+      : undefined) ?? permissionKey
+  );
 };
 
 export const buildPermissionOverrides = (
   role: UserRole,
   enabledPermissionKeys: Iterable<string>,
 ): PermissionsData | null => {
-  const enabledKeys = new Set(enabledPermissionKeys);
+  const requestedEnabledKeys = new Set(enabledPermissionKeys);
   const roleBasePermissions = getRoleBasePermissions(role);
   const roleBasePermissionsMap = new Map(Object.entries(roleBasePermissions));
+  const resolvedRequestedState = new Map<string, boolean>();
+
+  const isRequestedAndUsable = (permissionKey: string): boolean => {
+    const cached = resolvedRequestedState.get(permissionKey);
+    if (cached !== undefined) return cached;
+    const permission = PERMISSION_ITEM_MAP.get(permissionKey);
+    // Non-grantable prerequisites (for example the always-enabled personal
+    // profile view) are policy invariants, not choices that callers have to
+    // repeat in `enabledPermissionKeys`.
+    const directlyEnabled = isPermissionGrantable(permissionKey)
+      ? requestedEnabledKeys.has(permissionKey)
+      : (roleBasePermissionsMap.get(permissionKey) ?? false);
+    const enabled =
+      directlyEnabled &&
+      (permission?.dependencies ?? []).every((dependency) =>
+        isRequestedAndUsable(dependency),
+      );
+    resolvedRequestedState.set(permissionKey, enabled);
+
+    return enabled;
+  };
+
   const overrides = Object.fromEntries(
     ALL_PERMISSION_KEYS.flatMap((permissionKey) => {
+      if (!isPermissionGrantable(permissionKey)) return [];
       if (isPermissionAlwaysEnabled(permissionKey)) return [];
+      const enabled = isRequestedAndUsable(permissionKey);
 
-      const enabled = enabledKeys.has(permissionKey);
-
-      if ((roleBasePermissionsMap.get(permissionKey) ?? false) === enabled) {
-        return [];
-      }
+      if (roleBasePermissionsMap.get(permissionKey) === enabled) return [];
 
       return [[permissionKey, enabled] as const];
     }),
@@ -1217,17 +1096,69 @@ export const buildPermissionOverrides = (
   return Object.keys(overrides).length > 0 ? overrides : null;
 };
 
+/**
+ * Canonicalizes an override set and removes dormant grants. Disabling a
+ * parent therefore stores explicit denies for role-granted dependants, while
+ * an orphan grant on a denied dependency is discarded.
+ */
+export const enforcePermissionDependencies = (
+  role: UserRole,
+  permissions?: PermissionsData | null,
+  permissionScopeKeys?: readonly string[],
+): PermissionsData | null => {
+  const normalizedPermissions = normalizePermissionOverrides(permissions);
+  const effectivePermissions = getEffectivePermissions(
+    role,
+    normalizedPermissions,
+  );
+  const effectivePermissionsMap = new Map(Object.entries(effectivePermissions));
+  const enabledGrantableKeys = ALL_PERMISSION_KEYS.filter(
+    (permissionKey) =>
+      isPermissionGrantable(permissionKey) &&
+      effectivePermissionsMap.get(permissionKey),
+  );
+  const grantableOverrides = buildPermissionOverrides(
+    role,
+    enabledGrantableKeys,
+  );
+  const scopedPermissionKeys = permissionScopeKeys
+    ? new Set(permissionScopeKeys)
+    : null;
+  const preservedOutOfScopeOverrides = Object.fromEntries(
+    Object.entries(normalizedPermissions ?? {}).filter(
+      ([permissionKey]) =>
+        scopedPermissionKeys !== null &&
+        !scopedPermissionKeys.has(permissionKey),
+    ),
+  );
+  const enforcedScopeOverrides = Object.fromEntries(
+    Object.entries(grantableOverrides ?? {}).filter(
+      ([permissionKey]) =>
+        scopedPermissionKeys === null ||
+        scopedPermissionKeys.has(permissionKey),
+    ),
+  );
+
+  return normalizePermissionOverrides({
+    ...preservedOutOfScopeOverrides,
+    ...enforcedScopeOverrides,
+  });
+};
+
 export const arePermissionOverridesEqual = (
   first?: PermissionsData | null,
   second?: PermissionsData | null,
 ): boolean => {
-  const firstEntries = new Map(Object.entries(first ?? {}));
-  const secondEntries = new Map(Object.entries(second ?? {}));
+  const firstEntries = new Map(
+    Object.entries(normalizePermissionOverrides(first) ?? {}),
+  );
+  const secondEntries = new Map(
+    Object.entries(normalizePermissionOverrides(second) ?? {}),
+  );
 
   if (firstEntries.size !== secondEntries.size) return false;
 
   for (const [permissionKey, firstValue] of firstEntries) {
-    if (!secondEntries.has(permissionKey)) return false;
     if (secondEntries.get(permissionKey) !== firstValue) return false;
   }
 
@@ -1244,9 +1175,8 @@ export const countCategoryPermissions = (
   if (!category) return { enabled: 0, total: 0 };
 
   const total = category.permissions.length;
-  const effectivePermissionsMap = new Map(Object.entries(effectivePermissions));
-  const enabled = category.permissions.filter((permission) =>
-    effectivePermissionsMap.get(permission.key),
+  const enabled = category.permissions.filter(
+    (permission) => effectivePermissions[permission.key],
   ).length;
 
   return { enabled, total };
@@ -1260,16 +1190,14 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   USER: 'Utilisateur',
 };
 
-export const getRoleLabel = (role: UserRole | string): string => {
-  return ROLE_LABELS[role as UserRole] || DEFAULT_ROLE_LABEL;
-};
+export const getRoleLabel = (role: UserRole | string): string =>
+  ROLE_LABELS[role as UserRole] || DEFAULT_ROLE_LABEL;
 
 export const getAccessLabel = (user: {
   isProtected?: boolean;
   role: UserRole | string;
-}): string => {
-  return user.isProtected ? PROTECTED_ROLE_LABEL : getRoleLabel(user.role);
-};
+}): string =>
+  user.isProtected ? PROTECTED_ROLE_LABEL : getRoleLabel(user.role);
 
 type RoleBadgeVariant = 'outline' | 'secondary';
 
@@ -1280,6 +1208,5 @@ export const ROLE_COLORS: Record<UserRole, RoleBadgeVariant> = {
   USER: 'secondary',
 };
 
-export const getRoleColor = (role: UserRole | string): RoleBadgeVariant => {
-  return ROLE_COLORS[role as UserRole] || DEFAULT_ROLE_COLOR;
-};
+export const getRoleColor = (role: UserRole | string): RoleBadgeVariant =>
+  ROLE_COLORS[role as UserRole] || DEFAULT_ROLE_COLOR;

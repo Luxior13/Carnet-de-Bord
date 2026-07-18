@@ -1,5 +1,10 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
+import {
+  PERMISSIONS,
+  ROADMAP_PERMISSIONS,
+} from '$constants/permissions.constants';
+
 vi.mock('server-only', () => ({}));
 
 type AuditVisibilityModule = typeof import('../shared/server/audit-visibility');
@@ -22,7 +27,7 @@ describe('audit visibility', () => {
             lastName: 'Public',
             loginName: 'private.login',
             passwordHash: 'never-visible',
-            permissions: { 'system:audit': true },
+            permissions: { [PERMISSIONS.AUDIT.VIEW]: true },
             role: 'ADMIN',
           },
           before: {
@@ -32,7 +37,7 @@ describe('audit visibility', () => {
             lastName: 'Ancien',
             loginName: 'old.private.login',
             passwordHash: 'old-never-visible',
-            permissions: { 'system:audit': false },
+            permissions: { [PERMISSIONS.AUDIT.VIEW]: false },
             role: 'USER',
           },
           changes: [
@@ -70,7 +75,7 @@ describe('audit visibility', () => {
             firstName: 'Jeanne',
             passwordHash: 'secret-hash',
             permissions: {
-              'system:audit': true,
+              [PERMISSIONS.AUDIT.VIEW]: true,
               'unknown:permission': true,
             },
             privateKey: 'secret-private-key',
@@ -89,12 +94,38 @@ describe('audit visibility', () => {
     ).toEqual({
       after: {
         firstName: 'Jeanne',
-        permissions: { 'system:audit': true },
+        permissions: { [PERMISSIONS.AUDIT.VIEW]: true },
       },
       before: { firstName: 'Jean' },
       passwordChange: true,
       passwordReset: true,
       recoveryCodesGenerated: 8,
+    });
+  });
+
+  it('preserves safe historical permission keys without exposing unknown keys', () => {
+    expect(
+      auditVisibility.sanitizeAuditMetadata(
+        {
+          after: {
+            permissions: {
+              [ROADMAP_PERMISSIONS.TASKS.VIEW]: false,
+              'system:audit': true,
+              'unknown:permission': true,
+              'users:manage_roles': false,
+            },
+          },
+        },
+        true,
+      ),
+    ).toEqual({
+      after: {
+        permissions: {
+          [ROADMAP_PERMISSIONS.TASKS.VIEW]: false,
+          'system:audit': true,
+          'users:manage_roles': false,
+        },
+      },
     });
   });
 

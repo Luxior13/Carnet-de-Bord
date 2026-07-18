@@ -4,14 +4,17 @@ import { z } from 'zod';
 import { FEATURES } from '$constants/feature-registry.constants';
 import {
   arePermissionOverridesEqual,
+  enforcePermissionDependencies,
   getAccessPermissionKeys,
   getAccountPermissionKeys,
   getAllPermissionKeys,
+  getNonAssignablePermissionKeys,
+  getPermissionItem,
   getUnknownPermissionKeys,
   hasPermission,
   normalizePermissionOverrides,
   PERMISSIONS,
-  requiresMfaForAccess,
+  resolvePermissionKey,
 } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import {
@@ -280,13 +283,20 @@ const permissionsSchema = z
   .optional()
   .superRefine((value, context) => {
     const unknownPermissionKeys = getUnknownPermissionKeys(value);
+    if (unknownPermissionKeys.length > 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Permission inconnue: ${unknownPermissionKeys.join(', ')}`,
+      });
+    }
 
-    if (unknownPermissionKeys.length === 0) return;
-
-    context.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: `Permission inconnue: ${unknownPermissionKeys.join(', ')}`,
-    });
+    const nonAssignablePermissionKeys = getNonAssignablePermissionKeys(value);
+    if (nonAssignablePermissionKeys.length > 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Permission non attribuable: ${nonAssignablePermissionKeys.join(', ')}`,
+      });
+    }
   });
 
 const updateUserSchema = z
@@ -361,7 +371,17 @@ const updateUserSchema = z
     const scopePermissionKeys = getPermissionScopeKeySet(value.permissionScope);
     const outOfScopePermissionKeys = Object.keys(
       value.permissions ?? {},
-    ).filter((permissionKey) => !scopePermissionKeys.has(permissionKey));
+    ).filter((permissionKey) => {
+      const canonicalPermissionKeys = resolvePermissionKey(permissionKey);
+
+      return (
+        canonicalPermissionKeys.length > 0 &&
+        canonicalPermissionKeys.some(
+          (canonicalPermissionKey) =>
+            !scopePermissionKeys.has(canonicalPermissionKey),
+        )
+      );
+    });
 
     if (outOfScopePermissionKeys.length > 0) {
       context.addIssue({
@@ -472,25 +492,30 @@ export async function PATCH(
     if (isStatusUpdate) {
       const statusPermCheck = requirePermission(
         auth.user,
-        PERMISSIONS.USERS.MANAGE_STATUS,
+        PERMISSIONS.USERS.UPDATE_STATUS,
       );
       if (!statusPermCheck.success) return statusPermCheck.response;
     }
 
-    if (isRoleUpdate) {
-      const rolePermCheck = requirePermission(
-        auth.user,
-        PERMISSIONS.USERS.MANAGE_ROLES,
+    if (isRoleUpdate && !auth.user.isProtected) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message: 'Seul le compte racine peut modifier un rôle',
+          },
+          success: false,
+        },
+        { status: 403 },
       );
-      if (!rolePermCheck.success) return rolePermCheck.response;
     }
 
     if (isPermissionsUpdate && permissionScope !== undefined) {
       const scopedPermissionCheck = requirePermission(
         auth.user,
         permissionScope === 'account'
-          ? PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY
-          : PERMISSIONS.USERS.EDIT_PERMISSIONS,
+          ? PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY
+          : PERMISSIONS.USERS.UPDATE_ACCESS,
       );
       if (!scopedPermissionCheck.success) {
         return scopedPermissionCheck.response;
@@ -502,19 +527,19 @@ export async function PATCH(
         auth.user.isProtected ||
         hasPermission(
           auth.user.role,
-          PERMISSIONS.USERS.EDIT_PERMISSIONS,
+          PERMISSIONS.USERS.UPDATE_ACCESS,
           auth.user.permissions,
         ) ||
         hasPermission(
           auth.user.role,
-          PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY,
+          PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY,
           auth.user.permissions,
         );
 
       if (!canUseLegacyPermissionPayload) {
         const legacyPermissionCheck = requirePermission(
           auth.user,
-          PERMISSIONS.USERS.EDIT_PERMISSIONS,
+          PERMISSIONS.USERS.UPDATE_ACCESS,
         );
         if (!legacyPermissionCheck.success) {
           return legacyPermissionCheck.response;
@@ -602,6 +627,21 @@ export async function PATCH(
       );
     }
 
+    // Refuse every delegated mutation of another ADMIN before evaluating
+    // target MFA or other state, so the response cannot disclose posture.
+    if (existingUser.role === 'ADMIN' && !auth.user.isProtected) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.FORBIDDEN,
+            message: 'Seul le compte racine peut modifier un administrateur',
+          },
+          success: false,
+        },
+        { status: 403 },
+      );
+    }
+
     if (
       expectedUpdatedAt &&
       expectedUpdatedAt.getTime() !== existingUser.updatedAt.getTime()
@@ -622,7 +662,7 @@ export async function PATCH(
     const existingPermissionOverrides = normalizePermissionOverrides(
       existingUser.permissions as Record<string, boolean> | null,
     );
-    const permissions = isPermissionsUpdate
+    const mergedPermissions = isPermissionsUpdate
       ? permissionScope
         ? mergePermissionOverridesForScope(
             existingPermissionOverrides,
@@ -631,6 +671,19 @@ export async function PATCH(
           )
         : (normalizedRequestedPermissions ?? null)
       : undefined;
+    const resultingRole = role ?? existingUser.role;
+    const permissions =
+      isPermissionsUpdate || isRoleUpdate
+        ? enforcePermissionDependencies(
+            resultingRole,
+            mergedPermissions === undefined
+              ? existingPermissionOverrides
+              : mergedPermissions,
+            permissionScope
+              ? [...getPermissionScopeKeySet(permissionScope)]
+              : undefined,
+          )
+        : undefined;
     const requestedChangedPermissionKeys = isPermissionsUpdate
       ? getChangedPermissionKeys(existingPermissionOverrides, permissions)
       : [];
@@ -641,11 +694,11 @@ export async function PATCH(
       for (const permissionKey of requestedChangedPermissionKeys) {
         if (ACCOUNT_PERMISSION_KEY_SET.has(permissionKey)) {
           requiredLegacyPermissions.add(
-            PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY,
+            PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY,
           );
         }
         if (ACCESS_PERMISSION_KEY_SET.has(permissionKey)) {
-          requiredLegacyPermissions.add(PERMISSIONS.USERS.EDIT_PERMISSIONS);
+          requiredLegacyPermissions.add(PERMISSIONS.USERS.UPDATE_ACCESS);
         }
       }
 
@@ -653,8 +706,8 @@ export async function PATCH(
       // capabilities prevents omission of permissionScope from becoming a
       // bypass for either delegated administration boundary.
       if (requiredLegacyPermissions.size === 0) {
-        requiredLegacyPermissions.add(PERMISSIONS.USERS.EDIT_PERMISSIONS);
-        requiredLegacyPermissions.add(PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY);
+        requiredLegacyPermissions.add(PERMISSIONS.USERS.UPDATE_ACCESS);
+        requiredLegacyPermissions.add(PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY);
       }
 
       for (const permissionKey of requiredLegacyPermissions) {
@@ -698,19 +751,25 @@ export async function PATCH(
       );
     }
 
-    const resultingRole = role ?? existingUser.role;
     const resultingPermissions =
       permissions === undefined ? existingPermissionOverrides : permissions;
-    const resultingAccessRequiresMfa =
-      resultingRole === 'ADMIN' ||
-      requiresMfaForAccess(resultingRole, resultingPermissions);
+    const gainsTargetMfaPermission = getAllPermissionKeys().some(
+      (permissionKey) =>
+        getPermissionItem(permissionKey)?.requiresTargetMfa === true &&
+        !hasPermission(
+          existingUser.role,
+          permissionKey,
+          existingPermissionOverrides,
+        ) &&
+        hasPermission(resultingRole, permissionKey, resultingPermissions),
+    );
     const hasCompleteMfa =
       existingUser.mfaEnabledAt !== null &&
       Boolean(existingUser.totpCredential);
 
     if (
       (isRoleUpdate || isPermissionsUpdate) &&
-      resultingAccessRequiresMfa &&
+      gainsTargetMfaPermission &&
       !hasCompleteMfa
     ) {
       return NextResponse.json(
@@ -723,19 +782,6 @@ export async function PATCH(
           success: false,
         },
         { status: 409 },
-      );
-    }
-
-    if (existingUser.role === 'ADMIN' && !auth.user.isProtected) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.FORBIDDEN,
-            message: 'Seul le compte racine peut modifier un administrateur',
-          },
-          success: false,
-        },
-        { status: 403 },
       );
     }
 
@@ -964,7 +1010,7 @@ export async function PATCH(
       );
     const permissionAuditTab = hasOnlyAccountPermissionChanges
       ? { tabKey: 'account', tabLabel: 'Autonomie du compte' }
-      : { tabKey: 'access', tabLabel: 'Accès' };
+      : { tabKey: 'access', tabLabel: 'Autorisations' };
 
     const updatedLoginName =
       typeof updateData.loginName === 'string'
@@ -1008,7 +1054,7 @@ export async function PATCH(
       auditData = {
         action: 'PERMISSION_UPDATE',
         category: 'PERMISSION',
-        description: `Permissions modifiées: ${updatedLoginName}`,
+        description: `Autorisations modifiées : ${updatedLoginName}`,
         metadata: {
           after: afterValues,
           before: beforeValues,
@@ -1145,7 +1191,7 @@ export async function PATCH(
 }
 
 // ============================================
-// DELETE /api/users/[id] - Delete user
+// DELETE /api/users/[id] - Soft-archive user
 // ============================================
 export async function DELETE(
   _request: NextRequest,
@@ -1161,7 +1207,7 @@ export async function DELETE(
     if (!auth.success) return auth.response;
 
     // Check permission
-    const permCheck = requirePermission(auth.user, PERMISSIONS.USERS.DELETE);
+    const permCheck = requirePermission(auth.user, PERMISSIONS.USERS.ARCHIVE);
     if (!permCheck.success) return permCheck.response;
 
     // Get existing user
@@ -1182,13 +1228,13 @@ export async function DELETE(
       );
     }
 
-    // Cannot delete yourself
+    // Cannot archive yourself
     if (existingUser.id === auth.user.id) {
       return NextResponse.json(
         {
           error: {
             code: ErrorCode.FORBIDDEN,
-            message: 'Vous ne pouvez pas supprimer votre propre compte',
+            message: 'Vous ne pouvez pas archiver votre propre compte',
           },
           success: false,
         },
@@ -1196,13 +1242,13 @@ export async function DELETE(
       );
     }
 
-    // Cannot delete protected accounts
+    // Cannot archive protected accounts
     if (existingUser.isProtected) {
       return NextResponse.json(
         {
           error: {
             code: ErrorCode.FORBIDDEN,
-            message: 'Ce compte est protégé et ne peut pas être supprimé',
+            message: 'Ce compte est protégé et ne peut pas être archivé',
           },
           success: false,
         },
@@ -1215,7 +1261,7 @@ export async function DELETE(
         {
           error: {
             code: ErrorCode.FORBIDDEN,
-            message: 'Seul un superadmin peut supprimer un administrateur',
+            message: 'Seul un superadmin peut archiver un administrateur',
           },
           success: false,
         },
@@ -1248,11 +1294,13 @@ export async function DELETE(
 
       await createAuditLogWithHeaders(
         {
+          // Historical enum name kept so existing audit readers remain
+          // compatible; the operation itself is a reversible archive.
           action: 'USER_DELETE',
           category: 'USER',
-          description: `Utilisateur supprimé: ${existingUser.loginName}`,
+          description: `Utilisateur archivé: ${existingUser.loginName}`,
           metadata: {
-            deletedUserId: id,
+            archivedUserId: id,
             loginName: existingUser.loginName,
             ...USERS_PAGE_AUDIT_LOCATION,
             tabKey: 'resume',
@@ -1266,7 +1314,7 @@ export async function DELETE(
     });
 
     return NextResponse.json({
-      data: { message: 'Utilisateur supprimé' },
+      data: { message: 'Utilisateur archivé' },
       success: true,
     });
   } catch (error) {
@@ -1284,6 +1332,6 @@ export async function DELETE(
       );
     }
 
-    return apiErrors.internal('USER_DELETE', error);
+    return apiErrors.internal('USER_ARCHIVE', error);
   }
 }

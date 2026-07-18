@@ -9,9 +9,11 @@ import {
   getAccessLabel as getPermissionAccessLabel,
   getRoleLabel as getPermissionRoleLabel,
   hasPermission,
+  isKnownPermissionKey,
   PERMISSIONS,
   type PermissionsData,
   PROTECTED_ROLE_LABEL,
+  ROADMAP_PERMISSIONS,
   ROLE_LABELS,
 } from '$constants/permissions.constants';
 import type { UserType } from '$types/auth.types';
@@ -43,6 +45,7 @@ export type NavItem = {
   hubActionLabel?: string;
   icon: NavigationIconName;
   label: string;
+  permissionMode?: 'all' | 'any';
   requiredPermissions?: readonly string[];
   status?: string;
   subTabs?: readonly string[];
@@ -70,36 +73,42 @@ export type NavigationSpace = {
 };
 
 const dashboardAccess = [PERMISSIONS.DASHBOARD.VIEW] as const;
-const documentsAccess = [PERMISSIONS.DOCUMENTS.VIEW] as const;
-const documentsApprovalAccess = [PERMISSIONS.DOCUMENTS.APPROVE] as const;
-const contractsAccess = [PERMISSIONS.CONTRACTS.VIEW] as const;
-const incidentsAccess = [PERMISSIONS.INCIDENTS.VIEW] as const;
-const internalAccess = [PERMISSIONS.INTERNAL.VIEW] as const;
-const legalAccess = [PERMISSIONS.LEGAL.VIEW] as const;
-const meetingsAccess = [PERMISSIONS.MEETINGS.VIEW] as const;
-const meetingsUpdateAccess = [PERMISSIONS.MEETINGS.UPDATE] as const;
-const membersAccess = [PERMISSIONS.MEMBERS.VIEW] as const;
-const membersUpdateAccess = [PERMISSIONS.MEMBERS.UPDATE] as const;
+const documentsAccess = [ROADMAP_PERMISSIONS.DOCUMENTS.VIEW] as const;
+const documentsApprovalAccess = [
+  ROADMAP_PERMISSIONS.DOCUMENTS.APPROVE,
+] as const;
+const contractsAccess = [ROADMAP_PERMISSIONS.CONTRACTS.VIEW] as const;
+const incidentsAccess = [ROADMAP_PERMISSIONS.INCIDENTS.VIEW] as const;
+const internalAccess = [ROADMAP_PERMISSIONS.INTERNAL.VIEW] as const;
+const legalAccess = [ROADMAP_PERMISSIONS.LEGAL.VIEW] as const;
+const meetingsAccess = [ROADMAP_PERMISSIONS.MEETINGS.VIEW] as const;
+const meetingsUpdateAccess = [ROADMAP_PERMISSIONS.MEETINGS.UPDATE] as const;
+const membersAccess = [ROADMAP_PERMISSIONS.MEMBERS.VIEW] as const;
+const membersUpdateAccess = [ROADMAP_PERMISSIONS.MEMBERS.UPDATE] as const;
 const notificationsAccess = [PERMISSIONS.NOTIFICATIONS.VIEW] as const;
-const notificationsManageAccess = [PERMISSIONS.NOTIFICATIONS.MANAGE] as const;
-const sportAccess = [PERMISSIONS.SPORT.VIEW] as const;
-const sportUpdateAccess = [PERMISSIONS.SPORT.UPDATE] as const;
-const tasksAccess = [PERMISSIONS.TASKS.VIEW] as const;
-const treasuryAccess = [PERMISSIONS.TREASURY.VIEW] as const;
-const treasuryArchiveAccess = [PERMISSIONS.TREASURY.ARCHIVES] as const;
-const treasuryAuditAccess = [PERMISSIONS.TREASURY.AUDIT] as const;
-const treasuryExportAccess = [PERMISSIONS.TREASURY.EXPORT] as const;
-const treasuryValidationAccess = [PERMISSIONS.TREASURY.VALIDATE] as const;
-const systemArchiveAccess = [PERMISSIONS.SYSTEM.ARCHIVES] as const;
-const systemAuditAccess = [PERMISSIONS.SYSTEM.AUDIT] as const;
-const systemAutomationAccess = [PERMISSIONS.SYSTEM.AUTOMATION] as const;
-const systemExportAccess = [PERMISSIONS.SYSTEM.EXPORTS] as const;
-const systemSettingsAccess = [PERMISSIONS.SYSTEM.SETTINGS] as const;
-const systemValidationAccess = [PERMISSIONS.SYSTEM.VALIDATE] as const;
+const notificationsManageAccess = [
+  ROADMAP_PERMISSIONS.NOTIFICATIONS.MANAGE,
+] as const;
+const sportAccess = [ROADMAP_PERMISSIONS.SPORT.VIEW] as const;
+const sportUpdateAccess = [ROADMAP_PERMISSIONS.SPORT.UPDATE] as const;
+const tasksAccess = [ROADMAP_PERMISSIONS.TASKS.VIEW] as const;
+const treasuryAccess = [ROADMAP_PERMISSIONS.TREASURY.VIEW] as const;
+const treasuryArchiveAccess = [ROADMAP_PERMISSIONS.TREASURY.ARCHIVES] as const;
+const treasuryAuditAccess = [ROADMAP_PERMISSIONS.TREASURY.AUDIT] as const;
+const treasuryExportAccess = [ROADMAP_PERMISSIONS.TREASURY.EXPORT] as const;
+const treasuryValidationAccess = [
+  ROADMAP_PERMISSIONS.TREASURY.VALIDATE,
+] as const;
+const systemArchiveAccess = [ROADMAP_PERMISSIONS.SYSTEM.ARCHIVES] as const;
+const systemAuditAccess = [PERMISSIONS.AUDIT.VIEW] as const;
+const systemAutomationAccess = [ROADMAP_PERMISSIONS.SYSTEM.AUTOMATION] as const;
+const systemExportAccess = [ROADMAP_PERMISSIONS.BACKUPS.VIEW] as const;
+const systemSettingsAccess = [PERMISSIONS.SETTINGS.VIEW] as const;
+const systemValidationAccess = [ROADMAP_PERMISSIONS.SYSTEM.VALIDATE] as const;
 const usersAccess = [PERMISSIONS.USERS.VIEW] as const;
 const systemHubAccess = [
   PERMISSIONS.USERS.VIEW,
-  PERMISSIONS.SYSTEM.AUDIT,
+  PERMISSIONS.AUDIT.VIEW,
 ] as const;
 type NavigationUser = Pick<
   UserType,
@@ -181,7 +190,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             href: '/recherche',
             icon: 'Search',
             label: 'Recherche avancée',
-            requiredPermissions: dashboardAccess,
+            // Search only indexes destinations already authorized for the user.
           },
         ],
         label: 'Pilotage',
@@ -529,10 +538,10 @@ export const NAV_SPACES: NavigationSpace[] = [
   },
   {
     description: 'Administration, sécurité et configuration globale.',
-    href: '/systeme',
-    icon: 'Settings',
+    href: FEATURES.systemHome.href,
+    icon: FEATURES.systemHome.icon,
     id: 'system',
-    label: 'Système',
+    label: FEATURES.systemHome.audit.poleLabel,
     matchHrefs: ['/administration'],
     sections: [
       {
@@ -540,21 +549,22 @@ export const NAV_SPACES: NavigationSpace[] = [
         items: [
           {
             availability: 'live',
-            description: 'Accueil du pôle système.',
+            description: FEATURES.systemHome.description,
             featureId: FEATURES.systemHome.id,
-            href: '/systeme',
-            icon: 'Settings',
-            label: "Vue d'ensemble",
+            href: FEATURES.systemHome.href,
+            icon: FEATURES.systemHome.icon,
+            label: FEATURES.systemHome.label,
+            permissionMode: FEATURES.systemHome.permissionMode,
             requiredPermissions: systemHubAccess,
           },
           {
             availability: 'live',
-            description: 'Comptes, rôles et permissions existants.',
+            description: FEATURES.users.description,
             featureId: FEATURES.users.id,
-            href: '/administration/utilisateurs',
+            href: FEATURES.users.href,
             hubActionLabel: 'Accéder aux utilisateurs',
-            icon: 'Users',
-            label: 'Utilisateurs & permissions',
+            icon: FEATURES.users.icon,
+            label: FEATURES.users.label,
             requiredPermissions: usersAccess,
           },
           {
@@ -587,12 +597,12 @@ export const NAV_SPACES: NavigationSpace[] = [
           },
           {
             availability: 'live',
-            description: 'Historique admin et actions sensibles.',
+            description: FEATURES.systemActivity.description,
             featureId: FEATURES.systemActivity.id,
-            href: '/systeme/journal-activite',
+            href: FEATURES.systemActivity.href,
             hubActionLabel: 'Consulter le journal',
-            icon: 'History',
-            label: "Journal d'activité",
+            icon: FEATURES.systemActivity.icon,
+            label: FEATURES.systemActivity.label,
             requiredPermissions: systemAuditAccess,
           },
           {
@@ -757,16 +767,27 @@ export function canAccessNavigationItem(
   item: NavItem,
 ): boolean {
   if (!user) return false;
-  if (user.isProtected) return true;
   if (!item.requiredPermissions?.length) return true;
+  if (user.isProtected) {
+    // Planned cards are descriptive. A live navigation typo must not be
+    // hidden by the protected-account bypass.
+    return (
+      getNavigationAvailability(item) === 'planned' ||
+      item.requiredPermissions.every(isKnownPermissionKey)
+    );
+  }
 
-  return item.requiredPermissions.some((permissionKey) =>
+  const permissionChecks = item.requiredPermissions.map((permissionKey) =>
     hasPermission(
       user.role,
       permissionKey,
       user.permissions as PermissionsData | null,
     ),
   );
+
+  return item.permissionMode === 'any'
+    ? permissionChecks.some(Boolean)
+    : permissionChecks.every(Boolean);
 }
 
 export function canShowNavigationItem(
@@ -911,7 +932,11 @@ export function getVisibleNavigationSpaces(
 export function getPlannedNavigationSpaces(
   user: NavigationUser,
 ): NavigationSpace[] {
-  return getVisibleNavigationSpaces(user, 'planned');
+  if (!user) return [];
+
+  // Roadmap cards are a non-interactive product catalogue, not an
+  // authorization surface. Showing them must never require dormant grants.
+  return getVisibleNavigationSpaces({ ...user, isProtected: true }, 'planned');
 }
 
 export function getDefaultNavigationSpace(): NavigationSpace {

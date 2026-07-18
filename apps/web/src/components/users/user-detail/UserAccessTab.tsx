@@ -16,6 +16,7 @@ import React, { type FC } from 'react';
 import { PermissionsEditor } from '$components/users/PermissionsEditor';
 import {
   getAccessLabel,
+  getAllPermissionKeys,
   PERMISSION_CATEGORIES,
   type PermissionsData,
 } from '$constants/permissions.constants';
@@ -67,10 +68,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   user,
 }) => {
   if (user.isProtected) {
-    const totalPermissions = PERMISSION_CATEGORIES.reduce(
-      (total, category) => total + category.permissions.length,
-      0,
-    );
+    const totalPermissions = getAllPermissionKeys().length;
 
     return (
       <Card className="border-border/60 overflow-hidden rounded-lg py-0">
@@ -83,7 +81,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-foreground font-semibold">
-                    Accès super-administrateur
+                    Autorisations du super-administrateur
                   </h3>
                   <Badge
                     variant="outline"
@@ -93,8 +91,9 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                   </Badge>
                 </div>
                 <p className="text-muted-foreground mt-1 max-w-3xl text-sm leading-6">
-                  Ce compte est protégé par le système. Il dispose déjà de tous
-                  les accès et ses permissions ne se gèrent pas manuellement.
+                  Ce compte est protégé par le système. Il dispose déjà de
+                  toutes les autorisations et elles ne se gèrent pas
+                  manuellement.
                 </p>
               </div>
             </div>
@@ -117,7 +116,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                   Toutes les pages
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  {PERMISSION_CATEGORIES.length} espaces accessibles
+                  {PERMISSION_CATEGORIES.length} pages administratives
                 </p>
               </div>
             </div>
@@ -125,7 +124,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
               <Crown className="text-warning size-5 shrink-0" />
               <div className="min-w-0">
                 <p className="text-foreground text-sm font-semibold">
-                  {totalPermissions} permissions
+                  {totalPermissions} autorisations actives
                 </p>
                 <p className="text-muted-foreground text-xs">
                   Accordées automatiquement
@@ -163,8 +162,8 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                 <ShieldAlert className="text-warning mt-0.5 size-4 shrink-0" />
                 <p>
                   La double authentification doit être activée par ce membre
-                  avant de lui accorder un rôle administrateur ou un accès
-                  critique.
+                  avant de lui accorder un rôle administrateur ou une
+                  autorisation critique.
                 </p>
               </div>
             )}

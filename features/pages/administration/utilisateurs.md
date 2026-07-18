@@ -1,18 +1,18 @@
-# Utilisateurs & permissions
+# Utilisateurs
 
 Route : `/administration/utilisateurs`
-Pole : Systeme
+Pôle : Système
 
 ## Role de la page
 
-Comptes, roles et permissions existants.
+Comptes, rôles et autorisations administratives.
 
 ## Ce qu'il y aura sur la page
 
 - Configuration ou administration globale.
 - Liste des elements techniques ou transversaux.
 - Historique et impact des modifications.
-- Permissions et garde-fous avant action sensible.
+- Autorisations et garde-fous avant action sensible.
 
 ## Actions principales
 
@@ -40,12 +40,12 @@ Comptes, roles et permissions existants.
 
 - Garder la page lisible en liste puis fiche detaillee.
 - Ne pas dupliquer une donnee geree dans un autre module.
-- Afficher les donnees sensibles seulement selon les permissions.
+- Afficher les données sensibles seulement selon les autorisations.
 - Mettre les actions importantes pres de leur contexte.
 
 ## Points a clarifier avant implementation
 
 - Champs exacts a garder.
-- Permissions fines de lecture et modification.
+- Autorisations fines de consultation et de modification.
 - Statuts, filtres et tags utiles.
 - Donnees a afficher en lecture seule depuis les autres pages.

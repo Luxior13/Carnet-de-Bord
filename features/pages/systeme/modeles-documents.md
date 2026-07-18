@@ -31,7 +31,7 @@ Modeles de chartes, contrats et documents.
 
 ## Liaisons entre pages
 
-- `/administration/utilisateurs` - Utilisateurs & permissions.
+- `/administration/utilisateurs` - Utilisateurs.
 - `/systeme/parametres` - Parametres.
 - `/systeme/validations` - Validations globales.
 - `/systeme/journal-activite` - Journal d'activite.

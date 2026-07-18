@@ -23,6 +23,7 @@ import { AccessDeniedState } from '$components/layout/PageState';
 import { SectionPanel } from '$components/layout/SectionPanel';
 import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
 import { UsersAdminHero } from '$components/users/UsersAdminHero';
+import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import { ErrorCode } from '$types/api.types';
@@ -688,9 +689,15 @@ const NewUserContent: FC = () => {
 const NewUserPage: FC = () => (
   <AuthenticatedLayout
     breadcrumbs={[
-      { label: 'Administration' },
-      { href: '/administration/utilisateurs', label: 'Utilisateurs' },
-      { href: '/administration/utilisateurs/nouveau', label: 'Nouveau' },
+      {
+        href: FEATURES.systemHome.href,
+        label: FEATURES.users.audit.poleLabel,
+      },
+      { href: FEATURES.users.href, label: FEATURES.users.label },
+      {
+        href: '/administration/utilisateurs/nouveau',
+        label: 'Nouvel utilisateur',
+      },
     ]}
   >
     <NewUserContent />

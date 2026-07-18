@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Archive,
   ArrowRight,
   Ban,
   CheckCircle,
@@ -16,7 +17,6 @@ import {
   Pencil,
   RefreshCw,
   Shield,
-  Trash2,
   UserCheck,
   UserMinus,
   UserPlus,
@@ -25,6 +25,7 @@ import {
 import React, { type FC, memo, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { FEATURES } from '$constants/feature-registry.constants';
 import {
   getNavigationIcon,
   type NavigationIconName,
@@ -34,7 +35,7 @@ import {
   type NavigationSpaceTone,
 } from '$constants/navigation-theme.constants';
 import {
-  getPermissionItem,
+  getPermissionDisplayLabel,
   PERMISSION_CATEGORIES,
   PERMISSION_POLES,
 } from '$constants/permissions.constants';
@@ -270,8 +271,8 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   USER_DELETE: {
     category: 'lifecycle',
     color: 'text-destructive bg-destructive/10',
-    icon: Trash2,
-    label: 'Utilisateur supprimé',
+    icon: Archive,
+    label: 'Utilisateur archivé',
   },
   USER_UPDATE: {
     category: 'profile',
@@ -488,7 +489,7 @@ const DEFAULT_ACTIVITY_TAB: ActivityTabInfo = {
 
 const getInferredActivityTab = (log: AuditLogEntry): ActivityTabInfo => {
   if (log.action === 'PERMISSION_UPDATE') {
-    return { tabKey: 'access', tabLabel: 'Accès' };
+    return { tabKey: 'access', tabLabel: 'Autorisations' };
   }
 
   if (log.action === 'USER_UPDATE') {
@@ -529,7 +530,7 @@ const getInferredActivityTab = (log: AuditLogEntry): ActivityTabInfo => {
     return { tabKey: 'auth', tabLabel: 'Connexions' };
   }
   if (log.category === 'PERMISSION') {
-    return { tabKey: 'access', tabLabel: 'Accès' };
+    return { tabKey: 'access', tabLabel: 'Autorisations' };
   }
   if (log.category === 'USER') return { tabKey: 'profile', tabLabel: 'Profil' };
   if (log.category === 'SYSTEM') {
@@ -594,12 +595,9 @@ const OTHER_ACTIVITY_LOCATION: ActivityLocationInfo = {
 };
 
 const USERS_ACTIVITY_LOCATION = getPermissionCategoryLocation('users', {
+  ...FEATURES.users.audit,
   description: 'Gestion des utilisateurs du système.',
   icon: 'Users',
-  pageKey: 'users',
-  pageLabel: 'Utilisateurs & permissions',
-  poleKey: 'system',
-  poleLabel: 'Système',
   tabKey: DEFAULT_ACTIVITY_TAB.tabKey,
   tabLabel: DEFAULT_ACTIVITY_TAB.tabLabel,
   tone: 'system',
@@ -1149,7 +1147,7 @@ const getChangeFieldLabel = (fieldKey: string): string => {
   const permissionKey = getPermissionKeyFromChangeField(fieldKey);
 
   if (permissionKey) {
-    return getPermissionItem(permissionKey)?.label ?? permissionKey;
+    return getPermissionDisplayLabel(permissionKey);
   }
 
   return FIELD_LABELS.get(fieldKey) || fieldKey;

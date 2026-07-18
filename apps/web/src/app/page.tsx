@@ -312,7 +312,7 @@ export default function HomePage(): React.ReactNode {
       (userData.isProtected ||
         hasPermission(
           userData.role,
-          PERMISSIONS.SYSTEM.AUDIT,
+          PERMISSIONS.AUDIT.VIEW,
           userData.permissions,
         ))
     : false;
@@ -321,7 +321,7 @@ export default function HomePage(): React.ReactNode {
       (userData.isProtected ||
         hasPermission(
           userData.role,
-          PERMISSIONS.SYSTEM.AUDIT_SENSITIVE,
+          PERMISSIONS.AUDIT.VIEW_SENSITIVE,
           userData.permissions,
         ))
     : false;

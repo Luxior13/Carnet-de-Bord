@@ -1,4 +1,5 @@
 import {
+  Archive,
   Ban,
   CheckCircle,
   Download,
@@ -10,13 +11,12 @@ import {
   Pencil,
   RefreshCw,
   Shield,
-  Trash2,
   UserMinus,
   UserPlus,
   XCircle,
 } from 'lucide-react';
 
-import { getPermissionItem } from '$constants/permissions.constants';
+import { getPermissionDisplayLabel } from '$constants/permissions.constants';
 
 export type AuditActionDisplayConfig = {
   color: string;
@@ -224,9 +224,9 @@ export const AUDIT_ACTION_DISPLAY = new Map<string, AuditActionDisplayConfig>([
     'USER_DELETE',
     {
       color: 'border-destructive/35 bg-destructive/10 text-destructive',
-      icon: Trash2,
-      label: 'Utilisateur supprimé',
-      sentence: 'a supprimé le compte',
+      icon: Archive,
+      label: 'Utilisateur archivé',
+      sentence: 'a archivé le compte',
     },
   ],
   [
@@ -308,7 +308,7 @@ export const getAuditChangeFieldLabel = (fieldKey: string): string => {
   if (fieldKey.startsWith(PERMISSION_CHANGE_FIELD_PREFIX)) {
     const permissionKey = fieldKey.slice(PERMISSION_CHANGE_FIELD_PREFIX.length);
 
-    return getPermissionItem(permissionKey)?.label ?? permissionKey;
+    return getPermissionDisplayLabel(permissionKey);
   }
 
   return FIELD_LABELS.get(fieldKey) ?? fieldKey;

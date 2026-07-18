@@ -65,7 +65,7 @@ Chaque fichier explique le contenu attendu, les actions, les donnees gerees et l
 ## Systeme
 
 - [Vue d'ensemble](systeme.md) - `/systeme`
-- [Utilisateurs & permissions](administration/utilisateurs.md) - `/administration/utilisateurs`
+- [Utilisateurs](administration/utilisateurs.md) - `/administration/utilisateurs`
 - [Parametres](systeme/parametres.md) - `/systeme/parametres`
 - [Validations globales](systeme/validations.md) - `/systeme/validations`
 - [Exports / sauvegardes](systeme/exports-sauvegardes.md) - `/systeme/exports-sauvegardes`

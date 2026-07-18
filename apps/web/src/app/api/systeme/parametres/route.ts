@@ -16,10 +16,7 @@ export async function GET(
   try {
     const auth = await requireAuth();
     if (!auth.success) return auth.response;
-    const permission = requirePermission(
-      auth.user,
-      PERMISSIONS.SYSTEM.SETTINGS,
-    );
+    const permission = requirePermission(auth.user, PERMISSIONS.SETTINGS.VIEW);
     if (!permission.success) return permission.response;
 
     const storedSettings = await prisma.systemSetting.findMany({

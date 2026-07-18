@@ -15,6 +15,7 @@ export type FeatureDefinition = Readonly<{
   icon: string;
   id: string;
   label: string;
+  permissionMode: 'all' | 'any';
   requiredPermissions: readonly string[];
 }>;
 
@@ -26,7 +27,7 @@ export const FEATURES = {
   dashboard: defineFeature({
     audit: {
       pageKey: 'dashboard',
-      pageLabel: 'Tableau de bord',
+      pageLabel: "Vue d'ensemble",
       poleKey: 'dashboard',
       poleLabel: 'Tableau de bord',
     },
@@ -36,6 +37,7 @@ export const FEATURES = {
     icon: 'LayoutDashboard',
     id: 'dashboard',
     label: "Vue d'ensemble",
+    permissionMode: 'all',
     requiredPermissions: [PERMISSIONS.DASHBOARD.VIEW],
   }),
   notifications: defineFeature({
@@ -51,6 +53,7 @@ export const FEATURES = {
     icon: 'Bell',
     id: 'notifications',
     label: 'Mes notifications',
+    permissionMode: 'all',
     requiredPermissions: [PERMISSIONS.NOTIFICATIONS.VIEW],
   }),
   roadmap: defineFeature({
@@ -66,6 +69,7 @@ export const FEATURES = {
     icon: 'ClipboardList',
     id: 'roadmap',
     label: 'Feuille de route',
+    permissionMode: 'all',
     requiredPermissions: [],
   }),
   search: defineFeature({
@@ -81,7 +85,8 @@ export const FEATURES = {
     icon: 'Search',
     id: 'search',
     label: 'Recherche avancée',
-    requiredPermissions: [PERMISSIONS.DASHBOARD.VIEW],
+    permissionMode: 'all',
+    requiredPermissions: [],
   }),
   systemActivity: defineFeature({
     audit: {
@@ -96,12 +101,13 @@ export const FEATURES = {
     icon: 'History',
     id: 'system-activity',
     label: "Journal d'activité",
-    requiredPermissions: [PERMISSIONS.SYSTEM.AUDIT],
+    permissionMode: 'all',
+    requiredPermissions: [PERMISSIONS.AUDIT.VIEW],
   }),
   systemHome: defineFeature({
     audit: {
       pageKey: 'system',
-      pageLabel: 'Système',
+      pageLabel: "Vue d'ensemble",
       poleKey: 'system',
       poleLabel: 'Système',
     },
@@ -111,21 +117,23 @@ export const FEATURES = {
     icon: 'Settings',
     id: 'system-home',
     label: "Vue d'ensemble",
-    requiredPermissions: [PERMISSIONS.USERS.VIEW, PERMISSIONS.SYSTEM.AUDIT],
+    permissionMode: 'any',
+    requiredPermissions: [PERMISSIONS.USERS.VIEW, PERMISSIONS.AUDIT.VIEW],
   }),
   users: defineFeature({
     audit: {
       pageKey: 'users',
-      pageLabel: 'Utilisateurs & permissions',
+      pageLabel: 'Utilisateurs',
       poleKey: 'system',
       poleLabel: 'Système',
     },
     availability: 'live',
-    description: 'Comptes, rôles et permissions existants.',
+    description: 'Comptes, rôles et autorisations administratives.',
     href: '/administration/utilisateurs',
     icon: 'Users',
     id: 'users',
-    label: 'Utilisateurs & permissions',
+    label: 'Utilisateurs',
+    permissionMode: 'all',
     requiredPermissions: [PERMISSIONS.USERS.VIEW],
   }),
 } as const;

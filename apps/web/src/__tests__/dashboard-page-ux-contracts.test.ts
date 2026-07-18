@@ -77,7 +77,7 @@ describe('/ dashboard UX contracts', () => {
   it('enforces dedicated permissions and redaction in the API', () => {
     expect(dashboardRouteSource).toContain('PERMISSIONS.USERS.VIEW_SECURITY');
     expect(dashboardRouteSource).toContain('PERMISSIONS.USERS.VIEW_ACTIVITY');
-    expect(dashboardRouteSource).toContain('PERMISSIONS.SYSTEM.AUDIT');
+    expect(dashboardRouteSource).toContain('PERMISSIONS.AUDIT.VIEW');
     expect(dashboardRouteSource).toContain('AuditEventKind.ACTIVITY');
     expect(dashboardRouteSource).toContain('actorDisplayNameSnapshot');
     expect(dashboardRouteSource).toContain('getVisibleAuditDescription');

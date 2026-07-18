@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { FEATURES } from '$constants/feature-registry.constants';
 import { requireAuth } from '$server/api-auth';
 import { apiErrors, parseJsonBody } from '$server/api-response';
 import {
@@ -49,10 +50,7 @@ const resetMfaSchema = z
   .strict();
 
 const USERS_SECURITY_AUDIT_LOCATION = {
-  pageKey: 'users',
-  pageLabel: 'Utilisateurs & permissions',
-  poleKey: 'system',
-  poleLabel: 'Système',
+  ...FEATURES.users.audit,
   tabKey: 'security',
   tabLabel: 'Sécurité',
 } as const;

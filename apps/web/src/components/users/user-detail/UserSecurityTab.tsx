@@ -779,7 +779,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardHeader>
           <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
             <div>
-              <p className="text-sm font-medium">Supprimer cet utilisateur</p>
+              <p className="text-sm font-medium">Archiver cet utilisateur</p>
               <p className="text-muted-foreground text-xs">
                 Le compte sera désactivé, masqué de l&apos;annuaire et ses
                 sessions seront invalidées.
@@ -791,7 +791,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               onClick={onDeleteUser}
               className="shrink-0"
             >
-              Supprimer
+              Archiver
             </Button>
           </CardContent>
         </Card>

@@ -1,7 +1,10 @@
 import { type UserRole } from '@repo/database';
 import { NextResponse } from 'next/server';
 
-import { hasPermission } from '$constants/permissions.constants';
+import {
+  hasPermission,
+  isKnownPermissionKey,
+} from '$constants/permissions.constants';
 import { type ApiErrorResponse, ErrorCode } from '$types/api.types';
 import type { SessionType, UserType } from '$types/auth.types';
 
@@ -128,8 +131,8 @@ export function requirePermission(
   user: UserType,
   permissionKey: string,
 ): RequirePermissionResult {
-  // Protected users have all permissions
-  if (user.isProtected) {
+  // A protected account bypasses policy decisions, never catalogue typos.
+  if (user.isProtected && isKnownPermissionKey(permissionKey)) {
     return { success: true };
   }
 
@@ -162,8 +165,11 @@ export function requireAnyPermission(
   user: UserType,
   permissionKeys: readonly string[],
 ): RequirePermissionResult {
-  // Protected users have all permissions
-  if (user.isProtected) {
+  // A protected account bypasses known policies, never unknown keys.
+  if (
+    user.isProtected &&
+    permissionKeys.some((permissionKey) => isKnownPermissionKey(permissionKey))
+  ) {
     return { success: true };
   }
 

@@ -5,6 +5,7 @@ import { AuditAction, AuditCategory } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGINATION } from '$constants/pagination.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { env } from '$env';
@@ -621,7 +622,7 @@ export async function GET(
     if (wantsCsvExport && !isOwnAudit) {
       const exportCheck = requirePermission(
         auth.user,
-        PERMISSIONS.USERS.EXPORT,
+        PERMISSIONS.USERS.EXPORT_ACTIVITY,
       );
       if (!exportCheck.success) return exportCheck.response;
     }
@@ -668,7 +669,7 @@ export async function GET(
       auth.user.isProtected ||
       hasPermission(
         auth.user.role,
-        PERMISSIONS.SYSTEM.AUDIT_SENSITIVE,
+        PERMISSIONS.AUDIT.VIEW_SENSITIVE,
         auth.user.permissions,
       );
     const visibilityOptions = {
@@ -705,11 +706,8 @@ export async function GET(
         metadata: {
           filters: exportFilters,
           format: 'csv',
-          pageKey: 'users',
-          pageLabel: 'Utilisateurs & permissions',
+          ...FEATURES.users.audit,
           phase: 'started',
-          poleKey: 'system',
-          poleLabel: 'Système',
           rowCount: 0,
           snapshotAt: generatedAt.toISOString(),
           tabKey: 'activity',
@@ -732,11 +730,8 @@ export async function GET(
               filters: exportFilters,
               format: 'csv',
               generatedAt: generatedAt.toISOString(),
-              pageKey: 'users',
-              pageLabel: 'Utilisateurs & permissions',
+              ...FEATURES.users.audit,
               phase: 'completed',
-              poleKey: 'system',
-              poleLabel: 'Système',
               rowCount: summary.rowCount,
               snapshotAt: generatedAt.toISOString(),
               tabKey: 'activity',

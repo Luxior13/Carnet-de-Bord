@@ -11,6 +11,11 @@ son entrée de navigation avec `featureId`. Le manifeste possède une clé stabl
 la route, les permissions requises et la localisation d'audit. Une page ne
 devient `live` qu'une fois sa route, ses permissions et ses tests prêts.
 
+Une fonctionnalité `planned` utilise uniquement les identifiants réservés de
+`ROADMAP_PERMISSIONS`. Ils ne sont jamais effectifs, stockables dans les
+surcharges ni attribuables dans l'éditeur. Le passage vers `PERMISSIONS`, la
+politique serveur, les tests et le statut `live` doivent être livrés ensemble.
+
 ## 2. Découpage
 
 ```text

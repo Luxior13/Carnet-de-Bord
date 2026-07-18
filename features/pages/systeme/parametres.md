@@ -31,7 +31,7 @@ Configuration des jeux, statuts, categories et tags.
 
 ## Liaisons entre pages
 
-- `/administration/utilisateurs` - Utilisateurs & permissions.
+- `/administration/utilisateurs` - Utilisateurs.
 - `/systeme/validations` - Validations globales.
 - `/systeme/journal-activite` - Journal d'activite.
 - `/systeme/exports-sauvegardes` - Exports / sauvegardes.

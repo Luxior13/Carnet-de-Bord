@@ -43,6 +43,13 @@ tant que leur module metier n'est pas pret.
 Le socle de permissions est structure par pole pour preparer les futures pages
 sans donner un acces trop large via `dashboard:view`.
 
+Important : les permissions citees pour une page `Squelette`, `A connecter` ou
+`Plus tard` sont uniquement des identifiants de feuille de route dans
+`ROADMAP_PERMISSIONS`. Elles ne sont jamais effectives, stockables ou
+attribuables avant que la page, sa politique serveur, son audit et ses tests ne
+passent ensemble au statut `Live`. Le catalogue actif et la matrice des roles
+sont documentes dans `docs/PERMISSIONS.md`.
+
 | Famille | Permissions a prevoir | Notes |
 | --- | --- | --- |
 | Dashboard | `dashboard:view`, `dashboard:manage_widgets` | Widgets visibles selon les droits metier. |
@@ -52,7 +59,7 @@ sans donner un acces trop large via `dashboard:view`.
 | Documents | `documents:view`, `documents:create`, `documents:update`, `documents:approve`, `documents:archive` | Commun au juridique, systeme et dashboard. |
 | Juridique | `legal:view`, `contracts:view`, `contracts:update`, `incidents:view`, `incidents:update` | Donnees sensibles, audit obligatoire. |
 | Tresorerie | `treasury:view`, `treasury:edit`, `treasury:validate`, `treasury:export`, `treasury:audit`, `treasury:archives` | Finance isolee avec controles separes. |
-| Systeme | `system:view`, `system:audit`, `system:settings`, `system:validate`, `system:exports`, `system:archives`, `system:automation` | Ne pas tout melanger avec `users:*`. |
+| Systeme | actifs : `audit:view`, `audit:view_sensitive`, `audit:export`; API sans ecran : `settings:view`, `settings:update`; planifies : `system:validate`, `backups:view`, `system:archives`, `system:automation` | Ne pas tout melanger avec `users:*`. |
 | Sport | `sport:view`, `sport:update`, `sport:public_sync` | Priorite plus tard, lecture publique separee. |
 
 ## Entites transversales a prevoir
@@ -90,12 +97,14 @@ sans donner un acces trop large via `dashboard:view`.
 | `/login` | Live | FormFlow auth | session, user, rate-limit | public | audit connexions |
 | `/` | Live partiel | ActionHub | stats users, audit recent | `dashboard:view` | taches, rappels, validations |
 | `/mon-compte` | Live partiel | EntityDetail personnel | user, sessions, audit | `account:*` | audit, securite, notifications |
+| `/mes-notifications` | Live | DataList personnel | notifications du compte connecte | `notifications:view` | dashboard, modules emetteurs |
+| `/feuille-de-route` | Live | ActionHub informatif | catalogue des pages planifiees | authentification, aucune permission planifiee | fiches de preparation |
 | `/administration` | Support | Redirect | aucune | users selon cible | redirige vers utilisateurs |
 | `/administration/utilisateurs` | Live | DataList | users, stats, filtres | `users:view` | fiche utilisateur, export |
 | `/administration/utilisateurs/nouveau` | Live | FormFlow | user, role, mot de passe temporaire | `users:create` | fiche utilisateur, audit |
 | `/administration/utilisateurs/[id]` | Live partiel | EntityDetail | user, permissions, sessions, audit | `users:*` | compte, securite, historique |
-| `/systeme/journal-activite` | Live partiel | AuditJournal | audit logs, filtres, utilisateurs | `system:audit` avec fallback temporaire `users:view_activity` | toutes pages auditees |
-| `/recherche` | Squelette | SearchResults | a definir | selon modules | toutes entites indexees |
+| `/systeme/journal-activite` | Live partiel | AuditJournal | audit logs, filtres, utilisateurs | `audit:view`; `audit:view_sensitive` et `audit:export` sont separes | toutes pages auditees |
+| `/recherche` | Live | SearchResults | destinations actives autorisees | authentification puis filtrage selon modules | toutes entites indexees |
 | `/not-found` | Support | PageState | aucune | public | retour contextuel plus tard |
 | `/error` | Support | PageState | digest erreur | public | support/admin plus tard |
 
@@ -103,7 +112,8 @@ sans donner un acces trop large via `dashboard:view`.
 
 | Route | Statut | Modele cible | Donnees principales | Permissions | Liens a prevoir |
 | --- | --- | --- | --- | --- | --- |
-| `/tableau-de-bord` | Squelette | ActionHub | agregats transverses | `dashboard:view` | aligner avec `/` avant enrichissement |
+| `/tableau-de-bord` | Support | Redirect | aucune | `dashboard:view` sur la cible | redirige vers `/` |
+| `/tableau-de-bord/mes-notifications` | Support | Redirect | aucune | `notifications:view` sur la cible | redirige vers `/mes-notifications` |
 | `/tableau-de-bord/mes-taches` | A connecter | DataList / ActionHub | taches assignees | `tasks:view` | membres, validations, documents |
 | `/tableau-de-bord/mes-rappels` | A connecter | DataList | rappels personnels | `tasks:view` ou `notifications:view` | notifications, calendrier |
 | `/tableau-de-bord/prochaines-reunions` | A connecter | CalendarBoard | reunions a venir | `meetings:view` | vie interne, debriefs |
@@ -166,10 +176,10 @@ sans donner un acces trop large via `dashboard:view`.
 
 | Route | Statut | Modele cible | Donnees principales | Permissions | Liens a prevoir |
 | --- | --- | --- | --- | --- | --- |
-| `/systeme` | Squelette | SettingsHub | resume systeme | `system:view` | utilisateurs, journal |
-| `/systeme/parametres` | A connecter | SettingsHub | reglages globaux | `system:settings` | audit |
+| `/systeme` | Live partiel | SettingsHub | resume systeme | au moins `users:view` ou `audit:view` | utilisateurs, journal |
+| `/systeme/parametres` | A connecter | SettingsHub | reglages globaux | API active non attribuable : `settings:view`, `settings:update`; ecran planifie | audit |
 | `/systeme/validations` | A connecter | ApprovalQueue | validations globales | `system:validate` | finance, documents |
-| `/systeme/exports-sauvegardes` | A connecter | SettingsHub / Export | exports, backups | `system:exports` | archives |
+| `/systeme/exports-sauvegardes` | A connecter | SettingsHub / Export | exports, backups | `backups:view` | archives |
 | `/systeme/archives` | A connecter | DocumentVault | archives globales | `system:archives` | documents, finance |
 | `/systeme/modeles` | A connecter | SettingsHub | modeles | `system:settings` | documents, notifications |
 | `/systeme/modeles-documents` | A connecter | DocumentVault | modeles documents | `documents:update` | juridique |

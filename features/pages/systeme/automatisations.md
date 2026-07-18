@@ -31,7 +31,7 @@ Actions automatiques futures.
 
 ## Liaisons entre pages
 
-- `/administration/utilisateurs` - Utilisateurs & permissions.
+- `/administration/utilisateurs` - Utilisateurs.
 - `/systeme/parametres` - Parametres.
 - `/systeme/validations` - Validations globales.
 - `/systeme/journal-activite` - Journal d'activite.

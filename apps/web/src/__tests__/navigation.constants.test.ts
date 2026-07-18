@@ -16,7 +16,10 @@ import {
   type NavigationAvailabilityFilter,
   type NavItem,
 } from '$constants/app.constants';
-import { PERMISSIONS } from '$constants/permissions.constants';
+import {
+  PERMISSIONS,
+  ROADMAP_PERMISSIONS,
+} from '$constants/permissions.constants';
 
 type TestUser = {
   isProtected: boolean;
@@ -53,46 +56,82 @@ function getVisibleHrefs(
   ).flatMap((section) => flattenHrefs(section.items));
 }
 
-describe('navigation availability', () => {
-  it('shows only operational destinations in the default navigation', () => {
-    const hrefs = getVisibleHrefs();
+function getRoadmapHrefs(permissions: Record<string, boolean> = {}): string[] {
+  return getPlannedNavigationSpaces(buildUser(permissions)).flatMap((space) =>
+    space.sections.flatMap((section) => flattenHrefs(section.items)),
+  );
+}
 
-    expect(hrefs).toEqual(['/', '/feuille-de-route', '/recherche']);
+describe('navigation availability', () => {
+  it('shows the live baseline destinations without individual grants', () => {
+    const hrefs = getVisibleHrefs({
+      [PERMISSIONS.DASHBOARD.VIEW]: false,
+      [PERMISSIONS.NOTIFICATIONS.VIEW]: false,
+    });
+
+    expect(hrefs).toEqual([
+      '/',
+      '/feuille-de-route',
+      '/mes-notifications',
+      '/recherche',
+    ]);
     expect(hrefs).not.toContain('/tableau-de-bord/mes-taches');
     expect(hrefs).not.toContain('/vie-interne');
-    expect(hrefs).toContain('/recherche');
   });
 
-  it('keeps permitted planned destinations out of the main navigation', () => {
-    const permissions = {
-      [PERMISSIONS.INTERNAL.VIEW]: true,
-      [PERMISSIONS.MEETINGS.VIEW]: true,
-      [PERMISSIONS.MEMBERS.VIEW]: true,
-      [PERMISSIONS.TASKS.VIEW]: true,
-    };
-    const liveHrefs = getVisibleHrefs(permissions);
-    const plannedHrefs = getVisibleHrefs(permissions, false, 'planned');
+  it('publishes the complete roadmap without dormant permission grants', () => {
+    const hrefs = getRoadmapHrefs();
 
-    expect(liveHrefs).not.toContain('/tableau-de-bord/mes-taches');
-    expect(liveHrefs).not.toContain('/vie-interne/membres');
-    expect(plannedHrefs).toContain('/tableau-de-bord/mes-taches');
-    expect(plannedHrefs).toContain('/vie-interne');
-    expect(plannedHrefs).toContain('/vie-interne/membres');
-    expect(plannedHrefs).toContain('/vie-interne/calendrier-interne');
+    expect(hrefs).toContain('/tableau-de-bord/mes-taches');
+    expect(hrefs).toContain('/vie-interne');
+    expect(hrefs).toContain('/vie-interne/membres');
+    expect(hrefs).toContain('/vie-interne/calendrier-interne');
+    expect(hrefs).toContain('/bureau-juridique');
+    expect(hrefs).toContain('/tresorerie/operations');
+    expect(hrefs).toContain('/sport-team-control');
+    expect(hrefs).toContain('/systeme/parametres');
   });
 
-  it('treats unpromoted destinations as planned by default', () => {
-    const dashboard = getNavigationItemByHref('/');
+  it('keeps roadmap capability names on planned navigation items', () => {
     const tasks = getNavigationItemByHref('/tableau-de-bord/mes-taches');
 
-    expect(dashboard && getNavigationAvailability(dashboard)).toBe('live');
+    expect(tasks?.requiredPermissions).toEqual([
+      ROADMAP_PERMISSIONS.TASKS.VIEW,
+    ]);
     expect(tasks && getNavigationAvailability(tasks)).toBe('planned');
+    expect(
+      canAccessNavigationItem(
+        buildUser({ [ROADMAP_PERMISSIONS.TASKS.VIEW]: true }),
+        tasks as NavItem,
+      ),
+    ).toBe(false);
   });
 
-  it('blocks planned destinations while allowing account and dynamic routes', () => {
-    const user = buildUser({
-      [PERMISSIONS.NOTIFICATIONS.VIEW]: true,
-    });
+  it('does not let the protected bypass hide a typo on a live item', () => {
+    const mistypedLiveItem: NavItem = {
+      availability: 'live',
+      href: '/test-live',
+      icon: 'Settings',
+      label: 'Test live',
+      requiredPermissions: ['users:veiw'],
+    };
+    const plannedItem: NavItem = {
+      href: '/test-planned',
+      icon: 'Settings',
+      label: 'Test planned',
+      requiredPermissions: [ROADMAP_PERMISSIONS.TASKS.VIEW],
+    };
+
+    expect(canAccessNavigationItem(buildUser({}, true), mistypedLiveItem)).toBe(
+      false,
+    );
+    expect(canAccessNavigationItem(buildUser({}, true), plannedItem)).toBe(
+      true,
+    );
+  });
+
+  it('blocks planned destinations while allowing live and dynamic routes', () => {
+    const user = buildUser();
 
     expect(canOpenNavigationHref(user, '/')).toBe(true);
     expect(canOpenNavigationHref(user, '/mon-compte')).toBe(true);
@@ -104,9 +143,7 @@ describe('navigation availability', () => {
   });
 
   it('groups live user administration under the system space', () => {
-    const hrefs = getVisibleHrefs({
-      [PERMISSIONS.USERS.VIEW]: true,
-    });
+    const hrefs = getVisibleHrefs({ [PERMISSIONS.USERS.VIEW]: true });
 
     expect(hrefs).toContain('/systeme');
     expect(hrefs).toContain('/administration/utilisateurs');
@@ -114,7 +151,7 @@ describe('navigation availability', () => {
     expect(hrefs).not.toContain('/systeme/journal-activite');
   });
 
-  it('opens the system hub when at least one live tool is authorized', () => {
+  it('opens the system hub for either live administrative family', () => {
     const systemHub = getNavigationItemByHref('/systeme');
 
     expect(systemHub).not.toBeNull();
@@ -128,50 +165,40 @@ describe('navigation availability', () => {
     ).toBe(true);
     expect(
       canAccessNavigationItem(
-        buildUser({
-          [PERMISSIONS.SYSTEM.AUDIT]: true,
-          [PERMISSIONS.SYSTEM.VIEW]: true,
-        }),
+        buildUser({ [PERMISSIONS.AUDIT.VIEW]: true }),
         systemHub,
       ),
     ).toBe(true);
     expect(canAccessNavigationItem(buildUser(), systemHub)).toBe(false);
   });
 
-  it('shows the live journal while keeping other system tools planned', () => {
-    const permissions = {
-      [PERMISSIONS.SYSTEM.AUDIT]: true,
-      [PERMISSIONS.SYSTEM.SETTINGS]: true,
-      [PERMISSIONS.SYSTEM.VIEW]: true,
-    };
-    const liveHrefs = getVisibleHrefs(permissions);
-    const plannedHrefs = getVisibleHrefs(permissions, false, 'planned');
+  it('shows the live journal while settings stay roadmap-only in navigation', () => {
+    const liveHrefs = getVisibleHrefs({ [PERMISSIONS.AUDIT.VIEW]: true });
+    const roadmapHrefs = getRoadmapHrefs({
+      [PERMISSIONS.SETTINGS.VIEW]: true,
+    });
 
     expect(liveHrefs).toContain('/systeme');
     expect(liveHrefs).toContain('/systeme/journal-activite');
     expect(liveHrefs).not.toContain('/administration/utilisateurs');
     expect(liveHrefs).not.toContain('/systeme/parametres');
-    expect(plannedHrefs).toContain('/systeme/parametres');
-    expect(plannedHrefs).not.toContain('/systeme/journal-activite');
+    expect(roadmapHrefs).toContain('/systeme/parametres');
+    expect(roadmapHrefs).not.toContain('/systeme/journal-activite');
   });
 
-  it('derives system hub tools from live authorized navigation entries', () => {
+  it('derives system hub tools from authorized live entries', () => {
     const userTools = getLiveNavigationSpaceTools(
       'system',
       buildUser({ [PERMISSIONS.USERS.VIEW]: true }),
     );
     const auditTools = getLiveNavigationSpaceTools(
       'system',
-      buildUser({
-        [PERMISSIONS.SYSTEM.AUDIT]: true,
-        [PERMISSIONS.SYSTEM.VIEW]: true,
-      }),
+      buildUser({ [PERMISSIONS.AUDIT.VIEW]: true }),
     );
     const allTools = getLiveNavigationSpaceTools(
       'system',
       buildUser({
-        [PERMISSIONS.SYSTEM.AUDIT]: true,
-        [PERMISSIONS.SYSTEM.VIEW]: true,
+        [PERMISSIONS.AUDIT.VIEW]: true,
         [PERMISSIONS.USERS.VIEW]: true,
       }),
     );
@@ -192,49 +219,25 @@ describe('navigation availability', () => {
         (item) => item.href,
       ),
     ).toEqual(['/administration/utilisateurs', '/systeme/journal-activite']);
-    expect(allTools.map((item) => item.href)).not.toContain('/systeme');
-    expect(allTools.map((item) => item.href)).not.toContain(
-      '/systeme/parametres',
-    );
-  });
-
-  it('keeps finance, legal and sport destinations on the roadmap', () => {
-    const permissions = {
-      [PERMISSIONS.LEGAL.VIEW]: true,
-      [PERMISSIONS.SPORT.UPDATE]: true,
-      [PERMISSIONS.SPORT.VIEW]: true,
-      [PERMISSIONS.TREASURY.VIEW]: true,
-    };
-    const liveHrefs = getVisibleHrefs(permissions);
-    const plannedHrefs = getVisibleHrefs(permissions, false, 'planned');
-
-    expect(liveHrefs).not.toContain('/bureau-juridique');
-    expect(liveHrefs).not.toContain('/tresorerie/operations');
-    expect(liveHrefs).not.toContain('/sport-team-control');
-    expect(plannedHrefs).toContain('/bureau-juridique');
-    expect(plannedHrefs).toContain('/tresorerie/operations');
-    expect(plannedHrefs).toContain('/sport-team-control');
-    expect(plannedHrefs).toContain('/sport-team-control/scrims');
   });
 
   it('keeps the desktop sidebar live on a direct planned route', () => {
-    const user = buildUser({
-      [PERMISSIONS.INTERNAL.VIEW]: true,
-      [PERMISSIONS.MEMBERS.VIEW]: true,
-    });
     const sidebarHrefs = getDesktopSidebarSections(
-      user,
+      buildUser(),
       '/vie-interne/membres',
     ).flatMap((section) => flattenHrefs(section.items));
 
-    expect(sidebarHrefs).toEqual(['/', '/feuille-de-route', '/recherche']);
+    expect(sidebarHrefs).toEqual([
+      '/',
+      '/feuille-de-route',
+      '/mes-notifications',
+      '/recherche',
+    ]);
     expect(sidebarHrefs).not.toContain('/vie-interne/membres');
   });
 
   it('detects active live spaces for dashboard and administration routes', () => {
-    const user = buildUser({
-      [PERMISSIONS.USERS.VIEW]: true,
-    });
+    const user = buildUser({ [PERMISSIONS.USERS.VIEW]: true });
     const spaces = getVisibleNavigationSpaces(user);
 
     expect(getActiveNavigationSpace('/', spaces).id).toBe('dashboard');
@@ -250,16 +253,8 @@ describe('navigation availability', () => {
     expect(getNavigationPageBySlug('dashboard', [])).toBeNull();
   });
 
-  it('returns only permission-filtered planned spaces for the roadmap', () => {
-    const spaces = getPlannedNavigationSpaces(
-      buildUser({
-        [PERMISSIONS.INTERNAL.VIEW]: true,
-        [PERMISSIONS.MEMBERS.VIEW]: true,
-      }),
-    );
-    const hrefs = spaces.flatMap((space) =>
-      space.sections.flatMap((section) => flattenHrefs(section.items)),
-    );
+  it('returns only planned destinations from the roadmap helper', () => {
+    const hrefs = getRoadmapHrefs();
 
     expect(hrefs).toContain('/vie-interne');
     expect(hrefs).toContain('/vie-interne/membres');

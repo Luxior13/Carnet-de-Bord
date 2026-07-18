@@ -47,8 +47,8 @@ describe('global page search', () => {
     expect(
       normalizeSearchValue('  Modèles—d’activité / ÉQUIPE & œuvre  '),
     ).toBe('modeles d activite equipe oeuvre');
-    expect(normalizeSearchValue('Utilisateurs & permissions')).toBe(
-      'utilisateurs permissions',
+    expect(normalizeSearchValue('Membres & adhérents')).toBe(
+      'membres adherents',
     );
     expect(normalizeSearchValue('… / —')).toBe('');
   });
@@ -57,7 +57,7 @@ describe('global page search', () => {
     const fixtures = [
       createFixture({
         id: 'users',
-        label: 'Utilisateurs & permissions',
+        label: 'Utilisateurs',
         space: 'Système',
       }),
       createFixture({
@@ -68,10 +68,9 @@ describe('global page search', () => {
     ];
 
     expect(
-      rankSearchResults(
-        fixtures,
-        normalizeSearchValue('permissions utilisateurs'),
-      ).map((item) => item.id),
+      rankSearchResults(fixtures, normalizeSearchValue('utilisateurs')).map(
+        (item) => item.id,
+      ),
     ).toEqual(['users']);
     expect(
       rankSearchResults(fixtures, normalizeSearchValue('journal activite')).map(

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  getActiveNavigationSpace,
   getNavigationAvailability,
   getNavigationItemByHref,
 } from '$constants/app.constants';
@@ -10,6 +11,10 @@ import {
   getFeatureByHref,
   getFeatureById,
 } from '$constants/feature-registry.constants';
+import {
+  PERMISSION_CATEGORIES,
+  PERMISSION_POLES,
+} from '$constants/permissions.constants';
 import { ErrorCode } from '$types/api.types';
 import { ApiClientError, apiFetchJson, jsonRequest } from '$utils/api.utils';
 
@@ -40,6 +45,35 @@ describe('feature registry', () => {
       expect(navigationItem?.requiredPermissions ?? []).toEqual(
         feature.requiredPermissions,
       );
+      expect(navigationItem?.permissionMode ?? 'all').toBe(
+        feature.permissionMode,
+      );
+      expect(navigationItem?.label).toBe(feature.label);
+      expect(feature.audit.pageLabel).toBe(feature.label);
+      expect(getActiveNavigationSpace(feature.href).label).toBe(
+        feature.audit.poleLabel,
+      );
+    }
+  });
+
+  it('uses the live navigation names in the administrative permission pages', () => {
+    expect(
+      new Set(PERMISSION_CATEGORIES.map((category) => category.label)).size,
+    ).toBe(PERMISSION_CATEGORIES.length);
+
+    for (const category of PERMISSION_CATEGORIES) {
+      const feature = FEATURE_LIST.find(
+        (candidate) => candidate.audit.pageKey === category.key,
+      );
+      const pole = PERMISSION_POLES.find(
+        (candidate) => candidate.key === category.poleKey,
+      );
+
+      expect(feature, category.key).toBeDefined();
+      expect(feature?.label).toBe(category.label);
+      expect(feature?.audit.poleKey).toBe(category.poleKey);
+      expect(feature && category.routes).toContain(feature?.href);
+      expect(pole?.label).toBe(feature?.audit.poleLabel);
     }
   });
 

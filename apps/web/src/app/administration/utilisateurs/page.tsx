@@ -7,6 +7,7 @@ import React, { type FC, Suspense } from 'react';
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { AccessDeniedState } from '$components/layout/PageState';
 import { UsersAdminHero } from '$components/users/UsersAdminHero';
+import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import { UsersListPage } from '$features/users/UsersListPage';
@@ -54,14 +55,14 @@ const UsersAdministrationContent: FC = () => {
     <PageShell className="py-0">
       <PageCanvas contentClassName="space-y-5">
         <UsersAdminHero
-          title="Utilisateurs"
-          description="Comptes autorisés et accès de l'équipe."
+          title={FEATURES.users.label}
+          description="Comptes, rôles et autorisations administratives."
           actions={
             canCreateUsers ? (
               <Button asChild size="sm">
                 <Link href="/administration/utilisateurs/nouveau">
                   <Plus className="size-4" />
-                  Nouveau membre
+                  Nouvel utilisateur
                 </Link>
               </Button>
             ) : null
@@ -80,8 +81,11 @@ const UsersAdministrationPage: FC = () => {
   return (
     <AuthenticatedLayout
       breadcrumbs={[
-        { label: 'Administration' },
-        { href: '/administration/utilisateurs', label: 'Utilisateurs' },
+        {
+          href: FEATURES.systemHome.href,
+          label: FEATURES.users.audit.poleLabel,
+        },
+        { href: FEATURES.users.href, label: FEATURES.users.label },
       ]}
     >
       <UsersAdministrationContent />

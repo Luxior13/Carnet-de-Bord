@@ -40,14 +40,14 @@ export async function GET(): Promise<
       auth.user.isProtected ||
       hasPermission(
         auth.user.role,
-        PERMISSIONS.SYSTEM.AUDIT,
+        PERMISSIONS.AUDIT.VIEW,
         auth.user.permissions,
       );
     const canViewSensitiveAuditDetails =
       auth.user.isProtected ||
       hasPermission(
         auth.user.role,
-        PERMISSIONS.SYSTEM.AUDIT_SENSITIVE,
+        PERMISSIONS.AUDIT.VIEW_SENSITIVE,
         auth.user.permissions,
       );
     const canViewRecentActivity = canViewUserActivity || canViewSystemAudit;

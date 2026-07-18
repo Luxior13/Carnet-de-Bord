@@ -363,7 +363,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
             </span>
             <span className="min-w-0 flex-1">
               <span className="text-foreground block text-sm font-semibold">
-                Fonctions essentielles garanties
+                Autorisations essentielles garanties
               </span>
               <span className="text-muted-foreground mt-0.5 block text-xs leading-5">
                 Consultation et sécurisation du compte, toujours disponibles.

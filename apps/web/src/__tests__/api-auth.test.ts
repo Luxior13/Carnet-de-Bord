@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { requireAuth } from '$server/api-auth';
+import { PERMISSIONS } from '$constants/permissions.constants';
+import {
+  requireAnyPermission,
+  requireAuth,
+  requirePermission,
+} from '$server/api-auth';
 import { ErrorCode } from '$types/api.types';
 
 const { mockGetAuthSession, mockReserveAuthenticatedApiRateLimit } = vi.hoisted(
@@ -113,5 +118,36 @@ describe('requireAuth', () => {
         ErrorCode.RATE_LIMITED,
       );
     }
+  });
+});
+
+describe('protected permission bypass', () => {
+  it('allows a protected account to bypass a known active policy', () => {
+    const result = requirePermission(
+      buildAuthUser({ isProtected: true }) as never,
+      PERMISSIONS.AUDIT.VIEW_SENSITIVE,
+    );
+
+    expect(result.success).toBe(true);
+  });
+
+  it('fails closed for an unknown permission even on a protected account', () => {
+    const result = requirePermission(
+      buildAuthUser({ isProtected: true }) as never,
+      'users:veiw',
+    );
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.response.status).toBe(403);
+  });
+
+  it('fails closed when every alternative permission is unknown', () => {
+    const result = requireAnyPermission(
+      buildAuthUser({ isProtected: true }) as never,
+      ['users:veiw', 'audit:reed'],
+    );
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.response.status).toBe(403);
   });
 });

@@ -35,6 +35,7 @@ import {
   type NavigationSpace,
   type NavItem,
 } from '$constants/app.constants';
+import { FEATURES } from '$constants/feature-registry.constants';
 import {
   getNavigationIcon,
   type NavigationIconName,
@@ -189,6 +190,11 @@ const DEFAULT_FILTERS: JournalFilters = {
   to: '',
 };
 
+const normalizeJournalPageKey = (pageKey: string): string =>
+  pageKey === 'activity-journal' || pageKey === 'audit'
+    ? FEATURES.systemActivity.audit.pageKey
+    : pageKey;
+
 const PERIOD_OPTIONS = [
   { label: '24 dernières heures', value: '24h' },
   { label: '7 derniers jours', value: '7d' },
@@ -272,12 +278,6 @@ const getPageOptions = (poleKey: string): ActivityFilterOption[] => {
       tone: 'system',
       value: 'authentication',
     });
-    options.push({
-      icon: 'History',
-      label: "Journal d'activité",
-      tone: 'system',
-      value: 'activity-journal',
-    });
   }
 
   options.push(
@@ -318,7 +318,9 @@ const getFiltersFromSearchParams = (
     category: params.get('category') || DEFAULT_FILTERS.category,
     from: isCustomPeriod ? from : '',
     logType: logType === 'connections' ? 'connections' : 'activity',
-    pageKey: params.get('pageKey') || DEFAULT_FILTERS.pageKey,
+    pageKey: normalizeJournalPageKey(
+      params.get('pageKey') || DEFAULT_FILTERS.pageKey,
+    ),
     period:
       period &&
       PERIOD_OPTIONS.some((option) => option.value === period) &&
@@ -415,21 +417,22 @@ const getLocation = (log: JournalLog): ActivityLocationInfo => {
     log.poleKey ??
     (typeof metadata?.poleKey === 'string' ? metadata.poleKey : null) ??
     (log.category === 'AUTH' ? 'system' : 'system');
-  const pageKey =
+  const pageKey = normalizeJournalPageKey(
     log.pageKey ??
-    (typeof metadata?.pageKey === 'string' ? metadata.pageKey : null) ??
-    (log.category === 'AUTH' ? 'authentication' : 'users');
+      (typeof metadata?.pageKey === 'string' ? metadata.pageKey : null) ??
+      (log.category === 'AUTH' ? 'authentication' : 'users'),
+  );
   const pole = PERMISSION_POLES.find((candidate) => candidate.key === poleKey);
   const page = PERMISSION_CATEGORIES.find(
     (candidate) => candidate.key === pageKey,
   );
   const poleLabel =
-    (typeof metadata?.poleLabel === 'string' ? metadata.poleLabel : null) ??
     pole?.label ??
+    (typeof metadata?.poleLabel === 'string' ? metadata.poleLabel : null) ??
     (poleKey === 'account' ? 'Espace personnel' : 'Système');
   const pageLabel =
-    (typeof metadata?.pageLabel === 'string' ? metadata.pageLabel : null) ??
     page?.label ??
+    (typeof metadata?.pageLabel === 'string' ? metadata.pageLabel : null) ??
     (pageKey === 'authentication'
       ? 'Authentification'
       : pageKey === 'account'
@@ -859,7 +862,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
     (userData.isProtected ||
       hasPermission(
         userData.role,
-        PERMISSIONS.SYSTEM.EXPORTS,
+        PERMISSIONS.AUDIT.EXPORT,
         userData.permissions,
       ));
   const Icon = getNavigationIcon(item.icon);

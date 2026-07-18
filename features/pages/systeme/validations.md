@@ -31,7 +31,7 @@ Actions sensibles a approuver.
 
 ## Liaisons entre pages
 
-- `/administration/utilisateurs` - Utilisateurs & permissions.
+- `/administration/utilisateurs` - Utilisateurs.
 - `/systeme/parametres` - Parametres.
 - `/systeme/journal-activite` - Journal d'activite.
 - `/systeme/exports-sauvegardes` - Exports / sauvegardes.

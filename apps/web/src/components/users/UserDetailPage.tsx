@@ -41,6 +41,7 @@ import { UserResumeTab } from '$components/users/user-detail/UserResumeTab';
 import { UserSecurityTab } from '$components/users/user-detail/UserSecurityTab';
 import { UserAvatar } from '$components/users/UserAvatar';
 import { UsersAdminHero } from '$components/users/UsersAdminHero';
+import { FEATURES } from '$constants/feature-registry.constants';
 import {
   getAccessLabel,
   getAccessPermissionKeys,
@@ -194,8 +195,13 @@ const buildUserDetailSectionHref = (
 const normalizePermissionPageKey = (pageKey: string | null): string => {
   if (!pageKey) return DEFAULT_PERMISSION_PAGE_KEY;
 
-  return PERMISSION_CATEGORIES.some((category) => category.key === pageKey)
-    ? pageKey
+  const canonicalPageKey =
+    pageKey === 'audit' ? FEATURES.systemActivity.audit.pageKey : pageKey;
+
+  return PERMISSION_CATEGORIES.some(
+    (category) => category.key === canonicalPageKey,
+  )
+    ? canonicalPageKey
     : DEFAULT_PERMISSION_PAGE_KEY;
 };
 
@@ -326,8 +332,8 @@ const DetailSkeleton: FC = () => (
 export const UserDetailPageSkeleton: FC = () => (
   <AuthenticatedLayout
     breadcrumbs={[
-      { label: 'Administration' },
-      { href: '/administration/utilisateurs', label: 'Utilisateurs' },
+      { href: FEATURES.systemHome.href, label: FEATURES.users.audit.poleLabel },
+      { href: FEATURES.users.href, label: FEATURES.users.label },
     ]}
   >
     <DetailSkeleton />
@@ -475,18 +481,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     ? isProtectedActor ||
       hasPermission(
         currentUser.role,
-        PERMISSIONS.USERS.MANAGE_STATUS,
+        PERMISSIONS.USERS.UPDATE_STATUS,
         currentUser.permissions,
       )
     : false;
-  const canManageUserRoles = currentUser
-    ? isProtectedActor ||
-      hasPermission(
-        currentUser.role,
-        PERMISSIONS.USERS.MANAGE_ROLES,
-        currentUser.permissions,
-      )
-    : false;
+  const canManageUserRoles = isProtectedActor;
   const canViewUserAccess = currentUser
     ? isProtectedActor ||
       hasPermission(
@@ -499,7 +498,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     ? isProtectedActor ||
       hasPermission(
         currentUser.role,
-        PERMISSIONS.USERS.EDIT_PERMISSIONS,
+        PERMISSIONS.USERS.UPDATE_ACCESS,
         currentUser.permissions,
       )
     : false;
@@ -515,7 +514,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     ? isProtectedActor ||
       hasPermission(
         currentUser.role,
-        PERMISSIONS.USERS.MANAGE_ACCOUNT_POLICY,
+        PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY,
         currentUser.permissions,
       )
     : false;
@@ -555,7 +554,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     ? isProtectedActor ||
       hasPermission(
         currentUser.role,
-        PERMISSIONS.USERS.EXPORT,
+        PERMISSIONS.USERS.EXPORT_ACTIVITY,
         currentUser.permissions,
       )
     : false;
@@ -571,7 +570,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     ? isProtectedActor ||
       hasPermission(
         currentUser.role,
-        PERMISSIONS.USERS.DELETE,
+        PERMISSIONS.USERS.ARCHIVE,
         currentUser.permissions,
       )
     : false;
@@ -1622,7 +1621,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   const handleSaveAccess = async (): Promise<void> => {
     if (!canEditTargetRole && !canManageTargetAccessPermissions) {
-      toast.error('Permission insuffisante pour modifier les accès');
+      toast.error("Vous n'êtes pas autorisé à modifier ces autorisations");
 
       return;
     }
@@ -1666,14 +1665,14 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       if (response.ok && data.success) {
         syncUserState(data.data.user);
         refreshAuditAfterMutation();
-        toast.success('Accès mis à jour');
+        toast.success('Autorisations mises à jour');
       } else {
         if (
           requestStepUpForResponse(data, {
             description:
-              'Ce changement peut modifier le rôle ou les permissions sensibles du membre et fermer ses sessions.',
+              'Ce changement peut modifier le rôle ou les autorisations sensibles de l’utilisateur et fermer ses sessions.',
             execute: handleSaveAccess,
-            title: 'Confirmer la modification des accès',
+            title: 'Confirmer la modification des autorisations',
           })
         ) {
           return;
@@ -1942,7 +1941,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   const handleDelete = async (): Promise<void> => {
     if (!canDeleteTargetUser) {
-      toast.error('Permission insuffisante pour supprimer cet utilisateur');
+      toast.error('Permission insuffisante pour archiver cet utilisateur');
       setShowDeleteConfirm(false);
 
       return;
@@ -1956,23 +1955,23 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        toast.success('Utilisateur supprimé');
+        toast.success('Utilisateur archivé');
         router.push('/administration/utilisateurs');
       } else {
         if (
           requestStepUpForResponse(data, {
             description:
-              'Le compte sera désactivé, retiré des listes actives et toutes ses sessions seront fermées.',
+              'Le compte sera archivé, retiré des listes actives et toutes ses sessions seront fermées.',
             execute: handleDelete,
-            title: 'Confirmer la suppression du compte',
+            title: "Confirmer l'archivage du compte",
           })
         ) {
           return;
         }
-        toast.error(data.error?.message || 'Erreur lors de la suppression');
+        toast.error(data.error?.message || "Erreur lors de l'archivage");
       }
     } catch {
-      toast.error('Erreur lors de la suppression');
+      toast.error("Erreur lors de l'archivage");
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -2021,7 +2020,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               type="button"
               variant={selectedView === 'access' ? 'secondary' : 'ghost'}
             >
-              Accès au site
+              Autorisations administratives
               {hasAccessChanges && (
                 <span
                   aria-label="Modifications non enregistrées"
@@ -2295,8 +2294,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     return (
       <AuthenticatedLayout
         breadcrumbs={[
-          { label: 'Administration' },
-          { href: '/administration/utilisateurs', label: 'Utilisateurs' },
+          {
+            href: FEATURES.systemHome.href,
+            label: FEATURES.users.audit.poleLabel,
+          },
+          { href: FEATURES.users.href, label: FEATURES.users.label },
         ]}
       >
         <AccessDeniedState
@@ -2318,8 +2320,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     return (
       <AuthenticatedLayout
         breadcrumbs={[
-          { label: 'Administration' },
-          { href: '/administration/utilisateurs', label: 'Utilisateurs' },
+          {
+            href: FEATURES.systemHome.href,
+            label: FEATURES.users.audit.poleLabel,
+          },
+          { href: FEATURES.users.href, label: FEATURES.users.label },
         ]}
       >
         {errorStatus === 403 ? (
@@ -2334,7 +2339,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             actionLabel={isNotFound ? 'Retour aux utilisateurs' : 'Réessayer'}
             description={
               isNotFound
-                ? "Ce compte n'existe pas ou a été supprimé."
+                ? "Ce compte n'existe pas ou a été archivé."
                 : errorMessage || "Impossible de charger l'utilisateur."
             }
             onAction={
@@ -2365,8 +2370,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   return (
     <AuthenticatedLayout
       breadcrumbs={[
-        { label: 'Administration' },
-        { href: '/administration/utilisateurs', label: 'Utilisateurs' },
+        {
+          href: FEATURES.systemHome.href,
+          label: FEATURES.users.audit.poleLabel,
+        },
+        { href: FEATURES.users.href, label: FEATURES.users.label },
         {
           href: `/administration/utilisateurs/${user.id}`,
           label: getUserDisplayName(user),
@@ -2686,7 +2694,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 <div className="bg-destructive/10 flex h-8 w-8 items-center justify-center rounded-lg">
                   <AlertTriangle size={16} className="text-destructive" />
                 </div>
-                Supprimer cet utilisateur ?
+                Archiver cet utilisateur ?
               </AlertDialogTitle>
               <AlertDialogDescription className="text-muted-foreground">
                 Le compte de{' '}
@@ -2723,7 +2731,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 {isDeleting && (
                   <Loader2 size={16} className="mr-2 animate-spin" />
                 )}
-                Supprimer
+                Archiver
               </AlertDialogAction>
             </AlertDialogFooter>
           </div>

@@ -2,7 +2,7 @@ import 'server-only';
 
 import type { AuditAction, AuditCategory } from '@repo/database';
 
-import { isKnownPermissionKey } from '$constants/permissions.constants';
+import { isHistoricalAuditPermissionKey } from '$constants/permissions.constants';
 
 const PUBLIC_LOCATION_METADATA_KEYS = new Set([
   'pageKey',
@@ -24,9 +24,9 @@ const SENSITIVE_METADATA_KEYS = new Set([
   ...PUBLIC_METADATA_KEYS,
   'adminRecovery',
   'authenticationMethod',
+  'archivedUserId',
   'contactEmailVerificationReset',
   'createdUserId',
-  'deletedUserId',
   'filters',
   'format',
   'generatedAt',
@@ -89,7 +89,7 @@ const PUBLIC_DESCRIPTIONS: Partial<Record<AuditAction, string>> = {
   USER_ACTIVATE: 'Compte activé',
   USER_CREATE: 'Compte utilisateur créé',
   USER_DEACTIVATE: 'Compte désactivé',
-  USER_DELETE: 'Compte utilisateur supprimé',
+  USER_DELETE: 'Compte utilisateur archivé',
   USER_UPDATE: 'Compte utilisateur modifié',
 };
 
@@ -149,7 +149,8 @@ const sanitizePermissionDiff = (value: unknown): unknown => {
 
   return Object.fromEntries(
     Object.entries(permissions).flatMap(([permissionKey, enabled]) =>
-      isKnownPermissionKey(permissionKey) && typeof enabled === 'boolean'
+      isHistoricalAuditPermissionKey(permissionKey) &&
+      typeof enabled === 'boolean'
         ? [[permissionKey, enabled]]
         : [],
     ),

@@ -46,7 +46,7 @@ export async function PUT(
     if (!auth.success) return auth.response;
     const permission = requirePermission(
       auth.user,
-      PERMISSIONS.SYSTEM.SETTINGS,
+      PERMISSIONS.SETTINGS.UPDATE,
     );
     if (!permission.success) return permission.response;
     const proof = requireRecentSensitiveActionProof(auth.session);

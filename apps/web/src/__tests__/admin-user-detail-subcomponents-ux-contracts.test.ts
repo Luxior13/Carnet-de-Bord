@@ -42,7 +42,7 @@ describe('administrative user detail subcomponent UX contracts', () => {
 
   it('keeps guaranteed personal-account capabilities compact and secondary', () => {
     expect(accountSource).toContain('<details');
-    expect(accountSource).toContain('Fonctions essentielles garanties');
+    expect(accountSource).toContain('Autorisations essentielles garanties');
     expect(accountSource).toContain('Compte personnel');
     expect(accountSource).toContain('Option configurable');
     expect(accountSource).toContain('Personnalisé');
@@ -60,7 +60,7 @@ describe('administrative user detail subcomponent UX contracts', () => {
   });
 
   it('uses progressive disclosure for permission details without hiding dependencies', () => {
-    expect(permissionsSource).toContain('Accès et permissions');
+    expect(permissionsSource).toContain('Autorisations administratives');
     expect(permissionsSource).toContain('Détails et héritage');
     expect(permissionsSource).toContain('view.missingDependencyLabels');
     expect(permissionsSource).toContain('view.dependencyLabels');
