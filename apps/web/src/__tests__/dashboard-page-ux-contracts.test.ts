@@ -44,7 +44,7 @@ describe('/ dashboard UX contracts', () => {
   });
 
   it('reuses the audit catalog and accessible activity semantics', () => {
-    expect(dashboardPageSource).toContain('AUDIT_ACTION_DISPLAY');
+    expect(dashboardPageSource).toContain('getAuditActionDisplay');
     expect(dashboardPageSource).not.toContain('ACTION_LABELS');
     expect(dashboardPageSource).toContain('<time');
     expect(dashboardPageSource).toContain(
@@ -81,6 +81,7 @@ describe('/ dashboard UX contracts', () => {
     expect(dashboardRouteSource).toContain('AuditEventKind.ACTIVITY');
     expect(dashboardRouteSource).toContain('actorDisplayNameSnapshot');
     expect(dashboardRouteSource).toContain('getVisibleAuditDescription');
+    expect(dashboardRouteSource).toContain('sanitizeAuditMetadata');
     expect(dashboardRouteSource).toContain(
       '!auth.user.isProtected ? { isProtected: false } : {}',
     );

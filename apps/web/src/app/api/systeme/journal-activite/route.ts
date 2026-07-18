@@ -579,6 +579,7 @@ const getVisibleLog = (
       canViewSensitiveDetails,
       category: log.category,
       description: log.description,
+      metadata: log.metadata,
     }),
     eventKind: log.eventKind,
     eventVersion: log.eventVersion,

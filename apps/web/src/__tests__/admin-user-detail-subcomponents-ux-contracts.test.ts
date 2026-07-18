@@ -26,6 +26,9 @@ const adminStepUpControllerSource = readSourceFile(
 const securitySource = readSourceFile(
   '../components/users/user-detail/UserSecurityTab.tsx',
 );
+const deletionCardSource = readSourceFile(
+  '../components/users/user-detail/UserDeletionCard.tsx',
+);
 const permissionsSource = readSourceFile(
   '../components/users/PermissionsEditor.tsx',
 );
@@ -106,6 +109,62 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(securitySource).toContain('user.failedLoginAttempts > 0 &&');
     expect(securitySource).toContain('Révoquer cette session ?');
     expect(securitySource).toContain('Révoquer la session');
+  });
+
+  it('requires a persisted inactive account before exposing definitive deletion', () => {
+    expect(securitySource).toContain('canRequestDeleteUser');
+    expect(securitySource).toContain('<UserDeletionCard');
+    expect(securitySource).toContain("? 'Réactiver le compte'");
+    expect(securitySource).toContain(": 'Désactiver le compte'");
+    expect(securitySource).toContain(
+      'Le membre ne pourra plus se connecter et toutes ses sessions seront fermées.',
+    );
+    expect(securitySource).toContain(
+      'Le membre pourra de nouveau se connecter. Les anciennes sessions resteront fermées.',
+    );
+    expect(deletionCardSource).toContain(
+      'Désactivez d’abord ce compte et enregistrez ce changement. La suppression sera ensuite disponible.',
+    );
+    expect(deletionCardSource).toContain(
+      'Ce compte doit d’abord être désactivé par une personne autorisée. La suppression sera ensuite disponible.',
+    );
+    expect(deletionCardSource).toContain(
+      'Enregistrez ou annulez le changement d’état en cours avant de supprimer ce compte.',
+    );
+    expect(deletionCardSource).toContain(
+      'disabled={userIsActive || hasStatusChanges || isSaving}',
+    );
+    expect(deletionCardSource).toContain('Supprimer définitivement');
+  });
+
+  it('confirms irreversible deletion by login and recent password only', () => {
+    const deletionHandler = userDetailSource.slice(
+      userDetailSource.indexOf('const handleDelete = async'),
+      userDetailSource.indexOf('const renderAuthorizationContent'),
+    );
+
+    expect(deletionHandler).toContain('if (user?.isActive !== false)');
+    expect(deletionHandler).toContain(
+      'Désactivez d’abord ce compte avant de le supprimer',
+    );
+    expect(deletionHandler).toContain(
+      'requestPasswordReauthenticationForResponse(data',
+    );
+    expect(deletionHandler).not.toContain('requestStepUpForResponse');
+    expect(deletionHandler).toContain('Compte supprimé définitivement');
+    expect(deletionHandler).toContain(
+      'Le compte sera supprimé irréversiblement et son identité sera anonymisée.',
+    );
+    expect(deletionHandler).toContain('Confirmer la suppression définitive');
+    expect(userDetailSource).toContain(
+      'deleteConfirmation.trim() !== user.loginName',
+    );
+    expect(userDetailSource).toContain(
+      'Supprimer définitivement cet utilisateur ?',
+    );
+    expect(
+      `${securitySource}\n${deletionCardSource}\n${userDetailSource}`,
+    ).not.toMatch(/archiv/iu);
   });
 
   it('uses progressive disclosure for permission details without hiding dependencies', () => {

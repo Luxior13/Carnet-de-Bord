@@ -58,6 +58,8 @@ model User {
   passwordChangedAt      DateTime?
   mfaEnabledAt           DateTime?
   securityVersion        Int       @default(0)
+  /// Irreversible deletion marker. Deleted rows are anonymous, immutable
+  /// technical tombstones retained only for audit and identifier ownership.
   deletedAt              DateTime?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
@@ -93,7 +95,7 @@ model User {
 
 /// Permanent ownership history for authentication identifiers. A login name
 /// remains attached to its original user even when that user changes names or
-/// is soft-deleted, so it can never be reassigned to another identity.
+/// is irreversibly deleted, so it can never be reassigned to another identity.
 model LoginNameReservation {
   loginName String   @id
   userId    String

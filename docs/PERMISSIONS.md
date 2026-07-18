@@ -34,12 +34,12 @@ La hiérarchie visible est toujours : **Pôle → Page → Rubrique →
 Autorisation**.
 
 - Pôle `Système` ;
-- pages `Utilisateurs` et `Journal d'activité` ;
+- pages `Utilisateurs`, `Paramètres système` et `Journal d'activité` ;
 - rubriques telles que `Annuaire`, `Profil et contact`, `Sécurité` ou
   `Autorisations` ;
 - autorisations formulées avec un verbe d'action : `Consulter`, `Créer`,
   `Modifier`, `Accorder`, `Retirer`, `Déléguer`, `Exporter`, `Révoquer` ou
-  `Archiver`.
+  `Supprimer`.
 
 Le mot `permission` reste accepté dans le code et dans cette documentation
 technique. Dans l'interface, `autorisation` désigne le réglage et `accès`
@@ -49,8 +49,10 @@ désigne son résultat effectif (page accessible ou inaccessible).
 
 1. `PERMISSIONS` contient toutes les clés actives reconnues par
    `hasPermission` : socle, autonomie personnelle, administration et API.
-2. `PERMISSION_CATEGORIES` contient seulement les droits administratifs actifs
-   et configurables individuellement dans l'éditeur.
+2. `PERMISSION_CATEGORIES` décrit toutes les pages administratives actives
+   visibles dans l'éditeur. `DELEGABLE_PERMISSION_CATEGORIES` isole celles dont
+   les droits sont configurables individuellement ; les droits liés au rôle
+   restent affichés en lecture seule.
 3. `ROADMAP_PERMISSIONS` contient des noms réservés pour la préparation produit.
    Ils sont absents des presets, des surcharges acceptées et du calcul des
    droits effectifs.
@@ -109,7 +111,7 @@ attribuer : les limites d'attribution sont détaillées sous le tableau.
 | `users:update_contact`        | modifier une adresse de contact                 | `users:view`, `users:view_contact`          | sensible  | Non               |
 | `users:update_login`          | modifier l'identifiant et fermer les sessions   | `users:view`                                | critique  | Oui               |
 | `users:view_security`         | voir verrouillage, mot de passe et MFA          | `users:view`                                | sensible  | Non               |
-| `users:update_status`         | activer ou désactiver un compte                 | `users:view`, `users:view_security`         | critique  | Oui               |
+| `users:update_status`         | désactiver ou réactiver un compte               | `users:view`, `users:view_security`         | critique  | Oui               |
 | `users:view_access`           | consulter les autorisations administratives     | `users:view`                                | sensible  | Non               |
 | `users:grant_access`          | accorder des autorisations administratives      | `users:view_access`                         | critique  | Oui               |
 | `users:revoke_access`         | retirer des autorisations administratives       | `users:view_access`                         | critique  | Oui               |
@@ -121,13 +123,27 @@ attribuer : les limites d'attribution sont détaillées sous le tableau.
 | `users:revoke_sessions`       | révoquer une ou toutes les sessions             | `users:view_sessions`                       | critique  | Oui               |
 | `users:view_activity`         | voir l'activité d'un autre compte               | `users:view`                                | sensible  | Non               |
 | `users:export_activity`       | exporter l'activité d'un autre compte           | `users:view_activity`                       | critique  | Oui               |
-| `users:archive`               | suppression logique réversible                  | `users:view_security`                       | critique  | Oui               |
+| `users:delete_account`        | supprimer irréversiblement un compte désactivé  | `users:view_security`                       | critique  | Non               |
 
-`users:archive` est volontairement distinct d'une suppression irréversible.
-Le terme `delete` ne devra être utilisé que si une future opération détruit
-réellement les données et possède sa propre politique de rétention.
-L'identifiant d'audit historique `USER_DELETE` reste lisible pour compatibilité,
-mais son libellé fonctionnel et tous les nouveaux messages parlent d'archive.
+La désactivation via `users:update_status` est la seule opération réversible.
+La suppression exige un compte déjà désactivé, anonymise sa ligne technique,
+supprime ses secrets d'authentification et interdit toute restauration en base.
+Un détenteur de `users:delete_account` peut supprimer un compte standard ; seul
+le compte racine peut supprimer un administrateur. Le compte racine et son
+propre compte ne peuvent jamais être supprimés depuis l'application.
+
+La clé neuve `users:delete_account` évite de réutiliser `users:delete`, qui a
+historiquement désigné l'ancien archivage. Aucun ancien droit positif
+d'archivage n'est transformé en droit de suppression irréversible. Les anciens
+événements `USER_DELETE` sans marqueur `irreversible` restent affichés comme des
+archives historiques ; seuls les nouveaux événements versionnés sont présentés
+comme des suppressions définitives.
+
+Les tombstones supprimés sont immuables au niveau PostgreSQL. Toute future
+migration globale de `User` doit donc exclure `deletedAt IS NOT NULL` ou gérer
+explicitement le retrait puis la recréation du trigger dans la même migration.
+Une sauvegarde antérieure à ce changement doit être restaurée dans le schéma de
+la même version, puis recevoir cette migration de conversion.
 
 La gestion déléguée des autorisations repose sur trois capacités distinctes :
 
@@ -190,15 +206,16 @@ droits individuels.
 | `/recherche`                                         | authentification ; chaque résultat est filtré selon la destination réellement autorisée                                                                    |
 | `/tableau-de-bord`                                   | alias de support redirigeant vers `/` ; aucune permission supplémentaire                                                                                   |
 | `/tableau-de-bord/mes-notifications`                 | ancien alias redirigeant vers `/mes-notifications`                                                                                                         |
-| `/systeme`                                           | au moins `users:view` ou `audit:view` pour un compte non protégé                                                                                           |
+| `/systeme`                                           | au moins `users:view`, `settings:view` ou `audit:view` pour un compte non protégé                                                                          |
 | `/administration`                                    | route de support redirigeant vers les utilisateurs                                                                                                         |
 | `/administration/utilisateurs`                       | `users:view`                                                                                                                                               |
 | `/administration/utilisateurs/nouveau`               | `users:create`, donc aussi `users:view`                                                                                                                    |
 | `/administration/utilisateurs/[id]?section=profile`  | lecture de fiche, contact, profil et identifiant via les clés `users:*` correspondantes                                                                    |
-| `/administration/utilisateurs/[id]?section=security` | sécurité, statut, sessions, mot de passe et archivage via les clés `users:*` correspondantes                                                               |
+| `/administration/utilisateurs/[id]?section=security` | sécurité, statut, sessions, mot de passe et suppression définitive via les clés `users:*` correspondantes                                                  |
 | `/administration/utilisateurs/[id]?section=access`   | `users:view_access` pour lire ; `users:grant_access` pour accorder ; `users:revoke_access` pour retirer ; `users:delegate_access` pour déléguer la gestion |
 | `/administration/utilisateurs/[id]?section=account`  | `users:view_account_policy` pour lire ; `users:update_account_policy` pour modifier                                                                        |
 | `/administration/utilisateurs/[id]?section=history`  | `users:view_activity` ; `users:export_activity` pour le CSV                                                                                                |
+| `/systeme/parametres`                                | `settings:view` pour lire ; `settings:update` pour modifier ; droits exclusivement liés au rôle ADMIN                                                      |
 | `/systeme/journal-activite`                          | `audit:view` ; détails sensibles et export contrôlés séparément                                                                                            |
 | pages d'erreur et page introuvable                   | support technique, sans capacité métier accordée                                                                                                           |
 
@@ -242,7 +259,7 @@ Le champ `risk` classe l'impact ; il ne remplace jamais un contrôle serveur.
 - `sensitive` : donnée personnelle, sécurité ou mutation administrative à
   portée limitée ;
 - `critical` : changement d'identité ou d'autorisation, révocation, export,
-  archivage ou mutation globale.
+  suppression irréversible ou mutation globale.
 
 La plateforme exige une MFA configurée pour tous les comptes. En plus de ce
 socle, le backend refuse l'attribution d'un rôle ADMIN ou de toute permission
@@ -250,21 +267,28 @@ administrative critique tant que la cible ne possède pas une MFA complète
 (`mfaEnabledAt` et secret TOTP présents).
 
 Les actions marquées « Step-up » exigent une preuve récente associant mot de
-passe et MFA. La fenêtre actuelle est de cinq minutes. Cette preuve est
-vérifiée par la route de mutation ou d'export, y compris pour le compte racine.
-Une connexion MFA très récente peut satisfaire la fenêtre ; passé ce délai,
+passe et MFA. La preuve MFA renforcée est valable cinq minutes et la preuve du
+mot de passe trente minutes. Elles sont vérifiées par la route de mutation ou
+d'export, y compris pour le compte racine ; passé ces délais,
 `/api/auth/step-up` doit être utilisé.
 
+La suppression définitive d'un utilisateur suit le compromis UX retenu : elle
+exige seulement une preuve de mot de passe récente. Le mot de passe saisi à la
+connexion compte pendant trente minutes ; ensuite, seul le mot de passe est
+redemandé, sans nouveau code MFA. La cible devait déjà avoir été désactivée par
+une mutation distincte et toutes les opérations restent auditées.
+
 Cas supplémentaires : la création d'un compte ADMIN est réservée au compte
-racine et exige aussi un step-up. Le compte racine protégé ne peut être archivé,
-désactivé ou rétrogradé, et ses accès ne sont jamais gérés manuellement.
+racine et exige aussi un step-up. Le compte racine protégé ne peut être
+supprimé, désactivé ou rétrogradé, et ses accès ne sont jamais gérés
+manuellement.
 
 Pour toute nouvelle permission critique :
 
 1. définir ses dépendances de lecture ;
 2. décider si son attribution exige la MFA de la cible ;
-3. protéger son usage par step-up quand l'action est irréversible, globale ou
-   exfiltrante ;
+3. définir explicitement la confirmation d'usage adaptée au risque : mot de
+   passe récent ou step-up mot de passe + MFA ;
 4. auditer succès et refus pertinents sans exposer de secret ;
 5. tester le refus sans permission, sans dépendance, sans MFA et sans preuve
    récente.
@@ -354,7 +378,6 @@ lues, mais toute nouvelle écriture doit utiliser les clés canoniques.
 | `system:audit_sensitive`      | `audit:view_sensitive`                                                                              |
 | `system:exports`              | `audit:export`                                                                                      |
 | `system:settings`             | aucune surcharge conservée : `settings:view` et `settings:update` sont désormais liés au rôle ADMIN |
-| `users:delete`                | `users:archive`                                                                                     |
 | `users:update_access`         | `users:grant_access`, `users:revoke_access`, `users:delegate_access`                                |
 | `users:edit_permissions`      | `users:grant_access`, `users:revoke_access`, `users:delegate_access`                                |
 | `users:export`                | `users:export_activity`                                                                             |
@@ -380,11 +403,15 @@ qu'aucune ligne et aucun client n'émet encore l'ancien format, puis supprimer
 les alias et leurs tests de compatibilité. Les anciens droits globaux
 `users:update_access` et `users:edit_permissions` sont convertis vers les trois
 capacités afin de conserver leur valeur effective ; toutes les nouvelles
-écritures doivent employer les clés séparées. La conversion
-`users:delete` vers `users:archive` doit être contrôlée fonctionnellement, car
-elle remplace une ancienne sémantique de suppression. Les anciennes surcharges
-`system:settings` doivent être supprimées : les deux capacités de paramètres
-sont désormais exclusivement fournies par le preset ADMIN.
+écritures doivent employer les clés séparées. Les clés `users:archive` et
+`users:delete` sont désormais historiques uniquement : elles restent lisibles
+dans les anciens journaux, mais sont inconnues pour toute décision
+d'autorisation et ne sont jamais converties en `users:delete_account`. Lors de
+la migration, seul un refus explicite d'archivage porté par un ADMIN est
+conservé comme refus du nouveau droit, afin de ne pas élargir son preset. Les
+anciennes surcharges `system:settings` doivent être supprimées : les deux
+capacités de paramètres sont désormais exclusivement fournies par le preset
+ADMIN.
 
 ## Checklist d'ajout ou de revue
 

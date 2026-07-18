@@ -561,11 +561,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         currentUser.permissions,
       )
     : false;
-  const canDeleteUsers = currentUser
+  const canDeleteAccounts = currentUser
     ? isProtectedActor ||
       hasPermission(
         currentUser.role,
-        PERMISSIONS.USERS.ARCHIVE,
+        PERMISSIONS.USERS.DELETE_ACCOUNT,
         currentUser.permissions,
       )
     : false;
@@ -647,9 +647,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     !isSelf &&
     !user.isProtected &&
     !isTargetAdminAccessRestricted;
-  const canDeleteTargetUser =
+  const canRequestDeleteTargetUser =
     !!user &&
-    canDeleteUsers &&
+    canDeleteAccounts &&
     !user.isProtected &&
     !isSelf &&
     !isTargetAdminAccessRestricted;
@@ -690,9 +690,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const loginReadOnlyHint = isSelf
     ? "Votre propre identifiant ne se modifie pas depuis l'administration."
     : user?.isProtected
-      ? "L'identifiant du compte superadmin est protégé."
+      ? "L'identifiant du compte racine est protégé."
       : isTargetAdminAccessRestricted
-        ? "Seul le superadmin peut modifier l'identifiant d'un administrateur."
+        ? "Seul le compte racine peut modifier l'identifiant d'un administrateur."
         : !canUpdateUserLogin
           ? 'La permission Modifier les identifiants de connexion est requise.'
           : 'Cet identifiant est en lecture seule depuis cette fiche.';
@@ -708,7 +708,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       canViewTargetSessions ||
       canRevokeTargetSessions ||
       canEditTargetStatus ||
-      canDeleteTargetUser);
+      canRequestDeleteTargetUser);
   const visibleUserDetailSections = useMemo(
     () =>
       USER_DETAIL_SECTIONS.filter((section) => {
@@ -1801,7 +1801,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         syncUserState(data.data.user);
         refreshAuditAfterMutation();
         void fetchSecuritySessions();
-        toast.success('Sécurité mise à jour');
+        toast.success(
+          editForm.isActive ? 'Compte réactivé' : 'Compte désactivé',
+        );
       } else {
         if (
           requestStepUpForResponse(data, {
@@ -1961,8 +1963,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   };
 
   const handleDelete = async (): Promise<void> => {
-    if (!canDeleteTargetUser) {
-      toast.error('Permission insuffisante pour archiver cet utilisateur');
+    if (!canRequestDeleteTargetUser) {
+      toast.error(
+        'Vous n’avez pas l’autorisation de supprimer cet utilisateur',
+      );
+      setShowDeleteConfirm(false);
+
+      return;
+    }
+    if (user?.isActive !== false) {
+      toast.error('Désactivez d’abord ce compte avant de le supprimer');
       setShowDeleteConfirm(false);
 
       return;
@@ -1976,23 +1986,23 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        toast.success('Utilisateur archivé');
+        toast.success('Compte supprimé définitivement');
         router.push('/administration/utilisateurs');
       } else {
         if (
-          requestStepUpForResponse(data, {
+          requestPasswordReauthenticationForResponse(data, {
             description:
-              'Le compte sera archivé, retiré des listes actives et toutes ses sessions seront fermées.',
+              'Le compte sera supprimé irréversiblement et son identité sera anonymisée.',
             execute: handleDelete,
-            title: "Confirmer l'archivage du compte",
+            title: 'Confirmer la suppression définitive',
           })
         ) {
           return;
         }
-        toast.error(data.error?.message || "Erreur lors de l'archivage");
+        toast.error(data.error?.message || 'Impossible de supprimer ce compte');
       }
     } catch {
-      toast.error("Erreur lors de l'archivage");
+      toast.error('Impossible de supprimer ce compte');
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -2261,7 +2271,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             canSaveStatus={canSaveSecurity}
             hasStatusChanges={hasSecurityChanges}
             onCancelStatus={handleCancelSecurity}
-            canDeleteUser={canDeleteTargetUser}
+            canRequestDeleteUser={canRequestDeleteTargetUser}
             onDeleteUser={() => setShowDeleteConfirm(true)}
             sessions={securitySessions}
             sessionsError={securitySessionsError}
@@ -2365,7 +2375,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             actionLabel={isNotFound ? 'Retour aux utilisateurs' : 'Réessayer'}
             description={
               isNotFound
-                ? "Ce compte n'existe pas ou a été archivé."
+                ? "Ce compte n'existe pas ou a été supprimé."
                 : errorMessage || "Impossible de charger l'utilisateur."
             }
             onAction={
@@ -2711,6 +2721,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       <AlertDialog
         open={showDeleteConfirm}
         onOpenChange={(open) => {
+          if (isDeleting && !open) return;
           setShowDeleteConfirm(open);
           if (!open) setDeleteConfirmation('');
         }}
@@ -2722,31 +2733,38 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 <div className="bg-destructive/10 flex h-8 w-8 items-center justify-center rounded-lg">
                   <AlertTriangle size={16} className="text-destructive" />
                 </div>
-                Archiver cet utilisateur ?
+                Supprimer définitivement cet utilisateur ?
               </AlertDialogTitle>
               <AlertDialogDescription className="text-muted-foreground">
                 Le compte de{' '}
                 <strong>
                   {user.firstName} {user.lastName}
                 </strong>{' '}
-                sera désactivé, masqué des listes actives et toutes ses sessions
-                seront invalidées.
+                sera supprimé de manière irréversible et ne pourra pas être
+                restauré. Son profil sera anonymisé et ses secrets
+                d’authentification supprimés. Les traces indispensables au
+                journal d’audit et la réservation de son identifiant seront
+                conservées.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="mt-4 space-y-2">
               <Label htmlFor="delete-user-confirmation">
-                Saisissez <strong>{user.loginName}</strong> pour confirmer
+                Pour confirmer, saisissez <strong>{user.loginName}</strong>
               </Label>
               <Input
                 autoComplete="off"
                 id="delete-user-confirmation"
+                disabled={isDeleting}
                 onChange={(event) => setDeleteConfirmation(event.target.value)}
                 placeholder={user.loginName}
                 value={deleteConfirmation}
               />
             </div>
             <AlertDialogFooter className="mt-4">
-              <AlertDialogCancel className="border-border">
+              <AlertDialogCancel
+                className="border-border"
+                disabled={isDeleting}
+              >
                 Annuler
               </AlertDialogCancel>
               <AlertDialogAction
@@ -2759,7 +2777,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 {isDeleting && (
                   <Loader2 size={16} className="mr-2 animate-spin" />
                 )}
-                Archiver
+                Supprimer définitivement
               </AlertDialogAction>
             </AlertDialogFooter>
           </div>

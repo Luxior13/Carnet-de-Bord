@@ -332,6 +332,7 @@ const getVisibleAuditLog = (
       canViewSensitiveDetails: canViewFullDetails,
       category: log.category,
       description: log.description,
+      metadata: log.metadata,
     }),
     id: log.id,
     ipAddress:

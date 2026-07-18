@@ -18,6 +18,8 @@ const PUBLIC_METADATA_KEYS = new Set([
   'after',
   'before',
   'changes',
+  'deletionVersion',
+  'irreversible',
 ]);
 
 const SENSITIVE_METADATA_KEYS = new Set([
@@ -102,10 +104,9 @@ const PUBLIC_DESCRIPTIONS: Partial<Record<AuditAction, string>> = {
   STEP_UP_FAILED: 'Échec de confirmation renforcée',
   STEP_UP_SUCCESS: 'Confirmation renforcée réussie',
   SYSTEM_SETTING_UPDATE: 'Paramètre système mis à jour',
-  USER_ACTIVATE: 'Compte activé',
+  USER_ACTIVATE: 'Compte réactivé',
   USER_CREATE: 'Compte utilisateur créé',
   USER_DEACTIVATE: 'Compte désactivé',
-  USER_DELETE: 'Compte utilisateur archivé',
   USER_UPDATE: 'Compte utilisateur modifié',
 };
 
@@ -322,8 +323,26 @@ export const getVisibleAuditDescription = (options: {
   canViewSensitiveDetails: boolean;
   category: AuditCategory;
   description: string;
-}): string =>
-  options.canViewSensitiveDetails
-    ? options.description.slice(0, 4_000)
-    : (PUBLIC_DESCRIPTIONS[options.action] ??
-      CATEGORY_DESCRIPTIONS[options.category]);
+  metadata?: unknown;
+}): string => {
+  if (options.canViewSensitiveDetails) {
+    return options.description.slice(0, 4_000);
+  }
+
+  if (options.action === 'USER_DELETE') {
+    const metadata = toRecord(options.metadata);
+    const deletionVersion = metadata?.deletionVersion;
+
+    return metadata?.irreversible === true &&
+      typeof deletionVersion === 'number' &&
+      Number.isInteger(deletionVersion) &&
+      deletionVersion >= 1
+      ? 'Compte utilisateur supprimé'
+      : 'Compte utilisateur archivé (historique)';
+  }
+
+  return (
+    PUBLIC_DESCRIPTIONS[options.action] ??
+    CATEGORY_DESCRIPTIONS[options.category]
+  );
+};

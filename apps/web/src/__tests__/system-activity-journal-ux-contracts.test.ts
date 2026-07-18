@@ -66,6 +66,13 @@ describe('system activity journal UX contracts', () => {
     ]) {
       expect(displaySource).toContain(`'${action}'`);
     }
-    expect(pageSource).toContain('DEFAULT_AUDIT_ACTION_DISPLAY');
+    expect(pageSource).toContain('getAuditActionDisplay(log.action');
+    expect(displaySource).toContain('DEFAULT_AUDIT_ACTION_DISPLAY');
+  });
+
+  it('does not rewrite historical user archives as definitive deletions', () => {
+    expect(displaySource).toContain('HISTORICAL_USER_ARCHIVE_DISPLAY');
+    expect(displaySource).toContain('Utilisateur archivé (historique)');
+    expect(displaySource).toContain('metadata?.irreversible === true');
   });
 });

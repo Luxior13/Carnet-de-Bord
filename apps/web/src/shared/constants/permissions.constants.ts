@@ -38,9 +38,9 @@ export const PERMISSIONS = {
     VIEW: 'settings:view',
   },
   USERS: {
-    ARCHIVE: 'users:archive',
     CREATE: 'users:create',
     DELEGATE_ACCESS: 'users:delegate_access',
+    DELETE_ACCOUNT: 'users:delete_account',
     EXPORT_ACTIVITY: 'users:export_activity',
     GRANT_ACCESS: 'users:grant_access',
     RESET_PASSWORD: 'users:reset_password',
@@ -539,10 +539,10 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       activePermission({
         action: 'update',
         dependencies: [PERMISSIONS.USERS.VIEW, PERMISSIONS.USERS.VIEW_SECURITY],
-        description: 'Activer ou désactiver un compte utilisateur standard',
+        description: 'Désactiver ou réactiver un compte utilisateur standard',
         grantable: true,
         key: PERMISSIONS.USERS.UPDATE_STATUS,
-        label: 'Activer ou désactiver un compte',
+        label: 'Désactiver ou réactiver un compte',
         module: 'Sécurité',
         risk: 'critical',
         route: '/administration/utilisateurs/[id]?section=security',
@@ -693,17 +693,16 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         surface: 'page',
       }),
       activePermission({
-        action: 'archive',
+        action: 'delete',
         dependencies: [PERMISSIONS.USERS.VIEW_SECURITY],
         description:
-          'Archiver un compte standard par suppression logique réversible en base',
+          'Supprimer irréversiblement un compte déjà désactivé, après confirmation récente du mot de passe, et anonymiser son identité',
         grantable: true,
-        key: PERMISSIONS.USERS.ARCHIVE,
-        label: 'Archiver un utilisateur',
+        key: PERMISSIONS.USERS.DELETE_ACCOUNT,
+        label: 'Supprimer définitivement un utilisateur',
         module: 'Cycle de vie',
         risk: 'critical',
         route: '/administration/utilisateurs/[id]?section=security',
-        stepUpOnUse: true,
         surface: 'page',
       }),
     ],
@@ -847,7 +846,6 @@ export const LEGACY_PERMISSION_ALIASES: Readonly<
   'system:audit_sensitive': [PERMISSIONS.AUDIT.VIEW_SENSITIVE],
   'system:exports': [PERMISSIONS.AUDIT.EXPORT],
   'system:settings': [PERMISSIONS.SETTINGS.VIEW, PERMISSIONS.SETTINGS.UPDATE],
-  'users:delete': [PERMISSIONS.USERS.ARCHIVE],
   'users:edit_permissions': [
     PERMISSIONS.USERS.GRANT_ACCESS,
     PERMISSIONS.USERS.REVOKE_ACCESS,
@@ -864,6 +862,8 @@ export const LEGACY_PERMISSION_ALIASES: Readonly<
 };
 
 const LEGACY_PERMISSION_DISPLAY_LABEL_MAP = new Map<string, string>([
+  ['users:archive', 'Archiver un utilisateur (historique)'],
+  ['users:delete', 'Archiver un utilisateur (historique)'],
   [
     'users:edit_permissions',
     'Modifier les autorisations administratives (historique)',
@@ -904,6 +904,8 @@ const ROADMAP_PERMISSION_KEYS = Object.values(ROADMAP_PERMISSIONS).flatMap(
 );
 const HISTORICAL_ONLY_PERMISSION_KEYS = [
   'system:view',
+  'users:archive',
+  'users:delete',
   'users:manage_roles',
   'users:restore',
 ] as const;

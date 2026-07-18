@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -36,6 +37,10 @@ import {
   requireRecentSensitiveActionProof,
 } from '$server/sensitive-action';
 import {
+  deleteUserPermanently,
+  UserDeletionStateChangedError,
+} from '$server/user-deletion';
+import {
   authorizeUserPermissionMutation,
   preauthorizeUserPermissionMutation,
 } from '$server/user-permission-mutation-authorization';
@@ -60,13 +65,6 @@ class LoginNameReservationConflictError extends Error {
   constructor() {
     super('Login name is permanently reserved by another user');
     this.name = 'LoginNameReservationConflictError';
-  }
-}
-
-class UserStateChangedError extends Error {
-  constructor() {
-    super('User state changed during a sensitive mutation');
-    this.name = 'UserStateChangedError';
   }
 }
 
@@ -929,7 +927,7 @@ export async function PATCH(
       ) {
         beforeValues.permissions = existingPermissionOverrides;
         afterValues.permissions = permissions;
-        updateData.permissions = permissions;
+        updateData.permissions = permissions ?? Prisma.DbNull;
       }
     }
     // Only update if there are actual changes
@@ -981,10 +979,10 @@ export async function PATCH(
       typeof updateData.loginName === 'string'
         ? updateData.loginName
         : existingUser.loginName;
-    let auditData: AuditLogInput;
+    const auditEntries: AuditLogInput[] = [];
 
-    if (isActive === false) {
-      auditData = {
+    if (changedKeys.includes('isActive') && isActive === false) {
+      auditEntries.push({
         action: 'USER_DEACTIVATE',
         category: 'USER',
         description: `Utilisateur désactivé: ${updatedLoginName}`,
@@ -992,31 +990,33 @@ export async function PATCH(
           after: afterValues,
           before: beforeValues,
           ...USERS_PAGE_AUDIT_LOCATION,
-          tabKey: 'resume',
-          tabLabel: 'Résumé',
+          tabKey: 'security',
+          tabLabel: 'Sécurité',
           targetName,
         },
         targetUserId: id,
         userId: auth.user.id,
-      };
-    } else if (isActive === true && existingUser.isActive === false) {
-      auditData = {
+      });
+    } else if (changedKeys.includes('isActive') && isActive === true) {
+      auditEntries.push({
         action: 'USER_ACTIVATE',
         category: 'USER',
-        description: `Utilisateur activé: ${updatedLoginName}`,
+        description: `Utilisateur réactivé: ${updatedLoginName}`,
         metadata: {
           after: afterValues,
           before: beforeValues,
           ...USERS_PAGE_AUDIT_LOCATION,
-          tabKey: 'resume',
-          tabLabel: 'Résumé',
+          tabKey: 'security',
+          tabLabel: 'Sécurité',
           targetName,
         },
         targetUserId: id,
         userId: auth.user.id,
-      };
-    } else if (hasAuthorizationChange) {
-      auditData = {
+      });
+    }
+
+    if (hasAuthorizationChange) {
+      auditEntries.push({
         action: 'PERMISSION_UPDATE',
         category: 'PERMISSION',
         description: `Autorisations modifiées : ${updatedLoginName}`,
@@ -1032,9 +1032,11 @@ export async function PATCH(
         },
         targetUserId: id,
         userId: auth.user.id,
-      };
-    } else {
-      auditData = {
+      });
+    }
+
+    if (auditEntries.length === 0) {
+      auditEntries.push({
         action: 'USER_UPDATE',
         category: 'USER',
         description: `Utilisateur modifié: ${updatedLoginName}`,
@@ -1049,7 +1051,7 @@ export async function PATCH(
         },
         targetUserId: id,
         userId: auth.user.id,
-      };
+      });
     }
 
     const hasAccessPermissionChange = changedPermissionKeys.some(
@@ -1112,10 +1114,12 @@ export async function PATCH(
         await transaction.session.deleteMany({ where: { userId: id } });
       }
 
-      await createAuditLogWithHeaders(auditData, {
-        client: transaction,
-        required: true,
-      });
+      for (const auditEntry of auditEntries) {
+        await createAuditLogWithHeaders(auditEntry, {
+          client: transaction,
+          required: true,
+        });
+      }
       if (securityNotificationKind) {
         await createSecurityNotification(
           {
@@ -1182,7 +1186,7 @@ export async function PATCH(
 }
 
 // ============================================
-// DELETE /api/users/[id] - Soft-archive user
+// DELETE /api/users/[id] - Irreversibly delete and anonymize user
 // ============================================
 export async function DELETE(
   _request: NextRequest,
@@ -1198,7 +1202,10 @@ export async function DELETE(
     if (!auth.success) return auth.response;
 
     // Check permission
-    const permCheck = requirePermission(auth.user, PERMISSIONS.USERS.ARCHIVE);
+    const permCheck = requirePermission(
+      auth.user,
+      PERMISSIONS.USERS.DELETE_ACCOUNT,
+    );
     if (!permCheck.success) return permCheck.response;
 
     // Get existing user
@@ -1219,13 +1226,13 @@ export async function DELETE(
       );
     }
 
-    // Cannot archive yourself
+    // Cannot delete yourself
     if (existingUser.id === auth.user.id) {
       return NextResponse.json(
         {
           error: {
             code: ErrorCode.FORBIDDEN,
-            message: 'Vous ne pouvez pas archiver votre propre compte',
+            message: 'Vous ne pouvez pas supprimer votre propre compte',
           },
           success: false,
         },
@@ -1233,13 +1240,13 @@ export async function DELETE(
       );
     }
 
-    // Cannot archive protected accounts
+    // Cannot delete protected accounts
     if (existingUser.isProtected) {
       return NextResponse.json(
         {
           error: {
             code: ErrorCode.FORBIDDEN,
-            message: 'Ce compte est protégé et ne peut pas être archivé',
+            message: 'Ce compte est protégé et ne peut pas être supprimé',
           },
           success: false,
         },
@@ -1252,7 +1259,7 @@ export async function DELETE(
         {
           error: {
             code: ErrorCode.FORBIDDEN,
-            message: 'Seul un superadmin peut archiver un administrateur',
+            message: 'Seul le compte racine peut supprimer un administrateur',
           },
           success: false,
         },
@@ -1260,62 +1267,13 @@ export async function DELETE(
       );
     }
 
-    const proofCheck = requireRecentSensitiveActionProof(auth.session);
-    if (!proofCheck.success) return proofCheck.response;
-
-    await prisma.$transaction(async (transaction) => {
-      const deletedUser = await transaction.user.updateMany({
-        data: {
-          deletedAt: new Date(),
-          isActive: false,
-          securityVersion: { increment: 1 },
-        },
-        where: {
-          deletedAt: null,
-          id,
-          isProtected: false,
-          ...(auth.user.isProtected ? {} : { role: 'USER' as const }),
-          securityVersion: existingUser.securityVersion,
-          updatedAt: existingUser.updatedAt,
-        },
-      });
-      if (deletedUser.count !== 1) throw new UserStateChangedError();
-
-      await transaction.session.deleteMany({ where: { userId: id } });
-
-      await createAuditLogWithHeaders(
-        {
-          // Historical enum name kept so existing audit readers remain
-          // compatible; the operation itself is a reversible archive.
-          action: 'USER_DELETE',
-          category: 'USER',
-          description: `Utilisateur archivé: ${existingUser.loginName}`,
-          metadata: {
-            archivedUserId: id,
-            loginName: existingUser.loginName,
-            ...USERS_PAGE_AUDIT_LOCATION,
-            tabKey: 'resume',
-            tabLabel: 'Résumé',
-          },
-          targetUserId: id,
-          userId: auth.user.id,
-        },
-        { client: transaction, required: true },
-      );
-    });
-
-    return NextResponse.json({
-      data: { message: 'Utilisateur archivé' },
-      success: true,
-    });
-  } catch (error) {
-    if (error instanceof UserStateChangedError) {
+    if (existingUser.isActive) {
       return NextResponse.json(
         {
           error: {
             code: ErrorCode.CONFLICT,
             message:
-              'La sécurité ou le rôle de ce compte a changé. Rechargez la fiche avant de réessayer.',
+              'Désactivez d’abord ce compte avant de le supprimer définitivement',
           },
           success: false,
         },
@@ -1323,6 +1281,36 @@ export async function DELETE(
       );
     }
 
-    return apiErrors.internal('USER_ARCHIVE', error);
+    const proofCheck = requireRecentPasswordReauthentication(auth.session);
+    if (!proofCheck.success) return proofCheck.response;
+
+    await deleteUserPermanently({
+      actorId: auth.user.id,
+      actorIsProtected: auth.user.isProtected,
+      expectedSecurityVersion: existingUser.securityVersion,
+      expectedUpdatedAt: existingUser.updatedAt,
+      userId: id,
+    });
+
+    return NextResponse.json({
+      data: { message: 'Utilisateur supprimé définitivement' },
+      success: true,
+    });
+  } catch (error) {
+    if (error instanceof UserDeletionStateChangedError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.CONFLICT,
+            message:
+              'L’état, la sécurité ou le rôle de ce compte a changé. Rechargez la fiche avant de réessayer.',
+          },
+          success: false,
+        },
+        { status: 409 },
+      );
+    }
+
+    return apiErrors.internal('USER_DELETE', error);
   }
 }

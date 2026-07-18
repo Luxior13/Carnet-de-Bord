@@ -54,6 +54,8 @@ const readySchema = {
   totpCredentialColumns: 9,
   totpEnrollmentColumns: 8,
   userColumns: 15,
+  userLifecycleConstraints: 3,
+  userLifecycleTriggers: 2,
   validProtectedRootAccounts: 1,
   workerHeartbeatAgeSeconds: 10,
 };
@@ -144,6 +146,13 @@ describe('operational health routes', () => {
     expect(query).toContain('audit_index_state.indisvalid');
     expect(query).toContain('audit_index_state.indisready');
     expect(query).toContain("'AuditLog_immutable_identity_snapshots'");
+    expect(query).toContain("audit_trigger.tgenabled IN ('O', 'A')");
+    expect(query).toContain("'User_deleted_tombstone_check'");
+    expect(query).toContain("'User_prevent_deleted_tombstone_mutation'");
+    expect(query).toContain("'User_protect_root_lifecycle'");
+    expect(query).toContain("user_trigger.tgenabled IN ('O', 'A')");
+    expect(query).not.toContain("audit_trigger.tgenabled <> 'D'");
+    expect(query).not.toContain("user_trigger.tgenabled <> 'D'");
     expect(query).toContain("'LoginNameReservation'");
     expect(query).toContain('"isProtected" = true');
     expect(response.headers.get('cache-control')).toContain('no-store');
@@ -226,6 +235,8 @@ describe('operational health routes', () => {
     'systemSettingColumns',
     'totpCredentialColumns',
     'totpEnrollmentColumns',
+    'userLifecycleConstraints',
+    'userLifecycleTriggers',
   ] as const)('is not ready when %s are missing', async (field) => {
     mocks.transaction.$queryRaw.mockResolvedValueOnce([
       { ...readySchema, [field]: 0 },

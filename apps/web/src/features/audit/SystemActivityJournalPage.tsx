@@ -67,13 +67,12 @@ import { Skeleton } from '$ui/skeleton';
 import { cn } from '$utils/css.utils';
 
 import {
-  AUDIT_ACTION_DISPLAY,
   AUDIT_ACTION_OPTIONS,
   type AuditChangeDiff,
-  DEFAULT_AUDIT_ACTION_DISPLAY,
   formatAuditChangeValue,
   formatAuditFullDate,
   formatAuditRelativeTime,
+  getAuditActionDisplay,
   getAuditChangeDiffs,
   getAuditChangeFieldLabel,
   toValidAuditDate,
@@ -576,10 +575,7 @@ const JournalCard: FC<{
   ) => void;
   onToggle: () => void;
 }> = ({ isOpen, log, onIdentityFilter, onToggle }) => {
-  const config = AUDIT_ACTION_DISPLAY.get(log.action) ?? {
-    ...DEFAULT_AUDIT_ACTION_DISPLAY,
-    label: log.action || DEFAULT_AUDIT_ACTION_DISPLAY.label,
-  };
+  const config = getAuditActionDisplay(log.action, log.metadata);
   const EventIcon = config.icon;
   const changes = getAuditChangeDiffs(log.metadata);
   const location = getLocation(log);

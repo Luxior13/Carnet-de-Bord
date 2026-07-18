@@ -141,6 +141,8 @@ describe('audit visibility', () => {
               [ROADMAP_PERMISSIONS.TASKS.VIEW]: false,
               'system:audit': true,
               'unknown:permission': true,
+              'users:archive': true,
+              'users:delete': false,
               'users:manage_roles': false,
             },
           },
@@ -152,6 +154,8 @@ describe('audit visibility', () => {
         permissions: {
           [ROADMAP_PERMISSIONS.TASKS.VIEW]: false,
           'system:audit': true,
+          'users:archive': true,
+          'users:delete': false,
           'users:manage_roles': false,
         },
       },
@@ -210,5 +214,31 @@ describe('audit visibility', () => {
         description: 'Adresse privée modifiée pour personne@example.com',
       }),
     ).toBe('Adresse privée modifiée pour personne@example.com');
+  });
+
+  it('distinguishes historical archives from irreversible deletions', () => {
+    expect(
+      auditVisibility.getVisibleAuditDescription({
+        action: 'USER_DELETE',
+        canViewSensitiveDetails: false,
+        category: 'USER',
+        description: 'Ancien événement ambigu',
+      }),
+    ).toBe('Compte utilisateur archivé (historique)');
+    expect(
+      auditVisibility.getVisibleAuditDescription({
+        action: 'USER_DELETE',
+        canViewSensitiveDetails: false,
+        category: 'USER',
+        description: 'Utilisateur supprimé définitivement',
+        metadata: { deletionVersion: 1, irreversible: true },
+      }),
+    ).toBe('Compte utilisateur supprimé');
+    expect(
+      auditVisibility.sanitizeAuditMetadata(
+        { deletionVersion: 1, irreversible: true },
+        false,
+      ),
+    ).toEqual({ deletionVersion: 1, irreversible: true });
   });
 });

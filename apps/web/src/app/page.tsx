@@ -24,10 +24,7 @@ import { ContentState } from '$components/layout/ContentState';
 import { PageHero } from '$components/layout/PageHero';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
-import {
-  AUDIT_ACTION_DISPLAY,
-  DEFAULT_AUDIT_ACTION_DISPLAY,
-} from '$features/audit/audit-display';
+import { getAuditActionDisplay } from '$features/audit/audit-display';
 import type { ApiResponse } from '$types/api.types';
 import type {
   DashboardActivityItem,
@@ -120,9 +117,7 @@ const DashboardActivityList: FC<{
 }> = ({ activities }) => (
   <div>
     {activities.map((activity, index) => {
-      const display =
-        AUDIT_ACTION_DISPLAY.get(activity.action) ??
-        DEFAULT_AUDIT_ACTION_DISPLAY;
+      const display = getAuditActionDisplay(activity.action, activity.metadata);
       const Icon = display.icon;
       const activityDate = toValidDate(activity.createdAt);
 

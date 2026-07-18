@@ -4,7 +4,10 @@ import { NextResponse } from 'next/server';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
-import { getVisibleAuditDescription } from '$server/audit-visibility';
+import {
+  getVisibleAuditDescription,
+  sanitizeAuditMetadata,
+} from '$server/audit-visibility';
 import { prisma } from '$server/prisma';
 import {
   type ApiErrorResponse,
@@ -102,6 +105,7 @@ export async function GET(): Promise<
               createdAt: true,
               description: true,
               id: true,
+              metadata: true,
             },
             take: 3,
             where: {
@@ -142,8 +146,13 @@ export async function GET(): Promise<
               canViewSensitiveDetails: canViewSensitiveAuditDetails,
               category: log.category,
               description: log.description,
+              metadata: log.metadata,
             }),
             id: log.id,
+            metadata:
+              log.action === 'USER_DELETE'
+                ? sanitizeAuditMetadata(log.metadata, false)
+                : null,
             userName: log.actorDisplayNameSnapshot,
           }))
         : null,

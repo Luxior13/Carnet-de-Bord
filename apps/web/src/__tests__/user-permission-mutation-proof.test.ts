@@ -76,13 +76,13 @@ describe('user permission mutation proof classification', () => {
   it('requires only the password mode for effective critical grants and revocations', () => {
     expect(
       classify({
-        effectivelyGrantedPermissionKeys: [PERMISSIONS.USERS.ARCHIVE],
+        effectivelyGrantedPermissionKeys: [PERMISSIONS.USERS.DELETE_ACCOUNT],
         requestedChangedPermissionKeys: [PERMISSIONS.USERS.VIEW_SECURITY],
       }),
     ).toBe('password');
     expect(
       classify({
-        effectivelyRevokedPermissionKeys: [PERMISSIONS.USERS.ARCHIVE],
+        effectivelyRevokedPermissionKeys: [PERMISSIONS.USERS.DELETE_ACCOUNT],
         requestedChangedPermissionKeys: [PERMISSIONS.USERS.VIEW_SECURITY],
       }),
     ).toBe('password');
@@ -115,11 +115,11 @@ describe('user permission mutation proof classification', () => {
       classify({
         effectivelyGrantedPermissionKeys: [
           PERMISSIONS.USERS.VIEW,
-          PERMISSIONS.USERS.ARCHIVE,
+          PERMISSIONS.USERS.DELETE_ACCOUNT,
         ],
         requestedChangedPermissionKeys: [
           PERMISSIONS.USERS.VIEW,
-          PERMISSIONS.USERS.ARCHIVE,
+          PERMISSIONS.USERS.DELETE_ACCOUNT,
         ],
       }),
     ).toBe('password');

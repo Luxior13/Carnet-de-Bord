@@ -17,6 +17,7 @@ import {
   Pencil,
   RefreshCw,
   Shield,
+  Trash2,
   UserCheck,
   UserMinus,
   UserPlus,
@@ -254,7 +255,7 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
     category: 'lifecycle',
     color: 'text-primary-emphasis bg-primary/10',
     icon: UserCheck,
-    label: 'Utilisateur activé',
+    label: 'Utilisateur réactivé',
   },
   USER_CREATE: {
     category: 'lifecycle',
@@ -271,8 +272,8 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
   USER_DELETE: {
     category: 'lifecycle',
     color: 'text-destructive bg-destructive/10',
-    icon: Archive,
-    label: 'Utilisateur archivé',
+    icon: Trash2,
+    label: 'Utilisateur supprimé',
   },
   USER_UPDATE: {
     category: 'profile',
@@ -335,6 +336,23 @@ const mapAuditCategoryToActionCategory = (
 };
 
 const getActionConfig = (log: AuditLogEntry): ActionConfig => {
+  const deletionVersion = log.metadata?.deletionVersion;
+  const isIrreversibleDeletion =
+    log.action === 'USER_DELETE' &&
+    log.metadata?.irreversible === true &&
+    typeof deletionVersion === 'number' &&
+    Number.isInteger(deletionVersion) &&
+    deletionVersion >= 1;
+
+  if (log.action === 'USER_DELETE' && !isIrreversibleDeletion) {
+    return {
+      category: 'lifecycle',
+      color: 'text-warning bg-warning/10',
+      icon: Archive,
+      label: 'Utilisateur archivé (historique)',
+    };
+  }
+
   const knownConfig = ACTION_CONFIG[log.action];
 
   if (knownConfig) return knownConfig;

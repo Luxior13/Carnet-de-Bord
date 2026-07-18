@@ -4,6 +4,7 @@ export type DashboardActivityItem = {
   createdAt: string;
   description: string;
   id: string;
+  metadata: Record<string, unknown> | null;
   userName: string | null;
 };
 

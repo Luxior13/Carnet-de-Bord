@@ -50,6 +50,8 @@ type SchemaCheckRow = {
   totpCredentialColumns: number;
   totpEnrollmentColumns: number;
   userColumns: number;
+  userLifecycleConstraints: number;
+  userLifecycleTriggers: number;
   validProtectedRootAccounts: number;
   workerHeartbeatAgeSeconds: number | null;
 };
@@ -372,8 +374,41 @@ export async function createReadinessResponse(): Promise<
                 AND audit_table.relname = 'AuditLog'
                 AND audit_trigger.tgname = 'AuditLog_immutable_identity_snapshots'
                 AND NOT audit_trigger.tgisinternal
-                AND audit_trigger.tgenabled <> 'D'
+                AND audit_trigger.tgenabled IN ('O', 'A')
             ) AS "auditSnapshotTriggers",
+            (
+              SELECT count(*)::int
+              FROM pg_constraint user_constraint
+              JOIN pg_class user_table
+                ON user_table.oid = user_constraint.conrelid
+              JOIN pg_namespace user_namespace
+                ON user_namespace.oid = user_table.relnamespace
+              WHERE user_namespace.nspname = current_schema()
+                AND user_table.relname = 'User'
+                AND user_constraint.contype = 'c'
+                AND user_constraint.conname IN (
+                  'User_loginName_format_check',
+                  'User_deleted_tombstone_check',
+                  'User_protected_root_state_check'
+                )
+                AND user_constraint.convalidated
+            ) AS "userLifecycleConstraints",
+            (
+              SELECT count(*)::int
+              FROM pg_trigger user_trigger
+              JOIN pg_class user_table
+                ON user_table.oid = user_trigger.tgrelid
+              JOIN pg_namespace user_namespace
+                ON user_namespace.oid = user_table.relnamespace
+              WHERE user_namespace.nspname = current_schema()
+                AND user_table.relname = 'User'
+                AND user_trigger.tgname IN (
+                  'User_prevent_deleted_tombstone_mutation',
+                  'User_protect_root_lifecycle'
+                )
+                AND NOT user_trigger.tgisinternal
+                AND user_trigger.tgenabled IN ('O', 'A')
+            ) AS "userLifecycleTriggers",
             (
               SELECT count(*)::int
               FROM pg_enum enum_value
@@ -481,6 +516,8 @@ export async function createReadinessResponse(): Promise<
           schema.systemSettingColumns !== 7 ||
           schema.totpCredentialColumns !== 9 ||
           schema.totpEnrollmentColumns !== 8 ||
+          schema.userLifecycleConstraints !== 3 ||
+          schema.userLifecycleTriggers !== 2 ||
           schema.validProtectedRootAccounts !== 1
         ) {
           throw new SchemaNotReadyError();

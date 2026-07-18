@@ -38,10 +38,10 @@ const SECURITY_NOTIFICATION_DEFINITIONS = {
     title: 'Vos accès ont été modifiés',
   },
   ACCOUNT_ACTIVATED: {
-    body: 'Votre compte a été activé. Vous pouvez de nouveau accéder au site.',
+    body: 'Votre compte a été réactivé. Vous pouvez de nouveau accéder au site.',
     href: '/mon-compte',
     severity: 'SUCCESS',
-    title: 'Votre compte a été activé',
+    title: 'Votre compte a été réactivé',
   },
   ACCOUNT_DEACTIVATED: {
     body: 'Votre compte a été désactivé. Contactez un administrateur si cette action est inattendue.',

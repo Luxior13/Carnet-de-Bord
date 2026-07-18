@@ -15,6 +15,7 @@ import {
   getRoleBasePermissions,
   getUnknownPermissionKeys,
   hasPermission,
+  isHistoricalAuditPermissionKey,
   isKnownPermissionKey,
   isPermissionAlwaysEnabled,
   isPermissionGrantable,
@@ -478,7 +479,7 @@ describe('permission catalogue', () => {
       'users:revoke_sessions',
       'users:view_activity',
       'users:export_activity',
-      'users:archive',
+      'users:delete_account',
       'audit:view',
       'audit:view_sensitive',
       'audit:export',
@@ -585,14 +586,15 @@ describe('permission catalogue', () => {
     }
   });
 
-  it('detects unknown keys but exempts one-release legacy aliases', () => {
+  it('keeps historical lifecycle keys unknown for authorization', () => {
     expect(
       getUnknownPermissionKeys({
         'system:audit': true,
+        'users:archive': true,
         'users:delete': false,
         'users:ghost': false,
       }),
-    ).toEqual(['users:ghost']);
+    ).toEqual(['users:archive', 'users:delete', 'users:ghost']);
   });
 
   it('identifies baseline and role-bound keys as non-assignable inputs', () => {
@@ -602,6 +604,7 @@ describe('permission catalogue', () => {
         [PERMISSIONS.SETTINGS.UPDATE]: true,
         'system:settings': true,
         [PERMISSIONS.USERS.VIEW]: true,
+        'users:archive': false,
         'users:delete': false,
       }),
     ).toEqual([
@@ -616,12 +619,10 @@ describe('permission catalogue', () => {
       normalizePermissionOverrides({
         'system:audit': true,
         'system:settings': true,
-        'users:delete': true,
         'users:export': true,
       }),
     ).toEqual({
       [PERMISSIONS.AUDIT.VIEW]: true,
-      [PERMISSIONS.USERS.ARCHIVE]: true,
       [PERMISSIONS.USERS.EXPORT_ACTIVITY]: true,
     });
     expect(
@@ -655,18 +656,41 @@ describe('permission catalogue', () => {
       [PERMISSIONS.USERS.GRANT_ACCESS]: false,
       [PERMISSIONS.USERS.REVOKE_ACCESS]: false,
     });
-    expect(
-      normalizePermissionOverrides({
-        'users:delete': true,
-        [PERMISSIONS.USERS.ARCHIVE]: false,
-      }),
-    ).toEqual({ [PERMISSIONS.USERS.ARCHIVE]: false });
   });
 
-  it('uses canonical labels when rendering legacy permission history', () => {
-    expect(getPermissionDisplayLabel('users:delete')).toBe(
-      getPermissionItem(PERMISSIONS.USERS.ARCHIVE)?.label,
+  it('never upgrades historical lifecycle grants to irreversible deletion', () => {
+    const historicalLifecycleGrants = {
+      'users:archive': true,
+      'users:delete': true,
+    };
+
+    expect(normalizePermissionOverrides(historicalLifecycleGrants)).toBeNull();
+    expect(
+      hasPermission(
+        'USER',
+        PERMISSIONS.USERS.DELETE_ACCOUNT,
+        historicalLifecycleGrants,
+      ),
+    ).toBe(false);
+    expect(
+      normalizePermissionOverrides({
+        ...historicalLifecycleGrants,
+        [PERMISSIONS.USERS.DELETE_ACCOUNT]: false,
+      }),
+    ).toEqual({ [PERMISSIONS.USERS.DELETE_ACCOUNT]: false });
+  });
+
+  it('uses explicit historical labels without making old keys active', () => {
+    expect(getPermissionDisplayLabel('users:archive')).toBe(
+      'Archiver un utilisateur (historique)',
     );
+    expect(getPermissionDisplayLabel('users:delete')).toBe(
+      'Archiver un utilisateur (historique)',
+    );
+    expect(isHistoricalAuditPermissionKey('users:archive')).toBe(true);
+    expect(isHistoricalAuditPermissionKey('users:delete')).toBe(true);
+    expect(isKnownPermissionKey('users:archive')).toBe(false);
+    expect(isKnownPermissionKey('users:delete')).toBe(false);
     expect(getPermissionDisplayLabel('system:audit')).toBe(
       getPermissionItem(PERMISSIONS.AUDIT.VIEW)?.label,
     );

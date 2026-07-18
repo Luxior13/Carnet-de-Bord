@@ -7,6 +7,7 @@ import {
   KeyRound,
   Laptop,
   Loader2,
+  LockKeyhole,
   LogOut,
   Monitor,
   Power,
@@ -16,7 +17,6 @@ import {
   ShieldAlert,
   ShieldCheck,
   Smartphone,
-  Trash2,
   X,
 } from 'lucide-react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
@@ -42,9 +42,11 @@ import { Switch } from '$ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
+import { UserDeletionCard } from './UserDeletionCard';
+
 type UserSecurityTabProps = {
-  canDeleteUser: boolean;
   canEditStatus: boolean;
+  canRequestDeleteUser: boolean;
   canResetMfa: boolean;
   canResetPassword: boolean;
   canRevokeSessions: boolean;
@@ -307,8 +309,8 @@ const SessionRow: FC<{
 };
 
 export const UserSecurityTab: FC<UserSecurityTabProps> = ({
-  canDeleteUser,
   canEditStatus,
+  canRequestDeleteUser,
   canResetMfa,
   canResetPassword,
   canRevokeSessions,
@@ -467,14 +469,18 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                 id="user-active-switch-description"
                 className="text-muted-foreground text-xs"
               >
-                Les comptes inactifs ne peuvent pas se connecter.
+                {!isActive
+                  ? 'Le membre ne pourra plus se connecter et toutes ses sessions seront fermées.'
+                  : user.isActive
+                    ? 'Le membre peut se connecter normalement.'
+                    : 'Le membre pourra de nouveau se connecter. Les anciennes sessions resteront fermées.'}
               </p>
             </div>
             <Switch
               id="user-active-switch"
               checked={isActive}
               onCheckedChange={setIsActive}
-              disabled={!canEditStatus || isSelf}
+              disabled={!canEditStatus || isSelf || isSaving}
               aria-describedby="user-active-switch-description"
             />
           </div>
@@ -483,6 +489,12 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
               Vous ne pouvez pas désactiver votre propre compte depuis cette
               fiche.
+            </div>
+          )}
+          {!canEditStatus && !isSelf && (
+            <div className="text-muted-foreground border-border/60 bg-surface-muted flex items-start gap-2 rounded-md border px-3 py-2 text-xs">
+              <LockKeyhole className="mt-0.5 size-3.5 shrink-0" />
+              Vous n’avez pas l’autorisation de modifier l’état de ce compte.
             </div>
           )}
         </CardContent>
@@ -513,7 +525,11 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                 ) : (
                   <Save className="mr-1.5 h-4 w-4" />
                 )}
-                Enregistrer
+                {hasStatusChanges
+                  ? isActive
+                    ? 'Réactiver le compte'
+                    : 'Désactiver le compte'
+                  : 'Enregistrer'}
               </Button>
             </div>
           </CardFooter>
@@ -763,38 +779,14 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardFooter>
         )}
       </Card>
-      {canDeleteUser && (
-        <Card
-          aria-labelledby="user-security-danger-heading"
-          className="border-destructive/30 bg-destructive/5 overflow-hidden rounded-lg py-0"
-        >
-          <CardHeader className="border-destructive/20 bg-destructive/10 border-b p-3 sm:p-4">
-            <h3
-              id="user-security-danger-heading"
-              className="text-destructive flex items-center gap-2 text-sm font-semibold"
-            >
-              <Trash2 className="size-4" />
-              Zone danger
-            </h3>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
-            <div>
-              <p className="text-sm font-medium">Archiver cet utilisateur</p>
-              <p className="text-muted-foreground text-xs">
-                Le compte sera désactivé, masqué de l&apos;annuaire et ses
-                sessions seront invalidées.
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={onDeleteUser}
-              className="shrink-0"
-            >
-              Archiver
-            </Button>
-          </CardContent>
-        </Card>
+      {canRequestDeleteUser && (
+        <UserDeletionCard
+          canEditStatus={canEditStatus}
+          hasStatusChanges={hasStatusChanges}
+          isSaving={isSaving}
+          onDeleteUser={onDeleteUser}
+          userIsActive={user.isActive}
+        />
       )}
       <AlertDialog
         open={sessionPendingRevocation !== null}

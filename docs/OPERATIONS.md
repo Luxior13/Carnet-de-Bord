@@ -64,6 +64,60 @@ toutes les nouvelles écritures utilisent les trois clés séparées. Seul le
 compte racine peut attribuer ou retirer `users:delegate_access`, et aucun de ces
 droits ne permet de créer un ADMIN ou de modifier un rôle.
 
+### Suppression irréversible des comptes du 19 juillet 2026
+
+La migration `20260719120000_irreversible_user_deletion` convertit les anciens
+comptes archivés en tombstones anonymes et immuables, remplace le droit
+d'archivage par une nouvelle capacité de suppression et installe les
+protections PostgreSQL du compte racine et des tombstones. C'est une migration
+de contrat et de données, incompatible avec un déploiement rolling mêlant les
+anciens et les nouveaux binaires.
+
+1. Placer le site en maintenance, drainer le trafic, puis arrêter toutes les
+   instances web, tous les workers permanents et tout ordonnanceur exécutant
+   `bun run --filter web worker --once`. Désactiver leur redémarrage automatique
+   pendant toute l'intervention.
+2. Depuis la racine du dépôt correspondant à la version encore en production,
+   exécuter `bun run --filter @repo/database db:backup`. Vérifier les nombres de
+   lignes affichés, conserver ensemble le JSON et son fichier `.sha256`, puis
+   les copier dans un stockage chiffré distinct du serveur.
+3. Sur une base vide, isolée et au schéma compatible avec cette sauvegarde,
+   vérifier le fichier et son checksum avec
+   `bun run --filter @repo/database db:restore -- --file="<backup.json>" --dry-run`.
+   Ne poursuivre que si cette vérification réussit.
+4. Depuis le dépôt ou l'artefact de la nouvelle version contenant cette
+   migration, l'exécuter sur la base de production toujours hors trafic avec
+   `bun run db:migrate:deploy`. Tout échec laisse le site en maintenance et doit
+   être diagnostiqué avant de démarrer un processus applicatif.
+5. Déployer puis démarrer simultanément le nouveau web et le nouveau worker
+   issus de la même version. Aucun ancien processus ne doit redémarrer après la
+   migration.
+6. Interroger `GET /api/health/ready` et ne rouvrir le trafic qu'après une
+   réponse HTTP 200. Cette readiness vérifie notamment les contraintes et les
+   triggers actifs qui rendent les tombstones et le cycle de vie du compte
+   racine immuables.
+
+Cette suppression ne possède aucun rollback logique : ne jamais tenter de
+retirer `deletedAt`, de restaurer un compte dans la base migrée ou d'inverser la
+migration par des mises à jour manuelles. Si le déploiement doit être annulé,
+arrêter de nouveau le web et les workers, provisionner une base entièrement
+vide avec le schéma et le code compatibles avec la sauvegarde pré-migration,
+puis exécuter d'abord :
+
+```powershell
+bun run --filter @repo/database db:restore -- --file="<backup.json>" --dry-run
+```
+
+Après contrôle de la cible et des nombres de lignes, restaurer hors ligne avec :
+
+```powershell
+bun run --filter @repo/database db:restore -- --file="<backup.json>" --confirm-empty-restore=RESTORE-INTO-EMPTY-DATABASE
+```
+
+Redéployer ensuite uniquement la version applicative compatible, valider sa
+readiness, puis rouvrir le trafic. La restauration remplace la base migrée ;
+elle ne fusionne jamais la sauvegarde avec une base existante.
+
 ## Sauvegarde et restauration
 
 - Programmer une sauvegarde quotidienne et surveiller son code de sortie.

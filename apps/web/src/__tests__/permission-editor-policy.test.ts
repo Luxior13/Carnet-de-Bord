@@ -171,10 +171,10 @@ describe('permission editor mutation policy', () => {
   });
 
   it('classifies a reset from the role result, including implicit grants', () => {
-    const currentPermissions = { [PERMISSIONS.USERS.ARCHIVE]: false };
+    const currentPermissions = { [PERMISSIONS.USERS.DELETE_ACCOUNT]: false };
     const nextPermissions = buildResetPermissionOverrides(
       new Map(Object.entries(currentPermissions)),
-      [PERMISSIONS.USERS.ARCHIVE],
+      [PERMISSIONS.USERS.DELETE_ACCOUNT],
     );
 
     expect(
@@ -191,7 +191,7 @@ describe('permission editor mutation policy', () => {
 
   it('keeps the final batch atomic and summarizes grants, revocations and delegation separately', () => {
     const currentPermissions = {
-      [PERMISSIONS.USERS.ARCHIVE]: true,
+      [PERMISSIONS.USERS.DELETE_ACCOUNT]: true,
       [PERMISSIONS.USERS.VIEW]: true,
     };
     const nextPermissions = {
@@ -221,7 +221,7 @@ describe('permission editor mutation policy', () => {
       revokedCount: 1,
     });
     expect(analysis.summary.revokedPermissionKeys).toContain(
-      PERMISSIONS.USERS.ARCHIVE,
+      PERMISSIONS.USERS.DELETE_ACCOUNT,
     );
   });
 });
@@ -277,10 +277,14 @@ describe('user access editor policy', () => {
     };
 
     expect(
-      decideUserAccessMutation(context, PERMISSIONS.USERS.ARCHIVE, false),
+      decideUserAccessMutation(
+        context,
+        PERMISSIONS.USERS.DELETE_ACCOUNT,
+        false,
+      ),
     ).toEqual({ allowed: true });
     expect(
-      decideUserAccessMutation(context, PERMISSIONS.USERS.ARCHIVE, true),
+      decideUserAccessMutation(context, PERMISSIONS.USERS.DELETE_ACCOUNT, true),
     ).toMatchObject({ allowed: false });
   });
 

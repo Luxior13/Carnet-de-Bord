@@ -19,7 +19,7 @@ Comptes, rôles et autorisations administratives.
 - Configurer une option.
 - Verifier les impacts avant validation.
 - Consulter le journal associe.
-- Exporter ou archiver si necessaire.
+- Desactiver, reactiver ou supprimer un compte selon les autorisations.
 
 ## Donnees gerees ici
 

@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Settings,
   Shield,
+  Trash2,
   UserMinus,
   UserPlus,
   XCircle,
@@ -230,8 +231,8 @@ export const AUDIT_ACTION_DISPLAY = new Map<string, AuditActionDisplayConfig>([
     {
       color: 'border-success/35 bg-success/10 text-success',
       icon: CheckCircle,
-      label: 'Utilisateur activé',
-      sentence: 'a activé le compte',
+      label: 'Utilisateur réactivé',
+      sentence: 'a réactivé le compte',
     },
   ],
   [
@@ -256,9 +257,9 @@ export const AUDIT_ACTION_DISPLAY = new Map<string, AuditActionDisplayConfig>([
     'USER_DELETE',
     {
       color: 'border-destructive/35 bg-destructive/10 text-destructive',
-      icon: Archive,
-      label: 'Utilisateur archivé',
-      sentence: 'a archivé le compte',
+      icon: Trash2,
+      label: 'Utilisateur supprimé',
+      sentence: 'a supprimé définitivement le compte',
     },
   ],
   [
@@ -279,10 +280,52 @@ export const DEFAULT_AUDIT_ACTION_DISPLAY: AuditActionDisplayConfig = {
   sentence: 'a réalisé une action',
 };
 
+const HISTORICAL_USER_ARCHIVE_DISPLAY: AuditActionDisplayConfig = {
+  color: 'border-warning/35 bg-warning/10 text-warning',
+  icon: Archive,
+  label: 'Utilisateur archivé (historique)',
+  sentence: 'a archivé le compte (historique)',
+};
+
+export const isIrreversibleUserDeletion = (
+  action: string,
+  metadata?: Record<string, unknown> | null,
+): boolean =>
+  action === 'USER_DELETE' &&
+  metadata?.irreversible === true &&
+  typeof metadata.deletionVersion === 'number' &&
+  Number.isInteger(metadata.deletionVersion) &&
+  metadata.deletionVersion >= 1;
+
+export const getAuditActionDisplay = (
+  action: string,
+  metadata?: Record<string, unknown> | null,
+): AuditActionDisplayConfig => {
+  if (
+    action === 'USER_DELETE' &&
+    !isIrreversibleUserDeletion(action, metadata)
+  ) {
+    return HISTORICAL_USER_ARCHIVE_DISPLAY;
+  }
+
+  return (
+    AUDIT_ACTION_DISPLAY.get(action) ?? {
+      ...DEFAULT_AUDIT_ACTION_DISPLAY,
+      label: action || DEFAULT_AUDIT_ACTION_DISPLAY.label,
+    }
+  );
+};
+
 export const AUDIT_ACTION_OPTIONS = [
   { label: 'Toutes les actions', value: 'all' },
   ...[...AUDIT_ACTION_DISPLAY.entries()]
-    .map(([value, config]) => ({ label: config.label, value }))
+    .map(([value, config]) => ({
+      label:
+        value === 'USER_DELETE'
+          ? 'Suppression / archive historique'
+          : config.label,
+      value,
+    }))
     .sort((left, right) => left.label.localeCompare(right.label, 'fr')),
 ];
 
