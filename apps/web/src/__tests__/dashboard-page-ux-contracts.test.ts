@@ -81,5 +81,8 @@ describe('/ dashboard UX contracts', () => {
     expect(dashboardRouteSource).toContain('AuditEventKind.ACTIVITY');
     expect(dashboardRouteSource).toContain('actorDisplayNameSnapshot');
     expect(dashboardRouteSource).toContain('getVisibleAuditDescription');
+    expect(dashboardRouteSource).toContain(
+      '!auth.user.isProtected ? { isProtected: false } : {}',
+    );
   });
 });

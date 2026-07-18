@@ -1,6 +1,6 @@
 'use client';
 
-import { UserRole } from '@repo/database';
+import { UserRole } from '@repo/shared';
 import { AlertTriangle, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -106,7 +106,6 @@ type PendingNavigation =
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
 const LOGIN_NAME_PATTERN = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/;
 
-const USER_AUDIT_PAGE_SIZE = 50;
 const USER_AUDIT_SUMMARY_PAGE_SIZE = 1;
 const DEFAULT_PERMISSION_PAGE_KEY = PERMISSION_CATEGORIES[0]?.key ?? '';
 const ACCESS_PERMISSION_KEYS = getAccessPermissionKeys();
@@ -1029,12 +1028,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         setIsLoadingAudit(true);
         setIsLoadingMoreAudit(false);
         setAuditError(null);
-        const requestedPageSize = includeLogs
-          ? USER_AUDIT_PAGE_SIZE
-          : USER_AUDIT_SUMMARY_PAGE_SIZE;
-        const auditParams = new URLSearchParams({
-          pageSize: String(requestedPageSize),
-        });
+        const auditParams = new URLSearchParams();
 
         if (includeLogs) {
           auditParams.set('includeFacets', 'true');
@@ -1045,6 +1039,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
           appendUserAuditFilters(auditParams, auditFilters);
         } else {
           auditParams.set('includeLogs', 'false');
+          auditParams.set('pageSize', String(USER_AUDIT_SUMMARY_PAGE_SIZE));
         }
 
         const response = await fetch(
@@ -1102,7 +1097,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       cursor: auditNextCursor,
       includeFacets: 'false',
       includeStats: 'false',
-      pageSize: String(USER_AUDIT_PAGE_SIZE),
     });
     appendUserAuditFilters(auditParams, auditFilters);
     auditAbortControllerRef.current = controller;

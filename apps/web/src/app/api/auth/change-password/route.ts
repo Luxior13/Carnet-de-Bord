@@ -246,6 +246,7 @@ export async function POST(
       currentSessionToken: session.token,
       expectedSecurityVersion: session.securityVersion,
       rateLimitKey,
+      securityNotification: { actorUserId: user.id },
     });
 
     return NextResponse.json({ success: true });

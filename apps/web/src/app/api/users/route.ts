@@ -20,6 +20,7 @@ import {
 } from '$server/auth';
 import { prisma } from '$server/prisma';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
+import { getSystemSettingValue } from '$server/system-settings';
 import { protectUserIdentityForActor } from '$server/user-visibility';
 import {
   type ApiErrorResponse,
@@ -138,11 +139,20 @@ export async function GET(
         PERMISSIONS.USERS.VIEW_SECURITY,
         auth.user.permissions,
       );
+    const visibleSecurityUserWhere: Prisma.UserWhereInput = auth.user
+      .isProtected
+      ? {}
+      : { isProtected: false };
 
     const { searchParams } = new URL(request.url);
-    const { limit, page, skip } = parsePagination(searchParams, 25, {
-      maxLimit: 100,
-    });
+    const defaultPageSize = await getSystemSettingValue('ui.defaultPageSize');
+    const { limit, page, skip } = parsePagination(
+      searchParams,
+      defaultPageSize,
+      {
+        maxLimit: 100,
+      },
+    );
     const search = (
       searchParams.get('search')?.trim().slice(0, USER_SEARCH_MAX_LENGTH) || ''
     ).toLowerCase();
@@ -203,6 +213,7 @@ export async function GET(
       where.isActive = false;
     } else if (status === 'pending') {
       where.mustChangePassword = true;
+      Object.assign(where, visibleSecurityUserWhere);
     }
 
     const now = new Date();
@@ -244,12 +255,18 @@ export async function GET(
         by: ['role'],
         where: baseUserWhere,
       }),
-      countActiveUsers({ lastLoginAt: null }),
+      countActiveUsers({ ...visibleSecurityUserWhere, lastLoginAt: null }),
       countActiveUsers({ createdAt: { gte: oneWeekAgo } }),
       canViewSecurity
-        ? countActiveUsers({ mustChangePassword: true })
+        ? countActiveUsers({
+            ...visibleSecurityUserWhere,
+            mustChangePassword: true,
+          })
         : Promise.resolve(null),
-      countActiveUsers({ lastLoginAt: { gte: oneDayAgo } }),
+      countActiveUsers({
+        ...visibleSecurityUserWhere,
+        lastLoginAt: { gte: oneDayAgo },
+      }),
     ]);
 
     const active =

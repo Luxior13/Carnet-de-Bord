@@ -26,6 +26,7 @@ import {
 import { createAuditLog, getAuditRequestContext } from '$server/auth';
 import { prisma } from '$server/prisma';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
+import { getSystemSettingValue } from '$server/system-settings';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -291,6 +292,7 @@ const getValidationDetails = (error: z.ZodError): Record<string, string[]> => {
 
 const parseJournalQuery = (
   searchParams: URLSearchParams,
+  defaultPageSize: number,
 ):
   | { data: JournalQuery; success: true }
   | { response: NextResponse<ApiErrorResponse>; success: false } => {
@@ -313,6 +315,7 @@ const parseJournalQuery = (
   }
 
   const query = Object.fromEntries(entries);
+  if (query.limit === undefined) query.limit = String(defaultPageSize);
   const parsedQuery = JOURNAL_QUERY_SCHEMA.safeParse(query);
   if (!parsedQuery.success) {
     return {
@@ -479,6 +482,7 @@ const buildJournalWhere = (
   snapshotAt: Date,
   cursor: JournalCursor | null,
   canViewSensitiveDetails: boolean,
+  canViewProtectedAccountEvents: boolean,
 ): Prisma.AuditLogWhereInput => {
   const createdAfter = getCreatedAfter(query, snapshotAt);
   const eventKind =
@@ -494,6 +498,14 @@ const buildJournalWhere = (
       },
     },
   ];
+  if (!canViewProtectedAccountEvents) {
+    andFilters.push({
+      NOT: [
+        { user: { is: { isProtected: true } } },
+        { targetUser: { is: { isProtected: true } } },
+      ],
+    });
+  }
 
   const action =
     query.logType === 'connections' ? query.connectionAction : query.action;
@@ -648,6 +660,7 @@ const getExportFilters = (query: JournalQuery): Record<string, unknown> => ({
 });
 
 const createExportResponse = (options: {
+  canViewProtectedAccountEvents: boolean;
   canViewSensitiveDetails: boolean;
   format: 'csv' | 'json';
   knownTruncated: boolean;
@@ -667,6 +680,7 @@ const createExportResponse = (options: {
     options.snapshotAt,
     null,
     options.canViewSensitiveDetails,
+    options.canViewProtectedAccountEvents,
   );
   let exportedRows = 0;
   let position: JournalCursor | null = null;
@@ -861,7 +875,11 @@ export async function GET(
     );
     if (!permissionCheck.success) return permissionCheck.response;
 
-    const parsedQuery = parseJournalQuery(new URL(request.url).searchParams);
+    const defaultPageSize = await getSystemSettingValue('ui.defaultPageSize');
+    const parsedQuery = parseJournalQuery(
+      new URL(request.url).searchParams,
+      defaultPageSize,
+    );
     if (!parsedQuery.success) return parsedQuery.response;
 
     const query = parsedQuery.data;
@@ -898,6 +916,7 @@ export async function GET(
         snapshotAt,
         null,
         canViewSensitiveDetails,
+        auth.user.isProtected,
       );
       const [matchingRows, auditRequestContext] = await Promise.all([
         prisma.auditLog.count({
@@ -928,6 +947,7 @@ export async function GET(
       });
 
       return createExportResponse({
+        canViewProtectedAccountEvents: auth.user.isProtected,
         canViewSensitiveDetails,
         format: exportFormat,
         knownTruncated: matchingRows > MAX_EXPORT_ROWS,
@@ -964,6 +984,7 @@ export async function GET(
       snapshotAt,
       cursor,
       canViewSensitiveDetails,
+      auth.user.isProtected,
     );
     const batch = await loadVisibleBatch(
       where,

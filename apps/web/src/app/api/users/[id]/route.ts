@@ -28,6 +28,10 @@ import {
 } from '$server/auth';
 import { prisma } from '$server/prisma';
 import {
+  createSecurityNotification,
+  type SecurityNotificationKind,
+} from '$server/security-notifications';
+import {
   requireRecentPasswordReauthentication,
   requireRecentSensitiveActionProof,
 } from '$server/sensitive-action';
@@ -1057,6 +1061,19 @@ export async function PATCH(
       changedKeys.includes('role') ||
       hasAccessPermissionChange;
 
+    const securityNotificationKind: SecurityNotificationKind | null =
+      changedKeys.includes('isActive')
+        ? isActive
+          ? 'ACCOUNT_ACTIVATED'
+          : 'ACCOUNT_DEACTIVATED'
+        : hasAuthorizationChange
+          ? 'ACCESS_CHANGED'
+          : changedKeys.includes('loginName')
+            ? 'LOGIN_NAME_CHANGED'
+            : changedKeys.includes('contactEmail')
+              ? 'CONTACT_EMAIL_CHANGED'
+              : null;
+
     if (shouldInvalidateSessions) {
       updateData.securityVersion = { increment: 1 };
     }
@@ -1099,6 +1116,16 @@ export async function PATCH(
         client: transaction,
         required: true,
       });
+      if (securityNotificationKind) {
+        await createSecurityNotification(
+          {
+            actorUserId: auth.user.id,
+            kind: securityNotificationKind,
+            recipientUserId: id,
+          },
+          transaction,
+        );
+      }
 
       return nextUser;
     });

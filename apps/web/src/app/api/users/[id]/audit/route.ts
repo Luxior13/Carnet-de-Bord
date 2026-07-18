@@ -6,7 +6,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { FEATURES } from '$constants/feature-registry.constants';
-import { PAGINATION } from '$constants/pagination.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { env } from '$env';
 import { requireAuth, requirePermission } from '$server/api-auth';
@@ -18,6 +17,7 @@ import {
 import { createAuditLog, getAuditRequestContext } from '$server/auth';
 import { prisma } from '$server/prisma';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
+import { getSystemSettingValue } from '$server/system-settings';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -115,6 +115,13 @@ type AuditLogRecord = Prisma.AuditLogGetPayload<{
   select: typeof AUDIT_LOG_SELECT;
 }>;
 
+const PROTECTED_ACCOUNT_AUDIT_EXCLUSION: Prisma.AuditLogWhereInput = {
+  NOT: [
+    { user: { is: { isProtected: true } } },
+    { targetUser: { is: { isProtected: true } } },
+  ],
+};
+
 const getTextFilter = (value: string | null): string | undefined => {
   if (!value || value === 'all') return undefined;
 
@@ -143,10 +150,12 @@ const getAuditFilters = (searchParams: URLSearchParams): AuditFilters => {
 const getAuditFilterFingerprint = (
   viewedUserId: string,
   filters: AuditFilters,
+  canViewProtectedAccountEvents: boolean,
 ): string =>
   createHash('sha256')
     .update(
       JSON.stringify({
+        canViewProtectedAccountEvents,
         pageKey: filters.pageKey ?? null,
         periodDays: filters.periodDays ?? null,
         poleKey: filters.poleKey ?? null,
@@ -221,11 +230,12 @@ const buildAuditWhere = (
   userId: string,
   filters: AuditFilters,
   options: {
+    canViewProtectedAccountEvents: boolean;
     includePage?: boolean;
     includePole?: boolean;
     includeScope?: boolean;
     snapshotAt?: Date;
-  } = {},
+  },
 ): Prisma.AuditLogWhereInput => {
   const {
     includePage = true,
@@ -239,6 +249,10 @@ const buildAuditWhere = (
         ? { targetUserId: userId }
         : { OR: [{ userId }, { targetUserId: userId }] };
   const additionalFilters: Prisma.AuditLogWhereInput[] = [];
+
+  if (!options.canViewProtectedAccountEvents) {
+    additionalFilters.push(PROTECTED_ACCOUNT_AUDIT_EXCLUSION);
+  }
 
   if (filters.periodDays) {
     additionalFilters.push({
@@ -501,9 +515,11 @@ const getAuditFacets = async (
   userId: string,
   filters: AuditFilters,
   snapshotAt: Date,
+  canViewProtectedAccountEvents: boolean,
 ): Promise<AuditFacets> => {
   const scopeFacetWhere = constrainAuditToSnapshot(
     buildAuditWhere(userId, filters, {
+      canViewProtectedAccountEvents,
       includeScope: false,
       snapshotAt,
     }),
@@ -511,6 +527,7 @@ const getAuditFacets = async (
   );
   const poleFacetWhere = constrainAuditToSnapshot(
     buildAuditWhere(userId, filters, {
+      canViewProtectedAccountEvents,
       includePage: false,
       includePole: false,
       snapshotAt,
@@ -519,6 +536,7 @@ const getAuditFacets = async (
   );
   const pageFacetWhere = constrainAuditToSnapshot(
     buildAuditWhere(userId, filters, {
+      canViewProtectedAccountEvents,
       includePage: false,
       snapshotAt,
     }),
@@ -677,11 +695,15 @@ export async function GET(
       isOwnAudit,
       viewedUserId: id,
     };
+    const canViewProtectedAccountEvents = auth.user.isProtected;
 
     if (wantsCsvExport) {
       const generatedAt = new Date();
       const exportWhereClause = constrainAuditToSnapshot(
-        buildAuditWhere(id, filters, { snapshotAt: generatedAt }),
+        buildAuditWhere(id, filters, {
+          canViewProtectedAccountEvents,
+          snapshotAt: generatedAt,
+        }),
         generatedAt,
       );
       const rowCount = await prisma.auditLog.count({
@@ -746,16 +768,21 @@ export async function GET(
       });
     }
 
+    const defaultPageSize = await getSystemSettingValue('ui.defaultPageSize');
     const { limit: pageSize, page } = parsePagination(
       searchParams,
-      PAGINATION.DEFAULT_LIMIT,
+      defaultPageSize,
       {
         limitParam: 'pageSize',
       },
     );
     const includeLogs = searchParams.get('includeLogs') !== 'false';
     const rawCursor = searchParams.get('cursor');
-    const filterHash = getAuditFilterFingerprint(id, filters);
+    const filterHash = getAuditFilterFingerprint(
+      id,
+      filters,
+      canViewProtectedAccountEvents,
+    );
     const cursor = rawCursor ? decodeAuditCursor(rawCursor, filterHash) : null;
 
     if (rawCursor && !cursor) {
@@ -781,12 +808,19 @@ export async function GET(
     const includeFacets =
       isInitialPage && searchParams.get('includeFacets') === 'true';
     const selectedWhere = constrainAuditToSnapshot(
-      buildAuditWhere(id, filters, { snapshotAt }),
+      buildAuditWhere(id, filters, {
+        canViewProtectedAccountEvents,
+        snapshotAt,
+      }),
       snapshotAt,
     );
     const listWhere = constrainAuditToCursor(selectedWhere, cursor);
     const unfilteredWhere = constrainAuditToSnapshot(
-      buildAuditWhere(id, { scope: 'all' }, { snapshotAt }),
+      buildAuditWhere(
+        id,
+        { scope: 'all' },
+        { canViewProtectedAccountEvents, snapshotAt },
+      ),
       snapshotAt,
     );
     const [fetchedLogs, stats, facets] = await Promise.all([
@@ -806,22 +840,12 @@ export async function GET(
             }),
             prisma.auditLog.count({
               take: AUDIT_STATS_MAX_COUNT + 1,
-              where: {
-                AND: [
-                  {
-                    action: 'LOGIN_FAILED',
-                    OR: [{ targetUserId: id }, { userId: id }],
-                  },
-                  { createdAt: { lte: snapshotAt } },
-                ],
-              },
+              where: { AND: [unfilteredWhere, { action: 'LOGIN_FAILED' }] },
             }),
             prisma.auditLog.count({
               take: AUDIT_STATS_MAX_COUNT + 1,
               where: {
-                action: 'LOGIN_SUCCESS',
-                createdAt: { lte: snapshotAt },
-                userId: id,
+                AND: [unfilteredWhere, { action: 'LOGIN_SUCCESS', userId: id }],
               },
             }),
           ]).then(
@@ -841,7 +865,7 @@ export async function GET(
           )
         : Promise.resolve(null),
       includeFacets
-        ? getAuditFacets(id, filters, snapshotAt)
+        ? getAuditFacets(id, filters, snapshotAt, canViewProtectedAccountEvents)
         : Promise.resolve(null),
     ]);
     const hasMore = includeLogs && fetchedLogs.length > pageSize;

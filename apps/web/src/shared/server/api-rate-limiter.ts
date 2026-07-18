@@ -42,13 +42,18 @@ const normalizeIdentifier = (identifier: string): string => {
   return normalized || 'unknown';
 };
 
-export function checkRateLimit(ip: string): {
+export function checkRateLimit(
+  ip: string,
+  options: { bucket?: string; maxRequests?: number; windowMs?: number } = {},
+): {
   allowed: boolean;
   remaining: number;
   resetAt: number;
 } {
   const now = Date.now();
-  const key = normalizeIdentifier(ip);
+  const maxRequests = options.maxRequests ?? MAX_REQUESTS;
+  const windowMs = options.windowMs ?? WINDOW_MS;
+  const key = `${options.bucket ?? 'api'}:${normalizeIdentifier(ip)}`;
 
   let entry = requests.get(key);
 
@@ -56,7 +61,7 @@ export function checkRateLimit(ip: string): {
 
   if (!entry || entry.resetAt <= now) {
     if (!entry) ensureCapacity(now);
-    entry = { count: 0, resetAt: now + WINDOW_MS };
+    entry = { count: 0, resetAt: now + windowMs };
     requests.set(key, entry);
   }
 
@@ -66,8 +71,8 @@ export function checkRateLimit(ip: string): {
   requests.set(key, entry);
 
   return {
-    allowed: entry.count <= MAX_REQUESTS,
-    remaining: Math.max(0, MAX_REQUESTS - entry.count),
+    allowed: entry.count <= maxRequests,
+    remaining: Math.max(0, maxRequests - entry.count),
     resetAt: entry.resetAt,
   };
 }

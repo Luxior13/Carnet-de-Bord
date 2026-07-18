@@ -1,6 +1,7 @@
 {
   "name": "@repo/shared",
   "main": "./src/index.ts",
+  "sideEffects": false,
   "types": "./src/index.ts",
   "scripts": {
     "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",

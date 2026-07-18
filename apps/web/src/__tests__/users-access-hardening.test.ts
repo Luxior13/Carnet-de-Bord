@@ -22,8 +22,18 @@ const mockPrisma = {
     create: vi.fn(),
     findUnique: vi.fn(),
   },
+  notification: {
+    create: vi.fn(),
+    upsert: vi.fn(),
+  },
+  notificationRecipient: {
+    createMany: vi.fn(),
+  },
   session: {
     deleteMany: vi.fn(),
+  },
+  systemSetting: {
+    findUnique: vi.fn(),
   },
   user: {
     count: vi.fn(),
@@ -112,6 +122,12 @@ const SYSTEM_SENSITIVE_AUDIT_METADATA = {
   changes: ['contactEmail', 'firstName', 'isActive'],
   requestId: 'private-request-id',
 };
+const PROTECTED_ACCOUNT_AUDIT_EXCLUSION = {
+  NOT: [
+    { user: { is: { isProtected: true } } },
+    { targetUser: { is: { isProtected: true } } },
+  ],
+};
 
 const stringifyRequestBody = (body: Record<string, unknown>): string =>
   JSON.stringify({
@@ -171,6 +187,9 @@ describe('users access hardening', () => {
       userAgent: 'TestAgent',
     });
     mockPrisma.loginNameReservation.findUnique.mockResolvedValue(null);
+    mockPrisma.notification.create.mockResolvedValue({ id: 'notification-1' });
+    mockPrisma.notificationRecipient.createMany.mockResolvedValue({ count: 1 });
+    mockPrisma.systemSetting.findUnique.mockResolvedValue({ value: 25 });
     mockPrisma.user.groupBy.mockResolvedValue([]);
     mockPrisma.user.updateMany.mockResolvedValue({ count: 1 });
   });
@@ -260,6 +279,19 @@ describe('users access hardening', () => {
     );
     expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
       where: { userId: 'target-1' },
+    });
+    expect(mockPrisma.notification.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        createdById: actor.id,
+        href: '/mon-compte?section=security',
+        severity: 'WARNING',
+        type: 'security.login_name_changed',
+      }),
+      select: { id: true },
+    });
+    expect(mockPrisma.notificationRecipient.createMany).toHaveBeenCalledWith({
+      data: [{ notificationId: 'notification-1', userId: 'target-1' }],
+      skipDuplicates: true,
     });
   });
 
@@ -3441,7 +3473,12 @@ describe('users access hardening', () => {
         where: {
           AND: [
             {
-              OR: [{ userId: 'target-1' }, { targetUserId: 'target-1' }],
+              AND: [
+                {
+                  OR: [{ userId: 'target-1' }, { targetUserId: 'target-1' }],
+                },
+                PROTECTED_ACCOUNT_AUDIT_EXCLUSION,
+              ],
             },
             { createdAt: { lte: expect.any(Date) } },
           ],
@@ -3486,15 +3523,35 @@ describe('users access hardening', () => {
     expect(body.data.users[0].securityDetailsVisible).toBe(true);
     expect(mockPrisma.user.count).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ mustChangePassword: true }),
+        where: expect.objectContaining({
+          isProtected: false,
+          mustChangePassword: true,
+        }),
       }),
     );
     expect(mockPrisma.user.findMany).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
-        where: expect.objectContaining({ mustChangePassword: true }),
+        where: expect.objectContaining({
+          isProtected: false,
+          mustChangePassword: true,
+        }),
       }),
     );
+    expect(mockPrisma.user.count).toHaveBeenCalledWith({
+      where: {
+        deletedAt: null,
+        isProtected: false,
+        lastLoginAt: null,
+      },
+    });
+    expect(mockPrisma.user.count).toHaveBeenCalledWith({
+      where: {
+        deletedAt: null,
+        isProtected: false,
+        lastLoginAt: { gte: expect.any(Date) },
+      },
+    });
   });
 
   it('rejects the pending-password filter without view-security permission', async () => {
@@ -3658,6 +3715,10 @@ describe('users access hardening', () => {
       page: 1,
       total: 0,
       totalPages: 0,
+    });
+    expect(mockPrisma.systemSetting.findUnique).toHaveBeenCalledWith({
+      select: { value: true },
+      where: { key: 'ui.defaultPageSize' },
     });
     expect(mockPrisma.user.findMany).toHaveBeenNthCalledWith(
       1,
@@ -3871,6 +3932,50 @@ describe('users access hardening', () => {
       where: {
         deletedAt: null,
         isActive: true,
+        isProtected: false,
+        mustChangePassword: true,
+      },
+    });
+    expect(mockPrisma.user.count).toHaveBeenNthCalledWith(2, {
+      where: {
+        deletedAt: null,
+        isActive: true,
+        isProtected: false,
+        lockedUntil: { gt: expect.any(Date) },
+      },
+    });
+    expect(mockPrisma.user.count).toHaveBeenNthCalledWith(3, {
+      where: {
+        deletedAt: null,
+        isActive: true,
+        isProtected: false,
+        mfaEnabledAt: null,
+      },
+    });
+  });
+
+  it('keeps protected security signals visible to the protected viewer', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'root-1',
+        isProtected: true,
+        passwordHash: undefined,
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.count.mockResolvedValue(1);
+
+    const route = await import('$app/api/dashboard/route');
+    const response = await route.GET();
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.user.count).toHaveBeenNthCalledWith(1, {
+      where: {
+        deletedAt: null,
+        isActive: true,
         mustChangePassword: true,
       },
     });
@@ -3932,6 +4037,7 @@ describe('users access hardening', () => {
       },
       take: 3,
       where: {
+        ...PROTECTED_ACCOUNT_AUDIT_EXCLUSION,
         category: { in: ['AUTH', 'PERMISSION', 'USER'] },
         eventKind: 'ACTIVITY',
       },
@@ -3984,7 +4090,10 @@ describe('users access hardening', () => {
     expect(mockPrisma.user.count).not.toHaveBeenCalled();
     expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { eventKind: 'ACTIVITY' },
+        where: {
+          ...PROTECTED_ACCOUNT_AUDIT_EXCLUSION,
+          eventKind: 'ACTIVITY',
+        },
       }),
     );
   });
@@ -4009,14 +4118,14 @@ describe('users access hardening', () => {
     expect(body.success).toBe(true);
     expect(body.data.pagination).toEqual({
       page: 1,
-      pageSize: 50,
+      pageSize: 25,
       total: null,
       totalPages: null,
     });
     expect(mockPrisma.auditLog.findMany).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
-        take: 51,
+        take: 26,
       }),
     );
     expect(mockPrisma.auditLog.findMany.mock.calls[0]?.[0]).not.toHaveProperty(
@@ -4114,6 +4223,7 @@ describe('users access hardening', () => {
             { action: 'USER_UPDATE' },
             { category: 'AUTH' },
             { eventKind: 'ACTIVITY' },
+            PROTECTED_ACCOUNT_AUDIT_EXCLUSION,
             expect.objectContaining({
               createdAt: expect.objectContaining({
                 gte: expect.any(Date),
@@ -4251,7 +4361,10 @@ describe('users access hardening', () => {
       1,
       expect.objectContaining({
         where: {
-          AND: expect.arrayContaining([{ eventKind: 'ACTIVITY' }]),
+          AND: expect.arrayContaining([
+            { eventKind: 'ACTIVITY' },
+            PROTECTED_ACCOUNT_AUDIT_EXCLUSION,
+          ]),
         },
       }),
     );
@@ -4262,6 +4375,7 @@ describe('users access hardening', () => {
           AND: expect.arrayContaining([
             { action: 'LOGIN_FAILED' },
             { eventKind: 'CONNECTION' },
+            PROTECTED_ACCOUNT_AUDIT_EXCLUSION,
           ]),
         },
       }),

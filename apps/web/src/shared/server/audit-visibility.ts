@@ -23,6 +23,7 @@ const PUBLIC_METADATA_KEYS = new Set([
 const SENSITIVE_METADATA_KEYS = new Set([
   ...PUBLIC_METADATA_KEYS,
   'adminRecovery',
+  'attempts',
   'authenticationMethod',
   'archivedUserId',
   'contactEmailVerificationReset',
@@ -32,10 +33,14 @@ const SENSITIVE_METADATA_KEYS = new Set([
   'filters',
   'format',
   'generatedAt',
+  'jobId',
   'loginName',
+  'maxAttempts',
+  'notificationId',
   'passwordChange',
   'passwordReset',
   'reason',
+  'recipientCount',
   'recoveryCodesGenerated',
   'replacing',
   'revocationScope',
@@ -44,8 +49,12 @@ const SENSITIVE_METADATA_KEYS = new Set([
   'rowCount',
   'sessionId',
   'snapshotAt',
+  'settingKey',
+  'status',
   'targetName',
   'truncated',
+  'type',
+  'phase',
 ]);
 
 const SECRET_KEY_PATTERN =
@@ -58,6 +67,8 @@ const DIFF_FIELD_KEYS = new Set([
   'loginName',
   'permissions',
   'role',
+  'value',
+  'version',
 ]);
 const PUBLIC_DIFF_FIELD_KEYS = new Set(['firstName', 'isActive', 'lastName']);
 const STRING_DIFF_FIELD_KEYS = new Set([
@@ -74,6 +85,7 @@ const MAX_METADATA_STRING_LENGTH = 4_000;
 const PUBLIC_DESCRIPTIONS: Partial<Record<AuditAction, string>> = {
   ACCOUNT_LOCKED: 'Compte verrouillé',
   AUDIT_EXPORT: "Journal d'activité exporté",
+  BACKGROUND_JOB_UPDATE: 'Traitement en arrière-plan mis à jour',
   LOGIN_FAILED: 'Tentative de connexion échouée',
   LOGIN_SUCCESS: 'Connexion réussie',
   LOGOUT: 'Déconnexion',
@@ -82,12 +94,14 @@ const PUBLIC_DESCRIPTIONS: Partial<Record<AuditAction, string>> = {
   MFA_RECOVERY_CODE_USED: 'Code de secours utilisé',
   MFA_RECOVERY_CODES_REGENERATED: 'Codes de secours renouvelés',
   MFA_RESET: 'Double authentification réinitialisée',
+  NOTIFICATION_SEND: 'Notification envoyée',
   PASSWORD_CHANGE: 'Mot de passe modifié',
   PASSWORD_RESET: 'Mot de passe réinitialisé',
   PERMISSION_UPDATE: 'Autorisations modifiées',
   SESSION_INVALIDATE: 'Sessions révoquées',
   STEP_UP_FAILED: 'Échec de confirmation renforcée',
   STEP_UP_SUCCESS: 'Confirmation renforcée réussie',
+  SYSTEM_SETTING_UPDATE: 'Paramètre système mis à jour',
   USER_ACTIVATE: 'Compte activé',
   USER_CREATE: 'Compte utilisateur créé',
   USER_DEACTIVATE: 'Compte désactivé',
@@ -186,6 +200,12 @@ const sanitizeDiffFieldValue = (field: string, value: unknown): unknown => {
   if (field === 'role') {
     return value === 'ADMIN' || value === 'USER' ? value : undefined;
   }
+  if (field === 'version') {
+    return typeof value === 'number' && Number.isInteger(value) && value >= 0
+      ? value
+      : undefined;
+  }
+  if (field === 'value') return sanitizeMetadataValue(value, 1);
 
   return undefined;
 };

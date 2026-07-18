@@ -1,6 +1,6 @@
 'use client';
 
-import { UserRole } from '@repo/database';
+import { UserRole } from '@repo/shared';
 import {
   ArrowUpDown,
   Clock,
@@ -14,7 +14,8 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
 import React, {
   type FC,
   useCallback,
@@ -92,7 +93,6 @@ const FILTER_ROLE_OPTIONS: readonly FilterRole[] = [
 ];
 const SORT_OPTIONS: readonly SortOption[] = ['name', 'recent', 'created'];
 const USER_SEARCH_MAX_LENGTH = 100;
-const USERS_PER_PAGE = 20;
 
 const getSortLabel = (sort: SortOption): string => {
   switch (sort) {
@@ -136,7 +136,7 @@ const buildUsersQueryParams = ({
   sort,
   status,
 }: {
-  limit: number;
+  limit: number | null;
   page: number;
   role: FilterRole;
   search: string;
@@ -145,7 +145,7 @@ const buildUsersQueryParams = ({
 }): URLSearchParams => {
   const params = new URLSearchParams();
   params.set('page', String(page));
-  params.set('limit', String(limit));
+  if (limit !== null) params.set('limit', String(limit));
   if (search) params.set('search', search);
   if (status !== 'all') params.set('status', status);
   if (role !== 'all') params.set('role', role);
@@ -246,7 +246,6 @@ const UsersStatCard: FC<{
 
 export const UsersListPage: FC = () => {
   const pathname = usePathname();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const currentQueryString = searchParams.toString();
   const { userData: currentUser } = useUser();
@@ -285,6 +284,7 @@ export const UsersListPage: FC = () => {
     normalizeSortOption(searchParams.get('sort')),
   );
   const hasLoadedUsersRef = useRef(false);
+  const effectivePageSizeRef = useRef<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const isSyncingStateFromUrlRef = useRef(false);
   const lastSyncedQueryStringRef = useRef(currentQueryString);
@@ -318,8 +318,9 @@ export const UsersListPage: FC = () => {
           setIsLoading(true);
         }
 
+        if (page === 1) effectivePageSizeRef.current = null;
         const params = buildUsersQueryParams({
-          limit: USERS_PER_PAGE,
+          limit: page > 1 ? effectivePageSizeRef.current : null,
           page,
           role,
           search,
@@ -336,6 +337,7 @@ export const UsersListPage: FC = () => {
 
         if (response.ok && data.success) {
           const nextPagination = data.data.pagination as PaginationInfo;
+          effectivePageSizeRef.current = nextPagination.limit;
           const resolvedTotalPages = Math.max(
             1,
             nextPagination.totalPages || 0,
@@ -502,23 +504,10 @@ export const UsersListPage: FC = () => {
     setCurrentPage(1);
   };
 
-  const openUserDetail = (userId: string): void => {
-    router.push(
-      userId === currentUser?.id
-        ? '/mon-compte'
-        : `/administration/utilisateurs/${userId}`,
-    );
-  };
-
-  const handleOpenUserKeyDown = (
-    event: React.KeyboardEvent,
-    userId: string,
-  ): void => {
-    if (event.key !== 'Enter' && event.key !== ' ') return;
-
-    event.preventDefault();
-    openUserDetail(userId);
-  };
+  const getUserDetailHref = (userId: string): string =>
+    userId === currentUser?.id
+      ? '/mon-compte'
+      : `/administration/utilisateurs/${userId}`;
 
   const hasActiveFilters =
     !!searchQuery ||
@@ -767,7 +756,7 @@ export const UsersListPage: FC = () => {
         pagination={
           totalPages > 1
             ? {
-                limit: USERS_PER_PAGE,
+                limit: pagination?.limit ?? 1,
                 onPageChange: setCurrentPage,
                 page: currentPage,
                 total: totalFiltered,
@@ -822,15 +811,7 @@ export const UsersListPage: FC = () => {
                 </TableRow>
               ) : (
                 displayedUsers.map((user) => (
-                  <TableRow
-                    key={user.id}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Voir ${getUserDisplayName(user)}`}
-                    className="focus-visible:bg-primary/10 focus-visible:ring-primary/70 cursor-pointer focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
-                    onClick={() => openUserDetail(user.id)}
-                    onKeyDown={(event) => handleOpenUserKeyDown(event, user.id)}
-                  >
+                  <TableRow key={user.id}>
                     <TableCell>
                       <div className="flex min-w-0 items-center gap-3">
                         <UserAvatar user={user} className="size-9 rounded-md" />
@@ -898,16 +879,20 @@ export const UsersListPage: FC = () => {
                       {formatRelativeTime(user.lastLoginAt)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          openUserDetail(user.id);
-                        }}
-                      >
-                        {user.id === currentUser?.id ? 'Mon compte' : 'Ouvrir'}
+                      <Button asChild size="sm" variant="ghost">
+                        <Link
+                          aria-label={
+                            user.id === currentUser?.id
+                              ? 'Ouvrir mon compte'
+                              : `Ouvrir le compte de ${getUserDisplayName(user)}`
+                          }
+                          href={getUserDetailHref(user.id)}
+                          prefetch={false}
+                        >
+                          {user.id === currentUser?.id
+                            ? 'Mon compte'
+                            : 'Ouvrir'}
+                        </Link>
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -943,14 +928,12 @@ export const UsersListPage: FC = () => {
             />
           ) : (
             displayedUsers.map((user) => (
-              <div
-                key={user.id}
-                role="button"
-                tabIndex={0}
+              <Link
                 aria-label={`Voir ${getUserDisplayName(user)}`}
-                className="hover:bg-surface-raised/70 focus-visible:bg-primary/10 focus-visible:ring-primary/70 cursor-pointer p-4 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
-                onClick={() => openUserDetail(user.id)}
-                onKeyDown={(event) => handleOpenUserKeyDown(event, user.id)}
+                className="hover:bg-surface-raised/70 focus-visible:bg-primary/10 focus-visible:ring-primary/70 block p-4 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+                href={getUserDetailHref(user.id)}
+                key={user.id}
+                prefetch={false}
               >
                 <div className="flex items-start gap-3">
                   <UserAvatar user={user} className="size-11 rounded-lg" />
@@ -1002,7 +985,7 @@ export const UsersListPage: FC = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </DataTableMobileList>

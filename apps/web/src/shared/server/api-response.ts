@@ -28,6 +28,15 @@ type JsonBodyResult =
   | { data: unknown; success: true }
   | { response: NextResponse<ApiErrorResponse>; success: false };
 
+export const MAX_JSON_BODY_BYTES = 256 * 1024;
+
+const payloadTooLargeResponse = (): NextResponse<ApiErrorResponse> =>
+  apiError(
+    ErrorCode.PAYLOAD_TOO_LARGE,
+    'Corps de requête trop volumineux',
+    413,
+  );
+
 export function isPrismaUniqueConstraintError(error: unknown): boolean {
   return (
     typeof error === 'object' &&
@@ -43,8 +52,42 @@ export function isPrismaUniqueConstraintError(error: unknown): boolean {
  * remain specific to that endpoint.
  */
 export async function parseJsonBody(request: Request): Promise<JsonBodyResult> {
+  const contentLength = request.headers.get('content-length');
+  if (
+    contentLength &&
+    /^\d+$/.test(contentLength) &&
+    Number(contentLength) > MAX_JSON_BODY_BYTES
+  ) {
+    return { response: payloadTooLargeResponse(), success: false };
+  }
+
   try {
-    return { data: await request.json(), success: true };
+    if (!request.body) throw new SyntaxError('Missing JSON body');
+    const reader = request.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let receivedBytes = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      receivedBytes += value.byteLength;
+      if (receivedBytes > MAX_JSON_BODY_BYTES) {
+        await reader.cancel().catch(() => undefined);
+
+        return { response: payloadTooLargeResponse(), success: false };
+      }
+      chunks.push(value);
+    }
+
+    const bytes = new Uint8Array(receivedBytes);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    const source = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+
+    return { data: JSON.parse(source) as unknown, success: true };
   } catch {
     return {
       response: apiError(

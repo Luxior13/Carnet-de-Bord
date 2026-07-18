@@ -10,6 +10,9 @@ const mockPrisma = {
     count: vi.fn(),
     findMany: vi.fn(),
   },
+  systemSetting: {
+    findUnique: vi.fn(),
+  },
   user: {
     findUnique: vi.fn(),
   },
@@ -113,7 +116,11 @@ describe('user audit detail redaction', () => {
     vi.clearAllMocks();
 
     mockRequirePermission.mockReturnValue({ success: true });
-    mockPrisma.user.findUnique.mockResolvedValue({ id: 'target-1' });
+    mockPrisma.systemSetting.findUnique.mockResolvedValue(null);
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'target-1',
+      isProtected: false,
+    });
     mockPrisma.auditLog.count.mockResolvedValue(1);
   });
 
@@ -222,5 +229,23 @@ describe('user audit detail redaction', () => {
       metadata: VISIBLE_SENSITIVE_METADATA,
       userAgent: 'Sensitive browser details',
     });
+  });
+
+  it('keeps the protected root audit private from another reader', async () => {
+    setViewer({ id: 'viewer-1' });
+    mockPrisma.user.findUnique.mockResolvedValueOnce({
+      id: 'root-1',
+      isProtected: true,
+    });
+
+    const response = await getAudit('root-1');
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({
+      error: { code: 'FORBIDDEN' },
+      success: false,
+    });
+    expect(mockPrisma.systemSetting.findUnique).not.toHaveBeenCalled();
+    expect(mockPrisma.auditLog.findMany).not.toHaveBeenCalled();
   });
 });

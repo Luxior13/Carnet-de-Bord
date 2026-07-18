@@ -1,4 +1,4 @@
-import { UserRole } from '@repo/database';
+import { UserRole } from '@repo/shared';
 
 import type { NavigationIconName } from '$constants/navigation-icon.constants';
 import type { NavigationSpaceTone } from '$constants/navigation-theme.constants';

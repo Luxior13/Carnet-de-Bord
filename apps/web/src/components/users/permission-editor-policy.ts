@@ -1,4 +1,4 @@
-import { type UserRole } from '@repo/database';
+import { type UserRole } from '@repo/shared';
 
 import {
   getDependentPermissionKeys,

@@ -54,7 +54,10 @@ export async function GET(): Promise<
 
     const now = new Date();
 
-    const userWhere = { deletedAt: null };
+    const visibleSecurityUserWhere = {
+      deletedAt: null,
+      ...(!auth.user.isProtected ? { isProtected: false } : {}),
+    };
 
     const [
       temporaryPasswordActiveUsers,
@@ -65,7 +68,7 @@ export async function GET(): Promise<
       canViewUserSecurity
         ? prisma.user.count({
             where: {
-              ...userWhere,
+              ...visibleSecurityUserWhere,
               isActive: true,
               mustChangePassword: true,
             },
@@ -74,7 +77,7 @@ export async function GET(): Promise<
       canViewUserSecurity
         ? prisma.user.count({
             where: {
-              ...userWhere,
+              ...visibleSecurityUserWhere,
               isActive: true,
               lockedUntil: { gt: now },
             },
@@ -83,7 +86,7 @@ export async function GET(): Promise<
       canViewUserSecurity
         ? prisma.user.count({
             where: {
-              ...userWhere,
+              ...visibleSecurityUserWhere,
               isActive: true,
               mfaEnabledAt: null,
             },
@@ -103,6 +106,14 @@ export async function GET(): Promise<
             take: 3,
             where: {
               eventKind: AuditEventKind.ACTIVITY,
+              ...(!auth.user.isProtected
+                ? {
+                    NOT: [
+                      { user: { is: { isProtected: true } } },
+                      { targetUser: { is: { isProtected: true } } },
+                    ],
+                  }
+                : {}),
               ...(canViewSystemAudit
                 ? {}
                 : {

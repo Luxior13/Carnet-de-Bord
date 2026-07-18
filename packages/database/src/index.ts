@@ -1,3 +1,5 @@
+import 'server-only';
+
 // Export only what's needed to avoid Turbopack warnings with CommonJS modules
 import { PrismaClient as PrismaClientBase } from '@prisma/client';
 

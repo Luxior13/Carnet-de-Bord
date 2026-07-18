@@ -1,6 +1,6 @@
 'use client';
 
-import { UserRole } from '@repo/database';
+import { UserRole } from '@repo/shared';
 import { ChevronDown, CircleAlert, RotateCcw, ShieldCheck } from 'lucide-react';
 import React, { type FC, memo, useCallback, useMemo } from 'react';
 

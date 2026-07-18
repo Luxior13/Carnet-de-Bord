@@ -43,6 +43,7 @@ const readySchema = {
   notificationColumns: 10,
   notificationRecipientColumns: 6,
   notificationSeverities: 4,
+  oldestPendingJobAgeSeconds: null,
   platformAuditActions: 3,
   platformScaleIndexes: 10,
   protectedAccounts: 1,
@@ -54,6 +55,7 @@ const readySchema = {
   totpEnrollmentColumns: 8,
   userColumns: 15,
   validProtectedRootAccounts: 1,
+  workerHeartbeatAgeSeconds: 10,
 };
 
 describe('operational health routes', () => {
@@ -89,7 +91,12 @@ describe('operational health routes', () => {
 
     expect(response.status).toBe(200);
     expect(body).toMatchObject({
-      checks: { database: 'connected', schema: 'ready' },
+      checks: {
+        database: 'connected',
+        queue: 'ready',
+        schema: 'ready',
+        worker: 'ready',
+      },
       status: 'healthy',
     });
     expect(mocks.prisma.$transaction).toHaveBeenCalledWith(
@@ -140,6 +147,24 @@ describe('operational health routes', () => {
     expect(query).toContain("'LoginNameReservation'");
     expect(query).toContain('"isProtected" = true');
     expect(response.headers.get('cache-control')).toContain('no-store');
+  });
+
+  it('surfaces a stale worker and delayed queue without hiding web readiness', async () => {
+    mocks.transaction.$queryRaw.mockResolvedValueOnce([
+      {
+        ...readySchema,
+        oldestPendingJobAgeSeconds: 900,
+        workerHeartbeatAgeSeconds: 120,
+      },
+    ]);
+    const { GET } = await import('$app/api/health/ready/route');
+    const response = await GET();
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      checks: { queue: 'delayed', worker: 'stale' },
+      status: 'healthy',
+    });
   });
 
   it('keeps /api/health as a backward-compatible readiness alias', async () => {

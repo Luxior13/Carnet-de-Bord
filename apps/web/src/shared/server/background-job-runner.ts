@@ -9,38 +9,31 @@ import {
 } from '$server/background-jobs';
 import { logger } from '$server/logger';
 import { prisma } from '$server/prisma';
+import { getSystemSettingValue } from '$server/system-settings';
 
 export type BackgroundJobHandler = (
   payload: Prisma.JsonValue,
   context: { jobId: string; signal: AbortSignal },
 ) => Promise<void>;
 
-const getRetentionDays = async (
-  key: string,
-  fallback: number,
-): Promise<number> => {
-  const setting = await prisma.systemSetting.findUnique({
-    select: { value: true },
-    where: { key },
-  });
-
-  return typeof setting?.value === 'number' && Number.isInteger(setting.value)
-    ? setting.value
-    : fallback;
-};
-
 const cleanupPlatformData: BackgroundJobHandler = async () => {
   const now = new Date();
-  const [notificationRetentionDays, jobRetentionDays] = await Promise.all([
-    getRetentionDays('notifications.retentionDays', 180),
-    getRetentionDays('jobs.retentionDays', 30),
-  ]);
+  const [auditRetentionDays, notificationRetentionDays, jobRetentionDays] =
+    await Promise.all([
+      getSystemSettingValue('audit.retentionDays'),
+      getSystemSettingValue('notifications.retentionDays'),
+      getSystemSettingValue('jobs.retentionDays'),
+    ]);
+  const auditCutoff = new Date(now.getTime() - auditRetentionDays * 86_400_000);
   const notificationCutoff = new Date(
     now.getTime() - notificationRetentionDays * 86_400_000,
   );
   const jobCutoff = new Date(now.getTime() - jobRetentionDays * 86_400_000);
 
   await prisma.$transaction([
+    prisma.auditLog.deleteMany({
+      where: { createdAt: { lt: auditCutoff } },
+    }),
     prisma.notification.deleteMany({
       where: {
         OR: [

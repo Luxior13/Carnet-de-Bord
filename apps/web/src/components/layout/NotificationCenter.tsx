@@ -1,8 +1,24 @@
 'use client';
 
-import { Bell, BellRing, type LucideIcon, Settings } from 'lucide-react';
+import {
+  Bell,
+  BellRing,
+  Loader2,
+  type LucideIcon,
+  RefreshCcw,
+  Settings,
+  TriangleAlert,
+} from 'lucide-react';
 import Link from 'next/link';
-import React, { type FC, useCallback, useEffect, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
+import React, {
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { canOpenNavigationHref } from '$constants/app.constants';
 import {
@@ -49,11 +65,20 @@ const QUICK_LINKS = [
 
 const defaultAccentClassName =
   'border-primary/35 bg-primary/10 text-primary-emphasis';
+const NOTIFICATION_REFRESH_MIN_INTERVAL_MS = 30_000;
+const NOTIFICATION_CHANGED_DEBOUNCE_MS = 200;
 
 export const NotificationCenter: FC<NotificationCenterProps> = ({
   notifications,
 }) => {
+  const pathname = usePathname();
   const { userData } = useUser();
+  const [
+    hasActivatedNotificationResource,
+    setHasActivatedNotificationResource,
+  ] = useState(false);
+  const lastNotificationRequestAtRef = useRef(0);
+  const notificationChangedTimerRef = useRef<number | null>(null);
   const canViewNotifications =
     !!userData &&
     (userData.isProtected ||
@@ -62,31 +87,92 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
         PERMISSIONS.NOTIFICATIONS.VIEW,
         userData.permissions,
       ));
-  const loadNotifications = useCallback(
-    (signal: AbortSignal) =>
-      apiFetchJson<NotificationListData>('/api/notifications?limit=10', {
-        signal,
-      }),
-    [],
-  );
+  const isNotificationInboxRoute = pathname === NOTIFICATION_INBOX_HREF;
+  const shouldLoadNotificationResource =
+    notifications === undefined &&
+    canViewNotifications &&
+    (!isNotificationInboxRoute || hasActivatedNotificationResource);
+  const loadNotifications = useCallback((signal: AbortSignal) => {
+    lastNotificationRequestAtRef.current = Date.now();
+
+    return apiFetchJson<NotificationListData>('/api/notifications?limit=10', {
+      signal,
+    });
+  }, []);
   const notificationResource = useAsyncResource(loadNotifications, {
-    enabled: notifications === undefined && canViewNotifications,
+    enabled: shouldLoadNotificationResource,
   });
   const refreshNotificationResource = notificationResource.refresh;
+  const refreshNotificationResourceIfStale = useCallback((): void => {
+    if (
+      !shouldLoadNotificationResource ||
+      Date.now() - lastNotificationRequestAtRef.current <
+        NOTIFICATION_REFRESH_MIN_INTERVAL_MS
+    ) {
+      return;
+    }
+
+    void refreshNotificationResource();
+  }, [refreshNotificationResource, shouldLoadNotificationResource]);
+  const handlePopoverOpenChange = useCallback(
+    (open: boolean): void => {
+      if (!open || notifications !== undefined || !canViewNotifications) return;
+
+      if (isNotificationInboxRoute && !hasActivatedNotificationResource) {
+        // The inbox already loads the same collection. Defer the header read
+        // until the bell is actually used on that route.
+        setHasActivatedNotificationResource(true);
+
+        return;
+      }
+
+      refreshNotificationResourceIfStale();
+    },
+    [
+      canViewNotifications,
+      hasActivatedNotificationResource,
+      isNotificationInboxRoute,
+      notifications,
+      refreshNotificationResourceIfStale,
+    ],
+  );
   useEffect(() => {
-    if (notifications !== undefined || !canViewNotifications) return;
+    if (!shouldLoadNotificationResource) return;
 
     const refreshNotifications = (): void => {
-      void refreshNotificationResource();
+      if (notificationChangedTimerRef.current !== null) {
+        window.clearTimeout(notificationChangedTimerRef.current);
+      }
+      notificationChangedTimerRef.current = window.setTimeout(() => {
+        notificationChangedTimerRef.current = null;
+        void refreshNotificationResource();
+      }, NOTIFICATION_CHANGED_DEBOUNCE_MS);
     };
     window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, refreshNotifications);
 
-    return (): void =>
+    return (): void => {
       window.removeEventListener(
         NOTIFICATIONS_CHANGED_EVENT,
         refreshNotifications,
       );
-  }, [canViewNotifications, notifications, refreshNotificationResource]);
+      if (notificationChangedTimerRef.current !== null) {
+        window.clearTimeout(notificationChangedTimerRef.current);
+        notificationChangedTimerRef.current = null;
+      }
+    };
+  }, [refreshNotificationResource, shouldLoadNotificationResource]);
+  useEffect(() => {
+    if (!shouldLoadNotificationResource) return;
+
+    const refreshWhenVisible = (): void => {
+      if (document.visibilityState !== 'visible') return;
+      refreshNotificationResourceIfStale();
+    };
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+
+    return (): void =>
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+  }, [refreshNotificationResourceIfStale, shouldLoadNotificationResource]);
   const resolvedNotifications = useMemo<NotificationCenterItem[]>(
     () =>
       notifications ??
@@ -94,7 +180,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
         description: notification.body,
         href: notification.href ?? NOTIFICATION_INBOX_HREF,
         id: notification.id,
-        meta: new Date(notification.createdAt).toLocaleDateString('fr-FR'),
+        meta: `${new Date(notification.createdAt).toLocaleDateString('fr-FR')} · ${notification.source.label}`,
         read: notification.readAt !== null,
         title: notification.title,
       })) ??
@@ -121,11 +207,26 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
       ? (notificationResource.data?.unreadCount ?? 0)
       : visibleNotifications.filter((notification) => !notification.read)
           .length;
+  const hasLoadedNotifications =
+    notifications !== undefined || notificationResource.data !== null;
+  const isInitialLoading =
+    notifications === undefined &&
+    notificationResource.data === null &&
+    notificationResource.error === null &&
+    (shouldLoadNotificationResource || isNotificationInboxRoute);
+  const hasInitialError =
+    notifications === undefined &&
+    notificationResource.data === null &&
+    notificationResource.error !== null;
+  const hasRefreshError =
+    notifications === undefined &&
+    notificationResource.data !== null &&
+    notificationResource.error !== null;
 
   if (!canViewNotifications) return null;
 
   return (
-    <Popover>
+    <Popover onOpenChange={handlePopoverOpenChange}>
       <PopoverTrigger asChild>
         <Button
           aria-label={
@@ -158,9 +259,15 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                 Notifications
               </p>
               <p className="text-muted-foreground mt-0.5 text-xs">
-                {unreadNotificationsCount > 0
-                  ? `${unreadNotificationsCount} point${unreadNotificationsCount > 1 ? 's' : ''} a traiter`
-                  : 'Aucun point en attente'}
+                {isInitialLoading
+                  ? 'Chargement en cours'
+                  : hasInitialError
+                    ? 'Chargement indisponible'
+                    : notificationResource.isRefreshing
+                      ? 'Mise à jour en cours'
+                      : unreadNotificationsCount > 0
+                        ? `${unreadNotificationsCount} point${unreadNotificationsCount > 1 ? 's' : ''} a traiter`
+                        : 'Aucun point en attente'}
               </p>
             </div>
             {unreadNotificationsCount > 0 && (
@@ -170,7 +277,67 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
             )}
           </div>
         </div>
-        {visibleNotifications.length > 0 ? (
+        {hasRefreshError && (
+          <div
+            className="border-warning/30 bg-warning/10 text-warning flex items-center gap-2 border-b px-3 py-2"
+            role="alert"
+          >
+            <TriangleAlert aria-hidden="true" className="size-4 shrink-0" />
+            <p className="min-w-0 flex-1 text-xs font-medium">
+              Actualisation impossible. Les dernières données restent affichées.
+            </p>
+            <Button
+              onClick={() => void refreshNotificationResource()}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              Réessayer
+            </Button>
+          </div>
+        )}
+        {isInitialLoading ? (
+          <div
+            aria-live="polite"
+            className="flex flex-col items-center px-4 py-7 text-center"
+            role="status"
+          >
+            <span className="border-border-subtle bg-surface-inset text-muted-foreground flex size-10 items-center justify-center rounded-lg border">
+              <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+            </span>
+            <p className="text-foreground mt-3 text-sm font-semibold">
+              Chargement des notifications
+            </p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Récupération de vos derniers messages.
+            </p>
+          </div>
+        ) : hasInitialError ? (
+          <div
+            className="flex flex-col items-center px-4 py-7 text-center"
+            role="alert"
+          >
+            <span className="border-destructive/30 bg-destructive/10 text-destructive flex size-10 items-center justify-center rounded-lg border">
+              <TriangleAlert aria-hidden="true" className="size-4" />
+            </span>
+            <p className="text-foreground mt-3 text-sm font-semibold">
+              Notifications indisponibles
+            </p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Le chargement a échoué. Vous pouvez réessayer maintenant.
+            </p>
+            <Button
+              className="mt-3"
+              onClick={() => void refreshNotificationResource()}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <RefreshCcw aria-hidden="true" />
+              Réessayer
+            </Button>
+          </div>
+        ) : visibleNotifications.length > 0 ? (
           <div className="max-h-80 overflow-y-auto p-2">
             {visibleNotifications.map((notification) => {
               const NotificationIcon = notification.icon ?? BellRing;
@@ -214,7 +381,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                       {notification.description}
                     </span>
                     {notification.meta && (
-                      <span className="text-muted-foreground/75 mt-1 block text-xs font-medium uppercase">
+                      <span className="text-muted-foreground/75 mt-1 block text-xs font-medium [overflow-wrap:anywhere] uppercase">
                         {notification.meta}
                       </span>
                     )}
@@ -223,7 +390,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
               );
             })}
           </div>
-        ) : (
+        ) : hasLoadedNotifications ? (
           <div className="flex flex-col items-center px-4 py-7 text-center">
             <span className="border-border-subtle bg-surface-inset text-muted-foreground flex size-10 items-center justify-center rounded-lg border">
               <Bell className="size-4" />
@@ -235,7 +402,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
               Les points importants apparaitront ici.
             </p>
           </div>
-        )}
+        ) : null}
         {visibleQuickLinks.length > 0 && (
           <div
             className={cn(

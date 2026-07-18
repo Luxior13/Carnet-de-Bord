@@ -70,6 +70,10 @@ export async function PUT(
     // eslint-disable-next-line security/detect-object-injection
     const definition = SYSTEM_SETTING_DEFINITIONS[key];
     const setting = await prisma.$transaction(async (transaction) => {
+      const previous = await transaction.systemSetting.findUnique({
+        select: { value: true, version: true },
+        where: { key },
+      });
       const updated =
         parsed.data.expectedVersion === 0
           ? await createSystemSetting(
@@ -97,9 +101,11 @@ export async function PUT(
           category: AuditCategory.SYSTEM,
           description: `Paramètre système mis à jour : ${key}`,
           metadata: {
-            after: { value },
-            before: { version: parsed.data.expectedVersion },
-            changes: ['value'],
+            after: { value: updated.value, version: updated.version },
+            before: previous
+              ? { value: previous.value, version: previous.version }
+              : null,
+            changes: ['value', 'version'],
             pageKey: 'system-settings',
             pageLabel: 'Paramètres',
             poleKey: 'system',

@@ -150,16 +150,30 @@ describe('middleware security', () => {
     );
   });
 
-  it('exempts operational health endpoints from rate limit and CSRF cookies', () => {
+  it('rate-limits readiness without adding a CSRF cookie', () => {
     const response = middleware(
       new NextRequest('http://localhost/api/health/ready'),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockCheckRateLimit).toHaveBeenCalledWith('unknown', {
+      bucket: 'health-readiness',
+      maxRequests: 12,
+    });
+    expect(response.headers.get('set-cookie')).toBeNull();
+    expect(response.headers.get('x-ratelimit-remaining')).toBe('99');
+    expect(response.headers.get('cache-control')).toContain('no-store');
+  });
+
+  it('keeps the lightweight liveness endpoint exempt from rate limiting', () => {
+    const response = middleware(
+      new NextRequest('http://localhost/api/health/live'),
     );
 
     expect(response.status).toBe(200);
     expect(mockCheckRateLimit).not.toHaveBeenCalled();
     expect(response.headers.get('set-cookie')).toBeNull();
     expect(response.headers.get('x-ratelimit-remaining')).toBeNull();
-    expect(response.headers.get('cache-control')).toContain('no-store');
   });
 
   it('keeps API paths with file extensions inside middleware coverage', () => {

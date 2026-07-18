@@ -17,7 +17,7 @@ import {
   ROLE_LABELS,
 } from '$constants/permissions.constants';
 import type { UserType } from '$types/auth.types';
-
+import { isSafeInternalHref } from '$utils/internal-href.utils';
 export const SITE_CONFIG = {
   description: "Gestion privée d'équipe esport",
   logo: '/assets/noc.png',
@@ -907,8 +907,8 @@ export function canOpenNavigationHref(
   user: NavigationUser,
   href: string,
 ): boolean {
+  if (!isSafeInternalHref(href)) return false;
   const item = getNavigationItemByHref(href);
-
   // Dynamic destinations (for example, a specific user record) are checked by
   // their destination page. Known navigation entries are filtered here.
   if (!item) return true;

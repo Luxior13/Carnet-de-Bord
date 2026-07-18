@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => {
   const transaction = {
     mfaLoginChallenge: { deleteMany: vi.fn() },
     mfaRecoveryCode: { deleteMany: vi.fn() },
+    notification: { create: vi.fn() },
+    notificationRecipient: { createMany: vi.fn() },
     rateLimit: { deleteMany: vi.fn() },
     session: { deleteMany: vi.fn(), updateMany: vi.fn() },
     totpCredential: { deleteMany: vi.fn() },
@@ -170,6 +172,12 @@ describe('POST /api/users/[id]/reset-mfa', () => {
     mocks.transaction.totpEnrollment.deleteMany.mockResolvedValue({ count: 1 });
     mocks.transaction.mfaRecoveryCode.deleteMany.mockResolvedValue({
       count: 8,
+    });
+    mocks.transaction.notification.create.mockResolvedValue({
+      id: 'mfa-reset-notification',
+    });
+    mocks.transaction.notificationRecipient.createMany.mockResolvedValue({
+      count: 1,
     });
     mocks.transaction.rateLimit.deleteMany.mockResolvedValue({ count: 2 });
     mocks.transaction.user.findUnique.mockResolvedValue(UPDATED_TARGET);
@@ -355,6 +363,25 @@ describe('POST /api/users/[id]/reset-mfa', () => {
       }),
       { client: mocks.transaction, required: true },
     );
+    expect(mocks.transaction.notification.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        createdById: 'root-user',
+        severity: 'CRITICAL',
+        type: 'security.mfa_reset',
+      }),
+      select: { id: true },
+    });
+    expect(
+      mocks.transaction.notificationRecipient.createMany,
+    ).toHaveBeenCalledWith({
+      data: [
+        {
+          notificationId: 'mfa-reset-notification',
+          userId: 'target-user',
+        },
+      ],
+      skipDuplicates: true,
+    });
   });
 
   it('fails closed on a concurrent target security-version change', async () => {

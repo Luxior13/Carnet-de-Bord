@@ -3,6 +3,8 @@ import { extname, relative, resolve } from 'node:path';
 
 const sourceRoot = resolve(import.meta.dirname, '../src');
 const DEFAULT_SOURCE_LIMIT = 800;
+const SERVER_ONLY_DATABASE_IMPORT_PATTERN =
+  /(?:from\s+|import\s*)['"](?:@repo\/database|@prisma\/client)(?:\/[^'"]*)?['"]/u;
 const LEGACY_LIMITS = new Map([
   ['app/api/systeme/journal-activite/route.ts', 1_050],
   ['app/api/users/[id]/audit/route.ts', 950],
@@ -45,6 +47,18 @@ for (const filePath of await collectSourceFiles(sourceRoot)) {
   const limit = LEGACY_LIMITS.get(sourcePath) ?? DEFAULT_SOURCE_LIMIT;
   if (lineCount > limit) {
     failures.push(`${sourcePath}: ${lineCount} lines exceeds ${limit}`);
+  }
+
+  const isDatabaseServerBoundary =
+    sourcePath.startsWith('app/api/') ||
+    sourcePath.startsWith('shared/server/');
+  if (
+    !isDatabaseServerBoundary &&
+    SERVER_ONLY_DATABASE_IMPORT_PATTERN.test(source)
+  ) {
+    failures.push(
+      `${sourcePath}: database packages are server-only; import browser-safe contracts from @repo/shared`,
+    );
   }
 }
 

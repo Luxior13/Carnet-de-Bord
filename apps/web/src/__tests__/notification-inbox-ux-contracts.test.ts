@@ -61,6 +61,16 @@ describe('notification inbox UX contracts', () => {
     expect(inboxSource).toContain('notifyNotificationsChanged();');
   });
 
+  it('keeps notification provenance outside the semantic time value', () => {
+    expect(inboxSource).toMatch(
+      /<time dateTime=\{item\.createdAt\}>[\s\S]*?formatDate\(item\.createdAt\)[\s\S]*?<\/time>/,
+    );
+    expect(inboxSource).not.toMatch(
+      /<time[^>]*>[\s\S]*?Émise par[\s\S]*?<\/time>/,
+    );
+    expect(inboxSource).toContain('· Émise par {item.source.label}');
+  });
+
   it('keeps the inbox inside the shared private content column', () => {
     expect(inboxSource).toContain('<PageShell className="py-0">');
     expect(inboxSource).not.toContain('width="narrow"');

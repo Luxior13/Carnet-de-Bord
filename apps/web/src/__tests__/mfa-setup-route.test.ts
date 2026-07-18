@@ -44,6 +44,8 @@ const mocks = vi.hoisted(() => ({
       createMany: vi.fn(),
       deleteMany: vi.fn(),
     },
+    notification: { create: vi.fn() },
+    notificationRecipient: { createMany: vi.fn() },
     rateLimit: { deleteMany: vi.fn() },
     totpCredential: {
       count: vi.fn(),
@@ -282,6 +284,12 @@ describe('/api/auth/mfa/setup invariants', () => {
     mocks.transaction.$queryRaw.mockResolvedValue([{ id: 'user-1' }]);
     mocks.transaction.mfaLoginChallenge.upsert.mockResolvedValue({});
     mocks.transaction.totpEnrollment.upsert.mockResolvedValue({});
+    mocks.transaction.notification.create.mockResolvedValue({
+      id: 'mfa-enabled-notification',
+    });
+    mocks.transaction.notificationRecipient.createMany.mockResolvedValue({
+      count: 1,
+    });
     mocks.setMfaChallengeCookie.mockResolvedValue(undefined);
     mocks.setSessionTokenCookie.mockResolvedValue(undefined);
     mocks.clearMfaChallengeCookie.mockResolvedValue(undefined);
@@ -456,6 +464,25 @@ describe('/api/auth/mfa/setup invariants', () => {
     expect(mocks.transaction.user.update).toHaveBeenCalledWith({
       data: { mfaEnabledAt: NOW },
       where: { id: BOOTSTRAP_USER_ID },
+    });
+    expect(mocks.transaction.notification.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        createdById: null,
+        severity: 'SUCCESS',
+        type: 'security.mfa_enabled',
+      }),
+      select: { id: true },
+    });
+    expect(
+      mocks.transaction.notificationRecipient.createMany,
+    ).toHaveBeenCalledWith({
+      data: [
+        {
+          notificationId: 'mfa-enabled-notification',
+          userId: BOOTSTRAP_USER_ID,
+        },
+      ],
+      skipDuplicates: true,
     });
     expect(mocks.setSessionTokenCookie).toHaveBeenCalledWith(
       BOOTSTRAP_SESSION.token,

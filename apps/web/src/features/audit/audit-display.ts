@@ -1,7 +1,9 @@
 import {
   Archive,
   Ban,
+  Bell,
   CheckCircle,
+  Cpu,
   Download,
   History,
   Key,
@@ -10,6 +12,7 @@ import {
   type LucideIcon,
   Pencil,
   RefreshCw,
+  Settings,
   Shield,
   UserMinus,
   UserPlus,
@@ -46,6 +49,8 @@ const FIELD_LABELS = new Map<string, string>([
   ['permissions', 'Autorisations'],
   ['revokedSessions', 'Sessions révoquées'],
   ['role', 'Rôle'],
+  ['value', 'Valeur'],
+  ['version', 'Version'],
 ]);
 
 export const AUDIT_ACTION_DISPLAY = new Map<string, AuditActionDisplayConfig>([
@@ -65,6 +70,15 @@ export const AUDIT_ACTION_DISPLAY = new Map<string, AuditActionDisplayConfig>([
       icon: Download,
       label: 'Journal exporté',
       sentence: 'a exporté le journal',
+    },
+  ],
+  [
+    'BACKGROUND_JOB_UPDATE',
+    {
+      color: 'border-warning/35 bg-warning/10 text-warning',
+      icon: Cpu,
+      label: 'Traitement système mis à jour',
+      sentence: 'a mis à jour un traitement système',
     },
   ],
   [
@@ -140,6 +154,15 @@ export const AUDIT_ACTION_DISPLAY = new Map<string, AuditActionDisplayConfig>([
     },
   ],
   [
+    'NOTIFICATION_SEND',
+    {
+      color: 'border-info/35 bg-info/10 text-info',
+      icon: Bell,
+      label: 'Notification envoyée',
+      sentence: 'a envoyé une notification',
+    },
+  ],
+  [
     'PASSWORD_CHANGE',
     {
       color: 'border-warning/35 bg-warning/10 text-warning',
@@ -191,6 +214,15 @@ export const AUDIT_ACTION_DISPLAY = new Map<string, AuditActionDisplayConfig>([
       icon: CheckCircle,
       label: 'Confirmation renforcée réussie',
       sentence: 'a confirmé son identité',
+    },
+  ],
+  [
+    'SYSTEM_SETTING_UPDATE',
+    {
+      color: 'border-info/35 bg-info/10 text-info',
+      icon: Settings,
+      label: 'Paramètre système modifié',
+      sentence: 'a modifié un paramètre système',
     },
   ],
   [

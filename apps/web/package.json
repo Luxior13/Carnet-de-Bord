@@ -62,6 +62,7 @@
     "@radix-ui/react-tabs": "^1.1.17",
     "@radix-ui/react-tooltip": "^1.2.12",
     "@repo/database": "workspace:*",
+    "@repo/shared": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",

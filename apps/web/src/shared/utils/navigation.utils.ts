@@ -1,3 +1,5 @@
+import { isSafeInternalHref } from '$utils/internal-href.utils';
+
 const DEFAULT_AUTHENTICATED_PATH = '/';
 
 /**
@@ -8,20 +10,5 @@ export function getSafeReturnPath(
   candidate: string | null | undefined,
   fallback = DEFAULT_AUTHENTICATED_PATH,
 ): string {
-  if (!candidate || !candidate.startsWith('/')) return fallback;
-  if (candidate.startsWith('//') || candidate.includes('\\')) return fallback;
-  if (/\p{Cc}/u.test(candidate)) return fallback;
-
-  try {
-    const baseUrl = new URL('https://team-control.local');
-    const parsedUrl = new URL(candidate, baseUrl);
-
-    if (parsedUrl.origin !== baseUrl.origin) return fallback;
-    if (parsedUrl.pathname === '/login') return fallback;
-    if (parsedUrl.pathname.startsWith('/api/')) return fallback;
-
-    return `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
-  } catch {
-    return fallback;
-  }
+  return candidate && isSafeInternalHref(candidate) ? candidate : fallback;
 }

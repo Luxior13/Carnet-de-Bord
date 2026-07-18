@@ -56,7 +56,6 @@ type SeverityDisplay = {
   label: string;
 };
 
-const PAGE_SIZE = 20;
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
   dateStyle: 'medium',
   timeStyle: 'short',
@@ -191,12 +190,12 @@ const NotificationRow: FC<NotificationRowProps> = ({
                 <p className="text-muted-foreground mt-2 text-sm leading-6 [overflow-wrap:anywhere]">
                   {item.body}
                 </p>
-                <time
-                  className="text-muted-foreground/80 mt-2 block text-xs font-medium"
-                  dateTime={item.createdAt}
-                >
-                  {formatDate(item.createdAt)}
-                </time>
+                <p className="text-muted-foreground/80 mt-2 text-xs font-medium">
+                  <time dateTime={item.createdAt}>
+                    {formatDate(item.createdAt)}
+                  </time>{' '}
+                  · Émise par {item.source.label}
+                </p>
               </div>
             </div>
 
@@ -273,7 +272,7 @@ export const NotificationInboxPage: FC = () => {
   const loadFirstPage = useCallback(
     (signal: AbortSignal) =>
       apiFetchJson<NotificationListData>(
-        `/api/notifications?status=${filter}&limit=${PAGE_SIZE}`,
+        `/api/notifications?status=${filter}`,
         { signal },
       ),
     [filter],
@@ -433,7 +432,7 @@ export const NotificationInboxPage: FC = () => {
     setIsLoadingMore(true);
     try {
       const nextPage = await apiFetchJson<NotificationListData>(
-        `/api/notifications?status=${filter}&limit=${PAGE_SIZE}&cursor=${encodeURIComponent(pagination.nextCursor)}`,
+        `/api/notifications?status=${filter}&cursor=${encodeURIComponent(pagination.nextCursor)}`,
       );
       setItems((currentItems) => {
         const knownIds = new Set(currentItems.map((item) => item.id));

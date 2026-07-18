@@ -140,6 +140,10 @@ describe('navigation availability', () => {
       false,
     );
     expect(canOpenNavigationHref(user, '/resource/dynamic-id')).toBe(true);
+    expect(canOpenNavigationHref(user, '/\\evil.example/path')).toBe(false);
+    expect(canOpenNavigationHref(user, 'https://evil.example/path')).toBe(
+      false,
+    );
   });
 
   it('groups live user administration under the system space', () => {

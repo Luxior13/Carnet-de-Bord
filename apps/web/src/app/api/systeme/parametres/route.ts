@@ -34,13 +34,19 @@ export async function GET(
     const settings = Object.entries(SYSTEM_SETTING_DEFINITIONS).map(
       ([key, definition]) => {
         const stored = storedByKey.get(key);
+        const storedValue = stored
+          ? definition.schema.safeParse(stored.value)
+          : null;
 
         return {
           description: stored?.description ?? definition.description,
           key,
           updatedAt:
             stored?.updatedAt.toISOString() ?? new Date(0).toISOString(),
-          value: stored?.value ?? definition.defaultValue,
+          value:
+            storedValue?.success === true
+              ? storedValue.data
+              : definition.defaultValue,
           version: stored?.version ?? 0,
         } satisfies SystemSettingItem;
       },

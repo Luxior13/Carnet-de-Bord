@@ -1770,6 +1770,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   const [showCount, setShowCount] = useState(20);
   const [openLogId, setOpenLogId] = useState<string | null>(null);
   const isServerFiltering = !!filters && !!onFiltersChange;
+  const usesServerPagination = typeof onLoadMore === 'function';
   const poleFilter = filters?.poleFilter ?? localPoleFilter;
   const pageFilter = filters?.pageFilter ?? localPageFilter;
   const activityScope = filters?.activityScope ?? localActivityScope;
@@ -1900,8 +1901,12 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   ]);
 
   const displayedLogs = filteredLogs.slice(0, showCount);
-  const renderedLogs = isServerFiltering ? filteredLogs : displayedLogs;
-  const hasMore = !isServerFiltering && filteredLogs.length > showCount;
+  const renderedLogs =
+    isServerFiltering || usesServerPagination ? filteredLogs : displayedLogs;
+  const hasMore =
+    !isServerFiltering &&
+    !usesServerPagination &&
+    filteredLogs.length > showCount;
   const loadedAuditLogsCount = auditLogs.length;
   const effectiveTotalAuditLogs = totalAuditLogs ?? loadedAuditLogsCount;
   const hasTruncatedAuditLogs =

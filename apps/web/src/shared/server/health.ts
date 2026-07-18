@@ -11,6 +11,9 @@ import { prisma } from './prisma';
 const READINESS_MAX_WAIT_MS = 500;
 const READINESS_TIMEOUT_MS = 1_500;
 const FAILURE_LOG_THROTTLE_MS = 60_000;
+const READINESS_SUCCESS_CACHE_MS = 2_000;
+const WORKER_HEARTBEAT_STALE_AFTER_SECONDS = 60;
+const QUEUE_DELAY_WARNING_AFTER_SECONDS = 5 * 60;
 const NO_STORE_HEADERS = {
   'Cache-Control': 'private, no-store, max-age=0, must-revalidate',
   Pragma: 'no-cache',
@@ -36,6 +39,7 @@ type SchemaCheckRow = {
   notificationColumns: number;
   notificationRecipientColumns: number;
   notificationSeverities: number;
+  oldestPendingJobAgeSeconds: number | null;
   platformAuditActions: number;
   platformScaleIndexes: number;
   protectedAccounts: number;
@@ -47,16 +51,22 @@ type SchemaCheckRow = {
   totpEnrollmentColumns: number;
   userColumns: number;
   validProtectedRootAccounts: number;
+  workerHeartbeatAgeSeconds: number | null;
 };
 
 type ReadinessResponse = {
   checks: {
     database: 'connected' | 'disconnected';
+    queue: 'delayed' | 'ready' | 'unknown';
     schema: 'ready' | 'not_ready' | 'unknown';
+    worker: 'not_configured' | 'ready' | 'stale' | 'unknown';
   };
   status: 'healthy' | 'unhealthy';
   timestamp: string;
 };
+
+let cachedSuccessfulReadiness:
+  { expiresAt: number; response: ReadinessResponse } | undefined;
 
 class SchemaNotReadyError extends Error {
   constructor() {
@@ -99,7 +109,19 @@ const logReadinessFailure = async (
 export async function createReadinessResponse(): Promise<
   NextResponse<ReadinessResponse>
 > {
+  if (
+    process.env.NODE_ENV !== 'test' &&
+    cachedSuccessfulReadiness &&
+    cachedSuccessfulReadiness.expiresAt > Date.now()
+  ) {
+    return NextResponse.json(cachedSuccessfulReadiness.response, {
+      headers: NO_STORE_HEADERS,
+    });
+  }
+
   const startedAt = Date.now();
+  let queueStatus: ReadinessResponse['checks']['queue'] = 'ready';
+  let workerStatus: ReadinessResponse['checks']['worker'] = 'not_configured';
 
   try {
     await prisma.$transaction(
@@ -409,6 +431,21 @@ export async function createReadinessResponse(): Promise<
                 AND "isActive" = true
                 AND "deletedAt" IS NULL
             ) AS "validProtectedRootAccounts"
+            ,(
+              SELECT EXTRACT(
+                EPOCH FROM (CURRENT_TIMESTAMP - worker_setting."updatedAt")
+              )::int
+              FROM "SystemSetting" worker_setting
+              WHERE worker_setting."key" = '_internal.workerHeartbeat'
+            ) AS "workerHeartbeatAgeSeconds"
+            ,(
+              SELECT EXTRACT(
+                EPOCH FROM (CURRENT_TIMESTAMP - MIN(job."runAt"))
+              )::int
+              FROM "BackgroundJob" job
+              WHERE job."status" = 'PENDING'::"BackgroundJobStatus"
+                AND job."runAt" <= CURRENT_TIMESTAMP
+            ) AS "oldestPendingJobAgeSeconds"
           FROM information_schema.columns
           WHERE table_schema = current_schema()
         `;
@@ -448,6 +485,20 @@ export async function createReadinessResponse(): Promise<
         ) {
           throw new SchemaNotReadyError();
         }
+
+        if (typeof schema.workerHeartbeatAgeSeconds === 'number') {
+          workerStatus =
+            schema.workerHeartbeatAgeSeconds <=
+            WORKER_HEARTBEAT_STALE_AFTER_SECONDS
+              ? 'ready'
+              : 'stale';
+        }
+        if (
+          typeof schema.oldestPendingJobAgeSeconds === 'number' &&
+          schema.oldestPendingJobAgeSeconds > QUEUE_DELAY_WARNING_AFTER_SECONDS
+        ) {
+          queueStatus = 'delayed';
+        }
       },
       {
         maxWait: READINESS_MAX_WAIT_MS,
@@ -455,14 +506,24 @@ export async function createReadinessResponse(): Promise<
       },
     );
 
-    return NextResponse.json(
-      {
-        checks: { database: 'connected', schema: 'ready' },
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
+    const response: ReadinessResponse = {
+      checks: {
+        database: 'connected',
+        queue: queueStatus,
+        schema: 'ready',
+        worker: workerStatus,
       },
-      { headers: NO_STORE_HEADERS },
-    );
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+    };
+    if (process.env.NODE_ENV !== 'test') {
+      cachedSuccessfulReadiness = {
+        expiresAt: Date.now() + READINESS_SUCCESS_CACHE_MS,
+        response,
+      };
+    }
+
+    return NextResponse.json(response, { headers: NO_STORE_HEADERS });
   } catch (error) {
     const isSchemaFailure = error instanceof SchemaNotReadyError;
     await logReadinessFailure(
@@ -476,7 +537,9 @@ export async function createReadinessResponse(): Promise<
       {
         checks: {
           database: isSchemaFailure ? 'connected' : 'disconnected',
+          queue: 'unknown',
           schema: isSchemaFailure ? 'not_ready' : 'unknown',
+          worker: 'unknown',
         },
         status: 'unhealthy',
         timestamp: new Date().toISOString(),

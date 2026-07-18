@@ -20,6 +20,8 @@ const HEALTH_API_PATHS = new Set([
   '/api/health/live',
   '/api/health/ready',
 ]);
+const READINESS_API_PATHS = new Set(['/api/health', '/api/health/ready']);
+const READINESS_RATE_LIMIT = 12;
 const API_CACHE_CONTROL = 'private, no-store, max-age=0, must-revalidate';
 
 function generateToken(): string {
@@ -117,9 +119,16 @@ export function middleware(request: NextRequest): NextResponse {
   // Rate limiting for API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const isHealthEndpoint = HEALTH_API_PATHS.has(request.nextUrl.pathname);
-    const rateLimit = isHealthEndpoint
+    const isLivenessEndpoint = request.nextUrl.pathname === '/api/health/live';
+    const clientIp = getClientIp(request.headers) ?? 'unknown';
+    const rateLimit = isLivenessEndpoint
       ? null
-      : checkRateLimit(getClientIp(request.headers) ?? 'unknown');
+      : READINESS_API_PATHS.has(request.nextUrl.pathname)
+        ? checkRateLimit(clientIp, {
+            bucket: 'health-readiness',
+            maxRequests: READINESS_RATE_LIMIT,
+          })
+        : checkRateLimit(clientIp);
 
     if (rateLimit && !rateLimit.allowed) {
       const errorResponse = NextResponse.json(

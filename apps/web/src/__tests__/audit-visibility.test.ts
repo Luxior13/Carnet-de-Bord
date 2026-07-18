@@ -158,6 +158,41 @@ describe('audit visibility', () => {
     });
   });
 
+  it('keeps reviewed platform metadata only for sensitive audit readers', () => {
+    const metadata = {
+      after: { value: { apiKey: 'never-visible', mode: 'strict' }, version: 3 },
+      attempts: 5,
+      before: { value: { mode: 'balanced' }, version: 2 },
+      changes: ['value', 'version'],
+      jobId: 'job-1',
+      maxAttempts: 5,
+      notificationId: 'notification-1',
+      phase: 'terminal_failure',
+      reason: 'lease_expired',
+      recipientCount: 12,
+      settingKey: 'notifications.retentionDays',
+      status: 'FAILED',
+      type: 'platform.cleanup',
+    };
+
+    expect(auditVisibility.sanitizeAuditMetadata(metadata, false)).toBeNull();
+    expect(auditVisibility.sanitizeAuditMetadata(metadata, true)).toEqual({
+      after: { value: { mode: 'strict' }, version: 3 },
+      attempts: 5,
+      before: { value: { mode: 'balanced' }, version: 2 },
+      changes: ['value', 'version'],
+      jobId: 'job-1',
+      maxAttempts: 5,
+      notificationId: 'notification-1',
+      phase: 'terminal_failure',
+      reason: 'lease_expired',
+      recipientCount: 12,
+      settingKey: 'notifications.retentionDays',
+      status: 'FAILED',
+      type: 'platform.cleanup',
+    });
+  });
+
   it('redacts descriptions unless sensitive audit access is effective', () => {
     expect(
       auditVisibility.getVisibleAuditDescription({

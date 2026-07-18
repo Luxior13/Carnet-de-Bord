@@ -41,8 +41,6 @@ import { Skeleton } from '$ui/skeleton';
 
 type AccountSectionId = 'activity' | 'profile' | 'security';
 
-const ACCOUNT_AUDIT_PAGE_SIZE = 50;
-
 type PendingNavigation =
   | {
       href: string;
@@ -296,7 +294,6 @@ export const AccountPageContent: FC = () => {
 
       const auditParams = new URLSearchParams({
         includeStats: 'false',
-        pageSize: String(ACCOUNT_AUDIT_PAGE_SIZE),
       });
 
       const response = await fetch(
@@ -344,7 +341,6 @@ export const AccountPageContent: FC = () => {
       cursor: auditNextCursor,
       includeFacets: 'false',
       includeStats: 'false',
-      pageSize: String(ACCOUNT_AUDIT_PAGE_SIZE),
     });
 
     auditAbortControllerRef.current = controller;

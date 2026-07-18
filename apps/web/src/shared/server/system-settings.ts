@@ -2,9 +2,24 @@ import 'server-only';
 
 import type { Prisma } from '@prisma/client';
 
+import {
+  isSystemSettingKey,
+  SYSTEM_SETTING_DEFINITIONS,
+  type SystemSettingKey,
+} from '$constants/system-settings.constants';
+import { logger } from '$server/logger';
 import { prisma } from '$server/prisma';
 
 type SettingWriteClient = Pick<Prisma.TransactionClient, 'systemSetting'>;
+type SettingReadClient = Pick<Prisma.TransactionClient, 'systemSetting'>;
+const SYSTEM_SETTING_CACHE_TTL_MS = 30_000;
+const settingCache = new Map<
+  SystemSettingKey,
+  { expiresAt: number; value: unknown }
+>();
+
+export type SystemSettingValue<TKey extends SystemSettingKey> =
+  (typeof SYSTEM_SETTING_DEFINITIONS)[TKey]['defaultValue'];
 
 export class SystemSettingConflictError extends Error {
   constructor() {
@@ -12,6 +27,50 @@ export class SystemSettingConflictError extends Error {
     this.name = 'SystemSettingConflictError';
   }
 }
+
+/**
+ * Reads a setting through the closed catalog and validates stored JSON again
+ * before it can influence runtime behavior. A damaged or manually edited row
+ * therefore fails safe to the reviewed default instead of widening limits or
+ * producing destructive retention cutoffs.
+ */
+export const getSystemSettingValue = async <TKey extends SystemSettingKey>(
+  key: TKey,
+  client: SettingReadClient = prisma,
+): Promise<SystemSettingValue<TKey>> => {
+  // TKey comes from the closed SystemSettingKey union.
+  // eslint-disable-next-line security/detect-object-injection
+  const definition = SYSTEM_SETTING_DEFINITIONS[key];
+  const canUseCache = client === prisma && process.env.NODE_ENV !== 'test';
+  const cached = canUseCache ? settingCache.get(key) : undefined;
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value as SystemSettingValue<TKey>;
+  }
+
+  const setting = await client.systemSetting.findUnique({
+    select: { value: true },
+    where: { key },
+  });
+  const parsed = definition.schema.safeParse(setting?.value);
+
+  const value = parsed.success ? parsed.data : definition.defaultValue;
+  if (setting) {
+    if (!parsed.success) {
+      logger.warn('Invalid stored system setting; using reviewed default', {
+        action: 'SYSTEM_SETTING_READ',
+        metadata: { key },
+      });
+    }
+  }
+  if (canUseCache) {
+    settingCache.set(key, {
+      expiresAt: Date.now() + SYSTEM_SETTING_CACHE_TTL_MS,
+      value,
+    });
+  }
+
+  return value as SystemSettingValue<TKey>;
+};
 
 export const createSystemSetting = async (
   input: {
@@ -27,8 +86,8 @@ export const createSystemSetting = async (
   updatedAt: Date;
   value: Prisma.JsonValue;
   version: number;
-}> =>
-  client.systemSetting.create({
+}> => {
+  const setting = await client.systemSetting.create({
     data: {
       description: input.description,
       key: input.key,
@@ -43,6 +102,10 @@ export const createSystemSetting = async (
       version: true,
     },
   });
+  if (isSystemSettingKey(input.key)) settingCache.delete(input.key);
+
+  return setting;
+};
 
 export const updateSystemSetting = async (
   input: {
@@ -86,6 +149,7 @@ export const updateSystemSetting = async (
   });
 
   if (!setting) throw new SystemSettingConflictError();
+  if (isSystemSettingKey(input.key)) settingCache.delete(input.key);
 
   return setting;
 };

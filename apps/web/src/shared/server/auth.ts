@@ -33,6 +33,7 @@ import {
 import { logger } from './logger';
 import { prisma } from './prisma';
 import { getClientIp, getRequestId, getUserAgent } from './request-context';
+import { createSecurityNotification } from './security-notifications';
 
 export const SESSION_COOKIE_NAME = 'session';
 const SESSION_SHORT_DURATION_DAYS = 1;
@@ -985,6 +986,7 @@ type UpdateUserPasswordOptions = {
   currentSessionToken: string;
   expectedSecurityVersion: number;
   rateLimitKey?: string;
+  securityNotification?: { actorUserId?: string | null };
 };
 
 /**
@@ -1055,6 +1057,16 @@ export const updateUserPassword = async (
         transaction,
       );
     }
+    if (options.securityNotification) {
+      await createSecurityNotification(
+        {
+          actorUserId: options.securityNotification.actorUserId,
+          kind: 'PASSWORD_CHANGED',
+          recipientUserId: userId,
+        },
+        transaction,
+      );
+    }
   });
 };
 
@@ -1064,10 +1076,11 @@ export const updateUserPassword = async (
 export const resetUserPassword = async (
   userId: string,
   audit?: RequiredAuditLogInput,
-  precondition: {
+  options: {
     expectedRole?: UserRole;
     expectedSecurityVersion?: number;
     expectedUpdatedAt?: Date;
+    notificationActorUserId?: string;
   } = {},
 ): Promise<string> => {
   const tempPassword = generateTemporaryPassword();
@@ -1087,23 +1100,21 @@ export const resetUserPassword = async (
       where: {
         id: userId,
         isProtected: false,
-        ...(precondition.expectedRole
-          ? { role: precondition.expectedRole }
-          : {}),
-        ...(precondition.expectedSecurityVersion === undefined
+        ...(options.expectedRole ? { role: options.expectedRole } : {}),
+        ...(options.expectedSecurityVersion === undefined
           ? {}
-          : { securityVersion: precondition.expectedSecurityVersion }),
-        ...(precondition.expectedUpdatedAt
-          ? { updatedAt: precondition.expectedUpdatedAt }
+          : { securityVersion: options.expectedSecurityVersion }),
+        ...(options.expectedUpdatedAt
+          ? { updatedAt: options.expectedUpdatedAt }
           : {}),
       },
     });
 
     if (userUpdate.count !== 1) {
       if (
-        precondition.expectedRole ||
-        precondition.expectedSecurityVersion !== undefined ||
-        precondition.expectedUpdatedAt
+        options.expectedRole ||
+        options.expectedSecurityVersion !== undefined ||
+        options.expectedUpdatedAt
       ) {
         throw new SecurityVersionMismatchError();
       }
@@ -1117,6 +1128,16 @@ export const resetUserPassword = async (
 
     if (audit && requestContext) {
       await createAuditLog({ ...audit, ...requestContext }, transaction);
+    }
+    if (options.notificationActorUserId) {
+      await createSecurityNotification(
+        {
+          actorUserId: options.notificationActorUserId,
+          kind: 'PASSWORD_RESET',
+          recipientUserId: userId,
+        },
+        transaction,
+      );
     }
   });
 

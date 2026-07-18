@@ -43,8 +43,8 @@ describe('/mon-compte UX contracts', () => {
     expect(accountPageSource).toContain('Quitter sans enregistrer ?');
   });
 
-  it('loads personal activity in pages of 50 and exposes explicit pagination', () => {
-    expect(accountPageSource).toMatch(/const ACCOUNT_AUDIT_PAGE_SIZE\s*=\s*50/);
+  it('loads personal activity with the server page size and explicit pagination', () => {
+    expect(accountPageSource).not.toContain('ACCOUNT_AUDIT_PAGE_SIZE');
     expect(accountPageSource).toContain('fetchMoreAccountAuditLogs');
     expect(accountPageSource).toContain('cursor: auditNextCursor');
     expect(accountPageSource).toContain("includeStats: 'false'");
@@ -54,6 +54,12 @@ describe('/mon-compte UX contracts', () => {
       'onLoadMore={() => void fetchMoreAccountAuditLogs()}',
     );
     expect(accountPageSource).not.toContain('ACCOUNT_AUDIT_MAX_PREFETCH_PAGES');
+    expect(activitySource).toContain(
+      "const usesServerPagination = typeof onLoadMore === 'function'",
+    );
+    expect(activitySource).toContain(
+      'isServerFiltering || usesServerPagination ? filteredLogs : displayedLogs',
+    );
   });
 
   it('mounts Security and Activity only after their first visit', () => {

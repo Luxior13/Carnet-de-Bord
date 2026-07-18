@@ -1,6 +1,6 @@
 'use client';
 
-import { UserRole } from '@repo/database';
+import { UserRole } from '@repo/shared';
 import {
   ChevronDown,
   Crown,

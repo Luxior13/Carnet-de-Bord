@@ -34,6 +34,7 @@
         "@radix-ui/react-tabs": "^1.1.17",
         "@radix-ui/react-tooltip": "^1.2.12",
         "@repo/database": "workspace:*",
+        "@repo/shared": "workspace:*",
         "@t3-oss/env-nextjs": "^0.13.11",
         "bcryptjs": "^2.4.3",
         "class-variance-authority": "^0.7.1",
@@ -84,6 +85,7 @@
         "bcryptjs": "^2.4.3",
         "prisma": "6.19.3",
         "prisma-json-types-generator": "^3.5.1",
+        "server-only": "^0.0.1",
       },
       "devDependencies": {
         "@types/bcryptjs": "^2.4.6",

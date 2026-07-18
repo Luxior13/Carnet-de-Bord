@@ -160,7 +160,6 @@ type ActiveFilterChip = {
   label: string;
 };
 
-const PAGE_SIZE = 40;
 const ALL_FILTER_VALUE = 'all';
 const FILTER_QUERY_KEYS = [
   'action',
@@ -383,7 +382,6 @@ const buildServerQuery = (
     period: filters.period,
   });
 
-  if (!options.exportFormat) params.set('limit', String(PAGE_SIZE));
   if (options.exportFormat) params.set('format', options.exportFormat);
   if (filters.search) params.set('search', filters.search);
   if (filters.actorId) params.set('actorId', filters.actorId);

@@ -12,6 +12,9 @@ const mockPrisma = {
     findMany: vi.fn(),
     groupBy: vi.fn(),
   },
+  systemSetting: {
+    findUnique: vi.fn(),
+  },
   user: {
     findUnique: vi.fn(),
   },
@@ -84,7 +87,11 @@ describe('managed user audit server pagination', () => {
       requestId: 'request-export-1',
       userAgent: 'Test browser',
     });
-    mockPrisma.user.findUnique.mockResolvedValue({ id: 'target-1' });
+    mockPrisma.systemSetting.findUnique.mockResolvedValue(null);
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'target-1',
+      isProtected: false,
+    });
     mockPrisma.auditLog.count.mockResolvedValue(1);
     mockPrisma.auditLog.findMany.mockResolvedValue([buildLog()]);
     mockPrisma.auditLog.groupBy
@@ -96,6 +103,95 @@ describe('managed user audit server pagination', () => {
           poleKey: 'system',
         },
       ]);
+  });
+
+  it('uses the reviewed default page size when no value is stored', async () => {
+    const route = await import('$app/api/users/[id]/audit/route');
+    const response = await route.GET(
+      new Request(
+        'http://localhost/api/users/target-1/audit?includeStats=false',
+      ) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.pagination).toMatchObject({ page: 1, pageSize: 25 });
+    expect(mockPrisma.systemSetting.findUnique).toHaveBeenCalledWith({
+      select: { value: true },
+      where: { key: 'ui.defaultPageSize' },
+    });
+    expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ take: 26 }),
+    );
+  });
+
+  it('excludes protected-account events from every normal-user audit projection', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: {
+        criticalMfaVerifiedAt: new Date(),
+        mfaVerifiedAt: new Date(),
+        passwordReauthenticatedAt: new Date(),
+      },
+      success: true,
+      user: {
+        id: 'admin-1',
+        isProtected: false,
+        permissions: {},
+        role: 'ADMIN',
+      },
+    });
+    const route = await import('$app/api/users/[id]/audit/route');
+    const response = await route.GET(
+      new Request(
+        'http://localhost/api/users/target-1/audit?includeFacets=true',
+      ) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(200);
+    const containsProtectedAccountExclusion = (where: unknown): boolean =>
+      JSON.stringify(where).includes('"isProtected":true');
+    expect(
+      mockPrisma.auditLog.findMany.mock.calls.every(([query]) =>
+        containsProtectedAccountExclusion(query?.where),
+      ),
+    ).toBe(true);
+    expect(
+      mockPrisma.auditLog.count.mock.calls.every(([query]) =>
+        containsProtectedAccountExclusion(query?.where),
+      ),
+    ).toBe(true);
+    expect(
+      mockPrisma.auditLog.groupBy.mock.calls.every(([query]) =>
+        containsProtectedAccountExclusion(query?.where),
+      ),
+    ).toBe(true);
+
+    mockPrisma.auditLog.findMany.mockClear();
+    mockRequireAuth.mockResolvedValueOnce({
+      session: null,
+      success: true,
+      user: {
+        id: 'root-1',
+        isProtected: true,
+        permissions: {},
+        role: 'ADMIN',
+      },
+    });
+    const rootResponse = await route.GET(
+      new Request(
+        'http://localhost/api/users/target-1/audit?includeStats=false',
+      ) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(rootResponse.status).toBe(200);
+    expect(
+      containsProtectedAccountExclusion(
+        mockPrisma.auditLog.findMany.mock.calls[0]?.[0]?.where,
+      ),
+    ).toBe(false);
   });
 
   it('applies scope, period and location filters before returning page one', async () => {

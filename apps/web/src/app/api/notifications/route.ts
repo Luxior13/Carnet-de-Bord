@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
+import { PROTECTED_USER_PUBLIC_DISPLAY_NAME } from '$constants/protected-user.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors, parseJsonBody } from '$server/api-response';
 import { createAuditLogWithHeaders } from '$server/auth';
@@ -13,9 +14,15 @@ import {
   hashCursorFilters,
   parseCursorPageSize,
 } from '$server/cursor-pagination';
-import { createNotification } from '$server/notifications';
+import {
+  buildHumanNotificationDedupeKey,
+  createNotification,
+  isValidNotificationDedupeComponent,
+  NotificationDedupeConflictError,
+} from '$server/notifications';
 import { prisma } from '$server/prisma';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
+import { getSystemSettingValue } from '$server/system-settings';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -25,6 +32,7 @@ import type {
   NotificationItem,
   NotificationListData,
 } from '$types/platform.types';
+import { isKnownInternalPageHref } from '$utils/internal-href.utils';
 
 const NOTIFICATION_RESOURCE = 'notifications';
 const NOTIFICATION_MAX_LIMIT = 50;
@@ -37,14 +45,9 @@ const notificationBulkActionSchema = z
 const sendNotificationSchema = z
   .object({
     body: z.string().trim().min(1).max(2_000),
-    dedupeKey: z.string().trim().min(1).max(160).optional(),
+    dedupeKey: z.string().refine(isValidNotificationDedupeComponent).optional(),
     expiresAt: z.string().datetime({ offset: true }).optional(),
-    href: z
-      .string()
-      .trim()
-      .regex(/^\/(?!\/)/)
-      .max(500)
-      .optional(),
+    href: z.string().max(500).refine(isKnownInternalPageHref).optional(),
     recipientUserIds: z.array(z.string().trim().min(1)).min(1).max(1_000),
     severity: z
       .enum(['INFO', 'SUCCESS', 'WARNING', 'CRITICAL'])
@@ -82,7 +85,17 @@ export async function GET(
       return apiErrors.validation('Filtre de notifications invalide');
     }
     const status = parsedStatus.data;
-    const limit = parseCursorPageSize(searchParams, 20, NOTIFICATION_MAX_LIMIT);
+    const configuredDefaultLimit =
+      await getSystemSettingValue('ui.defaultPageSize');
+    const defaultLimit = Math.max(
+      1,
+      Math.min(configuredDefaultLimit, NOTIFICATION_MAX_LIMIT),
+    );
+    const limit = parseCursorPageSize(
+      searchParams,
+      defaultLimit,
+      NOTIFICATION_MAX_LIMIT,
+    );
     const filterHash = hashCursorFilters({ status });
     const rawCursor = searchParams.get('cursor');
     const cursor = rawCursor
@@ -132,6 +145,14 @@ export async function GET(
           notification: {
             select: {
               body: true,
+              createdBy: {
+                select: {
+                  firstName: true,
+                  isProtected: true,
+                  lastName: true,
+                  loginName: true,
+                },
+              },
               href: true,
               id: true,
               severity: true,
@@ -160,10 +181,23 @@ export async function GET(
       archivedAt: recipient.archivedAt?.toISOString() ?? null,
       body: recipient.notification.body,
       createdAt: recipient.createdAt.toISOString(),
-      href: recipient.notification.href,
+      href:
+        recipient.notification.href &&
+        isKnownInternalPageHref(recipient.notification.href)
+          ? recipient.notification.href
+          : null,
       id: recipient.notification.id,
       readAt: recipient.readAt?.toISOString() ?? null,
       severity: recipient.notification.severity,
+      source: recipient.notification.createdBy
+        ? {
+            kind: 'USER',
+            label: recipient.notification.createdBy.isProtected
+              ? PROTECTED_USER_PUBLIC_DISPLAY_NAME
+              : `${recipient.notification.createdBy.firstName} ${recipient.notification.createdBy.lastName}`.trim() ||
+                recipient.notification.createdBy.loginName,
+          }
+        : { kind: 'SYSTEM', label: 'Système' },
       title: recipient.notification.title,
       type: recipient.notification.type,
     }));
@@ -273,6 +307,12 @@ export async function POST(
         {
           ...parsed.data,
           createdById: auth.user.id,
+          dedupeKey: parsed.data.dedupeKey
+            ? buildHumanNotificationDedupeKey(
+                auth.user.id,
+                parsed.data.dedupeKey,
+              )
+            : undefined,
           expiresAt: parsed.data.expiresAt
             ? new Date(parsed.data.expiresAt)
             : null,
@@ -302,10 +342,11 @@ export async function POST(
     return NextResponse.json({ data: result, success: true }, { status: 201 });
   } catch (error) {
     if (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      error.code === 'P2002'
+      error instanceof NotificationDedupeConflictError ||
+      (typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === 'P2002')
     ) {
       return NextResponse.json(
         {

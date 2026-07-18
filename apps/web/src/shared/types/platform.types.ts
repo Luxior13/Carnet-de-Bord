@@ -1,4 +1,4 @@
-import type { BackgroundJobStatus, NotificationSeverity } from '@repo/database';
+import type { BackgroundJobStatus, NotificationSeverity } from '@repo/shared';
 
 export type NotificationItem = {
   archivedAt: string | null;
@@ -8,6 +8,10 @@ export type NotificationItem = {
   id: string;
   readAt: string | null;
   severity: NotificationSeverity;
+  source: {
+    kind: 'SYSTEM' | 'USER';
+    label: string;
+  };
   title: string;
   type: string;
 };

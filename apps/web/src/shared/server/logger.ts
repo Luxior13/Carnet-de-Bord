@@ -21,13 +21,25 @@ type LogContext = {
 
 const SENSITIVE_LOG_KEY_PATTERN =
   /authorization|cookie|password|recovery.?code|secret|token/i;
+const INLINE_SECRET_PATTERN =
+  /(access.?key|api.?key|authorization|cookie|credential|otp|passphrase|password|private.?key|recovery.?code|refresh.?token|secret|seed|token|totp)(\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi;
+const URL_CREDENTIAL_PATTERN = /\b([a-z][\w+.-]*:\/\/)[^/\s:@]+:[^@\s/]+@/gi;
+const BEARER_TOKEN_PATTERN = /\bBearer\s+[\w.~+/=-]+/gi;
 const MAX_LOG_DEPTH = 5;
 const MAX_LOG_ARRAY_LENGTH = 50;
 const MAX_LOG_STRING_LENGTH = 4_000;
 
+const sanitizeLogString = (value: string): string =>
+  value
+    .slice(0, MAX_LOG_STRING_LENGTH * 2)
+    .replace(URL_CREDENTIAL_PATTERN, '$1[redacted]@')
+    .replace(BEARER_TOKEN_PATTERN, 'Bearer [redacted]')
+    .replace(INLINE_SECRET_PATTERN, '$1$2[redacted]')
+    .slice(0, MAX_LOG_STRING_LENGTH);
+
 const sanitizeLogValue = (value: unknown, depth = 0): unknown => {
   if (depth >= MAX_LOG_DEPTH) return '[max-depth]';
-  if (typeof value === 'string') return value.slice(0, MAX_LOG_STRING_LENGTH);
+  if (typeof value === 'string') return sanitizeLogString(value);
   if (
     value === null ||
     typeof value === 'number' ||
@@ -55,32 +67,43 @@ const sanitizeLogValue = (value: unknown, depth = 0): unknown => {
   return String(value).slice(0, MAX_LOG_STRING_LENGTH);
 };
 
-function formatError(error: unknown): string {
+function formatError(error: unknown, includeStack: boolean): string {
   if (error instanceof Error) {
-    return `${error.name}: ${error.message}${error.stack ? `\n${error.stack}` : ''}`;
+    const summary = `${error.name}: ${sanitizeLogString(error.message)}`;
+
+    return includeStack && error.stack
+      ? `${summary}\n${sanitizeLogString(error.stack)}`
+      : summary;
   }
 
-  return String(error);
+  return sanitizeLogString(String(error));
 }
 
 function log(level: LogLevel, message: string, context?: LogContext): void {
   const timestamp = new Date().toISOString();
+  const sanitizedMessage = sanitizeLogString(message);
+  const formattedError =
+    context?.error === undefined
+      ? undefined
+      : formatError(context.error, process.env.NODE_ENV !== 'production');
   const logEntry: Record<string, unknown> = {
     level,
-    message,
+    message: sanitizedMessage,
     timestamp,
   };
 
-  if (context?.action) logEntry.action = context.action;
-  if (context?.method) logEntry.method = context.method;
-  if (context?.path) logEntry.path = context.path;
-  if (context?.requestId) logEntry.requestId = context.requestId;
+  if (context?.action) logEntry.action = sanitizeLogString(context.action);
+  if (context?.method) logEntry.method = sanitizeLogString(context.method);
+  if (context?.path) logEntry.path = sanitizeLogString(context.path);
+  if (context?.requestId) {
+    logEntry.requestId = sanitizeLogString(context.requestId);
+  }
   if (context?.status) logEntry.status = context.status;
-  if (context?.userId) logEntry.userId = context.userId;
+  if (context?.userId) logEntry.userId = sanitizeLogString(context.userId);
   if (context?.metadata) {
     logEntry.metadata = sanitizeLogValue(context.metadata);
   }
-  if (context?.error !== undefined) logEntry.error = formatError(context.error);
+  if (formattedError !== undefined) logEntry.error = formattedError;
 
   // In development, use colored console output
   // In production, output JSON for log aggregation services
@@ -99,12 +122,14 @@ function log(level: LogLevel, message: string, context?: LogContext): void {
   } else {
     const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
     const developmentContext = {
-      ...(context?.action ? { action: context.action } : {}),
-      ...(context?.method ? { method: context.method } : {}),
-      ...(context?.path ? { path: context.path } : {}),
-      ...(context?.requestId ? { requestId: context.requestId } : {}),
+      ...(context?.action ? { action: sanitizeLogString(context.action) } : {}),
+      ...(context?.method ? { method: sanitizeLogString(context.method) } : {}),
+      ...(context?.path ? { path: sanitizeLogString(context.path) } : {}),
+      ...(context?.requestId
+        ? { requestId: sanitizeLogString(context.requestId) }
+        : {}),
       ...(context?.status ? { status: context.status } : {}),
-      ...(context?.userId ? { userId: context.userId } : {}),
+      ...(context?.userId ? { userId: sanitizeLogString(context.userId) } : {}),
       ...(context?.metadata
         ? { metadata: sanitizeLogValue(context.metadata) }
         : {}),
@@ -113,19 +138,19 @@ function log(level: LogLevel, message: string, context?: LogContext): void {
       case 'error':
         console.error(
           prefix,
-          message,
-          context?.error || '',
+          sanitizedMessage,
+          formattedError ?? '',
           developmentContext,
         );
         break;
       case 'warn':
-        console.warn(prefix, message, developmentContext);
+        console.warn(prefix, sanitizedMessage, developmentContext);
         break;
       case 'info':
-        console.info(prefix, message, developmentContext);
+        console.info(prefix, sanitizedMessage, developmentContext);
         break;
       default:
-        console.log(prefix, message, developmentContext);
+        console.log(prefix, sanitizedMessage, developmentContext);
     }
   }
 }

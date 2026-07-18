@@ -1,8 +1,4 @@
-import {
-  type AuditAction,
-  type AuditCategory,
-  type UserRole,
-} from '@repo/database';
+import type { AuditAction, AuditCategory, UserRole } from '@repo/shared';
 
 import { type PermissionsData } from '$constants/permissions.constants';
 

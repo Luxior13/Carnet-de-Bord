@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   createAuditLogWithHeaders: vi.fn(),
   createNotification: vi.fn(),
   findMany: vi.fn(),
+  getSystemSettingValue: vi.fn(),
   notificationCount: vi.fn(),
   recipientUpdateMany: vi.fn(),
   requireAuth: vi.fn(),
@@ -30,7 +31,8 @@ vi.mock('$server/auth', () => ({
   createAuditLogWithHeaders: mocks.createAuditLogWithHeaders,
 }));
 
-vi.mock('$server/notifications', () => ({
+vi.mock('$server/notifications', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('$server/notifications')>()),
   createNotification: mocks.createNotification,
 }));
 
@@ -50,6 +52,10 @@ vi.mock('$server/sensitive-action', () => ({
   requireRecentSensitiveActionProof: mocks.requireRecentSensitiveActionProof,
 }));
 
+vi.mock('$server/system-settings', () => ({
+  getSystemSettingValue: mocks.getSystemSettingValue,
+}));
+
 const currentUser = {
   id: 'user-current',
   isProtected: false,
@@ -66,6 +72,7 @@ describe('personal notification routes', () => {
       user: currentUser,
     });
     mocks.requirePermission.mockReturnValue({ success: true });
+    mocks.getSystemSettingValue.mockResolvedValue(37);
     mocks.notificationCount.mockResolvedValue(3);
     mocks.findMany.mockResolvedValue([
       {
@@ -73,6 +80,12 @@ describe('personal notification routes', () => {
         createdAt: new Date('2026-07-17T12:00:00.000Z'),
         notification: {
           body: 'Message personnel',
+          createdBy: {
+            firstName: 'Alice',
+            isProtected: false,
+            lastName: 'Admin',
+            loginName: 'alice.admin',
+          },
           href: '/mon-compte',
           id: 'notification-1',
           severity: 'INFO',
@@ -109,6 +122,7 @@ describe('personal notification routes', () => {
       archivedAt: null,
       id: 'notification-1',
       readAt: null,
+      source: { kind: 'USER', label: 'Alice Admin' },
     });
     expect(body.data.unreadCount).toBe(3);
   });
@@ -122,12 +136,56 @@ describe('personal notification routes', () => {
     expect(response.status).toBe(200);
     expect(mocks.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        take: 38,
         where: expect.objectContaining({
           archivedAt: { not: null },
           userId: currentUser.id,
         }),
       }),
     );
+    expect(mocks.getSystemSettingValue).toHaveBeenCalledWith(
+      'ui.defaultPageSize',
+    );
+  });
+
+  it('caps the configured default page size to the notification limit', async () => {
+    mocks.getSystemSettingValue.mockResolvedValueOnce(100);
+    const { GET } = await import('$app/api/notifications/route');
+    const response = await GET(
+      new NextRequest('http://localhost/api/notifications?status=all'),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ take: 51 }),
+    );
+  });
+
+  it('fails closed when a legacy notification contains an unsafe href', async () => {
+    mocks.findMany.mockResolvedValueOnce([
+      {
+        archivedAt: null,
+        createdAt: new Date('2026-07-17T12:00:00.000Z'),
+        notification: {
+          body: 'Message personnel',
+          href: '/\\evil.example/path',
+          id: 'notification-1',
+          severity: 'INFO',
+          title: 'Information',
+          type: 'account.info',
+        },
+        notificationId: 'notification-1',
+        readAt: null,
+      },
+    ]);
+    const { GET } = await import('$app/api/notifications/route');
+    const response = await GET(
+      new NextRequest('http://localhost/api/notifications?status=all'),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.items[0].href).toBeNull();
   });
 
   it('rejects an unknown list filter before querying the database', async () => {

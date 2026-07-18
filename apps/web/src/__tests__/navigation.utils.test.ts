@@ -15,6 +15,9 @@ describe('getSafeReturnPath', () => {
     'https://example.com',
     '//example.com/path',
     '/\\example.com/path',
+    '/%5C%5Cexample.com/path',
+    '/%61pi/users',
+    '/path/../administration',
     '/login',
     '/api/users',
   ])('falls back for an unsafe return path: %s', (value) => {

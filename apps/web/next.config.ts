@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   },
   poweredByHeader: false,
   reactStrictMode: true,
-  transpilePackages: ['@repo/database'],
+  transpilePackages: ['@repo/database', '@repo/shared'],
 };
 
 export default nextConfig;
