@@ -23,6 +23,18 @@ const securitySource = readSourceFile(
 const permissionsSource = readSourceFile(
   '../components/users/PermissionsEditor.tsx',
 );
+const permissionDecisionButtonSource = readSourceFile(
+  '../components/users/PermissionDecisionButton.tsx',
+);
+const permissionStatePickerSource = readSourceFile(
+  '../components/users/PermissionStatePicker.tsx',
+);
+const userAccessSource = readSourceFile(
+  '../components/users/user-detail/UserAccessTab.tsx',
+);
+const userDetailSource = readSourceFile(
+  '../components/users/UserDetailPage.tsx',
+);
 
 describe('administrative user detail subcomponent UX contracts', () => {
   it('keeps the summary focused and does not expose an unfinished contact-verification status', () => {
@@ -65,5 +77,29 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(permissionsSource).toContain('view.missingDependencyLabels');
     expect(permissionsSource).toContain('view.dependencyLabels');
     expect(permissionsSource).toContain('Exception personnalisée');
+  });
+
+  it('keeps denied permission controls keyboard-explainable', () => {
+    expect(permissionStatePickerSource).toContain('aria-describedby');
+    expect(permissionStatePickerSource).toContain(
+      'tabIndex={decision.allowed ? undefined : 0}',
+    );
+    expect(permissionDecisionButtonSource).toContain(
+      'tabIndex={exposeDisabledReason ? 0 : undefined}',
+    );
+    expect(permissionDecisionButtonSource).toContain('className="sr-only"');
+  });
+
+  it('uses the final atomic decision, fail-closed MFA readiness and an explicit change summary', () => {
+    expect(userDetailSource).toContain(
+      'accessMutationAnalysis?.decision.allowed === true',
+    );
+    expect(userDetailSource).toContain(
+      'if (!accessMutationAnalysis?.decision.allowed)',
+    );
+    expect(userAccessSource).toContain('user.criticalAccessReady !== true');
+    expect(userAccessSource).not.toContain('user.mfaEnabledAt === null');
+    expect(userAccessSource).toContain('Déléguer attribution/retrait');
+    expect(userAccessSource).toContain('mutationSummaryLabel');
   });
 });

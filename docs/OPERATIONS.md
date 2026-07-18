@@ -46,6 +46,24 @@ que les anciennes clés.
 
 La sauvegarde de l'étape 2 est obligatoire pour ce changement de données.
 
+### Scission de la gestion des autorisations du 18 juillet 2026
+
+La migration
+`20260718180000_split_access_delegation_permissions` remplace les anciennes
+clés globales `users:update_access` et `users:edit_permissions` par trois
+capacités indépendantes : accorder (`users:grant_access`), retirer
+(`users:revoke_access`) et déléguer leur gestion (`users:delegate_access`). Elle
+conserve la valeur effective et les surcharges différentielles des presets
+USER et ADMIN.
+
+Cette migration est elle aussi une migration de contrat. Appliquer exactement
+la procédure d'arrêt complet décrite ci-dessus : aucun ancien web ou worker ne
+doit lire ou réécrire les permissions pendant ou après la conversion. Le
+nouveau code conserve une lecture temporaire des deux anciennes clés, mais
+toutes les nouvelles écritures utilisent les trois clés séparées. Seul le
+compte racine peut attribuer ou retirer `users:delegate_access`, et aucun de ces
+droits ne permet de créer un ADMIN ou de modifier un rôle.
+
 ## Sauvegarde et restauration
 
 - Programmer une sauvegarde quotidienne et surveiller son code de sortie.

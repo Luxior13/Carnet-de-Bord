@@ -23,6 +23,8 @@ export type UserType = {
   contactEmail: string | null;
   contactEmailVerifiedAt: Date | null;
   createdAt: Date;
+  /** Non-sensitive readiness flag for receiving critical delegated access. */
+  criticalAccessReady?: boolean;
   failedLoginAttempts: number;
   firstName: string;
   id: string;

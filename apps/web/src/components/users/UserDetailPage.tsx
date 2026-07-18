@@ -18,6 +18,11 @@ import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { AdminMfaResetDialog } from '$components/users/user-detail/AdminMfaResetDialog';
 import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
+import {
+  analyzeUserAccessMutationBatch,
+  decideUserAccessMutation,
+  getUserAccessMutationCapabilities as getAccessCapabilities,
+} from '$components/users/user-detail/user-access-editor-policy';
 import { UserAccessTab } from '$components/users/user-detail/UserAccessTab';
 import { UserAccountTab } from '$components/users/user-detail/UserAccountTab';
 import {
@@ -494,14 +499,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         currentUser.permissions,
       )
     : false;
-  const canEditUserPermissions = currentUser
-    ? isProtectedActor ||
-      hasPermission(
-        currentUser.role,
-        PERMISSIONS.USERS.UPDATE_ACCESS,
-        currentUser.permissions,
-      )
-    : false;
+  const accessCaps = getAccessCapabilities(currentUser, isProtectedActor);
   const canViewUserAccountPolicy = currentUser
     ? isProtectedActor ||
       hasPermission(
@@ -601,17 +599,27 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const canViewTargetAccess =
     !!user &&
     !isTargetIdentityMasked &&
-    (canViewUserAccess || canEditUserPermissions || canManageUserRoles);
+    (canViewUserAccess ||
+      accessCaps.canGrant ||
+      accessCaps.canRevoke ||
+      accessCaps.canDelegate ||
+      canManageUserRoles);
   const canViewTargetPersonalAccount =
     !!user &&
     !isTargetIdentityMasked &&
     (canViewUserAccountPolicy || canManageUserAccountPolicy);
+  const canMutateTargetAccess =
+    !!user && !isSelf && !user.isProtected && !isTargetAdminAccessRestricted;
+  const canGrantTargetAccessPermissions =
+    canMutateTargetAccess && accessCaps.canGrant;
+  const canRevokeTargetAccessPermissions =
+    canMutateTargetAccess && accessCaps.canRevoke;
+  const canDelegateTargetAccessPermissions =
+    canMutateTargetAccess && accessCaps.canDelegate;
   const canManageTargetAccessPermissions =
-    !!user &&
-    canEditUserPermissions &&
-    !isSelf &&
-    !user.isProtected &&
-    !isTargetAdminAccessRestricted;
+    canGrantTargetAccessPermissions ||
+    canRevokeTargetAccessPermissions ||
+    canDelegateTargetAccessPermissions;
   const canManageTargetAccountPolicy =
     !!user &&
     canManageUserAccountPolicy &&
@@ -657,6 +665,31 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     !isTargetAdminAccessRestricted;
   const canViewTargetActivity =
     !!user && !isTargetIdentityMasked && (isSelf || canViewUserActivity);
+  const decideAccessPermissionMutation = useCallback(
+    (permissionKey: string, enabled: boolean) =>
+      decideUserAccessMutation(
+        {
+          actor: currentUser,
+          canDelegate: canDelegateTargetAccessPermissions,
+          canGrant: canGrantTargetAccessPermissions,
+          canMutate: canMutateTargetAccess,
+          canRevoke: canRevokeTargetAccessPermissions,
+          isProtectedActor,
+          target: user,
+        },
+        permissionKey,
+        enabled,
+      ),
+    [
+      canDelegateTargetAccessPermissions,
+      canGrantTargetAccessPermissions,
+      canMutateTargetAccess,
+      canRevokeTargetAccessPermissions,
+      currentUser,
+      isProtectedActor,
+      user,
+    ],
+  );
   const loginReadOnlyHint = isSelf
     ? "Votre propre identifiant ne se modifie pas depuis l'administration."
     : user?.isProtected
@@ -759,6 +792,17 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       ACCOUNT_PERMISSION_KEYS,
     );
   const hasAccessChanges = hasRoleChanges || hasAccessPermissionChanges;
+  const accessMutationAnalysis = user
+    ? analyzeUserAccessMutationBatch({
+        currentPermissions: user.permissions,
+        currentRole: user.role,
+        disabled: !canManageTargetAccessPermissions,
+        nextPermissions: permissions,
+        nextRole: editForm.role,
+        policy: decideAccessPermissionMutation,
+        targetCriticalAccessReady: user.criticalAccessReady,
+      })
+    : null;
   const hasAccountChanges = hasAccountPermissionChanges;
   const hasSecurityChanges = !!user && editForm.isActive !== user.isActive;
   const hasCurrentSectionChanges =
@@ -777,8 +821,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       (hasProfileContactChanges && canEditTargetContact)) &&
     !hasProfileErrors;
   const canSaveAccess =
-    (hasRoleChanges && canEditTargetRole) ||
-    (hasAccessPermissionChanges && canManageTargetAccessPermissions);
+    hasAccessChanges &&
+    (!hasRoleChanges || canEditTargetRole) &&
+    accessMutationAnalysis?.decision.allowed === true;
   const canSaveAccount =
     hasAccountPermissionChanges && canManageTargetAccountPolicy;
   const canSaveSecurity = canEditTargetStatus && !isSelf && hasSecurityChanges;
@@ -1586,10 +1631,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       if (response.ok && data.success) {
         syncUserState(data.data.user);
         if (currentUser && data.data.user.id === currentUser.id) {
-          // The administrative response is shaped for the actor and may hide
-          // permission overrides. Update only the self-profile fields here so
-          // the shared authenticated context remains complete and
-          // /mon-compte changes immediately without a loading transition.
+          // Preserve hidden administrative overrides while syncing self-profile fields.
           applyUserUpdate({
             ...currentUser,
             firstName: data.data.user.firstName,
@@ -1628,6 +1670,14 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
     if (!hasAccessChanges) {
       toast.info('Aucune modification à enregistrer');
+
+      return;
+    }
+
+    if (!accessMutationAnalysis?.decision.allowed) {
+      toast.error(
+        accessMutationAnalysis?.decision.reason ?? 'Lot non autorisé',
+      );
 
       return;
     }
@@ -2055,8 +2105,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             }
             permissions={permissions}
             setPermissions={setPermissions}
+            canChangePermission={decideAccessPermissionMutation}
+            canDelegatePermissions={canDelegateTargetAccessPermissions}
             canEditRole={canEditTargetRole}
+            canGrantPermissions={canGrantTargetAccessPermissions}
             canManagePermissions={canManageTargetAccessPermissions}
+            canRevokePermissions={canRevokeTargetAccessPermissions}
+            mutationSummary={accessMutationAnalysis?.summary ?? null}
             isSaving={isSavingPermissions}
             permissionPageKey={permissionPageKey}
             onPermissionPageChange={handlePermissionPageChange}

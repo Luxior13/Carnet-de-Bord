@@ -40,10 +40,12 @@ export const PERMISSIONS = {
   USERS: {
     ARCHIVE: 'users:archive',
     CREATE: 'users:create',
+    DELEGATE_ACCESS: 'users:delegate_access',
     EXPORT_ACTIVITY: 'users:export_activity',
+    GRANT_ACCESS: 'users:grant_access',
     RESET_PASSWORD: 'users:reset_password',
+    REVOKE_ACCESS: 'users:revoke_access',
     REVOKE_SESSIONS: 'users:revoke_sessions',
-    UPDATE_ACCESS: 'users:update_access',
     UPDATE_ACCOUNT_POLICY: 'users:update_account_policy',
     UPDATE_CONTACT: 'users:update_contact',
     UPDATE_LOGIN: 'users:update_login',
@@ -138,8 +140,10 @@ export type PermissionAction =
   | 'archive'
   | 'assign'
   | 'create'
+  | 'delegate'
   | 'delete'
   | 'export'
+  | 'grant'
   | 'manage'
   | 'reset'
   | 'restore'
@@ -430,7 +434,7 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
   },
 ];
 
-/** Only live, delegable administrative capabilities are rendered here. */
+/** Only live administrative capabilities with individual overrides render here. */
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   {
     accessPermissionKey: PERMISSIONS.USERS.VIEW,
@@ -555,14 +559,45 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         surface: 'page',
       }),
       activePermission({
-        action: 'update',
+        action: 'grant',
         dependencies: [PERMISSIONS.USERS.VIEW_ACCESS],
         description:
-          "Modifier les autorisations administratives d'un compte standard, sans modifier son rôle",
+          "Accorder à un compte standard uniquement des autorisations administratives que l'acteur possède lui-même",
         grantable: true,
-        key: PERMISSIONS.USERS.UPDATE_ACCESS,
-        label: 'Modifier les autorisations administratives',
+        key: PERMISSIONS.USERS.GRANT_ACCESS,
+        label: 'Accorder des autorisations administratives',
         module: 'Autorisations',
+        risk: 'critical',
+        route: '/administration/utilisateurs/[id]?section=access',
+        stepUpOnUse: true,
+        surface: 'page',
+      }),
+      activePermission({
+        action: 'revoke',
+        dependencies: [PERMISSIONS.USERS.VIEW_ACCESS],
+        description:
+          'Retirer des autorisations administratives à un compte standard, sans modifier son rôle',
+        grantable: true,
+        key: PERMISSIONS.USERS.REVOKE_ACCESS,
+        label: 'Retirer des autorisations administratives',
+        module: 'Autorisations',
+        risk: 'critical',
+        route: '/administration/utilisateurs/[id]?section=access',
+        stepUpOnUse: true,
+        surface: 'page',
+      }),
+      activePermission({
+        action: 'delegate',
+        dependencies: [
+          PERMISSIONS.USERS.GRANT_ACCESS,
+          PERMISSIONS.USERS.REVOKE_ACCESS,
+        ],
+        description:
+          "Donner ou retirer à un compte standard le droit d'accorder et de retirer des autorisations ; seul le compte racine peut modifier le droit de délégation lui-même",
+        grantable: true,
+        key: PERMISSIONS.USERS.DELEGATE_ACCESS,
+        label: 'Déléguer la gestion des autorisations',
+        module: 'Délégation',
         risk: 'critical',
         route: '/administration/utilisateurs/[id]?section=access',
         stepUpOnUse: true,
@@ -796,11 +831,31 @@ export const LEGACY_PERMISSION_ALIASES: Readonly<
   'system:exports': [PERMISSIONS.AUDIT.EXPORT],
   'system:settings': [PERMISSIONS.SETTINGS.VIEW, PERMISSIONS.SETTINGS.UPDATE],
   'users:delete': [PERMISSIONS.USERS.ARCHIVE],
-  'users:edit_permissions': [PERMISSIONS.USERS.UPDATE_ACCESS],
+  'users:edit_permissions': [
+    PERMISSIONS.USERS.GRANT_ACCESS,
+    PERMISSIONS.USERS.REVOKE_ACCESS,
+    PERMISSIONS.USERS.DELEGATE_ACCESS,
+  ],
   'users:export': [PERMISSIONS.USERS.EXPORT_ACTIVITY],
   'users:manage_account_policy': [PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY],
   'users:manage_status': [PERMISSIONS.USERS.UPDATE_STATUS],
+  'users:update_access': [
+    PERMISSIONS.USERS.GRANT_ACCESS,
+    PERMISSIONS.USERS.REVOKE_ACCESS,
+    PERMISSIONS.USERS.DELEGATE_ACCESS,
+  ],
 };
+
+const LEGACY_PERMISSION_DISPLAY_LABEL_MAP = new Map<string, string>([
+  [
+    'users:edit_permissions',
+    'Modifier les autorisations administratives (historique)',
+  ],
+  [
+    'users:update_access',
+    'Modifier les autorisations administratives (historique)',
+  ],
+]);
 
 const LEGACY_PERMISSION_ALIAS_MAP = new Map<string, readonly string[]>(
   Object.entries(LEGACY_PERMISSION_ALIASES),
@@ -862,13 +917,19 @@ const getCanonicalPermissionEntries = (
       .map(([permissionKey]) => permissionKey),
   );
   const canonicalPermissions = new Map<string, boolean>();
+  const permissionEntryMap = new Map(entries);
 
-  for (const [permissionKey, enabled] of entries) {
-    const aliases = isKnownPermissionKey(permissionKey)
-      ? []
-      : resolvePermissionKey(permissionKey);
+  // Alias catalogue order defines deterministic precedence when several old
+  // names coexist. `users:update_access`, the most recent former canonical
+  // key, therefore wins over the older `users:edit_permissions` alias.
+  for (const [
+    legacyPermissionKey,
+    canonicalKeys,
+  ] of LEGACY_PERMISSION_ALIAS_MAP) {
+    const enabled = permissionEntryMap.get(legacyPermissionKey);
+    if (enabled === undefined) continue;
 
-    for (const canonicalKey of aliases) {
+    for (const canonicalKey of canonicalKeys) {
       if (!explicitCanonicalKeys.has(canonicalKey)) {
         canonicalPermissions.set(canonicalKey, enabled);
       }
@@ -1043,6 +1104,9 @@ export const getDependentPermissionKeys = (
 ): readonly string[] => DEPENDENT_PERMISSION_KEYS_MAP.get(permissionKey) ?? [];
 
 export const getPermissionDisplayLabel = (permissionKey: string): string => {
+  const legacyLabel = LEGACY_PERMISSION_DISPLAY_LABEL_MAP.get(permissionKey);
+  if (legacyLabel) return legacyLabel;
+
   const canonicalPermissionKey = resolvePermissionKey(permissionKey)[0];
 
   return (

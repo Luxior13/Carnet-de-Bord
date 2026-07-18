@@ -49,6 +49,8 @@ describe('audit visibility', () => {
             'permissions',
             'role',
           ],
+          effectivelyGrantedPermissionKeys: [PERMISSIONS.USERS.VIEW],
+          effectivelyRevokedPermissionKeys: [PERMISSIONS.USERS.GRANT_ACCESS],
           pageKey: 'users',
           pageLabel: 'Utilisateurs',
           poleKey: { nested: 'invalid' },
@@ -63,6 +65,33 @@ describe('audit visibility', () => {
       changes: ['firstName', 'isActive', 'lastName'],
       pageKey: 'users',
       pageLabel: 'Utilisateurs',
+    });
+  });
+
+  it('keeps strictly sanitized effective permission deltas for sensitive viewers only', () => {
+    const metadata = {
+      effectivelyGrantedPermissionKeys: [
+        PERMISSIONS.USERS.VIEW,
+        ROADMAP_PERMISSIONS.TASKS.VIEW,
+        'unknown:permission',
+        PERMISSIONS.USERS.VIEW,
+        42,
+      ],
+      effectivelyRevokedPermissionKeys: [
+        'system:audit',
+        'users:manage_roles',
+        'unknown:permission',
+        null,
+      ],
+    };
+
+    expect(auditVisibility.sanitizeAuditMetadata(metadata, false)).toBeNull();
+    expect(auditVisibility.sanitizeAuditMetadata(metadata, true)).toEqual({
+      effectivelyGrantedPermissionKeys: [
+        PERMISSIONS.USERS.VIEW,
+        ROADMAP_PERMISSIONS.TASKS.VIEW,
+      ],
+      effectivelyRevokedPermissionKeys: ['system:audit', 'users:manage_roles'],
     });
   });
 

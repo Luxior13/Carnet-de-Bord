@@ -27,6 +27,8 @@ const SENSITIVE_METADATA_KEYS = new Set([
   'archivedUserId',
   'contactEmailVerificationReset',
   'createdUserId',
+  'effectivelyGrantedPermissionKeys',
+  'effectivelyRevokedPermissionKeys',
   'filters',
   'format',
   'generatedAt',
@@ -157,6 +159,19 @@ const sanitizePermissionDiff = (value: unknown): unknown => {
   );
 };
 
+const sanitizePermissionKeyList = (value: unknown): string[] | undefined => {
+  if (!Array.isArray(value)) return undefined;
+
+  return [
+    ...new Set(
+      value.filter(
+        (entry): entry is string =>
+          typeof entry === 'string' && isHistoricalAuditPermissionKey(entry),
+      ),
+    ),
+  ].slice(0, MAX_METADATA_ARRAY_ENTRIES);
+};
+
 const sanitizeDiffFieldValue = (field: string, value: unknown): unknown => {
   if (field === 'permissions') return sanitizePermissionDiff(value);
   if (STRING_DIFF_FIELD_KEYS.has(field)) {
@@ -268,7 +283,10 @@ export const sanitizeAuditMetadata = (
                   ? DIFF_FIELD_KEYS
                   : PUBLIC_DIFF_FIELD_KEYS,
               )
-            : sanitizeMetadataValue(entryValue, 1);
+            : key === 'effectivelyGrantedPermissionKeys' ||
+                key === 'effectivelyRevokedPermissionKeys'
+              ? sanitizePermissionKeyList(entryValue)
+              : sanitizeMetadataValue(entryValue, 1);
 
       return sanitizedValue === undefined || sanitizedValue === null
         ? []

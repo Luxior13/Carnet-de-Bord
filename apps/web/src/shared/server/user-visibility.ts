@@ -1,3 +1,4 @@
+import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import {
   PROTECTED_USER_MASKED_LOGIN_NAME,
   PROTECTED_USER_PUBLIC_FIRST_NAME,
@@ -5,11 +6,15 @@ import {
 } from '$constants/protected-user.constants';
 import type { UserType } from '$types/auth.types';
 
-type UserVisibilityActor = Pick<UserType, 'id'>;
+type ProtectedIdentityActor = Pick<UserType, 'id'>;
+type UserVisibilityActor = Pick<
+  UserType,
+  'id' | 'isProtected' | 'permissions' | 'role'
+>;
 
 export const isProtectedUserIdentityMasked = (
   user: Pick<UserType, 'id' | 'isProtected'>,
-  actor: UserVisibilityActor,
+  actor: ProtectedIdentityActor,
 ): boolean => user.isProtected && user.id !== actor.id;
 
 /**
@@ -20,14 +25,29 @@ export const protectUserIdentityForActor = (
   user: UserType,
   actor: UserVisibilityActor,
 ): UserType => {
+  const canViewCriticalAccessReadiness =
+    actor.isProtected ||
+    hasPermission(
+      actor.role,
+      PERMISSIONS.USERS.GRANT_ACCESS,
+      actor.permissions,
+    );
+
   if (!isProtectedUserIdentityMasked(user, actor)) {
-    return { ...user, identityDetailsVisible: true };
+    return {
+      ...user,
+      criticalAccessReady: canViewCriticalAccessReadiness
+        ? user.criticalAccessReady
+        : undefined,
+      identityDetailsVisible: true,
+    };
   }
 
   return {
     ...user,
     contactEmail: null,
     contactEmailVerifiedAt: null,
+    criticalAccessReady: undefined,
     failedLoginAttempts: 0,
     firstName: PROTECTED_USER_PUBLIC_FIRST_NAME,
     identityDetailsVisible: false,

@@ -156,7 +156,7 @@ export async function GET(
           error: {
             code: ErrorCode.FORBIDDEN,
             message:
-              'La permission de voir la sÃ©curitÃ© des comptes est requise pour ce filtre',
+              'La permission de voir la sécurité des comptes est requise pour ce filtre',
           },
           success: false,
         },

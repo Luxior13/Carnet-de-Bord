@@ -1,17 +1,19 @@
 'use client';
 
 import { UserRole } from '@repo/database';
-import {
-  Check,
-  ChevronDown,
-  CircleAlert,
-  type LucideIcon,
-  RotateCcw,
-  ShieldCheck,
-  X,
-} from 'lucide-react';
+import { ChevronDown, CircleAlert, RotateCcw, ShieldCheck } from 'lucide-react';
 import React, { type FC, memo, useCallback, useMemo } from 'react';
 
+import {
+  buildPermissionOverrideChange as buildPermissionOverrideChangeData,
+  buildResetPermissionOverrides as buildResetPermissionOverridesData,
+  evaluatePermissionMutationBatch,
+  type PermissionChoiceState,
+  type PermissionMutationDecision,
+  type PermissionMutationPolicy,
+} from '$components/users/permission-editor-policy';
+import { PermissionDecisionButton } from '$components/users/PermissionDecisionButton';
+import { PermissionStatePicker } from '$components/users/PermissionStatePicker';
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
 import {
   getNavigationSpaceToneClasses,
@@ -19,7 +21,6 @@ import {
 } from '$constants/navigation-theme.constants';
 import {
   getAccessPermissionKeys,
-  getDependentPermissionKeys,
   getEffectivePermissions,
   getPermissionItem,
   getRoleBasePermissions,
@@ -32,7 +33,6 @@ import {
   type PermissionsData,
 } from '$constants/permissions.constants';
 import { Badge } from '$ui/badge';
-import { Button } from '$ui/button';
 import {
   Select,
   SelectContent,
@@ -40,10 +40,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '$ui/select';
-import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
 type PermissionsEditorProps = {
+  canChangePermission?: PermissionMutationPolicy;
   disabled?: boolean;
   headerControls?: React.ReactNode;
   onChange: (permissions: PermissionsData | null) => void;
@@ -53,7 +53,6 @@ type PermissionsEditorProps = {
   selectedPageKey: string;
 };
 
-type PermissionChoiceState = 'allow' | 'deny';
 type PermissionResultState =
   'allowed' | 'denied' | 'incomplete' | 'page-blocked';
 
@@ -106,8 +105,10 @@ const ACTION_LABELS: Record<PermissionAction, string> = {
   archive: 'Archiver',
   assign: 'Assigner',
   create: 'Créer',
+  delegate: 'Déléguer',
   delete: 'Supprimer',
   export: 'Exporter',
+  grant: 'Accorder',
   manage: 'Gérer',
   reset: 'Réinitialiser',
   restore: 'Restaurer',
@@ -124,15 +125,6 @@ const RISK_LABELS: Record<PermissionRisk, string | null> = {
   default: null,
   sensitive: 'Sensible',
 };
-
-const OVERRIDE_STATE_OPTIONS: Array<{
-  icon: LucideIcon;
-  label: string;
-  value: PermissionChoiceState;
-}> = [
-  { icon: Check, label: 'Autoriser', value: 'allow' },
-  { icon: X, label: 'Refuser', value: 'deny' },
-];
 
 const getRiskBadgeClassName = (risk: PermissionRisk): string => {
   if (risk === 'critical') return 'border-destructive/40 text-destructive';
@@ -174,29 +166,6 @@ const getPermissionResultBadgeClassName = (
   }
 
   return 'border-destructive/30 bg-destructive/10 text-destructive';
-};
-
-const getStateButtonClassName = (
-  option: PermissionChoiceState,
-  currentState: PermissionChoiceState,
-): string => {
-  if (option !== currentState) {
-    return 'border-transparent text-muted-foreground hover:bg-accent/70 hover:text-foreground';
-  }
-
-  if (option === 'allow') {
-    return 'border-success/35 bg-success/15 text-success shadow-none';
-  }
-
-  return 'border-destructive/40 bg-destructive/15 text-destructive shadow-none';
-};
-
-const toPermissionsData = (
-  permissionsMap: Map<string, boolean>,
-): PermissionsData | null => {
-  if (permissionsMap.size === 0) return null;
-
-  return Object.fromEntries(permissionsMap) as PermissionsData;
 };
 
 const getPermissionOverrideState = (
@@ -338,88 +307,6 @@ const getCategoryAccessPermission = (
   );
 };
 
-type PermissionStatePickerProps = {
-  canReset: boolean;
-  defaultState: PermissionChoiceState;
-  disabled: boolean;
-  onChange: (state: PermissionChoiceState) => void;
-  onReset: () => void;
-  permissionLabel: string;
-  state: PermissionChoiceState;
-};
-
-const PermissionStatePicker: FC<PermissionStatePickerProps> = memo(
-  ({
-    canReset,
-    defaultState,
-    disabled,
-    onChange,
-    onReset,
-    permissionLabel,
-    state,
-  }) => {
-    return (
-      <div className="flex min-w-0 items-center gap-1.5">
-        <div
-          className="border-border/70 bg-surface-control grid min-w-0 flex-1 grid-cols-2 gap-1 rounded-lg border p-1 sm:min-w-[12.5rem] sm:flex-none"
-          role="group"
-          aria-label={`Choix de l’autorisation ${permissionLabel}`}
-        >
-          {OVERRIDE_STATE_OPTIONS.map((option) => {
-            const OptionIcon = option.icon;
-
-            return (
-              <Tooltip key={option.value}>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    disabled={disabled}
-                    onClick={() => onChange(option.value)}
-                    className={cn(
-                      'h-8 rounded-md border px-2 text-xs font-medium',
-                      getStateButtonClassName(option.value, state),
-                    )}
-                    aria-pressed={state === option.value}
-                    aria-label={`${option.label} ${permissionLabel}`}
-                  >
-                    <OptionIcon className="size-3.5" />
-                    <span className="ml-1 hidden sm:inline">
-                      {option.label}
-                    </span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent sideOffset={6}>{option.label}</TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              disabled={disabled || !canReset}
-              onClick={onReset}
-              className="text-muted-foreground hover:text-foreground size-9 shrink-0"
-              aria-label={`Revenir au rôle pour ${permissionLabel}`}
-            >
-              <RotateCcw className="size-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent sideOffset={6}>
-            Défaut du rôle : {defaultState === 'allow' ? 'autorisé' : 'refusé'}
-          </TooltipContent>
-        </Tooltip>
-      </div>
-    );
-  },
-);
-
-PermissionStatePicker.displayName = 'PermissionStatePicker';
-
 const SelectVisualOption: FC<SelectVisualOptionProps> = ({
   icon,
   label,
@@ -461,7 +348,10 @@ const SelectVisualOption: FC<SelectVisualOptionProps> = ({
 };
 
 type PermissionCardProps = {
-  disabled: boolean;
+  getDecision: (
+    permissionKey: string,
+    state: PermissionChoiceState | 'reset',
+  ) => PermissionMutationDecision;
   onChange: (permissionKey: string, state: PermissionChoiceState) => void;
   onReset: (permissionKey: string) => void;
   permission: PermissionItem;
@@ -469,7 +359,7 @@ type PermissionCardProps = {
 };
 
 const PermissionCard: FC<PermissionCardProps> = memo(
-  ({ disabled, onChange, onReset, permission, view }) => {
+  ({ getDecision, onChange, onReset, permission, view }) => {
     return (
       <div
         className={cn(
@@ -552,10 +442,15 @@ const PermissionCard: FC<PermissionCardProps> = memo(
             </details>
           </div>
           <PermissionStatePicker
-            canReset={view.hasCustomChoice}
+            allowDecision={getDecision(permission.key, 'allow')}
             defaultState={view.defaultState}
-            disabled={disabled}
+            denyDecision={getDecision(permission.key, 'deny')}
             permissionLabel={permission.label}
+            resetDecision={
+              view.hasCustomChoice
+                ? getDecision(permission.key, 'reset')
+                : { allowed: false, reason: 'Aucune exception à réinitialiser' }
+            }
             state={view.overrideState}
             onChange={(state) => onChange(permission.key, state)}
             onReset={() => onReset(permission.key)}
@@ -570,6 +465,7 @@ PermissionCard.displayName = 'PermissionCard';
 
 export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
   ({
+    canChangePermission,
     disabled = false,
     headerControls,
     onChange,
@@ -659,54 +555,104 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
       [],
     );
 
+    const getBatchPermissionDecision = useCallback(
+      (nextPermissions: PermissionsData | null): PermissionMutationDecision =>
+        evaluatePermissionMutationBatch({
+          accessPermissionKeys,
+          currentEffectivePermissions: effectivePermissionsMap,
+          currentPermissionsMap: permissionsMap,
+          disabled,
+          nextPermissions,
+          policy: canChangePermission,
+          role,
+        }),
+      [
+        accessPermissionKeys,
+        canChangePermission,
+        disabled,
+        effectivePermissionsMap,
+        permissionsMap,
+        role,
+      ],
+    );
+
+    const buildPermissionOverrideChange = useCallback(
+      (
+        permissionKey: string,
+        state: PermissionChoiceState,
+      ): PermissionsData | null =>
+        buildPermissionOverrideChangeData({
+          permissionKey,
+          permissionsMap,
+          roleBasePermissionsMap,
+          state,
+        }),
+      [permissionsMap, roleBasePermissionsMap],
+    );
+
+    const buildResetPermissionOverrides = useCallback(
+      (permissionKeys: Iterable<string>): PermissionsData | null =>
+        buildResetPermissionOverridesData(permissionsMap, permissionKeys),
+      [permissionsMap],
+    );
+
+    const getPermissionControlDecision = useCallback(
+      (
+        permissionKey: string,
+        state: PermissionChoiceState | 'reset',
+      ): PermissionMutationDecision => {
+        if (state === 'reset') {
+          if (!customPermissionKeys.has(permissionKey)) {
+            return {
+              allowed: false,
+              reason: 'Aucune exception à réinitialiser.',
+            };
+          }
+
+          return getBatchPermissionDecision(
+            buildResetPermissionOverrides([permissionKey]),
+          );
+        }
+
+        const batchDecision = getBatchPermissionDecision(
+          buildPermissionOverrideChange(permissionKey, state),
+        );
+        if (!batchDecision.allowed || !canChangePermission) {
+          return batchDecision;
+        }
+
+        return canChangePermission(permissionKey, state === 'allow');
+      },
+      [
+        buildPermissionOverrideChange,
+        buildResetPermissionOverrides,
+        canChangePermission,
+        customPermissionKeys,
+        getBatchPermissionDecision,
+      ],
+    );
+
     const handleSetPermissionOverride = useCallback(
       (permissionKey: string, state: PermissionChoiceState) => {
-        const nextPermissionsMap = new Map(permissionsMap);
-        const enabled = state === 'allow';
+        const nextPermissions = buildPermissionOverrideChange(
+          permissionKey,
+          state,
+        );
+        if (!getBatchPermissionDecision(nextPermissions).allowed) return;
 
-        const setOverride = (key: string, nextEnabled: boolean): void => {
-          const roleBaseEnabled = roleBasePermissionsMap.get(key) ?? false;
-
-          if (nextEnabled === roleBaseEnabled) nextPermissionsMap.delete(key);
-          else nextPermissionsMap.set(key, nextEnabled);
-        };
-        const visitedPermissionKeys = new Set<string>();
-        const applyWithDependencies = (key: string): void => {
-          if (visitedPermissionKeys.has(key)) return;
-          visitedPermissionKeys.add(key);
-
-          for (const dependency of getPermissionItem(key)?.dependencies ?? []) {
-            applyWithDependencies(dependency);
-          }
-
-          setOverride(key, true);
-        };
-        const denyWithDependents = (key: string): void => {
-          if (visitedPermissionKeys.has(key)) return;
-          visitedPermissionKeys.add(key);
-          setOverride(key, false);
-
-          for (const dependent of getDependentPermissionKeys(key)) {
-            denyWithDependents(dependent);
-          }
-        };
-
-        if (enabled) applyWithDependencies(permissionKey);
-        else denyWithDependents(permissionKey);
-
-        onChange(toPermissionsData(nextPermissionsMap));
+        onChange(nextPermissions);
       },
-      [onChange, permissionsMap, roleBasePermissionsMap],
+      [buildPermissionOverrideChange, getBatchPermissionDecision, onChange],
     );
 
     const handleResetPermissionOverride = useCallback(
       (permissionKey: string) => {
-        const nextPermissionsMap = new Map(permissionsMap);
-        nextPermissionsMap.delete(permissionKey);
+        const nextPermissions = buildResetPermissionOverrides([permissionKey]);
+        if (!getBatchPermissionDecision(nextPermissions).allowed) return;
 
-        onChange(toPermissionsData(nextPermissionsMap));
+        onChange(nextPermissions);
       },
-      [onChange, permissionsMap],
+      [buildResetPermissionOverrides, getBatchPermissionDecision, onChange],
     );
 
     const handleResetCategoryOverrides = useCallback(
@@ -716,26 +662,28 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
         );
         if (!category) return;
 
-        const nextPermissionsMap = new Map(permissionsMap);
+        const nextPermissions = buildResetPermissionOverrides(
+          category.permissions.map((permission) => permission.key),
+        );
+        if (!getBatchPermissionDecision(nextPermissions).allowed) return;
 
-        for (const permission of category.permissions) {
-          nextPermissionsMap.delete(permission.key);
-        }
-
-        onChange(toPermissionsData(nextPermissionsMap));
+        onChange(nextPermissions);
       },
-      [onChange, permissionsMap],
+      [buildResetPermissionOverrides, getBatchPermissionDecision, onChange],
     );
 
     const handleResetAllOverrides = useCallback(() => {
-      const nextPermissionsMap = new Map(permissionsMap);
+      const nextPermissions =
+        buildResetPermissionOverrides(accessPermissionKeys);
+      if (!getBatchPermissionDecision(nextPermissions).allowed) return;
 
-      for (const permissionKey of accessPermissionKeys) {
-        nextPermissionsMap.delete(permissionKey);
-      }
-
-      onChange(toPermissionsData(nextPermissionsMap));
-    }, [accessPermissionKeys, onChange, permissionsMap]);
+      onChange(nextPermissions);
+    }, [
+      accessPermissionKeys,
+      buildResetPermissionOverrides,
+      getBatchPermissionDecision,
+      onChange,
+    ]);
 
     const handlePoleChange = useCallback(
       (poleKey: string) => {
@@ -782,6 +730,20 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
       selectedCategory?.permissions.filter((permission) =>
         customPermissionKeys.has(permission.key),
       ).length ?? 0;
+    const resetAllDecision =
+      customPermissionCount > 0
+        ? getBatchPermissionDecision(
+            buildResetPermissionOverrides(accessPermissionKeys),
+          )
+        : { allowed: false, reason: 'Aucune exception à réinitialiser.' };
+    const resetSelectedCategoryDecision =
+      selectedCategory && selectedCategoryOverrideCount > 0
+        ? getBatchPermissionDecision(
+            buildResetPermissionOverrides(
+              selectedCategory.permissions.map((permission) => permission.key),
+            ),
+          )
+        : { allowed: false, reason: 'Aucune exception à réinitialiser.' };
     const selectedCategoryGroups = useMemo(
       () =>
         groupPermissionsByModule(
@@ -904,22 +866,18 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                     {headerControls}
                   </div>
                 )}
-                <Button
-                  type="button"
+                <PermissionDecisionButton
+                  accessibleLabel="Tout réinitialiser"
+                  concealed={customPermissionCount === 0}
+                  decision={resetAllDecision}
+                  onClick={handleResetAllOverrides}
                   variant="ghost"
                   size="sm"
-                  disabled={disabled || customPermissionCount === 0}
-                  aria-hidden={customPermissionCount === 0}
-                  tabIndex={customPermissionCount === 0 ? -1 : undefined}
-                  onClick={handleResetAllOverrides}
-                  className={cn(
-                    'text-muted-foreground hover:text-foreground gap-1.5',
-                    customPermissionCount === 0 && 'invisible',
-                  )}
+                  className="text-muted-foreground hover:text-foreground gap-1.5"
                 >
                   <RotateCcw className="size-3.5" />
                   Tout réinitialiser
-                </Button>
+                </PermissionDecisionButton>
               </div>
             )}
           </div>
@@ -1092,10 +1050,27 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                     )}
                   </div>
                   <PermissionStatePicker
-                    canReset={selectedPageAccessView.hasCustomChoice}
+                    allowDecision={getPermissionControlDecision(
+                      selectedCategoryAccessPermission.key,
+                      'allow',
+                    )}
                     defaultState={selectedPageAccessView.defaultState}
-                    disabled={disabled}
+                    denyDecision={getPermissionControlDecision(
+                      selectedCategoryAccessPermission.key,
+                      'deny',
+                    )}
                     permissionLabel={selectedCategoryAccessPermission.label}
+                    resetDecision={
+                      selectedPageAccessView.hasCustomChoice
+                        ? getPermissionControlDecision(
+                            selectedCategoryAccessPermission.key,
+                            'reset',
+                          )
+                        : {
+                            allowed: false,
+                            reason: 'Aucune exception à réinitialiser',
+                          }
+                    }
                     state={selectedPageAccessView.overrideState}
                     onChange={(state) =>
                       handleSetPermissionOverride(
@@ -1113,18 +1088,18 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
               )}
               <div className="grid gap-3 md:grid-cols-2">
                 {selectedCategoryOverrideCount > 0 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={disabled}
+                  <PermissionDecisionButton
+                    accessibleLabel="Réinitialiser cette page"
+                    decision={resetSelectedCategoryDecision}
                     onClick={() =>
                       handleResetCategoryOverrides(selectedCategory.key)
                     }
+                    variant="outline"
                     className="justify-start gap-2"
                   >
                     <RotateCcw className="size-4" />
                     Réinitialiser cette page
-                  </Button>
+                  </PermissionDecisionButton>
                 )}
                 {selectedPageIsAllowed ? (
                   <div className="border-border/60 bg-surface-muted flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2">
@@ -1163,7 +1138,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                         {group.permissions.map((permission) => (
                           <PermissionCard
                             key={permission.key}
-                            disabled={disabled}
+                            getDecision={getPermissionControlDecision}
                             permission={permission}
                             view={getPermissionViewModel(permission)}
                             onChange={handleSetPermissionOverride}

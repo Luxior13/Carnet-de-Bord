@@ -16,7 +16,8 @@ politiques serveur et les tests concernés.
 - Une dépendance manquante rend la permission dépendante inefficace, même si
   une surcharge individuelle la contient à `true`.
 - Les surcharges sont différentielles : elles ajoutent ou retirent uniquement
-  les permissions `grantable` par rapport au preset du rôle.
+  les permissions marquées `grantable`, c'est-à-dire configurables
+  individuellement, par rapport au preset du rôle.
 - Les droits du compte racine protégé sont implicites et ne sont pas éditables.
 - Une page future ne justifie pas un droit actif. Les capacités futures restent
   dans `ROADMAP_PERMISSIONS` jusqu'à la mise en ligne complète du module.
@@ -37,7 +38,8 @@ Autorisation**.
 - rubriques telles que `Annuaire`, `Profil et contact`, `Sécurité` ou
   `Autorisations` ;
 - autorisations formulées avec un verbe d'action : `Consulter`, `Créer`,
-  `Modifier`, `Exporter`, `Révoquer` ou `Archiver`.
+  `Modifier`, `Accorder`, `Retirer`, `Déléguer`, `Exporter`, `Révoquer` ou
+  `Archiver`.
 
 Le mot `permission` reste accepté dans le code et dans cette documentation
 technique. Dans l'interface, `autorisation` désigne le réglage et `accès`
@@ -48,34 +50,34 @@ désigne son résultat effectif (page accessible ou inaccessible).
 1. `PERMISSIONS` contient toutes les clés actives reconnues par
    `hasPermission` : socle, autonomie personnelle, administration et API.
 2. `PERMISSION_CATEGORIES` contient seulement les droits administratifs actifs
-   et délégables affichés dans l'éditeur individuel.
+   et configurables individuellement dans l'éditeur.
 3. `ROADMAP_PERMISSIONS` contient des noms réservés pour la préparation produit.
    Ils sont absents des presets, des surcharges acceptées et du calcul des
    droits effectifs.
 
 `ACCOUNT_PERMISSION_CATEGORIES` décrit l'autonomie de `/mon-compte`. La plupart
 des actions de sécurité personnelles sont garanties par le socle. Seule
-`account:update_profile` est actuellement délégable afin de pouvoir retirer à
-un compte la modification de son prénom et de son nom.
+`account:update_profile` est actuellement configurable individuellement afin de
+pouvoir retirer à un compte la modification de son prénom et de son nom.
 
 ## Presets USER, ADMIN et compte racine
 
 Les colonnes USER et ADMIN ci-dessous décrivent le preset sans surcharge
-individuelle. Une permission délégable peut être ajoutée à un USER ou retirée à
-un ADMIN. Le compte racine protégé contourne les presets et possède toutes les
-capacités actives ; les restrictions structurelles du compte racine continuent
-néanmoins de s'appliquer.
+individuelle. Une permission configurable peut être ajoutée à un USER ou
+retirée à un ADMIN. Le compte racine protégé contourne les presets et possède
+toutes les capacités actives ; les restrictions structurelles du compte racine
+continuent néanmoins de s'appliquer.
 
 Légende :
 
 - **socle** : toujours active pour un compte authentifié, non retirable ;
-- **rôle** : valeur fournie par le preset, modifiable seulement si la clé est
-  délégable ;
+- **rôle** : valeur fournie par le preset, modifiable seulement si la clé
+  accepte une surcharge individuelle ;
 - **implicite** : droit du compte racine, sans surcharge stockée.
 
 ### Socle et autonomie personnelle
 
-| Clé canonique             | Portée                                | Dépend de               | Risque    | USER       | ADMIN      | Racine         | Délégable |
+| Clé canonique             | Portée                                | Dépend de               | Risque    | USER       | ADMIN      | Racine         | Surcharge |
 | ------------------------- | ------------------------------------- | ----------------------- | --------- | ---------- | ---------- | -------------- | --------- |
 | `dashboard:view`          | `/`                                   | —                       | `default` | Oui, socle | Oui, socle | Oui, implicite | Non       |
 | `notifications:view`      | `/mes-notifications`, données propres | —                       | `default` | Oui, socle | Oui, socle | Oui, implicite | Non       |
@@ -93,29 +95,33 @@ passe. Les capacités personnelles ne donnent aucun droit sur un autre compte.
 
 ### Page Utilisateurs
 
-Toutes les clés de ce tableau sont délégables. Leur preset est `false` pour
-USER et `true` pour ADMIN. Le compte racine les possède implicitement.
+Toutes les clés de ce tableau acceptent une surcharge individuelle. Leur preset
+est `false` pour USER et `true` pour ADMIN. Le compte racine les possède
+implicitement. Cela ne signifie pas que chaque gestionnaire peut toutes les
+attribuer : les limites d'attribution sont détaillées sous le tableau.
 
-| Clé canonique                 | Action couverte                                 | Dépend de                           | Risque    | Step-up à l'usage |
-| ----------------------------- | ----------------------------------------------- | ----------------------------------- | --------- | ----------------- |
-| `users:view`                  | liste, fiche et données de base                 | —                                   | `default` | Non               |
-| `users:create`                | créer un compte standard                        | `users:view`                        | sensible  | Non               |
-| `users:view_contact`          | voir les adresses de contact                    | `users:view`                        | sensible  | Non               |
-| `users:update_profile`        | modifier prénom et nom                          | `users:view`                        | sensible  | Non               |
-| `users:update_contact`        | modifier une adresse de contact                 | `users:view`, `users:view_contact`  | sensible  | Non               |
-| `users:update_login`          | modifier l'identifiant et fermer les sessions   | `users:view`                        | critique  | Oui               |
-| `users:view_security`         | voir verrouillage, mot de passe et MFA          | `users:view`                        | sensible  | Non               |
-| `users:update_status`         | activer ou désactiver un compte                 | `users:view`, `users:view_security` | critique  | Oui               |
-| `users:view_access`           | consulter les autorisations administratives     | `users:view`                        | sensible  | Non               |
-| `users:update_access`         | modifier les autorisations administratives      | `users:view_access`                 | critique  | Oui               |
-| `users:view_account_policy`   | voir l'autonomie personnelle                    | `users:view`                        | sensible  | Non               |
-| `users:update_account_policy` | modifier les options personnelles délégables    | `users:view_account_policy`         | sensible  | Oui               |
-| `users:reset_password`        | émettre un mot de passe temporaire              | `users:view_security`               | critique  | Oui               |
-| `users:view_sessions`         | voir les sessions actives                       | `users:view_security`               | sensible  | Non               |
-| `users:revoke_sessions`       | révoquer une ou toutes les sessions             | `users:view_sessions`               | critique  | Oui               |
-| `users:view_activity`         | voir l'activité d'un autre compte               | `users:view`                        | sensible  | Non               |
-| `users:export_activity`       | exporter l'activité d'un autre compte           | `users:view_activity`               | critique  | Oui               |
-| `users:archive`               | suppression logique réversible                  | `users:view_security`               | critique  | Oui               |
+| Clé canonique                 | Action couverte                                 | Dépend de                                   | Risque    | Step-up à l'usage |
+| ----------------------------- | ----------------------------------------------- | ------------------------------------------- | --------- | ----------------- |
+| `users:view`                  | liste, fiche et données de base                 | —                                           | `default` | Non               |
+| `users:create`                | créer un compte standard                        | `users:view`                                | sensible  | Non               |
+| `users:view_contact`          | voir les adresses de contact                    | `users:view`                                | sensible  | Non               |
+| `users:update_profile`        | modifier prénom et nom                          | `users:view`                                | sensible  | Non               |
+| `users:update_contact`        | modifier une adresse de contact                 | `users:view`, `users:view_contact`          | sensible  | Non               |
+| `users:update_login`          | modifier l'identifiant et fermer les sessions   | `users:view`                                | critique  | Oui               |
+| `users:view_security`         | voir verrouillage, mot de passe et MFA          | `users:view`                                | sensible  | Non               |
+| `users:update_status`         | activer ou désactiver un compte                 | `users:view`, `users:view_security`         | critique  | Oui               |
+| `users:view_access`           | consulter les autorisations administratives     | `users:view`                                | sensible  | Non               |
+| `users:grant_access`          | accorder des autorisations administratives      | `users:view_access`                         | critique  | Oui               |
+| `users:revoke_access`         | retirer des autorisations administratives       | `users:view_access`                         | critique  | Oui               |
+| `users:delegate_access`       | déléguer l'attribution et le retrait des accès  | `users:grant_access`, `users:revoke_access` | critique  | Oui               |
+| `users:view_account_policy`   | voir l'autonomie personnelle                    | `users:view`                                | sensible  | Non               |
+| `users:update_account_policy` | modifier les options personnelles configurables | `users:view_account_policy`                 | sensible  | Oui               |
+| `users:reset_password`        | émettre un mot de passe temporaire              | `users:view_security`                       | critique  | Oui               |
+| `users:view_sessions`         | voir les sessions actives                       | `users:view_security`                       | sensible  | Non               |
+| `users:revoke_sessions`       | révoquer une ou toutes les sessions             | `users:view_sessions`                       | critique  | Oui               |
+| `users:view_activity`         | voir l'activité d'un autre compte               | `users:view`                                | sensible  | Non               |
+| `users:export_activity`       | exporter l'activité d'un autre compte           | `users:view_activity`                       | critique  | Oui               |
+| `users:archive`               | suppression logique réversible                  | `users:view_security`                       | critique  | Oui               |
 
 `users:archive` est volontairement distinct d'une suppression irréversible.
 Le terme `delete` ne devra être utilisé que si une future opération détruit
@@ -123,24 +129,43 @@ réellement les données et possède sa propre politique de rétention.
 L'identifiant d'audit historique `USER_DELETE` reste lisible pour compatibilité,
 mais son libellé fonctionnel et tous les nouveaux messages parlent d'archive.
 
+La gestion déléguée des autorisations repose sur trois capacités distinctes :
+
+- `users:grant_access` permet d'accorder une autorisation que l'acteur possède
+  lui-même ;
+- `users:revoke_access` permet de retirer une autorisation ;
+- `users:delegate_access` permet d'attribuer ou de retirer les deux capacités
+  précédentes à un autre compte standard.
+
+Seul le compte racine peut attribuer ou retirer `users:delegate_access`. Un
+détenteur de ce droit peut déléguer l'attribution et le retrait, mais ne peut
+pas transmettre le droit de délégation lui-même. Les rôles `USER` et `ADMIN`
+restent hors de ce mécanisme : seul le compte racine peut les modifier.
+
+Chaque modification enregistre séparément les clés effectivement accordées et
+effectivement retirées, y compris les effets indirects des dépendances ou d'un
+changement de rôle. Ces listes sont des métadonnées d'audit sensibles : elles
+ne sont visibles qu'avec `audit:view_sensitive`.
+
 ### Journal global
 
-| Clé canonique          | Action couverte                                | Dépend de    | Risque   | USER | ADMIN     | Racine         | Délégable | Step-up |
+| Clé canonique          | Action couverte                                | Dépend de    | Risque   | USER | ADMIN     | Racine         | Surcharge | Step-up |
 | ---------------------- | ---------------------------------------------- | ------------ | -------- | ---- | --------- | -------------- | --------- | ------- |
 | `audit:view`           | consulter le journal global                    | —            | sensible | Non  | Oui, rôle | Oui, implicite | Oui       | Non     |
 | `audit:view_sensitive` | voir IP, identifiants et métadonnées sensibles | `audit:view` | critique | Non  | Non       | Oui, implicite | Oui       | Non     |
 | `audit:export`         | exporter le journal global                     | `audit:view` | critique | Non  | Oui, rôle | Oui, implicite | Oui       | Oui     |
 
 Le preset ADMIN exclut intentionnellement `audit:view_sensitive`. Le compte
-racine peut la déléguer explicitement à un compte ayant une MFA complète. Le
+racine peut l'attribuer explicitement à un compte ayant une MFA complète. Le
 droit de consulter l'activité d'un utilisateur ne permet jamais de lire
 l'activité privée du compte racine : seul son propriétaire y accède.
 
 ### API actives sans écran d'administration
 
 Ces permissions protègent une API opérationnelle, mais aucun écran actif ne
-permet encore d'en déléguer l'usage. Elles sont donc connues, non `grantable`,
-absentes de l'éditeur et impossibles à ajouter ou retirer par surcharge.
+permet encore d'en configurer l'usage individuellement. Elles sont donc
+connues, non `grantable`, absentes de l'éditeur et impossibles à ajouter ou
+retirer par surcharge.
 
 | Clé canonique        | API                                 | Dépend de       | Risque   | USER | ADMIN     | Racine         | Step-up |
 | -------------------- | ----------------------------------- | --------------- | -------- | ---- | --------- | -------------- | ------- |
@@ -148,33 +173,34 @@ absentes de l'éditeur et impossibles à ajouter ou retirer par surcharge.
 | `settings:view`      | `GET /api/systeme/parametres`       | —               | sensible | Non  | Oui, rôle | Oui, implicite | Non     |
 | `settings:update`    | `PUT /api/systeme/parametres/[key]` | `settings:view` | critique | Non  | Oui, rôle | Oui, implicite | Oui     |
 
-Lorsqu'un écran correspondant deviendra actif, le caractère délégable devra
-être décidé explicitement. La seule présence de l'API ou du futur écran ne doit
-pas transformer automatiquement ces droits de rôle en droits individuels.
+Lorsqu'un écran correspondant deviendra actif, la possibilité d'une surcharge
+individuelle devra être décidée explicitement. La seule présence de l'API ou du
+futur écran ne doit pas transformer automatiquement ces droits de rôle en
+droits individuels.
 
 ## Pages actives et contrôles attendus
 
-| Route active ou de support                           | Contrôle principal                                                                                                      |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `/login`                                             | publique ; le parcours d'authentification impose la MFA                                                                 |
-| `/`                                                  | `dashboard:view`, toujours actif ; chaque donnée administrative du tableau de bord conserve ensuite son propre contrôle |
-| `/mes-notifications`                                 | `notifications:view`, limité aux notifications du compte connecté                                                       |
-| `/mon-compte`                                        | droits `account:*`, toujours limités au compte connecté                                                                 |
-| `/feuille-de-route`                                  | authentification ; catalogue informatif des pages planifiées, sans attribution de droits                                |
-| `/recherche`                                         | authentification ; chaque résultat est filtré selon la destination réellement autorisée                                 |
-| `/tableau-de-bord`                                   | alias de support redirigeant vers `/` ; aucune permission supplémentaire                                                |
-| `/tableau-de-bord/mes-notifications`                 | ancien alias redirigeant vers `/mes-notifications`                                                                      |
-| `/systeme`                                           | au moins `users:view` ou `audit:view` pour un compte non protégé                                                        |
-| `/administration`                                    | route de support redirigeant vers les utilisateurs                                                                      |
-| `/administration/utilisateurs`                       | `users:view`                                                                                                            |
-| `/administration/utilisateurs/nouveau`               | `users:create`, donc aussi `users:view`                                                                                 |
-| `/administration/utilisateurs/[id]?section=profile`  | lecture de fiche, contact, profil et identifiant via les clés `users:*` correspondantes                                 |
-| `/administration/utilisateurs/[id]?section=security` | sécurité, statut, sessions, mot de passe et archivage via les clés `users:*` correspondantes                            |
-| `/administration/utilisateurs/[id]?section=access`   | `users:view_access` pour lire ; `users:update_access` pour modifier                                                     |
-| `/administration/utilisateurs/[id]?section=account`  | `users:view_account_policy` pour lire ; `users:update_account_policy` pour modifier                                     |
-| `/administration/utilisateurs/[id]?section=history`  | `users:view_activity` ; `users:export_activity` pour le CSV                                                             |
-| `/systeme/journal-activite`                          | `audit:view` ; détails sensibles et export contrôlés séparément                                                         |
-| pages d'erreur et page introuvable                   | support technique, sans capacité métier accordée                                                                        |
+| Route active ou de support                           | Contrôle principal                                                                                                                                         |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/login`                                             | publique ; le parcours d'authentification impose la MFA                                                                                                    |
+| `/`                                                  | `dashboard:view`, toujours actif ; chaque donnée administrative du tableau de bord conserve ensuite son propre contrôle                                    |
+| `/mes-notifications`                                 | `notifications:view`, limité aux notifications du compte connecté                                                                                          |
+| `/mon-compte`                                        | droits `account:*`, toujours limités au compte connecté                                                                                                    |
+| `/feuille-de-route`                                  | authentification ; catalogue informatif des pages planifiées, sans attribution de droits                                                                   |
+| `/recherche`                                         | authentification ; chaque résultat est filtré selon la destination réellement autorisée                                                                    |
+| `/tableau-de-bord`                                   | alias de support redirigeant vers `/` ; aucune permission supplémentaire                                                                                   |
+| `/tableau-de-bord/mes-notifications`                 | ancien alias redirigeant vers `/mes-notifications`                                                                                                         |
+| `/systeme`                                           | au moins `users:view` ou `audit:view` pour un compte non protégé                                                                                           |
+| `/administration`                                    | route de support redirigeant vers les utilisateurs                                                                                                         |
+| `/administration/utilisateurs`                       | `users:view`                                                                                                                                               |
+| `/administration/utilisateurs/nouveau`               | `users:create`, donc aussi `users:view`                                                                                                                    |
+| `/administration/utilisateurs/[id]?section=profile`  | lecture de fiche, contact, profil et identifiant via les clés `users:*` correspondantes                                                                    |
+| `/administration/utilisateurs/[id]?section=security` | sécurité, statut, sessions, mot de passe et archivage via les clés `users:*` correspondantes                                                               |
+| `/administration/utilisateurs/[id]?section=access`   | `users:view_access` pour lire ; `users:grant_access` pour accorder ; `users:revoke_access` pour retirer ; `users:delegate_access` pour déléguer la gestion |
+| `/administration/utilisateurs/[id]?section=account`  | `users:view_account_policy` pour lire ; `users:update_account_policy` pour modifier                                                                        |
+| `/administration/utilisateurs/[id]?section=history`  | `users:view_activity` ; `users:export_activity` pour le CSV                                                                                                |
+| `/systeme/journal-activite`                          | `audit:view` ; détails sensibles et export contrôlés séparément                                                                                            |
+| pages d'erreur et page introuvable                   | support technique, sans capacité métier accordée                                                                                                           |
 
 Les routes génériques présentes pour les pôles Vie interne, Bureau & juridique,
 Trésorerie, Système futur et Sport restent des pages planifiées. Leur existence
@@ -188,7 +214,7 @@ Pour un compte non protégé, le calcul suit cet ordre :
 
 1. partir du preset USER ou ADMIN ;
 2. convertir temporairement les alias legacy vers leurs cibles canoniques ;
-3. ne conserver et appliquer que les surcharges individuelles délégables ;
+3. ne conserver et appliquer que les surcharges individuelles configurables ;
 4. forcer les clés `alwaysEnabled` à `true` ;
 5. résoudre récursivement toutes les dépendances et refuser toute clé inconnue
    ou seulement planifiée.
@@ -196,13 +222,17 @@ Pour un compte non protégé, le calcul suit cet ordre :
 Une surcharge stockée est volontairement parcimonieuse. `true` signifie un
 ajout par rapport au rôle et `false` un retrait. L'absence de clé signifie
 « suivre le rôle ». `normalizePermissionOverrides` retire les clés inconnues,
-les droits de socle et les API non délégables. Une valeur affichée comme
-accordée mais privée de sa dépendance n'est pas effective.
+les droits de socle et les API non configurables individuellement. Une valeur
+affichée comme accordée mais privée de sa dépendance n'est pas effective.
 
-Lors d'une délégation, un administrateur non protégé ne peut pas accorder une
+Lors d'une attribution, un administrateur non protégé ne peut pas accorder une
 permission qu'il ne possède pas lui-même, ne peut pas modifier ses propres
-permissions et ne peut pas administrer un autre ADMIN. Les créations ou
-modifications d'ADMIN sont réservées au compte racine.
+permissions et ne peut pas administrer un autre ADMIN. Accorder un droit exige
+`users:grant_access` ; le retirer exige `users:revoke_access`. Modifier les
+droits d'attribution ou de retrait d'un autre compte exige en plus
+`users:delegate_access`. Seul le compte racine peut attribuer ou retirer ce
+dernier droit. Les créations ou modifications d'ADMIN et tous les changements
+de rôle restent réservés au compte racine.
 
 ## Risques, MFA et step-up
 
@@ -295,8 +325,8 @@ il n'existe rien à autoriser.
 - Un seul `:` sépare la ressource stable de l'action ; les mots composés
   utilisent `_`.
 - Utiliser le vocabulaire d'action commun : `view`, `create`, `update`,
-  `approve`, `archive`, `assign`, `delete`, `export`, `manage`, `reset`,
-  `restore`, `revoke`, `send`, `sync`, `validate`.
+  `approve`, `archive`, `assign`, `delegate`, `delete`, `export`, `grant`,
+  `manage`, `reset`, `restore`, `revoke`, `send`, `sync`, `validate`.
 - Préférer une action précise à `manage`. Ce dernier convient seulement à un
   ensemble cohérent impossible à séparer utilement, comme la MFA personnelle.
 - Séparer lecture, modification, export et données sensibles. Une permission
@@ -308,9 +338,10 @@ il n'existe rien à autoriser.
 - Un changement de libellé ou de route ne renomme pas la clé. Un changement de
   sens exige une nouvelle clé et une migration explicite.
 
-Exemples cohérents : `audit:view_sensitive`, `users:revoke_sessions`,
-`account:change_password`. Exemple à éviter : `system:manage_everything`, qui
-mélangerait plusieurs ressources, risques et responsabilités.
+Exemples cohérents : `audit:view_sensitive`, `users:grant_access`,
+`users:revoke_sessions`, `account:change_password`. Exemple à éviter :
+`system:manage_everything`, qui mélangerait plusieurs ressources, risques et
+responsabilités.
 
 ## Migration des clés legacy
 
@@ -324,7 +355,8 @@ lues, mais toute nouvelle écriture doit utiliser les clés canoniques.
 | `system:exports`              | `audit:export`                                                                                      |
 | `system:settings`             | aucune surcharge conservée : `settings:view` et `settings:update` sont désormais liés au rôle ADMIN |
 | `users:delete`                | `users:archive`                                                                                     |
-| `users:edit_permissions`      | `users:update_access`                                                                               |
+| `users:update_access`         | `users:grant_access`, `users:revoke_access`, `users:delegate_access`                                |
+| `users:edit_permissions`      | `users:grant_access`, `users:revoke_access`, `users:delegate_access`                                |
 | `users:export`                | `users:export_activity`                                                                             |
 | `users:manage_account_policy` | `users:update_account_policy`                                                                       |
 | `users:manage_status`         | `users:update_status`                                                                               |
@@ -333,16 +365,22 @@ Règles de résolution :
 
 - une valeur canonique explicite gagne si l'ancien et le nouveau nom sont
   présents ;
+- si les deux anciens noms de gestion des accès coexistent,
+  `users:update_access` gagne sur `users:edit_permissions` ;
 - un alias à plusieurs cibles propose sa valeur à chaque cible absente avant le
-  filtrage des droits délégables ;
-- seules les cibles actives et délégables survivent à la normalisation ;
+  filtrage des droits configurables individuellement ;
+- seules les cibles actives et configurables individuellement survivent à la
+  normalisation ;
 - les clés totalement inconnues sont remontées par
   `getUnknownPermissionKeys`, jamais rendues effectives.
 
 Plan de retrait : inventorier les JSON existants, convertir les alias en clés
 canoniques, enregistrer uniquement des surcharges différentielles, vérifier
 qu'aucune ligne et aucun client n'émet encore l'ancien format, puis supprimer
-les alias et leurs tests de compatibilité. La conversion
+les alias et leurs tests de compatibilité. Les anciens droits globaux
+`users:update_access` et `users:edit_permissions` sont convertis vers les trois
+capacités afin de conserver leur valeur effective ; toutes les nouvelles
+écritures doivent employer les clés séparées. La conversion
 `users:delete` vers `users:archive` doit être contrôlée fonctionnellement, car
 elle remplace une ancienne sémantique de suppression. Les anciennes surcharges
 `system:settings` doivent être supprimées : les deux capacités de paramètres
@@ -358,6 +396,6 @@ sont désormais exclusivement fournies par le preset ADMIN.
 - `grantable`, `alwaysEnabled`, `risk`, MFA cible et step-up sont-ils justifiés ?
 - La navigation et l'UI reflètent-elles le garde serveur sans le remplacer ?
 - Les mutations critiques sont-elles transactionnelles et auditées ?
-- Les surcharges inconnues, non délégables et planifiées sont-elles rejetées ?
+- Les surcharges inconnues, non configurables et planifiées sont-elles rejetées ?
 - La documentation, la migration éventuelle et les tests sont-ils livrés dans
   le même changement que l'activation ?

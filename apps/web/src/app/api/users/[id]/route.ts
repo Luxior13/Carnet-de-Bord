@@ -7,7 +7,6 @@ import {
   enforcePermissionDependencies,
   getAccessPermissionKeys,
   getAccountPermissionKeys,
-  getAllPermissionKeys,
   getNonAssignablePermissionKeys,
   getPermissionItem,
   getUnknownPermissionKeys,
@@ -29,6 +28,10 @@ import {
 } from '$server/auth';
 import { prisma } from '$server/prisma';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
+import {
+  authorizeUserPermissionMutation,
+  preauthorizeUserPermissionMutation,
+} from '$server/user-permission-mutation-authorization';
 import { protectUserIdentityForActor } from '$server/user-visibility';
 import {
   type ApiErrorResponse,
@@ -142,8 +145,14 @@ const getPermissionOverridesForActor = (
   );
 };
 
+type UserWithCriticalAccessReadiness = Parameters<
+  typeof mapUserToUserType
+>[0] & {
+  totpCredential?: { userId: string } | null;
+};
+
 const mapUserForActor = (
-  user: Parameters<typeof mapUserToUserType>[0],
+  user: UserWithCriticalAccessReadiness,
   actor: UserType,
 ): UserType => {
   const clientUser = mapUserToUserType(user);
@@ -172,6 +181,8 @@ const mapUserForActor = (
   return protectUserIdentityForActor(
     {
       ...clientUser,
+      criticalAccessReady:
+        clientUser.mfaEnabledAt !== null && Boolean(user.totpCredential),
       ...(canViewContact
         ? {}
         : { contactEmail: null, contactEmailVerifiedAt: null }),
@@ -247,6 +258,7 @@ export async function GET(
     if (!permCheck.success) return permCheck.response;
 
     const user = await prisma.user.findUnique({
+      include: { totpCredential: { select: { userId: true } } },
       where: { deletedAt: null, id },
     });
 
@@ -510,41 +522,12 @@ export async function PATCH(
       );
     }
 
-    if (isPermissionsUpdate && permissionScope !== undefined) {
-      const scopedPermissionCheck = requirePermission(
+    if (isPermissionsUpdate) {
+      const preauthorization = preauthorizeUserPermissionMutation(
         auth.user,
-        permissionScope === 'account'
-          ? PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY
-          : PERMISSIONS.USERS.UPDATE_ACCESS,
+        permissionScope,
       );
-      if (!scopedPermissionCheck.success) {
-        return scopedPermissionCheck.response;
-      }
-    }
-
-    if (isPermissionsUpdate && permissionScope === undefined) {
-      const canUseLegacyPermissionPayload =
-        auth.user.isProtected ||
-        hasPermission(
-          auth.user.role,
-          PERMISSIONS.USERS.UPDATE_ACCESS,
-          auth.user.permissions,
-        ) ||
-        hasPermission(
-          auth.user.role,
-          PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY,
-          auth.user.permissions,
-        );
-
-      if (!canUseLegacyPermissionPayload) {
-        const legacyPermissionCheck = requirePermission(
-          auth.user,
-          PERMISSIONS.USERS.UPDATE_ACCESS,
-        );
-        if (!legacyPermissionCheck.success) {
-          return legacyPermissionCheck.response;
-        }
-      }
+      if (!preauthorization.success) return preauthorization.response;
     }
 
     // Get existing user
@@ -684,42 +667,29 @@ export async function PATCH(
               : undefined,
           )
         : undefined;
+    const resultingPermissions =
+      permissions === undefined ? existingPermissionOverrides : permissions;
     const requestedChangedPermissionKeys = isPermissionsUpdate
       ? getChangedPermissionKeys(existingPermissionOverrides, permissions)
       : [];
-
-    if (isPermissionsUpdate && permissionScope === undefined) {
-      const requiredLegacyPermissions = new Set<string>();
-
-      for (const permissionKey of requestedChangedPermissionKeys) {
-        if (ACCOUNT_PERMISSION_KEY_SET.has(permissionKey)) {
-          requiredLegacyPermissions.add(
-            PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY,
-          );
-        }
-        if (ACCESS_PERMISSION_KEY_SET.has(permissionKey)) {
-          requiredLegacyPermissions.add(PERMISSIONS.USERS.UPDATE_ACCESS);
-        }
-      }
-
-      // A legacy no-op or null payload has no scope signal. Requiring both
-      // capabilities prevents omission of permissionScope from becoming a
-      // bypass for either delegated administration boundary.
-      if (requiredLegacyPermissions.size === 0) {
-        requiredLegacyPermissions.add(PERMISSIONS.USERS.UPDATE_ACCESS);
-        requiredLegacyPermissions.add(PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY);
-      }
-
-      for (const permissionKey of requiredLegacyPermissions) {
-        const legacyPermissionCheck = requirePermission(
-          auth.user,
-          permissionKey,
-        );
-        if (!legacyPermissionCheck.success) {
-          return legacyPermissionCheck.response;
-        }
-      }
+    const permissionMutationAuthorization = authorizeUserPermissionMutation({
+      actor: auth.user,
+      existingPermissions: existingPermissionOverrides,
+      existingRole: existingUser.role,
+      isPermissionsUpdate,
+      isRoleUpdate,
+      permissionScope,
+      requestedChangedPermissionKeys,
+      resultingPermissions,
+      resultingRole,
+    });
+    if (!permissionMutationAuthorization.success) {
+      return permissionMutationAuthorization.response;
     }
+    const {
+      effectivelyGrantedPermissionKeys,
+      effectivelyRevokedPermissionKeys,
+    } = permissionMutationAuthorization;
 
     // Authorization checks
     // Non-protected users cannot modify protected accounts
@@ -751,17 +721,9 @@ export async function PATCH(
       );
     }
 
-    const resultingPermissions =
-      permissions === undefined ? existingPermissionOverrides : permissions;
-    const gainsTargetMfaPermission = getAllPermissionKeys().some(
+    const gainsTargetMfaPermission = effectivelyGrantedPermissionKeys.some(
       (permissionKey) =>
-        getPermissionItem(permissionKey)?.requiresTargetMfa === true &&
-        !hasPermission(
-          existingUser.role,
-          permissionKey,
-          existingPermissionOverrides,
-        ) &&
-        hasPermission(resultingRole, permissionKey, resultingPermissions),
+        getPermissionItem(permissionKey)?.requiresTargetMfa === true,
     );
     const hasCompleteMfa =
       existingUser.mfaEnabledAt !== null &&
@@ -820,7 +782,6 @@ export async function PATCH(
       const beforePermissions = existingPermissionOverrides;
       const afterPermissions =
         permissions !== undefined ? permissions : beforePermissions;
-      const afterRole = role ?? existingUser.role;
       const afterPermissionsMap = toPermissionMap(afterPermissions);
       const unauthorizedPermissionKeys = new Set(
         requestedChangedPermissionKeys.flatMap((permissionKey) =>
@@ -831,13 +792,8 @@ export async function PATCH(
         ),
       );
 
-      for (const permissionKey of getAllPermissionKeys()) {
-        const isGainedEffectively =
-          !hasPermission(existingUser.role, permissionKey, beforePermissions) &&
-          hasPermission(afterRole, permissionKey, afterPermissions);
-
+      for (const permissionKey of effectivelyGrantedPermissionKeys) {
         if (
-          isGainedEffectively &&
           !hasPermission(auth.user.role, permissionKey, auth.user.permissions)
         ) {
           unauthorizedPermissionKeys.add(permissionKey);
@@ -1059,6 +1015,8 @@ export async function PATCH(
           after: afterValues,
           before: beforeValues,
           changes: changedKeys,
+          effectivelyGrantedPermissionKeys,
+          effectivelyRevokedPermissionKeys,
           ...USERS_PAGE_AUDIT_LOCATION,
           ...permissionAuditTab,
           targetName,
@@ -1120,6 +1078,7 @@ export async function PATCH(
 
       const nextUser = await transaction.user.update({
         data: updateData,
+        include: { totpCredential: { select: { userId: true } } },
         where: {
           id,
           securityVersion: existingUser.securityVersion,

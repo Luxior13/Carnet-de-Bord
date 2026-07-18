@@ -13,6 +13,10 @@ import {
 } from 'lucide-react';
 import React, { type FC } from 'react';
 
+import {
+  type PermissionMutationPolicy,
+  type PermissionMutationSummary,
+} from '$components/users/permission-editor-policy';
 import { PermissionsEditor } from '$components/users/PermissionsEditor';
 import {
   getAccessLabel,
@@ -35,11 +39,16 @@ import {
 } from '$ui/select';
 
 type UserAccessTabProps = {
+  canChangePermission: PermissionMutationPolicy;
+  canDelegatePermissions: boolean;
   canEditRole: boolean;
+  canGrantPermissions: boolean;
   canManagePermissions: boolean;
+  canRevokePermissions: boolean;
   canSave: boolean;
   hasChanges: boolean;
   isSaving: boolean;
+  mutationSummary: PermissionMutationSummary | null;
   onCancel: () => void;
   onPermissionPageChange: (pageKey: string) => void;
   onSave: () => void;
@@ -51,12 +60,37 @@ type UserAccessTabProps = {
   user: UserType;
 };
 
+const formatMutationSummary = (
+  summary: PermissionMutationSummary | null,
+): string | null => {
+  if (!summary) return null;
+
+  const changes = [
+    summary.grantedCount > 0
+      ? `${summary.grantedCount} attribution${summary.grantedCount > 1 ? 's' : ''}`
+      : null,
+    summary.revokedCount > 0
+      ? `${summary.revokedCount} retrait${summary.revokedCount > 1 ? 's' : ''}`
+      : null,
+    summary.delegationChangeCount > 0
+      ? `${summary.delegationChangeCount} changement${summary.delegationChangeCount > 1 ? 's' : ''} de délégation`
+      : null,
+  ].filter((change): change is string => change !== null);
+
+  return changes.length > 0 ? changes.join(' · ') : null;
+};
+
 export const UserAccessTab: FC<UserAccessTabProps> = ({
+  canChangePermission,
+  canDelegatePermissions,
   canEditRole,
+  canGrantPermissions,
   canManagePermissions,
+  canRevokePermissions,
   canSave,
   hasChanges,
   isSaving,
+  mutationSummary,
   onCancel,
   onPermissionPageChange,
   onSave,
@@ -67,6 +101,8 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   setRole,
   user,
 }) => {
+  const mutationSummaryLabel = formatMutationSummary(mutationSummary);
+
   if (user.isProtected) {
     const totalPermissions = getAllPermissionKeys().length;
 
@@ -152,22 +188,37 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
     <div>
       <Card className="border-border/60 overflow-visible rounded-lg py-0">
         <CardContent className="space-y-3 p-2.5 sm:p-3">
-          {canManagePermissions &&
-            user.securityDetailsVisible !== false &&
-            user.mfaEnabledAt === null && (
-              <div
-                className="border-warning/30 bg-warning/10 text-muted-foreground flex items-start gap-2.5 rounded-lg border p-3 text-sm leading-5"
-                role="note"
-              >
-                <ShieldAlert className="text-warning mt-0.5 size-4 shrink-0" />
-                <p>
-                  La double authentification doit être activée par ce membre
-                  avant de lui accorder un rôle administrateur ou une
-                  autorisation critique.
-                </p>
-              </div>
-            )}
+          <div
+            aria-label="Capacités de gestion des autorisations"
+            className="flex flex-wrap gap-1.5"
+          >
+            <Badge variant="secondary">Consultation</Badge>
+            <Badge variant={canGrantPermissions ? 'secondary' : 'outline'}>
+              Attribution {canGrantPermissions ? 'autorisée' : 'interdite'}
+            </Badge>
+            <Badge variant={canRevokePermissions ? 'secondary' : 'outline'}>
+              Retrait {canRevokePermissions ? 'autorisé' : 'interdit'}
+            </Badge>
+            <Badge variant={canDelegatePermissions ? 'secondary' : 'outline'}>
+              Déléguer attribution/retrait :{' '}
+              {canDelegatePermissions ? 'oui' : 'non'}
+            </Badge>
+          </div>
+          {canGrantPermissions && user.criticalAccessReady !== true && (
+            <div
+              className="border-warning/30 bg-warning/10 text-muted-foreground flex items-start gap-2.5 rounded-lg border p-3 text-sm leading-5"
+              role="note"
+            >
+              <ShieldAlert className="text-warning mt-0.5 size-4 shrink-0" />
+              <p>
+                La double authentification doit être activée par ce membre avant
+                de lui accorder un rôle administrateur ou une autorisation
+                critique.
+              </p>
+            </div>
+          )}
           <PermissionsEditor
+            canChangePermission={canChangePermission}
             role={role}
             permissions={permissions}
             onChange={setPermissions}
@@ -202,7 +253,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                       <SelectTrigger
                         id="user-role"
                         aria-describedby={
-                          canEditRole && user.mfaEnabledAt === null
+                          canEditRole && user.criticalAccessReady !== true
                             ? 'user-role-mfa-requirement'
                             : undefined
                         }
@@ -213,14 +264,14 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                       <SelectContent>
                         <SelectItem value="USER">Utilisateur</SelectItem>
                         <SelectItem
-                          disabled={user.mfaEnabledAt === null}
+                          disabled={user.criticalAccessReady !== true}
                           value="ADMIN"
                         >
                           Administrateur
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    {canEditRole && user.mfaEnabledAt === null && (
+                    {canEditRole && user.criticalAccessReady !== true && (
                       <p
                         className="text-warning max-w-56 text-xs leading-4"
                         id="user-role-mfa-requirement"
@@ -239,6 +290,11 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             <p className="text-muted-foreground text-xs">
               {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
             </p>
+            {hasChanges && mutationSummaryLabel && (
+              <p className="text-foreground text-xs font-medium">
+                {mutationSummaryLabel}
+              </p>
+            )}
             {hasChanges && (
               <p className="text-warning flex items-center gap-1.5 text-xs">
                 <LogOut className="size-3.5 shrink-0" />

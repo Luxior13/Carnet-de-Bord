@@ -55,12 +55,22 @@ describe('hasPermission', () => {
     expect(
       hasPermission('ADMIN', PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY),
     ).toBe(true);
+    expect(hasPermission('ADMIN', PERMISSIONS.USERS.GRANT_ACCESS)).toBe(true);
+    expect(hasPermission('ADMIN', PERMISSIONS.USERS.REVOKE_ACCESS)).toBe(true);
+    expect(hasPermission('ADMIN', PERMISSIONS.USERS.DELEGATE_ACCESS)).toBe(
+      true,
+    );
     expect(hasPermission('ADMIN', PERMISSIONS.AUDIT.VIEW)).toBe(true);
     expect(hasPermission('ADMIN', PERMISSIONS.AUDIT.VIEW_SENSITIVE)).toBe(
       false,
     );
 
     expect(hasPermission('USER', PERMISSIONS.USERS.CREATE)).toBe(false);
+    expect(hasPermission('USER', PERMISSIONS.USERS.GRANT_ACCESS)).toBe(false);
+    expect(hasPermission('USER', PERMISSIONS.USERS.REVOKE_ACCESS)).toBe(false);
+    expect(hasPermission('USER', PERMISSIONS.USERS.DELEGATE_ACCESS)).toBe(
+      false,
+    );
     expect(hasPermission('USER', PERMISSIONS.USERS.EXPORT_ACTIVITY)).toBe(
       false,
     );
@@ -331,7 +341,7 @@ describe('enforcePermissionDependencies', () => {
   it('removes an orphan grant instead of leaving it dormant', () => {
     expect(
       enforcePermissionDependencies('USER', {
-        [PERMISSIONS.USERS.UPDATE_ACCESS]: true,
+        [PERMISSIONS.USERS.DELEGATE_ACCESS]: true,
       }),
     ).toBeNull();
   });
@@ -339,15 +349,29 @@ describe('enforcePermissionDependencies', () => {
   it('keeps a grant when its complete dependency chain is explicit', () => {
     expect(
       enforcePermissionDependencies('USER', {
-        [PERMISSIONS.USERS.UPDATE_ACCESS]: true,
+        [PERMISSIONS.USERS.GRANT_ACCESS]: true,
         [PERMISSIONS.USERS.VIEW]: true,
         [PERMISSIONS.USERS.VIEW_ACCESS]: true,
       }),
     ).toEqual({
-      [PERMISSIONS.USERS.UPDATE_ACCESS]: true,
+      [PERMISSIONS.USERS.GRANT_ACCESS]: true,
       [PERMISSIONS.USERS.VIEW]: true,
       [PERMISSIONS.USERS.VIEW_ACCESS]: true,
     });
+  });
+
+  it('keeps delegation only with grant, revoke and view dependencies', () => {
+    const completeDelegation = {
+      [PERMISSIONS.USERS.DELEGATE_ACCESS]: true,
+      [PERMISSIONS.USERS.GRANT_ACCESS]: true,
+      [PERMISSIONS.USERS.REVOKE_ACCESS]: true,
+      [PERMISSIONS.USERS.VIEW]: true,
+      [PERMISSIONS.USERS.VIEW_ACCESS]: true,
+    };
+
+    expect(enforcePermissionDependencies('USER', completeDelegation)).toEqual(
+      completeDelegation,
+    );
   });
 });
 
@@ -395,6 +419,20 @@ describe('permission catalogue', () => {
     ).toBe(true);
   });
 
+  it('marks grant, revoke and delegation as critical step-up rights', () => {
+    for (const permissionKey of [
+      PERMISSIONS.USERS.GRANT_ACCESS,
+      PERMISSIONS.USERS.REVOKE_ACCESS,
+      PERMISSIONS.USERS.DELEGATE_ACCESS,
+    ]) {
+      expect(getPermissionItem(permissionKey)).toMatchObject({
+        requiresTargetMfa: true,
+        risk: 'critical',
+        stepUpOnUse: true,
+      });
+    }
+  });
+
   it('contains only the canonical effective permission families', () => {
     expect(getAllPermissionKeys()).toEqual([
       'dashboard:view',
@@ -411,7 +449,9 @@ describe('permission catalogue', () => {
       'users:view_security',
       'users:update_status',
       'users:view_access',
-      'users:update_access',
+      'users:grant_access',
+      'users:revoke_access',
+      'users:delegate_access',
       'users:view_account_policy',
       'users:update_account_policy',
       'users:reset_password',
@@ -535,6 +575,37 @@ describe('permission catalogue', () => {
     });
     expect(
       normalizePermissionOverrides({
+        'users:update_access': true,
+      }),
+    ).toEqual({
+      [PERMISSIONS.USERS.DELEGATE_ACCESS]: true,
+      [PERMISSIONS.USERS.GRANT_ACCESS]: true,
+      [PERMISSIONS.USERS.REVOKE_ACCESS]: true,
+    });
+    expect(
+      normalizePermissionOverrides({
+        'users:edit_permissions': true,
+        [PERMISSIONS.USERS.DELEGATE_ACCESS]: false,
+      }),
+    ).toEqual({
+      [PERMISSIONS.USERS.DELEGATE_ACCESS]: false,
+      [PERMISSIONS.USERS.GRANT_ACCESS]: true,
+      [PERMISSIONS.USERS.REVOKE_ACCESS]: true,
+    });
+    expect(
+      normalizePermissionOverrides(
+        Object.fromEntries([
+          ['users:update_access', false],
+          ['users:edit_permissions', true],
+        ]),
+      ),
+    ).toEqual({
+      [PERMISSIONS.USERS.DELEGATE_ACCESS]: false,
+      [PERMISSIONS.USERS.GRANT_ACCESS]: false,
+      [PERMISSIONS.USERS.REVOKE_ACCESS]: false,
+    });
+    expect(
+      normalizePermissionOverrides({
         'users:delete': true,
         [PERMISSIONS.USERS.ARCHIVE]: false,
       }),
@@ -547,6 +618,9 @@ describe('permission catalogue', () => {
     );
     expect(getPermissionDisplayLabel('system:audit')).toBe(
       getPermissionItem(PERMISSIONS.AUDIT.VIEW)?.label,
+    );
+    expect(getPermissionDisplayLabel('users:update_access')).toBe(
+      'Modifier les autorisations administratives (historique)',
     );
     expect(getPermissionDisplayLabel(ROADMAP_PERMISSIONS.TASKS.VIEW)).toBe(
       ROADMAP_PERMISSIONS.TASKS.VIEW,
