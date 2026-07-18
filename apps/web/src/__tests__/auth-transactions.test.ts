@@ -908,7 +908,11 @@ describe('auth security transactions', () => {
       where: { id: 'user-1', securityVersion: 3 },
     });
     expect(mocks.transaction.session.updateMany).toHaveBeenCalledWith({
-      data: { securityVersion: 4 },
+      data: {
+        criticalMfaVerifiedAt: null,
+        passwordReauthenticatedAt: null,
+        securityVersion: 4,
+      },
       where: {
         securityVersion: 3,
         token: {

@@ -17,6 +17,12 @@ const profileSource = readSourceFile(
 const accountSource = readSourceFile(
   '../components/users/user-detail/UserAccountTab.tsx',
 );
+const adminStepUpSource = readSourceFile(
+  '../components/users/user-detail/AdminStepUpDialog.tsx',
+);
+const adminStepUpControllerSource = readSourceFile(
+  '../components/users/user-detail/useAdminStepUpController.ts',
+);
 const securitySource = readSourceFile(
   '../components/users/user-detail/UserSecurityTab.tsx',
 );
@@ -55,9 +61,12 @@ describe('administrative user detail subcomponent UX contracts', () => {
   it('keeps account autonomy compact, direct and progressively disclosed', () => {
     expect(accountSource).toContain('<details');
     expect(accountSource).toContain('Autonomie du compte');
-    expect(accountSource).toContain('Droits essentiels toujours disponibles');
-    expect(accountSource).toContain('Option configurable');
-    expect(accountSource).toContain('Personnalisé');
+    expect(accountSource).toContain('Voir les droits essentiels');
+    expect(accountSource).toContain('aria-label="Options configurables"');
+    expect(accountSource).not.toContain('account-autonomy-options-title');
+    expect(accountSource).toContain('Valeur héritée du rôle');
+    expect(accountSource).toContain('Exception personnalisée');
+    expect(accountSource).toContain('bg-surface-control/60');
     expect(accountSource).not.toContain('configurablePermissionCount');
     expect(accountSource).not.toContain(
       'CONFIGURABLE_ACCOUNT_PERMISSION_CATEGORIES',
@@ -65,9 +74,14 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(accountSource).toContain(
       'CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.map',
     );
-    expect(accountSource).toContain('<h4 className=');
+    expect(accountSource).toContain('<h3 className=');
+    expect(accountSource).not.toContain('<h4');
     expect(accountSource).not.toContain('<h5');
+    expect(accountSource).toContain('role="region"');
     expect(accountSource).toContain('aria-labelledby="account-autonomy-title"');
+    expect(accountSource).not.toContain(
+      'aria-label="Autonomie du compte en lecture seule"',
+    );
     expect(accountSource).toContain(
       'disabled={!canManagePermissions || isSaving}',
     );
@@ -121,5 +135,32 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(userAccessSource).not.toContain('user.mfaEnabledAt === null');
     expect(userAccessSource).toContain('Déléguer attribution/retrait');
     expect(userAccessSource).toContain('mutationSummaryLabel');
+  });
+
+  it('uses a predictable administration mode and reserves MFA for critical batches', () => {
+    expect(userAccessSource).toContain('Mode administration actif');
+    expect(userAccessSource).toContain('Modifications verrouillées');
+    expect(userAccessSource).toContain('adminModeRemainingLabel');
+    expect(userAccessSource).toContain(
+      'disabled={!canManagePermissions || !isAdminModeActive}',
+    );
+    expect(userAccessSource).toContain(
+      'un code MFA sera demandé une seule fois',
+    );
+    expect(adminStepUpControllerSource).toContain(
+      'ErrorCode.ADMIN_MODE_REQUIRED',
+    );
+    expect(adminStepUpControllerSource).toContain(
+      'ErrorCode.CRITICAL_REAUTHENTICATION_REQUIRED',
+    );
+    expect(userDetailSource).toContain('onProofKindRequired=');
+    expect(adminStepUpSource).toContain("proofKind === 'password'");
+    expect(adminStepUpSource).toContain("proofKind === 'critical-mfa'");
+    expect(adminStepUpSource).toContain('trente minutes');
+    expect(adminStepUpSource).toContain('quinze minutes');
+    expect(adminStepUpSource).toContain('submissionInFlightRef.current');
+    expect(adminStepUpSource).toContain('ErrorCode.ADMIN_MODE_REQUIRED');
+    expect(adminStepUpSource).toContain("onProofKindRequired?.('full')");
+    expect(adminStepUpSource).toContain('passwordFailed');
   });
 });

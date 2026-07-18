@@ -4,7 +4,7 @@ import { Loader2, ShieldCheck } from 'lucide-react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { MfaCodeInput } from '$features/auth/components/MfaCodeInput';
-import { type ApiResponse } from '$types/api.types';
+import { type ApiResponse, ErrorCode } from '$types/api.types';
 import { Button } from '$ui/button';
 import {
   Dialog,
@@ -22,13 +22,20 @@ type AdminStepUpDialogProps = {
   actorLoginName: string;
   description: string;
   onCancel: () => void;
-  onComplete: () => Promise<void> | void;
+  onComplete: (result: AdminStepUpResult) => Promise<void> | void;
+  onProofKindRequired?: (proofKind: AdminStepUpKind) => void;
   open: boolean;
+  proofKind?: AdminStepUpKind;
   title: string;
 };
 
-type StepUpResponse = {
+export type AdminStepUpKind = 'critical-mfa' | 'full' | 'password';
+
+export type AdminStepUpResult = {
+  criticalMfaExpiresAt: string | null;
   expiresAt: string;
+  kind: AdminStepUpKind;
+  passwordExpiresAt: string | null;
 };
 
 export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
@@ -36,19 +43,30 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
   description,
   onCancel,
   onComplete,
+  onProofKindRequired,
   open,
+  proofKind = 'full',
   title,
 }) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [currentTotpCode, setCurrentTotpCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const submissionInFlightRef = useRef(false);
   const totpInputRef = useRef<HTMLInputElement>(null);
+  const requiresPassword = proofKind !== 'critical-mfa';
+  const requiresTotp = proofKind !== 'password';
   const canSubmit =
-    currentPassword.length > 0 && /^\d{6}$/.test(currentTotpCode);
+    (!requiresPassword || currentPassword.length > 0) &&
+    (!requiresTotp || /^\d{6}$/.test(currentTotpCode));
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      submissionInFlightRef.current = false;
+
+      return;
+    }
 
     setCurrentPassword('');
     setCurrentTotpCode('');
@@ -56,38 +74,84 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
     setIsSubmitting(false);
   }, [open, title]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    if (requiresPassword) {
+      passwordInputRef.current?.focus();
+    } else {
+      totpInputRef.current?.focus();
+    }
+  }, [open, proofKind, requiresPassword]);
+
   const handleSubmit = async (
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || submissionInFlightRef.current) return;
 
+    submissionInFlightRef.current = true;
     try {
       setIsSubmitting(true);
       setError(null);
       const response = await apiFetch('/api/auth/step-up', {
-        body: JSON.stringify({ currentPassword, currentTotpCode }),
+        body: JSON.stringify(
+          proofKind === 'password'
+            ? { currentPassword, kind: proofKind }
+            : proofKind === 'critical-mfa'
+              ? { currentTotpCode, kind: proofKind }
+              : { currentPassword, currentTotpCode, kind: proofKind },
+        ),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       });
-      const data = (await response.json()) as ApiResponse<StepUpResponse>;
+      const data = (await response.json()) as ApiResponse<AdminStepUpResult>;
 
       if (!response.ok || !data.success) {
-        setError(
-          data.success
-            ? 'Impossible de confirmer votre identité'
-            : data.error.message || 'Impossible de confirmer votre identité',
-        );
-        setCurrentTotpCode('');
-        totpInputRef.current?.focus();
+        const errorCode = data.success ? null : data.error.code;
+        const errorMessage = data.success
+          ? 'Impossible de confirmer votre identité'
+          : data.error.message || 'Impossible de confirmer votre identité';
+
+        if (
+          proofKind === 'critical-mfa' &&
+          errorCode === ErrorCode.ADMIN_MODE_REQUIRED
+        ) {
+          setCurrentPassword('');
+          setCurrentTotpCode('');
+          setError(
+            'Le mode administration a expiré. Confirmez à nouveau votre mot de passe et votre code MFA.',
+          );
+          onProofKindRequired?.('full');
+
+          return;
+        }
+
+        setError(errorMessage);
+        const passwordFailed =
+          requiresPassword &&
+          (!requiresTotp ||
+            errorMessage.toLowerCase().includes('mot de passe'));
+
+        if (passwordFailed) {
+          passwordInputRef.current?.focus();
+          passwordInputRef.current?.select();
+        } else if (requiresTotp) {
+          setCurrentTotpCode('');
+          totpInputRef.current?.focus();
+        } else {
+          passwordInputRef.current?.focus();
+          passwordInputRef.current?.select();
+        }
 
         return;
       }
 
-      await onComplete();
+      await onComplete(data.data);
     } catch {
       setError('Impossible de confirmer votre identité');
     } finally {
+      submissionInFlightRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -96,7 +160,7 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
     <Dialog
       open={open}
       onOpenChange={(isOpen) => {
-        if (!isOpen && !isSubmitting) onCancel();
+        if (!isOpen && !submissionInFlightRef.current) onCancel();
       }}
     >
       <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto p-0 sm:max-w-lg">
@@ -124,8 +188,11 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
             )}
 
             <p className="border-primary/25 bg-primary/[0.08] text-muted-foreground rounded-md border p-3 text-sm leading-6">
-              Cette preuve reste valable cinq minutes pour les autres actions
-              administratives sensibles de cette session.
+              {proofKind === 'password'
+                ? 'Le mode administration restera actif pendant trente minutes sur cette session.'
+                : proofKind === 'critical-mfa'
+                  ? 'Cette confirmation MFA restera valable quinze minutes pour les autres élévations critiques.'
+                  : 'Cette confirmation protège l’action sensible et déverrouille aussi l’administration pendant trente minutes.'}
             </p>
 
             <input
@@ -138,31 +205,37 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
               value={actorLoginName}
             />
 
-            <div className="space-y-2">
-              <Label htmlFor="admin-step-up-password" required>
-                Votre mot de passe
-              </Label>
-              <Input
-                autoComplete="current-password"
-                autoFocus
-                disabled={isSubmitting}
-                id="admin-step-up-password"
-                name="current-password"
-                onChange={(event) => setCurrentPassword(event.target.value)}
-                required
-                type="password"
-                value={currentPassword}
-              />
-            </div>
+            {requiresPassword && (
+              <div className="space-y-2">
+                <Label htmlFor="admin-step-up-password" required>
+                  Votre mot de passe
+                </Label>
+                <Input
+                  autoComplete="current-password"
+                  autoFocus
+                  disabled={isSubmitting}
+                  id="admin-step-up-password"
+                  name="current-password"
+                  onChange={(event) => setCurrentPassword(event.target.value)}
+                  ref={passwordInputRef}
+                  required
+                  type="password"
+                  value={currentPassword}
+                />
+              </div>
+            )}
 
-            <MfaCodeInput
-              disabled={isSubmitting}
-              id="admin-step-up-code"
-              inputRef={totpInputRef}
-              kind="totp"
-              onChange={setCurrentTotpCode}
-              value={currentTotpCode}
-            />
+            {requiresTotp && (
+              <MfaCodeInput
+                autoFocus={!requiresPassword}
+                disabled={isSubmitting}
+                id="admin-step-up-code"
+                inputRef={totpInputRef}
+                kind="totp"
+                onChange={setCurrentTotpCode}
+                value={currentTotpCode}
+              />
+            )}
 
             <div className="flex gap-2">
               <Button
@@ -180,7 +253,9 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
                 type="submit"
               >
                 {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-                Confirmer et continuer
+                {proofKind === 'password'
+                  ? 'Déverrouiller'
+                  : 'Confirmer et continuer'}
               </Button>
             </div>
           </form>

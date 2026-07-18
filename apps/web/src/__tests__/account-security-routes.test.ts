@@ -72,6 +72,7 @@ describe('account security routes', () => {
 
     mockGetAuthSession.mockResolvedValue({
       session: {
+        criticalMfaVerifiedAt: new Date(),
         expiresAt: new Date('2026-03-20T00:00:00.000Z'),
         idleExpiresAt: new Date('2026-03-01T00:30:00.000Z'),
         lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
@@ -91,10 +92,12 @@ describe('account security routes', () => {
 
     mockRequireAuth.mockResolvedValue({
       session: {
+        criticalMfaVerifiedAt: new Date(),
         expiresAt: new Date('2026-03-20T00:00:00.000Z'),
         idleExpiresAt: new Date('2026-03-01T00:30:00.000Z'),
         lastSeenAt: new Date('2026-03-01T00:00:00.000Z'),
         mfaVerifiedAt: new Date(),
+        passwordReauthenticatedAt: new Date(),
         rememberMe: false,
         securityVersion: 3,
         token: 'session-hash',

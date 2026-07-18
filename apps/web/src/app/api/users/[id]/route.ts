@@ -27,7 +27,11 @@ import {
   mapUserToUserType,
 } from '$server/auth';
 import { prisma } from '$server/prisma';
-import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
+import {
+  requireRecentAdminModeProof,
+  requireRecentCriticalPermissionProof,
+  requireRecentSensitiveActionProof,
+} from '$server/sensitive-action';
 import {
   authorizeUserPermissionMutation,
   preauthorizeUserPermissionMutation,
@@ -689,6 +693,7 @@ export async function PATCH(
     const {
       effectivelyGrantedPermissionKeys,
       effectivelyRevokedPermissionKeys,
+      requiredProofLevel,
     } = permissionMutationAuthorization;
 
     // Authorization checks
@@ -937,12 +942,17 @@ export async function PATCH(
     const changedKeys = Object.keys(afterValues);
     const hasAuthorizationChange =
       changedKeys.includes('permissions') || changedKeys.includes('role');
-    const requiresRecentProof =
-      hasAuthorizationChange ||
-      changedKeys.includes('isActive') ||
-      changedKeys.includes('loginName');
-
-    if (requiresRecentProof) {
+    if (requiredProofLevel === 'password' || requiredProofLevel === 'mfa') {
+      const adminProofCheck = requireRecentAdminModeProof(auth.session);
+      if (!adminProofCheck.success) return adminProofCheck.response;
+    }
+    if (requiredProofLevel === 'mfa') {
+      const criticalProofCheck = requireRecentCriticalPermissionProof(
+        auth.session,
+      );
+      if (!criticalProofCheck.success) return criticalProofCheck.response;
+    }
+    if (changedKeys.includes('isActive') || changedKeys.includes('loginName')) {
       const proofCheck = requireRecentSensitiveActionProof(auth.session);
       if (!proofCheck.success) return proofCheck.response;
     }

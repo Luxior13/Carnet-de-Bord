@@ -121,7 +121,8 @@ export async function createReadinessResponse(): Promise<
                 AND column_name IN (
                   'id', 'userId', 'token', 'expiresAt', 'idleExpiresAt',
                   'lastSeenAt', 'rememberMe', 'securityVersion',
-                  'mfaVerifiedAt', 'mfaMethod'
+                  'mfaVerifiedAt', 'mfaMethod',
+                  'passwordReauthenticatedAt', 'criticalMfaVerifiedAt'
                 )
             )::int AS "sessionColumns",
             COUNT(*) FILTER (
@@ -417,7 +418,7 @@ export async function createReadinessResponse(): Promise<
           schema?.backgroundJobColumns !== 15 ||
           schema.backgroundJobStatuses !== 5 ||
           schema.userColumns !== 15 ||
-          schema.sessionColumns !== 10 ||
+          schema.sessionColumns !== 12 ||
           schema.sessionMfaRequiredColumns !== 2 ||
           schema.auditEventKinds !== 2 ||
           schema.auditLogColumns !== 18 ||

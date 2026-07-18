@@ -301,8 +301,9 @@ describe('POST /api/users/[id]/reset-mfa', () => {
     );
     expect(mocks.transaction.session.updateMany).toHaveBeenCalledWith({
       data: {
+        criticalMfaVerifiedAt: expect.any(Date),
         lastSeenAt: expect.any(Date),
-        mfaVerifiedAt: expect.any(Date),
+        passwordReauthenticatedAt: expect.any(Date),
       },
       where: expect.objectContaining({
         securityVersion: 7,

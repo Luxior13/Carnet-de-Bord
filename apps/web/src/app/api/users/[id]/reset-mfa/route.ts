@@ -273,8 +273,9 @@ export async function POST(
       // revoked root session cannot authorize this operation.
       const sessionLock = await transaction.session.updateMany({
         data: {
+          criticalMfaVerifiedAt: authenticatedAt,
           lastSeenAt: authenticatedAt,
-          mfaVerifiedAt: authenticatedAt,
+          passwordReauthenticatedAt: authenticatedAt,
         },
         where: {
           expiresAt: { gt: authenticatedAt },

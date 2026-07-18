@@ -413,10 +413,10 @@ describe('permission catalogue', () => {
     }
   });
 
-  it('marks delegated account-policy changes as step-up protected', () => {
+  it('keeps delegated account-policy changes free of step-up friction', () => {
     expect(
       getPermissionItem(PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY)?.stepUpOnUse,
-    ).toBe(true);
+    ).toBeUndefined();
   });
 
   it('marks grant, revoke and delegation as critical step-up rights', () => {

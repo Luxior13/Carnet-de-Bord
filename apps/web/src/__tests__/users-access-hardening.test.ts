@@ -119,6 +119,15 @@ const stringifyRequestBody = (body: Record<string, unknown>): string =>
     ...body,
   });
 
+const buildRecentSensitiveSession = (
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> => ({
+  criticalMfaVerifiedAt: new Date(),
+  mfaVerifiedAt: new Date(),
+  passwordReauthenticatedAt: new Date(),
+  ...overrides,
+});
+
 const denyPermission = (deniedPermissionKey: string): void => {
   mockRequirePermission.mockImplementation((_user, permissionKey) =>
     permissionKey === deniedPermissionKey
@@ -146,7 +155,7 @@ describe('users access hardening', () => {
     );
 
     mockRequireAuth.mockResolvedValue({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -211,7 +220,7 @@ describe('users access hardening', () => {
     const existingUser = buildUser({ id: 'target-1', role: 'USER' });
 
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: actor,
     });
@@ -480,7 +489,7 @@ describe('users access hardening', () => {
   it('returns 409 when a concurrent login-name update hits the unique constraint', async () => {
     const existingUser = buildUser({ id: 'target-1' });
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -866,7 +875,7 @@ describe('users access hardening', () => {
 
   it('allows effective access grants with users:grant_access', async () => {
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -934,6 +943,46 @@ describe('users access hardening', () => {
     );
   });
 
+  it('requires password unlock before an ordinary access grant', async () => {
+    mockRequireAuth.mockResolvedValueOnce({
+      session: buildRecentSensitiveSession({
+        criticalMfaVerifiedAt: null,
+        passwordReauthenticatedAt: null,
+      }),
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'viewer-1',
+        passwordHash: undefined,
+        permissions: {
+          [PERMISSIONS.USERS.GRANT_ACCESS]: true,
+          [PERMISSIONS.USERS.VIEW]: true,
+          [PERMISSIONS.USERS.VIEW_ACCESS]: true,
+        },
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(
+      buildUser({ id: 'target-1', permissions: {} }),
+    );
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          permissions: { [PERMISSIONS.USERS.VIEW]: true },
+          permissionScope: 'access',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe(ErrorCode.ADMIN_MODE_REQUIRED);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
   it('rejects an access grant when users:grant_access is denied', async () => {
     denyPermission(PERMISSIONS.USERS.GRANT_ACCESS);
 
@@ -971,7 +1020,7 @@ describe('users access hardening', () => {
     });
 
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: actor,
     });
@@ -1027,7 +1076,7 @@ describe('users access hardening', () => {
       },
     });
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: actor,
     });
@@ -1072,7 +1121,7 @@ describe('users access hardening', () => {
       [PERMISSIONS.USERS.VIEW_ACCESS]: true,
     };
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: actor,
     });
@@ -1120,7 +1169,7 @@ describe('users access hardening', () => {
       [PERMISSIONS.USERS.VIEW_ACCESS]: true,
     };
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: actor,
     });
@@ -1167,7 +1216,7 @@ describe('users access hardening', () => {
       [PERMISSIONS.USERS.VIEW_ACCESS]: true,
     };
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: actor,
     });
@@ -1216,7 +1265,7 @@ describe('users access hardening', () => {
       [PERMISSIONS.USERS.VIEW_ACCESS]: true,
     };
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: actor,
     });
@@ -1247,7 +1296,10 @@ describe('users access hardening', () => {
 
   it('audits personal account permission updates on the personal account tab', async () => {
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession({
+        criticalMfaVerifiedAt: null,
+        passwordReauthenticatedAt: null,
+      }),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -1401,7 +1453,10 @@ describe('users access hardening', () => {
 
   it('does not reject an account-policy change because of an untouched access grant', async () => {
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession({
+        criticalMfaVerifiedAt: null,
+        passwordReauthenticatedAt: null,
+      }),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -1448,7 +1503,7 @@ describe('users access hardening', () => {
 
   it('merges access overrides without overwriting account overrides', async () => {
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession({ criticalMfaVerifiedAt: null }),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -1665,7 +1720,7 @@ describe('users access hardening', () => {
   it('revokes existing sessions when the login name changes', async () => {
     const existingUser = buildUser({ id: 'target-1' });
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -1708,7 +1763,7 @@ describe('users access hardening', () => {
   it('rejects a login name permanently reserved by another user', async () => {
     const existingUser = buildUser({ id: 'target-1' });
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -1750,7 +1805,7 @@ describe('users access hardening', () => {
   it('allows a user to return to one of its own reserved login names', async () => {
     const existingUser = buildUser({ id: 'target-1' });
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -1899,7 +1954,7 @@ describe('users access hardening', () => {
 
   it('rejects promotion when only the MFA timestamp exists without a credential', async () => {
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -1942,7 +1997,7 @@ describe('users access hardening', () => {
       totpCredential: { userId: 'target-1' },
     });
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -1987,7 +2042,7 @@ describe('users access hardening', () => {
       role: 'ADMIN',
     });
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -2036,7 +2091,7 @@ describe('users access hardening', () => {
 
   it('requires complete MFA before granting a critical delegated permission', async () => {
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -2085,7 +2140,7 @@ describe('users access hardening', () => {
       [PERMISSIONS.USERS.VIEW_SECURITY]: true,
     };
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -2124,6 +2179,47 @@ describe('users access hardening', () => {
     });
   });
 
+  it('requires critical MFA after password unlock for a critical elevation', async () => {
+    const existingUser = buildUser({
+      id: 'target-1',
+      mfaEnabledAt: new Date('2026-03-02T00:00:00.000Z'),
+      permissions: {},
+      role: 'USER',
+      totpCredential: { userId: 'target-1' },
+    });
+    const permissions = {
+      [PERMISSIONS.USERS.ARCHIVE]: true,
+      [PERMISSIONS.USERS.VIEW]: true,
+      [PERMISSIONS.USERS.VIEW_SECURITY]: true,
+    };
+    mockRequireAuth.mockResolvedValueOnce({
+      session: buildRecentSensitiveSession({ criticalMfaVerifiedAt: null }),
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'root-1',
+        isProtected: true,
+        passwordHash: undefined,
+        role: 'ADMIN',
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(existingUser);
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({ permissions, permissionScope: 'access' }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe(ErrorCode.CRITICAL_REAUTHENTICATION_REQUIRED);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
   it('allows reducing critical access after the target loses complete MFA', async () => {
     const existingPermissions = {
       [PERMISSIONS.USERS.ARCHIVE]: true,
@@ -2146,7 +2242,7 @@ describe('users access hardening', () => {
       totpCredential: null,
     });
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession({ criticalMfaVerifiedAt: null }),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -2709,7 +2805,7 @@ describe('users access hardening', () => {
       role: 'ADMIN',
     });
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: buildUser({
         deletedAt: undefined,
@@ -3140,7 +3236,7 @@ describe('users access hardening', () => {
 
   it('uses audit:view_sensitive consistently for another user journal', async () => {
     mockRequireAuth.mockResolvedValueOnce({
-      session: { mfaVerifiedAt: new Date() },
+      session: buildRecentSensitiveSession(),
       success: true,
       user: buildUser({
         deletedAt: undefined,

@@ -150,24 +150,20 @@ const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
   onChange,
   permission,
 }) => (
-  <div className="border-border/55 grid gap-3 border-t py-3 first:border-t-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:py-4">
-    <div className="min-w-0 space-y-1">
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <h4 className="text-foreground text-sm font-semibold">
+  <div className="bg-surface-control/60 ring-border/50 rounded-lg p-3 ring-1 ring-inset sm:p-4">
+    <div className="max-w-3xl min-w-0 space-y-1">
+      <div className="flex min-w-0 items-center gap-3">
+        <h3 className="text-foreground text-sm font-semibold">
           {permission.label}
-        </h4>
-        <Badge
-          variant={isAllowed ? 'secondary' : 'outline'}
-          className="rounded-full text-xs"
-        >
-          {isAllowed ? 'Autorisé' : 'Refusé'} ·{' '}
-          {hasCustomChoice ? 'Personnalisé' : 'Rôle'}
-        </Badge>
-        {missingDependencyLabels.length > 0 && (
-          <Badge variant="outline" className="border-warning/40 text-warning">
-            À compléter
-          </Badge>
-        )}
+        </h3>
+        <Switch
+          checked={isAllowed}
+          onCheckedChange={onChange}
+          disabled={!canManagePermissions || isSaving}
+          aria-label={permission.label}
+          aria-describedby={`account-permission-${permission.key}-description account-permission-${permission.key}-state`}
+          className="shrink-0"
+        />
       </div>
       <p
         id={`account-permission-${permission.key}-description`}
@@ -175,20 +171,26 @@ const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
       >
         {permission.description}
       </p>
+      <div
+        id={`account-permission-${permission.key}-state`}
+        className="flex min-h-5 items-center"
+      >
+        {hasCustomChoice ? (
+          <Badge variant="secondary" className="h-5 rounded-full px-2 text-xs">
+            Exception personnalisée
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground text-xs leading-5">
+            Valeur héritée du rôle
+          </span>
+        )}
+      </div>
       {missingDependencyLabels.length > 0 && (
         <p className="text-warning/90 text-xs leading-5">
           Prérequis : {missingDependencyLabels.join(', ')}
         </p>
       )}
     </div>
-    <Switch
-      checked={isAllowed}
-      onCheckedChange={onChange}
-      disabled={!canManagePermissions || isSaving}
-      aria-label={permission.label}
-      aria-describedby={`account-permission-${permission.key}-description`}
-      className="justify-self-start sm:justify-self-end"
-    />
   </div>
 );
 
@@ -304,6 +306,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
 
   return (
     <Card
+      role="region"
       aria-labelledby="account-autonomy-title"
       className="border-border/60 overflow-hidden rounded-lg py-0"
     >
@@ -327,33 +330,15 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
             </div>
           </div>
           {!canManagePermissions && (
-            <Badge
-              aria-label="Autonomie du compte en lecture seule"
-              className="w-fit shrink-0 rounded-full"
-              variant="secondary"
-            >
+            <Badge className="w-fit shrink-0 rounded-full" variant="secondary">
               Lecture seule
             </Badge>
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4 p-4 sm:p-5">
-        <section aria-labelledby="account-autonomy-options-title">
-          <div className="space-y-1 pb-2">
-            <h3
-              className="text-foreground text-sm font-semibold"
-              id="account-autonomy-options-title"
-            >
-              {CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.length > 1
-                ? 'Options configurables'
-                : 'Option configurable'}
-            </h3>
-            <p className="text-muted-foreground text-xs leading-5">
-              Sans choix personnalisé, la valeur prévue par le rôle reste
-              appliquée.
-            </p>
-          </div>
-          <div>
+      <CardContent className="space-y-3 p-4 sm:p-5">
+        <section aria-label="Options configurables">
+          <div className="space-y-2">
             {CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.map((permission) => (
               <ConfigurablePermissionRow
                 key={permission.key}
@@ -380,31 +365,31 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
           </div>
         </section>
 
-        <details className="group border-border/55 border-t pt-3">
-          <summary className="focus-visible:ring-ring/40 -mx-1 flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-md px-1 text-left focus-visible:ring-2 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
-            <LockKeyhole className="text-muted-foreground size-4 shrink-0" />
-            <span className="min-w-0 flex-1">
-              <span className="text-foreground block text-sm font-medium">
-                Droits essentiels toujours disponibles
-              </span>
-              <span className="text-muted-foreground block text-xs leading-5">
-                Aide sur les actions que le système ne permet pas de retirer.
-              </span>
+        <details className="group">
+          <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/40 -mx-1 flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-md px-1 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+            <LockKeyhole className="size-3.5 shrink-0" />
+            <span className="min-w-0 flex-1 text-sm font-medium">
+              Voir les droits essentiels
             </span>
             <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-180" />
           </summary>
-          <ul className="mt-3 grid gap-x-6 gap-y-3 pl-6 sm:grid-cols-2">
-            {ESSENTIAL_ACCOUNT_PERMISSION_ITEMS.map((permission) => (
-              <li key={permission.key} className="min-w-0">
-                <p className="text-foreground text-sm font-medium">
-                  {permission.label}
-                </p>
-                <p className="text-muted-foreground mt-0.5 text-xs leading-5">
-                  {permission.description}
-                </p>
-              </li>
-            ))}
-          </ul>
+          <div className="border-border/55 bg-surface-muted/50 mt-2 rounded-lg border p-3">
+            <p className="text-muted-foreground text-xs leading-5">
+              Ces actions restent disponibles et ne peuvent pas être retirées.
+            </p>
+            <ul className="mt-3 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+              {ESSENTIAL_ACCOUNT_PERMISSION_ITEMS.map((permission) => (
+                <li key={permission.key} className="min-w-0">
+                  <p className="text-foreground text-sm font-medium">
+                    {permission.label}
+                  </p>
+                  <p className="text-muted-foreground mt-0.5 text-xs leading-5">
+                    {permission.description}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
         </details>
       </CardContent>
       {canManagePermissions && (hasChanges || hasConfigurableOverrides) && (

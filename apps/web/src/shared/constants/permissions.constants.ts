@@ -627,7 +627,6 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         module: 'Compte personnel',
         risk: 'sensitive',
         route: '/administration/utilisateurs/[id]?section=account',
-        stepUpOnUse: true,
         surface: 'page',
       }),
       activePermission({

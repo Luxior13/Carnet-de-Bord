@@ -64,7 +64,11 @@ describe('managed user audit server pagination', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRequireAuth.mockResolvedValue({
-      session: { mfaVerifiedAt: new Date() },
+      session: {
+        criticalMfaVerifiedAt: new Date(),
+        mfaVerifiedAt: new Date(),
+        passwordReauthenticatedAt: new Date(),
+      },
       success: true,
       user: {
         id: 'root-1',

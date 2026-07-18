@@ -115,11 +115,13 @@ const SESSION_USER_SELECT = {
 } satisfies Prisma.UserSelect;
 
 const SESSION_WITH_USER_SELECT = {
+  criticalMfaVerifiedAt: true,
   expiresAt: true,
   idleExpiresAt: true,
   lastSeenAt: true,
   mfaMethod: true,
   mfaVerifiedAt: true,
+  passwordReauthenticatedAt: true,
   rememberMe: true,
   securityVersion: true,
   token: true,
@@ -416,12 +418,14 @@ export const createSession = async (
 
     const createdSession = await transaction.session.create({
       data: {
+        criticalMfaVerifiedAt: null,
         expiresAt: sessionExpiresAt,
         idleExpiresAt: sessionIdleExpiresAt,
         ipAddress: sessionIpAddress,
         lastSeenAt: loginAt,
         mfaMethod: securityOptions.mfaMethod,
         mfaVerifiedAt: loginAt,
+        passwordReauthenticatedAt: loginAt,
         rememberMe: sessionRememberMe,
         securityVersion: nextSecurityVersion,
         token: sessionId,
@@ -567,10 +571,12 @@ const validateSessionToken = async (
 
   return {
     session: {
+      criticalMfaVerifiedAt: session.criticalMfaVerifiedAt,
       expiresAt: session.expiresAt,
       idleExpiresAt: session.idleExpiresAt,
       lastSeenAt: session.lastSeenAt,
       mfaVerifiedAt: session.mfaVerifiedAt,
+      passwordReauthenticatedAt: session.passwordReauthenticatedAt,
       rememberMe: session.rememberMe,
       securityVersion: session.securityVersion,
       token: session.token,
@@ -1014,7 +1020,11 @@ export const updateUserPassword = async (
     const hashedToken = hashSessionToken(options.currentSessionToken);
     const currentSessionTokens = [options.currentSessionToken, hashedToken];
     const currentSessionUpdate = await transaction.session.updateMany({
-      data: { securityVersion: nextSecurityVersion },
+      data: {
+        criticalMfaVerifiedAt: null,
+        passwordReauthenticatedAt: null,
+        securityVersion: nextSecurityVersion,
+      },
       where: {
         securityVersion: options.expectedSecurityVersion,
         token: { in: currentSessionTokens },

@@ -5,6 +5,7 @@ import {
   getAccessPermissionKeys,
   getAccountPermissionKeys,
   getAllPermissionKeys,
+  getPermissionItem,
   hasPermission,
   PERMISSIONS,
   type PermissionsData,
@@ -27,11 +28,19 @@ type AuthorizationSuccess = {
 type PermissionMutationAuthorizationSuccess = AuthorizationSuccess & {
   effectivelyGrantedPermissionKeys: string[];
   effectivelyRevokedPermissionKeys: string[];
+  requiredProofLevel: AdminPermissionProofLevel;
 };
+
+export type AdminPermissionProofLevel = 'mfa' | 'none' | 'password';
 
 const ACCOUNT_PERMISSION_KEY_SET = new Set(getAccountPermissionKeys());
 const ACCESS_PERMISSION_KEY_SET = new Set(getAccessPermissionKeys());
 const ACCESS_DELEGATION_PERMISSION_KEY_SET = new Set<string>([
+  PERMISSIONS.USERS.GRANT_ACCESS,
+  PERMISSIONS.USERS.REVOKE_ACCESS,
+]);
+const ACCESS_AUTHORITY_PERMISSION_KEY_SET = new Set<string>([
+  PERMISSIONS.USERS.DELEGATE_ACCESS,
   PERMISSIONS.USERS.GRANT_ACCESS,
   PERMISSIONS.USERS.REVOKE_ACCESS,
 ]);
@@ -51,6 +60,52 @@ const requireAccessMutationPermission = (
   if (hasAccessMutationPermission(actor)) return { success: true };
 
   return requirePermission(actor, PERMISSIONS.USERS.GRANT_ACCESS);
+};
+
+export const classifyUserPermissionMutationProof = ({
+  effectivelyGrantedPermissionKeys,
+  effectivelyRevokedPermissionKeys,
+  requestedChangedPermissionKeys,
+  roleChanged,
+}: {
+  effectivelyGrantedPermissionKeys: readonly string[];
+  effectivelyRevokedPermissionKeys: readonly string[];
+  requestedChangedPermissionKeys: readonly string[];
+  roleChanged: boolean;
+}): AdminPermissionProofLevel => {
+  if (roleChanged) return 'mfa';
+
+  const effectivelyGrantedAccessPermissionKeys =
+    effectivelyGrantedPermissionKeys.filter((permissionKey) =>
+      ACCESS_PERMISSION_KEY_SET.has(permissionKey),
+    );
+  const changedAccessPermissionKeys = new Set(
+    [
+      ...requestedChangedPermissionKeys,
+      ...effectivelyGrantedPermissionKeys,
+      ...effectivelyRevokedPermissionKeys,
+    ].filter((permissionKey) => ACCESS_PERMISSION_KEY_SET.has(permissionKey)),
+  );
+
+  if (changedAccessPermissionKeys.size === 0) return 'none';
+
+  if (
+    [...changedAccessPermissionKeys].some((permissionKey) =>
+      ACCESS_AUTHORITY_PERMISSION_KEY_SET.has(permissionKey),
+    )
+  ) {
+    return 'mfa';
+  }
+
+  if (
+    effectivelyGrantedAccessPermissionKeys.some(
+      (permissionKey) => getPermissionItem(permissionKey)?.risk === 'critical',
+    )
+  ) {
+    return 'mfa';
+  }
+
+  return 'password';
 };
 
 /**
@@ -240,6 +295,12 @@ export const authorizeUserPermissionMutation = ({
   return {
     effectivelyGrantedPermissionKeys,
     effectivelyRevokedPermissionKeys,
+    requiredProofLevel: classifyUserPermissionMutationProof({
+      effectivelyGrantedPermissionKeys,
+      effectivelyRevokedPermissionKeys,
+      requestedChangedPermissionKeys,
+      roleChanged: isRoleUpdate && existingRole !== resultingRole,
+    }),
     success: true,
   };
 };

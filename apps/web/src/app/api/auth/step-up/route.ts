@@ -15,17 +15,37 @@ import {
   recordLoginAttempt,
   reserveSensitiveActionRateLimit,
 } from '$server/rate-limiter';
-import { SENSITIVE_ACTION_PROOF_MAX_AGE_MS } from '$server/sensitive-action';
+import {
+  getAdminModeExpiration,
+  getCriticalProofExpiration,
+  requireRecentAdminModeProof,
+} from '$server/sensitive-action';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
   ErrorCode,
 } from '$types/api.types';
+import type { SessionType } from '$types/auth.types';
 import { isPasswordWithinBcryptLimit } from '$utils/password.utils';
 
-type StepUpResponse = {
-  expiresAt: string;
+type StepUpKind = 'critical-mfa' | 'full' | 'password';
+
+type StepUpStatus = {
+  criticalMfaExpiresAt: string | null;
+  passwordExpiresAt: string | null;
 };
+
+type StepUpResponse = StepUpStatus & {
+  expiresAt: string;
+  kind: StepUpKind;
+};
+
+class StepUpSessionChangedError extends Error {
+  constructor() {
+    super('The authenticated session changed during step-up');
+    this.name = 'StepUpSessionChangedError';
+  }
+}
 
 const STEP_UP_AUDIT_LOCATION = {
   pageKey: 'authentication',
@@ -39,6 +59,7 @@ const STEP_UP_AUDIT_LOCATION = {
 const recordStepUpFailure = async (
   userId: string,
   reason: string,
+  proofKind: StepUpKind,
 ): Promise<void> => {
   await createAuditLogWithHeaders({
     action: 'STEP_UP_FAILED',
@@ -46,7 +67,7 @@ const recordStepUpFailure = async (
     description: 'Confirmation renforcée échouée',
     metadata: {
       ...STEP_UP_AUDIT_LOCATION,
-      authenticationMethod: 'TOTP',
+      proofKind,
       reason,
     },
     targetUserId: userId,
@@ -54,18 +75,37 @@ const recordStepUpFailure = async (
   });
 };
 
-const stepUpSchema = z
-  .object({
-    currentPassword: z
-      .string()
-      .min(1, 'Mot de passe actuel requis')
-      .refine(isPasswordWithinBcryptLimit, 'Mot de passe trop long'),
-    currentTotpCode: z
-      .string()
-      .trim()
-      .regex(MFA_TOTP_CODE_PATTERN, "Code d'authentification invalide"),
-  })
-  .strict();
+const currentPasswordSchema = z
+  .string()
+  .min(1, 'Mot de passe actuel requis')
+  .refine(isPasswordWithinBcryptLimit, 'Mot de passe trop long');
+const currentTotpCodeSchema = z
+  .string()
+  .trim()
+  .regex(MFA_TOTP_CODE_PATTERN, "Code d'authentification invalide");
+
+const stepUpSchema = z.union([
+  z
+    .object({
+      currentPassword: currentPasswordSchema,
+      kind: z.literal('password'),
+    })
+    .strict(),
+  z
+    .object({
+      currentTotpCode: currentTotpCodeSchema,
+      kind: z.literal('critical-mfa'),
+    })
+    .strict(),
+  z
+    .object({
+      currentPassword: currentPasswordSchema,
+      currentTotpCode: currentTotpCodeSchema,
+      kind: z.literal('full').optional(),
+    })
+    .strict()
+    .transform((value) => ({ ...value, kind: 'full' as const })),
+]);
 
 const rateLimitedResponse = (
   retryAfter: number,
@@ -84,12 +124,95 @@ const rateLimitedResponse = (
     },
   );
 
+const getStepUpStatus = (
+  session: SessionType | null,
+  now = new Date(),
+): StepUpStatus => ({
+  criticalMfaExpiresAt:
+    getCriticalProofExpiration(session, now)?.toISOString() ?? null,
+  passwordExpiresAt:
+    getAdminModeExpiration(session, now)?.toISOString() ?? null,
+});
+
+export async function GET(): Promise<
+  NextResponse<ApiSuccessResponse<StepUpStatus> | ApiErrorResponse>
+> {
+  try {
+    const auth = await requireAuth();
+    if (!auth.success) return auth.response;
+
+    return NextResponse.json({
+      data: getStepUpStatus(auth.session),
+      success: true,
+    });
+  } catch (error) {
+    return apiErrors.internal('AUTH_STEP_UP_STATUS', error);
+  }
+}
+
+export async function DELETE(): Promise<
+  NextResponse<ApiSuccessResponse<StepUpStatus> | ApiErrorResponse>
+> {
+  try {
+    const auth = await requireAuth();
+    if (!auth.success) return auth.response;
+    if (!auth.session) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.UNAUTHORIZED,
+            message: 'Session actuelle introuvable',
+          },
+          success: false,
+        },
+        { status: 401 },
+      );
+    }
+
+    const lockedAt = new Date();
+    const update = await prisma.session.updateMany({
+      data: {
+        criticalMfaVerifiedAt: null,
+        passwordReauthenticatedAt: null,
+      },
+      where: {
+        expiresAt: { gt: lockedAt },
+        idleExpiresAt: { gt: lockedAt },
+        securityVersion: auth.session.securityVersion,
+        token: auth.session.token,
+        userId: auth.user.id,
+      },
+    });
+
+    if (update.count !== 1) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.CONFLICT,
+            message: 'La session a changé. Rechargez la page.',
+          },
+          success: false,
+        },
+        { status: 409 },
+      );
+    }
+
+    return NextResponse.json({
+      data: { criticalMfaExpiresAt: null, passwordExpiresAt: null },
+      success: true,
+    });
+  } catch (error) {
+    return apiErrors.internal('AUTH_STEP_UP_LOCK', error);
+  }
+}
+
 export async function POST(
   request: NextRequest,
 ): Promise<
   NextResponse<ApiSuccessResponse<StepUpResponse> | ApiErrorResponse>
 > {
   let authenticatedUserId: string | null = null;
+  let requestedKind: StepUpKind = 'full';
 
   try {
     const auth = await requireAuth();
@@ -118,6 +241,12 @@ export async function POST(
         validation.error.flatten().fieldErrors,
       );
     }
+    requestedKind = validation.data.kind;
+
+    if (requestedKind === 'critical-mfa') {
+      const passwordProof = requireRecentAdminModeProof(currentSession);
+      if (!passwordProof.success) return passwordProof.response;
+    }
 
     const storedUser = await prisma.user.findUnique({
       include: { totpCredential: true },
@@ -130,7 +259,11 @@ export async function POST(
       !storedUser.totpCredential ||
       storedUser.securityVersion !== currentSession.securityVersion
     ) {
-      await recordStepUpFailure(auth.user.id, 'SECURITY_STATE_CHANGED');
+      await recordStepUpFailure(
+        auth.user.id,
+        'SECURITY_STATE_CHANGED',
+        requestedKind,
+      );
 
       return NextResponse.json(
         {
@@ -144,68 +277,100 @@ export async function POST(
       );
     }
 
-    const passwordRateLimitKey = `sensitive-step-up-password:${storedUser.id}`;
-    const passwordLimit =
-      await reserveSensitiveActionRateLimit(passwordRateLimitKey);
-    if (!passwordLimit.allowed) {
-      return rateLimitedResponse(passwordLimit.retryAfter ?? 1800);
-    }
+    const verifiesPassword = requestedKind !== 'critical-mfa';
+    const verifiesTotp = requestedKind !== 'password';
+    const totpCredential = storedUser.totpCredential;
+    const rateLimitKeys: string[] = [];
 
-    const passwordValid = await verifyPassword(
-      validation.data.currentPassword,
-      storedUser.passwordHash,
-    );
-    if (!passwordValid) {
-      await recordStepUpFailure(storedUser.id, 'PASSWORD_INVALID');
+    if (verifiesPassword) {
+      const passwordRateLimitKey = `sensitive-step-up-password:${storedUser.id}`;
+      rateLimitKeys.push(passwordRateLimitKey);
+      const passwordLimit =
+        await reserveSensitiveActionRateLimit(passwordRateLimitKey);
+      if (!passwordLimit.allowed) {
+        return rateLimitedResponse(passwordLimit.retryAfter ?? 1800);
+      }
 
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.INVALID_CREDENTIALS,
-            message: 'Mot de passe actuel incorrect',
-          },
-          success: false,
-        },
-        { status: 400 },
+      const currentPassword =
+        'currentPassword' in validation.data
+          ? validation.data.currentPassword
+          : '';
+      const passwordValid = await verifyPassword(
+        currentPassword,
+        storedUser.passwordHash,
       );
-    }
-    await recordLoginAttempt(passwordRateLimitKey, true);
+      if (!passwordValid) {
+        await recordStepUpFailure(
+          storedUser.id,
+          'PASSWORD_INVALID',
+          requestedKind,
+        );
 
-    const totpRateLimitKey = `sensitive-step-up-totp:${storedUser.id}`;
-    const totpLimit = await reserveSensitiveActionRateLimit(totpRateLimitKey);
-    if (!totpLimit.allowed) {
-      return rateLimitedResponse(totpLimit.retryAfter ?? 1800);
-    }
-
-    const proof = await verifyMfaProof({
-      code: validation.data.currentTotpCode,
-      credential: storedUser.totpCredential,
-      recoveryCodes: [],
-      userId: storedUser.id,
-    });
-    if (!proof || proof.method !== 'TOTP') {
-      await recordStepUpFailure(storedUser.id, 'TOTP_INVALID');
-
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.INVALID_CREDENTIALS,
-            message: 'Code actuel incorrect ou expiré',
+        return NextResponse.json(
+          {
+            error: {
+              code: ErrorCode.INVALID_CREDENTIALS,
+              message: 'Mot de passe actuel incorrect',
+            },
+            success: false,
           },
-          success: false,
-        },
-        { status: 400 },
-      );
+          { status: 400 },
+        );
+      }
+      await recordLoginAttempt(passwordRateLimitKey, true);
+    }
+
+    let verifiedMfaProof: Awaited<ReturnType<typeof verifyMfaProof>> = null;
+    if (verifiesTotp) {
+      const totpRateLimitKey = `sensitive-step-up-totp:${storedUser.id}`;
+      rateLimitKeys.push(totpRateLimitKey);
+      const totpLimit = await reserveSensitiveActionRateLimit(totpRateLimitKey);
+      if (!totpLimit.allowed) {
+        return rateLimitedResponse(totpLimit.retryAfter ?? 1800);
+      }
+
+      const currentTotpCode =
+        'currentTotpCode' in validation.data
+          ? validation.data.currentTotpCode
+          : '';
+      verifiedMfaProof = await verifyMfaProof({
+        code: currentTotpCode,
+        credential: totpCredential,
+        recoveryCodes: [],
+        userId: storedUser.id,
+      });
+      if (!verifiedMfaProof || verifiedMfaProof.method !== 'TOTP') {
+        await recordStepUpFailure(storedUser.id, 'TOTP_INVALID', requestedKind);
+
+        return NextResponse.json(
+          {
+            error: {
+              code: ErrorCode.INVALID_CREDENTIALS,
+              message: 'Code actuel incorrect ou expiré',
+            },
+            success: false,
+          },
+          { status: 400 },
+        );
+      }
     }
 
     const authenticatedAt = new Date();
-    const credentialUpdatedAt = storedUser.totpCredential.updatedAt;
+    const sessionProofData: {
+      criticalMfaVerifiedAt?: Date;
+      lastSeenAt: Date;
+      passwordReauthenticatedAt?: Date;
+    } = { lastSeenAt: authenticatedAt };
+    if (verifiesPassword) {
+      sessionProofData.passwordReauthenticatedAt = authenticatedAt;
+    }
+    if (verifiesTotp) {
+      sessionProofData.criticalMfaVerifiedAt = authenticatedAt;
+    }
+
     await prisma.$transaction(async (transaction) => {
       const sessionUpdate = await transaction.session.updateMany({
-        data: {
-          lastSeenAt: authenticatedAt,
-          mfaVerifiedAt: authenticatedAt,
-        },
+        data: sessionProofData,
         where: {
           expiresAt: { gt: authenticatedAt },
           idleExpiresAt: { gt: authenticatedAt },
@@ -214,14 +379,16 @@ export async function POST(
           userId: storedUser.id,
         },
       });
-      if (sessionUpdate.count !== 1) throw new MfaReplayDetectedError();
+      if (sessionUpdate.count !== 1) throw new StepUpSessionChangedError();
 
-      await consumeVerifiedMfaProof(transaction, {
-        authenticatedAt,
-        credentialUpdatedAt,
-        proof,
-        userId: storedUser.id,
-      });
+      if (verifiedMfaProof) {
+        await consumeVerifiedMfaProof(transaction, {
+          authenticatedAt,
+          credentialUpdatedAt: totpCredential.updatedAt,
+          proof: verifiedMfaProof,
+          userId: storedUser.id,
+        });
+      }
 
       await createAuditLogWithHeaders(
         {
@@ -230,7 +397,13 @@ export async function POST(
           description: 'Confirmation renforcée réussie',
           metadata: {
             ...STEP_UP_AUDIT_LOCATION,
-            authenticationMethod: 'TOTP',
+            authenticationMethod:
+              requestedKind === 'password'
+                ? 'PASSWORD'
+                : requestedKind === 'critical-mfa'
+                  ? 'TOTP'
+                  : 'PASSWORD_TOTP',
+            proofKind: requestedKind,
           },
           targetUserId: storedUser.id,
           userId: storedUser.id,
@@ -239,22 +412,39 @@ export async function POST(
       );
 
       await transaction.rateLimit.deleteMany({
-        where: { key: { in: [passwordRateLimitKey, totpRateLimitKey] } },
+        where: { key: { in: rateLimitKeys } },
       });
     });
 
+    const updatedSession: SessionType = {
+      ...currentSession,
+      criticalMfaVerifiedAt: verifiesTotp
+        ? authenticatedAt
+        : currentSession.criticalMfaVerifiedAt,
+      passwordReauthenticatedAt: verifiesPassword
+        ? authenticatedAt
+        : currentSession.passwordReauthenticatedAt,
+    };
+    const status = getStepUpStatus(updatedSession, authenticatedAt);
+    const expiresAt =
+      requestedKind === 'password'
+        ? status.passwordExpiresAt
+        : status.criticalMfaExpiresAt;
+
+    if (!expiresAt) throw new StepUpSessionChangedError();
+
     return NextResponse.json({
-      data: {
-        expiresAt: new Date(
-          authenticatedAt.getTime() + SENSITIVE_ACTION_PROOF_MAX_AGE_MS,
-        ).toISOString(),
-      },
+      data: { ...status, expiresAt, kind: requestedKind },
       success: true,
     });
   } catch (error) {
     if (error instanceof MfaReplayDetectedError) {
       if (authenticatedUserId) {
-        await recordStepUpFailure(authenticatedUserId, 'PROOF_REPLAYED');
+        await recordStepUpFailure(
+          authenticatedUserId,
+          'PROOF_REPLAYED',
+          requestedKind,
+        );
       }
 
       return NextResponse.json(
@@ -262,6 +452,19 @@ export async function POST(
           error: {
             code: ErrorCode.CONFLICT,
             message: 'Cette preuve a expiré. Saisissez un nouveau code.',
+          },
+          success: false,
+        },
+        { status: 409 },
+      );
+    }
+
+    if (error instanceof StepUpSessionChangedError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.CONFLICT,
+            message: 'La session a changé. Rechargez la page.',
           },
           success: false,
         },

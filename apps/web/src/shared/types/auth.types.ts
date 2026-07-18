@@ -8,10 +8,12 @@ import { type PermissionsData } from '$constants/permissions.constants';
 
 // Session type
 export type SessionType = {
+  criticalMfaVerifiedAt: Date | null;
   expiresAt: Date;
   idleExpiresAt: Date;
   lastSeenAt: Date;
   mfaVerifiedAt: Date | null;
+  passwordReauthenticatedAt: Date | null;
   rememberMe: boolean;
   securityVersion: number;
   token: string;

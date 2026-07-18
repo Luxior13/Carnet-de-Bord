@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => {
         async (callback: (client: typeof transaction) => Promise<unknown>) =>
           callback(transaction),
       ),
+      session: { updateMany: vi.fn() },
       user: { findUnique: vi.fn() },
     },
     recordLoginAttempt: vi.fn(),
@@ -87,14 +88,13 @@ const STORED_ADMIN = {
   totpCredential: TOTP_CREDENTIAL,
 };
 
-const buildSession = (
-  mfaVerifiedAt: Date | null,
-  overrides: Partial<SessionType> = {},
-): SessionType => ({
+const buildSession = (overrides: Partial<SessionType> = {}): SessionType => ({
+  criticalMfaVerifiedAt: null,
   expiresAt: new Date('2026-07-16T12:00:00.000Z'),
   idleExpiresAt: new Date('2026-07-15T12:30:00.000Z'),
   lastSeenAt: new Date('2026-07-15T11:55:00.000Z'),
-  mfaVerifiedAt,
+  mfaVerifiedAt: new Date('2026-07-15T11:00:00.000Z'),
+  passwordReauthenticatedAt: null,
   rememberMe: false,
   securityVersion: 7,
   token: SESSION_TOKEN,
@@ -102,8 +102,8 @@ const buildSession = (
   ...overrides,
 });
 
-const buildAuth = (): Record<string, unknown> => ({
-  session: buildSession(new Date('2026-07-15T11:00:00.000Z')),
+const buildAuth = (session = buildSession()): Record<string, unknown> => ({
+  session,
   success: true,
   user: {
     id: 'admin-user',
@@ -112,54 +112,77 @@ const buildAuth = (): Record<string, unknown> => ({
   },
 });
 
-const createRequest = (): NextRequest =>
+const createRequest = (body: Record<string, unknown>): NextRequest =>
   new NextRequest('http://localhost/api/auth/step-up', {
-    body: JSON.stringify({
-      currentPassword: 'Secret1!',
-      currentTotpCode: '123456',
-    }),
+    body: JSON.stringify(body),
     headers: { 'Content-Type': 'application/json' },
     method: 'POST',
   });
 
-describe('sensitive-action proof freshness', () => {
-  it('accepts a recent proof, including the five-minute boundary', async () => {
-    const { hasRecentSensitiveActionProof, SENSITIVE_ACTION_PROOF_MAX_AGE_MS } =
-      await import('$server/sensitive-action');
-
-    expect(
-      hasRecentSensitiveActionProof(
-        buildSession(
-          new Date(NOW.getTime() - SENSITIVE_ACTION_PROOF_MAX_AGE_MS),
-        ),
-        NOW,
+describe('administration proof freshness', () => {
+  it('accepts the exact password and critical-MFA boundaries', async () => {
+    const {
+      ADMIN_MODE_PROOF_MAX_AGE_MS,
+      CRITICAL_PERMISSION_PROOF_MAX_AGE_MS,
+      hasRecentAdminModeProof,
+      hasRecentCriticalPermissionProof,
+    } = await import('$server/sensitive-action');
+    const session = buildSession({
+      criticalMfaVerifiedAt: new Date(
+        NOW.getTime() - CRITICAL_PERMISSION_PROOF_MAX_AGE_MS,
       ),
-    ).toBe(true);
+      passwordReauthenticatedAt: new Date(
+        NOW.getTime() - ADMIN_MODE_PROOF_MAX_AGE_MS,
+      ),
+    });
+
+    expect(hasRecentAdminModeProof(session, NOW)).toBe(true);
+    expect(hasRecentCriticalPermissionProof(session, NOW)).toBe(true);
   });
 
-  it('rejects an old, missing, or future-dated proof', async () => {
-    const { hasRecentSensitiveActionProof, SENSITIVE_ACTION_PROOF_MAX_AGE_MS } =
-      await import('$server/sensitive-action');
+  it('rejects old, absent, and future-dated administration proofs', async () => {
+    const {
+      ADMIN_MODE_PROOF_MAX_AGE_MS,
+      CRITICAL_PERMISSION_PROOF_MAX_AGE_MS,
+      hasRecentAdminModeProof,
+      hasRecentCriticalPermissionProof,
+    } = await import('$server/sensitive-action');
 
+    expect(hasRecentAdminModeProof(buildSession(), NOW)).toBe(false);
     expect(
-      hasRecentSensitiveActionProof(
-        buildSession(
-          new Date(NOW.getTime() - SENSITIVE_ACTION_PROOF_MAX_AGE_MS - 1),
-        ),
+      hasRecentAdminModeProof(
+        buildSession({
+          passwordReauthenticatedAt: new Date(
+            NOW.getTime() - ADMIN_MODE_PROOF_MAX_AGE_MS - 1,
+          ),
+        }),
         NOW,
       ),
     ).toBe(false);
-    expect(hasRecentSensitiveActionProof(buildSession(null), NOW)).toBe(false);
     expect(
-      hasRecentSensitiveActionProof(
-        buildSession(new Date(NOW.getTime() + 1)),
+      hasRecentCriticalPermissionProof(
+        buildSession({
+          criticalMfaVerifiedAt: new Date(
+            NOW.getTime() - CRITICAL_PERMISSION_PROOF_MAX_AGE_MS - 1,
+          ),
+          passwordReauthenticatedAt: NOW,
+        }),
+        NOW,
+      ),
+    ).toBe(false);
+    expect(
+      hasRecentCriticalPermissionProof(
+        buildSession({
+          criticalMfaVerifiedAt: new Date(NOW.getTime() + 1),
+          passwordReauthenticatedAt: NOW,
+        }),
         NOW,
       ),
     ).toBe(false);
   });
 });
 
-describe('POST /api/auth/step-up', () => {
+describe('/api/auth/step-up', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
@@ -177,6 +200,7 @@ describe('POST /api/auth/step-up', () => {
       timeStep: 123n,
     });
     mocks.transaction.session.updateMany.mockResolvedValue({ count: 1 });
+    mocks.prisma.session.updateMany.mockResolvedValue({ count: 1 });
     mocks.transaction.rateLimit.deleteMany.mockResolvedValue({ count: 2 });
   });
 
@@ -184,93 +208,27 @@ describe('POST /api/auth/step-up', () => {
     vi.useRealTimers();
   });
 
-  it('allows a USER with an MFA-bound session to refresh its proof', async () => {
-    mocks.requireAuth.mockResolvedValueOnce({
-      ...buildAuth(),
-      user: {
-        id: 'admin-user',
-        isProtected: false,
-        role: 'USER',
-      },
-    });
-    mocks.prisma.user.findUnique.mockResolvedValueOnce({
-      ...STORED_ADMIN,
-      role: 'USER',
-    });
+  it('unlocks administration with the password only for thirty minutes', async () => {
     const { POST } = await import('$app/api/auth/step-up/route');
-
-    const response = await POST(createRequest());
-
-    expect(response.status).toBe(200);
-    expect(mocks.requireAuth).toHaveBeenCalledWith();
-    expect(mocks.prisma.user.findUnique).toHaveBeenCalledWith({
-      include: { totpCredential: true },
-      where: { deletedAt: null, id: 'admin-user' },
-    });
-    expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
-  });
-
-  it('rejects an invalid current password before checking TOTP', async () => {
-    mocks.verifyPassword.mockResolvedValueOnce(false);
-    const { POST } = await import('$app/api/auth/step-up/route');
-
-    const response = await POST(createRequest());
+    const response = await POST(
+      createRequest({ currentPassword: 'Secret1!', kind: 'password' }),
+    );
     const body = await response.json();
 
-    expect(response.status).toBe(400);
-    expect(body.error.code).toBe(ErrorCode.INVALID_CREDENTIALS);
+    expect(response.status).toBe(200);
+    expect(body.data).toMatchObject({
+      criticalMfaExpiresAt: null,
+      expiresAt: '2026-07-15T12:30:00.000Z',
+      kind: 'password',
+      passwordExpiresAt: '2026-07-15T12:30:00.000Z',
+    });
+    expect(mocks.verifyPassword).toHaveBeenCalledTimes(1);
     expect(mocks.verifyMfaProof).not.toHaveBeenCalled();
-    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
-    expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: 'STEP_UP_FAILED',
-        metadata: expect.objectContaining({ reason: 'PASSWORD_INVALID' }),
-        targetUserId: 'admin-user',
-        userId: 'admin-user',
-      }),
-    );
-  });
-
-  it('rejects an invalid TOTP without updating the session', async () => {
-    mocks.verifyMfaProof.mockResolvedValueOnce(null);
-    const { POST } = await import('$app/api/auth/step-up/route');
-
-    const response = await POST(createRequest());
-    const body = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(body.error.code).toBe(ErrorCode.INVALID_CREDENTIALS);
-    expect(mocks.recordLoginAttempt).toHaveBeenCalledWith(
-      'sensitive-step-up-password:admin-user',
-      true,
-    );
-    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.consumeVerifiedMfaProof).not.toHaveBeenCalled();
-    expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: 'STEP_UP_FAILED',
-        metadata: expect.objectContaining({ reason: 'TOTP_INVALID' }),
-        targetUserId: 'admin-user',
-        userId: 'admin-user',
-      }),
-    );
-  });
-
-  it('atomically refreshes the current session proof and consumes the TOTP', async () => {
-    const proof = { method: 'TOTP' as const, timeStep: 123n };
-    mocks.verifyMfaProof.mockResolvedValueOnce(proof);
-    const { POST } = await import('$app/api/auth/step-up/route');
-
-    const response = await POST(createRequest());
-    const body = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(body.data.expiresAt).toBe('2026-07-15T12:05:00.000Z');
-    expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(mocks.transaction.session.updateMany).toHaveBeenCalledWith({
       data: {
         lastSeenAt: NOW,
-        mfaVerifiedAt: NOW,
+        passwordReauthenticatedAt: NOW,
       },
       where: {
         expiresAt: { gt: NOW },
@@ -280,6 +238,72 @@ describe('POST /api/auth/step-up', () => {
         userId: 'admin-user',
       },
     });
+  });
+
+  it('rejects an invalid password without checking TOTP', async () => {
+    mocks.verifyPassword.mockResolvedValueOnce(false);
+    const { POST } = await import('$app/api/auth/step-up/route');
+    const response = await POST(
+      createRequest({ currentPassword: 'wrong', kind: 'password' }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe(ErrorCode.INVALID_CREDENTIALS);
+    expect(mocks.verifyMfaProof).not.toHaveBeenCalled();
+    expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'STEP_UP_FAILED',
+        metadata: expect.objectContaining({
+          proofKind: 'password',
+          reason: 'PASSWORD_INVALID',
+        }),
+      }),
+    );
+  });
+
+  it('requires an active password proof before critical MFA', async () => {
+    mocks.requireAuth.mockResolvedValueOnce(buildAuth(buildSession()));
+    const { POST } = await import('$app/api/auth/step-up/route');
+    const response = await POST(
+      createRequest({ currentTotpCode: '123456', kind: 'critical-mfa' }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe(ErrorCode.ADMIN_MODE_REQUIRED);
+    expect(mocks.prisma.user.findUnique).not.toHaveBeenCalled();
+    expect(mocks.verifyMfaProof).not.toHaveBeenCalled();
+  });
+
+  it('confirms critical MFA without asking for the password again', async () => {
+    mocks.requireAuth.mockResolvedValueOnce(
+      buildAuth(buildSession({ passwordReauthenticatedAt: NOW })),
+    );
+    const proof = { method: 'TOTP' as const, timeStep: 123n };
+    mocks.verifyMfaProof.mockResolvedValueOnce(proof);
+    const { POST } = await import('$app/api/auth/step-up/route');
+    const response = await POST(
+      createRequest({ currentTotpCode: '123456', kind: 'critical-mfa' }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toMatchObject({
+      criticalMfaExpiresAt: '2026-07-15T12:15:00.000Z',
+      expiresAt: '2026-07-15T12:15:00.000Z',
+      kind: 'critical-mfa',
+      passwordExpiresAt: '2026-07-15T12:30:00.000Z',
+    });
+    expect(mocks.verifyPassword).not.toHaveBeenCalled();
+    expect(mocks.transaction.session.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          criticalMfaVerifiedAt: NOW,
+          lastSeenAt: NOW,
+        },
+      }),
+    );
     expect(mocks.consumeVerifiedMfaProof).toHaveBeenCalledWith(
       mocks.transaction,
       {
@@ -289,25 +313,65 @@ describe('POST /api/auth/step-up', () => {
         userId: 'admin-user',
       },
     );
-    expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: 'STEP_UP_SUCCESS',
-        metadata: expect.objectContaining({
-          authenticationMethod: 'TOTP',
-        }),
-        targetUserId: 'admin-user',
-        userId: 'admin-user',
+  });
+
+  it('keeps the login MFA timestamp immutable for a legacy full proof', async () => {
+    const { POST } = await import('$app/api/auth/step-up/route');
+    const response = await POST(
+      createRequest({
+        currentPassword: 'Secret1!',
+        currentTotpCode: '123456',
       }),
-      { client: mocks.transaction, required: true },
     );
-    expect(mocks.transaction.rateLimit.deleteMany).toHaveBeenCalledWith({
-      where: {
-        key: {
-          in: [
-            'sensitive-step-up-password:admin-user',
-            'sensitive-step-up-totp:admin-user',
-          ],
+
+    expect(response.status).toBe(200);
+    expect(mocks.transaction.session.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          criticalMfaVerifiedAt: NOW,
+          lastSeenAt: NOW,
+          passwordReauthenticatedAt: NOW,
         },
+      }),
+    );
+    expect(
+      mocks.transaction.session.updateMany.mock.calls[0]?.[0]?.data,
+    ).not.toHaveProperty('mfaVerifiedAt');
+  });
+
+  it('returns status and clears both administration proofs on lock', async () => {
+    const activeSession = buildSession({
+      criticalMfaVerifiedAt: NOW,
+      passwordReauthenticatedAt: NOW,
+    });
+    mocks.requireAuth.mockResolvedValue(buildAuth(activeSession));
+    const { DELETE, GET } = await import('$app/api/auth/step-up/route');
+
+    const statusResponse = await GET();
+    const statusBody = await statusResponse.json();
+    expect(statusBody.data).toEqual({
+      criticalMfaExpiresAt: '2026-07-15T12:15:00.000Z',
+      passwordExpiresAt: '2026-07-15T12:30:00.000Z',
+    });
+
+    const lockResponse = await DELETE();
+    const lockBody = await lockResponse.json();
+    expect(lockResponse.status).toBe(200);
+    expect(lockBody.data).toEqual({
+      criticalMfaExpiresAt: null,
+      passwordExpiresAt: null,
+    });
+    expect(mocks.prisma.session.updateMany).toHaveBeenCalledWith({
+      data: {
+        criticalMfaVerifiedAt: null,
+        passwordReauthenticatedAt: null,
+      },
+      where: {
+        expiresAt: { gt: NOW },
+        idleExpiresAt: { gt: NOW },
+        securityVersion: 7,
+        token: SESSION_TOKEN,
+        userId: 'admin-user',
       },
     });
   });

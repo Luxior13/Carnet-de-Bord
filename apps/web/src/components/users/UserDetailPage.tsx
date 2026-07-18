@@ -18,6 +18,7 @@ import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { AdminMfaResetDialog } from '$components/users/user-detail/AdminMfaResetDialog';
 import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
+import { useAdminStepUpController } from '$components/users/user-detail/useAdminStepUpController';
 import {
   analyzeUserAccessMutationBatch,
   decideUserAccessMutation,
@@ -51,6 +52,7 @@ import {
   getAccessLabel,
   getAccessPermissionKeys,
   getAccountPermissionKeys,
+  getPermissionItem,
   getRoleColor,
   hasPermission,
   PERMISSION_CATEGORIES,
@@ -58,7 +60,6 @@ import {
   type PermissionsData,
 } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
-import { ErrorCode } from '$types/api.types';
 import type {
   AuditLogEntry,
   UserAuditStats,
@@ -102,12 +103,6 @@ type PendingNavigation =
       href: string;
       kind: 'section';
     };
-
-type PendingStepUpAction = {
-  description: string;
-  execute: () => Promise<void> | void;
-  title: string;
-};
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
 const LOGIN_NAME_PATTERN = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/;
@@ -404,8 +399,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  const [pendingStepUpAction, setPendingStepUpAction] =
-    useState<PendingStepUpAction | null>(null);
 
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [auditNextCursor, setAuditNextCursor] = useState<string | null>(null);
@@ -439,6 +432,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   const [permissions, setPermissions] = useState<PermissionsData | null>(null);
   const [isSavingPermissions, setIsSavingPermissions] = useState(false);
+  const adminStepUp = useAdminStepUpController({ currentUser });
+  const { pendingStepUpAction, requestStepUpForResponse } = adminStepUp;
 
   const isProtectedActor = currentUser?.isProtected === true;
   const canViewUsers = currentUser
@@ -803,6 +798,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         targetCriticalAccessReady: user.criticalAccessReady,
       })
     : null;
+  const accessChangesRequireCriticalMfa =
+    hasRoleChanges ||
+    (accessMutationAnalysis?.summary.delegationChangeCount ?? 0) > 0 ||
+    (accessMutationAnalysis?.summary.grantedPermissionKeys.some(
+      (permissionKey) => getPermissionItem(permissionKey)?.risk === 'critical',
+    ) ??
+      false);
   const hasAccountChanges = hasAccountPermissionChanges;
   const hasSecurityChanges = !!user && editForm.isActive !== user.isActive;
   const hasCurrentSectionChanges =
@@ -1488,27 +1490,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     router.push(navigation.href);
   }, [activeSection, discardSectionChanges, pendingNavigation, router]);
 
-  const requestStepUpForResponse = (
-    data: unknown,
-    action: PendingStepUpAction,
-  ): boolean => {
-    const errorCode = (data as { error?: { code?: string } } | null | undefined)
-      ?.error?.code;
-
-    if (errorCode !== ErrorCode.REAUTHENTICATION_REQUIRED) return false;
-
-    setPendingStepUpAction(action);
-
-    return true;
-  };
-
-  const handleStepUpComplete = async (): Promise<void> => {
-    const action = pendingStepUpAction;
-
-    setPendingStepUpAction(null);
-    if (action) await action.execute();
-  };
-
   const syncUserState = (updatedUser: UserType): void => {
     setUser(updatedUser);
     setEditForm({
@@ -2098,6 +2079,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
         )}
         {selectedView === 'access' ? (
           <UserAccessTab
+            adminModeExpiresAt={adminStepUp.adminModeExpiresAt}
+            adminModeRemainingLabel={adminStepUp.adminModeRemainingLabel}
             user={user}
             role={editForm.role}
             setRole={(role) =>
@@ -2119,6 +2102,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
             onCancel={handleCancelAccess}
             hasChanges={hasAccessChanges}
             canSave={canSaveAccess}
+            isAdminModeActive={adminStepUp.isAdminModeActive}
+            isAdminModeStatusLoading={adminStepUp.isAdminModeStatusLoading}
+            isCriticalMfaActive={adminStepUp.isCriticalMfaActive}
+            isLockingAdminMode={adminStepUp.isLockingAdminMode}
+            onLockAdminMode={() => void adminStepUp.handleLockAdminMode()}
+            onUnlockAdminMode={adminStepUp.handleUnlockAdminMode}
+            requiresCriticalMfa={accessChangesRequireCriticalMfa}
           />
         ) : (
           <UserAccountTab
@@ -2660,9 +2650,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       <AdminStepUpDialog
         actorLoginName={currentUser?.loginName ?? ''}
         description={pendingStepUpAction?.description ?? ''}
-        onCancel={() => setPendingStepUpAction(null)}
-        onComplete={handleStepUpComplete}
+        onCancel={adminStepUp.cancelPendingStepUpAction}
+        onComplete={adminStepUp.handleStepUpComplete}
+        onProofKindRequired={adminStepUp.setPendingStepUpProofKind}
         open={pendingStepUpAction !== null}
+        proofKind={pendingStepUpAction?.proofKind ?? 'full'}
         title={pendingStepUpAction?.title ?? 'Confirmer votre identité'}
       />
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>

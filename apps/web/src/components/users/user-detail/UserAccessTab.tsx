@@ -39,6 +39,8 @@ import {
 } from '$ui/select';
 
 type UserAccessTabProps = {
+  adminModeExpiresAt: string | null;
+  adminModeRemainingLabel: string | null;
   canChangePermission: PermissionMutationPolicy;
   canDelegatePermissions: boolean;
   canEditRole: boolean;
@@ -47,13 +49,20 @@ type UserAccessTabProps = {
   canRevokePermissions: boolean;
   canSave: boolean;
   hasChanges: boolean;
+  isAdminModeActive: boolean;
+  isAdminModeStatusLoading: boolean;
+  isCriticalMfaActive: boolean;
+  isLockingAdminMode: boolean;
   isSaving: boolean;
   mutationSummary: PermissionMutationSummary | null;
   onCancel: () => void;
+  onLockAdminMode: () => void;
   onPermissionPageChange: (pageKey: string) => void;
   onSave: () => void;
+  onUnlockAdminMode: () => void;
   permissionPageKey: string;
   permissions: PermissionsData | null;
+  requiresCriticalMfa: boolean;
   role: UserRole;
   setPermissions: (permissions: PermissionsData | null) => void;
   setRole: (role: UserRole) => void;
@@ -81,6 +90,8 @@ const formatMutationSummary = (
 };
 
 export const UserAccessTab: FC<UserAccessTabProps> = ({
+  adminModeExpiresAt,
+  adminModeRemainingLabel,
   canChangePermission,
   canDelegatePermissions,
   canEditRole,
@@ -89,19 +100,27 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   canRevokePermissions,
   canSave,
   hasChanges,
+  isAdminModeActive,
+  isAdminModeStatusLoading,
+  isCriticalMfaActive,
+  isLockingAdminMode,
   isSaving,
   mutationSummary,
   onCancel,
+  onLockAdminMode,
   onPermissionPageChange,
   onSave,
+  onUnlockAdminMode,
   permissionPageKey,
   permissions,
+  requiresCriticalMfa,
   role,
   setPermissions,
   setRole,
   user,
 }) => {
   const mutationSummaryLabel = formatMutationSummary(mutationSummary);
+  const canMutateAccess = canEditRole || canManagePermissions;
 
   if (user.isProtected) {
     const totalPermissions = getAllPermissionKeys().length;
@@ -188,6 +207,83 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
     <div>
       <Card className="border-border/60 overflow-visible rounded-lg py-0">
         <CardContent className="space-y-3 p-2.5 sm:p-3">
+          {canMutateAccess && (
+            <section
+              aria-labelledby="admin-mode-status-title"
+              aria-live="polite"
+              className={`flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between ${
+                isAdminModeActive
+                  ? 'border-success/30 bg-success/10'
+                  : 'border-border/60 bg-surface-muted'
+              }`}
+              role="region"
+            >
+              <div className="flex min-w-0 items-start gap-3">
+                <span
+                  className={`flex size-9 shrink-0 items-center justify-center rounded-lg border ${
+                    isAdminModeActive
+                      ? 'border-success/35 bg-success/15 text-success'
+                      : 'border-border/60 bg-surface-control text-muted-foreground'
+                  }`}
+                >
+                  {isAdminModeActive ? (
+                    <ShieldCheck className="size-4" />
+                  ) : (
+                    <LockKeyhole className="size-4" />
+                  )}
+                </span>
+                <div className="min-w-0">
+                  <h3
+                    className="text-foreground text-sm font-semibold"
+                    id="admin-mode-status-title"
+                  >
+                    {isAdminModeStatusLoading
+                      ? 'Vérification du mode administration'
+                      : isAdminModeActive
+                        ? 'Mode administration actif'
+                        : 'Modifications verrouillées'}
+                  </h3>
+                  <p className="text-muted-foreground mt-0.5 text-xs leading-5">
+                    {isAdminModeStatusLoading
+                      ? 'Vérification de la confirmation enregistrée sur cette session.'
+                      : isAdminModeActive
+                        ? 'Vous pouvez modifier plusieurs utilisateurs sans ressaisir votre mot de passe.'
+                        : 'Confirmez votre mot de passe une seule fois pour commencer vos modifications.'}
+                  </p>
+                  {isAdminModeActive && adminModeRemainingLabel && (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                      <time
+                        className="text-success text-xs font-medium"
+                        dateTime={adminModeExpiresAt ?? undefined}
+                      >
+                        {adminModeRemainingLabel}
+                      </time>
+                      {isCriticalMfaActive && (
+                        <Badge variant="secondary" className="rounded-full">
+                          MFA critique active
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <Button
+                className="shrink-0"
+                disabled={isAdminModeStatusLoading || isLockingAdminMode}
+                onClick={
+                  isAdminModeActive ? onLockAdminMode : onUnlockAdminMode
+                }
+                size="sm"
+                type="button"
+                variant={isAdminModeActive ? 'outline' : 'default'}
+              >
+                {isLockingAdminMode && (
+                  <Loader2 className="size-4 animate-spin" />
+                )}
+                {isAdminModeActive ? 'Verrouiller' : 'Déverrouiller'}
+              </Button>
+            </section>
+          )}
           <div
             aria-label="Capacités de gestion des autorisations"
             className="flex flex-wrap gap-1.5"
@@ -224,7 +320,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             onChange={setPermissions}
             selectedPageKey={permissionPageKey}
             onSelectedPageChange={onPermissionPageChange}
-            disabled={!canManagePermissions}
+            disabled={!canManagePermissions || !isAdminModeActive}
             headerControls={
               <div className="border-border/60 bg-surface-control flex items-center gap-2 rounded-lg border px-2 py-1">
                 <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-7 shrink-0 items-center justify-center rounded-md border">
@@ -248,7 +344,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                     <Select
                       value={role}
                       onValueChange={(value) => setRole(value as UserRole)}
-                      disabled={!canEditRole}
+                      disabled={!canEditRole || !isAdminModeActive}
                     >
                       <SelectTrigger
                         id="user-role"
@@ -301,6 +397,14 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                 Enregistrer déconnectera cet utilisateur de toutes ses sessions.
               </p>
             )}
+            {hasChanges && requiresCriticalMfa && (
+              <p className="text-primary-emphasis flex items-center gap-1.5 text-xs">
+                <ShieldAlert className="size-3.5 shrink-0" />
+                {isCriticalMfaActive
+                  ? 'La confirmation MFA critique est déjà active.'
+                  : 'Ce lot contient une élévation critique : un code MFA sera demandé une seule fois.'}
+              </p>
+            )}
           </div>
           <div className="flex justify-end gap-2">
             <Button
@@ -315,7 +419,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             <Button
               type="button"
               onClick={onSave}
-              disabled={isSaving || !canSave}
+              disabled={isSaving || !canSave || !isAdminModeActive}
               size="sm"
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
