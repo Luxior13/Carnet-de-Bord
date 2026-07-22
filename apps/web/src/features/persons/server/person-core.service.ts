@@ -21,6 +21,7 @@ import type {
   PersonDetail,
   PersonDuplicateWarning,
   PersonEmailItem,
+  PersonListSort,
   PersonPhoneItem,
   PersonsListResponse,
   PersonSocialProfileItem,
@@ -58,11 +59,15 @@ type PersonDetailRecord = Prisma.PersonGetPayload<{
 
 type PersonListRow = {
   createdAt: Date;
+  emailCount: number;
   firstName: string | null;
   id: string;
   lastName: string | null;
   matchedByContact: boolean;
   nickname: string | null;
+  phoneCount: number;
+  socialProfileCount: number;
+  sortName: string;
   structureStatus: 'IN_STRUCTURE' | 'OUTSIDE_STRUCTURE';
   updatedAt: Date;
   version: number;
@@ -109,6 +114,11 @@ const toSocialProfileItem = (
 });
 
 const toPersonSummary = (person: PersonListRow): PersonSummary => ({
+  contactCounts: {
+    emails: person.emailCount,
+    phones: person.phoneCount,
+    socialProfiles: person.socialProfileCount,
+  },
   createdAt: person.createdAt.toISOString(),
   firstName: person.firstName,
   id: person.id,
@@ -231,12 +241,15 @@ export const listPersons = async (input: {
   cursor?: string;
   limit: number;
   q: string;
+  sort?: PersonListSort;
   structureStatus?: 'IN_STRUCTURE' | 'OUTSIDE_STRUCTURE';
 }): Promise<PersonsListResponse> => {
+  const sort = input.sort ?? 'name';
   const { contactSearchClause, normalizedQuery, searchClause } =
     buildPersonSearchFragments(input.q);
   const filterHash = hashCursorFilters({
     q: normalizedQuery,
+    sort,
     structureStatus: input.structureStatus ?? null,
   });
   const cursor = input.cursor
@@ -245,21 +258,43 @@ export const listPersons = async (input: {
   if (input.cursor && !cursor) throw new RangeError('INVALID_CURSOR');
 
   const snapshotAt = cursor ? new Date(cursor.snapshotAt) : new Date();
-  const cursorCreatedAt = cursor ? new Date(cursor.sortValue) : null;
-  if (cursorCreatedAt && Number.isNaN(cursorCreatedAt.getTime())) {
+  const cursorDate =
+    cursor && sort !== 'name' ? new Date(cursor.sortValue) : null;
+  if (cursorDate && Number.isNaN(cursorDate.getTime())) {
     throw new RangeError('INVALID_CURSOR');
   }
 
   const statusClause = input.structureStatus
     ? Prisma.sql`AND p."structureStatus" = ${input.structureStatus}::"PersonStructureStatus"`
     : Prisma.empty;
-  const cursorClause =
-    cursorCreatedAt && cursor
+  const snapshotClause =
+    sort === 'created'
+      ? Prisma.sql`p."createdAt" <= ${snapshotAt}`
+      : Prisma.sql`p."updatedAt" <= ${snapshotAt}`;
+  const cursorClause = !cursor
+    ? Prisma.empty
+    : sort === 'name'
       ? Prisma.sql`AND (
-          p."createdAt" < ${cursorCreatedAt}
-          OR (p."createdAt" = ${cursorCreatedAt} AND p."id" < ${cursor.id})
+          p."sortName" > ${cursor.sortValue}
+          OR (p."sortName" = ${cursor.sortValue} AND p."id" > ${cursor.id})
         )`
-      : Prisma.empty;
+      : sort === 'updated' && cursorDate
+        ? Prisma.sql`AND (
+            p."updatedAt" < ${cursorDate}
+            OR (p."updatedAt" = ${cursorDate} AND p."id" < ${cursor.id})
+          )`
+        : cursorDate
+          ? Prisma.sql`AND (
+              p."createdAt" < ${cursorDate}
+              OR (p."createdAt" = ${cursorDate} AND p."id" < ${cursor.id})
+            )`
+          : Prisma.empty;
+  const orderClause =
+    sort === 'name'
+      ? Prisma.sql`p."sortName" ASC, p."id" ASC`
+      : sort === 'updated'
+        ? Prisma.sql`p."updatedAt" DESC, p."id" DESC`
+        : Prisma.sql`p."createdAt" DESC, p."id" DESC`;
 
   const rows = await prisma.$queryRaw<PersonListRow[]>(Prisma.sql`
     SELECT
@@ -267,19 +302,26 @@ export const listPersons = async (input: {
       p."nickname",
       p."firstName",
       p."lastName",
+      p."sortName",
       p."structureStatus",
       p."version",
       p."createdAt",
       p."updatedAt",
+      (SELECT COUNT(*)::integer FROM "PersonEmail" email_count
+        WHERE email_count."personId" = p."id") AS "emailCount",
+      (SELECT COUNT(*)::integer FROM "PersonPhone" phone_count
+        WHERE phone_count."personId" = p."id") AS "phoneCount",
+      (SELECT COUNT(*)::integer FROM "PersonSocialProfile" social_count
+        WHERE social_count."personId" = p."id") AS "socialProfileCount",
       CASE WHEN ${normalizedQuery} <> '' THEN (
         ${contactSearchClause}
       ) ELSE FALSE END AS "matchedByContact"
     FROM "Person" p
-    WHERE p."createdAt" <= ${snapshotAt}
+    WHERE ${snapshotClause}
       ${statusClause}
       ${searchClause}
       ${cursorClause}
-    ORDER BY p."createdAt" DESC, p."id" DESC
+    ORDER BY ${orderClause}
     LIMIT ${input.limit + 1}
   `);
   const paginated = buildCursorPaginationMeta(
@@ -291,7 +333,12 @@ export const listPersons = async (input: {
       id: person.id,
       resource: 'persons',
       snapshotAt: snapshotAt.toISOString(),
-      sortValue: person.createdAt.toISOString(),
+      sortValue:
+        sort === 'name'
+          ? person.sortName
+          : sort === 'updated'
+            ? person.updatedAt.toISOString()
+            : person.createdAt.toISOString(),
     }),
   );
 

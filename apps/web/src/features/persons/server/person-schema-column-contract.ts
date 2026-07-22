@@ -43,6 +43,7 @@ export const PERSON_SCHEMA_COLUMNS = [
   ],
   ['Person', 'lastName', null, 'character varying(100)', false, null],
   ['Person', 'normalizedLastName', null, 'character varying(200)', false, null],
+  ['Person', 'sortName', null, 'character varying(401)', true, null],
   ['Person', 'birthDate', null, 'date', false, null],
   [
     'Person',

@@ -62,11 +62,11 @@ describe('strict Person PostgreSQL catalog readiness', () => {
     expect(queryRaw).toHaveBeenCalledTimes(1);
     expect(PERSON_SCHEMA_EXPECTED_COUNTS).toEqual({
       checks: 23,
-      columns: 69,
+      columns: 70,
       enums: 12,
       foreignKeys: 7,
       functions: 2,
-      indexes: 28,
+      indexes: 32,
       triggers: 5,
     });
   });

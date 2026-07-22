@@ -22,14 +22,22 @@ export const PageBackButton: FC<PageBackButtonProps> = ({
   label,
   ...target
 }) => {
-  const buttonClassName = cn(fullWidth && 'w-full justify-start', className);
+  const buttonClassName = cn(
+    fullWidth && 'w-full min-w-0 justify-start overflow-hidden px-2.5 text-xs',
+    className,
+  );
+  const content = (
+    <>
+      <ArrowLeft className="size-4 shrink-0" />
+      <span className={cn(fullWidth && 'min-w-0 truncate')}>{label}</span>
+    </>
+  );
 
   if (target.href) {
     return (
       <Button asChild className={buttonClassName} size="sm" variant="outline">
-        <Link href={target.href}>
-          <ArrowLeft className="size-4" />
-          {label}
+        <Link href={target.href} title={fullWidth ? label : undefined}>
+          {content}
         </Link>
       </Button>
     );
@@ -40,11 +48,11 @@ export const PageBackButton: FC<PageBackButtonProps> = ({
       className={buttonClassName}
       onClick={target.onClick}
       size="sm"
+      title={fullWidth ? label : undefined}
       type="button"
       variant="outline"
     >
-      <ArrowLeft className="size-4" />
-      {label}
+      {content}
     </Button>
   );
 };

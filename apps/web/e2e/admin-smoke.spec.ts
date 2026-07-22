@@ -274,6 +274,9 @@ async function expectPersonsListFilteringAndPagination(
       normalizedNickname: `${listPrefix} ${String(index).padStart(2, '0')}`
         .toLocaleLowerCase('fr-FR')
         .normalize('NFKC'),
+      sortName: `${listPrefix} ${String(index).padStart(2, '0')}`
+        .toLocaleLowerCase('fr-FR')
+        .normalize('NFKC'),
       structureStatus:
         index % 2 === 0
           ? ('IN_STRUCTURE' as const)
@@ -302,7 +305,7 @@ async function expectPersonsListFilteringAndPagination(
   expect(firstPage.items).toHaveLength(25);
   expect(firstPage.pagination.hasMore).toBe(true);
   await expect(
-    page.getByText(/Page 1 .* 25 r.sultats/, { exact: true }),
+    page.getByText(/Page 1 .* 25 fiches/, { exact: true }),
   ).toBeVisible();
 
   const nextPageButton = page.getByRole('button', { name: /Page suivante/ });
@@ -324,7 +327,7 @@ async function expectPersonsListFilteringAndPagination(
   expect(secondPage.items).toHaveLength(1);
   expect(secondPage.pagination.hasMore).toBe(false);
   await expect(
-    page.getByText(/Page 2 .* 1 r.sultat/, { exact: true }),
+    page.getByText(/Page 2 .* 1 fiche/, { exact: true }),
   ).toBeVisible();
 
   const previousPageButton = page.getByRole('button', {
@@ -333,7 +336,7 @@ async function expectPersonsListFilteringAndPagination(
   await expect(previousPageButton).toBeEnabled();
   await previousPageButton.click();
   await expect(
-    page.getByText(/Page 1 .* 25 r.sultats/, { exact: true }),
+    page.getByText(/Page 1 .* 25 fiches/, { exact: true }),
   ).toBeVisible();
 
   const statusFilter = page.getByRole('combobox', {
@@ -368,7 +371,7 @@ async function expectPersonsListFilteringAndPagination(
     );
   });
   await expect(
-    page.getByText(/Page 1 .* 13 r.sultats/, { exact: true }),
+    page.getByText(/Page 1 .* 13 fiches/, { exact: true }),
   ).toBeVisible();
   await expect(nextPageButton).toBeDisabled();
 

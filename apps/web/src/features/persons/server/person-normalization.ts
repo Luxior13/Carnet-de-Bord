@@ -26,19 +26,27 @@ export const personIdentityData = (input: {
   lastName?: string | null;
   nickname?: string | null;
   structureStatus: 'IN_STRUCTURE' | 'OUTSIDE_STRUCTURE';
-}) => ({
-  birthDate: parseCivilDate(input.birthDate ?? null),
-  firstName: input.firstName ?? null,
-  lastName: input.lastName ?? null,
-  nickname: input.nickname ?? null,
-  normalizedFirstName: input.firstName
+}) => {
+  const normalizedFirstName = input.firstName
     ? normalizePersonSearchValue(input.firstName)
-    : null,
-  normalizedLastName: input.lastName
+    : null;
+  const normalizedLastName = input.lastName
     ? normalizePersonSearchValue(input.lastName)
-    : null,
-  normalizedNickname: input.nickname
+    : null;
+  const normalizedNickname = input.nickname
     ? normalizePersonSearchValue(input.nickname)
-    : null,
-  structureStatus: input.structureStatus,
-});
+    : null;
+
+  return {
+    birthDate: parseCivilDate(input.birthDate ?? null),
+    firstName: input.firstName ?? null,
+    lastName: input.lastName ?? null,
+    nickname: input.nickname ?? null,
+    normalizedFirstName,
+    normalizedLastName,
+    normalizedNickname,
+    sortName:
+      normalizedNickname ?? `${normalizedFirstName} ${normalizedLastName}`,
+    structureStatus: input.structureStatus,
+  };
+};

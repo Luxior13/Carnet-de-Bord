@@ -3,6 +3,8 @@ export const PERSON_STRUCTURE_STATUSES = [
   'OUTSIDE_STRUCTURE',
 ] as const;
 
+export const PERSON_LIST_SORTS = ['name', 'updated', 'created'] as const;
+
 export const PERSON_STRUCTURE_STATUS_LABELS = {
   IN_STRUCTURE: 'Dans la structure',
   OUTSIDE_STRUCTURE: 'Hors structure',

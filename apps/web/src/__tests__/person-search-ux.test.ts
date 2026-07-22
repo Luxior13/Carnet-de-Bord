@@ -203,6 +203,32 @@ describe('person indexed search', () => {
     expect(sql.text).not.toMatch(
       /JOIN\s+"Person(?:Email|Phone|SocialProfile)"/u,
     );
+    expect(sql.text).toContain('AS "emailCount"');
+    expect(sql.text).toContain('AS "phoneCount"');
+    expect(sql.text).toContain('AS "socialProfileCount"');
+  });
+
+  it('uses stable indexed orders for every directory sort', async () => {
+    await listPersons({ limit: 25, q: '', sort: 'name' });
+    const alphabeticalSql = getLastSql();
+    expect(alphabeticalSql.text).toContain(
+      'ORDER BY p."sortName" ASC, p."id" ASC',
+    );
+    expect(alphabeticalSql.text).toContain('p."updatedAt" <=');
+
+    await listPersons({ limit: 25, q: '', sort: 'updated' });
+    const updatedSql = getLastSql();
+    expect(updatedSql.text).toContain(
+      'ORDER BY p."updatedAt" DESC, p."id" DESC',
+    );
+    expect(updatedSql.text).toContain('p."updatedAt" <=');
+
+    await listPersons({ limit: 25, q: '', sort: 'created' });
+    const createdSql = getLastSql();
+    expect(createdSql.text).toContain(
+      'ORDER BY p."createdAt" DESC, p."id" DESC',
+    );
+    expect(createdSql.text).toContain('p."createdAt" <=');
   });
 
   it('does not depend on an asynchronous deletion table', async () => {
@@ -224,22 +250,30 @@ describe('person indexed search', () => {
     mocks.queryRaw.mockResolvedValueOnce([
       {
         createdAt: new Date('2026-07-20T10:00:00.000Z'),
+        emailCount: 0,
         firstName: 'Ada',
         id: 'person-1',
         lastName: 'Lovelace',
         matchedByContact: false,
         nickname: null,
+        phoneCount: 0,
+        socialProfileCount: 0,
+        sortName: 'ada lovelace',
         structureStatus: 'OUTSIDE_STRUCTURE',
         updatedAt: new Date('2026-07-20T10:00:00.000Z'),
         version: 1,
       },
       {
         createdAt: new Date('2026-07-19T10:00:00.000Z'),
+        emailCount: 0,
         firstName: 'Grace',
         id: 'person-2',
         lastName: 'Hopper',
         matchedByContact: false,
         nickname: null,
+        phoneCount: 0,
+        socialProfileCount: 0,
+        sortName: 'grace hopper',
         structureStatus: 'IN_STRUCTURE',
         updatedAt: new Date('2026-07-19T10:00:00.000Z'),
         version: 1,
@@ -264,24 +298,32 @@ describe('person indexed search', () => {
       {
         createdAt: new Date('2026-07-20T10:00:00.000Z'),
         email: 'private@example.com',
+        emailCount: 1,
         firstName: 'Ada',
         id: 'person-1',
         lastName: 'Lovelace',
         matchedByContact: true,
         nickname: null,
         phone: '+33600000000',
+        phoneCount: 1,
+        socialProfileCount: 1,
         socialProfiles: [{ identifier: 'private' }],
+        sortName: 'ada lovelace',
         structureStatus: 'OUTSIDE_STRUCTURE',
         updatedAt: new Date('2026-07-20T10:00:00.000Z'),
         version: 1,
       },
       {
         createdAt: new Date('2026-07-19T10:00:00.000Z'),
+        emailCount: 0,
         firstName: 'Grace',
         id: 'person-2',
         lastName: 'Hopper',
         matchedByContact: false,
         nickname: null,
+        phoneCount: 0,
+        socialProfileCount: 0,
+        sortName: 'grace hopper',
         structureStatus: 'IN_STRUCTURE',
         updatedAt: new Date('2026-07-19T10:00:00.000Z'),
         version: 1,
@@ -291,6 +333,11 @@ describe('person indexed search', () => {
     const firstPage = await listPersons({ limit: 1, q: 'private' });
     expect(firstPage.items).toEqual([
       {
+        contactCounts: {
+          emails: 1,
+          phones: 1,
+          socialProfiles: 1,
+        },
         createdAt: '2026-07-20T10:00:00.000Z',
         firstName: 'Ada',
         id: 'person-1',
@@ -311,9 +358,9 @@ describe('person indexed search', () => {
       q: 'private',
     });
     const nextSql = getLastSql();
-    expect(nextSql.text).toContain('p."createdAt" <=');
-    expect(nextSql.text).toContain('p."createdAt" <');
-    expect(nextSql.text).toContain('p."id" <');
+    expect(nextSql.text).toContain('p."updatedAt" <=');
+    expect(nextSql.text).toContain('p."sortName" >');
+    expect(nextSql.text).toContain('p."id" >');
     expect(
       nextSql.values.some(
         (value) =>

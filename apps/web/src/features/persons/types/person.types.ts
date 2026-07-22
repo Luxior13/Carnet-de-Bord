@@ -1,6 +1,10 @@
-import type { PERSON_STRUCTURE_STATUSES } from '../person.constants';
+import type {
+  PERSON_LIST_SORTS,
+  PERSON_STRUCTURE_STATUSES,
+} from '../person.constants';
 
 export type PersonStructureStatus = (typeof PERSON_STRUCTURE_STATUSES)[number];
+export type PersonListSort = (typeof PERSON_LIST_SORTS)[number];
 
 export type PersonAuditActor = {
   displayName: string;
@@ -47,6 +51,11 @@ export type PersonSocialProfileItem = {
 };
 
 export type PersonSummary = {
+  contactCounts: {
+    emails: number;
+    phones: number;
+    socialProfiles: number;
+  };
   createdAt: string;
   firstName: string | null;
   id: string;
@@ -58,7 +67,10 @@ export type PersonSummary = {
   version: number;
 };
 
-export type PersonDetail = Omit<PersonSummary, 'matchedByContact'> & {
+export type PersonDetail = Omit<
+  PersonSummary,
+  'contactCounts' | 'matchedByContact'
+> & {
   age: number | null;
   birthDate: string | null;
   emails: PersonEmailItem[];

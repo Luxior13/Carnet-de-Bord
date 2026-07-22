@@ -339,6 +339,8 @@ export const getPersonSchemaCatalogRows = async (
         ('PersonSocialProfile_normalizedProfileUrlHash_idx'),
         ('PersonSocialProfile_one_primary_per_network_idx'),
         ('Person_createdAt_id_idx'), ('Person_structureStatus_createdAt_id_idx'),
+        ('Person_updatedAt_id_idx'), ('Person_structureStatus_updatedAt_id_idx'),
+        ('Person_sortName_id_idx'), ('Person_structureStatus_sortName_id_idx'),
         ('Person_normalizedNickname_trgm_idx'),
         ('Person_normalizedFirstName_trgm_idx'),
         ('Person_normalizedLastName_trgm_idx'),

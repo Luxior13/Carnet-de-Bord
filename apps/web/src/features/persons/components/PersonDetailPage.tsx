@@ -37,6 +37,7 @@ import { PersonStatusBadge } from './PersonStatusBadge';
 type PersonDetailPageProps = {
   activeSection: PersonDetailSection;
   personId: string;
+  returnHref: string;
 };
 
 export type PersonDetailSection = 'coordonnees' | 'identite';
@@ -167,6 +168,7 @@ const parseStoredDuplicateWarning = (raw: string): PersonDuplicateWarning => {
 const PersonDetailContent: FC<PersonDetailPageProps> = ({
   activeSection,
   personId,
+  returnHref,
 }) => {
   const {
     featureAvailabilityLoaded,
@@ -227,7 +229,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
   if (!canView) {
     return (
       <AccessDeniedState
-        actionHref={FEATURES.persons.href}
+        actionHref={returnHref}
         actionLabel="Retour au répertoire"
         description="Vous n'avez pas la permission de consulter cette fiche."
       />
@@ -252,7 +254,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
   if (error instanceof ApiClientError && error.status === 410) {
     return (
       <PageState
-        actionHref={FEATURES.persons.href}
+        actionHref={returnHref}
         actionLabel="Retour au répertoire"
         description="Cette fiche est masquée pendant sa suppression définitive. Aucune autre action n'est possible."
         icon={<Clock3 className="size-5" />}
@@ -264,7 +266,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
   if (error instanceof ApiClientError && error.status === 404) {
     return (
       <PageState
-        actionHref={FEATURES.persons.href}
+        actionHref={returnHref}
         actionLabel="Retour au répertoire"
         description="Cette fiche n'existe pas ou a été supprimée."
         title="Fiche introuvable"
@@ -294,16 +296,16 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
     );
   }
 
-  const sectionHref = (section: PersonDetailSection): string =>
-    `${FEATURES.persons.href}/${encodeURIComponent(personId)}?section=${section}`;
+  const sectionHref = (section: PersonDetailSection): string => {
+    const params = new URLSearchParams({ returnTo: returnHref, section });
+
+    return `${FEATURES.persons.href}/${encodeURIComponent(personId)}?${params}`;
+  };
 
   return (
     <PageShell className="py-0">
       <PageCanvas contentClassName="relative space-y-3">
-        <PageBackNavigation
-          href={FEATURES.persons.href}
-          label="Retour au répertoire"
-        />
+        <PageBackNavigation href={returnHref} label="Retour au répertoire" />
 
         <PageHero
           compact
@@ -336,7 +338,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
               className="data-[state=active]:border-primary/40 data-[state=active]:bg-primary/10 data-[state=active]:text-primary-emphasis"
               value="identite"
             >
-              <Link href={sectionHref('identite')}>
+              <Link href={sectionHref('identite')} replace>
                 <UserRound className="size-4" />
                 Identité
               </Link>
@@ -346,7 +348,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
               className="data-[state=active]:border-primary/40 data-[state=active]:bg-primary/10 data-[state=active]:text-primary-emphasis"
               value="coordonnees"
             >
-              <Link href={sectionHref('coordonnees')}>
+              <Link href={sectionHref('coordonnees')} replace>
                 <AtSign className="size-4" />
                 Coordonnées
               </Link>
@@ -389,6 +391,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
 export const PersonDetailPage: FC<PersonDetailPageProps> = ({
   activeSection,
   personId,
+  returnHref,
 }) => (
   <AuthenticatedLayout
     breadcrumbs={[
@@ -397,6 +400,10 @@ export const PersonDetailPage: FC<PersonDetailPageProps> = ({
       { label: 'Fiche' },
     ]}
   >
-    <PersonDetailContent activeSection={activeSection} personId={personId} />
+    <PersonDetailContent
+      activeSection={activeSection}
+      personId={personId}
+      returnHref={returnHref}
+    />
   </AuthenticatedLayout>
 );

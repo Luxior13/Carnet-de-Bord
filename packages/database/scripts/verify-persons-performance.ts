@@ -203,17 +203,38 @@ const buildPerformanceQueries = (
       expectation: {
         indexRequirements: [
           {
-            description: 'general Person keyset order',
-            oneOf: ['Person_createdAt_id_idx'],
+            description: 'general Person alphabetical keyset order',
+            oneOf: ['Person_sortName_id_idx'],
+          },
+          {
+            description: 'email count by Person',
+            oneOf: ['PersonEmail_personId_normalizedEmail_key'],
+          },
+          {
+            description: 'phone count by Person',
+            oneOf: ['PersonPhone_personId_normalizedPhone_key'],
+          },
+          {
+            description: 'social profile count by Person',
+            oneOf: [
+              'PersonSocialProfile_person_network_identifier_key',
+              'PersonSocialProfile_person_network_url_hash_key',
+            ],
           },
         ],
         name: 'persons-general-list',
       },
       parameters: [],
       sql: `
-        SELECT p."id", p."nickname", p."firstName", p."lastName"
+        SELECT p."id", p."nickname", p."firstName", p."lastName",
+          (SELECT COUNT(*) FROM "PersonEmail" email_count
+            WHERE email_count."personId" = p."id") AS "emailCount",
+          (SELECT COUNT(*) FROM "PersonPhone" phone_count
+            WHERE phone_count."personId" = p."id") AS "phoneCount",
+          (SELECT COUNT(*) FROM "PersonSocialProfile" social_count
+            WHERE social_count."personId" = p."id") AS "socialProfileCount"
         FROM "Person" p
-        ORDER BY p."createdAt" DESC, p."id" DESC
+        ORDER BY p."sortName" ASC, p."id" ASC
         LIMIT 26
       `,
     },
@@ -221,18 +242,39 @@ const buildPerformanceQueries = (
       expectation: {
         indexRequirements: [
           {
-            description: 'filtered Person keyset order',
-            oneOf: ['Person_structureStatus_createdAt_id_idx'],
+            description: 'filtered Person alphabetical keyset order',
+            oneOf: ['Person_structureStatus_sortName_id_idx'],
+          },
+          {
+            description: 'email count by Person',
+            oneOf: ['PersonEmail_personId_normalizedEmail_key'],
+          },
+          {
+            description: 'phone count by Person',
+            oneOf: ['PersonPhone_personId_normalizedPhone_key'],
+          },
+          {
+            description: 'social profile count by Person',
+            oneOf: [
+              'PersonSocialProfile_person_network_identifier_key',
+              'PersonSocialProfile_person_network_url_hash_key',
+            ],
           },
         ],
         name: 'persons-filtered-list',
       },
       parameters: [samples.status],
       sql: `
-        SELECT p."id", p."nickname", p."firstName", p."lastName"
+        SELECT p."id", p."nickname", p."firstName", p."lastName",
+          (SELECT COUNT(*) FROM "PersonEmail" email_count
+            WHERE email_count."personId" = p."id") AS "emailCount",
+          (SELECT COUNT(*) FROM "PersonPhone" phone_count
+            WHERE phone_count."personId" = p."id") AS "phoneCount",
+          (SELECT COUNT(*) FROM "PersonSocialProfile" social_count
+            WHERE social_count."personId" = p."id") AS "socialProfileCount"
         FROM "Person" p
         WHERE p."structureStatus" = $1::"PersonStructureStatus"
-        ORDER BY p."createdAt" DESC, p."id" DESC
+        ORDER BY p."sortName" ASC, p."id" ASC
         LIMIT 26
       `,
     },
@@ -255,7 +297,7 @@ const buildPerformanceQueries = (
           OR p."normalizedFirstName" = $1
           OR p."normalizedLastName" = $1
         )
-        ORDER BY p."createdAt" DESC, p."id" DESC
+        ORDER BY p."sortName" ASC, p."id" ASC
         LIMIT 26
       `,
     },
@@ -278,7 +320,7 @@ const buildPerformanceQueries = (
           OR p."normalizedFirstName" LIKE $1 ESCAPE E'\\\\'
           OR p."normalizedLastName" LIKE $1 ESCAPE E'\\\\'
         )
-        ORDER BY p."createdAt" DESC, p."id" DESC
+        ORDER BY p."sortName" ASC, p."id" ASC
         LIMIT 26
       `,
     },
@@ -301,7 +343,7 @@ const buildPerformanceQueries = (
           OR p."normalizedFirstName" LIKE $1 ESCAPE E'\\\\'
           OR p."normalizedLastName" LIKE $1 ESCAPE E'\\\\'
         )
-        ORDER BY p."createdAt" DESC, p."id" DESC
+        ORDER BY p."sortName" ASC, p."id" ASC
         LIMIT 26
       `,
     },
@@ -328,7 +370,7 @@ const buildPerformanceQueries = (
           WHERE email."personId" = p."id"
             AND email."normalizedEmail" = $1
         )
-        ORDER BY p."createdAt" DESC, p."id" DESC
+        ORDER BY p."sortName" ASC, p."id" ASC
         LIMIT 26
       `,
     },
@@ -355,7 +397,7 @@ const buildPerformanceQueries = (
           WHERE phone."personId" = p."id"
             AND phone."normalizedPhone" = $1
         )
-        ORDER BY p."createdAt" DESC, p."id" DESC
+        ORDER BY p."sortName" ASC, p."id" ASC
         LIMIT 26
       `,
     },
@@ -383,7 +425,7 @@ const buildPerformanceQueries = (
             AND social."networkKey" = $1
             AND social."normalizedIdentifier" = $2
         )
-        ORDER BY p."createdAt" DESC, p."id" DESC
+        ORDER BY p."sortName" ASC, p."id" ASC
         LIMIT 26
       `,
     },
@@ -412,7 +454,7 @@ const buildPerformanceQueries = (
             AND social_url."normalizedProfileUrlHash" = $2
             AND social_url."normalizedProfileUrl" = $3
         )
-        ORDER BY p."createdAt" DESC, p."id" DESC
+        ORDER BY p."sortName" ASC, p."id" ASC
         LIMIT 26
       `,
     },

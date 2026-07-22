@@ -9,6 +9,7 @@ import {
   isKnownPersonSocialNetwork,
   isSelectablePersonSocialNetwork,
   PERSON_LIMITS,
+  PERSON_LIST_SORTS,
   PERSON_STRUCTURE_STATUSES,
 } from '../person.constants';
 import {
@@ -442,6 +443,7 @@ export const personsListQuerySchema = z
     cursor: z.string().max(2_048).optional(),
     limit: z.coerce.number().int().min(1).max(100).default(25),
     q: z.string().trim().max(100).default(''),
+    sort: z.enum(PERSON_LIST_SORTS).default('name'),
     structureStatus: z.enum(PERSON_STRUCTURE_STATUSES).optional(),
   })
   .strict();

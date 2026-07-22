@@ -29,6 +29,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     cursor: searchParams.get('cursor') ?? undefined,
     limit: searchParams.get('limit') ?? undefined,
     q: searchParams.get('q') ?? undefined,
+    sort: searchParams.get('sort') ?? undefined,
     structureStatus: searchParams.get('structureStatus') ?? undefined,
   });
   if (!parsed.success) {

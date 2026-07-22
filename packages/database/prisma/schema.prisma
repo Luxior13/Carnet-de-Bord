@@ -378,6 +378,7 @@ model Person {
   normalizedFirstName String?               @db.VarChar(200)
   lastName            String?               @db.VarChar(100)
   normalizedLastName  String?               @db.VarChar(200)
+  sortName            String                @db.VarChar(401)
   birthDate           DateTime?             @db.Date
   structureStatus     PersonStructureStatus @default(OUTSIDE_STRUCTURE)
   version             Int                   @default(1)
@@ -390,6 +391,10 @@ model Person {
 
   @@index([createdAt, id])
   @@index([structureStatus, createdAt, id])
+  @@index([updatedAt, id])
+  @@index([structureStatus, updatedAt, id])
+  @@index([sortName, id])
+  @@index([structureStatus, sortName, id])
   @@index([normalizedNickname(ops: raw("gin_trgm_ops"))], type: Gin, map: "Person_normalizedNickname_trgm_idx")
   @@index([normalizedFirstName(ops: raw("gin_trgm_ops"))], type: Gin, map: "Person_normalizedFirstName_trgm_idx")
   @@index([normalizedLastName(ops: raw("gin_trgm_ops"))], type: Gin, map: "Person_normalizedLastName_trgm_idx")

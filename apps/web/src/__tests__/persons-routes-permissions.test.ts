@@ -369,8 +369,10 @@ describe('person API permission boundaries', () => {
     expect(response.headers.get('Cache-Control')).toBe('private, no-store');
     expect(response.headers.get('Pragma')).toBe('no-cache');
     expect(mocks.listPersons).toHaveBeenCalledWith({
+      cursor: undefined,
       limit: 25,
       q: '',
+      sort: 'name',
       structureStatus: 'IN_STRUCTURE',
     });
   });

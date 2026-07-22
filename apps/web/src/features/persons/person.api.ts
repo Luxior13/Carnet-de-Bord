@@ -8,6 +8,7 @@ import {
 import type {
   PersonDetail,
   PersonFieldHistoryResponse,
+  PersonListSort,
   PersonMutationResponse,
   PersonsListResponse,
   PersonStructureStatus,
@@ -17,6 +18,8 @@ type ListPersonsOptions = {
   cursor?: string;
   limit?: number;
   q?: string;
+  signal?: AbortSignal;
+  sort?: PersonListSort;
   structureStatus?: PersonStructureStatus;
 };
 
@@ -60,14 +63,20 @@ export const listPersons = async ({
   cursor,
   limit = 25,
   q,
+  signal,
+  sort = 'name',
   structureStatus,
 }: ListPersonsOptions): Promise<PersonsListResponse> => {
   const params = new URLSearchParams({ limit: String(limit) });
   if (cursor) params.set('cursor', cursor);
   if (q) params.set('q', q);
+  if (sort !== 'name') params.set('sort', sort);
   if (structureStatus) params.set('structureStatus', structureStatus);
 
-  return apiFetchJson<PersonsListResponse>(`/api/personnes?${params}`);
+  return apiFetchJson<PersonsListResponse>(`/api/personnes?${params}`, {
+    cache: 'no-store',
+    signal,
+  });
 };
 
 export const getPerson = (personId: string): Promise<PersonDetail> =>

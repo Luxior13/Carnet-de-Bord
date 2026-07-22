@@ -2,7 +2,7 @@
 
 import { Plus, Users } from 'lucide-react';
 import Link from 'next/link';
-import React, { type FC, Suspense } from 'react';
+import React, { type FC } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { PageHero } from '$components/layout/PageHero';
@@ -52,6 +52,7 @@ const PersonsPageContent: FC = () => {
     <PageShell className="py-0">
       <PageCanvas contentClassName="space-y-5">
         <PageHero
+          compact
           actions={
             canCreate ? (
               <Button asChild size="sm">
@@ -67,16 +68,7 @@ const PersonsPageContent: FC = () => {
           title="Répertoire"
           tone="internal"
         />
-        <Suspense
-          fallback={
-            <div className="space-y-3" role="status" aria-label="Chargement">
-              <Skeleton className="h-24 rounded-xl" />
-              <Skeleton className="h-96 rounded-xl" />
-            </div>
-          }
-        >
-          <PersonsList canCreate={canCreate} />
-        </Suspense>
+        <PersonsList canCreate={canCreate} />
       </PageCanvas>
     </PageShell>
   );
