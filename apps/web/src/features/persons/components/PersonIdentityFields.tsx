@@ -1,7 +1,5 @@
-import { History } from 'lucide-react';
 import React, { type FC } from 'react';
 
-import { Button } from '$ui/button';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import {
@@ -17,7 +15,10 @@ import {
   PERSON_STRUCTURE_STATUSES,
 } from '../person.constants';
 import type { PersonStructureStatus } from '../types/person.types';
-import type { PersonFieldHistoryTarget } from './PersonFieldHistoryPanel';
+import {
+  PersonFieldProvenanceHint,
+  type PersonFieldProvenanceTarget,
+} from './PersonFieldProvenanceHint';
 
 export type PersonIdentityFormValue = {
   birthDate: string;
@@ -28,54 +29,27 @@ export type PersonIdentityFormValue = {
 };
 
 type PersonIdentityFieldsProps = {
-  activeHistoryFieldKey?: string;
   disabled?: boolean;
   errors: Record<string, string>;
-  histories?: Readonly<
-    Partial<Record<keyof PersonIdentityFormValue, PersonFieldHistoryTarget>>
-  >;
   idPrefix: string;
   onChange: <TKey extends keyof PersonIdentityFormValue>(
     key: TKey,
     value: PersonIdentityFormValue[TKey],
   ) => void;
-  onHistoryOpen?: (target: PersonFieldHistoryTarget) => void;
+  provenances?: Readonly<
+    Partial<Record<keyof PersonIdentityFormValue, PersonFieldProvenanceTarget>>
+  >;
   value: PersonIdentityFormValue;
 };
 
-const HistoryAction: FC<{
-  activeFieldKey?: string;
-  onOpen?: (target: PersonFieldHistoryTarget) => void;
-  target?: PersonFieldHistoryTarget;
-}> = ({ activeFieldKey, onOpen, target }) =>
-  target && onOpen ? (
-    <Button
-      aria-label={`Afficher l'historique : ${target.label}`}
-      aria-pressed={activeFieldKey === target.fieldKey}
-      className="size-6 shrink-0"
-      onClick={() => onOpen(target)}
-      size="icon"
-      type="button"
-      variant={activeFieldKey === target.fieldKey ? 'secondary' : 'ghost'}
-    >
-      <History className="size-3.5" />
-    </Button>
-  ) : null;
-
 const FieldLabel: FC<{
-  activeHistoryFieldKey?: string;
-  history?: PersonFieldHistoryTarget;
   htmlFor: string;
   label: string;
-  onHistoryOpen?: (target: PersonFieldHistoryTarget) => void;
-}> = ({ activeHistoryFieldKey, history, htmlFor, label, onHistoryOpen }) => (
+  provenance?: PersonFieldProvenanceTarget;
+}> = ({ htmlFor, label, provenance }) => (
   <div className="flex items-center gap-1.5">
     <Label htmlFor={htmlFor}>{label}</Label>
-    <HistoryAction
-      activeFieldKey={activeHistoryFieldKey}
-      onOpen={onHistoryOpen}
-      target={history}
-    />
+    <PersonFieldProvenanceHint target={provenance} />
   </div>
 );
 
@@ -87,13 +61,11 @@ const FieldError: FC<{ id: string; message?: string }> = ({ id, message }) =>
   ) : null;
 
 export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
-  activeHistoryFieldKey,
   disabled = false,
   errors,
-  histories,
   idPrefix,
   onChange,
-  onHistoryOpen,
+  provenances,
   value,
 }) => {
   const field = (
@@ -120,11 +92,9 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
     <div className="grid gap-4 sm:grid-cols-2">
       <div className="space-y-1.5 sm:col-span-2">
         <FieldLabel
-          activeHistoryFieldKey={activeHistoryFieldKey}
-          history={histories?.nickname}
           htmlFor={nickname.id}
           label="Pseudo principal"
-          onHistoryOpen={onHistoryOpen}
+          provenance={provenances?.nickname}
         />
         <Input
           aria-describedby={nickname.describedBy ?? `${nickname.id}-hint`}
@@ -148,11 +118,9 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
       </div>
       <div className="space-y-1.5">
         <FieldLabel
-          activeHistoryFieldKey={activeHistoryFieldKey}
-          history={histories?.firstName}
           htmlFor={firstName.id}
           label="Prénom"
-          onHistoryOpen={onHistoryOpen}
+          provenance={provenances?.firstName}
         />
         <Input
           aria-describedby={firstName.describedBy}
@@ -167,11 +135,9 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
       </div>
       <div className="space-y-1.5">
         <FieldLabel
-          activeHistoryFieldKey={activeHistoryFieldKey}
-          history={histories?.lastName}
           htmlFor={lastName.id}
           label="Nom"
-          onHistoryOpen={onHistoryOpen}
+          provenance={provenances?.lastName}
         />
         <Input
           aria-describedby={lastName.describedBy}
@@ -186,11 +152,9 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
       </div>
       <div className="space-y-1.5">
         <FieldLabel
-          activeHistoryFieldKey={activeHistoryFieldKey}
-          history={histories?.birthDate}
           htmlFor={birthDate.id}
           label="Date de naissance"
-          onHistoryOpen={onHistoryOpen}
+          provenance={provenances?.birthDate}
         />
         <Input
           aria-describedby={birthDate.describedBy ?? `${birthDate.id}-hint`}
@@ -213,11 +177,9 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
       </div>
       <div className="space-y-1.5">
         <FieldLabel
-          activeHistoryFieldKey={activeHistoryFieldKey}
-          history={histories?.structureStatus}
           htmlFor={structureStatus.id}
           label="Statut dans la structure"
-          onHistoryOpen={onHistoryOpen}
+          provenance={provenances?.structureStatus}
         />
         <Select
           disabled={disabled}

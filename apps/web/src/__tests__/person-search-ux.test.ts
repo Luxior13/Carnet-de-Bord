@@ -40,9 +40,9 @@ const getLastSql = (): { text: string; values: readonly unknown[] } => {
 
 // Test-owned paths only; neither URL receives external input.
 // eslint-disable-next-line security/detect-non-literal-fs-filename
-const historyPanelSource = readFileSync(
+const provenanceHintSource = readFileSync(
   new URL(
-    '../features/persons/components/PersonFieldHistoryPanel.tsx',
+    '../features/persons/components/PersonFieldProvenanceHint.tsx',
     import.meta.url,
   ),
   'utf8',
@@ -325,13 +325,9 @@ describe('person indexed search', () => {
 });
 
 describe('person short-lived sensitive UX contracts', () => {
-  it('expires decrypted field history within thirty seconds and reloads on every panel opening', () => {
-    expect(historyPanelSource).toContain(
-      'const DECRYPTED_HISTORY_TTL_MS = 30_000',
-    );
-    expect(historyPanelSource).toContain('void load()');
-    expect(historyPanelSource).toContain('authorizationRevision');
-    expect(historyPanelSource).toContain('canViewAudit,');
+  it('shows only field provenance in an accessible tooltip', () => {
+    expect(provenanceHintSource).toContain('void load()');
+    expect(provenanceHintSource).toContain('authorizationRevision');
     for (const key of [
       'fieldKey,',
       'personId,',
@@ -339,51 +335,44 @@ describe('person short-lived sensitive UX contracts', () => {
       'revision,',
       'sectionKey,',
     ]) {
-      expect(historyPanelSource).toContain(key);
+      expect(provenanceHintSource).toContain(key);
     }
-    expect(historyPanelSource).toContain('setItems([])');
-    expect(historyPanelSource).toContain('setExpired(true)');
-    expect(historyPanelSource).toContain('Historique masqué');
-    expect(historyPanelSource).toContain('Recharger');
-    expect(historyPanelSource).not.toContain('localStorage');
-    expect(historyPanelSource).not.toContain('sessionStorage');
-    expect(historyPanelSource).toContain('{canViewAudit && !loading && (');
-    expect(historyPanelSource).toContain('<Link href={journalHref}>');
-    expect(historyPanelSource).toContain('divide-border-divider divide-y');
+    expect(provenanceHintSource).toContain('<Tooltip');
+    expect(provenanceHintSource).toContain("Voir l'origine :");
+    expect(provenanceHintSource).toContain('onClick={() => handleOpenChange');
+    expect(provenanceHintSource).toContain('latest.actor');
+    expect(provenanceHintSource).toContain('latest.at');
+    expect(provenanceHintSource).not.toContain('latest.before');
+    expect(provenanceHintSource).not.toContain('latest.after');
+    expect(provenanceHintSource).not.toContain('localStorage');
+    expect(provenanceHintSource).not.toContain('sessionStorage');
+    expect(provenanceHintSource).not.toContain('Voir dans le journal');
     expect(collectionsSource).not.toContain('fieldKey="email"');
     expect(collectionsSource).not.toContain('fieldKey="phone"');
-    expect(collectionsSource).not.toContain('<PersonFieldHistoryPopover');
-    expect(collectionFieldsSource).toContain('aria-pressed={activeFieldKey');
-    expect(collectionFieldsSource).toContain('target={histories?.email}');
-    expect(collectionFieldsSource).toContain('target={histories?.phone}');
-    expect(identitySectionSource).not.toContain('<PersonFieldHistoryPopover');
-    expect(identitySectionSource).toContain('<PersonFieldHistoryPanel');
-    expect(identityFieldsSource).toContain('history={histories?.nickname}');
+    expect(collectionFieldsSource).toContain('target={provenances?.email}');
+    expect(collectionFieldsSource).toContain('target={provenances?.phone}');
+    expect(identitySectionSource).not.toContain('PersonFieldHistoryPanel');
     expect(identityFieldsSource).toContain(
-      'history={histories?.structureStatus}',
+      'provenance={provenances?.nickname}',
+    );
+    expect(identityFieldsSource).toContain(
+      'provenance={provenances?.structureStatus}',
     );
     expect(childDialogSource).toContain("'label',");
     expect(childDialogSource).toContain("'isPrimary',");
+    expect(childDialogSource).toContain(
+      'canViewProvenance && item && hasValue',
+    );
     expect(collectionsSource).toContain('canEdit={canUpdate}');
     expect(childDialogSource).toContain('layout="stacked"');
     expect(collectionFieldsSource).toContain(
       "type FieldsLayout = 'grid' | 'stacked'",
     );
-    expect(historyPanelSource).toContain('...(recordId ? { recordId } : {})');
-    expect(historyPanelSource).toContain('lg:border-l lg:pl-5');
-    expect(historyPanelSource).toContain('<ArrowLeft className="size-4" />');
-    expect(historyPanelSource).toContain('<Plus />');
-    expect(historyPanelSource).toContain('variant="success"');
-    expect(historyPanelSource).toContain('variant="info"');
-    expect(historyPanelSource).toContain('variant="destructive"');
-    expect(childDialogSource).toContain(
-      'lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.72fr)]',
-    );
-    expect(childDialogSource).toContain(
-      "'sm:h-[min(42rem,85svh)] sm:max-w-4xl'",
-    );
-    expect(childDialogSource).toContain('Historique des champs');
-    expect(childDialogSource).toContain("'hidden space-y-4 lg:block'");
+    expect(childDialogSource).toContain('sm:max-w-2xl');
+    expect(childDialogSource).not.toContain('sm:max-w-4xl');
+    expect(childDialogSource).not.toContain('Historique des champs');
+    expect(identitySectionSource).toContain('sm:max-w-2xl');
+    expect(identitySectionSource).not.toContain('sm:max-w-4xl');
   });
 
   it('restores focus in the deleted collection and disables deprecated networks', () => {
@@ -449,11 +438,11 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(identitySectionSource).toContain('fullscreenOnMobile');
     expect(childDialogSource).toContain('sm:max-w-2xl');
     expect(childDialogSource).toContain('grid-rows-[auto_minmax(0,1fr)_auto]');
-    expect(childDialogSource).toContain('min-h-0 overflow-y-auto');
+    expect(childDialogSource).toContain('space-y-4 overflow-y-auto');
     expect(identitySectionSource).toContain(
       'grid-rows-[auto_minmax(0,1fr)_auto]',
     );
-    expect(identitySectionSource).toContain('min-h-0 overflow-y-auto');
+    expect(identitySectionSource).toContain('space-y-4 overflow-y-auto');
     expect(collectionsSource).toContain(
       "requiresReplacement ? 'sm:max-w-lg' : 'sm:max-w-md'",
     );
@@ -491,7 +480,8 @@ describe('person short-lived sensitive UX contracts', () => {
     );
     expect(identitySectionSource).toContain('flex size-8 shrink-0');
     expect(identitySectionSource).toContain("Modifier l'identité");
-    expect(identitySectionSource).toContain("'sm:max-w-4xl' : 'sm:max-w-2xl'");
+    expect(identitySectionSource).toContain('sm:max-w-2xl');
+    expect(identitySectionSource).not.toContain('sm:max-w-4xl');
     expect(identityFieldsSource).toContain('sm:grid-cols-2');
     expect(identityFieldsSource).not.toContain('xl:grid-cols-3');
     expect(identityFieldsSource).not.toContain('autoComplete="given-name"');

@@ -76,13 +76,12 @@ describe('direct Person page permission boundaries', () => {
       canDelete: true,
       canUpdate: true,
       canView: true,
-      canViewAudit: true,
-      canViewHistory: true,
+      canViewProvenance: true,
     });
     expect(
       getPersonCapabilities(
         user({ [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true }) as never,
-      ).canViewHistory,
+      ).canViewProvenance,
     ).toBe(false);
   });
 

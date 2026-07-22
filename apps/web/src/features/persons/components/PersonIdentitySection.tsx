@@ -2,7 +2,7 @@
 
 import {
   Check,
-  History,
+  Info,
   Loader2,
   Pencil,
   RotateCcw,
@@ -37,10 +37,7 @@ import {
 } from '../person.ui';
 import { updatePersonSchema } from '../schemas/person.schemas';
 import type { PersonDetail } from '../types/person.types';
-import {
-  PersonFieldHistoryPanel,
-  type PersonFieldHistoryTarget,
-} from './PersonFieldHistoryPanel';
+import type { PersonFieldProvenanceTarget } from './PersonFieldProvenanceHint';
 import {
   PersonIdentityFields,
   type PersonIdentityFormValue,
@@ -49,8 +46,7 @@ import { PersonStatusBadge } from './PersonStatusBadge';
 
 type PersonIdentitySectionProps = {
   canUpdate: boolean;
-  canViewAudit: boolean;
-  canViewHistory: boolean;
+  canViewProvenance: boolean;
   onChange: (person: PersonDetail) => void;
   onReload: () => Promise<PersonDetail>;
   person: PersonDetail;
@@ -91,14 +87,11 @@ const toForm = (person: PersonDetail): PersonIdentityFormValue => ({
 
 export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
   canUpdate,
-  canViewAudit,
-  canViewHistory,
+  canViewProvenance,
   onChange,
   onReload,
   person,
 }) => {
-  const [activeHistory, setActiveHistory] =
-    useState<PersonFieldHistoryTarget | null>(null);
   const [conflict, setConflict] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<PersonIdentityFormValue>(() =>
@@ -122,10 +115,6 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
       setVersion(person.version);
     }
   }, [isEditing, person]);
-
-  useEffect(() => {
-    setActiveHistory(null);
-  }, [canViewAudit, canViewHistory, isEditing]);
 
   const focusFirstError = (): void => {
     requestAnimationFrame(() => {
@@ -196,7 +185,6 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
     setForm(toForm(person));
     setErrors({});
     setConflict(false);
-    setActiveHistory(null);
     setIsEditing(false);
     setPendingLocalDiscard(false);
   };
@@ -215,18 +203,17 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
     setVersion(person.version);
     setConflict(false);
     setErrors({});
-    setActiveHistory(null);
     setIsEditing(true);
   };
 
-  const historyTarget = (
+  const provenanceTarget = (
     fieldKey: keyof PersonIdentityFormValue,
     label: string,
     sectionKey: string,
-  ): PersonFieldHistoryTarget | undefined =>
-    canViewHistory
+    hasValue: boolean,
+  ): PersonFieldProvenanceTarget | undefined =>
+    canViewProvenance && hasValue
       ? {
-          canViewAudit,
           fieldKey,
           label,
           personId: person.id,
@@ -234,31 +221,36 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
           sectionKey,
         }
       : undefined;
-  const histories = {
-    birthDate: historyTarget(
+  const provenances = {
+    birthDate: provenanceTarget(
       'birthDate',
       'Date de naissance',
       PERSON_AUDIT_KEYS.sections.identity,
+      Boolean(person.birthDate),
     ),
-    firstName: historyTarget(
+    firstName: provenanceTarget(
       'firstName',
       'Prénom',
       PERSON_AUDIT_KEYS.sections.identity,
+      Boolean(person.firstName),
     ),
-    lastName: historyTarget(
+    lastName: provenanceTarget(
       'lastName',
       'Nom',
       PERSON_AUDIT_KEYS.sections.identity,
+      Boolean(person.lastName),
     ),
-    nickname: historyTarget(
+    nickname: provenanceTarget(
       'nickname',
       'Pseudo principal',
       PERSON_AUDIT_KEYS.sections.identity,
+      Boolean(person.nickname),
     ),
-    structureStatus: historyTarget(
+    structureStatus: provenanceTarget(
       'structureStatus',
       'Statut dans la structure',
       PERSON_AUDIT_KEYS.sections.structure,
+      Boolean(person.structureStatus),
     ),
   };
 
@@ -280,7 +272,7 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
                 </p>
               </div>
             </div>
-            {(canUpdate || canViewHistory) && (
+            {(canUpdate || canViewProvenance) && (
               <Button
                 onClick={openEditor}
                 size="sm"
@@ -290,7 +282,7 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
                 {canUpdate ? (
                   <Pencil className="size-4" />
                 ) : (
-                  <History className="size-4" />
+                  <Info className="size-4" />
                 )}
                 {canUpdate ? 'Modifier' : 'Consulter'}
               </Button>
@@ -348,7 +340,7 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
         }}
       >
         <DialogContent
-          className={`grid h-[100svh] max-h-[100svh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 sm:h-[min(42rem,85svh)] ${canViewHistory ? 'sm:max-w-4xl' : 'sm:max-w-2xl'}`}
+          className="grid h-[100svh] max-h-[100svh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 sm:h-auto sm:max-h-[85svh] sm:max-w-2xl"
           fullscreenOnMobile
           id="person-identity-dialog"
         >
@@ -359,85 +351,50 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
             <DialogDescription>
               {canUpdate
                 ? 'Mettez à jour les informations principales et le statut dans la structure.'
-                : 'Consultez les informations et leur historique sans modifier la fiche.'}
+                : 'Consultez les informations sans modifier la fiche.'}
             </DialogDescription>
           </DialogHeader>
 
-          <div
-            className={`min-h-0 overflow-y-auto px-4 py-4 sm:px-5 ${canViewHistory ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.72fr)] lg:gap-5' : ''}`}
-          >
-            <div
-              className={
-                activeHistory ? 'hidden space-y-4 lg:block' : 'space-y-4'
-              }
-            >
-              {conflict && (
-                <ContentState
-                  action={
-                    <Button
-                      onClick={() => {
-                        void onReload().then((fresh) => {
-                          setVersion(fresh.version);
-                          setConflict(false);
-                          toast.info(
-                            'Version actualisée, votre saisie est conservée',
-                          );
-                        });
-                      }}
-                      size="sm"
-                      type="button"
-                      variant="outline"
-                    >
-                      <RotateCcw className="size-4" />
-                      Actualiser la version
-                    </Button>
-                  }
-                  description="La fiche a changé depuis son ouverture. Actualisez sa version puis vérifiez votre saisie avant de réessayer."
-                  kind="warning"
-                  title="Modification concurrente"
-                />
-              )}
-              <PersonIdentityFields
-                activeHistoryFieldKey={activeHistory?.fieldKey}
-                disabled={!canUpdate || isSaving}
-                errors={errors}
-                histories={histories}
-                idPrefix="person-detail"
-                onChange={(key, value) =>
-                  setForm((current) => ({ ...current, [key]: value }))
+          <div className="min-h-0 space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
+            {conflict && (
+              <ContentState
+                action={
+                  <Button
+                    onClick={() => {
+                      void onReload().then((fresh) => {
+                        setVersion(fresh.version);
+                        setConflict(false);
+                        toast.info(
+                          'Version actualisée, votre saisie est conservée',
+                        );
+                      });
+                    }}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    <RotateCcw className="size-4" />
+                    Actualiser la version
+                  </Button>
                 }
-                onHistoryOpen={setActiveHistory}
-                value={form}
+                description="La fiche a changé depuis son ouverture. Actualisez sa version puis vérifiez votre saisie avant de réessayer."
+                kind="warning"
+                title="Modification concurrente"
               />
-            </div>
-
-            {canViewHistory &&
-              (activeHistory ? (
-                <PersonFieldHistoryPanel
-                  {...activeHistory}
-                  onClose={() => setActiveHistory(null)}
-                />
-              ) : (
-                <aside className="border-border-divider hidden min-w-0 items-center justify-center border-l px-6 text-center lg:flex">
-                  <div className="max-w-56">
-                    <span className="bg-surface-inset text-muted-foreground mx-auto flex size-9 items-center justify-center rounded-lg">
-                      <History className="size-4" />
-                    </span>
-                    <p className="mt-3 text-sm font-medium">
-                      Historique des champs
-                    </p>
-                    <p className="text-muted-foreground mt-1 text-xs leading-5">
-                      Sélectionnez l&apos;icône d&apos;historique près d&apos;un
-                      champ pour afficher ses deux derniers changements.
-                    </p>
-                  </div>
-                </aside>
-              ))}
+            )}
+            <PersonIdentityFields
+              disabled={!canUpdate || isSaving}
+              errors={errors}
+              idPrefix="person-detail"
+              onChange={(key, value) =>
+                setForm((current) => ({ ...current, [key]: value }))
+              }
+              provenances={provenances}
+              value={form}
+            />
           </div>
 
-          <DialogFooter
-            className={`border-border-divider bg-surface-inset border-t px-4 py-4 sm:px-5 ${activeHistory ? 'hidden lg:flex' : ''}`}
-          >
+          <DialogFooter className="border-border-divider bg-surface-inset border-t px-4 py-4 sm:px-5">
             {!canUpdate ? (
               <Button onClick={closeEditor} type="button">
                 Fermer

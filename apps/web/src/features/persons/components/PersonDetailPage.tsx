@@ -179,7 +179,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [person, setPerson] = useState<PersonDetail | null>(null);
-  const { canDelete, canUpdate, canView, canViewAudit, canViewHistory } =
+  const { canDelete, canUpdate, canView, canViewProvenance } =
     getPersonCapabilities(userData);
   const featureOperational = operationalFeatureIds.has(FEATURES.persons.id);
 
@@ -357,8 +357,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
             <Card>
               <PersonIdentitySection
                 canUpdate={canUpdate}
-                canViewAudit={canViewAudit}
-                canViewHistory={canViewHistory}
+                canViewProvenance={canViewProvenance}
                 onChange={setPerson}
                 onReload={load}
                 person={person}
@@ -371,8 +370,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
           <TabsContent className="space-y-5" value="coordonnees">
             <PersonCollectionsSection
               canUpdate={canUpdate}
-              canViewAudit={canViewAudit}
-              canViewHistory={canViewHistory}
+              canViewProvenance={canViewProvenance}
               duplicateMatches={duplicateWarning?.matches ?? []}
               onChange={setPerson}
               onReload={load}

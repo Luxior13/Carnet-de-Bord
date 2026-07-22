@@ -4,7 +4,7 @@ import {
   AlertTriangle,
   Copy,
   ExternalLink,
-  History,
+  Info,
   Mail,
   Network,
   Pencil,
@@ -64,8 +64,7 @@ type DeleteState = {
 
 type PersonCollectionsSectionProps = {
   canUpdate: boolean;
-  canViewAudit: boolean;
-  canViewHistory: boolean;
+  canViewProvenance: boolean;
   duplicateMatches: NonNullable<PersonDuplicateWarning['matches']>;
   onChange: (person: PersonDetail) => void;
   onReload: () => Promise<PersonDetail>;
@@ -110,18 +109,18 @@ const CopyAction: FC<{ label: string; value: string }> = ({ label, value }) => {
   );
 };
 
-const HistoryOnlyAction: FC<{ label: string; onOpen: () => void }> = ({
+const ProvenanceOnlyAction: FC<{ label: string; onOpen: () => void }> = ({
   label,
   onOpen,
 }) => (
   <Button
-    aria-label={`Consulter ${label} et son historique`}
+    aria-label={`Consulter ${label} et son origine`}
     onClick={onOpen}
     size="icon"
     type="button"
     variant="ghost"
   >
-    <History className="size-3.5" />
+    <Info className="size-3.5" />
   </Button>
 );
 
@@ -157,11 +156,11 @@ const DuplicateFieldWarning: FC<{ children: React.ReactNode }> = ({
 
 const EmailRow: FC<{
   canUpdate: boolean;
-  canViewHistory: boolean;
+  canViewProvenance: boolean;
   duplicateWarning: boolean;
   item: PersonEmailItem;
   onEdit: () => void;
-}> = ({ canUpdate, canViewHistory, duplicateWarning, item, onEdit }) => (
+}> = ({ canUpdate, canViewProvenance, duplicateWarning, item, onEdit }) => (
   <li className="border-border-divider flex min-w-0 items-center gap-2 border-b py-2.5 last:border-0">
     <div className="min-w-0 flex-1">
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -180,8 +179,8 @@ const EmailRow: FC<{
       )}
     </div>
     <div className="flex shrink-0 items-center gap-1">
-      {canViewHistory && !canUpdate && (
-        <HistoryOnlyAction label="cet email" onOpen={onEdit} />
+      {canViewProvenance && !canUpdate && (
+        <ProvenanceOnlyAction label="cet email" onOpen={onEdit} />
       )}
       {canUpdate && <EditAction label="cet email" onEdit={onEdit} />}
       <CopyAction label="Email" value={item.email} />
@@ -191,11 +190,11 @@ const EmailRow: FC<{
 
 const PhoneRow: FC<{
   canUpdate: boolean;
-  canViewHistory: boolean;
+  canViewProvenance: boolean;
   duplicateWarning: boolean;
   item: PersonPhoneItem;
   onEdit: () => void;
-}> = ({ canUpdate, canViewHistory, duplicateWarning, item, onEdit }) => (
+}> = ({ canUpdate, canViewProvenance, duplicateWarning, item, onEdit }) => (
   <li className="border-border-divider flex min-w-0 items-center gap-2 border-b py-2.5 last:border-0">
     <div className="min-w-0 flex-1">
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -214,8 +213,8 @@ const PhoneRow: FC<{
       )}
     </div>
     <div className="flex shrink-0 items-center gap-1">
-      {canViewHistory && !canUpdate && (
-        <HistoryOnlyAction label="ce téléphone" onOpen={onEdit} />
+      {canViewProvenance && !canUpdate && (
+        <ProvenanceOnlyAction label="ce téléphone" onOpen={onEdit} />
       )}
       {canUpdate && <EditAction label="ce téléphone" onEdit={onEdit} />}
       <CopyAction label="Numéro" value={item.phone} />
@@ -225,11 +224,11 @@ const PhoneRow: FC<{
 
 const SocialRow: FC<{
   canUpdate: boolean;
-  canViewHistory: boolean;
+  canViewProvenance: boolean;
   duplicateFieldKeys: string[];
   item: PersonSocialProfileItem;
   onEdit: () => void;
-}> = ({ canUpdate, canViewHistory, duplicateFieldKeys, item, onEdit }) => {
+}> = ({ canUpdate, canViewProvenance, duplicateFieldKeys, item, onEdit }) => {
   const network = getPersonSocialNetwork(item.networkKey);
   const visibleValue = item.identifier ?? item.profileUrl ?? 'Profil';
   const copyValue = item.profileUrl ?? item.identifier;
@@ -271,8 +270,8 @@ const SocialRow: FC<{
         )}
       </div>
       <div className="flex shrink-0 items-center gap-1">
-        {canViewHistory && !canUpdate && (
-          <HistoryOnlyAction label="ce profil" onOpen={onEdit} />
+        {canViewProvenance && !canUpdate && (
+          <ProvenanceOnlyAction label="ce profil" onOpen={onEdit} />
         )}
         {canUpdate && <EditAction label="ce profil" onEdit={onEdit} />}
         {copyValue && (
@@ -288,8 +287,7 @@ const SocialRow: FC<{
 
 export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
   canUpdate,
-  canViewAudit,
-  canViewHistory,
+  canViewProvenance,
   duplicateMatches,
   onChange,
   onReload,
@@ -431,7 +429,7 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
                   {person.emails.map((item) => (
                     <EmailRow
                       canUpdate={canUpdate}
-                      canViewHistory={canViewHistory}
+                      canViewProvenance={canViewProvenance}
                       duplicateWarning={duplicateMatches.some(
                         (match) =>
                           match.recordId === item.id &&
@@ -488,7 +486,7 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
                   {person.phones.map((item) => (
                     <PhoneRow
                       canUpdate={canUpdate}
-                      canViewHistory={canViewHistory}
+                      canViewProvenance={canViewProvenance}
                       duplicateWarning={duplicateMatches.some(
                         (match) =>
                           match.recordId === item.id &&
@@ -550,7 +548,7 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
                 {person.socialProfiles.map((item) => (
                   <SocialRow
                     canUpdate={canUpdate}
-                    canViewHistory={canViewHistory}
+                    canViewProvenance={canViewProvenance}
                     duplicateFieldKeys={duplicateMatches
                       .filter(
                         (match) =>
@@ -573,8 +571,7 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
       {editor && (
         <PersonChildDialog
           canEdit={canUpdate}
-          canViewAudit={canViewAudit}
-          canViewHistory={canViewHistory}
+          canViewProvenance={canViewProvenance}
           defaultPrimary={
             editor.kind === 'email'
               ? person.emails.length === 0

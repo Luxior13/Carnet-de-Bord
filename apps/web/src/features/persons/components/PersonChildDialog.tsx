@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, History, Loader2, RotateCcw, Trash2 } from 'lucide-react';
+import { Check, Loader2, RotateCcw, Trash2 } from 'lucide-react';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { ZodError } from 'zod';
@@ -44,10 +44,7 @@ import {
   type SocialDraft,
   SocialFields,
 } from './PersonCollectionFields';
-import {
-  PersonFieldHistoryPanel,
-  type PersonFieldHistoryTarget,
-} from './PersonFieldHistoryPanel';
+import type { PersonFieldProvenanceTarget } from './PersonFieldProvenanceHint';
 
 type PersonChildKind = 'email' | 'phone' | 'social';
 type PersonChildItem =
@@ -56,8 +53,7 @@ type ChildDraft = EmailDraft | PhoneDraft | SocialDraft;
 
 type PersonChildDialogProps = {
   canEdit: boolean;
-  canViewAudit: boolean;
-  canViewHistory: boolean;
+  canViewProvenance: boolean;
   defaultPrimary: boolean;
   item: PersonChildItem | null;
   kind: PersonChildKind;
@@ -124,8 +120,7 @@ const getKindConfig = (kind: PersonChildKind): KindConfig => {
 
 export const PersonChildDialog: FC<PersonChildDialogProps> = ({
   canEdit,
-  canViewAudit,
-  canViewHistory,
+  canViewProvenance,
   defaultPrimary,
   item,
   kind,
@@ -141,8 +136,6 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
     [defaultPrimary, item, kind],
   );
   const [childVersion, setChildVersion] = useState(item?.version ?? null);
-  const [activeHistory, setActiveHistory] =
-    useState<PersonFieldHistoryTarget | null>(null);
   const [conflict, setConflict] = useState(false);
   const [draft, setDraft] = useState<ChildDraft>(initialDraft);
   const [duplicateWarnings, setDuplicateWarnings] = useState<
@@ -168,16 +161,11 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
     setPersonVersion(person.version);
     setChildVersion(item?.version ?? null);
     setConflict(false);
-    setActiveHistory(null);
     setDuplicateWarnings({});
     setErrors({});
     setPendingClose(false);
     setSaved(false);
   }, [initialDraft, item?.version, open, person.version]);
-
-  useEffect(() => {
-    setActiveHistory(null);
-  }, [canViewAudit, canViewHistory]);
 
   const close = (): void => {
     if (!saved && isDirty) {
@@ -336,14 +324,14 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
   };
 
   const showPrimarySwitch = !item?.isPrimary;
-  const historyTarget = (
+  const provenanceTarget = (
     fieldKey: string,
     label: string,
     sectionKey: string,
-  ): PersonFieldHistoryTarget | undefined =>
-    canViewHistory && item
+    hasValue: boolean,
+  ): PersonFieldProvenanceTarget | undefined => {
+    return canViewProvenance && item && hasValue
       ? {
-          canViewAudit,
           fieldKey,
           label,
           personId: person.id,
@@ -352,68 +340,84 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
           sectionKey,
         }
       : undefined;
-  const histories =
+  };
+  const emailItem = kind === 'email' ? (item as PersonEmailItem | null) : null;
+  const phoneItem = kind === 'phone' ? (item as PersonPhoneItem | null) : null;
+  const socialItem =
+    kind === 'social' ? (item as PersonSocialProfileItem | null) : null;
+  const provenances =
     kind === 'email'
       ? {
-          email: historyTarget(
+          email: provenanceTarget(
             'email',
             'Adresse email',
             PERSON_AUDIT_KEYS.sections.contacts,
+            Boolean(emailItem?.email),
           ),
-          isPrimary: historyTarget(
+          isPrimary: provenanceTarget(
             'isPrimary',
             'Statut principal',
             PERSON_AUDIT_KEYS.sections.contacts,
+            Boolean(emailItem),
           ),
-          label: historyTarget(
+          label: provenanceTarget(
             'label',
             'Libellé',
             PERSON_AUDIT_KEYS.sections.contacts,
+            Boolean(emailItem?.label),
           ),
         }
       : kind === 'phone'
         ? {
-            isPrimary: historyTarget(
+            isPrimary: provenanceTarget(
               'isPrimary',
               'Statut principal',
               PERSON_AUDIT_KEYS.sections.contacts,
+              Boolean(phoneItem),
             ),
-            label: historyTarget(
+            label: provenanceTarget(
               'label',
               'Libellé',
               PERSON_AUDIT_KEYS.sections.contacts,
+              Boolean(phoneItem?.label),
             ),
-            phone: historyTarget(
+            phone: provenanceTarget(
               'phone',
               'Numéro de téléphone',
               PERSON_AUDIT_KEYS.sections.contacts,
+              Boolean(phoneItem?.phone),
             ),
           }
         : {
-            identifier: historyTarget(
+            identifier: provenanceTarget(
               'identifier',
               'Identifiant visible',
               PERSON_AUDIT_KEYS.sections.social,
+              Boolean(socialItem?.identifier),
             ),
-            isPrimary: historyTarget(
+            isPrimary: provenanceTarget(
               'isPrimary',
               'Statut principal',
               PERSON_AUDIT_KEYS.sections.social,
+              Boolean(socialItem),
             ),
-            label: historyTarget(
+            label: provenanceTarget(
               'label',
               'Libellé',
               PERSON_AUDIT_KEYS.sections.social,
+              Boolean(socialItem?.label),
             ),
-            networkKey: historyTarget(
+            networkKey: provenanceTarget(
               'networkKey',
               'Réseau',
               PERSON_AUDIT_KEYS.sections.social,
+              Boolean(socialItem?.networkKey),
             ),
-            profileUrl: historyTarget(
+            profileUrl: provenanceTarget(
               'profileUrl',
               'URL du profil',
               PERSON_AUDIT_KEYS.sections.social,
+              Boolean(socialItem?.profileUrl),
             ),
           };
 
@@ -426,7 +430,7 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
         }}
       >
         <DialogContent
-          className={`grid h-[100svh] max-h-[100svh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 ${item ? 'sm:h-[min(42rem,85svh)] sm:max-w-4xl' : 'sm:h-auto sm:max-h-[85svh] sm:max-w-2xl'}`}
+          className="grid h-[100svh] max-h-[100svh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 sm:h-auto sm:max-h-[85svh] sm:max-w-2xl"
           fullscreenOnMobile
         >
           <DialogHeader className="border-border-divider border-b px-4 py-4 pr-14 text-left sm:px-5">
@@ -436,111 +440,72 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
             </DialogTitle>
             <DialogDescription>
               {!canEdit
-                ? 'Consultez les informations et leur historique sans modifier la fiche.'
+                ? 'Consultez les informations sans modifier la fiche.'
                 : item?.isPrimary
                   ? "Cette information est principale. Pour la remplacer, définissez d'abord une autre information comme principale."
                   : 'Les doublons sur une autre fiche sont signalés sans bloquer les cas légitimes.'}
             </DialogDescription>
           </DialogHeader>
-          <div
-            className={`min-h-0 overflow-y-auto px-4 py-4 sm:px-5 ${item ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.72fr)] lg:gap-5' : ''}`}
-          >
-            <div
-              className={
-                activeHistory ? 'hidden space-y-4 lg:block' : 'space-y-4'
-              }
-            >
-              {conflict && (
-                <ContentState
-                  action={
-                    <Button
-                      onClick={() => void refreshVersions()}
-                      size="sm"
-                      type="button"
-                      variant="outline"
-                    >
-                      <RotateCcw className="size-4" />
-                      Actualiser la version
-                    </Button>
-                  }
-                  description="La fiche a changé. Actualisez les versions puis vérifiez votre saisie avant de réessayer."
-                  kind="warning"
-                  title="Modification concurrente"
-                />
-              )}
-              {kind === 'email' && (
-                <EmailFields
-                  activeHistoryFieldKey={activeHistory?.fieldKey}
-                  disabled={!canEdit || isSaving || saved}
-                  errors={errors}
-                  histories={histories}
-                  idPrefix="person-child-email"
-                  layout="stacked"
-                  onChange={setDraft}
-                  onHistoryOpen={setActiveHistory}
-                  showPrimarySwitch={showPrimarySwitch}
-                  value={draft as EmailDraft}
-                  warnings={duplicateWarnings}
-                />
-              )}
-              {kind === 'phone' && (
-                <PhoneFields
-                  activeHistoryFieldKey={activeHistory?.fieldKey}
-                  disabled={!canEdit || isSaving || saved}
-                  errors={errors}
-                  histories={histories}
-                  idPrefix="person-child-phone"
-                  layout="stacked"
-                  onChange={setDraft}
-                  onHistoryOpen={setActiveHistory}
-                  showPrimarySwitch={showPrimarySwitch}
-                  value={draft as PhoneDraft}
-                  warnings={duplicateWarnings}
-                />
-              )}
-              {kind === 'social' && (
-                <SocialFields
-                  activeHistoryFieldKey={activeHistory?.fieldKey}
-                  disabled={!canEdit || isSaving || saved}
-                  errors={errors}
-                  histories={histories}
-                  idPrefix="person-child-social"
-                  layout="stacked"
-                  onChange={setDraft}
-                  onHistoryOpen={setActiveHistory}
-                  showPrimarySwitch={showPrimarySwitch}
-                  value={draft as SocialDraft}
-                  warnings={duplicateWarnings}
-                />
-              )}
-            </div>
-            {activeHistory ? (
-              <PersonFieldHistoryPanel
-                {...activeHistory}
-                onClose={() => setActiveHistory(null)}
+          <div className="min-h-0 space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
+            {conflict && (
+              <ContentState
+                action={
+                  <Button
+                    onClick={() => void refreshVersions()}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    <RotateCcw className="size-4" />
+                    Actualiser la version
+                  </Button>
+                }
+                description="La fiche a changé. Actualisez les versions puis vérifiez votre saisie avant de réessayer."
+                kind="warning"
+                title="Modification concurrente"
               />
-            ) : (
-              item && (
-                <aside className="border-border-divider hidden min-w-0 items-center justify-center border-l px-6 text-center lg:flex">
-                  <div className="max-w-56">
-                    <span className="bg-surface-inset text-muted-foreground mx-auto flex size-9 items-center justify-center rounded-lg">
-                      <History className="size-4" />
-                    </span>
-                    <p className="mt-3 text-sm font-medium">
-                      Historique des champs
-                    </p>
-                    <p className="text-muted-foreground mt-1 text-xs leading-5">
-                      Sélectionnez l&apos;icône d&apos;historique près d&apos;un
-                      champ pour afficher ses deux derniers changements.
-                    </p>
-                  </div>
-                </aside>
-              )
+            )}
+            {kind === 'email' && (
+              <EmailFields
+                disabled={!canEdit || isSaving || saved}
+                errors={errors}
+                idPrefix="person-child-email"
+                layout="stacked"
+                onChange={setDraft}
+                provenances={provenances}
+                showPrimarySwitch={showPrimarySwitch}
+                value={draft as EmailDraft}
+                warnings={duplicateWarnings}
+              />
+            )}
+            {kind === 'phone' && (
+              <PhoneFields
+                disabled={!canEdit || isSaving || saved}
+                errors={errors}
+                idPrefix="person-child-phone"
+                layout="stacked"
+                onChange={setDraft}
+                provenances={provenances}
+                showPrimarySwitch={showPrimarySwitch}
+                value={draft as PhoneDraft}
+                warnings={duplicateWarnings}
+              />
+            )}
+            {kind === 'social' && (
+              <SocialFields
+                disabled={!canEdit || isSaving || saved}
+                errors={errors}
+                idPrefix="person-child-social"
+                layout="stacked"
+                onChange={setDraft}
+                provenances={provenances}
+                showPrimarySwitch={showPrimarySwitch}
+                value={draft as SocialDraft}
+                warnings={duplicateWarnings}
+              />
             )}
           </div>
-          <DialogFooter
-            className={`border-border-divider bg-surface-inset border-t px-4 py-4 sm:justify-between sm:px-5 ${activeHistory ? 'hidden lg:flex' : ''}`}
-          >
+          <DialogFooter className="border-border-divider bg-surface-inset border-t px-4 py-4 sm:justify-between sm:px-5">
             {canEdit && item && !saved && (
               <Button
                 disabled={isSaving}

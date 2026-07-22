@@ -743,7 +743,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
     accessPermissionKey: PERMISSIONS.AUDIT.VIEW,
     assignment: 'delegable',
     description:
-      "Journal global détaillé, historiques contextuels et export d'activité.",
+      "Journal global détaillé, origine des informations et export d'activité.",
     icon: 'History',
     key: 'system-activity',
     label: "Journal d'activité",
@@ -763,11 +763,11 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       activePermission({
         action: 'view',
         description:
-          "Consulter les deux derniers changements d'un champ sur une page déjà autorisée",
+          'Voir qui a renseigné ou modifié une information et à quelle date sur une page déjà autorisée',
         grantable: true,
         key: PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY,
-        label: "Consulter l'historique des champs",
-        module: 'Historique contextuel',
+        label: "Consulter l'origine des informations",
+        module: 'Provenance contextuelle',
         risk: 'sensitive',
         route: 'Pages autorisées',
         surface: 'page',

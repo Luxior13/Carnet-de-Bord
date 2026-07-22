@@ -11,8 +11,7 @@ export type PersonCapabilities = Readonly<{
   canDelete: boolean;
   canUpdate: boolean;
   canView: boolean;
-  canViewAudit: boolean;
-  canViewHistory: boolean;
+  canViewProvenance: boolean;
 }>;
 
 export const getPersonCapabilities = (
@@ -31,7 +30,7 @@ export const getPersonCapabilities = (
     canDelete: permitted(PERMISSIONS.PERSONS.DELETE),
     canUpdate: permitted(PERMISSIONS.PERSONS.UPDATE),
     canView,
-    canViewAudit: permitted(PERMISSIONS.AUDIT.VIEW),
-    canViewHistory: canView && permitted(PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY),
+    canViewProvenance:
+      canView && permitted(PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY),
   };
 };
