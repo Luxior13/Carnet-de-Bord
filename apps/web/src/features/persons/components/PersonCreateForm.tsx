@@ -563,6 +563,7 @@ export const PersonCreateForm: FC = () => {
         </Card>
       </form>
       <UnsavedNavigationDialog
+        contentClassName="sm:max-w-md"
         description="Les informations saisies pour cette nouvelle fiche seront perdues."
         onCancel={cancelPendingNavigation}
         onConfirm={confirmPendingNavigation}

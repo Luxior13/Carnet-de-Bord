@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Loader2, RotateCcw } from 'lucide-react';
+import { Check, History, Loader2, RotateCcw } from 'lucide-react';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { ZodError } from 'zod';
@@ -20,6 +20,7 @@ import {
 import { ApiClientError } from '$utils/api.utils';
 
 import { mutatePersonChild } from '../person.api';
+import { PERSON_AUDIT_KEYS } from '../person.constants';
 import { zodErrorMap } from '../person.ui';
 import {
   createPersonEmailSchema,
@@ -43,6 +44,10 @@ import {
   type SocialDraft,
   SocialFields,
 } from './PersonCollectionFields';
+import {
+  PersonFieldHistoryPanel,
+  type PersonFieldHistoryTarget,
+} from './PersonFieldHistoryPanel';
 
 type PersonChildKind = 'email' | 'phone' | 'social';
 type PersonChildItem =
@@ -50,6 +55,9 @@ type PersonChildItem =
 type ChildDraft = EmailDraft | PhoneDraft | SocialDraft;
 
 type PersonChildDialogProps = {
+  canEdit: boolean;
+  canViewAudit: boolean;
+  canViewHistory: boolean;
   defaultPrimary: boolean;
   item: PersonChildItem | null;
   kind: PersonChildKind;
@@ -114,6 +122,9 @@ const getKindConfig = (kind: PersonChildKind): KindConfig => {
 };
 
 export const PersonChildDialog: FC<PersonChildDialogProps> = ({
+  canEdit,
+  canViewAudit,
+  canViewHistory,
   defaultPrimary,
   item,
   kind,
@@ -128,6 +139,8 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
     [defaultPrimary, item, kind],
   );
   const [childVersion, setChildVersion] = useState(item?.version ?? null);
+  const [activeHistory, setActiveHistory] =
+    useState<PersonFieldHistoryTarget | null>(null);
   const [conflict, setConflict] = useState(false);
   const [draft, setDraft] = useState<ChildDraft>(initialDraft);
   const [duplicateWarnings, setDuplicateWarnings] = useState<
@@ -139,12 +152,13 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
   const [personVersion, setPersonVersion] = useState(person.version);
   const [saved, setSaved] = useState(false);
   const config = getKindConfig(kind);
-  const isDirty = JSON.stringify(draft) !== JSON.stringify(initialDraft);
+  const isDirty =
+    canEdit && JSON.stringify(draft) !== JSON.stringify(initialDraft);
   const {
     cancelPendingNavigation,
     confirmPendingNavigation,
     pendingNavigationHref,
-  } = useUnsavedNavigationGuard(open && !saved && isDirty);
+  } = useUnsavedNavigationGuard(open && canEdit && !saved && isDirty);
 
   useEffect(() => {
     if (!open) return;
@@ -152,11 +166,16 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
     setPersonVersion(person.version);
     setChildVersion(item?.version ?? null);
     setConflict(false);
+    setActiveHistory(null);
     setDuplicateWarnings({});
     setErrors({});
     setPendingClose(false);
     setSaved(false);
   }, [initialDraft, item?.version, open, person.version]);
+
+  useEffect(() => {
+    setActiveHistory(null);
+  }, [canViewAudit, canViewHistory]);
 
   const close = (): void => {
     if (!saved && isDirty) {
@@ -210,6 +229,7 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
   };
 
   const handleSave = async (): Promise<void> => {
+    if (!canEdit) return;
     if (saved) return close();
     const payload = getPayload();
     const validation = validate(payload);
@@ -314,6 +334,86 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
   };
 
   const showPrimarySwitch = !item?.isPrimary;
+  const historyTarget = (
+    fieldKey: string,
+    label: string,
+    sectionKey: string,
+  ): PersonFieldHistoryTarget | undefined =>
+    canViewHistory && item
+      ? {
+          canViewAudit,
+          fieldKey,
+          label,
+          personId: person.id,
+          recordId: item.id,
+          revision: childVersion ?? item.version,
+          sectionKey,
+        }
+      : undefined;
+  const histories =
+    kind === 'email'
+      ? {
+          email: historyTarget(
+            'email',
+            'Adresse email',
+            PERSON_AUDIT_KEYS.sections.contacts,
+          ),
+          isPrimary: historyTarget(
+            'isPrimary',
+            'Statut principal',
+            PERSON_AUDIT_KEYS.sections.contacts,
+          ),
+          label: historyTarget(
+            'label',
+            'Libellé',
+            PERSON_AUDIT_KEYS.sections.contacts,
+          ),
+        }
+      : kind === 'phone'
+        ? {
+            isPrimary: historyTarget(
+              'isPrimary',
+              'Statut principal',
+              PERSON_AUDIT_KEYS.sections.contacts,
+            ),
+            label: historyTarget(
+              'label',
+              'Libellé',
+              PERSON_AUDIT_KEYS.sections.contacts,
+            ),
+            phone: historyTarget(
+              'phone',
+              'Numéro de téléphone',
+              PERSON_AUDIT_KEYS.sections.contacts,
+            ),
+          }
+        : {
+            identifier: historyTarget(
+              'identifier',
+              'Identifiant visible',
+              PERSON_AUDIT_KEYS.sections.social,
+            ),
+            isPrimary: historyTarget(
+              'isPrimary',
+              'Statut principal',
+              PERSON_AUDIT_KEYS.sections.social,
+            ),
+            label: historyTarget(
+              'label',
+              'Libellé',
+              PERSON_AUDIT_KEYS.sections.social,
+            ),
+            networkKey: historyTarget(
+              'networkKey',
+              'Réseau',
+              PERSON_AUDIT_KEYS.sections.social,
+            ),
+            profileUrl: historyTarget(
+              'profileUrl',
+              'URL du profil',
+              PERSON_AUDIT_KEYS.sections.social,
+            ),
+          };
 
   return (
     <>
@@ -323,99 +423,161 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
           if (!nextOpen) close();
         }}
       >
-        <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-xl">
-          <DialogHeader>
+        <DialogContent
+          className={`grid h-[100svh] max-h-[100svh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 ${item ? 'sm:h-[min(42rem,85svh)] sm:max-w-4xl' : 'sm:h-auto sm:max-h-[85svh] sm:max-w-2xl'}`}
+          fullscreenOnMobile
+        >
+          <DialogHeader className="border-border-divider border-b px-4 py-4 pr-14 text-left sm:px-5">
             <DialogTitle>
-              {item ? 'Modifier' : 'Ajouter'} un {config.title}
+              {item ? (canEdit ? 'Modifier' : 'Consulter') : 'Ajouter'} un{' '}
+              {config.title}
             </DialogTitle>
             <DialogDescription>
-              {item?.isPrimary
-                ? "Cette information est principale. Pour la remplacer, définissez d'abord une autre information comme principale."
-                : 'Les doublons sur une autre fiche sont signalés sans bloquer les cas légitimes.'}
+              {!canEdit
+                ? 'Consultez les informations et leur historique sans modifier la fiche.'
+                : item?.isPrimary
+                  ? "Cette information est principale. Pour la remplacer, définissez d'abord une autre information comme principale."
+                  : 'Les doublons sur une autre fiche sont signalés sans bloquer les cas légitimes.'}
             </DialogDescription>
           </DialogHeader>
-          {conflict && (
-            <ContentState
-              action={
-                <Button
-                  onClick={() => void refreshVersions()}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  <RotateCcw className="size-4" />
-                  Actualiser la version
-                </Button>
+          <div
+            className={`min-h-0 overflow-y-auto px-4 py-4 sm:px-5 ${item ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.72fr)] lg:gap-5' : ''}`}
+          >
+            <div
+              className={
+                activeHistory ? 'hidden space-y-4 lg:block' : 'space-y-4'
               }
-              description="La fiche a changé. Actualisez les versions puis vérifiez votre saisie avant de réessayer."
-              kind="warning"
-              title="Modification concurrente"
-            />
-          )}
-          {kind === 'email' && (
-            <EmailFields
-              disabled={isSaving || saved}
-              errors={errors}
-              idPrefix="person-child-email"
-              onChange={setDraft}
-              showPrimarySwitch={showPrimarySwitch}
-              value={draft as EmailDraft}
-              warnings={duplicateWarnings}
-            />
-          )}
-          {kind === 'phone' && (
-            <PhoneFields
-              disabled={isSaving || saved}
-              errors={errors}
-              idPrefix="person-child-phone"
-              onChange={setDraft}
-              showPrimarySwitch={showPrimarySwitch}
-              value={draft as PhoneDraft}
-              warnings={duplicateWarnings}
-            />
-          )}
-          {kind === 'social' && (
-            <SocialFields
-              disabled={isSaving || saved}
-              errors={errors}
-              idPrefix="person-child-social"
-              onChange={setDraft}
-              showPrimarySwitch={showPrimarySwitch}
-              value={draft as SocialDraft}
-              warnings={duplicateWarnings}
-            />
-          )}
-          <DialogFooter>
-            {!saved && (
-              <Button
-                disabled={isSaving}
-                onClick={close}
-                type="button"
-                variant="outline"
-              >
-                Annuler
-              </Button>
-            )}
-            <Button
-              disabled={isSaving}
-              onClick={() => void handleSave()}
-              type="button"
             >
-              {isSaving ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Check className="size-4" />
+              {conflict && (
+                <ContentState
+                  action={
+                    <Button
+                      onClick={() => void refreshVersions()}
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      <RotateCcw className="size-4" />
+                      Actualiser la version
+                    </Button>
+                  }
+                  description="La fiche a changé. Actualisez les versions puis vérifiez votre saisie avant de réessayer."
+                  kind="warning"
+                  title="Modification concurrente"
+                />
               )}
-              {saved
-                ? 'Terminer'
-                : isSaving
-                  ? 'Enregistrement…'
-                  : 'Enregistrer'}
-            </Button>
+              {kind === 'email' && (
+                <EmailFields
+                  activeHistoryFieldKey={activeHistory?.fieldKey}
+                  disabled={!canEdit || isSaving || saved}
+                  errors={errors}
+                  histories={histories}
+                  idPrefix="person-child-email"
+                  layout="stacked"
+                  onChange={setDraft}
+                  onHistoryOpen={setActiveHistory}
+                  showPrimarySwitch={showPrimarySwitch}
+                  value={draft as EmailDraft}
+                  warnings={duplicateWarnings}
+                />
+              )}
+              {kind === 'phone' && (
+                <PhoneFields
+                  activeHistoryFieldKey={activeHistory?.fieldKey}
+                  disabled={!canEdit || isSaving || saved}
+                  errors={errors}
+                  histories={histories}
+                  idPrefix="person-child-phone"
+                  layout="stacked"
+                  onChange={setDraft}
+                  onHistoryOpen={setActiveHistory}
+                  showPrimarySwitch={showPrimarySwitch}
+                  value={draft as PhoneDraft}
+                  warnings={duplicateWarnings}
+                />
+              )}
+              {kind === 'social' && (
+                <SocialFields
+                  activeHistoryFieldKey={activeHistory?.fieldKey}
+                  disabled={!canEdit || isSaving || saved}
+                  errors={errors}
+                  histories={histories}
+                  idPrefix="person-child-social"
+                  layout="stacked"
+                  onChange={setDraft}
+                  onHistoryOpen={setActiveHistory}
+                  showPrimarySwitch={showPrimarySwitch}
+                  value={draft as SocialDraft}
+                  warnings={duplicateWarnings}
+                />
+              )}
+            </div>
+            {activeHistory ? (
+              <PersonFieldHistoryPanel
+                {...activeHistory}
+                onClose={() => setActiveHistory(null)}
+              />
+            ) : (
+              item && (
+                <aside className="border-border-divider hidden min-w-0 items-center justify-center border-l px-6 text-center lg:flex">
+                  <div className="max-w-56">
+                    <span className="bg-surface-inset text-muted-foreground mx-auto flex size-9 items-center justify-center rounded-lg">
+                      <History className="size-4" />
+                    </span>
+                    <p className="mt-3 text-sm font-medium">
+                      Historique des champs
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-xs leading-5">
+                      Sélectionnez l&apos;icône d&apos;historique près d&apos;un
+                      champ pour afficher ses deux derniers changements.
+                    </p>
+                  </div>
+                </aside>
+              )
+            )}
+          </div>
+          <DialogFooter
+            className={`border-border-divider bg-surface-inset border-t px-4 py-4 sm:px-5 ${activeHistory ? 'hidden lg:flex' : ''}`}
+          >
+            {!canEdit ? (
+              <Button onClick={close} type="button">
+                Fermer
+              </Button>
+            ) : (
+              <>
+                {!saved && (
+                  <Button
+                    disabled={isSaving}
+                    onClick={close}
+                    type="button"
+                    variant="outline"
+                  >
+                    Annuler
+                  </Button>
+                )}
+                <Button
+                  disabled={isSaving}
+                  onClick={() => void handleSave()}
+                  type="button"
+                >
+                  {isSaving ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Check className="size-4" />
+                  )}
+                  {saved
+                    ? 'Terminer'
+                    : isSaving
+                      ? 'Enregistrement…'
+                      : 'Enregistrer'}
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <UnsavedNavigationDialog
+        contentClassName="sm:max-w-md"
         description="Les modifications de cette information ne sont pas enregistrées."
         onCancel={() => {
           setPendingClose(false);

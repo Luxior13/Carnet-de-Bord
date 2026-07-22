@@ -34,7 +34,7 @@ describe('person contextual field history', () => {
     mocks.requirePersonDetailRecord.mockResolvedValue({ id: 'person-1' });
   });
 
-  it('verifies person visibility and reads at most three exact field events', async () => {
+  it('verifies person visibility and reads at most two exact field events', async () => {
     mocks.findMany.mockResolvedValueOnce([
       {
         afterValue: '"new@example.com"',
@@ -99,6 +99,62 @@ describe('person contextual field history', () => {
         },
       ],
     });
+  });
+
+  it('reads label history independently from the contact value', async () => {
+    mocks.findMany.mockResolvedValueOnce([
+      {
+        afterValue: '"Professionnel"',
+        auditLog: {
+          action: 'PERSON_UPDATE',
+          actorDisplayNameSnapshot: 'Ada Admin',
+          actorLoginNameSnapshot: 'ada.admin',
+        },
+        auditLogId: 'audit-2',
+        beforeValue: '"Personnel"',
+        changeType: 'UPDATE',
+        createdAt: DATE,
+        entityId: 'person-1',
+        fieldKey: 'label',
+        id: 'change-2',
+        recordId: 'cmqr17jek0006uwfcqetuq78v',
+        sectionKey: 'contacts',
+        valueKeyVersion: null,
+        valueMode: 'PLAIN',
+        valuesAuthTag: null,
+        valuesCiphertext: null,
+        valuesIv: null,
+      },
+    ]);
+    mocks.decodePlainPersonAuditValues.mockReturnValueOnce({
+      after: 'Professionnel',
+      before: 'Personnel',
+    });
+
+    const result = await getPersonFieldHistory('person-1', {
+      fieldKey: 'label',
+      recordId: 'cmqr17jek0006uwfcqetuq78v',
+      sectionKey: 'contacts',
+    });
+
+    expect(mocks.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        take: PERSON_LIMITS.fieldHistory,
+        where: {
+          entityId: 'person-1',
+          entityType: 'PERSON',
+          fieldKey: 'label',
+          recordId: 'cmqr17jek0006uwfcqetuq78v',
+          sectionKey: 'contacts',
+        },
+      }),
+    );
+    expect(result.items[0]).toEqual(
+      expect.objectContaining({
+        after: 'Professionnel',
+        before: 'Personnel',
+      }),
+    );
   });
 
   it('rejects an unreviewed field before reading a person or audit data', async () => {

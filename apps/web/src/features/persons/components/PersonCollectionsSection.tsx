@@ -2,10 +2,8 @@
 
 import {
   AlertTriangle,
-  AtSign,
-  ChevronDown,
-  ChevronUp,
   ExternalLink,
+  History,
   Mail,
   Network,
   Pencil,
@@ -29,6 +27,7 @@ import {
 } from '$ui/alert-dialog';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
+import { Card, CardContent, CardHeader } from '$ui/card';
 import {
   Select,
   SelectContent,
@@ -39,11 +38,7 @@ import {
 import { ApiClientError } from '$utils/api.utils';
 
 import { mutatePersonChild } from '../person.api';
-import {
-  getPersonSocialNetwork,
-  PERSON_AUDIT_KEYS,
-  PERSON_LIMITS,
-} from '../person.constants';
+import { getPersonSocialNetwork, PERSON_LIMITS } from '../person.constants';
 import type {
   PersonDetail,
   PersonDuplicateWarning,
@@ -52,7 +47,7 @@ import type {
   PersonSocialProfileItem,
 } from '../types/person.types';
 import { PersonChildDialog } from './PersonChildDialog';
-import { PersonFieldHistoryPopover } from './PersonFieldHistoryPopover';
+import { PersonSocialNetworkIcon } from './PersonSocialNetworkIcon';
 
 type ChildKind = 'email' | 'phone' | 'social';
 type ChildItem = PersonEmailItem | PersonPhoneItem | PersonSocialProfileItem;
@@ -104,18 +99,38 @@ const ChildActions: FC<{
   </div>
 );
 
-const ItemBadges: FC<{ isPrimary: boolean; label: string }> = ({
-  isPrimary,
+const HistoryOnlyAction: FC<{ label: string; onOpen: () => void }> = ({
   label,
+  onOpen,
 }) => (
-  <div className="flex flex-wrap items-center gap-1.5">
-    <Badge variant="outline">{label}</Badge>
-    {isPrimary && <Badge variant="success">Principal</Badge>}
-  </div>
+  <Button
+    aria-label={`Consulter ${label} et son historique`}
+    onClick={onOpen}
+    size="icon"
+    type="button"
+    variant="ghost"
+  >
+    <History className="size-3.5" />
+  </Button>
+);
+
+const ItemMetadata: FC<{ isPrimary: boolean; parts: string[] }> = ({
+  isPrimary,
+  parts,
+}) => (
+  <p className="text-muted-foreground mt-0.5 truncate text-xs">
+    {parts.join(' · ')}
+    {isPrimary && (
+      <>
+        <span aria-hidden="true"> · </span>
+        <span className="text-success">Principal</span>
+      </>
+    )}
+  </p>
 );
 
 const EmptyCollection: FC<{ children: React.ReactNode }> = ({ children }) => (
-  <p className="text-muted-foreground border-border-divider rounded-lg border border-dashed px-3 py-5 text-center text-sm">
+  <p className="text-muted-foreground border-border-divider rounded-lg border border-dashed px-3 py-4 text-center text-sm">
     {children}
   </p>
 );
@@ -131,144 +146,124 @@ const DuplicateFieldWarning: FC<{ children: React.ReactNode }> = ({
 
 const EmailRow: FC<{
   canUpdate: boolean;
-  canViewAudit: boolean;
   canViewHistory: boolean;
   duplicateWarning: boolean;
   item: PersonEmailItem;
   onDelete: () => void;
   onEdit: () => void;
-  personId: string;
 }> = ({
   canUpdate,
-  canViewAudit,
   canViewHistory,
   duplicateWarning,
   item,
   onDelete,
   onEdit,
-  personId,
 }) => (
-  <li className="border-border-divider flex min-w-0 items-center gap-3 border-b py-3 last:border-0">
-    <Mail className="text-muted-foreground size-4 shrink-0" />
+  <li className="border-border-divider flex min-w-0 items-center gap-2 border-b py-2.5 last:border-0">
     <div className="min-w-0 flex-1">
-      <div className="flex min-w-0 items-center gap-1">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <a
-          className="hover:text-primary-emphasis truncate text-sm font-medium hover:underline"
+          className="hover:text-primary-emphasis max-w-full truncate text-sm font-medium hover:underline"
           href={`mailto:${item.email}`}
         >
           {item.email}
         </a>
-        {canViewHistory && (
-          <PersonFieldHistoryPopover
-            canViewAudit={canViewAudit}
-            fieldKey="email"
-            label="Email"
-            personId={personId}
-            recordId={item.id}
-            revision={item.version}
-            sectionKey={PERSON_AUDIT_KEYS.sections.contacts}
-          />
-        )}
       </div>
-      <div className="mt-1">
-        <ItemBadges isPrimary={item.isPrimary} label={item.label} />
-      </div>
+      <ItemMetadata isPrimary={item.isPrimary} parts={[item.label]} />
       {duplicateWarning && (
         <DuplicateFieldWarning>
           Cet email existe aussi sur une autre fiche.
         </DuplicateFieldWarning>
       )}
     </div>
-    {canUpdate && (
-      <ChildActions label="cet email" onDelete={onDelete} onEdit={onEdit} />
+    {(canViewHistory || canUpdate) && (
+      <div className="flex shrink-0 items-center gap-1">
+        {canViewHistory && !canUpdate && (
+          <HistoryOnlyAction label="cet email" onOpen={onEdit} />
+        )}
+        {canUpdate && (
+          <ChildActions label="cet email" onDelete={onDelete} onEdit={onEdit} />
+        )}
+      </div>
     )}
   </li>
 );
 
 const PhoneRow: FC<{
   canUpdate: boolean;
-  canViewAudit: boolean;
   canViewHistory: boolean;
   duplicateWarning: boolean;
   item: PersonPhoneItem;
   onDelete: () => void;
   onEdit: () => void;
-  personId: string;
 }> = ({
   canUpdate,
-  canViewAudit,
   canViewHistory,
   duplicateWarning,
   item,
   onDelete,
   onEdit,
-  personId,
 }) => (
-  <li className="border-border-divider flex min-w-0 items-center gap-3 border-b py-3 last:border-0">
-    <Phone className="text-muted-foreground size-4 shrink-0" />
+  <li className="border-border-divider flex min-w-0 items-center gap-2 border-b py-2.5 last:border-0">
     <div className="min-w-0 flex-1">
-      <div className="flex min-w-0 items-center gap-1">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <a
-          className="hover:text-primary-emphasis truncate text-sm font-medium hover:underline"
+          className="hover:text-primary-emphasis max-w-full truncate text-sm font-medium hover:underline"
           href={`tel:${item.phone}`}
         >
           {item.phone}
         </a>
-        {canViewHistory && (
-          <PersonFieldHistoryPopover
-            canViewAudit={canViewAudit}
-            fieldKey="phone"
-            label="Téléphone"
-            personId={personId}
-            recordId={item.id}
-            revision={item.version}
-            sectionKey={PERSON_AUDIT_KEYS.sections.contacts}
-          />
-        )}
       </div>
-      <div className="mt-1">
-        <ItemBadges isPrimary={item.isPrimary} label={item.label} />
-      </div>
+      <ItemMetadata isPrimary={item.isPrimary} parts={[item.label]} />
       {duplicateWarning && (
         <DuplicateFieldWarning>
           Ce téléphone existe aussi sur une autre fiche.
         </DuplicateFieldWarning>
       )}
     </div>
-    {canUpdate && (
-      <ChildActions label="ce téléphone" onDelete={onDelete} onEdit={onEdit} />
+    {(canViewHistory || canUpdate) && (
+      <div className="flex shrink-0 items-center gap-1">
+        {canViewHistory && !canUpdate && (
+          <HistoryOnlyAction label="ce téléphone" onOpen={onEdit} />
+        )}
+        {canUpdate && (
+          <ChildActions
+            label="ce téléphone"
+            onDelete={onDelete}
+            onEdit={onEdit}
+          />
+        )}
+      </div>
     )}
   </li>
 );
 
 const SocialRow: FC<{
   canUpdate: boolean;
-  canViewAudit: boolean;
   canViewHistory: boolean;
   duplicateFieldKeys: string[];
   item: PersonSocialProfileItem;
   onDelete: () => void;
   onEdit: () => void;
-  personId: string;
 }> = ({
   canUpdate,
-  canViewAudit,
   canViewHistory,
   duplicateFieldKeys,
   item,
   onDelete,
   onEdit,
-  personId,
 }) => {
   const network = getPersonSocialNetwork(item.networkKey);
   const visibleValue = item.identifier ?? item.profileUrl ?? 'Profil';
-  const fieldKey = item.identifier ? 'identifier' : 'profileUrl';
 
   return (
-    <li className="border-border-divider flex min-w-0 items-center gap-3 border-b py-3 last:border-0">
-      <Network className="text-muted-foreground size-4 shrink-0" />
+    <li className="border-border-divider flex min-w-0 items-center gap-2 border-b py-2.5 last:border-0">
+      <PersonSocialNetworkIcon
+        className="text-muted-foreground size-4 shrink-0"
+        networkKey={item.networkKey}
+      />
       <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 items-center gap-1">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           {item.profileUrl ? (
             <a
               className="hover:text-primary-emphasis flex min-w-0 items-center gap-1 truncate text-sm font-medium hover:underline"
@@ -282,22 +277,11 @@ const SocialRow: FC<{
           ) : (
             <span className="truncate text-sm font-medium">{visibleValue}</span>
           )}
-          {canViewHistory && (
-            <PersonFieldHistoryPopover
-              canViewAudit={canViewAudit}
-              fieldKey={fieldKey}
-              label={`Profil ${network?.label ?? item.networkKey}`}
-              personId={personId}
-              recordId={item.id}
-              revision={item.version}
-              sectionKey={PERSON_AUDIT_KEYS.sections.social}
-            />
-          )}
         </div>
-        <div className="mt-1 flex flex-wrap gap-1.5">
-          <Badge>{network?.label ?? item.networkKey}</Badge>
-          <ItemBadges isPrimary={item.isPrimary} label={item.label} />
-        </div>
+        <ItemMetadata
+          isPrimary={item.isPrimary}
+          parts={[network?.label ?? item.networkKey, item.label]}
+        />
         {duplicateFieldKeys.length > 0 && (
           <DuplicateFieldWarning>
             {duplicateFieldKeys.length > 1
@@ -308,8 +292,19 @@ const SocialRow: FC<{
           </DuplicateFieldWarning>
         )}
       </div>
-      {canUpdate && (
-        <ChildActions label="ce profil" onDelete={onDelete} onEdit={onEdit} />
+      {(canViewHistory || canUpdate) && (
+        <div className="flex shrink-0 items-center gap-1">
+          {canViewHistory && !canUpdate && (
+            <HistoryOnlyAction label="ce profil" onOpen={onEdit} />
+          )}
+          {canUpdate && (
+            <ChildActions
+              label="ce profil"
+              onDelete={onDelete}
+              onEdit={onEdit}
+            />
+          )}
+        </div>
       )}
     </li>
   );
@@ -329,28 +324,10 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
   const [editor, setEditor] = useState<EditorState>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [replacementId, setReplacementId] = useState('');
-  const [showOtherContacts, setShowOtherContacts] = useState(false);
-  const [showOtherSocials, setShowOtherSocials] = useState(false);
   const [version, setVersion] = useState(person.version);
   const addEmailRef = useRef<HTMLButtonElement>(null);
   const addPhoneRef = useRef<HTMLButtonElement>(null);
   const addSocialRef = useRef<HTMLButtonElement>(null);
-
-  const emails = showOtherContacts
-    ? person.emails
-    : person.emails.filter((item) => item.isPrimary);
-  const phones = showOtherContacts
-    ? person.phones
-    : person.phones.filter((item) => item.isPrimary);
-  const socials = showOtherSocials
-    ? person.socialProfiles
-    : person.socialProfiles.filter((item) => item.isPrimary);
-  const secondaryContactCount =
-    person.emails.filter((item) => !item.isPrimary).length +
-    person.phones.filter((item) => !item.isPrimary).length;
-  const secondarySocialCount = person.socialProfiles.filter(
-    (item) => !item.isPrimary,
-  ).length;
 
   const alternatives = ((): ChildItem[] => {
     if (!deleteState?.item.isPrimary) return [];
@@ -434,60 +411,49 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
 
   return (
     <>
-      <section className="p-4 sm:p-5">
-        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-9 items-center justify-center rounded-lg border">
-              <AtSign className="size-4" />
-            </span>
-            <div>
-              <h2 className="text-sm font-semibold">Coordonnées</h2>
-              <p className="text-muted-foreground text-xs">
-                Emails et téléphones utiles.
-              </p>
-            </div>
-          </div>
-          {canUpdate && (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                ref={addEmailRef}
-                disabled={person.emails.length >= PERSON_LIMITS.emails}
-                onClick={() => setEditor({ item: null, kind: 'email' })}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                <Plus className="size-4" />
-                Email
-              </Button>
-              <Button
-                ref={addPhoneRef}
-                disabled={person.phones.length >= PERSON_LIMITS.phones}
-                onClick={() => setEditor({ item: null, kind: 'phone' })}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                <Plus className="size-4" />
-                Téléphone
-              </Button>
-            </div>
-          )}
-        </div>
-        {person.emails.length === 0 && person.phones.length === 0 ? (
-          <EmptyCollection>Aucune coordonnée renseignée.</EmptyCollection>
-        ) : (
-          <div className="grid gap-x-6 lg:grid-cols-2">
-            <div>
-              <h3 className="text-muted-foreground mt-2 text-xs font-semibold uppercase">
-                Emails
-              </h3>
-              {person.emails.length ? (
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="p-3.5 sm:p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-8 shrink-0 items-center justify-center rounded-lg border">
+                    <Mail className="size-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-sm font-semibold">Emails</h2>
+                      <Badge variant="outline">{person.emails.length}</Badge>
+                    </div>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      Adresses utiles et adresse principale.
+                    </p>
+                  </div>
+                </div>
+                {canUpdate && (
+                  <Button
+                    ref={addEmailRef}
+                    aria-label="Ajouter un email"
+                    disabled={person.emails.length >= PERSON_LIMITS.emails}
+                    onClick={() => setEditor({ item: null, kind: 'email' })}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    <Plus className="size-4" />
+                    Ajouter
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4">
+              {person.emails.length === 0 ? (
+                <EmptyCollection>Aucun email renseigné.</EmptyCollection>
+              ) : (
                 <ul>
-                  {emails.map((item) => (
+                  {person.emails.map((item) => (
                     <EmailRow
                       canUpdate={canUpdate}
-                      canViewAudit={canViewAudit}
                       canViewHistory={canViewHistory}
                       duplicateWarning={duplicateMatches.some(
                         (match) =>
@@ -498,26 +464,54 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
                       key={item.id}
                       onDelete={() => openDelete('email', item)}
                       onEdit={() => setEditor({ item, kind: 'email' })}
-                      personId={person.id}
                     />
                   ))}
                 </ul>
-              ) : (
-                <p className="text-muted-foreground py-3 text-sm">
-                  Aucun email.
-                </p>
               )}
-            </div>
-            <div>
-              <h3 className="text-muted-foreground mt-2 text-xs font-semibold uppercase">
-                Téléphones
-              </h3>
-              {person.phones.length ? (
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="p-3.5 sm:p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-8 shrink-0 items-center justify-center rounded-lg border">
+                    <Phone className="size-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-sm font-semibold">Téléphones</h2>
+                      <Badge variant="outline">{person.phones.length}</Badge>
+                    </div>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      Numéros utiles et numéro principal.
+                    </p>
+                  </div>
+                </div>
+                {canUpdate && (
+                  <Button
+                    ref={addPhoneRef}
+                    aria-label="Ajouter un téléphone"
+                    disabled={person.phones.length >= PERSON_LIMITS.phones}
+                    onClick={() => setEditor({ item: null, kind: 'phone' })}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    <Plus className="size-4" />
+                    Ajouter
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4">
+              {person.phones.length === 0 ? (
+                <EmptyCollection>Aucun téléphone renseigné.</EmptyCollection>
+              ) : (
                 <ul>
-                  {phones.map((item) => (
+                  {person.phones.map((item) => (
                     <PhoneRow
                       canUpdate={canUpdate}
-                      canViewAudit={canViewAudit}
                       canViewHistory={canViewHistory}
                       duplicateWarning={duplicateMatches.some(
                         (match) =>
@@ -528,115 +522,85 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
                       key={item.id}
                       onDelete={() => openDelete('phone', item)}
                       onEdit={() => setEditor({ item, kind: 'phone' })}
-                      personId={person.id}
                     />
                   ))}
                 </ul>
-              ) : (
-                <p className="text-muted-foreground py-3 text-sm">
-                  Aucun téléphone.
-                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader className="p-3.5 sm:p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-8 shrink-0 items-center justify-center rounded-lg border">
+                  <Network className="size-4" />
+                </span>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-sm font-semibold">Réseaux sociaux</h2>
+                    <Badge variant="outline">
+                      {person.socialProfiles.length}
+                    </Badge>
+                  </div>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Profils publics utiles à la structure.
+                  </p>
+                </div>
+              </div>
+              {canUpdate && (
+                <Button
+                  ref={addSocialRef}
+                  aria-label="Ajouter un profil social"
+                  disabled={
+                    person.socialProfiles.length >= PERSON_LIMITS.socialProfiles
+                  }
+                  onClick={() => setEditor({ item: null, kind: 'social' })}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <Plus className="size-4" />
+                  Ajouter
+                </Button>
               )}
             </div>
-          </div>
-        )}
-        {secondaryContactCount > 0 && (
-          <Button
-            className="mt-3"
-            onClick={() => setShowOtherContacts((value) => !value)}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
-            {showOtherContacts ? (
-              <ChevronUp className="size-4" />
+          </CardHeader>
+          <CardContent className="p-3 sm:p-4">
+            {person.socialProfiles.length === 0 ? (
+              <EmptyCollection>Aucun profil social renseigné.</EmptyCollection>
             ) : (
-              <ChevronDown className="size-4" />
+              <ul>
+                {person.socialProfiles.map((item) => (
+                  <SocialRow
+                    canUpdate={canUpdate}
+                    canViewHistory={canViewHistory}
+                    duplicateFieldKeys={duplicateMatches
+                      .filter(
+                        (match) =>
+                          match.recordId === item.id &&
+                          (match.fieldKey === 'identifier' ||
+                            match.fieldKey === 'profileUrl'),
+                      )
+                      .map((match) => match.fieldKey)}
+                    item={item}
+                    key={item.id}
+                    onDelete={() => openDelete('social', item)}
+                    onEdit={() => setEditor({ item, kind: 'social' })}
+                  />
+                ))}
+              </ul>
             )}
-            {showOtherContacts
-              ? 'Masquer les autres'
-              : `Voir les autres (${secondaryContactCount})`}
-          </Button>
-        )}
-      </section>
-
-      <section className="border-border-divider border-t p-4 sm:p-5">
-        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-9 items-center justify-center rounded-lg border">
-              <Network className="size-4" />
-            </span>
-            <div>
-              <h2 className="text-sm font-semibold">Réseaux sociaux</h2>
-              <p className="text-muted-foreground text-xs">
-                Profils publics utiles à la structure.
-              </p>
-            </div>
-          </div>
-          {canUpdate && (
-            <Button
-              ref={addSocialRef}
-              disabled={
-                person.socialProfiles.length >= PERSON_LIMITS.socialProfiles
-              }
-              onClick={() => setEditor({ item: null, kind: 'social' })}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              <Plus className="size-4" />
-              Ajouter
-            </Button>
-          )}
-        </div>
-        {person.socialProfiles.length === 0 ? (
-          <EmptyCollection>Aucun profil social renseigné.</EmptyCollection>
-        ) : (
-          <ul>
-            {socials.map((item) => (
-              <SocialRow
-                canUpdate={canUpdate}
-                canViewAudit={canViewAudit}
-                canViewHistory={canViewHistory}
-                duplicateFieldKeys={duplicateMatches
-                  .filter(
-                    (match) =>
-                      match.recordId === item.id &&
-                      (match.fieldKey === 'identifier' ||
-                        match.fieldKey === 'profileUrl'),
-                  )
-                  .map((match) => match.fieldKey)}
-                item={item}
-                key={item.id}
-                onDelete={() => openDelete('social', item)}
-                onEdit={() => setEditor({ item, kind: 'social' })}
-                personId={person.id}
-              />
-            ))}
-          </ul>
-        )}
-        {secondarySocialCount > 0 && (
-          <Button
-            className="mt-3"
-            onClick={() => setShowOtherSocials((value) => !value)}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
-            {showOtherSocials ? (
-              <ChevronUp className="size-4" />
-            ) : (
-              <ChevronDown className="size-4" />
-            )}
-            {showOtherSocials
-              ? 'Masquer les autres'
-              : `Voir les autres (${secondarySocialCount})`}
-          </Button>
-        )}
-      </section>
+          </CardContent>
+        </Card>
+      </div>
 
       {editor && (
         <PersonChildDialog
+          canEdit={canUpdate}
+          canViewAudit={canViewAudit}
+          canViewHistory={canViewHistory}
           defaultPrimary={
             editor.kind === 'email'
               ? person.emails.length === 0
@@ -662,7 +626,9 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
           if (!open && !isDeleting) setDeleteState(null);
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent
+          className={requiresReplacement ? 'sm:max-w-lg' : 'sm:max-w-md'}
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer cette information ?</AlertDialogTitle>
             <AlertDialogDescription>

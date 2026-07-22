@@ -82,14 +82,14 @@ const PersonsListSkeleton: FC = () => (
     aria-label="Chargement du répertoire"
   >
     {[...Array(7)].map((_, index) => (
-      <Skeleton className="h-14 rounded-lg" key={index} />
+      <Skeleton className="h-12 rounded-lg" key={index} />
     ))}
   </div>
 );
 
 const PersonIdentity: FC<{ person: PersonSummary }> = ({ person }) => (
-  <div className="flex min-w-0 items-center gap-3">
-    <span className="border-border-default bg-surface-inset text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg border text-xs font-semibold">
+  <div className="flex min-w-0 items-center gap-2.5">
+    <span className="border-border-default bg-surface-inset text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg border text-xs font-semibold">
       {getPersonInitials(person) || <UserRound className="size-4" />}
     </span>
     <div className="min-w-0">
@@ -108,10 +108,10 @@ const PersonIdentity: FC<{ person: PersonSummary }> = ({ person }) => (
 const PersonMobileRow: FC<{ person: PersonSummary }> = ({ person }) => (
   <Link
     aria-label={`Ouvrir la fiche de ${getPersonDisplayName(person)}`}
-    className="hover:bg-surface-tile-hover focus-visible:ring-ring/40 flex items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset"
+    className="hover:bg-surface-tile-hover focus-visible:ring-ring/40 flex items-center gap-3 px-4 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-inset"
     href={`/vie-interne/repertoire/${person.id}`}
   >
-    <div className="min-w-0 flex-1 space-y-2">
+    <div className="min-w-0 flex-1 space-y-1.5">
       <PersonIdentity person={person} />
       <div className="flex flex-wrap items-center gap-2">
         <PersonStatusBadge status={person.structureStatus} />
@@ -209,7 +209,10 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
     <div className="space-y-4">
       <DataTableSection
         description="Les coordonnées privées restent visibles uniquement dans chaque fiche."
+        headerClassName="p-3 sm:p-4"
+        headerLayout="inline"
         title="Toutes les fiches"
+        toolbarClassName="mt-2 xl:max-w-4xl"
         toolbar={
           <div className="flex w-full flex-col gap-2 sm:flex-row">
             <form
@@ -284,7 +287,7 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
           <>
             <DataTableDesktop>
               <Table>
-                <TableHeader>
+                <TableHeader className="[&_th]:h-9">
                   <TableRow>
                     <TableHead>Fiche</TableHead>
                     <TableHead>Statut dans la structure</TableHead>
@@ -297,19 +300,20 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
                 <TableBody>
                   {data?.items.map((person) => (
                     <TableRow key={person.id}>
-                      <TableCell>
+                      <TableCell className="py-2">
                         <PersonIdentity person={person} />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="py-2">
                         <PersonStatusBadge status={person.structureStatus} />
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
+                      <TableCell className="text-muted-foreground py-2 text-sm">
                         {formatPersonDateTime(person.updatedAt)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="py-1.5">
                         <Button
                           asChild
                           aria-label={`Ouvrir ${getPersonDisplayName(person)}`}
+                          className="lg:size-8"
                           size="icon"
                           variant="ghost"
                         >
@@ -328,7 +332,7 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
                 <PersonMobileRow key={person.id} person={person} />
               ))}
             </DataTableMobileList>
-            <div className="border-border-divider bg-surface-inset flex items-center justify-between gap-3 border-t px-4 py-3">
+            <div className="border-border-divider bg-surface-inset flex items-center justify-between gap-3 border-t px-4 py-2">
               <p aria-live="polite" className="text-muted-foreground text-xs">
                 Page {pageIndex + 1} · {data?.items.length ?? 0} résultat
                 {(data?.items.length ?? 0) > 1 ? 's' : ''}
@@ -336,6 +340,7 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
               <div className="flex items-center gap-1">
                 <Button
                   aria-label="Page précédente"
+                  className="lg:size-8"
                   disabled={pageIndex === 0 || isLoading}
                   onClick={() =>
                     setPageIndex((value) => Math.max(0, value - 1))
@@ -347,6 +352,7 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
                 </Button>
                 <Button
                   aria-label="Page suivante"
+                  className="lg:size-8"
                   disabled={
                     !data?.pagination.hasMore ||
                     !data.pagination.nextCursor ||

@@ -763,7 +763,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       activePermission({
         action: 'view',
         description:
-          "Consulter les trois derniers changements d'un champ sur une page déjà autorisée",
+          "Consulter les deux derniers changements d'un champ sur une page déjà autorisée",
         grantable: true,
         key: PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY,
         label: "Consulter l'historique des champs",

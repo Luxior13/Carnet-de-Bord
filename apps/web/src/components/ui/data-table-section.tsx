@@ -17,6 +17,8 @@ type DataTableSectionProps = {
   contentClassName?: string;
   description?: ReactNode;
   desktopClassName?: string;
+  headerClassName?: string;
+  headerLayout?: 'inline' | 'stacked';
   mobileClassName?: string;
   mobileList?: ReactNode;
   pagination?: PaginationProps;
@@ -44,6 +46,8 @@ const DataTableSection: FC<DataTableSectionProps> = ({
   contentClassName,
   description,
   desktopClassName,
+  headerClassName,
+  headerLayout = 'stacked',
   mobileClassName,
   mobileList,
   pagination,
@@ -58,23 +62,35 @@ const DataTableSection: FC<DataTableSectionProps> = ({
       className,
     )}
   >
-    <CardHeader className="border-border-divider bg-surface-panel-header p-4">
-      <div className="flex flex-col gap-1">
+    <CardHeader
+      className={cn(
+        'border-border-divider bg-surface-panel-header p-4',
+        headerClassName,
+      )}
+    >
+      <div
+        className={cn(
+          'flex flex-col gap-1',
+          headerLayout === 'inline' &&
+            'xl:flex-row xl:items-center xl:justify-between xl:gap-4',
+        )}
+      >
         <div className="min-w-0">
           <CardTitle className="text-base">{title}</CardTitle>
           {description && <CardDescription>{description}</CardDescription>}
         </div>
+        {toolbar && (
+          <div
+            className={cn(
+              'mt-3 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between',
+              headerLayout === 'inline' && 'xl:mt-0 xl:min-w-0 xl:flex-1',
+              toolbarClassName,
+            )}
+          >
+            {toolbar}
+          </div>
+        )}
       </div>
-      {toolbar && (
-        <div
-          className={cn(
-            'mt-3 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between',
-            toolbarClassName,
-          )}
-        >
-          {toolbar}
-        </div>
-      )}
     </CardHeader>
     <CardContent className={cn('bg-surface p-0', contentClassName)}>
       {children ?? (

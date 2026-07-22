@@ -1,5 +1,7 @@
+import { History } from 'lucide-react';
 import React, { type FC } from 'react';
 
+import { Button } from '$ui/button';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import {
@@ -16,6 +18,8 @@ import {
   PERSON_SOCIAL_LABEL_SUGGESTIONS,
   PERSON_SOCIAL_NETWORKS,
 } from '../person.constants';
+import type { PersonFieldHistoryTarget } from './PersonFieldHistoryPanel';
+import { PersonSocialNetworkIcon } from './PersonSocialNetworkIcon';
 
 export type EmailDraft = {
   email: string;
@@ -39,6 +43,30 @@ export type SocialDraft = {
 };
 
 type FieldErrors = Record<string, string>;
+type FieldHistories = Readonly<
+  Partial<Record<string, PersonFieldHistoryTarget>>
+>;
+type OpenHistory = (target: PersonFieldHistoryTarget) => void;
+type FieldsLayout = 'grid' | 'stacked';
+
+const HistoryAction: FC<{
+  activeFieldKey?: string;
+  onOpen?: OpenHistory;
+  target?: PersonFieldHistoryTarget;
+}> = ({ activeFieldKey, onOpen, target }) =>
+  target && onOpen ? (
+    <Button
+      aria-label={`Afficher l'historique : ${target.label}`}
+      aria-pressed={activeFieldKey === target.fieldKey}
+      className="size-6 shrink-0"
+      onClick={() => onOpen(target)}
+      size="icon"
+      type="button"
+      variant={activeFieldKey === target.fieldKey ? 'secondary' : 'ghost'}
+    >
+      <History className="size-3.5" />
+    </Button>
+  ) : null;
 
 const COUNTRY_OPTIONS = [
   ['FR', 'France (+33)'],
@@ -80,21 +108,27 @@ const fieldError = (
 };
 
 const LabelField: FC<{
+  activeHistoryFieldKey?: string;
   disabled?: boolean;
   errors: FieldErrors;
+  history?: PersonFieldHistoryTarget;
   idPrefix: string;
   keyPrefix?: string;
   listId: string;
   onChange: (value: string) => void;
+  onHistoryOpen?: OpenHistory;
   suggestions: readonly string[];
   value: string;
 }> = ({
+  activeHistoryFieldKey,
   disabled,
   errors,
+  history,
   idPrefix,
   keyPrefix = '',
   listId,
   onChange,
+  onHistoryOpen,
   suggestions,
   value,
 }) => {
@@ -102,9 +136,16 @@ const LabelField: FC<{
 
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={`${idPrefix}-label`} required>
-        Libellé
-      </Label>
+      <div className="flex items-center gap-1.5">
+        <Label htmlFor={`${idPrefix}-label`} required>
+          Libellé
+        </Label>
+        <HistoryAction
+          activeFieldKey={activeHistoryFieldKey}
+          onOpen={onHistoryOpen}
+          target={history}
+        />
+      </div>
       <Input
         aria-describedby={error ? `${idPrefix}-label-error` : undefined}
         aria-invalid={Boolean(error)}
@@ -127,42 +168,69 @@ const LabelField: FC<{
 };
 
 const PrimarySwitch: FC<{
+  activeHistoryFieldKey?: string;
   checked: boolean;
   disabled?: boolean;
+  history?: PersonFieldHistoryTarget;
   id: string;
   label: string;
   onChange: (checked: boolean) => void;
-}> = ({ checked, disabled, id, label, onChange }) => (
+  onHistoryOpen?: OpenHistory;
+}> = ({
+  activeHistoryFieldKey,
+  checked,
+  disabled,
+  history,
+  id,
+  label,
+  onChange,
+  onHistoryOpen,
+}) => (
   <div className="border-border-default bg-surface-inset flex items-center justify-between gap-4 rounded-lg border px-3 py-2.5">
     <Label className="leading-5" htmlFor={id}>
       {label}
     </Label>
-    <Switch
-      checked={checked}
-      disabled={disabled}
-      id={id}
-      onCheckedChange={onChange}
-    />
+    <div className="flex items-center gap-1">
+      <HistoryAction
+        activeFieldKey={activeHistoryFieldKey}
+        onOpen={onHistoryOpen}
+        target={history}
+      />
+      <Switch
+        checked={checked}
+        disabled={disabled}
+        id={id}
+        onCheckedChange={onChange}
+      />
+    </div>
   </div>
 );
 
 type EmailFieldsProps = {
+  activeHistoryFieldKey?: string;
   disabled?: boolean;
   errors: FieldErrors;
+  histories?: FieldHistories;
   idPrefix: string;
   keyPrefix?: string;
+  layout?: FieldsLayout;
   onChange: (value: EmailDraft) => void;
+  onHistoryOpen?: OpenHistory;
   showPrimarySwitch?: boolean;
   value: EmailDraft;
   warnings?: FieldErrors;
 };
 
 export const EmailFields: FC<EmailFieldsProps> = ({
+  activeHistoryFieldKey,
   disabled,
   errors,
+  histories,
   idPrefix,
   keyPrefix = '',
+  layout = 'grid',
   onChange,
+  onHistoryOpen,
   showPrimarySwitch = true,
   value,
   warnings = {},
@@ -171,11 +239,22 @@ export const EmailFields: FC<EmailFieldsProps> = ({
   const emailWarning = fieldError(warnings, keyPrefix, 'email');
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <div className="space-y-1.5 sm:col-span-2">
-        <Label htmlFor={`${idPrefix}-email`} required>
-          Email
-        </Label>
+    <div
+      className={`grid gap-4 ${layout === 'grid' ? 'sm:grid-cols-2' : 'grid-cols-1'}`}
+    >
+      <div
+        className={`space-y-1.5 ${layout === 'grid' ? 'sm:col-span-2' : ''}`}
+      >
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor={`${idPrefix}-email`} required>
+            Email
+          </Label>
+          <HistoryAction
+            activeFieldKey={activeHistoryFieldKey}
+            onOpen={onHistoryOpen}
+            target={histories?.email}
+          />
+        </div>
         <Input
           aria-describedby={
             emailError
@@ -200,22 +279,28 @@ export const EmailFields: FC<EmailFieldsProps> = ({
         <FieldWarning id={`${idPrefix}-email-warning`} message={emailWarning} />
       </div>
       <LabelField
+        activeHistoryFieldKey={activeHistoryFieldKey}
         disabled={disabled}
         errors={errors}
         idPrefix={idPrefix}
+        history={histories?.label}
         keyPrefix={keyPrefix}
         listId={`${idPrefix}-contact-labels`}
         onChange={(label) => onChange({ ...value, label })}
+        onHistoryOpen={onHistoryOpen}
         suggestions={PERSON_CONTACT_LABEL_SUGGESTIONS}
         value={value.label}
       />
-      {showPrimarySwitch && (
+      {(showPrimarySwitch || histories?.isPrimary) && (
         <PrimarySwitch
+          activeHistoryFieldKey={activeHistoryFieldKey}
           checked={value.isPrimary}
-          disabled={disabled}
+          disabled={disabled || !showPrimarySwitch}
+          history={histories?.isPrimary}
           id={`${idPrefix}-primary`}
           label="Email principal"
           onChange={(isPrimary) => onChange({ ...value, isPrimary })}
+          onHistoryOpen={onHistoryOpen}
         />
       )}
     </div>
@@ -223,22 +308,30 @@ export const EmailFields: FC<EmailFieldsProps> = ({
 };
 
 type PhoneFieldsProps = {
+  activeHistoryFieldKey?: string;
   disabled?: boolean;
   errors: FieldErrors;
+  histories?: FieldHistories;
   idPrefix: string;
   keyPrefix?: string;
+  layout?: FieldsLayout;
   onChange: (value: PhoneDraft) => void;
+  onHistoryOpen?: OpenHistory;
   showPrimarySwitch?: boolean;
   value: PhoneDraft;
   warnings?: FieldErrors;
 };
 
 export const PhoneFields: FC<PhoneFieldsProps> = ({
+  activeHistoryFieldKey,
   disabled,
   errors,
+  histories,
   idPrefix,
   keyPrefix = '',
+  layout = 'grid',
   onChange,
+  onHistoryOpen,
   showPrimarySwitch = true,
   value,
   warnings = {},
@@ -248,7 +341,9 @@ export const PhoneFields: FC<PhoneFieldsProps> = ({
   const countryError = fieldError(errors, keyPrefix, 'countryCode');
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div
+      className={`grid gap-4 ${layout === 'grid' ? 'sm:grid-cols-2' : 'grid-cols-1'}`}
+    >
       <div className="space-y-1.5">
         <Label htmlFor={`${idPrefix}-country`} required>
           Pays
@@ -278,9 +373,16 @@ export const PhoneFields: FC<PhoneFieldsProps> = ({
         <FieldError id={`${idPrefix}-country-error`} message={countryError} />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor={`${idPrefix}-phone`} required>
-          Numéro
-        </Label>
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor={`${idPrefix}-phone`} required>
+            Numéro
+          </Label>
+          <HistoryAction
+            activeFieldKey={activeHistoryFieldKey}
+            onOpen={onHistoryOpen}
+            target={histories?.phone}
+          />
+        </div>
         <Input
           aria-describedby={
             phoneError
@@ -305,22 +407,28 @@ export const PhoneFields: FC<PhoneFieldsProps> = ({
         <FieldWarning id={`${idPrefix}-phone-warning`} message={phoneWarning} />
       </div>
       <LabelField
+        activeHistoryFieldKey={activeHistoryFieldKey}
         disabled={disabled}
         errors={errors}
         idPrefix={idPrefix}
+        history={histories?.label}
         keyPrefix={keyPrefix}
         listId={`${idPrefix}-contact-labels`}
         onChange={(label) => onChange({ ...value, label })}
+        onHistoryOpen={onHistoryOpen}
         suggestions={PERSON_CONTACT_LABEL_SUGGESTIONS}
         value={value.label}
       />
-      {showPrimarySwitch && (
+      {(showPrimarySwitch || histories?.isPrimary) && (
         <PrimarySwitch
+          activeHistoryFieldKey={activeHistoryFieldKey}
           checked={value.isPrimary}
-          disabled={disabled}
+          disabled={disabled || !showPrimarySwitch}
+          history={histories?.isPrimary}
           id={`${idPrefix}-primary`}
           label="Téléphone principal"
           onChange={(isPrimary) => onChange({ ...value, isPrimary })}
+          onHistoryOpen={onHistoryOpen}
         />
       )}
     </div>
@@ -328,22 +436,30 @@ export const PhoneFields: FC<PhoneFieldsProps> = ({
 };
 
 type SocialFieldsProps = {
+  activeHistoryFieldKey?: string;
   disabled?: boolean;
   errors: FieldErrors;
+  histories?: FieldHistories;
   idPrefix: string;
   keyPrefix?: string;
+  layout?: FieldsLayout;
   onChange: (value: SocialDraft) => void;
+  onHistoryOpen?: OpenHistory;
   showPrimarySwitch?: boolean;
   value: SocialDraft;
   warnings?: FieldErrors;
 };
 
 export const SocialFields: FC<SocialFieldsProps> = ({
+  activeHistoryFieldKey,
   disabled,
   errors,
+  histories,
   idPrefix,
   keyPrefix = '',
+  layout = 'grid',
   onChange,
+  onHistoryOpen,
   showPrimarySwitch = true,
   value,
   warnings = {},
@@ -355,11 +471,20 @@ export const SocialFields: FC<SocialFieldsProps> = ({
   const urlWarning = fieldError(warnings, keyPrefix, 'profileUrl');
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div
+      className={`grid gap-4 ${layout === 'grid' ? 'sm:grid-cols-2' : 'grid-cols-1'}`}
+    >
       <div className="space-y-1.5">
-        <Label htmlFor={`${idPrefix}-network`} required>
-          Réseau
-        </Label>
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor={`${idPrefix}-network`} required>
+            Réseau
+          </Label>
+          <HistoryAction
+            activeFieldKey={activeHistoryFieldKey}
+            onOpen={onHistoryOpen}
+            target={histories?.networkKey}
+          />
+        </div>
         <Select
           disabled={disabled}
           onValueChange={(networkKey) => onChange({ ...value, networkKey })}
@@ -372,7 +497,15 @@ export const SocialFields: FC<SocialFieldsProps> = ({
             aria-invalid={Boolean(networkError)}
             id={`${idPrefix}-network`}
           >
-            <SelectValue />
+            <span className="flex min-w-0 items-center gap-2">
+              {value.networkKey && (
+                <PersonSocialNetworkIcon
+                  className="size-4 shrink-0"
+                  networkKey={value.networkKey}
+                />
+              )}
+              <SelectValue />
+            </span>
           </SelectTrigger>
           <SelectContent>
             {PERSON_SOCIAL_NETWORKS.filter(
@@ -384,8 +517,14 @@ export const SocialFields: FC<SocialFieldsProps> = ({
                 key={network.key}
                 value={network.key}
               >
-                {network.label}
-                {network.status === 'deprecated' ? ' (ancien)' : ''}
+                <PersonSocialNetworkIcon
+                  className="size-4 shrink-0"
+                  networkKey={network.key}
+                />
+                <span>
+                  {network.label}
+                  {network.status === 'deprecated' ? ' (ancien)' : ''}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -393,17 +532,27 @@ export const SocialFields: FC<SocialFieldsProps> = ({
         <FieldError id={`${idPrefix}-network-error`} message={networkError} />
       </div>
       <LabelField
+        activeHistoryFieldKey={activeHistoryFieldKey}
         disabled={disabled}
         errors={errors}
         idPrefix={idPrefix}
+        history={histories?.label}
         keyPrefix={keyPrefix}
         listId={`${idPrefix}-social-labels`}
         onChange={(label) => onChange({ ...value, label })}
+        onHistoryOpen={onHistoryOpen}
         suggestions={PERSON_SOCIAL_LABEL_SUGGESTIONS}
         value={value.label}
       />
       <div className="space-y-1.5">
-        <Label htmlFor={`${idPrefix}-identifier`}>Identifiant visible</Label>
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor={`${idPrefix}-identifier`}>Identifiant visible</Label>
+          <HistoryAction
+            activeFieldKey={activeHistoryFieldKey}
+            onOpen={onHistoryOpen}
+            target={histories?.identifier}
+          />
+        </div>
         <Input
           aria-describedby={
             identifierError
@@ -432,7 +581,14 @@ export const SocialFields: FC<SocialFieldsProps> = ({
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor={`${idPrefix}-url`}>URL du profil</Label>
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor={`${idPrefix}-url`}>URL du profil</Label>
+          <HistoryAction
+            activeFieldKey={activeHistoryFieldKey}
+            onOpen={onHistoryOpen}
+            target={histories?.profileUrl}
+          />
+        </div>
         <Input
           aria-describedby={
             urlError
@@ -456,19 +612,22 @@ export const SocialFields: FC<SocialFieldsProps> = ({
         <FieldWarning id={`${idPrefix}-url-warning`} message={urlWarning} />
       </div>
       <p
-        className="text-muted-foreground text-xs sm:col-span-2"
+        className={`text-muted-foreground text-xs ${layout === 'grid' ? 'sm:col-span-2' : ''}`}
         id={`${idPrefix}-identity-hint`}
       >
         Renseignez au moins un identifiant visible ou une URL de profil.
       </p>
-      {showPrimarySwitch && (
-        <div className="sm:col-span-2">
+      {(showPrimarySwitch || histories?.isPrimary) && (
+        <div className={layout === 'grid' ? 'sm:col-span-2' : undefined}>
           <PrimarySwitch
+            activeHistoryFieldKey={activeHistoryFieldKey}
             checked={value.isPrimary}
-            disabled={disabled}
+            disabled={disabled || !showPrimarySwitch}
+            history={histories?.isPrimary}
             id={`${idPrefix}-primary`}
             label="Profil principal pour ce réseau"
             onChange={(isPrimary) => onChange({ ...value, isPrimary })}
+            onHistoryOpen={onHistoryOpen}
           />
         </div>
       )}

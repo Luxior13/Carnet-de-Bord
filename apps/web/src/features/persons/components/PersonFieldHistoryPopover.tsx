@@ -1,13 +1,19 @@
 'use client';
 
-import { History, Loader2 } from 'lucide-react';
+import { History, X } from 'lucide-react';
 import Link from 'next/link';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { ContentState } from '$components/layout/ContentState';
 import { useUser } from '$context/UserContext';
 import { Button } from '$ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '$ui/popover';
+import {
+  Popover,
+  PopoverClose,
+  PopoverContent,
+  PopoverTrigger,
+} from '$ui/popover';
+import { Skeleton } from '$ui/skeleton';
 
 import { getPersonFieldHistory } from '../person.api';
 import { formatPersonDateTime, getPersonFieldJournalHref } from '../person.ui';
@@ -25,9 +31,11 @@ type PersonFieldHistoryPopoverProps = {
 
 const DECRYPTED_HISTORY_TTL_MS = 30_000;
 
-const formatHistoryValue = (value: unknown): string => {
+const formatHistoryValue = (value: unknown, fieldKey?: string): string => {
   if (value === null || value === undefined || value === '')
     return 'Non renseigné';
+  if (fieldKey === 'isPrimary' && typeof value === 'boolean')
+    return value ? 'Principal' : 'Secondaire';
   if (typeof value === 'boolean') return value ? 'Oui' : 'Non';
   if (typeof value === 'string' || typeof value === 'number')
     return String(value);
@@ -48,33 +56,132 @@ const getActionLabel = (action: string): string => {
   }
 };
 
-const HistoryEntry: FC<{ item: PersonFieldHistoryItem }> = ({ item }) => (
-  <li className="border-border-divider space-y-2 border-b pb-3 last:border-0 last:pb-0">
-    <div className="flex flex-wrap items-baseline justify-between gap-2">
-      <span className="text-sm font-medium">{getActionLabel(item.action)}</span>
+const getFieldLabel = (fieldKey: string): string => {
+  switch (fieldKey) {
+    case 'birthDate':
+      return 'Date de naissance';
+    case 'email':
+      return 'Adresse email';
+    case 'firstName':
+      return 'Prénom';
+    case 'identifier':
+      return 'Identifiant';
+    case 'isPrimary':
+      return 'Statut principal';
+    case 'label':
+      return 'Libellé';
+    case 'lastName':
+      return 'Nom';
+    case 'networkKey':
+      return 'Réseau';
+    case 'nickname':
+      return 'Pseudo principal';
+    case 'phone':
+      return 'Numéro de téléphone';
+    case 'profileUrl':
+      return 'URL du profil';
+    case 'structureStatus':
+      return 'Statut dans la structure';
+    default:
+      return fieldKey;
+  }
+};
+
+const HistoryChange: FC<{
+  after: unknown | null;
+  before: unknown | null;
+  fieldKey: string;
+}> = ({ after, before, fieldKey }) => {
+  const hasAfter = after !== null && after !== undefined && after !== '';
+  const hasBefore = before !== null && before !== undefined && before !== '';
+
+  if (hasBefore && hasAfter) {
+    return (
+      <dl className="bg-surface-inset mt-2 grid min-w-0 items-center gap-1 rounded-md px-3 py-2 text-xs sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-2">
+        <div className="min-w-0">
+          <dt className="text-muted-foreground">Avant</dt>
+          <dd className="mt-0.5 break-words">
+            {formatHistoryValue(before, fieldKey)}
+          </dd>
+        </div>
+        <span
+          className="text-muted-foreground hidden sm:block"
+          aria-hidden="true"
+        >
+          →
+        </span>
+        <div className="min-w-0">
+          <dt className="text-muted-foreground">Après</dt>
+          <dd className="mt-0.5 break-words">
+            {formatHistoryValue(after, fieldKey)}
+          </dd>
+        </div>
+      </dl>
+    );
+  }
+  if (hasAfter) {
+    return (
+      <p className="bg-surface-inset mt-2 rounded-md px-3 py-2 text-xs break-words">
+        <span className="text-muted-foreground">Valeur ajoutée : </span>
+        {formatHistoryValue(after, fieldKey)}
+      </p>
+    );
+  }
+  if (hasBefore) {
+    return (
+      <p className="bg-surface-inset mt-2 rounded-md px-3 py-2 text-xs break-words">
+        <span className="text-muted-foreground">Valeur supprimée : </span>
+        {formatHistoryValue(before, fieldKey)}
+      </p>
+    );
+  }
+
+  return null;
+};
+
+const HistoryEntry: FC<{
+  fieldKey: string;
+  item: PersonFieldHistoryItem;
+}> = ({ fieldKey, item }) => (
+  <li className="py-3 first:pt-0 last:pb-0">
+    <div className="flex flex-wrap items-start justify-between gap-2">
+      <p className="text-sm">
+        <span className="font-medium">{getFieldLabel(fieldKey)}</span>
+        <span className="text-muted-foreground">
+          {' · '}
+          {getActionLabel(item.action).toLowerCase()}
+        </span>
+      </p>
       <time className="text-muted-foreground text-xs" dateTime={item.at}>
         {formatPersonDateTime(item.at)}
       </time>
     </div>
-    <p className="text-muted-foreground text-xs">
+    <p className="text-muted-foreground mt-1 text-xs">
       Par {item.actor.displayName}
       {item.actor.loginName ? ` (${item.actor.loginName})` : ''}
     </p>
-    {(item.before !== null || item.after !== null) && (
-      <dl className="grid gap-2 text-xs sm:grid-cols-2">
-        <div className="bg-surface-inset min-w-0 rounded-md p-2">
-          <dt className="text-muted-foreground">Avant</dt>
-          <dd className="mt-1 break-words">
-            {formatHistoryValue(item.before)}
-          </dd>
-        </div>
-        <div className="bg-surface-inset min-w-0 rounded-md p-2">
-          <dt className="text-muted-foreground">Après</dt>
-          <dd className="mt-1 break-words">{formatHistoryValue(item.after)}</dd>
-        </div>
-      </dl>
-    )}
+    <HistoryChange
+      after={item.after}
+      before={item.before}
+      fieldKey={fieldKey}
+    />
   </li>
+);
+
+const HistoryLoading: FC = () => (
+  <div
+    aria-label="Chargement de l'historique"
+    className="space-y-3"
+    role="status"
+  >
+    {[0, 1].map((item) => (
+      <div className="border-border-divider space-y-2 border-b pb-3" key={item}>
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-1/2" />
+        <Skeleton className="h-10 w-full rounded-md" />
+      </div>
+    ))}
+  </div>
 );
 
 export const PersonFieldHistoryPopover: FC<PersonFieldHistoryPopoverProps> = ({
@@ -88,6 +195,7 @@ export const PersonFieldHistoryPopover: FC<PersonFieldHistoryPopoverProps> = ({
 }) => {
   const { authorizationRevision } = useUser();
   const [error, setError] = useState<string | null>(null);
+  const [isExpired, setIsExpired] = useState(false);
   const [items, setItems] = useState<PersonFieldHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -113,6 +221,7 @@ export const PersonFieldHistoryPopover: FC<PersonFieldHistoryPopoverProps> = ({
     requestIdRef.current += 1;
     setItems([]);
     setError(null);
+    setIsExpired(false);
     setIsLoading(false);
     setOpen(false);
   }, [
@@ -129,6 +238,7 @@ export const PersonFieldHistoryPopover: FC<PersonFieldHistoryPopoverProps> = ({
     const requestId = ++requestIdRef.current;
     clearExpiryTimer();
     setError(null);
+    setIsExpired(false);
     setIsLoading(true);
     try {
       const response = await getPersonFieldHistory({
@@ -143,8 +253,8 @@ export const PersonFieldHistoryPopover: FC<PersonFieldHistoryPopoverProps> = ({
           requestIdRef.current += 1;
           setItems([]);
           setError(null);
+          setIsExpired(true);
           setIsLoading(false);
-          setOpen(false);
           expiryTimerRef.current = null;
         }, DECRYPTED_HISTORY_TTL_MS);
       }
@@ -170,6 +280,7 @@ export const PersonFieldHistoryPopover: FC<PersonFieldHistoryPopoverProps> = ({
       requestIdRef.current += 1;
       setItems([]);
       setError(null);
+      setIsExpired(false);
       setIsLoading(false);
     }
   };
@@ -194,18 +305,31 @@ export const PersonFieldHistoryPopover: FC<PersonFieldHistoryPopoverProps> = ({
           <History className="size-3.5" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[min(26rem,calc(100vw-2rem))]">
-        <div className="flex items-center justify-between gap-3">
-          <div>
+      <PopoverContent
+        align="end"
+        className="flex max-h-[min(36rem,calc(100svh-2rem))] w-[min(28rem,calc(100vw-2rem))] flex-col overflow-hidden p-0"
+      >
+        <div className="border-border-divider flex items-center justify-between gap-3 border-b px-4 py-3">
+          <div className="min-w-0">
             <p className="text-sm font-semibold">Historique</p>
             <p className="text-muted-foreground text-xs">{label}</p>
           </div>
-          {isLoading && (
-            <Loader2 aria-label="Chargement" className="size-4 animate-spin" />
-          )}
+          <PopoverClose asChild>
+            <Button
+              aria-label="Fermer l'historique"
+              className="size-8"
+              size="icon"
+              type="button"
+              variant="ghost"
+            >
+              <X className="size-4" />
+            </Button>
+          </PopoverClose>
         </div>
-        <div className="mt-3">
-          {error ? (
+        <div aria-live="polite" className="min-h-0 flex-1 overflow-y-auto p-4">
+          {isLoading ? (
+            <HistoryLoading />
+          ) : error ? (
             <ContentState
               action={
                 <Button onClick={() => void load()} size="sm" variant="outline">
@@ -216,22 +340,40 @@ export const PersonFieldHistoryPopover: FC<PersonFieldHistoryPopoverProps> = ({
               kind="error"
               title="Historique indisponible"
             />
-          ) : !isLoading && items.length === 0 ? (
-            <p className="text-muted-foreground py-4 text-center text-sm">
+          ) : isExpired ? (
+            <div className="py-3 text-center">
+              <p className="text-sm font-medium">Historique masqué</p>
+              <p className="text-muted-foreground mt-1 text-xs leading-5">
+                Les valeurs ont été effacées après 30 secondes.
+              </p>
+              <Button
+                className="mt-3"
+                onClick={() => void load()}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                Recharger l&apos;historique
+              </Button>
+            </div>
+          ) : items.length === 0 ? (
+            <p className="text-muted-foreground py-5 text-center text-sm">
               Aucun changement enregistré.
             </p>
           ) : (
-            <ol className="space-y-3">
+            <ol className="divide-border-divider divide-y">
               {items.map((item) => (
-                <HistoryEntry item={item} key={item.id} />
+                <HistoryEntry fieldKey={fieldKey} item={item} key={item.id} />
               ))}
             </ol>
           )}
         </div>
         {canViewAudit && (
-          <Button asChild className="mt-3 w-full" size="sm" variant="outline">
-            <Link href={journalHref}>Voir dans le journal d&apos;activité</Link>
-          </Button>
+          <div className="border-border-divider border-t p-3">
+            <Button asChild className="w-full" size="sm" variant="outline">
+              <Link href={journalHref}>Voir l&apos;historique complet</Link>
+            </Button>
+          </div>
         )}
       </PopoverContent>
     </Popover>

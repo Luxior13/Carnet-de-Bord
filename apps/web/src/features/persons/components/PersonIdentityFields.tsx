@@ -70,8 +70,8 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
   const structureStatus = field('structureStatus');
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <div className="space-y-1.5 sm:col-span-2">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="space-y-1.5 sm:col-span-2 xl:col-span-1">
         <Label htmlFor={nickname.id}>Pseudo principal</Label>
         <Input
           aria-describedby={nickname.describedBy ?? `${nickname.id}-hint`}

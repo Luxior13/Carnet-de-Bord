@@ -16,6 +16,7 @@ import {
 type UnsavedNavigationDialogProps = {
   cancelLabel?: string;
   confirmLabel?: string;
+  contentClassName?: string;
   description: string;
   onCancel: () => void;
   onConfirm: () => void;
@@ -26,6 +27,7 @@ type UnsavedNavigationDialogProps = {
 export const UnsavedNavigationDialog: FC<UnsavedNavigationDialogProps> = ({
   cancelLabel = 'Rester',
   confirmLabel = 'Quitter sans enregistrer',
+  contentClassName,
   description,
   onCancel,
   onConfirm,
@@ -38,7 +40,7 @@ export const UnsavedNavigationDialog: FC<UnsavedNavigationDialogProps> = ({
       if (!nextOpen) onCancel();
     }}
   >
-    <AlertDialogContent>
+    <AlertDialogContent className={contentClassName}>
       <AlertDialogHeader>
         <AlertDialogTitle>{title}</AlertDialogTitle>
         <AlertDialogDescription>{description}</AlertDialogDescription>

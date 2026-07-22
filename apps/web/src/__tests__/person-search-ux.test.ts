@@ -48,9 +48,25 @@ const historyPopoverSource = readFileSync(
   'utf8',
 );
 // eslint-disable-next-line security/detect-non-literal-fs-filename
+const historyPanelSource = readFileSync(
+  new URL(
+    '../features/persons/components/PersonFieldHistoryPanel.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+// eslint-disable-next-line security/detect-non-literal-fs-filename
 const collectionsSource = readFileSync(
   new URL(
     '../features/persons/components/PersonCollectionsSection.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const childDialogSource = readFileSync(
+  new URL(
+    '../features/persons/components/PersonChildDialog.tsx',
     import.meta.url,
   ),
   'utf8',
@@ -61,6 +77,19 @@ const collectionFieldsSource = readFileSync(
     '../features/persons/components/PersonCollectionFields.tsx',
     import.meta.url,
   ),
+  'utf8',
+);
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const socialNetworkIconSource = readFileSync(
+  new URL(
+    '../features/persons/components/PersonSocialNetworkIcon.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const dataTableSectionSource = readFileSync(
+  new URL('../components/ui/data-table-section.tsx', import.meta.url),
   'utf8',
 );
 // eslint-disable-next-line security/detect-non-literal-fs-filename
@@ -80,6 +109,14 @@ const identitySectionSource = readFileSync(
   'utf8',
 );
 // eslint-disable-next-line security/detect-non-literal-fs-filename
+const identityFieldsSource = readFileSync(
+  new URL(
+    '../features/persons/components/PersonIdentityFields.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+// eslint-disable-next-line security/detect-non-literal-fs-filename
 const detailPageSource = readFileSync(
   new URL(
     '../features/persons/components/PersonDetailPage.tsx',
@@ -88,8 +125,21 @@ const detailPageSource = readFileSync(
   'utf8',
 );
 // eslint-disable-next-line security/detect-non-literal-fs-filename
+const dangerZoneSource = readFileSync(
+  new URL(
+    '../features/persons/components/PersonDangerZone.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+// eslint-disable-next-line security/detect-non-literal-fs-filename
 const personsPageSource = readFileSync(
   new URL('../app/vie-interne/repertoire/page.tsx', import.meta.url),
+  'utf8',
+);
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const personsListSource = readFileSync(
+  new URL('../features/persons/components/PersonsList.tsx', import.meta.url),
   'utf8',
 );
 // eslint-disable-next-line security/detect-non-literal-fs-filename
@@ -302,10 +352,47 @@ describe('person short-lived sensitive UX contracts', () => {
       expect(historyPopoverSource).toContain(key);
     }
     expect(historyPopoverSource).toContain('setItems([])');
+    expect(historyPopoverSource).toContain('setIsExpired(true)');
+    expect(historyPopoverSource).toContain('Historique masqué');
+    expect(historyPopoverSource).toContain('Recharger l&apos;historique');
     expect(historyPopoverSource).not.toContain('localStorage');
     expect(historyPopoverSource).not.toContain('sessionStorage');
     expect(historyPopoverSource).toContain('{canViewAudit && (');
     expect(historyPopoverSource).toContain('<Link href={journalHref}>');
+    expect(historyPopoverSource).toContain('getFieldLabel(fieldKey)');
+    expect(historyPopoverSource).toContain('divide-border-divider divide-y');
+    expect(historyPopoverSource).not.toContain('HistoryActionIcon');
+    expect(historyPopoverSource).not.toContain('before:absolute');
+    expect(collectionsSource).not.toContain('fieldKey="email"');
+    expect(collectionsSource).not.toContain('fieldKey="phone"');
+    expect(collectionsSource).not.toContain('<PersonFieldHistoryPopover');
+    expect(collectionFieldsSource).toContain('aria-pressed={activeFieldKey');
+    expect(collectionFieldsSource).toContain('target={histories?.email}');
+    expect(collectionFieldsSource).toContain('target={histories?.phone}');
+    expect(childDialogSource).toContain("'label',");
+    expect(childDialogSource).toContain("'isPrimary',");
+    expect(collectionsSource).toContain('canEdit={canUpdate}');
+    expect(childDialogSource).toContain('layout="stacked"');
+    expect(collectionFieldsSource).toContain(
+      "type FieldsLayout = 'grid' | 'stacked'",
+    );
+    expect(historyPanelSource).toContain(
+      'const DECRYPTED_HISTORY_TTL_MS = 30_000',
+    );
+    expect(historyPanelSource).toContain('lg:border-l lg:pl-5');
+    expect(historyPanelSource).toContain('<ArrowLeft className="size-4" />');
+    expect(historyPanelSource).toContain('<Plus />');
+    expect(historyPanelSource).toContain('variant="success"');
+    expect(historyPanelSource).toContain('variant="info"');
+    expect(historyPanelSource).toContain('variant="destructive"');
+    expect(childDialogSource).toContain(
+      'lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.72fr)]',
+    );
+    expect(childDialogSource).toContain(
+      "'sm:h-[min(42rem,85svh)] sm:max-w-4xl'",
+    );
+    expect(childDialogSource).toContain('Historique des champs');
+    expect(childDialogSource).toContain("'hidden space-y-4 lg:block'");
   });
 
   it('restores focus in the deleted collection and disables deprecated networks', () => {
@@ -316,6 +403,86 @@ describe('person short-lived sensitive UX contracts', () => {
     );
     expect(collectionsSource).toContain('<DuplicateFieldWarning>');
     expect(collectionsSource).toContain('match.recordId === item.id');
+  });
+
+  it('shows durable social network icons without depending on remote assets', () => {
+    for (const networkKey of [
+      'discord',
+      'instagram',
+      'x',
+      'twitter',
+      'tiktok',
+      'twitch',
+      'youtube',
+      'facebook',
+      'linkedin',
+    ]) {
+      expect(socialNetworkIconSource).toContain(`['${networkKey}',`);
+    }
+    expect(socialNetworkIconSource).toContain('if (!definition)');
+    expect(socialNetworkIconSource).toContain('<Globe2');
+    expect(socialNetworkIconSource).toContain('aria-hidden="true"');
+    expect(socialNetworkIconSource).not.toContain('fetch(');
+    expect(socialNetworkIconSource).not.toContain('<img');
+    expect(collectionFieldsSource).toContain('networkKey={value.networkKey}');
+    expect(collectionFieldsSource).toContain('networkKey={network.key}');
+    expect(collectionsSource).toContain('networkKey={item.networkKey}');
+  });
+
+  it('separates each contact collection into an independent responsive card', () => {
+    expect(collectionsSource).toContain(
+      'xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]',
+    );
+    expect(collectionsSource).toContain('<div className="space-y-4">');
+    expect(collectionsSource).toContain('(canViewHistory || canUpdate)');
+    expect(collectionsSource).toContain('person.emails.map');
+    expect(collectionsSource).toContain('person.phones.map');
+    expect(collectionsSource).toContain('person.socialProfiles.map');
+    expect(collectionsSource).not.toContain('SecondaryItemsToggle');
+    expect(collectionsSource).not.toContain('showOther');
+    expect(collectionsSource).not.toContain('Masquer les autres');
+    expect(detailPageSource).toContain('<div className="px-1">');
+    expect(detailPageSource).not.toContain(
+      'bg-surface-inset rounded-lg border px-4 py-3',
+    );
+  });
+
+  it('keeps directory editors usable at every viewport size', () => {
+    expect(childDialogSource).toContain('fullscreenOnMobile');
+    expect(childDialogSource).toContain('sm:max-w-2xl');
+    expect(childDialogSource).toContain('grid-rows-[auto_minmax(0,1fr)_auto]');
+    expect(childDialogSource).toContain('min-h-0 overflow-y-auto');
+    expect(historyPopoverSource).toContain(
+      'max-h-[min(36rem,calc(100svh-2rem))]',
+    );
+    expect(historyPopoverSource).toContain('min-h-0 flex-1 overflow-y-auto');
+    expect(collectionsSource).toContain(
+      "requiresReplacement ? 'sm:max-w-lg' : 'sm:max-w-md'",
+    );
+    expect(dangerZoneSource).toContain(
+      '<AlertDialogContent className="sm:max-w-lg">',
+    );
+    for (const source of [
+      childDialogSource,
+      createFormSource,
+      identitySectionSource,
+    ]) {
+      expect(source).toContain('contentClassName="sm:max-w-md"');
+    }
+  });
+
+  it('uses the directory width and a compact list hierarchy', () => {
+    expect(detailPageSource).not.toContain('width="narrow"');
+    expect(personLoadingSource).not.toContain('width="narrow"');
+    expect(personsListSource).toContain('headerLayout="inline"');
+    expect(personsListSource).toContain('className="[&_th]:h-9"');
+    expect(personsListSource).toContain('className="py-2"');
+    expect(personsListSource).toContain('border-t px-4 py-2');
+    expect(dataTableSectionSource).toContain(
+      "headerLayout?: 'inline' | 'stacked'",
+    );
+    expect(identitySectionSource).toContain('xl:grid-cols-3');
+    expect(identityFieldsSource).toContain('xl:grid-cols-3');
   });
 
   it('guards sidebar and breadcrumb links for both dirty person forms', () => {

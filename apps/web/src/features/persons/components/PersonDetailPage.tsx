@@ -43,7 +43,7 @@ type PersonDetailPageProps = {
 export type PersonDetailSection = 'coordonnees' | 'identite';
 
 const DetailSkeleton: FC = () => (
-  <PageShell className="py-0" width="narrow">
+  <PageShell className="py-0">
     <PageCanvas>
       <Skeleton className="h-36 rounded-xl" />
       <Skeleton className="h-[34rem] rounded-xl" />
@@ -51,22 +51,26 @@ const DetailSkeleton: FC = () => (
   </PageShell>
 );
 
-const PersonLastChangeFooter: FC<{ person: PersonDetail }> = ({ person }) => {
+const PersonLastChangeSummary: FC<{ person: PersonDetail }> = ({ person }) => {
   const actor = person.lastChange?.actor;
 
   return (
-    <CardFooter>
-      <p className="text-muted-foreground text-xs">
-        Dernière modification le{' '}
-        <time dateTime={person.lastChange?.at ?? person.updatedAt}>
-          {formatPersonDateTime(person.lastChange?.at ?? person.updatedAt)}
-        </time>{' '}
-        par {actor?.displayName ?? 'un auteur non disponible'}
-        {actor?.loginName ? ` (${actor.loginName})` : ''}.
-      </p>
-    </CardFooter>
+    <p className="text-muted-foreground text-xs">
+      Dernière modification le{' '}
+      <time dateTime={person.lastChange?.at ?? person.updatedAt}>
+        {formatPersonDateTime(person.lastChange?.at ?? person.updatedAt)}
+      </time>{' '}
+      par {actor?.displayName ?? 'un auteur non disponible'}
+      {actor?.loginName ? ` (${actor.loginName})` : ''}.
+    </p>
   );
 };
+
+const PersonLastChangeFooter: FC<{ person: PersonDetail }> = ({ person }) => (
+  <CardFooter>
+    <PersonLastChangeSummary person={person} />
+  </CardFooter>
+);
 
 const getDuplicateFieldLabel = (field: string): string | null => {
   const match = /^(emails|phones|socialProfiles)\.(\d+)\.(\w+)$/.exec(field);
@@ -295,7 +299,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
     `${FEATURES.persons.href}/${encodeURIComponent(personId)}?section=${section}`;
 
   return (
-    <PageShell className="py-0" width="narrow">
+    <PageShell className="py-0">
       <PageCanvas contentClassName="space-y-5">
         <PageHero
           actions={
@@ -362,18 +366,18 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
           </TabsContent>
 
           <TabsContent className="space-y-5" value="coordonnees">
-            <Card>
-              <PersonCollectionsSection
-                canUpdate={canUpdate}
-                canViewAudit={canViewAudit}
-                canViewHistory={canViewHistory}
-                duplicateMatches={duplicateWarning?.matches ?? []}
-                onChange={setPerson}
-                onReload={load}
-                person={person}
-              />
-              <PersonLastChangeFooter person={person} />
-            </Card>
+            <PersonCollectionsSection
+              canUpdate={canUpdate}
+              canViewAudit={canViewAudit}
+              canViewHistory={canViewHistory}
+              duplicateMatches={duplicateWarning?.matches ?? []}
+              onChange={setPerson}
+              onReload={load}
+              person={person}
+            />
+            <div className="px-1">
+              <PersonLastChangeSummary person={person} />
+            </div>
           </TabsContent>
         </Tabs>
       </PageCanvas>

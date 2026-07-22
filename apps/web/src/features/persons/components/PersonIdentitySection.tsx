@@ -291,7 +291,7 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
             </div>
           </div>
         ) : (
-          <dl className="grid gap-x-6 sm:grid-cols-2">
+          <dl className="grid gap-x-6 sm:grid-cols-2 xl:grid-cols-3">
             <DisplayField
               canViewAudit={canViewAudit}
               canViewHistory={canViewHistory}
@@ -350,6 +350,7 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
         )}
       </section>
       <UnsavedNavigationDialog
+        contentClassName="sm:max-w-md"
         description="Les modifications de l'identité et du statut seront perdues."
         onCancel={cancelPendingNavigation}
         onConfirm={confirmPendingNavigation}
@@ -358,6 +359,7 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
       <UnsavedNavigationDialog
         cancelLabel="Continuer la modification"
         confirmLabel="Abandonner les modifications"
+        contentClassName="sm:max-w-md"
         description="La saisie actuelle de l'identité et du statut sera réinitialisée."
         onCancel={() => setPendingLocalDiscard(false)}
         onConfirm={discardLocalChanges}

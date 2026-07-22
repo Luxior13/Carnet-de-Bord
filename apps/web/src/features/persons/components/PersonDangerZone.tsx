@@ -99,7 +99,7 @@ export const PersonDangerZone: FC<PersonDangerZoneProps> = ({
               Supprimer la fiche
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent>
+          <AlertDialogContent className="sm:max-w-lg">
             <AlertDialogHeader>
               <AlertDialogTitle>
                 Supprimer définitivement cette fiche ?
