@@ -62,15 +62,12 @@ type PageBackNavigationProps = PageBackTarget & {
 };
 
 /**
- * Responsive back navigation for a relatively positioned page canvas.
- * It occupies the left rail on 2xl screens and falls back above the hero.
+ * Responsive back navigation anchored to the application's left content rail.
+ * Its desktop position does not depend on the current page content width.
  */
 export const PageBackNavigation: FC<PageBackNavigationProps> = (props) => (
   <>
-    <nav
-      aria-label={props.label}
-      className="hidden 2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:block 2xl:w-44"
-    >
+    <nav aria-label={props.label} className="private-left-rail">
       <div className="sticky top-4">
         <PageBackButton {...props} fullWidth />
       </div>

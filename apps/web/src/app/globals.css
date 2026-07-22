@@ -165,8 +165,11 @@
   --sidebar-ring: var(--ring);
   --public-column-width: 66rem;
   --private-content-width: 76rem;
+  --private-content-half-width: 38rem;
   --private-content-width-wide: 92rem;
   --private-content-padding: clamp(1rem, 1.8vw, 1.75rem);
+  --private-left-rail-width: 11rem;
+  --private-left-rail-gap: 2.5rem;
   --public-column-border: var(--border-subtle);
   --public-column-shadow: 0 30px 72px -40px rgba(0, 0, 0, 0.98);
   --column-surface-start: var(--surface-inset);
@@ -251,6 +254,28 @@
 
   .private-background-column {
     max-width: var(--private-content-width);
+  }
+
+  /*
+   * Keep secondary page navigation anchored to the application column,
+   * independently from the width chosen by the page content itself.
+   */
+  .private-left-rail {
+    display: none;
+  }
+
+  @media (width >= 96rem) {
+    .private-left-rail {
+      position: absolute;
+      inset-block: 0;
+      left: calc(
+        50% - var(--private-content-half-width) +
+          var(--private-content-padding) - var(--private-left-rail-width) -
+          var(--private-left-rail-gap)
+      );
+      display: block;
+      width: var(--private-left-rail-width);
+    }
   }
 
   .sidebar-pattern::before {

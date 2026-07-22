@@ -20,15 +20,12 @@ import { ApiClientError } from '$utils/api.utils';
 
 import { getPerson } from '../person.api';
 import { getPersonCapabilities } from '../person.permissions';
-import {
-  formatPersonDateTime,
-  getPersonDisplayName,
-  getPersonInitials,
-} from '../person.ui';
+import { formatPersonDateTime, getPersonDisplayName } from '../person.ui';
 import type {
   PersonDetail,
   PersonDuplicateWarning,
 } from '../types/person.types';
+import { PersonAvatar } from './PersonAvatar';
 import { PersonCollectionsSection } from './PersonCollectionsSection';
 import { PersonDangerZone } from './PersonDangerZone';
 import { PersonIdentitySection } from './PersonIdentitySection';
@@ -310,14 +307,9 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
         <PageHero
           compact
           icon={
-            getPersonInitials(person) ? (
-              <span className="text-base font-semibold">
-                {getPersonInitials(person)}
-              </span>
-            ) : (
-              <UserRound className="size-5" />
-            )
+            <PersonAvatar className="size-full rounded-full" person={person} />
           }
+          iconClassName="overflow-hidden p-0"
           meta={<PersonStatusBadge status={person.structureStatus} />}
           title={getPersonDisplayName(person)}
           tone="internal"

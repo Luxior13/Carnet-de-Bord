@@ -106,7 +106,12 @@ describe('direct Person page permission boundaries', () => {
     renderToStaticMarkup(createElement(PersonsPage));
 
     expect(mocks.personsList).toHaveBeenCalledWith(
-      { canCreate: true },
+      {
+        canCreate: true,
+        createHref:
+          '/vie-interne/repertoire/nouveau?returnTo=%2Fvie-interne%2Frepertoire',
+        returnHref: '/vie-interne/repertoire',
+      },
       undefined,
     );
   });
@@ -133,6 +138,10 @@ describe('direct Person page permission boundaries', () => {
     renderToStaticMarkup(createElement(NewPersonPage));
 
     expect(mocks.createForm).toHaveBeenCalledOnce();
+    expect(mocks.createForm).toHaveBeenCalledWith(
+      { returnHref: '/vie-interne/repertoire' },
+      undefined,
+    );
   });
 
   it('uses stable URL-addressable detail sections and safely defaults to identity', async () => {

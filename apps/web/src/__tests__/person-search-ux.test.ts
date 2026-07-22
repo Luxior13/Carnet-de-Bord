@@ -85,6 +85,21 @@ const dataTableSectionSource = readFileSync(
   'utf8',
 );
 // eslint-disable-next-line security/detect-non-literal-fs-filename
+const diceBearAvatarSource = readFileSync(
+  new URL('../components/ui/dicebear-avatar.tsx', import.meta.url),
+  'utf8',
+);
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const userAvatarSource = readFileSync(
+  new URL('../components/users/UserAvatar.tsx', import.meta.url),
+  'utf8',
+);
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const personAvatarSource = readFileSync(
+  new URL('../features/persons/components/PersonAvatar.tsx', import.meta.url),
+  'utf8',
+);
+// eslint-disable-next-line security/detect-non-literal-fs-filename
 const createFormSource = readFileSync(
   new URL(
     '../features/persons/components/PersonCreateForm.tsx',
@@ -372,6 +387,22 @@ describe('person indexed search', () => {
 });
 
 describe('person short-lived sensitive UX contracts', () => {
+  it('uses stable local DiceBear avatars with an accessible fallback', () => {
+    expect(diceBearAvatarSource).toContain('useMemo');
+    expect(diceBearAvatarSource).toContain('fallback ||');
+    expect(diceBearAvatarSource).not.toContain('fetch(');
+    expect(diceBearAvatarSource).not.toContain('@dicebear/lorelei-neutral');
+    expect(personAvatarSource).toContain("from '@dicebear/lorelei-neutral'");
+    expect(userAvatarSource).toContain("from '@dicebear/notionists-neutral'");
+    expect(userAvatarSource).not.toContain('@dicebear/lorelei-neutral');
+    expect(personAvatarSource).toContain('seed={`person:');
+    expect(personAvatarSource).toContain('person.id');
+    expect(personAvatarSource).toContain('radius: 50');
+    expect(personAvatarSource).toContain('getPersonInitials(person)');
+    expect(personsListSource).toContain('<PersonAvatar');
+    expect(detailPageSource).toContain('<PersonAvatar');
+  });
+
   it('shows only field provenance in an accessible tooltip', () => {
     expect(provenanceHintSource).toContain('void load()');
     expect(provenanceHintSource).toContain('authorizationRevision');
@@ -505,13 +536,28 @@ describe('person short-lived sensitive UX contracts', () => {
     }
   });
 
+  it('keeps initial creation minimal and completes the fiche after redirect', () => {
+    expect(createFormSource).toContain('showBirthDate={false}');
+    expect(createFormSource).toContain('emails: []');
+    expect(createFormSource).toContain('phones: []');
+    expect(createFormSource).toContain('socialProfiles: []');
+    expect(createFormSource).toContain('Créer et ouvrir la fiche');
+    expect(createFormSource).toContain("section: 'identite'");
+    expect(createFormSource).toContain('returnTo: returnHref');
+    expect(createFormSource).not.toContain('PersonCollectionFields');
+    expect(createFormSource).not.toContain('Date de naissance');
+  });
+
   it('uses the directory width and a compact list hierarchy', () => {
     expect(detailPageSource).not.toContain('width="narrow"');
     expect(personLoadingSource).not.toContain('width="narrow"');
-    expect(personsListSource).toContain('headerLayout="inline"');
+    expect(personsListSource).toContain('headerLayout="stacked"');
     expect(personsListSource).toContain('className="[&_th]:h-9"');
     expect(personsListSource).toContain('className="py-2"');
     expect(personsListSource).toContain('border-t px-4 py-2');
+    expect(personsListSource).toContain('after:absolute after:inset-0');
+    expect(personsListSource).toContain('group/row');
+    expect(personsListSource).toContain('focus-within:ring-2');
     expect(dataTableSectionSource).toContain(
       "headerLayout?: 'inline' | 'stacked'",
     );
@@ -548,6 +594,7 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(detailPageSource).toContain('label="Retour au répertoire"');
     expect(detailPageSource).not.toContain('<PageHero\n          actions=');
     expect(newPersonPageSource).toContain('<PageBackNavigation');
+    expect(newPersonPageSource).toContain('max-w-3xl py-0');
     expect(newPersonPageSource).toContain('contentClassName="relative');
     expect(personLoadingSource).toContain('h-28 rounded-xl');
   });

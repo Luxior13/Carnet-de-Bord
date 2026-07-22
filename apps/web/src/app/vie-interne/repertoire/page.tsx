@@ -2,7 +2,8 @@
 
 import { Plus, Users } from 'lucide-react';
 import Link from 'next/link';
-import React, { type FC } from 'react';
+import { useSearchParams } from 'next/navigation';
+import React, { type FC, Suspense } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { PageHero } from '$components/layout/PageHero';
@@ -17,6 +18,7 @@ import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 
 const PersonsPageContent: FC = () => {
+  const searchParams = useSearchParams();
   const {
     featureAvailabilityLoaded,
     operationalFeatureIds,
@@ -24,6 +26,9 @@ const PersonsPageContent: FC = () => {
   } = useFeatureAvailability();
   const { userData } = useUser();
   const { canCreate, canView } = getPersonCapabilities(userData);
+  const searchParamsString = searchParams?.toString() ?? '';
+  const returnHref = `/vie-interne/repertoire${searchParamsString ? `?${searchParamsString}` : ''}`;
+  const createHref = `/vie-interne/repertoire/nouveau?${new URLSearchParams({ returnTo: returnHref })}`;
 
   if (!canView) {
     return (
@@ -56,7 +61,7 @@ const PersonsPageContent: FC = () => {
           actions={
             canCreate ? (
               <Button asChild size="sm">
-                <Link href="/vie-interne/repertoire/nouveau">
+                <Link href={createHref}>
                   <Plus className="size-4" />
                   Nouvelle fiche
                 </Link>
@@ -68,7 +73,11 @@ const PersonsPageContent: FC = () => {
           title="Répertoire"
           tone="internal"
         />
-        <PersonsList canCreate={canCreate} />
+        <PersonsList
+          canCreate={canCreate}
+          createHref={createHref}
+          returnHref={returnHref}
+        />
       </PageCanvas>
     </PageShell>
   );
@@ -90,7 +99,9 @@ const PersonsPage: FC = () => (
       { label: FEATURES.persons.label },
     ]}
   >
-    <PersonsPageContent />
+    <Suspense fallback={<ListPageSkeleton />}>
+      <PersonsPageContent />
+    </Suspense>
   </AuthenticatedLayout>
 );
 

@@ -1,7 +1,8 @@
 'use client';
 
 import { UserPlus } from 'lucide-react';
-import React, { type FC } from 'react';
+import { useSearchParams } from 'next/navigation';
+import React, { type FC, Suspense } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { PageBackNavigation } from '$components/layout/PageBackNavigation';
@@ -15,7 +16,38 @@ import { getPersonCapabilities } from '$features/persons/person.permissions';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 
+const DIRECTORY_PATH = '/vie-interne/repertoire';
+
+const getSafeReturnHref = (candidate: string | null): string => {
+  if (!candidate?.startsWith('/')) return DIRECTORY_PATH;
+  try {
+    const parsed = new URL(candidate, 'https://team-control.local');
+    if (
+      parsed.origin !== 'https://team-control.local' ||
+      parsed.pathname !== DIRECTORY_PATH
+    ) {
+      return DIRECTORY_PATH;
+    }
+
+    return `${parsed.pathname}${parsed.search}`;
+  } catch {
+    return DIRECTORY_PATH;
+  }
+};
+
+const NewPersonPageSkeleton: FC = () => (
+  <PageShell className="max-w-3xl py-0" width="narrow">
+    <PageCanvas>
+      <div aria-label="Chargement" className="space-y-3" role="status">
+        <Skeleton className="h-24 rounded-xl" />
+        <Skeleton className="h-80 rounded-xl" />
+      </div>
+    </PageCanvas>
+  </PageShell>
+);
+
 const NewPersonContent: FC = () => {
+  const searchParams = useSearchParams();
   const {
     featureAvailabilityLoaded,
     operationalFeatureIds,
@@ -23,11 +55,12 @@ const NewPersonContent: FC = () => {
   } = useFeatureAvailability();
   const { userData } = useUser();
   const { canCreate } = getPersonCapabilities(userData);
+  const returnHref = getSafeReturnHref(searchParams?.get('returnTo') ?? null);
 
   if (!canCreate) {
     return (
       <AccessDeniedState
-        actionHref={FEATURES.persons.href}
+        actionHref={returnHref}
         actionLabel="Retour au répertoire"
         description="Vous n'avez pas la permission de créer une fiche."
       />
@@ -49,32 +82,21 @@ const NewPersonContent: FC = () => {
   }
 
   if (!featureAvailabilityLoaded) {
-    return (
-      <PageShell className="py-0" width="narrow">
-        <PageCanvas>
-          <div aria-label="Chargement" className="space-y-3" role="status">
-            <Skeleton className="h-28 rounded-xl" />
-            <Skeleton className="h-96 rounded-xl" />
-          </div>
-        </PageCanvas>
-      </PageShell>
-    );
+    return <NewPersonPageSkeleton />;
   }
 
   return (
-    <PageShell className="py-0" width="narrow">
+    <PageShell className="max-w-3xl py-0" width="narrow">
       <PageCanvas contentClassName="relative space-y-5">
-        <PageBackNavigation
-          href={FEATURES.persons.href}
-          label="Retour au répertoire"
-        />
+        <PageBackNavigation href={returnHref} label="Retour au répertoire" />
         <PageHero
-          description="Créez le socle d'identité ; toutes les informations complémentaires restent facultatives."
+          compact
+          description="Créez l'identité essentielle, puis complétez la fiche si nécessaire."
           icon={<UserPlus className="size-5" />}
           title="Nouvelle fiche"
           tone="internal"
         />
-        <PersonCreateForm />
+        <PersonCreateForm returnHref={returnHref} />
       </PageCanvas>
     </PageShell>
   );
@@ -88,7 +110,9 @@ const NewPersonPage: FC = () => (
       { label: 'Nouvelle fiche' },
     ]}
   >
-    <NewPersonContent />
+    <Suspense fallback={<NewPersonPageSkeleton />}>
+      <NewPersonContent />
+    </Suspense>
   </AuthenticatedLayout>
 );
 

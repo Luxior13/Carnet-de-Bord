@@ -154,7 +154,11 @@ describe('design system contracts', () => {
   });
 
   it('keeps parent-page navigation in the desktop rail with a responsive fallback', () => {
-    expect(pageBackNavigationSource).toContain('2xl:right-[calc(100%+2.5rem)]');
+    expect(pageBackNavigationSource).toContain('className="private-left-rail"');
+    expect(globalStylesSource).toContain('.private-left-rail');
+    expect(globalStylesSource).toContain(
+      '50% - var(--private-content-half-width)',
+    );
     expect(pageBackNavigationSource).toContain('2xl:hidden');
     expect(pageBackNavigationSource).toContain(
       'w-full min-w-0 justify-start overflow-hidden',

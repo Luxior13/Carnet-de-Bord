@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '$ui/select';
+import { cn } from '$utils/css.utils';
 
 import {
   PERSON_STRUCTURE_STATUS_LABELS,
@@ -39,6 +40,7 @@ type PersonIdentityFieldsProps = {
   provenances?: Readonly<
     Partial<Record<keyof PersonIdentityFormValue, PersonFieldProvenanceTarget>>
   >;
+  showBirthDate?: boolean;
   value: PersonIdentityFormValue;
 };
 
@@ -66,6 +68,7 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
   idPrefix,
   onChange,
   provenances,
+  showBirthDate = true,
   value,
 }) => {
   const field = (
@@ -103,7 +106,7 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
           id={nickname.id}
           maxLength={80}
           onChange={(event) => onChange('nickname', event.target.value)}
-          placeholder="Pseudo utilisé dans la structure"
+          placeholder="Pseudo principal ou habituel"
           value={value.nickname}
         />
         <FieldError id={`${nickname.id}-error`} message={nickname.error} />
@@ -150,32 +153,39 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
         />
         <FieldError id={`${lastName.id}-error`} message={lastName.error} />
       </div>
-      <div className="space-y-1.5">
-        <FieldLabel
-          htmlFor={birthDate.id}
-          label="Date de naissance"
-          provenance={provenances?.birthDate}
-        />
-        <Input
-          aria-describedby={birthDate.describedBy ?? `${birthDate.id}-hint`}
-          aria-invalid={Boolean(birthDate.error)}
-          disabled={disabled}
-          id={birthDate.id}
-          onChange={(event) => onChange('birthDate', event.target.value)}
-          type="date"
-          value={value.birthDate}
-        />
-        <FieldError id={`${birthDate.id}-error`} message={birthDate.error} />
-        {!birthDate.error && (
-          <p
-            className="text-muted-foreground text-xs"
-            id={`${birthDate.id}-hint`}
-          >
-            Facultative, utile pour l&apos;âge légal et les anniversaires.
-          </p>
+      {showBirthDate && (
+        <div className="space-y-1.5">
+          <FieldLabel
+            htmlFor={birthDate.id}
+            label="Date de naissance"
+            provenance={provenances?.birthDate}
+          />
+          <Input
+            aria-describedby={birthDate.describedBy ?? `${birthDate.id}-hint`}
+            aria-invalid={Boolean(birthDate.error)}
+            disabled={disabled}
+            id={birthDate.id}
+            onChange={(event) => onChange('birthDate', event.target.value)}
+            type="date"
+            value={value.birthDate}
+          />
+          <FieldError id={`${birthDate.id}-error`} message={birthDate.error} />
+          {!birthDate.error && (
+            <p
+              className="text-muted-foreground text-xs"
+              id={`${birthDate.id}-hint`}
+            >
+              Facultative, utile pour l&apos;âge légal et les anniversaires.
+            </p>
+          )}
+        </div>
+      )}
+      <div
+        className={cn(
+          'space-y-1.5',
+          !showBirthDate && 'sm:col-span-2 sm:max-w-sm',
         )}
-      </div>
-      <div className="space-y-1.5">
+      >
         <FieldLabel
           htmlFor={structureStatus.id}
           label="Statut dans la structure"

@@ -9,7 +9,6 @@ import {
   Plus,
   Search,
   Share2,
-  UserRound,
   Users,
   X,
 } from 'lucide-react';
@@ -19,7 +18,6 @@ import React, {
   type FC,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -56,21 +54,20 @@ import {
   PERSON_STRUCTURE_STATUS_LABELS,
   PERSON_STRUCTURE_STATUSES,
 } from '../person.constants';
-import {
-  formatPersonDateTime,
-  getPersonDisplayName,
-  getPersonInitials,
-} from '../person.ui';
+import { formatPersonDateTime, getPersonDisplayName } from '../person.ui';
 import type {
   PersonListSort,
   PersonsListResponse,
   PersonStructureStatus,
   PersonSummary,
 } from '../types/person.types';
+import { PersonAvatar } from './PersonAvatar';
 import { PersonStatusBadge } from './PersonStatusBadge';
 
 type PersonsListProps = {
   canCreate: boolean;
+  createHref: string;
+  returnHref: string;
 };
 
 type StatusFilter = 'ALL' | PersonStructureStatus;
@@ -136,12 +133,14 @@ const PersonIdentity: FC<{
   person: PersonSummary;
 }> = ({ href, person }) => (
   <Link
-    className="focus-visible:ring-ring/40 group flex min-w-0 items-center gap-2.5 rounded-md outline-none focus-visible:ring-2"
+    aria-label={`Ouvrir la fiche de ${getPersonDisplayName(person)}`}
+    className="group flex min-w-0 items-center gap-2.5 rounded-md outline-none after:absolute after:inset-0 after:z-10 after:content-['']"
     href={href}
   >
-    <span className="border-border-default bg-surface-inset text-muted-foreground group-hover:border-primary/35 group-hover:text-foreground flex size-8 shrink-0 items-center justify-center rounded-lg border text-xs font-semibold transition-colors">
-      {getPersonInitials(person) || <UserRound className="size-4" />}
-    </span>
+    <PersonAvatar
+      className="border-border-default group-hover:border-primary/35 size-8 rounded-full border transition-colors"
+      person={person}
+    />
     <div className="min-w-0">
       <p className="group-hover:text-primary-emphasis truncate text-sm font-medium transition-colors">
         {getPersonDisplayName(person)}
@@ -221,9 +220,10 @@ const PersonMobileRow: FC<{
   >
     <div className="min-w-0 flex-1 space-y-2">
       <div className="flex min-w-0 items-center gap-2.5">
-        <span className="border-border-default bg-surface-inset text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg border text-xs font-semibold">
-          {getPersonInitials(person) || <UserRound className="size-4" />}
-        </span>
+        <PersonAvatar
+          className="border-border-default size-8 rounded-full border"
+          person={person}
+        />
         <p className="truncate text-sm font-medium">
           {getPersonDisplayName(person)}
         </p>
@@ -240,7 +240,11 @@ const PersonMobileRow: FC<{
   </Link>
 );
 
-export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
+export const PersonsList: FC<PersonsListProps> = ({
+  canCreate,
+  createHref,
+  returnHref,
+}) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
@@ -403,10 +407,6 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
     return (): void => abortControllerRef.current?.abort();
   }, [load]);
 
-  const returnHref = useMemo(
-    () => `${LIST_PATH}${searchParamsString ? `?${searchParamsString}` : ''}`,
-    [searchParamsString],
-  );
   const personHref = useCallback(
     (personId: string) => buildPersonHref(personId, returnHref),
     [returnHref],
@@ -430,7 +430,7 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
     </Button>
   ) : canCreate ? (
     <Button asChild className="mt-4" size="sm">
-      <Link href="/vie-interne/repertoire/nouveau">
+      <Link href={createHref}>
         <Plus className="size-4" />
         Ajouter une fiche
       </Link>
@@ -441,13 +441,12 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
     <DataTableSection
       description="Recherchez une identité ou une coordonnée. Les données privées restent dans chaque fiche."
       headerClassName="p-3 sm:p-4"
-      headerLayout="inline"
+      headerLayout="stacked"
       title="Toutes les fiches"
-      toolbarClassName="mt-3"
       toolbar={
-        <div className="grid w-full gap-2 md:grid-cols-[minmax(16rem,1fr)_13rem_13rem]">
+        <div className="grid w-full min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(16rem,1fr)_13rem_13rem]">
           <form
-            className="relative min-w-0"
+            className="relative min-w-0 sm:col-span-2 xl:col-span-1"
             onSubmit={(event) => {
               event.preventDefault();
               applyFilters(draftQuery, status, sort);
@@ -482,7 +481,10 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
             }
             value={status}
           >
-            <SelectTrigger aria-label="Filtrer par statut dans la structure">
+            <SelectTrigger
+              aria-label="Filtrer par statut dans la structure"
+              className="w-full min-w-0"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -500,7 +502,10 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
             }
             value={sort}
           >
-            <SelectTrigger aria-label="Trier le répertoire">
+            <SelectTrigger
+              aria-label="Trier le répertoire"
+              className="w-full min-w-0"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -575,7 +580,10 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
                   const href = personHref(person.id);
 
                   return (
-                    <TableRow key={person.id}>
+                    <TableRow
+                      className="group/row focus-within:ring-ring/40 relative cursor-pointer focus-within:ring-2 focus-within:ring-inset"
+                      key={person.id}
+                    >
                       <TableCell className="py-2">
                         <PersonIdentity href={href} person={person} />
                       </TableCell>
@@ -588,18 +596,11 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
                       <TableCell className="text-muted-foreground py-2 text-sm">
                         {formatPersonDateTime(person.updatedAt)}
                       </TableCell>
-                      <TableCell className="py-1.5">
-                        <Button
-                          asChild
-                          aria-label={`Ouvrir ${getPersonDisplayName(person)}`}
-                          className="lg:size-8"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <Link href={href}>
-                            <ArrowRight className="size-4" />
-                          </Link>
-                        </Button>
+                      <TableCell className="pointer-events-none py-1.5">
+                        <ArrowRight
+                          aria-hidden="true"
+                          className="text-muted-foreground size-4 transition-transform group-hover/row:translate-x-0.5"
+                        />
                       </TableCell>
                     </TableRow>
                   );
