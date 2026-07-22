@@ -155,6 +155,7 @@ export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = ({
                 Ton mot de passe superadmin
               </Label>
               <Input
+                allowPasswordManager
                 autoComplete="current-password"
                 autoFocus
                 disabled={isSubmitting}

@@ -156,6 +156,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                   Mot de passe actuel
                 </Label>
                 <Input
+                  allowPasswordManager
                   autoComplete="current-password"
                   id="currentPassword"
                   name="current-password"
@@ -175,6 +176,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 Nouveau mot de passe
               </Label>
               <Input
+                allowPasswordManager
                 autoComplete="new-password"
                 id="newPassword"
                 name="new-password"
@@ -249,6 +251,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 Confirmer le mot de passe
               </Label>
               <Input
+                allowPasswordManager
                 autoComplete="new-password"
                 id="confirmPassword"
                 name="confirm-password"

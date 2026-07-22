@@ -54,6 +54,7 @@ export const MfaCodeInput: FC<MfaCodeInputProps> = ({
         {isRecoveryCode ? 'Code de secours' : 'Code à 6 chiffres'}
       </Label>
       <Input
+        allowPasswordManager
         aria-describedby={error ? `${descriptionId} ${errorId}` : descriptionId}
         aria-invalid={!!error}
         autoCapitalize="none"

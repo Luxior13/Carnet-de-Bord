@@ -339,6 +339,7 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
               Mot de passe actuel
             </Label>
             <Input
+              allowPasswordManager
               autoComplete="current-password"
               autoFocus
               disabled={isSubmitting}

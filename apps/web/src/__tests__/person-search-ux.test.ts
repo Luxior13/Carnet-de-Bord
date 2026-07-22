@@ -483,10 +483,20 @@ describe('person short-lived sensitive UX contracts', () => {
       'xl:grid-cols-[minmax(0,1fr)_18rem]',
     );
     expect(identitySectionSource).toContain('Informations personnelles');
+    expect(identitySectionSource).toContain(
+      '<CardHeader className="p-3.5 sm:p-4">',
+    );
+    expect(identitySectionSource).toContain(
+      '<CardContent className="p-4 sm:p-5">',
+    );
+    expect(identitySectionSource).toContain('flex size-8 shrink-0');
     expect(identitySectionSource).toContain("Modifier l'identité");
     expect(identitySectionSource).toContain("'sm:max-w-4xl' : 'sm:max-w-2xl'");
     expect(identityFieldsSource).toContain('sm:grid-cols-2');
     expect(identityFieldsSource).not.toContain('xl:grid-cols-3');
+    expect(identityFieldsSource).not.toContain('autoComplete="given-name"');
+    expect(identityFieldsSource).not.toContain('autoComplete="family-name"');
+    expect(identityFieldsSource).not.toContain('autoComplete="nickname"');
     expect(detailPageSource).toContain('<PageHero');
     expect(detailPageSource).toContain('compact');
     expect(detailPageSource).not.toContain('Fiche du répertoire');
@@ -497,10 +507,11 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(detailPageSource).toContain(
       '<Tabs className="gap-3" value={activeSection}>',
     );
-    expect(detailPageSource).toContain('2xl:right-[calc(100%+2.5rem)]');
-    expect(detailPageSource).toContain('<div className="2xl:hidden">');
-    expect(detailPageSource).toContain('className="w-full justify-start"');
+    expect(detailPageSource).toContain('<PageBackNavigation');
+    expect(detailPageSource).toContain('label="Retour au répertoire"');
     expect(detailPageSource).not.toContain('<PageHero\n          actions=');
+    expect(newPersonPageSource).toContain('<PageBackNavigation');
+    expect(newPersonPageSource).toContain('contentClassName="relative');
     expect(personLoadingSource).toContain('h-28 rounded-xl');
   });
 

@@ -304,6 +304,7 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
                   Mot de passe actuel
                 </Label>
                 <Input
+                  allowPasswordManager
                   autoComplete="current-password"
                   autoFocus={isConfirmingRemoval}
                   disabled={isSaving}

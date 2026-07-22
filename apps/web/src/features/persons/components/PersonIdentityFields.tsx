@@ -129,7 +129,6 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
         <Input
           aria-describedby={nickname.describedBy ?? `${nickname.id}-hint`}
           aria-invalid={Boolean(nickname.error)}
-          autoComplete="nickname"
           disabled={disabled}
           id={nickname.id}
           maxLength={80}
@@ -158,7 +157,6 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
         <Input
           aria-describedby={firstName.describedBy}
           aria-invalid={Boolean(firstName.error)}
-          autoComplete="given-name"
           disabled={disabled}
           id={firstName.id}
           maxLength={100}
@@ -178,7 +176,6 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
         <Input
           aria-describedby={lastName.describedBy}
           aria-invalid={Boolean(lastName.error)}
-          autoComplete="family-name"
           disabled={disabled}
           id={lastName.id}
           maxLength={100}

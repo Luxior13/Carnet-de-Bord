@@ -1,7 +1,7 @@
 'use client';
 
 import { UserRole } from '@repo/shared';
-import { AlertTriangle, ArrowLeft, Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, {
@@ -15,6 +15,7 @@ import React, {
 import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
+import { PageBackButton } from '$components/layout/PageBackNavigation';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { AdminMfaResetDialog } from '$components/users/user-detail/AdminMfaResetDialog';
 import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
@@ -2419,41 +2420,48 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     >
       <PageShell className="py-0">
         <PageCanvas contentClassName="relative space-y-5">
-          <UserDetailSectionRail
-            activeSection={activeRailSection}
-            className="2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:w-44"
-            dirtySections={railDirtySections}
-            getSectionHref={(sectionId) =>
-              buildUserDetailSectionHref(
-                pathname,
-                currentQueryString,
-                resolveRailSection(sectionId),
-              )
-            }
-            onSectionChange={(sectionId) => {
-              if (sectionId === 'access' && activeRailSection === 'access') {
-                return;
-              }
+          <div className="hidden 2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:block 2xl:w-44">
+            <div className="sticky top-4 space-y-2">
+              <PageBackButton
+                fullWidth
+                label="Retour aux utilisateurs"
+                onClick={handleNavigateBackToUsers}
+              />
+              <UserDetailSectionRail
+                activeSection={activeRailSection}
+                className="!block"
+                dirtySections={railDirtySections}
+                getSectionHref={(sectionId) =>
+                  buildUserDetailSectionHref(
+                    pathname,
+                    currentQueryString,
+                    resolveRailSection(sectionId),
+                  )
+                }
+                onSectionChange={(sectionId) => {
+                  if (
+                    sectionId === 'access' &&
+                    activeRailSection === 'access'
+                  ) {
+                    return;
+                  }
 
-              handleSectionChange(resolveRailSection(sectionId));
-            }}
-            sections={visibleUserDetailSections}
-          />
+                  handleSectionChange(resolveRailSection(sectionId));
+                }}
+                sections={visibleUserDetailSections}
+              />
+            </div>
+          </div>
           <div className="min-w-0 space-y-3">
+            <div className="2xl:hidden">
+              <PageBackButton
+                label="Retour aux utilisateurs"
+                onClick={handleNavigateBackToUsers}
+              />
+            </div>
             <UsersAdminHero
               title={getUserDisplayName(user)}
               description={`Identifiant : ${getUserLoginDisplay(user)}`}
-              actions={
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleNavigateBackToUsers}
-                >
-                  <ArrowLeft className="size-4" />
-                  Retour
-                </Button>
-              }
               icon={<UserAvatar user={user} className="size-full rounded-lg" />}
               iconClassName="overflow-hidden p-0"
               meta={

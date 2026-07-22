@@ -4,6 +4,7 @@ import { UserPlus } from 'lucide-react';
 import React, { type FC } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
+import { PageBackNavigation } from '$components/layout/PageBackNavigation';
 import { PageHero } from '$components/layout/PageHero';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { FEATURES } from '$constants/feature-registry.constants';
@@ -62,7 +63,11 @@ const NewPersonContent: FC = () => {
 
   return (
     <PageShell className="py-0" width="narrow">
-      <PageCanvas contentClassName="space-y-5">
+      <PageCanvas contentClassName="relative space-y-5">
+        <PageBackNavigation
+          href={FEATURES.persons.href}
+          label="Retour au répertoire"
+        />
         <PageHero
           description="Créez le socle d'identité ; toutes les informations complémentaires restent facultatives."
           icon={<UserPlus className="size-5" />}

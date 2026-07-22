@@ -211,6 +211,7 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
                   Votre mot de passe
                 </Label>
                 <Input
+                  allowPasswordManager
                   autoComplete="current-password"
                   autoFocus
                   disabled={isSubmitting}

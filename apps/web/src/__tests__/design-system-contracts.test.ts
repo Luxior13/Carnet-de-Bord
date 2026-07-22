@@ -20,8 +20,12 @@ const authenticatedLayoutSource = readSourceFile(
 );
 const rootLayoutSource = readSourceFile('../app/layout.tsx');
 const globalStylesSource = readSourceFile('../app/globals.css');
+const inputSource = readSourceFile('../components/ui/input.tsx');
 const navigationThemeSource = readSourceFile(
   '../shared/constants/navigation-theme.constants.ts',
+);
+const pageBackNavigationSource = readSourceFile(
+  '../components/layout/PageBackNavigation.tsx',
 );
 const tabsSource = readSourceFile('../components/ui/tabs.tsx');
 const userDetailSectionRailSource = readSourceFile(
@@ -41,6 +45,11 @@ const themeIndependentSourcePaths = globSync('**/*.{ts,tsx}', {
   .filter(
     (path) => !path.startsWith('__tests__/') && !sidebarTokenOwners.has(path),
   );
+const passwordManagerOptInPaths = themeIndependentSourcePaths
+  .filter((path) =>
+    readSourceFile(`../${path}`).includes('allowPasswordManager'),
+  )
+  .sort();
 
 const getRawGlobalColorToken = (token: string): string | undefined => {
   const declaration = globalStylesSource
@@ -124,6 +133,34 @@ const compositeHexColors = (
 };
 
 describe('design system contracts', () => {
+  it('disables password managers on business inputs by default', () => {
+    expect(inputSource).toContain('allowPasswordManager = false');
+    expect(inputSource).toContain('passwordManagerIgnoreAttributes');
+    expect(inputSource).toContain('{...autofillProtection}');
+    expect(inputSource.indexOf('{...props}')).toBeLessThan(
+      inputSource.indexOf('{...autofillProtection}'),
+    );
+    expect(passwordManagerOptInPaths).toEqual([
+      'app/login/page.tsx',
+      'components/ChangePasswordDialog.tsx',
+      'components/ui/input.tsx',
+      'components/users/user-detail/AdminMfaResetDialog.tsx',
+      'components/users/user-detail/AdminStepUpDialog.tsx',
+      'features/account/components/ContactEmailDialog.tsx',
+      'features/auth/components/MfaActionDialog.tsx',
+      'features/auth/components/MfaCodeInput.tsx',
+      'features/auth/components/MfaSetupFlow.tsx',
+    ]);
+  });
+
+  it('keeps parent-page navigation in the desktop rail with a responsive fallback', () => {
+    expect(pageBackNavigationSource).toContain('2xl:right-[calc(100%+2.5rem)]');
+    expect(pageBackNavigationSource).toContain('2xl:hidden');
+    expect(pageBackNavigationSource).toContain("'w-full justify-start'");
+    expect(pageBackNavigationSource).toContain('<ArrowLeft');
+    expect(pageBackNavigationSource).toContain('variant="outline"');
+  });
+
   it('keeps feature availability above page-level authenticated shells', () => {
     expect(rootLayoutSource).toContain('<FeatureAvailabilityProvider>');
     expect(authenticatedLayoutSource).not.toContain(

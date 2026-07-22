@@ -1,17 +1,17 @@
 'use client';
 
-import { ArrowLeft, AtSign, Clock3, RefreshCw, UserRound } from 'lucide-react';
+import { AtSign, Clock3, RefreshCw, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
+import { PageBackNavigation } from '$components/layout/PageBackNavigation';
 import { PageHero } from '$components/layout/PageHero';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
-import { Button } from '$ui/button';
 import { Card, CardFooter } from '$ui/card';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
@@ -300,33 +300,10 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
   return (
     <PageShell className="py-0">
       <PageCanvas contentClassName="relative space-y-3">
-        <nav
-          aria-label="Navigation vers le répertoire"
-          className="hidden 2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:block 2xl:w-44"
-        >
-          <div className="sticky top-4">
-            <Button
-              asChild
-              className="w-full justify-start"
-              size="sm"
-              variant="outline"
-            >
-              <Link href={FEATURES.persons.href}>
-                <ArrowLeft className="size-4" />
-                Retour au répertoire
-              </Link>
-            </Button>
-          </div>
-        </nav>
-
-        <div className="2xl:hidden">
-          <Button asChild size="sm" variant="outline">
-            <Link href={FEATURES.persons.href}>
-              <ArrowLeft className="size-4" />
-              Retour au répertoire
-            </Link>
-          </Button>
-        </div>
+        <PageBackNavigation
+          href={FEATURES.persons.href}
+          label="Retour au répertoire"
+        />
 
         <PageHero
           compact

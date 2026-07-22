@@ -303,6 +303,7 @@ function LoginPage(): React.ReactNode {
                 <div className="relative">
                   <UserRound className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                   <Input
+                    allowPasswordManager
                     autoCapitalize="none"
                     autoComplete="username"
                     autoCorrect="off"
@@ -327,6 +328,7 @@ function LoginPage(): React.ReactNode {
                 <div className="relative">
                   <Lock className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                   <Input
+                    allowPasswordManager
                     autoComplete="current-password"
                     className="h-10 px-10"
                     disabled={isSubmitting}

@@ -185,6 +185,7 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
                     Mot de passe actuel
                   </Label>
                   <Input
+                    allowPasswordManager
                     autoComplete="current-password"
                     autoFocus
                     disabled={isSubmitting}

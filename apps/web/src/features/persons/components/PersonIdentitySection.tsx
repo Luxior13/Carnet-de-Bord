@@ -16,6 +16,7 @@ import { ContentState } from '$components/layout/ContentState';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
 import { Button } from '$ui/button';
+import { CardContent, CardHeader } from '$ui/card';
 import {
   Dialog,
   DialogContent,
@@ -263,77 +264,81 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
 
   return (
     <>
-      <section className="p-4 sm:p-5" id="person-identity">
-        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-9 shrink-0 items-center justify-center rounded-lg border">
-              <UserRound className="size-4" />
-            </span>
-            <div>
-              <h2 className="text-sm font-semibold">
-                Informations personnelles
-              </h2>
-              <p className="text-muted-foreground text-xs">
-                Identité civile et informations utiles à la structure.
+      <section id="person-identity">
+        <CardHeader className="p-3.5 sm:p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-8 shrink-0 items-center justify-center rounded-lg border">
+                <UserRound className="size-4" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold">
+                  Informations personnelles
+                </h2>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Identité civile et informations utiles à la structure.
+                </p>
+              </div>
+            </div>
+            {(canUpdate || canViewHistory) && (
+              <Button
+                onClick={openEditor}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                {canUpdate ? (
+                  <Pencil className="size-4" />
+                ) : (
+                  <History className="size-4" />
+                )}
+                {canUpdate ? 'Modifier' : 'Consulter'}
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-4 sm:p-5">
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_18rem]">
+            <dl className="grid gap-x-6 sm:grid-cols-2">
+              <DisplayField
+                className="sm:col-span-2"
+                label="Pseudo principal"
+                prominent
+                value={person.nickname}
+              />
+              <DisplayField label="Prénom" value={person.firstName} />
+              <DisplayField label="Nom" value={person.lastName} />
+              <DisplayField
+                className="sm:col-span-2"
+                label="Date de naissance"
+                value={
+                  person.birthDate ? (
+                    <span>
+                      {formatPersonBirthDate(person.birthDate)}{' '}
+                      <span className="text-muted-foreground">
+                        ({getAgeDescription(person.birthDate)})
+                      </span>
+                    </span>
+                  ) : null
+                }
+              />
+            </dl>
+
+            <div className="border-border-divider border-t pt-4 xl:border-t-0 xl:border-l xl:pt-3 xl:pl-6">
+              <p className="text-muted-foreground text-xs font-medium">
+                Dans la structure
+              </p>
+              <div className="mt-2">
+                <PersonStatusBadge status={person.structureStatus} />
+              </div>
+              <p className="text-muted-foreground mt-2 text-xs leading-5">
+                Indique si cette fiche correspond actuellement à un membre de la
+                structure.
               </p>
             </div>
           </div>
-          {(canUpdate || canViewHistory) && (
-            <Button
-              onClick={openEditor}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              {canUpdate ? (
-                <Pencil className="size-4" />
-              ) : (
-                <History className="size-4" />
-              )}
-              {canUpdate ? 'Modifier' : 'Consulter'}
-            </Button>
-          )}
-        </div>
-
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_18rem]">
-          <dl className="grid gap-x-6 sm:grid-cols-2">
-            <DisplayField
-              className="sm:col-span-2"
-              label="Pseudo principal"
-              prominent
-              value={person.nickname}
-            />
-            <DisplayField label="Prénom" value={person.firstName} />
-            <DisplayField label="Nom" value={person.lastName} />
-            <DisplayField
-              className="sm:col-span-2"
-              label="Date de naissance"
-              value={
-                person.birthDate ? (
-                  <span>
-                    {formatPersonBirthDate(person.birthDate)}{' '}
-                    <span className="text-muted-foreground">
-                      ({getAgeDescription(person.birthDate)})
-                    </span>
-                  </span>
-                ) : null
-              }
-            />
-          </dl>
-
-          <div className="border-border-divider border-t pt-4 xl:border-t-0 xl:border-l xl:pt-3 xl:pl-6">
-            <p className="text-muted-foreground text-xs font-medium">
-              Dans la structure
-            </p>
-            <div className="mt-2">
-              <PersonStatusBadge status={person.structureStatus} />
-            </div>
-            <p className="text-muted-foreground mt-2 text-xs leading-5">
-              Indique si cette fiche correspond actuellement à un membre de la
-              structure.
-            </p>
-          </div>
-        </div>
+        </CardContent>
       </section>
 
       <Dialog

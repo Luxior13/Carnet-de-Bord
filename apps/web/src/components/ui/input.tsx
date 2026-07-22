@@ -1,10 +1,23 @@
 import React, { type ComponentProps, type FC } from 'react';
 
+import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 import { cn } from '$utils/css.utils';
 
-type InputProps = ComponentProps<'input'>;
+type InputProps = ComponentProps<'input'> & {
+  /** Keep password-manager integration only for genuine authentication fields. */
+  allowPasswordManager?: boolean;
+};
 
-const Input: FC<InputProps> = ({ className, type, ...props }) => {
+const Input: FC<InputProps> = ({
+  allowPasswordManager = false,
+  className,
+  type,
+  ...props
+}) => {
+  const autofillProtection = allowPasswordManager
+    ? {}
+    : passwordManagerIgnoreAttributes;
+
   return (
     <input
       type={type}
@@ -16,6 +29,7 @@ const Input: FC<InputProps> = ({ className, type, ...props }) => {
         className,
       )}
       {...props}
+      {...autofillProtection}
     />
   );
 };

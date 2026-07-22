@@ -2,7 +2,6 @@
 
 import { UserRole } from '@repo/shared';
 import {
-  ArrowLeft,
   AtSign,
   CheckCircle2,
   Copy,
@@ -19,6 +18,7 @@ import React, { type FC, useState } from 'react';
 import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
+import { PageBackNavigation } from '$components/layout/PageBackNavigation';
 import { AccessDeniedState } from '$components/layout/PageState';
 import { SectionPanel } from '$components/layout/SectionPanel';
 import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
@@ -234,18 +234,14 @@ const NewUserContent: FC = () => {
   return (
     <PageShell className="py-0">
       <PageCanvas contentClassName="space-y-5">
-        <div className="mx-auto w-full max-w-4xl space-y-5">
+        <div className="relative mx-auto w-full max-w-4xl space-y-5">
+          <PageBackNavigation
+            href="/administration/utilisateurs"
+            label="Retour aux utilisateurs"
+          />
           <UsersAdminHero
             title={headerTitle}
             description={headerSubtitle}
-            actions={
-              <Button asChild variant="outline" size="sm">
-                <Link href="/administration/utilisateurs">
-                  <ArrowLeft className="size-4" />
-                  Retour
-                </Link>
-              </Button>
-            }
             icon={
               createdUser ? (
                 <CheckCircle2 className="size-5" />
@@ -386,9 +382,6 @@ const NewUserContent: FC = () => {
                 </Button>
                 <Button type="button" variant="outline" onClick={resetForm}>
                   Créer un autre
-                </Button>
-                <Button asChild variant="ghost">
-                  <Link href="/administration/utilisateurs">Retour</Link>
                 </Button>
               </CardFooter>
             </Card>

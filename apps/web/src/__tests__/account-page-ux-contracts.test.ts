@@ -145,6 +145,9 @@ describe('/mon-compte UX contracts', () => {
   });
 
   it('keeps the current user read-only in Administration and directs self-service to /mon-compte', () => {
+    expect(userDetailPageSource).toContain('<PageBackButton');
+    expect(userDetailPageSource).toContain('label="Retour aux utilisateurs"');
+    expect(userDetailPageSource).not.toContain('<ArrowLeft');
     expect(userDetailPageSource).toMatch(
       /const canEditTargetProfile\s*=\s*!!user\s*&&\s*!isSelf/,
     );
