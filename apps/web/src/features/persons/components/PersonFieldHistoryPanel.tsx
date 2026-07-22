@@ -24,7 +24,7 @@ export type PersonFieldHistoryTarget = {
   fieldKey: string;
   label: string;
   personId: string;
-  recordId: string;
+  recordId?: string;
   revision: number;
   sectionKey: string;
 };
@@ -139,7 +139,7 @@ export const PersonFieldHistoryPanel: FC<PersonFieldHistoryPanelProps> = ({
       const response = await getPersonFieldHistory({
         fieldKey,
         personId,
-        recordId,
+        ...(recordId ? { recordId } : {}),
         sectionKey,
       });
       if (requestId !== requestIdRef.current) return;
@@ -176,7 +176,7 @@ export const PersonFieldHistoryPanel: FC<PersonFieldHistoryPanelProps> = ({
   const journalHref = getPersonFieldJournalHref({
     fieldKey,
     personId,
-    recordId,
+    ...(recordId ? { recordId } : {}),
     sectionKey,
   });
 

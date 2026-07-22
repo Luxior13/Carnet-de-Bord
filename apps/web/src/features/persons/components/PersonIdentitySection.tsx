@@ -1,6 +1,14 @@
 'use client';
 
-import { Check, Loader2, Pencil, RotateCcw, UserRound, X } from 'lucide-react';
+import {
+  Check,
+  History,
+  Loader2,
+  Pencil,
+  RotateCcw,
+  UserRound,
+  X,
+} from 'lucide-react';
 import React, { type FC, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -8,6 +16,14 @@ import { ContentState } from '$components/layout/ContentState';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
 import { Button } from '$ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '$ui/dialog';
 import { ApiClientError } from '$utils/api.utils';
 
 import { updatePerson } from '../person.api';
@@ -20,7 +36,10 @@ import {
 } from '../person.ui';
 import { updatePersonSchema } from '../schemas/person.schemas';
 import type { PersonDetail } from '../types/person.types';
-import { PersonFieldHistoryPopover } from './PersonFieldHistoryPopover';
+import {
+  PersonFieldHistoryPanel,
+  type PersonFieldHistoryTarget,
+} from './PersonFieldHistoryPanel';
 import {
   PersonIdentityFields,
   type PersonIdentityFormValue,
@@ -37,49 +56,27 @@ type PersonIdentitySectionProps = {
 };
 
 type DisplayFieldProps = {
-  canViewAudit: boolean;
-  canViewHistory: boolean;
-  fieldKey: string;
+  className?: string;
   label: string;
-  personId: string;
-  revision: number;
+  prominent?: boolean;
   value: React.ReactNode;
 };
 
 const DisplayField: FC<DisplayFieldProps> = ({
-  canViewAudit,
-  canViewHistory,
-  fieldKey,
+  className = '',
   label,
-  personId,
-  revision,
+  prominent = false,
   value,
 }) => (
-  <div className="border-border-divider min-w-0 border-b py-3 last:border-0">
-    <div className="flex min-w-0 items-start justify-between gap-3">
-      <div className="min-w-0">
-        <dt className="text-muted-foreground text-xs font-medium">{label}</dt>
-        <dd className="mt-1 min-h-5 text-sm break-words">
-          {value || (
-            <span className="text-muted-foreground">Non renseigné</span>
-          )}
-        </dd>
-      </div>
-      {canViewHistory && (
-        <PersonFieldHistoryPopover
-          canViewAudit={canViewAudit}
-          fieldKey={fieldKey}
-          label={label}
-          personId={personId}
-          revision={revision}
-          sectionKey={
-            fieldKey === 'structureStatus'
-              ? PERSON_AUDIT_KEYS.sections.structure
-              : PERSON_AUDIT_KEYS.sections.identity
-          }
-        />
-      )}
-    </div>
+  <div
+    className={`border-border-divider min-w-0 border-b py-3 last:border-0 ${className}`}
+  >
+    <dt className="text-muted-foreground text-xs font-medium">{label}</dt>
+    <dd
+      className={`mt-1 min-h-5 break-words ${prominent ? 'text-base font-semibold' : 'text-sm'}`}
+    >
+      {value || <span className="text-muted-foreground">Non renseigné</span>}
+    </dd>
   </div>
 );
 
@@ -99,6 +96,8 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
   onReload,
   person,
 }) => {
+  const [activeHistory, setActiveHistory] =
+    useState<PersonFieldHistoryTarget | null>(null);
   const [conflict, setConflict] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<PersonIdentityFormValue>(() =>
@@ -108,7 +107,8 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [pendingLocalDiscard, setPendingLocalDiscard] = useState(false);
   const [version, setVersion] = useState(person.version);
-  const isDirty = isEditing && !isPersonIdentityEqual(person, form);
+  const isDirty =
+    canUpdate && isEditing && !isPersonIdentityEqual(person, form);
   const {
     cancelPendingNavigation,
     confirmPendingNavigation,
@@ -122,15 +122,22 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
     }
   }, [isEditing, person]);
 
+  useEffect(() => {
+    setActiveHistory(null);
+  }, [canViewAudit, canViewHistory, isEditing]);
+
   const focusFirstError = (): void => {
     requestAnimationFrame(() => {
       document
-        .querySelector<HTMLElement>('#person-identity [aria-invalid="true"]')
+        .querySelector<HTMLElement>(
+          '#person-identity-dialog [aria-invalid="true"]',
+        )
         ?.focus();
     });
   };
 
   const handleSave = async (): Promise<void> => {
+    if (!canUpdate) return;
     const payload = {
       birthDate: form.birthDate || null,
       firstName: form.firstName || null,
@@ -188,11 +195,12 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
     setForm(toForm(person));
     setErrors({});
     setConflict(false);
+    setActiveHistory(null);
     setIsEditing(false);
     setPendingLocalDiscard(false);
   };
 
-  const cancel = (): void => {
+  const closeEditor = (): void => {
     if (isDirty) {
       setPendingLocalDiscard(true);
 
@@ -201,131 +209,105 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
     discardLocalChanges();
   };
 
+  const openEditor = (): void => {
+    setForm(toForm(person));
+    setVersion(person.version);
+    setConflict(false);
+    setErrors({});
+    setActiveHistory(null);
+    setIsEditing(true);
+  };
+
+  const historyTarget = (
+    fieldKey: keyof PersonIdentityFormValue,
+    label: string,
+    sectionKey: string,
+  ): PersonFieldHistoryTarget | undefined =>
+    canViewHistory
+      ? {
+          canViewAudit,
+          fieldKey,
+          label,
+          personId: person.id,
+          revision: version,
+          sectionKey,
+        }
+      : undefined;
+  const histories = {
+    birthDate: historyTarget(
+      'birthDate',
+      'Date de naissance',
+      PERSON_AUDIT_KEYS.sections.identity,
+    ),
+    firstName: historyTarget(
+      'firstName',
+      'Prénom',
+      PERSON_AUDIT_KEYS.sections.identity,
+    ),
+    lastName: historyTarget(
+      'lastName',
+      'Nom',
+      PERSON_AUDIT_KEYS.sections.identity,
+    ),
+    nickname: historyTarget(
+      'nickname',
+      'Pseudo principal',
+      PERSON_AUDIT_KEYS.sections.identity,
+    ),
+    structureStatus: historyTarget(
+      'structureStatus',
+      'Statut dans la structure',
+      PERSON_AUDIT_KEYS.sections.structure,
+    ),
+  };
+
   return (
     <>
       <section className="p-4 sm:p-5" id="person-identity">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-9 items-center justify-center rounded-lg border">
+            <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-9 shrink-0 items-center justify-center rounded-lg border">
               <UserRound className="size-4" />
             </span>
             <div>
-              <h2 className="text-sm font-semibold">Identité</h2>
+              <h2 className="text-sm font-semibold">
+                Informations personnelles
+              </h2>
               <p className="text-muted-foreground text-xs">
-                Informations civiles et statut courant.
+                Identité civile et informations utiles à la structure.
               </p>
             </div>
           </div>
-          {canUpdate && !isEditing && (
+          {(canUpdate || canViewHistory) && (
             <Button
-              onClick={() => setIsEditing(true)}
+              onClick={openEditor}
               size="sm"
               type="button"
               variant="outline"
             >
-              <Pencil className="size-4" />
-              Modifier
+              {canUpdate ? (
+                <Pencil className="size-4" />
+              ) : (
+                <History className="size-4" />
+              )}
+              {canUpdate ? 'Modifier' : 'Consulter'}
             </Button>
           )}
         </div>
 
-        {isEditing ? (
-          <div className="space-y-4">
-            {conflict && (
-              <ContentState
-                action={
-                  <Button
-                    onClick={() => {
-                      void onReload().then((fresh) => {
-                        setVersion(fresh.version);
-                        setConflict(false);
-                        toast.info(
-                          'Version actualisée, votre saisie est conservée',
-                        );
-                      });
-                    }}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    <RotateCcw className="size-4" />
-                    Actualiser la version
-                  </Button>
-                }
-                description="La fiche a changé depuis son ouverture. Actualisez sa version puis vérifiez votre saisie avant de réessayer."
-                kind="warning"
-                title="Modification concurrente"
-              />
-            )}
-            <PersonIdentityFields
-              disabled={isSaving}
-              errors={errors}
-              idPrefix="person-detail"
-              onChange={(key, value) =>
-                setForm((current) => ({ ...current, [key]: value }))
-              }
-              value={form}
-            />
-            <div className="flex flex-col-reverse justify-end gap-2 sm:flex-row">
-              <Button
-                disabled={isSaving}
-                onClick={cancel}
-                type="button"
-                variant="outline"
-              >
-                <X className="size-4" />
-                Annuler
-              </Button>
-              <Button
-                disabled={isSaving || !isDirty}
-                onClick={() => void handleSave()}
-                type="button"
-              >
-                {isSaving ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Check className="size-4" />
-                )}
-                {isSaving ? 'Enregistrement…' : 'Enregistrer'}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <dl className="grid gap-x-6 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_18rem]">
+          <dl className="grid gap-x-6 sm:grid-cols-2">
             <DisplayField
-              canViewAudit={canViewAudit}
-              canViewHistory={canViewHistory}
-              fieldKey="nickname"
+              className="sm:col-span-2"
               label="Pseudo principal"
-              personId={person.id}
-              revision={person.version}
+              prominent
               value={person.nickname}
             />
+            <DisplayField label="Prénom" value={person.firstName} />
+            <DisplayField label="Nom" value={person.lastName} />
             <DisplayField
-              canViewAudit={canViewAudit}
-              canViewHistory={canViewHistory}
-              fieldKey="firstName"
-              label="Prénom"
-              personId={person.id}
-              revision={person.version}
-              value={person.firstName}
-            />
-            <DisplayField
-              canViewAudit={canViewAudit}
-              canViewHistory={canViewHistory}
-              fieldKey="lastName"
-              label="Nom"
-              personId={person.id}
-              revision={person.version}
-              value={person.lastName}
-            />
-            <DisplayField
-              canViewAudit={canViewAudit}
-              canViewHistory={canViewHistory}
-              fieldKey="birthDate"
+              className="sm:col-span-2"
               label="Date de naissance"
-              personId={person.id}
-              revision={person.version}
               value={
                 person.birthDate ? (
                   <span>
@@ -337,33 +319,167 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
                 ) : null
               }
             />
-            <DisplayField
-              canViewAudit={canViewAudit}
-              canViewHistory={canViewHistory}
-              fieldKey="structureStatus"
-              label="Statut dans la structure"
-              personId={person.id}
-              revision={person.version}
-              value={<PersonStatusBadge status={person.structureStatus} />}
-            />
           </dl>
-        )}
+
+          <div className="border-border-divider border-t pt-4 xl:border-t-0 xl:border-l xl:pt-3 xl:pl-6">
+            <p className="text-muted-foreground text-xs font-medium">
+              Dans la structure
+            </p>
+            <div className="mt-2">
+              <PersonStatusBadge status={person.structureStatus} />
+            </div>
+            <p className="text-muted-foreground mt-2 text-xs leading-5">
+              Indique si cette fiche correspond actuellement à un membre de la
+              structure.
+            </p>
+          </div>
+        </div>
       </section>
-      <UnsavedNavigationDialog
-        contentClassName="sm:max-w-md"
-        description="Les modifications de l'identité et du statut seront perdues."
-        onCancel={cancelPendingNavigation}
-        onConfirm={confirmPendingNavigation}
-        open={pendingNavigationHref !== null}
-      />
+
+      <Dialog
+        open={isEditing}
+        onOpenChange={(open) => {
+          if (!open) closeEditor();
+        }}
+      >
+        <DialogContent
+          className={`grid h-[100svh] max-h-[100svh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 sm:h-[min(42rem,85svh)] ${canViewHistory ? 'sm:max-w-4xl' : 'sm:max-w-2xl'}`}
+          fullscreenOnMobile
+          id="person-identity-dialog"
+        >
+          <DialogHeader className="border-border-divider border-b px-4 py-4 pr-14 text-left sm:px-5">
+            <DialogTitle>
+              {canUpdate ? "Modifier l'identité" : "Consulter l'identité"}
+            </DialogTitle>
+            <DialogDescription>
+              {canUpdate
+                ? 'Mettez à jour les informations principales et le statut dans la structure.'
+                : 'Consultez les informations et leur historique sans modifier la fiche.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div
+            className={`min-h-0 overflow-y-auto px-4 py-4 sm:px-5 ${canViewHistory ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.72fr)] lg:gap-5' : ''}`}
+          >
+            <div
+              className={
+                activeHistory ? 'hidden space-y-4 lg:block' : 'space-y-4'
+              }
+            >
+              {conflict && (
+                <ContentState
+                  action={
+                    <Button
+                      onClick={() => {
+                        void onReload().then((fresh) => {
+                          setVersion(fresh.version);
+                          setConflict(false);
+                          toast.info(
+                            'Version actualisée, votre saisie est conservée',
+                          );
+                        });
+                      }}
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      <RotateCcw className="size-4" />
+                      Actualiser la version
+                    </Button>
+                  }
+                  description="La fiche a changé depuis son ouverture. Actualisez sa version puis vérifiez votre saisie avant de réessayer."
+                  kind="warning"
+                  title="Modification concurrente"
+                />
+              )}
+              <PersonIdentityFields
+                activeHistoryFieldKey={activeHistory?.fieldKey}
+                disabled={!canUpdate || isSaving}
+                errors={errors}
+                histories={histories}
+                idPrefix="person-detail"
+                onChange={(key, value) =>
+                  setForm((current) => ({ ...current, [key]: value }))
+                }
+                onHistoryOpen={setActiveHistory}
+                value={form}
+              />
+            </div>
+
+            {canViewHistory &&
+              (activeHistory ? (
+                <PersonFieldHistoryPanel
+                  {...activeHistory}
+                  onClose={() => setActiveHistory(null)}
+                />
+              ) : (
+                <aside className="border-border-divider hidden min-w-0 items-center justify-center border-l px-6 text-center lg:flex">
+                  <div className="max-w-56">
+                    <span className="bg-surface-inset text-muted-foreground mx-auto flex size-9 items-center justify-center rounded-lg">
+                      <History className="size-4" />
+                    </span>
+                    <p className="mt-3 text-sm font-medium">
+                      Historique des champs
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-xs leading-5">
+                      Sélectionnez l&apos;icône d&apos;historique près d&apos;un
+                      champ pour afficher ses deux derniers changements.
+                    </p>
+                  </div>
+                </aside>
+              ))}
+          </div>
+
+          <DialogFooter
+            className={`border-border-divider bg-surface-inset border-t px-4 py-4 sm:px-5 ${activeHistory ? 'hidden lg:flex' : ''}`}
+          >
+            {!canUpdate ? (
+              <Button onClick={closeEditor} type="button">
+                Fermer
+              </Button>
+            ) : (
+              <>
+                <Button
+                  disabled={isSaving}
+                  onClick={closeEditor}
+                  type="button"
+                  variant="outline"
+                >
+                  <X className="size-4" />
+                  Annuler
+                </Button>
+                <Button
+                  disabled={isSaving || !isDirty}
+                  onClick={() => void handleSave()}
+                  type="button"
+                >
+                  {isSaving ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Check className="size-4" />
+                  )}
+                  {isSaving ? 'Enregistrement…' : 'Enregistrer'}
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <UnsavedNavigationDialog
         cancelLabel="Continuer la modification"
         confirmLabel="Abandonner les modifications"
         contentClassName="sm:max-w-md"
-        description="La saisie actuelle de l'identité et du statut sera réinitialisée."
-        onCancel={() => setPendingLocalDiscard(false)}
-        onConfirm={discardLocalChanges}
-        open={pendingLocalDiscard}
+        description="Les modifications de cette information ne sont pas enregistrées."
+        onCancel={() => {
+          setPendingLocalDiscard(false);
+          cancelPendingNavigation();
+        }}
+        onConfirm={() => {
+          if (pendingLocalDiscard) discardLocalChanges();
+          else confirmPendingNavigation();
+        }}
+        open={pendingLocalDiscard || pendingNavigationHref !== null}
         title="Annuler les modifications ?"
       />
     </>

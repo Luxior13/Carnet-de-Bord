@@ -40,14 +40,6 @@ const getLastSql = (): { text: string; values: readonly unknown[] } => {
 
 // Test-owned paths only; neither URL receives external input.
 // eslint-disable-next-line security/detect-non-literal-fs-filename
-const historyPopoverSource = readFileSync(
-  new URL(
-    '../features/persons/components/PersonFieldHistoryPopover.tsx',
-    import.meta.url,
-  ),
-  'utf8',
-);
-// eslint-disable-next-line security/detect-non-literal-fs-filename
 const historyPanelSource = readFileSync(
   new URL(
     '../features/persons/components/PersonFieldHistoryPanel.tsx',
@@ -333,15 +325,13 @@ describe('person indexed search', () => {
 });
 
 describe('person short-lived sensitive UX contracts', () => {
-  it('expires decrypted field history within thirty seconds and reloads on every opening', () => {
-    expect(historyPopoverSource).toContain(
+  it('expires decrypted field history within thirty seconds and reloads on every panel opening', () => {
+    expect(historyPanelSource).toContain(
       'const DECRYPTED_HISTORY_TTL_MS = 30_000',
     );
-    expect(historyPopoverSource).toContain('setOpen(false)');
-    expect(historyPopoverSource).toContain('if (nextOpen)');
-    expect(historyPopoverSource).toContain('void load()');
-    expect(historyPopoverSource).toContain('authorizationRevision');
-    expect(historyPopoverSource).toContain('canViewAudit,');
+    expect(historyPanelSource).toContain('void load()');
+    expect(historyPanelSource).toContain('authorizationRevision');
+    expect(historyPanelSource).toContain('canViewAudit,');
     for (const key of [
       'fieldKey,',
       'personId,',
@@ -349,26 +339,29 @@ describe('person short-lived sensitive UX contracts', () => {
       'revision,',
       'sectionKey,',
     ]) {
-      expect(historyPopoverSource).toContain(key);
+      expect(historyPanelSource).toContain(key);
     }
-    expect(historyPopoverSource).toContain('setItems([])');
-    expect(historyPopoverSource).toContain('setIsExpired(true)');
-    expect(historyPopoverSource).toContain('Historique masqué');
-    expect(historyPopoverSource).toContain('Recharger l&apos;historique');
-    expect(historyPopoverSource).not.toContain('localStorage');
-    expect(historyPopoverSource).not.toContain('sessionStorage');
-    expect(historyPopoverSource).toContain('{canViewAudit && (');
-    expect(historyPopoverSource).toContain('<Link href={journalHref}>');
-    expect(historyPopoverSource).toContain('getFieldLabel(fieldKey)');
-    expect(historyPopoverSource).toContain('divide-border-divider divide-y');
-    expect(historyPopoverSource).not.toContain('HistoryActionIcon');
-    expect(historyPopoverSource).not.toContain('before:absolute');
+    expect(historyPanelSource).toContain('setItems([])');
+    expect(historyPanelSource).toContain('setExpired(true)');
+    expect(historyPanelSource).toContain('Historique masqué');
+    expect(historyPanelSource).toContain('Recharger');
+    expect(historyPanelSource).not.toContain('localStorage');
+    expect(historyPanelSource).not.toContain('sessionStorage');
+    expect(historyPanelSource).toContain('{canViewAudit && !loading && (');
+    expect(historyPanelSource).toContain('<Link href={journalHref}>');
+    expect(historyPanelSource).toContain('divide-border-divider divide-y');
     expect(collectionsSource).not.toContain('fieldKey="email"');
     expect(collectionsSource).not.toContain('fieldKey="phone"');
     expect(collectionsSource).not.toContain('<PersonFieldHistoryPopover');
     expect(collectionFieldsSource).toContain('aria-pressed={activeFieldKey');
     expect(collectionFieldsSource).toContain('target={histories?.email}');
     expect(collectionFieldsSource).toContain('target={histories?.phone}');
+    expect(identitySectionSource).not.toContain('<PersonFieldHistoryPopover');
+    expect(identitySectionSource).toContain('<PersonFieldHistoryPanel');
+    expect(identityFieldsSource).toContain('history={histories?.nickname}');
+    expect(identityFieldsSource).toContain(
+      'history={histories?.structureStatus}',
+    );
     expect(childDialogSource).toContain("'label',");
     expect(childDialogSource).toContain("'isPrimary',");
     expect(collectionsSource).toContain('canEdit={canUpdate}');
@@ -376,9 +369,7 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(collectionFieldsSource).toContain(
       "type FieldsLayout = 'grid' | 'stacked'",
     );
-    expect(historyPanelSource).toContain(
-      'const DECRYPTED_HISTORY_TTL_MS = 30_000',
-    );
+    expect(historyPanelSource).toContain('...(recordId ? { recordId } : {})');
     expect(historyPanelSource).toContain('lg:border-l lg:pl-5');
     expect(historyPanelSource).toContain('<ArrowLeft className="size-4" />');
     expect(historyPanelSource).toContain('<Plus />');
@@ -455,13 +446,14 @@ describe('person short-lived sensitive UX contracts', () => {
 
   it('keeps directory editors usable at every viewport size', () => {
     expect(childDialogSource).toContain('fullscreenOnMobile');
+    expect(identitySectionSource).toContain('fullscreenOnMobile');
     expect(childDialogSource).toContain('sm:max-w-2xl');
     expect(childDialogSource).toContain('grid-rows-[auto_minmax(0,1fr)_auto]');
     expect(childDialogSource).toContain('min-h-0 overflow-y-auto');
-    expect(historyPopoverSource).toContain(
-      'max-h-[min(36rem,calc(100svh-2rem))]',
+    expect(identitySectionSource).toContain(
+      'grid-rows-[auto_minmax(0,1fr)_auto]',
     );
-    expect(historyPopoverSource).toContain('min-h-0 flex-1 overflow-y-auto');
+    expect(identitySectionSource).toContain('min-h-0 overflow-y-auto');
     expect(collectionsSource).toContain(
       "requiresReplacement ? 'sm:max-w-lg' : 'sm:max-w-md'",
     );
@@ -487,8 +479,14 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(dataTableSectionSource).toContain(
       "headerLayout?: 'inline' | 'stacked'",
     );
-    expect(identitySectionSource).toContain('xl:grid-cols-3');
-    expect(identityFieldsSource).toContain('xl:grid-cols-3');
+    expect(identitySectionSource).toContain(
+      'xl:grid-cols-[minmax(0,1fr)_18rem]',
+    );
+    expect(identitySectionSource).toContain('Informations personnelles');
+    expect(identitySectionSource).toContain("Modifier l'identité");
+    expect(identitySectionSource).toContain("'sm:max-w-4xl' : 'sm:max-w-2xl'");
+    expect(identityFieldsSource).toContain('sm:grid-cols-2');
+    expect(identityFieldsSource).not.toContain('xl:grid-cols-3');
   });
 
   it('guards sidebar and breadcrumb links for both dirty person forms', () => {
