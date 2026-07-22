@@ -11,7 +11,6 @@ import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
-import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardFooter } from '$ui/card';
 import { PageCanvas, PageShell } from '$ui/page-shell';
@@ -45,7 +44,7 @@ export type PersonDetailSection = 'coordonnees' | 'identite';
 const DetailSkeleton: FC = () => (
   <PageShell className="py-0">
     <PageCanvas>
-      <Skeleton className="h-36 rounded-xl" />
+      <Skeleton className="h-28 rounded-xl" />
       <Skeleton className="h-[34rem] rounded-xl" />
     </PageCanvas>
   </PageShell>
@@ -300,18 +299,37 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
 
   return (
     <PageShell className="py-0">
-      <PageCanvas contentClassName="space-y-5">
-        <PageHero
-          actions={
-            <Button asChild size="sm" variant="outline">
+      <PageCanvas contentClassName="relative space-y-3">
+        <nav
+          aria-label="Navigation vers le répertoire"
+          className="hidden 2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:block 2xl:w-44"
+        >
+          <div className="sticky top-4">
+            <Button
+              asChild
+              className="w-full justify-start"
+              size="sm"
+              variant="outline"
+            >
               <Link href={FEATURES.persons.href}>
                 <ArrowLeft className="size-4" />
                 Retour au répertoire
               </Link>
             </Button>
-          }
-          description="Fiche d'identité autonome, sans lien avec un compte d'accès au site."
-          eyebrow={<Badge variant="outline">Fiche du répertoire</Badge>}
+          </div>
+        </nav>
+
+        <div className="2xl:hidden">
+          <Button asChild size="sm" variant="outline">
+            <Link href={FEATURES.persons.href}>
+              <ArrowLeft className="size-4" />
+              Retour au répertoire
+            </Link>
+          </Button>
+        </div>
+
+        <PageHero
+          compact
           icon={
             getPersonInitials(person) ? (
               <span className="text-base font-semibold">
@@ -334,15 +352,23 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
           />
         )}
 
-        <Tabs value={activeSection}>
+        <Tabs className="gap-3" value={activeSection}>
           <ScrollableTabsList aria-label="Sections de la fiche">
-            <TabsTrigger asChild value="identite">
+            <TabsTrigger
+              asChild
+              className="data-[state=active]:border-primary/40 data-[state=active]:bg-primary/10 data-[state=active]:text-primary-emphasis"
+              value="identite"
+            >
               <Link href={sectionHref('identite')}>
                 <UserRound className="size-4" />
                 Identité
               </Link>
             </TabsTrigger>
-            <TabsTrigger asChild value="coordonnees">
+            <TabsTrigger
+              asChild
+              className="data-[state=active]:border-primary/40 data-[state=active]:bg-primary/10 data-[state=active]:text-primary-emphasis"
+              value="coordonnees"
+            >
               <Link href={sectionHref('coordonnees')}>
                 <AtSign className="size-4" />
                 Coordonnées

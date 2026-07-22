@@ -9,6 +9,7 @@ import { cn } from '$utils/css.utils';
 
 type PageHeroProps = Omit<ComponentProps<'section'>, 'title'> & {
   actions?: ReactNode;
+  compact?: boolean;
   description?: ReactNode;
   eyebrow?: ReactNode;
   icon?: ReactNode;
@@ -21,6 +22,7 @@ type PageHeroProps = Omit<ComponentProps<'section'>, 'title'> & {
 export const PageHero: FC<PageHeroProps> = ({
   actions,
   className,
+  compact = false,
   description,
   eyebrow,
   icon,
@@ -45,12 +47,23 @@ export const PageHero: FC<PageHeroProps> = ({
         aria-hidden="true"
         className={cn('h-1 w-full', toneClasses.accent)}
       />
-      <div className="from-surface-panel-raised/50 via-surface-panel to-surface-panel flex flex-col gap-4 bg-gradient-to-br p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+      <div
+        className={cn(
+          'from-surface-panel-raised/50 via-surface-panel to-surface-panel flex flex-col bg-gradient-to-br lg:flex-row lg:items-center lg:justify-between',
+          compact ? 'gap-3 p-3 sm:p-4' : 'gap-4 p-4 sm:p-5',
+        )}
+      >
+        <div
+          className={cn(
+            'flex min-w-0 gap-3 sm:gap-4',
+            compact ? 'items-center' : 'items-start',
+          )}
+        >
           {icon && (
             <ServiceIcon
               className={cn(
-                'mt-0.5 size-11 rounded-lg',
+                'rounded-lg',
+                compact ? 'size-10' : 'mt-0.5 size-11',
                 toneClasses.icon,
                 iconClassName,
               )}
@@ -62,20 +75,32 @@ export const PageHero: FC<PageHeroProps> = ({
             {eyebrow && (
               <div className="flex flex-wrap items-center gap-2">{eyebrow}</div>
             )}
-            <h1
+            <div
               className={cn(
-                'text-2xl font-semibold tracking-normal sm:text-3xl',
-                eyebrow && 'mt-2',
+                compact && 'flex flex-wrap items-center gap-x-3 gap-y-1',
               )}
             >
-              {title}
-            </h1>
+              <h1
+                className={cn(
+                  'font-semibold tracking-normal',
+                  compact ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl',
+                  eyebrow && 'mt-2',
+                )}
+              >
+                {title}
+              </h1>
+              {compact && meta && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {meta}
+                </div>
+              )}
+            </div>
             {description && (
               <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-6">
                 {description}
               </p>
             )}
-            {meta && (
+            {!compact && meta && (
               <div className="mt-3 flex flex-wrap items-center gap-1.5">
                 {meta}
               </div>

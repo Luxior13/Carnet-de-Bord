@@ -16,7 +16,7 @@ export default function PersonLoading(): React.ReactNode {
     >
       <PageShell className="py-0">
         <PageCanvas>
-          <Skeleton className="h-36 rounded-xl" />
+          <Skeleton className="h-28 rounded-xl" />
           <Skeleton className="h-[34rem] rounded-xl" />
         </PageCanvas>
       </PageShell>

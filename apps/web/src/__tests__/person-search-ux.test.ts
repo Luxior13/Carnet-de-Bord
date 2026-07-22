@@ -487,6 +487,21 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(identitySectionSource).toContain("'sm:max-w-4xl' : 'sm:max-w-2xl'");
     expect(identityFieldsSource).toContain('sm:grid-cols-2');
     expect(identityFieldsSource).not.toContain('xl:grid-cols-3');
+    expect(detailPageSource).toContain('<PageHero');
+    expect(detailPageSource).toContain('compact');
+    expect(detailPageSource).not.toContain('Fiche du répertoire');
+    expect(detailPageSource).not.toContain(
+      "sans lien avec un compte d'accès au site",
+    );
+    expect(detailPageSource).toContain('data-[state=active]:border-primary/40');
+    expect(detailPageSource).toContain(
+      '<Tabs className="gap-3" value={activeSection}>',
+    );
+    expect(detailPageSource).toContain('2xl:right-[calc(100%+2.5rem)]');
+    expect(detailPageSource).toContain('<div className="2xl:hidden">');
+    expect(detailPageSource).toContain('className="w-full justify-start"');
+    expect(detailPageSource).not.toContain('<PageHero\n          actions=');
+    expect(personLoadingSource).toContain('h-28 rounded-xl');
   });
 
   it('guards sidebar and breadcrumb links for both dirty person forms', () => {
