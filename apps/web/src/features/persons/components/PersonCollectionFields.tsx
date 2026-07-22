@@ -497,15 +497,7 @@ export const SocialFields: FC<SocialFieldsProps> = ({
             aria-invalid={Boolean(networkError)}
             id={`${idPrefix}-network`}
           >
-            <span className="flex min-w-0 items-center gap-2">
-              {value.networkKey && (
-                <PersonSocialNetworkIcon
-                  className="size-4 shrink-0"
-                  networkKey={value.networkKey}
-                />
-              )}
-              <SelectValue />
-            </span>
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {PERSON_SOCIAL_NETWORKS.filter(

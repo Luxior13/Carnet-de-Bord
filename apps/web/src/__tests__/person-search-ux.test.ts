@@ -403,6 +403,13 @@ describe('person short-lived sensitive UX contracts', () => {
     );
     expect(collectionsSource).toContain('<DuplicateFieldWarning>');
     expect(collectionsSource).toContain('match.recordId === item.id');
+    expect(collectionsSource).toContain('navigator.clipboard.writeText(value)');
+    expect(collectionsSource).toContain('<CopyAction label="Email"');
+    expect(collectionsSource).toContain('<CopyAction label="Numéro"');
+    expect(collectionsSource).not.toContain('<Trash2');
+    expect(childDialogSource).toContain('{canEdit && item && !saved && (');
+    expect(childDialogSource).toContain('onClick={onDelete}');
+    expect(childDialogSource).toContain('variant="destructive"');
   });
 
   it('shows durable social network icons without depending on remote assets', () => {
@@ -424,7 +431,6 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(socialNetworkIconSource).toContain('aria-hidden="true"');
     expect(socialNetworkIconSource).not.toContain('fetch(');
     expect(socialNetworkIconSource).not.toContain('<img');
-    expect(collectionFieldsSource).toContain('networkKey={value.networkKey}');
     expect(collectionFieldsSource).toContain('networkKey={network.key}');
     expect(collectionsSource).toContain('networkKey={item.networkKey}');
   });
@@ -434,7 +440,7 @@ describe('person short-lived sensitive UX contracts', () => {
       'xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]',
     );
     expect(collectionsSource).toContain('<div className="space-y-4">');
-    expect(collectionsSource).toContain('(canViewHistory || canUpdate)');
+    expect(collectionsSource).toContain('const CopyAction');
     expect(collectionsSource).toContain('person.emails.map');
     expect(collectionsSource).toContain('person.phones.map');
     expect(collectionsSource).toContain('person.socialProfiles.map');

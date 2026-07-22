@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, History, Loader2, RotateCcw } from 'lucide-react';
+import { Check, History, Loader2, RotateCcw, Trash2 } from 'lucide-react';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { ZodError } from 'zod';
@@ -61,6 +61,7 @@ type PersonChildDialogProps = {
   defaultPrimary: boolean;
   item: PersonChildItem | null;
   kind: PersonChildKind;
+  onDelete: () => void;
   onOpenChange: (open: boolean) => void;
   onPersonChange: (person: PersonDetail) => void;
   onReload: () => Promise<PersonDetail>;
@@ -128,6 +129,7 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
   defaultPrimary,
   item,
   kind,
+  onDelete,
   onOpenChange,
   onPersonChange,
   onReload,
@@ -537,42 +539,55 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
             )}
           </div>
           <DialogFooter
-            className={`border-border-divider bg-surface-inset border-t px-4 py-4 sm:px-5 ${activeHistory ? 'hidden lg:flex' : ''}`}
+            className={`border-border-divider bg-surface-inset border-t px-4 py-4 sm:justify-between sm:px-5 ${activeHistory ? 'hidden lg:flex' : ''}`}
           >
-            {!canEdit ? (
-              <Button onClick={close} type="button">
-                Fermer
+            {canEdit && item && !saved && (
+              <Button
+                disabled={isSaving}
+                onClick={onDelete}
+                type="button"
+                variant="destructive"
+              >
+                <Trash2 className="size-4" />
+                Supprimer
               </Button>
-            ) : (
-              <>
-                {!saved && (
+            )}
+            <div className="flex flex-col-reverse gap-2 sm:ml-auto sm:flex-row">
+              {!canEdit ? (
+                <Button onClick={close} type="button">
+                  Fermer
+                </Button>
+              ) : (
+                <>
+                  {!saved && (
+                    <Button
+                      disabled={isSaving}
+                      onClick={close}
+                      type="button"
+                      variant="outline"
+                    >
+                      Annuler
+                    </Button>
+                  )}
                   <Button
                     disabled={isSaving}
-                    onClick={close}
+                    onClick={() => void handleSave()}
                     type="button"
-                    variant="outline"
                   >
-                    Annuler
+                    {isSaving ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Check className="size-4" />
+                    )}
+                    {saved
+                      ? 'Terminer'
+                      : isSaving
+                        ? 'Enregistrement…'
+                        : 'Enregistrer'}
                   </Button>
-                )}
-                <Button
-                  disabled={isSaving}
-                  onClick={() => void handleSave()}
-                  type="button"
-                >
-                  {isSaving ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Check className="size-4" />
-                  )}
-                  {saved
-                    ? 'Terminer'
-                    : isSaving
-                      ? 'Enregistrement…'
-                      : 'Enregistrer'}
-                </Button>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

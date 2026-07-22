@@ -2,6 +2,7 @@
 
 import {
   AlertTriangle,
+  Copy,
   ExternalLink,
   History,
   Mail,
@@ -10,7 +11,6 @@ import {
   Phone,
   Plus,
   RotateCcw,
-  Trash2,
 } from 'lucide-react';
 import React, { type FC, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -72,32 +72,43 @@ type PersonCollectionsSectionProps = {
   person: PersonDetail;
 };
 
-const ChildActions: FC<{
+const EditAction: FC<{
   label: string;
-  onDelete: () => void;
   onEdit: () => void;
-}> = ({ label, onDelete, onEdit }) => (
-  <div className="flex shrink-0 items-center gap-1">
-    <Button
-      aria-label={`Modifier ${label}`}
-      onClick={onEdit}
-      size="icon"
-      type="button"
-      variant="ghost"
-    >
-      <Pencil className="size-3.5" />
-    </Button>
-    <Button
-      aria-label={`Supprimer ${label}`}
-      onClick={onDelete}
-      size="icon"
-      type="button"
-      variant="ghost"
-    >
-      <Trash2 className="size-3.5" />
-    </Button>
-  </div>
+}> = ({ label, onEdit }) => (
+  <Button
+    aria-label={`Modifier ${label}`}
+    onClick={onEdit}
+    size="icon"
+    type="button"
+    variant="ghost"
+  >
+    <Pencil className="size-3.5" />
+  </Button>
 );
+
+const CopyAction: FC<{ label: string; value: string }> = ({ label, value }) => {
+  const handleCopy = async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} copié`);
+    } catch {
+      toast.error('Copie impossible');
+    }
+  };
+
+  return (
+    <Button
+      aria-label={`Copier ${label.toLowerCase()}`}
+      onClick={() => void handleCopy()}
+      size="icon"
+      type="button"
+      variant="ghost"
+    >
+      <Copy className="size-3.5" />
+    </Button>
+  );
+};
 
 const HistoryOnlyAction: FC<{ label: string; onOpen: () => void }> = ({
   label,
@@ -149,16 +160,8 @@ const EmailRow: FC<{
   canViewHistory: boolean;
   duplicateWarning: boolean;
   item: PersonEmailItem;
-  onDelete: () => void;
   onEdit: () => void;
-}> = ({
-  canUpdate,
-  canViewHistory,
-  duplicateWarning,
-  item,
-  onDelete,
-  onEdit,
-}) => (
+}> = ({ canUpdate, canViewHistory, duplicateWarning, item, onEdit }) => (
   <li className="border-border-divider flex min-w-0 items-center gap-2 border-b py-2.5 last:border-0">
     <div className="min-w-0 flex-1">
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -176,16 +179,13 @@ const EmailRow: FC<{
         </DuplicateFieldWarning>
       )}
     </div>
-    {(canViewHistory || canUpdate) && (
-      <div className="flex shrink-0 items-center gap-1">
-        {canViewHistory && !canUpdate && (
-          <HistoryOnlyAction label="cet email" onOpen={onEdit} />
-        )}
-        {canUpdate && (
-          <ChildActions label="cet email" onDelete={onDelete} onEdit={onEdit} />
-        )}
-      </div>
-    )}
+    <div className="flex shrink-0 items-center gap-1">
+      {canViewHistory && !canUpdate && (
+        <HistoryOnlyAction label="cet email" onOpen={onEdit} />
+      )}
+      {canUpdate && <EditAction label="cet email" onEdit={onEdit} />}
+      <CopyAction label="Email" value={item.email} />
+    </div>
   </li>
 );
 
@@ -194,16 +194,8 @@ const PhoneRow: FC<{
   canViewHistory: boolean;
   duplicateWarning: boolean;
   item: PersonPhoneItem;
-  onDelete: () => void;
   onEdit: () => void;
-}> = ({
-  canUpdate,
-  canViewHistory,
-  duplicateWarning,
-  item,
-  onDelete,
-  onEdit,
-}) => (
+}> = ({ canUpdate, canViewHistory, duplicateWarning, item, onEdit }) => (
   <li className="border-border-divider flex min-w-0 items-center gap-2 border-b py-2.5 last:border-0">
     <div className="min-w-0 flex-1">
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -221,20 +213,13 @@ const PhoneRow: FC<{
         </DuplicateFieldWarning>
       )}
     </div>
-    {(canViewHistory || canUpdate) && (
-      <div className="flex shrink-0 items-center gap-1">
-        {canViewHistory && !canUpdate && (
-          <HistoryOnlyAction label="ce téléphone" onOpen={onEdit} />
-        )}
-        {canUpdate && (
-          <ChildActions
-            label="ce téléphone"
-            onDelete={onDelete}
-            onEdit={onEdit}
-          />
-        )}
-      </div>
-    )}
+    <div className="flex shrink-0 items-center gap-1">
+      {canViewHistory && !canUpdate && (
+        <HistoryOnlyAction label="ce téléphone" onOpen={onEdit} />
+      )}
+      {canUpdate && <EditAction label="ce téléphone" onEdit={onEdit} />}
+      <CopyAction label="Numéro" value={item.phone} />
+    </div>
   </li>
 );
 
@@ -243,18 +228,11 @@ const SocialRow: FC<{
   canViewHistory: boolean;
   duplicateFieldKeys: string[];
   item: PersonSocialProfileItem;
-  onDelete: () => void;
   onEdit: () => void;
-}> = ({
-  canUpdate,
-  canViewHistory,
-  duplicateFieldKeys,
-  item,
-  onDelete,
-  onEdit,
-}) => {
+}> = ({ canUpdate, canViewHistory, duplicateFieldKeys, item, onEdit }) => {
   const network = getPersonSocialNetwork(item.networkKey);
   const visibleValue = item.identifier ?? item.profileUrl ?? 'Profil';
+  const copyValue = item.profileUrl ?? item.identifier;
 
   return (
     <li className="border-border-divider flex min-w-0 items-center gap-2 border-b py-2.5 last:border-0">
@@ -292,20 +270,18 @@ const SocialRow: FC<{
           </DuplicateFieldWarning>
         )}
       </div>
-      {(canViewHistory || canUpdate) && (
-        <div className="flex shrink-0 items-center gap-1">
-          {canViewHistory && !canUpdate && (
-            <HistoryOnlyAction label="ce profil" onOpen={onEdit} />
-          )}
-          {canUpdate && (
-            <ChildActions
-              label="ce profil"
-              onDelete={onDelete}
-              onEdit={onEdit}
-            />
-          )}
-        </div>
-      )}
+      <div className="flex shrink-0 items-center gap-1">
+        {canViewHistory && !canUpdate && (
+          <HistoryOnlyAction label="ce profil" onOpen={onEdit} />
+        )}
+        {canUpdate && <EditAction label="ce profil" onEdit={onEdit} />}
+        {copyValue && (
+          <CopyAction
+            label={item.profileUrl ? 'Lien du profil' : 'Identifiant'}
+            value={copyValue}
+          />
+        )}
+      </div>
     </li>
   );
 };
@@ -378,6 +354,7 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
         personId: person.id,
       });
       onChange(result.person);
+      setEditor(null);
       setDeleteState(null);
       toast.success('Information supprimée');
       requestAnimationFrame(() => {
@@ -462,7 +439,6 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
                       )}
                       item={item}
                       key={item.id}
-                      onDelete={() => openDelete('email', item)}
                       onEdit={() => setEditor({ item, kind: 'email' })}
                     />
                   ))}
@@ -520,7 +496,6 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
                       )}
                       item={item}
                       key={item.id}
-                      onDelete={() => openDelete('phone', item)}
                       onEdit={() => setEditor({ item, kind: 'phone' })}
                     />
                   ))}
@@ -586,7 +561,6 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
                       .map((match) => match.fieldKey)}
                     item={item}
                     key={item.id}
-                    onDelete={() => openDelete('social', item)}
                     onEdit={() => setEditor({ item, kind: 'social' })}
                   />
                 ))}
@@ -610,6 +584,10 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
           }
           item={editor.item}
           kind={editor.kind}
+          onDelete={() => {
+            if (!editor.item) return;
+            openDelete(editor.kind, editor.item);
+          }}
           onOpenChange={(open) => {
             if (!open) setEditor(null);
           }}
