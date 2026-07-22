@@ -221,6 +221,9 @@ describe('person indexed search', () => {
     expect(sql.text).toContain('AS "emailCount"');
     expect(sql.text).toContain('AS "phoneCount"');
     expect(sql.text).toContain('AS "socialProfileCount"');
+    expect(sql.text).toContain('LEFT JOIN LATERAL');
+    expect(sql.text).toContain('FROM "AuditLog" audit');
+    expect(sql.text).toContain('audit."entityId" = p."id"');
   });
 
   it('uses stable indexed orders for every directory sort', async () => {
@@ -316,6 +319,8 @@ describe('person indexed search', () => {
         emailCount: 1,
         firstName: 'Ada',
         id: 'person-1',
+        lastModifiedByDisplayName: 'Marie Curie',
+        lastModifiedByLoginName: 'mcurie',
         lastName: 'Lovelace',
         matchedByContact: true,
         nickname: null,
@@ -356,6 +361,10 @@ describe('person indexed search', () => {
         createdAt: '2026-07-20T10:00:00.000Z',
         firstName: 'Ada',
         id: 'person-1',
+        lastModifiedBy: {
+          displayName: 'Marie Curie',
+          loginName: 'mcurie',
+        },
         lastName: 'Lovelace',
         matchedByContact: true,
         nickname: null,
@@ -558,6 +567,8 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(personsListSource).toContain('after:absolute after:inset-0');
     expect(personsListSource).toContain('group/row');
     expect(personsListSource).toContain('focus-within:ring-2');
+    expect(personsListSource).toContain('<PersonLastModifiedAt href={href}');
+    expect(personsListSource).toContain('<TooltipContent>{actorLabel}');
     expect(dataTableSectionSource).toContain(
       "headerLayout?: 'inline' | 'stacked'",
     );

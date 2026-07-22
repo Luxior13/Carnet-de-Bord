@@ -309,7 +309,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
           icon={
             <PersonAvatar className="size-full rounded-full" person={person} />
           }
-          iconClassName="overflow-hidden p-0"
+          iconClassName="overflow-hidden rounded-full p-0"
           meta={<PersonStatusBadge status={person.structureStatus} />}
           title={getPersonDisplayName(person)}
           tone="internal"

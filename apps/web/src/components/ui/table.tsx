@@ -41,7 +41,7 @@ function TableBody({
     <tbody
       data-slot="table-body"
       className={cn(
-        'bg-surface [&_tr:nth-child(even)]:bg-surface-inset/70 [&_tr:last-child]:border-0',
+        'bg-surface [&_tr:nth-child(even)]:bg-surface-inset/70 [&_tr:nth-child(even):hover]:bg-surface-tile-hover [&_tr:last-child]:border-0',
         className,
       )}
       {...props}

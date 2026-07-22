@@ -46,6 +46,7 @@ import {
   TableHeader,
   TableRow,
 } from '$ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
 import { listPersons } from '../person.api';
@@ -203,6 +204,46 @@ const PersonContactCounts: FC<{ person: PersonSummary }> = ({ person }) => (
   </div>
 );
 
+const getLastModifiedByLabel = (person: PersonSummary): string | null => {
+  const actor = person.lastModifiedBy;
+  if (!actor) return null;
+
+  return `Modifiée par ${actor.displayName}${
+    actor.loginName && actor.loginName !== actor.displayName
+      ? ` (${actor.loginName})`
+      : ''
+  }`;
+};
+
+const PersonLastModifiedAt: FC<{
+  href?: string;
+  person: PersonSummary;
+}> = ({ href, person }) => {
+  const actorLabel = getLastModifiedByLabel(person);
+  const time = (
+    <time dateTime={person.updatedAt}>
+      {formatPersonDateTime(person.updatedAt)}
+    </time>
+  );
+
+  if (!actorLabel || !href) return time;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Link
+          aria-label={`Ouvrir la fiche — ${actorLabel}, le ${formatPersonDateTime(person.updatedAt)}`}
+          className="focus-visible:ring-ring/40 relative z-20 inline-flex cursor-help rounded-sm underline decoration-dotted underline-offset-4 outline-none focus-visible:ring-2"
+          href={href}
+        >
+          {time}
+        </Link>
+      </TooltipTrigger>
+      <TooltipContent>{actorLabel}</TooltipContent>
+    </Tooltip>
+  );
+};
+
 const buildPersonHref = (personId: string, returnHref: string): string => {
   const params = new URLSearchParams({ returnTo: returnHref });
 
@@ -233,7 +274,7 @@ const PersonMobileRow: FC<{
         <PersonContactCounts person={person} />
       </div>
       <p className="text-muted-foreground text-xs">
-        Modifiée le {formatPersonDateTime(person.updatedAt)}
+        Modifiée le <PersonLastModifiedAt person={person} />
       </p>
     </div>
     <ArrowRight className="text-muted-foreground size-4 shrink-0" />
@@ -594,7 +635,7 @@ export const PersonsList: FC<PersonsListProps> = ({
                         <PersonContactCounts person={person} />
                       </TableCell>
                       <TableCell className="text-muted-foreground py-2 text-sm">
-                        {formatPersonDateTime(person.updatedAt)}
+                        <PersonLastModifiedAt href={href} person={person} />
                       </TableCell>
                       <TableCell className="pointer-events-none py-1.5">
                         <ArrowRight

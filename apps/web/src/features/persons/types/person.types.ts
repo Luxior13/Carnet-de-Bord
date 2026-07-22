@@ -59,6 +59,7 @@ export type PersonSummary = {
   createdAt: string;
   firstName: string | null;
   id: string;
+  lastModifiedBy: PersonAuditActor | null;
   lastName: string | null;
   matchedByContact: boolean;
   nickname: string | null;
@@ -69,7 +70,7 @@ export type PersonSummary = {
 
 export type PersonDetail = Omit<
   PersonSummary,
-  'contactCounts' | 'matchedByContact'
+  'contactCounts' | 'lastModifiedBy' | 'matchedByContact'
 > & {
   age: number | null;
   birthDate: string | null;

@@ -62,6 +62,8 @@ type PersonListRow = {
   emailCount: number;
   firstName: string | null;
   id: string;
+  lastModifiedByDisplayName: string | null;
+  lastModifiedByLoginName: string | null;
   lastName: string | null;
   matchedByContact: boolean;
   nickname: string | null;
@@ -122,6 +124,16 @@ const toPersonSummary = (person: PersonListRow): PersonSummary => ({
   createdAt: person.createdAt.toISOString(),
   firstName: person.firstName,
   id: person.id,
+  lastModifiedBy:
+    person.lastModifiedByDisplayName || person.lastModifiedByLoginName
+      ? {
+          displayName:
+            person.lastModifiedByDisplayName ??
+            person.lastModifiedByLoginName ??
+            'Compte indisponible',
+          loginName: person.lastModifiedByLoginName,
+        }
+      : null,
   lastName: person.lastName,
   matchedByContact: person.matchedByContact,
   nickname: person.nickname,
@@ -307,6 +319,8 @@ export const listPersons = async (input: {
       p."version",
       p."createdAt",
       p."updatedAt",
+      last_change."actorDisplayNameSnapshot" AS "lastModifiedByDisplayName",
+      last_change."actorLoginNameSnapshot" AS "lastModifiedByLoginName",
       (SELECT COUNT(*)::integer FROM "PersonEmail" email_count
         WHERE email_count."personId" = p."id") AS "emailCount",
       (SELECT COUNT(*)::integer FROM "PersonPhone" phone_count
@@ -317,6 +331,16 @@ export const listPersons = async (input: {
         ${contactSearchClause}
       ) ELSE FALSE END AS "matchedByContact"
     FROM "Person" p
+    LEFT JOIN LATERAL (
+      SELECT
+        audit."actorDisplayNameSnapshot",
+        audit."actorLoginNameSnapshot"
+      FROM "AuditLog" audit
+      WHERE audit."entityType" = ${PERSON_AUDIT_KEYS.entityType}
+        AND audit."entityId" = p."id"
+      ORDER BY audit."createdAt" DESC, audit."id" DESC
+      LIMIT 1
+    ) last_change ON TRUE
     WHERE ${snapshotClause}
       ${statusClause}
       ${searchClause}
