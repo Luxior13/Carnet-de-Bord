@@ -1,4 +1,4 @@
-import type { BackgroundJobStatus, NotificationSeverity } from '@repo/shared';
+import type { NotificationSeverity } from '@repo/shared';
 
 import type { SystemSettingKey } from '$constants/system-setting-catalog.constants';
 
@@ -30,22 +30,4 @@ export type SystemSettingItem = {
   updatedAt: string;
   value: unknown;
   version: number;
-};
-
-export type BackgroundJobItem = {
-  attempts: number;
-  completedAt: Date | null;
-  createdAt: Date;
-  dedupeKey: string | null;
-  id: string;
-  lastError: string | null;
-  lockedAt: Date | null;
-  lockedBy: string | null;
-  maxAttempts: number;
-  payload: unknown;
-  priority: number;
-  runAt: Date;
-  status: BackgroundJobStatus;
-  type: string;
-  updatedAt: Date;
 };

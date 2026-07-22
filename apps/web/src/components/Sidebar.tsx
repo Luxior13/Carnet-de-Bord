@@ -21,6 +21,7 @@ import {
   getNavigationSpaceBadgeClasses,
   getNavigationSpaceToneClasses,
 } from '$constants/navigation-theme.constants';
+import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
 import {
   Collapsible,
@@ -311,13 +312,14 @@ const SpaceSwitcher: FC<{
 
 const Sidebar: FC<SidebarProps> = ({ className }) => {
   const pathname = usePathname();
+  const { operationalFeatureIds } = useFeatureAvailability();
   const { logout, userData } = useUser();
   const { isMobile, setOpenMobile, state: sidebarState } = useSidebar();
   const isCollapsed = !isMobile && sidebarState === 'collapsed';
 
   const visibleSpaces = useMemo(
-    () => getVisibleNavigationSpaces(userData),
-    [userData],
+    () => getVisibleNavigationSpaces(userData, 'live', operationalFeatureIds),
+    [operationalFeatureIds, userData],
   );
   const activeSpace = useMemo(
     () => getActiveNavigationSpace(pathname, visibleSpaces),
@@ -328,8 +330,8 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
     [activeSpace.tone],
   );
   const sections = useMemo(
-    () => getDesktopSidebarSections(userData, pathname),
-    [pathname, userData],
+    () => getDesktopSidebarSections(userData, pathname, operationalFeatureIds),
+    [operationalFeatureIds, pathname, userData],
   );
 
   const topSections = sections.filter(

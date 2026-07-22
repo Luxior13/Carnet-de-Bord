@@ -1,51 +1,81 @@
-# Database migration workflow
+# Base de données
 
-The application database must be managed by Prisma Migrate. Do not use
-`prisma db push` on a shared or production database.
+## Migrations
 
-## Existing unmanaged database
+Valider et générer le client :
 
-The historical database was created without a `_prisma_migrations` table. It
-must be baselined exactly once before normal deploys can run.
-
-1. Take a provider-level snapshot when available.
-2. Review the configured `DATABASE_URL`.
-3. Run `bun run db:backup` and verify the ignored JSON backup path.
-4. Run `bun run db:migrate:baseline --confirm=I_HAVE_A_VERIFIED_BACKUP` from
-   `packages/database` (the equivalent environment variable is also accepted).
-5. Run `bun run db:migrate:status` and verify that the schema is up to date.
-
-The baseline command refuses unknown or failed migration records. It applies
-the idempotent reconciliation SQL before recording the historical migrations.
-Legacy `StaffProfile` rows are copied to `ArchivedStaffProfile`, never erased.
-
-## Normal deploy
-
-Use `bun run db:migrate:deploy`. Its preflight refuses to run migrations on an
-existing application schema with no migration history. A genuinely empty
-database is allowed and receives the full migration chain.
-
-Always test migrations on a clone and an empty database before production.
-
-## Backup and restore drill
-
-`bun run db:backup` writes a versioned snapshot and a SHA-256 sidecar with
-owner-only permissions. The snapshot contains authentication material and must
-be moved immediately to encrypted, access-controlled storage.
-
-Restoration is deliberately restricted to a migrated, completely empty
-database. Verify the snapshot and target first:
-
-```powershell
-bun run db:restore -- --file="C:\secure\backup.json" --dry-run
+```bash
+bunx prisma validate --schema packages/database/prisma/schema.prisma
+bunx prisma generate --schema packages/database/prisma/schema.prisma
 ```
 
-After reviewing the reported target and row counts, perform the offline restore:
+Déployer les migrations :
 
-```powershell
-bun run db:restore -- --file="C:\secure\backup.json" --confirm-empty-restore=RESTORE-INTO-EMPTY-DATABASE
+```bash
+bun run db:migrate:deploy
 ```
 
-Run this drill regularly on an isolated database and verify application login,
-MFA, notifications, audit history and background jobs before declaring the
-backup usable.
+Le schéma courant ne contient aucun worker ni aucune file de tâches. La
+migration `20260722120000_remove_background_worker` retire la table historique
+`BackgroundJob` et son enum. Ne modifiez pas la migration de fondation déjà
+appliquée : la suppression se fait volontairement dans cette nouvelle
+migration.
+
+## Fiches Personnes
+
+La migration `20260721120000_person_identity_foundation` crée les tables
+d’identité, les contacts, les profils sociaux, l’historique de champs chiffré et
+`PersonDeletionTombstone`.
+
+Une suppression est synchrone et transactionnelle. Le tombstone contient
+uniquement l’identifiant de la fiche, l’identifiant idempotent de l’opération et
+la date. Il est immuable et garantit l’idempotence des nouvelles tentatives de
+suppression dans l’état courant de la base.
+
+Une sauvegarde créée avant la suppression ne contient nécessairement ni le
+tombstone ni la suppression. Sa restauration peut donc réintroduire la fiche :
+ce cas doit être traité lors de la procédure de restauration et par une durée
+de conservation des sauvegardes adaptée.
+
+## Sauvegardes
+
+Créer une sauvegarde signée v5 :
+
+```bash
+bun run --filter @repo/database db:backup
+```
+
+Variables requises :
+
+- toutes les `AUDIT_ENCRYPTION_KEY_V<n>` encore référencées ;
+- `DATABASE_BACKUP_SIGNING_CURRENT_VERSION` ;
+- `DATABASE_BACKUP_SIGNING_PRIVATE_KEY_V<n>` ;
+- `DATABASE_BACKUP_SIGNING_PUBLIC_KEY_V<n>` pour l’auto-vérification.
+
+Le format exporte les tables dans l’ordre des clés étrangères, par lots bornés,
+avec checksum SHA-256 et enveloppe Ed25519. Il n’exporte aucune file ni aucun
+état de worker.
+
+## Restauration
+
+La cible doit être vide, migrée et isolée du trafic :
+
+```bash
+bun run --filter @repo/database db:restore -- --file="C:\secure\backup.jsonl" --dry-run
+bun run --filter @repo/database db:restore -- --file="C:\secure\backup.jsonl" --confirm-empty-restore=RESTORE-INTO-EMPTY-DATABASE
+```
+
+Le fichier de signature est obligatoire. La restauration valide le flux fermé,
+le checksum, la signature, les compteurs, les clés AES et l’existence d’un seul
+compte racine valide avant de considérer l’opération terminée.
+
+## Performance Personnes
+
+Le contrôle de plans s’exécute uniquement sur une base isolée explicitement
+confirmée :
+
+```bash
+bun run persons:performance
+```
+
+Ne pointez jamais ce contrôle de charge vers la base applicative courante.

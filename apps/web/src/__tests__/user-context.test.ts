@@ -240,6 +240,7 @@ class FakeWindow {
 
 type ContextValue = {
   applyUserUpdate: (user: UserType) => void;
+  authorizationRevision: number;
   cancelMfaChallenge: () => Promise<void>;
   extendSession: () => Promise<void>;
   isLoading: boolean;
@@ -611,6 +612,8 @@ describe('UserContext session activity', () => {
   it('applies a successful account mutation without another request', async () => {
     await mountAuthenticatedProvider();
     vi.mocked(fetch).mockClear();
+    const previousAuthorizationRevision =
+      getContext(runtime).authorizationRevision;
 
     getContext(runtime).applyUserUpdate({
       ...user,
@@ -621,6 +624,9 @@ describe('UserContext session activity', () => {
     expect(fetch).not.toHaveBeenCalled();
     expect(getContext(runtime).userData?.contactEmail).toBe(
       'updated@example.com',
+    );
+    expect(getContext(runtime).authorizationRevision).toBeGreaterThan(
+      previousAuthorizationRevision,
     );
   });
 

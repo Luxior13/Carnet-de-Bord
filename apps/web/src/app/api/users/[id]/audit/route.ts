@@ -688,7 +688,7 @@ export async function GET(
       auth.user.isProtected ||
       hasPermission(
         auth.user.role,
-        PERMISSIONS.AUDIT.VIEW_SENSITIVE,
+        PERMISSIONS.AUDIT.VIEW,
         auth.user.permissions,
       );
     const visibilityOptions = {

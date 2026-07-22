@@ -1,10 +1,4 @@
-import {
-  Bell,
-  DatabaseZap,
-  History,
-  ListFilter,
-  type LucideIcon,
-} from 'lucide-react';
+import { Bell, History, ListFilter, type LucideIcon } from 'lucide-react';
 
 import {
   getSystemSettingDefinition,
@@ -35,17 +29,12 @@ const SETTING_PRESENTATION = {
   'notifications.retentionDays': {
     icon: Bell,
     impact:
-      'Le worker supprimera les notifications plus anciennes lors du prochain nettoyage. Une augmentation ne restaure pas ce qui a déjà été supprimé.',
+      'La maintenance planifiée supprimera les notifications plus anciennes lors de sa prochaine exécution. Une augmentation ne restaure pas ce qui a déjà été supprimé.',
   },
   'audit.retentionDays': {
     icon: History,
     impact:
-      "Le worker supprimera les événements plus anciens lors du prochain nettoyage. Une augmentation ne restaure pas l'historique supprimé.",
-  },
-  'jobs.retentionDays': {
-    icon: DatabaseZap,
-    impact:
-      'Le worker supprimera les traitements terminés plus anciens lors du prochain nettoyage.',
+      "La maintenance planifiée supprimera les événements plus anciens lors de sa prochaine exécution. Une augmentation ne restaure pas l'historique supprimé.",
   },
 } as const satisfies Record<SystemSettingKey, SettingPresentation>;
 /* eslint-enable sort-keys-custom-order/object-keys */
@@ -63,7 +52,7 @@ export const SECTION_DEFINITIONS: ReadonlyArray<{
   },
   {
     description:
-      'Durées de conservation appliquées par le nettoyage automatique.',
+      'Durées de conservation appliquées par la maintenance planifiée.',
     id: 'retention',
     title: 'Conservation des données',
   },
@@ -73,7 +62,6 @@ export const SYSTEM_SETTING_KEYS = [
   'ui.defaultPageSize',
   'notifications.retentionDays',
   'audit.retentionDays',
-  'jobs.retentionDays',
 ] as const satisfies readonly SystemSettingKey[];
 
 export const getSettingPresentation = (

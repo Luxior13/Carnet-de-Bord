@@ -62,6 +62,7 @@ const publishSessionActivity = (activityAt: number): void => {
 
 type ContextType = {
   applyUserUpdate: (user: UserType) => void;
+  authorizationRevision: number;
   cancelMfaChallenge: () => Promise<void>;
   clearError: () => void;
   completeAuthentication: (data: AuthenticatedLoginData) => void;
@@ -79,6 +80,7 @@ type ContextType = {
 
 const UserContext = createContext<ContextType>({
   applyUserUpdate: () => {},
+  authorizationRevision: 0,
   cancelMfaChallenge: async () => {},
   clearError: () => {},
   completeAuthentication: () => {},
@@ -107,6 +109,7 @@ export const UserProvider: FC<UserProviderProps> = ({
 }) => {
   const router = useRouter();
   const [userData, setUserData] = useState<UserType | null>(initialUser);
+  const [authorizationRevision, setAuthorizationRevision] = useState(0);
   const [isLoading, setIsLoading] = useState<boolean>(initialUser === null);
   const [error, setError] = useState<string | null>(null);
   const [mustChangePassword, setMustChangePassword] = useState<boolean>(
@@ -125,8 +128,17 @@ export const UserProvider: FC<UserProviderProps> = ({
 
   const applyUserUpdate = useCallback((nextUser: UserType): void => {
     setUserData(nextUser);
+    // A fresh server snapshot may represent a new session, role or permission
+    // revision. Consumers holding decrypted data must invalidate it even when
+    // the visible user fields happen to be unchanged.
+    setAuthorizationRevision((revision) => revision + 1);
     setMustChangePassword(nextUser.mustChangePassword);
     setError(null);
+  }, []);
+
+  const clearAuthenticatedUser = useCallback((): void => {
+    setUserData(null);
+    setAuthorizationRevision((revision) => revision + 1);
   }, []);
 
   const clearError = useCallback((): void => {
@@ -176,13 +188,13 @@ export const UserProvider: FC<UserProviderProps> = ({
           lastServerActivitySyncRef.current = activityAt;
           publishSessionActivity(activityAt);
         } else {
-          setUserData(null);
+          clearAuthenticatedUser();
           setMustChangePassword(false);
           setSessionRememberMe(false);
         }
       } catch {
         if (!silent) {
-          setUserData(null);
+          clearAuthenticatedUser();
           setMustChangePassword(false);
           setSessionRememberMe(false);
         }
@@ -191,7 +203,7 @@ export const UserProvider: FC<UserProviderProps> = ({
         if (!silent) setIsLoading(false);
       }
     },
-    [applyUserUpdate],
+    [applyUserUpdate, clearAuthenticatedUser],
   );
 
   const refreshUser = useCallback(async (): Promise<void> => {
@@ -203,7 +215,7 @@ export const UserProvider: FC<UserProviderProps> = ({
 
   const logout = useCallback(async (): Promise<void> => {
     setIsLoading(true);
-    setUserData(null);
+    clearAuthenticatedUser();
     setMustChangePassword(false);
     setSessionRememberMe(false);
     setError(null);
@@ -217,7 +229,7 @@ export const UserProvider: FC<UserProviderProps> = ({
       router.push('/login');
       setIsLoading(false);
     }
-  }, [router]);
+  }, [clearAuthenticatedUser, router]);
 
   const syncSessionActivity = useCallback(async (): Promise<boolean> => {
     lastServerActivitySyncRef.current = Date.now();
@@ -226,7 +238,7 @@ export const UserProvider: FC<UserProviderProps> = ({
       const response = await fetch(RoutesApi.me, { cache: 'no-store' });
 
       if (response.status === 401) {
-        setUserData(null);
+        clearAuthenticatedUser();
         setMustChangePassword(false);
         setSessionRememberMe(false);
         router.push('/login');
@@ -253,7 +265,7 @@ export const UserProvider: FC<UserProviderProps> = ({
     } catch {
       return false;
     }
-  }, [applyUserUpdate, router]);
+  }, [applyUserUpdate, clearAuthenticatedUser, router]);
 
   const login = useCallback(
     async (credentials: LoginCredentials): Promise<LoginResult | null> => {
@@ -515,6 +527,7 @@ export const UserProvider: FC<UserProviderProps> = ({
     <UserContext.Provider
       value={{
         applyUserUpdate,
+        authorizationRevision,
         cancelMfaChallenge,
         clearError,
         completeAuthentication,

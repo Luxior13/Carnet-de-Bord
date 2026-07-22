@@ -86,6 +86,8 @@ describe('feature registry', () => {
     expect(getFeatureByHref('/systeme/parametres')).toBe(
       FEATURES.systemSettings,
     );
+    expect(getFeatureByHref('/vie-interne/repertoire')).toBe(FEATURES.persons);
+    expect(getFeatureById('persons')).toBe(FEATURES.persons);
     expect(getFeatureByHref('/inconnu')).toBeNull();
   });
 });

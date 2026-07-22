@@ -52,10 +52,19 @@ describe('known notification destinations', () => {
     '/mon-compte?section=security',
     '/systeme/journal-activite?period=7d',
     '/systeme/parametres',
+    '/vie-interne/repertoire/nouveau',
+    '/vie-interne/repertoire/person-1?section=contacts',
     '/administration/utilisateurs/user-1?section=access',
   ])('accepts the live destination %s', (href) => {
     expect(isKnownInternalPageHref(href)).toBe(true);
   });
+
+  it.each(['/personnes/nouveau', '/personnes/person-1?section=contacts'])(
+    'keeps the legacy repository destination redirectable: %s',
+    (href) => {
+      expect(isKnownInternalPageHref(href)).toBe(true);
+    },
+  );
 
   it.each(['/future-module', '/administration/utilisateurs/user-1/unknown'])(
     'rejects the unknown or planned destination %s',

@@ -1,21 +1,23 @@
+import { FEATURE_LIST } from '$constants/feature-registry.constants';
+
 const INTERNAL_HREF_BASE_URL = new URL('https://team-control.local');
 const INVALID_ENCODED_URL_BYTE_PATTERN =
   /%(?:0[0-9a-f]|1[0-9a-f]|25|2f|5c|7f)/i;
 const INVALID_PERCENT_ENCODING_PATTERN = /%(?![0-9a-f]{2})/i;
 const KNOWN_INTERNAL_PAGE_PATHS = new Set([
-  '/',
+  ...FEATURE_LIST.filter(({ availability }) => availability === 'live').map(
+    ({ href }) => href,
+  ),
   '/administration',
-  '/administration/utilisateurs',
   '/administration/utilisateurs/nouveau',
-  '/feuille-de-route',
-  '/mes-notifications',
   '/mon-compte',
-  '/recherche',
-  '/systeme',
-  '/systeme/journal-activite',
-  '/systeme/parametres',
+  '/vie-interne/repertoire/nouveau',
+  // Compatibilité des notifications créées avant le renommage du répertoire.
+  '/personnes/nouveau',
 ]);
 const USER_DETAIL_PATH_PATTERN = /^\/administration\/utilisateurs\/[^/]+$/;
+const PERSON_DETAIL_PATH_PATTERN = /^\/vie-interne\/repertoire\/[^/]+$/;
+const LEGACY_PERSON_DETAIL_PATH_PATTERN = /^\/personnes\/[^/]+$/;
 
 const containsUrlControlCharacter = (value: string): boolean =>
   [...value].some((character) => {
@@ -103,7 +105,7 @@ export const getSafeInternalPathname = (value: string): string | null => {
 /**
  * Notification links use a closed list of live pages. This prevents durable
  * messages from advertising stale, planned or mistyped destinations. Dynamic
- * user records are the only currently supported parameterized page.
+ * records are admitted only through explicit page patterns.
  */
 export const isKnownInternalPageHref = (value: string): boolean => {
   const pathname = getSafeInternalPathname(value);
@@ -111,6 +113,8 @@ export const isKnownInternalPageHref = (value: string): boolean => {
 
   return (
     KNOWN_INTERNAL_PAGE_PATHS.has(pathname) ||
-    USER_DETAIL_PATH_PATTERN.test(pathname)
+    USER_DETAIL_PATH_PATTERN.test(pathname) ||
+    PERSON_DETAIL_PATH_PATTERN.test(pathname) ||
+    LEGACY_PERSON_DETAIL_PATH_PATTERN.test(pathname)
   );
 };

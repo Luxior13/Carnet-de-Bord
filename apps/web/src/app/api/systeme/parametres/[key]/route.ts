@@ -117,6 +117,13 @@ export async function PUT(
       if (!proof.success) return proof.response;
     }
     const setting = await prisma.$transaction(async (transaction) => {
+      if (key === 'audit.retentionDays') {
+        await transaction.$queryRaw`
+          SELECT pg_catalog.pg_advisory_xact_lock(
+            pg_catalog.hashtextextended('system-setting:audit.retentionDays', 0)
+          )
+        `;
+      }
       let updated: Awaited<ReturnType<typeof createSystemSetting>>;
       if (parsed.data.expectedVersion === 0) {
         try {

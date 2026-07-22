@@ -2,6 +2,7 @@ import { UserRole } from '@repo/shared';
 
 import type { NavigationIconName } from '$constants/navigation-icon.constants';
 import type { NavigationSpaceTone } from '$constants/navigation-theme.constants';
+import { createPersonsPermissionCategory } from '$constants/persons-permission-category.constants';
 
 /**
  * Canonical, effective permissions.
@@ -24,7 +25,7 @@ export const PERMISSIONS = {
   AUDIT: {
     EXPORT: 'audit:export',
     VIEW: 'audit:view',
-    VIEW_SENSITIVE: 'audit:view_sensitive',
+    VIEW_FIELD_HISTORY: 'audit:view_field_history',
   },
   DASHBOARD: {
     VIEW: 'dashboard:view',
@@ -32,6 +33,12 @@ export const PERMISSIONS = {
   NOTIFICATIONS: {
     SEND: 'notifications:send',
     VIEW: 'notifications:view',
+  },
+  PERSONS: {
+    CREATE: 'persons:create',
+    DELETE: 'persons:delete',
+    UPDATE: 'persons:update',
+    VIEW: 'persons:view',
   },
   SETTINGS: {
     UPDATE: 'settings:update',
@@ -96,10 +103,6 @@ export const ROADMAP_PERMISSIONS = {
   MEETINGS: {
     UPDATE: 'meetings:update',
     VIEW: 'meetings:view',
-  },
-  MEMBERS: {
-    UPDATE: 'members:update',
-    VIEW: 'members:view',
   },
   NOTIFICATIONS: {
     MANAGE: 'notifications:manage',
@@ -179,6 +182,12 @@ export type PermissionPole = {
 };
 
 export const PERMISSION_POLES = [
+  {
+    icon: 'Users',
+    key: 'internal',
+    label: 'Vie interne',
+    tone: 'internal',
+  },
   {
     icon: 'Settings',
     key: 'system',
@@ -438,6 +447,7 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
 
 /** All live administrative pages shown in the per-user access overview. */
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
+  createPersonsPermissionCategory(PERMISSIONS.PERSONS),
   {
     accessPermissionKey: PERMISSIONS.USERS.VIEW,
     assignment: 'delegable',
@@ -733,33 +743,33 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
     accessPermissionKey: PERMISSIONS.AUDIT.VIEW,
     assignment: 'delegable',
     description:
-      "Consultation, détails sensibles et export du journal d'activité global.",
+      "Journal global détaillé, historiques contextuels et export d'activité.",
     icon: 'History',
     key: 'system-activity',
     label: "Journal d'activité",
     permissions: [
       activePermission({
         action: 'view',
-        description: "Consulter le journal d'activité global du système",
+        description:
+          "Consulter le journal d'activité global et tous ses détails autorisés",
         grantable: true,
         key: PERMISSIONS.AUDIT.VIEW,
-        label: "Consulter le journal d'activité global",
+        label: "Consulter le journal d'activité global détaillé",
         module: 'Consultation',
-        risk: 'sensitive',
+        risk: 'critical',
         route: '/systeme/journal-activite',
         surface: 'page',
       }),
       activePermission({
         action: 'view',
-        dependencies: [PERMISSIONS.AUDIT.VIEW],
         description:
-          'Consulter les adresses IP, identifiants et métadonnées techniques sensibles',
+          "Consulter les trois derniers changements d'un champ sur une page déjà autorisée",
         grantable: true,
-        key: PERMISSIONS.AUDIT.VIEW_SENSITIVE,
-        label: 'Consulter les détails sensibles du journal',
-        module: 'Données sensibles',
-        risk: 'critical',
-        route: '/systeme/journal-activite',
+        key: PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY,
+        label: "Consulter l'historique des champs",
+        module: 'Historique contextuel',
+        risk: 'sensitive',
+        route: 'Pages autorisées',
         surface: 'page',
       }),
       activePermission({
@@ -843,7 +853,6 @@ export const LEGACY_PERMISSION_ALIASES: Readonly<
   Record<string, readonly string[]>
 > = {
   'system:audit': [PERMISSIONS.AUDIT.VIEW],
-  'system:audit_sensitive': [PERMISSIONS.AUDIT.VIEW_SENSITIVE],
   'system:exports': [PERMISSIONS.AUDIT.EXPORT],
   'system:settings': [PERMISSIONS.SETTINGS.VIEW, PERMISSIONS.SETTINGS.UPDATE],
   'users:edit_permissions': [
@@ -862,6 +871,16 @@ export const LEGACY_PERMISSION_ALIASES: Readonly<
 };
 
 const LEGACY_PERMISSION_DISPLAY_LABEL_MAP = new Map<string, string>([
+  [
+    'audit:view_sensitive',
+    'Consulter les détails sensibles du journal (historique)',
+  ],
+  ['members:update', 'Modifier les membres (historique)'],
+  ['members:view', 'Consulter les membres (historique)'],
+  [
+    'system:audit_sensitive',
+    'Consulter les détails sensibles du journal (historique)',
+  ],
   ['users:archive', 'Archiver un utilisateur (historique)'],
   ['users:delete', 'Archiver un utilisateur (historique)'],
   [
@@ -903,11 +922,27 @@ const ROADMAP_PERMISSION_KEYS = Object.values(ROADMAP_PERMISSIONS).flatMap(
   (family) => Object.values(family),
 );
 const HISTORICAL_ONLY_PERMISSION_KEYS = [
+  'audit:view_sensitive',
+  'members:update',
+  'members:view',
+  'system:audit_sensitive',
   'system:view',
   'users:archive',
   'users:delete',
   'users:manage_roles',
   'users:restore',
+] as const;
+
+/**
+ * Keys kept byte-for-byte during rollout A so a drained legacy instance still
+ * observes its former overrides. They never participate in authorization in
+ * this version and can be removed only by the explicit rollout-B command.
+ */
+const RETIRING_PERMISSION_OVERRIDE_KEYS = [
+  'audit:view_sensitive',
+  'members:update',
+  'members:view',
+  'system:audit_sensitive',
 ] as const;
 const HISTORICAL_AUDIT_PERMISSION_KEYS_SET = new Set<string>([
   ...ALL_PERMISSION_KEYS,
@@ -978,6 +1013,25 @@ export const normalizePermissionOverrides = (
     : null;
 };
 
+export const preserveRetiringPermissionOverrides = (
+  existingPermissions: PermissionsData | null | undefined,
+  canonicalPermissions: PermissionsData | null,
+): PermissionsData | null => {
+  const preservedEntries = RETIRING_PERMISSION_OVERRIDE_KEYS.flatMap((key) =>
+    typeof existingPermissions?.[key] === 'boolean'
+      ? ([[key, existingPermissions[key]]] as const)
+      : [],
+  );
+  const persistedPermissions = Object.fromEntries([
+    ...preservedEntries,
+    ...Object.entries(canonicalPermissions ?? {}),
+  ]) as PermissionsData;
+
+  return Object.keys(persistedPermissions).length > 0
+    ? persistedPermissions
+    : null;
+};
+
 export const getUnknownPermissionKeys = (
   permissions?: PermissionsData | null,
 ): string[] => {
@@ -1010,9 +1064,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.NOTIFICATIONS.SEND,
     PERMISSIONS.SETTINGS.VIEW,
     PERMISSIONS.SETTINGS.UPDATE,
-    ...ACCESS_PERMISSION_KEYS.filter(
-      (permissionKey) => permissionKey !== PERMISSIONS.AUDIT.VIEW_SENSITIVE,
-    ),
+    ...ACCESS_PERMISSION_KEYS,
   ],
   USER: [
     ...Object.values(PERMISSIONS.ACCOUNT),

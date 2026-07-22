@@ -9,11 +9,14 @@
     "db:migrate:baseline": "bun run scripts/baseline-existing-database.ts",
     "db:migrate:deploy": "bun run scripts/safe-migrate-deploy.ts",
     "db:migrate:status": "prisma migrate status",
+    "db:persons:performance-check": "bun run scripts/verify-persons-performance.ts",
+    "db:permissions:retire-historical": "bun run scripts/retire-historical-permission-overrides.ts",
     "db:root:mfa:recover": "bun run scripts/reset-root-mfa.ts",
     "deploy": "bun run db:migrate:deploy",
     "seed": "bun run prisma/seed.ts",
-    "lint": "eslint \"{src,scripts}/**/*.{js,jsx,ts,tsx}\"",
-    "lint:fix": "eslint \"{src,scripts}/**/*.{js,jsx,ts,tsx}\" --fix",
+    "lint": "eslint \"{src,scripts,test}/**/*.{js,jsx,ts,tsx}\"",
+    "lint:fix": "eslint \"{src,scripts,test}/**/*.{js,jsx,ts,tsx}\" --fix",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test test/database-backup-format.test.ts test/database-backup-signature.test.ts test/persons-performance-plan.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

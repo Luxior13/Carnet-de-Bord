@@ -1,148 +1,149 @@
-# Exploitation du socle applicatif
+# Exploitation
 
-Ce document complète le contrat de création des fonctionnalités. Il décrit les
-processus qui doivent accompagner l'application en production.
+## Architecture d’exécution
 
-## Processus obligatoires
+L’application utilise un seul processus web. Aucun worker permanent, aucune
+file `BackgroundJob`, aucun heartbeat et aucun registre externe de suppression
+ne sont nécessaires.
 
-- Le serveur web est déployé après `bun run db:migrate:deploy` puis validé par
-  `GET /api/health/ready`.
-- Un worker séparé exécute `bun run --filter web worker`. Un seul worker suffit
-  au départ ; plusieurs instances peuvent ensuite partager la file grâce aux
-  verrous PostgreSQL `SKIP LOCKED`.
-- Pour un ordonnanceur sans processus permanent, exécuter
-  `bun run --filter web worker --once` à intervalle court.
-- Les secrets restent dans le gestionnaire de secrets du déploiement. La table
-  `SystemSetting` n'accepte que les paramètres non secrets du catalogue fermé.
+La suppression d’une fiche Personne est exécutée immédiatement dans une seule
+transaction PostgreSQL : contrôle de version, purge des valeurs d’historique de
+champs, suppression en cascade, création du tombstone immuable et événement
+d’audit final. Une erreur annule toute la transaction.
+
+Les purges de conservation sont exécutées par une commande ponctuelle :
+
+```bash
+bun run maintenance
+```
+
+En production, planifier cette commande une fois par jour avec le scheduler de
+la plateforme. Elle se termine après un passage et ne constitue pas un worker.
 
 ## Déploiement
 
-1. Exécuter `bun install --frozen-lockfile` et `bun run check`.
-2. Créer une sauvegarde et conserver le fichier JSON avec son fichier
-   `.sha256` dans un stockage chiffré distinct du serveur.
-3. Exécuter `bun run db:migrate:deploy`.
-4. Démarrer le web et le worker.
-5. Attendre une réponse HTTP 200 de `/api/health/ready` avant de recevoir du
-   trafic. La readiness contrôle le schéma, les enums, les index critiques et
-   l'unicité du compte racine protégé.
+1. Sauvegarder la base et conserver ensemble le JSONL, le checksum et la
+   signature.
+2. Déployer les migrations :
 
-### Migration canonique des permissions du 18 juillet 2026
+   ```bash
+   bun run db:migrate:deploy
+   ```
 
-La migration `20260718120000_canonical_live_permissions` est une migration de
-contrat : elle remplace les anciennes clés stockées et supprime les droits
-obsolètes. Elle ne doit jamais coexister avec un ancien binaire qui ne connaît
-que les anciennes clés.
+3. Déployer puis démarrer le processus web.
+4. Vérifier `/api/health/live`, puis `/api/health/ready`.
+5. Remettre le trafic lorsque `status` vaut `healthy` et `checks.schema` vaut
+   `ready`.
 
-- Drainer le trafic, puis arrêter toutes les instances web et tous les workers
-  avant `db:migrate:deploy`.
-- Vérifier qu'aucun ancien processus ne peut redémarrer automatiquement pendant
-  la migration.
-- Déployer uniquement le nouveau web et le nouveau worker après le succès de la
-  migration, puis rouvrir le trafic après la readiness.
-- Pour une infrastructure rolling sans fenêtre de maintenance, ne pas exécuter
-  cette migration en l'état : livrer d'abord le code dual-read sur toutes les
-  instances, migrer après leur drainage complet, puis retirer les alias dans
-  une version ultérieure.
+`checks.persons` peut valoir `schema_not_ready` ou `not_configured` sans rendre
+le reste du site indisponible. Dans ce cas, la rubrique Répertoire reste masquée.
+Elle devient `ready` lorsque la migration du répertoire est présente et que toutes
+les clés AES requises par l’inventaire d’audit sont disponibles.
 
-La sauvegarde de l'étape 2 est obligatoire pour ce changement de données.
+La migration `20260722120000_remove_background_worker` supprime l’ancienne table
+de file et son enum. L’action d’audit historique `BACKGROUND_JOB_UPDATE` reste
+lisible afin de ne pas casser l’affichage d’anciens journaux ; aucun code ne la
+produit désormais.
 
-### Scission de la gestion des autorisations du 18 juillet 2026
+## Secrets du répertoire et sauvegardes
 
-La migration
-`20260718180000_split_access_delegation_permissions` remplace les anciennes
-clés globales `users:update_access` et `users:edit_permissions` par trois
-capacités indépendantes : accorder (`users:grant_access`), retirer
-(`users:revoke_access`) et déléguer leur gestion (`users:delegate_access`). Elle
-conserve la valeur effective et les surcharges différentielles des presets
-USER et ADMIN.
+Générer le matériel initial sans écrire de secret dans le dépôt :
 
-Cette migration est elle aussi une migration de contrat. Appliquer exactement
-la procédure d'arrêt complet décrite ci-dessus : aucun ancien web ou worker ne
-doit lire ou réécrire les permissions pendant ou après la conversion. Le
-nouveau code conserve une lecture temporaire des deux anciennes clés, mais
-toutes les nouvelles écritures utilisent les trois clés séparées. Seul le
-compte racine peut attribuer ou retirer `users:delegate_access`, et aucun de ces
-droits ne permet de créer un ADMIN ou de modifier un rôle.
-
-### Suppression irréversible des comptes du 19 juillet 2026
-
-La migration `20260719120000_irreversible_user_deletion` convertit les anciens
-comptes archivés en tombstones anonymes et immuables, remplace le droit
-d'archivage par une nouvelle capacité de suppression et installe les
-protections PostgreSQL du compte racine et des tombstones. C'est une migration
-de contrat et de données, incompatible avec un déploiement rolling mêlant les
-anciens et les nouveaux binaires.
-
-1. Placer le site en maintenance, drainer le trafic, puis arrêter toutes les
-   instances web, tous les workers permanents et tout ordonnanceur exécutant
-   `bun run --filter web worker --once`. Désactiver leur redémarrage automatique
-   pendant toute l'intervention.
-2. Depuis la racine du dépôt correspondant à la version encore en production,
-   exécuter `bun run --filter @repo/database db:backup`. Vérifier les nombres de
-   lignes affichés, conserver ensemble le JSON et son fichier `.sha256`, puis
-   les copier dans un stockage chiffré distinct du serveur.
-3. Sur une base vide, isolée et au schéma compatible avec cette sauvegarde,
-   vérifier le fichier et son checksum avec
-   `bun run --filter @repo/database db:restore -- --file="<backup.json>" --dry-run`.
-   Ne poursuivre que si cette vérification réussit.
-4. Depuis le dépôt ou l'artefact de la nouvelle version contenant cette
-   migration, l'exécuter sur la base de production toujours hors trafic avec
-   `bun run db:migrate:deploy`. Tout échec laisse le site en maintenance et doit
-   être diagnostiqué avant de démarrer un processus applicatif.
-5. Déployer puis démarrer simultanément le nouveau web et le nouveau worker
-   issus de la même version. Aucun ancien processus ne doit redémarrer après la
-   migration.
-6. Interroger `GET /api/health/ready` et ne rouvrir le trafic qu'après une
-   réponse HTTP 200. Cette readiness vérifie notamment les contraintes et les
-   triggers actifs qui rendent les tombstones et le cycle de vie du compte
-   racine immuables.
-
-Cette suppression ne possède aucun rollback logique : ne jamais tenter de
-retirer `deletedAt`, de restaurer un compte dans la base migrée ou d'inverser la
-migration par des mises à jour manuelles. Si le déploiement doit être annulé,
-arrêter de nouveau le web et les workers, provisionner une base entièrement
-vide avec le schéma et le code compatibles avec la sauvegarde pré-migration,
-puis exécuter d'abord :
-
-```powershell
-bun run --filter @repo/database db:restore -- --file="<backup.json>" --dry-run
+```bash
+bun run --filter web security:secrets:generate
 ```
 
-Après contrôle de la cible et des nombres de lignes, restaurer hors ligne avec :
+La commande produit :
 
-```powershell
-bun run --filter @repo/database db:restore -- --file="<backup.json>" --confirm-empty-restore=RESTORE-INTO-EMPTY-DATABASE
+- `AUDIT_ENCRYPTION_CURRENT_VERSION` et `AUDIT_ENCRYPTION_KEY_V<n>` pour les
+  valeurs sensibles de l’historique de champs ;
+- `DATABASE_BACKUP_SIGNING_CURRENT_VERSION` et la paire Ed25519 de sauvegarde.
+
+Conserver toutes les anciennes clés `AUDIT_ENCRYPTION_KEY_V<n>` tant qu’une
+ligne active ou une sauvegarde restaurable les référence. La clé privée de
+sauvegarde ne doit être exposée qu’au job de sauvegarde. Les restaurations ont
+seulement besoin des clés publiques correspondantes.
+
+## Sauvegarde
+
+Depuis `packages/database` :
+
+```bash
+bun run db:backup
 ```
 
-Redéployer ensuite uniquement la version applicative compatible, valider sa
-readiness, puis rouvrir le trafic. La restauration remplace la base migrée ;
-elle ne fusionne jamais la sauvegarde avec une base existante.
+Le format courant est le format signé v5. Il contient le tombstone immuable des
+fiches supprimées, mais aucune file, demande en attente ou donnée de worker.
 
-## Sauvegarde et restauration
+Une sauvegarde n’est exploitable que si ces trois fichiers sont conservés
+ensemble :
 
-- Programmer une sauvegarde quotidienne et surveiller son code de sortie.
-- Répliquer les sauvegardes hors machine avec chiffrement au repos et politique
-  de rétention.
-- Réaliser au minimum chaque trimestre un exercice de restauration dans une
-  base vide et isolée avec `db:restore --dry-run`, puis avec la confirmation
-  explicite documentée dans `packages/database/prisma/README.md`.
-- Une sauvegarde n'est considérée valide qu'après vérification du checksum et
-  démarrage réussi de l'application restaurée.
+- `*.jsonl` ;
+- `*.jsonl.sha256` ;
+- `*.jsonl.signature.json`.
 
-## Surveillance minimale
+Copier ces artefacts vers un stockage chiffré, versionné et hors site. Tester
+régulièrement la restauration dans une base isolée.
 
-- Alerter sur la readiness, les réponses HTTP 5xx/429, les tâches `FAILED` et
-  les tâches `RUNNING` dont le verrou expire fréquemment.
-- Centraliser les logs JSON et conserver le `requestId` entre proxy, serveur et
-  collecteur. Les champs sensibles sont masqués par le logger applicatif.
-- Suivre la durée et le volume des requêtes principales ; utiliser les curseurs
-  signés pour toute liste non bornée.
-- Revoir les seuils de rétention et de limitation après mesure réelle, jamais
-  en supprimant les garde-fous dans une route isolée.
+## Restauration
 
-## Évolution
+La restauration cible exclusivement une base vide ayant déjà reçu le schéma de
+la version applicative correspondante.
 
-Chaque nouvelle table doit être ajoutée à la migration, à la readiness, au
-manifeste de sauvegarde/restauration et à une politique de rétention. Chaque
-nouvelle tâche de fond doit avoir une clé d'idempotence, un nombre maximal de
-tentatives et un handler enregistré dans le worker.
+Vérification sans écriture :
+
+```bash
+bun run db:restore -- --file="C:\secure\backup.jsonl" --dry-run
+```
+
+Restauration confirmée :
+
+```bash
+bun run db:restore -- --file="C:\secure\backup.jsonl" --confirm-empty-restore=RESTORE-INTO-EMPTY-DATABASE
+```
+
+La signature est obligatoire. Les anciens artefacts non signés ne sont pas
+acceptés automatiquement. Après restauration, démarrer le web et attendre une
+readiness saine.
+
+Attention : une sauvegarde créée avant la suppression d’une fiche contient
+encore cette fiche et ne connaît pas son tombstone ultérieur. Puisqu’il n’existe
+plus de registre externe de suppression, l’opérateur doit contrôler ce point
+avant la remise en trafic et rejouer les suppressions requises. Une politique
+de conservation courte et documentée réduit cette fenêtre sans réintroduire de
+worker permanent.
+
+## Conservation des données
+
+Les paramètres `audit.retentionDays` et `notifications.retentionDays` sont lus
+au début de chaque commande de maintenance et ne sont pas mis en cache. Une
+réduction protégée par mot de passe ne prendra effet qu’à la prochaine
+exécution planifiée.
+
+La purge d’audit passe exclusivement par la fonction SQL
+`purge_expired_audit_logs(integer)`. Les tables d’audit restent append-only pour
+les requêtes ordinaires. La purge des valeurs liées à une fiche supprimée passe
+exclusivement par `purge_person_audit_field_changes(text)` dans la transaction
+de suppression.
+
+Surveiller la sortie et le code de retour de `bun run maintenance`. Une erreur
+n’empêche pas le web de servir du trafic, mais doit déclencher une alerte afin
+que la conservation ne dérive pas silencieusement.
+
+## Rotation des clés d’audit
+
+1. Générer une nouvelle clé AES de 32 octets en Base64.
+2. Distribuer `AUDIT_ENCRYPTION_KEY_V<n+1>` à tous les web, outils de sauvegarde
+   et opérateurs de restauration.
+3. Définir `AUDIT_ENCRYPTION_CURRENT_VERSION=n+1` sur le web.
+4. Vérifier `checks.persons === "ready"`.
+5. Ne jamais retirer une ancienne version avant la fin de conservation de toutes
+   les données et sauvegardes qui la référencent.
+
+## Retour arrière
+
+Une version antérieure qui dépend de `BackgroundJob` ne doit pas être redéployée
+après la migration de suppression de la table. En cas de problème applicatif,
+corriger ou redéployer une version compatible avec le schéma courant. Pour un
+retour complet vers un schéma ancien, restaurer une sauvegarde cohérente dans
+une nouvelle base hors trafic plutôt que recréer manuellement la file supprimée.

@@ -19,6 +19,9 @@ export const AuditAction = {
   PASSWORD_CHANGE: 'PASSWORD_CHANGE',
   PASSWORD_RESET: 'PASSWORD_RESET',
   PERMISSION_UPDATE: 'PERMISSION_UPDATE',
+  PERSON_CREATE: 'PERSON_CREATE',
+  PERSON_DELETE: 'PERSON_DELETE',
+  PERSON_UPDATE: 'PERSON_UPDATE',
   SESSION_INVALIDATE: 'SESSION_INVALIDATE',
   STEP_UP_FAILED: 'STEP_UP_FAILED',
   STEP_UP_SUCCESS: 'STEP_UP_SUCCESS',
@@ -35,22 +38,46 @@ export type AuditAction = (typeof AuditAction)[keyof typeof AuditAction];
 export const AuditCategory = {
   AUTH: 'AUTH',
   PERMISSION: 'PERMISSION',
+  PERSON: 'PERSON',
   SYSTEM: 'SYSTEM',
   USER: 'USER',
 } as const;
 
 export type AuditCategory = (typeof AuditCategory)[keyof typeof AuditCategory];
 
-export const BackgroundJobStatus = {
-  CANCELLED: 'CANCELLED',
-  FAILED: 'FAILED',
-  PENDING: 'PENDING',
-  RUNNING: 'RUNNING',
-  SUCCEEDED: 'SUCCEEDED',
+export const AuditEventKind = {
+  ACTIVITY: 'ACTIVITY',
+  CONNECTION: 'CONNECTION',
 } as const;
 
-export type BackgroundJobStatus =
-  (typeof BackgroundJobStatus)[keyof typeof BackgroundJobStatus];
+export type AuditEventKind =
+  (typeof AuditEventKind)[keyof typeof AuditEventKind];
+
+export const AuditOutcome = {
+  FAILURE: 'FAILURE',
+  NEUTRAL: 'NEUTRAL',
+  SUCCESS: 'SUCCESS',
+} as const;
+
+export type AuditOutcome = (typeof AuditOutcome)[keyof typeof AuditOutcome];
+
+export const AuditSeverity = {
+  CRITICAL: 'CRITICAL',
+  INFO: 'INFO',
+  WARNING: 'WARNING',
+} as const;
+
+export type AuditSeverity = (typeof AuditSeverity)[keyof typeof AuditSeverity];
+
+export const AuditStream = {
+  AUTHENTICATION: 'AUTHENTICATION',
+  AUTHORIZATION: 'AUTHORIZATION',
+  IDENTITY: 'IDENTITY',
+  SECURITY: 'SECURITY',
+  SYSTEM: 'SYSTEM',
+} as const;
+
+export type AuditStream = (typeof AuditStream)[keyof typeof AuditStream];
 
 export const NotificationSeverity = {
   CRITICAL: 'CRITICAL',

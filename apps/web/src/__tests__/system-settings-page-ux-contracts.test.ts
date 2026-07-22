@@ -42,10 +42,9 @@ describe('system settings page contracts', () => {
       'ui.defaultPageSize',
       'notifications.retentionDays',
       'audit.retentionDays',
-      'jobs.retentionDays',
     ]);
     expect(normalizeSettings(SYSTEM_SETTING_KEYS.map(buildSetting)).size).toBe(
-      4,
+      3,
     );
   });
 
@@ -113,6 +112,9 @@ describe('system settings page contracts', () => {
     expect(navigationGuardSource).toContain("'beforeunload'");
     expect(navigationGuardSource).toContain(
       "document.addEventListener('click'",
+    );
+    expect(navigationGuardSource).toContain(
+      "window.addEventListener('popstate', handlePopState, true)",
     );
   });
 });

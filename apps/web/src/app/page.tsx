@@ -311,15 +311,7 @@ export default function HomePage(): React.ReactNode {
           userData.permissions,
         ))
     : false;
-  const canViewSensitiveAuditDetails = userData
-    ? canUseOperationalAccess &&
-      (userData.isProtected ||
-        hasPermission(
-          userData.role,
-          PERMISSIONS.AUDIT.VIEW_SENSITIVE,
-          userData.permissions,
-        ))
-    : false;
+  const canViewSensitiveAuditDetails = canViewSystemAudit;
   const canViewRecentActivity = canViewUserActivity || canViewSystemAudit;
   const canLoadDashboardData =
     canViewDashboard && (canViewUserSecurity || canViewRecentActivity);

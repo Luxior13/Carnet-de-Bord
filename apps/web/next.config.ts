@@ -9,6 +9,18 @@ const nextConfig: NextConfig = {
   },
   poweredByHeader: false,
   reactStrictMode: true,
+  redirects: async () => [
+    {
+      destination: '/vie-interne/repertoire',
+      permanent: true,
+      source: '/personnes',
+    },
+    {
+      destination: '/vie-interne/repertoire/:path*',
+      permanent: true,
+      source: '/personnes/:path*',
+    },
+  ],
   transpilePackages: ['@repo/database', '@repo/shared'],
 };
 

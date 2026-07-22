@@ -93,6 +93,12 @@ const AUDIT_EVENT_CLASSIFICATIONS = {
     AuditStream.SECURITY,
     AuditSeverity.WARNING,
   ),
+  [AuditAction.PERSON_CREATE]: activity(AuditStream.IDENTITY),
+  [AuditAction.PERSON_DELETE]: activity(
+    AuditStream.IDENTITY,
+    AuditSeverity.CRITICAL,
+  ),
+  [AuditAction.PERSON_UPDATE]: activity(AuditStream.IDENTITY),
   [AuditAction.PERMISSION_UPDATE]: activity(
     AuditStream.AUTHORIZATION,
     AuditSeverity.CRITICAL,

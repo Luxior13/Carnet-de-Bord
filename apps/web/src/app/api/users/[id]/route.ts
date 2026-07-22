@@ -14,6 +14,7 @@ import {
   hasPermission,
   normalizePermissionOverrides,
   PERMISSIONS,
+  preserveRetiringPermissionOverrides,
   resolvePermissionKey,
 } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
@@ -927,7 +928,11 @@ export async function PATCH(
       ) {
         beforeValues.permissions = existingPermissionOverrides;
         afterValues.permissions = permissions;
-        updateData.permissions = permissions ?? Prisma.DbNull;
+        updateData.permissions =
+          preserveRetiringPermissionOverrides(
+            existingUser.permissions as Record<string, boolean> | null,
+            permissions,
+          ) ?? Prisma.DbNull;
       }
     }
     // Only update if there are actual changes

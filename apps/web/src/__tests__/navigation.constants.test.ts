@@ -16,6 +16,7 @@ import {
   type NavigationAvailabilityFilter,
   type NavItem,
 } from '$constants/app.constants';
+import { FEATURES } from '$constants/feature-registry.constants';
 import {
   PERMISSIONS,
   ROADMAP_PERMISSIONS,
@@ -92,8 +93,8 @@ describe('navigation availability', () => {
 
     expect(hrefs).toContain('/tableau-de-bord/mes-taches');
     expect(hrefs).toContain('/vie-interne');
-    expect(hrefs).toContain('/vie-interne/membres');
     expect(hrefs).toContain('/vie-interne/calendrier-interne');
+    expect(hrefs).not.toContain('/vie-interne/repertoire');
     expect(hrefs).toContain('/bureau-juridique');
     expect(hrefs).toContain('/tresorerie/operations');
     expect(hrefs).toContain('/sport-team-control');
@@ -173,6 +174,20 @@ describe('navigation availability', () => {
     expect(hrefs).toContain('/administration/utilisateurs');
     expect(hrefs).not.toContain('/systeme/parametres');
     expect(hrefs).not.toContain('/systeme/journal-activite');
+  });
+
+  it('publishes the canonical persons page in the internal space', () => {
+    const user = buildUser({ [PERMISSIONS.PERSONS.VIEW]: true });
+    const hrefs = getVisibleHrefs(user.permissions);
+
+    expect(hrefs).toContain('/vie-interne/repertoire');
+    expect(hrefs).not.toContain('/vie-interne/membres');
+    expect(hrefs).not.toContain('/bureau-juridique/personnes-contacts');
+    expect(
+      getActiveNavigationSpace('/vie-interne/repertoire', [
+        ...getVisibleNavigationSpaces(user),
+      ]).id,
+    ).toBe('internal');
   });
 
   it('opens the system hub for every live administrative family', () => {
@@ -262,7 +277,7 @@ describe('navigation availability', () => {
   it('keeps the desktop sidebar live on a direct planned route', () => {
     const sidebarHrefs = getDesktopSidebarSections(
       buildUser(),
-      '/vie-interne/membres',
+      '/vie-interne/calendrier-interne',
     ).flatMap((section) => flattenHrefs(section.items));
 
     expect(sidebarHrefs).toEqual([
@@ -271,7 +286,7 @@ describe('navigation availability', () => {
       '/mes-notifications',
       '/recherche',
     ]);
-    expect(sidebarHrefs).not.toContain('/vie-interne/membres');
+    expect(sidebarHrefs).not.toContain('/vie-interne/calendrier-interne');
   });
 
   it('detects active live spaces for dashboard and administration routes', () => {
@@ -282,6 +297,31 @@ describe('navigation availability', () => {
     expect(
       getActiveNavigationSpace('/administration/utilisateurs', spaces).id,
     ).toBe('system');
+    const personSpaces = getVisibleNavigationSpaces(
+      buildUser({ [PERMISSIONS.PERSONS.VIEW]: true }),
+    );
+    expect(
+      getActiveNavigationSpace('/vie-interne/repertoire', personSpaces).id,
+    ).toBe('internal');
+  });
+
+  it('hides a live feature whose operational readiness is unavailable', () => {
+    const user = buildUser({ [PERMISSIONS.PERSONS.VIEW]: true });
+    const operationalFeatures = new Set(
+      Object.values(FEATURES)
+        .filter((feature) => feature.id !== FEATURES.persons.id)
+        .map((feature) => feature.id),
+    );
+    const hrefs = getVisibleNavigationSpaces(
+      user,
+      'live',
+      operationalFeatures,
+    ).flatMap((space) =>
+      space.sections.flatMap((section) => flattenHrefs(section.items)),
+    );
+
+    expect(hrefs).not.toContain('/vie-interne/repertoire');
+    expect(hrefs).toContain('/');
   });
 
   it('resolves historical dashboard routes against their route base', () => {
@@ -295,7 +335,7 @@ describe('navigation availability', () => {
     const hrefs = getRoadmapHrefs();
 
     expect(hrefs).toContain('/vie-interne');
-    expect(hrefs).toContain('/vie-interne/membres');
+    expect(hrefs).not.toContain('/vie-interne/repertoire');
     expect(hrefs).not.toContain('/');
     expect(hrefs).not.toContain('/mon-compte');
     expect(hrefs).not.toContain('/administration/utilisateurs');
@@ -313,6 +353,7 @@ describe('navigation availability', () => {
       '/feuille-de-route',
       '/mes-notifications',
       '/recherche',
+      '/vie-interne/repertoire',
       '/systeme',
       '/administration/utilisateurs',
       '/systeme/parametres',

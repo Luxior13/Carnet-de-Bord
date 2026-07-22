@@ -22,10 +22,10 @@ politiques serveur et les tests concernés.
 - Une page future ne justifie pas un droit actif. Les capacités futures restent
   dans `ROADMAP_PERMISSIONS` jusqu'à la mise en ligne complète du module.
 
-Le catalogue actif ne possède actuellement qu'un pôle, **Système** (clé
-technique `system`), dans l'éditeur des autorisations. `Administration` reste
-le nom d'une section de navigation à l'intérieur de ce pôle. Les pôles futurs
-ne doivent être ajoutés à `PERMISSION_POLES` qu'au moment où leurs pages
+Le catalogue actif possède deux pôles dans l'éditeur des autorisations :
+**Vie interne** (`internal`) et **Système** (`system`). `Administration` reste
+le nom d'une section de navigation à l'intérieur du pôle Système. Les pôles
+futurs ne doivent être ajoutés à `PERMISSION_POLES` qu'au moment où leurs pages
 deviennent réellement actives.
 
 ## Vocabulaire canonique de l'interface
@@ -33,8 +33,9 @@ deviennent réellement actives.
 La hiérarchie visible est toujours : **Pôle → Page → Rubrique →
 Autorisation**.
 
-- Pôle `Système` ;
-- pages `Utilisateurs`, `Paramètres système` et `Journal d'activité` ;
+- pôles `Vie interne` et `Système` ;
+- pages `Répertoire`, `Utilisateurs`, `Paramètres système` et
+  `Journal d'activité` ;
 - rubriques telles que `Annuaire`, `Profil et contact`, `Sécurité` ou
   `Autorisations` ;
 - autorisations formulées avec un verbe d'action : `Consulter`, `Créer`,
@@ -161,20 +162,43 @@ restent hors de ce mécanisme : seul le compte racine peut les modifier.
 Chaque modification enregistre séparément les clés effectivement accordées et
 effectivement retirées, y compris les effets indirects des dépendances ou d'un
 changement de rôle. Ces listes sont des métadonnées d'audit sensibles : elles
-ne sont visibles qu'avec `audit:view_sensitive`.
+ne sont visibles que dans la projection détaillée autorisée par `audit:view`.
 
-### Journal global
+### Page Répertoire
 
-| Clé canonique          | Action couverte                                | Dépend de    | Risque   | USER | ADMIN     | Racine         | Surcharge | Step-up |
-| ---------------------- | ---------------------------------------------- | ------------ | -------- | ---- | --------- | -------------- | --------- | ------- |
-| `audit:view`           | consulter le journal global                    | —            | sensible | Non  | Oui, rôle | Oui, implicite | Oui       | Non     |
-| `audit:view_sensitive` | voir IP, identifiants et métadonnées sensibles | `audit:view` | critique | Non  | Non       | Oui, implicite | Oui       | Non     |
-| `audit:export`         | exporter le journal global                     | `audit:view` | critique | Non  | Oui, rôle | Oui, implicite | Oui       | Oui     |
+Les quatre permissions acceptent une surcharge individuelle. Leur preset est
+`false` pour USER et `true` pour ADMIN. Le compte racine les possède
+implicitement.
 
-Le preset ADMIN exclut intentionnellement `audit:view_sensitive`. Le compte
-racine peut l'attribuer explicitement à un compte ayant une MFA complète. Le
-droit de consulter l'activité d'un utilisateur ne permet jamais de lire
-l'activité privée du compte racine : seul son propriétaire y accède.
+| Clé canonique    | Action couverte                                       | Dépend de      | Risque   | Step-up à l'usage |
+| ---------------- | ----------------------------------------------------- | -------------- | -------- | ----------------- |
+| `persons:view`   | consulter la liste et la fiche complète               | —              | sensible | Non               |
+| `persons:create` | créer une fiche et choisir son statut                 | `persons:view` | sensible | Non               |
+| `persons:update` | modifier l'identité, le statut et les coordonnées     | `persons:view` | sensible | Non               |
+| `persons:delete` | supprimer définitivement une fiche et ses coordonnées | `persons:view` | critique | Non               |
+
+`persons:view` donne accès à toutes les données de la fiche détaillée, mais les
+listes et suggestions n'exposent ni coordonnées privées ni date de naissance.
+La suppression exige une confirmation explicite et une version courante ; elle
+ne demande pas de nouvelle preuve à l'usage. Comme toute permission critique,
+son attribution reste soumise aux protections générales du moteur.
+
+### Journal global et historique contextuel
+
+| Clé canonique              | Action couverte                                          | Dépend de    | Risque   | USER | ADMIN     | Racine         | Surcharge | Step-up |
+| -------------------------- | -------------------------------------------------------- | ------------ | -------- | ---- | --------- | -------------- | --------- | ------- |
+| `audit:view`               | consulter le journal global et ses détails autorisés     | —            | critique | Non  | Oui, rôle | Oui, implicite | Oui       | Non     |
+| `audit:view_field_history` | voir trois changements d'un champ sur une page autorisée | dynamique    | sensible | Non  | Oui, rôle | Oui, implicite | Oui       | Non     |
+| `audit:export`             | exporter le journal global                               | `audit:view` | critique | Non  | Oui, rôle | Oui, implicite | Oui       | Oui     |
+
+`audit:view_field_history` ne dépend statiquement d'aucune page : chaque route
+contextuelle exige simultanément ce droit et le droit de consulter l'entité
+concernée, par exemple `persons:view`. Il n'accorde jamais l'accès au journal
+global. `audit:view` suffit en revanche à consulter la projection globale
+détaillée sans permission métier supplémentaire. Les secrets
+d'authentification ne sont jamais enregistrés. Le droit de consulter l'activité
+d'un utilisateur ne permet jamais de lire l'activité privée du compte racine :
+seul son propriétaire y accède.
 
 ### API actives sans écran d'administration
 
@@ -204,6 +228,9 @@ droits individuels.
 | `/mon-compte`                                        | droits `account:*`, toujours limités au compte connecté                                                                                                    |
 | `/feuille-de-route`                                  | authentification ; catalogue informatif des pages planifiées, sans attribution de droits                                                                   |
 | `/recherche`                                         | authentification ; chaque résultat est filtré selon la destination réellement autorisée                                                                    |
+| `/vie-interne/repertoire`                            | `persons:view` pour consulter et rechercher le répertoire                                                                                                  |
+| `/vie-interne/repertoire/nouveau`                    | `persons:create`, donc aussi `persons:view`                                                                                                                |
+| `/vie-interne/repertoire/[id]`                       | `persons:view` pour la fiche ; les mutations exigent `persons:update` ou `persons:delete`                                                                  |
 | `/tableau-de-bord`                                   | alias de support redirigeant vers `/` ; aucune permission supplémentaire                                                                                   |
 | `/tableau-de-bord/mes-notifications`                 | ancien alias redirigeant vers `/mes-notifications`                                                                                                         |
 | `/systeme`                                           | au moins `users:view`, `settings:view` ou `audit:view` pour un compte non protégé                                                                          |
@@ -216,7 +243,7 @@ droits individuels.
 | `/administration/utilisateurs/[id]?section=account`  | `users:view_account_policy` pour lire ; `users:update_account_policy` pour modifier                                                                        |
 | `/administration/utilisateurs/[id]?section=history`  | `users:view_activity` ; `users:export_activity` pour le CSV                                                                                                |
 | `/systeme/parametres`                                | `settings:view` pour lire ; `settings:update` pour modifier ; droits exclusivement liés au rôle ADMIN                                                      |
-| `/systeme/journal-activite`                          | `audit:view` ; détails sensibles et export contrôlés séparément                                                                                            |
+| `/systeme/journal-activite`                          | `audit:view` pour le journal détaillé ; `audit:export` reste nécessaire pour une extraction                                                                |
 | pages d'erreur et page introuvable                   | support technique, sans capacité métier accordée                                                                                                           |
 
 Les routes génériques présentes pour les pôles Vie interne, Bureau & juridique,
@@ -302,8 +329,7 @@ pas des permissions effectives :
 - tâches : `tasks:view`, `tasks:create`, `tasks:update`, `tasks:assign`,
   `tasks:delete` ;
 - notifications : `notifications:manage` ;
-- vie interne : `internal:view`, `members:view`, `members:update`,
-  `meetings:view`, `meetings:update` ;
+- vie interne : `internal:view`, `meetings:view`, `meetings:update` ;
 - documents et juridique : `documents:view`, `documents:create`,
   `documents:update`, `documents:approve`, `documents:archive`, `legal:view`,
   `contracts:view`, `contracts:update`, `incidents:view`, `incidents:update` ;
@@ -362,7 +388,7 @@ il n'existe rien à autoriser.
 - Un changement de libellé ou de route ne renomme pas la clé. Un changement de
   sens exige une nouvelle clé et une migration explicite.
 
-Exemples cohérents : `audit:view_sensitive`, `users:grant_access`,
+Exemples cohérents : `audit:view_field_history`, `users:grant_access`,
 `users:revoke_sessions`, `account:change_password`. Exemple à éviter :
 `system:manage_everything`, qui mélangerait plusieurs ressources, risques et
 responsabilités.
@@ -375,7 +401,6 @@ lues, mais toute nouvelle écriture doit utiliser les clés canoniques.
 | Clé legacy                    | Clé(s) canonique(s)                                                                                 |
 | ----------------------------- | --------------------------------------------------------------------------------------------------- |
 | `system:audit`                | `audit:view`                                                                                        |
-| `system:audit_sensitive`      | `audit:view_sensitive`                                                                              |
 | `system:exports`              | `audit:export`                                                                                      |
 | `system:settings`             | aucune surcharge conservée : `settings:view` et `settings:update` sont désormais liés au rôle ADMIN |
 | `users:update_access`         | `users:grant_access`, `users:revoke_access`, `users:delegate_access`                                |
@@ -412,6 +437,16 @@ conservé comme refus du nouveau droit, afin de ne pas élargir son preset. Les
 anciennes surcharges `system:settings` doivent être supprimées : les deux
 capacités de paramètres sont désormais exclusivement fournies par le preset
 ADMIN.
+
+Les clés `audit:view_sensitive`, `system:audit_sensitive`, `members:view` et
+`members:update` sont également historiques uniquement. Elles restent dans
+l'allowlist de rendu des événements immuables, mais sont inconnues de
+`hasPermission`, non attribuables et supprimées de toute surcharge normalisée.
+`audit:view` porte désormais l'accès détaillé au journal ; aucune ancienne clé
+ne peut le conférer. Durant le déploiement A, leurs valeurs brutes sont
+néanmoins conservées à l'écriture pour les anciennes instances en cours de
+drainage. Leur suppression physique est une phase B explicite, documentée dans
+`OPERATIONS.md`, jamais une migration automatique du lot Répertoire.
 
 ## Checklist d'ajout ou de revue
 

@@ -87,7 +87,7 @@ const MAX_METADATA_STRING_LENGTH = 4_000;
 const PUBLIC_DESCRIPTIONS: Partial<Record<AuditAction, string>> = {
   ACCOUNT_LOCKED: 'Compte verrouillé',
   AUDIT_EXPORT: "Journal d'activité exporté",
-  BACKGROUND_JOB_UPDATE: 'Traitement en arrière-plan mis à jour',
+  BACKGROUND_JOB_UPDATE: 'Ancien traitement en arrière-plan mis à jour',
   LOGIN_FAILED: 'Tentative de connexion échouée',
   LOGIN_SUCCESS: 'Connexion réussie',
   LOGOUT: 'Déconnexion',
@@ -100,6 +100,9 @@ const PUBLIC_DESCRIPTIONS: Partial<Record<AuditAction, string>> = {
   PASSWORD_CHANGE: 'Mot de passe modifié',
   PASSWORD_RESET: 'Mot de passe réinitialisé',
   PERMISSION_UPDATE: 'Autorisations modifiées',
+  PERSON_CREATE: 'Fiche personne créée',
+  PERSON_DELETE: 'Fiche personne supprimée',
+  PERSON_UPDATE: 'Fiche personne modifiée',
   SESSION_INVALIDATE: 'Sessions révoquées',
   STEP_UP_FAILED: 'Échec de confirmation renforcée',
   STEP_UP_SUCCESS: 'Confirmation renforcée réussie',
@@ -113,6 +116,7 @@ const PUBLIC_DESCRIPTIONS: Partial<Record<AuditAction, string>> = {
 const CATEGORY_DESCRIPTIONS: Record<AuditCategory, string> = {
   AUTH: "Événement d'authentification",
   PERMISSION: "Modification d'autorisation",
+  PERSON: 'Événement personne',
   SYSTEM: 'Événement système',
   USER: 'Événement utilisateur',
 };

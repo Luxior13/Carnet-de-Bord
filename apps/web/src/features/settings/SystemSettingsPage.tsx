@@ -361,7 +361,7 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
             />
 
             <ContentState
-              description="Les réglages s'appliquent à tout le site. Réduire une durée de conservation peut entraîner une suppression irréversible au prochain nettoyage du worker."
+              description="Les réglages s'appliquent à tout le site. Réduire une durée de conservation peut entraîner une suppression irréversible lors de la prochaine maintenance planifiée."
               icon={<ShieldAlert className="size-4" />}
               kind="warning"
               role="status"

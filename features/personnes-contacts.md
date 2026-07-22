@@ -1,4 +1,4 @@
-# Personnes et contacts
+# Répertoire
 
 ## Objectif
 

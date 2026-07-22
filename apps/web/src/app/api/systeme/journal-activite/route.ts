@@ -8,14 +8,26 @@ import {
   AuditOutcome,
   AuditSeverity,
   AuditStream,
-  type UserRole,
 } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { FEATURES } from '$constants/feature-registry.constants';
-import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
+import { PERMISSIONS } from '$constants/permissions.constants';
 import { env } from '$env';
+import type {
+  SystemActivityJournalLog as JournalLog,
+  SystemActivityJournalResponse as JournalResponse,
+} from '$features/audit/system-activity.types';
+import { formatPersonDisplayName } from '$features/persons/person.utils';
+import {
+  decodePersonJournalFieldChanges,
+  getPersonJournalFilterFields,
+  getPersonJournalWhereFilters,
+  PERSON_AUDIT_FIELD_CHANGE_SELECT,
+  PERSON_JOURNAL_QUERY_SHAPE,
+  validatePersonJournalQuery,
+} from '$features/persons/server/person-journal';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
 import { getAuditEventClassification } from '$server/audit-event';
@@ -85,6 +97,7 @@ const JOURNAL_QUERY_SCHEMA = z
     category: z.enum(AuditCategory).optional(),
     connectionAction: z.enum(AuditAction).optional(),
     cursor: z.string().trim().min(1).max(2_048).optional(),
+    ...PERSON_JOURNAL_QUERY_SHAPE,
     format: z.enum(['csv', 'json']).optional(),
     from: ISO_DATE_TIME_SCHEMA.optional(),
     limit: z.coerce.number().int().min(1).max(MAX_LIMIT).default(DEFAULT_LIMIT),
@@ -102,6 +115,8 @@ const JOURNAL_QUERY_SCHEMA = z
   .strict()
   .superRefine((query, context) => {
     const isCustomPeriod = query.period === 'custom';
+
+    validatePersonJournalQuery(query, context);
 
     if (isCustomPeriod && !(query.from && query.to)) {
       context.addIssue({
@@ -142,8 +157,13 @@ const JOURNAL_QUERY_SCHEMA = z
       for (const [key, value] of [
         ['action', query.action],
         ['category', query.category],
+        ['entityId', query.entityId],
+        ['entityType', query.entityType],
+        ['fieldKey', query.fieldKey],
         ['pageKey', query.pageKey],
         ['poleKey', query.poleKey],
+        ['recordId', query.recordId],
+        ['sectionKey', query.sectionKey],
       ] as const) {
         if (value !== undefined) {
           context.addIssue({
@@ -209,8 +229,14 @@ const AUDIT_LOG_SELECT = {
   category: true,
   createdAt: true,
   description: true,
+  entityId: true,
+  entityType: true,
   eventKind: true,
   eventVersion: true,
+  fieldChanges: {
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    select: PERSON_AUDIT_FIELD_CHANGE_SELECT,
+  },
   id: true,
   ipAddress: true,
   metadata: true,
@@ -232,52 +258,6 @@ const AUDIT_LOG_SELECT = {
 type AuditLogRecord = Prisma.AuditLogGetPayload<{
   select: typeof AUDIT_LOG_SELECT;
 }>;
-
-type JournalLog = {
-  action: AuditAction;
-  actorLoginName: string | null;
-  actorName: string | null;
-  actorRole: UserRole | null;
-  actorSnapshot: {
-    displayName: string | null;
-    loginName: string | null;
-    role: UserRole | null;
-  };
-  category: AuditCategory;
-  createdAt: string;
-  description: string;
-  eventKind: AuditEventKind;
-  eventVersion: number;
-  id: string;
-  ipAddress: string | null;
-  metadata: Record<string, unknown> | null;
-  outcome: AuditOutcome;
-  pageKey: string | null;
-  poleKey: string | null;
-  requestId: string | null;
-  severity: AuditSeverity;
-  stream: AuditStream;
-  tabKey: string | null;
-  targetLoginName: string | null;
-  targetName: string | null;
-  targetRole: UserRole | null;
-  targetSnapshot: {
-    displayName: string | null;
-    loginName: string | null;
-    role: UserRole | null;
-  };
-  targetUserId: string | null;
-  userAgent: string | null;
-  userId: string | null;
-};
-
-type JournalResponse = {
-  logs: JournalLog[];
-  nextCursor: string | null;
-  pageSize: number;
-  sensitiveDetailsVisible: boolean;
-  snapshotAt: string;
-};
 
 const getValidationDetails = (error: z.ZodError): Record<string, string[]> => {
   const details = new Map<string, string[]>();
@@ -336,6 +316,7 @@ const getFilterFingerprint = (query: JournalQuery): string => {
     actorId: query.actorId ?? null,
     category: query.category ?? null,
     connectionAction: query.connectionAction ?? null,
+    ...getPersonJournalFilterFields(query),
     from: query.from ?? null,
     logType: query.logType,
     outcome: query.outcome ?? null,
@@ -512,6 +493,7 @@ const buildJournalWhere = (
   if (action) andFilters.push({ action });
   if (query.actorId) andFilters.push({ userId: query.actorId });
   if (query.category) andFilters.push({ category: query.category });
+  andFilters.push(...getPersonJournalWhereFilters(query));
   if (query.outcome) andFilters.push({ outcome: query.outcome });
   if (query.pageKey) {
     andFilters.push({
@@ -545,6 +527,7 @@ const buildJournalWhere = (
 const getVisibleLog = (
   log: AuditLogRecord,
   canViewSensitiveDetails: boolean,
+  personNames: ReadonlyMap<string, string>,
 ): JournalLog => {
   const metadata = sanitizeAuditMetadata(log.metadata, canViewSensitiveDetails);
   const actorName = log.actorDisplayNameSnapshot ?? null;
@@ -561,6 +544,9 @@ const getVisibleLog = (
   const targetRole = canViewSensitiveDetails
     ? (log.targetRoleSnapshot ?? null)
     : null;
+  const fieldChanges = canViewSensitiveDetails
+    ? decodePersonJournalFieldChanges(log.fieldChanges ?? [])
+    : [];
 
   return {
     action: log.action,
@@ -581,8 +567,15 @@ const getVisibleLog = (
       description: log.description,
       metadata: log.metadata,
     }),
+    entityDisplayName:
+      log.entityType === 'PERSON' && log.entityId
+        ? (personNames.get(log.entityId) ?? null)
+        : null,
+    entityId: log.entityId,
+    entityType: log.entityType,
     eventKind: log.eventKind,
     eventVersion: log.eventVersion,
+    fieldChanges,
     id: log.id,
     ipAddress: canViewSensitiveDetails ? log.ipAddress : null,
     metadata,
@@ -623,11 +616,35 @@ const loadVisibleBatch = async (
     where,
   });
   const visibleRecords = records.slice(0, take);
+  const personIds = [
+    ...new Set(
+      visibleRecords.flatMap((record) =>
+        record.entityType === 'PERSON' && record.entityId
+          ? [record.entityId]
+          : [],
+      ),
+    ),
+  ];
+  const persons =
+    personIds.length > 0
+      ? await prisma.person.findMany({
+          select: {
+            firstName: true,
+            id: true,
+            lastName: true,
+            nickname: true,
+          },
+          where: { id: { in: personIds } },
+        })
+      : [];
+  const personNames = new Map(
+    persons.map((person) => [person.id, formatPersonDisplayName(person)]),
+  );
 
   return {
     hasMore: records.length > take,
     logs: visibleRecords.map((log) =>
-      getVisibleLog(log, canViewSensitiveDetails),
+      getVisibleLog(log, canViewSensitiveDetails, personNames),
     ),
     records: visibleRecords,
   };
@@ -647,6 +664,7 @@ const getExportFilters = (query: JournalQuery): Record<string, unknown> => ({
   actorId: query.actorId ?? null,
   category: query.category ?? null,
   connectionAction: query.connectionAction ?? null,
+  ...getPersonJournalFilterFields(query),
   from: query.from ?? null,
   logType: query.logType,
   outcome: query.outcome ?? null,
@@ -723,7 +741,7 @@ const createExportResponse = (options: {
           if (options.format === 'csv') {
             controller.enqueue(
               encoder.encode(
-                '\ufeffDate;Action;Flux;Résultat;Gravité;Catégorie;Description;Acteur;Identifiant acteur;Compte concerné;Identifiant cible;Pôle;Page;Onglet;Adresse IP;Request ID;Métadonnées\r\n',
+                '\ufeffDate;Action;Flux;Résultat;Gravité;Catégorie;Description;Acteur;Identifiant acteur;Compte concerné;Identifiant cible;Pôle;Page;Onglet;Entité;Nom entité;Identifiant entité;Adresse IP;Request ID;Changements de champs;Métadonnées\r\n',
               ),
             );
           } else {
@@ -802,8 +820,14 @@ const createExportResponse = (options: {
               log.poleKey,
               log.pageKey,
               log.tabKey,
+              log.entityType,
+              log.entityDisplayName,
+              log.entityId,
               log.ipAddress,
               log.requestId,
+              log.fieldChanges.length > 0
+                ? JSON.stringify(log.fieldChanges)
+                : null,
               log.metadata ? JSON.stringify(log.metadata) : null,
             ]
               .map(escapeCsvCell)
@@ -850,7 +874,7 @@ const createExportResponse = (options: {
 
   return new Response(stream, {
     headers: {
-      'Cache-Control': 'no-store',
+      'Cache-Control': 'private, no-store',
       'Content-Disposition': `attachment; filename="journal-activite-${date}.${extension}"`,
       'Content-Type': contentType,
       'X-Content-Type-Options': 'nosniff',
@@ -892,13 +916,9 @@ export async function GET(
       );
     }
 
-    const canViewSensitiveDetails =
-      auth.user.isProtected ||
-      hasPermission(
-        auth.user.role,
-        PERMISSIONS.AUDIT.VIEW_SENSITIVE,
-        auth.user.permissions,
-      );
+    // The route is already guarded by audit:view, which now covers the full
+    // allowlisted journal projection. Authentication secrets are never stored.
+    const canViewSensitiveDetails = true;
     const snapshotAt = getSnapshotAt(query, cursor);
 
     if (query.format) {
@@ -1015,7 +1035,7 @@ export async function GET(
         },
         success: true,
       },
-      { headers: { 'Cache-Control': 'no-store' } },
+      { headers: { 'Cache-Control': 'private, no-store' } },
     );
   } catch (error) {
     return apiErrors.internal('SYSTEM_ACTIVITY_JOURNAL', error, request);

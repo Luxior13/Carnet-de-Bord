@@ -40,6 +40,9 @@ const mockPrisma = {
     createMany: vi.fn(),
     deleteMany: vi.fn(),
   },
+  person: {
+    findMany: vi.fn(),
+  },
   session: {
     deleteMany: vi.fn(),
   },
@@ -206,6 +209,7 @@ describe('users access hardening', () => {
     mockPrisma.loginNameReservation.findUnique.mockResolvedValue(null);
     mockPrisma.notification.create.mockResolvedValue({ id: 'notification-1' });
     mockPrisma.notificationRecipient.createMany.mockResolvedValue({ count: 1 });
+    mockPrisma.person.findMany.mockResolvedValue([]);
     mockPrisma.systemSetting.findUnique.mockResolvedValue({ value: 25 });
     mockPrisma.user.groupBy.mockResolvedValue([]);
     mockPrisma.user.updateMany.mockResolvedValue({ count: 1 });
@@ -1033,6 +1037,61 @@ describe('users access hardening', () => {
     expect(mockPrisma.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ permissions: nextPermissions }),
+      }),
+    );
+  });
+
+  it('keeps rollout-A legacy overrides stored while new instances ignore them', async () => {
+    const existingUser = buildUser({
+      id: 'target-1',
+      permissions: {
+        'audit:view_sensitive': true,
+        'members:view': false,
+      },
+    });
+    const nextPermissions = { [PERMISSIONS.USERS.VIEW]: true };
+    mockRequireAuth.mockResolvedValueOnce({
+      session: buildRecentSensitiveSession(),
+      success: true,
+      user: buildUser({
+        deletedAt: undefined,
+        id: 'viewer-1',
+        passwordHash: undefined,
+        permissions: {
+          [PERMISSIONS.USERS.GRANT_ACCESS]: true,
+          [PERMISSIONS.USERS.VIEW]: true,
+          [PERMISSIONS.USERS.VIEW_ACCESS]: true,
+        },
+      }),
+    });
+    mockPrisma.user.findUnique.mockResolvedValueOnce(existingUser);
+    mockPrisma.user.update.mockResolvedValueOnce({
+      ...existingUser,
+      permissions: nextPermissions,
+    });
+
+    const route = await import('$app/api/users/[id]/route');
+    const response = await route.PATCH(
+      new Request('http://localhost/api/users/target-1', {
+        body: stringifyRequestBody({
+          permissions: nextPermissions,
+          permissionScope: 'access',
+        }),
+        method: 'PATCH',
+      }) as never,
+      { params: Promise.resolve({ id: 'target-1' }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          permissions: {
+            'audit:view_sensitive': true,
+            'members:view': false,
+            [PERMISSIONS.USERS.VIEW]: true,
+          },
+        }),
       }),
     );
   });
@@ -3691,7 +3750,7 @@ describe('users access hardening', () => {
     );
   });
 
-  it('uses audit:view_sensitive consistently for another user journal', async () => {
+  it('uses audit:view consistently for detailed another-user journals', async () => {
     mockRequireAuth.mockResolvedValueOnce({
       session: buildRecentSensitiveSession(),
       success: true,
@@ -3700,7 +3759,7 @@ describe('users access hardening', () => {
         id: 'auditor-1',
         isProtected: false,
         passwordHash: undefined,
-        permissions: { [PERMISSIONS.AUDIT.VIEW_SENSITIVE]: true },
+        permissions: { [PERMISSIONS.AUDIT.VIEW]: true },
         role: 'ADMIN',
       }),
     });
@@ -4510,7 +4569,7 @@ describe('users access hardening', () => {
     );
   });
 
-  it('loads the system activity journal with cursor pagination and masked ip', async () => {
+  it('loads the detailed system activity journal with cursor pagination', async () => {
     mockPrisma.auditLog.findMany.mockReset();
     mockPrisma.user.findMany.mockReset();
     mockPrisma.auditLog.findMany.mockResolvedValueOnce([
@@ -4561,7 +4620,7 @@ describe('users access hardening', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(response.headers.get('Cache-Control')).toBe('no-store');
+    expect(response.headers.get('Cache-Control')).toBe('private, no-store');
     expect(body.success).toBe(true);
     expect(body.data.logs).toHaveLength(2);
     expect(body.data.nextCursor).toEqual(expect.any(String));
@@ -4569,22 +4628,26 @@ describe('users access hardening', () => {
     expect(body.data.snapshotAt).toEqual(expect.any(String));
     expect(body.data.logs[0]).toMatchObject({
       actorName: 'Alice Admin',
-      ipAddress: null,
+      ipAddress: '1.2.3.4',
       metadata: {
         ...SYSTEM_SAFE_AUDIT_METADATA,
-        after: { firstName: 'Jeanne', isActive: true },
-        before: { firstName: 'Jean', isActive: false },
-        changes: ['firstName', 'isActive'],
+        after: {
+          contactEmail: 'new@example.com',
+          firstName: 'Jeanne',
+          isActive: true,
+        },
+        before: {
+          contactEmail: 'old@example.com',
+          firstName: 'Jean',
+          isActive: false,
+        },
+        changes: ['contactEmail', 'firstName', 'isActive'],
       },
       targetName: 'Bob User',
     });
-    expect(body.data.logs[0].metadata.after).not.toHaveProperty('contactEmail');
-    expect(body.data.logs[0].metadata.before).not.toHaveProperty(
-      'contactEmail',
-    );
     expect(body.data.logs[1]).toMatchObject({
       actorName: null,
-      ipAddress: null,
+      ipAddress: '5.6.7.8',
       targetName: 'Nom archive',
     });
     expect(mockRequirePermission).toHaveBeenCalledWith(
@@ -4636,6 +4699,86 @@ describe('users access hardening', () => {
         },
       }),
     );
+  });
+
+  it('resolves active person entity names in one grouped query and preserves deleted IDs', async () => {
+    mockPrisma.auditLog.findMany.mockReset();
+    mockPrisma.person.findMany.mockReset();
+    const baseLog = {
+      action: 'PERSON_UPDATE',
+      actorDisplayNameSnapshot: 'Alice Admin',
+      actorLoginNameSnapshot: 'alice.admin',
+      actorRoleSnapshot: 'ADMIN',
+      category: 'PERSON',
+      createdAt: new Date('2026-03-03T10:00:00.000Z'),
+      description: 'Fiche modifiée',
+      entityType: 'PERSON',
+      eventKind: 'ACTIVITY',
+      eventVersion: 1,
+      fieldChanges: [],
+      ipAddress: null,
+      metadata: null,
+      outcome: 'SUCCESS',
+      pageKey: 'persons',
+      poleKey: 'persons',
+      requestId: 'request-person',
+      severity: 'INFO',
+      stream: 'IDENTITY',
+      tabKey: null,
+      targetDisplayNameSnapshot: null,
+      targetLoginNameSnapshot: null,
+      targetRoleSnapshot: null,
+      targetUserId: null,
+      userAgent: null,
+      userId: 'actor-1',
+    };
+    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
+      { ...baseLog, entityId: 'person-active', id: 'log-active' },
+      {
+        ...baseLog,
+        createdAt: new Date('2026-03-03T09:00:00.000Z'),
+        entityId: 'person-deleted',
+        id: 'log-deleted',
+      },
+    ]);
+    mockPrisma.person.findMany.mockResolvedValueOnce([
+      {
+        firstName: 'Ada',
+        id: 'person-active',
+        lastName: 'Lovelace',
+        nickname: 'Enchantress',
+      },
+    ]);
+    const route = await import('$app/api/systeme/journal-activite/route');
+    const response = await route.GET(
+      new Request(
+        'http://localhost/api/systeme/journal-activite?limit=2&period=7d',
+      ) as never,
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe('private, no-store');
+    expect(mockPrisma.person.findMany).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.person.findMany).toHaveBeenCalledWith({
+      select: {
+        firstName: true,
+        id: true,
+        lastName: true,
+        nickname: true,
+      },
+      where: {
+        id: { in: ['person-active', 'person-deleted'] },
+      },
+    });
+    expect(body.data.logs[0]).toMatchObject({
+      entityDisplayName: 'Enchantress · Ada Lovelace',
+      entityId: 'person-active',
+    });
+    expect(body.data.logs[1]).toMatchObject({
+      entityDisplayName: null,
+      entityId: 'person-deleted',
+    });
   });
 
   it('reads legacy activity-journal page keys through the canonical page filter', async () => {
@@ -4853,7 +4996,7 @@ describe('users access hardening', () => {
     expect(mockPrisma.auditLog.findMany).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps login-name search behind sensitive audit access', async () => {
+  it('includes login-name search for every global audit viewer', async () => {
     mockPrisma.auditLog.findMany.mockReset();
     mockPrisma.auditLog.findMany
       .mockResolvedValueOnce([])
@@ -4890,8 +5033,9 @@ describe('users access hardening', () => {
 
     expect(regularResponse.status).toBe(200);
     expect(protectedResponse.status).toBe(200);
-    expect(regularSearch).toHaveLength(2);
-    expect(JSON.stringify(regularSearch)).not.toContain('LoginNameSnapshot');
+    expect(regularSearch).toHaveLength(4);
+    expect(JSON.stringify(regularSearch)).toContain('actorLoginNameSnapshot');
+    expect(JSON.stringify(regularSearch)).toContain('targetLoginNameSnapshot');
     expect(protectedSearch).toHaveLength(4);
     expect(JSON.stringify(protectedSearch)).toContain('actorLoginNameSnapshot');
     expect(JSON.stringify(protectedSearch)).toContain(
@@ -5029,10 +5173,9 @@ describe('users access hardening', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('Content-Type')).toContain('text/csv');
     expect(csv).toContain('"\' \n=2+2"');
-    expect(csv).toContain('Compte utilisateur modifié');
-    expect(csv).not.toContain('private description');
+    expect(csv).toContain('private description');
     expect(csv).not.toContain('never-export');
-    expect(csv).not.toContain('request-private');
+    expect(csv).toContain('request-private');
     expect(csv).not.toContain('private-agent');
     expect(response.headers.get('X-Export-Truncated')).toBe('false');
     expect(mockPrisma.auditLog.count).toHaveBeenCalledWith(

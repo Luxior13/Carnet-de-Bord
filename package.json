@@ -16,6 +16,8 @@
     "start": "turbo run start",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
+    "persons:performance": "bun run --filter @repo/database db:persons:performance-check",
+    "maintenance": "bun run --filter web maintenance",
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e --filter=web",
     "typecheck": "turbo run typecheck",

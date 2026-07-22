@@ -49,8 +49,10 @@ dans les composants React.
 - Les éditions utilisent une version optimiste (`version` ou `updatedAt`).
 - Les commandes rejouables possèdent une clé d'idempotence.
 - Les écritures liées et l'audit partagent la même transaction.
-- Les traitements longs sont placés dans `BackgroundJob`; aucune promesse
-  détachée ne garantit un travail métier.
+- Les mutations actuelles restent bornées et transactionnelles dans la requête.
+- Une future opération réellement longue devra introduire explicitement son
+  mécanisme durable et son exploitation ; aucune promesse détachée ne garantit
+  un travail métier.
 
 ## 5. États UX obligatoires
 

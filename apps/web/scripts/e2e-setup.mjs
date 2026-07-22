@@ -66,6 +66,37 @@ async function ensureLoginNameReservation(transaction, loginName, userId) {
   }
 }
 
+async function assertEmptyPersonDomain(client) {
+  const [
+    personCount,
+    deletionTombstoneCount,
+    personFieldChangeCount,
+    personAuditCount,
+  ] = await client.$transaction([
+    client.person.count(),
+    client.personDeletionTombstone.count(),
+    client.auditFieldChange.count({ where: { entityType: 'PERSON' } }),
+    client.auditLog.count({
+      where: {
+        OR: [{ category: 'PERSON' }, { entityType: 'PERSON' }],
+      },
+    }),
+  ]);
+  const dirtyResources = [
+    ['Person', personCount],
+    ['PersonDeletionTombstone', deletionTombstoneCount],
+    ['AuditFieldChange(PERSON)', personFieldChangeCount],
+    ['AuditLog(PERSON)', personAuditCount],
+  ]
+    .filter(([, count]) => count !== 0)
+    .map(([resource, count]) => `${resource}=${count}`);
+  if (dirtyResources.length > 0) {
+    throw new Error(
+      `Refusing E2E setup: the Person domain is not empty (${dirtyResources.join(', ')}). Recreate or reset the isolated E2E database before running end-to-end tests.`,
+    );
+  }
+}
+
 const databaseUrl = process.env.E2E_DATABASE_URL;
 const adminLoginName =
   process.env.E2E_SUPERADMIN_LOGIN_NAME?.trim().toLowerCase();
@@ -167,6 +198,8 @@ const prisma = new PrismaClient({
 });
 
 try {
+  await assertEmptyPersonDomain(prisma);
+
   const passwordHash = await bcrypt.hash(adminPassword, 12);
   const protectedAccounts = await prisma.user.findMany({
     select: { id: true, loginName: true },

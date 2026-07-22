@@ -78,8 +78,8 @@ export const AUDIT_ACTION_DISPLAY = new Map<string, AuditActionDisplayConfig>([
     {
       color: 'border-warning/35 bg-warning/10 text-warning',
       icon: Cpu,
-      label: 'Traitement système mis à jour',
-      sentence: 'a mis à jour un traitement système',
+      label: 'Ancien traitement système',
+      sentence: 'avait mis à jour un ancien traitement système',
     },
   ],
   [

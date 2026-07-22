@@ -6,6 +6,7 @@ import { ErrorCode } from '$types/api.types';
 
 const mocks = vi.hoisted(() => {
   const transaction = {
+    $queryRaw: vi.fn(),
     systemSetting: {
       create: vi.fn(),
       findUnique: vi.fn(),
@@ -100,6 +101,7 @@ describe('system settings routes', () => {
           version: 1,
         }),
     );
+    mocks.transaction.$queryRaw.mockResolvedValue([]);
     mocks.transaction.systemSetting.updateMany.mockResolvedValue({ count: 1 });
     mocks.transaction.systemSetting.findUnique.mockResolvedValue({
       description: 'Nombre de lignes proposé par défaut dans les listes',
@@ -111,7 +113,7 @@ describe('system settings routes', () => {
     mocks.createAuditLogWithHeaders.mockResolvedValue(undefined);
   });
 
-  it('returns the four closed settings and ignores stored descriptions or unknown keys', async () => {
+  it('returns the three closed settings and ignores stored descriptions or unknown keys', async () => {
     mocks.prisma.systemSetting.findMany.mockResolvedValue([
       {
         description: '<script>unsafe</script>',
@@ -145,7 +147,6 @@ describe('system settings routes', () => {
           key: {
             in: expect.arrayContaining([
               'audit.retentionDays',
-              'jobs.retentionDays',
               'notifications.retentionDays',
               'ui.defaultPageSize',
             ]),
@@ -153,7 +154,7 @@ describe('system settings routes', () => {
         },
       }),
     );
-    expect(body.data).toHaveLength(4);
+    expect(body.data).toHaveLength(3);
     expect(body.data).toContainEqual(
       expect.objectContaining({
         description: 'Nombre de lignes proposé par défaut dans les listes',
@@ -335,26 +336,26 @@ describe('system settings routes', () => {
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
   });
 
-  it('protects a reduction of completed-job retention with the same password rule', async () => {
+  it('protects a notification-retention reduction with the password rule', async () => {
     mocks.prisma.systemSetting.findUnique.mockResolvedValueOnce({
-      value: 30,
+      value: 180,
       version: 2,
     });
     mocks.transaction.systemSetting.findUnique.mockResolvedValueOnce({
-      description: 'Durée de conservation des traitements terminés en jours',
-      key: 'jobs.retentionDays',
+      description: 'Durée de conservation des notifications en jours',
+      key: 'notifications.retentionDays',
       updatedAt: UPDATED_AT,
-      value: 7,
+      value: 30,
       version: 3,
     });
     const { PUT } = await import('$app/api/systeme/parametres/[key]/route');
 
     const response = await PUT(
-      createPutRequest('jobs.retentionDays', {
+      createPutRequest('notifications.retentionDays', {
         expectedVersion: 2,
-        value: 7,
+        value: 30,
       }),
-      routeParams('jobs.retentionDays'),
+      routeParams('notifications.retentionDays'),
     );
 
     expect(response.status).toBe(200);
@@ -380,6 +381,9 @@ describe('system settings routes', () => {
       1,
     );
     expect(mocks.transaction.systemSetting.create).toHaveBeenCalled();
+    expect(String(mocks.transaction.$queryRaw.mock.calls[0]?.[0])).toContain(
+      'system-setting:audit.retentionDays',
+    );
   });
 
   it('audits the old and new values with the canonical page location', async () => {
@@ -471,11 +475,11 @@ describe('system settings routes', () => {
     const { PUT } = await import('$app/api/systeme/parametres/[key]/route');
 
     const response = await PUT(
-      createPutRequest('jobs.retentionDays', {
+      createPutRequest('notifications.retentionDays', {
         expectedVersion: 0,
         value: 60,
       }),
-      routeParams('jobs.retentionDays'),
+      routeParams('notifications.retentionDays'),
     );
 
     expect(response.status).toBe(409);
@@ -505,7 +509,6 @@ describe('system settings routes', () => {
     ['ui.defaultPageSize', 101],
     ['audit.retentionDays', 364],
     ['notifications.retentionDays', 731],
-    ['jobs.retentionDays', 6],
   ])('rejects the out-of-range value for %s', async (key, value) => {
     const { PUT } = await import('$app/api/systeme/parametres/[key]/route');
 

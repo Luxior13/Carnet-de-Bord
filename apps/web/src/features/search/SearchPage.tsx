@@ -22,6 +22,7 @@ import { PageHero } from '$components/layout/PageHero';
 import { getVisibleNavigationSpaces } from '$constants/app.constants';
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
 import { getNavigationSpaceToneClasses } from '$constants/navigation-theme.constants';
+import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
 import { buildSearchCatalog } from '$features/search/search-catalog';
 import { Badge } from '$ui/badge';
@@ -47,6 +48,7 @@ export const SearchPage: FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { userData } = useUser();
+  const { operationalFeatureIds } = useFeatureAvailability();
   const urlQuery = sanitizeQuery(searchParams.get('q'));
   const requestedSpace = searchParams.get('pole') ?? 'all';
   const requestedSource = searchParams.get('source') ?? 'all';
@@ -57,8 +59,8 @@ export const SearchPage: FC = () => {
     : 'all';
   const [queryInput, setQueryInput] = useState(urlQuery);
   const spaces = useMemo(
-    () => getVisibleNavigationSpaces(userData),
-    [userData],
+    () => getVisibleNavigationSpaces(userData, 'live', operationalFeatureIds),
+    [operationalFeatureIds, userData],
   );
   const catalog = useMemo(
     () => buildSearchCatalog(spaces, userData),

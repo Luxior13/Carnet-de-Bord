@@ -24,6 +24,7 @@ import {
 } from '$constants/app.constants';
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
 import { getNavigationSpaceToneClasses } from '$constants/navigation-theme.constants';
+import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
 import {
   buildSearchCatalog,
@@ -46,6 +47,7 @@ export const QuickNavigation: FC = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { userData } = useUser();
+  const { operationalFeatureIds } = useFeatureAvailability();
   const listboxId = useId();
   const activeResultRef = useRef<HTMLButtonElement | null>(null);
   const [activeResultHref, setActiveResultHref] = useState<string | null>(null);
@@ -53,8 +55,8 @@ export const QuickNavigation: FC = () => {
   const [query, setQuery] = useState('');
 
   const spaces = useMemo(
-    () => getVisibleNavigationSpaces(userData),
-    [userData],
+    () => getVisibleNavigationSpaces(userData, 'live', operationalFeatureIds),
+    [operationalFeatureIds, userData],
   );
   const activeSpace = useMemo(
     () => getActiveNavigationSpace(pathname, spaces),

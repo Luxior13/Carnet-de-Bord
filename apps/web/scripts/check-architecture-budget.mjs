@@ -51,7 +51,8 @@ for (const filePath of await collectSourceFiles(sourceRoot)) {
 
   const isDatabaseServerBoundary =
     sourcePath.startsWith('app/api/') ||
-    sourcePath.startsWith('shared/server/');
+    sourcePath.startsWith('shared/server/') ||
+    /^features\/[^/]+\/server\//u.test(sourcePath);
   if (
     !isDatabaseServerBoundary &&
     SERVER_ONLY_DATABASE_IMPORT_PATTERN.test(source)

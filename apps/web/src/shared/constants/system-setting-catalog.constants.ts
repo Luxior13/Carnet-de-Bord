@@ -31,16 +31,6 @@ export const SYSTEM_SETTING_CATALOG = {
     section: 'retention',
     unit: 'days',
   }),
-  'jobs.retentionDays': defineSystemSetting({
-    defaultValue: 30,
-    description: 'Durée de conservation des traitements terminés en jours',
-    label: 'Tâches de fond terminées',
-    max: 365,
-    min: 7,
-    passwordWhenDecreasing: true,
-    section: 'retention',
-    unit: 'days',
-  }),
   'notifications.retentionDays': defineSystemSetting({
     defaultValue: 180,
     description: 'Durée de conservation des notifications en jours',

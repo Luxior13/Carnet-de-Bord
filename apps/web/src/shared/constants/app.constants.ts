@@ -48,9 +48,8 @@ const internalAccess = [ROADMAP_PERMISSIONS.INTERNAL.VIEW] as const;
 const legalAccess = [ROADMAP_PERMISSIONS.LEGAL.VIEW] as const;
 const meetingsAccess = [ROADMAP_PERMISSIONS.MEETINGS.VIEW] as const;
 const meetingsUpdateAccess = [ROADMAP_PERMISSIONS.MEETINGS.UPDATE] as const;
-const membersAccess = [ROADMAP_PERMISSIONS.MEMBERS.VIEW] as const;
-const membersUpdateAccess = [ROADMAP_PERMISSIONS.MEMBERS.UPDATE] as const;
 const notificationsAccess = [PERMISSIONS.NOTIFICATIONS.VIEW] as const;
+const personsAccess = [PERMISSIONS.PERSONS.VIEW] as const;
 const notificationsManageAccess = [
   ROADMAP_PERMISSIONS.NOTIFICATIONS.MANAGE,
 ] as const;
@@ -172,6 +171,7 @@ export const NAV_SPACES: NavigationSpace[] = [
     icon: 'Users',
     id: 'internal',
     label: 'Vie interne',
+    matchHrefs: ['/vie-interne/repertoire'],
     sections: [
       {
         id: 'internal-main',
@@ -191,35 +191,14 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: internalAccess,
           },
           {
-            children: [
-              {
-                description:
-                  'Fiches internes, contacts, notes et liens utiles.',
-                href: '/vie-interne/membres',
-                icon: 'Users',
-                label: 'Membres',
-                requiredPermissions: membersAccess,
-              },
-              {
-                description: 'Adhésions, statuts et cotisations liées.',
-                href: '/vie-interne/adherents',
-                icon: 'UserCheck',
-                label: 'Adhérents',
-                requiredPermissions: membersAccess,
-              },
-              {
-                description: 'Arrivées, départs et checklists internes.',
-                href: '/vie-interne/onboarding-depart',
-                icon: 'UserPlus',
-                label: 'Onboarding et départ',
-                requiredPermissions: membersUpdateAccess,
-              },
-            ],
-            description: 'Personnes, adhérents et parcours interne.',
-            href: '/vie-interne/membres-adherents',
-            icon: 'Users',
-            label: 'Membres & adhérents',
-            requiredPermissions: membersAccess,
+            availability: 'live',
+            description: FEATURES.persons.description,
+            featureId: FEATURES.persons.id,
+            href: FEATURES.persons.href,
+            hubActionLabel: 'Consulter le répertoire',
+            icon: FEATURES.persons.icon,
+            label: FEATURES.persons.label,
+            requiredPermissions: personsAccess,
           },
           {
             children: [
@@ -256,7 +235,7 @@ export const NAV_SPACES: NavigationSpace[] = [
             href: '/vie-interne/recrutement-tryouts',
             icon: 'UserPlus',
             label: 'Recrutement & tryouts',
-            requiredPermissions: membersUpdateAccess,
+            requiredPermissions: internalAccess,
           },
           {
             description: 'Rappels transversaux et notifications internes.',
@@ -270,7 +249,7 @@ export const NAV_SPACES: NavigationSpace[] = [
         position: 'top',
       },
     ],
-    summary: 'Membres, réunions, rappels',
+    summary: 'Répertoire, réunions, rappels',
     tone: 'internal',
   },
   {
@@ -295,14 +274,6 @@ export const NAV_SPACES: NavigationSpace[] = [
             href: '/bureau-juridique/sponsors',
             icon: 'Handshake',
             label: 'Sponsors & partenaires',
-            requiredPermissions: legalAccess,
-          },
-          {
-            description:
-              'Répertoire central des personnes internes, externes, anciens contacts et profils sensibles.',
-            href: '/bureau-juridique/personnes-contacts',
-            icon: 'Users',
-            label: 'Personnes & contacts',
             requiredPermissions: legalAccess,
           },
           {
@@ -773,11 +744,17 @@ function filterNavItems(
   items: readonly NavItem[],
   user: NavigationUser,
   availability: NavigationAvailabilityFilter,
+  operationalFeatureIds?: ReadonlySet<string>,
 ): NavItem[] {
   return items
     .map((item) => {
       const visibleChildren = item.children
-        ? filterNavItems(item.children, user, availability)
+        ? filterNavItems(
+            item.children,
+            user,
+            availability,
+            operationalFeatureIds,
+          )
         : undefined;
 
       return {
@@ -790,10 +767,16 @@ function filterNavItems(
       const hasExpectedAvailability =
         availability === 'all' ||
         getNavigationAvailability(item) === availability;
+      const isOperational =
+        !item.featureId ||
+        !operationalFeatureIds ||
+        operationalFeatureIds.has(item.featureId);
 
       return (
         hasVisibleChildren ||
-        (hasExpectedAvailability && canAccessNavigationItem(user, item))
+        (hasExpectedAvailability &&
+          isOperational &&
+          canAccessNavigationItem(user, item))
       );
     });
 }
@@ -802,11 +785,17 @@ function filterNavSections(
   sections: readonly NavSection[],
   user: NavigationUser,
   availability: NavigationAvailabilityFilter,
+  operationalFeatureIds?: ReadonlySet<string>,
 ): NavSection[] {
   return sections
     .map((section) => ({
       ...section,
-      items: filterNavItems(section.items, user, availability),
+      items: filterNavItems(
+        section.items,
+        user,
+        availability,
+        operationalFeatureIds,
+      ),
     }))
     .filter((section) => section.items.length > 0);
 }
@@ -823,10 +812,25 @@ export function filterNavigationSpace(
   space: NavigationSpace,
   user: NavigationUser,
   availability: NavigationAvailabilityFilter = 'live',
+  operationalFeatureIds?: ReadonlySet<string>,
 ): NavigationSpace {
+  const sections = filterNavSections(
+    space.sections,
+    user,
+    availability,
+    operationalFeatureIds,
+  );
+  const visibleItems = flattenNavItems(
+    sections.flatMap((section) => section.items),
+  );
+  const href = visibleItems.some((item) => item.href === space.href)
+    ? space.href
+    : (visibleItems[0]?.href ?? space.href);
+
   return {
     ...space,
-    sections: filterNavSections(space.sections, user, availability),
+    href,
+    sections,
   };
 }
 
@@ -888,9 +892,10 @@ export function canOpenNavigationHref(
 export function getVisibleNavigationSpaces(
   user: NavigationUser,
   availability: NavigationAvailabilityFilter = 'live',
+  operationalFeatureIds?: ReadonlySet<string>,
 ): NavigationSpace[] {
   return NAV_SPACES.map((space) =>
-    filterNavigationSpace(space, user, availability),
+    filterNavigationSpace(space, user, availability, operationalFeatureIds),
   ).filter((space) => space.sections.length > 0);
 }
 
@@ -952,8 +957,13 @@ export function getVisibleNavSections(
 export function getDesktopSidebarSections(
   user: NavigationUser,
   pathname = '/tableau-de-bord',
+  operationalFeatureIds?: ReadonlySet<string>,
 ): NavSection[] {
-  const visibleSpaces = getVisibleNavigationSpaces(user);
+  const visibleSpaces = getVisibleNavigationSpaces(
+    user,
+    'live',
+    operationalFeatureIds,
+  );
 
   // Never reveal the unfiltered dashboard when every space is denied.
   if (visibleSpaces.length === 0) return [];

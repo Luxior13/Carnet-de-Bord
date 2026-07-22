@@ -29,12 +29,21 @@ enum NotificationSeverity {
   CRITICAL
 }
 
-enum BackgroundJobStatus {
-  PENDING
-  RUNNING
-  SUCCEEDED
-  FAILED
-  CANCELLED
+enum PersonStructureStatus {
+  IN_STRUCTURE
+  OUTSIDE_STRUCTURE
+}
+
+enum AuditFieldChangeType {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum AuditValueStorageMode {
+  PLAIN
+  ENCRYPTED
+  NONE
 }
 
 model User {
@@ -231,6 +240,9 @@ enum AuditAction {
   NOTIFICATION_SEND
   SYSTEM_SETTING_UPDATE
   BACKGROUND_JOB_UPDATE
+  PERSON_CREATE
+  PERSON_UPDATE
+  PERSON_DELETE
 }
 
 enum AuditCategory {
@@ -238,6 +250,7 @@ enum AuditCategory {
   USER
   PERMISSION
   SYSTEM
+  PERSON
 }
 
 enum AuditEventKind {
@@ -268,12 +281,12 @@ enum AuditSeverity {
 model AuditLog {
   id                        String         @id @default(cuid())
   userId                    String?
-  user                      User?          @relation("AuditActor", fields: [userId], references: [id], onDelete: SetNull)
+  user                      User?          @relation("AuditActor", fields: [userId], references: [id], onDelete: Restrict)
   actorDisplayNameSnapshot  String?
   actorLoginNameSnapshot    String?
   actorRoleSnapshot         UserRole?
   targetUserId              String?
-  targetUser                User?          @relation("AuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  targetUser                User?          @relation("AuditTarget", fields: [targetUserId], references: [id], onDelete: Restrict)
   targetDisplayNameSnapshot String?
   targetLoginNameSnapshot   String?
   targetRoleSnapshot        UserRole?
@@ -289,11 +302,16 @@ model AuditLog {
   poleKey                   String?
   pageKey                   String?
   tabKey                    String?
+  entityType                String?        @db.VarChar(40)
+  entityId                  String?        @db.VarChar(128)
   requestId                 String?
   ipAddress                 String?
   userAgent                 String?
   createdAt                 DateTime       @default(now())
 
+  fieldChanges AuditFieldChange[]
+
+  @@unique([id, entityType, entityId])
   @@index([userId, action])
   @@index([userId, createdAt, id])
   @@index([targetUserId, action])
@@ -308,11 +326,142 @@ model AuditLog {
   @@index([requestId])
   @@index([action, createdAt, id])
   @@index([category, createdAt, id])
+  @@index([entityType, entityId, createdAt, id])
   @@index([createdAt, id])
   @@index([actorDisplayNameSnapshot(ops: raw("gin_trgm_ops"))], type: Gin, map: "AuditLog_actorDisplayNameSnapshot_trgm_idx")
   @@index([actorLoginNameSnapshot(ops: raw("gin_trgm_ops"))], type: Gin, map: "AuditLog_actorLoginNameSnapshot_trgm_idx")
   @@index([targetDisplayNameSnapshot(ops: raw("gin_trgm_ops"))], type: Gin, map: "AuditLog_targetDisplayNameSnapshot_trgm_idx")
   @@index([targetLoginNameSnapshot(ops: raw("gin_trgm_ops"))], type: Gin, map: "AuditLog_targetLoginNameSnapshot_trgm_idx")
+}
+
+model AuditEncryptionKeyVersion {
+  version     Int      @id
+  algorithm   String   @default("AES-256-GCM") @db.VarChar(32)
+  firstUsedAt DateTime @default(now())
+
+  fieldChanges AuditFieldChange[]
+}
+
+model AuditFieldChange {
+  id               String                @id @default(cuid())
+  auditLogId       String
+  entityType       String                @db.VarChar(40)
+  entityId         String                @db.VarChar(128)
+  sectionKey       String                @db.VarChar(64)
+  fieldKey         String                @db.VarChar(100)
+  recordId         String?               @db.VarChar(128)
+  changeType       AuditFieldChangeType
+  valueMode        AuditValueStorageMode
+  beforeValue      String?               @db.VarChar(512)
+  afterValue       String?               @db.VarChar(512)
+  valuesCiphertext Bytes?
+  valuesIv         Bytes?
+  valuesAuthTag    Bytes?
+  valueKeyVersion  Int?
+  beforeHash       String?               @db.Char(64)
+  afterHash        String?               @db.Char(64)
+  createdAt        DateTime
+
+  auditLog             AuditLog                   @relation(fields: [auditLogId, entityType, entityId], references: [id, entityType, entityId], onDelete: Cascade)
+  encryptionKeyVersion AuditEncryptionKeyVersion? @relation(fields: [valueKeyVersion], references: [version], onDelete: Restrict)
+
+  @@index([auditLogId])
+  @@index([entityType, entityId, sectionKey, fieldKey, recordId, createdAt, id], map: "AuditFieldChange_history_lookup_idx")
+  @@index([valueKeyVersion])
+}
+
+model Person {
+  id                  String                @id @default(cuid())
+  nickname            String?               @db.VarChar(80)
+  normalizedNickname  String?               @db.VarChar(160)
+  firstName           String?               @db.VarChar(100)
+  normalizedFirstName String?               @db.VarChar(200)
+  lastName            String?               @db.VarChar(100)
+  normalizedLastName  String?               @db.VarChar(200)
+  birthDate           DateTime?             @db.Date
+  structureStatus     PersonStructureStatus @default(OUTSIDE_STRUCTURE)
+  version             Int                   @default(1)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  emails         PersonEmail[]
+  phones         PersonPhone[]
+  socialProfiles PersonSocialProfile[]
+
+  @@index([createdAt, id])
+  @@index([structureStatus, createdAt, id])
+  @@index([normalizedNickname(ops: raw("gin_trgm_ops"))], type: Gin, map: "Person_normalizedNickname_trgm_idx")
+  @@index([normalizedFirstName(ops: raw("gin_trgm_ops"))], type: Gin, map: "Person_normalizedFirstName_trgm_idx")
+  @@index([normalizedLastName(ops: raw("gin_trgm_ops"))], type: Gin, map: "Person_normalizedLastName_trgm_idx")
+  @@index([normalizedNickname(ops: raw("varchar_pattern_ops"))], map: "Person_normalizedNickname_prefix_idx")
+  @@index([normalizedFirstName(ops: raw("varchar_pattern_ops"))], map: "Person_normalizedFirstName_prefix_idx")
+  @@index([normalizedLastName(ops: raw("varchar_pattern_ops"))], map: "Person_normalizedLastName_prefix_idx")
+}
+
+model PersonEmail {
+  id              String   @id @default(cuid())
+  personId        String
+  email           String   @db.VarChar(320)
+  normalizedEmail String   @db.VarChar(320)
+  label           String   @db.VarChar(40)
+  isPrimary       Boolean  @default(false)
+  version         Int      @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, normalizedEmail])
+  @@index([normalizedEmail])
+  @@index([normalizedEmail(ops: raw("varchar_pattern_ops"))], map: "PersonEmail_normalizedEmail_prefix_idx")
+}
+
+model PersonPhone {
+  id              String   @id @default(cuid())
+  personId        String
+  phone           String   @db.VarChar(40)
+  normalizedPhone String   @db.VarChar(16)
+  label           String   @db.VarChar(40)
+  isPrimary       Boolean  @default(false)
+  version         Int      @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, normalizedPhone])
+  @@index([normalizedPhone])
+  @@index([normalizedPhone(ops: raw("varchar_pattern_ops"))], map: "PersonPhone_normalizedPhone_prefix_idx")
+}
+
+model PersonSocialProfile {
+  id                       String   @id @default(cuid())
+  personId                 String
+  networkKey               String   @db.VarChar(40)
+  identifier               String?  @db.VarChar(100)
+  normalizedIdentifier     String?  @db.VarChar(100)
+  profileUrl               String?  @db.VarChar(2048)
+  normalizedProfileUrl     String?  @db.VarChar(2048)
+  normalizedProfileUrlHash String?  @db.Char(64)
+  label                    String   @db.VarChar(40)
+  isPrimary                Boolean  @default(false)
+  version                  Int      @default(1)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, networkKey, normalizedIdentifier], map: "PersonSocialProfile_person_network_identifier_key")
+  @@unique([personId, networkKey, normalizedProfileUrlHash], map: "PersonSocialProfile_person_network_url_hash_key")
+  @@index([normalizedIdentifier])
+  @@index([normalizedIdentifier(ops: raw("varchar_pattern_ops"))], map: "PersonSocialProfile_normalizedIdentifier_prefix_idx")
+  @@index([normalizedProfileUrlHash])
+}
+
+model PersonDeletionTombstone {
+  personId            String   @id @db.VarChar(128)
+  deletionOperationId String   @unique @db.VarChar(191)
+  deletedAt           DateTime @default(now())
 }
 
 /// Read-only archive of the legacy StaffProfile table.
@@ -406,28 +555,4 @@ model SystemSetting {
 
   @@index([updatedAt])
   @@index([updatedById])
-}
-
-/// Provider-neutral durable work queue. Workers claim due jobs atomically and
-/// recover leases after a crash; dedupeKey makes producers idempotent.
-model BackgroundJob {
-  id          String              @id @default(cuid())
-  type        String
-  payload     Json
-  status      BackgroundJobStatus @default(PENDING)
-  priority    Int                 @default(0)
-  runAt       DateTime            @default(now())
-  attempts    Int                 @default(0)
-  maxAttempts Int                 @default(5)
-  lockedAt    DateTime?
-  lockedBy    String?
-  lastError   String?
-  completedAt DateTime?
-  dedupeKey   String?             @unique
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-
-  @@index([status, runAt, priority, id])
-  @@index([lockedAt])
-  @@index([type, status, createdAt])
 }

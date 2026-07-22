@@ -125,7 +125,7 @@ describe('protected permission bypass', () => {
   it('allows a protected account to bypass a known active policy', () => {
     const result = requirePermission(
       buildAuthUser({ isProtected: true }) as never,
-      PERMISSIONS.AUDIT.VIEW_SENSITIVE,
+      PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY,
     );
 
     expect(result.success).toBe(true);

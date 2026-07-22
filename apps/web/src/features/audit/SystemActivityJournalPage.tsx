@@ -67,6 +67,14 @@ import { Skeleton } from '$ui/skeleton';
 import { cn } from '$utils/css.utils';
 
 import {
+  AUDIT_CONTEXT_FILTER_DEFAULTS,
+  AUDIT_CONTEXT_FILTER_QUERY_KEYS,
+  type AuditContextFilters,
+  getAuditContextFilterChips,
+  readAuditContextFilters,
+  writeAuditContextFilters,
+} from './audit-context-filters';
+import {
   AUDIT_ACTION_OPTIONS,
   type AuditChangeDiff,
   formatAuditChangeValue,
@@ -77,6 +85,11 @@ import {
   getAuditChangeFieldLabel,
   toValidAuditDate,
 } from './audit-display';
+import type {
+  AuditIdentitySnapshot as IdentitySnapshot,
+  SystemActivityJournalLog as JournalLog,
+  SystemActivityJournalResponse as JournalResponse,
+} from './system-activity.types';
 
 type SystemActivityJournalPageProps = {
   item: NavItem;
@@ -86,46 +99,7 @@ type SystemActivityJournalPageProps = {
 type JournalLogType = 'activity' | 'connections';
 type JournalExportFormat = 'csv' | 'json';
 
-type JournalLog = {
-  action: string;
-  actorName: string | null;
-  actorSnapshot?: IdentitySnapshot | null;
-  category: string;
-  createdAt: string;
-  description: string;
-  eventKind?: string | null;
-  eventVersion?: number | null;
-  id: string;
-  ipAddress: string | null;
-  metadata: Record<string, unknown> | null;
-  outcome?: string | null;
-  pageKey?: string | null;
-  poleKey?: string | null;
-  requestId?: string | null;
-  severity?: string | null;
-  stream?: string | null;
-  tabKey?: string | null;
-  targetName: string | null;
-  targetSnapshot?: IdentitySnapshot | null;
-  targetUserId: string | null;
-  userAgent?: string | null;
-  userId: string | null;
-};
-
-type IdentitySnapshot = {
-  displayName?: string | null;
-  loginName?: string | null;
-};
-
-type JournalResponse = {
-  logs: JournalLog[];
-  nextCursor: string | null;
-  pageSize: number;
-  sensitiveDetailsVisible?: boolean;
-  snapshotAt?: string;
-};
-
-type JournalFilters = {
+type JournalFilters = AuditContextFilters & {
   action: string;
   actorId: string;
   category: string;
@@ -164,6 +138,7 @@ const FILTER_QUERY_KEYS = [
   'action',
   'actorId',
   'category',
+  ...AUDIT_CONTEXT_FILTER_QUERY_KEYS,
   'from',
   'logType',
   'pageKey',
@@ -178,6 +153,7 @@ const DEFAULT_FILTERS: JournalFilters = {
   action: ALL_FILTER_VALUE,
   actorId: '',
   category: ALL_FILTER_VALUE,
+  ...AUDIT_CONTEXT_FILTER_DEFAULTS,
   from: '',
   logType: 'activity',
   pageKey: ALL_FILTER_VALUE,
@@ -314,6 +290,7 @@ const getFiltersFromSearchParams = (
     action: params.get('action') || DEFAULT_FILTERS.action,
     actorId: params.get('actorId') || '',
     category: params.get('category') || DEFAULT_FILTERS.category,
+    ...readAuditContextFilters(params),
     from: isCustomPeriod ? from : '',
     logType: logType === 'connections' ? 'connections' : 'activity',
     pageKey: normalizeJournalPageKey(
@@ -345,6 +322,7 @@ const writeFiltersToSearchParams = (
   if (filters.search) params.set('search', filters.search);
   if (filters.actorId) params.set('actorId', filters.actorId);
   if (filters.targetUserId) params.set('targetUserId', filters.targetUserId);
+  writeAuditContextFilters(params, filters);
 
   if (filters.logType === 'connections') {
     if (filters.action !== ALL_FILTER_VALUE)
@@ -385,6 +363,7 @@ const buildServerQuery = (
   if (filters.search) params.set('search', filters.search);
   if (filters.actorId) params.set('actorId', filters.actorId);
   if (filters.targetUserId) params.set('targetUserId', filters.targetUserId);
+  writeAuditContextFilters(params, filters);
   if (filters.period === 'custom') {
     params.set('from', filters.from);
     params.set('to', filters.to);
@@ -577,7 +556,14 @@ const JournalCard: FC<{
 }> = ({ isOpen, log, onIdentityFilter, onToggle }) => {
   const config = getAuditActionDisplay(log.action, log.metadata);
   const EventIcon = config.icon;
-  const changes = getAuditChangeDiffs(log.metadata);
+  const changes =
+    log.fieldChanges && log.fieldChanges.length > 0
+      ? log.fieldChanges.map(({ after, before, fieldKey }) => ({
+          after,
+          before,
+          fieldKey,
+        }))
+      : getAuditChangeDiffs(log.metadata);
   const location = getLocation(log);
   const LocationIcon = getNavigationIcon(location.icon);
   const actorLabel =
@@ -588,6 +574,10 @@ const JournalCard: FC<{
     log.targetUserId,
   );
   const sameIdentity = isSameIdentity(log);
+  const personEntityLabel =
+    log.entityType === 'PERSON' && log.entityId
+      ? (log.entityDisplayName ?? `Fiche supprimée · ${log.entityId}`)
+      : null;
   const detailsId = `journal-details-${log.id}`;
   const normalizedOutcome = log.outcome?.toUpperCase();
   const normalizedSeverity = log.severity?.toUpperCase();
@@ -611,6 +601,9 @@ const JournalCard: FC<{
     ['Résultat', log.outcome],
     ['Gravité', log.severity],
     ['Version', log.eventVersion?.toString()],
+    ['Type d’entité', log.entityType],
+    ['Nom de l’entité', log.entityDisplayName],
+    ['Identifiant d’entité', log.entityId],
   ].filter((entry): entry is [string, string] => !!entry[1]);
 
   return (
@@ -675,6 +668,11 @@ const JournalCard: FC<{
                 >
                   Cible : {targetLabel}
                 </button>
+              )}
+              {personEntityLabel && (
+                <span title={personEntityLabel}>
+                  Entité : {personEntityLabel}
+                </span>
               )}
               {changes.length > 0 && (
                 <span className="text-primary-emphasis">
@@ -760,7 +758,7 @@ const JournalCard: FC<{
                 <div className="space-y-1.5">
                   {changes.map((change) => (
                     <ChangeItem
-                      key={change.fieldKey}
+                      key={`${change.fieldKey}-${String(change.before)}-${String(change.after)}`}
                       after={change.after}
                       before={change.before}
                       fieldKey={change.fieldKey}
@@ -867,6 +865,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
     filters.action !== ALL_FILTER_VALUE ||
       filters.category !== ALL_FILTER_VALUE ||
       filters.poleKey !== ALL_FILTER_VALUE ||
+      Boolean(filters.entityId) ||
       filters.period === 'custom',
   );
   const [logs, setLogs] = useState<JournalLog[]>([]);
@@ -1201,6 +1200,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
         label: `Cible : ${target?.targetName ?? filters.targetUserId}`,
       });
     }
+    chips.push(...getAuditContextFilterChips(filters));
     if (filters.period !== DEFAULT_FILTERS.period) {
       chips.push({
         key: 'period',
@@ -1246,6 +1246,22 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
   }, [filters, logs, selectedPage.label, selectedPole.label]);
 
   const removeFilter = (key: keyof JournalFilters): void => {
+    if (key === 'entityId' || key === 'entityType') {
+      updateFilters({
+        entityId: '',
+        entityType: '',
+        fieldKey: '',
+        recordId: '',
+        sectionKey: '',
+      });
+
+      return;
+    }
+    if (key === 'fieldKey' || key === 'sectionKey' || key === 'recordId') {
+      updateFilters({ fieldKey: '', recordId: '', sectionKey: '' });
+
+      return;
+    }
     if (key === 'period') {
       updateFilters({ from: '', period: DEFAULT_FILTERS.period, to: '' });
 

@@ -56,6 +56,23 @@ export const FEATURES = {
     permissionMode: 'all',
     requiredPermissions: [PERMISSIONS.NOTIFICATIONS.VIEW],
   }),
+  persons: defineFeature({
+    audit: {
+      pageKey: 'persons',
+      pageLabel: 'Répertoire',
+      poleKey: 'internal',
+      poleLabel: 'Vie interne',
+    },
+    availability: 'live',
+    description:
+      "Répertoire central de l'identité et des coordonnées des personnes.",
+    href: '/vie-interne/repertoire',
+    icon: 'Users',
+    id: 'persons',
+    label: 'Répertoire',
+    permissionMode: 'all',
+    requiredPermissions: [PERMISSIONS.PERSONS.VIEW],
+  }),
   roadmap: defineFeature({
     audit: {
       pageKey: 'roadmap',

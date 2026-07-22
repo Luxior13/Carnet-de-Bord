@@ -24,6 +24,7 @@ import {
   PERMISSION_CATEGORIES,
   PERMISSION_POLES,
   PERMISSIONS,
+  preserveRetiringPermissionOverrides,
   requiresMfaForAccess,
   ROADMAP_PERMISSIONS,
   ROLE_PERMISSIONS,
@@ -63,9 +64,13 @@ describe('hasPermission', () => {
       true,
     );
     expect(hasPermission('ADMIN', PERMISSIONS.AUDIT.VIEW)).toBe(true);
-    expect(hasPermission('ADMIN', PERMISSIONS.AUDIT.VIEW_SENSITIVE)).toBe(
-      false,
+    expect(hasPermission('ADMIN', PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY)).toBe(
+      true,
     );
+    expect(hasPermission('ADMIN', PERMISSIONS.PERSONS.VIEW)).toBe(true);
+    expect(hasPermission('ADMIN', PERMISSIONS.PERSONS.CREATE)).toBe(true);
+    expect(hasPermission('ADMIN', PERMISSIONS.PERSONS.UPDATE)).toBe(true);
+    expect(hasPermission('ADMIN', PERMISSIONS.PERSONS.DELETE)).toBe(true);
 
     expect(hasPermission('USER', PERMISSIONS.USERS.CREATE)).toBe(false);
     expect(hasPermission('USER', PERMISSIONS.USERS.GRANT_ACCESS)).toBe(false);
@@ -77,6 +82,7 @@ describe('hasPermission', () => {
       false,
     );
     expect(hasPermission('USER', PERMISSIONS.AUDIT.VIEW)).toBe(false);
+    expect(hasPermission('USER', PERMISSIONS.PERSONS.VIEW)).toBe(false);
   });
 
   it('lets grantable overrides change access when dependencies are effective', () => {
@@ -270,16 +276,10 @@ describe('hasPermission', () => {
     ).toBe(true);
   });
 
-  it('requires audit view before sensitive details and export', () => {
+  it('keeps contextual history independent and export dependent', () => {
     expect(
-      hasPermission('USER', PERMISSIONS.AUDIT.VIEW_SENSITIVE, {
-        [PERMISSIONS.AUDIT.VIEW_SENSITIVE]: true,
-      }),
-    ).toBe(false);
-    expect(
-      hasPermission('USER', PERMISSIONS.AUDIT.VIEW_SENSITIVE, {
-        [PERMISSIONS.AUDIT.VIEW]: true,
-        [PERMISSIONS.AUDIT.VIEW_SENSITIVE]: true,
+      hasPermission('USER', PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY, {
+        [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true,
       }),
     ).toBe(true);
     expect(
@@ -291,9 +291,25 @@ describe('hasPermission', () => {
     expect(
       requiresMfaForAccess('USER', {
         [PERMISSIONS.AUDIT.VIEW]: true,
-        [PERMISSIONS.AUDIT.VIEW_SENSITIVE]: true,
       }),
     ).toBe(true);
+  });
+
+  it('enforces the persons read dependency without coupling contextual audit', () => {
+    expect(
+      hasPermission('USER', PERMISSIONS.PERSONS.UPDATE, {
+        [PERMISSIONS.PERSONS.UPDATE]: true,
+      }),
+    ).toBe(false);
+    expect(
+      hasPermission('USER', PERMISSIONS.PERSONS.UPDATE, {
+        [PERMISSIONS.PERSONS.UPDATE]: true,
+        [PERMISSIONS.PERSONS.VIEW]: true,
+      }),
+    ).toBe(true);
+    expect(
+      getPermissionItem(PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY)?.dependencies,
+    ).toBeUndefined();
   });
 
   it('keeps essential personal account actions enabled despite deny overrides', () => {
@@ -453,6 +469,20 @@ describe('permission catalogue', () => {
     }
   });
 
+  it('keeps critical journal and person deletion free of per-use step-up', () => {
+    for (const permissionKey of [
+      PERMISSIONS.AUDIT.VIEW,
+      PERMISSIONS.PERSONS.DELETE,
+    ]) {
+      expect(getPermissionItem(permissionKey)).toMatchObject({
+        requiresTargetMfa: true,
+        risk: 'critical',
+      });
+      expect(getPermissionItem(permissionKey)?.stepUpOnUse).toBeUndefined();
+    }
+    expect(getPermissionItem(PERMISSIONS.AUDIT.EXPORT)?.stepUpOnUse).toBe(true);
+  });
+
   it('contains only the canonical effective permission families', () => {
     expect(getAllPermissionKeys()).toEqual([
       'dashboard:view',
@@ -460,6 +490,10 @@ describe('permission catalogue', () => {
       'notifications:send',
       'settings:view',
       'settings:update',
+      'persons:view',
+      'persons:create',
+      'persons:update',
+      'persons:delete',
       'users:view',
       'users:create',
       'users:view_contact',
@@ -481,7 +515,7 @@ describe('permission catalogue', () => {
       'users:export_activity',
       'users:delete_account',
       'audit:view',
-      'audit:view_sensitive',
+      'audit:view_field_history',
       'audit:export',
       'account:view_profile',
       'account:update_profile',
@@ -496,13 +530,14 @@ describe('permission catalogue', () => {
 
   it('shows every live administrative page without widening delegation', () => {
     expect(PERMISSION_CATEGORIES.map((category) => category.key)).toEqual([
+      'persons',
       'users',
       'system-settings',
       'system-activity',
     ]);
     expect(
       DELEGABLE_PERMISSION_CATEGORIES.map((category) => category.key),
-    ).toEqual(['users', 'system-activity']);
+    ).toEqual(['persons', 'users', 'system-activity']);
     expect(getAccessPermissionKeys()).toEqual(
       DELEGABLE_PERMISSION_CATEGORIES.flatMap((category) =>
         category.permissions.map((permission) => permission.key),
@@ -515,6 +550,21 @@ describe('permission catalogue', () => {
         (permission) => permission.grantable && permission.surface === 'page',
       ),
     ).toBe(true);
+
+    const personsCategory = PERMISSION_CATEGORIES.find(
+      (category) => category.key === 'persons',
+    );
+    expect(personsCategory?.routes).toEqual([
+      '/vie-interne/repertoire',
+      '/vie-interne/repertoire/nouveau',
+      '/vie-interne/repertoire/[id]',
+    ]);
+    expect(
+      personsCategory?.permissions.find(
+        (permission) => permission.key === PERMISSIONS.PERSONS.CREATE,
+      )?.route,
+    ).toBe('/vie-interne/repertoire/nouveau');
+
     expect(getAccessPermissionKeys()).not.toEqual(
       expect.arrayContaining([
         PERMISSIONS.SETTINGS.VIEW,
@@ -544,9 +594,11 @@ describe('permission catalogue', () => {
 
   it('uses a coherent user-facing taxonomy and action labels', () => {
     expect(PERMISSION_POLES).toMatchObject([
+      { key: 'internal', label: 'Vie interne' },
       { key: 'system', label: 'Système' },
     ]);
     expect(PERMISSION_CATEGORIES.map((category) => category.label)).toEqual([
+      'Répertoire',
       'Utilisateurs',
       'Paramètres système',
       "Journal d'activité",
@@ -589,12 +641,24 @@ describe('permission catalogue', () => {
   it('keeps historical lifecycle keys unknown for authorization', () => {
     expect(
       getUnknownPermissionKeys({
+        'audit:view_sensitive': true,
+        'members:update': false,
+        'members:view': true,
         'system:audit': true,
+        'system:audit_sensitive': true,
         'users:archive': true,
         'users:delete': false,
         'users:ghost': false,
       }),
-    ).toEqual(['users:archive', 'users:delete', 'users:ghost']);
+    ).toEqual([
+      'audit:view_sensitive',
+      'members:update',
+      'members:view',
+      'system:audit_sensitive',
+      'users:archive',
+      'users:delete',
+      'users:ghost',
+    ]);
   });
 
   it('identifies baseline and role-bound keys as non-assignable inputs', () => {
@@ -680,7 +744,51 @@ describe('permission catalogue', () => {
     ).toEqual({ [PERMISSIONS.USERS.DELETE_ACCOUNT]: false });
   });
 
+  it('preserves only rollout keys for legacy instances without authorizing them', () => {
+    expect(
+      preserveRetiringPermissionOverrides(
+        {
+          'audit:view_sensitive': true,
+          'members:view': false,
+          'system:audit_sensitive': true,
+          'users:archive': true,
+          'users:ghost': true,
+        },
+        { [PERMISSIONS.PERSONS.VIEW]: true },
+      ),
+    ).toEqual({
+      'audit:view_sensitive': true,
+      'members:view': false,
+      'system:audit_sensitive': true,
+      [PERMISSIONS.PERSONS.VIEW]: true,
+    });
+    expect(
+      hasPermission('USER', 'audit:view_sensitive', {
+        'audit:view_sensitive': true,
+      }),
+    ).toBe(false);
+    expect(preserveRetiringPermissionOverrides(null, null)).toBeNull();
+  });
+
   it('uses explicit historical labels without making old keys active', () => {
+    for (const permissionKey of [
+      'audit:view_sensitive',
+      'members:update',
+      'members:view',
+      'system:audit_sensitive',
+    ]) {
+      expect(isHistoricalAuditPermissionKey(permissionKey)).toBe(true);
+      expect(isKnownPermissionKey(permissionKey)).toBe(false);
+      expect(isPermissionGrantable(permissionKey)).toBe(false);
+    }
+    expect(
+      normalizePermissionOverrides({
+        'audit:view_sensitive': true,
+        'members:update': true,
+        'members:view': true,
+        'system:audit_sensitive': true,
+      }),
+    ).toBeNull();
     expect(getPermissionDisplayLabel('users:archive')).toBe(
       'Archiver un utilisateur (historique)',
     );
@@ -756,9 +864,7 @@ describe('permission catalogue', () => {
       PERMISSIONS.NOTIFICATIONS.SEND,
       PERMISSIONS.SETTINGS.VIEW,
       PERMISSIONS.SETTINGS.UPDATE,
-      ...getAccessPermissionKeys().filter(
-        (permissionKey) => permissionKey !== PERMISSIONS.AUDIT.VIEW_SENSITIVE,
-      ),
+      ...getAccessPermissionKeys(),
     ]);
     expect(ROLE_PERMISSIONS.USER).toEqual([
       ...Object.values(PERMISSIONS.ACCOUNT),

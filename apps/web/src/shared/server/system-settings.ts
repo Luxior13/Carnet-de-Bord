@@ -47,9 +47,8 @@ export const getSystemSettingValue = async <TKey extends SystemSettingKey>(
   // TKey comes from the closed SystemSettingKey union.
   // eslint-disable-next-line security/detect-object-injection
   const definition = SYSTEM_SETTING_DEFINITIONS[key];
-  // Retention values are intentionally never cached: after an administrator
-  // increases a duration, a worker in another process must not keep applying
-  // the older, shorter value and delete data that should now be retained.
+  // Retention values are intentionally never cached: a maintenance command
+  // must always read the latest reviewed duration before deleting data.
   const canUseCache =
     isSystemSettingLocallyCacheable(key) &&
     client === prisma &&

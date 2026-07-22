@@ -46,13 +46,7 @@ export async function GET(): Promise<
         PERMISSIONS.AUDIT.VIEW,
         auth.user.permissions,
       );
-    const canViewSensitiveAuditDetails =
-      auth.user.isProtected ||
-      hasPermission(
-        auth.user.role,
-        PERMISSIONS.AUDIT.VIEW_SENSITIVE,
-        auth.user.permissions,
-      );
+    const canViewSensitiveAuditDetails = canViewSystemAudit;
     const canViewRecentActivity = canViewUserActivity || canViewSystemAudit;
 
     const now = new Date();

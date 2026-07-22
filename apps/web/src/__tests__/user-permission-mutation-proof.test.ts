@@ -48,6 +48,14 @@ describe('user permission mutation proof classification', () => {
         requestedChangedPermissionKeys: [PERMISSIONS.USERS.VIEW_CONTACT],
       }),
     ).toBe('none');
+    expect(
+      classify({
+        effectivelyGrantedPermissionKeys: [
+          PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY,
+        ],
+        requestedChangedPermissionKeys: [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY],
+      }),
+    ).toBe('none');
   });
 
   it('requires only the password mode for every role or authority change', () => {
@@ -86,6 +94,17 @@ describe('user permission mutation proof classification', () => {
         requestedChangedPermissionKeys: [PERMISSIONS.USERS.VIEW_SECURITY],
       }),
     ).toBe('password');
+    for (const permissionKey of [
+      PERMISSIONS.AUDIT.VIEW,
+      PERMISSIONS.PERSONS.DELETE,
+    ]) {
+      expect(
+        classify({
+          effectivelyGrantedPermissionKeys: [permissionKey],
+          requestedChangedPermissionKeys: [permissionKey],
+        }),
+      ).toBe('password');
+    }
   });
 
   it('requires the password mode for every access-policy change on an administrator', () => {

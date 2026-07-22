@@ -1,0 +1,477 @@
+import React, { type FC } from 'react';
+
+import { Input } from '$ui/input';
+import { Label } from '$ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '$ui/select';
+import { Switch } from '$ui/switch';
+
+import {
+  PERSON_CONTACT_LABEL_SUGGESTIONS,
+  PERSON_SOCIAL_LABEL_SUGGESTIONS,
+  PERSON_SOCIAL_NETWORKS,
+} from '../person.constants';
+
+export type EmailDraft = {
+  email: string;
+  isPrimary: boolean;
+  label: string;
+};
+
+export type PhoneDraft = {
+  countryCode: string;
+  isPrimary: boolean;
+  label: string;
+  phone: string;
+};
+
+export type SocialDraft = {
+  identifier: string;
+  isPrimary: boolean;
+  label: string;
+  networkKey: string;
+  profileUrl: string;
+};
+
+type FieldErrors = Record<string, string>;
+
+const COUNTRY_OPTIONS = [
+  ['FR', 'France (+33)'],
+  ['BE', 'Belgique (+32)'],
+  ['CH', 'Suisse (+41)'],
+  ['LU', 'Luxembourg (+352)'],
+  ['DE', 'Allemagne (+49)'],
+  ['ES', 'Espagne (+34)'],
+  ['IT', 'Italie (+39)'],
+  ['GB', 'Royaume-Uni (+44)'],
+  ['CA', 'Canada (+1)'],
+  ['US', 'États-Unis (+1)'],
+] as const;
+
+const FieldError: FC<{ id: string; message?: string }> = ({ id, message }) =>
+  message ? (
+    <p className="text-destructive text-xs" id={id} role="alert">
+      {message}
+    </p>
+  ) : null;
+
+const FieldWarning: FC<{ id: string; message?: string }> = ({ id, message }) =>
+  message ? (
+    <p className="text-warning text-xs" id={id} role="status">
+      {message}
+    </p>
+  ) : null;
+
+const fieldError = (
+  errors: FieldErrors,
+  keyPrefix: string,
+  key: string,
+): string | undefined => {
+  const candidates = new Set([`${keyPrefix}${key}`, key]);
+
+  return Object.entries(errors).find(([entryKey]) =>
+    candidates.has(entryKey),
+  )?.[1];
+};
+
+const LabelField: FC<{
+  disabled?: boolean;
+  errors: FieldErrors;
+  idPrefix: string;
+  keyPrefix?: string;
+  listId: string;
+  onChange: (value: string) => void;
+  suggestions: readonly string[];
+  value: string;
+}> = ({
+  disabled,
+  errors,
+  idPrefix,
+  keyPrefix = '',
+  listId,
+  onChange,
+  suggestions,
+  value,
+}) => {
+  const error = fieldError(errors, keyPrefix, 'label');
+
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={`${idPrefix}-label`} required>
+        Libellé
+      </Label>
+      <Input
+        aria-describedby={error ? `${idPrefix}-label-error` : undefined}
+        aria-invalid={Boolean(error)}
+        disabled={disabled}
+        id={`${idPrefix}-label`}
+        list={listId}
+        maxLength={40}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Personnel"
+        value={value}
+      />
+      <datalist id={listId}>
+        {suggestions.map((suggestion) => (
+          <option key={suggestion} value={suggestion} />
+        ))}
+      </datalist>
+      <FieldError id={`${idPrefix}-label-error`} message={error} />
+    </div>
+  );
+};
+
+const PrimarySwitch: FC<{
+  checked: boolean;
+  disabled?: boolean;
+  id: string;
+  label: string;
+  onChange: (checked: boolean) => void;
+}> = ({ checked, disabled, id, label, onChange }) => (
+  <div className="border-border-default bg-surface-inset flex items-center justify-between gap-4 rounded-lg border px-3 py-2.5">
+    <Label className="leading-5" htmlFor={id}>
+      {label}
+    </Label>
+    <Switch
+      checked={checked}
+      disabled={disabled}
+      id={id}
+      onCheckedChange={onChange}
+    />
+  </div>
+);
+
+type EmailFieldsProps = {
+  disabled?: boolean;
+  errors: FieldErrors;
+  idPrefix: string;
+  keyPrefix?: string;
+  onChange: (value: EmailDraft) => void;
+  showPrimarySwitch?: boolean;
+  value: EmailDraft;
+  warnings?: FieldErrors;
+};
+
+export const EmailFields: FC<EmailFieldsProps> = ({
+  disabled,
+  errors,
+  idPrefix,
+  keyPrefix = '',
+  onChange,
+  showPrimarySwitch = true,
+  value,
+  warnings = {},
+}) => {
+  const emailError = fieldError(errors, keyPrefix, 'email');
+  const emailWarning = fieldError(warnings, keyPrefix, 'email');
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-1.5 sm:col-span-2">
+        <Label htmlFor={`${idPrefix}-email`} required>
+          Email
+        </Label>
+        <Input
+          aria-describedby={
+            emailError
+              ? `${idPrefix}-email-error`
+              : emailWarning
+                ? `${idPrefix}-email-warning`
+                : undefined
+          }
+          aria-invalid={Boolean(emailError)}
+          autoComplete="email"
+          disabled={disabled}
+          id={`${idPrefix}-email`}
+          maxLength={320}
+          onChange={(event) =>
+            onChange({ ...value, email: event.target.value })
+          }
+          placeholder="nom@exemple.fr"
+          type="email"
+          value={value.email}
+        />
+        <FieldError id={`${idPrefix}-email-error`} message={emailError} />
+        <FieldWarning id={`${idPrefix}-email-warning`} message={emailWarning} />
+      </div>
+      <LabelField
+        disabled={disabled}
+        errors={errors}
+        idPrefix={idPrefix}
+        keyPrefix={keyPrefix}
+        listId={`${idPrefix}-contact-labels`}
+        onChange={(label) => onChange({ ...value, label })}
+        suggestions={PERSON_CONTACT_LABEL_SUGGESTIONS}
+        value={value.label}
+      />
+      {showPrimarySwitch && (
+        <PrimarySwitch
+          checked={value.isPrimary}
+          disabled={disabled}
+          id={`${idPrefix}-primary`}
+          label="Email principal"
+          onChange={(isPrimary) => onChange({ ...value, isPrimary })}
+        />
+      )}
+    </div>
+  );
+};
+
+type PhoneFieldsProps = {
+  disabled?: boolean;
+  errors: FieldErrors;
+  idPrefix: string;
+  keyPrefix?: string;
+  onChange: (value: PhoneDraft) => void;
+  showPrimarySwitch?: boolean;
+  value: PhoneDraft;
+  warnings?: FieldErrors;
+};
+
+export const PhoneFields: FC<PhoneFieldsProps> = ({
+  disabled,
+  errors,
+  idPrefix,
+  keyPrefix = '',
+  onChange,
+  showPrimarySwitch = true,
+  value,
+  warnings = {},
+}) => {
+  const phoneError = fieldError(errors, keyPrefix, 'phone');
+  const phoneWarning = fieldError(warnings, keyPrefix, 'phone');
+  const countryError = fieldError(errors, keyPrefix, 'countryCode');
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-1.5">
+        <Label htmlFor={`${idPrefix}-country`} required>
+          Pays
+        </Label>
+        <Select
+          disabled={disabled}
+          onValueChange={(countryCode) => onChange({ ...value, countryCode })}
+          value={value.countryCode}
+        >
+          <SelectTrigger
+            aria-describedby={
+              countryError ? `${idPrefix}-country-error` : undefined
+            }
+            aria-invalid={Boolean(countryError)}
+            id={`${idPrefix}-country`}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {COUNTRY_OPTIONS.map(([code, label]) => (
+              <SelectItem key={code} value={code}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <FieldError id={`${idPrefix}-country-error`} message={countryError} />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor={`${idPrefix}-phone`} required>
+          Numéro
+        </Label>
+        <Input
+          aria-describedby={
+            phoneError
+              ? `${idPrefix}-phone-error`
+              : phoneWarning
+                ? `${idPrefix}-phone-warning`
+                : undefined
+          }
+          aria-invalid={Boolean(phoneError)}
+          autoComplete="tel"
+          disabled={disabled}
+          id={`${idPrefix}-phone`}
+          maxLength={40}
+          onChange={(event) =>
+            onChange({ ...value, phone: event.target.value })
+          }
+          placeholder="06 12 34 56 78"
+          type="tel"
+          value={value.phone}
+        />
+        <FieldError id={`${idPrefix}-phone-error`} message={phoneError} />
+        <FieldWarning id={`${idPrefix}-phone-warning`} message={phoneWarning} />
+      </div>
+      <LabelField
+        disabled={disabled}
+        errors={errors}
+        idPrefix={idPrefix}
+        keyPrefix={keyPrefix}
+        listId={`${idPrefix}-contact-labels`}
+        onChange={(label) => onChange({ ...value, label })}
+        suggestions={PERSON_CONTACT_LABEL_SUGGESTIONS}
+        value={value.label}
+      />
+      {showPrimarySwitch && (
+        <PrimarySwitch
+          checked={value.isPrimary}
+          disabled={disabled}
+          id={`${idPrefix}-primary`}
+          label="Téléphone principal"
+          onChange={(isPrimary) => onChange({ ...value, isPrimary })}
+        />
+      )}
+    </div>
+  );
+};
+
+type SocialFieldsProps = {
+  disabled?: boolean;
+  errors: FieldErrors;
+  idPrefix: string;
+  keyPrefix?: string;
+  onChange: (value: SocialDraft) => void;
+  showPrimarySwitch?: boolean;
+  value: SocialDraft;
+  warnings?: FieldErrors;
+};
+
+export const SocialFields: FC<SocialFieldsProps> = ({
+  disabled,
+  errors,
+  idPrefix,
+  keyPrefix = '',
+  onChange,
+  showPrimarySwitch = true,
+  value,
+  warnings = {},
+}) => {
+  const networkError = fieldError(errors, keyPrefix, 'networkKey');
+  const identifierError = fieldError(errors, keyPrefix, 'identifier');
+  const identifierWarning = fieldError(warnings, keyPrefix, 'identifier');
+  const urlError = fieldError(errors, keyPrefix, 'profileUrl');
+  const urlWarning = fieldError(warnings, keyPrefix, 'profileUrl');
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-1.5">
+        <Label htmlFor={`${idPrefix}-network`} required>
+          Réseau
+        </Label>
+        <Select
+          disabled={disabled}
+          onValueChange={(networkKey) => onChange({ ...value, networkKey })}
+          value={value.networkKey}
+        >
+          <SelectTrigger
+            aria-describedby={
+              networkError ? `${idPrefix}-network-error` : undefined
+            }
+            aria-invalid={Boolean(networkError)}
+            id={`${idPrefix}-network`}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PERSON_SOCIAL_NETWORKS.filter(
+              (network) =>
+                network.status === 'active' || network.key === value.networkKey,
+            ).map((network) => (
+              <SelectItem
+                disabled={network.status === 'deprecated'}
+                key={network.key}
+                value={network.key}
+              >
+                {network.label}
+                {network.status === 'deprecated' ? ' (ancien)' : ''}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <FieldError id={`${idPrefix}-network-error`} message={networkError} />
+      </div>
+      <LabelField
+        disabled={disabled}
+        errors={errors}
+        idPrefix={idPrefix}
+        keyPrefix={keyPrefix}
+        listId={`${idPrefix}-social-labels`}
+        onChange={(label) => onChange({ ...value, label })}
+        suggestions={PERSON_SOCIAL_LABEL_SUGGESTIONS}
+        value={value.label}
+      />
+      <div className="space-y-1.5">
+        <Label htmlFor={`${idPrefix}-identifier`}>Identifiant visible</Label>
+        <Input
+          aria-describedby={
+            identifierError
+              ? `${idPrefix}-identifier-error`
+              : identifierWarning
+                ? `${idPrefix}-identifier-warning`
+                : `${idPrefix}-identity-hint`
+          }
+          aria-invalid={Boolean(identifierError)}
+          disabled={disabled}
+          id={`${idPrefix}-identifier`}
+          maxLength={100}
+          onChange={(event) =>
+            onChange({ ...value, identifier: event.target.value })
+          }
+          placeholder="@identifiant"
+          value={value.identifier}
+        />
+        <FieldError
+          id={`${idPrefix}-identifier-error`}
+          message={identifierError}
+        />
+        <FieldWarning
+          id={`${idPrefix}-identifier-warning`}
+          message={identifierWarning}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor={`${idPrefix}-url`}>URL du profil</Label>
+        <Input
+          aria-describedby={
+            urlError
+              ? `${idPrefix}-url-error`
+              : urlWarning
+                ? `${idPrefix}-url-warning`
+                : `${idPrefix}-identity-hint`
+          }
+          aria-invalid={Boolean(urlError)}
+          disabled={disabled}
+          id={`${idPrefix}-url`}
+          maxLength={2_048}
+          onChange={(event) =>
+            onChange({ ...value, profileUrl: event.target.value })
+          }
+          placeholder="https://…"
+          type="url"
+          value={value.profileUrl}
+        />
+        <FieldError id={`${idPrefix}-url-error`} message={urlError} />
+        <FieldWarning id={`${idPrefix}-url-warning`} message={urlWarning} />
+      </div>
+      <p
+        className="text-muted-foreground text-xs sm:col-span-2"
+        id={`${idPrefix}-identity-hint`}
+      >
+        Renseignez au moins un identifiant visible ou une URL de profil.
+      </p>
+      {showPrimarySwitch && (
+        <div className="sm:col-span-2">
+          <PrimarySwitch
+            checked={value.isPrimary}
+            disabled={disabled}
+            id={`${idPrefix}-primary`}
+            label="Profil principal pour ce réseau"
+            onChange={(isPrimary) => onChange({ ...value, isPrimary })}
+          />
+        </div>
+      )}
+    </div>
+  );
+};

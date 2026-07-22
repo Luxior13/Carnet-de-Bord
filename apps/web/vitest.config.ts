@@ -9,6 +9,8 @@ export default defineConfig({
       $constants: resolve(__dirname, 'src/shared/constants'),
       $context: resolve(__dirname, 'src/shared/context'),
       ['$env']: resolve(__dirname, 'src/env.ts'),
+      $features: resolve(__dirname, 'src/features'),
+      $hooks: resolve(__dirname, 'src/shared/hooks'),
       $server: resolve(__dirname, 'src/shared/server'),
       $types: resolve(__dirname, 'src/shared/types'),
       $ui: resolve(__dirname, 'src/components/ui'),
