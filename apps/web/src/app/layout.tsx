@@ -8,6 +8,7 @@ import React, { type ReactNode } from 'react';
 
 import { SITE_CONFIG } from '$constants/app.constants';
 import { isPublicPagePath } from '$constants/security.constants';
+import { FeatureAvailabilityProvider } from '$context/FeatureAvailabilityContext';
 import { UserProvider } from '$context/UserContext';
 import { env } from '$env';
 import { getPageAuthSession } from '$server/auth';
@@ -84,7 +85,7 @@ const RootLayout = async ({
           initialSessionRememberMe={initialSessionRememberMe}
           initialUser={initialUser}
         >
-          {children}
+          <FeatureAvailabilityProvider>{children}</FeatureAvailabilityProvider>
         </UserProvider>
       </body>
     </html>

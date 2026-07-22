@@ -24,7 +24,7 @@ export const personErrors = {
       "La protection des données du répertoire n'est pas configurée",
     ),
   notFound: (): PersonDomainError =>
-    new PersonDomainError('PERSON_NOT_FOUND', 'Personne introuvable'),
+    new PersonDomainError('PERSON_NOT_FOUND', 'Fiche introuvable'),
   primaryConflict: (message: string): PersonDomainError =>
     new PersonDomainError('PRIMARY_CONFLICT', message),
   versionConflict: (): PersonDomainError =>

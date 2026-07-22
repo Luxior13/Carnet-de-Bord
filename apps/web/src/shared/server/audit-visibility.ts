@@ -100,9 +100,9 @@ const PUBLIC_DESCRIPTIONS: Partial<Record<AuditAction, string>> = {
   PASSWORD_CHANGE: 'Mot de passe modifié',
   PASSWORD_RESET: 'Mot de passe réinitialisé',
   PERMISSION_UPDATE: 'Autorisations modifiées',
-  PERSON_CREATE: 'Fiche personne créée',
-  PERSON_DELETE: 'Fiche personne supprimée',
-  PERSON_UPDATE: 'Fiche personne modifiée',
+  PERSON_CREATE: 'Fiche créée',
+  PERSON_DELETE: 'Fiche supprimée',
+  PERSON_UPDATE: 'Fiche modifiée',
   SESSION_INVALIDATE: 'Sessions révoquées',
   STEP_UP_FAILED: 'Échec de confirmation renforcée',
   STEP_UP_SUCCESS: 'Confirmation renforcée réussie',
@@ -116,10 +116,36 @@ const PUBLIC_DESCRIPTIONS: Partial<Record<AuditAction, string>> = {
 const CATEGORY_DESCRIPTIONS: Record<AuditCategory, string> = {
   AUTH: "Événement d'authentification",
   PERMISSION: "Modification d'autorisation",
-  PERSON: 'Événement personne',
+  PERSON: 'Événement du répertoire',
   SYSTEM: 'Événement système',
   USER: 'Événement utilisateur',
 };
+
+const LEGACY_PERSON_DESCRIPTION_RENAMES = new Map<string, string>([
+  ['Email ajouté à une fiche personne', 'Email ajouté à une fiche'],
+  ['Email d’une fiche personne modifié', 'Email d’une fiche modifié'],
+  ['Email supprimé d’une fiche personne', 'Email supprimé d’une fiche'],
+  ['Fiche personne créée', 'Fiche créée'],
+  ['Fiche personne modifiée', 'Fiche modifiée'],
+  ['Fiche personne supprimée', 'Fiche supprimée'],
+  ['Fiche personne supprimée définitivement', 'Fiche supprimée définitivement'],
+  ['Identité de la fiche personne modifiée', 'Identité de la fiche modifiée'],
+  [
+    'Réseau social ajouté à une fiche personne',
+    'Réseau social ajouté à une fiche',
+  ],
+  [
+    'Réseau social d’une fiche personne modifié',
+    'Réseau social d’une fiche modifié',
+  ],
+  [
+    'Réseau social supprimé d’une fiche personne',
+    'Réseau social supprimé d’une fiche',
+  ],
+  ['Téléphone ajouté à une fiche personne', 'Téléphone ajouté à une fiche'],
+  ['Téléphone d’une fiche personne modifié', 'Téléphone d’une fiche modifié'],
+  ['Téléphone supprimé d’une fiche personne', 'Téléphone supprimé d’une fiche'],
+]);
 
 const toRecord = (value: unknown): Record<string, unknown> | null => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
@@ -330,7 +356,13 @@ export const getVisibleAuditDescription = (options: {
   metadata?: unknown;
 }): string => {
   if (options.canViewSensitiveDetails) {
-    return options.description.slice(0, 4_000);
+    const description =
+      options.category === 'PERSON'
+        ? (LEGACY_PERSON_DESCRIPTION_RENAMES.get(options.description) ??
+          options.description)
+        : options.description;
+
+    return description.slice(0, 4_000);
   }
 
   if (options.action === 'USER_DELETE') {

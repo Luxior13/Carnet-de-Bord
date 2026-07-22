@@ -462,7 +462,7 @@ describe('person contact optimistic concurrency and primary invariants', () => {
           sensitive: false,
         },
       ],
-      description: 'Identité de la fiche personne modifiée',
+      description: 'Identité de la fiche modifiée',
       entityId: 'person-1',
     });
     expect(mocks.transaction.notification.create).not.toHaveBeenCalled();

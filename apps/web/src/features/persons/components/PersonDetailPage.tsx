@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Clock3, RefreshCw, UserRound } from 'lucide-react';
+import { ArrowLeft, AtSign, Clock3, RefreshCw, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 
@@ -13,9 +13,10 @@ import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import { Card, CardFooter, CardHeader, CardTitle } from '$ui/card';
+import { Card, CardFooter } from '$ui/card';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
+import { ScrollableTabsList, Tabs, TabsContent, TabsTrigger } from '$ui/tabs';
 import { ApiClientError } from '$utils/api.utils';
 
 import { getPerson } from '../person.api';
@@ -35,8 +36,11 @@ import { PersonIdentitySection } from './PersonIdentitySection';
 import { PersonStatusBadge } from './PersonStatusBadge';
 
 type PersonDetailPageProps = {
+  activeSection: PersonDetailSection;
   personId: string;
 };
+
+export type PersonDetailSection = 'coordonnees' | 'identite';
 
 const DetailSkeleton: FC = () => (
   <PageShell className="py-0" width="narrow">
@@ -46,6 +50,23 @@ const DetailSkeleton: FC = () => (
     </PageCanvas>
   </PageShell>
 );
+
+const PersonLastChangeFooter: FC<{ person: PersonDetail }> = ({ person }) => {
+  const actor = person.lastChange?.actor;
+
+  return (
+    <CardFooter>
+      <p className="text-muted-foreground text-xs">
+        Dernière modification le{' '}
+        <time dateTime={person.lastChange?.at ?? person.updatedAt}>
+          {formatPersonDateTime(person.lastChange?.at ?? person.updatedAt)}
+        </time>{' '}
+        par {actor?.displayName ?? 'un auteur non disponible'}
+        {actor?.loginName ? ` (${actor.loginName})` : ''}.
+      </p>
+    </CardFooter>
+  );
+};
 
 const getDuplicateFieldLabel = (field: string): string | null => {
   const match = /^(emails|phones|socialProfiles)\.(\d+)\.(\w+)$/.exec(field);
@@ -140,7 +161,10 @@ const parseStoredDuplicateWarning = (raw: string): PersonDuplicateWarning => {
   }
 };
 
-const PersonDetailContent: FC<PersonDetailPageProps> = ({ personId }) => {
+const PersonDetailContent: FC<PersonDetailPageProps> = ({
+  activeSection,
+  personId,
+}) => {
   const {
     featureAvailabilityLoaded,
     operationalFeatureIds,
@@ -267,7 +291,8 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({ personId }) => {
     );
   }
 
-  const actor = person.lastChange?.actor;
+  const sectionHref = (section: PersonDetailSection): string =>
+    `${FEATURES.persons.href}/${encodeURIComponent(personId)}?section=${section}`;
 
   return (
     <PageShell className="py-0" width="narrow">
@@ -282,7 +307,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({ personId }) => {
             </Button>
           }
           description="Fiche d'identité autonome, sans lien avec un compte d'accès au site."
-          eyebrow={<Badge variant="outline">Fiche personne</Badge>}
+          eyebrow={<Badge variant="outline">Fiche du répertoire</Badge>}
           icon={
             getPersonInitials(person) ? (
               <span className="text-base font-semibold">
@@ -305,58 +330,68 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({ personId }) => {
           />
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Identité et coordonnées</CardTitle>
-            <p className="text-muted-foreground text-sm">
-              Les informations principales sont affichées en premier.
-            </p>
-          </CardHeader>
-          <PersonIdentitySection
-            canUpdate={canUpdate}
-            canViewAudit={canViewAudit}
-            canViewHistory={canViewHistory}
-            onChange={setPerson}
-            onReload={load}
-            person={person}
-          />
-          <PersonCollectionsSection
-            canUpdate={canUpdate}
-            canViewAudit={canViewAudit}
-            canViewHistory={canViewHistory}
-            duplicateMatches={duplicateWarning?.matches ?? []}
-            onChange={setPerson}
-            onReload={load}
-            person={person}
-          />
-          <CardFooter>
-            <p className="text-muted-foreground text-xs">
-              Dernière modification le{' '}
-              <time dateTime={person.lastChange?.at ?? person.updatedAt}>
-                {formatPersonDateTime(
-                  person.lastChange?.at ?? person.updatedAt,
-                )}
-              </time>{' '}
-              par {actor?.displayName ?? 'un auteur non disponible'}
-              {actor?.loginName ? ` (${actor.loginName})` : ''}.
-            </p>
-          </CardFooter>
-        </Card>
+        <Tabs value={activeSection}>
+          <ScrollableTabsList aria-label="Sections de la fiche">
+            <TabsTrigger asChild value="identite">
+              <Link href={sectionHref('identite')}>
+                <UserRound className="size-4" />
+                Identité
+              </Link>
+            </TabsTrigger>
+            <TabsTrigger asChild value="coordonnees">
+              <Link href={sectionHref('coordonnees')}>
+                <AtSign className="size-4" />
+                Coordonnées
+              </Link>
+            </TabsTrigger>
+          </ScrollableTabsList>
 
-        {canDelete && <PersonDangerZone onReload={load} person={person} />}
+          <TabsContent className="space-y-5" value="identite">
+            <Card>
+              <PersonIdentitySection
+                canUpdate={canUpdate}
+                canViewAudit={canViewAudit}
+                canViewHistory={canViewHistory}
+                onChange={setPerson}
+                onReload={load}
+                person={person}
+              />
+              <PersonLastChangeFooter person={person} />
+            </Card>
+            {canDelete && <PersonDangerZone onReload={load} person={person} />}
+          </TabsContent>
+
+          <TabsContent className="space-y-5" value="coordonnees">
+            <Card>
+              <PersonCollectionsSection
+                canUpdate={canUpdate}
+                canViewAudit={canViewAudit}
+                canViewHistory={canViewHistory}
+                duplicateMatches={duplicateWarning?.matches ?? []}
+                onChange={setPerson}
+                onReload={load}
+                person={person}
+              />
+              <PersonLastChangeFooter person={person} />
+            </Card>
+          </TabsContent>
+        </Tabs>
       </PageCanvas>
     </PageShell>
   );
 };
 
-export const PersonDetailPage: FC<PersonDetailPageProps> = ({ personId }) => (
+export const PersonDetailPage: FC<PersonDetailPageProps> = ({
+  activeSection,
+  personId,
+}) => (
   <AuthenticatedLayout
     breadcrumbs={[
       { label: FEATURES.persons.audit.poleLabel },
       { href: FEATURES.persons.href, label: FEATURES.persons.label },
-      { label: 'Fiche personne' },
+      { label: 'Fiche' },
     ]}
   >
-    <PersonDetailContent personId={personId} />
+    <PersonDetailContent activeSection={activeSection} personId={personId} />
   </AuthenticatedLayout>
 );

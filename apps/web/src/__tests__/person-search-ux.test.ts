@@ -362,6 +362,6 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(newPersonPageSource).toContain(
       '{ href: FEATURES.persons.href, label: FEATURES.persons.label }',
     );
-    expect(newPersonPageSource).toContain("{ label: 'Ajouter une personne' }");
+    expect(newPersonPageSource).toContain("{ label: 'Nouvelle fiche' }");
   });
 });

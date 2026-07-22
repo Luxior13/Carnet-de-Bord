@@ -12,6 +12,7 @@ import React, {
 } from 'react';
 
 import { FEATURES } from '$constants/feature-registry.constants';
+import { useUser } from '$context/UserContext';
 
 const REFRESH_INTERVAL_MS = 30_000;
 
@@ -38,11 +39,19 @@ const FeatureAvailabilityContext =
 export const FeatureAvailabilityProvider: FC<{ children: ReactNode }> = ({
   children,
 }) => {
+  const { userData } = useUser();
   const [featureAvailabilityLoaded, setFeatureAvailabilityLoaded] =
     useState(false);
   const [personsReady, setPersonsReady] = useState(false);
 
   const refreshFeatureAvailability = useCallback(async (): Promise<void> => {
+    if (!userData) {
+      setPersonsReady(false);
+      setFeatureAvailabilityLoaded(false);
+
+      return;
+    }
+
     try {
       const response = await fetch('/api/health/ready', {
         cache: 'no-store',
@@ -56,16 +65,23 @@ export const FeatureAvailabilityProvider: FC<{ children: ReactNode }> = ({
     } finally {
       setFeatureAvailabilityLoaded(true);
     }
-  }, []);
+  }, [userData]);
 
   useEffect(() => {
+    if (!userData) {
+      setPersonsReady(false);
+      setFeatureAvailabilityLoaded(false);
+
+      return;
+    }
+
     void refreshFeatureAvailability();
     const interval = window.setInterval((): void => {
       void refreshFeatureAvailability();
     }, REFRESH_INTERVAL_MS);
 
     return (): void => window.clearInterval(interval);
-  }, [refreshFeatureAvailability]);
+  }, [refreshFeatureAvailability, userData]);
 
   const operationalFeatureIds = useMemo(
     () =>

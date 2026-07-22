@@ -64,8 +64,7 @@ export const FEATURES = {
       poleLabel: 'Vie interne',
     },
     availability: 'live',
-    description:
-      "Répertoire central de l'identité et des coordonnées des personnes.",
+    description: 'Répertoire central des identités, statuts et coordonnées.',
     href: '/vie-interne/repertoire',
     icon: 'Users',
     id: 'persons',

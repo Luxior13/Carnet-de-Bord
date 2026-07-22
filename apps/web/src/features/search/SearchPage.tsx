@@ -48,7 +48,8 @@ export const SearchPage: FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { userData } = useUser();
-  const { operationalFeatureIds } = useFeatureAvailability();
+  const { featureAvailabilityLoaded, operationalFeatureIds } =
+    useFeatureAvailability();
   const urlQuery = sanitizeQuery(searchParams.get('q'));
   const requestedSpace = searchParams.get('pole') ?? 'all';
   const requestedSource = searchParams.get('source') ?? 'all';
@@ -59,8 +60,13 @@ export const SearchPage: FC = () => {
     : 'all';
   const [queryInput, setQueryInput] = useState(urlQuery);
   const spaces = useMemo(
-    () => getVisibleNavigationSpaces(userData, 'live', operationalFeatureIds),
-    [operationalFeatureIds, userData],
+    () =>
+      getVisibleNavigationSpaces(
+        userData,
+        'live',
+        featureAvailabilityLoaded ? operationalFeatureIds : undefined,
+      ),
+    [featureAvailabilityLoaded, operationalFeatureIds, userData],
   );
   const catalog = useMemo(
     () => buildSearchCatalog(spaces, userData),

@@ -57,7 +57,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const parsed = createPersonSchema.safeParse(body.data);
   if (!parsed.success) {
     return apiErrors.validation(
-      'Informations de la personne invalides',
+      'Informations de la fiche invalides',
       zodErrorDetails(parsed.error),
     );
   }

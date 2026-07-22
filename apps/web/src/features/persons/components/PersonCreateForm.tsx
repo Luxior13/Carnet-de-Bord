@@ -257,7 +257,7 @@ export const PersonCreateForm: FC = () => {
         );
       }
       setIsDirty(false);
-      toast.success('Personne créée');
+      toast.success('Fiche créée');
       router.push(`/vie-interne/repertoire/${result.person.id}`);
     } catch (caught) {
       if (caught instanceof ApiClientError && caught.details) {
@@ -557,7 +557,7 @@ export const PersonCreateForm: FC = () => {
               ) : (
                 <Save className="size-4" />
               )}
-              {isSubmitting ? 'Ajout…' : 'Ajouter la personne'}
+              {isSubmitting ? 'Ajout…' : 'Ajouter la fiche'}
             </Button>
           </CardFooter>
         </Card>

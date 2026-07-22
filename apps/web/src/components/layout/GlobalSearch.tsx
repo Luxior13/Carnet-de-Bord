@@ -47,7 +47,8 @@ export const QuickNavigation: FC = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { userData } = useUser();
-  const { operationalFeatureIds } = useFeatureAvailability();
+  const { featureAvailabilityLoaded, operationalFeatureIds } =
+    useFeatureAvailability();
   const listboxId = useId();
   const activeResultRef = useRef<HTMLButtonElement | null>(null);
   const [activeResultHref, setActiveResultHref] = useState<string | null>(null);
@@ -55,8 +56,13 @@ export const QuickNavigation: FC = () => {
   const [query, setQuery] = useState('');
 
   const spaces = useMemo(
-    () => getVisibleNavigationSpaces(userData, 'live', operationalFeatureIds),
-    [operationalFeatureIds, userData],
+    () =>
+      getVisibleNavigationSpaces(
+        userData,
+        'live',
+        featureAvailabilityLoaded ? operationalFeatureIds : undefined,
+      ),
+    [featureAvailabilityLoaded, operationalFeatureIds, userData],
   );
   const activeSpace = useMemo(
     () => getActiveNavigationSpace(pathname, spaces),

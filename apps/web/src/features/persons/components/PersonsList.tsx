@@ -79,7 +79,7 @@ const PersonsListSkeleton: FC = () => (
   <div
     className="space-y-2 p-4"
     role="status"
-    aria-label="Chargement des personnes"
+    aria-label="Chargement du répertoire"
   >
     {[...Array(7)].map((_, index) => (
       <Skeleton className="h-14 rounded-lg" key={index} />
@@ -222,7 +222,7 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
             >
               <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <Input
-                aria-label="Rechercher une personne"
+                aria-label="Rechercher dans le répertoire"
                 className="pr-10 pl-9"
                 maxLength={100}
                 onChange={(event) => setDraftQuery(event.target.value)}
@@ -274,9 +274,7 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
               ? 'Essayez une autre recherche ou retirez les filtres.'
               : 'Créez la première fiche pour commencer le répertoire.'
           }
-          emptyTitle={
-            isFiltered ? 'Aucune personne trouvée' : 'Répertoire vide'
-          }
+          emptyTitle={isFiltered ? 'Aucune fiche trouvée' : 'Répertoire vide'}
           error={error}
           isEmpty={showEmpty}
           isLoading={isLoading}
@@ -288,7 +286,7 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Personne</TableHead>
+                    <TableHead>Fiche</TableHead>
                     <TableHead>Statut dans la structure</TableHead>
                     <TableHead>Dernière modification</TableHead>
                     <TableHead className="w-16">
@@ -378,7 +376,7 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
         <Button asChild>
           <Link href="/vie-interne/repertoire/nouveau">
             <Plus className="size-4" />
-            Ajouter une personne
+            Ajouter une fiche
           </Link>
         </Button>
       )}
@@ -390,7 +388,7 @@ export const PersonsList: FC<PersonsListProps> = ({ canCreate }) => {
       )}
       {data && !showEmpty && (
         <div className="sr-only" aria-live="polite">
-          {data.items.length} personnes affichées sur cette page
+          {data.items.length} fiches affichées sur cette page
         </div>
       )}
     </div>

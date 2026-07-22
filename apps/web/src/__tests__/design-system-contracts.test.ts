@@ -124,6 +124,13 @@ const compositeHexColors = (
 };
 
 describe('design system contracts', () => {
+  it('keeps feature availability above page-level authenticated shells', () => {
+    expect(rootLayoutSource).toContain('<FeatureAvailabilityProvider>');
+    expect(authenticatedLayoutSource).not.toContain(
+      '<FeatureAvailabilityProvider>',
+    );
+  });
+
   it('uses the accessible destructive fill for filled actions', () => {
     const buttonClasses = buttonVariants({ variant: 'destructive' });
     const badgeClasses = badgeVariants({ variant: 'destructive' });

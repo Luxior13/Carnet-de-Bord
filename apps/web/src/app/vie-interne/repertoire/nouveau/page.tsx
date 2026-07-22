@@ -28,7 +28,7 @@ const NewPersonContent: FC = () => {
       <AccessDeniedState
         actionHref={FEATURES.persons.href}
         actionLabel="Retour au répertoire"
-        description="Vous n'avez pas la permission de créer une fiche personne."
+        description="Vous n'avez pas la permission de créer une fiche."
       />
     );
   }
@@ -66,7 +66,7 @@ const NewPersonContent: FC = () => {
         <PageHero
           description="Créez le socle d'identité ; toutes les informations complémentaires restent facultatives."
           icon={<UserPlus className="size-5" />}
-          title="Ajouter une personne"
+          title="Nouvelle fiche"
           tone="internal"
         />
         <PersonCreateForm />
@@ -80,7 +80,7 @@ const NewPersonPage: FC = () => (
     breadcrumbs={[
       { label: FEATURES.persons.audit.poleLabel },
       { href: FEATURES.persons.href, label: FEATURES.persons.label },
-      { label: 'Ajouter une personne' },
+      { label: 'Nouvelle fiche' },
     ]}
   >
     <NewPersonContent />

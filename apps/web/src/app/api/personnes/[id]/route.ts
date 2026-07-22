@@ -57,7 +57,7 @@ export async function PATCH(
   const parsed = updatePersonSchema.safeParse(body.data);
   if (!parsed.success) {
     return apiErrors.validation(
-      'Informations de la personne invalides',
+      'Informations de la fiche invalides',
       zodErrorDetails(parsed.error),
     );
   }

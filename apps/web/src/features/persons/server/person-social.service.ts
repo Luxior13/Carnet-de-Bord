@@ -135,7 +135,7 @@ export const addPersonSocialProfile = async (
     await auditContactMutation(transaction, {
       actor,
       changes,
-      description: 'Réseau social ajouté à une fiche personne',
+      description: 'Réseau social ajouté à une fiche',
       personId,
     });
     const updated = await requirePersonDetailRecord(transaction, personId);
@@ -286,7 +286,7 @@ export const updatePersonSocialProfile = async (
     await auditContactMutation(transaction, {
       actor,
       changes,
-      description: 'Réseau social d’une fiche personne modifié',
+      description: 'Réseau social d’une fiche modifié',
       personId,
     });
     const updated = await requirePersonDetailRecord(transaction, personId);
@@ -383,7 +383,7 @@ export const deletePersonSocialProfile = async (
             ]
           : []),
       ],
-      description: 'Réseau social supprimé d’une fiche personne',
+      description: 'Réseau social supprimé d’une fiche',
       personId,
     });
     const updated = await requirePersonDetailRecord(transaction, personId);

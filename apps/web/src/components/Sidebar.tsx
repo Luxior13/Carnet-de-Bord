@@ -312,14 +312,20 @@ const SpaceSwitcher: FC<{
 
 const Sidebar: FC<SidebarProps> = ({ className }) => {
   const pathname = usePathname();
-  const { operationalFeatureIds } = useFeatureAvailability();
+  const { featureAvailabilityLoaded, operationalFeatureIds } =
+    useFeatureAvailability();
   const { logout, userData } = useUser();
   const { isMobile, setOpenMobile, state: sidebarState } = useSidebar();
   const isCollapsed = !isMobile && sidebarState === 'collapsed';
 
   const visibleSpaces = useMemo(
-    () => getVisibleNavigationSpaces(userData, 'live', operationalFeatureIds),
-    [operationalFeatureIds, userData],
+    () =>
+      getVisibleNavigationSpaces(
+        userData,
+        'live',
+        featureAvailabilityLoaded ? operationalFeatureIds : undefined,
+      ),
+    [featureAvailabilityLoaded, operationalFeatureIds, userData],
   );
   const activeSpace = useMemo(
     () => getActiveNavigationSpace(pathname, visibleSpaces),
@@ -330,8 +336,13 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
     [activeSpace.tone],
   );
   const sections = useMemo(
-    () => getDesktopSidebarSections(userData, pathname, operationalFeatureIds),
-    [operationalFeatureIds, pathname, userData],
+    () =>
+      getDesktopSidebarSections(
+        userData,
+        pathname,
+        featureAvailabilityLoaded ? operationalFeatureIds : undefined,
+      ),
+    [featureAvailabilityLoaded, operationalFeatureIds, pathname, userData],
   );
 
   const topSections = sections.filter(

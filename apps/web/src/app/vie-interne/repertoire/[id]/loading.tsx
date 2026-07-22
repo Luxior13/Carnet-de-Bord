@@ -11,7 +11,7 @@ export default function PersonLoading(): React.ReactNode {
       breadcrumbs={[
         { label: FEATURES.persons.audit.poleLabel },
         { href: FEATURES.persons.href, label: FEATURES.persons.label },
-        { label: 'Fiche personne' },
+        { label: 'Fiche' },
       ]}
     >
       <PageShell className="py-0" width="narrow">

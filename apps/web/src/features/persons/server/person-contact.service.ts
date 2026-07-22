@@ -110,7 +110,7 @@ export const addPersonEmail = async (
             ]
           : []),
       ],
-      description: 'Email ajouté à une fiche personne',
+      description: 'Email ajouté à une fiche',
       personId,
     });
     const updated = await requirePersonDetailRecord(transaction, personId);
@@ -217,7 +217,7 @@ export const updatePersonEmail = async (
     await auditContactMutation(transaction, {
       actor,
       changes,
-      description: 'Email d’une fiche personne modifié',
+      description: 'Email d’une fiche modifié',
       personId,
     });
     const updated = await requirePersonDetailRecord(transaction, personId);
@@ -291,7 +291,7 @@ export const deletePersonEmail = async (
             ]
           : []),
       ],
-      description: 'Email supprimé d’une fiche personne',
+      description: 'Email supprimé d’une fiche',
       personId,
     });
     const updated = await requirePersonDetailRecord(transaction, personId);
@@ -380,7 +380,7 @@ export const addPersonPhone = async (
             ]
           : []),
       ],
-      description: 'Téléphone ajouté à une fiche personne',
+      description: 'Téléphone ajouté à une fiche',
       personId,
     });
     const updated = await requirePersonDetailRecord(transaction, personId);
@@ -488,7 +488,7 @@ export const updatePersonPhone = async (
     await auditContactMutation(transaction, {
       actor,
       changes,
-      description: 'Téléphone d’une fiche personne modifié',
+      description: 'Téléphone d’une fiche modifié',
       personId,
     });
     const updated = await requirePersonDetailRecord(transaction, personId);
@@ -563,7 +563,7 @@ export const deletePersonPhone = async (
             ]
           : []),
       ],
-      description: 'Téléphone supprimé d’une fiche personne',
+      description: 'Téléphone supprimé d’une fiche',
       personId,
     });
     const updated = await requirePersonDetailRecord(transaction, personId);

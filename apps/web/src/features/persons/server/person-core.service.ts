@@ -560,7 +560,7 @@ export const createPerson = async (
       action: 'PERSON_CREATE',
       actor,
       changes,
-      description: 'Fiche personne créée',
+      description: 'Fiche créée',
       entityId: person.id,
     });
     const refreshed = await requirePersonDetailRecord(transaction, person.id);
@@ -651,7 +651,7 @@ export const updatePerson = async (
       action: 'PERSON_UPDATE',
       actor,
       changes,
-      description: 'Identité de la fiche personne modifiée',
+      description: 'Identité de la fiche modifiée',
       entityId: personId,
     });
     const updated = await requirePersonDetailRecord(transaction, personId);

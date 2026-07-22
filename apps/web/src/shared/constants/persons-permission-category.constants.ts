@@ -25,7 +25,7 @@ export const createPersonsPermissionCategory = (
   accessPermissionKey: keys.VIEW,
   assignment: 'delegable',
   description:
-    'Répertoire central des personnes, de leur identité et de leurs coordonnées.',
+    'Identités, statuts et coordonnées centralisés dans le répertoire.',
   icon: 'Users',
   key: 'persons',
   label: 'Répertoire',
@@ -33,7 +33,7 @@ export const createPersonsPermissionCategory = (
     permission({
       action: 'view',
       description:
-        "Consulter la liste, l'identité, le statut et les coordonnées des personnes",
+        'Consulter les fiches, leur identité, leur statut et leurs coordonnées',
       grantable: true,
       key: keys.VIEW,
       label: 'Consulter le répertoire',
@@ -49,7 +49,7 @@ export const createPersonsPermissionCategory = (
         'Créer une fiche avec son identité, son statut et ses coordonnées',
       grantable: true,
       key: keys.CREATE,
-      label: 'Ajouter des personnes au répertoire',
+      label: 'Ajouter des fiches au répertoire',
       module: 'Gestion des fiches',
       risk: 'sensitive',
       route: '/vie-interne/repertoire/nouveau',

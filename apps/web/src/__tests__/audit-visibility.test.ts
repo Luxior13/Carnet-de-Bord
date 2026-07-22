@@ -216,6 +216,25 @@ describe('audit visibility', () => {
     ).toBe('Adresse privée modifiée pour personne@example.com');
   });
 
+  it('presents legacy directory audit descriptions with the current wording', () => {
+    expect(
+      auditVisibility.getVisibleAuditDescription({
+        action: 'PERSON_UPDATE',
+        canViewSensitiveDetails: true,
+        category: 'PERSON',
+        description: 'Identité de la fiche personne modifiée',
+      }),
+    ).toBe('Identité de la fiche modifiée');
+    expect(
+      auditVisibility.getVisibleAuditDescription({
+        action: 'PERSON_UPDATE',
+        canViewSensitiveDetails: true,
+        category: 'PERSON',
+        description: 'Description future inchangée',
+      }),
+    ).toBe('Description future inchangée');
+  });
+
   it('distinguishes historical archives from irreversible deletions', () => {
     expect(
       auditVisibility.getVisibleAuditDescription({

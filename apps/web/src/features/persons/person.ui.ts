@@ -26,7 +26,7 @@ export const getPersonDisplayName = (person: {
 
   if (person.nickname && civilName) return `${person.nickname} · ${civilName}`;
 
-  return person.nickname ?? (civilName || 'Personne sans nom');
+  return person.nickname ?? (civilName || 'Fiche sans nom');
 };
 
 export const getPersonInitials = (person: {

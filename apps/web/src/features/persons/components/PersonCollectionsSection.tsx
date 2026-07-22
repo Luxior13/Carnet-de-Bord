@@ -434,7 +434,7 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
 
   return (
     <>
-      <section className="border-border-divider border-t p-4 sm:p-5">
+      <section className="p-4 sm:p-5">
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-9 items-center justify-center rounded-lg border">

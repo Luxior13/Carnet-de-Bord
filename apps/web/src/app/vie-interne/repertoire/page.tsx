@@ -57,7 +57,7 @@ const PersonsPageContent: FC = () => {
               <Button asChild size="sm">
                 <Link href="/vie-interne/repertoire/nouveau">
                   <Plus className="size-4" />
-                  Ajouter une personne
+                  Nouvelle fiche
                 </Link>
               </Button>
             ) : null

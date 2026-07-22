@@ -7,7 +7,6 @@ import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { ChangePasswordDialog } from '$components/ChangePasswordDialog';
 import { Header } from '$components/layout/Header';
 import Sidebar from '$components/Sidebar';
-import { FeatureAvailabilityProvider } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
 import { MfaSetupDialog } from '$features/auth/components/MfaSetupDialog';
 import { type BreadcrumbEntry } from '$ui/breadcrumb';
@@ -103,48 +102,46 @@ const AuthenticatedLayout: FC<AuthenticatedLayoutProps> = ({
   }
 
   return (
-    <FeatureAvailabilityProvider>
-      <SidebarProvider>
-        {/* Skip to main content link for accessibility */}
-        <a
-          href="#main-content"
-          className="focus:bg-primary focus:text-primary-foreground focus:ring-ring/50 sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-lg focus:px-4 focus:py-2 focus:ring-2 focus:outline-none"
+    <SidebarProvider>
+      {/* Skip to main content link for accessibility */}
+      <a
+        href="#main-content"
+        className="focus:bg-primary focus:text-primary-foreground focus:ring-ring/50 sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-lg focus:px-4 focus:py-2 focus:ring-2 focus:outline-none"
+      >
+        Aller au contenu principal
+      </a>
+      <ChangePasswordDialog
+        open={showPasswordDialog}
+        onSuccess={handlePasswordChanged}
+      />
+      <MfaSetupDialog
+        allowCancel={false}
+        loginName={userData.loginName}
+        mode="activate"
+        onComplete={(data) => applyUserUpdate(data.user)}
+        open={requiresMfaSetup}
+      />
+      <Sidebar />
+      <SidebarInset className="relative isolate h-full bg-transparent">
+        <div
+          aria-hidden="true"
+          className="site-background-column site-background-column--local private-background-column"
+        />
+        <Header breadcrumbs={breadcrumbs} />
+        <main
+          id="main-content"
+          className={cn(
+            'relative z-10 min-h-0 flex-1',
+            fullHeight
+              ? 'overflow-hidden'
+              : 'scrollbar-gutter-both-edges overflow-y-auto',
+          )}
+          tabIndex={-1}
         >
-          Aller au contenu principal
-        </a>
-        <ChangePasswordDialog
-          open={showPasswordDialog}
-          onSuccess={handlePasswordChanged}
-        />
-        <MfaSetupDialog
-          allowCancel={false}
-          loginName={userData.loginName}
-          mode="activate"
-          onComplete={(data) => applyUserUpdate(data.user)}
-          open={requiresMfaSetup}
-        />
-        <Sidebar />
-        <SidebarInset className="relative isolate h-full bg-transparent">
-          <div
-            aria-hidden="true"
-            className="site-background-column site-background-column--local private-background-column"
-          />
-          <Header breadcrumbs={breadcrumbs} />
-          <main
-            id="main-content"
-            className={cn(
-              'relative z-10 min-h-0 flex-1',
-              fullHeight
-                ? 'overflow-hidden'
-                : 'scrollbar-gutter-both-edges overflow-y-auto',
-            )}
-            tabIndex={-1}
-          >
-            {children}
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
-    </FeatureAvailabilityProvider>
+          {children}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
 

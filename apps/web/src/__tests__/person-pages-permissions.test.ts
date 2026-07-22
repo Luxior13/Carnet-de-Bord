@@ -1,4 +1,4 @@
-import { createElement, type ReactNode } from 'react';
+import { createElement, type ReactElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -119,7 +119,7 @@ describe('direct Person page permission boundaries', () => {
 
     const html = renderToStaticMarkup(createElement(NewPersonPage));
 
-    expect(html).toContain('permission de créer une fiche personne');
+    expect(html).toContain('permission de créer une fiche');
     expect(mocks.createForm).not.toHaveBeenCalled();
   });
 
@@ -134,6 +134,23 @@ describe('direct Person page permission boundaries', () => {
     renderToStaticMarkup(createElement(NewPersonPage));
 
     expect(mocks.createForm).toHaveBeenCalledOnce();
+  });
+
+  it('uses stable URL-addressable detail sections and safely defaults to identity', async () => {
+    const coordinates = (await PersonPage({
+      params: Promise.resolve({ id: 'person-1' }),
+      searchParams: Promise.resolve({ section: 'coordonnees' }),
+    })) as ReactElement<{ activeSection: string; personId: string }>;
+    const invalidSection = (await PersonPage({
+      params: Promise.resolve({ id: 'person-1' }),
+      searchParams: Promise.resolve({ section: 'inconnue' }),
+    })) as ReactElement<{ activeSection: string; personId: string }>;
+
+    expect(coordinates.props).toMatchObject({
+      activeSection: 'coordonnees',
+      personId: 'person-1',
+    });
+    expect(invalidSection.props.activeSection).toBe('identite');
   });
 
   it('denies a direct detail-page visit without persons:view', async () => {

@@ -99,7 +99,7 @@ export const deletePerson = async (input: {
     await createPersonAudit(transaction, {
       action: 'PERSON_DELETE',
       actor: input.actor,
-      description: 'Fiche personne supprimée définitivement',
+      description: 'Fiche supprimée définitivement',
       entityId: input.personId,
       metadata: { irreversible: true },
       outcome: 'SUCCESS',
