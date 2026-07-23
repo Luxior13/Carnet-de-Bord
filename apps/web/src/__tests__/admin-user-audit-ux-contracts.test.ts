@@ -59,4 +59,19 @@ describe('managed user audit UX contracts', () => {
     expect(userDetailSource).toContain('!hasLoadedAuditLogsRef.current');
     expect(userDetailSource).toContain('isLoading={shouldShowAuditLoading}');
   });
+
+  it('keeps the managed activity hierarchy flat and filters grouped', () => {
+    expect(historySource).toContain('<CardContent className="p-0">');
+    expect(historySource).toContain('managed-activity-scope-label');
+    expect(historySource).toContain('id="activity-pole"');
+    expect(historySource).toContain('id="activity-page"');
+    expect(historySource).toContain('Par cet utilisateur');
+    expect(historySource).toContain(
+      'Événements concernant ce compte ou déclenchés par cet utilisateur.',
+    );
+    expect(historySource).not.toContain('Actions de cet utilisateur');
+    expect(historySource).not.toContain('selectedPageTitle');
+    expect(historySource).not.toContain('ActivityScopeIconGroup');
+    expect(historySource).not.toContain('CardFooter');
+  });
 });

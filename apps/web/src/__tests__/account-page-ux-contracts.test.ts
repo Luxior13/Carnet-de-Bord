@@ -113,9 +113,7 @@ describe('/mon-compte UX contracts', () => {
     expect(activitySource).toContain('personal-activity-scope-label');
     expect(activitySource).toContain('personal-activity-period');
     expect(activitySource).toMatch(/<details[\s\S]{0,600}Filtres avancés/);
-    expect(activitySource).toMatch(
-      /\{!isPersonalPerspective\s*&&\s*\([\s\S]{0,160}<CardFooter/,
-    );
+    expect(activitySource).not.toContain('CardFooter');
     expect(activitySource).toContain(
       'const displayedLogs = filteredLogs.slice(0, showCount)',
     );

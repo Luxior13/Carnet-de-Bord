@@ -11,12 +11,17 @@ const readSourceFile = (relativePath: string): string => {
 const usersListSource = readSourceFile('../features/users/UsersListPage.tsx');
 
 describe('administrative users list accessibility contracts', () => {
-  it('keeps desktop table rows semantic and exposes one native navigation control', () => {
-    expect(usersListSource).toContain('<TableRow key={user.id}>');
+  it('keeps desktop table rows semantic with one native overlay link', () => {
     expect(usersListSource).toContain(
-      '<Button asChild size="sm" variant="ghost">',
+      'group/row focus-within:ring-ring/40 relative cursor-pointer',
+    );
+    expect(usersListSource).toContain(
+      "after:absolute after:inset-0 after:z-10 after:content-['']",
     );
     expect(usersListSource).toContain('href={getUserDetailHref(user.id)}');
+    expect(usersListSource).not.toContain(
+      '<Button asChild size="sm" variant="ghost">',
+    );
     expect(usersListSource).not.toContain('role="button"');
     expect(usersListSource).not.toContain('handleOpenUserKeyDown');
     expect(usersListSource).not.toContain('openUserDetail');
@@ -25,13 +30,25 @@ describe('administrative users list accessibility contracts', () => {
   });
 
   it('uses a native link for the complete mobile row without nested controls', () => {
+    expect(usersListSource).toContain("'Ouvrir mon compte'");
     expect(usersListSource).toMatch(
-      /aria-label=\{`Voir \$\{getUserDisplayName\(user\)\}`\}/,
+      /`Ouvrir le compte de \$\{getUserDisplayName\(user\)\}`/,
     );
     expect(usersListSource).toContain(
       'className="hover:bg-surface-raised/70 focus-visible:bg-primary/10',
     );
     expect(usersListSource).not.toContain('tabIndex={0}');
     expect(usersListSource).not.toContain('router.push(');
+  });
+
+  it('keeps the directory compact and uses one coherent filter bar', () => {
+    expect(usersListSource).toContain('title="Comptes utilisateurs"');
+    expect(usersListSource).toContain('Nom, identifiant ou email…');
+    expect(usersListSource).toContain('Tous les états');
+    expect(usersListSource).toContain('Mot de passe à changer');
+    expect(usersListSource).not.toContain('UsersStatCard');
+    expect(usersListSource).not.toContain('Annuaire utilisateurs');
+    expect(usersListSource).not.toContain('<Tabs');
+    expect(usersListSource).not.toContain('DropdownMenu');
   });
 });

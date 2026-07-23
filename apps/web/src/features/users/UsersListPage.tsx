@@ -2,16 +2,12 @@
 
 import { UserRole } from '@repo/shared';
 import {
-  ArrowUpDown,
-  Clock,
+  ArrowRight,
   Key,
-  type LucideIcon,
   Search,
   Shield,
   User,
-  UserCheck,
   UserMinus,
-  Users,
   X,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -40,18 +36,11 @@ import type {
 } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import { Card, CardContent } from '$ui/card';
 import {
   DataTableDesktop,
   DataTableMobileList,
   DataTableSection,
 } from '$ui/data-table-section';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '$ui/dropdown-menu';
 import { Input } from '$ui/input';
 import {
   Select,
@@ -69,7 +58,6 @@ import {
   TableHeader,
   TableRow,
 } from '$ui/table';
-import { ScrollableTabsList, Tabs, TabsTrigger } from '$ui/tabs';
 import {
   getUserDisplayName,
   getUserLoginDisplay,
@@ -97,12 +85,12 @@ const USER_SEARCH_MAX_LENGTH = 100;
 const getSortLabel = (sort: SortOption): string => {
   switch (sort) {
     case 'created':
-      return 'Création';
+      return 'Date de création';
     case 'recent':
-      return 'Connexion';
+      return 'Dernière connexion';
     case 'name':
     default:
-      return 'Nom';
+      return 'Nom (A–Z)';
   }
 };
 
@@ -179,68 +167,16 @@ const buildUsersPageUrlParams = ({
   return params;
 };
 
-type UsersStatTone = 'neutral' | 'warning';
-
-type UsersStatToneClassNames = {
-  icon: string;
-  value: string;
-};
-
-const getUsersStatToneClassNames = (
-  tone: UsersStatTone,
-): UsersStatToneClassNames => {
-  if (tone === 'warning') {
-    return {
-      icon: 'border-warning/35 bg-warning/10 text-warning',
-      value: 'text-warning',
-    };
-  }
-
-  return {
-    icon: 'border-border-default bg-surface-inset text-muted-foreground',
-    value: 'text-foreground',
-  };
-};
-
 const UserStatusBadge: FC<{ isActive: boolean }> = ({ isActive }) => {
-  if (isActive) return <Badge variant="secondary">Actif</Badge>;
+  if (isActive) return <Badge variant="success">Actif</Badge>;
 
   return (
     <Badge
       variant="outline"
       className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
     >
-      Inactif
+      Désactivé
     </Badge>
-  );
-};
-
-const UsersStatCard: FC<{
-  icon: LucideIcon;
-  label: string;
-  tone?: UsersStatTone;
-  value: number;
-}> = ({ icon: Icon, label, tone = 'neutral', value }) => {
-  const toneClassNames = getUsersStatToneClassNames(tone);
-
-  return (
-    <Card className="border-border-subtle bg-surface overflow-hidden rounded-xl py-0 shadow-[var(--shadow-panel)]">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={`${toneClassNames.icon} flex h-9 w-9 items-center justify-center rounded-lg border shadow-none`}
-          >
-            <Icon size={18} />
-          </div>
-          <div>
-            <p className={`${toneClassNames.value} text-xl font-semibold`}>
-              {value}
-            </p>
-            <p className="text-muted-foreground text-xs">{label}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 };
 
@@ -545,18 +481,8 @@ export const UsersListPage: FC = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6" role="status" aria-label="Chargement">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-20" />
-          ))}
-        </div>
-        <Skeleton className="h-12" />
-        <div className="space-y-3">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-16" />
-          ))}
-        </div>
+      <div role="status" aria-label="Chargement">
+        <Skeleton className="h-96 rounded-xl" />
       </div>
     );
   }
@@ -598,160 +524,130 @@ export const UsersListPage: FC = () => {
           title={loadError}
         />
       )}
-      {/* Stats Cards */}
-      {stats && (
-        <div
-          className={`grid grid-cols-2 gap-3 ${
-            securityDetailsVisible ? 'md:grid-cols-4' : 'md:grid-cols-3'
-          }`}
-        >
-          <UsersStatCard icon={Users} label="Total" value={stats.total} />
-          <UsersStatCard icon={UserCheck} label="Actifs" value={stats.active} />
-          {securityDetailsVisible && stats.pendingPasswordChange !== null && (
-            <UsersStatCard
-              icon={Key}
-              label="MDP temporaire"
-              value={stats.pendingPasswordChange}
-              tone="warning"
-            />
-          )}
-          <UsersStatCard
-            icon={Clock}
-            label="Cnx 24h"
-            value={stats.recentLogins}
-          />
-        </div>
-      )}
       <DataTableSection
-        title="Annuaire utilisateurs"
+        title="Comptes utilisateurs"
         description={
-          <>
-            {totalFiltered} utilisateur
-            {totalFiltered !== 1 ? 's' : ''}
-            {hasActiveFilters && stats && ` sur ${stats.total}`}
-            {pagination &&
-              totalPages > 1 &&
-              ` - Page ${currentPage}/${totalPages}`}
-            {isRefreshing && ' - Mise à jour...'}
-            {!isRefreshing && lastSuccessfulLoadAt && (
-              <span className="ml-1">
-                - Actualisé à{' '}
-                {lastSuccessfulLoadAt.toLocaleTimeString('fr-FR', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </span>
-            )}
-          </>
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span>
+              {totalFiltered} compte{totalFiltered !== 1 ? 's' : ''}
+              {hasActiveFilters && stats ? ` sur ${stats.total}` : ''}
+              {stats
+                ? ` · ${stats.active} actif${stats.active !== 1 ? 's' : ''}`
+                : ''}
+            </span>
+            {securityDetailsVisible &&
+              stats?.pendingPasswordChange !== null &&
+              stats?.pendingPasswordChange !== undefined &&
+              stats.pendingPasswordChange > 0 && (
+                <span className="text-warning">
+                  · {stats.pendingPasswordChange} mot
+                  {stats.pendingPasswordChange !== 1 ? 's' : ''} de passe à
+                  changer
+                </span>
+              )}
+            {isRefreshing && <span>· Actualisation…</span>}
+          </span>
         }
+        headerClassName="p-3 sm:p-4"
         contentClassName={
           isRefreshing ? 'opacity-60 transition-opacity' : undefined
         }
         toolbar={
-          <>
-            <div className="flex min-w-0 flex-1 flex-col gap-3 lg:flex-row lg:items-center">
-              <div className="relative w-full lg:max-w-xs">
-                <Search
-                  size={16}
-                  className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2"
-                />
-                <Input
-                  aria-label="Rechercher un utilisateur"
-                  placeholder="Rechercher..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  maxLength={USER_SEARCH_MAX_LENGTH}
-                  className="h-9 pr-8 pl-9"
-                />
-                {searchQuery && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSearchQuery('')}
-                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 size-7 -translate-y-1/2"
-                    aria-label="Effacer la recherche"
-                  >
-                    <X size={14} />
-                  </Button>
-                )}
-              </div>
-              <Tabs
-                value={filterStatus}
-                onValueChange={(value) => handleFilterChange('status', value)}
-                className="min-w-0"
-              >
-                <ScrollableTabsList className="h-9 p-1">
-                  <TabsTrigger value="all" className="h-7 px-2.5 text-xs">
-                    Tous
-                  </TabsTrigger>
-                  <TabsTrigger value="active" className="h-7 px-2.5 text-xs">
-                    Actifs
-                  </TabsTrigger>
-                  <TabsTrigger value="inactive" className="h-7 px-2.5 text-xs">
-                    Inactifs
-                  </TabsTrigger>
-                  {canRequestSecurityDetails && (
-                    <TabsTrigger value="pending" className="h-7 px-2.5 text-xs">
-                      MDP
-                    </TabsTrigger>
-                  )}
-                </ScrollableTabsList>
-              </Tabs>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Select
-                value={filterRole}
-                onValueChange={(v) => handleFilterChange('role', v)}
-              >
-                <SelectTrigger className="h-9 w-[140px]">
-                  <SelectValue placeholder="Rôle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les rôles</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                  <SelectItem value="USER">Utilisateur</SelectItem>
-                </SelectContent>
-              </Select>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9 gap-1.5">
-                    <ArrowUpDown size={14} />
-                    <span>Trier: {getSortLabel(sortBy)}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => handleFilterChange('sort', 'name')}
-                  >
-                    Nom (A-Z)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleFilterChange('sort', 'recent')}
-                  >
-                    Dernière connexion
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleFilterChange('sort', 'created')}
-                  >
-                    Date de création
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {hasActiveFilters && (
+          <div className="grid w-full min-w-0 gap-2 sm:grid-cols-2 2xl:grid-cols-[minmax(16rem,1fr)_12rem_12rem_13rem_auto]">
+            <div className="relative min-w-0 sm:col-span-2 2xl:col-span-1">
+              <Search
+                size={16}
+                className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
+              />
+              <Input
+                aria-label="Rechercher un compte utilisateur"
+                placeholder="Nom, identifiant ou email…"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                maxLength={USER_SEARCH_MAX_LENGTH}
+                className="pr-10 pl-9"
+              />
+              {searchQuery && (
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="text-muted-foreground h-9"
+                  size="icon"
+                  onClick={() => setSearchQuery('')}
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 size-8 -translate-y-1/2"
+                  aria-label="Effacer la recherche"
                 >
                   <X size={14} />
-                  Effacer
                 </Button>
               )}
             </div>
-          </>
+            <Select
+              value={filterStatus}
+              onValueChange={(value) => handleFilterChange('status', value)}
+            >
+              <SelectTrigger
+                aria-label="Filtrer par état du compte"
+                className="w-full min-w-0"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les états</SelectItem>
+                <SelectItem value="active">Actifs</SelectItem>
+                <SelectItem value="inactive">Désactivés</SelectItem>
+                {canRequestSecurityDetails && (
+                  <SelectItem value="pending">
+                    Mot de passe à changer
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            <Select
+              value={filterRole}
+              onValueChange={(value) => handleFilterChange('role', value)}
+            >
+              <SelectTrigger
+                aria-label="Filtrer par rôle"
+                className="w-full min-w-0"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les rôles</SelectItem>
+                <SelectItem value="ADMIN">Administrateurs</SelectItem>
+                <SelectItem value="USER">Utilisateurs</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={sortBy}
+              onValueChange={(value) => handleFilterChange('sort', value)}
+            >
+              <SelectTrigger
+                aria-label="Trier les comptes utilisateurs"
+                className="w-full min-w-0"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">{getSortLabel('name')}</SelectItem>
+                <SelectItem value="recent">{getSortLabel('recent')}</SelectItem>
+                <SelectItem value="created">
+                  {getSortLabel('created')}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            {hasActiveFilters && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="text-muted-foreground min-h-10"
+              >
+                <X size={14} />
+                Réinitialiser
+              </Button>
+            )}
+          </div>
         }
         pagination={
           totalPages > 1
@@ -767,14 +663,16 @@ export const UsersListPage: FC = () => {
       >
         <DataTableDesktop>
           <Table>
-            <TableHeader>
+            <TableHeader className="[&_th]:h-9">
               <TableRow>
-                <TableHead>Utilisateur</TableHead>
-                <TableHead>Rôle</TableHead>
-                <TableHead>Statut</TableHead>
-                {securityDetailsVisible && <TableHead>Mot de passe</TableHead>}
+                <TableHead>Compte</TableHead>
+                <TableHead>Accès</TableHead>
+                <TableHead>État</TableHead>
+                {securityDetailsVisible && <TableHead>Sécurité</TableHead>}
                 <TableHead>Dernière connexion</TableHead>
-                <TableHead className="w-24 text-right">Action</TableHead>
+                <TableHead className="w-14">
+                  <span className="sr-only">Action</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -811,42 +709,66 @@ export const UsersListPage: FC = () => {
                 </TableRow>
               ) : (
                 displayedUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex min-w-0 items-center gap-3">
-                        <UserAvatar user={user} className="size-9 rounded-md" />
+                  <TableRow
+                    className="group/row focus-within:ring-ring/40 relative cursor-pointer focus-within:ring-2 focus-within:ring-inset"
+                    key={user.id}
+                  >
+                    <TableCell className="py-2">
+                      <Link
+                        aria-label={
+                          user.id === currentUser?.id
+                            ? 'Ouvrir mon compte'
+                            : `Ouvrir le compte de ${getUserDisplayName(user)}`
+                        }
+                        className="group/link flex min-w-0 items-center gap-2.5 rounded-md outline-none after:absolute after:inset-0 after:z-10 after:content-['']"
+                        href={getUserDetailHref(user.id)}
+                        prefetch={false}
+                      >
+                        <UserAvatar
+                          user={user}
+                          className="border-border-default group-hover/link:border-primary/35 size-8 rounded-full border transition-colors"
+                        />
                         <div className="min-w-0">
                           <div className="flex min-w-0 items-center gap-2">
-                            <span className="text-foreground truncate font-medium">
+                            <span className="text-foreground group-hover/link:text-primary-emphasis truncate text-sm font-medium transition-colors">
                               {getUserDisplayName(user)}
                             </span>
                             {user.isProtected && (
-                              <Shield
-                                size={14}
-                                className="text-warning shrink-0"
-                              />
+                              <span title="Compte racine">
+                                <Shield
+                                  aria-hidden="true"
+                                  size={14}
+                                  className="text-warning shrink-0"
+                                />
+                                <span className="sr-only">Compte racine</span>
+                              </span>
+                            )}
+                            {isUserIdentityMasked(user) && (
+                              <Badge
+                                variant="outline"
+                                className="border-warning/35 text-warning shrink-0 px-1.5 py-0 text-xs"
+                              >
+                                Identité protégée
+                              </Badge>
                             )}
                           </div>
-                          <p className="text-muted-foreground truncate font-mono text-xs">
-                            {getUserLoginDisplay(user)}
+                          <p className="text-muted-foreground flex min-w-0 items-center gap-1.5 truncate text-xs">
+                            <span className="shrink-0 font-mono">
+                              {getUserLoginDisplay(user)}
+                            </span>
+                            {user.contactEmail && (
+                              <span className="truncate">
+                                · {user.contactEmail}
+                              </span>
+                            )}
                           </p>
-                          {isUserIdentityMasked(user) && (
-                            <p className="text-warning mt-0.5 text-xs">
-                              Identité protégée
-                            </p>
-                          )}
-                          {user.contactEmail && (
-                            <p className="text-muted-foreground/80 truncate text-xs">
-                              {user.contactEmail}
-                            </p>
-                          )}
                         </div>
-                      </div>
+                      </Link>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="pointer-events-none py-2">
                       <Badge
                         variant={getRoleColor(user.role)}
-                        className="shrink-0"
+                        className="shrink-0 text-xs"
                       >
                         {user.role === 'ADMIN' ? (
                           <Shield size={10} className="mr-1" />
@@ -856,17 +778,18 @@ export const UsersListPage: FC = () => {
                         {getAccessLabel(user)}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="pointer-events-none py-2">
                       <UserStatusBadge isActive={user.isActive} />
                     </TableCell>
                     {securityDetailsVisible && (
-                      <TableCell>
+                      <TableCell className="pointer-events-none py-2">
                         {user.mustChangePassword ? (
                           <Badge
                             variant="outline"
-                            className="border-warning/40 text-warning"
+                            className="border-warning/40 text-warning text-xs"
                           >
-                            <Key size={10} className="mr-1" />À changer
+                            <Key size={10} className="mr-1" />
+                            Mot de passe à changer
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground text-xs">
@@ -875,25 +798,14 @@ export const UsersListPage: FC = () => {
                         )}
                       </TableCell>
                     )}
-                    <TableCell className="text-muted-foreground text-xs">
+                    <TableCell className="text-muted-foreground pointer-events-none py-2 text-xs">
                       {formatRelativeTime(user.lastLoginAt)}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <Button asChild size="sm" variant="ghost">
-                        <Link
-                          aria-label={
-                            user.id === currentUser?.id
-                              ? 'Ouvrir mon compte'
-                              : `Ouvrir le compte de ${getUserDisplayName(user)}`
-                          }
-                          href={getUserDetailHref(user.id)}
-                          prefetch={false}
-                        >
-                          {user.id === currentUser?.id
-                            ? 'Mon compte'
-                            : 'Ouvrir'}
-                        </Link>
-                      </Button>
+                    <TableCell className="pointer-events-none py-2">
+                      <ArrowRight
+                        aria-hidden="true"
+                        className="text-muted-foreground size-4 transition-transform group-hover/row:translate-x-0.5"
+                      />
                     </TableCell>
                   </TableRow>
                 ))
@@ -929,14 +841,21 @@ export const UsersListPage: FC = () => {
           ) : (
             displayedUsers.map((user) => (
               <Link
-                aria-label={`Voir ${getUserDisplayName(user)}`}
-                className="hover:bg-surface-raised/70 focus-visible:bg-primary/10 focus-visible:ring-primary/70 block p-4 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+                aria-label={
+                  user.id === currentUser?.id
+                    ? 'Ouvrir mon compte'
+                    : `Ouvrir le compte de ${getUserDisplayName(user)}`
+                }
+                className="hover:bg-surface-raised/70 focus-visible:bg-primary/10 focus-visible:ring-primary/70 block p-3 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
                 href={getUserDetailHref(user.id)}
                 key={user.id}
                 prefetch={false}
               >
                 <div className="flex items-start gap-3">
-                  <UserAvatar user={user} className="size-11 rounded-lg" />
+                  <UserAvatar
+                    user={user}
+                    className="border-border-default size-10 rounded-full border"
+                  />
                   <div className="min-w-0 flex-1 space-y-2">
                     <div className="min-w-0">
                       <div className="flex min-w-0 items-center gap-2">
@@ -944,22 +863,34 @@ export const UsersListPage: FC = () => {
                           {getUserDisplayName(user)}
                         </h3>
                         {user.isProtected && (
-                          <Shield size={14} className="text-warning shrink-0" />
+                          <span title="Compte racine">
+                            <Shield
+                              aria-hidden="true"
+                              size={14}
+                              className="text-warning shrink-0"
+                            />
+                            <span className="sr-only">Compte racine</span>
+                          </span>
+                        )}
+                        {isUserIdentityMasked(user) && (
+                          <Badge
+                            variant="outline"
+                            className="border-warning/35 text-warning shrink-0 px-1.5 py-0 text-xs"
+                          >
+                            Identité protégée
+                          </Badge>
                         )}
                       </div>
-                      <p className="text-muted-foreground truncate font-mono text-sm">
-                        {getUserLoginDisplay(user)}
+                      <p className="text-muted-foreground flex min-w-0 items-center gap-1.5 truncate text-xs">
+                        <span className="shrink-0 font-mono">
+                          {getUserLoginDisplay(user)}
+                        </span>
+                        {user.contactEmail && (
+                          <span className="truncate">
+                            · {user.contactEmail}
+                          </span>
+                        )}
                       </p>
-                      {isUserIdentityMasked(user) && (
-                        <p className="text-warning text-xs">
-                          Identité protégée
-                        </p>
-                      )}
-                      {user.contactEmail && (
-                        <p className="text-muted-foreground/80 truncate text-xs">
-                          {user.contactEmail}
-                        </p>
-                      )}
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <Badge
@@ -968,19 +899,17 @@ export const UsersListPage: FC = () => {
                       >
                         {getAccessLabel(user)}
                       </Badge>
-                      {!user.isActive && (
-                        <UserStatusBadge isActive={user.isActive} />
-                      )}
+                      <UserStatusBadge isActive={user.isActive} />
                       {securityDetailsVisible && user.mustChangePassword && (
                         <Badge
                           variant="outline"
                           className="border-warning/40 text-warning text-xs"
                         >
-                          MDP temporaire
+                          Mot de passe à changer
                         </Badge>
                       )}
                       <span className="text-muted-foreground ml-auto text-xs">
-                        {formatRelativeTime(user.lastLoginAt)}
+                        Connexion {formatRelativeTime(user.lastLoginAt)}
                       </span>
                     </div>
                   </div>

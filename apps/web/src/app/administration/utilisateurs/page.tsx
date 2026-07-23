@@ -16,14 +16,7 @@ import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 
 const UsersListFallback: FC = () => (
-  <div className="space-y-4" role="status" aria-label="Chargement">
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-      {[...Array(4)].map((_, index) => (
-        <Skeleton key={index} className="h-20 rounded-md" />
-      ))}
-    </div>
-    <Skeleton className="h-96 rounded-md" />
-  </div>
+  <Skeleton className="h-96 rounded-xl" role="status" aria-label="Chargement" />
 );
 
 const UsersAdministrationContent: FC = () => {
@@ -56,7 +49,7 @@ const UsersAdministrationContent: FC = () => {
       <PageCanvas contentClassName="space-y-5">
         <UsersAdminHero
           title={FEATURES.users.label}
-          description="Comptes, rôles et autorisations administratives."
+          description="Comptes ayant accès au site, rôles et état de sécurité."
           actions={
             canCreateUsers ? (
               <Button asChild size="sm">

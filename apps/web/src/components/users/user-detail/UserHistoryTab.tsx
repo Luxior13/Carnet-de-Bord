@@ -43,7 +43,7 @@ import {
 import type { AuditLogEntry } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import { Card, CardContent, CardFooter } from '$ui/card';
+import { Card, CardContent } from '$ui/card';
 import {
   Select,
   SelectContent,
@@ -52,7 +52,6 @@ import {
   SelectValue,
 } from '$ui/select';
 import { Skeleton } from '$ui/skeleton';
-import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
 // ============================================
@@ -307,7 +306,7 @@ const ACTIVITY_SCOPE_VISUALS: Record<
   by: {
     className: 'border-success/35 bg-success/10 text-success',
     icon: UserCheck,
-    label: 'Actions de cet utilisateur',
+    label: 'Par cet utilisateur',
     value: 'by',
   },
   linked: {
@@ -450,19 +449,6 @@ const getLogScopeVisuals = (
   return scopes.length > 0
     ? scopes
     : [getActivityScopeVisual('linked', perspective)];
-};
-
-const getActivityScopeOptionVisuals = (
-  scope: ActivityScope,
-  perspective: ActivityPerspective,
-): ActivityScopeVisual[] => {
-  if (scope === 'by') return [getActivityScopeVisual('by', perspective)];
-  if (scope === 'on') return [getActivityScopeVisual('on', perspective)];
-
-  return [
-    getActivityScopeVisual('on', perspective),
-    getActivityScopeVisual('by', perspective),
-  ];
 };
 
 const FALLBACK_SYSTEM_POLE: ActivityPoleInfo = {
@@ -1008,7 +994,7 @@ const getActivityScopeOptions = (
         },
         {
           description: "Connexions et actions effectuées par l'utilisateur",
-          label: 'Actions de cet utilisateur',
+          label: 'Par cet utilisateur',
           value: 'by',
         },
         {
@@ -1399,35 +1385,6 @@ const ActivitySelectVisualOption: FC<{
   );
 };
 
-const ActivityScopeIconGroup: FC<{
-  scopes: ActivityScopeVisual[];
-  size?: 'md' | 'sm';
-}> = ({ scopes, size = 'sm' }) => (
-  <span className="inline-flex items-center gap-1">
-    {scopes.map((scope) => {
-      const ScopeIcon = scope.icon;
-
-      return (
-        <Tooltip key={scope.value}>
-          <TooltipTrigger asChild>
-            <span
-              aria-label={scope.label}
-              className={cn(
-                'inline-flex shrink-0 items-center justify-center rounded-md border',
-                size === 'md' ? 'size-8' : 'size-7',
-                scope.className,
-              )}
-            >
-              <ScopeIcon className={size === 'md' ? 'size-4' : 'size-3.5'} />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent sideOffset={6}>{scope.label}</TooltipContent>
-        </Tooltip>
-      );
-    })}
-  </span>
-);
-
 const ActivityScopeSummary: FC<{ scopes: ActivityScopeVisual[] }> = ({
   scopes,
 }) => (
@@ -1463,7 +1420,7 @@ const ChangeItem: FC<{
   const isFactOnly = FACT_ONLY_CHANGE_KEYS.has(fieldKey);
 
   return (
-    <div className="border-border/60 bg-background/40 grid gap-2 rounded-md border px-2.5 py-2 text-xs sm:grid-cols-[minmax(13rem,16rem)_minmax(0,1fr)] sm:items-center">
+    <div className="border-border/45 grid gap-2 border-b px-1 py-2.5 text-xs last:border-b-0 sm:grid-cols-[minmax(13rem,16rem)_minmax(0,1fr)] sm:items-center">
       <span
         className="text-foreground min-w-0 truncate font-semibold"
         title={label}
@@ -1519,10 +1476,8 @@ const ActivityListRow: FC<{
   return (
     <article
       className={cn(
-        'border-border/60 bg-surface-muted/35 relative overflow-hidden rounded-lg border transition-colors [contain-intrinsic-size:auto_5rem] [content-visibility:auto]',
-        isOpen
-          ? 'border-primary/35 bg-surface-inset/75'
-          : 'hover:border-border hover:bg-surface-muted/60',
+        'border-border/55 relative overflow-hidden border-b transition-colors [contain-intrinsic-size:auto_5rem] [content-visibility:auto] last:border-b-0',
+        isOpen ? 'bg-surface-inset/70' : 'hover:bg-surface-muted/45',
       )}
     >
       <span
@@ -1615,12 +1570,7 @@ const ActivityListRow: FC<{
             </div>
           </div>
           <div className="hidden min-w-0 text-right md:block">
-            <div
-              className={cn(
-                'min-w-0 rounded-lg border px-2 py-1.5',
-                locationToneClasses.soft,
-              )}
-            >
+            <div className="min-w-0 px-2 py-1">
               <div className="flex min-w-0 items-center gap-2">
                 <span
                   className={cn(
@@ -1682,10 +1632,10 @@ const ActivityListRow: FC<{
         </div>
       </button>
       {isOpen && (
-        <div className="border-border/65 bg-background/25 border-t px-3 py-3 sm:px-4">
+        <div className="border-border/55 bg-background/20 border-t px-3 py-3 sm:px-4">
           <div className="space-y-3 md:ml-[3.25rem]">
             {hasChanges && (
-              <section className="border-primary/35 bg-primary/10 rounded-lg border p-3">
+              <section>
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <p className="text-foreground text-xs font-semibold">
                     Changements
@@ -1697,7 +1647,7 @@ const ActivityListRow: FC<{
                     {changes.length}
                   </Badge>
                 </div>
-                <div className="space-y-1.5">
+                <div className="border-border/45 border-t">
                   {changes.map((change) => (
                     <ChangeItem
                       key={change.fieldKey}
@@ -1715,7 +1665,7 @@ const ActivityListRow: FC<{
                 Détails techniques
                 <ChevronDown className="size-3 transition-transform group-open/technical:rotate-180" />
               </summary>
-              <div className="border-border/60 bg-surface-muted/35 mt-2 rounded-lg border px-3 py-2">
+              <div className="bg-surface-muted/35 mt-2 px-3 py-2">
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                   <span className="text-muted-foreground">
                     Action{' '}
@@ -1801,7 +1751,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
     : "Journal d'activité";
   const journalDescription = isPersonalPerspective
     ? '« Sur mon compte » regroupe les événements qui visent votre compte ; « Mes actions », ceux que vous avez déclenchés. Un même événement peut apparaître dans les deux vues.'
-    : "« Sur ce compte » regroupe les événements qui visent l'utilisateur ; « Actions de cet utilisateur », ceux qu'il a déclenchés. Un même événement peut apparaître dans les deux vues.";
+    : 'Événements concernant ce compte ou déclenchés par cet utilisateur.';
 
   const poleOptions = useMemo(() => {
     if (isServerFiltering && facets) {
@@ -1956,31 +1906,6 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
       tone: 'internal',
       value: ALL_FILTER_VALUE,
     } satisfies ActivityFilterOption);
-  const selectedPageLocation =
-    effectivePageFilter === ALL_FILTER_VALUE
-      ? null
-      : (auditLogs
-          .map((log) => getActivityLocation(log))
-          .find((location) => location.pageKey === effectivePageFilter) ??
-        null);
-  const selectedPageTitle =
-    effectivePageFilter === ALL_FILTER_VALUE
-      ? 'Toutes les pages'
-      : selectedPageOption.label;
-  const selectedPageDescription =
-    selectedPageLocation?.description ??
-    (isPersonalPerspective
-      ? poleFilter === ALL_FILTER_VALUE
-        ? 'Tous les événements de votre compte, quelle que soit leur origine.'
-        : `Événements de votre compte dans ${selectedPoleOption.label}.`
-      : poleFilter === ALL_FILTER_VALUE
-        ? 'Journal consolidé de tous les pôles et toutes les pages.'
-        : `Journal consolidé des pages du pôle ${selectedPoleOption.label}.`);
-  const selectedPageVisualOption =
-    effectivePageFilter === ALL_FILTER_VALUE
-      ? selectedPoleOption
-      : selectedPageOption;
-
   const getScopeCount = (scope: ActivityScope): number => {
     if (scope === 'by') return scopeCounts.by;
     if (scope === 'on') return scopeCounts.on;
@@ -2181,18 +2106,13 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
     );
   }
 
-  const SelectedPageIcon = getNavigationIcon(selectedPageVisualOption.icon);
-  const selectedPageToneClasses = getNavigationSpaceToneClasses(
-    selectedPageVisualOption.tone,
-  );
-
   return (
     <Card aria-busy={isLoading || isLoadingMore} className="overflow-visible">
-      <CardContent className="p-2.5 sm:p-3">
-        <div className="space-y-3">
+      <CardContent className="p-0">
+        <div>
           {error && (
             <div
-              className="border-destructive/35 bg-destructive/10 text-destructive flex flex-wrap items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm"
+              className="border-destructive/35 bg-destructive/10 text-destructive mx-3 mt-3 flex flex-wrap items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm"
               role="alert"
             >
               <span>{error}</span>
@@ -2205,15 +2125,19 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
             </div>
           )}
           {!isPersonalPerspective && (
-            <section className="border-border/55 bg-surface-muted overflow-hidden rounded-lg border">
-              <div className="flex flex-col gap-4 p-4 xl:flex-row xl:items-center xl:justify-between">
+            <header className="border-border/55 border-b">
+              <div className="grid gap-3 px-4 py-3 2xl:grid-cols-[minmax(20rem,1fr)_auto] 2xl:items-center">
                 <div className="min-w-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-foreground font-semibold">
+                    <h2
+                      id="managed-activity-heading"
+                      className="text-foreground font-semibold"
+                    >
                       {journalTitle}
-                    </h3>
+                    </h2>
                     <Badge variant="secondary" className="text-xs">
-                      {filteredLogs.length}/{auditLogs.length} affichés
+                      {filteredLogs.length} événement
+                      {filteredLogs.length > 1 ? 's' : ''}
                     </Badge>
                     {hasTruncatedAuditLogs && (
                       <Badge
@@ -2224,20 +2148,12 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                         {effectiveTotalAuditLogs} chargés
                       </Badge>
                     )}
-                    {hasActiveFilters && (
-                      <Badge
-                        variant="outline"
-                        className="border-primary/40 text-primary-emphasis text-xs"
-                      >
-                        Filtres actifs
-                      </Badge>
-                    )}
                   </div>
                   <p className="text-muted-foreground max-w-3xl text-sm leading-6">
                     {journalDescription}
                   </p>
                 </div>
-                <div className="flex min-w-0 flex-wrap gap-2 xl:justify-end">
+                <div className="flex min-w-0 flex-wrap items-center gap-2 2xl:flex-nowrap 2xl:justify-end">
                   <div className="min-w-44">
                     <Select
                       value={dateFilter}
@@ -2293,11 +2209,15 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                   )}
                 </div>
               </div>
-            </section>
+            </header>
           )}
-          <section className="border-border/60 bg-surface overflow-hidden rounded-lg border">
+          <section
+            aria-labelledby={
+              isPersonalPerspective ? undefined : 'managed-activity-heading'
+            }
+          >
             {isPersonalPerspective ? (
-              <div className="border-border/55 bg-surface-muted space-y-4 border-b p-4">
+              <div className="border-border/55 space-y-4 border-b px-4 py-3">
                 <div className="space-y-1">
                   <h2 className="text-foreground text-lg font-semibold">
                     Activité
@@ -2524,29 +2444,49 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="border-border/55 bg-surface-muted grid gap-4 border-b p-4 xl:grid-cols-[minmax(0,1fr)_40rem] xl:items-start">
-                <div className="flex min-w-0 items-start gap-3">
+              <div className="border-border/55 grid gap-4 border-b px-4 py-3 2xl:grid-cols-[minmax(20rem,1fr)_minmax(30rem,40rem)] 2xl:items-end">
+                <div className="min-w-0 space-y-2">
                   <span
-                    className={cn(
-                      'flex size-11 shrink-0 items-center justify-center rounded-lg border',
-                      selectedPageToneClasses.icon,
-                    )}
+                    id="managed-activity-scope-label"
+                    className="text-muted-foreground block text-xs font-medium"
                   >
-                    <SelectedPageIcon className="size-5" />
+                    Afficher
                   </span>
-                  <div className="min-w-0 space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="text-foreground font-semibold">
-                        {selectedPageTitle}
-                      </h4>
-                      <Badge variant="secondary" className="text-xs">
-                        {filteredLogs.length} événement
-                        {filteredLogs.length > 1 ? 's' : ''}
-                      </Badge>
-                    </div>
-                    <p className="text-muted-foreground max-w-2xl text-sm leading-6">
-                      {selectedPageDescription}
-                    </p>
+                  <div
+                    aria-labelledby="managed-activity-scope-label"
+                    className="border-border/60 bg-background/30 grid grid-cols-3 rounded-lg border p-1"
+                    role="group"
+                  >
+                    {activityScopeOptions.map((scope) => {
+                      const isActiveScope = activityScope === scope.value;
+
+                      return (
+                        <button
+                          key={scope.value}
+                          type="button"
+                          aria-pressed={isActiveScope}
+                          title={scope.description}
+                          onClick={() => handleActivityScopeChange(scope.value)}
+                          className={cn(
+                            'text-muted-foreground hover:text-foreground flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-md px-2 text-xs font-medium transition-colors sm:text-sm',
+                            isActiveScope &&
+                              'bg-primary/15 text-primary-emphasis shadow-sm',
+                          )}
+                        >
+                          <span className="truncate">{scope.label}</span>
+                          <span
+                            className={cn(
+                              'shrink-0 text-xs tabular-nums',
+                              isActiveScope
+                                ? 'text-primary-emphasis'
+                                : 'text-muted-foreground/75',
+                            )}
+                          >
+                            {getScopeCount(scope.value)}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
                 <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
@@ -2641,53 +2581,10 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                 </div>
               </div>
             )}
-            <div className="space-y-4 p-4">
-              {!isPersonalPerspective && (
-                <div className="grid gap-2 md:grid-cols-3">
-                  {activityScopeOptions.map((scope) => {
-                    const isActiveScope = activityScope === scope.value;
-                    const scopeVisuals = getActivityScopeOptionVisuals(
-                      scope.value,
-                      perspective,
-                    );
-
-                    return (
-                      <button
-                        key={scope.value}
-                        type="button"
-                        aria-pressed={isActiveScope}
-                        onClick={() => handleActivityScopeChange(scope.value)}
-                        className={cn(
-                          'border-border/60 bg-surface-muted hover:bg-accent/25 flex min-w-0 items-center gap-3 rounded-lg border p-3 text-left transition-colors',
-                          isActiveScope && 'border-primary/45 bg-primary/10',
-                        )}
-                      >
-                        <ActivityScopeIconGroup
-                          scopes={scopeVisuals}
-                          size="md"
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span className="text-foreground block truncate text-sm font-semibold">
-                            {scope.label}
-                          </span>
-                          <span className="text-muted-foreground block truncate text-xs">
-                            {scope.description}
-                          </span>
-                        </span>
-                        <Badge
-                          variant={isActiveScope ? 'secondary' : 'outline'}
-                          className="shrink-0"
-                        >
-                          {getScopeCount(scope.value)}
-                        </Badge>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              <div className="space-y-2">
+            <div className="p-4">
+              <div>
                 {!isPersonalPerspective && (
-                  <div className="border-border/60 bg-surface-muted/45 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_18rem_10rem_1.5rem] rounded-lg border px-4 py-2 text-xs font-medium md:grid">
+                  <div className="border-border/55 text-muted-foreground hidden grid-cols-[minmax(0,1fr)_18rem_10rem_1.5rem] border-b px-4 py-2 text-xs font-medium md:grid">
                     <span>Événement</span>
                     <span>Emplacement</span>
                     <span className="text-right">Date</span>
@@ -2704,7 +2601,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div>
                     {((): React.ReactNode => {
                       let lastCategory: DateCategory | null = null;
 
@@ -2782,12 +2679,6 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
           </section>
         </div>
       </CardContent>
-      {!isPersonalPerspective && (
-        <CardFooter className="text-muted-foreground bg-surface-inset/95 justify-center rounded-b-xl px-4 py-3 text-center text-xs">
-          {filteredLogs.length} événement{filteredLogs.length > 1 ? 's' : ''}
-          {hasActiveFilters && ' (filtre)'}
-        </CardFooter>
-      )}
     </Card>
   );
 };
