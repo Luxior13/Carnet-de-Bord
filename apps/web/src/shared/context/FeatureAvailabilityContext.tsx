@@ -17,7 +17,7 @@ import { useUser } from '$context/UserContext';
 const REFRESH_INTERVAL_MS = 30_000;
 
 type ReadinessPayload = {
-  checks?: { persons?: string };
+  checks?: { partners?: string; persons?: string };
 };
 
 type FeatureAvailabilityContextValue = {
@@ -29,7 +29,9 @@ type FeatureAvailabilityContextValue = {
 const ALWAYS_OPERATIONAL_FEATURE_IDS = Object.values(FEATURES)
   .filter(
     (feature) =>
-      feature.availability === 'live' && feature.id !== FEATURES.persons.id,
+      feature.availability === 'live' &&
+      feature.id !== FEATURES.persons.id &&
+      feature.id !== FEATURES.partners.id,
   )
   .map((feature) => feature.id);
 
@@ -43,10 +45,12 @@ export const FeatureAvailabilityProvider: FC<{ children: ReactNode }> = ({
   const [featureAvailabilityLoaded, setFeatureAvailabilityLoaded] =
     useState(false);
   const [personsReady, setPersonsReady] = useState(false);
+  const [partnersReady, setPartnersReady] = useState(false);
 
   const refreshFeatureAvailability = useCallback(async (): Promise<void> => {
     if (!userData) {
       setPersonsReady(false);
+      setPartnersReady(false);
       setFeatureAvailabilityLoaded(false);
 
       return;
@@ -60,8 +64,10 @@ export const FeatureAvailabilityProvider: FC<{ children: ReactNode }> = ({
       });
       const payload = (await response.json()) as ReadinessPayload;
       setPersonsReady(payload.checks?.persons === 'ready');
+      setPartnersReady(payload.checks?.partners === 'ready');
     } catch {
       setPersonsReady(false);
+      setPartnersReady(false);
     } finally {
       setFeatureAvailabilityLoaded(true);
     }
@@ -70,6 +76,7 @@ export const FeatureAvailabilityProvider: FC<{ children: ReactNode }> = ({
   useEffect(() => {
     if (!userData) {
       setPersonsReady(false);
+      setPartnersReady(false);
       setFeatureAvailabilityLoaded(false);
 
       return;
@@ -88,8 +95,9 @@ export const FeatureAvailabilityProvider: FC<{ children: ReactNode }> = ({
       new Set([
         ...ALWAYS_OPERATIONAL_FEATURE_IDS,
         ...(personsReady ? [FEATURES.persons.id] : []),
+        ...(partnersReady ? [FEATURES.partners.id] : []),
       ]),
-    [personsReady],
+    [partnersReady, personsReady],
   );
   const value = useMemo(
     () => ({

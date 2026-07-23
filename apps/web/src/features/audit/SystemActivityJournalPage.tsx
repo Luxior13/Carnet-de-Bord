@@ -576,7 +576,8 @@ const JournalCard: FC<{
   const sameIdentity = isSameIdentity(log);
   const personEntityLabel =
     log.entityType === 'PERSON' && log.entityId
-      ? (log.entityDisplayName ?? `Fiche supprimée · ${log.entityId}`)
+      ? (log.entityDisplayName ??
+        `Fiche supprimée · ${log.entityId}`)
       : null;
   const detailsId = `journal-details-${log.id}`;
   const normalizedOutcome = log.outcome?.toUpperCase();

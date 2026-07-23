@@ -39,7 +39,7 @@ de conservation des sauvegardes adaptée.
 
 ## Sauvegardes
 
-Créer une sauvegarde signée v5 :
+Créer une sauvegarde signée v6 :
 
 ```bash
 bun run --filter @repo/database db:backup

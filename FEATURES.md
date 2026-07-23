@@ -12,6 +12,8 @@ Chaque ligne pourra ensuite avoir son propre fichier detaille.
 ## Deja existant
 
 - Utilisateurs et permissions - Partie deja presente pour gerer les comptes, roles et acces au site.
+- [Répertoire](features/personnes-contacts.md) - Répertoire central des personnes internes ou externes avec identité, coordonnées et statut dans la structure.
+- [Sponsors & partenaires](features/sponsors.md) - Organisations, contacts, périodes de relation et suivi interne.
 
 ## Fonctionnalites transversales
 
@@ -23,10 +25,8 @@ Chaque ligne pourra ensuite avoir son propre fichier detaille.
 - [Gestion des reunions](features/gestion-reunions.md) - Page complete pour organiser les reunions, ajouter les participants et faire le debrief.
 - [Actualite interne](features/actualite-interne.md) - Page qui liste les evenements importants de la structure comme un joueur retire ou un sponsor ajoute.
 - [Membres](features/membres.md) - Liste des membres avec une fiche detaillee pour garder mail, telephone, notes internes, bans ou informations importantes.
-- [Répertoire](features/personnes-contacts.md) - Répertoire central des personnes internes ou externes avec identité, coordonnées et statut dans la structure.
 - [Tresorerie](features/tresorerie.md) - Partie finance pour gerer la tresorerie, paiements, depenses, recettes et bilans de l'equipe esport.
 - [Adherents](features/adherents.md) - Suivre les adherents, cotisations, informations personnelles et statut dans la structure.
-- [Sponsors](features/sponsors.md) - Centraliser les sponsors avec leurs contacts, contrats, obligations, livrables et historique.
 - [Chartes et documents officiels](features/chartes-documents.md) - Creer, mettre a jour et exporter en PDF les chartes, reglements et documents importants.
 - [Contrats](features/contrats.md) - Centraliser les contrats lies aux sponsors, membres, documents et operations de tresorerie.
 - [Debriefs](features/debriefs.md) - Garder les retours internes apres reunions, matchs, scrims, entrainements ou tryouts.

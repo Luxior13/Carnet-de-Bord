@@ -3,6 +3,7 @@ import 'server-only';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { isPartnerSchemaReady } from '$features/partners/server/partner-readiness';
 import {
   isPersonEnvironmentConfigured,
   isPersonReady,
@@ -24,6 +25,7 @@ const NO_STORE_HEADERS = {
 type ReadinessResponse = {
   checks: {
     database: 'connected' | 'disconnected';
+    partners: 'ready' | 'schema_not_ready' | 'unknown';
     persons: 'not_configured' | 'ready' | 'schema_not_ready' | 'unknown';
     schema: 'not_ready' | 'ready' | 'unknown';
   };
@@ -88,6 +90,7 @@ const performReadinessCheck = async (): Promise<ReadinessResponse> => {
     return {
       checks: {
         database: 'connected',
+        partners: 'unknown',
         persons: 'unknown',
         schema: 'not_ready',
       },
@@ -97,6 +100,7 @@ const performReadinessCheck = async (): Promise<ReadinessResponse> => {
   }
 
   const personSchemaReady = await isPersonSchemaCatalogReady(prisma);
+  const partnerSchemaReady = await isPartnerSchemaReady(prisma);
   let personsStatus: ReadinessResponse['checks']['persons'] =
     'schema_not_ready';
   if (personSchemaReady) {
@@ -116,6 +120,7 @@ const performReadinessCheck = async (): Promise<ReadinessResponse> => {
   return {
     checks: {
       database: 'connected',
+      partners: partnerSchemaReady ? 'ready' : 'schema_not_ready',
       persons: personsStatus,
       schema: 'ready',
     },
@@ -167,6 +172,7 @@ export async function createReadinessResponse(): Promise<
       {
         checks: {
           database: 'disconnected',
+          partners: 'unknown',
           persons: 'unknown',
           schema: 'unknown',
         },

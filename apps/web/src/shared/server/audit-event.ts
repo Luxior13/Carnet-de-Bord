@@ -99,6 +99,27 @@ const AUDIT_EVENT_CLASSIFICATIONS = {
     AuditSeverity.CRITICAL,
   ),
   [AuditAction.PERSON_UPDATE]: activity(AuditStream.IDENTITY),
+  [AuditAction.PARTNER_CONTACTS_UPDATE]: activity(AuditStream.SYSTEM),
+  [AuditAction.PARTNER_CREATE]: activity(AuditStream.SYSTEM),
+  [AuditAction.PARTNER_DELETE]: activity(
+    AuditStream.SYSTEM,
+    AuditSeverity.CRITICAL,
+  ),
+  [AuditAction.PARTNER_FOLLOW_UP_COMPLETE]: activity(AuditStream.SYSTEM),
+  [AuditAction.PARTNER_FOLLOW_UP_CREATE]: activity(AuditStream.SYSTEM),
+  [AuditAction.PARTNER_FOLLOW_UP_DELETE]: activity(
+    AuditStream.SYSTEM,
+    AuditSeverity.WARNING,
+  ),
+  [AuditAction.PARTNER_FOLLOW_UP_UPDATE]: activity(AuditStream.SYSTEM),
+  [AuditAction.PARTNER_MERGE]: activity(
+    AuditStream.SYSTEM,
+    AuditSeverity.CRITICAL,
+  ),
+  [AuditAction.PARTNER_PERIOD_CREATE]: activity(AuditStream.SYSTEM),
+  [AuditAction.PARTNER_PERIOD_UPDATE]: activity(AuditStream.SYSTEM),
+  [AuditAction.PARTNER_STATUS_UPDATE]: activity(AuditStream.SYSTEM),
+  [AuditAction.PARTNER_UPDATE]: activity(AuditStream.SYSTEM),
   [AuditAction.PERMISSION_UPDATE]: activity(
     AuditStream.AUTHORIZATION,
     AuditSeverity.CRITICAL,

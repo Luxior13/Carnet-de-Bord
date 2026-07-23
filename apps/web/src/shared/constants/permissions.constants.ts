@@ -2,6 +2,7 @@ import { UserRole } from '@repo/shared';
 
 import type { NavigationIconName } from '$constants/navigation-icon.constants';
 import type { NavigationSpaceTone } from '$constants/navigation-theme.constants';
+import { createPartnersPermissionCategory } from '$constants/partners-permission-category.constants';
 import { createPersonsPermissionCategory } from '$constants/persons-permission-category.constants';
 
 /**
@@ -33,6 +34,11 @@ export const PERMISSIONS = {
   NOTIFICATIONS: {
     SEND: 'notifications:send',
     VIEW: 'notifications:view',
+  },
+  PARTNERS: {
+    DELETE: 'partners:delete',
+    MANAGE: 'partners:manage',
+    VIEW: 'partners:view',
   },
   PERSONS: {
     CREATE: 'persons:create',
@@ -187,6 +193,12 @@ export const PERMISSION_POLES = [
     key: 'internal',
     label: 'Vie interne',
     tone: 'internal',
+  },
+  {
+    icon: 'Handshake',
+    key: 'legal',
+    label: 'Bureau & juridique',
+    tone: 'legal',
   },
   {
     icon: 'Settings',
@@ -448,6 +460,7 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
 /** All live administrative pages shown in the per-user access overview. */
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   createPersonsPermissionCategory(PERMISSIONS.PERSONS),
+  createPartnersPermissionCategory(PERMISSIONS.PARTNERS),
   {
     accessPermissionKey: PERMISSIONS.USERS.VIEW,
     assignment: 'delegable',

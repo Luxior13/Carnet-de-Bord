@@ -85,6 +85,24 @@ export const deletePerson = async (input: {
     await transaction.$queryRaw<Array<{ deletedCount: bigint }>>`
       SELECT "public"."purge_person_audit_field_changes"(${input.personId}) AS "deletedCount"
     `;
+    const partnerSchema = await transaction.$queryRaw<
+      Array<{ ready: boolean }>
+    >`
+      SELECT to_regclass(format('%I.%I', current_schema(), 'PartnerContact'))
+        IS NOT NULL AS "ready"
+    `;
+    if (partnerSchema?.[0]?.ready) {
+      await transaction.partnerContact.updateMany({
+        data: {
+          closedAt: new Date(),
+          endedOn: null,
+          isPrimary: false,
+          personId: null,
+          version: { increment: 1 },
+        },
+        where: { personId: input.personId },
+      });
+    }
     const deleted = await transaction.person.deleteMany({
       where: { id: input.personId, version: input.version },
     });

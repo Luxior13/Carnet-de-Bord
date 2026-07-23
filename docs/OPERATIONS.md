@@ -72,7 +72,7 @@ Depuis `packages/database` :
 bun run db:backup
 ```
 
-Le format courant est le format signé v5. Il contient le tombstone immuable des
+Le format courant est le format signé v6. Il contient le tombstone immuable des
 fiches supprimées, mais aucune file, demande en attente ou donnée de worker.
 
 Une sauvegarde n’est exploitable que si ces trois fichiers sont conservés

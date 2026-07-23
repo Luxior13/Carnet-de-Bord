@@ -183,6 +183,25 @@ La suppression exige une confirmation explicite et une version courante ; elle
 ne demande pas de nouvelle preuve à l'usage. Comme toute permission critique,
 son attribution reste soumise aux protections générales du moteur.
 
+### Page Sponsors & partenaires
+
+Les trois permissions acceptent une surcharge individuelle. Leur preset est
+`false` pour USER et `true` pour ADMIN. Le compte racine les possède
+implicitement.
+
+| Clé canonique     | Action couverte                                                       | Dépend de       | Risque   | Step-up à l'usage |
+| ----------------- | --------------------------------------------------------------------- | --------------- | -------- | ----------------- |
+| `partners:view`   | consulter les organisations, périodes et suivis                       | —               | sensible | Non               |
+| `partners:manage` | créer et modifier organisations, contacts, périodes et suivis         | `partners:view` | sensible | Non               |
+| `partners:delete` | supprimer uniquement une fiche vide créée par erreur                  | `partners:view` | critique | Non               |
+
+L'identité d'un contact reste conditionnée par `persons:view`. Sans cette
+permission, la fiche partenaire ne révèle ni son nom ni ses coordonnées.
+Associer un contact exige simultanément `partners:manage` et `persons:view`.
+Une fiche possédant une période, un contact ou un suivi ne peut plus être
+supprimée ; elle doit être terminée ou, pour un doublon, fusionnée lorsque
+cette opération sera activée.
+
 ### Journal global et historique contextuel
 
 | Clé canonique              | Action couverte                                          | Dépend de    | Risque   | USER | ADMIN     | Racine         | Surcharge | Step-up |

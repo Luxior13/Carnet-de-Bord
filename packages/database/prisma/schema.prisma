@@ -34,6 +34,24 @@ enum PersonStructureStatus {
   OUTSIDE_STRUCTURE
 }
 
+enum PartnerOrganizationCategoryType {
+  SPONSOR
+  PARTNER
+}
+
+enum PartnerOrganizationStatus {
+  PROSPECT
+  DISCUSSION
+  ACTIVE
+  ENDED
+  CLOSED
+}
+
+enum PartnerContactChannelType {
+  EMAIL
+  PHONE
+}
+
 enum AuditFieldChangeType {
   CREATE
   UPDATE
@@ -73,18 +91,23 @@ model User {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  sessions               Session[]
-  auditLogs              AuditLog[]              @relation("AuditActor")
-  targetedAuditLogs      AuditLog[]              @relation("AuditTarget")
-  archivedStaffProfile   ArchivedStaffProfile?
-  loginNameReservations  LoginNameReservation[]
-  totpCredential         TotpCredential?
-  totpEnrollment         TotpEnrollment?
-  mfaRecoveryCodes       MfaRecoveryCode[]
-  mfaLoginChallenge      MfaLoginChallenge?
-  createdNotifications   Notification[]          @relation("NotificationCreator")
-  notificationRecipients NotificationRecipient[]
-  updatedSystemSettings  SystemSetting[]         @relation("SystemSettingUpdater")
+  sessions                    Session[]
+  auditLogs                   AuditLog[]              @relation("AuditActor")
+  targetedAuditLogs           AuditLog[]              @relation("AuditTarget")
+  archivedStaffProfile        ArchivedStaffProfile?
+  loginNameReservations       LoginNameReservation[]
+  totpCredential              TotpCredential?
+  totpEnrollment              TotpEnrollment?
+  mfaRecoveryCodes            MfaRecoveryCode[]
+  mfaLoginChallenge           MfaLoginChallenge?
+  createdNotifications        Notification[]          @relation("NotificationCreator")
+  notificationRecipients      NotificationRecipient[]
+  updatedSystemSettings       SystemSetting[]         @relation("SystemSettingUpdater")
+  createdPartnerOrganizations PartnerOrganization[]   @relation("PartnerOrganizationCreator")
+  updatedPartnerOrganizations PartnerOrganization[]   @relation("PartnerOrganizationUpdater")
+  updatedPartnerSituations    PartnerOrganization[]   @relation("PartnerOrganizationSituationUpdater")
+  createdPartnerFollowUps     PartnerFollowUpEntry[]  @relation("PartnerFollowUpAuthor")
+  completedPartnerActions     PartnerFollowUpAction[] @relation("PartnerFollowUpActionCompleter")
 
   @@index([contactEmail])
   @@index([role])
@@ -243,6 +266,18 @@ enum AuditAction {
   PERSON_CREATE
   PERSON_UPDATE
   PERSON_DELETE
+  PARTNER_CREATE
+  PARTNER_UPDATE
+  PARTNER_STATUS_UPDATE
+  PARTNER_PERIOD_CREATE
+  PARTNER_PERIOD_UPDATE
+  PARTNER_CONTACTS_UPDATE
+  PARTNER_FOLLOW_UP_CREATE
+  PARTNER_FOLLOW_UP_UPDATE
+  PARTNER_FOLLOW_UP_DELETE
+  PARTNER_FOLLOW_UP_COMPLETE
+  PARTNER_MERGE
+  PARTNER_DELETE
 }
 
 enum AuditCategory {
@@ -251,6 +286,7 @@ enum AuditCategory {
   PERMISSION
   SYSTEM
   PERSON
+  PARTNER
 }
 
 enum AuditEventKind {
@@ -385,9 +421,10 @@ model Person {
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 
-  emails         PersonEmail[]
-  phones         PersonPhone[]
-  socialProfiles PersonSocialProfile[]
+  emails          PersonEmail[]
+  phones          PersonPhone[]
+  socialProfiles  PersonSocialProfile[]
+  partnerContacts PartnerContact[]
 
   @@index([createdAt, id])
   @@index([structureStatus, createdAt, id])
@@ -467,6 +504,168 @@ model PersonDeletionTombstone {
   personId            String   @id @db.VarChar(128)
   deletionOperationId String   @unique @db.VarChar(191)
   deletedAt           DateTime @default(now())
+}
+
+model PartnerOrganization {
+  id                   String                    @id @default(cuid())
+  name                 String                    @db.VarChar(200)
+  normalizedName       String                    @db.VarChar(400)
+  description          String?                   @db.VarChar(500)
+  status               PartnerOrganizationStatus @default(PROSPECT)
+  website              String?                   @db.VarChar(2048)
+  normalizedDomain     String?                   @db.VarChar(253)
+  currentSituation     String?                   @db.VarChar(1000)
+  situationUpdatedAt   DateTime?
+  situationUpdatedById String?
+  createdById          String?
+  updatedById          String?
+  version              Int                       @default(1)
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+
+  situationUpdatedBy User?                               @relation("PartnerOrganizationSituationUpdater", fields: [situationUpdatedById], references: [id], onDelete: SetNull)
+  createdBy          User?                               @relation("PartnerOrganizationCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy          User?                               @relation("PartnerOrganizationUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  categories         PartnerOrganizationCategory[]
+  channels           PartnerOrganizationContactChannel[]
+  periods            PartnerRelationshipPeriod[]
+  contacts           PartnerContact[]
+  followUps          PartnerFollowUpEntry[]
+  mergeRedirects     PartnerOrganizationMergeRedirect[]  @relation("PartnerOrganizationMergeTarget")
+
+  @@index([normalizedName, id])
+  @@index([status, normalizedName, id])
+  @@index([updatedAt, id])
+  @@index([status, updatedAt, id])
+  @@index([normalizedDomain])
+  @@index([normalizedName(ops: raw("gin_trgm_ops"))], type: Gin, map: "PartnerOrganization_normalizedName_trgm_idx")
+}
+
+model PartnerOrganizationCategory {
+  id             String                          @id @default(cuid())
+  organizationId String
+  category       PartnerOrganizationCategoryType
+  createdAt      DateTime                        @default(now())
+
+  organization PartnerOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, category])
+  @@index([category, organizationId])
+}
+
+model PartnerOrganizationContactChannel {
+  id              String                    @id @default(cuid())
+  organizationId  String
+  type            PartnerContactChannelType
+  value           String                    @db.VarChar(320)
+  normalizedValue String                    @db.VarChar(320)
+  label           String                    @db.VarChar(40)
+  isPrimary       Boolean                   @default(false)
+  version         Int                       @default(1)
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+
+  organization PartnerOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, type, normalizedValue])
+  @@index([normalizedValue])
+  @@index([organizationId, type, createdAt])
+}
+
+model PartnerRelationshipPeriod {
+  id             String    @id @default(cuid())
+  organizationId String
+  startedOn      DateTime? @db.Date
+  endedOn        DateTime? @db.Date
+  closedAt       DateTime?
+  closingNote    String?   @db.VarChar(300)
+  version        Int       @default(1)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization PartnerOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, closedAt])
+  @@index([startedOn])
+  @@index([endedOn])
+}
+
+model PartnerContact {
+  id             String    @id @default(cuid())
+  organizationId String
+  personId       String?
+  label          String    @db.VarChar(80)
+  isPrimary      Boolean   @default(false)
+  startedOn      DateTime? @db.Date
+  endedOn        DateTime? @db.Date
+  closedAt       DateTime?
+  version        Int       @default(1)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization PartnerOrganization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  person       Person?                @relation(fields: [personId], references: [id], onDelete: SetNull)
+  followUps    PartnerFollowUpEntry[]
+
+  @@index([organizationId, closedAt, createdAt])
+  @@index([personId, closedAt])
+}
+
+model PartnerFollowUpEntry {
+  id               String   @id @default(cuid())
+  organizationId   String
+  partnerContactId String?
+  text             String   @db.VarChar(4000)
+  occurredAt       DateTime
+  authorId         String?
+  version          Int      @default(1)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  organization   PartnerOrganization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  partnerContact PartnerContact?        @relation(fields: [partnerContactId], references: [id], onDelete: SetNull)
+  author         User?                  @relation("PartnerFollowUpAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  action         PartnerFollowUpAction?
+
+  @@index([organizationId, occurredAt, id])
+  @@index([partnerContactId])
+  @@index([authorId])
+}
+
+model PartnerFollowUpAction {
+  id            String    @id @default(cuid())
+  entryId       String    @unique
+  description   String    @db.VarChar(300)
+  dueOn         DateTime? @db.Date
+  completedAt   DateTime?
+  completedById String?
+  version       Int       @default(1)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  entry       PartnerFollowUpEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  completedBy User?                @relation("PartnerFollowUpActionCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+
+  @@index([completedAt, dueOn, id])
+  @@index([completedById])
+}
+
+model PartnerOrganizationDeletionTombstone {
+  organizationId      String   @id @db.VarChar(128)
+  deletionOperationId String   @unique @db.VarChar(191)
+  deletedAt           DateTime @default(now())
+}
+
+model PartnerOrganizationMergeRedirect {
+  sourceOrganizationId String   @id @db.VarChar(128)
+  targetOrganizationId String
+  mergeOperationId     String   @unique @db.VarChar(191)
+  mergedAt             DateTime @default(now())
+
+  targetOrganization PartnerOrganization @relation("PartnerOrganizationMergeTarget", fields: [targetOrganizationId], references: [id], onDelete: Restrict)
+
+  @@index([targetOrganizationId])
 }
 
 /// Read-only archive of the legacy StaffProfile table.

@@ -56,6 +56,23 @@ export const FEATURES = {
     permissionMode: 'all',
     requiredPermissions: [PERMISSIONS.NOTIFICATIONS.VIEW],
   }),
+  partners: defineFeature({
+    audit: {
+      pageKey: 'partners',
+      pageLabel: 'Sponsors & partenaires',
+      poleKey: 'legal',
+      poleLabel: 'Bureau & juridique',
+    },
+    availability: 'live',
+    description:
+      'Organisations, contacts, périodes de relation et suivi interne.',
+    href: '/bureau-juridique/partenaires',
+    icon: 'Handshake',
+    id: 'partners',
+    label: 'Sponsors & partenaires',
+    permissionMode: 'all',
+    requiredPermissions: [PERMISSIONS.PARTNERS.VIEW],
+  }),
   persons: defineFeature({
     audit: {
       pageKey: 'persons',

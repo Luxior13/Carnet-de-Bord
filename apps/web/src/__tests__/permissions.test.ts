@@ -494,6 +494,9 @@ describe('permission catalogue', () => {
       'persons:create',
       'persons:update',
       'persons:delete',
+      'partners:view',
+      'partners:manage',
+      'partners:delete',
       'users:view',
       'users:create',
       'users:view_contact',
@@ -531,13 +534,14 @@ describe('permission catalogue', () => {
   it('shows every live administrative page without widening delegation', () => {
     expect(PERMISSION_CATEGORIES.map((category) => category.key)).toEqual([
       'persons',
+      'partners',
       'users',
       'system-settings',
       'system-activity',
     ]);
     expect(
       DELEGABLE_PERMISSION_CATEGORIES.map((category) => category.key),
-    ).toEqual(['persons', 'users', 'system-activity']);
+    ).toEqual(['persons', 'partners', 'users', 'system-activity']);
     expect(getAccessPermissionKeys()).toEqual(
       DELEGABLE_PERMISSION_CATEGORIES.flatMap((category) =>
         category.permissions.map((permission) => permission.key),
@@ -564,6 +568,20 @@ describe('permission catalogue', () => {
         (permission) => permission.key === PERMISSIONS.PERSONS.CREATE,
       )?.route,
     ).toBe('/vie-interne/repertoire/nouveau');
+
+    const partnersCategory = PERMISSION_CATEGORIES.find(
+      (category) => category.key === 'partners',
+    );
+    expect(partnersCategory).toMatchObject({
+      accessPermissionKey: PERMISSIONS.PARTNERS.VIEW,
+      assignment: 'delegable',
+      poleKey: 'legal',
+      routes: [
+        '/bureau-juridique/partenaires',
+        '/bureau-juridique/partenaires/nouveau',
+        '/bureau-juridique/partenaires/[id]',
+      ],
+    });
 
     expect(getAccessPermissionKeys()).not.toEqual(
       expect.arrayContaining([
@@ -595,10 +613,12 @@ describe('permission catalogue', () => {
   it('uses a coherent user-facing taxonomy and action labels', () => {
     expect(PERMISSION_POLES).toMatchObject([
       { key: 'internal', label: 'Vie interne' },
+      { key: 'legal', label: 'Bureau & juridique' },
       { key: 'system', label: 'Système' },
     ]);
     expect(PERMISSION_CATEGORIES.map((category) => category.label)).toEqual([
       'Répertoire',
+      'Sponsors & partenaires',
       'Utilisateurs',
       'Paramètres système',
       "Journal d'activité",

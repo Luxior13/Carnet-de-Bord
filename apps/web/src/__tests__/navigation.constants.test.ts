@@ -354,6 +354,7 @@ describe('navigation availability', () => {
       '/mes-notifications',
       '/recherche',
       '/vie-interne/repertoire',
+      '/bureau-juridique/partenaires',
       '/systeme',
       '/administration/utilisateurs',
       '/systeme/parametres',

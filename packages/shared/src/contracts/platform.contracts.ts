@@ -22,6 +22,18 @@ export const AuditAction = {
   PERSON_CREATE: 'PERSON_CREATE',
   PERSON_DELETE: 'PERSON_DELETE',
   PERSON_UPDATE: 'PERSON_UPDATE',
+  PARTNER_CONTACTS_UPDATE: 'PARTNER_CONTACTS_UPDATE',
+  PARTNER_CREATE: 'PARTNER_CREATE',
+  PARTNER_DELETE: 'PARTNER_DELETE',
+  PARTNER_FOLLOW_UP_COMPLETE: 'PARTNER_FOLLOW_UP_COMPLETE',
+  PARTNER_FOLLOW_UP_CREATE: 'PARTNER_FOLLOW_UP_CREATE',
+  PARTNER_FOLLOW_UP_DELETE: 'PARTNER_FOLLOW_UP_DELETE',
+  PARTNER_FOLLOW_UP_UPDATE: 'PARTNER_FOLLOW_UP_UPDATE',
+  PARTNER_MERGE: 'PARTNER_MERGE',
+  PARTNER_PERIOD_CREATE: 'PARTNER_PERIOD_CREATE',
+  PARTNER_PERIOD_UPDATE: 'PARTNER_PERIOD_UPDATE',
+  PARTNER_STATUS_UPDATE: 'PARTNER_STATUS_UPDATE',
+  PARTNER_UPDATE: 'PARTNER_UPDATE',
   SESSION_INVALIDATE: 'SESSION_INVALIDATE',
   STEP_UP_FAILED: 'STEP_UP_FAILED',
   STEP_UP_SUCCESS: 'STEP_UP_SUCCESS',
@@ -39,6 +51,7 @@ export const AuditCategory = {
   AUTH: 'AUTH',
   PERMISSION: 'PERMISSION',
   PERSON: 'PERSON',
+  PARTNER: 'PARTNER',
   SYSTEM: 'SYSTEM',
   USER: 'USER',
 } as const;
@@ -95,3 +108,22 @@ export const UserRole = {
 } as const;
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+
+export const PartnerOrganizationCategoryType = {
+  PARTNER: 'PARTNER',
+  SPONSOR: 'SPONSOR',
+} as const;
+
+export type PartnerOrganizationCategoryType =
+  (typeof PartnerOrganizationCategoryType)[keyof typeof PartnerOrganizationCategoryType];
+
+export const PartnerOrganizationStatus = {
+  ACTIVE: 'ACTIVE',
+  CLOSED: 'CLOSED',
+  DISCUSSION: 'DISCUSSION',
+  ENDED: 'ENDED',
+  PROSPECT: 'PROSPECT',
+} as const;
+
+export type PartnerOrganizationStatus =
+  (typeof PartnerOrganizationStatus)[keyof typeof PartnerOrganizationStatus];

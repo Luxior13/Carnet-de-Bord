@@ -96,7 +96,7 @@ Statut : implémenté, validation finale en cours.
 - [x] Planification quotidienne recommandée sur la plateforme de déploiement.
 - [x] Paramètre obsolète `jobs.retentionDays` retiré.
 - [x] Readiness réduite à `database`, `schema` et `persons`.
-- [x] Format de sauvegarde signé v5 sans table de worker ni état transitoire.
+- [x] Format de sauvegarde signé v6 sans table de worker ni état transitoire.
 - [x] Restauration signée obligatoire et vérification des clés AES historiques.
 
 ## Tests et performance
@@ -108,7 +108,7 @@ Statut : implémenté, validation finale en cours.
 - [x] Tests des gardes SQL de purge contrôlée.
 - [x] Tests de suppression synchrone, rollback logique et idempotence.
 - [x] Tests de readiness et de catalogue PostgreSQL.
-- [x] Tests du format de sauvegarde v5 et de sa signature.
+- [x] Tests du format de sauvegarde v6 et de sa signature.
 - [x] Scénario E2E prévu sur base dédiée, jamais sur la base applicative.
 - [x] Contrôle de plans PostgreSQL sur base de performance explicitement isolée.
 

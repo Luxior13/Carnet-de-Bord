@@ -640,7 +640,6 @@ const loadVisibleBatch = async (
   const personNames = new Map(
     persons.map((person) => [person.id, formatPersonDisplayName(person)]),
   );
-
   return {
     hasMore: records.length > take,
     logs: visibleRecords.map((log) =>

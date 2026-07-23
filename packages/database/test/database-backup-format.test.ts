@@ -57,18 +57,20 @@ const validateLines = (
   return validator.finish();
 };
 
-test('validates the signed v5 format, ordered tables and exact counts', () => {
+test('validates the signed v6 format, ordered tables and exact counts', () => {
   const summary = validateLines(
     createBackupLines({ users: [{ id: 'user-1' }, { id: 'user-2' }] }),
   );
 
-  assert.equal(summary.manifest.formatVersion, 5);
+  assert.equal(summary.manifest.formatVersion, 6);
   assert.equal(summary.counts.users, 2);
   const tableNames: readonly string[] = DATABASE_BACKUP_TABLES.map(
     ({ tableName }) => tableName,
   );
   assert.equal(tableNames.includes('BackgroundJob'), false);
   assert.equal(tableNames.includes('PersonDeletionRequest'), false);
+  assert.equal(tableNames.includes('PartnerOrganization'), true);
+  assert.equal(tableNames.includes('PartnerFollowUpEntry'), true);
 });
 
 test('serializes bigint and bytea without loss', () => {
