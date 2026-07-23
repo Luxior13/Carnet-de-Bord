@@ -1,21 +1,22 @@
 'use client';
 
 import { AtSign, Clock3, RefreshCw, UserRound } from 'lucide-react';
-import Link from 'next/link';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
-import { PageBackNavigation } from '$components/layout/PageBackNavigation';
+import { PageBackButton } from '$components/layout/PageBackNavigation';
 import { PageHero } from '$components/layout/PageHero';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
+import type { UserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
+import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailSectionRail';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
 import { Card, CardFooter } from '$ui/card';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
-import { ScrollableTabsList, Tabs, TabsContent, TabsTrigger } from '$ui/tabs';
+import { Tabs, TabsContent } from '$ui/tabs';
 import { ApiClientError } from '$utils/api.utils';
 
 import { getPerson } from '../person.api';
@@ -38,6 +39,20 @@ type PersonDetailPageProps = {
 };
 
 export type PersonDetailSection = 'coordonnees' | 'identite';
+
+const PERSON_DETAIL_SECTIONS: readonly UserDetailSection<PersonDetailSection>[] =
+  [
+    {
+      icon: <UserRound className="size-4" />,
+      id: 'identite',
+      label: 'Identité',
+    },
+    {
+      icon: <AtSign className="size-4" />,
+      id: 'coordonnees',
+      label: 'Coordonnées',
+    },
+  ];
 
 const DetailSkeleton: FC = () => (
   <PageShell className="py-0">
@@ -298,11 +313,30 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
 
     return `${FEATURES.persons.href}/${encodeURIComponent(personId)}?${params}`;
   };
-
   return (
     <PageShell className="py-0">
       <PageCanvas contentClassName="relative space-y-3">
-        <PageBackNavigation href={returnHref} label="Retour au répertoire" />
+        <div className="private-left-rail">
+          <div className="sticky top-4 space-y-2">
+            <PageBackButton
+              fullWidth
+              href={returnHref}
+              label="Retour au répertoire"
+            />
+            <UserDetailSectionRail
+              activeSection={activeSection}
+              ariaLabel="Navigation de la fiche du répertoire"
+              className="!block"
+              dirtySections={[]}
+              getSectionHref={sectionHref}
+              replace
+              sections={PERSON_DETAIL_SECTIONS}
+            />
+          </div>
+        </div>
+        <div className="2xl:hidden">
+          <PageBackButton href={returnHref} label="Retour au répertoire" />
+        </div>
 
         <PageHero
           compact
@@ -323,30 +357,21 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
           />
         )}
 
-        <Tabs className="gap-3" value={activeSection}>
-          <ScrollableTabsList aria-label="Sections de la fiche">
-            <TabsTrigger
-              asChild
-              className="data-[state=active]:border-primary/40 data-[state=active]:bg-primary/10 data-[state=active]:text-primary-emphasis"
-              value="identite"
-            >
-              <Link href={sectionHref('identite')} replace>
-                <UserRound className="size-4" />
-                Identité
-              </Link>
-            </TabsTrigger>
-            <TabsTrigger
-              asChild
-              className="data-[state=active]:border-primary/40 data-[state=active]:bg-primary/10 data-[state=active]:text-primary-emphasis"
-              value="coordonnees"
-            >
-              <Link href={sectionHref('coordonnees')} replace>
-                <AtSign className="size-4" />
-                Coordonnées
-              </Link>
-            </TabsTrigger>
-          </ScrollableTabsList>
+        <UserDetailSectionRail
+          activeSection={activeSection}
+          ariaLabel="Navigation de la fiche du répertoire"
+          dirtySections={[]}
+          getSectionHref={sectionHref}
+          layout="mobile"
+          replace
+          sections={PERSON_DETAIL_SECTIONS}
+        />
+        <p aria-live="polite" className="sr-only">
+          Section {activeSection === 'identite' ? 'Identité' : 'Coordonnées'}{' '}
+          affichée
+        </p>
 
+        <Tabs className="gap-3" value={activeSection}>
           <TabsContent className="space-y-5" value="identite">
             <Card>
               <PersonIdentitySection

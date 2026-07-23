@@ -23,7 +23,8 @@ type UserDetailSectionRailProps<
   getSectionHref: (sectionId: SectionId) => string;
   heading?: string;
   layout?: UserDetailSectionRailLayout;
-  onSectionChange: (sectionId: SectionId) => void;
+  onSectionChange?: (sectionId: SectionId) => void;
+  replace?: boolean;
   sections?: readonly UserDetailSection<SectionId>[];
 };
 
@@ -51,6 +52,7 @@ export const UserDetailSectionRail = <
   heading = 'Fiche',
   layout = 'desktop',
   onSectionChange,
+  replace = false,
   sections,
 }: UserDetailSectionRailProps<SectionId>): React.JSX.Element => {
   const visibleSections =
@@ -68,10 +70,11 @@ export const UserDetailSectionRail = <
       <Link
         key={section.id}
         href={getSectionHref(section.id)}
+        replace={replace}
         aria-current={isActive ? 'page' : undefined}
         title={isDesktop ? section.label : undefined}
         onClick={(event) => {
-          if (shouldLetBrowserHandleClick(event)) return;
+          if (!onSectionChange || shouldLetBrowserHandleClick(event)) return;
 
           event.preventDefault();
           onSectionChange(section.id);

@@ -408,6 +408,10 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(personAvatarSource).toContain('person.id');
     expect(personAvatarSource).toContain('radius: 50');
     expect(personAvatarSource).toContain('getPersonInitials(person)');
+    expect(personAvatarSource).toContain('bg-nav-internal');
+    expect(userAvatarSource).toContain('bg-nav-system');
+    expect(personAvatarSource).not.toContain('ACCOUNT_BACKGROUND_COLORS');
+    expect(userAvatarSource).not.toContain('DIRECTORY_BACKGROUND_COLORS');
     expect(personsListSource).toContain('<PersonAvatar');
     expect(detailPageSource).toContain('<PersonAvatar');
   });
@@ -597,12 +601,17 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(detailPageSource).not.toContain(
       "sans lien avec un compte d'accès au site",
     );
-    expect(detailPageSource).toContain('data-[state=active]:border-primary/40');
     expect(detailPageSource).toContain(
       '<Tabs className="gap-3" value={activeSection}>',
     );
-    expect(detailPageSource).toContain('<PageBackNavigation');
+    expect(detailPageSource).toContain('<PageBackButton');
     expect(detailPageSource).toContain('label="Retour au répertoire"');
+    expect(detailPageSource).toContain('className="private-left-rail"');
+    expect(detailPageSource).toContain('<UserDetailSectionRail');
+    expect(detailPageSource).toContain('className="!block"');
+    expect(detailPageSource).toContain('layout="mobile"');
+    expect(detailPageSource).toContain('sections={PERSON_DETAIL_SECTIONS}');
+    expect(detailPageSource).not.toContain('<ScrollableTabsList');
     expect(detailPageSource).not.toContain('<PageHero\n          actions=');
     expect(newPersonPageSource).toContain('<PageBackNavigation');
     expect(newPersonPageSource).toContain('max-w-3xl py-0');

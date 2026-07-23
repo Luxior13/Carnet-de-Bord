@@ -6,6 +6,7 @@ import React, { type FC } from 'react';
 
 import type { UserType } from '$types/auth.types';
 import { DiceBearAvatar } from '$ui/dicebear-avatar';
+import { cn } from '$utils/css.utils';
 
 type AvatarUser = Pick<UserType, 'firstName' | 'id' | 'lastName' | 'loginName'>;
 
@@ -15,11 +16,11 @@ type UserAvatarProps = {
 };
 
 const ACCOUNT_BACKGROUND_COLORS = [
-  'dce7e5',
-  'dfe5e8',
-  'ced9d8',
-  'e2e0d8',
-  'd8dde5',
+  'b9a7e8',
+  'a8b6e8',
+  'c3a5dd',
+  '9eafe0',
+  'c9b4e8',
 ];
 
 const createAccountAvatarDataUri = (seed: string): string =>
@@ -51,7 +52,7 @@ export const UserAvatar: FC<UserAvatarProps> = ({ className, user }) => {
 
   return (
     <DiceBearAvatar
-      className={className}
+      className={cn('bg-nav-system text-nav-system-foreground', className)}
       createDataUri={createAccountAvatarDataUri}
       fallback={initials}
       label={`Avatar de ${displayName}`}

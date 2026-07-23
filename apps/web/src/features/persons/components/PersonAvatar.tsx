@@ -3,6 +3,7 @@ import * as loreleiNeutral from '@dicebear/lorelei-neutral';
 import React, { type FC } from 'react';
 
 import { DiceBearAvatar } from '$ui/dicebear-avatar';
+import { cn } from '$utils/css.utils';
 
 import { getPersonDisplayName, getPersonInitials } from '../person.ui';
 import type { PersonSummary } from '../types/person.types';
@@ -18,11 +19,11 @@ type PersonAvatarProps = {
 };
 
 const DIRECTORY_BACKGROUND_COLORS = [
-  'd7e3f4',
-  'ded8ef',
-  'd5e8eb',
-  'ead9df',
-  'e8e0cf',
+  '8fd3cf',
+  '9ad9c4',
+  '80c8d8',
+  'a6dfd5',
+  '91c9bd',
 ];
 
 const createDirectoryAvatarDataUri = (seed: string): string =>
@@ -35,7 +36,7 @@ const createDirectoryAvatarDataUri = (seed: string): string =>
 
 export const PersonAvatar: FC<PersonAvatarProps> = ({ className, person }) => (
   <DiceBearAvatar
-    className={className}
+    className={cn('bg-nav-internal text-nav-internal-foreground', className)}
     createDataUri={createDirectoryAvatarDataUri}
     fallback={getPersonInitials(person)}
     label={`Avatar de la fiche ${getPersonDisplayName(person)}`}
