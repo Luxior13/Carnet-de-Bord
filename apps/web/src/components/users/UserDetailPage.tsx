@@ -44,7 +44,6 @@ import {
   type ProfileForm,
   UserProfileTab,
 } from '$components/users/user-detail/UserProfileTab';
-import { UserResumeTab } from '$components/users/user-detail/UserResumeTab';
 import { UserSecurityTab } from '$components/users/user-detail/UserSecurityTab';
 import { UserAvatar } from '$components/users/UserAvatar';
 import { UsersAdminHero } from '$components/users/UsersAdminHero';
@@ -62,7 +61,6 @@ import {
 import { useUser } from '$context/UserContext';
 import type {
   AuditLogEntry,
-  UserAuditStats,
   UserSessionInfo,
   UserType,
 } from '$types/auth.types';
@@ -107,7 +105,6 @@ type PendingNavigation =
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
 const LOGIN_NAME_PATTERN = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/;
 
-const USER_AUDIT_SUMMARY_PAGE_SIZE = 1;
 const DEFAULT_PERMISSION_PAGE_KEY = PERMISSION_CATEGORIES[0]?.key ?? '';
 const ACCESS_PERMISSION_KEYS = getAccessPermissionKeys();
 const ACCOUNT_PERMISSION_KEYS = getAccountPermissionKeys();
@@ -180,7 +177,7 @@ const buildUserDetailSectionHref = (
 ): string => {
   const nextParams = new URLSearchParams(currentQueryString);
 
-  if (sectionId === 'resume') {
+  if (sectionId === 'profile') {
     nextParams.delete('section');
   } else {
     nextParams.set('section', sectionId);
@@ -376,7 +373,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const auditAbortControllerRef = useRef<AbortController | null>(null);
   const sessionsAbortControllerRef = useRef<AbortController | null>(null);
   const hasLoadedAuditLogsRef = useRef(false);
-  const hasLoadedAuditSummaryRef = useRef(false);
 
   const [editForm, setEditForm] = useState({
     contactEmail: '',
@@ -402,7 +398,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [auditNextCursor, setAuditNextCursor] = useState<string | null>(null);
   const [auditHasMore, setAuditHasMore] = useState(false);
-  const [auditStats, setAuditStats] = useState<UserAuditStats | null>(null);
   const [isExportingAudit, setIsExportingAudit] = useState(false);
   const [auditFacets, setAuditFacets] = useState<UserHistoryFacets | null>(
     null,
@@ -1002,90 +997,70 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     [canViewUsers, userId],
   );
 
-  const fetchAuditData = useCallback(
-    async (includeLogs: boolean): Promise<void> => {
-      auditAbortControllerRef.current?.abort();
-      auditAbortControllerRef.current = null;
+  const fetchAuditData = useCallback(async (): Promise<void> => {
+    auditAbortControllerRef.current?.abort();
+    auditAbortControllerRef.current = null;
 
-      if (!canFetchUserAudit) {
-        setAuditLogs([]);
-        setAuditNextCursor(null);
-        setAuditHasMore(false);
-        setAuditStats(null);
-        setAuditFacets(null);
-        setAuditError(null);
-        setIsLoadingAudit(false);
-        setIsLoadingMoreAudit(false);
-        hasLoadedAuditLogsRef.current = false;
-        hasLoadedAuditSummaryRef.current = false;
+    if (!canFetchUserAudit) {
+      setAuditLogs([]);
+      setAuditNextCursor(null);
+      setAuditHasMore(false);
+      setAuditFacets(null);
+      setAuditError(null);
+      setIsLoadingAudit(false);
+      setIsLoadingMoreAudit(false);
+      hasLoadedAuditLogsRef.current = false;
 
-        return;
-      }
+      return;
+    }
 
-      const controller = new AbortController();
-      auditAbortControllerRef.current = controller;
+    const controller = new AbortController();
+    auditAbortControllerRef.current = controller;
 
-      try {
-        setIsLoadingAudit(true);
-        setIsLoadingMoreAudit(false);
-        setAuditError(null);
-        const auditParams = new URLSearchParams();
+    try {
+      setIsLoadingAudit(true);
+      setIsLoadingMoreAudit(false);
+      setAuditError(null);
+      const auditParams = new URLSearchParams({
+        includeFacets: 'true',
+        includeStats: 'false',
+      });
+      appendUserAuditFilters(auditParams, auditFilters);
 
-        if (includeLogs) {
-          auditParams.set('includeFacets', 'true');
-          auditParams.set(
-            'includeStats',
-            hasLoadedAuditSummaryRef.current ? 'false' : 'true',
-          );
-          appendUserAuditFilters(auditParams, auditFilters);
-        } else {
-          auditParams.set('includeLogs', 'false');
-          auditParams.set('pageSize', String(USER_AUDIT_SUMMARY_PAGE_SIZE));
-        }
+      const response = await fetch(
+        `/api/users/${userId}/audit?${auditParams.toString()}`,
+        {
+          signal: controller.signal,
+        },
+      );
+      const data = await response.json();
 
-        const response = await fetch(
-          `/api/users/${userId}/audit?${auditParams.toString()}`,
-          {
-            signal: controller.signal,
-          },
+      if (controller.signal.aborted) return;
+
+      if (response.ok && data.success) {
+        const loadedLogs = data.data.logs as AuditLogEntry[];
+
+        setAuditLogs(loadedLogs);
+        setAuditNextCursor(data.data.nextCursor ?? null);
+        setAuditHasMore(data.data.hasMore === true);
+        setAuditFacets(data.data.facets ?? null);
+        hasLoadedAuditLogsRef.current = true;
+      } else {
+        setAuditError(
+          data.error?.message || "Impossible de charger l'historique",
         );
-        const data = await response.json();
-
-        if (controller.signal.aborted) return;
-
-        if (response.ok && data.success) {
-          if (data.data.stats) {
-            setAuditStats(data.data.stats);
-          }
-          hasLoadedAuditSummaryRef.current = true;
-
-          if (includeLogs) {
-            const loadedLogs = data.data.logs as AuditLogEntry[];
-
-            setAuditLogs(loadedLogs);
-            setAuditNextCursor(data.data.nextCursor ?? null);
-            setAuditHasMore(data.data.hasMore === true);
-            setAuditFacets(data.data.facets ?? null);
-            hasLoadedAuditLogsRef.current = true;
-          }
-        } else {
-          setAuditError(
-            data.error?.message || "Impossible de charger l'historique",
-          );
-        }
-      } catch {
-        if (controller.signal.aborted) return;
-
-        setAuditError("Impossible de charger l'historique");
-      } finally {
-        if (auditAbortControllerRef.current !== controller) return;
-
-        auditAbortControllerRef.current = null;
-        setIsLoadingAudit(false);
       }
-    },
-    [auditFilters, canFetchUserAudit, userId],
-  );
+    } catch {
+      if (controller.signal.aborted) return;
+
+      setAuditError("Impossible de charger l'historique");
+    } finally {
+      if (auditAbortControllerRef.current !== controller) return;
+
+      auditAbortControllerRef.current = null;
+      setIsLoadingAudit(false);
+    }
+  }, [auditFilters, canFetchUserAudit, userId]);
 
   const fetchMoreAuditData = useCallback(async (): Promise<void> => {
     if (!canFetchUserAudit || isLoadingMoreAudit) return;
@@ -1229,8 +1204,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   const refreshAuditAfterMutation = useCallback((): void => {
     hasLoadedAuditLogsRef.current = false;
-    hasLoadedAuditSummaryRef.current = false;
-    void fetchAuditData(activeSection === 'history');
+    if (activeSection === 'history') void fetchAuditData();
   }, [activeSection, fetchAuditData]);
 
   useEffect((): (() => void) => {
@@ -1250,11 +1224,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
   useEffect(() => {
     hasLoadedAuditLogsRef.current = false;
-    hasLoadedAuditSummaryRef.current = false;
     setAuditLogs([]);
     setAuditNextCursor(null);
     setAuditHasMore(false);
-    setAuditStats(null);
     setAuditFacets(null);
     setAuditError(null);
     setIsLoadingAudit(false);
@@ -1288,17 +1260,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   }, [auditFilters, requestedAuditFilters]);
 
   useEffect(() => {
-    if (activeSection === 'history') {
-      if (hasLoadedAuditLogsRef.current) return;
-
-      void fetchAuditData(true);
-
-      return;
-    }
-
-    if (!hasLoadedAuditSummaryRef.current) {
-      void fetchAuditData(false);
-    }
+    if (activeSection !== 'history' || hasLoadedAuditLogsRef.current) return;
+    void fetchAuditData();
   }, [activeSection, fetchAuditData]);
 
   useEffect(() => {
@@ -2197,15 +2160,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     if (!user) return null;
 
     switch (activeSection) {
-      case 'resume':
-        return (
-          <UserResumeTab
-            auditStats={auditStats}
-            canViewActivity={canFetchUserAudit}
-            canViewContact={canViewTargetContact}
-            user={user}
-          />
-        );
       case 'profile':
         return (
           <UserProfileTab
@@ -2305,21 +2259,14 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
                 : undefined
             }
             onLoadMore={() => void fetchMoreAuditData()}
-            onRetry={() => void fetchAuditData(true)}
+            onRetry={() => void fetchAuditData()}
             perspective={isSelf ? 'personal' : 'managed'}
             totalAuditLogs={auditLogs.length}
             userId={userId}
           />
         );
       default:
-        return (
-          <UserResumeTab
-            auditStats={auditStats}
-            canViewActivity={canFetchUserAudit}
-            canViewContact={canViewTargetContact}
-            user={user}
-          />
-        );
+        return null;
     }
   };
 
@@ -2419,7 +2366,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       ]}
     >
       <PageShell className="py-0">
-        <PageCanvas contentClassName="relative space-y-5">
+        <PageCanvas contentClassName="relative space-y-3">
           <div className="private-left-rail">
             <div className="sticky top-4 space-y-2">
               <PageBackButton
@@ -2460,12 +2407,18 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
               />
             </div>
             <UsersAdminHero
+              compact
               title={getUserDisplayName(user)}
-              description={`Identifiant : ${getUserLoginDisplay(user)}`}
-              icon={<UserAvatar user={user} className="size-full rounded-lg" />}
-              iconClassName="overflow-hidden p-0"
+              icon={
+                <UserAvatar user={user} className="size-full rounded-full" />
+              }
+              iconClassName="overflow-hidden rounded-full p-0"
+              showSpaceBadge={false}
               meta={
                 <>
+                  <span className="text-muted-foreground text-xs">
+                    Identifiant : {getUserLoginDisplay(user)}
+                  </span>
                   <Badge variant={getRoleColor(user.role)}>
                     {getAccessLabel(user)}
                   </Badge>

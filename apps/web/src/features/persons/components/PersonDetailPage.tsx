@@ -313,6 +313,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
 
     return `${FEATURES.persons.href}/${encodeURIComponent(personId)}?${params}`;
   };
+
   return (
     <PageShell className="py-0">
       <PageCanvas contentClassName="relative space-y-3">

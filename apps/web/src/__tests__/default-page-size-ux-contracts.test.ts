@@ -43,9 +43,9 @@ describe('reviewed default page-size UX contracts', () => {
     expect(journalSource).not.toMatch(/params\.set\(['"]limit['"]/);
   });
 
-  it('lets activity APIs size displayed pages while keeping summary reads tiny', () => {
+  it('lets activity APIs size displayed pages without background summary reads', () => {
     expect(userDetailSource).not.toContain('USER_AUDIT_PAGE_SIZE');
-    expect(userDetailSource).toContain('USER_AUDIT_SUMMARY_PAGE_SIZE = 1');
+    expect(userDetailSource).not.toContain('USER_AUDIT_SUMMARY_PAGE_SIZE');
     expect(accountSource).not.toContain('ACCOUNT_AUDIT_PAGE_SIZE');
     expect(historySource).toContain(
       "const usesServerPagination = typeof onLoadMore === 'function'",

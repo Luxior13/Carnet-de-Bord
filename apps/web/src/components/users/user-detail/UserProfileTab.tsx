@@ -162,8 +162,8 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
 
   if (isSelf) {
     return (
-      <Card className="border-border/70 overflow-hidden rounded-lg py-0">
-        <CardHeader className="border-border/65 bg-surface-muted border-b p-4">
+      <Card>
+        <CardHeader className="p-3.5 sm:p-4">
           <h2 className="text-sm font-semibold">Profil administratif</h2>
         </CardHeader>
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2">
@@ -196,8 +196,8 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
 
   if (!isEditing) {
     return (
-      <Card className="border-border/70 overflow-hidden rounded-lg py-0">
-        <CardHeader className="border-border/65 bg-surface-muted flex-row items-center justify-between gap-3 border-b p-3 sm:p-4">
+      <Card>
+        <CardHeader className="flex-row items-center justify-between gap-3 p-3.5 sm:p-4">
           <h2 className="text-sm font-semibold">Profil utilisateur</h2>
           {canEditAnything ? (
             <Button
@@ -252,8 +252,8 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
 
   return (
     <form {...passwordManagerIgnoreAttributes} onSubmit={handleSubmit}>
-      <Card className="border-border/70 overflow-hidden rounded-lg py-0">
-        <CardHeader className="border-border/65 bg-surface-muted flex-row items-center justify-between border-b p-3 sm:p-4">
+      <Card>
+        <CardHeader className="flex-row items-center justify-between p-3.5 sm:p-4">
           <h2 className="text-sm font-semibold">Profil utilisateur</h2>
           {!canEdit && !canEditContact && !canEditLogin && (
             <Badge
@@ -452,7 +452,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
           </div>
         </CardContent>
         {(canEdit || canEditContact || canEditLogin) && (
-          <CardFooter className="border-border/60 bg-surface-muted/95 flex-col items-stretch justify-between gap-3 rounded-b-lg border-t p-3 sm:flex-row sm:items-center sm:p-4">
+          <CardFooter className="flex-col items-stretch justify-between gap-3 p-3 sm:flex-row sm:items-center sm:p-4">
             <p className="text-muted-foreground text-xs">
               {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
             </p>

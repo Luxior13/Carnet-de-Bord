@@ -275,7 +275,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
 
   if (user.isProtected) {
     return (
-      <Card className="border-border/60 overflow-hidden rounded-lg py-0">
+      <Card>
         <CardContent className="space-y-4 p-4">
           <div className="flex min-w-0 items-start gap-3">
             <span className="border-warning/35 bg-warning/10 text-warning flex size-11 shrink-0 items-center justify-center rounded-lg border">
@@ -305,12 +305,8 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
   }
 
   return (
-    <Card
-      role="region"
-      aria-labelledby="account-autonomy-title"
-      className="border-border/60 overflow-hidden rounded-lg py-0"
-    >
-      <CardHeader className="border-border/60 bg-surface-muted border-b p-4">
+    <Card role="region" aria-labelledby="account-autonomy-title">
+      <CardHeader className="p-3.5 sm:p-4">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
             <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-10 shrink-0 items-center justify-center rounded-lg border">
@@ -393,7 +389,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
         </details>
       </CardContent>
       {canManagePermissions && (hasChanges || hasConfigurableOverrides) && (
-        <CardFooter className="border-border/60 bg-surface-muted flex-col items-stretch justify-between gap-3 rounded-b-lg border-t p-3 sm:flex-row sm:items-center">
+        <CardFooter className="flex-col items-stretch justify-between gap-3 p-3 sm:flex-row sm:items-center">
           <p className="text-muted-foreground text-xs">
             {hasChanges
               ? 'Modifications non enregistrées'

@@ -20,8 +20,11 @@ const historySource = readFileSync(
 describe('managed user audit UX contracts', () => {
   it('renders one server-sized page immediately without sequential prefetch', () => {
     expect(userDetailSource).not.toContain('USER_AUDIT_PAGE_SIZE');
-    expect(userDetailSource).toContain('USER_AUDIT_SUMMARY_PAGE_SIZE');
+    expect(userDetailSource).not.toContain('USER_AUDIT_SUMMARY_PAGE_SIZE');
     expect(userDetailSource).not.toContain('USER_AUDIT_MAX_PREFETCH_PAGES');
+    expect(userDetailSource).toContain(
+      "if (activeSection !== 'history' || hasLoadedAuditLogsRef.current) return",
+    );
     expect(userDetailSource).not.toMatch(
       /for\s*\(let page = 2; page <= pagesToFetch/,
     );

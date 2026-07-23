@@ -107,7 +107,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
     const totalPermissions = getAllPermissionKeys().length;
 
     return (
-      <Card className="border-border/60 overflow-hidden rounded-lg py-0">
+      <Card>
         <CardContent className="space-y-4 p-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex min-w-0 items-start gap-3">
@@ -186,7 +186,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
 
   return (
     <div>
-      <Card className="border-border/60 overflow-visible rounded-lg py-0">
+      <Card className="overflow-visible">
         <CardContent className="space-y-3 p-2.5 sm:p-3">
           <div
             aria-label="Capacités de gestion des autorisations"
@@ -285,7 +285,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             }
           />
         </CardContent>
-        <CardFooter className="border-border/60 bg-surface-muted/95 sticky bottom-3 z-20 flex-col items-stretch justify-between gap-3 rounded-b-lg border-t p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center">
+        <CardFooter className="bg-surface-inset/95 sticky bottom-3 z-20 flex-col items-stretch justify-between gap-3 rounded-b-xl p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center">
           <div className="space-y-1">
             <p className="text-muted-foreground text-xs">
               {hasChanges ? 'Modifications non enregistrées' : 'À jour'}

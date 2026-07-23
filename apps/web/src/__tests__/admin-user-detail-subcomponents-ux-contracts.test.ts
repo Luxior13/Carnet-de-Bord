@@ -8,9 +8,6 @@ const readSourceFile = (relativePath: string): string => {
   return readFileSync(new URL(relativePath, import.meta.url), 'utf8');
 };
 
-const resumeSource = readSourceFile(
-  '../components/users/user-detail/UserResumeTab.tsx',
-);
 const profileSource = readSourceFile(
   '../components/users/user-detail/UserProfileTab.tsx',
 );
@@ -49,11 +46,24 @@ const userDetailSource = readSourceFile(
 );
 
 describe('administrative user detail subcomponent UX contracts', () => {
-  it('keeps the summary focused and does not expose an unfinished contact-verification status', () => {
-    expect(resumeSource).toContain('Résumé du compte');
-    expect(resumeSource).not.toContain('contactEmailVerifiedAt');
-    expect(resumeSource).not.toContain('Identifiant de connexion');
-    expect(resumeSource).not.toContain('getAccessLabel');
+  it('shares the compact fiche scaffold used by the internal directory', () => {
+    expect(userDetailSource).toContain(
+      '<PageCanvas contentClassName="relative space-y-3">',
+    );
+    expect(userDetailSource).toMatch(/<UsersAdminHero\s+compact/);
+    expect(userDetailSource).toContain(
+      'iconClassName="overflow-hidden rounded-full p-0"',
+    );
+    expect(userDetailSource).toContain('showSpaceBadge={false}');
+    expect(profileSource).toContain(
+      '<CardHeader className="flex-row items-center justify-between gap-3 p-3.5 sm:p-4">',
+    );
+  });
+
+  it('opens directly on Profile without keeping a duplicate summary tab', () => {
+    expect(userDetailSource).not.toContain('UserResumeTab');
+    expect(userDetailSource).not.toContain("case 'resume'");
+    expect(userDetailSource).toContain("if (sectionId === 'profile')");
   });
 
   it('makes contact removal explicit and keeps the self profile compact', () => {

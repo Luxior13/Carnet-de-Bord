@@ -381,7 +381,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       {tempPassword && (
         <Card
           aria-live="assertive"
-          className="border-warning/25 bg-warning/10 overflow-hidden rounded-lg py-0 outline-none focus-visible:ring-2"
+          className="border-warning/25 bg-warning/10 rounded-xl outline-none focus-visible:ring-2"
           ref={tempPasswordAnnouncementRef}
           role="status"
           tabIndex={-1}
@@ -439,11 +439,8 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardContent>
         </Card>
       )}
-      <Card
-        aria-labelledby="user-security-status-heading"
-        className="border-border/70 overflow-hidden rounded-lg py-0"
-      >
-        <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
+      <Card aria-labelledby="user-security-status-heading">
+        <CardHeader className="p-3.5 sm:p-4">
           <SectionTitle
             id="user-security-status-heading"
             icon={<Power className="size-3.5" />}
@@ -499,7 +496,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           )}
         </CardContent>
         {canEditStatus && !isSelf && (
-          <CardFooter className="border-border/65 bg-surface-muted flex-col items-stretch justify-between gap-3 border-t p-3 sm:flex-row sm:items-center sm:p-4">
+          <CardFooter className="flex-col items-stretch justify-between gap-3 p-3 sm:flex-row sm:items-center sm:p-4">
             <p className="text-muted-foreground text-xs">
               {hasStatusChanges ? 'Modification non enregistrée' : 'À jour'}
             </p>
@@ -535,11 +532,8 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardFooter>
         )}
       </Card>
-      <Card
-        aria-labelledby="user-security-password-heading"
-        className="border-border/70 overflow-hidden rounded-lg py-0"
-      >
-        <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
+      <Card aria-labelledby="user-security-password-heading">
+        <CardHeader className="p-3.5 sm:p-4">
           <SectionTitle
             id="user-security-password-heading"
             icon={<KeyRound className="size-3.5" />}
@@ -611,7 +605,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </SecurityInfoBlock>
         </CardContent>
         {canResetPassword && (
-          <CardFooter className="border-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
+          <CardFooter className="justify-end p-3 sm:p-4">
             <Button
               type="button"
               variant="outline"
@@ -625,11 +619,8 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardFooter>
         )}
       </Card>
-      <Card
-        aria-labelledby="user-security-mfa-heading"
-        className="border-border/70 overflow-hidden rounded-lg py-0"
-      >
-        <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
+      <Card aria-labelledby="user-security-mfa-heading">
+        <CardHeader className="p-3.5 sm:p-4">
           <SectionTitle
             id="user-security-mfa-heading"
             icon={<QrCode className="size-3.5" />}
@@ -676,7 +667,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </SecurityInfoBlock>
         </CardContent>
         {canResetMfa && (
-          <CardFooter className="border-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
+          <CardFooter className="justify-end p-3 sm:p-4">
             <Button
               className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning gap-2"
               onClick={onResetMfa}
@@ -690,11 +681,8 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardFooter>
         )}
       </Card>
-      <Card
-        aria-labelledby="user-security-sessions-heading"
-        className="border-border/70 overflow-hidden rounded-lg py-0"
-      >
-        <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
+      <Card aria-labelledby="user-security-sessions-heading">
+        <CardHeader className="p-3.5 sm:p-4">
           <SectionTitle
             id="user-security-sessions-heading"
             icon={<Monitor className="size-3.5" />}
@@ -760,7 +748,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           )}
         </CardContent>
         {canRevokeSessions && sessions.length > 0 && (
-          <CardFooter className="border-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
+          <CardFooter className="justify-end p-3 sm:p-4">
             <Button
               type="button"
               variant="outline"

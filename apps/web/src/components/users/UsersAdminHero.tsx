@@ -6,19 +6,23 @@ import { Badge } from '$ui/badge';
 
 type UsersAdminHeroProps = {
   actions?: ReactNode;
-  description: ReactNode;
+  compact?: boolean;
+  description?: ReactNode;
   icon: ReactNode;
   iconClassName?: string;
   meta?: ReactNode;
+  showSpaceBadge?: boolean;
   title: ReactNode;
 };
 
 export const UsersAdminHero: FC<UsersAdminHeroProps> = ({
   actions,
+  compact = false,
   description,
   icon,
   iconClassName,
   meta,
+  showSpaceBadge = true,
   title,
 }) => {
   const tone = getNavigationSpaceToneClasses('system');
@@ -26,11 +30,14 @@ export const UsersAdminHero: FC<UsersAdminHeroProps> = ({
   return (
     <PageHero
       actions={actions}
+      compact={compact}
       description={description}
       eyebrow={
-        <Badge variant="outline" className={tone.soft}>
-          Système
-        </Badge>
+        showSpaceBadge ? (
+          <Badge variant="outline" className={tone.soft}>
+            Système
+          </Badge>
+        ) : undefined
       }
       icon={icon}
       iconClassName={iconClassName}

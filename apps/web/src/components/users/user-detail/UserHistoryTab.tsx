@@ -2135,7 +2135,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
 
   if (error && auditLogs.length === 0) {
     return (
-      <Card className="border-destructive/35 bg-destructive/5 min-h-[280px] items-center justify-center rounded-lg py-0">
+      <Card className="border-destructive/35 bg-destructive/5 min-h-[280px] items-center justify-center">
         {isPersonalPerspective && <h2 className="sr-only">Activité</h2>}
         <CardContent
           className="flex flex-col items-center p-8 text-center"
@@ -2162,7 +2162,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   // Empty
   if (auditLogs.length === 0 && !isServerFiltering) {
     return (
-      <Card className="border-border/70 min-h-[360px] items-center justify-center rounded-lg py-0">
+      <Card className="min-h-[360px] items-center justify-center">
         {isPersonalPerspective && <h2 className="sr-only">Activité</h2>}
         <CardContent className="flex flex-col items-center p-8">
           <div className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-20 items-center justify-center rounded-md border">
@@ -2187,10 +2187,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
   );
 
   return (
-    <Card
-      aria-busy={isLoading || isLoadingMore}
-      className="border-border/60 overflow-visible rounded-lg py-0"
-    >
+    <Card aria-busy={isLoading || isLoadingMore} className="overflow-visible">
       <CardContent className="p-2.5 sm:p-3">
         <div className="space-y-3">
           {error && (
@@ -2786,7 +2783,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
         </div>
       </CardContent>
       {!isPersonalPerspective && (
-        <CardFooter className="border-border/60 text-muted-foreground bg-surface-muted/95 justify-center rounded-b-lg border-t px-4 py-3 text-center text-xs">
+        <CardFooter className="text-muted-foreground bg-surface-inset/95 justify-center rounded-b-xl px-4 py-3 text-center text-xs">
           {filteredLogs.length} événement{filteredLogs.length > 1 ? 's' : ''}
           {hasActiveFilters && ' (filtre)'}
         </CardFooter>

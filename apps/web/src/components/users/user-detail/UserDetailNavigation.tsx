@@ -1,8 +1,8 @@
-import { FileText, History, Key, Shield, User } from 'lucide-react';
+import { History, Key, Shield, User } from 'lucide-react';
 import React from 'react';
 
 export type UserDetailSectionId =
-  'resume' | 'profile' | 'access' | 'account' | 'security' | 'history';
+  'profile' | 'access' | 'account' | 'security' | 'history';
 
 export type UserDetailSection<SectionId extends string = UserDetailSectionId> =
   {
@@ -12,11 +12,6 @@ export type UserDetailSection<SectionId extends string = UserDetailSectionId> =
   };
 
 export const USER_DETAIL_SECTIONS: UserDetailSection[] = [
-  {
-    icon: <FileText className="h-4 w-4" />,
-    id: 'resume',
-    label: 'R\u00e9sum\u00e9',
-  },
   { icon: <User className="h-4 w-4" />, id: 'profile', label: 'Profil' },
   {
     icon: <Shield className="h-4 w-4" />,
@@ -44,7 +39,7 @@ export const normalizeUserDetailSection = (
   if (value === 'security') return 'security';
   if (value === 'history') return 'history';
 
-  return 'resume';
+  return 'profile';
 };
 
 export const getUserDetailSectionLabel = (
@@ -54,6 +49,6 @@ export const getUserDetailSectionLabel = (
 
   return (
     USER_DETAIL_SECTIONS.find((section) => section.id === sectionId)?.label ||
-    'R\u00e9sum\u00e9'
+    'Profil'
   );
 };
