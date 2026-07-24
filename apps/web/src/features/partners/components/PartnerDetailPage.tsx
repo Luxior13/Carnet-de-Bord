@@ -9,6 +9,7 @@ import {
   History,
   Loader2,
   MessageSquareText,
+  Plus,
   RefreshCw,
   Trash2,
   UserRound,
@@ -19,7 +20,6 @@ import React, {
   type FormEvent,
   useCallback,
   useEffect,
-  useMemo,
   useState,
 } from 'react';
 import { toast } from 'sonner';
@@ -40,6 +40,14 @@ import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
 import { Checkbox } from '$ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '$ui/dialog';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
@@ -65,19 +73,16 @@ import {
   updatePartner,
   updatePartnerContact,
 } from '../partner.api';
-import {
-  PARTNER_CATEGORY_LABELS,
-  PARTNER_STATUS_LABELS,
-} from '../partner.constants';
+import { PARTNER_CATEGORY_LABELS } from '../partner.constants';
 import { getPartnerCapabilities } from '../partner.permissions';
 import type {
   PartnerActivityItem,
   PartnerCategory,
   PartnerChannel,
   PartnerDetail,
-  PartnerStatus,
 } from '../types/partner.types';
 import { PartnerStatusBadge } from './PartnerStatusBadge';
+import { PartnerStatusControl } from './PartnerStatusControl';
 
 export type PartnerDetailSection =
   'activite' | 'contacts' | 'information' | 'suivi';
@@ -104,14 +109,6 @@ const SECTIONS: readonly UserDetailSection<PartnerDetailSection>[] = [
     label: 'Activité',
   },
 ];
-
-const STATUS_TRANSITIONS: Record<PartnerStatus, PartnerStatus[]> = {
-  ACTIVE: ['ACTIVE', 'ENDED'],
-  CLOSED: ['CLOSED', 'DISCUSSION'],
-  DISCUSSION: ['DISCUSSION', 'ACTIVE', 'CLOSED'],
-  ENDED: ['ENDED', 'DISCUSSION'],
-  PROSPECT: ['PROSPECT', 'DISCUSSION', 'CLOSED'],
-};
 
 const formatDateTime = (value: string): string =>
   new Intl.DateTimeFormat('fr-FR', {
@@ -143,7 +140,6 @@ const InformationSection: FC<{
   const [name, setName] = useState(partner.name);
   const [description, setDescription] = useState(partner.description ?? '');
   const [website, setWebsite] = useState(partner.website ?? '');
-  const [status, setStatus] = useState(partner.status);
   const [categories, setCategories] = useState<PartnerCategory[]>(
     partner.categories,
   );
@@ -155,17 +151,12 @@ const InformationSection: FC<{
       value,
     })),
   );
-  const activePeriod = partner.periods.find((period) => !period.closedAt);
-  const [startedOn, setStartedOn] = useState(activePeriod?.startedOn ?? '');
-  const [endedOn, setEndedOn] = useState('');
-  const [closingNote, setClosingNote] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setName(partner.name);
     setDescription(partner.description ?? '');
     setWebsite(partner.website ?? '');
-    setStatus(partner.status);
     setCategories(partner.categories);
     setChannels(
       partner.channels.map(({ isPrimary, label, type, value }) => ({
@@ -191,21 +182,13 @@ const InformationSection: FC<{
           ...channel,
           countryCode: 'FR',
         })),
-        closingNote: closingNote || null,
         description: description || null,
-        endedOn: endedOn || null,
         name,
-        startedOn: startedOn || null,
-        status,
         version: partner.version,
         website: website || null,
       });
       onChange(updated);
-      toast.success(
-        partner.status === status
-          ? 'Informations enregistrées'
-          : 'Statut mis à jour',
-      );
+      toast.success('Informations enregistrées');
     } catch (error) {
       toast.error(
         error instanceof ApiClientError
@@ -230,7 +213,7 @@ const InformationSection: FC<{
         <CardHeader>
           <h2 className="font-semibold">Informations générales</h2>
           <p className="text-muted-foreground text-sm">
-            Identité de l’organisation et état actuel de la relation.
+            Identité et informations générales de l’organisation.
           </p>
         </CardHeader>
         <form
@@ -268,66 +251,6 @@ const InformationSection: FC<{
                 ))}
               </div>
             </fieldset>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="grid gap-2">
-                <Label htmlFor="partner-detail-status">Statut</Label>
-                <Select
-                  disabled={!canManage}
-                  onValueChange={(value) => setStatus(value as PartnerStatus)}
-                  value={status}
-                >
-                  <SelectTrigger className="w-full" id="partner-detail-status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_TRANSITIONS[partner.status].map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {PARTNER_STATUS_LABELS[item]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {(status === 'ACTIVE' || status === 'ENDED') && (
-                <div className="grid gap-2">
-                  <Label htmlFor="partner-detail-start">Début de période</Label>
-                  <Input
-                    disabled={!canManage}
-                    id="partner-detail-start"
-                    onChange={(event) => setStartedOn(event.target.value)}
-                    type="date"
-                    value={startedOn}
-                  />
-                </div>
-              )}
-              {status === 'ENDED' && partner.status !== 'ENDED' && (
-                <>
-                  <div className="grid gap-2">
-                    <Label htmlFor="partner-detail-end">Fin de période</Label>
-                    <Input
-                      disabled={!canManage}
-                      id="partner-detail-end"
-                      onChange={(event) => setEndedOn(event.target.value)}
-                      type="date"
-                      value={endedOn}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="partner-detail-closing">
-                      Motif ou précision
-                    </Label>
-                    <Input
-                      autoComplete="off"
-                      disabled={!canManage}
-                      id="partner-detail-closing"
-                      maxLength={300}
-                      onChange={(event) => setClosingNote(event.target.value)}
-                      value={closingNote}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
             <div className="grid gap-2">
               <Label htmlFor="partner-detail-description">
                 Description courte
@@ -532,12 +455,19 @@ const InformationSection: FC<{
               className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 text-sm"
               key={period.id}
             >
-              <span>
-                {period.startedOn ?? 'Début inconnu'} →{' '}
-                {period.closedAt
-                  ? (period.endedOn ?? 'Fin inconnue')
-                  : 'En cours'}
-              </span>
+              <div>
+                <p>
+                  {period.startedOn ?? 'Début inconnu'} →{' '}
+                  {period.closedAt
+                    ? (period.endedOn ?? 'Fin inconnue')
+                    : 'En cours'}
+                </p>
+                {period.closingNote && (
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {period.closingNote}
+                  </p>
+                )}
+              </div>
               <Badge variant={period.closedAt ? 'outline' : 'secondary'}>
                 {period.closedAt ? 'Terminée' : 'Active'}
               </Badge>
@@ -766,28 +696,16 @@ const FollowUpSection: FC<{
   const [text, setText] = useState('');
   const [hasAction, setHasAction] = useState(false);
   const [actionDescription, setActionDescription] = useState('');
-  const [dueOn, setDueOn] = useState('');
-  const [saving, setSaving] = useState(false);
-  const openActions = useMemo(
-    () =>
-      partner.followUps.filter(
-        (entry) => entry.action && !entry.action.completedAt,
-      ),
-    [partner.followUps],
+  const [actionSavingEntryId, setActionSavingEntryId] = useState<string | null>(
+    null,
   );
-  const latestFollowUp = partner.followUps[0] ?? null;
-  const nextAction = useMemo(
-    () =>
-      [...openActions].sort((left, right) => {
-        const leftDueOn = left.action?.dueOn;
-        const rightDueOn = right.action?.dueOn;
-        if (leftDueOn && rightDueOn) return leftDueOn.localeCompare(rightDueOn);
-        if (leftDueOn) return -1;
-        if (rightDueOn) return 1;
-
-        return right.occurredAt.localeCompare(left.occurredAt);
-      })[0] ?? null,
-    [openActions],
+  const [partnerContactId, setPartnerContactId] = useState('');
+  const [dueOn, setDueOn] = useState('');
+  const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const openActions = partner.openActions;
+  const selectableContacts = partner.contacts.filter(
+    (contact) => !contact.closedAt && contact.person,
   );
 
   const submit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
@@ -798,7 +716,7 @@ const FollowUpSection: FC<{
         action: hasAction
           ? { description: actionDescription, dueOn: dueOn || null }
           : null,
-        partnerContactId: null,
+        partnerContactId: partnerContactId || null,
         text,
         version: partner.version,
       });
@@ -806,7 +724,9 @@ const FollowUpSection: FC<{
       setText('');
       setHasAction(false);
       setActionDescription('');
+      setPartnerContactId('');
       setDueOn('');
+      setFollowUpOpen(false);
       toast.success('Suivi ajouté');
     } catch (error) {
       toast.error(
@@ -817,62 +737,39 @@ const FollowUpSection: FC<{
     }
   };
 
+  const toggleAction = async (
+    entryId: string,
+    completed: boolean,
+  ): Promise<void> => {
+    if (actionSavingEntryId) return;
+    setActionSavingEntryId(entryId);
+    try {
+      const updated = await setPartnerActionCompleted(
+        partner.id,
+        entryId,
+        completed,
+        partner.version,
+      );
+      onChange(updated);
+      toast.success(completed ? 'Action terminée' : 'Action réouverte');
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Modification de l’action impossible',
+      );
+    } finally {
+      setActionSavingEntryId(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="flex-row items-start justify-between gap-3">
-          <div>
-            <h2 className="font-semibold">Situation en bref</h2>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Synthèse automatique, sans information à saisir une seconde fois.
-            </p>
-          </div>
-          <PartnerStatusBadge status={partner.status} />
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="border-border-divider rounded-lg border p-3">
-            <p className="text-muted-foreground text-xs font-medium">
-              Dernier suivi
-            </p>
-            {latestFollowUp ? (
-              <>
-                <p className="mt-2 line-clamp-3 text-sm leading-6 whitespace-pre-wrap">
-                  {latestFollowUp.text}
-                </p>
-                <p className="text-muted-foreground mt-2 text-xs">
-                  {latestFollowUp.author.displayName} ·{' '}
-                  {formatDateTime(latestFollowUp.occurredAt)}
-                </p>
-              </>
-            ) : (
-              <p className="text-muted-foreground mt-2 text-sm">
-                Aucun suivi enregistré.
-              </p>
-            )}
-          </div>
-          <div className="border-border-divider rounded-lg border p-3">
-            <p className="text-muted-foreground text-xs font-medium">
-              Prochaine action
-            </p>
-            {nextAction?.action ? (
-              <>
-                <p className="mt-2 text-sm font-medium">
-                  {nextAction.action.description}
-                </p>
-                <p className="text-muted-foreground mt-2 text-xs">
-                  {nextAction.action.dueOn
-                    ? `À prévoir pour le ${nextAction.action.dueOn}`
-                    : 'Sans date cible'}
-                </p>
-              </>
-            ) : (
-              <p className="text-muted-foreground mt-2 text-sm">
-                Aucune action en attente.
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <PartnerStatusControl
+        canManage={canManage}
+        onChange={onChange}
+        partner={partner}
+      />
 
       {openActions.length > 0 && (
         <Card>
@@ -897,20 +794,15 @@ const FollowUpSection: FC<{
                 </div>
                 {canManage && entry.action && (
                   <Button
-                    onClick={() =>
-                      void setPartnerActionCompleted(
-                        partner.id,
-                        entry.id,
-                        true,
-                        partner.version,
-                      ).then((updated) => {
-                        onChange(updated);
-                        toast.success('Action terminée');
-                      })
-                    }
+                    disabled={actionSavingEntryId !== null}
+                    onClick={() => void toggleAction(entry.id, true)}
                     size="sm"
                   >
-                    <Check className="size-4" />
+                    {actionSavingEntryId === entry.id ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Check className="size-4" />
+                    )}
                     Terminer
                   </Button>
                 )}
@@ -920,24 +812,76 @@ const FollowUpSection: FC<{
         </Card>
       )}
 
-      {canManage && (
-        <Card>
+      <Dialog
+        onOpenChange={(open) => {
+          if (saving) return;
+          setFollowUpOpen(open);
+          if (!open) {
+            setText('');
+            setHasAction(false);
+            setActionDescription('');
+            setPartnerContactId('');
+            setDueOn('');
+          }
+        }}
+        open={followUpOpen}
+      >
+        <DialogContent className="sm:max-w-2xl">
           <form onSubmit={(event) => void submit(event)}>
-            <CardHeader>
-              <h2 className="font-semibold">Ajouter un suivi</h2>
-              <p className="text-muted-foreground text-sm">
-                Notez ce qui a été fait, demandé ou appris.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Textarea
-                maxLength={4000}
-                onChange={(event) => setText(event.target.value)}
-                placeholder="Ajouter un suivi…"
-                required
-                rows={4}
-                value={text}
-              />
+            <DialogHeader>
+              <DialogTitle>Ajouter un suivi</DialogTitle>
+              <DialogDescription>
+                Notez ce qui a été fait, demandé ou appris. Vous pouvez aussi
+                prévoir la prochaine action.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="partner-follow-up-text">Suivi</Label>
+                <Textarea
+                  autoFocus
+                  id="partner-follow-up-text"
+                  maxLength={4000}
+                  onChange={(event) => setText(event.target.value)}
+                  placeholder="Écrire le suivi…"
+                  required
+                  rows={6}
+                  value={text}
+                />
+              </div>
+              {selectableContacts.length > 0 && (
+                <div className="grid gap-2">
+                  <Label htmlFor="partner-follow-up-contact">
+                    Contact concerné
+                    <span className="text-muted-foreground font-normal">
+                      {' '}
+                      (facultatif)
+                    </span>
+                  </Label>
+                  <Select
+                    disabled={saving}
+                    onValueChange={(value) =>
+                      setPartnerContactId(value === 'none' ? '' : value)
+                    }
+                    value={partnerContactId || 'none'}
+                  >
+                    <SelectTrigger
+                      className="w-full"
+                      id="partner-follow-up-contact"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Aucun contact</SelectItem>
+                      {selectableContacts.map((contact) => (
+                        <SelectItem key={contact.id} value={contact.id}>
+                          {contact.person?.displayName} · {contact.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Label className="flex items-center gap-2">
                 <Checkbox
                   checked={hasAction}
@@ -946,39 +890,69 @@ const FollowUpSection: FC<{
                 Prévoir une action
               </Label>
               {hasAction && (
-                <div className="grid gap-3 md:grid-cols-[1fr_12rem]">
-                  <Input
-                    autoComplete="off"
-                    maxLength={300}
-                    onChange={(event) =>
-                      setActionDescription(event.target.value)
-                    }
-                    placeholder="Action à réaliser"
-                    required
-                    value={actionDescription}
-                  />
-                  <Input
-                    aria-label="Date cible"
-                    onChange={(event) => setDueOn(event.target.value)}
-                    type="date"
-                    value={dueOn}
-                  />
+                <div className="grid gap-3 sm:grid-cols-[1fr_12rem]">
+                  <div className="grid gap-2">
+                    <Label htmlFor="partner-follow-up-action">Action</Label>
+                    <Input
+                      autoComplete="off"
+                      id="partner-follow-up-action"
+                      maxLength={300}
+                      onChange={(event) =>
+                        setActionDescription(event.target.value)
+                      }
+                      placeholder="Action à réaliser"
+                      required
+                      value={actionDescription}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="partner-follow-up-due">Date cible</Label>
+                    <Input
+                      id="partner-follow-up-due"
+                      onChange={(event) => setDueOn(event.target.value)}
+                      type="date"
+                      value={dueOn}
+                    />
+                  </div>
                 </div>
               )}
-            </CardContent>
-            <CardFooter className="justify-end">
+            </div>
+            <DialogFooter>
+              <Button
+                disabled={saving}
+                onClick={() => setFollowUpOpen(false)}
+                type="button"
+                variant="outline"
+              >
+                Annuler
+              </Button>
               <Button disabled={saving} type="submit">
                 {saving && <Loader2 className="size-4 animate-spin" />}
-                Ajouter le suivi
+                Ajouter
               </Button>
-            </CardFooter>
+            </DialogFooter>
           </form>
-        </Card>
-      )}
+        </DialogContent>
+      </Dialog>
 
       <Card>
-        <CardHeader>
-          <h2 className="font-semibold">Historique du suivi</h2>
+        <CardHeader className="flex-row items-start justify-between gap-3">
+          <div>
+            <h2 className="font-semibold">Suivis</h2>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Les informations les plus récentes apparaissent en premier.
+            </p>
+          </div>
+          {canManage && (
+            <Button
+              onClick={() => setFollowUpOpen(true)}
+              size="sm"
+              type="button"
+            >
+              <Plus className="size-4" />
+              Ajouter un suivi
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="space-y-3">
           {!partner.followUps.length && (
@@ -999,12 +973,26 @@ const FollowUpSection: FC<{
               <p className="text-sm leading-6 whitespace-pre-wrap">
                 {entry.text}
               </p>
+              {entry.contact && (
+                <p className="text-muted-foreground mt-2 text-xs">
+                  Contact concerné : {entry.contact.displayName}
+                </p>
+              )}
+              {entry.version > 1 && (
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Corrigé le {formatDateTime(entry.updatedAt)}
+                </p>
+              )}
               {entry.action && (
                 <div className="bg-surface-muted mt-3 rounded-md p-3 text-sm">
                   <p className="font-medium">{entry.action.description}</p>
                   <p className="text-muted-foreground mt-1 text-xs">
                     {entry.action.completedAt
-                      ? `Terminée le ${formatDateTime(entry.action.completedAt)}`
+                      ? `Terminée le ${formatDateTime(entry.action.completedAt)}${
+                          entry.action.completedBy
+                            ? ` par ${entry.action.completedBy.displayName}`
+                            : ''
+                        }`
                       : entry.action.dueOn
                         ? `À prévoir pour le ${entry.action.dueOn}`
                         : 'À prévoir sans date cible'}
@@ -1012,20 +1000,14 @@ const FollowUpSection: FC<{
                   {canManage && entry.action.completedAt && (
                     <Button
                       className="mt-2"
-                      onClick={() =>
-                        void setPartnerActionCompleted(
-                          partner.id,
-                          entry.id,
-                          false,
-                          partner.version,
-                        ).then((updated) => {
-                          onChange(updated);
-                          toast.success('Action réouverte');
-                        })
-                      }
+                      disabled={actionSavingEntryId !== null}
+                      onClick={() => void toggleAction(entry.id, false)}
                       size="sm"
                       variant="outline"
                     >
+                      {actionSavingEntryId === entry.id && (
+                        <Loader2 className="size-4 animate-spin" />
+                      )}
                       Réouvrir
                     </Button>
                   )}

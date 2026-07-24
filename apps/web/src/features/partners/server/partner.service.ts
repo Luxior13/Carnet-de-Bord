@@ -4,10 +4,8 @@ import {
   AuditAction,
   type PartnerOrganizationStatus,
   Prisma,
-  type PrismaClient,
 } from '@prisma/client';
 
-import { formatPersonDisplayName } from '$features/persons/person.utils';
 import {
   buildCursorPaginationMeta,
   decodeKeysetCursor,
@@ -16,6 +14,7 @@ import {
 import { prisma } from '$server/prisma';
 import type { UserType } from '$types/auth.types';
 
+import { PARTNER_STATUS_TRANSITIONS } from '../partner.constants';
 import type {
   CreatePartnerContactInput,
   CreatePartnerFollowUpInput,
@@ -23,11 +22,10 @@ import type {
   UpdatePartnerContactInput,
   UpdatePartnerFollowUpInput,
   UpdatePartnerInput,
+  UpdatePartnerStatusInput,
 } from '../schemas/partner.schemas';
 import type {
   PartnerActivityItem,
-  PartnerActor,
-  PartnerContact,
   PartnerDetail,
   PartnerListSort,
   PartnerMutationResponse,
@@ -36,6 +34,12 @@ import type {
   PartnerSummary,
 } from '../types/partner.types';
 import { createPartnerAudit } from './partner-audit';
+import {
+  getPartnerDetail,
+  loadPartnerDetail,
+  personReference,
+  requirePartner,
+} from './partner-detail.repository';
 import { partnerErrors } from './partner-errors';
 import {
   fromCivilDate,
@@ -45,197 +49,10 @@ import {
   toCivilDate,
 } from './partner-normalization';
 
-type PartnerClient = Prisma.TransactionClient | PrismaClient;
-
-const PARTNER_DETAIL_INCLUDE = {
-  categories: { orderBy: { category: 'asc' } },
-  channels: {
-    orderBy: [{ type: 'asc' }, { isPrimary: 'desc' }, { createdAt: 'asc' }],
-  },
-  contacts: {
-    include: {
-      person: {
-        select: {
-          firstName: true,
-          id: true,
-          lastName: true,
-          nickname: true,
-        },
-      },
-    },
-    orderBy: [{ closedAt: 'asc' }, { isPrimary: 'desc' }, { createdAt: 'asc' }],
-  },
-  createdBy: {
-    select: { firstName: true, lastName: true, loginName: true },
-  },
-  followUps: {
-    include: {
-      action: {
-        include: {
-          completedBy: {
-            select: { firstName: true, lastName: true, loginName: true },
-          },
-        },
-      },
-      author: {
-        select: { firstName: true, lastName: true, loginName: true },
-      },
-      partnerContact: {
-        include: {
-          person: {
-            select: {
-              firstName: true,
-              id: true,
-              lastName: true,
-              nickname: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }],
-    take: 50,
-  },
-  periods: { orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] },
-  updatedBy: {
-    select: { firstName: true, lastName: true, loginName: true },
-  },
-} as const satisfies Prisma.PartnerOrganizationInclude;
-
-type PartnerDetailRecord = Prisma.PartnerOrganizationGetPayload<{
-  include: typeof PARTNER_DETAIL_INCLUDE;
-}>;
-
-const actorFromUser = (
-  user: {
-    firstName: string;
-    lastName: string;
-    loginName: string;
-  } | null,
-): PartnerActor | null => {
-  if (!user) return null;
-  const displayName =
-    `${user.firstName.trim()} ${user.lastName.trim()}`.trim() || user.loginName;
-
-  return { displayName, loginName: user.loginName };
-};
-
-const personReference = (
-  person: {
-    firstName: string | null;
-    id: string;
-    lastName: string | null;
-    nickname: string | null;
-  } | null,
-  canViewPersons: boolean,
-) =>
-  !person || !canViewPersons
-    ? null
-    : {
-        displayName: formatPersonDisplayName(person),
-        id: person.id,
-        nickname: person.nickname,
-      };
-
-const mapContact = (
-  contact: PartnerDetailRecord['contacts'][number],
-  canViewPersons: boolean,
-): PartnerContact => ({
-  closedAt: contact.closedAt?.toISOString() ?? null,
-  endedOn: fromCivilDate(contact.endedOn),
-  id: contact.id,
-  isPrimary: contact.isPrimary,
-  label: contact.label,
-  person: personReference(contact.person, canViewPersons),
-  startedOn: fromCivilDate(contact.startedOn),
-  version: contact.version,
-});
-
-export const mapPartnerDetail = (
-  partner: PartnerDetailRecord,
-  canViewPersons: boolean,
-): PartnerDetail => ({
-  categories: partner.categories.map(({ category }) => category),
-  channels: partner.channels.map((channel) => ({
-    id: channel.id,
-    isPrimary: channel.isPrimary,
-    label: channel.label,
-    type: channel.type,
-    value: channel.value,
-    version: channel.version,
-  })),
-  contacts: partner.contacts.map((contact) =>
-    mapContact(contact, canViewPersons),
-  ),
-  createdAt: partner.createdAt.toISOString(),
-  createdBy: actorFromUser(partner.createdBy),
-  description: partner.description,
-  followUps: partner.followUps.map((entry) => ({
-    action: entry.action
-      ? {
-          completedAt: entry.action.completedAt?.toISOString() ?? null,
-          completedBy: actorFromUser(entry.action.completedBy),
-          description: entry.action.description,
-          dueOn: fromCivilDate(entry.action.dueOn),
-          id: entry.action.id,
-          version: entry.action.version,
-        }
-      : null,
-    author: actorFromUser(entry.author) ?? {
-      displayName: 'Compte indisponible',
-      loginName: null,
-    },
-    contact: personReference(
-      entry.partnerContact?.person ?? null,
-      canViewPersons,
-    ),
-    createdAt: entry.createdAt.toISOString(),
-    id: entry.id,
-    occurredAt: entry.occurredAt.toISOString(),
-    text: entry.text,
-    updatedAt: entry.updatedAt.toISOString(),
-    version: entry.version,
-  })),
-  id: partner.id,
-  name: partner.name,
-  normalizedName: partner.normalizedName,
-  periods: partner.periods.map((period) => ({
-    closedAt: period.closedAt?.toISOString() ?? null,
-    closingNote: period.closingNote,
-    endedOn: fromCivilDate(period.endedOn),
-    id: period.id,
-    startedOn: fromCivilDate(period.startedOn),
-    version: period.version,
-  })),
-  status: partner.status,
-  updatedAt: partner.updatedAt.toISOString(),
-  updatedBy: actorFromUser(partner.updatedBy),
-  version: partner.version,
-  website: partner.website,
-});
-
-const requirePartner = async (
-  client: PartnerClient,
-  partnerId: string,
-): Promise<PartnerDetailRecord> => {
-  const redirect = await client.partnerOrganizationMergeRedirect.findUnique({
-    select: { targetOrganizationId: true },
-    where: { sourceOrganizationId: partnerId },
-  });
-  const partner = await client.partnerOrganization.findUnique({
-    include: PARTNER_DETAIL_INCLUDE,
-    where: { id: redirect?.targetOrganizationId ?? partnerId },
-  });
-  if (!partner) throw partnerErrors.notFound();
-
-  return partner;
-};
-
 export const getPartner = async (
   partnerId: string,
   canViewPersons: boolean,
-): Promise<PartnerDetail> =>
-  mapPartnerDetail(await requirePartner(prisma, partnerId), canViewPersons);
+): Promise<PartnerDetail> => getPartnerDetail(partnerId, canViewPersons);
 
 const primaryChannels = <T extends { isPrimary: boolean; type: string }>(
   channels: readonly T[],
@@ -269,20 +86,26 @@ const channelCreateData = (
     value: channel.value,
   }));
 
-const allowedTransitions: Record<PartnerStatus, readonly PartnerStatus[]> = {
-  ACTIVE: ['ACTIVE', 'ENDED'],
-  CLOSED: ['CLOSED', 'DISCUSSION'],
-  DISCUSSION: ['DISCUSSION', 'ACTIVE', 'CLOSED'],
-  ENDED: ['ENDED', 'DISCUSSION'],
-  PROSPECT: ['PROSPECT', 'DISCUSSION', 'CLOSED'],
-};
-
 const assertTransition = (
   before: PartnerOrganizationStatus,
   after: PartnerOrganizationStatus,
 ): void => {
-  if (!allowedTransitions[before].includes(after)) {
+  const allowedTransitions = PARTNER_STATUS_TRANSITIONS[
+    before
+  ] as readonly PartnerStatus[];
+  if (!allowedTransitions.includes(after)) {
     throw partnerErrors.invalidTransition();
+  }
+};
+
+const assertPeriodDateOrder = (
+  startedOn: Date | null,
+  endedOn: Date | null,
+): void => {
+  if (startedOn && endedOn && endedOn.getTime() < startedOn.getTime()) {
+    throw partnerErrors.dependencyConflict(
+      'La date de fin ne peut pas précéder la date de début',
+    );
   }
 };
 
@@ -557,7 +380,6 @@ export const createPartner = async (
             }
           : {}),
       },
-      include: PARTNER_DETAIL_INCLUDE,
     });
     await createPartnerAudit(transaction, {
       action: AuditAction.PARTNER_CREATE,
@@ -567,14 +389,14 @@ export const createPartner = async (
       metadata: { categories: input.categories, status: input.status },
     });
 
-    return created;
+    return loadPartnerDetail(transaction, created.id, canViewPersons);
   });
 
   return {
     ...(duplicates.length
       ? { duplicateWarning: { duplicateFound: true, names: duplicates } }
       : {}),
-    partner: mapPartnerDetail(partner, canViewPersons),
+    partner,
   };
 };
 
@@ -586,7 +408,6 @@ export const updatePartner = async (
 ): Promise<PartnerDetail> =>
   prisma.$transaction(async (transaction) => {
     const existing = await requirePartner(transaction, partnerId);
-    assertTransition(existing.status, input.status);
     const { domain, website } = normalizePartnerWebsite(input.website);
     await touchPartner(transaction, {
       actorId: actor.id,
@@ -599,7 +420,6 @@ export const updatePartner = async (
         name: input.name,
         normalizedDomain: domain,
         normalizedName: normalizePartnerSearchValue(input.name),
-        status: input.status,
         website,
       },
       where: { id: existing.id },
@@ -625,71 +445,151 @@ export const updatePartner = async (
       });
     }
 
-    if (existing.status !== input.status && input.status === 'ACTIVE') {
+    await createPartnerAudit(transaction, {
+      action: AuditAction.PARTNER_UPDATE,
+      actor,
+      description: 'Informations du partenaire modifiées',
+      entityId: existing.id,
+      metadata: { changedSections: ['information'] },
+      tabKey: 'information',
+    });
+
+    return loadPartnerDetail(transaction, existing.id, canViewPersons);
+  });
+
+export const updatePartnerStatus = async (
+  partnerId: string,
+  input: UpdatePartnerStatusInput,
+  actor: UserType,
+  canViewPersons: boolean,
+): Promise<PartnerDetail> =>
+  prisma.$transaction(async (transaction) => {
+    const existing = await requirePartner(transaction, partnerId);
+    assertTransition(existing.status, input.status);
+    const statusChanged = existing.status !== input.status;
+    const currentPeriod =
+      existing.status === 'ACTIVE'
+        ? await transaction.partnerRelationshipPeriod.findFirst({
+            orderBy: { createdAt: 'desc' },
+            where: { closedAt: null, organizationId: existing.id },
+          })
+        : existing.status === 'ENDED'
+          ? await transaction.partnerRelationshipPeriod.findFirst({
+              orderBy: { createdAt: 'desc' },
+              where: { closedAt: { not: null }, organizationId: existing.id },
+            })
+          : null;
+    const periodChanged =
+      !statusChanged &&
+      ((input.status === 'ACTIVE' &&
+        fromCivilDate(currentPeriod?.startedOn ?? null) !== input.startedOn) ||
+        (input.status === 'ENDED' &&
+          (fromCivilDate(currentPeriod?.startedOn ?? null) !==
+            input.startedOn ||
+            fromCivilDate(currentPeriod?.endedOn ?? null) !== input.endedOn ||
+            (currentPeriod?.closingNote ?? null) !== input.closingNote)));
+
+    if (!statusChanged && !periodChanged) {
+      return loadPartnerDetail(transaction, existing.id, canViewPersons);
+    }
+
+    await touchPartner(transaction, {
+      actorId: actor.id,
+      id: existing.id,
+      version: input.version,
+    });
+    if (statusChanged) {
+      await transaction.partnerOrganization.update({
+        data: { status: input.status },
+        where: { id: existing.id },
+      });
+    }
+
+    if (statusChanged && input.status === 'ACTIVE') {
       await transaction.partnerRelationshipPeriod.create({
         data: {
           organizationId: existing.id,
           startedOn: toCivilDate(input.startedOn),
         },
       });
-    } else if (existing.status !== input.status && input.status === 'ENDED') {
-      const openPeriod = await transaction.partnerRelationshipPeriod.findFirst({
-        orderBy: { createdAt: 'desc' },
-        where: { closedAt: null, organizationId: existing.id },
+      await createPartnerAudit(transaction, {
+        action: AuditAction.PARTNER_PERIOD_CREATE,
+        actor,
+        description: 'Période de relation créée',
+        entityId: existing.id,
+        tabKey: 'information',
       });
+    } else if (statusChanged && input.status === 'ENDED') {
+      const openPeriod = currentPeriod;
       if (!openPeriod) {
         throw partnerErrors.dependencyConflict(
           'Aucune période active ne peut être terminée',
         );
       }
+      const endedOn = toCivilDate(input.endedOn);
+      assertPeriodDateOrder(openPeriod.startedOn, endedOn);
       await transaction.partnerRelationshipPeriod.update({
         data: {
           closedAt: new Date(),
           closingNote: input.closingNote,
-          endedOn: toCivilDate(input.endedOn),
+          endedOn,
           version: { increment: 1 },
         },
         where: { id: openPeriod.id },
       });
-    } else if (input.status === 'ACTIVE') {
-      const openPeriod = await transaction.partnerRelationshipPeriod.findFirst({
-        where: { closedAt: null, organizationId: existing.id },
+      await createPartnerAudit(transaction, {
+        action: AuditAction.PARTNER_PERIOD_UPDATE,
+        actor,
+        description: 'Période de relation terminée',
+        entityId: existing.id,
+        tabKey: 'information',
       });
-      if (openPeriod) {
-        await transaction.partnerRelationshipPeriod.update({
-          data: {
-            startedOn: toCivilDate(input.startedOn),
-            version: { increment: 1 },
-          },
-          where: { id: openPeriod.id },
-        });
-      }
+    } else if (periodChanged && currentPeriod) {
+      const startedOn = toCivilDate(input.startedOn);
+      const endedOn =
+        input.status === 'ENDED' ? toCivilDate(input.endedOn) : null;
+      assertPeriodDateOrder(startedOn, endedOn);
+      await transaction.partnerRelationshipPeriod.update({
+        data: {
+          startedOn,
+          ...(input.status === 'ENDED'
+            ? { closingNote: input.closingNote, endedOn }
+            : {}),
+          version: { increment: 1 },
+        },
+        where: { id: currentPeriod.id },
+      });
+    } else if (periodChanged) {
+      throw partnerErrors.dependencyConflict(
+        'La période de relation à corriger est introuvable',
+      );
     }
 
-    await createPartnerAudit(transaction, {
-      action:
-        existing.status === input.status
-          ? AuditAction.PARTNER_UPDATE
-          : AuditAction.PARTNER_STATUS_UPDATE,
-      actor,
-      description:
-        existing.status === input.status
-          ? 'Informations du partenaire modifiées'
-          : 'Statut du partenaire modifié',
-      entityId: existing.id,
-      metadata: {
-        changedSections: ['information'],
-        ...(existing.status !== input.status
-          ? { fromStatus: existing.status, toStatus: input.status }
-          : {}),
-      },
-      tabKey: 'information',
-    });
+    if (statusChanged) {
+      await createPartnerAudit(transaction, {
+        action: AuditAction.PARTNER_STATUS_UPDATE,
+        actor,
+        description: 'Statut du partenaire modifié',
+        entityId: existing.id,
+        metadata: {
+          changedSections: ['follow-up'],
+          fromStatus: existing.status,
+          toStatus: input.status,
+        },
+        tabKey: 'follow-up',
+      });
+    } else {
+      await createPartnerAudit(transaction, {
+        action: AuditAction.PARTNER_PERIOD_UPDATE,
+        actor,
+        description: 'Période de relation corrigée',
+        entityId: existing.id,
+        metadata: { changedSections: ['information'] },
+        tabKey: 'information',
+      });
+    }
 
-    return mapPartnerDetail(
-      await requirePartner(transaction, existing.id),
-      canViewPersons,
-    );
+    return loadPartnerDetail(transaction, existing.id, canViewPersons);
   });
 
 export const addPartnerContact = async (
@@ -733,10 +633,7 @@ export const addPartnerContact = async (
       tabKey: 'contacts',
     });
 
-    return mapPartnerDetail(
-      await requirePartner(transaction, partner.id),
-      canViewPersons,
-    );
+    return loadPartnerDetail(transaction, partner.id, canViewPersons);
   });
 
 export const updatePartnerContact = async (
@@ -800,10 +697,7 @@ export const updatePartnerContact = async (
       tabKey: 'contacts',
     });
 
-    return mapPartnerDetail(
-      await requirePartner(transaction, partner.id),
-      canViewPersons,
-    );
+    return loadPartnerDetail(transaction, partner.id, canViewPersons);
   });
 
 export const addPartnerFollowUp = async (
@@ -855,10 +749,7 @@ export const addPartnerFollowUp = async (
       tabKey: 'follow-up',
     });
 
-    return mapPartnerDetail(
-      await requirePartner(transaction, partner.id),
-      canViewPersons,
-    );
+    return loadPartnerDetail(transaction, partner.id, canViewPersons);
   });
 
 export const updatePartnerFollowUp = async (
@@ -893,10 +784,7 @@ export const updatePartnerFollowUp = async (
       tabKey: 'follow-up',
     });
 
-    return mapPartnerDetail(
-      await requirePartner(transaction, partner.id),
-      canViewPersons,
-    );
+    return loadPartnerDetail(transaction, partner.id, canViewPersons);
   });
 
 export const deletePartnerFollowUp = async (
@@ -925,10 +813,7 @@ export const deletePartnerFollowUp = async (
       tabKey: 'follow-up',
     });
 
-    return mapPartnerDetail(
-      await requirePartner(transaction, partner.id),
-      canViewPersons,
-    );
+    return loadPartnerDetail(transaction, partner.id, canViewPersons);
   });
 
 export const setPartnerActionCompleted = async (
@@ -969,10 +854,7 @@ export const setPartnerActionCompleted = async (
       tabKey: 'follow-up',
     });
 
-    return mapPartnerDetail(
-      await requirePartner(transaction, partner.id),
-      canViewPersons,
-    );
+    return loadPartnerDetail(transaction, partner.id, canViewPersons);
   });
 
 export const getPartnerActivity = async (

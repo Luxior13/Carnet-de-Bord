@@ -20,16 +20,49 @@ const optionalTrimmed = (max: number) =>
     .optional()
     .transform((value) => value?.trim() || null);
 
-const civilDate = z
+const CIVIL_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+const isLeapYear = (year: number): boolean =>
+  year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+
+const isValidCivilDate = (value: string): boolean => {
+  const match = CIVIL_DATE_PATTERN.exec(value);
+  if (!match) return false;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (year === 0 || month < 1 || month > 12 || day < 1) return false;
+
+  const daysInMonth = [
+    31,
+    isLeapYear(year) ? 29 : 28,
+    31,
+    30,
+    31,
+    30,
+    31,
+    31,
+    30,
+    31,
+    30,
+    31,
+  ];
+
+  return day <= (daysInMonth[month - 1] ?? 0);
+};
+
+const civilDateString = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide')
+  .regex(CIVIL_DATE_PATTERN, 'Date invalide')
+  .refine(isValidCivilDate, 'Date invalide');
+
+const civilDate = civilDateString
   .nullable()
   .optional()
   .transform((value) => value || null);
 
-const optionalCivilDate = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide')
+const optionalCivilDate = civilDateString
   .nullable()
   .optional()
   .transform((value) => (value === undefined ? undefined : value || null));
@@ -106,7 +139,6 @@ const commonOrganizationShape = {
   channels: z.array(channelSchema).max(PARTNER_LIMITS.channels).default([]),
   description: optionalTrimmed(500),
   name: z.string().trim().min(1, 'Nom requis').max(200),
-  status: z.enum(PARTNER_STATUSES),
   website,
 };
 
@@ -129,6 +161,19 @@ const validatePrimaries = (
   }
 };
 
+const validateDateOrder = (
+  value: { endedOn?: string | null; startedOn?: string | null },
+  context: z.RefinementCtx,
+): void => {
+  if (value.startedOn && value.endedOn && value.endedOn < value.startedOn) {
+    context.addIssue({
+      code: 'custom',
+      message: 'La date de fin ne peut pas précéder la date de début',
+      path: ['endedOn'],
+    });
+  }
+};
+
 export const createPartnerSchema = z
   .object({
     ...commonOrganizationShape,
@@ -143,20 +188,30 @@ export const createPartnerSchema = z
       .default(null),
     endedOn: civilDate,
     startedOn: civilDate,
+    status: z.enum(PARTNER_STATUSES),
   })
   .strict()
-  .superRefine(validatePrimaries);
+  .superRefine(validatePrimaries)
+  .superRefine(validateDateOrder);
 
 export const updatePartnerSchema = z
   .object({
     ...commonOrganizationShape,
-    closingNote: optionalTrimmed(300),
-    endedOn: civilDate,
-    startedOn: civilDate,
     version: z.number().int().positive(),
   })
   .strict()
   .superRefine(validatePrimaries);
+
+export const updatePartnerStatusSchema = z
+  .object({
+    closingNote: optionalTrimmed(300),
+    endedOn: civilDate,
+    startedOn: civilDate,
+    status: z.enum(PARTNER_STATUSES),
+    version: z.number().int().positive(),
+  })
+  .strict()
+  .superRefine(validateDateOrder);
 
 export const partnersListQuerySchema = z
   .object({
@@ -188,7 +243,8 @@ export const updatePartnerContactSchema = z
     startedOn: optionalCivilDate,
     version: z.number().int().positive(),
   })
-  .strict();
+  .strict()
+  .superRefine(validateDateOrder);
 
 export const createPartnerFollowUpSchema = z
   .object({
@@ -230,6 +286,9 @@ export const deletePartnerChildSchema = z
 
 export type CreatePartnerInput = z.infer<typeof createPartnerSchema>;
 export type UpdatePartnerInput = z.infer<typeof updatePartnerSchema>;
+export type UpdatePartnerStatusInput = z.infer<
+  typeof updatePartnerStatusSchema
+>;
 export type CreatePartnerContactInput = z.infer<
   typeof createPartnerContactSchema
 >;

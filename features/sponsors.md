@@ -21,6 +21,14 @@ modules respectifs.
 - Création des informations essentielles.
 - Fiche avec les onglets Informations, Contacts, Suivi et Activité.
 
+Le statut se gère dans l'onglet Suivi depuis un menu déroulant compact. Les
+transitions simples sont enregistrées directement ; un modal apparaît seulement
+pour ouvrir, terminer ou corriger une période. Le même onglet présente les
+entrées les plus récentes et un bouton d'ajout ouvrant un modal ; aucun résumé
+manuel n'est demandé et la liste des suivis constitue elle-même la chronologie.
+Les actions encore ouvertes restent visibles même si leur suivi est ancien ;
+les dates et le motif d'une période peuvent être corrigés avec audit.
+
 ## Cycle de vie
 
 - Prospect.

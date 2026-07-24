@@ -21,6 +21,17 @@ export const PARTNER_STATUS_LABELS = {
   PROSPECT: 'Prospect',
 } as const;
 
+export const PARTNER_STATUS_TRANSITIONS = {
+  ACTIVE: ['ACTIVE', 'ENDED'],
+  CLOSED: ['CLOSED', 'DISCUSSION'],
+  DISCUSSION: ['DISCUSSION', 'ACTIVE', 'CLOSED'],
+  ENDED: ['ENDED', 'DISCUSSION'],
+  PROSPECT: ['PROSPECT', 'DISCUSSION', 'CLOSED'],
+} as const satisfies Record<
+  (typeof PARTNER_STATUSES)[number],
+  readonly (typeof PARTNER_STATUSES)[number][]
+>;
+
 export const PARTNER_LIMITS = {
   channels: 10,
   contacts: 30,

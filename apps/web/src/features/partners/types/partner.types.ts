@@ -95,6 +95,7 @@ export type PartnerDetail = Omit<
   createdBy: PartnerActor | null;
   description: string | null;
   followUps: PartnerFollowUp[];
+  openActions: PartnerFollowUp[];
   periods: PartnerPeriod[];
   updatedBy: PartnerActor | null;
 };

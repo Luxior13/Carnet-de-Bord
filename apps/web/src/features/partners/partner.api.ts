@@ -63,6 +63,18 @@ export const updatePartner = async (
   return response.partner;
 };
 
+export const updatePartnerStatus = async (
+  id: string,
+  payload: Payload,
+): Promise<PartnerDetail> => {
+  const response = await apiFetchJson<PartnerMutationResponse>(
+    `/api/partenaires/${encodeURIComponent(id)}/statut`,
+    jsonRequest('PATCH', payload),
+  );
+
+  return response.partner;
+};
+
 export const addPartnerContact = async (
   id: string,
   payload: Payload,

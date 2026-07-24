@@ -221,14 +221,13 @@ ou à implémenter.
 
 - [ ] Nom de l'organisation.
 - [ ] Catégories sponsor et partenaire.
-- [ ] Statut de la relation.
 - [ ] Description courte.
 - [ ] Site internet principal.
 - [ ] Plusieurs emails et téléphones généraux facultatifs, avec libellé court
       et un principal par type.
 - [ ] Période en cours et périodes terminées, avec dates facultatives.
-- [ ] Afficher séparément le statut courant et l'historique des périodes pour
-      ne jamais laisser croire qu'une date résume toute la relation.
+- [ ] Afficher la chronologie des périodes sans la confondre avec le statut
+      courant, qui reste géré dans Suivi et visible dans l'en-tête.
 - [ ] Créateur et dernière modification issus des comptes utilisateurs et de
       l'audit.
 - [ ] Historique de champ accessible selon la permission d'audit existante.
@@ -258,18 +257,19 @@ ou à implémenter.
 
 ### Onglet Suivi
 
-- [x] Résumé opérationnel visible immédiatement :
-  - statut actuel ;
-  - dernière entrée de suivi ;
-  - prochaine action ouverte et sa date cible si elle existe ;
-  - auteur et date de la dernière entrée.
+- [x] Afficher et modifier le statut depuis un menu déroulant compact dans cet
+      onglet ; les transitions sans période sont enregistrées directement.
+- [x] Ouvrir un modal uniquement pour activer ou terminer une période, ou pour
+      corriger les dates et le motif de la période courante ou de la dernière
+      période terminée, avec audit distinct.
 - [x] Aucune « situation actuelle » ne doit être saisie séparément : la
-      synthèse est calculée depuis le statut, le dernier suivi et la prochaine
-      action afin d'éviter toute double saisie ou information périmée.
+      chronologie suffit et évite toute double saisie ou information périmée.
 - [x] Le suivi ressemble visuellement à une suite de messages internes, mais
       aucun message n'est envoyé au partenaire.
-- [x] Champ « Ajouter un suivi… » pour écrire ce qui a été fait, demandé ou
-      appris.
+- [x] Un bouton « Ajouter un suivi » ouvre un modal pour écrire ce qui a été
+      fait, demandé ou appris et prévoir facultativement une action.
+- [x] Présenter directement la liste comme des « Suivis », sans carte
+      « Situation en bref » ni titre artificiel « Historique du suivi ».
 - [x] Chronologie affichée de l'entrée la plus récente à la plus ancienne.
 - [x] Chaque entrée affiche :
   - auteur ;
@@ -286,6 +286,8 @@ ou à implémenter.
   - état à faire ou fait ;
   - auteur et date de réalisation.
 - [x] Les actions encore à prévoir sont regroupées en haut de l'onglet.
+- [x] Les actions ouvertes sont chargées indépendamment de la limite des suivis
+      récents afin qu'une ancienne action ne disparaisse jamais.
 - [x] Une action affiche automatiquement le compte qui l'a créée et, lorsqu'elle
       est terminée, le compte qui l'a réalisée.
 - [x] Aucune action et aucune fiche ne sont assignées durablement à un
@@ -300,8 +302,8 @@ ou à implémenter.
   - aucun envoi externe ;
   - aucun statut lu ou non lu ;
   - aucune mention complexe.
-- [ ] Utiliser une zone de composition intégrée pour l'ajout courant et un
-      modal compact uniquement si des options complémentaires sont ouvertes.
+- [x] Utiliser un bouton « Ajouter un suivi » ouvrant un modal compact, avec
+      les options d'action facultative dans le même formulaire.
 - [ ] Autoriser la correction d'une entrée et la suppression d'une entrée
       créée par erreur, avec confirmation, version optimiste et audit.
 - [ ] Une entrée supprimée disparaît de la chronologie, mais l'audit minimal
@@ -741,9 +743,9 @@ ou à implémenter.
       principal par type.
 - [x] Utiliser un libellé libre court par période de liaison contact ; des
       suggestions UX n'imposent pas de catalogue métier.
-- [x] L'onglet Suivi calcule une synthèse depuis le dernier suivi et la
-      prochaine action, sans champ de résumé manuel.
-- [x] L'ajout courant d'une entrée utilise une zone intégrée.
+- [x] L'onglet Suivi présente directement le statut, les actions ouvertes et
+      la liste des suivis, sans carte de synthèse redondante.
+- [x] L'ajout d'une entrée se fait dans un modal ouvert depuis un bouton dédié.
 - [x] Une action prévue terminée peut être réouverte avec audit.
 - [x] Les dates de relation restent facultatives ; l'interface signale les
       incohérences sans inventer de date.
