@@ -15,6 +15,13 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { ContentState } from '$components/layout/ContentState';
 import { Button } from '$ui/button';
 import { Input } from '$ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '$ui/select';
 import { Skeleton } from '$ui/skeleton';
 import {
   Table,
@@ -165,49 +172,64 @@ export const PartnersList: FC<{ createHref: string; returnHref: string }> = ({
               </button>
             )}
           </div>
-          <select
-            aria-label="Filtrer par statut"
-            className="border-input bg-surface h-10 rounded-md border px-3 text-sm"
-            onChange={(event) =>
-              updateFilters({ status: event.target.value || null })
+          <Select
+            onValueChange={(value) =>
+              updateFilters({ status: value === 'all' ? null : value })
             }
-            value={status}
+            value={status || 'all'}
           >
-            <option value="">Tous les statuts</option>
-            {Object.entries(PARTNER_STATUS_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Filtrer par catégorie"
-            className="border-input bg-surface h-10 rounded-md border px-3 text-sm"
-            onChange={(event) =>
-              updateFilters({ category: event.target.value || null })
+            <SelectTrigger aria-label="Filtrer par statut" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les statuts</SelectItem>
+              {Object.entries(PARTNER_STATUS_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            onValueChange={(value) =>
+              updateFilters({ category: value === 'all' ? null : value })
             }
-            value={category}
+            value={category || 'all'}
           >
-            <option value="">Toutes les catégories</option>
-            {Object.entries(PARTNER_CATEGORY_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Trier les organisations"
-            className="border-input bg-surface h-10 rounded-md border px-3 text-sm"
-            onChange={(event) =>
+            <SelectTrigger
+              aria-label="Filtrer par catégorie"
+              className="w-full"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les catégories</SelectItem>
+              {Object.entries(PARTNER_CATEGORY_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            onValueChange={(value) =>
               updateFilters({
-                sort: event.target.value === 'name' ? null : event.target.value,
+                sort: value === 'name' ? null : value,
               })
             }
             value={sort}
           >
-            <option value="name">Nom (A–Z)</option>
-            <option value="updated">Modifiées récemment</option>
-          </select>
+            <SelectTrigger
+              aria-label="Trier les organisations"
+              className="w-full"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Nom (A–Z)</SelectItem>
+              <SelectItem value="updated">Modifiées récemment</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

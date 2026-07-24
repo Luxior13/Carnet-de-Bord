@@ -20,6 +20,24 @@ const migrationSql = readFileSync(
   ),
   'utf8',
 );
+// Test-owned static path.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const partnerDetailSource = readFileSync(
+  new URL(
+    '../features/partners/components/PartnerDetailPage.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+// Test-owned static path.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const personDangerZoneSource = readFileSync(
+  new URL(
+    '../features/persons/components/PersonDangerZone.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
 
 describe('Sponsors & partenaires foundation', () => {
   it('publishes the canonical live feature and three stable permissions', () => {
@@ -39,7 +57,6 @@ describe('Sponsors & partenaires foundation', () => {
       categories: ['SPONSOR'],
       channels: [],
       contact: null,
-      currentSituation: null,
       description: null,
       endedOn: null,
       name: 'Exemple',
@@ -75,5 +92,13 @@ describe('Sponsors & partenaires foundation', () => {
     expect(migrationSql).toContain(
       'CREATE TRIGGER "PartnerOrganizationDeletionTombstone_prevent_mutation"',
     );
+  });
+
+  it('shares the fiche shell and destructive confirmation with the directory', () => {
+    expect(partnerDetailSource).toContain('<EntityDetailLayout');
+    expect(partnerDetailSource).toContain('<EntityDangerZone');
+    expect(personDangerZoneSource).toContain('<EntityDangerZone');
+    expect(partnerDetailSource).not.toContain('window.confirm');
+    expect(partnerDetailSource).not.toContain('<select');
   });
 });

@@ -260,13 +260,12 @@ ou à implémenter.
 
 - [x] Résumé opérationnel visible immédiatement :
   - statut actuel ;
-  - situation actuelle courte ;
+  - dernière entrée de suivi ;
   - prochaine action ouverte et sa date cible si elle existe ;
   - auteur et date de la dernière entrée.
-- [x] La situation actuelle est une synthèse courte, pas une seconde
-      chronologie ni une note générale illimitée.
-- [x] La situation actuelle affiche son auteur et sa date de mise à jour ; elle
-      n'est ni générée ni remplacée automatiquement.
+- [x] Aucune « situation actuelle » ne doit être saisie séparément : la
+      synthèse est calculée depuis le statut, le dernier suivi et la prochaine
+      action afin d'éviter toute double saisie ou information périmée.
 - [x] Le suivi ressemble visuellement à une suite de messages internes, mais
       aucun message n'est envoyé au partenaire.
 - [x] Champ « Ajouter un suivi… » pour écrire ce qui a été fait, demandé ou
@@ -411,8 +410,6 @@ ou à implémenter.
   - description courte ;
   - statut ;
   - site et domaine normalisé ;
-  - situation actuelle courte ;
-  - compte et date de mise à jour de la situation ;
   - version optimiste ;
   - dates de création et modification ;
   - comptes créateur et dernier modificateur facultatifs pour survivre à la
@@ -744,8 +741,8 @@ ou à implémenter.
       principal par type.
 - [x] Utiliser un libellé libre court par période de liaison contact ; des
       suggestions UX n'imposent pas de catalogue métier.
-- [x] L'onglet Suivi contient une situation actuelle courte et plusieurs
-      entrées datées, sans note générale illimitée.
+- [x] L'onglet Suivi calcule une synthèse depuis le dernier suivi et la
+      prochaine action, sans champ de résumé manuel.
 - [x] L'ajout courant d'une entrée utilise une zone intégrée.
 - [x] Une action prévue terminée peut être réouverte avec audit.
 - [x] Les dates de relation restent facultatives ; l'interface signale les

@@ -104,7 +104,6 @@ const channelSchema = z
 const commonOrganizationShape = {
   categories: z.array(z.enum(PARTNER_CATEGORIES)).min(1).max(2),
   channels: z.array(channelSchema).max(PARTNER_LIMITS.channels).default([]),
-  currentSituation: optionalTrimmed(1000),
   description: optionalTrimmed(500),
   name: z.string().trim().min(1, 'Nom requis').max(200),
   status: z.enum(PARTNER_STATUSES),

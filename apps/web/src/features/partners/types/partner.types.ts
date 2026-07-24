@@ -93,12 +93,9 @@ export type PartnerDetail = Omit<
   channels: PartnerChannel[];
   contacts: PartnerContact[];
   createdBy: PartnerActor | null;
-  currentSituation: string | null;
   description: string | null;
   followUps: PartnerFollowUp[];
   periods: PartnerPeriod[];
-  situationUpdatedAt: string | null;
-  situationUpdatedBy: PartnerActor | null;
   updatedBy: PartnerActor | null;
 };
 

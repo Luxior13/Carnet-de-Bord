@@ -97,9 +97,6 @@ const PARTNER_DETAIL_INCLUDE = {
     take: 50,
   },
   periods: { orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] },
-  situationUpdatedBy: {
-    select: { firstName: true, lastName: true, loginName: true },
-  },
   updatedBy: {
     select: { firstName: true, lastName: true, loginName: true },
   },
@@ -172,7 +169,6 @@ export const mapPartnerDetail = (
   ),
   createdAt: partner.createdAt.toISOString(),
   createdBy: actorFromUser(partner.createdBy),
-  currentSituation: partner.currentSituation,
   description: partner.description,
   followUps: partner.followUps.map((entry) => ({
     action: entry.action
@@ -211,8 +207,6 @@ export const mapPartnerDetail = (
     startedOn: fromCivilDate(period.startedOn),
     version: period.version,
   })),
-  situationUpdatedAt: partner.situationUpdatedAt?.toISOString() ?? null,
-  situationUpdatedBy: actorFromUser(partner.situationUpdatedBy),
   status: partner.status,
   updatedAt: partner.updatedAt.toISOString(),
   updatedBy: actorFromUser(partner.updatedBy),
@@ -530,13 +524,10 @@ export const createPartner = async (
         },
         channels: { create: channelCreateData(input.channels) },
         createdById: actor.id,
-        currentSituation: input.currentSituation,
         description: input.description,
         name: input.name,
         normalizedDomain: domain,
         normalizedName,
-        situationUpdatedAt: input.currentSituation ? new Date() : null,
-        situationUpdatedById: input.currentSituation ? actor.id : null,
         status: input.status,
         updatedById: actor.id,
         website,
@@ -597,8 +588,6 @@ export const updatePartner = async (
     const existing = await requirePartner(transaction, partnerId);
     assertTransition(existing.status, input.status);
     const { domain, website } = normalizePartnerWebsite(input.website);
-    const situationChanged =
-      existing.currentSituation !== input.currentSituation;
     await touchPartner(transaction, {
       actorId: actor.id,
       id: existing.id,
@@ -606,17 +595,10 @@ export const updatePartner = async (
     });
     await transaction.partnerOrganization.update({
       data: {
-        currentSituation: input.currentSituation,
         description: input.description,
         name: input.name,
         normalizedDomain: domain,
         normalizedName: normalizePartnerSearchValue(input.name),
-        ...(situationChanged
-          ? {
-              situationUpdatedAt: new Date(),
-              situationUpdatedById: actor.id,
-            }
-          : {}),
         status: input.status,
         website,
       },

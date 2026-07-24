@@ -132,11 +132,13 @@ const detailPageSource = readFileSync(
   'utf8',
 );
 // eslint-disable-next-line security/detect-non-literal-fs-filename
+const entityDetailLayoutSource = readFileSync(
+  new URL('../components/layout/EntityDetailLayout.tsx', import.meta.url),
+  'utf8',
+);
+// eslint-disable-next-line security/detect-non-literal-fs-filename
 const dangerZoneSource = readFileSync(
-  new URL(
-    '../features/persons/components/PersonDangerZone.tsx',
-    import.meta.url,
-  ),
+  new URL('../components/layout/EntityDangerZone.tsx', import.meta.url),
   'utf8',
 );
 // eslint-disable-next-line security/detect-non-literal-fs-filename
@@ -595,8 +597,9 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(identityFieldsSource).not.toContain('autoComplete="given-name"');
     expect(identityFieldsSource).not.toContain('autoComplete="family-name"');
     expect(identityFieldsSource).not.toContain('autoComplete="nickname"');
-    expect(detailPageSource).toContain('<PageHero');
-    expect(detailPageSource).toContain('compact');
+    expect(detailPageSource).toContain('<EntityDetailLayout');
+    expect(entityDetailLayoutSource).toContain('<PageHero');
+    expect(entityDetailLayoutSource).toContain('compact');
     expect(detailPageSource).not.toContain('Fiche du répertoire');
     expect(detailPageSource).not.toContain(
       "sans lien avec un compte d'accès au site",
@@ -604,12 +607,12 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(detailPageSource).toContain(
       '<Tabs className="gap-3" value={activeSection}>',
     );
-    expect(detailPageSource).toContain('<PageBackButton');
-    expect(detailPageSource).toContain('label="Retour au répertoire"');
-    expect(detailPageSource).toContain('className="private-left-rail"');
-    expect(detailPageSource).toContain('<UserDetailSectionRail');
-    expect(detailPageSource).toContain('className="!block"');
-    expect(detailPageSource).toContain('layout="mobile"');
+    expect(detailPageSource).toContain('backLabel="Retour au répertoire"');
+    expect(entityDetailLayoutSource).toContain('<PageBackButton');
+    expect(entityDetailLayoutSource).toContain('className="private-left-rail"');
+    expect(entityDetailLayoutSource).toContain('<UserDetailSectionRail');
+    expect(entityDetailLayoutSource).toContain('className="!block"');
+    expect(entityDetailLayoutSource).toContain('layout="mobile"');
     expect(detailPageSource).toContain('sections={PERSON_DETAIL_SECTIONS}');
     expect(detailPageSource).not.toContain('<ScrollableTabsList');
     expect(detailPageSource).not.toContain('<PageHero\n          actions=');

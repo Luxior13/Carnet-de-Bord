@@ -10,6 +10,13 @@ import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
 import { Checkbox } from '$ui/checkbox';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '$ui/select';
 import { Textarea } from '$ui/textarea';
 import { ApiClientError } from '$utils/api.utils';
 
@@ -67,7 +74,6 @@ export const PartnerCreateForm: FC<{ returnHref: string }> = ({
             : []),
         ],
         contact: null,
-        currentSituation: null,
         description: String(form.get('description') ?? '').trim() || null,
         endedOn: null,
         name: String(form.get('name') ?? ''),
@@ -142,22 +148,25 @@ export const PartnerCreateForm: FC<{ returnHref: string }> = ({
           <div className="grid gap-2 md:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="partner-status">Statut initial</Label>
-              <select
-                className="border-input bg-surface h-10 rounded-md border px-3 text-sm"
-                id="partner-status"
-                onChange={(event) =>
-                  setStatus(
-                    event.target.value as keyof typeof PARTNER_STATUS_LABELS,
-                  )
+              <Select
+                onValueChange={(value) =>
+                  setStatus(value as keyof typeof PARTNER_STATUS_LABELS)
                 }
                 value={status}
               >
-                {Object.entries(PARTNER_STATUS_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full" id="partner-status">
+                  <SelectValue placeholder="Sélectionner un statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(PARTNER_STATUS_LABELS).map(
+                    ([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             {(status === 'ACTIVE' || status === 'ENDED') && (
               <div className="grid gap-2">

@@ -5,11 +5,9 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
-import { PageBackButton } from '$components/layout/PageBackNavigation';
-import { PageHero } from '$components/layout/PageHero';
+import { EntityDetailLayout } from '$components/layout/EntityDetailLayout';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import type { UserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
-import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailSectionRail';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
@@ -315,94 +313,61 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
   };
 
   return (
-    <PageShell className="py-0">
-      <PageCanvas contentClassName="relative space-y-3">
-        <div className="private-left-rail">
-          <div className="sticky top-4 space-y-2">
-            <PageBackButton
-              fullWidth
-              href={returnHref}
-              label="Retour au répertoire"
-            />
-            <UserDetailSectionRail
-              activeSection={activeSection}
-              ariaLabel="Navigation de la fiche du répertoire"
-              className="!block"
-              dirtySections={[]}
-              getSectionHref={sectionHref}
-              replace
-              sections={PERSON_DETAIL_SECTIONS}
-            />
-          </div>
-        </div>
-        <div className="2xl:hidden">
-          <PageBackButton href={returnHref} label="Retour au répertoire" />
-        </div>
-
-        <PageHero
-          compact
-          icon={
-            <PersonAvatar className="size-full rounded-full" person={person} />
-          }
-          iconClassName="overflow-hidden rounded-full p-0"
-          meta={<PersonStatusBadge status={person.structureStatus} />}
-          title={getPersonDisplayName(person)}
-          tone="internal"
-        />
-
-        {duplicateWarning && (
+    <EntityDetailLayout
+      activeSection={activeSection}
+      afterHero={
+        duplicateWarning && (
           <ContentState
             description={getDuplicateWarningDescription(duplicateWarning)}
             kind="warning"
             title="Correspondance détectée"
           />
-        )}
-
-        <UserDetailSectionRail
-          activeSection={activeSection}
-          ariaLabel="Navigation de la fiche du répertoire"
-          dirtySections={[]}
-          getSectionHref={sectionHref}
-          layout="mobile"
-          replace
-          sections={PERSON_DETAIL_SECTIONS}
-        />
-        <p aria-live="polite" className="sr-only">
-          Section {activeSection === 'identite' ? 'Identité' : 'Coordonnées'}{' '}
-          affichée
-        </p>
-
-        <Tabs className="gap-3" value={activeSection}>
-          <TabsContent className="space-y-5" value="identite">
-            <Card>
-              <PersonIdentitySection
-                canUpdate={canUpdate}
-                canViewProvenance={canViewProvenance}
-                onChange={setPerson}
-                onReload={load}
-                person={person}
-              />
-              <PersonLastChangeFooter person={person} />
-            </Card>
-            {canDelete && <PersonDangerZone onReload={load} person={person} />}
-          </TabsContent>
-
-          <TabsContent className="space-y-5" value="coordonnees">
-            <PersonCollectionsSection
+        )
+      }
+      ariaLiveLabel={`Section ${activeSection === 'identite' ? 'Identité' : 'Coordonnées'} affichée`}
+      backHref={returnHref}
+      backLabel="Retour au répertoire"
+      heroIcon={
+        <PersonAvatar className="size-full rounded-full" person={person} />
+      }
+      heroIconClassName="overflow-hidden rounded-full p-0"
+      heroMeta={<PersonStatusBadge status={person.structureStatus} />}
+      heroTitle={getPersonDisplayName(person)}
+      railAriaLabel="Navigation de la fiche du répertoire"
+      sectionHref={sectionHref}
+      sections={PERSON_DETAIL_SECTIONS}
+      tone="internal"
+    >
+      <Tabs className="gap-3" value={activeSection}>
+        <TabsContent className="space-y-5" value="identite">
+          <Card>
+            <PersonIdentitySection
               canUpdate={canUpdate}
               canViewProvenance={canViewProvenance}
-              duplicateMatches={duplicateWarning?.matches ?? []}
               onChange={setPerson}
               onReload={load}
               person={person}
             />
-            <div className="px-1">
-              <PersonLastChangeSummary person={person} />
-            </div>
-          </TabsContent>
-        </Tabs>
-      </PageCanvas>
-    </PageShell>
+            <PersonLastChangeFooter person={person} />
+          </Card>
+          {canDelete && <PersonDangerZone onReload={load} person={person} />}
+        </TabsContent>
+
+        <TabsContent className="space-y-5" value="coordonnees">
+          <PersonCollectionsSection
+            canUpdate={canUpdate}
+            canViewProvenance={canViewProvenance}
+            duplicateMatches={duplicateWarning?.matches ?? []}
+            onChange={setPerson}
+            onReload={load}
+            person={person}
+          />
+          <div className="px-1">
+            <PersonLastChangeSummary person={person} />
+          </div>
+        </TabsContent>
+      </Tabs>
+    </EntityDetailLayout>
   );
 };
 

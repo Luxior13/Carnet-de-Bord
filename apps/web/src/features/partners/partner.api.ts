@@ -150,13 +150,14 @@ export const getPartnerActivity = (
 export const deletePartner = async (
   id: string,
   version: number,
+  idempotencyKey = crypto.randomUUID(),
 ): Promise<void> => {
   const response = await apiFetch(
     `/api/partenaires/${encodeURIComponent(id)}`,
     jsonRequest(
       'DELETE',
       { version },
-      { headers: { 'Idempotency-Key': crypto.randomUUID() } },
+      { headers: { 'Idempotency-Key': idempotencyKey } },
     ),
   );
   if (response.status === 204) return;

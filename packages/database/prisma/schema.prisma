@@ -105,7 +105,6 @@ model User {
   updatedSystemSettings       SystemSetting[]         @relation("SystemSettingUpdater")
   createdPartnerOrganizations PartnerOrganization[]   @relation("PartnerOrganizationCreator")
   updatedPartnerOrganizations PartnerOrganization[]   @relation("PartnerOrganizationUpdater")
-  updatedPartnerSituations    PartnerOrganization[]   @relation("PartnerOrganizationSituationUpdater")
   createdPartnerFollowUps     PartnerFollowUpEntry[]  @relation("PartnerFollowUpAuthor")
   completedPartnerActions     PartnerFollowUpAction[] @relation("PartnerFollowUpActionCompleter")
 
@@ -507,31 +506,27 @@ model PersonDeletionTombstone {
 }
 
 model PartnerOrganization {
-  id                   String                    @id @default(cuid())
-  name                 String                    @db.VarChar(200)
-  normalizedName       String                    @db.VarChar(400)
-  description          String?                   @db.VarChar(500)
-  status               PartnerOrganizationStatus @default(PROSPECT)
-  website              String?                   @db.VarChar(2048)
-  normalizedDomain     String?                   @db.VarChar(253)
-  currentSituation     String?                   @db.VarChar(1000)
-  situationUpdatedAt   DateTime?
-  situationUpdatedById String?
-  createdById          String?
-  updatedById          String?
-  version              Int                       @default(1)
-  createdAt            DateTime                  @default(now())
-  updatedAt            DateTime                  @updatedAt
+  id               String                    @id @default(cuid())
+  name             String                    @db.VarChar(200)
+  normalizedName   String                    @db.VarChar(400)
+  description      String?                   @db.VarChar(500)
+  status           PartnerOrganizationStatus @default(PROSPECT)
+  website          String?                   @db.VarChar(2048)
+  normalizedDomain String?                   @db.VarChar(253)
+  createdById      String?
+  updatedById      String?
+  version          Int                       @default(1)
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
 
-  situationUpdatedBy User?                               @relation("PartnerOrganizationSituationUpdater", fields: [situationUpdatedById], references: [id], onDelete: SetNull)
-  createdBy          User?                               @relation("PartnerOrganizationCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  updatedBy          User?                               @relation("PartnerOrganizationUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
-  categories         PartnerOrganizationCategory[]
-  channels           PartnerOrganizationContactChannel[]
-  periods            PartnerRelationshipPeriod[]
-  contacts           PartnerContact[]
-  followUps          PartnerFollowUpEntry[]
-  mergeRedirects     PartnerOrganizationMergeRedirect[]  @relation("PartnerOrganizationMergeTarget")
+  createdBy      User?                               @relation("PartnerOrganizationCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy      User?                               @relation("PartnerOrganizationUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  categories     PartnerOrganizationCategory[]
+  channels       PartnerOrganizationContactChannel[]
+  periods        PartnerRelationshipPeriod[]
+  contacts       PartnerContact[]
+  followUps      PartnerFollowUpEntry[]
+  mergeRedirects PartnerOrganizationMergeRedirect[]  @relation("PartnerOrganizationMergeTarget")
 
   @@index([normalizedName, id])
   @@index([status, normalizedName, id])

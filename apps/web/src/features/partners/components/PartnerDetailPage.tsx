@@ -26,11 +26,10 @@ import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
-import { PageBackButton } from '$components/layout/PageBackNavigation';
-import { PageHero } from '$components/layout/PageHero';
+import { EntityDangerZone } from '$components/layout/EntityDangerZone';
+import { EntityDetailLayout } from '$components/layout/EntityDetailLayout';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import type { UserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
-import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailSectionRail';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
@@ -44,6 +43,13 @@ import { Checkbox } from '$ui/checkbox';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '$ui/select';
 import { Skeleton } from '$ui/skeleton';
 import { Tabs, TabsContent } from '$ui/tabs';
 import { Textarea } from '$ui/textarea';
@@ -137,7 +143,6 @@ const InformationSection: FC<{
   const [name, setName] = useState(partner.name);
   const [description, setDescription] = useState(partner.description ?? '');
   const [website, setWebsite] = useState(partner.website ?? '');
-  const [situation, setSituation] = useState(partner.currentSituation ?? '');
   const [status, setStatus] = useState(partner.status);
   const [categories, setCategories] = useState<PartnerCategory[]>(
     partner.categories,
@@ -160,7 +165,6 @@ const InformationSection: FC<{
     setName(partner.name);
     setDescription(partner.description ?? '');
     setWebsite(partner.website ?? '');
-    setSituation(partner.currentSituation ?? '');
     setStatus(partner.status);
     setCategories(partner.categories);
     setChannels(
@@ -188,7 +192,6 @@ const InformationSection: FC<{
           countryCode: 'FR',
         })),
         closingNote: closingNote || null,
-        currentSituation: situation || null,
         description: description || null,
         endedOn: endedOn || null,
         name,
@@ -268,21 +271,22 @@ const InformationSection: FC<{
             <div className="grid gap-4 md:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="partner-detail-status">Statut</Label>
-                <select
-                  className="border-input bg-surface h-10 rounded-md border px-3 text-sm"
+                <Select
                   disabled={!canManage}
-                  id="partner-detail-status"
-                  onChange={(event) =>
-                    setStatus(event.target.value as PartnerStatus)
-                  }
+                  onValueChange={(value) => setStatus(value as PartnerStatus)}
                   value={status}
                 >
-                  {STATUS_TRANSITIONS[partner.status].map((item) => (
-                    <option key={item} value={item}>
-                      {PARTNER_STATUS_LABELS[item]}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full" id="partner-detail-status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_TRANSITIONS[partner.status].map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {PARTNER_STATUS_LABELS[item]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               {(status === 'ACTIVE' || status === 'ENDED') && (
                 <div className="grid gap-2">
@@ -336,29 +340,6 @@ const InformationSection: FC<{
                 rows={3}
                 value={description}
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="partner-detail-situation">
-                Situation actuelle
-              </Label>
-              <Textarea
-                disabled={!canManage}
-                id="partner-detail-situation"
-                maxLength={1000}
-                onChange={(event) => setSituation(event.target.value)}
-                placeholder="Résumé court permettant de comprendre immédiatement où en est la relation."
-                rows={3}
-                value={situation}
-              />
-              {partner.situationUpdatedAt && (
-                <p className="text-muted-foreground text-xs">
-                  Mise à jour le {formatDateTime(partner.situationUpdatedAt)}
-                  {partner.situationUpdatedBy
-                    ? ` par ${partner.situationUpdatedBy.displayName}`
-                    : ''}
-                  .
-                </p>
-              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="partner-detail-website">Site internet</Label>
@@ -424,17 +405,15 @@ const InformationSection: FC<{
               className="grid gap-2 rounded-lg border p-3 md:grid-cols-[8rem_8rem_minmax(12rem,1fr)_auto_auto]"
               key={`${channel.type}-${index}`}
             >
-              <select
-                aria-label="Type de coordonnée"
-                className="border-input bg-surface h-10 rounded-md border px-2 text-sm"
+              <Select
                 disabled={!canManage}
-                onChange={(event) =>
+                onValueChange={(value) =>
                   setChannels((items) =>
                     items.map((item, itemIndex) =>
                       itemIndex === index
                         ? {
                             ...item,
-                            type: event.target.value as 'EMAIL' | 'PHONE',
+                            type: value as 'EMAIL' | 'PHONE',
                           }
                         : item,
                     ),
@@ -442,9 +421,17 @@ const InformationSection: FC<{
                 }
                 value={channel.type}
               >
-                <option value="EMAIL">Email</option>
-                <option value="PHONE">Téléphone</option>
-              </select>
+                <SelectTrigger
+                  aria-label="Type de coordonnée"
+                  className="w-full"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="EMAIL">Email</SelectItem>
+                  <SelectItem value="PHONE">Téléphone</SelectItem>
+                </SelectContent>
+              </Select>
               <Input
                 aria-label="Libellé"
                 autoComplete="off"
@@ -560,41 +547,22 @@ const InformationSection: FC<{
       </Card>
 
       {canDelete && (
-        <Card className="border-destructive/30">
-          <CardHeader>
-            <h2 className="text-destructive font-semibold">Zone dangereuse</h2>
-            <p className="text-muted-foreground text-sm">
-              Seule une fiche sans période, contact ni suivi peut être
-              supprimée.
-            </p>
-          </CardHeader>
-          <CardFooter>
-            <Button
-              onClick={() => {
-                const confirmed = window.confirm(
-                  `Supprimer définitivement la fiche « ${partner.name} » ?`,
-                );
-                if (!confirmed) return;
-                void deletePartner(partner.id, partner.version)
-                  .then(() => {
-                    toast.success('Fiche supprimée');
-                    window.location.assign(returnHref);
-                  })
-                  .catch((error) =>
-                    toast.error(
-                      error instanceof Error
-                        ? error.message
-                        : 'Suppression impossible',
-                    ),
-                  );
-              }}
-              variant="destructive"
-            >
-              <Trash2 className="size-4" />
-              Supprimer la fiche vide
-            </Button>
-          </CardFooter>
-        </Card>
+        <EntityDangerZone
+          description="Seule une fiche créée par erreur et encore dépourvue de période, contact ou suivi peut être supprimée."
+          dialogDescription="Cette action est irréversible. Vérifiez qu’il s’agit bien d’une fiche vide créée par erreur avant de confirmer."
+          dialogNotice={`La fiche « ${partner.name} » sera effacée immédiatement et définitivement.`}
+          onDelete={(version, idempotencyKey) =>
+            deletePartner(partner.id, version, idempotencyKey)
+          }
+          onDeleted={() => window.location.assign(returnHref)}
+          onReloadVersion={async () => {
+            const fresh = await getPartner(partner.id);
+            onChange(fresh);
+
+            return fresh.version;
+          }}
+          version={partner.version}
+        />
       )}
     </div>
   );
@@ -807,6 +775,20 @@ const FollowUpSection: FC<{
       ),
     [partner.followUps],
   );
+  const latestFollowUp = partner.followUps[0] ?? null;
+  const nextAction = useMemo(
+    () =>
+      [...openActions].sort((left, right) => {
+        const leftDueOn = left.action?.dueOn;
+        const rightDueOn = right.action?.dueOn;
+        if (leftDueOn && rightDueOn) return leftDueOn.localeCompare(rightDueOn);
+        if (leftDueOn) return -1;
+        if (rightDueOn) return 1;
+
+        return right.occurredAt.localeCompare(left.occurredAt);
+      })[0] ?? null,
+    [openActions],
+  );
 
   const submit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -837,6 +819,61 @@ const FollowUpSection: FC<{
 
   return (
     <div className="space-y-4">
+      <Card>
+        <CardHeader className="flex-row items-start justify-between gap-3">
+          <div>
+            <h2 className="font-semibold">Situation en bref</h2>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Synthèse automatique, sans information à saisir une seconde fois.
+            </p>
+          </div>
+          <PartnerStatusBadge status={partner.status} />
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2">
+          <div className="border-border-divider rounded-lg border p-3">
+            <p className="text-muted-foreground text-xs font-medium">
+              Dernier suivi
+            </p>
+            {latestFollowUp ? (
+              <>
+                <p className="mt-2 line-clamp-3 text-sm leading-6 whitespace-pre-wrap">
+                  {latestFollowUp.text}
+                </p>
+                <p className="text-muted-foreground mt-2 text-xs">
+                  {latestFollowUp.author.displayName} ·{' '}
+                  {formatDateTime(latestFollowUp.occurredAt)}
+                </p>
+              </>
+            ) : (
+              <p className="text-muted-foreground mt-2 text-sm">
+                Aucun suivi enregistré.
+              </p>
+            )}
+          </div>
+          <div className="border-border-divider rounded-lg border p-3">
+            <p className="text-muted-foreground text-xs font-medium">
+              Prochaine action
+            </p>
+            {nextAction?.action ? (
+              <>
+                <p className="mt-2 text-sm font-medium">
+                  {nextAction.action.description}
+                </p>
+                <p className="text-muted-foreground mt-2 text-xs">
+                  {nextAction.action.dueOn
+                    ? `À prévoir pour le ${nextAction.action.dueOn}`
+                    : 'Sans date cible'}
+                </p>
+              </>
+            ) : (
+              <p className="text-muted-foreground mt-2 text-sm">
+                Aucune action en attente.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {openActions.length > 0 && (
         <Card>
           <CardHeader>
@@ -1157,91 +1194,64 @@ const DetailContent: FC<{
     `${FEATURES.partners.href}/${encodeURIComponent(partner.id)}?${new URLSearchParams({ returnTo: returnHref, section })}`;
 
   return (
-    <PageShell className="py-0">
-      <PageCanvas contentClassName="relative space-y-3">
-        <div className="private-left-rail">
-          <div className="sticky top-4 space-y-2">
-            <PageBackButton
-              fullWidth
-              href={returnHref}
-              label="Retour aux partenaires"
-            />
-            <UserDetailSectionRail
-              activeSection={activeSection}
-              ariaLabel="Navigation de la fiche partenaire"
-              className="!block"
-              dirtySections={[]}
-              getSectionHref={sectionHref}
-              replace
-              sections={SECTIONS}
-            />
-          </div>
-        </div>
-        <div className="2xl:hidden">
-          <PageBackButton href={returnHref} label="Retour aux partenaires" />
-        </div>
-        <PageHero
-          compact
-          icon={<Handshake className="size-5" />}
-          meta={
-            <>
-              <PartnerStatusBadge status={partner.status} />
-              {partner.categories.map((category) => (
-                <Badge key={category} variant="outline">
-                  {PARTNER_CATEGORY_LABELS[category]}
-                </Badge>
-              ))}
-            </>
-          }
-          title={partner.name}
-          tone="legal"
-        />
-        <UserDetailSectionRail
-          activeSection={activeSection}
-          ariaLabel="Navigation de la fiche partenaire"
-          dirtySections={[]}
-          getSectionHref={sectionHref}
-          layout="mobile"
-          replace
-          sections={SECTIONS}
-        />
-        <Tabs value={activeSection}>
-          <TabsContent value="information">
-            <InformationSection
-              canDelete={capabilities.canDelete}
-              canManage={capabilities.canManage}
-              onChange={setPartner}
-              partner={partner}
-              returnHref={returnHref}
-            />
-          </TabsContent>
-          <TabsContent value="contacts">
-            <ContactsSection
-              canManage={capabilities.canManage}
-              canViewContacts={capabilities.canViewContacts}
-              onChange={setPartner}
-              partner={partner}
-            />
-          </TabsContent>
-          <TabsContent value="suivi">
-            <FollowUpSection
-              canManage={capabilities.canManage}
-              onChange={setPartner}
-              partner={partner}
-            />
-          </TabsContent>
-          <TabsContent value="activite">
-            <ActivitySection partnerId={partner.id} />
-          </TabsContent>
-        </Tabs>
-        <p className="text-muted-foreground px-1 text-xs">
-          Créée le {formatDateTime(partner.createdAt)}
-          {partner.createdBy ? ` par ${partner.createdBy.displayName}` : ''} ·
-          dernière modification le {formatDateTime(partner.updatedAt)}
-          {partner.updatedBy ? ` par ${partner.updatedBy.displayName}` : ''}.
-        </p>
-      </PageCanvas>
-    </PageShell>
+    <EntityDetailLayout
+      activeSection={activeSection}
+      ariaLiveLabel={`Section ${SECTIONS.find((section) => section.id === activeSection)?.label ?? activeSection} affichée`}
+      backHref={returnHref}
+      backLabel="Retour aux partenaires"
+      heroIcon={<Handshake className="size-5" />}
+      heroMeta={
+        <>
+          <PartnerStatusBadge status={partner.status} />
+          {partner.categories.map((category) => (
+            <Badge key={category} variant="outline">
+              {PARTNER_CATEGORY_LABELS[category]}
+            </Badge>
+          ))}
+        </>
+      }
+      heroTitle={partner.name}
+      railAriaLabel="Navigation de la fiche partenaire"
+      sectionHref={sectionHref}
+      sections={SECTIONS}
+      tone="legal"
+    >
+      <Tabs value={activeSection}>
+        <TabsContent value="information">
+          <InformationSection
+            canDelete={capabilities.canDelete}
+            canManage={capabilities.canManage}
+            onChange={setPartner}
+            partner={partner}
+            returnHref={returnHref}
+          />
+        </TabsContent>
+        <TabsContent value="contacts">
+          <ContactsSection
+            canManage={capabilities.canManage}
+            canViewContacts={capabilities.canViewContacts}
+            onChange={setPartner}
+            partner={partner}
+          />
+        </TabsContent>
+        <TabsContent value="suivi">
+          <FollowUpSection
+            canManage={capabilities.canManage}
+            onChange={setPartner}
+            partner={partner}
+          />
+        </TabsContent>
+        <TabsContent value="activite">
+          <ActivitySection partnerId={partner.id} />
+        </TabsContent>
+      </Tabs>
+      <p className="text-muted-foreground px-1 text-xs">
+        Créée le {formatDateTime(partner.createdAt)}
+        {partner.createdBy ? ` par ${partner.createdBy.displayName}` : ''} ·
+        dernière modification le {formatDateTime(partner.updatedAt)}
+        {partner.updatedBy ? ` par ${partner.updatedBy.displayName}` : ''}.
+      </p>
+    </EntityDetailLayout>
   );
 };
 
