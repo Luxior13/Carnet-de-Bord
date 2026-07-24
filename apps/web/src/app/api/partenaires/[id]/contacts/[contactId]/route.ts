@@ -18,8 +18,10 @@ export async function PATCH(
 ): Promise<NextResponse> {
   const auth = await requireAuth();
   if (!auth.success) return auth.response;
-  const permission = requirePermission(auth.user, PERMISSIONS.PARTNERS.MANAGE);
-  if (!permission.success) return permission.response;
+  for (const key of [PERMISSIONS.PARTNERS.MANAGE, PERMISSIONS.PERSONS.VIEW]) {
+    const permission = requirePermission(auth.user, key);
+    if (!permission.success) return permission.response;
+  }
   const body = await parseJsonBody(request);
   if (!body.success) return body.response;
   const parsed = updatePartnerContactSchema.safeParse(body.data);

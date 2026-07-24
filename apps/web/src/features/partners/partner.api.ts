@@ -14,6 +14,7 @@ import type {
   PartnersListResponse,
   PartnerStatus,
 } from './types/partner.types';
+import type { PartnerTimelineResponse } from './types/partner-timeline.types';
 
 type Payload = Record<string, unknown>;
 
@@ -142,11 +143,11 @@ export const setPartnerActionCompleted = async (
   id: string,
   entryId: string,
   completed: boolean,
-  version: number,
+  actionVersion: number,
 ): Promise<PartnerDetail> => {
   const response = await apiFetchJson<PartnerMutationResponse>(
     `/api/partenaires/${encodeURIComponent(id)}/suivis/${encodeURIComponent(entryId)}/action`,
-    jsonRequest('PATCH', { completed, version }),
+    jsonRequest('PATCH', { actionVersion, completed }),
   );
 
   return response.partner;
@@ -158,6 +159,28 @@ export const getPartnerActivity = (
   apiFetchJson(`/api/partenaires/${encodeURIComponent(id)}/activite`, {
     cache: 'no-store',
   });
+
+export const getPartnerTimeline = (
+  id: string,
+  options: {
+    cursor?: string;
+    limit?: number;
+    signal?: AbortSignal;
+  } = {},
+): Promise<PartnerTimelineResponse> => {
+  const params = new URLSearchParams({
+    limit: String(options.limit ?? 25),
+  });
+  if (options.cursor) params.set('cursor', options.cursor);
+
+  return apiFetchJson(
+    `/api/partenaires/${encodeURIComponent(id)}/fil?${params}`,
+    {
+      cache: 'no-store',
+      signal: options.signal,
+    },
+  );
+};
 
 export const deletePartner = async (
   id: string,

@@ -224,6 +224,13 @@ export const partnersListQuerySchema = z
   })
   .strict();
 
+export const partnerTimelineQuerySchema = z
+  .object({
+    cursor: z.string().max(2048).optional(),
+    limit: z.coerce.number().int().min(1).max(50).default(25),
+  })
+  .strict();
+
 export const createPartnerContactSchema = z
   .object({
     isPrimary: z.boolean().default(false),
@@ -260,14 +267,17 @@ export const createPartnerFollowUpSchema = z
     occurredAt: z.iso.datetime().optional(),
     partnerContactId: z.string().trim().min(1).max(128).nullable().optional(),
     text: z.string().trim().min(1).max(4000),
-    version: z.number().int().positive(),
+    // Kept optional for backward compatibility with clients that still send
+    // the fiche version. Creating an independent note must not conflict with
+    // another administrator changing the fiche at the same time.
+    version: z.number().int().positive().optional(),
   })
   .strict();
 
 export const updatePartnerFollowUpSchema = z
   .object({
     occurredAt: z.iso.datetime(),
-    partnerContactId: z.string().trim().min(1).max(128).nullable(),
+    partnerContactId: z.string().trim().min(1).max(128).nullable().optional(),
     text: z.string().trim().min(1).max(4000),
     version: z.number().int().positive(),
   })
@@ -275,8 +285,8 @@ export const updatePartnerFollowUpSchema = z
 
 export const updatePartnerActionSchema = z
   .object({
+    actionVersion: z.number().int().positive(),
     completed: z.boolean(),
-    version: z.number().int().positive(),
   })
   .strict();
 

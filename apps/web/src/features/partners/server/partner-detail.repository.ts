@@ -10,13 +10,14 @@ import type {
   PartnerContact,
   PartnerContactPerson,
   PartnerDetail,
+  PartnerFollowUp,
 } from '../types/partner.types';
 import { partnerErrors } from './partner-errors';
 import { fromCivilDate } from './partner-normalization';
 
 type PartnerClient = Prisma.TransactionClient | PrismaClient;
 
-const PARTNER_FOLLOW_UP_INCLUDE = {
+export const PARTNER_FOLLOW_UP_INCLUDE = {
   action: {
     include: {
       completedBy: {
@@ -42,6 +43,12 @@ const PARTNER_FOLLOW_UP_INCLUDE = {
 } as const satisfies Prisma.PartnerFollowUpEntryInclude;
 
 const PARTNER_DETAIL_INCLUDE = {
+  _count: {
+    select: {
+      followUps: true,
+      timelineEvents: true,
+    },
+  },
   categories: { orderBy: { category: 'asc' } },
   channels: {
     orderBy: [{ type: 'asc' }, { isPrimary: 'desc' }, { createdAt: 'asc' }],
@@ -62,11 +69,6 @@ const PARTNER_DETAIL_INCLUDE = {
   createdBy: {
     select: { firstName: true, lastName: true, loginName: true },
   },
-  followUps: {
-    include: PARTNER_FOLLOW_UP_INCLUDE,
-    orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }],
-    take: 50,
-  },
   periods: { orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] },
   updatedBy: {
     select: { firstName: true, lastName: true, loginName: true },
@@ -76,7 +78,7 @@ const PARTNER_DETAIL_INCLUDE = {
 type PartnerDetailRecord = Prisma.PartnerOrganizationGetPayload<{
   include: typeof PARTNER_DETAIL_INCLUDE;
 }>;
-type PartnerFollowUpRecord = Prisma.PartnerFollowUpEntryGetPayload<{
+export type PartnerFollowUpRecord = Prisma.PartnerFollowUpEntryGetPayload<{
   include: typeof PARTNER_FOLLOW_UP_INCLUDE;
 }>;
 
@@ -93,6 +95,17 @@ const actorFromUser = (
 
   return { displayName, loginName: user.loginName };
 };
+
+const actorFromSnapshot = (
+  displayName: string | null,
+  loginName: string | null,
+): PartnerActor | null =>
+  displayName || loginName
+    ? {
+        displayName: displayName ?? loginName ?? 'Compte indisponible',
+        loginName,
+      }
+    : null;
 
 export const personReference = (
   person: {
@@ -125,24 +138,32 @@ const mapContact = (
   version: contact.version,
 });
 
-const mapFollowUp = (
+export const mapPartnerFollowUp = (
   entry: PartnerFollowUpRecord,
   canViewPersons: boolean,
-): PartnerDetail['followUps'][number] => ({
+): PartnerFollowUp => ({
   action: entry.action
     ? {
         completedAt: entry.action.completedAt?.toISOString() ?? null,
-        completedBy: actorFromUser(entry.action.completedBy),
+        completedBy:
+          actorFromSnapshot(
+            entry.action.completedByDisplayNameSnapshot,
+            entry.action.completedByLoginNameSnapshot,
+          ) ?? actorFromUser(entry.action.completedBy),
         description: entry.action.description,
         dueOn: fromCivilDate(entry.action.dueOn),
         id: entry.action.id,
         version: entry.action.version,
       }
     : null,
-  author: actorFromUser(entry.author) ?? {
-    displayName: 'Compte indisponible',
-    loginName: null,
-  },
+  author: actorFromSnapshot(
+    entry.authorDisplayNameSnapshot,
+    entry.authorLoginNameSnapshot,
+  ) ??
+    actorFromUser(entry.author) ?? {
+      displayName: 'Compte indisponible',
+      loginName: null,
+    },
   contact: personReference(
     entry.partnerContact?.person ?? null,
     canViewPersons,
@@ -158,7 +179,6 @@ const mapFollowUp = (
 const mapPartnerDetail = (
   partner: PartnerDetailRecord,
   canViewPersons: boolean,
-  openActionEntries: PartnerFollowUpRecord[],
 ): PartnerDetail => ({
   categories: partner.categories.map(({ category }) => category),
   channels: partner.channels.map((channel) => ({
@@ -169,21 +189,15 @@ const mapPartnerDetail = (
     value: channel.value,
     version: channel.version,
   })),
-  contacts: partner.contacts.map((contact) =>
-    mapContact(contact, canViewPersons),
-  ),
+  contacts: canViewPersons
+    ? partner.contacts.map((contact) => mapContact(contact, true))
+    : [],
   createdAt: partner.createdAt.toISOString(),
   createdBy: actorFromUser(partner.createdBy),
   description: partner.description,
-  followUps: partner.followUps.map((entry) =>
-    mapFollowUp(entry, canViewPersons),
-  ),
   id: partner.id,
   name: partner.name,
   normalizedName: partner.normalizedName,
-  openActions: openActionEntries.map((entry) =>
-    mapFollowUp(entry, canViewPersons),
-  ),
   periods: partner.periods.map((period) => ({
     closedAt: period.closedAt?.toISOString() ?? null,
     closingNote: period.closingNote,
@@ -216,22 +230,31 @@ export const requirePartner = async (
   return partner;
 };
 
+export const resolvePartnerId = async (
+  client: PartnerClient,
+  partnerId: string,
+): Promise<string> => {
+  const redirect = await client.partnerOrganizationMergeRedirect.findUnique({
+    select: { targetOrganizationId: true },
+    where: { sourceOrganizationId: partnerId },
+  });
+  const partner = await client.partnerOrganization.findUnique({
+    select: { id: true },
+    where: { id: redirect?.targetOrganizationId ?? partnerId },
+  });
+  if (!partner) throw partnerErrors.notFound();
+
+  return partner.id;
+};
+
 export const loadPartnerDetail = async (
   client: PartnerClient,
   partnerId: string,
   canViewPersons: boolean,
 ): Promise<PartnerDetail> => {
   const partner = await requirePartner(client, partnerId);
-  const openActionEntries = await client.partnerFollowUpEntry.findMany({
-    include: PARTNER_FOLLOW_UP_INCLUDE,
-    orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }],
-    where: {
-      action: { is: { completedAt: null } },
-      organizationId: partner.id,
-    },
-  });
 
-  return mapPartnerDetail(partner, canViewPersons, openActionEntries);
+  return mapPartnerDetail(partner, canViewPersons);
 };
 
 export const getPartnerDetail = (

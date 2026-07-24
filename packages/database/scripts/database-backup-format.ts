@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
 
-export const DATABASE_BACKUP_FORMAT_VERSION = 6;
+export const DATABASE_BACKUP_FORMAT_VERSION = 7;
 export const DATABASE_BACKUP_BATCH_SIZE = 500;
 export const MAX_DATABASE_BACKUP_BYTES = 2 * 1024 * 1024 * 1024;
 export const MAX_BACKUP_LINE_BYTES = 16 * 1024 * 1024;
@@ -168,6 +168,12 @@ export const DATABASE_BACKUP_TABLES = [
     cursorKind: 'text',
     property: 'partnerFollowUpActions',
     tableName: 'PartnerFollowUpAction',
+  },
+  {
+    cursorColumn: 'id',
+    cursorKind: 'text',
+    property: 'partnerTimelineEvents',
+    tableName: 'PartnerTimelineEvent',
   },
   {
     cursorColumn: 'sourceOrganizationId',

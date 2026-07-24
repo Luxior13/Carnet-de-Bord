@@ -52,6 +52,15 @@ enum PartnerContactChannelType {
   PHONE
 }
 
+enum PartnerTimelineEventType {
+  RELATIONSHIP_CREATED
+  STATUS_CHANGED
+  PERIOD_CORRECTED
+  ACTION_COMPLETED
+  ACTION_REOPENED
+  ACTION_UPDATED
+}
+
 enum AuditFieldChangeType {
   CREATE
   UPDATE
@@ -107,6 +116,7 @@ model User {
   updatedPartnerOrganizations PartnerOrganization[]   @relation("PartnerOrganizationUpdater")
   createdPartnerFollowUps     PartnerFollowUpEntry[]  @relation("PartnerFollowUpAuthor")
   completedPartnerActions     PartnerFollowUpAction[] @relation("PartnerFollowUpActionCompleter")
+  partnerTimelineEvents       PartnerTimelineEvent[]  @relation("PartnerTimelineEventActor")
 
   @@index([contactEmail])
   @@index([role])
@@ -526,6 +536,7 @@ model PartnerOrganization {
   periods        PartnerRelationshipPeriod[]
   contacts       PartnerContact[]
   followUps      PartnerFollowUpEntry[]
+  timelineEvents PartnerTimelineEvent[]
   mergeRedirects PartnerOrganizationMergeRedirect[]  @relation("PartnerOrganizationMergeTarget")
 
   @@index([normalizedName, id])
@@ -578,7 +589,8 @@ model PartnerRelationshipPeriod {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  organization PartnerOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   PartnerOrganization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  timelineEvents PartnerTimelineEvent[]
 
   @@index([organizationId, createdAt])
   @@index([organizationId, closedAt])
@@ -608,20 +620,23 @@ model PartnerContact {
 }
 
 model PartnerFollowUpEntry {
-  id               String   @id @default(cuid())
-  organizationId   String
-  partnerContactId String?
-  text             String   @db.VarChar(4000)
-  occurredAt       DateTime
-  authorId         String?
-  version          Int      @default(1)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                        String   @id @default(cuid())
+  organizationId            String
+  partnerContactId          String?
+  text                      String   @db.VarChar(4000)
+  occurredAt                DateTime
+  authorId                  String?
+  authorDisplayNameSnapshot String?  @db.VarChar(200)
+  authorLoginNameSnapshot   String?  @db.VarChar(64)
+  version                   Int      @default(1)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
 
   organization   PartnerOrganization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   partnerContact PartnerContact?        @relation(fields: [partnerContactId], references: [id], onDelete: SetNull)
   author         User?                  @relation("PartnerFollowUpAuthor", fields: [authorId], references: [id], onDelete: SetNull)
   action         PartnerFollowUpAction?
+  timelineEvents PartnerTimelineEvent[]
 
   @@index([organizationId, occurredAt, id])
   @@index([partnerContactId])
@@ -629,21 +644,56 @@ model PartnerFollowUpEntry {
 }
 
 model PartnerFollowUpAction {
-  id            String    @id @default(cuid())
-  entryId       String    @unique
-  description   String    @db.VarChar(300)
-  dueOn         DateTime? @db.Date
-  completedAt   DateTime?
-  completedById String?
-  version       Int       @default(1)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                             String    @id @default(cuid())
+  entryId                        String    @unique
+  description                    String    @db.VarChar(300)
+  dueOn                          DateTime? @db.Date
+  completedAt                    DateTime?
+  completedById                  String?
+  completedByDisplayNameSnapshot String?   @db.VarChar(200)
+  completedByLoginNameSnapshot   String?   @db.VarChar(64)
+  version                        Int       @default(1)
+  createdAt                      DateTime  @default(now())
+  updatedAt                      DateTime  @updatedAt
 
-  entry       PartnerFollowUpEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
-  completedBy User?                @relation("PartnerFollowUpActionCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+  entry          PartnerFollowUpEntry   @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  completedBy    User?                  @relation("PartnerFollowUpActionCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+  timelineEvents PartnerTimelineEvent[]
 
   @@index([completedAt, dueOn, id])
   @@index([completedById])
+}
+
+/// Durable business history for a partner relationship. These immutable facts
+/// complement the technical audit journal and remain readable even when their
+/// optional source rows or actor account no longer exist.
+model PartnerTimelineEvent {
+  id                       String                   @id @default(cuid())
+  organizationId           String
+  type                     PartnerTimelineEventType
+  operationId              String                   @unique @db.VarChar(191)
+  actorId                  String?
+  actorDisplayNameSnapshot String?                  @db.VarChar(200)
+  actorLoginNameSnapshot   String?                  @db.VarChar(64)
+  occurredAt               DateTime
+  createdAt                DateTime                 @default(now())
+  formatVersion            Int                      @default(1)
+  periodId                 String?
+  actionId                 String?
+  followUpEntryId          String?
+  payload                  Json
+
+  organization  PartnerOrganization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actor         User?                      @relation("PartnerTimelineEventActor", fields: [actorId], references: [id], onDelete: SetNull)
+  period        PartnerRelationshipPeriod? @relation(fields: [periodId], references: [id], onDelete: SetNull)
+  action        PartnerFollowUpAction?     @relation(fields: [actionId], references: [id], onDelete: SetNull)
+  followUpEntry PartnerFollowUpEntry?      @relation(fields: [followUpEntryId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, occurredAt(sort: Desc), id(sort: Desc)])
+  @@index([actorId])
+  @@index([periodId])
+  @@index([actionId])
+  @@index([followUpEntryId])
 }
 
 model PartnerOrganizationDeletionTombstone {

@@ -94,8 +94,6 @@ export type PartnerDetail = Omit<
   contacts: PartnerContact[];
   createdBy: PartnerActor | null;
   description: string | null;
-  followUps: PartnerFollowUp[];
-  openActions: PartnerFollowUp[];
   periods: PartnerPeriod[];
   updatedBy: PartnerActor | null;
 };

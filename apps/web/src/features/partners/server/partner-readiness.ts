@@ -25,6 +25,7 @@ export const isPartnerSchemaReady = async (
         ('PartnerContact'),
         ('PartnerFollowUpEntry'),
         ('PartnerFollowUpAction'),
+        ('PartnerTimelineEvent'),
         ('PartnerOrganizationDeletionTombstone'),
         ('PartnerOrganizationMergeRedirect')
       ) AS required_table(name)

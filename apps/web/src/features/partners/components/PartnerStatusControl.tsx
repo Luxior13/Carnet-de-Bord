@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2, Pencil } from 'lucide-react';
+import { CalendarDays, Loader2, Pencil } from 'lucide-react';
 import React, { type FC, type FormEvent, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -16,28 +16,38 @@ import {
 } from '$ui/dialog';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-} from '$ui/select';
 
 import { updatePartnerStatus } from '../partner.api';
+import { PARTNER_STATUS_TRANSITIONS } from '../partner.constants';
 import {
-  PARTNER_STATUS_LABELS,
-  PARTNER_STATUS_TRANSITIONS,
-} from '../partner.constants';
+  formatPartnerCivilDate,
+  getRelationshipStatusDescription,
+} from '../partner-timeline.ui';
 import type { PartnerDetail, PartnerStatus } from '../types/partner.types';
 import { PartnerStatusBadge } from './PartnerStatusBadge';
+
+const getTransitionLabel = (
+  currentStatus: PartnerStatus,
+  nextStatus: PartnerStatus,
+): string => {
+  if (nextStatus === 'ACTIVE') return 'Activer la relation';
+  if (nextStatus === 'ENDED') return 'Terminer la relation';
+  if (nextStatus === 'CLOSED') return 'Classer sans suite';
+  if (nextStatus === 'DISCUSSION') {
+    return currentStatus === 'PROSPECT'
+      ? 'Commencer les échanges'
+      : 'Reprendre les échanges';
+  }
+
+  return 'Revenir au statut prospect';
+};
 
 export const PartnerStatusControl: FC<{
   canManage: boolean;
   onChange: (partner: PartnerDetail) => void;
+  onTimelineRefresh?: () => Promise<void>;
   partner: PartnerDetail;
-}> = ({ canManage, onChange, partner }) => {
+}> = ({ canManage, onChange, onTimelineRefresh, partner }) => {
   const activePeriod = partner.periods.find((period) => !period.closedAt);
   const editablePeriod =
     activePeriod ??
@@ -54,6 +64,9 @@ export const PartnerStatusControl: FC<{
   const [status, setStatus] = useState<PartnerStatus>(partner.status);
   const normalizedClosingNote = closingNote.trim();
   const isCorrection = status === partner.status;
+  const nextStatuses = (
+    PARTNER_STATUS_TRANSITIONS[partner.status] as readonly PartnerStatus[]
+  ).filter((item) => item !== partner.status);
   const hasChanges =
     !isCorrection ||
     (status === 'ACTIVE' && startedOn !== (editablePeriod?.startedOn ?? '')) ||
@@ -90,6 +103,13 @@ export const PartnerStatusControl: FC<{
       });
       onChange(updated);
       toast.success('Statut mis à jour');
+      try {
+        await onTimelineRefresh?.();
+      } catch {
+        toast.warning(
+          'Le statut est enregistré, mais le fil n’a pas pu être actualisé.',
+        );
+      }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Modification impossible',
@@ -132,6 +152,13 @@ export const PartnerStatusControl: FC<{
       onChange(updated);
       setOpen(false);
       toast.success(isCorrection ? 'Période corrigée' : 'Statut mis à jour');
+      try {
+        await onTimelineRefresh?.();
+      } catch {
+        toast.warning(
+          'La modification est enregistrée, mais le fil n’a pas pu être actualisé.',
+        );
+      }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Modification impossible',
@@ -155,46 +182,58 @@ export const PartnerStatusControl: FC<{
   return (
     <>
       <Card>
-        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-          <div>
-            <p className="text-sm font-medium">Statut de la relation</p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Le statut reste également visible dans l’en-tête de la fiche.
-            </p>
+        <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="bg-surface-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg">
+              <CalendarDays className="size-4" />
+            </span>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-semibold">Relation</p>
+                <PartnerStatusBadge status={partner.status} />
+              </div>
+              <p className="text-muted-foreground mt-1 text-sm">
+                {getRelationshipStatusDescription(partner)}
+              </p>
+              {editablePeriod?.closingNote && partner.status === 'ENDED' && (
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Précision : {editablePeriod.closingNote}
+                </p>
+              )}
+            </div>
           </div>
-          {canManage ? (
-            <Select
-              disabled={saving || open}
-              onValueChange={selectStatus}
-              value={partner.status}
-            >
-              <SelectTrigger
-                aria-label="Statut de la relation"
-                className="w-52"
-              >
-                <SelectValue />
-                {saving && <Loader2 className="size-4 animate-spin" />}
-              </SelectTrigger>
-              <SelectContent>
-                {PARTNER_STATUS_TRANSITIONS[partner.status].map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {PARTNER_STATUS_LABELS[item]}
-                  </SelectItem>
-                ))}
-                {(partner.status === 'ACTIVE' ||
-                  partner.status === 'ENDED') && (
-                  <>
-                    <SelectSeparator />
-                    <SelectItem value="edit-period">
-                      <Pencil className="size-4" />
-                      Corriger la période…
-                    </SelectItem>
-                  </>
-                )}
-              </SelectContent>
-            </Select>
-          ) : (
-            <PartnerStatusBadge status={partner.status} />
+          {canManage && (
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {editablePeriod && (
+                <Button
+                  disabled={saving || open}
+                  onClick={openPeriodCorrection}
+                  size="sm"
+                  type="button"
+                  variant="ghost"
+                >
+                  <Pencil className="size-4" />
+                  Corriger les dates
+                </Button>
+              )}
+              {nextStatuses.map((nextStatus) => (
+                <Button
+                  disabled={saving || open}
+                  key={nextStatus}
+                  onClick={() => selectStatus(nextStatus)}
+                  size="sm"
+                  type="button"
+                  variant={
+                    nextStatus === 'CLOSED' || nextStatus === 'ENDED'
+                      ? 'outline'
+                      : 'default'
+                  }
+                >
+                  {saving && <Loader2 className="size-4 animate-spin" />}
+                  {getTransitionLabel(partner.status, nextStatus)}
+                </Button>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -208,7 +247,10 @@ export const PartnerStatusControl: FC<{
         open={open}
       >
         <DialogContent className="sm:max-w-lg">
-          <form onSubmit={(event) => void submitPeriod(event)}>
+          <form
+            autoComplete="off"
+            onSubmit={(event) => void submitPeriod(event)}
+          >
             <DialogHeader>
               <DialogTitle>{modalTitle}</DialogTitle>
               <DialogDescription>{modalDescription}</DialogDescription>
@@ -216,16 +258,39 @@ export const PartnerStatusControl: FC<{
             <div className="grid gap-4 py-4">
               {(status === 'ACTIVE' || status === 'ENDED') && (
                 <div className="grid gap-2">
-                  <Label htmlFor="partner-status-started">
-                    Début de période
-                  </Label>
-                  <Input
-                    disabled={saving}
-                    id="partner-status-started"
-                    onChange={(event) => setStartedOn(event.target.value)}
-                    type="date"
-                    value={startedOn}
-                  />
+                  {status === 'ENDED' && !isCorrection ? (
+                    <>
+                      <Label>Début de période</Label>
+                      <div className="bg-surface-muted rounded-lg border px-3 py-2 text-sm">
+                        {startedOn
+                          ? formatPartnerCivilDate(startedOn)
+                          : 'Date de début non renseignée'}
+                      </div>
+                      <p className="text-muted-foreground text-xs">
+                        Utilisez « Corriger les dates » si ce début est
+                        incorrect.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Label htmlFor="partner-status-started">
+                        Début de période
+                      </Label>
+                      <Input
+                        autoComplete="off"
+                        disabled={saving}
+                        id="partner-status-started"
+                        onChange={(event) => setStartedOn(event.target.value)}
+                        type="date"
+                        value={startedOn}
+                      />
+                      {startedOn && (
+                        <p className="text-muted-foreground text-xs">
+                          {formatPartnerCivilDate(startedOn)}
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
               {status === 'ENDED' && (
@@ -233,12 +298,18 @@ export const PartnerStatusControl: FC<{
                   <div className="grid gap-2">
                     <Label htmlFor="partner-status-ended">Fin de période</Label>
                     <Input
+                      autoComplete="off"
                       disabled={saving}
                       id="partner-status-ended"
                       onChange={(event) => setEndedOn(event.target.value)}
                       type="date"
                       value={endedOn}
                     />
+                    {endedOn && (
+                      <p className="text-muted-foreground text-xs">
+                        {formatPartnerCivilDate(endedOn)}
+                      </p>
+                    )}
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="partner-status-note">

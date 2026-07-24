@@ -37,9 +37,23 @@ tombstone ni la suppression. Sa restauration peut donc réintroduire la fiche :
 ce cas doit être traité lors de la procédure de restauration et par une durée
 de conservation des sauvegardes adaptée.
 
+## Fil métier partenaires
+
+La migration `20260724214500_partner_timeline_events` ajoute
+`PartnerTimelineEvent`. Ce fil métier append-only est distinct du journal
+technique : il conserve sans limite applicative les changements de statut, de
+période et d’action utiles à la reprise d’une relation.
+
+Les noms de l’acteur sont figés au moment de l’événement. Les auteurs des notes
+et les comptes ayant terminé une action possèdent également un snapshot
+lisible. Les références vers un compte, une période, une action ou un suivi
+sont facultatives et passent à `NULL` si leur source disparaît, sans effacer le
+fait métier ni ses snapshots. Chaque opération possède un identifiant unique et
+un payload JSON versionné.
+
 ## Sauvegardes
 
-Créer une sauvegarde signée v6 :
+Créer une sauvegarde signée v7 :
 
 ```bash
 bun run --filter @repo/database db:backup

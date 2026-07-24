@@ -6,7 +6,10 @@ vi.mock('server-only', () => ({}));
 
 import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
-import { PARTNER_STATUS_TRANSITIONS } from '$features/partners/partner.constants';
+import {
+  PARTNER_STATUS_TRANSITIONS,
+  PARTNER_STATUSES,
+} from '$features/partners/partner.constants';
 import {
   createPartnerSchema,
   updatePartnerContactSchema,
@@ -28,6 +31,42 @@ const migrationSql = readFileSync(
 const partnerDetailSource = readFileSync(
   new URL(
     '../features/partners/components/PartnerDetailPage.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+// Test-owned static path.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const partnerFollowUpSource = readFileSync(
+  new URL(
+    '../features/partners/components/PartnerFollowUpSection.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+// Test-owned static path.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const partnerFollowUpComposerSource = readFileSync(
+  new URL(
+    '../features/partners/components/PartnerFollowUpComposer.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+// Test-owned static path.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const partnerOpenActionsSource = readFileSync(
+  new URL(
+    '../features/partners/components/PartnerOpenActions.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+// Test-owned static path.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const partnerTimelineItemsSource = readFileSync(
+  new URL(
+    '../features/partners/components/PartnerTimelineItems.tsx',
     import.meta.url,
   ),
   'utf8',
@@ -152,6 +191,13 @@ describe('Sponsors & partenaires foundation', () => {
   });
 
   it('shares one explicit relationship lifecycle between the UI and server', () => {
+    expect(PARTNER_STATUSES).toEqual([
+      'PROSPECT',
+      'DISCUSSION',
+      'ACTIVE',
+      'ENDED',
+      'CLOSED',
+    ]);
     expect(PARTNER_STATUS_TRANSITIONS).toEqual({
       ACTIVE: ['ACTIVE', 'ENDED'],
       CLOSED: ['CLOSED', 'DISCUSSION'],
@@ -159,9 +205,12 @@ describe('Sponsors & partenaires foundation', () => {
       ENDED: ['ENDED', 'DISCUSSION'],
       PROSPECT: ['PROSPECT', 'DISCUSSION', 'CLOSED'],
     });
+    expect(partnerStatusControlSource).toContain('nextStatuses.map');
     expect(partnerStatusControlSource).toContain(
-      'PARTNER_STATUS_TRANSITIONS[partner.status]',
+      '.filter((item) => item !== partner.status)',
     );
+    expect(partnerStatusControlSource).not.toContain('PARTNER_STATUSES.map');
+    expect(partnerStatusControlSource).not.toContain('disabled={!allowed}');
     expect(partnerServiceSource).toContain(
       'const allowedTransitions = PARTNER_STATUS_TRANSITIONS[',
     );
@@ -188,26 +237,41 @@ describe('Sponsors & partenaires foundation', () => {
     expect(personDangerZoneSource).toContain('<EntityDangerZone');
     expect(partnerDetailSource).not.toContain('window.confirm');
     expect(partnerDetailSource).not.toContain('<select');
-    expect(partnerDetailSource).toContain(
-      '<DialogTitle>Ajouter un suivi</DialogTitle>',
+    expect(partnerDetailSource).toContain('<PartnerFollowUpSection');
+    expect(partnerFollowUpComposerSource).toContain(
+      '<DialogTitle>Ajouter une note de suivi</DialogTitle>',
     );
-    expect(partnerDetailSource).toContain('<PartnerStatusControl');
-    expect(partnerStatusControlSource).toContain(
-      'onValueChange={selectStatus}',
-    );
+    expect(partnerFollowUpSource).toContain('<PartnerStatusControl');
     expect(partnerStatusControlSource).toContain('void saveStatus(nextStatus)');
-    expect(partnerStatusControlSource).toContain('value="edit-period"');
+    expect(partnerStatusControlSource).toContain(
+      'onClick={() => selectStatus(nextStatus)}',
+    );
     expect(partnerStatusControlSource).toContain("'Activer la relation'");
     expect(partnerStatusControlSource).toContain("'Terminer la relation'");
     expect(partnerStatusControlSource).toContain("'Corriger la période'");
+    expect(partnerStatusControlSource).toContain('Corriger les dates');
     expect(partnerStatusControlSource).not.toContain('Modifier le statut');
+    expect(partnerStatusControlSource).not.toContain('<Select');
     expect(partnerDetailSource).not.toContain('partner-detail-status');
     expect(partnerDetailSource).not.toContain('Situation en bref');
     expect(partnerDetailSource).not.toContain('Historique du suivi');
-    expect(partnerDetailSource).toContain(
-      'const openActions = partner.openActions',
+    expect(partnerFollowUpSource).toContain('entry.action.version');
+    expect(partnerFollowUpComposerSource).toContain('Contact concerné');
+    expect(partnerTimelineItemsSource).toContain('Modifiée le');
+  });
+
+  it('presents one lazy, durable and understandable business timeline', () => {
+    expect(partnerFollowUpSource).toContain('getPartnerTimeline');
+    expect(partnerFollowUpSource).toContain('TIMELINE_PAGE_SIZE = 25');
+    expect(partnerFollowUpSource).toContain('Afficher les suivis précédents');
+    expect(partnerFollowUpSource).toContain("return 'Aujourd’hui'");
+    expect(partnerFollowUpSource).toContain("return 'Hier'");
+    expect(partnerTimelineItemsSource).toContain(
+      "item.payload.source === 'migration'",
     );
-    expect(partnerDetailSource).toContain('Contact concerné');
-    expect(partnerDetailSource).toContain('Corrigé le');
+    expect(partnerTimelineItemsSource).toContain("'Échanges commencés'");
+    expect(partnerTimelineItemsSource).toContain("'Échanges repris'");
+    expect(partnerOpenActionsSource).toContain('Contexte : {entry.text}');
+    expect(partnerFollowUpComposerSource).toContain('autoComplete="off"');
   });
 });

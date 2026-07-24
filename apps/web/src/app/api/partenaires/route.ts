@@ -74,6 +74,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       partnerZodErrorDetails(parsed.error),
     );
   }
+  if (parsed.data.contact) {
+    const personPermission = requirePermission(
+      auth.user,
+      PERMISSIONS.PERSONS.VIEW,
+    );
+    if (!personPermission.success) return personPermission.response;
+  }
   try {
     await assertPartnerFeatureReady();
 

@@ -1,8 +1,11 @@
 # Plan — Sponsors & partenaires
 
-Statut : socle V1 implémenté le 23 juillet 2026, migration déployée et module
-prêt à être utilisé. Les extensions explicitement marquées « plus tard » dans
-ce document restent volontairement hors de la première version.
+Statut : socle V1 implémenté le 24 juillet 2026 et migration du fil appliquée à
+la base actuellement configurée. Les migrations sont versionnées dans le dépôt
+et doivent être appliquées par le flux de déploiement avant d'activer la version
+correspondante sur tout autre environnement. Les extensions explicitement
+marquées « plus tard » dans ce document restent volontairement hors de la
+première version.
 
 Ce document évolue avec les décisions prises pendant la discussion. Une case
 cochée représente une orientation déjà retenue ; une case vide reste à décider
@@ -19,10 +22,11 @@ ou à implémenter.
 - [x] Statuts et périodes successives conservés sur une fiche unique.
 - [x] Coordonnées générales et contacts liés au Répertoire sans recopier leur
       identité.
-- [x] Chronologie de suivi, prochaine action, réalisation et réouverture.
+- [x] Fil métier paginé réunissant notes, changements de relation et actions,
+      avec projection séparée des actions encore ouvertes.
 - [x] Suppression limitée aux fiches vides, avec tombstone d'idempotence.
 - [x] Audit, toasts, réponses privées `no-store` et readiness.
-- [x] Sauvegarde/restauration au format 6 et suppression cohérente d'une fiche
+- [x] Sauvegarde/restauration au format 7 et suppression cohérente d'une fiche
       du Répertoire liée.
 - [x] Tests de fondation, permissions, navigation, contrats et sauvegarde.
 - [ ] Extensions futures : contrats, documents, paiements, notifications,
@@ -36,7 +40,7 @@ ou à implémenter.
 - [x] Utiliser « Partenaires » comme nom général du module et de la route.
 - [x] Lier les contacts à des fiches du Répertoire sans créer de statut manuel
       « contact sponsor » sur une personne.
-- [ ] Permettre de suivre simplement la relation, ses contacts et ses
+- [x] Permettre de suivre simplement la relation, ses contacts et ses
       informations utiles sans dupliquer les contrats ou les opérations
       financières.
 
@@ -257,20 +261,31 @@ ou à implémenter.
 
 ### Onglet Suivi
 
-- [x] Afficher et modifier le statut depuis un menu déroulant compact dans cet
-      onglet ; les transitions sans période sont enregistrées directement.
+- [x] Afficher le statut courant, la période utile et les seules commandes
+      métier possibles ; aucun statut interdit n'est présenté en grisé.
+- [x] Formuler les transitions comme des actions compréhensibles :
+      commencer ou reprendre les échanges, activer, terminer ou classer sans
+      suite.
 - [x] Ouvrir un modal uniquement pour activer ou terminer une période, ou pour
       corriger les dates et le motif de la période courante ou de la dernière
       période terminée, avec audit distinct.
+- [x] Lors d'une fin, afficher le début existant en lecture seule ; sa
+      correction reste une action explicite séparée.
 - [x] Aucune « situation actuelle » ne doit être saisie séparément : la
       chronologie suffit et évite toute double saisie ou information périmée.
 - [x] Le suivi ressemble visuellement à une suite de messages internes, mais
       aucun message n'est envoyé au partenaire.
-- [x] Un bouton « Ajouter un suivi » ouvre un modal pour écrire ce qui a été
+- [x] Un bouton « Ajouter une note » ouvre un modal pour écrire ce qui a été
       fait, demandé ou appris et prévoir facultativement une action.
-- [x] Présenter directement la liste comme des « Suivis », sans carte
-      « Situation en bref » ni titre artificiel « Historique du suivi ».
-- [x] Chronologie affichée de l'entrée la plus récente à la plus ancienne.
+- [x] Présenter un seul « Fil de suivi », sans carte « Situation en bref » ni
+      titre artificiel « Historique du suivi ».
+- [x] Réunir dans ce fil les notes et les événements métier persistants :
+      création, changement de statut, correction de période, réalisation et
+      réouverture d'une action.
+- [x] Une intention utilisateur produit une seule ligne métier : une activation
+      avec ouverture de période n'est jamais affichée comme deux opérations.
+- [x] Chronologie affichée de l'entrée la plus récente à la plus ancienne,
+      regroupée par jour.
 - [x] Chaque entrée affiche :
   - auteur ;
   - date et heure ;
@@ -285,7 +300,8 @@ ou à implémenter.
   - date cible facultative ;
   - état à faire ou fait ;
   - auteur et date de réalisation.
-- [x] Les actions encore à prévoir sont regroupées en haut de l'onglet.
+- [x] Les actions encore à prévoir sont résumées en haut de l'onglet comme une
+      projection du fil, avec échéance, retard et contexte de la note source.
 - [x] Les actions ouvertes sont chargées indépendamment de la limite des suivis
       récents afin qu'une ancienne action ne disparaisse jamais.
 - [x] Une action affiche automatiquement le compte qui l'a créée et, lorsqu'elle
@@ -302,13 +318,18 @@ ou à implémenter.
   - aucun envoi externe ;
   - aucun statut lu ou non lu ;
   - aucune mention complexe.
-- [x] Utiliser un bouton « Ajouter un suivi » ouvrant un modal compact, avec
+- [x] Utiliser un bouton « Ajouter une note » ouvrant un modal compact, avec
       les options d'action facultative dans le même formulaire.
+- [x] Paginer le fil par curseur stable et proposer « Afficher les suivis
+      précédents » au lieu de masquer les entrées dépassant une limite fixe.
+- [x] Refuser la suppression d'une note qui porte une action afin qu'une
+      réalisation ou une réouverture ne perde jamais son contexte métier.
 - [ ] Autoriser la correction d'une entrée et la suppression d'une entrée
-      créée par erreur, avec confirmation, version optimiste et audit.
+      sans action créée par erreur depuis l'interface, avec confirmation,
+      version propre à l'entrée et audit.
 - [ ] Une entrée supprimée disparaît de la chronologie, mais l'audit minimal
       conserve l'opération sans recopier son texte.
-- [ ] Ne pas anticiper les tâches, rappels, livrables, contrats ou paiements
+- [x] Ne pas anticiper les tâches, rappels, livrables, contrats ou paiements
       avant leurs modules respectifs.
 - [ ] Prévoir plus tard des liens en lecture seule vers :
   - contrats ;
@@ -448,36 +469,52 @@ ou à implémenter.
   - texte du suivi ;
   - contact lié facultatif ;
   - date de l'événement ou de l'échange ;
-  - compte créateur ;
+  - compte créateur facultatif et snapshot lisible de son identité interne ;
   - dates de création et modification ;
-  - version optimiste.
+  - champ de version incrémenté lors des corrections.
 - [x] `PartnerFollowUpAction`, facultative et liée à une entrée :
   - description de l'action ;
   - date cible facultative ;
   - date de réalisation facultative ;
-  - compte ayant marqué l'action comme faite.
+  - compte ayant marqué l'action comme faite et snapshot lisible ;
+  - version optimiste propre à l'action.
 - [x] Utiliser une table enfant `PartnerFollowUpAction` avec une contrainte
       d'une action par entrée dans la première version ; cette contrainte
       pourra évoluer sans réécrire les entrées.
 - [x] Une seule action facultative par entrée suffit pour la première version.
 - [x] Aucun champ `responsibleUserId`, équipe commerciale ou groupe
       d'assignation dans la première version.
+- [x] `PartnerTimelineEvent`, journal métier permanent et append-only tant que
+      la fiche existe :
+  - type d'événement et version de format ;
+  - date métier et date d'enregistrement ;
+  - acteur facultatif avec snapshots lisibles ;
+  - identifiant d'opération unique ;
+  - payload structuré ;
+  - références facultatives vers période, action et note, mises à `null` si
+    leur source disparaît sans effacer le fait métier ;
+  - index chronologique par organisation.
+- [x] Ne jamais reconstruire le fil métier depuis `AuditLog`, dont la durée de
+      conservation est configurable et volontairement limitée.
 - [ ] Déduire la dernière activité et la prochaine action par requête bornée,
       sans les recopier dans plusieurs tables.
-- [ ] Lier une entrée à `PartnerContact` plutôt que directement à `Person`,
+- [x] Lier une entrée à `PartnerContact` plutôt que directement à `Person`,
       afin qu'une suppression du Répertoire ne casse pas la chronologie.
-- [ ] Utiliser des relations utilisateur facultatives avec snapshots d'acteur
-      d'audit afin qu'une désactivation ou suppression de compte ne détruise
-      aucun suivi.
+- [x] Utiliser des relations utilisateur facultatives avec snapshots lisibles
+      pour les notes, réalisations d'action et événements métier afin qu'une
+      anonymisation future de compte ne détruise pas leur attribution.
 - [ ] Index pour nom, nom normalisé, statut, catégorie, domaine, période,
       prochaine action et dernière modification.
 - [ ] Index partiel garantissant un seul contact principal par organisation.
 - [ ] Index partiel garantissant une seule période ouverte par organisation.
-- [ ] Index partiel des actions non terminées par date cible pour calculer les
-      prochaines étapes sans parcourir la chronologie.
+- [x] Index composite des actions par état, date cible et identifiant pour
+      ordonner les prochaines étapes sans parcourir toute la chronologie.
 - [ ] Contraintes de cohérence des dates et coordonnées normalisées.
-- [ ] Version optimiste pour éviter les écrasements concurrents.
-- [ ] Longueurs et types SQL bornés ; texte de suivi en texte brut, sans HTML
+- [x] Version optimiste sur la fiche pour les mutations couplées et version
+      propre à l'action pour sa réalisation ou sa réouverture.
+- [ ] Faire utiliser la version propre de l'entrée lors de sa future correction
+      ou suppression depuis l'interface.
+- [x] Longueurs et types SQL bornés ; texte de suivi en texte brut, sans HTML
       ni contenu riche dans la première version.
 - [ ] `PartnerOrganizationDeletionTombstone` minimal pour l'idempotence d'une
       suppression autorisée.
@@ -517,18 +554,29 @@ ou à implémenter.
 - [ ] API paginée pour la liste.
 - [ ] Endpoint de création.
 - [ ] Endpoint de lecture d'une fiche.
-- [ ] Mutations distinctes pour informations, contacts, statut et entrées de
+- [x] Mutations distinctes pour informations, contacts, statut et entrées de
       suivi.
-- [ ] Mutation transactionnelle pour ouvrir ou clôturer une période avec le
+- [x] Mutation transactionnelle pour ouvrir ou clôturer une période avec le
       changement de statut correspondant.
-- [ ] Mutations dédiées pour créer, corriger et supprimer une entrée.
-- [ ] Mutation dédiée pour marquer une action prévue comme faite ou à nouveau
+- [x] Mutations dédiées pour créer, corriger et supprimer une entrée ; la
+      suppression est refusée si cette entrée porte une action.
+- [x] Mutation dédiée pour marquer une action prévue comme faite ou à nouveau
       ouverte.
+- [x] Endpoint paginé dédié au fil, protégé par `partners:view`, fusionnant les
+      notes et événements métier sans dupliquer une même opération.
+- [x] Charger les actions ouvertes indépendamment de la page courante du fil,
+      uniquement avec la première page pour ne pas répéter cette requête lors
+      du chargement des suivis précédents.
+- [x] La création d'une note ne dépend pas de la version globale de la fiche ;
+      la réalisation d'une action utilise la version propre de cette action.
 - [ ] Endpoint de recherche de contacts protégé par `persons:view`.
 - [ ] Validation partagée entre client et serveur.
-- [ ] Version optimiste sur les mutations.
+- [ ] Faire reposer aussi la correction et la suppression d'une note sur la
+      version propre de cette note plutôt que sur la version globale de la
+      fiche.
 - [ ] Clés d'idempotence pour création et suppression.
-- [ ] Transactions pour les changements touchant plusieurs tables.
+- [x] Transactions pour les changements de statut, de période ou d'action qui
+      créent aussi un événement métier.
 - [ ] Vérification serveur de l'existence et de l'autorisation d'une personne
       avant association.
 - [ ] Lors de la suppression d'une fiche du Répertoire, anonymiser et clôturer
@@ -575,7 +623,13 @@ ou à implémenter.
 
 ## Audit et historique
 
-- [ ] Événements envisagés :
+- [x] Séparer le fil métier permanent du journal technique soumis à rétention.
+- [x] Créer l'événement métier dans la même transaction que le statut, la
+      période ou l'action qu'il décrit.
+- [x] Conserver les notes complètes uniquement dans les données métier ; le
+      journal global ne reçoit jamais leur texte.
+
+- [x] Événements techniques actifs :
   - `PARTNER_CREATE` ;
   - `PARTNER_UPDATE` ;
   - `PARTNER_STATUS_UPDATE` ;
@@ -586,16 +640,17 @@ ou à implémenter.
   - `PARTNER_FOLLOW_UP_UPDATE` ;
   - `PARTNER_FOLLOW_UP_DELETE` ;
   - `PARTNER_FOLLOW_UP_COMPLETE` ;
-  - `PARTNER_MERGE` ;
   - `PARTNER_DELETE`.
-- [ ] Enregistrer `poleKey`, `pageKey`, `tabKey` et identifiant
+- [ ] Activer `PARTNER_MERGE` uniquement avec la future fusion manuelle.
+- [x] Enregistrer `poleKey`, `pageKey`, `tabKey` et identifiant
       d'organisation.
-- [ ] Auditer les catégories, le statut, les dates et les liaisons de contacts.
-- [ ] Ne pas inclure les notes ou coordonnées dans les toasts, notifications
+- [x] Auditer les catégories, le statut, les dates et les liaisons de contacts.
+- [x] Ne pas inclure les notes ou coordonnées dans les toasts, notifications
       ou métadonnées non autorisées.
 - [x] L'activité indique qu'une entrée a été créée, corrigée, supprimée ou
       terminée sans recopier son texte complet dans le journal global.
-- [ ] Conserver un libellé lisible de l'acteur.
+- [x] Conserver un libellé lisible de l'acteur dans l'audit technique, les
+      notes, les réalisations d'action et les événements métier.
 - [ ] Ajouter l'historique de champs uniquement aux informations pour lesquelles
       il apporte une vraie valeur.
 - [ ] Chiffrer les anciennes et nouvelles valeurs sensibles ajoutées à
@@ -658,12 +713,16 @@ ou à implémenter.
 
 ## Performance
 
-- [ ] Pagination serveur et ordre déterministe.
+- [x] Pagination serveur du fil avec ordre déterministe, curseur signé et
+      photographie stable pendant le chargement des pages suivantes.
 - [ ] Sélection minimale pour la liste.
 - [ ] Compteurs et contact principal chargés sans récupérer toutes les fiches.
-- [ ] Chargement différé des contacts, du suivi et de l'activité.
-- [ ] Pagination ou chargement progressif des anciennes entrées de suivi.
-- [ ] Charger séparément et en une requête bornée les actions encore à prévoir.
+- [x] Chargement différé du fil uniquement à l'ouverture de l'onglet Suivi.
+- [x] Pagination et chargement progressif des anciennes entrées de suivi.
+- [x] Charger séparément toutes les actions encore à prévoir lors de la
+      première page, afin qu'une action ancienne ne soit jamais masquée.
+- [ ] Borner ou paginer la projection des actions ouvertes si un volume réel
+      rend sa requête exhaustive mesurablement coûteuse.
 - [ ] Calculer la prochaine étape affichée dans la liste sans charger toute la
       chronologie.
 - [ ] Recherche indexée, normalisée et bornée.
@@ -682,19 +741,27 @@ ou à implémenter.
 - [ ] Tests de plusieurs périodes, reprise après plusieurs années et unicité de
       la période ouverte.
 - [ ] Tests des permissions `view`, `manage` et `delete`.
-- [ ] Tests empêchant la lecture ou l'association d'un contact non autorisé.
+- [x] Tests de contrat empêchant la lecture ou l'association d'un contact non
+      autorisé depuis le fil.
 - [ ] Tests du contact principal et des doublons.
 - [ ] Tests de fin et réactivation d'une liaison contact.
 - [ ] Tests de suppression d'une fiche du Répertoire avec anonymisation de la
       liaison partenaire.
-- [ ] Tests de masquage complet des contacts sans `persons:view`.
-- [ ] Tests de création, correction et suppression d'une entrée de suivi.
-- [ ] Tests d'action facultative, date cible, réalisation et réouverture.
+- [x] Tests de contrat du masquage complet des contacts sans `persons:view`.
+- [x] Tests de contrat du fil unifié et de sa pagination.
+- [ ] Tests fonctionnels de correction et de suppression d'une note depuis la
+      future interface dédiée.
+- [x] Tests d'action facultative, date cible, réalisation, réouverture et
+      version propre à l'action.
 - [ ] Tests garantissant qu'aucun responsable permanent n'est nécessaire pour
       consulter ou poursuivre un suivi.
 - [ ] Tests garantissant que le texte complet du suivi ne fuit pas dans
       l'audit, les toasts ou les notifications.
-- [ ] Tests de concurrence optimiste et d'idempotence.
+- [x] Tests de contrat de concurrence : ajout d'une note indépendant de la
+      version globale, action protégée par sa version et répétition du même
+      état traitée comme un no-op.
+- [ ] Tests d'intégration avec deux requêtes réellement concurrentes sur une
+      base dédiée.
 - [ ] Tests de suppression, rollback et dépendances futures.
 - [ ] Tests de fusion, collisions et redirection d'un ancien identifiant avant
       d'activer cette capacité.
@@ -705,8 +772,9 @@ ou à implémenter.
 - [ ] Tests d'accessibilité des lignes cliquables et formulaires.
 - [ ] Tests d'états vide, chargement, erreur et accès refusé.
 - [ ] Scénarios E2E uniquement sur une base dédiée et réinitialisable.
-- [ ] Tests de sauvegarde/restauration de toutes les tables partenaires et
-      vérification de signature.
+- [x] Tests du contrat de sauvegarde v7 : présence et ordre de toutes les
+      tables partenaires, format fermé, compteurs et signature.
+- [ ] Test d'intégration d'une restauration v7 complète sur une base isolée.
 - [ ] Tests garantissant que recherche globale, logs et erreurs ne contiennent
       aucune note ni coordonnée.
 
@@ -717,18 +785,22 @@ ou à implémenter.
       préparation existantes.
 - [ ] Mettre à jour la documentation des permissions.
 - [ ] Documenter les événements d'audit.
-- [ ] Ajouter et déployer les migrations.
+- [x] Ajouter la migration du fil durable au flux de déploiement.
+- [x] Appliquer la migration du fil sur la base actuellement configurée.
+- [ ] Appliquer cette migration sur chaque autre environnement avant d'y
+      activer cette version de l'onglet Suivi.
 - [ ] Étendre la procédure contrôlée de suppression du Répertoire pour
       anonymiser et clôturer les `PartnerContact` atomiquement.
-- [ ] Ajouter toutes les tables dans l'ordre de dépendance au manifeste de
-      sauvegarde/restauration, augmenter la version du format et tester une
-      restauration complète.
-- [ ] Documenter la conservation sans expiration automatique des données
+- [x] Ajouter toutes les tables dans l'ordre de dépendance au manifeste de
+      sauvegarde/restauration et augmenter le format signé à la version 7.
+- [ ] Tester une restauration complète du format 7 sur une base isolée avant
+      le déploiement en production.
+- [x] Documenter la conservation sans expiration automatique des données
       métier du module et la purge lors d'une suppression autorisée.
-- [ ] Ajouter le schéma du module aux contrôles de readiness si nécessaire.
+- [x] Ajouter `PartnerTimelineEvent` aux contrôles de readiness du module.
 - [ ] Vérifier la recherche globale et les liens de notifications.
 - [ ] Vérifier la visibilité avec plusieurs profils de permissions.
-- [ ] Aucun worker ni tâche planifiée requis pour la première version.
+- [x] Aucun worker ni tâche planifiée requis pour la première version.
 
 ## Décisions finales avant le schéma
 

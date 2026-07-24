@@ -39,6 +39,7 @@ import {
   loadPartnerDetail,
   personReference,
   requirePartner,
+  resolvePartnerId,
 } from './partner-detail.repository';
 import { partnerErrors } from './partner-errors';
 import {
@@ -48,6 +49,10 @@ import {
   normalizePartnerWebsite,
   toCivilDate,
 } from './partner-normalization';
+import {
+  createPartnerTimelineEvent,
+  getPartnerActorSnapshot,
+} from './partner-timeline.service';
 
 export const getPartner = async (
   partnerId: string,
@@ -118,6 +123,16 @@ const touchPartner = async (
     where: { id: input.id, version: input.version },
   });
   if (result.count !== 1) throw partnerErrors.versionConflict();
+};
+
+const touchPartnerForIndependentMutation = async (
+  transaction: Prisma.TransactionClient,
+  input: { actorId: string; id: string },
+): Promise<void> => {
+  await transaction.partnerOrganization.update({
+    data: { updatedById: input.actorId },
+    where: { id: input.id },
+  });
 };
 
 export const listPartners = async (
@@ -388,6 +403,30 @@ export const createPartner = async (
       entityId: created.id,
       metadata: { categories: input.categories, status: input.status },
     });
+    const createdPeriod =
+      input.status === 'ACTIVE' || input.status === 'ENDED'
+        ? await transaction.partnerRelationshipPeriod.findFirst({
+            orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+            select: { id: true },
+            where: { organizationId: created.id },
+          })
+        : null;
+    await createPartnerTimelineEvent(transaction, {
+      actor,
+      occurredAt: created.createdAt,
+      organizationId: created.id,
+      payload: {
+        closingNote: null,
+        endedOn: input.status === 'ENDED' ? input.endedOn : null,
+        startedOn:
+          input.status === 'ACTIVE' || input.status === 'ENDED'
+            ? input.startedOn
+            : null,
+        status: input.status,
+      },
+      periodId: createdPeriod?.id ?? null,
+      type: 'RELATIONSHIP_CREATED',
+    });
 
     return loadPartnerDetail(transaction, created.id, canViewPersons);
   });
@@ -488,6 +527,8 @@ export const updatePartnerStatus = async (
             input.startedOn ||
             fromCivilDate(currentPeriod?.endedOn ?? null) !== input.endedOn ||
             (currentPeriod?.closingNote ?? null) !== input.closingNote)));
+    const eventOccurredAt = new Date();
+    let eventPeriodId = currentPeriod?.id ?? null;
 
     if (!statusChanged && !periodChanged) {
       return loadPartnerDetail(transaction, existing.id, canViewPersons);
@@ -506,12 +547,13 @@ export const updatePartnerStatus = async (
     }
 
     if (statusChanged && input.status === 'ACTIVE') {
-      await transaction.partnerRelationshipPeriod.create({
+      const period = await transaction.partnerRelationshipPeriod.create({
         data: {
           organizationId: existing.id,
           startedOn: toCivilDate(input.startedOn),
         },
       });
+      eventPeriodId = period.id;
       await createPartnerAudit(transaction, {
         action: AuditAction.PARTNER_PERIOD_CREATE,
         actor,
@@ -578,6 +620,25 @@ export const updatePartnerStatus = async (
         },
         tabKey: 'follow-up',
       });
+      await createPartnerTimelineEvent(transaction, {
+        actor,
+        occurredAt: eventOccurredAt,
+        organizationId: existing.id,
+        payload: {
+          closingNote: input.status === 'ENDED' ? input.closingNote : null,
+          endedOn: input.status === 'ENDED' ? input.endedOn : null,
+          fromStatus: existing.status,
+          startedOn:
+            input.status === 'ACTIVE'
+              ? input.startedOn
+              : input.status === 'ENDED'
+                ? fromCivilDate(currentPeriod?.startedOn ?? null)
+                : null,
+          toStatus: input.status,
+        },
+        periodId: eventPeriodId,
+        type: 'STATUS_CHANGED',
+      });
     } else {
       await createPartnerAudit(transaction, {
         action: AuditAction.PARTNER_PERIOD_UPDATE,
@@ -586,6 +647,22 @@ export const updatePartnerStatus = async (
         entityId: existing.id,
         metadata: { changedSections: ['information'] },
         tabKey: 'information',
+      });
+      await createPartnerTimelineEvent(transaction, {
+        actor,
+        occurredAt: eventOccurredAt,
+        organizationId: existing.id,
+        payload: {
+          closingNote: input.status === 'ENDED' ? input.closingNote : null,
+          endedOn: input.status === 'ENDED' ? input.endedOn : null,
+          previousClosingNote: currentPeriod?.closingNote ?? null,
+          previousEndedOn: fromCivilDate(currentPeriod?.endedOn ?? null),
+          previousStartedOn: fromCivilDate(currentPeriod?.startedOn ?? null),
+          startedOn: input.startedOn,
+          status: input.status,
+        },
+        periodId: eventPeriodId,
+        type: 'PERIOD_CORRECTED',
       });
     }
 
@@ -708,6 +785,7 @@ export const addPartnerFollowUp = async (
 ): Promise<PartnerDetail> =>
   prisma.$transaction(async (transaction) => {
     const partner = await requirePartner(transaction, partnerId);
+    const authorSnapshot = getPartnerActorSnapshot(actor);
     if (input.partnerContactId) {
       const contact = await transaction.partnerContact.findFirst({
         select: { id: true },
@@ -718,10 +796,9 @@ export const addPartnerFollowUp = async (
       });
       if (!contact) throw partnerErrors.dependencyConflict('Contact invalide');
     }
-    await touchPartner(transaction, {
+    await touchPartnerForIndependentMutation(transaction, {
       actorId: actor.id,
       id: partner.id,
-      version: input.version,
     });
     await transaction.partnerFollowUpEntry.create({
       data: {
@@ -733,7 +810,9 @@ export const addPartnerFollowUp = async (
               },
             }
           : undefined,
+        authorDisplayNameSnapshot: authorSnapshot.actorDisplayNameSnapshot,
         authorId: actor.id,
+        authorLoginNameSnapshot: authorSnapshot.actorLoginNameSnapshot,
         occurredAt: input.occurredAt ? new Date(input.occurredAt) : new Date(),
         organizationId: partner.id,
         partnerContactId: input.partnerContactId ?? null,
@@ -761,6 +840,16 @@ export const updatePartnerFollowUp = async (
 ): Promise<PartnerDetail> =>
   prisma.$transaction(async (transaction) => {
     const partner = await requirePartner(transaction, partnerId);
+    if (input.partnerContactId) {
+      const contact = await transaction.partnerContact.findFirst({
+        select: { id: true },
+        where: {
+          id: input.partnerContactId,
+          organizationId: partner.id,
+        },
+      });
+      if (!contact) throw partnerErrors.dependencyConflict('Contact invalide');
+    }
     await touchPartner(transaction, {
       actorId: actor.id,
       id: partner.id,
@@ -769,7 +858,9 @@ export const updatePartnerFollowUp = async (
     const updated = await transaction.partnerFollowUpEntry.updateMany({
       data: {
         occurredAt: new Date(input.occurredAt),
-        partnerContactId: input.partnerContactId,
+        ...(input.partnerContactId !== undefined
+          ? { partnerContactId: input.partnerContactId }
+          : {}),
         text: input.text,
         version: { increment: 1 },
       },
@@ -796,6 +887,16 @@ export const deletePartnerFollowUp = async (
 ): Promise<PartnerDetail> =>
   prisma.$transaction(async (transaction) => {
     const partner = await requirePartner(transaction, partnerId);
+    const entry = await transaction.partnerFollowUpEntry.findFirst({
+      select: { action: { select: { id: true } }, id: true },
+      where: { id: entryId, organizationId: partner.id },
+    });
+    if (!entry) throw partnerErrors.notFound();
+    if (entry.action) {
+      throw partnerErrors.dependencyConflict(
+        'Une note liée à une action appartient à l’historique métier et ne peut plus être supprimée. Corrigez-la si nécessaire.',
+      );
+    }
     await touchPartner(transaction, {
       actorId: actor.id,
       id: partner.id,
@@ -804,7 +905,7 @@ export const deletePartnerFollowUp = async (
     const deleted = await transaction.partnerFollowUpEntry.deleteMany({
       where: { id: entryId, organizationId: partner.id },
     });
-    if (!deleted.count) throw partnerErrors.notFound();
+    if (!deleted.count) throw partnerErrors.versionConflict();
     await createPartnerAudit(transaction, {
       action: AuditAction.PARTNER_FOLLOW_UP_DELETE,
       actor,
@@ -819,29 +920,41 @@ export const deletePartnerFollowUp = async (
 export const setPartnerActionCompleted = async (
   partnerId: string,
   entryId: string,
-  input: { completed: boolean; version: number },
+  input: { actionVersion: number; completed: boolean },
   actor: UserType,
   canViewPersons: boolean,
 ): Promise<PartnerDetail> =>
   prisma.$transaction(async (transaction) => {
     const partner = await requirePartner(transaction, partnerId);
-    await touchPartner(transaction, {
-      actorId: actor.id,
-      id: partner.id,
-      version: input.version,
-    });
     const entry = await transaction.partnerFollowUpEntry.findFirst({
       include: { action: true },
       where: { id: entryId, organizationId: partner.id },
     });
     if (!entry?.action) throw partnerErrors.notFound();
-    await transaction.partnerFollowUpAction.update({
+    if (Boolean(entry.action.completedAt) === input.completed) {
+      return loadPartnerDetail(transaction, partner.id, canViewPersons);
+    }
+    const completedAt = input.completed ? new Date() : null;
+    const eventOccurredAt = completedAt ?? new Date();
+    const completerSnapshot = input.completed
+      ? getPartnerActorSnapshot(actor)
+      : null;
+    const updated = await transaction.partnerFollowUpAction.updateMany({
       data: {
-        completedAt: input.completed ? new Date() : null,
+        completedAt,
+        completedByDisplayNameSnapshot:
+          completerSnapshot?.actorDisplayNameSnapshot ?? null,
         completedById: input.completed ? actor.id : null,
+        completedByLoginNameSnapshot:
+          completerSnapshot?.actorLoginNameSnapshot ?? null,
         version: { increment: 1 },
       },
-      where: { id: entry.action.id },
+      where: { id: entry.action.id, version: input.actionVersion },
+    });
+    if (updated.count !== 1) throw partnerErrors.versionConflict();
+    await touchPartnerForIndependentMutation(transaction, {
+      actorId: actor.id,
+      id: partner.id,
     });
     await createPartnerAudit(transaction, {
       action: AuditAction.PARTNER_FOLLOW_UP_COMPLETE,
@@ -852,6 +965,24 @@ export const setPartnerActionCompleted = async (
       entityId: partner.id,
       metadata: { completed: input.completed },
       tabKey: 'follow-up',
+    });
+    await createPartnerTimelineEvent(transaction, {
+      actionId: entry.action.id,
+      actor,
+      followUpEntryId: entry.id,
+      occurredAt: eventOccurredAt,
+      organizationId: partner.id,
+      payload: input.completed
+        ? {
+            completedAt: eventOccurredAt.toISOString(),
+            description: entry.action.description,
+            dueOn: fromCivilDate(entry.action.dueOn),
+          }
+        : {
+            description: entry.action.description,
+            dueOn: fromCivilDate(entry.action.dueOn),
+          },
+      type: input.completed ? 'ACTION_COMPLETED' : 'ACTION_REOPENED',
     });
 
     return loadPartnerDetail(transaction, partner.id, canViewPersons);
@@ -894,14 +1025,22 @@ export const deletePartner = async (input: {
         where: { deletionOperationId: input.idempotencyKey },
       });
     if (replay) return;
-    const partner = await requirePartner(transaction, input.partnerId);
+    const canonicalId = await resolvePartnerId(transaction, input.partnerId);
+    await transaction.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+      SELECT "id"
+      FROM "public"."PartnerOrganization"
+      WHERE "id" = ${canonicalId}
+      FOR UPDATE
+    `);
+    const partner = await requirePartner(transaction, canonicalId);
     if (partner.version !== input.version) {
       throw partnerErrors.versionConflict();
     }
     if (
       partner.periods.length ||
       partner.contacts.length ||
-      partner.followUps.length
+      partner._count.followUps > 0 ||
+      partner._count.timelineEvents > 1
     ) {
       throw partnerErrors.dependencyConflict(
         'Cette fiche possède déjà un historique métier. Terminez la relation ou fusionnez un doublon au lieu de la supprimer.',

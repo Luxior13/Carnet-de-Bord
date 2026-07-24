@@ -43,6 +43,13 @@ export async function PATCH(
       partnerZodErrorDetails(parsed.error),
     );
   }
+  if (parsed.data.partnerContactId !== undefined) {
+    const personPermission = requirePermission(
+      auth.user,
+      PERMISSIONS.PERSONS.VIEW,
+    );
+    if (!personPermission.success) return personPermission.response;
+  }
   try {
     await assertPartnerFeatureReady();
     const { entryId, id } = await context.params;
