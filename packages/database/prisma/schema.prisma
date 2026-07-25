@@ -460,7 +460,8 @@ model PersonEmail {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  person                   Person           @relation(fields: [personId], references: [id], onDelete: Cascade)
+  partnerContactSelections PartnerContact[] @relation("PartnerContactSelectedEmail")
 
   @@unique([personId, normalizedEmail])
   @@index([normalizedEmail])
@@ -478,7 +479,8 @@ model PersonPhone {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  person                   Person           @relation(fields: [personId], references: [id], onDelete: Cascade)
+  partnerContactSelections PartnerContact[] @relation("PartnerContactSelectedPhone")
 
   @@unique([personId, normalizedPhone])
   @@index([normalizedPhone])
@@ -599,24 +601,30 @@ model PartnerRelationshipPeriod {
 }
 
 model PartnerContact {
-  id             String    @id @default(cuid())
-  organizationId String
-  personId       String?
-  label          String    @db.VarChar(80)
-  isPrimary      Boolean   @default(false)
-  startedOn      DateTime? @db.Date
-  endedOn        DateTime? @db.Date
-  closedAt       DateTime?
-  version        Int       @default(1)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  organizationId  String
+  personId        String?
+  selectedEmailId String?
+  selectedPhoneId String?
+  label           String    @db.VarChar(80)
+  isPrimary       Boolean   @default(false)
+  startedOn       DateTime? @db.Date
+  endedOn         DateTime? @db.Date
+  closedAt        DateTime?
+  version         Int       @default(1)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  organization PartnerOrganization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  person       Person?                @relation(fields: [personId], references: [id], onDelete: SetNull)
-  followUps    PartnerFollowUpEntry[]
+  organization  PartnerOrganization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  person        Person?                @relation(fields: [personId], references: [id], onDelete: SetNull)
+  selectedEmail PersonEmail?           @relation("PartnerContactSelectedEmail", fields: [selectedEmailId], references: [id], onDelete: SetNull)
+  selectedPhone PersonPhone?           @relation("PartnerContactSelectedPhone", fields: [selectedPhoneId], references: [id], onDelete: SetNull)
+  followUps     PartnerFollowUpEntry[]
 
   @@index([organizationId, closedAt, createdAt])
   @@index([personId, closedAt])
+  @@index([selectedEmailId])
+  @@index([selectedPhoneId])
 }
 
 model PartnerFollowUpEntry {

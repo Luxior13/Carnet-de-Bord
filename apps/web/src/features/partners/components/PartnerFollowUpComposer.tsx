@@ -112,7 +112,7 @@ export const PartnerFollowUpComposer: FC<{
             {selectableContacts.length > 0 && (
               <div className="grid gap-2">
                 <Label htmlFor="partner-follow-up-contact">
-                  Contact concerné
+                  Interlocuteur concerné
                   <span className="text-muted-foreground font-normal">
                     {' '}
                     (facultatif)
@@ -132,7 +132,7 @@ export const PartnerFollowUpComposer: FC<{
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Aucun contact</SelectItem>
+                    <SelectItem value="none">Aucun interlocuteur</SelectItem>
                     {selectableContacts.map((contact) => (
                       <SelectItem key={contact.id} value={contact.id}>
                         {contact.person?.displayName} · {contact.label}

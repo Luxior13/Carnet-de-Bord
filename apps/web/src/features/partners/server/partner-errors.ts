@@ -6,9 +6,14 @@ import {
 } from '../partner.constants';
 
 export type PartnerDomainErrorCode =
+  | 'PARTNER_CHANNEL_ALREADY_EXISTS'
+  | 'PARTNER_CHANNEL_LIMIT_REACHED'
+  | 'PARTNER_CHANNEL_NOT_FOUND'
+  | 'PARTNER_CHANNEL_VERSION_CONFLICT'
   | 'PARTNER_CONTACT_ALREADY_ACTIVE'
   | 'PARTNER_CONTACT_LIMIT_REACHED'
   | 'PARTNER_CONTACT_REOPEN_FORBIDDEN'
+  | 'PARTNER_CONTACT_VERSION_CONFLICT'
   | 'PARTNER_DEPENDENCY_CONFLICT'
   | 'PARTNER_FEATURE_NOT_CONFIGURED'
   | 'PARTNER_FOLLOW_UP_FORBIDDEN'
@@ -29,20 +34,45 @@ export class PartnerDomainError extends Error {
 }
 
 export const partnerErrors = {
+  channelAlreadyExists: (): PartnerDomainError =>
+    new PartnerDomainError(
+      'PARTNER_CHANNEL_ALREADY_EXISTS',
+      'Cette coordonnée existe déjà sur la fiche',
+    ),
+  channelLimitReached: (): PartnerDomainError =>
+    new PartnerDomainError(
+      'PARTNER_CHANNEL_LIMIT_REACHED',
+      `Cette organisation a atteint la limite de ${PARTNER_LIMITS.channels} coordonnées`,
+    ),
+  channelNotFound: (): PartnerDomainError =>
+    new PartnerDomainError(
+      'PARTNER_CHANNEL_NOT_FOUND',
+      'Coordonnée introuvable sur cette fiche',
+    ),
+  channelVersionConflict: (): PartnerDomainError =>
+    new PartnerDomainError(
+      'PARTNER_CHANNEL_VERSION_CONFLICT',
+      'Cette coordonnée a été modifiée. Rechargez la fiche avant de réessayer.',
+    ),
   contactAlreadyActive: (): PartnerDomainError =>
     new PartnerDomainError(
       'PARTNER_CONTACT_ALREADY_ACTIVE',
-      'Ce contact est déjà lié activement à cette organisation',
+      'Cet interlocuteur est déjà lié activement à cette organisation',
     ),
   contactLimitReached: (): PartnerDomainError =>
     new PartnerDomainError(
       'PARTNER_CONTACT_LIMIT_REACHED',
-      `Cette organisation a atteint la limite de ${PARTNER_LIMITS.contacts} contacts actifs`,
+      `Cette organisation a atteint la limite de ${PARTNER_LIMITS.contacts} interlocuteurs actifs`,
     ),
   contactReopenForbidden: (): PartnerDomainError =>
     new PartnerDomainError(
       'PARTNER_CONTACT_REOPEN_FORBIDDEN',
-      'Une liaison terminée ne peut pas être rouverte. Créez une nouvelle liaison afin de préserver son historique.',
+      'Une liaison terminée ne peut pas être réactivée ni modifiée comme active. Créez une nouvelle liaison afin de préserver son historique.',
+    ),
+  contactVersionConflict: (): PartnerDomainError =>
+    new PartnerDomainError(
+      'PARTNER_CONTACT_VERSION_CONFLICT',
+      'Cette liaison avec un interlocuteur a été modifiée. Rechargez la fiche avant de réessayer.',
     ),
   dependencyConflict: (message: string): PartnerDomainError =>
     new PartnerDomainError('PARTNER_DEPENDENCY_CONFLICT', message),

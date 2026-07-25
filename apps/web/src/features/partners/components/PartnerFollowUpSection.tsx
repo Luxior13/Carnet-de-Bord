@@ -267,10 +267,10 @@ const PartnerTimelineFeed: FC<{
 
 export const PartnerFollowUpSection: FC<{
   canManage: boolean;
-  canViewContacts: boolean;
+  canViewInterlocutors: boolean;
   onChange: (partner: PartnerDetail) => void;
   partner: PartnerDetail;
-}> = ({ canManage, canViewContacts, onChange, partner }) => {
+}> = ({ canManage, canViewInterlocutors, onChange, partner }) => {
   const [actionSavingEntryId, setActionSavingEntryId] = useState<string | null>(
     null,
   );
@@ -471,7 +471,7 @@ export const PartnerFollowUpSection: FC<{
 
       {editingFollowUp && (
         <PartnerFollowUpEditor
-          canViewContacts={canViewContacts}
+          canViewInterlocutors={canViewInterlocutors}
           editableDeadlineMs={editingFollowUp.editableDeadlineMs}
           entry={editingFollowUp.entry}
           onConflict={() => {

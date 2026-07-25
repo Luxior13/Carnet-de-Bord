@@ -413,9 +413,7 @@ describe('partner business timeline server', () => {
   it('keeps attribution durable and validates edited contact scope', () => {
     expect(partnerServiceSource).toContain('authorDisplayNameSnapshot:');
     expect(partnerServiceSource).toContain('completedByDisplayNameSnapshot:');
-    expect(partnerServiceSource).toContain(
-      "if (!contact) throw partnerErrors.dependencyConflict('Contact invalide')",
-    );
+    expect(partnerServiceSource).toContain('Interlocuteur invalide');
     expect(partnerDetailRepositorySource).toContain(
       'entry.authorDisplayNameSnapshot',
     );

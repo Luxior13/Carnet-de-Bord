@@ -1,6 +1,7 @@
 import 'server-only';
 
 import type { Prisma, PrismaClient } from '@prisma/client';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
 import { formatPersonDisplayName } from '$features/persons/person.utils';
 import { prisma } from '$server/prisma';
@@ -69,8 +70,30 @@ const PARTNER_DETAIL_INCLUDE = {
           nickname: true,
         },
       },
+      selectedEmail: {
+        select: {
+          email: true,
+          id: true,
+          isPrimary: true,
+          label: true,
+          personId: true,
+        },
+      },
+      selectedPhone: {
+        select: {
+          id: true,
+          isPrimary: true,
+          label: true,
+          personId: true,
+          phone: true,
+        },
+      },
     },
-    orderBy: [{ closedAt: 'asc' }, { isPrimary: 'desc' }, { createdAt: 'asc' }],
+    orderBy: [
+      { isPrimary: 'desc' },
+      { closedAt: 'desc' },
+      { createdAt: 'asc' },
+    ],
   },
   createdBy: {
     select: { firstName: true, lastName: true, loginName: true },
@@ -78,6 +101,16 @@ const PARTNER_DETAIL_INCLUDE = {
   periods: { orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] },
   updatedBy: {
     select: { firstName: true, lastName: true, loginName: true },
+  },
+} as const satisfies Prisma.PartnerOrganizationInclude;
+
+const PARTNER_DETAIL_INCLUDE_WITHOUT_PERSONS = {
+  ...PARTNER_DETAIL_INCLUDE,
+  contacts: {
+    ...PARTNER_DETAIL_INCLUDE.contacts,
+    // Keep the response shape stable without selecting any liaison or Person
+    // row when the caller cannot consult the Répertoire.
+    where: { id: '__hidden_without_persons_view__' },
   },
 } as const satisfies Prisma.PartnerOrganizationInclude;
 
@@ -140,6 +173,30 @@ const mapContact = (
   isPrimary: contact.isPrimary,
   label: contact.label,
   person: personReference(contact.person, canViewPersons),
+  selectedEmail:
+    contact.closedAt === null &&
+    contact.personId &&
+    contact.selectedEmail?.personId === contact.personId &&
+    canViewPersons
+      ? {
+          email: contact.selectedEmail.email,
+          id: contact.selectedEmail.id,
+          isPrimary: contact.selectedEmail.isPrimary,
+          label: contact.selectedEmail.label,
+        }
+      : null,
+  selectedPhone:
+    contact.closedAt === null &&
+    contact.personId &&
+    contact.selectedPhone?.personId === contact.personId &&
+    canViewPersons
+      ? {
+          id: contact.selectedPhone.id,
+          isPrimary: contact.selectedPhone.isPrimary,
+          label: contact.selectedPhone.label,
+          phone: contact.selectedPhone.phone,
+        }
+      : null,
   startedOn: fromCivilDate(contact.startedOn),
   version: contact.version,
 });
@@ -205,6 +262,10 @@ const mapPartnerDetail = (
 ): PartnerDetail => ({
   categories: partner.categories.map(({ category }) => category),
   channels: partner.channels.map((channel) => ({
+    countryCode:
+      channel.type === 'PHONE'
+        ? (parsePhoneNumberFromString(channel.normalizedValue)?.country ?? null)
+        : null,
     id: channel.id,
     isPrimary: channel.isPrimary,
     label: channel.label,
@@ -239,13 +300,16 @@ const mapPartnerDetail = (
 export const requirePartner = async (
   client: PartnerClient,
   partnerId: string,
+  canViewPersons: boolean,
 ): Promise<PartnerDetailRecord> => {
   const redirect = await client.partnerOrganizationMergeRedirect.findUnique({
     select: { targetOrganizationId: true },
     where: { sourceOrganizationId: partnerId },
   });
   const partner = await client.partnerOrganization.findUnique({
-    include: PARTNER_DETAIL_INCLUDE,
+    include: canViewPersons
+      ? PARTNER_DETAIL_INCLUDE
+      : PARTNER_DETAIL_INCLUDE_WITHOUT_PERSONS,
     where: { id: redirect?.targetOrganizationId ?? partnerId },
   });
   if (!partner) throw partnerErrors.notFound();
@@ -275,7 +339,7 @@ export const loadPartnerDetail = async (
   partnerId: string,
   canViewPersons: boolean,
 ): Promise<PartnerDetail> => {
-  const partner = await requirePartner(client, partnerId);
+  const partner = await requirePartner(client, partnerId, canViewPersons);
 
   return mapPartnerDetail(partner, canViewPersons);
 };

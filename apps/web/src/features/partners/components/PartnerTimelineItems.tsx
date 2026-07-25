@@ -298,7 +298,7 @@ export const PartnerFollowUpNote: FC<{
 
       {entry.contact && (
         <Badge className="mt-3" variant="secondary">
-          Contact · {entry.contact.displayName}
+          Interlocuteur · {entry.contact.displayName}
         </Badge>
       )}
 

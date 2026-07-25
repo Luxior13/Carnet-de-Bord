@@ -270,7 +270,7 @@ export const PartnersList: FC<{ createHref: string; returnHref: string }> = ({
                   <TableHead>Organisation</TableHead>
                   <TableHead>Catégories</TableHead>
                   <TableHead>Statut</TableHead>
-                  <TableHead>Contact principal</TableHead>
+                  <TableHead>Interlocuteur principal</TableHead>
                   <TableHead>Prochaine étape</TableHead>
                   <TableHead>Dernière modification</TableHead>
                   <TableHead className="w-10" />
@@ -306,7 +306,7 @@ export const PartnersList: FC<{ createHref: string; returnHref: string }> = ({
                         {partner.primaryContact?.displayName ??
                           (partner.primaryContact === null
                             ? '—'
-                            : 'Contact restreint')}
+                            : 'Interlocuteur restreint')}
                       </TableCell>
                       <TableCell className="max-w-56 truncate text-sm">
                         {partner.openAction?.description ?? '—'}

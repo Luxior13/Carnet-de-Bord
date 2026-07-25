@@ -16,10 +16,8 @@ import type { UserType } from '$types/auth.types';
 
 import { PARTNER_STATUS_TRANSITIONS } from '../partner.constants';
 import type {
-  CreatePartnerContactInput,
   CreatePartnerFollowUpInput,
   CreatePartnerInput,
-  UpdatePartnerContactInput,
   UpdatePartnerFollowUpInput,
   UpdatePartnerInput,
   UpdatePartnerStatusInput,
@@ -34,7 +32,10 @@ import type {
   PartnerSummary,
 } from '../types/partner.types';
 import { createPartnerAudit } from './partner-audit';
-import { lockPartnerForIndependentMutation } from './partner-concurrency';
+import {
+  lockPartnerForIndependentMutation,
+  touchPartner,
+} from './partner-concurrency';
 import {
   getPartnerDetail,
   loadPartnerDetail,
@@ -55,6 +56,16 @@ import {
   createPartnerTimelineEvent,
   getPartnerActorSnapshot,
 } from './partner-timeline.service';
+
+export {
+  addPartnerChannel,
+  deletePartnerChannel,
+  updatePartnerChannel,
+} from './partner-channel.service';
+export {
+  addPartnerContact,
+  updatePartnerContact,
+} from './partner-contact.service';
 
 export const getPartner = async (
   partnerId: string,
@@ -83,8 +94,14 @@ const primaryChannels = <T extends { isPrimary: boolean; type: string }>(
 };
 
 const channelCreateData = (
-  channels: CreatePartnerInput['channels'] | UpdatePartnerInput['channels'],
-) =>
+  channels: CreatePartnerInput['channels'],
+): Array<{
+  isPrimary: boolean;
+  label: string;
+  normalizedValue: string;
+  type: 'EMAIL' | 'PHONE';
+  value: string;
+}> =>
   primaryChannels(channels).map((channel) => ({
     isPrimary: channel.isPrimary,
     label: channel.label,
@@ -114,17 +131,6 @@ const assertPeriodDateOrder = (
       'La date de fin ne peut pas précéder la date de début',
     );
   }
-};
-
-const touchPartner = async (
-  transaction: Prisma.TransactionClient,
-  input: { actorId: string; id: string; version: number },
-): Promise<void> => {
-  const result = await transaction.partnerOrganization.updateMany({
-    data: { updatedById: input.actorId, version: { increment: 1 } },
-    where: { id: input.id, version: input.version },
-  });
-  if (result.count !== 1) throw partnerErrors.versionConflict();
 };
 
 const touchPartnerForIndependentMutation = async (
@@ -247,7 +253,9 @@ export const listPartners = async (
           },
         },
         take: 1,
-        where: { closedAt: null, isPrimary: true },
+        where: canViewPersons
+          ? { closedAt: null, isPrimary: true }
+          : { id: '__hidden_without_persons_view__' },
       },
       followUps: {
         include: { action: true },
@@ -353,7 +361,7 @@ export const createPartner = async (
         where: { id: input.contact.personId },
       });
       if (!person)
-        throw partnerErrors.dependencyConflict('Contact introuvable');
+        throw partnerErrors.dependencyConflict('Interlocuteur introuvable');
     }
     const created = await transaction.partnerOrganization.create({
       data: {
@@ -448,7 +456,11 @@ export const updatePartner = async (
   canViewPersons: boolean,
 ): Promise<PartnerDetail> =>
   prisma.$transaction(async (transaction) => {
-    const existing = await requirePartner(transaction, partnerId);
+    const existing = await requirePartner(
+      transaction,
+      partnerId,
+      canViewPersons,
+    );
     const { domain, website } = normalizePartnerWebsite(input.website);
     await touchPartner(transaction, {
       actorId: actor.id,
@@ -474,18 +486,6 @@ export const updatePartner = async (
         organizationId: existing.id,
       })),
     });
-    await transaction.partnerOrganizationContactChannel.deleteMany({
-      where: { organizationId: existing.id },
-    });
-    if (input.channels.length) {
-      await transaction.partnerOrganizationContactChannel.createMany({
-        data: channelCreateData(input.channels).map((channel) => ({
-          ...channel,
-          organizationId: existing.id,
-        })),
-      });
-    }
-
     await createPartnerAudit(transaction, {
       action: AuditAction.PARTNER_UPDATE,
       actor,
@@ -505,7 +505,11 @@ export const updatePartnerStatus = async (
   canViewPersons: boolean,
 ): Promise<PartnerDetail> =>
   prisma.$transaction(async (transaction) => {
-    const existing = await requirePartner(transaction, partnerId);
+    const existing = await requirePartner(
+      transaction,
+      partnerId,
+      canViewPersons,
+    );
     assertTransition(existing.status, input.status);
     const statusChanged = existing.status !== input.status;
     const closesActivePeriod =
@@ -675,114 +679,6 @@ export const updatePartnerStatus = async (
     return loadPartnerDetail(transaction, existing.id, canViewPersons);
   });
 
-export const addPartnerContact = async (
-  partnerId: string,
-  input: CreatePartnerContactInput,
-  actor: UserType,
-  canViewPersons: boolean,
-): Promise<PartnerDetail> =>
-  prisma.$transaction(async (transaction) => {
-    const partner = await requirePartner(transaction, partnerId);
-    const person = await transaction.person.findUnique({
-      select: { id: true },
-      where: { id: input.personId },
-    });
-    if (!person) throw partnerErrors.dependencyConflict('Contact introuvable');
-    await touchPartner(transaction, {
-      actorId: actor.id,
-      id: partner.id,
-      version: input.version,
-    });
-    if (input.isPrimary) {
-      await transaction.partnerContact.updateMany({
-        data: { isPrimary: false, version: { increment: 1 } },
-        where: { closedAt: null, isPrimary: true, organizationId: partner.id },
-      });
-    }
-    await transaction.partnerContact.create({
-      data: {
-        isPrimary: input.isPrimary,
-        label: input.label,
-        organizationId: partner.id,
-        personId: input.personId,
-        startedOn: toCivilDate(input.startedOn),
-      },
-    });
-    await createPartnerAudit(transaction, {
-      action: AuditAction.PARTNER_CONTACTS_UPDATE,
-      actor,
-      description: 'Contact ajouté au partenaire',
-      entityId: partner.id,
-      tabKey: 'contacts',
-    });
-
-    return loadPartnerDetail(transaction, partner.id, canViewPersons);
-  });
-
-export const updatePartnerContact = async (
-  partnerId: string,
-  contactId: string,
-  input: UpdatePartnerContactInput,
-  actor: UserType,
-  canViewPersons: boolean,
-): Promise<PartnerDetail> =>
-  prisma.$transaction(async (transaction) => {
-    const partner = await requirePartner(transaction, partnerId);
-    const contact = await transaction.partnerContact.findFirst({
-      where: { id: contactId, organizationId: partner.id },
-    });
-    if (!contact) throw partnerErrors.notFound();
-    await touchPartner(transaction, {
-      actorId: actor.id,
-      id: partner.id,
-      version: input.version,
-    });
-    if (input.isPrimary) {
-      await transaction.partnerContact.updateMany({
-        data: { isPrimary: false, version: { increment: 1 } },
-        where: {
-          closedAt: null,
-          id: { not: contact.id },
-          isPrimary: true,
-          organizationId: partner.id,
-        },
-      });
-    }
-    await transaction.partnerContact.update({
-      data: {
-        ...(input.close === true
-          ? {
-              closedAt: new Date(),
-              endedOn: toCivilDate(input.endedOn),
-              isPrimary: false,
-            }
-          : input.close === false
-            ? { closedAt: null, endedOn: null }
-            : {}),
-        ...(input.isPrimary !== undefined
-          ? { isPrimary: input.close ? false : input.isPrimary }
-          : {}),
-        ...(input.label ? { label: input.label } : {}),
-        ...(input.startedOn !== undefined
-          ? { startedOn: toCivilDate(input.startedOn) }
-          : {}),
-        version: { increment: 1 },
-      },
-      where: { id: contact.id },
-    });
-    await createPartnerAudit(transaction, {
-      action: AuditAction.PARTNER_CONTACTS_UPDATE,
-      actor,
-      description: input.close
-        ? 'Liaison contact terminée'
-        : 'Liaison contact modifiée',
-      entityId: partner.id,
-      tabKey: 'contacts',
-    });
-
-    return loadPartnerDetail(transaction, partner.id, canViewPersons);
-  });
-
 export const addPartnerFollowUp = async (
   partnerId: string,
   input: CreatePartnerFollowUpInput,
@@ -790,7 +686,11 @@ export const addPartnerFollowUp = async (
   canViewPersons: boolean,
 ): Promise<PartnerDetail> =>
   prisma.$transaction(async (transaction) => {
-    const partner = await requirePartner(transaction, partnerId);
+    const partner = await requirePartner(
+      transaction,
+      partnerId,
+      canViewPersons,
+    );
     const authorSnapshot = getPartnerActorSnapshot(actor);
     if (input.partnerContactId) {
       const contact = await transaction.partnerContact.findFirst({
@@ -800,7 +700,8 @@ export const addPartnerFollowUp = async (
           organizationId: partner.id,
         },
       });
-      if (!contact) throw partnerErrors.dependencyConflict('Contact invalide');
+      if (!contact)
+        throw partnerErrors.dependencyConflict('Interlocuteur invalide');
     }
     await touchPartnerForIndependentMutation(transaction, {
       actorId: actor.id,
@@ -845,7 +746,11 @@ export const updatePartnerFollowUp = async (
   canViewPersons: boolean,
 ): Promise<PartnerDetail> =>
   prisma.$transaction(async (transaction) => {
-    const partner = await requirePartner(transaction, partnerId);
+    const partner = await requirePartner(
+      transaction,
+      partnerId,
+      canViewPersons,
+    );
     await lockPartnerForIndependentMutation(transaction, partner.id);
     const entry = await transaction.partnerFollowUpEntry.findFirst({
       select: {
@@ -881,7 +786,8 @@ export const updatePartnerFollowUp = async (
           organizationId: partner.id,
         },
       });
-      if (!contact) throw partnerErrors.dependencyConflict('Contact invalide');
+      if (!contact)
+        throw partnerErrors.dependencyConflict('Interlocuteur invalide');
     }
     const updated = await transaction.partnerFollowUpEntry.updateMany({
       data: {
@@ -921,7 +827,11 @@ export const deletePartnerFollowUp = async (
   canViewPersons: boolean,
 ): Promise<PartnerDetail> =>
   prisma.$transaction(async (transaction) => {
-    const partner = await requirePartner(transaction, partnerId);
+    const partner = await requirePartner(
+      transaction,
+      partnerId,
+      canViewPersons,
+    );
     const entry = await transaction.partnerFollowUpEntry.findFirst({
       select: { action: { select: { id: true } }, id: true },
       where: { id: entryId, organizationId: partner.id },
@@ -960,7 +870,11 @@ export const setPartnerActionCompleted = async (
   canViewPersons: boolean,
 ): Promise<PartnerDetail> =>
   prisma.$transaction(async (transaction) => {
-    const partner = await requirePartner(transaction, partnerId);
+    const partner = await requirePartner(
+      transaction,
+      partnerId,
+      canViewPersons,
+    );
     await lockPartnerForIndependentMutation(transaction, partner.id);
     const entry = await transaction.partnerFollowUpEntry.findFirst({
       include: { action: true },
@@ -1027,11 +941,11 @@ export const setPartnerActionCompleted = async (
 export const getPartnerActivity = async (
   partnerId: string,
 ): Promise<PartnerActivityItem[]> => {
-  await requirePartner(prisma, partnerId);
+  const canonicalId = await resolvePartnerId(prisma, partnerId);
   const rows = await prisma.auditLog.findMany({
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: 100,
-    where: { entityId: partnerId, entityType: 'PARTNER' },
+    where: { entityId: canonicalId, entityType: 'PARTNER' },
   });
 
   return rows.map((row) => ({
@@ -1068,7 +982,17 @@ export const deletePartner = async (input: {
       WHERE "id" = ${canonicalId}
       FOR UPDATE
     `);
-    const partner = await requirePartner(transaction, canonicalId);
+    const partner = await transaction.partnerOrganization.findUnique({
+      select: {
+        _count: { select: { followUps: true, timelineEvents: true } },
+        contacts: { select: { id: true }, take: 1 },
+        id: true,
+        periods: { select: { id: true }, take: 1 },
+        version: true,
+      },
+      where: { id: canonicalId },
+    });
+    if (!partner) throw partnerErrors.notFound();
     if (partner.version !== input.version) {
       throw partnerErrors.versionConflict();
     }

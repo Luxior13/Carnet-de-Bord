@@ -86,22 +86,43 @@ export const deletePerson = async (input: {
       SELECT "public"."purge_person_audit_field_changes"(${input.personId}) AS "deletedCount"
     `;
     const partnerSchema = await transaction.$queryRaw<
-      Array<{ ready: boolean }>
+      Array<{ ready: boolean; selectedCoordinatesReady: boolean }>
     >`
-      SELECT to_regclass(format('%I.%I', current_schema(), 'PartnerContact'))
-        IS NOT NULL AS "ready"
+      SELECT
+        to_regclass(format('%I.%I', current_schema(), 'PartnerContact'))
+          IS NOT NULL AS "ready",
+        (
+          SELECT count(*) = 2
+          FROM information_schema.columns
+          WHERE table_schema = current_schema()
+            AND table_name = 'PartnerContact'
+            AND column_name IN ('selectedEmailId', 'selectedPhoneId')
+        ) AS "selectedCoordinatesReady"
     `;
     if (partnerSchema?.[0]?.ready) {
-      await transaction.partnerContact.updateMany({
-        data: {
-          closedAt: new Date(),
-          endedOn: null,
-          isPrimary: false,
-          personId: null,
-          version: { increment: 1 },
-        },
-        where: { personId: input.personId },
-      });
+      const commonData = {
+        closedAt: new Date(),
+        endedOn: null,
+        isPrimary: false,
+        label: 'Interlocuteur supprimé',
+        personId: null,
+        version: { increment: 1 as const },
+      };
+      if (partnerSchema[0].selectedCoordinatesReady) {
+        await transaction.partnerContact.updateMany({
+          data: {
+            ...commonData,
+            selectedEmailId: null,
+            selectedPhoneId: null,
+          },
+          where: { personId: input.personId },
+        });
+      } else {
+        await transaction.partnerContact.updateMany({
+          data: commonData,
+          where: { personId: input.personId },
+        });
+      }
     }
     const deleted = await transaction.person.deleteMany({
       where: { id: input.personId, version: input.version },

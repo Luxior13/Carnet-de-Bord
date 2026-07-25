@@ -72,8 +72,14 @@ describe('partner civil dates', () => {
       endedOn: undefined,
       startedOn: undefined,
     });
-    const omittedUpdate = updatePartnerContactSchema.parse({ version: 1 });
+    const omittedUpdate = updatePartnerContactSchema.parse({
+      contactVersion: 1,
+      isPrimary: true,
+      version: 1,
+    });
     const nullableUpdate = updatePartnerContactSchema.parse({
+      close: true,
+      contactVersion: 1,
       endedOn: null,
       startedOn: null,
       version: 1,
@@ -112,6 +118,8 @@ describe('partner civil dates', () => {
     ).toBe(false);
     expect(
       updatePartnerContactSchema.safeParse({
+        close: true,
+        contactVersion: 1,
         endedOn: '2025-05-31',
         startedOn: '2025-06-01',
         version: 1,

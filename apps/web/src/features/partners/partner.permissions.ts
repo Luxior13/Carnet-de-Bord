@@ -6,7 +6,18 @@ type PartnerPermissionUser = Pick<
   'isProtected' | 'permissions' | 'role'
 > | null;
 
-export const getPartnerCapabilities = (user: PartnerPermissionUser) => {
+export type PartnerCapabilities = {
+  canDelete: boolean;
+  canManage: boolean;
+  canUpdatePersons: boolean;
+  canView: boolean;
+  canViewFieldHistory: boolean;
+  canViewInterlocutors: boolean;
+};
+
+export const getPartnerCapabilities = (
+  user: PartnerPermissionUser,
+): PartnerCapabilities => {
   const permitted = (permission: string): boolean =>
     Boolean(
       user &&
@@ -14,13 +25,16 @@ export const getPartnerCapabilities = (user: PartnerPermissionUser) => {
         hasPermission(user.role, permission, user.permissions)),
     );
   const canView = permitted(PERMISSIONS.PARTNERS.VIEW);
+  const canViewInterlocutors = canView && permitted(PERMISSIONS.PERSONS.VIEW);
 
   return {
     canDelete: permitted(PERMISSIONS.PARTNERS.DELETE),
     canManage: permitted(PERMISSIONS.PARTNERS.MANAGE),
+    canUpdatePersons:
+      canViewInterlocutors && permitted(PERMISSIONS.PERSONS.UPDATE),
     canView,
-    canViewContacts: canView && permitted(PERMISSIONS.PERSONS.VIEW),
     canViewFieldHistory:
       canView && permitted(PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY),
+    canViewInterlocutors,
   };
 };

@@ -91,6 +91,47 @@ const partnerStatusControlSource = readFileSync(
 );
 // Test-owned static path.
 // eslint-disable-next-line security/detect-non-literal-fs-filename
+const partnerContactsSectionSource = readFileSync(
+  new URL(
+    '../features/partners/components/PartnerContactsSection.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+// Test-owned static path.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const partnerInterlocutorsSectionSource = readFileSync(
+  new URL(
+    '../features/partners/components/PartnerInterlocutorsSection.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+// Test-owned static path.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const partnerInterlocutorCreateDialogSource = readFileSync(
+  new URL(
+    '../features/partners/components/PartnerInterlocutorCreateDialog.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+const partnerContactsFeatureSource = [
+  partnerContactsSectionSource,
+  partnerInterlocutorsSectionSource,
+  partnerInterlocutorCreateDialogSource,
+].join('\n');
+// Test-owned static path.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const partnerContactEditDialogsSource = readFileSync(
+  new URL(
+    '../features/partners/components/PartnerContactEditDialogs.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+// Test-owned static path.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
 const partnerStatusRouteSource = readFileSync(
   new URL('../app/api/partenaires/[id]/statut/route.ts', import.meta.url),
   'utf8',
@@ -144,23 +185,54 @@ describe('Sponsors & partenaires foundation', () => {
 
   it('preserves omitted contact dates during a partial mutation', () => {
     const parsed = updatePartnerContactSchema.parse({
+      contactVersion: 4,
       isPrimary: true,
       version: 2,
     });
+    expect(parsed.contactVersion).toBe(4);
     expect(parsed).not.toHaveProperty('startedOn');
     expect(parsed).not.toHaveProperty('endedOn');
+    expect(
+      updatePartnerContactSchema.safeParse({
+        isPrimary: true,
+        version: 2,
+      }).success,
+    ).toBe(false);
+    expect(
+      updatePartnerContactSchema.safeParse({
+        contactVersion: 4,
+        endedOn: '2026-07-25',
+        version: 2,
+      }).success,
+    ).toBe(false);
+    expect(
+      updatePartnerContactSchema.safeParse({
+        close: true,
+        contactVersion: 4,
+        selectedEmailId: null,
+        version: 2,
+      }).success,
+    ).toBe(false);
+    expect(
+      updatePartnerContactSchema.safeParse({
+        contactVersion: 4,
+        version: 2,
+      }).success,
+    ).toBe(false);
   });
 
   it('separates general information from the relationship status mutation', () => {
     const information = {
       categories: ['PARTNER'],
-      channels: [],
       description: null,
       name: 'Exemple',
       version: 2,
       website: null,
     };
     expect(updatePartnerSchema.safeParse(information).success).toBe(true);
+    expect(
+      updatePartnerSchema.safeParse({ ...information, channels: [] }).success,
+    ).toBe(false);
     for (const relationshipField of [
       'closingNote',
       'endedOn',
@@ -286,6 +358,7 @@ describe('Sponsors & partenaires foundation', () => {
     expect(partnerDetailSource).not.toContain('window.confirm');
     expect(partnerDetailSource).not.toContain('<select');
     expect(partnerDetailSource).toContain('<PartnerFollowUpSection');
+    expect(partnerDetailSource).toContain('<PartnerContactsSection');
     expect(partnerFollowUpComposerSource).toContain(
       '<DialogTitle>Ajouter une note de suivi</DialogTitle>',
     );
@@ -310,13 +383,39 @@ describe('Sponsors & partenaires foundation', () => {
     expect(partnerDetailSource).not.toContain('Situation en bref');
     expect(partnerDetailSource).not.toContain('Historique du suivi');
     expect(partnerFollowUpSource).toContain('entry.action.version');
-    expect(partnerFollowUpComposerSource).toContain('Contact concerné');
+    expect(partnerFollowUpComposerSource).toContain('Interlocuteur concerné');
     expect(partnerTimelineItemsSource).toContain('Modifiée le');
+  });
+
+  it('keeps contact management compact without rewriting closed links', () => {
+    expect(partnerContactsFeatureSource).toContain('Lier un interlocuteur');
+    expect(partnerContactsFeatureSource).toContain('<PersonAvatar');
+    expect(partnerContactsFeatureSource).toContain('Aucun résultat.');
+    expect(partnerContactsFeatureSource).toContain('Anciens interlocuteurs (');
+    expect(partnerContactsFeatureSource).toContain('Relier de nouveau');
+    expect(partnerContactsFeatureSource).toContain('addPartnerContact(');
+    expect(partnerContactsFeatureSource).toContain('PARTNER_LIMITS.contacts');
+    expect(partnerContactsFeatureSource).not.toContain('close: false');
+    expect(partnerContactEditDialogsSource).toContain(
+      'Date de fin (facultative)',
+    );
+    expect(partnerContactEditDialogsSource).toContain(
+      'getPartnerTodayCivilDate()',
+    );
+    expect(partnerContactEditDialogsSource).toContain('close: true');
+    expect(partnerContactEditDialogsSource).not.toContain('close: false');
+    expect(partnerContactEditDialogsSource).toContain('dirtyFields.label');
+    expect(partnerContactEditDialogsSource).toContain(
+      'ErrorCode.PARTNER_CONTACT_VERSION_CONFLICT',
+    );
+    expect(partnerContactsFeatureSource).toContain(
+      'ErrorCode.PARTNER_DEPENDENCY_CONFLICT',
+    );
   });
 
   it('allows a short, server-authorized correction without rewriting history', () => {
     expect(partnerDetailSource).toContain(
-      'canViewContacts={capabilities.canViewContacts}',
+      'canViewInterlocutors={capabilities.canViewInterlocutors}',
     );
     expect(partnerFollowUpSource).toContain('<PartnerFollowUpEditor');
     expect(partnerTimelineItemsSource).toContain(
@@ -333,7 +432,7 @@ describe('Sponsors & partenaires foundation', () => {
     expect(partnerFollowUpEditorSource).toContain(
       'entryVersion: entry.entryVersion',
     );
-    expect(partnerFollowUpEditorSource).toContain('canViewContacts');
+    expect(partnerFollowUpEditorSource).toContain('canViewInterlocutors');
     expect(partnerFollowUpEditorSource).toContain(
       '? { partnerContactId: partnerContactId || null }',
     );

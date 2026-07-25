@@ -3,16 +3,13 @@
 import {
   Activity,
   Building2,
-  CirclePlus,
   Handshake,
   History,
   Loader2,
   MessageSquareText,
   RefreshCw,
-  Trash2,
   UserRound,
 } from 'lucide-react';
-import Link from 'next/link';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -25,9 +22,6 @@ import type { UserDetailSection } from '$components/users/user-detail/UserDetail
 import { FEATURES } from '$constants/feature-registry.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
-import { listPersons } from '$features/persons/person.api';
-import { getPersonDisplayName } from '$features/persons/person.ui';
-import type { PersonSummary } from '$features/persons/types/person.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
@@ -35,34 +29,25 @@ import { Checkbox } from '$ui/checkbox';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '$ui/select';
 import { Skeleton } from '$ui/skeleton';
 import { Tabs, TabsContent } from '$ui/tabs';
 import { Textarea } from '$ui/textarea';
 import { ApiClientError } from '$utils/api.utils';
 
 import {
-  addPartnerContact,
   deletePartner,
   getPartner,
   getPartnerActivity,
   updatePartner,
-  updatePartnerContact,
 } from '../partner.api';
 import { PARTNER_CATEGORY_LABELS } from '../partner.constants';
 import { getPartnerCapabilities } from '../partner.permissions';
 import type {
   PartnerActivityItem,
   PartnerCategory,
-  PartnerChannel,
   PartnerDetail,
 } from '../types/partner.types';
+import { PartnerContactsSection } from './PartnerContactsSection';
 import { PartnerFollowUpSection } from './PartnerFollowUpSection';
 import { PartnerStatusBadge } from './PartnerStatusBadge';
 
@@ -107,11 +92,6 @@ const DetailSkeleton: FC = () => (
   </PageShell>
 );
 
-type ChannelDraft = Pick<
-  PartnerChannel,
-  'isPrimary' | 'label' | 'type' | 'value'
->;
-
 const InformationSection: FC<{
   canDelete: boolean;
   canManage: boolean;
@@ -125,14 +105,6 @@ const InformationSection: FC<{
   const [categories, setCategories] = useState<PartnerCategory[]>(
     partner.categories,
   );
-  const [channels, setChannels] = useState<ChannelDraft[]>(
-    partner.channels.map(({ isPrimary, label, type, value }) => ({
-      isPrimary,
-      label,
-      type,
-      value,
-    })),
-  );
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -140,14 +112,6 @@ const InformationSection: FC<{
     setDescription(partner.description ?? '');
     setWebsite(partner.website ?? '');
     setCategories(partner.categories);
-    setChannels(
-      partner.channels.map(({ isPrimary, label, type, value }) => ({
-        isPrimary,
-        label,
-        type,
-        value,
-      })),
-    );
   }, [partner]);
 
   const saveInformation = async (): Promise<void> => {
@@ -160,10 +124,6 @@ const InformationSection: FC<{
     try {
       const updated = await updatePartner(partner.id, {
         categories,
-        channels: channels.map((channel) => ({
-          ...channel,
-          countryCode: 'FR',
-        })),
         description: description || null,
         name,
         version: partner.version,
@@ -270,156 +230,6 @@ const InformationSection: FC<{
       </Card>
 
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
-          <div>
-            <h2 className="font-semibold">Coordonnées générales</h2>
-            <p className="text-muted-foreground text-sm">
-              Emails et téléphones propres à l’organisation.
-            </p>
-          </div>
-          {canManage && (
-            <Button
-              onClick={() =>
-                setChannels((items) => [
-                  ...items,
-                  {
-                    isPrimary: !items.some((item) => item.type === 'EMAIL'),
-                    label: 'Général',
-                    type: 'EMAIL',
-                    value: '',
-                  },
-                ])
-              }
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              <CirclePlus className="size-4" />
-              Ajouter
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {!channels.length && (
-            <p className="text-muted-foreground text-sm">
-              Aucune coordonnée générale.
-            </p>
-          )}
-          {channels.map((channel, index) => (
-            <div
-              className="grid gap-2 rounded-lg border p-3 md:grid-cols-[8rem_8rem_minmax(12rem,1fr)_auto_auto]"
-              key={`${channel.type}-${index}`}
-            >
-              <Select
-                disabled={!canManage}
-                onValueChange={(value) =>
-                  setChannels((items) =>
-                    items.map((item, itemIndex) =>
-                      itemIndex === index
-                        ? {
-                            ...item,
-                            type: value as 'EMAIL' | 'PHONE',
-                          }
-                        : item,
-                    ),
-                  )
-                }
-                value={channel.type}
-              >
-                <SelectTrigger
-                  aria-label="Type de coordonnée"
-                  className="w-full"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="EMAIL">Email</SelectItem>
-                  <SelectItem value="PHONE">Téléphone</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
-                aria-label="Libellé"
-                autoComplete="off"
-                disabled={!canManage}
-                maxLength={40}
-                onChange={(event) =>
-                  setChannels((items) =>
-                    items.map((item, itemIndex) =>
-                      itemIndex === index
-                        ? { ...item, label: event.target.value }
-                        : item,
-                    ),
-                  )
-                }
-                value={channel.label}
-              />
-              <Input
-                aria-label="Coordonnée"
-                autoComplete="off"
-                disabled={!canManage}
-                onChange={(event) =>
-                  setChannels((items) =>
-                    items.map((item, itemIndex) =>
-                      itemIndex === index
-                        ? { ...item, value: event.target.value }
-                        : item,
-                    ),
-                  )
-                }
-                type={channel.type === 'EMAIL' ? 'email' : 'tel'}
-                value={channel.value}
-              />
-              <Label className="flex items-center gap-2 whitespace-nowrap">
-                <Checkbox
-                  checked={channel.isPrimary}
-                  disabled={!canManage}
-                  onCheckedChange={() =>
-                    setChannels((items) =>
-                      items.map((item, itemIndex) => ({
-                        ...item,
-                        isPrimary:
-                          item.type === channel.type
-                            ? itemIndex === index
-                            : item.isPrimary,
-                      })),
-                    )
-                  }
-                />
-                Principal
-              </Label>
-              {canManage && (
-                <Button
-                  aria-label="Retirer la coordonnée"
-                  onClick={() =>
-                    setChannels((items) =>
-                      items.filter((_, itemIndex) => itemIndex !== index),
-                    )
-                  }
-                  size="icon"
-                  type="button"
-                  variant="ghost"
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              )}
-            </div>
-          ))}
-          {canManage && (
-            <div className="flex justify-end">
-              <Button
-                disabled={saving}
-                onClick={() => void saveInformation()}
-                type="button"
-              >
-                {saving && <Loader2 className="size-4 animate-spin" />}
-                Enregistrer les coordonnées
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
         <CardHeader>
           <h2 className="font-semibold">Périodes de relation</h2>
           <p className="text-muted-foreground text-sm">
@@ -460,7 +270,7 @@ const InformationSection: FC<{
 
       {canDelete && (
         <EntityDangerZone
-          description="Seule une fiche créée par erreur et encore dépourvue de période, contact ou suivi peut être supprimée."
+          description="Seule une fiche créée par erreur et encore dépourvue de période, d’interlocuteur ou de suivi peut être supprimée."
           dialogDescription="Cette action est irréversible. Vérifiez qu’il s’agit bien d’une fiche vide créée par erreur avant de confirmer."
           dialogNotice={`La fiche « ${partner.name} » sera effacée immédiatement et définitivement.`}
           onDelete={(version, idempotencyKey) =>
@@ -477,196 +287,6 @@ const InformationSection: FC<{
         />
       )}
     </div>
-  );
-};
-
-const ContactsSection: FC<{
-  canManage: boolean;
-  canViewContacts: boolean;
-  onChange: (partner: PartnerDetail) => void;
-  partner: PartnerDetail;
-}> = ({ canManage, canViewContacts, onChange, partner }) => {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<PersonSummary[]>([]);
-  const [searching, setSearching] = useState(false);
-
-  useEffect(() => {
-    if (!canViewContacts || query.trim().length < 2) {
-      setResults([]);
-
-      return;
-    }
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => {
-      setSearching(true);
-      void listPersons({
-        limit: 8,
-        q: query,
-        signal: controller.signal,
-      })
-        .then((response) => setResults(response.items))
-        .catch(() => setResults([]))
-        .finally(() => setSearching(false));
-    }, 250);
-
-    return () => {
-      controller.abort();
-      window.clearTimeout(timer);
-    };
-  }, [canViewContacts, query]);
-
-  if (!canViewContacts) {
-    return (
-      <ContentState
-        description="La permission de consulter le Répertoire est nécessaire pour afficher ou associer des contacts."
-        title="Contacts restreints"
-      />
-    );
-  }
-
-  const add = async (person: PersonSummary): Promise<void> => {
-    try {
-      const updated = await addPartnerContact(partner.id, {
-        isPrimary: !partner.contacts.some(
-          (contact) => !contact.closedAt && contact.isPrimary,
-        ),
-        label: 'Contact',
-        personId: person.id,
-        startedOn: null,
-        version: partner.version,
-      });
-      onChange(updated);
-      setQuery('');
-      setResults([]);
-      toast.success('Contact ajouté');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Ajout impossible');
-    }
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <h2 className="font-semibold">Contacts liés au Répertoire</h2>
-        <p className="text-muted-foreground text-sm">
-          Une liaison n’effectue aucune copie des coordonnées personnelles.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {canManage && (
-          <div className="relative">
-            <Input
-              autoComplete="off"
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Rechercher une fiche du Répertoire…"
-              value={query}
-            />
-            {(searching || results.length > 0) && (
-              <div className="border-border-default bg-surface absolute z-20 mt-1 w-full rounded-lg border p-1 shadow-lg">
-                {searching ? (
-                  <p className="text-muted-foreground p-3 text-sm">
-                    Recherche…
-                  </p>
-                ) : (
-                  results.map((person) => (
-                    <button
-                      className="hover:bg-surface-tile-hover w-full rounded-md px-3 py-2 text-left text-sm"
-                      key={person.id}
-                      onClick={() => void add(person)}
-                      type="button"
-                    >
-                      {getPersonDisplayName(person)}
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-        )}
-        {!partner.contacts.length && (
-          <p className="text-muted-foreground text-sm">
-            Aucun contact n’est encore lié.
-          </p>
-        )}
-        <div className="space-y-2">
-          {partner.contacts.map((contact) => (
-            <div
-              className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
-              key={contact.id}
-            >
-              <div className="min-w-0">
-                {contact.person ? (
-                  <Link
-                    className="font-medium hover:underline"
-                    href={`/vie-interne/repertoire/${encodeURIComponent(contact.person.id)}`}
-                  >
-                    {contact.person.displayName}
-                  </Link>
-                ) : (
-                  <p className="text-muted-foreground font-medium">
-                    Contact supprimé ou restreint
-                  </p>
-                )}
-                <p className="text-muted-foreground text-xs">
-                  {contact.label}
-                  {contact.isPrimary ? ' · Principal' : ''}
-                  {contact.closedAt ? ' · Ancien contact' : ''}
-                </p>
-              </div>
-              {canManage && (
-                <div className="flex gap-2">
-                  {!contact.closedAt && !contact.isPrimary && (
-                    <Button
-                      onClick={() =>
-                        void updatePartnerContact(partner.id, contact.id, {
-                          isPrimary: true,
-                          version: partner.version,
-                        }).then((updated) => {
-                          onChange(updated);
-                          toast.success('Contact principal mis à jour');
-                        })
-                      }
-                      size="sm"
-                      variant="outline"
-                    >
-                      Principal
-                    </Button>
-                  )}
-                  <Button
-                    onClick={() =>
-                      void updatePartnerContact(partner.id, contact.id, {
-                        close: !contact.closedAt,
-                        endedOn: null,
-                        version: partner.version,
-                      })
-                        .then((updated) => {
-                          onChange(updated);
-                          toast.success(
-                            contact.closedAt
-                              ? 'Contact réactivé'
-                              : 'Liaison terminée',
-                          );
-                        })
-                        .catch((error) =>
-                          toast.error(
-                            error instanceof Error
-                              ? error.message
-                              : 'Modification impossible',
-                          ),
-                        )
-                    }
-                    size="sm"
-                    variant="ghost"
-                  >
-                    {contact.closedAt ? 'Réactiver' : 'Terminer'}
-                  </Button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
   );
 };
 
@@ -858,9 +478,10 @@ const DetailContent: FC<{
           />
         </TabsContent>
         <TabsContent value="contacts">
-          <ContactsSection
+          <PartnerContactsSection
             canManage={capabilities.canManage}
-            canViewContacts={capabilities.canViewContacts}
+            canUpdatePersons={capabilities.canUpdatePersons}
+            canViewInterlocutors={capabilities.canViewInterlocutors}
             onChange={setPartner}
             partner={partner}
           />
@@ -868,7 +489,7 @@ const DetailContent: FC<{
         <TabsContent value="suivi">
           <PartnerFollowUpSection
             canManage={capabilities.canManage}
-            canViewContacts={capabilities.canViewContacts}
+            canViewInterlocutors={capabilities.canViewInterlocutors}
             onChange={setPartner}
             partner={partner}
           />

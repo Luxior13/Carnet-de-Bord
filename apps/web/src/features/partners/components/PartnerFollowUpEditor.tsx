@@ -35,7 +35,7 @@ const getMutationErrorMessage = (error: unknown): string => {
 };
 
 export const PartnerFollowUpEditor: FC<{
-  canViewContacts: boolean;
+  canViewInterlocutors: boolean;
   editableDeadlineMs: number;
   entry: PartnerFollowUp;
   onConflict: () => void;
@@ -44,7 +44,7 @@ export const PartnerFollowUpEditor: FC<{
   open: boolean;
   partner: PartnerDetail;
 }> = ({
-  canViewContacts,
+  canViewInterlocutors,
   editableDeadlineMs,
   entry,
   onConflict,
@@ -69,7 +69,8 @@ export const PartnerFollowUpEditor: FC<{
   );
   const hasChanges =
     text.trim() !== entry.text ||
-    (canViewContacts && partnerContactId !== (entry.partnerContactId ?? ''));
+    (canViewInterlocutors &&
+      partnerContactId !== (entry.partnerContactId ?? ''));
 
   useEffect((): (() => void) | undefined => {
     if (!open) return;
@@ -118,7 +119,7 @@ export const PartnerFollowUpEditor: FC<{
     try {
       const updated = await updatePartnerFollowUp(partner.id, entry.id, {
         entryVersion: entry.entryVersion,
-        ...(canViewContacts
+        ...(canViewInterlocutors
           ? { partnerContactId: partnerContactId || null }
           : {}),
         text,
@@ -177,10 +178,10 @@ export const PartnerFollowUpEditor: FC<{
               />
             </div>
 
-            {canViewContacts && selectableContacts.length > 0 && (
+            {canViewInterlocutors && selectableContacts.length > 0 && (
               <div className="grid gap-2">
                 <Label htmlFor="partner-follow-up-edit-contact">
-                  Contact concerné
+                  Interlocuteur concerné
                   <span className="text-muted-foreground font-normal">
                     {' '}
                     (facultatif)
@@ -200,11 +201,11 @@ export const PartnerFollowUpEditor: FC<{
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Aucun contact</SelectItem>
+                    <SelectItem value="none">Aucun interlocuteur</SelectItem>
                     {selectableContacts.map((contact) => (
                       <SelectItem key={contact.id} value={contact.id}>
                         {contact.person?.displayName} · {contact.label}
-                        {contact.closedAt ? ' (ancien contact)' : ''}
+                        {contact.closedAt ? ' (ancien interlocuteur)' : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>

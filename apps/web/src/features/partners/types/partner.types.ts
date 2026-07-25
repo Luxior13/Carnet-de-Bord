@@ -14,6 +14,7 @@ export type PartnerActor = {
 };
 
 export type PartnerChannel = {
+  countryCode: string | null;
   id: string;
   isPrimary: boolean;
   label: string;
@@ -37,6 +38,20 @@ export type PartnerContactPerson = {
   nickname: string | null;
 };
 
+export type PartnerContactSelectedEmail = {
+  email: string;
+  id: string;
+  isPrimary: boolean;
+  label: string;
+};
+
+export type PartnerContactSelectedPhone = {
+  id: string;
+  isPrimary: boolean;
+  label: string;
+  phone: string;
+};
+
 export type PartnerContact = {
   closedAt: string | null;
   endedOn: string | null;
@@ -44,6 +59,8 @@ export type PartnerContact = {
   isPrimary: boolean;
   label: string;
   person: PartnerContactPerson | null;
+  selectedEmail: PartnerContactSelectedEmail | null;
+  selectedPhone: PartnerContactSelectedPhone | null;
   startedOn: string | null;
   version: number;
 };

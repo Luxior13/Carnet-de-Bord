@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '$ui/select';
 import { Switch } from '$ui/switch';
+import { PHONE_COUNTRY_OPTIONS } from '$utils/phone-country-options';
 
 import {
   PERSON_CONTACT_LABEL_SUGGESTIONS,
@@ -48,19 +49,6 @@ type FieldProvenances = Readonly<
   Partial<Record<string, PersonFieldProvenanceTarget>>
 >;
 type FieldsLayout = 'grid' | 'stacked';
-
-const COUNTRY_OPTIONS = [
-  ['FR', 'France (+33)'],
-  ['BE', 'Belgique (+32)'],
-  ['CH', 'Suisse (+41)'],
-  ['LU', 'Luxembourg (+352)'],
-  ['DE', 'Allemagne (+49)'],
-  ['ES', 'Espagne (+34)'],
-  ['IT', 'Italie (+39)'],
-  ['GB', 'Royaume-Uni (+44)'],
-  ['CA', 'Canada (+1)'],
-  ['US', 'États-Unis (+1)'],
-] as const;
 
 const FieldError: FC<{ id: string; message?: string }> = ({ id, message }) =>
   message ? (
@@ -305,7 +293,7 @@ export const PhoneFields: FC<PhoneFieldsProps> = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {COUNTRY_OPTIONS.map(([code, label]) => (
+            {PHONE_COUNTRY_OPTIONS.map(([code, label]) => (
               <SelectItem key={code} value={code}>
                 {label}
               </SelectItem>

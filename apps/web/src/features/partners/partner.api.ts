@@ -77,6 +77,44 @@ export const updatePartnerStatus = async (
   return response.partner;
 };
 
+export const addPartnerChannel = async (
+  id: string,
+  payload: Payload,
+): Promise<PartnerDetail> => {
+  const response = await apiFetchJson<PartnerMutationResponse>(
+    `/api/partenaires/${encodeURIComponent(id)}/coordonnees`,
+    jsonRequest('POST', payload),
+  );
+
+  return response.partner;
+};
+
+export const updatePartnerChannel = async (
+  id: string,
+  channelId: string,
+  payload: Payload,
+): Promise<PartnerDetail> => {
+  const response = await apiFetchJson<PartnerMutationResponse>(
+    `/api/partenaires/${encodeURIComponent(id)}/coordonnees/${encodeURIComponent(channelId)}`,
+    jsonRequest('PATCH', payload),
+  );
+
+  return response.partner;
+};
+
+export const deletePartnerChannel = async (
+  id: string,
+  channelId: string,
+  channelVersion: number,
+): Promise<PartnerDetail> => {
+  const response = await apiFetchJson<PartnerMutationResponse>(
+    `/api/partenaires/${encodeURIComponent(id)}/coordonnees/${encodeURIComponent(channelId)}`,
+    jsonRequest('DELETE', { channelVersion }),
+  );
+
+  return response.partner;
+};
+
 export const addPartnerContact = async (
   id: string,
   payload: Payload,

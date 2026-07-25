@@ -84,8 +84,8 @@ ou à implémenter.
 - [ ] Gestion des catégories et du statut.
 - [ ] Historique des périodes de relation, y compris une reprise plusieurs
       années après une relation terminée.
-- [ ] Gestion des contacts liés au Répertoire.
-- [ ] Contact principal facultatif.
+- [x] Gestion des contacts liés au Répertoire.
+- [x] Contact principal facultatif.
 - [ ] Coordonnées générales libellées de l'organisation.
 - [x] Journal interne de suivi composé d'entrées chronologiques.
 - [x] Action facultative à prévoir sur une entrée de suivi.
@@ -227,8 +227,6 @@ ou à implémenter.
 - [ ] Catégories sponsor et partenaire.
 - [ ] Description courte.
 - [ ] Site internet principal.
-- [ ] Plusieurs emails et téléphones généraux facultatifs, avec libellé court
-      et un principal par type.
 - [ ] Période en cours et périodes terminées, avec dates facultatives.
 - [ ] Afficher la chronologie des périodes sans la confondre avec le statut
       courant, qui reste géré dans Suivi et visible dans l'en-tête.
@@ -238,26 +236,40 @@ ou à implémenter.
 
 ### Onglet Contacts
 
-- [ ] Recherche et sélection d'une fiche du Répertoire.
-- [ ] Plusieurs contacts possibles.
-- [ ] Libellé court par contact : direction, commercial, communication,
+- [x] Séparer visuellement « Coordonnées de l'organisation » et
+      « Interlocuteurs » dans le même onglet.
+- [x] Plusieurs emails et téléphones généraux facultatifs, avec libellé court
+      et un principal par type.
+- [x] Réserver les coordonnées générales au standard, à la facturation, aux
+      partenariats et aux autres points de contact réellement génériques.
+- [x] Gérer chaque coordonnée générale par un CRUD granulaire sans réécrire la
+      collection ni les informations générales de la fiche.
+- [x] Recherche et sélection d'une fiche du Répertoire.
+- [x] Plusieurs interlocuteurs possibles.
+- [x] Libellé court par interlocuteur : direction, commercial, communication,
       technique ou texte libre court.
-- [ ] Un seul contact principal par organisation.
-- [ ] Une liaison possède une date de début, une date de fin facultative et un
+- [x] Un seul interlocuteur principal par organisation.
+- [x] Une liaison possède une date de début, une date de fin facultative et un
       marqueur technique de clôture indépendant ; l'état courant ne dépend pas
       d'une date métier qui peut être inconnue.
-- [ ] « Retirer » un ancien contact termine la liaison au lieu d'effacer son
-      existence ; une liaison créée par erreur peut seule être supprimée.
-- [ ] Une même personne peut être réactivée plus tard sans écraser sa liaison
+- [x] Terminer la participation d'un interlocuteur clôt la liaison au lieu d'effacer son existence.
+- [ ] Une liaison créée par erreur peut seule être supprimée.
+- [x] Une même personne peut être reliée de nouveau plus tard sans écraser sa liaison
       historique.
-- [ ] Ouvrir la fiche du contact sans dupliquer son identité ou ses
+- [x] Ouvrir la fiche de l'interlocuteur sans dupliquer son identité ou ses
       coordonnées.
-- [ ] Afficher uniquement les informations du Répertoire que l'utilisateur a
+- [x] Choisir facultativement un email et un téléphone de la fiche source ;
+      stocker uniquement `selectedEmailId` et `selectedPhoneId`, jamais leur
+      valeur.
+- [x] Préselectionner les coordonnées principales lors d'une nouvelle liaison,
+      tout en permettant un autre choix ou aucune coordonnée.
+- [x] Afficher uniquement les informations du Répertoire que l'utilisateur a
       le droit de consulter.
-- [ ] Ajouter et retirer une liaison sans modifier la fiche source.
-- [ ] Si la fiche du Répertoire est supprimée, conserver la liaison métier
-      anonymisée sous « Contact supprimé », sans copie de nom ou de coordonnée.
-- [ ] Prévoir l'affichage inverse du partenaire sur la fiche du contact.
+- [x] Ajouter et terminer une liaison sans modifier la fiche source.
+- [x] Si la fiche du Répertoire est supprimée, conserver la liaison métier
+      anonymisée sous « Interlocuteur supprimé », sans copie de nom ou de
+      coordonnée.
+- [ ] Prévoir l'affichage inverse du partenaire sur la fiche de l'interlocuteur.
 
 ### Onglet Suivi
 
@@ -420,22 +432,29 @@ ou à implémenter.
 
 ## Contacts et Répertoire
 
+- [x] Une coordonnée générale appartient à l'organisation et reste distincte
+      d'une coordonnée personnelle du Répertoire.
 - [x] Un contact référence une `Person`, jamais automatiquement un `User`.
 - [x] La relation avec l'organisation ne modifie pas le statut de la personne
       dans la structure.
 - [x] Une personne peut être contact de plusieurs organisations.
-- [ ] Empêcher deux liaisons actives identiques entre la même personne et la
+- [x] Empêcher deux liaisons actives identiques entre la même personne et la
       même organisation.
-- [ ] Autoriser un libellé libre court avec suggestions, sans catalogue de
+- [x] Autoriser un libellé libre court avec suggestions, sans catalogue de
       rôles à administrer.
 - [x] Lorsqu'une fiche du Répertoire est supprimée, passer la référence à
       `null`, clôturer la liaison, retirer son statut principal, conserver la
       liaison anonymisée et ne révéler aucune ancienne donnée personnelle.
-- [ ] Ne jamais recopier prénom, nom, pseudo, email ou téléphone dans la table
+- [x] Ne jamais recopier prénom, nom, pseudo, email ou téléphone dans la table
       de liaison.
-- [ ] Conserver dans l'audit uniquement l'identifiant de liaison et un libellé
+- [ ] Référencer l'email et le téléphone préférés par `selectedEmailId` et
+      `selectedPhoneId`, avec mise à `null` automatique si la coordonnée source
+      disparaît.
+- [ ] Vérifier côté serveur que chaque coordonnée sélectionnée appartient à la
+      personne de la liaison.
+- [x] Conserver dans l'audit uniquement l'identifiant de liaison et un libellé
       neutre autorisé, jamais une ancienne coordonnée.
-- [ ] Si un contact est inaccessible par permission, appliquer le même
+- [x] Si un contact est inaccessible par permission, appliquer le même
       masquage dans la liste, la fiche, le suivi, l'activité et les API.
 
 ## Schéma de données envisagé
@@ -454,7 +473,7 @@ ou à implémenter.
   - organisation ;
   - catégorie canonique ;
   - unicité du couple.
-- [ ] `PartnerOrganizationContactChannel`
+- [x] `PartnerOrganizationContactChannel`
   - organisation ;
   - type email ou téléphone ;
   - valeur et valeur normalisée ;
@@ -468,11 +487,13 @@ ou à implémenter.
   - motif ou note courte facultative de fin/réouverture ;
   - version et dates techniques ;
   - contrainte d'une seule période ouverte.
-- [ ] `PartnerContact`
+- [x] `PartnerContact`
   - organisation ;
   - personne facultative après suppression de la fiche source ;
+  - références facultatives `selectedEmailId` et `selectedPhoneId`, sans copie
+    des valeurs du Répertoire ;
   - libellé court ;
-  - contact principal ;
+  - interlocuteur principal ;
   - dates métier de début et de fin facultatives ;
   - horodatage technique de clôture facultatif ;
   - dates de création et modification ;
@@ -552,15 +573,21 @@ ou à implémenter.
 - [x] Aucun droit spécial d'assignation ou de responsabilité.
 - [ ] Ajouter le pôle et la catégorie de permissions uniquement avec les pages
       et API opérationnelles.
-- [ ] Exiger `partners:manage` et `persons:view` pour rechercher et associer un
-      contact.
+- [x] Laisser les coordonnées générales visibles avec `partners:view` et
+      exiger `partners:manage` pour leur CRUD.
+- [x] Exiger `partners:manage` et `persons:view` pour rechercher et associer un
+      interlocuteur ou choisir ses coordonnées existantes.
+- [x] Continuer d'exiger `persons:update` pour toute création, correction ou
+      suppression d'une coordonnée dans la fiche source.
+- [x] Ne créer aucune permission supplémentaire pour l'onglet Contacts.
 - [ ] Exiger `partners:view` et `audit:view_field_history` pour l'historique
       détaillé d'un champ partenaire.
-- [ ] `partners:view` sans `persons:view` permet de consulter l'organisation,
-      mais masque entièrement l'identité et les coordonnées de ses contacts.
+- [x] `partners:view` sans `persons:view` permet de consulter l'organisation et
+      ses coordonnées générales, mais masque entièrement les interlocuteurs,
+      leurs liaisons et leurs coordonnées sélectionnées.
 - [ ] `persons:view` sans `partners:view` ne révèle aucune liaison partenaire
       sur la fiche du Répertoire.
-- [ ] Une permission de gestion des partenaires ne donne jamais le droit de
+- [x] Une permission de gestion des partenaires ne donne jamais le droit de
       modifier une fiche du Répertoire.
 - [ ] Appliquer toutes les permissions côté serveur.
 - [ ] Respecter les règles existantes de délégation et de hiérarchie.
@@ -574,6 +601,10 @@ ou à implémenter.
 - [ ] Endpoint de lecture d'une fiche.
 - [x] Mutations distinctes pour informations, contacts, statut et entrées de
       suivi.
+- [x] CRUD dédié et granulaire des coordonnées générales, protégé par
+      `partners:manage`, avec version de la fiche et version de la coordonnée.
+- [x] Retirer les coordonnées générales de la mutation globale des
+      informations afin de ne plus supprimer et recréer toute la collection.
 - [x] Mutation transactionnelle pour ouvrir ou clôturer une période avec le
       changement de statut correspondant.
 - [x] Mutations dédiées pour créer, corriger et supprimer une entrée ; la
@@ -587,7 +618,7 @@ ou à implémenter.
       du chargement des suivis précédents.
 - [x] La création d'une note ne dépend pas de la version globale de la fiche ;
       la réalisation d'une action utilise la version propre de cette action.
-- [ ] Endpoint de recherche de contacts protégé par `persons:view`.
+- [x] Recherche des interlocuteurs protégée par `persons:view`.
 - [ ] Validation partagée entre client et serveur.
 - [x] Faire reposer la correction d'une note sur sa version propre plutôt que
       sur la version globale de la fiche.
@@ -595,9 +626,11 @@ ou à implémenter.
 - [ ] Clés d'idempotence pour création et suppression.
 - [x] Transactions pour les changements de statut, de période ou d'action qui
       créent aussi un événement métier.
-- [ ] Vérification serveur de l'existence et de l'autorisation d'une personne
+- [x] Vérification serveur de l'existence et de l'autorisation d'une personne
       avant association.
-- [ ] Lors de la suppression d'une fiche du Répertoire, anonymiser et clôturer
+- [x] Vérification transactionnelle de l'appartenance de `selectedEmailId` et
+      `selectedPhoneId` à la personne associée.
+- [x] Lors de la suppression d'une fiche du Répertoire, anonymiser et clôturer
       ses liaisons partenaires dans la même transaction que la suppression de
       la personne.
 - [ ] Réponses d'erreur stables pour validation, conflit, permission, doublon
@@ -663,8 +696,13 @@ ou à implémenter.
 - [x] Enregistrer `poleKey`, `pageKey`, `tabKey` et identifiant
       d'organisation.
 - [x] Auditer les catégories, le statut, les dates et les liaisons de contacts.
+- [x] Auditer séparément la création, la modification et la suppression d'une
+      coordonnée générale avec son identifiant opaque, son type et les champs
+      modifiés.
 - [x] Ne pas inclure les notes ou coordonnées dans les toasts, notifications
       ou métadonnées non autorisées.
+- [x] Ne jamais journaliser de nom, pseudo, `personId`, valeur de coordonnée ou
+      libellé libre dans les métadonnées d'une liaison.
 - [x] L'activité indique qu'une entrée a été créée, corrigée, supprimée ou
       terminée sans recopier son texte complet dans le journal global.
 - [x] Conserver un libellé lisible de l'acteur dans l'audit technique, les
@@ -722,8 +760,12 @@ ou à implémenter.
 - [ ] Ne jamais faire confiance aux catégories, statuts ou relations envoyés
       par le client.
 - [ ] Échapper ou assainir les notes avant affichage.
-- [ ] Ne pas exposer un contact devenu inaccessible à travers une fiche
+- [x] Ne pas exposer un interlocuteur devenu inaccessible à travers une fiche
       partenaire.
+- [x] À la suppression d'une fiche du Répertoire, clôturer les liaisons,
+      retirer leur statut principal, mettre la personne et les coordonnées
+      sélectionnées à `null` et neutraliser toute donnée libre susceptible de
+      révéler l'ancienne identité.
 - [ ] Garder les notes et coordonnées hors des journaux techniques.
 - [ ] Définir les longueurs maximales de tous les champs.
 - [ ] Réponses privées en `no-store` et absence de données partenaires dans les
@@ -733,10 +775,13 @@ ou à implémenter.
 
 - [x] Pagination serveur du fil avec ordre déterministe, curseur signé et
       photographie stable pendant le chargement des pages suivantes.
-- [ ] Sélection minimale pour la liste.
-- [ ] Compteurs et contact principal chargés sans récupérer toutes les fiches.
+- [x] Sélection minimale pour la liste.
+- [x] Compteurs et interlocuteur principal chargés sans récupérer toutes les
+      fiches.
 - [x] Chargement différé du fil uniquement à l'ouverture de l'onglet Suivi.
 - [x] Pagination et chargement progressif des anciennes entrées de suivi.
+- [ ] Paginer les anciennes liaisons de contacts si leur volume réel devient
+      mesurablement coûteux ; leur conservation en base reste illimitée.
 - [x] Charger séparément toutes les actions encore à prévoir lors de la
       première page, afin qu'une action ancienne ne soit jamais masquée.
 - [ ] Borner ou paginer la projection des actions ouvertes si un volume réel
@@ -759,12 +804,20 @@ ou à implémenter.
 - [ ] Tests de plusieurs périodes, reprise après plusieurs années et unicité de
       la période ouverte.
 - [ ] Tests des permissions `view`, `manage` et `delete`.
+- [x] Tests garantissant que les coordonnées générales restent visibles avec
+      `partners:view` sans `persons:view`.
+- [x] Tests du CRUD granulaire des coordonnées générales avec
+      `partners:manage`, versions optimistes, doublon et principal unique.
+- [x] Tests refusant la liaison et le choix de coordonnées sans
+      `persons:view`, ou lorsque la coordonnée appartient à une autre personne.
 - [x] Tests de contrat empêchant la lecture ou l'association d'un contact non
       autorisé depuis le fil.
 - [ ] Tests du contact principal et des doublons.
 - [ ] Tests de fin et réactivation d'une liaison contact.
 - [ ] Tests de suppression d'une fiche du Répertoire avec anonymisation de la
       liaison partenaire.
+- [ ] Tests de suppression d'un email ou téléphone sélectionné avec mise à
+      `null` de sa référence, sans copie ni perte de la liaison.
 - [x] Tests de contrat du masquage complet des contacts sans `persons:view`.
 - [x] Tests de contrat du fil unifié et de sa pagination.
 - [x] Tests de contrat de correction d'une note par son auteur, pendant sa

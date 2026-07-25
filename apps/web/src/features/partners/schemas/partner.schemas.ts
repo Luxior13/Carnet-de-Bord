@@ -134,9 +134,8 @@ const channelSchema = z
     return { ...value, countryCode, normalizedValue: phone.number };
   });
 
-const commonOrganizationShape = {
+const organizationInformationShape = {
   categories: z.array(z.enum(PARTNER_CATEGORIES)).min(1).max(2),
-  channels: z.array(channelSchema).max(PARTNER_LIMITS.channels).default([]),
   description: optionalTrimmed(500),
   name: z.string().trim().min(1, 'Nom requis').max(200),
   website,
@@ -174,9 +173,73 @@ const validateDateOrder = (
   }
 };
 
+const validatePartnerContactUpdate = (
+  value: {
+    close?: boolean;
+    endedOn?: string | null;
+    isPrimary?: boolean;
+    label?: string;
+    selectedEmailId?: string | null;
+    selectedPhoneId?: string | null;
+    startedOn?: string | null;
+  },
+  context: z.RefinementCtx,
+): void => {
+  validateDateOrder(value, context);
+  if (value.close === false) {
+    context.addIssue({
+      code: 'custom',
+      message:
+        'Une liaison terminée doit être recréée au lieu d’être réactivée',
+      path: ['close'],
+    });
+  }
+  if (value.endedOn !== undefined && value.close !== true) {
+    context.addIssue({
+      code: 'custom',
+      message: 'La date de fin ne peut être renseignée qu’à la clôture',
+      path: ['endedOn'],
+    });
+  }
+  if (value.close === true && value.isPrimary === true) {
+    context.addIssue({
+      code: 'custom',
+      message:
+        'Une liaison terminée ne peut pas être définie comme interlocuteur principal',
+      path: ['isPrimary'],
+    });
+  }
+  if (
+    value.close === true &&
+    (value.selectedEmailId !== undefined || value.selectedPhoneId !== undefined)
+  ) {
+    context.addIssue({
+      code: 'custom',
+      message:
+        'Les coordonnées opérationnelles doivent être retirées lors de la clôture',
+      path: ['_form'],
+    });
+  }
+  if (
+    value.close !== true &&
+    value.isPrimary === undefined &&
+    value.label === undefined &&
+    value.selectedEmailId === undefined &&
+    value.selectedPhoneId === undefined &&
+    value.startedOn === undefined
+  ) {
+    context.addIssue({
+      code: 'custom',
+      message: 'Aucune modification à enregistrer',
+      path: ['_form'],
+    });
+  }
+};
+
 export const createPartnerSchema = z
   .object({
-    ...commonOrganizationShape,
+    ...organizationInformationShape,
+    channels: z.array(channelSchema).max(PARTNER_LIMITS.channels).default([]),
     contact: z
       .object({
         label: z.string().trim().min(1).max(80),
@@ -196,11 +259,10 @@ export const createPartnerSchema = z
 
 export const updatePartnerSchema = z
   .object({
-    ...commonOrganizationShape,
+    ...organizationInformationShape,
     version: z.number().int().positive(),
   })
-  .strict()
-  .superRefine(validatePrimaries);
+  .strict();
 
 export const updatePartnerStatusSchema = z
   .object({
@@ -236,6 +298,8 @@ export const createPartnerContactSchema = z
     isPrimary: z.boolean().default(false),
     label: z.string().trim().min(1).max(80),
     personId: z.string().trim().min(1).max(128),
+    selectedEmailId: z.string().trim().min(1).max(128).nullable().optional(),
+    selectedPhoneId: z.string().trim().min(1).max(128).nullable().optional(),
     startedOn: civilDate,
     version: z.number().int().positive(),
   })
@@ -244,14 +308,33 @@ export const createPartnerContactSchema = z
 export const updatePartnerContactSchema = z
   .object({
     close: z.boolean().optional(),
+    contactVersion: z.number().int().positive(),
     endedOn: optionalCivilDate,
     isPrimary: z.boolean().optional(),
     label: z.string().trim().min(1).max(80).optional(),
+    selectedEmailId: z.string().trim().min(1).max(128).nullable().optional(),
+    selectedPhoneId: z.string().trim().min(1).max(128).nullable().optional(),
     startedOn: optionalCivilDate,
     version: z.number().int().positive(),
   })
   .strict()
-  .superRefine(validateDateOrder);
+  .superRefine(validatePartnerContactUpdate);
+
+export const createPartnerChannelSchema = channelSchema;
+
+export const updatePartnerChannelSchema = z
+  .object({
+    channelVersion: z.number().int().positive(),
+    countryCode: z.string().length(2).optional().default('FR'),
+    isPrimary: z.boolean(),
+    label: z.string().trim().min(1).max(40),
+    value: z.string().trim().min(1).max(320),
+  })
+  .strict();
+
+export const deletePartnerChannelSchema = z
+  .object({ channelVersion: z.number().int().positive() })
+  .strict();
 
 export const createPartnerFollowUpSchema = z
   .object({
@@ -303,6 +386,18 @@ export type CreatePartnerContactInput = z.infer<
 >;
 export type UpdatePartnerContactInput = z.infer<
   typeof updatePartnerContactSchema
+>;
+export type CreatePartnerChannelInput = z.infer<
+  typeof createPartnerChannelSchema
+>;
+export type CreatePartnerChannelPayload = z.input<
+  typeof createPartnerChannelSchema
+>;
+export type UpdatePartnerChannelInput = z.infer<
+  typeof updatePartnerChannelSchema
+>;
+export type DeletePartnerChannelInput = z.infer<
+  typeof deletePartnerChannelSchema
 >;
 export type CreatePartnerFollowUpInput = z.infer<
   typeof createPartnerFollowUpSchema

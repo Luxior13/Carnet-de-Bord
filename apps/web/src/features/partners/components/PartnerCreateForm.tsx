@@ -111,7 +111,7 @@ export const PartnerCreateForm: FC<{ returnHref: string }> = ({
         <CardHeader>
           <h2 className="font-semibold">Informations essentielles</h2>
           <p className="text-muted-foreground text-sm">
-            Commencez simplement ; les contacts et le suivi se complètent
+            Commencez simplement ; les interlocuteurs et le suivi se complètent
             ensuite dans la fiche.
           </p>
         </CardHeader>

@@ -30,6 +30,10 @@ const SENSITIVE_METADATA_KEYS = new Set([
   'archivedUserId',
   'contactEmailVerificationReset',
   'createdUserId',
+  'changedFields',
+  'changedSections',
+  'changeKind',
+  'channelType',
   'effectivelyGrantedPermissionKeys',
   'effectivelyRevokedPermissionKeys',
   'filters',
@@ -39,6 +43,8 @@ const SENSITIVE_METADATA_KEYS = new Set([
   'loginName',
   'maxAttempts',
   'notificationId',
+  'partnerChannelId',
+  'partnerContactId',
   'passwordChange',
   'passwordReset',
   'reason',
@@ -57,6 +63,7 @@ const SENSITIVE_METADATA_KEYS = new Set([
   'truncated',
   'type',
   'phase',
+  'previousPrimaryContactId',
 ]);
 
 const SECRET_KEY_PATTERN =
@@ -97,7 +104,8 @@ const PUBLIC_DESCRIPTIONS: Partial<Record<AuditAction, string>> = {
   MFA_RECOVERY_CODES_REGENERATED: 'Codes de secours renouvelés',
   MFA_RESET: 'Double authentification réinitialisée',
   NOTIFICATION_SEND: 'Notification envoyée',
-  PARTNER_CONTACTS_UPDATE: 'Contacts du partenaire modifiés',
+  PARTNER_CONTACTS_UPDATE:
+    'Coordonnées et interlocuteurs du partenaire modifiés',
   PARTNER_CREATE: 'Fiche partenaire créée',
   PARTNER_DELETE: 'Fiche partenaire supprimée',
   PARTNER_FOLLOW_UP_COMPLETE: 'Action de suivi mise à jour',
