@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { DEFAULT_APPLICATION_TIME_ZONE } from '$constants/time.constants';
 import {
   formatPartnerCivilDate,
   getPartnerActionDuePresentation,
+  getPartnerTodayCivilDate,
   getRelationshipStatusDescription,
 } from '$features/partners/partner-timeline.ui';
 import type { PartnerDetail } from '$features/partners/types/partner.types';
@@ -26,8 +28,21 @@ const basePartner = {
 } satisfies PartnerDetail;
 
 describe('Partner timeline UI', () => {
+  it('uses Europe/Paris as the canonical application timezone', () => {
+    expect(DEFAULT_APPLICATION_TIME_ZONE).toBe('Europe/Paris');
+  });
+
   it('formats civil dates without shifting their calendar day', () => {
     expect(formatPartnerCivilDate('2026-07-24')).toBe('24 juillet 2026');
+  });
+
+  it('uses the Europe/Paris civil day around UTC midnight', () => {
+    expect(getPartnerTodayCivilDate(new Date('2026-07-24T22:30:00.000Z'))).toBe(
+      '2026-07-25',
+    );
+    expect(getPartnerTodayCivilDate(new Date('2026-12-31T23:30:00.000Z'))).toBe(
+      '2027-01-01',
+    );
   });
 
   it('states the current relationship period and missing dates explicitly', () => {

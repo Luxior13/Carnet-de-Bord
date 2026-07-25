@@ -17,6 +17,7 @@ import React, {
 } from 'react';
 import { toast } from 'sonner';
 
+import { DEFAULT_APPLICATION_TIME_ZONE } from '$constants/time.constants';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardHeader } from '$ui/card';
 import { Skeleton } from '$ui/skeleton';
@@ -29,6 +30,7 @@ import type {
   PartnerTimelineResponse,
 } from '../types/partner-timeline.types';
 import { PartnerFollowUpComposer } from './PartnerFollowUpComposer';
+import { PartnerFollowUpEditor } from './PartnerFollowUpEditor';
 import { PartnerOpenActions } from './PartnerOpenActions';
 import { PartnerStatusControl } from './PartnerStatusControl';
 import {
@@ -41,7 +43,7 @@ const TIMELINE_PAGE_SIZE = 25;
 const PARIS_DAY_KEY_FORMATTER = new Intl.DateTimeFormat('fr-FR', {
   day: '2-digit',
   month: '2-digit',
-  timeZone: 'Europe/Paris',
+  timeZone: DEFAULT_APPLICATION_TIME_ZONE,
   year: 'numeric',
 });
 
@@ -87,6 +89,7 @@ const PartnerTimelineFeed: FC<{
   items: readonly PartnerTimelineItem[];
   loading: boolean;
   loadingMore: boolean;
+  onEdit: (entry: PartnerFollowUp, editableDeadlineMs: number) => void;
   onLoadMore: () => Promise<void>;
   onOpenComposer: () => void;
   onRetry: () => Promise<void>;
@@ -100,6 +103,7 @@ const PartnerTimelineFeed: FC<{
   items,
   loading,
   loadingMore,
+  onEdit,
   onLoadMore,
   onOpenComposer,
   onRetry,
@@ -230,6 +234,7 @@ const PartnerTimelineFeed: FC<{
                         canManage={canManage}
                         entry={item.followUp}
                         key={item.id}
+                        onEdit={onEdit}
                         onToggleAction={onToggleAction}
                       />
                     ) : (
@@ -262,13 +267,18 @@ const PartnerTimelineFeed: FC<{
 
 export const PartnerFollowUpSection: FC<{
   canManage: boolean;
+  canViewContacts: boolean;
   onChange: (partner: PartnerDetail) => void;
   partner: PartnerDetail;
-}> = ({ canManage, onChange, partner }) => {
+}> = ({ canManage, canViewContacts, onChange, partner }) => {
   const [actionSavingEntryId, setActionSavingEntryId] = useState<string | null>(
     null,
   );
   const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [editingFollowUp, setEditingFollowUp] = useState<{
+    editableDeadlineMs: number;
+    entry: PartnerFollowUp;
+  } | null>(null);
   const [timelineItems, setTimelineItems] = useState<PartnerTimelineItem[]>([]);
   const [openActions, setOpenActions] = useState<PartnerFollowUp[]>([]);
   const [pagination, setPagination] = useState<
@@ -459,6 +469,26 @@ export const PartnerFollowUpSection: FC<{
         partner={partner}
       />
 
+      {editingFollowUp && (
+        <PartnerFollowUpEditor
+          canViewContacts={canViewContacts}
+          editableDeadlineMs={editingFollowUp.editableDeadlineMs}
+          entry={editingFollowUp.entry}
+          onConflict={() => {
+            void refreshTimeline().catch(() => undefined);
+          }}
+          onOpenChange={(open) => {
+            if (!open) setEditingFollowUp(null);
+          }}
+          onUpdated={(updated) => {
+            onChange(updated);
+            void refreshAfterMutation();
+          }}
+          open
+          partner={partner}
+        />
+      )}
+
       <PartnerTimelineFeed
         actionSavingEntryId={actionSavingEntryId}
         canManage={canManage}
@@ -468,6 +498,9 @@ export const PartnerFollowUpSection: FC<{
         loading={timelineLoading}
         loadingMore={timelineLoadingMore}
         onLoadMore={loadMore}
+        onEdit={(entry, editableDeadlineMs) =>
+          setEditingFollowUp({ editableDeadlineMs, entry })
+        }
         onOpenComposer={() => setFollowUpOpen(true)}
         onRetry={refreshTimeline}
         onToggleAction={toggleAction}

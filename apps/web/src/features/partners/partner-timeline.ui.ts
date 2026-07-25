@@ -1,3 +1,5 @@
+import { DEFAULT_APPLICATION_TIME_ZONE } from '$constants/time.constants';
+
 import type {
   PartnerDetail,
   PartnerFollowUp,
@@ -12,7 +14,7 @@ const CIVIL_DATE_FORMATTER = new Intl.DateTimeFormat('fr-FR', {
 const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('fr-FR', {
   dateStyle: 'medium',
   timeStyle: 'short',
-  timeZone: 'Europe/Paris',
+  timeZone: DEFAULT_APPLICATION_TIME_ZONE,
 });
 
 export const formatPartnerCivilDate = (value: string): string =>
@@ -85,11 +87,11 @@ export type PartnerActionDuePresentation = {
   label: string;
 };
 
-const getCivilToday = (now: Date): string => {
+export const getPartnerTodayCivilDate = (now = new Date()): string => {
   const parts = new Intl.DateTimeFormat('en-CA', {
     day: '2-digit',
     month: '2-digit',
-    timeZone: 'Europe/Paris',
+    timeZone: DEFAULT_APPLICATION_TIME_ZONE,
     year: 'numeric',
   }).formatToParts(now);
   const value = Object.fromEntries(
@@ -110,7 +112,7 @@ export const getPartnerActionDuePresentation = (
     };
   }
 
-  const isOverdue = dueOn < getCivilToday(now);
+  const isOverdue = dueOn < getPartnerTodayCivilDate(now);
 
   return {
     isOverdue,

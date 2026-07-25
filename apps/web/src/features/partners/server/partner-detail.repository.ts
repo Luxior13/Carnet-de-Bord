@@ -13,6 +13,7 @@ import type {
   PartnerFollowUp,
 } from '../types/partner.types';
 import { partnerErrors } from './partner-errors';
+import { buildPartnerFollowUpEditPolicy } from './partner-follow-up-policy';
 import { fromCivilDate } from './partner-normalization';
 
 type PartnerClient = Prisma.TransactionClient | PrismaClient;
@@ -39,6 +40,11 @@ export const PARTNER_FOLLOW_UP_INCLUDE = {
         },
       },
     },
+  },
+  timelineEvents: {
+    select: { id: true },
+    take: 1,
+    where: { type: 'ACTION_COMPLETED' },
   },
 } as const satisfies Prisma.PartnerFollowUpEntryInclude;
 
@@ -140,7 +146,12 @@ const mapContact = (
 
 export const mapPartnerFollowUp = (
   entry: PartnerFollowUpRecord,
-  canViewPersons: boolean,
+  access: {
+    canManage: boolean;
+    canViewPersons: boolean;
+    currentUserId: string;
+    now: Date;
+  },
 ): PartnerFollowUp => ({
   action: entry.action
     ? {
@@ -166,14 +177,26 @@ export const mapPartnerFollowUp = (
     },
   contact: personReference(
     entry.partnerContact?.person ?? null,
-    canViewPersons,
+    access.canViewPersons,
   ),
   createdAt: entry.createdAt.toISOString(),
+  editPolicy: buildPartnerFollowUpEditPolicy({
+    authorId: entry.authorId,
+    canManage: access.canManage,
+    createdAt: entry.createdAt,
+    currentUserId: access.currentUserId,
+    hasCompletedActionEvent:
+      Boolean(entry.action?.completedAt) || entry.timelineEvents.length > 0,
+    now: access.now,
+  }),
+  entryVersion: entry.version,
   id: entry.id,
   occurredAt: entry.occurredAt.toISOString(),
+  ...(access.canViewPersons
+    ? { partnerContactId: entry.partnerContactId }
+    : {}),
   text: entry.text,
   updatedAt: entry.updatedAt.toISOString(),
-  version: entry.version,
 });
 
 const mapPartnerDetail = (

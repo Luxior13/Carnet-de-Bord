@@ -276,10 +276,9 @@ export const createPartnerFollowUpSchema = z
 
 export const updatePartnerFollowUpSchema = z
   .object({
-    occurredAt: z.iso.datetime(),
+    entryVersion: z.number().int().positive(),
     partnerContactId: z.string().trim().min(1).max(128).nullable().optional(),
     text: z.string().trim().min(1).max(4000),
-    version: z.number().int().positive(),
   })
   .strict();
 

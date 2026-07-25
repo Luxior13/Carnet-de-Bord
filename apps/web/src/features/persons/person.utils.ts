@@ -1,6 +1,8 @@
+import { DEFAULT_APPLICATION_TIME_ZONE } from '$constants/time.constants';
+
 const COMBINING_MARKS_PATTERN = /[\u0300-\u036f]/g;
 const SPACE_PATTERN = /\s+/g;
-export const APPLICATION_CIVIL_TIME_ZONE = 'Europe/Paris';
+export const APPLICATION_CIVIL_TIME_ZONE = DEFAULT_APPLICATION_TIME_ZONE;
 
 const APPLICATION_DATE_PARTS_FORMATTER = new Intl.DateTimeFormat('en-CA', {
   day: 'numeric',

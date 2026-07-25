@@ -34,6 +34,7 @@ import type {
   PartnerSummary,
 } from '../types/partner.types';
 import { createPartnerAudit } from './partner-audit';
+import { lockPartnerForIndependentMutation } from './partner-concurrency';
 import {
   getPartnerDetail,
   loadPartnerDetail,
@@ -42,6 +43,7 @@ import {
   resolvePartnerId,
 } from './partner-detail.repository';
 import { partnerErrors } from './partner-errors';
+import { PARTNER_FOLLOW_UP_EDIT_WINDOW_MS } from './partner-follow-up-policy';
 import {
   fromCivilDate,
   normalizePartnerChannel,
@@ -840,6 +842,33 @@ export const updatePartnerFollowUp = async (
 ): Promise<PartnerDetail> =>
   prisma.$transaction(async (transaction) => {
     const partner = await requirePartner(transaction, partnerId);
+    await lockPartnerForIndependentMutation(transaction, partner.id);
+    const entry = await transaction.partnerFollowUpEntry.findFirst({
+      select: {
+        action: { select: { completedAt: true } },
+        authorId: true,
+        createdAt: true,
+        id: true,
+        timelineEvents: {
+          select: { id: true },
+          take: 1,
+          where: { type: 'ACTION_COMPLETED' },
+        },
+      },
+      where: { id: entryId, organizationId: partner.id },
+    });
+    if (!entry) throw partnerErrors.notFound();
+    if (entry.authorId !== actor.id) throw partnerErrors.followUpForbidden();
+    if (entry.action?.completedAt || entry.timelineEvents.length > 0) {
+      throw partnerErrors.followUpActionLocked();
+    }
+    const now = new Date();
+    if (
+      now.getTime() >=
+      entry.createdAt.getTime() + PARTNER_FOLLOW_UP_EDIT_WINDOW_MS
+    ) {
+      throw partnerErrors.followUpEditExpired();
+    }
     if (input.partnerContactId) {
       const contact = await transaction.partnerContact.findFirst({
         select: { id: true },
@@ -850,23 +879,25 @@ export const updatePartnerFollowUp = async (
       });
       if (!contact) throw partnerErrors.dependencyConflict('Contact invalide');
     }
-    await touchPartner(transaction, {
-      actorId: actor.id,
-      id: partner.id,
-      version: input.version,
-    });
     const updated = await transaction.partnerFollowUpEntry.updateMany({
       data: {
-        occurredAt: new Date(input.occurredAt),
         ...(input.partnerContactId !== undefined
           ? { partnerContactId: input.partnerContactId }
           : {}),
         text: input.text,
         version: { increment: 1 },
       },
-      where: { id: entryId, organizationId: partner.id },
+      where: {
+        id: entryId,
+        organizationId: partner.id,
+        version: input.entryVersion,
+      },
     });
-    if (!updated.count) throw partnerErrors.notFound();
+    if (updated.count !== 1) throw partnerErrors.followUpVersionConflict();
+    await touchPartnerForIndependentMutation(transaction, {
+      actorId: actor.id,
+      id: partner.id,
+    });
     await createPartnerAudit(transaction, {
       action: AuditAction.PARTNER_FOLLOW_UP_UPDATE,
       actor,
@@ -926,6 +957,7 @@ export const setPartnerActionCompleted = async (
 ): Promise<PartnerDetail> =>
   prisma.$transaction(async (transaction) => {
     const partner = await requirePartner(transaction, partnerId);
+    await lockPartnerForIndependentMutation(transaction, partner.id);
     const entry = await transaction.partnerFollowUpEntry.findFirst({
       include: { action: true },
       where: { id: entryId, organizationId: partner.id },

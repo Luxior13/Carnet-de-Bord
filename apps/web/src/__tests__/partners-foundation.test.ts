@@ -55,6 +55,15 @@ const partnerFollowUpComposerSource = readFileSync(
 );
 // Test-owned static path.
 // eslint-disable-next-line security/detect-non-literal-fs-filename
+const partnerFollowUpEditorSource = readFileSync(
+  new URL(
+    '../features/partners/components/PartnerFollowUpEditor.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+);
+// Test-owned static path.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
 const partnerOpenActionsSource = readFileSync(
   new URL(
     '../features/partners/components/PartnerOpenActions.tsx',
@@ -205,12 +214,24 @@ describe('Sponsors & partenaires foundation', () => {
       ENDED: ['ENDED', 'DISCUSSION'],
       PROSPECT: ['PROSPECT', 'DISCUSSION', 'CLOSED'],
     });
-    expect(partnerStatusControlSource).toContain('nextStatuses.map');
+    expect(partnerStatusControlSource).toContain('PARTNER_STATUSES.map');
     expect(partnerStatusControlSource).toContain(
-      '.filter((item) => item !== partner.status)',
+      'aria-label="Statut de la relation"',
     );
-    expect(partnerStatusControlSource).not.toContain('PARTNER_STATUSES.map');
-    expect(partnerStatusControlSource).not.toContain('disabled={!allowed}');
+    expect(partnerStatusControlSource).toContain('aria-pressed={isCurrent}');
+    expect(partnerStatusControlSource).toContain(
+      'getUnavailableTransitionReason',
+    );
+    expect(partnerStatusControlSource).toContain(
+      'allowedStatuses.includes(nextStatus)',
+    );
+    expect(partnerStatusControlSource).toContain(
+      'disabled={saving || open || isCurrent || !isAllowed}',
+    );
+    expect(partnerStatusControlSource).toContain(
+      'grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5',
+    );
+    expect(partnerStatusControlSource).not.toContain('nextStatuses.map');
     expect(partnerServiceSource).toContain(
       'const allowedTransitions = PARTNER_STATUS_TRANSITIONS[',
     );
@@ -248,6 +269,12 @@ describe('Sponsors & partenaires foundation', () => {
     );
     expect(partnerStatusControlSource).toContain("'Activer la relation'");
     expect(partnerStatusControlSource).toContain("'Terminer la relation'");
+    expect(partnerStatusControlSource).toContain(
+      'const today = getPartnerTodayCivilDate()',
+    );
+    expect(partnerStatusControlSource).toContain(
+      "setEndedOn(nextStatus === 'ENDED' ? today : '')",
+    );
     expect(partnerStatusControlSource).toContain("'Corriger la période'");
     expect(partnerStatusControlSource).toContain('Corriger les dates');
     expect(partnerStatusControlSource).not.toContain('Modifier le statut');
@@ -258,6 +285,37 @@ describe('Sponsors & partenaires foundation', () => {
     expect(partnerFollowUpSource).toContain('entry.action.version');
     expect(partnerFollowUpComposerSource).toContain('Contact concerné');
     expect(partnerTimelineItemsSource).toContain('Modifiée le');
+  });
+
+  it('allows a short, server-authorized correction without rewriting history', () => {
+    expect(partnerDetailSource).toContain(
+      'canViewContacts={capabilities.canViewContacts}',
+    );
+    expect(partnerFollowUpSource).toContain('<PartnerFollowUpEditor');
+    expect(partnerTimelineItemsSource).toContain(
+      'entry.editPolicy.remainingMs',
+    );
+    expect(partnerTimelineItemsSource).toContain('window.setTimeout(');
+    expect(partnerTimelineItemsSource).toContain(
+      'aria-label="Modifier cette note"',
+    );
+    expect(partnerTimelineItemsSource).toContain('entry.entryVersion > 1');
+    expect(partnerFollowUpEditorSource).toContain(
+      '<DialogTitle>Modifier la note de suivi</DialogTitle>',
+    );
+    expect(partnerFollowUpEditorSource).toContain(
+      'entryVersion: entry.entryVersion',
+    );
+    expect(partnerFollowUpEditorSource).toContain('canViewContacts');
+    expect(partnerFollowUpEditorSource).toContain(
+      '? { partnerContactId: partnerContactId || null }',
+    );
+    expect(partnerFollowUpEditorSource).toContain('Note de suivi modifiée');
+    expect(partnerFollowUpEditorSource).toContain(
+      'error instanceof ApiClientError && error.status === 409',
+    );
+    expect(partnerFollowUpEditorSource).not.toContain('occurredAt:');
+    expect(partnerFollowUpEditorSource).not.toContain('action:');
   });
 
   it('presents one lazy, durable and understandable business timeline', () => {

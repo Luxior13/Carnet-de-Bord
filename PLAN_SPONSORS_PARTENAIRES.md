@@ -261,8 +261,11 @@ ou à implémenter.
 
 ### Onglet Suivi
 
-- [x] Afficher le statut courant, la période utile et les seules commandes
-      métier possibles ; aucun statut interdit n'est présenté en grisé.
+- [x] Afficher les cinq statuts dans une barre stable : même ordre et même
+      emplacement après chaque changement, avec le statut courant sélectionné.
+- [x] Une transition indisponible reste visible sans changer la composition de
+      la barre ; son aide explique l'étape préalable au survol ou au focus
+      clavier.
 - [x] Formuler les transitions comme des actions compréhensibles :
       commencer ou reprendre les échanges, activer, terminer ou classer sans
       suite.
@@ -324,9 +327,16 @@ ou à implémenter.
       précédents » au lieu de masquer les entrées dépassant une limite fixe.
 - [x] Refuser la suppression d'une note qui porte une action afin qu'une
       réalisation ou une réouverture ne perde jamais son contexte métier.
-- [ ] Autoriser la correction d'une entrée et la suppression d'une entrée
-      sans action créée par erreur depuis l'interface, avec confirmation,
-      version propre à l'entrée et audit.
+- [x] Autoriser l'auteur à corriger sa propre note pendant les 30 minutes qui
+      suivent sa création, avec version propre à l'entrée et audit minimal.
+- [x] Calculer ce délai côté serveur depuis `createdAt` et le revérifier lors
+      de chaque mutation ; l'interface n'est qu'une aide visuelle.
+- [x] Verrouiller définitivement la correction dès qu'une action liée a déjà
+      été terminée, même si cette action est ensuite rouverte.
+- [x] Après verrouillage ou expiration, ajouter une nouvelle note de correction
+      au lieu de réécrire l'historique.
+- [ ] Autoriser plus tard la suppression d'une entrée sans action créée par
+      erreur depuis l'interface, avec confirmation, version propre et audit.
 - [ ] Une entrée supprimée disparaît de la chronologie, mais l'audit minimal
       conserve l'opération sans recopier son texte.
 - [x] Ne pas anticiper les tâches, rappels, livrables, contrats ou paiements
@@ -401,8 +411,8 @@ ou à implémenter.
 - [x] Les périodes ne remplacent pas les contrats : elles résument uniquement
       l'existence de la relation.
 - [ ] Afficher une chronologie compacte des périodes dans Informations.
-- [ ] Proposer la date du jour lors d'une activation ou d'une fin, tout en
-      permettant de saisir la date métier réelle.
+- [x] Préremplir la date du jour civil en `Europe/Paris` lors d'une activation
+      ou d'une fin, tout en permettant de la modifier ou de l'effacer.
 - [ ] Autoriser une date inconnue sans fabriquer une précision fausse.
 
 ## Contacts et Répertoire
@@ -472,6 +482,8 @@ ou à implémenter.
   - compte créateur facultatif et snapshot lisible de son identité interne ;
   - dates de création et modification ;
   - champ de version incrémenté lors des corrections.
+- [x] La fenêtre d'édition de 30 minutes est une règle serveur calculée depuis
+      `createdAt` ; aucun champ de délai redondant n'est stocké en base.
 - [x] `PartnerFollowUpAction`, facultative et liée à une entrée :
   - description de l'action ;
   - date cible facultative ;
@@ -493,6 +505,8 @@ ou à implémenter.
   - payload structuré ;
   - références facultatives vers période, action et note, mises à `null` si
     leur source disparaît sans effacer le fait métier ;
+  - suppression directe interdite en base tant que la fiche existe, avec
+    suppression physique autorisée uniquement par la cascade de la fiche ;
   - index chronologique par organisation.
 - [x] Ne jamais reconstruire le fil métier depuis `AuditLog`, dont la durée de
       conservation est configurable et volontairement limitée.
@@ -512,8 +526,9 @@ ou à implémenter.
 - [ ] Contraintes de cohérence des dates et coordonnées normalisées.
 - [x] Version optimiste sur la fiche pour les mutations couplées et version
       propre à l'action pour sa réalisation ou sa réouverture.
-- [ ] Faire utiliser la version propre de l'entrée lors de sa future correction
-      ou suppression depuis l'interface.
+- [x] Utiliser la version propre de l'entrée lors de sa correction.
+- [ ] Utiliser cette même version propre lors de sa future suppression depuis
+      l'interface.
 - [x] Longueurs et types SQL bornés ; texte de suivi en texte brut, sans HTML
       ni contenu riche dans la première version.
 - [ ] `PartnerOrganizationDeletionTombstone` minimal pour l'idempotence d'une
@@ -571,9 +586,9 @@ ou à implémenter.
       la réalisation d'une action utilise la version propre de cette action.
 - [ ] Endpoint de recherche de contacts protégé par `persons:view`.
 - [ ] Validation partagée entre client et serveur.
-- [ ] Faire reposer aussi la correction et la suppression d'une note sur la
-      version propre de cette note plutôt que sur la version globale de la
-      fiche.
+- [x] Faire reposer la correction d'une note sur sa version propre plutôt que
+      sur la version globale de la fiche.
+- [ ] Faire aussi reposer sa future suppression sur cette version propre.
 - [ ] Clés d'idempotence pour création et suppression.
 - [x] Transactions pour les changements de statut, de période ou d'action qui
       créent aussi un événement métier.
@@ -749,8 +764,12 @@ ou à implémenter.
       liaison partenaire.
 - [x] Tests de contrat du masquage complet des contacts sans `persons:view`.
 - [x] Tests de contrat du fil unifié et de sa pagination.
-- [ ] Tests fonctionnels de correction et de suppression d'une note depuis la
-      future interface dédiée.
+- [x] Tests de contrat de correction d'une note par son auteur, pendant sa
+      fenêtre de 30 minutes et avec sa version propre.
+- [x] Tests de refus pour un autre auteur, après expiration et après la
+      réalisation puis la réouverture d'une action.
+- [ ] Tests fonctionnels de suppression d'une note depuis la future interface
+      dédiée.
 - [x] Tests d'action facultative, date cible, réalisation, réouverture et
       version propre à l'action.
 - [ ] Tests garantissant qu'aucun responsable permanent n'est nécessaire pour

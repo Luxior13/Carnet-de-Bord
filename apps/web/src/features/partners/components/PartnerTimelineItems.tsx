@@ -10,10 +10,11 @@ import {
   PencilLine,
   RotateCcw,
 } from 'lucide-react';
-import React, { type FC, type ReactNode } from 'react';
+import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
 import { PARTNER_STATUS_LABELS } from '../partner.constants';
@@ -195,11 +196,50 @@ export const PartnerFollowUpNote: FC<{
   actionSavingEntryId: string | null;
   canManage: boolean;
   entry: PartnerFollowUp;
+  onEdit: (entry: PartnerFollowUp, editableDeadlineMs: number) => void;
   onToggleAction: (entry: PartnerFollowUp, completed: boolean) => Promise<void>;
-}> = ({ actionSavingEntryId, canManage, entry, onToggleAction }) => {
+}> = ({ actionSavingEntryId, canManage, entry, onEdit, onToggleAction }) => {
   const actionDue = entry.action
     ? getPartnerActionDuePresentation(entry.action.dueOn)
     : null;
+  const [editableDeadlineMs, setEditableDeadlineMs] = useState<number | null>(
+    null,
+  );
+
+  useEffect((): (() => void) | undefined => {
+    if (!entry.editPolicy.canEdit) {
+      setEditableDeadlineMs(null);
+
+      return;
+    }
+
+    const remainingMs = Number.isFinite(entry.editPolicy.remainingMs)
+      ? Math.max(0, entry.editPolicy.remainingMs)
+      : entry.editPolicy.editableUntil
+        ? Math.max(
+            0,
+            new Date(entry.editPolicy.editableUntil).getTime() - Date.now(),
+          )
+        : 0;
+    if (remainingMs <= 0) {
+      setEditableDeadlineMs(null);
+
+      return;
+    }
+
+    const deadline = Date.now() + remainingMs;
+    setEditableDeadlineMs(deadline);
+    const timeout = window.setTimeout(
+      () => setEditableDeadlineMs(null),
+      remainingMs,
+    );
+
+    return () => window.clearTimeout(timeout);
+  }, [
+    entry.editPolicy.canEdit,
+    entry.editPolicy.editableUntil,
+    entry.editPolicy.remainingMs,
+  ]);
 
   return (
     <article
@@ -211,18 +251,37 @@ export const PartnerFollowUpNote: FC<{
           {entry.author.displayName.trim().charAt(0) || '—'}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
             <p className="truncate text-sm font-semibold">
               {entry.author.displayName}
             </p>
-            <time
-              className="text-muted-foreground shrink-0 text-xs"
-              dateTime={entry.occurredAt}
-            >
-              {formatPartnerDateTime(entry.occurredAt)}
-            </time>
+            <div className="flex shrink-0 items-center gap-1">
+              <time
+                className="text-muted-foreground text-xs"
+                dateTime={entry.occurredAt}
+              >
+                {formatPartnerDateTime(entry.occurredAt)}
+              </time>
+              {canManage && editableDeadlineMs !== null && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      aria-label="Modifier cette note"
+                      className="size-7 rounded-md"
+                      onClick={() => onEdit(entry, editableDeadlineMs)}
+                      size="icon"
+                      type="button"
+                      variant="ghost"
+                    >
+                      <PencilLine className="size-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Modifier cette note</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
           </div>
-          {entry.version > 1 && (
+          {entry.entryVersion > 1 && (
             <p className="text-muted-foreground mt-0.5 text-xs">
               Modifiée le {formatPartnerDateTime(entry.updatedAt)}
             </p>

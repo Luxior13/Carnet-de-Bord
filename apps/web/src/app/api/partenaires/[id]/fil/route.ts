@@ -42,9 +42,22 @@ export async function GET(
         PERMISSIONS.PERSONS.VIEW,
         auth.user.permissions,
       );
+    const canManage =
+      auth.user.isProtected ||
+      hasPermission(
+        auth.user.role,
+        PERMISSIONS.PARTNERS.MANAGE,
+        auth.user.permissions,
+      );
 
     return withPartnerNoStore(
-      apiSuccess(await listPartnerTimeline(id, parsed.data, canViewPersons)),
+      apiSuccess(
+        await listPartnerTimeline(id, parsed.data, {
+          canManage,
+          canViewPersons,
+          currentUserId: auth.user.id,
+        }),
+      ),
     );
   } catch (error) {
     return handlePartnerApiError('PARTNER_TIMELINE_LIST', error, request);

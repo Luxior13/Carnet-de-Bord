@@ -6,6 +6,7 @@ import {
   jsonRequest,
 } from '$utils/api.utils';
 
+import type { UpdatePartnerFollowUpInput } from './schemas/partner.schemas';
 import type {
   PartnerActivityItem,
   PartnerDetail,
@@ -116,7 +117,7 @@ export const addPartnerFollowUp = async (
 export const updatePartnerFollowUp = async (
   id: string,
   entryId: string,
-  payload: Payload,
+  payload: UpdatePartnerFollowUpInput,
 ): Promise<PartnerDetail> => {
   const response = await apiFetchJson<PartnerMutationResponse>(
     `/api/partenaires/${encodeURIComponent(id)}/suivis/${encodeURIComponent(entryId)}`,

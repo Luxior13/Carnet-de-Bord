@@ -51,6 +51,13 @@ sont facultatives et passent à `NULL` si leur source disparaît, sans effacer l
 fait métier ni ses snapshots. Chaque opération possède un identifiant unique et
 un payload JSON versionné.
 
+Un trigger PostgreSQL interdit la suppression directe d'un événement tant que
+sa fiche `PartnerOrganization` existe. La suppression physique du fil reste
+possible uniquement par la cascade `ON DELETE CASCADE` déclenchée lorsque la
+fiche propriétaire est elle-même réellement supprimée. La restauration n'est
+pas concernée : elle insère les fiches avant leurs événements et ne supprime
+aucune ligne.
+
 ## Sauvegardes
 
 Créer une sauvegarde signée v7 :

@@ -62,11 +62,17 @@ export type PartnerFollowUp = {
   author: PartnerActor;
   contact: PartnerContactPerson | null;
   createdAt: string;
+  editPolicy: {
+    canEdit: boolean;
+    editableUntil: string | null;
+    remainingMs: number;
+  };
+  entryVersion: number;
   id: string;
   occurredAt: string;
+  partnerContactId?: string | null;
   text: string;
   updatedAt: string;
-  version: number;
 };
 
 export type PartnerSummary = {

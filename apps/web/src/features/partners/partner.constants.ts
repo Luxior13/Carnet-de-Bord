@@ -7,6 +7,7 @@ export const PARTNER_STATUSES = [
   'CLOSED',
 ] as const;
 export const PARTNER_LIST_SORTS = ['name', 'updated'] as const;
+export const PARTNER_FOLLOW_UP_EDIT_WINDOW_MINUTES = 30;
 
 export const PARTNER_CATEGORY_LABELS = {
   PARTNER: 'Partenaire',

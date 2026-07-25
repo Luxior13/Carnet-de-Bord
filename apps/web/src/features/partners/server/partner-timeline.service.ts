@@ -158,7 +158,11 @@ const mapTimelineEvent = (
 export const listPartnerTimeline = async (
   partnerId: string,
   input: { cursor?: string; limit: number },
-  canViewPersons: boolean,
+  access: {
+    canManage: boolean;
+    canViewPersons: boolean;
+    currentUserId: string;
+  },
 ): Promise<PartnerTimelineResponse> => {
   const organizationId = await resolvePartnerId(prisma, partnerId);
   const filterHash = hashCursorFilters({ organizationId });
@@ -194,6 +198,7 @@ export const listPartnerTimeline = async (
   const snapshotAt = decodedCursor
     ? new Date(decodedCursor.snapshotAt)
     : new Date();
+  const policyNow = new Date();
 
   const [followUps, events, openActionEntries] = await Promise.all([
     prisma.partnerFollowUpEntry.findMany({
@@ -234,7 +239,10 @@ export const listPartnerTimeline = async (
 
   const items: PartnerTimelineItem[] = [
     ...followUps.map((entry) => {
-      const followUp = mapPartnerFollowUp(entry, canViewPersons);
+      const followUp = mapPartnerFollowUp(entry, {
+        ...access,
+        now: policyNow,
+      });
 
       return {
         createdAt: followUp.createdAt,
@@ -263,7 +271,7 @@ export const listPartnerTimeline = async (
   return {
     items: page.items,
     openActions: openActionEntries.map((entry) =>
-      mapPartnerFollowUp(entry, canViewPersons),
+      mapPartnerFollowUp(entry, { ...access, now: policyNow }),
     ),
     pagination: page.pagination,
   };

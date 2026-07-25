@@ -41,8 +41,12 @@ export const handlePartnerApiError = async (
   };
   if (error instanceof PartnerDomainError) {
     switch (error.code) {
+      case 'PARTNER_FOLLOW_UP_FORBIDDEN':
+        return wrap(apiErrors.forbidden(error.message));
       case 'PARTNER_NOT_FOUND':
         return wrap(apiErrors.notFound(error.message));
+      case 'PARTNER_FOLLOW_UP_LOCKED':
+      case 'PARTNER_FOLLOW_UP_VERSION_CONFLICT':
       case 'PARTNER_VERSION_CONFLICT':
       case 'PARTNER_DEPENDENCY_CONFLICT':
       case 'PARTNER_INVALID_TRANSITION':

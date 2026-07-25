@@ -868,6 +868,7 @@ const DetailContent: FC<{
         <TabsContent value="suivi">
           <PartnerFollowUpSection
             canManage={capabilities.canManage}
+            canViewContacts={capabilities.canViewContacts}
             onChange={setPartner}
             partner={partner}
           />

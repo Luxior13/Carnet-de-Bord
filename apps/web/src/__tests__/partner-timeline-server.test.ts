@@ -20,7 +20,10 @@ vi.mock('$server/prisma', () => ({ prisma: prismaMock }));
 import {
   partnerTimelineQuerySchema,
   updatePartnerActionSchema,
+  updatePartnerFollowUpSchema,
 } from '$features/partners/schemas/partner.schemas';
+import { partnerErrors } from '$features/partners/server/partner-errors';
+import { buildPartnerFollowUpEditPolicy } from '$features/partners/server/partner-follow-up-policy';
 import type { PartnerTimelineItem } from '$features/partners/types/partner-timeline.types';
 import type { UserType } from '$types/auth.types';
 
@@ -34,6 +37,11 @@ const timelineRouteSource = readFileSync(
 // eslint-disable-next-line security/detect-non-literal-fs-filename
 const partnerServiceSource = readFileSync(
   new URL('../features/partners/server/partner.service.ts', import.meta.url),
+  'utf8',
+);
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const partnerApiSource = readFileSync(
+  new URL('../features/partners/server/partner-api.ts', import.meta.url),
   'utf8',
 );
 // Test-owned static path.
@@ -94,11 +102,111 @@ describe('partner business timeline server', () => {
         version: 3,
       }).success,
     ).toBe(false);
+    expect(
+      updatePartnerFollowUpSchema.safeParse({
+        entryVersion: 2,
+        partnerContactId: null,
+        text: 'Correction.',
+      }).success,
+    ).toBe(true);
+    expect(
+      updatePartnerFollowUpSchema.safeParse({
+        occurredAt: new Date().toISOString(),
+        text: 'Correction.',
+        version: 2,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('computes the edit window from the server creation time', () => {
+    const createdAt = new Date('2026-07-24T12:00:00.000Z');
+
+    expect(
+      buildPartnerFollowUpEditPolicy({
+        authorId: 'user-1',
+        canManage: true,
+        createdAt,
+        currentUserId: 'user-1',
+        hasCompletedActionEvent: false,
+        now: new Date('2026-07-24T12:12:30.000Z'),
+      }),
+    ).toEqual({
+      canEdit: true,
+      editableUntil: '2026-07-24T12:30:00.000Z',
+      remainingMs: 1_050_000,
+    });
+    expect(
+      buildPartnerFollowUpEditPolicy({
+        authorId: 'user-1',
+        canManage: true,
+        createdAt,
+        currentUserId: 'user-1',
+        hasCompletedActionEvent: true,
+        now: new Date('2026-07-24T12:01:00.000Z'),
+      }),
+    ).toEqual({ canEdit: false, editableUntil: null, remainingMs: 0 });
+    expect(
+      buildPartnerFollowUpEditPolicy({
+        authorId: 'user-1',
+        canManage: true,
+        createdAt,
+        currentUserId: 'user-1',
+        hasCompletedActionEvent: false,
+        now: new Date('2026-07-24T12:30:00.000Z'),
+      }),
+    ).toEqual({
+      canEdit: false,
+      editableUntil: '2026-07-24T12:30:00.000Z',
+      remainingMs: 0,
+    });
+    expect(
+      buildPartnerFollowUpEditPolicy({
+        authorId: 'user-2',
+        canManage: true,
+        createdAt,
+        currentUserId: 'user-1',
+        hasCompletedActionEvent: false,
+        now: new Date('2026-07-24T12:01:00.000Z'),
+      }),
+    ).toEqual({ canEdit: false, editableUntil: null, remainingMs: 0 });
+    expect(
+      buildPartnerFollowUpEditPolicy({
+        authorId: 'user-1',
+        canManage: false,
+        createdAt,
+        currentUserId: 'user-1',
+        hasCompletedActionEvent: false,
+        now: new Date('2026-07-24T12:01:00.000Z'),
+      }).canEdit,
+    ).toBe(false);
+  });
+
+  it('returns dedicated edit authorization, lock and concurrency errors', () => {
+    expect(partnerErrors.followUpForbidden()).toMatchObject({
+      code: 'PARTNER_FOLLOW_UP_FORBIDDEN',
+      message: 'Seul l’auteur de cette note peut la modifier.',
+    });
+    expect(partnerErrors.followUpActionLocked()).toMatchObject({
+      code: 'PARTNER_FOLLOW_UP_LOCKED',
+      message: expect.stringContaining('action a déjà été terminée'),
+    });
+    expect(partnerErrors.followUpEditExpired()).toMatchObject({
+      code: 'PARTNER_FOLLOW_UP_LOCKED',
+      message: expect.stringContaining('délai de 30 minutes est expiré'),
+    });
+    expect(partnerErrors.followUpVersionConflict()).toMatchObject({
+      code: 'PARTNER_FOLLOW_UP_VERSION_CONFLICT',
+      message: expect.stringContaining('Cette note a été modifiée'),
+    });
+    expect(partnerApiSource).toContain("case 'PARTNER_FOLLOW_UP_FORBIDDEN':");
+    expect(partnerApiSource).toContain('apiErrors.forbidden(error.message)');
   });
 
   it('protects the feed and person references independently', () => {
     expect(timelineRouteSource).toContain('PERMISSIONS.PARTNERS.VIEW');
+    expect(timelineRouteSource).toContain('PERMISSIONS.PARTNERS.MANAGE');
     expect(timelineRouteSource).toContain('PERMISSIONS.PERSONS.VIEW');
+    expect(timelineRouteSource).toContain('currentUserId: auth.user.id');
     expect(timelineRouteSource).toContain('withPartnerNoStore(');
     expect(timelineRouteSource).toContain('listPartnerTimeline(');
   });
@@ -168,7 +276,7 @@ describe('partner business timeline server', () => {
   });
 
   it('merges notes and events while masking directory contacts', async () => {
-    const occurredAt = new Date('2026-07-24T12:00:00.000Z');
+    const occurredAt = new Date();
     prismaMock.partnerOrganizationMergeRedirect.findUnique.mockResolvedValue(
       null,
     );
@@ -199,6 +307,7 @@ describe('partner business timeline server', () => {
           },
           partnerContactId: 'contact-1',
           text: 'Proposition envoyée.',
+          timelineEvents: [],
           updatedAt: occurredAt,
           version: 1,
         },
@@ -233,7 +342,11 @@ describe('partner business timeline server', () => {
     const response = await listPartnerTimeline(
       'partner-1',
       { limit: 1 },
-      false,
+      {
+        canManage: true,
+        canViewPersons: false,
+        currentUserId: 'user-1',
+      },
     );
 
     expect(response.items.map(({ id }) => id)).toEqual(['note:note-1']);
@@ -241,6 +354,7 @@ describe('partner business timeline server', () => {
       followUp: {
         author: { displayName: 'Jean Dupont', loginName: 'jdupont' },
         contact: null,
+        editPolicy: { canEdit: true },
         text: 'Proposition envoyée.',
       },
       kind: 'NOTE',
@@ -250,6 +364,10 @@ describe('partner business timeline server', () => {
       limit: 1,
       nextCursor: expect.any(String),
     });
+    if (response.items[0]?.kind === 'NOTE') {
+      expect(response.items[0].followUp).not.toHaveProperty('partnerContactId');
+      expect(response.items[0].followUp.entryVersion).toBe(1);
+    }
 
     prismaMock.partnerFollowUpEntry.findMany
       .mockResolvedValueOnce([])
@@ -260,7 +378,11 @@ describe('partner business timeline server', () => {
         cursor: response.pagination.nextCursor ?? undefined,
         limit: 1,
       },
-      false,
+      {
+        canManage: true,
+        canViewPersons: false,
+        currentUserId: 'user-1',
+      },
     );
 
     expect(nextPage.items.map(({ id }) => id)).toEqual(['event:event-1']);
@@ -297,7 +419,45 @@ describe('partner business timeline server', () => {
     expect(partnerDetailRepositorySource).toContain(
       'entry.authorDisplayNameSnapshot',
     );
+    expect(partnerDetailRepositorySource).toContain(
+      'Boolean(entry.action?.completedAt) || entry.timelineEvents.length > 0',
+    );
     expect(partnerDetailRepositorySource).not.toContain('take: 50');
+  });
+
+  it('serializes note edits and action completion parent-first', () => {
+    const updateSource = partnerServiceSource.slice(
+      partnerServiceSource.indexOf('export const updatePartnerFollowUp'),
+      partnerServiceSource.indexOf('export const deletePartnerFollowUp'),
+    );
+    const completionSource = partnerServiceSource.slice(
+      partnerServiceSource.indexOf('export const setPartnerActionCompleted'),
+      partnerServiceSource.indexOf('export const getPartnerActivity'),
+    );
+    const updateAuditSource = updateSource.slice(
+      updateSource.indexOf('createPartnerAudit'),
+      updateSource.indexOf('return loadPartnerDetail'),
+    );
+
+    expect(updateSource).toContain('input.entryVersion');
+    expect(updateSource).toContain('entry.authorId !== actor.id');
+    expect(updateSource).toContain("where: { type: 'ACTION_COMPLETED' }");
+    expect(updateSource).toContain('entry.action?.completedAt');
+    expect(
+      updateSource.indexOf('lockPartnerForIndependentMutation'),
+    ).toBeLessThan(updateSource.indexOf('partnerFollowUpEntry.findFirst'));
+    expect(updateSource.indexOf('partnerFollowUpEntry.findFirst')).toBeLessThan(
+      updateSource.indexOf('partnerFollowUpEntry.updateMany'),
+    );
+    expect(
+      completionSource.indexOf('lockPartnerForIndependentMutation'),
+    ).toBeLessThan(completionSource.indexOf('partnerFollowUpEntry.findFirst'));
+    expect(
+      completionSource.indexOf('partnerFollowUpAction.updateMany'),
+    ).toBeLessThan(
+      completionSource.indexOf('touchPartnerForIndependentMutation'),
+    );
+    expect(updateAuditSource).not.toContain('input.text');
   });
 
   it('locks a fiche before deciding whether its history permits deletion', () => {
