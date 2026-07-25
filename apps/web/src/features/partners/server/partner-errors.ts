@@ -1,8 +1,14 @@
 import 'server-only';
 
-import { PARTNER_FOLLOW_UP_EDIT_WINDOW_MINUTES } from '../partner.constants';
+import {
+  PARTNER_FOLLOW_UP_EDIT_WINDOW_MINUTES,
+  PARTNER_LIMITS,
+} from '../partner.constants';
 
 export type PartnerDomainErrorCode =
+  | 'PARTNER_CONTACT_ALREADY_ACTIVE'
+  | 'PARTNER_CONTACT_LIMIT_REACHED'
+  | 'PARTNER_CONTACT_REOPEN_FORBIDDEN'
   | 'PARTNER_DEPENDENCY_CONFLICT'
   | 'PARTNER_FEATURE_NOT_CONFIGURED'
   | 'PARTNER_FOLLOW_UP_FORBIDDEN'
@@ -23,6 +29,21 @@ export class PartnerDomainError extends Error {
 }
 
 export const partnerErrors = {
+  contactAlreadyActive: (): PartnerDomainError =>
+    new PartnerDomainError(
+      'PARTNER_CONTACT_ALREADY_ACTIVE',
+      'Ce contact est déjà lié activement à cette organisation',
+    ),
+  contactLimitReached: (): PartnerDomainError =>
+    new PartnerDomainError(
+      'PARTNER_CONTACT_LIMIT_REACHED',
+      `Cette organisation a atteint la limite de ${PARTNER_LIMITS.contacts} contacts actifs`,
+    ),
+  contactReopenForbidden: (): PartnerDomainError =>
+    new PartnerDomainError(
+      'PARTNER_CONTACT_REOPEN_FORBIDDEN',
+      'Une liaison terminée ne peut pas être rouverte. Créez une nouvelle liaison afin de préserver son historique.',
+    ),
   dependencyConflict: (message: string): PartnerDomainError =>
     new PartnerDomainError('PARTNER_DEPENDENCY_CONFLICT', message),
   featureNotConfigured: (): PartnerDomainError =>

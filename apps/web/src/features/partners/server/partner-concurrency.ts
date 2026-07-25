@@ -4,6 +4,17 @@ import { Prisma } from '@prisma/client';
 
 import { partnerErrors } from './partner-errors';
 
+export const touchPartner = async (
+  transaction: Prisma.TransactionClient,
+  input: { actorId: string; id: string; version: number },
+): Promise<void> => {
+  const result = await transaction.partnerOrganization.updateMany({
+    data: { updatedById: input.actorId, version: { increment: 1 } },
+    where: { id: input.id, version: input.version },
+  });
+  if (result.count !== 1) throw partnerErrors.versionConflict();
+};
+
 export const lockPartnerForIndependentMutation = async (
   transaction: Prisma.TransactionClient,
   partnerId: string,
