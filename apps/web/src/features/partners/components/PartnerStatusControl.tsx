@@ -41,6 +41,10 @@ const getTransitionLabel = (
   if (nextStatus === 'ENDED') return 'Terminer la relation';
   if (nextStatus === 'CLOSED') return 'Classer sans suite';
   if (nextStatus === 'DISCUSSION') {
+    if (currentStatus === 'ACTIVE') {
+      return 'Clôturer la période active et reprendre les échanges';
+    }
+
     return currentStatus === 'PROSPECT'
       ? 'Commencer les échanges'
       : 'Reprendre les échanges';
@@ -104,6 +108,12 @@ export const PartnerStatusControl: FC<{
   const saving = savingStatus !== null;
   const normalizedClosingNote = closingNote.trim();
   const isCorrection = status === partner.status;
+  const isResumeAfterActive =
+    partner.status === 'ACTIVE' && status === 'DISCUSSION';
+  const isClosingActivePeriod =
+    partner.status === 'ACTIVE' &&
+    (status === 'DISCUSSION' || status === 'ENDED');
+  const isPeriodEndForm = status === 'ENDED' || isClosingActivePeriod;
   const allowedStatuses = PARTNER_STATUS_TRANSITIONS[
     partner.status
   ] as readonly PartnerStatus[];
@@ -125,11 +135,12 @@ export const PartnerStatusControl: FC<{
 
   const openPeriodTransition = (nextStatus: PartnerStatus): void => {
     const today = getPartnerTodayCivilDate();
+    const closesActivePeriod =
+      partner.status === 'ACTIVE' &&
+      (nextStatus === 'DISCUSSION' || nextStatus === 'ENDED');
     setStatus(nextStatus);
-    setStartedOn(
-      nextStatus === 'ENDED' ? (activePeriod?.startedOn ?? '') : today,
-    );
-    setEndedOn(nextStatus === 'ENDED' ? today : '');
+    setStartedOn(closesActivePeriod ? (activePeriod?.startedOn ?? '') : today);
+    setEndedOn(closesActivePeriod ? today : '');
     setClosingNote('');
     setOpen(true);
   };
@@ -165,7 +176,11 @@ export const PartnerStatusControl: FC<{
   const selectStatus = (nextStatus: PartnerStatus): void => {
     if (nextStatus === partner.status) return;
     if (!allowedStatuses.includes(nextStatus)) return;
-    if (nextStatus === 'ACTIVE' || nextStatus === 'ENDED') {
+    if (
+      nextStatus === 'ACTIVE' ||
+      nextStatus === 'ENDED' ||
+      (partner.status === 'ACTIVE' && nextStatus === 'DISCUSSION')
+    ) {
       openPeriodTransition(nextStatus);
 
       return;
@@ -189,7 +204,13 @@ export const PartnerStatusControl: FC<{
       });
       onChange(updated);
       setOpen(false);
-      toast.success(isCorrection ? 'Période corrigée' : 'Statut mis à jour');
+      toast.success(
+        isCorrection
+          ? 'Période corrigée'
+          : isResumeAfterActive
+            ? 'Période clôturée et échanges repris'
+            : 'Statut mis à jour',
+      );
       try {
         await onTimelineRefresh?.();
       } catch {
@@ -208,14 +229,18 @@ export const PartnerStatusControl: FC<{
 
   const modalTitle = isCorrection
     ? 'Corriger la période'
-    : status === 'ACTIVE'
-      ? 'Activer la relation'
-      : 'Terminer la relation';
+    : isResumeAfterActive
+      ? 'Reprendre les échanges'
+      : status === 'ACTIVE'
+        ? 'Activer la relation'
+        : 'Terminer la relation';
   const modalDescription = isCorrection
     ? 'Corrigez les informations de la période. Chaque modification reste journalisée.'
-    : status === 'ACTIVE'
-      ? 'La nouvelle période sera ouverte. Sa date de début reste facultative.'
-      : 'La période active sera clôturée. La date de fin et le motif restent facultatifs.';
+    : isResumeAfterActive
+      ? 'La période active sera clôturée, puis la fiche repassera en discussion dans une seule opération.'
+      : status === 'ACTIVE'
+        ? 'La nouvelle période sera ouverte. Sa date de début reste facultative.'
+        : 'La période active sera clôturée. La date de fin et le motif restent facultatifs.';
 
   return (
     <>
@@ -350,9 +375,9 @@ export const PartnerStatusControl: FC<{
               <DialogDescription>{modalDescription}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              {(status === 'ACTIVE' || status === 'ENDED') && (
+              {(status === 'ACTIVE' || isPeriodEndForm) && (
                 <div className="grid gap-2">
-                  {status === 'ENDED' && !isCorrection ? (
+                  {isPeriodEndForm && !isCorrection ? (
                     <>
                       <Label>Début de période</Label>
                       <div className="bg-surface-muted rounded-lg border px-3 py-2 text-sm">
@@ -387,7 +412,7 @@ export const PartnerStatusControl: FC<{
                   )}
                 </div>
               )}
-              {status === 'ENDED' && (
+              {isPeriodEndForm && (
                 <>
                   <div className="grid gap-2">
                     <Label htmlFor="partner-status-ended">Fin de période</Label>

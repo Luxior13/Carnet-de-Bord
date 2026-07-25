@@ -85,12 +85,15 @@ const getTimelineEventPresentation = (
       };
     }
     case 'STATUS_CHANGED': {
+      const resumesAfterActive =
+        item.payload.fromStatus === 'ACTIVE' &&
+        item.payload.toStatus === 'DISCUSSION';
       const period =
         item.payload.startedOn || item.payload.endedOn
           ? formatPeriod(
               item.payload.startedOn,
               item.payload.endedOn,
-              item.payload.toStatus === 'ENDED',
+              item.payload.toStatus === 'ENDED' || resumesAfterActive,
             )
           : null;
       const closingNote = item.payload.closingNote
@@ -106,7 +109,7 @@ const getTimelineEventPresentation = (
           .filter(Boolean)
           .join(' · '),
         icon:
-          item.payload.toStatus === 'ENDED' ? (
+          item.payload.toStatus === 'ENDED' || resumesAfterActive ? (
             <CalendarClock className="size-4" />
           ) : (
             <Handshake className="size-4" />
@@ -117,9 +120,11 @@ const getTimelineEventPresentation = (
             : item.payload.toStatus === 'ENDED'
               ? 'Relation terminée'
               : item.payload.toStatus === 'DISCUSSION'
-                ? item.payload.fromStatus === 'PROSPECT'
-                  ? 'Échanges commencés'
-                  : 'Échanges repris'
+                ? resumesAfterActive
+                  ? 'Relation clôturée, échanges repris'
+                  : item.payload.fromStatus === 'PROSPECT'
+                    ? 'Échanges commencés'
+                    : 'Échanges repris'
                 : 'Relation classée sans suite',
       };
     }

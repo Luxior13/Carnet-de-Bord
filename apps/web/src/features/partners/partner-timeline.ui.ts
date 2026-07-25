@@ -67,12 +67,16 @@ export const getRelationshipStatusDescription = (
     return 'Relation terminée · dates de la période non renseignées';
   }
 
-  if (latestClosedPeriod?.endedOn) {
-    return `Dernière relation terminée le ${formatPartnerCivilDate(latestClosedPeriod.endedOn)}`;
+  if (partner.status === 'DISCUSSION') {
+    if (latestClosedPeriod?.endedOn) {
+      return `Échanges en cours · dernière relation terminée le ${formatPartnerCivilDate(latestClosedPeriod.endedOn)}`;
+    }
+
+    return 'Échanges en cours · aucune période active';
   }
 
-  if (partner.status === 'DISCUSSION') {
-    return 'Échanges en cours · aucune période active';
+  if (latestClosedPeriod?.endedOn) {
+    return `Dernière relation terminée le ${formatPartnerCivilDate(latestClosedPeriod.endedOn)}`;
   }
 
   if (partner.status === 'CLOSED') {

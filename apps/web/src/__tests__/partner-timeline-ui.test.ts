@@ -79,6 +79,23 @@ describe('Partner timeline UI', () => {
         status: 'ENDED',
       }),
     ).toBe('Dernière période : début le 10 juillet 2026 · fin non renseignée');
+
+    expect(
+      getRelationshipStatusDescription({
+        ...basePartner,
+        periods: [
+          {
+            closedAt: '2026-07-25T09:00:00.000Z',
+            closingNote: 'Renégociation',
+            endedOn: '2026-07-25',
+            id: 'period-1',
+            startedOn: '2026-07-10',
+            version: 2,
+          },
+        ],
+        status: 'DISCUSSION',
+      }),
+    ).toBe('Échanges en cours · dernière relation terminée le 25 juillet 2026');
   });
 
   it('makes an overdue action immediately understandable', () => {

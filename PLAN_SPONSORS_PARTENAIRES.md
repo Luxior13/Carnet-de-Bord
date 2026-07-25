@@ -380,12 +380,15 @@ ou à implémenter.
 - [x] Cycle principal :
   - `PROSPECT` vers `DISCUSSION` ;
   - `DISCUSSION` vers `ACTIVE` ou `CLOSED` ;
-  - `ACTIVE` vers `ENDED`.
+  - `ACTIVE` vers `ENDED` ou directement `DISCUSSION` en clôturant la période.
 - [x] Un prospect peut passer directement à « Sans suite ».
 - [x] Une fiche « Sans suite » ou « Terminée » peut être réouverte en
       repassant par « En discussion ».
 - [x] Le passage à « Actif » ouvre une nouvelle période si aucune période n'est
       ouverte ; le passage à « Terminé » clôt la période courante.
+- [x] Depuis « Actif », le raccourci vers « En discussion » clôt la période
+      courante et reprend les échanges dans une seule mutation ; une simple
+      renégociation pendant une relation toujours active reste dans le suivi.
 - [x] Ces deux changements sont confirmés dans la même mutation
       transactionnelle : aucun état partiel entre statut et période.
 - [x] Réouvrir une fiche en « En discussion » ne crée pas encore une nouvelle

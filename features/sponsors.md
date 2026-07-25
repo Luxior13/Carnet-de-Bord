@@ -26,12 +26,18 @@ cinq statuts dans le même ordre. Le statut courant est sélectionné et les
 transitions disponibles ne changent jamais de place. Lorsqu'une transition
 nécessite une étape préalable, son bouton reste visible et l'explique au survol
 ou au focus clavier. Les dates utiles restent affichées ; un modal apparaît
-seulement pour ouvrir, terminer ou corriger une période.
+seulement pour ouvrir, terminer, corriger une période ou reprendre les
+échanges depuis une relation active.
 
 À l'ouverture d'une activation, la date de début est préremplie avec le jour
 civil courant en `Europe/Paris`. Lors d'une fin, la date de fin reçoit ce même
 jour tandis que la date de début existante reste visible. Ces valeurs demeurent
 modifiables et peuvent être effacées lorsqu'une date métier est inconnue.
+Depuis « Actif », choisir « En discussion » clôt la période active puis reprend
+les échanges dans une seule transaction. La date de fin est préremplie avec le
+jour courant et une précision facultative peut expliquer ce retour. Si la
+relation reste réellement active pendant une renégociation, son statut reste
+« Actif » et la renégociation se documente simplement dans le suivi.
 
 Le même onglet contient un fil métier permanent réunissant les notes, les
 changements de relation et la réalisation ou réouverture des actions. Une

@@ -186,6 +186,15 @@ describe('Sponsors & partenaires foundation', () => {
     ).toBe(true);
     expect(
       updatePartnerStatusSchema.safeParse({
+        closingNote: 'Renégociation nécessaire',
+        endedOn: '2026-07-25',
+        startedOn: '2026-07-01',
+        status: 'DISCUSSION',
+        version: 2,
+      }).success,
+    ).toBe(true);
+    expect(
+      updatePartnerStatusSchema.safeParse({
         ...relationshipStatus,
         name: 'Exemple',
       }).success,
@@ -208,7 +217,7 @@ describe('Sponsors & partenaires foundation', () => {
       'CLOSED',
     ]);
     expect(PARTNER_STATUS_TRANSITIONS).toEqual({
-      ACTIVE: ['ACTIVE', 'ENDED'],
+      ACTIVE: ['ACTIVE', 'DISCUSSION', 'ENDED'],
       CLOSED: ['CLOSED', 'DISCUSSION'],
       DISCUSSION: ['DISCUSSION', 'ACTIVE', 'CLOSED'],
       ENDED: ['ENDED', 'DISCUSSION'],
@@ -229,11 +238,29 @@ describe('Sponsors & partenaires foundation', () => {
       'disabled={saving || open || isCurrent || !isAllowed}',
     );
     expect(partnerStatusControlSource).toContain(
+      "partner.status === 'ACTIVE' && nextStatus === 'DISCUSSION'",
+    );
+    expect(partnerStatusControlSource).toContain(
+      'Période clôturée et échanges repris',
+    );
+    expect(partnerStatusControlSource).toContain(
       'grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5',
     );
     expect(partnerStatusControlSource).not.toContain('nextStatuses.map');
     expect(partnerServiceSource).toContain(
       'const allowedTransitions = PARTNER_STATUS_TRANSITIONS[',
+    );
+    expect(partnerServiceSource).toContain(
+      "existing.status === 'ACTIVE' && input.status !== 'ACTIVE'",
+    );
+    expect(partnerServiceSource).toContain(
+      'statusChanged && closesActivePeriod',
+    );
+    expect(partnerServiceSource).toContain(
+      'Période clôturée avant la reprise des échanges',
+    );
+    expect(partnerTimelineItemsSource).toContain(
+      'Relation clôturée, échanges repris',
     );
   });
 
@@ -273,7 +300,7 @@ describe('Sponsors & partenaires foundation', () => {
       'const today = getPartnerTodayCivilDate()',
     );
     expect(partnerStatusControlSource).toContain(
-      "setEndedOn(nextStatus === 'ENDED' ? today : '')",
+      "setEndedOn(closesActivePeriod ? today : '')",
     );
     expect(partnerStatusControlSource).toContain("'Corriger la période'");
     expect(partnerStatusControlSource).toContain('Corriger les dates');

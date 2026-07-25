@@ -508,6 +508,8 @@ export const updatePartnerStatus = async (
     const existing = await requirePartner(transaction, partnerId);
     assertTransition(existing.status, input.status);
     const statusChanged = existing.status !== input.status;
+    const closesActivePeriod =
+      existing.status === 'ACTIVE' && input.status !== 'ACTIVE';
     const currentPeriod =
       existing.status === 'ACTIVE'
         ? await transaction.partnerRelationshipPeriod.findFirst({
@@ -531,7 +533,6 @@ export const updatePartnerStatus = async (
             (currentPeriod?.closingNote ?? null) !== input.closingNote)));
     const eventOccurredAt = new Date();
     let eventPeriodId = currentPeriod?.id ?? null;
-
     if (!statusChanged && !periodChanged) {
       return loadPartnerDetail(transaction, existing.id, canViewPersons);
     }
@@ -563,7 +564,7 @@ export const updatePartnerStatus = async (
         entityId: existing.id,
         tabKey: 'information',
       });
-    } else if (statusChanged && input.status === 'ENDED') {
+    } else if (statusChanged && closesActivePeriod) {
       const openPeriod = currentPeriod;
       if (!openPeriod) {
         throw partnerErrors.dependencyConflict(
@@ -584,7 +585,10 @@ export const updatePartnerStatus = async (
       await createPartnerAudit(transaction, {
         action: AuditAction.PARTNER_PERIOD_UPDATE,
         actor,
-        description: 'Période de relation terminée',
+        description:
+          input.status === 'DISCUSSION'
+            ? 'Période clôturée avant la reprise des échanges'
+            : 'Période de relation terminée',
         entityId: existing.id,
         tabKey: 'information',
       });
@@ -627,13 +631,13 @@ export const updatePartnerStatus = async (
         occurredAt: eventOccurredAt,
         organizationId: existing.id,
         payload: {
-          closingNote: input.status === 'ENDED' ? input.closingNote : null,
-          endedOn: input.status === 'ENDED' ? input.endedOn : null,
+          closingNote: closesActivePeriod ? input.closingNote : null,
+          endedOn: closesActivePeriod ? input.endedOn : null,
           fromStatus: existing.status,
           startedOn:
             input.status === 'ACTIVE'
               ? input.startedOn
-              : input.status === 'ENDED'
+              : closesActivePeriod
                 ? fromCivilDate(currentPeriod?.startedOn ?? null)
                 : null,
           toStatus: input.status,
