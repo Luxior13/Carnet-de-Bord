@@ -196,6 +196,8 @@
   --sidebar-scrollbar-thumb-hover: rgba(152, 166, 185, 0.55);
   --shadow-panel: 0 12px 32px -24px rgba(0, 0, 0, 0.85);
   --shadow-panel-strong: 0 20px 52px -24px rgba(0, 0, 0, 0.9);
+  --shadow-account-popover:
+    0 24px 60px -22px rgba(0, 0, 0, 0.96), 0 0 0 1px rgba(255, 255, 255, 0.025);
   --site-background-column-bg: linear-gradient(
     180deg,
     var(--column-surface-start),

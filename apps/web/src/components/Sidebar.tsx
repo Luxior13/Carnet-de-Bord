@@ -78,9 +78,9 @@ const SIDEBAR_POPOVER_DANGER_ACTION_CLASS =
 const SIDEBAR_POPOVER_ICON_BASE_CLASS =
   'flex size-8 shrink-0 items-center justify-center rounded-md transition-colors duration-150';
 const SIDEBAR_POPOVER_ICON_ACTION_CLASS =
-  'text-muted-foreground group-hover/menu-action:text-primary-emphasis group-focus/menu-action:text-primary-emphasis';
+  'bg-primary/10 text-primary-emphasis ring-primary/15 ring-1 group-hover/menu-action:bg-primary/15 group-focus/menu-action:bg-primary/15';
 const SIDEBAR_POPOVER_ICON_DANGER_CLASS =
-  'text-muted-foreground group-hover/menu-action:text-destructive group-focus/menu-action:text-destructive';
+  'bg-surface-panel text-muted-foreground ring-border-subtle ring-1 group-hover/menu-action:bg-destructive/10 group-hover/menu-action:text-destructive group-hover/menu-action:ring-destructive/20 group-focus/menu-action:bg-destructive/10 group-focus/menu-action:text-destructive group-focus/menu-action:ring-destructive/20';
 const SIDEBAR_POPOVER_CHEVRON_CLASS =
   'text-muted-foreground size-3.5 shrink-0 transition-[color,opacity,transform] duration-150 group-hover/menu-action:translate-x-0.5 group-hover/menu-action:text-foreground';
 
@@ -707,14 +707,18 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               collisionPadding={8}
               className={cn(
                 SIDEBAR_POPOVER_PANEL_CLASS,
-                'w-[min(19rem,calc(100vw-2rem))]',
+                'border-border-strong w-[min(19rem,calc(100vw-2rem))] shadow-[var(--shadow-account-popover)]',
               )}
             >
-              <div className="border-border-divider border-b px-3.5 py-3">
+              <div className="border-border-default bg-primary/5 relative border-b px-3.5 py-3.5">
+                <span
+                  aria-hidden="true"
+                  className="bg-border-strong absolute inset-x-0 top-0 h-px opacity-70"
+                />
                 <div className="flex min-w-0 items-center gap-3">
                   <UserAvatar
                     user={userData}
-                    className="ring-sidebar-border size-11 rounded-lg ring-1"
+                    className="ring-primary/25 size-11 rounded-lg ring-2"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="text-foreground block truncate text-sm leading-5 font-semibold">
@@ -735,7 +739,10 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 </DropdownMenuLabel>
                 <DropdownMenuGroup
                   aria-label="Accès au compte"
-                  className={SIDEBAR_POPOVER_SECTION_CLASS}
+                  className={cn(
+                    SIDEBAR_POPOVER_SECTION_CLASS,
+                    'bg-surface-panel-raised/55 ring-border-subtle rounded-lg p-1 ring-1',
+                  )}
                 >
                   <DropdownMenuItem
                     asChild
@@ -779,7 +786,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 </DropdownMenuGroup>
               </div>
 
-              <div className="border-border-divider border-t p-2">
+              <div className="border-border-default bg-surface-page/65 border-t p-2">
                 <DropdownMenuItem
                   onSelect={() => {
                     setOpenMobile(false);

@@ -113,13 +113,21 @@ describe('sidebar UX contracts', () => {
     expect(sidebarSource).not.toContain('text-sidebar-foreground/45');
   });
 
-  it('uses the same flat visual language for both sidebar popovers', () => {
+  it('gives the account popover controlled tonal depth', () => {
     expect(sidebarSource).toContain('w-[min(19rem,calc(100vw-2rem))]');
     expect(sidebarSource).not.toContain('bg-gradient');
     expect(sidebarSource).not.toContain('from-surface-muted');
+    expect(sidebarSource).toContain('shadow-[var(--shadow-account-popover)]');
+    expect(sidebarSource).toContain('bg-primary/5 relative border-b');
+    expect(sidebarSource).toContain('bg-surface-panel-raised/55');
+    expect(sidebarSource).toContain('bg-surface-page/65');
+    expect(sidebarSource).toContain(
+      'bg-primary/10 text-primary-emphasis ring-primary/15',
+    );
     expect(sidebarSource).toContain('bg-primary/10 text-foreground');
     expect(sidebarSource).toContain('hover:bg-destructive/10');
     expect(sidebarSource).toContain('text-muted-foreground');
+    expect(globalStylesSource).toContain('--shadow-account-popover:');
   });
 
   it('keeps compact proportions without decorative texture or nested cards', () => {
