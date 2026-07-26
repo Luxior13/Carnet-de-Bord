@@ -63,8 +63,7 @@ const QUICK_LINKS = [
   },
 ] as const;
 
-const defaultAccentClassName =
-  'border-primary/35 bg-primary/10 text-primary-emphasis';
+const defaultAccentClassName = 'bg-primary/10 text-primary-emphasis';
 const NOTIFICATION_REFRESH_MIN_INTERVAL_MS = 30_000;
 const NOTIFICATION_CHANGED_DEBOUNCE_MS = 200;
 
@@ -244,13 +243,13 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
               ? `Ouvrir les notifications (${unreadNotificationsCount} non lues)`
               : 'Ouvrir les notifications'
           }
-          className="border-border-control bg-surface-control text-muted-foreground hover:border-primary/35 hover:bg-surface-control-hover hover:text-foreground relative rounded-lg shadow-none"
+          className="text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground relative rounded-md bg-transparent shadow-none hover:border-transparent"
           size="icon"
-          variant="outline"
+          variant="ghost"
         >
           <Bell aria-hidden="true" className="size-4" />
           {unreadNotificationsCount > 0 && (
-            <span className="ring-surface bg-primary text-primary-foreground absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold ring-2">
+            <span className="ring-surface-page bg-primary text-primary-foreground absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold ring-2">
               {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
               <span className="sr-only">notifications non lues</span>
             </span>
@@ -259,11 +258,11 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
       </PopoverTrigger>
       <PopoverContent
         align="end"
-        className="border-border-default bg-surface-floating flex max-h-[var(--radix-popover-content-available-height)] w-[min(calc(100vw-2rem),22rem)] flex-col overflow-hidden rounded-xl p-0 shadow-[var(--shadow-panel-strong)]"
+        className="border-border-default bg-surface-floating flex max-h-[var(--radix-popover-content-available-height)] w-[min(calc(100vw-2rem),22rem)] flex-col overflow-hidden rounded-lg p-0 shadow-[var(--shadow-panel-strong)]"
         collisionPadding={8}
         sideOffset={8}
       >
-        <div className="border-border-divider bg-surface-panel-raised/85 shrink-0 border-b px-4 py-3">
+        <div className="border-border-divider shrink-0 border-b px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-foreground text-sm font-semibold">
@@ -282,7 +281,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
               </p>
             </div>
             {unreadNotificationsCount > 0 && (
-              <span className="border-primary/30 bg-primary/10 text-primary-emphasis rounded-full border px-2 py-0.5 text-xs font-semibold">
+              <span className="bg-primary/10 text-primary-emphasis rounded-full px-2 py-0.5 text-xs font-semibold">
                 {unreadNotificationsCount}
               </span>
             )}
@@ -313,7 +312,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
             className="flex flex-col items-center px-4 py-7 text-center"
             role="status"
           >
-            <span className="border-border-subtle bg-surface-inset text-muted-foreground flex size-10 items-center justify-center rounded-lg border">
+            <span className="border-border-subtle bg-surface-inset text-muted-foreground flex size-10 items-center justify-center rounded-md border">
               <Loader2 aria-hidden="true" className="size-4 animate-spin" />
             </span>
             <p className="text-foreground mt-3 text-sm font-semibold">
@@ -328,7 +327,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
             className="flex flex-col items-center px-4 py-7 text-center"
             role="alert"
           >
-            <span className="border-destructive/30 bg-destructive/10 text-destructive flex size-10 items-center justify-center rounded-lg border">
+            <span className="border-destructive/30 bg-destructive/10 text-destructive flex size-10 items-center justify-center rounded-md border">
               <TriangleAlert aria-hidden="true" className="size-4" />
             </span>
             <p className="text-foreground mt-3 text-sm font-semibold">
@@ -356,7 +355,12 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
 
               return (
                 <Link
-                  className="hover:bg-surface-tile-hover focus-visible:ring-ring/50 flex gap-3 rounded-lg px-2 py-2.5 transition-colors outline-none focus-visible:ring-2"
+                  className={cn(
+                    'focus-visible:ring-ring/50 flex gap-3 rounded-md px-2 py-2.5 transition-colors outline-none focus-visible:ring-2',
+                    isUnread
+                      ? 'bg-primary/5 hover:bg-primary/10'
+                      : 'hover:bg-surface-tile-hover',
+                  )}
                   href={notification.href}
                   key={notification.id}
                   onClick={() => {
@@ -374,7 +378,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                 >
                   <span
                     className={cn(
-                      'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border',
+                      'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md',
                       notification.accentClassName ?? defaultAccentClassName,
                     )}
                   >
@@ -399,7 +403,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                       {notification.description}
                     </span>
                     {notification.meta && (
-                      <span className="text-muted-foreground mt-1 block text-xs font-medium [overflow-wrap:anywhere] uppercase">
+                      <span className="text-muted-foreground mt-1 block text-xs [overflow-wrap:anywhere]">
                         {notification.meta}
                       </span>
                     )}
@@ -410,7 +414,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
           </div>
         ) : hasLoadedNotifications ? (
           <div className="flex flex-col items-center px-4 py-7 text-center">
-            <span className="border-border-subtle bg-surface-inset text-muted-foreground flex size-10 items-center justify-center rounded-lg border">
+            <span className="border-border-subtle bg-surface-inset text-muted-foreground flex size-10 items-center justify-center rounded-md border">
               <Bell aria-hidden="true" className="size-4" />
             </span>
             <p className="text-foreground mt-3 text-sm font-semibold">
@@ -424,7 +428,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
         {visibleQuickLinks.length > 0 && (
           <div
             className={cn(
-              'border-border-divider bg-surface-inset/70 grid shrink-0 border-t',
+              'border-border-divider bg-surface-page grid shrink-0 border-t',
               visibleQuickLinks.length > 1 ? 'grid-cols-2' : 'grid-cols-1',
             )}
           >

@@ -11,6 +11,7 @@ const readSourceFile = (relativePath: string): string => {
 const sidebarSource = readSourceFile('../components/Sidebar.tsx');
 const sidebarPrimitiveSource = readSourceFile('../components/ui/sidebar.tsx');
 const navigationSource = readSourceFile('../shared/constants/app.constants.ts');
+const globalStylesSource = readSourceFile('../app/globals.css');
 
 describe('sidebar UX contracts', () => {
   it('keeps the desktop sidebar genuinely collapsible and remembers its state', () => {
@@ -76,48 +77,58 @@ describe('sidebar UX contracts', () => {
     expect(sidebarSource).toContain(
       'group-data-[state=open]/account-menu:rotate-180',
     );
-    expect(sidebarSource).toContain('bg-primary/15 text-primary-emphasis');
+    expect(sidebarSource).toContain('data-[state=open]:bg-sidebar-accent/65');
+    expect(sidebarSource).toContain('bg-primary/10 text-primary-emphasis');
     expect(sidebarSource).toContain('Actuel');
     expect(sidebarSource).toContain('aria-current={isActive');
+    expect(sidebarPrimitiveSource).toContain('before:bg-primary');
+    expect(sidebarPrimitiveSource).toContain(
+      'data-[active=true]:before:opacity-100',
+    );
   });
 
   it('keeps the pole switcher readable in expanded, collapsed and mobile layouts', () => {
     expect(sidebarSource).toContain('w-[min(20rem,calc(100vw-2rem))]');
-    expect(sidebarSource).toContain('border-primary/40 bg-primary/10');
+    expect(sidebarSource).toContain('hover:bg-sidebar-accent/55');
     expect(sidebarSource).toContain('Changer de pôle — {activeSpace.label}');
     expect(sidebarSource).toContain('open={isTooltipOpen && !isMenuOpen}');
     expect(sidebarSource).not.toContain('Changer d’espace');
   });
 
-  it('keeps pole placement stable and expresses hierarchy with color', () => {
+  it('keeps pole placement stable with restrained color hierarchy', () => {
     expect(sidebarSource).toContain(
       'spaces.map((space) => renderSpaceItem(space))',
     );
     expect(sidebarSource).not.toContain('Autres pôles');
-    expect(sidebarSource).toContain('border-border-strong bg-surface');
+    expect(sidebarSource).toContain(
+      'border-border-default bg-surface-floating',
+    );
     expect(sidebarSource).toContain('aria-label="Pôles disponibles"');
-    expect(sidebarSource).toContain('bg-surface-inset');
-    expect(sidebarSource).toContain('hover:border-border-default');
-    expect(sidebarSource).toContain('text-sidebar-foreground/55');
+    expect(sidebarSource).toContain(
+      "const SIDEBAR_POPOVER_SECTION_CLASS = 'space-y-0.5'",
+    );
+    expect(sidebarSource).toContain('hover:bg-surface-tile-hover');
+    expect(sidebarSource).toContain('text-muted-foreground');
     expect(sidebarSource).toContain('text-sidebar-foreground/60');
     expect(sidebarSource).not.toContain('text-sidebar-foreground/45');
   });
 
-  it('uses the same layered visual language for both sidebar popovers', () => {
+  it('uses the same flat visual language for both sidebar popovers', () => {
     expect(sidebarSource).toContain('w-[min(19rem,calc(100vw-2rem))]');
-    expect(sidebarSource).toContain('from-surface-muted/60 to-surface');
-    expect(sidebarSource).toContain('border-primary/35 bg-primary/10');
-    expect(sidebarSource).toContain('hover:border-destructive/35');
-    expect(sidebarSource).toContain('text-sidebar-foreground/65');
+    expect(sidebarSource).not.toContain('bg-gradient');
+    expect(sidebarSource).not.toContain('from-surface-muted');
+    expect(sidebarSource).toContain('bg-primary/10 text-foreground');
+    expect(sidebarSource).toContain('hover:bg-destructive/10');
+    expect(sidebarSource).toContain('text-muted-foreground');
   });
 
-  it('matches the reference proportions without importing its palette', () => {
-    expect(sidebarSource).toContain('rounded-xl');
+  it('keeps compact proportions without decorative texture or nested cards', () => {
+    expect(sidebarSource).toContain('rounded-lg border p-0');
     expect(sidebarSource).toContain('size-11');
-    expect(sidebarSource).toContain('size-7');
+    expect(sidebarSource).toContain('size-8');
     expect(sidebarSource).toContain('min-h-10');
-    expect(sidebarSource).toContain('text-[13px]');
-    expect(sidebarSource).toContain('tracking-[0.16em]');
+    expect(sidebarSource).toContain('text-sm font-medium');
+    expect(sidebarSource).not.toContain('tracking-[0.16em]');
     expect(sidebarSource).toContain('collisionPadding={8}');
     expect(sidebarSource).toContain('overflow-y-auto overscroll-contain');
     expect(sidebarSource).toContain(
@@ -126,5 +137,7 @@ describe('sidebar UX contracts', () => {
     expect(sidebarSource).not.toContain('#121c2b');
     expect(sidebarSource).not.toContain('#18243a');
     expect(sidebarSource).not.toContain('#0e1622');
+    expect(sidebarPrimitiveSource).not.toContain('sidebar-pattern');
+    expect(globalStylesSource).not.toContain('repeating-linear-gradient');
   });
 });

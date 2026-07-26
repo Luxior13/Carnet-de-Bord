@@ -21,6 +21,23 @@ describe('header notification UX contracts', () => {
     expect(headerSource).toContain('<NotificationCenter />');
   });
 
+  it('uses a matte header and flat floating surfaces', () => {
+    expect(headerSource).toContain('bg-surface-page');
+    expect(headerSource).not.toContain('backdrop-blur');
+    expect(headerSource).not.toContain('bg-surface-page/95');
+    expect(notificationCenterSource).toContain(
+      'border-border-default bg-surface-floating',
+    );
+    expect(notificationCenterSource).toContain('rounded-lg p-0');
+    expect(notificationCenterSource).toContain('variant="ghost"');
+    expect(notificationCenterSource).toContain(
+      "'bg-primary/5 hover:bg-primary/10'",
+    );
+    expect(notificationCenterSource).not.toContain(
+      'bg-surface-panel-raised/85',
+    );
+  });
+
   it('hides the bell when the authenticated user cannot view notifications', () => {
     expect(notificationCenterSource).toContain(
       'if (!canViewNotifications) return null;',

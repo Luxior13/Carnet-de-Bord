@@ -17,20 +17,21 @@ export type NavigationSpaceToneClasses = {
 const baseHero =
   'border-border/70 bg-surface text-foreground shadow-[var(--shadow-panel)]';
 const baseRow =
-  'hover:bg-sidebar-accent/45 focus:bg-sidebar-accent/55 focus:text-sidebar-foreground';
+  'hover:bg-sidebar-accent/55 focus:bg-sidebar-accent/65 focus:text-sidebar-foreground';
 const baseActiveItem =
-  'border-sidebar-ring/35 bg-sidebar-accent/55 text-sidebar-foreground';
+  'bg-primary/10 text-sidebar-foreground [&>svg]:text-primary';
+const baseBranchButton =
+  'bg-primary/5 text-sidebar-foreground [&>svg]:text-primary';
 const baseMenuButton =
-  'data-[active=true]:border-sidebar-ring/45 data-[active=true]:bg-sidebar-accent/70 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring';
+  'data-[active=true]:bg-primary/10 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-primary';
 const baseSubButton =
-  'data-[active=true]:border-sidebar-ring/35 data-[active=true]:bg-sidebar-accent/60 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-ring';
+  'data-[active=true]:bg-primary/10 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-primary';
 
 export const NAVIGATION_SPACE_TONE_CLASSES = {
   dashboard: {
     accent: 'bg-nav-dashboard',
     activeItem: baseActiveItem,
-    branchButton:
-      'border-nav-dashboard/30 bg-nav-dashboard/10 text-sidebar-foreground [&>svg]:text-nav-dashboard-icon',
+    branchButton: baseBranchButton,
     dot: 'bg-nav-dashboard',
     hero: baseHero,
     icon: 'border-nav-dashboard/30 bg-nav-dashboard/10 text-nav-dashboard-icon',
@@ -42,8 +43,7 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
   internal: {
     accent: 'bg-nav-internal',
     activeItem: baseActiveItem,
-    branchButton:
-      'border-nav-internal/30 bg-nav-internal/10 text-sidebar-foreground [&>svg]:text-nav-internal-icon',
+    branchButton: baseBranchButton,
     dot: 'bg-nav-internal',
     hero: baseHero,
     icon: 'border-nav-internal/30 bg-nav-internal/10 text-nav-internal-icon',
@@ -55,8 +55,7 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
   legal: {
     accent: 'bg-nav-legal',
     activeItem: baseActiveItem,
-    branchButton:
-      'border-nav-legal/30 bg-nav-legal/10 text-sidebar-foreground [&>svg]:text-nav-legal-icon',
+    branchButton: baseBranchButton,
     dot: 'bg-nav-legal',
     hero: baseHero,
     icon: 'border-nav-legal/30 bg-nav-legal/10 text-nav-legal-icon',
@@ -68,8 +67,7 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
   sport: {
     accent: 'bg-nav-sport',
     activeItem: baseActiveItem,
-    branchButton:
-      'border-nav-sport/30 bg-nav-sport/10 text-sidebar-foreground [&>svg]:text-nav-sport-icon',
+    branchButton: baseBranchButton,
     dot: 'bg-nav-sport',
     hero: baseHero,
     icon: 'border-nav-sport/30 bg-nav-sport/10 text-nav-sport-icon',
@@ -81,8 +79,7 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
   system: {
     accent: 'bg-nav-system',
     activeItem: baseActiveItem,
-    branchButton:
-      'border-nav-system/30 bg-nav-system/10 text-sidebar-foreground [&>svg]:text-nav-system-icon',
+    branchButton: baseBranchButton,
     dot: 'bg-nav-system',
     hero: baseHero,
     icon: 'border-nav-system/30 bg-nav-system/10 text-nav-system-icon',
@@ -94,8 +91,7 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
   treasury: {
     accent: 'bg-nav-treasury',
     activeItem: baseActiveItem,
-    branchButton:
-      'border-nav-treasury/30 bg-nav-treasury/10 text-sidebar-foreground [&>svg]:text-nav-treasury-icon',
+    branchButton: baseBranchButton,
     dot: 'bg-nav-treasury',
     hero: baseHero,
     icon: 'border-nav-treasury/30 bg-nav-treasury/10 text-nav-treasury-icon',

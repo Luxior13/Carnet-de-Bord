@@ -92,29 +92,29 @@
 :root {
   color-scheme: dark;
 
-  /* Canonical midnight surface scale. */
-  --surface-canvas: #060a11;
-  --surface-page: #0b111b;
-  --surface-inset: #0e1622;
-  --surface-panel: #142033;
-  --surface-panel-raised: #18243a;
-  --surface-panel-header: #1d2c48;
-  --surface-floating: #1b2942;
-  --surface-control-hover: #101827;
-  --surface-control-focus: #142034;
-  --surface-tile-hover: #20304d;
+  /* Calm graphite surface scale. */
+  --surface-canvas: #090d14;
+  --surface-page: #0e1520;
+  --surface-inset: #101824;
+  --surface-panel: #172231;
+  --surface-panel-raised: #192534;
+  --surface-panel-header: #1b2838;
+  --surface-floating: #1d2a3b;
+  --surface-control-hover: #17212f;
+  --surface-control-focus: #1a2534;
+  --surface-tile-hover: #1c2837;
 
   /* Canonical text and border scale. */
   --text-primary: #f3f6fb;
-  --text-secondary: #c4cedc;
-  --text-muted: #8e9baf;
-  --text-disabled: #69778b;
+  --text-secondary: #c2ccd9;
+  --text-muted: #98a6b9;
+  --text-disabled: #6f7d90;
   --overlay: #02060c;
-  --border-steel: #94aacf;
-  --border-subtle: rgba(148, 170, 207, 0.14);
-  --border-default: rgba(148, 170, 207, 0.22);
-  --border-strong: rgba(148, 170, 207, 0.34);
-  --border-divider: rgba(148, 170, 207, 0.16);
+  --border-steel: #8fa1b8;
+  --border-subtle: rgba(143, 161, 184, 0.12);
+  --border-default: rgba(143, 161, 184, 0.2);
+  --border-strong: rgba(143, 161, 184, 0.3);
+  --border-divider: rgba(143, 161, 184, 0.13);
 
   /* Backward-compatible semantic aliases used throughout the application. */
   --background: var(--surface-canvas);
@@ -128,8 +128,8 @@
   --card-foreground: var(--foreground);
   --popover: var(--surface-raised);
   --popover-foreground: var(--foreground);
-  --primary: #8b9cf6;
-  --primary-emphasis: #dce2ff;
+  --primary: #8795ff;
+  --primary-emphasis: #e2e6ff;
   --primary-foreground: #07111f;
   --secondary: var(--surface-muted);
   --secondary-foreground: var(--foreground);
@@ -149,13 +149,13 @@
   --border: color-mix(in srgb, var(--border-steel) 34%, var(--surface-panel));
   --border-control: #586780;
   --input: var(--surface-control);
-  --ring: #a9b5ff;
+  --ring: #9ca8ff;
   --radius: 0.5rem;
   --sidebar: var(--surface-page);
   --sidebar-foreground: var(--text-secondary);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--surface-panel-raised);
+  --sidebar-accent: var(--surface-panel);
   --sidebar-accent-foreground: var(--text-primary);
   --sidebar-border: color-mix(
     in srgb,
@@ -192,18 +192,10 @@
   --nav-treasury: #79bd70;
   --nav-treasury-icon: #b4e5ad;
   --nav-treasury-foreground: #d8f2d3;
-  --sidebar-pattern-primary: rgba(196, 206, 220, 0.025);
-  --sidebar-pattern-secondary: rgba(139, 156, 246, 0.018);
-  --sidebar-pattern-mask-start: rgba(0, 0, 0, 0.6);
-  --sidebar-pattern-mask-end: rgba(0, 0, 0, 0.32);
-  --sidebar-scrollbar-thumb: rgba(139, 156, 246, 0.55);
-  --sidebar-scrollbar-thumb-hover: rgba(183, 194, 255, 0.78);
-  --shadow-panel:
-    0 18px 40px -30px rgba(0, 0, 0, 0.92),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  --shadow-panel-strong:
-    0 30px 72px -34px rgba(0, 0, 0, 0.98),
-    inset 0 1px 0 rgba(255, 255, 255, 0.055);
+  --sidebar-scrollbar-thumb: rgba(152, 166, 185, 0.34);
+  --sidebar-scrollbar-thumb-hover: rgba(152, 166, 185, 0.55);
+  --shadow-panel: 0 12px 32px -24px rgba(0, 0, 0, 0.85);
+  --shadow-panel-strong: 0 20px 52px -24px rgba(0, 0, 0, 0.9);
   --site-background-column-bg: linear-gradient(
     180deg,
     var(--column-surface-start),
@@ -248,14 +240,6 @@
     box-shadow: var(--public-column-shadow);
   }
 
-  .site-background-column--local {
-    position: absolute;
-  }
-
-  .private-background-column {
-    max-width: var(--private-content-width);
-  }
-
   /*
    * Keep secondary page navigation anchored to the application column,
    * independently from the width chosen by the page content itself.
@@ -276,29 +260,6 @@
       display: block;
       width: var(--private-left-rail-width);
     }
-  }
-
-  .sidebar-pattern::before {
-    pointer-events: none;
-    position: absolute;
-    inset: 0;
-    content: '';
-    background-image:
-      repeating-linear-gradient(
-        135deg,
-        var(--sidebar-pattern-primary) 0 1px,
-        transparent 1px 18px
-      ),
-      repeating-linear-gradient(
-        45deg,
-        var(--sidebar-pattern-secondary) 0 1px,
-        transparent 1px 24px
-      );
-    mask-image: linear-gradient(
-      180deg,
-      var(--sidebar-pattern-mask-start),
-      var(--sidebar-pattern-mask-end)
-    );
   }
 
   .sidebar-scrollbar {

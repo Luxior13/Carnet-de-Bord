@@ -159,11 +159,19 @@ describe('global page search', () => {
     expect(globalSearchSource).not.toContain('setActiveIndex');
   });
 
-  it('keeps the dialog hierarchy and mobile safe areas explicit', () => {
-    expect(globalSearchSource).toContain('bg-surface-panel h-dvh');
-    expect(globalSearchSource).toContain('bg-surface-panel-raised/95');
-    expect(globalSearchSource).toContain('bg-surface-inset/85');
-    expect(globalSearchSource).toContain('bg-primary/10 ring-primary/30');
+  it('keeps a flat dialog hierarchy and explicit mobile safe areas', () => {
+    expect(globalSearchSource).toContain('bg-surface-floating h-dvh');
+    expect(globalSearchSource).toContain(
+      'border-border-divider flex items-center',
+    );
+    expect(globalSearchSource).toContain(
+      'bg-surface-page text-muted-foreground',
+    );
+    expect(globalSearchSource).toContain(
+      "isActive ? 'bg-primary/10' : 'hover:bg-surface-tile-hover'",
+    );
+    expect(globalSearchSource).not.toContain('bg-surface-panel-raised/95');
+    expect(globalSearchSource).not.toContain('ring-primary/30');
     expect(globalSearchSource).toContain('Pages suggérées');
     expect(globalSearchSource).toContain('safe-area-inset-top');
     expect(globalSearchSource).toContain('safe-area-inset-bottom');

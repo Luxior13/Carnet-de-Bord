@@ -219,11 +219,7 @@ export const PersistentAuthenticatedShell: FC<AuthenticatedShellProps> = ({
           open={requiresMfaSetup}
         />
         <Sidebar />
-        <SidebarInset className="relative isolate h-full bg-transparent">
-          <div
-            aria-hidden="true"
-            className="site-background-column site-background-column--local private-background-column"
-          />
+        <SidebarInset className="bg-surface-canvas relative isolate h-full">
           <Header breadcrumbs={registeredPageConfig.breadcrumbs} />
           <main
             id="main-content"

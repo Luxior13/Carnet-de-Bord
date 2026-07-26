@@ -24,6 +24,10 @@ describe('persistent authenticated shell UX contracts', () => {
       'if (shellContext) return children;',
     );
     expect(authenticatedLayoutSource).toContain('registerPageConfig');
+    expect(authenticatedLayoutSource).toContain('bg-surface-canvas');
+    expect(authenticatedLayoutSource).not.toContain(
+      'private-background-column',
+    );
   });
 
   it('lets public routes pass through the persistent root wrapper', () => {
