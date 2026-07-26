@@ -40,6 +40,23 @@ export const FEATURES = {
     permissionMode: 'all',
     requiredPermissions: [PERMISSIONS.DASHBOARD.VIEW],
   }),
+  internalNews: defineFeature({
+    audit: {
+      pageKey: 'internal-news',
+      pageLabel: 'Actualité interne',
+      poleKey: 'internal',
+      poleLabel: 'Vie interne',
+    },
+    availability: 'live',
+    description:
+      'Annonces partagées et changements importants issus des modules autorisés.',
+    href: '/vie-interne/actualite-interne',
+    icon: 'Newspaper',
+    id: 'internal-news',
+    label: 'Actualité interne',
+    permissionMode: 'all',
+    requiredPermissions: [PERMISSIONS.INTERNAL_NEWS.VIEW],
+  }),
   notifications: defineFeature({
     audit: {
       pageKey: 'notifications',

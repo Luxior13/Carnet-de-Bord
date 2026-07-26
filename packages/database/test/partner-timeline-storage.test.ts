@@ -111,8 +111,8 @@ test('rejects direct timeline deletes while preserving the owning fiche cascade'
   );
 });
 
-test('requires and restores the timeline table with backup format v7', () => {
-  assert.equal(DATABASE_BACKUP_FORMAT_VERSION, 7);
+test('requires and restores the timeline table with backup format v8', () => {
+  assert.equal(DATABASE_BACKUP_FORMAT_VERSION, 8);
   const actionIndex = DATABASE_BACKUP_TABLES.findIndex(
     ({ tableName }) => tableName === 'PartnerFollowUpAction',
   );

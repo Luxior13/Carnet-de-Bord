@@ -3,6 +3,7 @@ import 'server-only';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { isInternalNewsSchemaReady } from '$features/internal-news/server/internal-news-readiness';
 import { isPartnerSchemaReady } from '$features/partners/server/partner-readiness';
 import {
   isPersonEnvironmentConfigured,
@@ -25,6 +26,7 @@ const NO_STORE_HEADERS = {
 type ReadinessResponse = {
   checks: {
     database: 'connected' | 'disconnected';
+    internalNews: 'ready' | 'schema_not_ready' | 'unknown';
     partners: 'ready' | 'schema_not_ready' | 'unknown';
     persons: 'not_configured' | 'ready' | 'schema_not_ready' | 'unknown';
     schema: 'not_ready' | 'ready' | 'unknown';
@@ -90,6 +92,7 @@ const performReadinessCheck = async (): Promise<ReadinessResponse> => {
     return {
       checks: {
         database: 'connected',
+        internalNews: 'unknown',
         partners: 'unknown',
         persons: 'unknown',
         schema: 'not_ready',
@@ -101,6 +104,7 @@ const performReadinessCheck = async (): Promise<ReadinessResponse> => {
 
   const personSchemaReady = await isPersonSchemaCatalogReady(prisma);
   const partnerSchemaReady = await isPartnerSchemaReady(prisma);
+  const internalNewsSchemaReady = await isInternalNewsSchemaReady(prisma);
   let personsStatus: ReadinessResponse['checks']['persons'] =
     'schema_not_ready';
   if (personSchemaReady) {
@@ -120,6 +124,7 @@ const performReadinessCheck = async (): Promise<ReadinessResponse> => {
   return {
     checks: {
       database: 'connected',
+      internalNews: internalNewsSchemaReady ? 'ready' : 'schema_not_ready',
       partners: partnerSchemaReady ? 'ready' : 'schema_not_ready',
       persons: personsStatus,
       schema: 'ready',
@@ -172,6 +177,7 @@ export async function createReadinessResponse(): Promise<
       {
         checks: {
           database: 'disconnected',
+          internalNews: 'unknown',
           partners: 'unknown',
           persons: 'unknown',
           schema: 'unknown',

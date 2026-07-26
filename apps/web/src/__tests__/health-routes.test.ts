@@ -4,6 +4,8 @@ vi.mock('server-only', () => ({}));
 
 const mocks = vi.hoisted(() => ({
   auditEncryptionKeyVersion: { findMany: vi.fn() },
+  isInternalNewsSchemaReady: vi.fn(),
+  isPartnerSchemaReady: vi.fn(),
   isPersonEnvironmentConfigured: vi.fn(),
   isPersonSchemaCatalogReady: vi.fn(),
   queryRaw: vi.fn(),
@@ -23,6 +25,12 @@ vi.mock('$features/persons/server/person-readiness', () => ({
   isPersonEnvironmentConfigured: mocks.isPersonEnvironmentConfigured,
   isPersonReady: (status: string): boolean => status === 'ready',
 }));
+vi.mock('$features/internal-news/server/internal-news-readiness', () => ({
+  isInternalNewsSchemaReady: mocks.isInternalNewsSchemaReady,
+}));
+vi.mock('$features/partners/server/partner-readiness', () => ({
+  isPartnerSchemaReady: mocks.isPartnerSchemaReady,
+}));
 
 import { createReadinessResponse } from '$server/health';
 
@@ -30,6 +38,8 @@ describe('readiness without a background worker', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.queryRaw.mockResolvedValue([{ ready: true }]);
+    mocks.isInternalNewsSchemaReady.mockResolvedValue(true);
+    mocks.isPartnerSchemaReady.mockResolvedValue(true);
     mocks.isPersonSchemaCatalogReady.mockResolvedValue(true);
     mocks.auditEncryptionKeyVersion.findMany.mockResolvedValue([
       { version: 1 },
@@ -37,17 +47,35 @@ describe('readiness without a background worker', () => {
     mocks.isPersonEnvironmentConfigured.mockReturnValue(true);
   });
 
-  it('reports only database, schema and persons checks', async () => {
+  it('reports the core and live feature schema checks', async () => {
     const response = await createReadinessResponse();
 
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body).toMatchObject({
-      checks: { database: 'connected', persons: 'ready', schema: 'ready' },
+      checks: {
+        database: 'connected',
+        internalNews: 'ready',
+        partners: 'ready',
+        persons: 'ready',
+        schema: 'ready',
+      },
       status: 'healthy',
     });
     expect(JSON.stringify(body)).not.toContain('worker');
     expect(JSON.stringify(body)).not.toContain('queue');
+  });
+
+  it('keeps the site healthy while the internal news schema is not ready', async () => {
+    mocks.isInternalNewsSchemaReady.mockResolvedValue(false);
+
+    const response = await createReadinessResponse();
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      checks: { internalNews: 'schema_not_ready', schema: 'ready' },
+      status: 'healthy',
+    });
   });
 
   it('keeps the site healthy while the Persons schema is not ready', async () => {
@@ -83,6 +111,8 @@ describe('readiness without a background worker', () => {
     expect(await response.json()).toMatchObject({
       checks: {
         database: 'disconnected',
+        internalNews: 'unknown',
+        partners: 'unknown',
         persons: 'unknown',
         schema: 'unknown',
       },

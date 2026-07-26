@@ -488,6 +488,8 @@ describe('permission catalogue', () => {
       'dashboard:view',
       'notifications:view',
       'notifications:send',
+      'internal_news:view',
+      'internal_news:manage',
       'settings:view',
       'settings:update',
       'persons:view',
@@ -533,6 +535,7 @@ describe('permission catalogue', () => {
 
   it('shows every live administrative page without widening delegation', () => {
     expect(PERMISSION_CATEGORIES.map((category) => category.key)).toEqual([
+      'internal-news',
       'persons',
       'partners',
       'users',
@@ -552,6 +555,21 @@ describe('permission catalogue', () => {
         (category) => category.permissions,
       ).every(
         (permission) => permission.grantable && permission.surface === 'page',
+      ),
+    ).toBe(true);
+
+    const internalNewsCategory = PERMISSION_CATEGORIES.find(
+      (category) => category.key === 'internal-news',
+    );
+    expect(internalNewsCategory).toMatchObject({
+      accessPermissionKey: PERMISSIONS.INTERNAL_NEWS.VIEW,
+      assignment: 'role-bound',
+      poleKey: 'internal',
+      routes: ['/vie-interne/actualite-interne'],
+    });
+    expect(
+      internalNewsCategory?.permissions.every(
+        (permission) => !permission.grantable,
       ),
     ).toBe(true);
 
@@ -617,6 +635,7 @@ describe('permission catalogue', () => {
       { key: 'system', label: 'Système' },
     ]);
     expect(PERMISSION_CATEGORIES.map((category) => category.label)).toEqual([
+      'Actualité interne',
       'Répertoire',
       'Sponsors & partenaires',
       'Utilisateurs',
@@ -880,6 +899,8 @@ describe('permission catalogue', () => {
     expect(ROLE_PERMISSIONS.ADMIN).toEqual([
       ...Object.values(PERMISSIONS.ACCOUNT),
       PERMISSIONS.DASHBOARD.VIEW,
+      PERMISSIONS.INTERNAL_NEWS.VIEW,
+      PERMISSIONS.INTERNAL_NEWS.MANAGE,
       PERMISSIONS.NOTIFICATIONS.VIEW,
       PERMISSIONS.NOTIFICATIONS.SEND,
       PERMISSIONS.SETTINGS.VIEW,
@@ -889,6 +910,7 @@ describe('permission catalogue', () => {
     expect(ROLE_PERMISSIONS.USER).toEqual([
       ...Object.values(PERMISSIONS.ACCOUNT),
       PERMISSIONS.DASHBOARD.VIEW,
+      PERMISSIONS.INTERNAL_NEWS.VIEW,
       PERMISSIONS.NOTIFICATIONS.VIEW,
     ]);
     expect(ROLE_PERMISSIONS.ADMIN).not.toEqual(

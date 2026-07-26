@@ -111,6 +111,7 @@ model User {
   mfaLoginChallenge           MfaLoginChallenge?
   createdNotifications        Notification[]          @relation("NotificationCreator")
   notificationRecipients      NotificationRecipient[]
+  internalAnnouncements       InternalAnnouncement[]  @relation("InternalAnnouncementAuthor")
   updatedSystemSettings       SystemSetting[]         @relation("SystemSettingUpdater")
   createdPartnerOrganizations PartnerOrganization[]   @relation("PartnerOrganizationCreator")
   updatedPartnerOrganizations PartnerOrganization[]   @relation("PartnerOrganizationUpdater")
@@ -270,6 +271,8 @@ enum AuditAction {
   PERMISSION_UPDATE
   AUDIT_EXPORT
   NOTIFICATION_SEND
+  INTERNAL_ANNOUNCEMENT_PUBLISH
+  INTERNAL_ANNOUNCEMENT_PIN_UPDATE
   SYSTEM_SETTING_UPDATE
   BACKGROUND_JOB_UPDATE
   PERSON_CREATE
@@ -795,6 +798,27 @@ model NotificationRecipient {
   @@unique([notificationId, userId])
   @@index([userId, archivedAt, createdAt, notificationId])
   @@index([userId, readAt, archivedAt])
+}
+
+/// Editorial information shared with authenticated members. Author snapshots
+/// remain readable if the originating account is later removed.
+model InternalAnnouncement {
+  id                        String    @id @default(cuid())
+  title                     String    @db.VarChar(160)
+  body                      String    @db.VarChar(2000)
+  publishedAt               DateTime  @default(now())
+  pinnedAt                  DateTime?
+  createdById               String?
+  authorDisplayNameSnapshot String    @db.VarChar(200)
+  authorLoginNameSnapshot   String    @db.VarChar(64)
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+
+  createdBy User? @relation("InternalAnnouncementAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([publishedAt, id])
+  @@index([pinnedAt, publishedAt, id])
+  @@index([createdById])
 }
 
 /// Non-secret runtime configuration. Credentials and encryption material must

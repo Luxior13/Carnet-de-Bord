@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
 
-export const DATABASE_BACKUP_FORMAT_VERSION = 7;
+export const DATABASE_BACKUP_FORMAT_VERSION = 8;
 export const DATABASE_BACKUP_BATCH_SIZE = 500;
 export const MAX_DATABASE_BACKUP_BYTES = 2 * 1024 * 1024 * 1024;
 export const MAX_BACKUP_LINE_BYTES = 16 * 1024 * 1024;
@@ -72,6 +72,12 @@ export const DATABASE_BACKUP_TABLES = [
     cursorKind: 'text',
     property: 'notificationRecipients',
     tableName: 'NotificationRecipient',
+  },
+  {
+    cursorColumn: 'id',
+    cursorKind: 'text',
+    property: 'internalAnnouncements',
+    tableName: 'InternalAnnouncement',
   },
   {
     cursorColumn: 'key',

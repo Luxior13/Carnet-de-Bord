@@ -1,5 +1,10 @@
 import { UserRole } from '@repo/shared';
 
+import {
+  INTERNAL_NEWS_PERMISSION_CATEGORY,
+  INTERNAL_NEWS_PERMISSION_ITEMS,
+  INTERNAL_NEWS_PERMISSION_KEYS,
+} from '$constants/internal-news-permission-category.constants';
 import type { NavigationIconName } from '$constants/navigation-icon.constants';
 import type { NavigationSpaceTone } from '$constants/navigation-theme.constants';
 import { createPartnersPermissionCategory } from '$constants/partners-permission-category.constants';
@@ -31,6 +36,7 @@ export const PERMISSIONS = {
   DASHBOARD: {
     VIEW: 'dashboard:view',
   },
+  INTERNAL_NEWS: INTERNAL_NEWS_PERMISSION_KEYS,
   NOTIFICATIONS: {
     SEND: 'notifications:send',
     VIEW: 'notifications:view',
@@ -320,6 +326,7 @@ const ROLE_BOUND_PERMISSION_ITEMS: PermissionItem[] = [
     stepUpOnUse: true,
     surface: 'api',
   }),
+  ...INTERNAL_NEWS_PERMISSION_ITEMS,
   ...SETTINGS_PERMISSION_ITEMS,
 ];
 
@@ -459,6 +466,7 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
 
 /** All live administrative pages shown in the per-user access overview. */
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
+  INTERNAL_NEWS_PERMISSION_CATEGORY,
   createPersonsPermissionCategory(PERMISSIONS.PERSONS),
   createPartnersPermissionCategory(PERMISSIONS.PARTNERS),
   {
@@ -1073,6 +1081,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   ADMIN: [
     ...Object.values(PERMISSIONS.ACCOUNT),
     PERMISSIONS.DASHBOARD.VIEW,
+    PERMISSIONS.INTERNAL_NEWS.VIEW,
+    PERMISSIONS.INTERNAL_NEWS.MANAGE,
     PERMISSIONS.NOTIFICATIONS.VIEW,
     PERMISSIONS.NOTIFICATIONS.SEND,
     PERMISSIONS.SETTINGS.VIEW,
@@ -1082,6 +1092,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   USER: [
     ...Object.values(PERMISSIONS.ACCOUNT),
     PERMISSIONS.DASHBOARD.VIEW,
+    PERMISSIONS.INTERNAL_NEWS.VIEW,
     PERMISSIONS.NOTIFICATIONS.VIEW,
   ],
 };

@@ -10,7 +10,9 @@ import {
   LogIn,
   LogOut,
   type LucideIcon,
+  Newspaper,
   Pencil,
+  Pin,
   RefreshCw,
   Settings,
   Shield,
@@ -80,6 +82,24 @@ export const AUDIT_ACTION_DISPLAY = new Map<string, AuditActionDisplayConfig>([
       icon: Cpu,
       label: 'Ancien traitement système',
       sentence: 'avait mis à jour un ancien traitement système',
+    },
+  ],
+  [
+    'INTERNAL_ANNOUNCEMENT_PIN_UPDATE',
+    {
+      color: 'border-primary/35 bg-primary/10 text-primary-emphasis',
+      icon: Pin,
+      label: 'Épinglage d’une actualité modifié',
+      sentence: 'a modifié l’épinglage d’une actualité interne',
+    },
+  ],
+  [
+    'INTERNAL_ANNOUNCEMENT_PUBLISH',
+    {
+      color: 'border-info/35 bg-info/10 text-info',
+      icon: Newspaper,
+      label: 'Actualité interne publiée',
+      sentence: 'a publié une actualité interne',
     },
   ],
   [

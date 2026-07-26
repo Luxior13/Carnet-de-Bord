@@ -64,6 +64,8 @@ const AUDIT_EVENT_CLASSIFICATIONS = {
     AuditStream.SYSTEM,
     AuditSeverity.WARNING,
   ),
+  [AuditAction.INTERNAL_ANNOUNCEMENT_PIN_UPDATE]: activity(AuditStream.SYSTEM),
+  [AuditAction.INTERNAL_ANNOUNCEMENT_PUBLISH]: activity(AuditStream.SYSTEM),
   [AuditAction.LOGIN_FAILED]: connection(
     AuditOutcome.FAILURE,
     AuditSeverity.WARNING,

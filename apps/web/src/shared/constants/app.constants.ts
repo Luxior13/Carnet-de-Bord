@@ -172,7 +172,7 @@ export const NAV_SPACES: NavigationSpace[] = [
     icon: 'Users',
     id: 'internal',
     label: 'Vie interne',
-    matchHrefs: ['/vie-interne/repertoire'],
+    matchHrefs: ['/vie-interne/actualite-interne', '/vie-interne/repertoire'],
     sections: [
       {
         id: 'internal-main',
@@ -185,11 +185,13 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: internalAccess,
           },
           {
-            description: 'Informations importantes réservées à la structure.',
-            href: '/vie-interne/actualite-interne',
-            icon: 'Newspaper',
-            label: 'Actualité interne',
-            requiredPermissions: internalAccess,
+            availability: 'live',
+            description: FEATURES.internalNews.description,
+            featureId: FEATURES.internalNews.id,
+            href: FEATURES.internalNews.href,
+            icon: FEATURES.internalNews.icon,
+            label: FEATURES.internalNews.label,
+            requiredPermissions: FEATURES.internalNews.requiredPermissions,
           },
           {
             availability: 'live',

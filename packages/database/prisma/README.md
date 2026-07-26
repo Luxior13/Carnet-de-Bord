@@ -60,7 +60,7 @@ aucune ligne.
 
 ## Sauvegardes
 
-Créer une sauvegarde signée v7 :
+Créer une sauvegarde signée v8 :
 
 ```bash
 bun run --filter @repo/database db:backup

@@ -83,6 +83,7 @@ describe('navigation availability', () => {
       '/feuille-de-route',
       '/mes-notifications',
       '/recherche',
+      '/vie-interne/actualite-interne',
     ]);
     expect(hrefs).not.toContain('/tableau-de-bord/mes-taches');
     expect(hrefs).not.toContain('/vie-interne');
@@ -353,6 +354,7 @@ describe('navigation availability', () => {
       '/feuille-de-route',
       '/mes-notifications',
       '/recherche',
+      '/vie-interne/actualite-interne',
       '/vie-interne/repertoire',
       '/bureau-juridique/partenaires',
       '/systeme',
