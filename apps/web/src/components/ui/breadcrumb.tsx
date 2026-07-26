@@ -3,6 +3,13 @@ import { ChevronRight, Home, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import * as React from 'react';
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '$ui/dropdown-menu';
 import { cn } from '$utils/css.utils';
 
 export type BreadcrumbEntry = {
@@ -71,7 +78,7 @@ function BreadcrumbLink({
   return (
     <Comp
       className={cn(
-        'text-muted-foreground hover:text-foreground inline-flex min-w-0 items-center gap-1.5 truncate transition-colors',
+        'text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 inline-flex min-h-8 min-w-0 items-center gap-1.5 truncate rounded-lg px-1.5 transition-colors outline-none focus-visible:ring-2',
         className,
       )}
       {...props}
@@ -89,7 +96,7 @@ function BreadcrumbPage({
     <span
       aria-current="page"
       className={cn(
-        'text-foreground inline-flex min-w-0 items-center gap-1.5 truncate font-medium',
+        'text-foreground inline-flex min-h-8 min-w-0 items-center gap-1.5 truncate font-medium',
         className,
       )}
       {...props}
@@ -119,23 +126,24 @@ function BreadcrumbSeparator({
   );
 }
 
-type BreadcrumbEllipsisProps = React.ComponentProps<'span'>;
+type BreadcrumbEllipsisProps = React.ComponentProps<'button'>;
 
 function BreadcrumbEllipsis({
   className,
   ...props
 }: BreadcrumbEllipsisProps): React.ReactNode {
   return (
-    <span
+    <button
+      aria-label="Afficher les niveaux intermédiaires"
       className={cn(
-        'text-muted-foreground flex size-6 items-center justify-center rounded-md',
+        'text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground focus-visible:ring-ring/50 flex size-8 items-center justify-center rounded-lg outline-none focus-visible:ring-2',
         className,
       )}
+      type="button"
       {...props}
     >
       <MoreHorizontal aria-hidden="true" className="size-4" />
-      <span className="sr-only">Plus de pages</span>
-    </span>
+    </button>
   );
 }
 
@@ -147,7 +155,7 @@ type BreadcrumbTrailProps = BreadcrumbProps & {
 function getDisplayItems(
   items: BreadcrumbEntry[],
 ): Array<BreadcrumbEntry | null> {
-  if (items.length <= 4) return items;
+  if (items.length <= 3) return items;
 
   return [items[0] ?? null, null, ...items.slice(-2)];
 }
@@ -158,10 +166,13 @@ function BreadcrumbTrail({
   showHome = true,
   ...props
 }: BreadcrumbTrailProps): React.ReactNode {
+  const normalizedItems =
+    showHome && items[0]?.href === '/' ? items.slice(1) : items;
   const allItems = showHome
-    ? [{ href: '/', label: 'Accueil' }, ...items]
+    ? [{ href: '/', label: 'Accueil' }, ...normalizedItems]
     : items;
   const displayItems = getDisplayItems(allItems);
+  const collapsedItems = allItems.length > 3 ? allItems.slice(1, -1) : [];
 
   return (
     <Breadcrumb className={className} {...props}>
@@ -197,16 +208,59 @@ function BreadcrumbTrail({
                 )}
               >
                 {isCollapsedItem ? (
-                  <BreadcrumbEllipsis />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <BreadcrumbEllipsis />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      aria-label="Niveaux intermédiaires"
+                      className="w-[min(18rem,calc(100vw-2rem))]"
+                      collisionPadding={8}
+                      sideOffset={6}
+                    >
+                      <DropdownMenuLabel>Chemin complet</DropdownMenuLabel>
+                      {collapsedItems.map((collapsedItem, collapsedIndex) =>
+                        collapsedItem.href ? (
+                          <DropdownMenuItem
+                            asChild
+                            key={`${collapsedItem.href}-${collapsedIndex}`}
+                          >
+                            <Link href={collapsedItem.href}>
+                              <span className="truncate">
+                                {collapsedItem.label}
+                              </span>
+                            </Link>
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            disabled
+                            key={`${collapsedItem.label}-${collapsedIndex}`}
+                          >
+                            <span className="truncate">
+                              {collapsedItem.label}
+                            </span>
+                          </DropdownMenuItem>
+                        ),
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 ) : item.href && !isLast ? (
                   <BreadcrumbLink asChild>
                     <Link
-                      className={cn(!isFirst && 'max-w-40 sm:max-w-56')}
+                      className={cn(
+                        isFirst
+                          ? 'size-8 justify-center p-0'
+                          : 'max-w-40 sm:max-w-56',
+                      )}
                       href={item.href}
                     >
                       {isFirst ? (
                         <>
-                          <Home className="size-3.5 shrink-0" />
+                          <Home
+                            aria-hidden="true"
+                            className="size-3.5 shrink-0"
+                          />
                           <span className="sr-only">{item.label}</span>
                         </>
                       ) : (
@@ -222,7 +276,10 @@ function BreadcrumbTrail({
                   <BreadcrumbPage className="max-w-40 sm:max-w-64 lg:max-w-80">
                     {isFirst ? (
                       <>
-                        <Home className="size-3.5 shrink-0" />
+                        <Home
+                          aria-hidden="true"
+                          className="size-3.5 shrink-0"
+                        />
                         <span className="sr-only">{item.label}</span>
                       </>
                     ) : (

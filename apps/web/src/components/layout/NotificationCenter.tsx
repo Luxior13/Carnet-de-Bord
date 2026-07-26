@@ -79,6 +79,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
   ] = useState(false);
   const lastNotificationRequestAtRef = useRef(0);
   const notificationChangedTimerRef = useRef<number | null>(null);
+  const [open, setOpen] = useState(false);
   const canViewNotifications =
     !!userData &&
     (userData.isProtected ||
@@ -173,6 +174,9 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
     return (): void =>
       document.removeEventListener('visibilitychange', refreshWhenVisible);
   }, [refreshNotificationResourceIfStale, shouldLoadNotificationResource]);
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
   const resolvedNotifications = useMemo<NotificationCenterItem[]>(
     () =>
       notifications ??
@@ -226,7 +230,13 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
   if (!canViewNotifications) return null;
 
   return (
-    <Popover onOpenChange={handlePopoverOpenChange}>
+    <Popover
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        handlePopoverOpenChange(nextOpen);
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           aria-label={
@@ -238,10 +248,10 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
           size="icon"
           variant="outline"
         >
-          <Bell className="size-4" />
+          <Bell aria-hidden="true" className="size-4" />
           {unreadNotificationsCount > 0 && (
-            <span className="ring-surface bg-primary text-primary-foreground absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full text-xs font-bold ring-2">
-              {unreadNotificationsCount}
+            <span className="ring-surface bg-primary text-primary-foreground absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold ring-2">
+              {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
               <span className="sr-only">notifications non lues</span>
             </span>
           )}
@@ -249,10 +259,11 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
       </PopoverTrigger>
       <PopoverContent
         align="end"
-        className="border-border-default bg-surface-floating w-[min(calc(100vw-2rem),22rem)] overflow-hidden rounded-xl p-0 shadow-[var(--shadow-panel-strong)]"
+        className="border-border-default bg-surface-floating flex max-h-[var(--radix-popover-content-available-height)] w-[min(calc(100vw-2rem),22rem)] flex-col overflow-hidden rounded-xl p-0 shadow-[var(--shadow-panel-strong)]"
+        collisionPadding={8}
         sideOffset={8}
       >
-        <div className="border-border-divider bg-surface-panel-raised/85 border-b px-4 py-3">
+        <div className="border-border-divider bg-surface-panel-raised/85 shrink-0 border-b px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-foreground text-sm font-semibold">
@@ -266,7 +277,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                     : notificationResource.isRefreshing
                       ? 'Mise à jour en cours'
                       : unreadNotificationsCount > 0
-                        ? `${unreadNotificationsCount} point${unreadNotificationsCount > 1 ? 's' : ''} a traiter`
+                        ? `${unreadNotificationsCount} point${unreadNotificationsCount > 1 ? 's' : ''} à traiter`
                         : 'Aucun point en attente'}
               </p>
             </div>
@@ -279,7 +290,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
         </div>
         {hasRefreshError && (
           <div
-            className="border-warning/30 bg-warning/10 text-warning flex items-center gap-2 border-b px-3 py-2"
+            className="border-warning/30 bg-warning/10 text-warning flex shrink-0 items-center gap-2 border-b px-3 py-2"
             role="alert"
           >
             <TriangleAlert aria-hidden="true" className="size-4 shrink-0" />
@@ -338,7 +349,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
             </Button>
           </div>
         ) : visibleNotifications.length > 0 ? (
-          <div className="max-h-80 overflow-y-auto p-2">
+          <div className="max-h-80 min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
             {visibleNotifications.map((notification) => {
               const NotificationIcon = notification.icon ?? BellRing;
               const isUnread = !notification.read;
@@ -349,6 +360,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                   href={notification.href}
                   key={notification.id}
                   onClick={() => {
+                    setOpen(false);
                     if (notification.read) return;
                     void apiFetchJson(
                       `/api/notifications/${notification.id}`,
@@ -366,7 +378,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                       notification.accentClassName ?? defaultAccentClassName,
                     )}
                   >
-                    <NotificationIcon className="size-4" />
+                    <NotificationIcon aria-hidden="true" className="size-4" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex min-w-0 items-center gap-2">
@@ -374,14 +386,20 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                         {notification.title}
                       </span>
                       {isUnread && (
-                        <span className="bg-primary size-1.5 shrink-0 rounded-full" />
+                        <>
+                          <span
+                            aria-hidden="true"
+                            className="bg-primary size-1.5 shrink-0 rounded-full"
+                          />
+                          <span className="sr-only">Non lue</span>
+                        </>
                       )}
                     </span>
                     <span className="text-muted-foreground mt-0.5 line-clamp-2 text-xs leading-5">
                       {notification.description}
                     </span>
                     {notification.meta && (
-                      <span className="text-muted-foreground/75 mt-1 block text-xs font-medium [overflow-wrap:anywhere] uppercase">
+                      <span className="text-muted-foreground mt-1 block text-xs font-medium [overflow-wrap:anywhere] uppercase">
                         {notification.meta}
                       </span>
                     )}
@@ -393,20 +411,20 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
         ) : hasLoadedNotifications ? (
           <div className="flex flex-col items-center px-4 py-7 text-center">
             <span className="border-border-subtle bg-surface-inset text-muted-foreground flex size-10 items-center justify-center rounded-lg border">
-              <Bell className="size-4" />
+              <Bell aria-hidden="true" className="size-4" />
             </span>
             <p className="text-foreground mt-3 text-sm font-semibold">
               Aucune notification
             </p>
             <p className="text-muted-foreground mt-1 text-xs">
-              Les points importants apparaitront ici.
+              Les points importants apparaîtront ici.
             </p>
           </div>
         ) : null}
         {visibleQuickLinks.length > 0 && (
           <div
             className={cn(
-              'border-border-divider bg-surface-inset/70 grid border-t',
+              'border-border-divider bg-surface-inset/70 grid shrink-0 border-t',
               visibleQuickLinks.length > 1 ? 'grid-cols-2' : 'grid-cols-1',
             )}
           >
@@ -422,8 +440,9 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                   )}
                   href={link.href}
                   key={link.href}
+                  onClick={() => setOpen(false)}
                 >
-                  <LinkIcon className="size-3.5" />
+                  <LinkIcon aria-hidden="true" className="size-3.5" />
                   {link.label}
                 </Link>
               );

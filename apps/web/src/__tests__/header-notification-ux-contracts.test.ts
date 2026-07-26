@@ -55,8 +55,9 @@ describe('header notification UX contracts', () => {
   });
 
   it('refreshes on meaningful re-entry without polling or request spam', () => {
+    expect(notificationCenterSource).toContain('open={open}');
     expect(notificationCenterSource).toContain(
-      '<Popover onOpenChange={handlePopoverOpenChange}>',
+      'handlePopoverOpenChange(nextOpen)',
     );
     expect(notificationCenterSource).toContain(
       "document.addEventListener('visibilitychange'",
@@ -71,6 +72,17 @@ describe('header notification UX contracts', () => {
       'NOTIFICATION_CHANGED_DEBOUNCE_MS',
     );
     expect(notificationCenterSource).not.toContain('setInterval(');
+  });
+
+  it('stays usable in constrained viewports and exposes unread state', () => {
+    expect(notificationCenterSource).toContain(
+      'max-h-[var(--radix-popover-content-available-height)]',
+    );
+    expect(notificationCenterSource).toContain('unreadNotificationsCount > 99');
+    expect(notificationCenterSource).toContain('99+');
+    expect(notificationCenterSource).toContain('Non lue');
+    expect(notificationCenterSource).toContain('setOpen(false)');
+    expect(notificationCenterSource).not.toContain('text-muted-foreground/75');
   });
 
   it('defers the duplicate header read on the personal inbox until the bell is opened', () => {

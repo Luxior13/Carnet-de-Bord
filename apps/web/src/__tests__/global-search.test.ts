@@ -144,6 +144,7 @@ describe('global page search', () => {
   it('links the quick dialog to the shareable advanced search', () => {
     expect(globalSearchSource).toContain('advancedSearchHref');
     expect(globalSearchSource).toContain('Recherche avancée');
+    expect(globalSearchSource).toContain('requestGuardedNavigation(href)');
     expect(globalSearchSource).toMatch(
       /\/recherche\?q=.*encodeURIComponent\(query\.trim\(\)\)/,
     );

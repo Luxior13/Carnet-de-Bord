@@ -6,6 +6,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import React, { type ReactNode } from 'react';
 
+import { PersistentAuthenticatedShell } from '$components/AuthenticatedLayout';
 import { SITE_CONFIG } from '$constants/app.constants';
 import { isPublicPagePath } from '$constants/security.constants';
 import { FeatureAvailabilityProvider } from '$context/FeatureAvailabilityContext';
@@ -85,7 +86,11 @@ const RootLayout = async ({
           initialSessionRememberMe={initialSessionRememberMe}
           initialUser={initialUser}
         >
-          <FeatureAvailabilityProvider>{children}</FeatureAvailabilityProvider>
+          <FeatureAvailabilityProvider>
+            <PersistentAuthenticatedShell>
+              {children}
+            </PersistentAuthenticatedShell>
+          </FeatureAvailabilityProvider>
         </UserProvider>
       </body>
     </html>

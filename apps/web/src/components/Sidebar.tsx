@@ -56,6 +56,7 @@ import {
 } from '$ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
+import { requestGuardedNavigation } from '$utils/guarded-navigation.utils';
 
 type SidebarProps = {
   className?: string;
@@ -68,7 +69,7 @@ const SIDEBAR_POPOVER_SCROLL_CLASS =
 const SIDEBAR_POPOVER_SECTION_CLASS =
   'border-border-subtle bg-surface-inset space-y-0.5 rounded-xl border p-1';
 const SIDEBAR_POPOVER_SECTION_LABEL_CLASS =
-  'text-sidebar-foreground/45 px-1.5 pb-1.5 text-[10px] font-semibold tracking-[0.16em] uppercase';
+  'text-sidebar-foreground/60 px-1.5 pb-1.5 text-[10px] font-semibold tracking-[0.16em] uppercase';
 const SIDEBAR_POPOVER_ACTION_BASE_CLASS =
   'group/menu-action focus:text-sidebar-foreground flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-lg border border-transparent px-2 py-1.5 text-left text-[13px] font-semibold text-sidebar-foreground/75 transition-colors duration-150';
 const SIDEBAR_POPOVER_ACTION_CLASS =
@@ -238,7 +239,7 @@ const SpaceSwitcher: FC<{
                 'mt-0.5 block truncate text-[11px] leading-4',
                 isActive
                   ? 'text-sidebar-foreground/70'
-                  : 'text-sidebar-foreground/55',
+                  : 'text-sidebar-foreground/60',
               )}
             >
               {space.summary}
@@ -730,7 +731,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                     <span className="text-sidebar-foreground block truncate text-sm leading-5 font-bold">
                       {userDisplayName}
                     </span>
-                    <span className="text-sidebar-foreground/50 block truncate text-xs leading-5">
+                    <span className="text-sidebar-foreground/65 block truncate text-xs leading-5">
                       @{userData.loginName} · {userAccessLabel}
                     </span>
                   </span>
@@ -776,7 +777,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate">Mon compte</span>
-                        <span className="text-sidebar-foreground/50 block truncate text-[11px] leading-4 font-normal">
+                        <span className="text-sidebar-foreground/65 block truncate text-[11px] leading-4 font-normal">
                           Profil, sécurité et activité
                         </span>
                       </span>
@@ -793,7 +794,9 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 <DropdownMenuItem
                   onSelect={() => {
                     setOpenMobile(false);
-                    void logout();
+                    if (requestGuardedNavigation('/login', logout)) {
+                      void logout();
+                    }
                   }}
                   className={cn(
                     SIDEBAR_POPOVER_ACTION_BASE_CLASS,

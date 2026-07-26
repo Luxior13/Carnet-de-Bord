@@ -83,6 +83,11 @@ import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 import { apiFetch } from '$utils/api.utils';
 import {
+  getGuardedNavigationRequest,
+  GUARDED_NAVIGATION_REQUEST_EVENT,
+  type GuardedNavigationAction,
+} from '$utils/guarded-navigation.utils';
+import {
   getUserDisplayName,
   getUserLoginDisplay,
   isUserIdentityMasked,
@@ -94,6 +99,7 @@ type UserDetailPageProps = {
 
 type PendingNavigation =
   | {
+      action?: GuardedNavigationAction;
       href: string;
       kind: 'href';
     }
@@ -1319,7 +1325,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       if (nextUrl.pathname === currentUrl.pathname) return;
 
       event.preventDefault();
-      event.stopPropagation();
       requestPendingNavigation({
         href: `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
         kind: 'href',
@@ -1330,6 +1335,53 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
 
     return (): void => {
       document.removeEventListener('click', handleDocumentClick, true);
+    };
+  }, [hasUnsavedChanges, requestPendingNavigation]);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handleGuardedNavigationRequest = (event: Event): void => {
+      if (event.defaultPrevented) return;
+      const request = getGuardedNavigationRequest(event);
+      if (!request) return;
+
+      let nextUrl: URL;
+      try {
+        nextUrl = new URL(request.href, window.location.origin);
+      } catch {
+        return;
+      }
+      if (nextUrl.origin !== window.location.origin) return;
+
+      const currentUrl = new URL(window.location.href);
+      const nextHref = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+      if (
+        nextUrl.pathname === currentUrl.pathname &&
+        nextUrl.search === currentUrl.search &&
+        nextUrl.hash === currentUrl.hash
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      requestPendingNavigation({
+        ...(request.action ? { action: request.action } : {}),
+        href: nextHref,
+        kind: 'href',
+      });
+    };
+
+    window.addEventListener(
+      GUARDED_NAVIGATION_REQUEST_EVENT,
+      handleGuardedNavigationRequest,
+    );
+
+    return (): void => {
+      window.removeEventListener(
+        GUARDED_NAVIGATION_REQUEST_EVENT,
+        handleGuardedNavigationRequest,
+      );
     };
   }, [hasUnsavedChanges, requestPendingNavigation]);
 
@@ -1437,6 +1489,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
       discardSectionChanges(activeSection);
       skipSectionNavigationGuardRef.current = true;
       window.history.replaceState(null, '', navigation.href);
+
+      return;
+    }
+    if (navigation.action) {
+      void navigation.action();
 
       return;
     }

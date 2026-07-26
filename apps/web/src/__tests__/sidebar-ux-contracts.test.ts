@@ -99,7 +99,8 @@ describe('sidebar UX contracts', () => {
     expect(sidebarSource).toContain('bg-surface-inset');
     expect(sidebarSource).toContain('hover:border-border-default');
     expect(sidebarSource).toContain('text-sidebar-foreground/55');
-    expect(sidebarSource).toContain('text-sidebar-foreground/45');
+    expect(sidebarSource).toContain('text-sidebar-foreground/60');
+    expect(sidebarSource).not.toContain('text-sidebar-foreground/45');
   });
 
   it('uses the same layered visual language for both sidebar popovers', () => {
@@ -107,6 +108,7 @@ describe('sidebar UX contracts', () => {
     expect(sidebarSource).toContain('from-surface-muted/60 to-surface');
     expect(sidebarSource).toContain('border-primary/35 bg-primary/10');
     expect(sidebarSource).toContain('hover:border-destructive/35');
+    expect(sidebarSource).toContain('text-sidebar-foreground/65');
   });
 
   it('matches the reference proportions without importing its palette', () => {
@@ -118,6 +120,9 @@ describe('sidebar UX contracts', () => {
     expect(sidebarSource).toContain('tracking-[0.16em]');
     expect(sidebarSource).toContain('collisionPadding={8}');
     expect(sidebarSource).toContain('overflow-y-auto overscroll-contain');
+    expect(sidebarSource).toContain(
+      "requestGuardedNavigation('/login', logout)",
+    );
     expect(sidebarSource).not.toContain('#121c2b');
     expect(sidebarSource).not.toContain('#18243a');
     expect(sidebarSource).not.toContain('#0e1622');

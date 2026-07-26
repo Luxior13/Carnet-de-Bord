@@ -1,7 +1,6 @@
 'use client';
 
 import { ArrowRight, CircleX, Search, X } from 'lucide-react';
-import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import React, {
   type FC,
@@ -42,6 +41,7 @@ import {
 } from '$ui/dialog';
 import { Input } from '$ui/input';
 import { cn } from '$utils/css.utils';
+import { requestGuardedNavigation } from '$utils/guarded-navigation.utils';
 
 export const QuickNavigation: FC = () => {
   const pathname = usePathname();
@@ -116,12 +116,17 @@ export const QuickNavigation: FC = () => {
     setActiveResultHref(null);
   }, []);
 
-  const navigateToResult = useCallback(
-    (result: SearchCatalogItem): void => {
+  const navigateToHref = useCallback(
+    (href: string): void => {
       closeSearch();
-      if (result.href !== pathname) router.push(result.href);
+      if (href === pathname) return;
+      if (requestGuardedNavigation(href)) router.push(href);
     },
     [closeSearch, pathname, router],
+  );
+  const navigateToResult = useCallback(
+    (result: SearchCatalogItem): void => navigateToHref(result.href),
+    [navigateToHref],
   );
 
   useEffect(() => {
@@ -353,15 +358,14 @@ export const QuickNavigation: FC = () => {
         <div className="border-border-divider bg-surface-inset/85 text-muted-foreground border-t text-[11px]">
           <div className="flex items-center justify-between gap-3 px-3 py-2 sm:px-4">
             <span>Besoin de plus de filtres ?</span>
-            <DialogClose asChild>
-              <Link
-                className="text-primary-emphasis focus-visible:ring-ring/50 inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold outline-none hover:underline focus-visible:ring-2"
-                href={advancedSearchHref}
-              >
-                Recherche avancée
-                <ArrowRight className="size-3.5" />
-              </Link>
-            </DialogClose>
+            <button
+              className="text-primary-emphasis focus-visible:ring-ring/50 inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold outline-none hover:underline focus-visible:ring-2"
+              onClick={() => navigateToHref(advancedSearchHref)}
+              type="button"
+            >
+              Recherche avancée
+              <ArrowRight aria-hidden="true" className="size-3.5" />
+            </button>
           </div>
           <div className="border-border-divider hidden items-center gap-4 border-t px-4 py-2 sm:flex">
             <span className="flex items-center gap-1.5">

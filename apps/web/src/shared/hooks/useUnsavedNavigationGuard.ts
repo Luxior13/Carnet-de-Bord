@@ -4,6 +4,12 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
+  getGuardedNavigationRequest,
+  GUARDED_NAVIGATION_REQUEST_EVENT,
+  type GuardedNavigationAction,
+} from '$utils/guarded-navigation.utils';
+
+import {
   createUnsavedHistoryTraversalGuard,
   type UnsavedHistoryTraversalGuard,
 } from './unsaved-navigation-history';
@@ -53,7 +59,12 @@ export const useUnsavedNavigationGuard = (
   const [pendingNavigationHref, setPendingNavigationHref] = useState<
     string | null
   >(null);
-  const pendingNavigationKindRef = useRef<'history' | 'router' | null>(null);
+  const pendingNavigationKindRef = useRef<
+    'action' | 'history' | 'router' | null
+  >(null);
+  const pendingNavigationActionRef = useRef<GuardedNavigationAction | null>(
+    null,
+  );
   const historyTraversalGuardRef = useRef<UnsavedHistoryTraversalGuard | null>(
     null,
   );
@@ -75,6 +86,7 @@ export const useUnsavedNavigationGuard = (
     if (hasUnsavedChanges) return;
     historyTraversalGuardRef.current?.cancel();
     pendingNavigationKindRef.current = null;
+    pendingNavigationActionRef.current = null;
     setPendingNavigationHref(null);
   }, [hasUnsavedChanges]);
 
@@ -101,6 +113,7 @@ export const useUnsavedNavigationGuard = (
       },
       (href) => {
         pendingNavigationKindRef.current = 'history';
+        pendingNavigationActionRef.current = null;
         setPendingNavigationHref(href);
       },
     );
@@ -129,9 +142,9 @@ export const useUnsavedNavigationGuard = (
         return;
       }
       event.preventDefault();
-      event.stopPropagation();
       historyTraversalGuardRef.current?.cancel();
       pendingNavigationKindRef.current = 'router';
+      pendingNavigationActionRef.current = null;
       setPendingNavigationHref(
         `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
       );
@@ -143,22 +156,70 @@ export const useUnsavedNavigationGuard = (
     };
   }, [hasUnsavedChanges]);
 
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handleGuardedNavigationRequest = (event: Event): void => {
+      if (event.defaultPrevented) return;
+      const request = getGuardedNavigationRequest(event);
+      if (!request) return;
+
+      let nextUrl: URL;
+      try {
+        nextUrl = new URL(request.href, window.location.origin);
+      } catch {
+        return;
+      }
+      if (nextUrl.origin !== window.location.origin) return;
+
+      const currentHref = getCurrentRelativeHref();
+      const nextHref = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+      if (nextHref === currentHref) return;
+
+      event.preventDefault();
+      historyTraversalGuardRef.current?.cancel();
+      pendingNavigationKindRef.current = request.action ? 'action' : 'router';
+      pendingNavigationActionRef.current = request.action ?? null;
+      setPendingNavigationHref(nextHref);
+    };
+
+    window.addEventListener(
+      GUARDED_NAVIGATION_REQUEST_EVENT,
+      handleGuardedNavigationRequest,
+    );
+
+    return (): void => {
+      window.removeEventListener(
+        GUARDED_NAVIGATION_REQUEST_EVENT,
+        handleGuardedNavigationRequest,
+      );
+    };
+  }, [hasUnsavedChanges]);
+
   const cancelPendingNavigation = useCallback((): void => {
     historyTraversalGuardRef.current?.cancel();
     pendingNavigationKindRef.current = null;
+    pendingNavigationActionRef.current = null;
     setPendingNavigationHref(null);
   }, []);
   const confirmPendingNavigation = useCallback((): void => {
     if (!pendingNavigationHref) return;
     const href = pendingNavigationHref;
     const navigationKind = pendingNavigationKindRef.current;
+    const navigationAction = pendingNavigationActionRef.current;
 
     pendingNavigationKindRef.current = null;
+    pendingNavigationActionRef.current = null;
     setPendingNavigationHref(null);
     if (
       navigationKind === 'history' &&
       historyTraversalGuardRef.current?.confirm()
     ) {
+      return;
+    }
+    if (navigationKind === 'action' && navigationAction) {
+      void navigationAction();
+
       return;
     }
     router.push(href);
