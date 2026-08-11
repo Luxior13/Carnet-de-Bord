@@ -15,6 +15,12 @@ export const PAGINATION = {
   MAX_LIMIT: 200,
 
   /**
+   * Maximum page accepted by legacy offset-based lists. Cursor-based feeds do
+   * not use this value. Bounding it prevents oversized Prisma `skip` values.
+   */
+  MAX_PAGE: 1_000,
+
+  /**
    * Minimum number of items per page.
    */
   MIN_LIMIT: 1,

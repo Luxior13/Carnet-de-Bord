@@ -37,7 +37,11 @@ import {
 const normalizeSocialInput = (input: {
   identifier?: string | null;
   profileUrl?: string | null;
-}) => {
+}): {
+  normalizedIdentifier: string | null;
+  normalizedProfileUrl: string | null;
+  normalizedProfileUrlHash: string | null;
+} => {
   const normalizedIdentifier = input.identifier
     ? normalizePersonSocialIdentifier(input.identifier)
     : null;
@@ -103,6 +107,8 @@ export const addPersonSocialProfile = async (
     const changes = (
       ['networkKey', 'identifier', 'profileUrl', 'label', 'isPrimary'] as const
     ).flatMap((fieldKey) => {
+      // `fieldKey` comes from the closed social-field tuple above.
+      // eslint-disable-next-line security/detect-object-injection
       const value = profile[fieldKey];
 
       return value === null
@@ -352,6 +358,8 @@ export const deletePersonSocialProfile = async (
             'isPrimary',
           ] as const
         ).flatMap((fieldKey) => {
+          // `fieldKey` comes from the closed social-field tuple above.
+          // eslint-disable-next-line security/detect-object-injection
           const value = current[fieldKey];
 
           return value === null

@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 const WORKSPACE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REMOVABLE_DIRECTORIES = new Set([
   ".next",
+  ".next-dev",
+  ".next-build",
   ".prisma",
   ".turbo",
   "dist",

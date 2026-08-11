@@ -1038,11 +1038,14 @@ export const preserveRetiringPermissionOverrides = (
   existingPermissions: PermissionsData | null | undefined,
   canonicalPermissions: PermissionsData | null,
 ): PermissionsData | null => {
-  const preservedEntries = RETIRING_PERMISSION_OVERRIDE_KEYS.flatMap((key) =>
-    typeof existingPermissions?.[key] === 'boolean'
-      ? ([[key, existingPermissions[key]]] as const)
-      : [],
+  const existingPermissionEntries = new Map(
+    Object.entries(existingPermissions ?? {}),
   );
+  const preservedEntries = RETIRING_PERMISSION_OVERRIDE_KEYS.flatMap((key) => {
+    const value = existingPermissionEntries.get(key);
+
+    return typeof value === 'boolean' ? ([[key, value]] as const) : [];
+  });
   const persistedPermissions = Object.fromEntries([
     ...preservedEntries,
     ...Object.entries(canonicalPermissions ?? {}),

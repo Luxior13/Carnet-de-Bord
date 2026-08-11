@@ -31,7 +31,14 @@ export default [
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    ignores: ['dist/**', 'node_modules', '.next', '*.mjs'],
+    ignores: [
+      'dist/**',
+      'node_modules',
+      '.next',
+      '.next-dev',
+      '.next-build',
+      '*.mjs',
+    ],
     plugins: {
       turbo: turboPlugin,
       'react-hooks': hooksPlugin,

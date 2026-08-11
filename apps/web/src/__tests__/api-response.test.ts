@@ -12,7 +12,10 @@ function testParsePagination(
   searchParams: URLSearchParams,
   defaultLimit: number = PAGINATION.DEFAULT_LIMIT,
 ): { limit: number; page: number; skip: number } {
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+  const page = Math.min(
+    PAGINATION.MAX_PAGE,
+    Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1),
+  );
   const limit = Math.min(
     PAGINATION.MAX_LIMIT,
     Math.max(
@@ -55,6 +58,14 @@ describe('parsePagination', () => {
       const params = createSearchParams({ page: '0' });
       const result = testParsePagination(params);
       expect(result.page).toBe(1);
+    });
+
+    it('caps oversized page numbers', () => {
+      const params = createSearchParams({ page: '999999999999999999999' });
+      const result = testParsePagination(params);
+
+      expect(result.page).toBe(PAGINATION.MAX_PAGE);
+      expect(Number.isSafeInteger(result.skip)).toBe(true);
     });
   });
 

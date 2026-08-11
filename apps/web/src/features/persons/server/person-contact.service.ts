@@ -269,6 +269,8 @@ export const deletePersonEmail = async (
         ...(['email', 'label', 'isPrimary'] as const).map((fieldKey) =>
           childFieldChange({
             after: null,
+            // `fieldKey` comes from the closed email-field tuple above.
+            // eslint-disable-next-line security/detect-object-injection
             before: current[fieldKey],
             changeType: 'DELETE',
             fieldKey,
@@ -541,6 +543,8 @@ export const deletePersonPhone = async (
         ...(['phone', 'label', 'isPrimary'] as const).map((fieldKey) =>
           childFieldChange({
             after: null,
+            // `fieldKey` comes from the closed phone-field tuple above.
+            // eslint-disable-next-line security/detect-object-injection
             before: current[fieldKey],
             changeType: 'DELETE',
             fieldKey,

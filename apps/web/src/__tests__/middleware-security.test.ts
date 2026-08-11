@@ -59,6 +59,30 @@ describe('middleware security', () => {
     expect(response.headers.get('set-cookie')).toContain('csrf-token=');
   });
 
+  it('forwards a per-request nonce and rejects inline scripts in the CSP', () => {
+    const response = middleware(new NextRequest('http://localhost/login'));
+    const csp = response.headers.get('content-security-policy');
+    const nonce = csp?.match(/script-src[^;]*'nonce-([^']+)'/)?.[1];
+
+    expect(nonce).toMatch(/^[0-9a-f]{64}$/);
+    expect(csp).toContain("'strict-dynamic'");
+    expect(csp?.match(/script-src[^;]*/)?.[0]).not.toContain("'unsafe-inline'");
+    expect(
+      response.headers.get('x-middleware-request-content-security-policy'),
+    ).toBe(csp);
+    expect(response.headers.get('x-middleware-request-x-nonce')).toBe(nonce);
+  });
+
+  it('disables scripts entirely on API responses', () => {
+    const response = middleware(
+      new NextRequest('http://localhost/api/dashboard'),
+    );
+
+    expect(response.headers.get('content-security-policy')).toContain(
+      "script-src 'none'",
+    );
+  });
+
   it('does not make nested paths public through the login allowlist', () => {
     const response = middleware(
       new NextRequest('http://localhost/login/administration'),

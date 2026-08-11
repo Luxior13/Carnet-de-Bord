@@ -18,7 +18,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "15.5.20",
+    "@next/eslint-plugin-next": "15.5.23",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4.3.2",
     "@types/bcryptjs": "^2.4.6",
@@ -73,7 +73,7 @@
     "clsx": "^2.1.1",
     "libphonenumber-js": "^1.13.9",
     "lucide-react": "^0.536.0",
-    "next": "15.5.20",
+    "next": "15.5.23",
     "otplib": "^13.4.1",
     "qrcode": "^1.5.4",
     "react": "19.1.8",

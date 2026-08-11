@@ -27,6 +27,8 @@ blob-report/
 
 # Build Outputs
 .next/
+.next-dev/
+.next-build/
 out/
 dist/
 build/

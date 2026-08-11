@@ -12,6 +12,8 @@ import {
 
 const CSRF_COOKIE = 'csrf-token';
 const CSRF_HEADER = 'x-csrf-token';
+const CSP_HEADER = 'Content-Security-Policy';
+const CSP_NONCE_HEADER = 'x-nonce';
 const SESSION_COOKIE = 'session';
 const CSRF_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
@@ -50,8 +52,12 @@ function tokensMatch(first: string, second: string): boolean {
 function createDownstreamResponse(
   request: NextRequest,
   requestId: string,
+  contentSecurityPolicy: string,
+  nonce: string,
 ): NextResponse {
   const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(CSP_HEADER, contentSecurityPolicy);
+  requestHeaders.set(CSP_NONCE_HEADER, nonce);
   requestHeaders.set(REQUEST_ID_HEADER, requestId);
   requestHeaders.set(REQUEST_METHOD_HEADER, request.method);
   requestHeaders.set(REQUEST_PATH_HEADER, request.nextUrl.pathname);
@@ -66,6 +72,7 @@ function createDownstreamResponse(
 function addResponseHeaders(
   response: NextResponse,
   requestId: string,
+  contentSecurityPolicy: string,
   isApi = false,
 ): void {
   // Security headers
@@ -86,12 +93,28 @@ function addResponseHeaders(
     'camera=(), microphone=(), geolocation=()',
   );
 
-  // CSP - conditional based on environment
-  const isDev = process.env.NODE_ENV !== 'production';
+  response.headers.set(CSP_HEADER, contentSecurityPolicy);
 
-  const csp = [
+  if (process.env.NODE_ENV === 'production') {
+    response.headers.set(
+      'Strict-Transport-Security',
+      'max-age=63072000; includeSubDomains; preload',
+    );
+  }
+}
+
+function createContentSecurityPolicy(nonce: string, isApi: boolean): string {
+  const isDev = process.env.NODE_ENV !== 'production';
+  const scriptPolicy = isApi
+    ? "script-src 'none'"
+    : `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${
+        isDev ? " 'unsafe-eval'" : ''
+      }`;
+
+  return [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+    scriptPolicy,
+    "script-src-attr 'none'",
     "style-src 'self' 'unsafe-inline'", // Required for Tailwind CSS
     "img-src 'self' data: blob:",
     "font-src 'self'",
@@ -102,22 +125,20 @@ function addResponseHeaders(
     "frame-ancestors 'none'",
     ...(!isDev ? ['upgrade-insecure-requests'] : []),
   ].join('; ');
-  response.headers.set('Content-Security-Policy', csp);
-
-  if (!isDev) {
-    response.headers.set(
-      'Strict-Transport-Security',
-      'max-age=63072000; includeSubDomains; preload',
-    );
-  }
 }
 
 export function middleware(request: NextRequest): NextResponse {
   // Always replace a client-provided identifier with a server-generated UUID.
   const requestId = crypto.randomUUID();
+  const isApiRequest = request.nextUrl.pathname.startsWith('/api/');
+  const nonce = generateToken();
+  const contentSecurityPolicy = createContentSecurityPolicy(
+    nonce,
+    isApiRequest,
+  );
 
   // Rate limiting for API routes
-  if (request.nextUrl.pathname.startsWith('/api/')) {
+  if (isApiRequest) {
     const isHealthEndpoint = HEALTH_API_PATHS.has(request.nextUrl.pathname);
     const isLivenessEndpoint = request.nextUrl.pathname === '/api/health/live';
     const clientIp = getClientIp(request.headers) ?? 'unknown';
@@ -149,13 +170,18 @@ export function middleware(request: NextRequest): NextResponse {
           status: 429,
         },
       );
-      addResponseHeaders(errorResponse, requestId, true);
+      addResponseHeaders(errorResponse, requestId, contentSecurityPolicy, true);
 
       return errorResponse;
     }
 
     // Continue with request processing, will add rate limit headers to response later
-    const response = createDownstreamResponse(request, requestId);
+    const response = createDownstreamResponse(
+      request,
+      requestId,
+      contentSecurityPolicy,
+      nonce,
+    );
 
     // Ensure CSRF cookie exists on every response
     const existingToken = request.cookies.get(CSRF_COOKIE)?.value;
@@ -189,7 +215,12 @@ export function middleware(request: NextRequest): NextResponse {
           },
           { status: 403 },
         );
-        addResponseHeaders(csrfErrorResponse, requestId, true);
+        addResponseHeaders(
+          csrfErrorResponse,
+          requestId,
+          contentSecurityPolicy,
+          true,
+        );
 
         return csrfErrorResponse;
       }
@@ -202,7 +233,7 @@ export function middleware(request: NextRequest): NextResponse {
         String(rateLimit.remaining),
       );
     }
-    addResponseHeaders(response, requestId, true);
+    addResponseHeaders(response, requestId, contentSecurityPolicy, true);
 
     return response;
   }
@@ -219,12 +250,17 @@ export function middleware(request: NextRequest): NextResponse {
     loginUrl.searchParams.set('next', requestedPath);
 
     const redirectResponse = NextResponse.redirect(loginUrl);
-    addResponseHeaders(redirectResponse, requestId);
+    addResponseHeaders(redirectResponse, requestId, contentSecurityPolicy);
 
     return redirectResponse;
   }
 
-  const response = createDownstreamResponse(request, requestId);
+  const response = createDownstreamResponse(
+    request,
+    requestId,
+    contentSecurityPolicy,
+    nonce,
+  );
 
   // Ensure CSRF cookie exists on every response
   const existingToken = request.cookies.get(CSRF_COOKIE)?.value;
@@ -238,7 +274,7 @@ export function middleware(request: NextRequest): NextResponse {
     });
   }
 
-  addResponseHeaders(response, requestId);
+  addResponseHeaders(response, requestId, contentSecurityPolicy);
 
   return response;
 }

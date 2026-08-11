@@ -12,13 +12,13 @@ import { PersonDomainError } from './person-errors';
 export const zodErrorDetails = (
   error: z.ZodError,
 ): Record<string, string[]> => {
-  const details: Record<string, string[]> = {};
+  const details = new Map<string, string[]>();
   for (const issue of error.issues) {
     const key = issue.path.join('.') || '_form';
-    details[key] = [...(details[key] ?? []), issue.message];
+    details.set(key, [...(details.get(key) ?? []), issue.message]);
   }
 
-  return details;
+  return Object.fromEntries(details);
 };
 
 export const withPrivateNoStore = <T extends NextResponse>(response: T): T => {

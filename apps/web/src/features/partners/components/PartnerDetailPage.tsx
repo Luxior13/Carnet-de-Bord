@@ -188,7 +188,11 @@ const InformationSection: FC<{
                       disabled={!canManage}
                       onCheckedChange={() => toggleCategory(category)}
                     />
-                    {PARTNER_CATEGORY_LABELS[category]}
+                    {
+                      // The tuple above is the complete closed category enum.
+                      // eslint-disable-next-line security/detect-object-injection
+                      PARTNER_CATEGORY_LABELS[category]
+                    }
                   </Label>
                 ))}
               </div>
@@ -456,7 +460,11 @@ const DetailContent: FC<{
           <PartnerStatusBadge status={partner.status} />
           {partner.categories.map((category) => (
             <Badge key={category} variant="outline">
-              {PARTNER_CATEGORY_LABELS[category]}
+              {
+                // Categories are validated by the partner response schema.
+                // eslint-disable-next-line security/detect-object-injection
+                PARTNER_CATEGORY_LABELS[category]
+              }
             </Badge>
           ))}
         </>

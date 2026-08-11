@@ -20,13 +20,25 @@ export {
 export const hashPersonNormalizedUrl = (value: string): string =>
   createHash('sha256').update(value, 'utf8').digest('hex');
 
+type PersonIdentityData = {
+  birthDate: Date | null;
+  firstName: string | null;
+  lastName: string | null;
+  nickname: string | null;
+  normalizedFirstName: string | null;
+  normalizedLastName: string | null;
+  normalizedNickname: string | null;
+  sortName: string;
+  structureStatus: 'IN_STRUCTURE' | 'OUTSIDE_STRUCTURE';
+};
+
 export const personIdentityData = (input: {
   birthDate?: string | null;
   firstName?: string | null;
   lastName?: string | null;
   nickname?: string | null;
   structureStatus: 'IN_STRUCTURE' | 'OUTSIDE_STRUCTURE';
-}) => {
+}): PersonIdentityData => {
   const normalizedFirstName = input.firstName
     ? normalizePersonSearchValue(input.firstName)
     : null;

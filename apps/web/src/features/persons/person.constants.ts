@@ -88,6 +88,8 @@ export const isAllowedPersonHistoryField = (
   const collectionField = section === 'contacts' || section === 'social';
 
   return (
+    // `section` is narrowed by the own-key check above.
+    // eslint-disable-next-line security/detect-object-injection
     PERSON_HISTORY_FIELDS[section].has(fieldKey) &&
     (collectionField ? Boolean(recordId) : recordId === null)
   );

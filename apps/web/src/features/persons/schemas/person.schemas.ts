@@ -20,6 +20,9 @@ import {
   normalizePersonSocialUrl,
 } from '../person.utils';
 
+// These builders intentionally retain their precise inferred Zod pipeline
+// types so `z.input` and `z.output` stay distinct after transforms.
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const optionalTrimmed = (max: number, message: string) =>
   z
     .string()
@@ -101,6 +104,7 @@ const identityShape = {
     .default('OUTSIDE_STRUCTURE'),
 };
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- Preserve the generic Zod object shape.
 const withMinimumIdentity = <T extends z.ZodRawShape>(shape: T) =>
   z
     .object(shape)
@@ -164,6 +168,7 @@ const personPhoneShape = {
     .max(40, 'Le numéro ne peut pas dépasser 40 caractères'),
 };
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- Preserve transformed Zod input/output types.
 const buildPersonPhoneSchema = <T extends z.ZodRawShape>(extraShape: T) =>
   z
     .object({ ...personPhoneShape, ...extraShape })
@@ -229,6 +234,9 @@ const personSocialProfileShape = {
   profileUrl: optionalUrl,
 };
 
+// The generic Zod builder deliberately leaves the concrete inferred output to
+// each caller; spelling it out here would erase the additional shape `T`.
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 const buildPersonSocialProfileSchema = <T extends z.ZodRawShape>(
   extraShape: T,
 ) =>
@@ -273,6 +281,7 @@ const buildPersonSocialProfileSchema = <T extends z.ZodRawShape>(
         }
       }
     });
+/* eslint-enable @typescript-eslint/explicit-function-return-type */
 
 export const personSocialProfileInputSchema = buildPersonSocialProfileSchema(
   {},

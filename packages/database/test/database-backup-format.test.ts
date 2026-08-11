@@ -29,12 +29,12 @@ const createBackupLines = (
   > = {},
 ): string[] => {
   const lines = [stringifyBackupRecord(createManifest())];
-  const counts: Record<string, number> = {};
+  const counts = new Map<string, number>();
   for (const { property } of DATABASE_BACKUP_TABLES) {
     // Properties come from the closed backup contract.
     // eslint-disable-next-line security/detect-object-injection
     const rows = rowsByProperty[property] ?? [];
-    counts[property] = rows.length;
+    counts.set(property, rows.length);
     lines.push(stringifyBackupRecord({ property, type: 'tableStart' }));
     for (const value of rows) {
       lines.push(stringifyBackupRecord({ property, type: 'row', value }));
@@ -43,7 +43,12 @@ const createBackupLines = (
       stringifyBackupRecord({ count: rows.length, property, type: 'tableEnd' }),
     );
   }
-  lines.push(stringifyBackupRecord({ counts, type: 'footer' }));
+  lines.push(
+    stringifyBackupRecord({
+      counts: Object.fromEntries(counts),
+      type: 'footer',
+    }),
+  );
 
   return lines;
 };

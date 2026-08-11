@@ -33,6 +33,8 @@ describe('platform foundation without a persistent worker', () => {
   });
 
   it('uses a one-shot maintenance command and no durable queue', () => {
+    // The URL is a test-owned constant resolved relative to this test file.
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     const source = readFileSync(
       new URL('../../scripts/run-maintenance.ts', import.meta.url),
       'utf8',

@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity, AlertTriangle, ShieldCheck, User } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, {
   type FC,
@@ -12,17 +12,22 @@ import React, {
 } from 'react';
 
 import { ContentState } from '$components/layout/ContentState';
-import { PageHero } from '$components/layout/PageHero';
-import type { UserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
 import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailSectionRail';
 import { UserHistoryTab } from '$components/users/user-detail/UserHistoryTab';
-import { UserAvatar } from '$components/users/UserAvatar';
-import {
-  getAccessLabel,
-  hasPermission,
-  PERMISSIONS,
-} from '$constants/permissions.constants';
+import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
+import {
+  ACCOUNT_SECTIONS,
+  AccountHeader,
+  AccountPageContentSkeleton,
+  type AccountPendingNavigation,
+  type AccountSectionId,
+  buildAccountSectionHref,
+  findAnchorElement,
+  isInternalNavigationLink,
+  isPlainLeftClick,
+  normalizeAccountSection,
+} from '$features/account/account-page.helpers';
 import { ProfileSection } from '$features/account/components/ProfileSection';
 import { SecuritySection } from '$features/account/components/SecuritySection';
 import type { AuditLogEntry, UserType } from '$types/auth.types';
@@ -36,143 +41,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '$ui/alert-dialog';
-import { Badge } from '$ui/badge';
-import { Skeleton } from '$ui/skeleton';
 import {
   getGuardedNavigationRequest,
   GUARDED_NAVIGATION_REQUEST_EVENT,
-  type GuardedNavigationAction,
 } from '$utils/guarded-navigation.utils';
-
-type AccountSectionId = 'activity' | 'profile' | 'security';
-
-type PendingNavigation =
-  | {
-      action?: GuardedNavigationAction;
-      href: string;
-      kind: 'href';
-    }
-  | {
-      href: string;
-      kind: 'section';
-    };
-
-const ACCOUNT_SECTIONS: Array<UserDetailSection<AccountSectionId>> = [
-  {
-    icon: <User className="h-4 w-4" />,
-    id: 'profile',
-    label: 'Profil',
-  },
-  {
-    icon: <ShieldCheck className="h-4 w-4" />,
-    id: 'security',
-    label: 'Sécurité',
-  },
-  {
-    icon: <Activity className="h-4 w-4" />,
-    id: 'activity',
-    label: 'Activité',
-  },
-];
-
-const normalizeAccountSection = (value: string | null): AccountSectionId => {
-  if (value === 'security') return 'security';
-  if (value === 'activity' || value === 'history') return 'activity';
-
-  return 'profile';
-};
-
-const buildAccountSectionHref = (
-  pathname: string,
-  currentQueryString: string,
-  sectionId: AccountSectionId,
-): string => {
-  const nextParams = new URLSearchParams(currentQueryString);
-
-  if (sectionId === 'profile') {
-    nextParams.delete('section');
-  } else {
-    nextParams.set('section', sectionId);
-  }
-
-  const nextQueryString = nextParams.toString();
-
-  return nextQueryString ? `${pathname}?${nextQueryString}` : pathname;
-};
-
-const isPlainLeftClick = (event: MouseEvent): boolean => {
-  return (
-    event.button === 0 &&
-    !event.metaKey &&
-    !event.altKey &&
-    !event.ctrlKey &&
-    !event.shiftKey
-  );
-};
-
-const findAnchorElement = (
-  target: EventTarget | null,
-): HTMLAnchorElement | null => {
-  if (!(target instanceof Element)) return null;
-
-  return target.closest('a[href]');
-};
-
-const isInternalNavigationLink = (anchor: HTMLAnchorElement): boolean => {
-  const target = anchor.getAttribute('target');
-  const href = anchor.getAttribute('href');
-
-  if (!href) return false;
-  if (target && target !== '_self') return false;
-  if (
-    href.startsWith('#') ||
-    href.startsWith('mailto:') ||
-    href.startsWith('tel:')
-  ) {
-    return false;
-  }
-
-  return anchor.origin === window.location.origin;
-};
-
-const getAccountDisplayName = (userData: UserType): string => {
-  return (
-    `${userData.firstName} ${userData.lastName}`.trim() || userData.loginName
-  );
-};
-
-type AccountHeaderProps = {
-  userData: UserType;
-};
-
-const AccountHeader: FC<AccountHeaderProps> = ({ userData }) => (
-  <PageHero
-    title={getAccountDisplayName(userData)}
-    description={`Identifiant de connexion : ${userData.loginName}`}
-    eyebrow={
-      <span className="text-muted-foreground text-xs font-medium">
-        Mon compte
-      </span>
-    }
-    meta={
-      <>
-        <Badge variant="secondary">{getAccessLabel(userData)}</Badge>
-        {userData.isProtected && <Badge variant="warning">Compte racine</Badge>}
-      </>
-    }
-    icon={<UserAvatar user={userData} className="size-full rounded-md" />}
-    iconClassName="overflow-hidden p-0"
-    tone="dashboard"
-  />
-);
-
-const AccountPageContentSkeleton: FC = () => (
-  <div className="space-y-5" role="status" aria-label="Chargement">
-    <Skeleton className="h-28 rounded-md" />
-    <Skeleton className="h-12 rounded-md 2xl:hidden" />
-    <Skeleton className="h-[32rem] rounded-md" />
-  </div>
-);
 
 export const AccountPageContent: FC = () => {
   const pathname = usePathname();
@@ -190,7 +62,7 @@ export const AccountPageContent: FC = () => {
   const [isProfileDirty, setIsProfileDirty] = useState(false);
   const [profileResetKey, setProfileResetKey] = useState(0);
   const [pendingNavigation, setPendingNavigation] =
-    useState<PendingNavigation | null>(null);
+    useState<AccountPendingNavigation | null>(null);
   const [showUnsavedNavigationConfirm, setShowUnsavedNavigationConfirm] =
     useState(false);
   const auditAbortControllerRef = useRef<AbortController | null>(null);
@@ -267,7 +139,7 @@ export const AccountPageContent: FC = () => {
     [isProfileDirty],
   );
   const requestPendingNavigation = useCallback(
-    (navigation: PendingNavigation): void => {
+    (navigation: AccountPendingNavigation): void => {
       setPendingNavigation(navigation);
       setShowUnsavedNavigationConfirm(true);
     },

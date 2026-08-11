@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
 const appRoot = resolve(import.meta.dirname, '..');
-const nextRoot = resolve(appRoot, '.next');
+const nextRoot = resolve(appRoot, '.next-build');
 const manifestPath = resolve(nextRoot, 'app-build-manifest.json');
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
 const MAX_ROUTE_GZIP_BYTES = 350 * 1024;
@@ -26,8 +26,29 @@ async function measureFile(relativePath) {
 
 const failures = [];
 const routeMeasurements = [];
-for (const [route, files] of Object.entries(manifest.pages)) {
-  if (!route.endsWith('/page') || route.startsWith('/api/')) continue;
+if (
+  !manifest.pages ||
+  typeof manifest.pages !== 'object' ||
+  Array.isArray(manifest.pages)
+) {
+  throw new Error('Invalid app build manifest: expected a pages object.');
+}
+
+const appPageEntries = Object.entries(manifest.pages).filter(
+  ([route]) => route.endsWith('/page') && !route.startsWith('/api/'),
+);
+
+if (appPageEntries.length === 0) {
+  throw new Error(
+    'Performance budget cannot run: the app build manifest contains no page routes.',
+  );
+}
+
+for (const [route, files] of appPageEntries) {
+  if (!Array.isArray(files)) {
+    failures.push(`${route}: expected an array of build files`);
+    continue;
+  }
   const javascriptFiles = [
     ...new Set(files.filter((file) => file.endsWith('.js'))),
   ];

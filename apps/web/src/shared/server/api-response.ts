@@ -243,15 +243,17 @@ export function parsePagination(
   options: {
     limitParam?: string;
     maxLimit?: number;
+    maxPage?: number;
     pageParam?: string;
   } = {},
 ): { limit: number; page: number; skip: number } {
   const pageParam = options.pageParam ?? 'page';
   const limitParam = options.limitParam ?? 'limit';
   const maxLimit = options.maxLimit ?? PAGINATION.MAX_LIMIT;
-  const page = Math.max(
-    1,
-    parseInt(searchParams.get(pageParam) || '1', 10) || 1,
+  const maxPage = options.maxPage ?? PAGINATION.MAX_PAGE;
+  const page = Math.min(
+    maxPage,
+    Math.max(1, parseInt(searchParams.get(pageParam) || '1', 10) || 1),
   );
   const limit = Math.min(
     maxLimit,

@@ -20,6 +20,10 @@ export const PartnerStatusBadge: FC<{ status: PartnerStatus }> = ({
     )}
     variant="outline"
   >
-    {PARTNER_STATUS_LABELS[status]}
+    {
+      // `status` is the closed PartnerStatus union.
+      // eslint-disable-next-line security/detect-object-injection
+      PARTNER_STATUS_LABELS[status]
+    }
   </Badge>
 );

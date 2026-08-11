@@ -114,6 +114,8 @@ const assertTransition = (
   before: PartnerOrganizationStatus,
   after: PartnerOrganizationStatus,
 ): void => {
+  // `before` is the closed persisted status enum.
+  // eslint-disable-next-line security/detect-object-injection
   const allowedTransitions = PARTNER_STATUS_TRANSITIONS[
     before
   ] as readonly PartnerStatus[];

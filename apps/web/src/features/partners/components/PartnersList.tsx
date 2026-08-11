@@ -99,7 +99,7 @@ export const PartnersList: FC<{ createHref: string; returnHref: string }> = ({
       300,
     );
 
-    return () => window.clearTimeout(timer);
+    return (): void => window.clearTimeout(timer);
   }, [input, query, updateFilters]);
 
   const load = useCallback(
@@ -131,7 +131,7 @@ export const PartnersList: FC<{ createHref: string; returnHref: string }> = ({
     const controller = new AbortController();
     void load(controller.signal);
 
-    return () => controller.abort();
+    return (): void => controller.abort();
   }, [load]);
 
   return (
@@ -296,6 +296,8 @@ export const PartnersList: FC<{ createHref: string; returnHref: string }> = ({
                       </TableCell>
                       <TableCell className="text-muted-foreground text-xs">
                         {partner.categories
+                          // Categories are validated against a closed enum.
+                          // eslint-disable-next-line security/detect-object-injection
                           .map((item) => PARTNER_CATEGORY_LABELS[item])
                           .join(' · ')}
                       </TableCell>

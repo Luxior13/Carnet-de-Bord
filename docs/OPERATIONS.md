@@ -6,6 +6,12 @@ L’application utilise un seul processus web. Aucun worker permanent, aucune
 file `BackgroundJob`, aucun heartbeat et aucun registre externe de suppression
 ne sont nécessaires.
 
+Le limiteur général du middleware est borné en mémoire et s’applique donc à ce
+processus unique. Avant de déployer plusieurs réplicas web, le remplacer par un
+limiteur partagé (par exemple Redis ou la base) afin de conserver une limite
+globale. Les parcours sensibles (connexion, MFA et réauthentification) utilisent
+déjà le limiteur transactionnel partagé en base.
+
 La suppression d’une fiche Personne est exécutée immédiatement dans une seule
 transaction PostgreSQL : contrôle de version, purge des valeurs d’historique de
 champs, suppression en cascade, création du tombstone immuable et événement

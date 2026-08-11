@@ -25,6 +25,24 @@ import {
   decideUserAccessMutation,
   getUserAccessMutationCapabilities as getAccessCapabilities,
 } from '$components/users/user-detail/user-access-editor-policy';
+import {
+  ACCESS_PERMISSION_KEYS,
+  ACCOUNT_PERMISSION_KEYS,
+  appendUserAuditFilters,
+  buildUserDetailSectionHref,
+  EMAIL_PATTERN,
+  findAnchorElement,
+  getUserAuditFiltersFromParams,
+  getUserAuditFiltersKey,
+  havePermissionOverridesChangedForKeys,
+  isInternalNavigationLink,
+  isPlainLeftClick,
+  LOGIN_NAME_PATTERN,
+  normalizePermissionPageKey,
+  resetPermissionOverridesForKeys,
+  selectPermissionOverridesForKeys,
+  type UserDetailPendingNavigation,
+} from '$components/users/user-detail/user-detail-page.helpers';
 import { UserAccessTab } from '$components/users/user-detail/UserAccessTab';
 import { UserAccountTab } from '$components/users/user-detail/UserAccountTab';
 import {
@@ -35,7 +53,6 @@ import {
 } from '$components/users/user-detail/UserDetailNavigation';
 import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailSectionRail';
 import {
-  DEFAULT_USER_HISTORY_FILTERS,
   type UserHistoryFacets,
   type UserHistoryFilters,
   UserHistoryTab,
@@ -50,11 +67,8 @@ import { UsersAdminHero } from '$components/users/UsersAdminHero';
 import { FEATURES } from '$constants/feature-registry.constants';
 import {
   getAccessLabel,
-  getAccessPermissionKeys,
-  getAccountPermissionKeys,
   getRoleColor,
   hasPermission,
-  PERMISSION_CATEGORIES,
   PERMISSIONS,
   type PermissionsData,
 } from '$constants/permissions.constants';
@@ -85,7 +99,6 @@ import { apiFetch } from '$utils/api.utils';
 import {
   getGuardedNavigationRequest,
   GUARDED_NAVIGATION_REQUEST_EVENT,
-  type GuardedNavigationAction,
 } from '$utils/guarded-navigation.utils';
 import {
   getUserDisplayName,
@@ -95,201 +108,6 @@ import {
 
 type UserDetailPageProps = {
   userId: string;
-};
-
-type PendingNavigation =
-  | {
-      action?: GuardedNavigationAction;
-      href: string;
-      kind: 'href';
-    }
-  | {
-      href: string;
-      kind: 'section';
-    };
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
-const LOGIN_NAME_PATTERN = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/;
-
-const DEFAULT_PERMISSION_PAGE_KEY = PERMISSION_CATEGORIES[0]?.key ?? '';
-const ACCESS_PERMISSION_KEYS = getAccessPermissionKeys();
-const ACCOUNT_PERMISSION_KEYS = getAccountPermissionKeys();
-
-const havePermissionOverridesChangedForKeys = (
-  first: PermissionsData | null | undefined,
-  second: PermissionsData | null | undefined,
-  permissionKeys: readonly string[],
-): boolean => {
-  const firstPermissionsMap = new Map(Object.entries(first ?? {}));
-  const secondPermissionsMap = new Map(Object.entries(second ?? {}));
-
-  for (const permissionKey of permissionKeys) {
-    if (
-      firstPermissionsMap.get(permissionKey) !==
-      secondPermissionsMap.get(permissionKey)
-    ) {
-      return true;
-    }
-  }
-
-  return false;
-};
-
-const resetPermissionOverridesForKeys = (
-  currentPermissions: PermissionsData | null | undefined,
-  originalPermissions: PermissionsData | null | undefined,
-  permissionKeys: readonly string[],
-): PermissionsData | null => {
-  const nextPermissionsMap = new Map(Object.entries(currentPermissions ?? {}));
-  const originalPermissionsMap = new Map(
-    Object.entries(originalPermissions ?? {}),
-  );
-
-  for (const permissionKey of permissionKeys) {
-    const originalValue = originalPermissionsMap.get(permissionKey);
-
-    if (typeof originalValue === 'boolean') {
-      nextPermissionsMap.set(permissionKey, originalValue);
-    } else {
-      nextPermissionsMap.delete(permissionKey);
-    }
-  }
-
-  return nextPermissionsMap.size > 0
-    ? (Object.fromEntries(nextPermissionsMap) as PermissionsData)
-    : null;
-};
-
-const selectPermissionOverridesForKeys = (
-  permissions: PermissionsData | null | undefined,
-  permissionKeys: readonly string[],
-): PermissionsData | null => {
-  const permissionKeySet = new Set(permissionKeys);
-  const selectedPermissions = Object.fromEntries(
-    Object.entries(permissions ?? {}).filter(([permissionKey]) =>
-      permissionKeySet.has(permissionKey),
-    ),
-  ) as PermissionsData;
-
-  return Object.keys(selectedPermissions).length > 0
-    ? selectedPermissions
-    : null;
-};
-
-const buildUserDetailSectionHref = (
-  pathname: string,
-  currentQueryString: string,
-  sectionId: UserDetailSectionId,
-): string => {
-  const nextParams = new URLSearchParams(currentQueryString);
-
-  if (sectionId === 'profile') {
-    nextParams.delete('section');
-  } else {
-    nextParams.set('section', sectionId);
-  }
-
-  const nextQueryString = nextParams.toString();
-
-  return nextQueryString ? `${pathname}?${nextQueryString}` : pathname;
-};
-
-const normalizePermissionPageKey = (pageKey: string | null): string => {
-  if (!pageKey) return DEFAULT_PERMISSION_PAGE_KEY;
-
-  const canonicalPageKey =
-    pageKey === 'audit' ? FEATURES.systemActivity.audit.pageKey : pageKey;
-
-  return PERMISSION_CATEGORIES.some(
-    (category) => category.key === canonicalPageKey,
-  )
-    ? canonicalPageKey
-    : DEFAULT_PERMISSION_PAGE_KEY;
-};
-
-const appendUserAuditFilters = (
-  params: URLSearchParams,
-  filters: UserHistoryFilters,
-): void => {
-  params.set('scope', filters.activityScope);
-
-  params.set('period', filters.dateFilter);
-  if (filters.poleFilter !== 'all') {
-    params.set('poleKey', filters.poleFilter);
-  }
-  if (filters.pageFilter !== 'all') {
-    params.set('pageKey', filters.pageFilter);
-  }
-};
-
-const getUserAuditFiltersFromParams = (params: {
-  get: (name: string) => string | null;
-}): UserHistoryFilters => {
-  const requestedScope = params.get('scope');
-  const requestedPeriod = params.get('period');
-
-  return {
-    activityScope:
-      requestedScope === 'all' ||
-      requestedScope === 'by' ||
-      requestedScope === 'on'
-        ? requestedScope
-        : DEFAULT_USER_HISTORY_FILTERS.activityScope,
-    dateFilter:
-      requestedPeriod === 'all' ||
-      requestedPeriod === '7' ||
-      requestedPeriod === '30' ||
-      requestedPeriod === '90'
-        ? requestedPeriod
-        : DEFAULT_USER_HISTORY_FILTERS.dateFilter,
-    pageFilter:
-      params.get('pageKey') || DEFAULT_USER_HISTORY_FILTERS.pageFilter,
-    poleFilter:
-      params.get('poleKey') || DEFAULT_USER_HISTORY_FILTERS.poleFilter,
-  };
-};
-
-const getUserAuditFiltersKey = (filters: UserHistoryFilters): string =>
-  [
-    filters.activityScope,
-    filters.dateFilter,
-    filters.poleFilter,
-    filters.pageFilter,
-  ].join('|');
-
-const isPlainLeftClick = (event: MouseEvent): boolean => {
-  return (
-    event.button === 0 &&
-    !event.metaKey &&
-    !event.altKey &&
-    !event.ctrlKey &&
-    !event.shiftKey
-  );
-};
-
-const findAnchorElement = (
-  target: EventTarget | null,
-): HTMLAnchorElement | null => {
-  if (!(target instanceof Element)) return null;
-
-  return target.closest('a[href]');
-};
-
-const isInternalNavigationLink = (anchor: HTMLAnchorElement): boolean => {
-  const target = anchor.getAttribute('target');
-  const href = anchor.getAttribute('href');
-
-  if (!href) return false;
-  if (target && target !== '_self') return false;
-  if (
-    href.startsWith('#') ||
-    href.startsWith('mailto:') ||
-    href.startsWith('tel:')
-  ) {
-    return false;
-  }
-
-  return anchor.origin === window.location.origin;
 };
 
 const DetailSkeleton: FC = () => (
@@ -370,7 +188,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const [activeSection, setActiveSection] =
     useState<UserDetailSectionId>(requestedSection);
   const [pendingNavigation, setPendingNavigation] =
-    useState<PendingNavigation | null>(null);
+    useState<UserDetailPendingNavigation | null>(null);
   const [showUnsavedNavigationConfirm, setShowUnsavedNavigationConfirm] =
     useState(false);
   const [showLoginChangeConfirm, setShowLoginChangeConfirm] = useState(false);
@@ -863,7 +681,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   );
 
   const requestPendingNavigation = useCallback(
-    (navigation: PendingNavigation): void => {
+    (navigation: UserDetailPendingNavigation): void => {
       setPendingNavigation(navigation);
       setShowUnsavedNavigationConfirm(true);
     },

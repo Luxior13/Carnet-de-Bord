@@ -21,6 +21,7 @@ import type {
   PersonDetail,
   PersonDuplicateWarning,
   PersonEmailItem,
+  PersonLastChange,
   PersonListSort,
   PersonPhoneItem,
   PersonsListResponse,
@@ -142,7 +143,10 @@ const toPersonSummary = (person: PersonListRow): PersonSummary => ({
   version: person.version,
 });
 
-const getLastPersonChange = async (client: PersonClient, personId: string) => {
+const getLastPersonChange = async (
+  client: PersonClient,
+  personId: string,
+): Promise<PersonLastChange> => {
   const audit = await client.auditLog.findFirst({
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     select: {
@@ -515,8 +519,11 @@ export const createPerson = async (
     const changes: PersonAuditChange[] = [
       ...(['nickname', 'firstName', 'lastName', 'birthDate'] as const).flatMap(
         (fieldKey) => {
+          // `fieldKey` comes from the closed identity tuple above.
+          /* eslint-disable security/detect-object-injection */
           const value =
             fieldKey === 'birthDate' ? input.birthDate : input[fieldKey];
+          /* eslint-enable security/detect-object-injection */
 
           return value
             ? [
@@ -608,6 +615,8 @@ export const createPerson = async (
             'isPrimary',
           ] as const
         ).flatMap((fieldKey) => {
+          // `fieldKey` comes from the closed social-field tuple above.
+          // eslint-disable-next-line security/detect-object-injection
           const value = profile[fieldKey];
 
           return value === null

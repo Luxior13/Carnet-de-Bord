@@ -12,6 +12,8 @@ import {
   PARTNER_STATUSES,
 } from '../partner.constants';
 
+// Keeping the inferred Zod pipeline preserves its distinct input/output types.
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const optionalTrimmed = (max: number) =>
   z
     .string()
