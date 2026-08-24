@@ -17,8 +17,6 @@ import { toast } from 'sonner';
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { PageBackButton } from '$components/layout/PageBackNavigation';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
-import { AdminMfaResetDialog } from '$components/users/user-detail/AdminMfaResetDialog';
-import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
 import { useAdminStepUpController } from '$components/users/user-detail/useAdminStepUpController';
 import {
   analyzeUserAccessMutationBatch,
@@ -43,8 +41,15 @@ import {
   selectPermissionOverridesForKeys,
   type UserDetailPendingNavigation,
 } from '$components/users/user-detail/user-detail-page.helpers';
-import { UserAccessTab } from '$components/users/user-detail/UserAccessTab';
-import { UserAccountTab } from '$components/users/user-detail/UserAccountTab';
+import {
+  AdminMfaResetDialog,
+  AdminStepUpDialog,
+  UserAccessTab,
+  UserAccountTab,
+  UserHistoryTab,
+  UserProfileTab,
+  UserSecurityTab,
+} from '$components/users/user-detail/UserDetailLazySections';
 import {
   getUserDetailSectionLabel,
   normalizeUserDetailSection,
@@ -55,13 +60,8 @@ import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailS
 import {
   type UserHistoryFacets,
   type UserHistoryFilters,
-  UserHistoryTab,
 } from '$components/users/user-detail/UserHistoryTab';
-import {
-  type ProfileForm,
-  UserProfileTab,
-} from '$components/users/user-detail/UserProfileTab';
-import { UserSecurityTab } from '$components/users/user-detail/UserSecurityTab';
+import type { ProfileForm } from '$components/users/user-detail/UserProfileTab';
 import { UserAvatar } from '$components/users/UserAvatar';
 import { UsersAdminHero } from '$components/users/UsersAdminHero';
 import { FEATURES } from '$constants/feature-registry.constants';
@@ -107,6 +107,7 @@ import {
 } from '$utils/user-display.utils';
 
 type UserDetailPageProps = {
+  initialUser?: UserType;
   userId: string;
 };
 
@@ -160,7 +161,10 @@ export const UserDetailPageSkeleton: FC = () => (
   </AuthenticatedLayout>
 );
 
-export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
+export const UserDetailPage: FC<UserDetailPageProps> = ({
+  initialUser,
+  userId,
+}) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -181,8 +185,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     isLoading: isCurrentUserLoading,
     userData: currentUser,
   } = useUser();
-  const [user, setUser] = useState<UserType | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<UserType | null>(initialUser ?? null);
+  const [isLoading, setIsLoading] = useState(!initialUser);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [activeSection, setActiveSection] =
@@ -199,12 +203,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   const hasLoadedAuditLogsRef = useRef(false);
 
   const [editForm, setEditForm] = useState({
-    contactEmail: '',
-    firstName: '',
-    isActive: true,
-    lastName: '',
-    loginName: '',
-    role: 'USER' as UserRole,
+    contactEmail: initialUser?.contactEmail ?? '',
+    firstName: initialUser?.firstName ?? '',
+    isActive: initialUser?.isActive ?? true,
+    lastName: initialUser?.lastName ?? '',
+    loginName: initialUser?.loginName ?? '',
+    role: initialUser?.role ?? ('USER' as UserRole),
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -248,7 +252,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
     string | null
   >(null);
 
-  const [permissions, setPermissions] = useState<PermissionsData | null>(null);
+  const [permissions, setPermissions] = useState<PermissionsData | null>(
+    initialUser?.permissions ?? null,
+  );
   const [isSavingPermissions, setIsSavingPermissions] = useState(false);
   const adminStepUp = useAdminStepUpController();
   const {
@@ -1043,8 +1049,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({ userId }) => {
   }, []);
 
   useEffect(() => {
+    if (initialUser?.id === userId) return;
     void fetchUser();
-  }, [fetchUser]);
+  }, [fetchUser, initialUser?.id, userId]);
 
   useEffect(() => {
     hasLoadedAuditLogsRef.current = false;

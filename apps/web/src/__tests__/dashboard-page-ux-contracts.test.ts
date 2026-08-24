@@ -8,8 +8,14 @@ const readSourceFile = (relativePath: string): string => {
   return readFileSync(new URL(relativePath, import.meta.url), 'utf8');
 };
 
-const dashboardPageSource = readSourceFile('../app/page.tsx');
-const dashboardRouteSource = readSourceFile('../app/api/dashboard/route.ts');
+const dashboardPageSource = [
+  readSourceFile('../app/page.tsx'),
+  readSourceFile('../features/dashboard/components/DashboardPageClient.tsx'),
+].join('\n');
+const dashboardRouteSource = [
+  readSourceFile('../app/api/dashboard/route.ts'),
+  readSourceFile('../features/dashboard/server/dashboard.service.ts'),
+].join('\n');
 const dashboardTypesSource = readSourceFile(
   '../shared/types/dashboard.types.ts',
 );
@@ -83,7 +89,7 @@ describe('/ dashboard UX contracts', () => {
     expect(dashboardRouteSource).toContain('getVisibleAuditDescription');
     expect(dashboardRouteSource).toContain('sanitizeAuditMetadata');
     expect(dashboardRouteSource).toContain(
-      '!auth.user.isProtected ? { isProtected: false } : {}',
+      '!user.isProtected ? { isProtected: false } : {}',
     );
   });
 });

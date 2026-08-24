@@ -37,6 +37,10 @@ import {
   PARTNER_CATEGORY_LABELS,
   PARTNER_STATUS_LABELS,
 } from '../partner.constants';
+import {
+  haveSamePartnerListFilters,
+  type PartnersListFilters,
+} from '../partner-list-state';
 import type {
   PartnerCategory,
   PartnerListSort,
@@ -47,30 +51,52 @@ import { PartnerStatusBadge } from './PartnerStatusBadge';
 
 const LIST_PATH = '/bureau-juridique/partenaires';
 
+type PartnersListProps = {
+  createHref: string;
+  initialState?: {
+    data: PartnersListResponse;
+    filters: PartnersListFilters;
+  };
+  returnHref: string;
+};
+
 const formatDate = (value: string): string =>
   new Intl.DateTimeFormat('fr-FR', {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value));
 
-export const PartnersList: FC<{ createHref: string; returnHref: string }> = ({
+export const PartnersList: FC<PartnersListProps> = ({
   createHref,
+  initialState,
   returnHref,
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const query = (searchParams.get('q') ?? '').slice(0, 100);
+  const query = (searchParams.get('q') ?? '').slice(0, 100).trim();
   const status = (searchParams.get('status') || '') as PartnerStatus | '';
   const category = (searchParams.get('category') || '') as PartnerCategory | '';
   const sort = (
     searchParams.get('sort') === 'updated' ? 'updated' : 'name'
   ) as PartnerListSort;
   const [input, setInput] = useState(query);
-  const [data, setData] = useState<PartnersListResponse | null>(null);
+  const [data, setData] = useState<PartnersListResponse | null>(
+    initialState?.data ?? null,
+  );
   const [cursor, setCursor] = useState<string | undefined>();
   const [cursorStack, setCursorStack] = useState<string[]>([]);
   const [error, setError] = useState<Error | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialState);
+  const initialStateMatchesRequest = Boolean(
+    !cursor &&
+    initialState &&
+    haveSamePartnerListFilters(initialState.filters, {
+      category: category || undefined,
+      q: query,
+      sort,
+      status: status || undefined,
+    }),
+  );
 
   const updateFilters = useCallback(
     (updates: Record<string, string | null>) => {
@@ -128,11 +154,19 @@ export const PartnersList: FC<{ createHref: string; returnHref: string }> = ({
   );
 
   useEffect(() => {
+    if (initialState && initialStateMatchesRequest) {
+      setData(initialState.data);
+      setError(null);
+      setLoading(false);
+
+      return;
+    }
+
     const controller = new AbortController();
     void load(controller.signal);
 
     return (): void => controller.abort();
-  }, [load]);
+  }, [initialState, initialStateMatchesRequest, load]);
 
   return (
     <section className="border-border-default bg-surface-panel overflow-hidden rounded-xl border shadow-[var(--shadow-panel)]">

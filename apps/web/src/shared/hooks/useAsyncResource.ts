@@ -15,6 +15,7 @@ type UseAsyncResourceOptions<TData> = {
   enabled?: boolean;
   initialData?: TData | null;
   keepPreviousData?: boolean;
+  skipInitialRefresh?: boolean;
 };
 
 /**
@@ -29,6 +30,7 @@ export const useAsyncResource = <TData>(
     enabled = true,
     initialData = null,
     keepPreviousData = true,
+    skipInitialRefresh = false,
   } = options;
   const [data, setData] = useState<TData | null>(initialData);
   const [error, setError] = useState<Error | null>(null);
@@ -37,6 +39,7 @@ export const useAsyncResource = <TData>(
   const dataRef = useRef<TData | null>(initialData);
   const requestSequenceRef = useRef(0);
   const controllerRef = useRef<AbortController | null>(null);
+  const skippedInitialRefreshRef = useRef(false);
 
   const refresh = useCallback(async (): Promise<void> => {
     if (!enabled) return;
@@ -100,10 +103,20 @@ export const useAsyncResource = <TData>(
       return;
     }
 
+    if (
+      skipInitialRefresh &&
+      !skippedInitialRefreshRef.current &&
+      dataRef.current !== null
+    ) {
+      skippedInitialRefreshRef.current = true;
+
+      return;
+    }
+
     void refresh();
 
     return (): void => controllerRef.current?.abort();
-  }, [enabled, refresh]);
+  }, [enabled, refresh, skipInitialRefresh]);
 
   return { data, error, isLoading, isRefreshing, refresh, reset };
 };

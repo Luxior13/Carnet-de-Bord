@@ -1,108 +1,71 @@
-'use client';
-
-import { Plus, Users } from 'lucide-react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import React, { type FC, Suspense } from 'react';
-
-import AuthenticatedLayout from '$components/AuthenticatedLayout';
-import { PageHero } from '$components/layout/PageHero';
-import { AccessDeniedState, PageState } from '$components/layout/PageState';
-import { FEATURES } from '$constants/feature-registry.constants';
-import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
-import { useUser } from '$context/UserContext';
-import { PersonsList } from '$features/persons/components/PersonsList';
+import { PersonsPageClient } from '$features/persons/components/PersonsPageClient';
 import { getPersonCapabilities } from '$features/persons/person.permissions';
-import { Button } from '$ui/button';
-import { PageCanvas, PageShell } from '$ui/page-shell';
-import { Skeleton } from '$ui/skeleton';
+import type { PersonsListRequest } from '$features/persons/person-list-state';
+import { personsListQuerySchema } from '$features/persons/schemas/person.schemas';
+import { listPersons } from '$features/persons/server/person.service';
+import { assertPersonFeatureReady } from '$features/persons/server/person-deletion';
+import { getPageAuthSession } from '$server/auth';
 
-const PersonsPageContent: FC = () => {
-  const searchParams = useSearchParams();
-  const {
-    featureAvailabilityLoaded,
-    operationalFeatureIds,
-    refreshFeatureAvailability,
-  } = useFeatureAvailability();
-  const { userData } = useUser();
-  const { canCreate, canView } = getPersonCapabilities(userData);
-  const searchParamsString = searchParams?.toString() ?? '';
-  const returnHref = `/vie-interne/repertoire${searchParamsString ? `?${searchParamsString}` : ''}`;
-  const createHref = `/vie-interne/repertoire/nouveau?${new URLSearchParams({ returnTo: returnHref })}`;
-
-  if (!canView) {
-    return (
-      <AccessDeniedState
-        actionHref="/"
-        actionLabel="Retour à l'accueil"
-        description="Vous n'avez pas la permission de consulter le répertoire."
-      />
-    );
-  }
-
-  if (!featureAvailabilityLoaded) return <ListPageSkeleton />;
-
-  if (!operationalFeatureIds.has(FEATURES.persons.id)) {
-    return (
-      <PageState
-        actionLabel="Revérifier"
-        description="La migration ou la clé de chiffrement d’audit n’est pas encore prête. La fonctionnalité reste masquée jusqu’à la fin de sa configuration."
-        onAction={() => void refreshFeatureAvailability()}
-        title="Répertoire temporairement indisponible"
-      />
-    );
-  }
-
-  return (
-    <PageShell className="py-0">
-      <PageCanvas contentClassName="space-y-5">
-        <PageHero
-          compact
-          actions={
-            canCreate ? (
-              <Button asChild size="sm">
-                <Link href={createHref}>
-                  <Plus className="size-4" />
-                  Nouvelle fiche
-                </Link>
-              </Button>
-            ) : null
-          }
-          description="Identité, statut dans la structure et coordonnées utiles, réunis dans un répertoire unique."
-          icon={<Users className="size-5" />}
-          title="Répertoire"
-          tone="internal"
-        />
-        <PersonsList
-          canCreate={canCreate}
-          createHref={createHref}
-          returnHref={returnHref}
-        />
-      </PageCanvas>
-    </PageShell>
-  );
+type PersonsPageQuery = {
+  cursor?: string | string[];
+  q?: string | string[];
+  sort?: string | string[];
+  structureStatus?: string | string[];
 };
 
-const ListPageSkeleton: FC = () => (
-  <PageShell className="py-0">
-    <PageCanvas contentClassName="space-y-3">
-      <Skeleton className="h-28 rounded-xl" />
-      <Skeleton className="h-96 rounded-xl" />
-    </PageCanvas>
-  </PageShell>
-);
+type PersonsPageProps = {
+  searchParams?: Promise<PersonsPageQuery>;
+};
 
-const PersonsPage: FC = () => (
-  <AuthenticatedLayout
-    breadcrumbs={[
-      { label: FEATURES.persons.audit.poleLabel },
-      { label: FEATURES.persons.label },
-    ]}
-  >
-    <Suspense fallback={<ListPageSkeleton />}>
-      <PersonsPageContent />
-    </Suspense>
-  </AuthenticatedLayout>
-);
+const firstValue = (
+  value: string | string[] | undefined,
+): string | undefined => (Array.isArray(value) ? value[0] : value);
 
-export default PersonsPage;
+export default async function PersonsPage({
+  searchParams,
+}: PersonsPageProps): Promise<React.ReactNode> {
+  const [params, { user }] = await Promise.all([
+    searchParams ?? Promise.resolve<PersonsPageQuery>({}),
+    getPageAuthSession(),
+  ]);
+  const parsed = personsListQuerySchema.safeParse({
+    cursor: firstValue(params.cursor),
+    limit: 25,
+    q: firstValue(params.q),
+    sort: firstValue(params.sort),
+    structureStatus: firstValue(params.structureStatus),
+  });
+  const capabilities = getPersonCapabilities(user);
+  let initialState:
+    | {
+        data: Awaited<ReturnType<typeof listPersons>>;
+        request: PersonsListRequest;
+      }
+    | undefined;
+
+  if (
+    user &&
+    !user.mustChangePassword &&
+    capabilities.canView &&
+    parsed.success
+  ) {
+    try {
+      await assertPersonFeatureReady();
+      const data = await listPersons(parsed.data);
+      initialState = {
+        data,
+        request: {
+          cursor: parsed.data.cursor,
+          q: parsed.data.q,
+          sort: parsed.data.sort,
+          structureStatus: parsed.data.structureStatus,
+        },
+      };
+    } catch {
+      // The client preserves the existing unavailable/retry states when the
+      // server cannot produce a safe initial snapshot.
+    }
+  }
+
+  return <PersonsPageClient initialState={initialState} />;
+}

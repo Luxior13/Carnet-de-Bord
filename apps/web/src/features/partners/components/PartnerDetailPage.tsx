@@ -10,6 +10,7 @@ import {
   RefreshCw,
   UserRound,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -47,9 +48,18 @@ import type {
   PartnerCategory,
   PartnerDetail,
 } from '../types/partner.types';
-import { PartnerContactsSection } from './PartnerContactsSection';
-import { PartnerFollowUpSection } from './PartnerFollowUpSection';
 import { PartnerStatusBadge } from './PartnerStatusBadge';
+
+const PartnerContactsSection = dynamic(() =>
+  import('./PartnerContactsSection').then(
+    (module) => module.PartnerContactsSection,
+  ),
+);
+const PartnerFollowUpSection = dynamic(() =>
+  import('./PartnerFollowUpSection').then(
+    (module) => module.PartnerFollowUpSection,
+  ),
+);
 
 export type PartnerDetailSection =
   'activite' | 'contacts' | 'information' | 'suivi';
@@ -358,9 +368,10 @@ const ActivitySection: FC<{ partnerId: string }> = ({ partnerId }) => {
 
 const DetailContent: FC<{
   activeSection: PartnerDetailSection;
+  initialPartner?: PartnerDetail;
   partnerId: string;
   returnHref: string;
-}> = ({ activeSection, partnerId, returnHref }) => {
+}> = ({ activeSection, initialPartner, partnerId, returnHref }) => {
   const { userData } = useUser();
   const {
     featureAvailabilityLoaded,
@@ -368,9 +379,11 @@ const DetailContent: FC<{
     refreshFeatureAvailability,
   } = useFeatureAvailability();
   const capabilities = getPartnerCapabilities(userData);
-  const [partner, setPartner] = useState<PartnerDetail | null>(null);
+  const [partner, setPartner] = useState<PartnerDetail | null>(
+    initialPartner ?? null,
+  );
   const [error, setError] = useState<Error | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialPartner);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -385,6 +398,16 @@ const DetailContent: FC<{
   }, [partnerId]);
 
   useEffect(() => {
+    if (initialPartner?.id === partnerId) {
+      setPartner((current) =>
+        current?.id === partnerId ? current : initialPartner,
+      );
+      setError(null);
+      setLoading(false);
+
+      return;
+    }
+
     if (
       capabilities.canView &&
       featureAvailabilityLoaded &&
@@ -397,8 +420,10 @@ const DetailContent: FC<{
   }, [
     capabilities.canView,
     featureAvailabilityLoaded,
+    initialPartner,
     load,
     operationalFeatureIds,
+    partnerId,
   ]);
 
   useEffect(() => {
@@ -417,8 +442,14 @@ const DetailContent: FC<{
       />
     );
   }
-  if (!featureAvailabilityLoaded || loading) return <DetailSkeleton />;
-  if (!operationalFeatureIds.has(FEATURES.partners.id)) {
+  if ((!featureAvailabilityLoaded && !initialPartner) || loading) {
+    return <DetailSkeleton />;
+  }
+  if (
+    featureAvailabilityLoaded &&
+    !initialPartner &&
+    !operationalFeatureIds.has(FEATURES.partners.id)
+  ) {
     return (
       <PageState
         actionLabel="Revérifier"
@@ -518,6 +549,7 @@ const DetailContent: FC<{
 
 export const PartnerDetailPage: FC<{
   activeSection: PartnerDetailSection;
+  initialPartner?: PartnerDetail;
   partnerId: string;
   returnHref: string;
 }> = (props) => (

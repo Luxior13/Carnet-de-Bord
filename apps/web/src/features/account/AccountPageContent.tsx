@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertTriangle } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, {
   type FC,
@@ -13,7 +14,6 @@ import React, {
 
 import { ContentState } from '$components/layout/ContentState';
 import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailSectionRail';
-import { UserHistoryTab } from '$components/users/user-detail/UserHistoryTab';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import {
@@ -28,8 +28,6 @@ import {
   isPlainLeftClick,
   normalizeAccountSection,
 } from '$features/account/account-page.helpers';
-import { ProfileSection } from '$features/account/components/ProfileSection';
-import { SecuritySection } from '$features/account/components/SecuritySection';
 import type { AuditLogEntry, UserType } from '$types/auth.types';
 import {
   AlertDialog,
@@ -45,6 +43,22 @@ import {
   getGuardedNavigationRequest,
   GUARDED_NAVIGATION_REQUEST_EVENT,
 } from '$utils/guarded-navigation.utils';
+
+const ProfileSection = dynamic(() =>
+  import('$features/account/components/ProfileSection').then(
+    (module) => module.ProfileSection,
+  ),
+);
+const SecuritySection = dynamic(() =>
+  import('$features/account/components/SecuritySection').then(
+    (module) => module.SecuritySection,
+  ),
+);
+const UserHistoryTab = dynamic(() =>
+  import('$components/users/user-detail/UserHistoryTab').then(
+    (module) => module.UserHistoryTab,
+  ),
+);
 
 export const AccountPageContent: FC = () => {
   const pathname = usePathname();

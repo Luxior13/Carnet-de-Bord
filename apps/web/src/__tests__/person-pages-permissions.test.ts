@@ -9,6 +9,7 @@ import { getPersonCapabilities } from '$features/persons/person.permissions';
 const mocks = vi.hoisted(() => ({
   createForm: vi.fn(() => null),
   featureAvailability: vi.fn(),
+  getPageAuthSession: vi.fn(),
   personsList: vi.fn(() => null),
   useUser: vi.fn(),
 }));
@@ -31,9 +32,22 @@ vi.mock('$features/persons/components/PersonCreateForm', () => ({
   PersonCreateForm: mocks.createForm,
 }));
 
+vi.mock('$server/auth', () => ({
+  getPageAuthSession: mocks.getPageAuthSession,
+}));
+
+vi.mock('$features/persons/server/person-deletion', () => ({
+  assertPersonFeatureReady: vi.fn(),
+}));
+
+vi.mock('$features/persons/server/person.service', () => ({
+  getPerson: vi.fn(),
+  listPersons: vi.fn(),
+}));
+
 import PersonPage from '$app/vie-interne/repertoire/[id]/page';
 import NewPersonPage from '$app/vie-interne/repertoire/nouveau/page';
-import PersonsPage from '$app/vie-interne/repertoire/page';
+import { PersonsPageClient as PersonsPage } from '$features/persons/components/PersonsPageClient';
 
 const user = (
   permissions: Record<string, boolean>,
@@ -52,6 +66,10 @@ const user = (
 describe('direct Person page permission boundaries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getPageAuthSession.mockResolvedValue({
+      session: null,
+      user: user({}),
+    });
     mocks.featureAvailability.mockReturnValue({
       featureAvailabilityLoaded: true,
       operationalFeatureIds: new Set([FEATURES.persons.id]),
@@ -110,6 +128,7 @@ describe('direct Person page permission boundaries', () => {
         canCreate: true,
         createHref:
           '/vie-interne/repertoire/nouveau?returnTo=%2Fvie-interne%2Frepertoire',
+        initialState: undefined,
         returnHref: '/vie-interne/repertoire',
       },
       undefined,

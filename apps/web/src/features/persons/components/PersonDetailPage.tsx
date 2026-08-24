@@ -1,6 +1,7 @@
 'use client';
 
 import { AtSign, Clock3, RefreshCw, UserRound } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
@@ -25,13 +26,23 @@ import type {
   PersonDuplicateWarning,
 } from '../types/person.types';
 import { PersonAvatar } from './PersonAvatar';
-import { PersonCollectionsSection } from './PersonCollectionsSection';
 import { PersonDangerZone } from './PersonDangerZone';
-import { PersonIdentitySection } from './PersonIdentitySection';
 import { PersonStatusBadge } from './PersonStatusBadge';
+
+const PersonCollectionsSection = dynamic(() =>
+  import('./PersonCollectionsSection').then(
+    (module) => module.PersonCollectionsSection,
+  ),
+);
+const PersonIdentitySection = dynamic(() =>
+  import('./PersonIdentitySection').then(
+    (module) => module.PersonIdentitySection,
+  ),
+);
 
 type PersonDetailPageProps = {
   activeSection: PersonDetailSection;
+  initialPerson?: PersonDetail;
   personId: string;
   returnHref: string;
 };
@@ -177,6 +188,7 @@ const parseStoredDuplicateWarning = (raw: string): PersonDuplicateWarning => {
 
 const PersonDetailContent: FC<PersonDetailPageProps> = ({
   activeSection,
+  initialPerson,
   personId,
   returnHref,
 }) => {
@@ -189,8 +201,10 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
   const [duplicateWarning, setDuplicateWarning] =
     useState<PersonDuplicateWarning | null>(null);
   const [error, setError] = useState<Error | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [person, setPerson] = useState<PersonDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(!initialPerson);
+  const [person, setPerson] = useState<PersonDetail | null>(
+    initialPerson ?? null,
+  );
   const { canDelete, canUpdate, canView, canViewProvenance } =
     getPersonCapabilities(userData);
   const featureOperational = operationalFeatureIds.has(FEATURES.persons.id);
@@ -204,6 +218,16 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
   }, [personId]);
 
   useEffect((): (() => void) | undefined => {
+    if (initialPerson?.id === personId) {
+      setPerson((current) =>
+        current?.id === personId ? current : initialPerson,
+      );
+      setError(null);
+      setIsLoading(false);
+
+      return;
+    }
+
     if (!canView || !featureAvailabilityLoaded || !featureOperational) {
       setIsLoading(false);
 
@@ -226,7 +250,14 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
     return () => {
       active = false;
     };
-  }, [canView, featureAvailabilityLoaded, featureOperational, load]);
+  }, [
+    canView,
+    featureAvailabilityLoaded,
+    featureOperational,
+    initialPerson,
+    load,
+    personId,
+  ]);
 
   useEffect((): void => {
     const key = `person-duplicate-warning:${personId}`;
@@ -246,9 +277,9 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
     );
   }
 
-  if (!featureAvailabilityLoaded) return <DetailSkeleton />;
+  if (!featureAvailabilityLoaded && !initialPerson) return <DetailSkeleton />;
 
-  if (!featureOperational) {
+  if (featureAvailabilityLoaded && !initialPerson && !featureOperational) {
     return (
       <PageState
         actionLabel="Revérifier"

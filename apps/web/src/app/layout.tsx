@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import React, { type ReactNode } from 'react';
 
 import { PersistentAuthenticatedShell } from '$components/AuthenticatedLayout';
+import { WebVitalsReporter } from '$components/observability/WebVitalsReporter';
 import { SITE_CONFIG } from '$constants/app.constants';
 import { isPublicPagePath } from '$constants/security.constants';
 import { FeatureAvailabilityProvider } from '$context/FeatureAvailabilityContext';
@@ -91,6 +92,7 @@ const RootLayout = async ({
               {children}
             </PersistentAuthenticatedShell>
           </FeatureAvailabilityProvider>
+          {initialUser ? <WebVitalsReporter /> : null}
         </UserProvider>
       </body>
     </html>

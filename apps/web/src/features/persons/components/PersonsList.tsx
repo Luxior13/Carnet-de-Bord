@@ -56,6 +56,10 @@ import {
   PERSON_STRUCTURE_STATUSES,
 } from '../person.constants';
 import { formatPersonDateTime, getPersonDisplayName } from '../person.ui';
+import {
+  haveSamePersonsListRequest,
+  type PersonsListRequest,
+} from '../person-list-state';
 import type {
   PersonListSort,
   PersonsListResponse,
@@ -68,6 +72,10 @@ import { PersonStatusBadge } from './PersonStatusBadge';
 type PersonsListProps = {
   canCreate: boolean;
   createHref: string;
+  initialState?: {
+    data: PersonsListResponse;
+    request: PersonsListRequest;
+  };
   returnHref: string;
 };
 
@@ -284,6 +292,7 @@ const PersonMobileRow: FC<{
 export const PersonsList: FC<PersonsListProps> = ({
   canCreate,
   createHref,
+  initialState,
   returnHref,
 }) => {
   const router = useRouter();
@@ -307,10 +316,12 @@ export const PersonsList: FC<PersonsListProps> = ({
       ];
     },
   );
-  const [data, setData] = useState<PersonsListResponse | null>(null);
+  const [data, setData] = useState<PersonsListResponse | null>(
+    initialState?.data ?? null,
+  );
   const [draftQuery, setDraftQuery] = useState(appliedQuery);
   const [error, setError] = useState<Error | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialState);
   const [pageIndex, setPageIndex] = useState(effectiveInitialPageIndex);
   const [sort, setSort] = useState<PersonListSort>(() =>
     normalizeSort(searchParams.get('sort')),
@@ -319,6 +330,15 @@ export const PersonsList: FC<PersonsListProps> = ({
     normalizeStatus(searchParams.get('structureStatus')),
   );
   const abortControllerRef = useRef<AbortController | null>(null);
+  const initialStateMatchesRequest = Boolean(
+    initialState &&
+    haveSamePersonsListRequest(initialState.request, {
+      cursor: cursorStack.at(pageIndex),
+      q: appliedQuery,
+      sort,
+      ...(status === 'ALL' ? {} : { structureStatus: status }),
+    }),
+  );
 
   const updateUrl = useCallback(
     ({
@@ -443,10 +463,19 @@ export const PersonsList: FC<PersonsListProps> = ({
   }, [appliedQuery, cursorStack, pageIndex, sort, status]);
 
   useEffect(() => {
+    if (initialState && initialStateMatchesRequest) {
+      abortControllerRef.current?.abort();
+      setData(initialState.data);
+      setError(null);
+      setIsLoading(false);
+
+      return;
+    }
+
     void load();
 
     return (): void => abortControllerRef.current?.abort();
-  }, [load]);
+  }, [initialState, initialStateMatchesRequest, load]);
 
   const personHref = useCallback(
     (personId: string) => buildPersonHref(personId, returnHref),

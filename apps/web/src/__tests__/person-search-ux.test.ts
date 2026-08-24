@@ -141,11 +141,23 @@ const dangerZoneSource = readFileSync(
   new URL('../components/layout/EntityDangerZone.tsx', import.meta.url),
   'utf8',
 );
-// eslint-disable-next-line security/detect-non-literal-fs-filename
-const personsPageSource = readFileSync(
-  new URL('../app/vie-interne/repertoire/page.tsx', import.meta.url),
-  'utf8',
-);
+const personsPageSource = [
+  // Test-owned path only; the URL never receives external input.
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  readFileSync(
+    new URL('../app/vie-interne/repertoire/page.tsx', import.meta.url),
+    'utf8',
+  ),
+  // Test-owned path only; the URL never receives external input.
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  readFileSync(
+    new URL(
+      '../features/persons/components/PersonsPageClient.tsx',
+      import.meta.url,
+    ),
+    'utf8',
+  ),
+].join('\n');
 // eslint-disable-next-line security/detect-non-literal-fs-filename
 const personsListSource = readFileSync(
   new URL('../features/persons/components/PersonsList.tsx', import.meta.url),

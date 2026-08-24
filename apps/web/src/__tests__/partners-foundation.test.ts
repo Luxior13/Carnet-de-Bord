@@ -10,6 +10,7 @@ import {
   PARTNER_STATUS_TRANSITIONS,
   PARTNER_STATUSES,
 } from '$features/partners/partner.constants';
+import { haveSamePartnerListFilters } from '$features/partners/partner-list-state';
 import {
   createPartnerSchema,
   updatePartnerContactSchema,
@@ -153,6 +154,23 @@ const personDangerZoneSource = readFileSync(
 );
 
 describe('Sponsors & partenaires foundation', () => {
+  it('reuses a preloaded first page only for the exact same filters', () => {
+    const filters = {
+      category: 'PARTNER' as const,
+      q: 'fondation',
+      sort: 'name' as const,
+      status: 'ACTIVE' as const,
+    };
+
+    expect(haveSamePartnerListFilters(filters, { ...filters })).toBe(true);
+    expect(
+      haveSamePartnerListFilters(filters, { ...filters, sort: 'updated' }),
+    ).toBe(false);
+    expect(
+      haveSamePartnerListFilters(filters, { ...filters, q: 'autre' }),
+    ).toBe(false);
+  });
+
   it('publishes the canonical live feature and three stable permissions', () => {
     expect(FEATURES.partners).toMatchObject({
       availability: 'live',

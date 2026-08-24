@@ -15,6 +15,7 @@ import {
 } from '@repo/database';
 import bcrypt from 'bcryptjs';
 import { cookies, headers } from 'next/headers';
+import { cache } from 'react';
 
 import {
   hasPermission,
@@ -707,8 +708,10 @@ export const getAuthSession = async (
  * not allow them to mutate cookies, but the database session remains the
  * authoritative source and invalid server-side state is still revoked.
  */
-export const getPageAuthSession = async (): Promise<ServerAuthResponseType> =>
-  readAuthSession({ clearInvalidCookie: false, refreshCookie: false });
+export const getPageAuthSession = cache(
+  async (): Promise<ServerAuthResponseType> =>
+    readAuthSession({ clearInvalidCookie: false, refreshCookie: false }),
+);
 
 // ============================================
 // AUTHENTICATION

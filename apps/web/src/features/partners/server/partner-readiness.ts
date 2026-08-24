@@ -8,8 +8,12 @@ import { partnerErrors } from './partner-errors';
 
 type SchemaRow = { ready: boolean };
 
-export const isPartnerSchemaReady = async (
-  client: PrismaClient = prisma,
+const SUCCESS_CACHE_MS = 5_000;
+let cachedReadyUntil = 0;
+let pendingReadiness: Promise<boolean> | undefined;
+
+const queryPartnerSchemaReadiness = async (
+  client: PrismaClient,
 ): Promise<boolean> => {
   try {
     const rows = await client.$queryRaw<SchemaRow[]>`
@@ -64,6 +68,27 @@ export const isPartnerSchemaReady = async (
     return rows[0]?.ready === true;
   } catch {
     return false;
+  }
+};
+
+export const isPartnerSchemaReady = async (
+  client: PrismaClient = prisma,
+): Promise<boolean> => {
+  const cacheable = client === prisma && process.env.NODE_ENV !== 'test';
+  if (!cacheable) return queryPartnerSchemaReadiness(client);
+  if (cachedReadyUntil > Date.now()) return true;
+  if (pendingReadiness) return pendingReadiness;
+
+  pendingReadiness = queryPartnerSchemaReadiness(client).then((ready) => {
+    if (ready) cachedReadyUntil = Date.now() + SUCCESS_CACHE_MS;
+
+    return ready;
+  });
+
+  try {
+    return await pendingReadiness;
+  } finally {
+    pendingReadiness = undefined;
   }
 };
 

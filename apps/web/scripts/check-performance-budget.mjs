@@ -6,7 +6,9 @@ const appRoot = resolve(import.meta.dirname, '..');
 const nextRoot = resolve(appRoot, '.next-build');
 const manifestPath = resolve(nextRoot, 'app-build-manifest.json');
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
-const MAX_ROUTE_GZIP_BYTES = 350 * 1024;
+// Keep enough headroom for framework patches while preventing the heaviest
+// route from drifting back to the pre-splitting 350 KiB ceiling.
+const MAX_ROUTE_GZIP_BYTES = 325 * 1024;
 const MAX_SINGLE_CHUNK_BYTES = 600 * 1024;
 const measuredFiles = new Map();
 

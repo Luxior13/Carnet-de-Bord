@@ -1,6 +1,7 @@
 'use client';
 
 import { Newspaper, Plus, ShieldCheck } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { type FC, useState } from 'react';
 
@@ -15,9 +16,17 @@ import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 
 import { getInternalNewsCapabilities } from '../internal-news.permissions';
-import type { InternalNewsFilter } from '../internal-news.types';
+import type {
+  InternalNewsFilter,
+  InternalNewsResponse,
+} from '../internal-news.types';
 import { InternalNewsFeed } from './InternalNewsFeed';
-import { PublishAnnouncementDialog } from './PublishAnnouncementDialog';
+
+const PublishAnnouncementDialog = dynamic(() =>
+  import('./PublishAnnouncementDialog').then(
+    (module) => module.PublishAnnouncementDialog,
+  ),
+);
 
 const INTERNAL_NEWS_PATH = '/vie-interne/actualite-interne';
 
@@ -41,7 +50,16 @@ const readFilter = (
   return 'all';
 };
 
-export const InternalNewsPage: FC = () => {
+type InternalNewsPageProps = {
+  initialState?: {
+    data: InternalNewsResponse;
+    filter: InternalNewsFilter;
+  };
+};
+
+export const InternalNewsPage: FC<InternalNewsPageProps> = ({
+  initialState,
+}) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { userData } = useUser();
@@ -81,8 +99,12 @@ export const InternalNewsPage: FC = () => {
       />
     );
   }
-  if (!featureAvailabilityLoaded) return <PageSkeleton />;
-  if (!operationalFeatureIds.has(FEATURES.internalNews.id)) {
+  if (!featureAvailabilityLoaded && !initialState) return <PageSkeleton />;
+  if (
+    featureAvailabilityLoaded &&
+    !initialState &&
+    !operationalFeatureIds.has(FEATURES.internalNews.id)
+  ) {
     return (
       <PageState
         actionLabel="Revérifier"
@@ -130,6 +152,7 @@ export const InternalNewsPage: FC = () => {
             canManage={canManage}
             canViewPartners={canViewPartners}
             filter={filter}
+            initialState={initialState}
             onContentChanged={refreshFeed}
             onFilterChange={updateFilter}
             refreshVersion={refreshVersion}

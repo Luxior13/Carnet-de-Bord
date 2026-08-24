@@ -1,102 +1,87 @@
-'use client';
+import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
+import { PartnersPageClient } from '$features/partners/components/PartnersPageClient';
+import type { PartnersListFilters } from '$features/partners/partner-list-state';
+import { partnersListQuerySchema } from '$features/partners/schemas/partner.schemas';
+import { listPartners } from '$features/partners/server/partner.service';
+import { isPartnerSchemaReady } from '$features/partners/server/partner-readiness';
+import { getPageAuthSession } from '$server/auth';
 
-import { Handshake, Plus } from 'lucide-react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import React, { type FC, Suspense } from 'react';
-
-import AuthenticatedLayout from '$components/AuthenticatedLayout';
-import { PageHero } from '$components/layout/PageHero';
-import { AccessDeniedState, PageState } from '$components/layout/PageState';
-import { FEATURES } from '$constants/feature-registry.constants';
-import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
-import { useUser } from '$context/UserContext';
-import { PartnersList } from '$features/partners/components/PartnersList';
-import { getPartnerCapabilities } from '$features/partners/partner.permissions';
-import { Button } from '$ui/button';
-import { PageCanvas, PageShell } from '$ui/page-shell';
-import { Skeleton } from '$ui/skeleton';
-
-const SkeletonPage: FC = () => (
-  <PageShell className="py-0">
-    <PageCanvas contentClassName="space-y-5">
-      <Skeleton className="h-28 rounded-xl" />
-      <Skeleton className="h-96 rounded-xl" />
-    </PageCanvas>
-  </PageShell>
-);
-
-const PageContent: FC = () => {
-  const params = useSearchParams();
-  const { userData } = useUser();
-  const {
-    featureAvailabilityLoaded,
-    operationalFeatureIds,
-    refreshFeatureAvailability,
-  } = useFeatureAvailability();
-  const { canManage, canView } = getPartnerCapabilities(userData);
-  const query = params.toString();
-  const returnHref = `${FEATURES.partners.href}${query ? `?${query}` : ''}`;
-  const createHref = `${FEATURES.partners.href}/nouveau?${new URLSearchParams({ returnTo: returnHref })}`;
-
-  if (!canView) {
-    return (
-      <AccessDeniedState
-        actionHref="/"
-        actionLabel="Retour à l’accueil"
-        description="Vous n’avez pas la permission de consulter les partenaires."
-      />
-    );
-  }
-  if (!featureAvailabilityLoaded) return <SkeletonPage />;
-  if (!operationalFeatureIds.has(FEATURES.partners.id)) {
-    return (
-      <PageState
-        actionLabel="Revérifier"
-        description="La migration du module n’est pas encore disponible."
-        onAction={() => void refreshFeatureAvailability()}
-        title="Sponsors & partenaires temporairement indisponibles"
-      />
-    );
-  }
-
-  return (
-    <PageShell className="py-0">
-      <PageCanvas contentClassName="space-y-5">
-        <PageHero
-          compact
-          actions={
-            canManage ? (
-              <Button asChild size="sm">
-                <Link href={createHref}>
-                  <Plus className="size-4" />
-                  Nouvelle fiche
-                </Link>
-              </Button>
-            ) : null
-          }
-          description="Organisations, contacts, périodes de relation et suivi interne réunis au même endroit."
-          icon={<Handshake className="size-5" />}
-          title="Sponsors & partenaires"
-          tone="legal"
-        />
-        <PartnersList createHref={createHref} returnHref={returnHref} />
-      </PageCanvas>
-    </PageShell>
-  );
+type PartnersPageQuery = {
+  category?: string | string[];
+  q?: string | string[];
+  sort?: string | string[];
+  status?: string | string[];
 };
 
-export default function PartnersPage(): React.JSX.Element {
-  return (
-    <AuthenticatedLayout
-      breadcrumbs={[
-        { label: FEATURES.partners.audit.poleLabel },
-        { label: FEATURES.partners.label },
-      ]}
-    >
-      <Suspense fallback={<SkeletonPage />}>
-        <PageContent />
-      </Suspense>
-    </AuthenticatedLayout>
+type PartnersPageProps = {
+  searchParams?: Promise<PartnersPageQuery>;
+};
+
+const firstValue = (
+  value: string | string[] | undefined,
+): string | undefined => (Array.isArray(value) ? value[0] : value);
+
+export default async function PartnersPage({
+  searchParams,
+}: PartnersPageProps): Promise<React.ReactNode> {
+  const [params, auth] = await Promise.all([
+    searchParams ?? Promise.resolve<PartnersPageQuery>({}),
+    getPageAuthSession(),
+  ]);
+  const parsed = partnersListQuerySchema.safeParse({
+    category: firstValue(params.category),
+    q: firstValue(params.q),
+    sort: firstValue(params.sort),
+    status: firstValue(params.status),
+  });
+  const canViewPartners = Boolean(
+    auth.user &&
+    !auth.user.mustChangePassword &&
+    (auth.user.isProtected ||
+      hasPermission(
+        auth.user.role,
+        PERMISSIONS.PARTNERS.VIEW,
+        auth.user.permissions,
+      )),
   );
+  const canViewPersons = Boolean(
+    auth.user &&
+    (auth.user.isProtected ||
+      hasPermission(
+        auth.user.role,
+        PERMISSIONS.PERSONS.VIEW,
+        auth.user.permissions,
+      )),
+  );
+  let initialState:
+    | {
+        data: Awaited<ReturnType<typeof listPartners>>;
+        filters: PartnersListFilters;
+      }
+    | undefined;
+
+  if (canViewPartners && parsed.success) {
+    try {
+      const [ready, data] = await Promise.all([
+        isPartnerSchemaReady(),
+        listPartners(parsed.data, canViewPersons),
+      ]);
+      if (ready) {
+        initialState = {
+          data,
+          filters: {
+            category: parsed.data.category,
+            q: parsed.data.q,
+            sort: parsed.data.sort,
+            status: parsed.data.status,
+          },
+        };
+      }
+    } catch {
+      // The client keeps the established unavailable/error states when the
+      // database cannot provide a safe initial snapshot.
+    }
+  }
+
+  return <PartnersPageClient initialState={initialState} />;
 }

@@ -251,14 +251,22 @@ const NotificationRow: FC<NotificationRowProps> = ({
   );
 };
 
-export const NotificationInboxPage: FC = () => {
+type NotificationInboxPageProps = {
+  initialData?: NotificationListData;
+};
+
+export const NotificationInboxPage: FC<NotificationInboxPageProps> = ({
+  initialData,
+}) => {
   const { userData } = useUser();
   const [filter, setFilter] = useState<InboxFilter>('all');
-  const [items, setItems] = useState<NotificationItem[]>([]);
+  const [items, setItems] = useState<NotificationItem[]>(
+    initialData?.items ?? [],
+  );
   const [pagination, setPagination] = useState<
     NotificationListData['pagination'] | null
-  >(null);
-  const [unreadCount, setUnreadCount] = useState(0);
+  >(initialData?.pagination ?? null);
+  const [unreadCount, setUnreadCount] = useState(initialData?.unreadCount ?? 0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const canViewNotifications =
@@ -279,7 +287,9 @@ export const NotificationInboxPage: FC = () => {
   );
   const resource = useAsyncResource(loadFirstPage, {
     enabled: canViewNotifications,
+    initialData: initialData ?? null,
     keepPreviousData: false,
+    skipInitialRefresh: Boolean(initialData),
   });
 
   useEffect(() => {

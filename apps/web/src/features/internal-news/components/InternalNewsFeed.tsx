@@ -31,6 +31,7 @@ import {
 import type {
   InternalNewsFilter,
   InternalNewsItem,
+  InternalNewsResponse,
 } from '../internal-news.types';
 import { InternalNewsCard } from './InternalNewsCard';
 
@@ -86,6 +87,10 @@ type InternalNewsFeedProps = {
   canManage: boolean;
   canViewPartners: boolean;
   filter: InternalNewsFilter;
+  initialState?: {
+    data: InternalNewsResponse;
+    filter: InternalNewsFilter;
+  };
   onContentChanged: () => void;
   onFilterChange: (filter: InternalNewsFilter) => void;
   refreshVersion: number;
@@ -95,17 +100,24 @@ export const InternalNewsFeed: FC<InternalNewsFeedProps> = ({
   canManage,
   canViewPartners,
   filter,
+  initialState,
   onContentChanged,
   onFilterChange,
   refreshVersion,
 }) => {
   const [error, setError] = useState<Error | null>(null);
-  const [items, setItems] = useState<InternalNewsItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<InternalNewsItem[]>(
+    initialState?.data.items ?? [],
+  );
+  const [loading, setLoading] = useState(!initialState);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(
+    initialState?.data.pagination.nextCursor ?? null,
+  );
   const [pinPendingId, setPinPendingId] = useState<string | null>(null);
-  const [pinned, setPinned] = useState<InternalNewsItem[]>([]);
+  const [pinned, setPinned] = useState<InternalNewsItem[]>(
+    initialState?.data.pinned ?? [],
+  );
 
   const loadFirstPage = useCallback(
     async (signal?: AbortSignal): Promise<void> => {
@@ -135,11 +147,25 @@ export const InternalNewsFeed: FC<InternalNewsFeedProps> = ({
   );
 
   useEffect(() => {
+    if (
+      refreshVersion === 0 &&
+      initialState &&
+      initialState.filter === filter
+    ) {
+      setItems(initialState.data.items);
+      setPinned(initialState.data.pinned);
+      setNextCursor(initialState.data.pagination.nextCursor);
+      setError(null);
+      setLoading(false);
+
+      return;
+    }
+
     const controller = new AbortController();
     void loadFirstPage(controller.signal);
 
     return (): void => controller.abort();
-  }, [loadFirstPage, refreshVersion]);
+  }, [filter, initialState, loadFirstPage, refreshVersion]);
 
   const loadMore = async (): Promise<void> => {
     if (!nextCursor || loadingMore) return;
