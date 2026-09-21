@@ -683,7 +683,6 @@ const NewUserPage: FC = () => (
   <AuthenticatedLayout
     breadcrumbs={[
       {
-        href: FEATURES.systemHome.href,
         label: FEATURES.users.audit.poleLabel,
       },
       { href: FEATURES.users.href, label: FEATURES.users.label },

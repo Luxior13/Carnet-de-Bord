@@ -153,7 +153,7 @@ const DetailSkeleton: FC = () => (
 export const UserDetailPageSkeleton: FC = () => (
   <AuthenticatedLayout
     breadcrumbs={[
-      { href: FEATURES.systemHome.href, label: FEATURES.users.audit.poleLabel },
+      { label: FEATURES.users.audit.poleLabel },
       { href: FEATURES.users.href, label: FEATURES.users.label },
     ]}
   >
@@ -2161,7 +2161,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       <AuthenticatedLayout
         breadcrumbs={[
           {
-            href: FEATURES.systemHome.href,
             label: FEATURES.users.audit.poleLabel,
           },
           { href: FEATURES.users.href, label: FEATURES.users.label },
@@ -2187,7 +2186,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       <AuthenticatedLayout
         breadcrumbs={[
           {
-            href: FEATURES.systemHome.href,
             label: FEATURES.users.audit.poleLabel,
           },
           { href: FEATURES.users.href, label: FEATURES.users.label },
@@ -2237,7 +2235,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     <AuthenticatedLayout
       breadcrumbs={[
         {
-          href: FEATURES.systemHome.href,
           label: FEATURES.users.audit.poleLabel,
         },
         { href: FEATURES.users.href, label: FEATURES.users.label },

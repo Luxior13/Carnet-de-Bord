@@ -5,16 +5,11 @@ const mocks = vi.hoisted(() => ({
     throw new Error('NOT_FOUND');
   }),
   SystemActivityJournalPage: vi.fn(() => null),
-  SystemHomePage: vi.fn(() => null),
   SystemSettingsPage: vi.fn(() => null),
 }));
 
 vi.mock('next/navigation', () => ({
   notFound: mocks.notFound,
-}));
-
-vi.mock('$components/private-navigation/SystemHomePage', () => ({
-  SystemHomePage: mocks.SystemHomePage,
 }));
 
 vi.mock('$features/audit/SystemActivityJournalPage', () => ({
@@ -30,14 +25,14 @@ describe('/systeme route availability', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the system hub at the space root', async () => {
+  it('rejects the removed system space root', async () => {
     const { default: SystemePage } =
       await import('$app/systeme/[[...slug]]/page');
 
-    const result = await SystemePage({ params: Promise.resolve({ slug: [] }) });
-
-    expect(result).toMatchObject({ type: mocks.SystemHomePage });
-    expect(mocks.notFound).not.toHaveBeenCalled();
+    await expect(
+      SystemePage({ params: Promise.resolve({ slug: [] }) }),
+    ).rejects.toThrow('NOT_FOUND');
+    expect(mocks.notFound).toHaveBeenCalledTimes(1);
   });
 
   it('renders the operational activity journal', async () => {

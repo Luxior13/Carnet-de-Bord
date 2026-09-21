@@ -137,26 +137,6 @@ export const FEATURES = {
     permissionMode: 'all',
     requiredPermissions: [PERMISSIONS.AUDIT.VIEW],
   }),
-  systemHome: defineFeature({
-    audit: {
-      pageKey: 'system',
-      pageLabel: "Vue d'ensemble",
-      poleKey: 'system',
-      poleLabel: 'Système',
-    },
-    availability: 'live',
-    description: 'Accueil du pôle système.',
-    href: '/systeme',
-    icon: 'Settings',
-    id: 'system-home',
-    label: "Vue d'ensemble",
-    permissionMode: 'any',
-    requiredPermissions: [
-      PERMISSIONS.USERS.VIEW,
-      PERMISSIONS.AUDIT.VIEW,
-      PERMISSIONS.SETTINGS.VIEW,
-    ],
-  }),
   systemSettings: defineFeature({
     audit: {
       pageKey: 'system-settings',

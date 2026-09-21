@@ -5,7 +5,6 @@ import {
   canOpenNavigationHref,
   getActiveNavigationSpace,
   getDesktopSidebarSections,
-  getLiveNavigationSpaceTools,
   getNavigationAvailability,
   getNavigationItemByHref,
   getNavigationPageBySlug,
@@ -172,8 +171,8 @@ describe('navigation availability', () => {
   it('groups live user administration under the system space', () => {
     const hrefs = getVisibleHrefs({ [PERMISSIONS.USERS.VIEW]: true });
 
-    expect(hrefs).toContain('/systeme');
     expect(hrefs).toContain('/administration/utilisateurs');
+    expect(hrefs).not.toContain('/systeme');
     expect(hrefs).not.toContain('/systeme/parametres');
     expect(hrefs).not.toContain('/systeme/journal-activite');
   });
@@ -192,28 +191,6 @@ describe('navigation availability', () => {
     ).toBe('internal');
   });
 
-  it('opens the system hub for every live administrative family', () => {
-    const systemHub = getNavigationItemByHref('/systeme');
-
-    expect(systemHub).not.toBeNull();
-    if (!systemHub) return;
-
-    expect(
-      canAccessNavigationItem(
-        buildUser({ [PERMISSIONS.USERS.VIEW]: true }),
-        systemHub,
-      ),
-    ).toBe(true);
-    expect(
-      canAccessNavigationItem(
-        buildUser({ [PERMISSIONS.AUDIT.VIEW]: true }),
-        systemHub,
-      ),
-    ).toBe(true);
-    expect(canAccessNavigationItem(buildAdmin(), systemHub)).toBe(true);
-    expect(canAccessNavigationItem(buildUser(), systemHub)).toBe(false);
-  });
-
   it('shows system settings live for administrators and removes them from the roadmap', () => {
     const liveHrefs = getVisibleHrefs({ [PERMISSIONS.AUDIT.VIEW]: true });
     const adminHrefs = getVisibleNavigationSpaces(buildAdmin()).flatMap(
@@ -222,58 +199,13 @@ describe('navigation availability', () => {
     );
     const roadmapHrefs = getRoadmapHrefs();
 
-    expect(liveHrefs).toContain('/systeme');
     expect(liveHrefs).toContain('/systeme/journal-activite');
+    expect(liveHrefs).not.toContain('/systeme');
     expect(liveHrefs).not.toContain('/administration/utilisateurs');
     expect(liveHrefs).not.toContain('/systeme/parametres');
     expect(adminHrefs).toContain('/systeme/parametres');
     expect(roadmapHrefs).not.toContain('/systeme/parametres');
     expect(roadmapHrefs).not.toContain('/systeme/journal-activite');
-  });
-
-  it('derives system hub tools from authorized live entries', () => {
-    const userTools = getLiveNavigationSpaceTools(
-      'system',
-      buildUser({ [PERMISSIONS.USERS.VIEW]: true }),
-    );
-    const auditTools = getLiveNavigationSpaceTools(
-      'system',
-      buildUser({ [PERMISSIONS.AUDIT.VIEW]: true }),
-    );
-    const allTools = getLiveNavigationSpaceTools(
-      'system',
-      buildUser({
-        [PERMISSIONS.AUDIT.VIEW]: true,
-        [PERMISSIONS.USERS.VIEW]: true,
-      }),
-    );
-    const adminTools = getLiveNavigationSpaceTools('system', buildAdmin());
-
-    expect(userTools.map((item) => item.href)).toEqual([
-      '/administration/utilisateurs',
-    ]);
-    expect(auditTools.map((item) => item.href)).toEqual([
-      '/systeme/journal-activite',
-    ]);
-    expect(allTools.map((item) => item.href)).toEqual([
-      '/administration/utilisateurs',
-      '/systeme/journal-activite',
-    ]);
-    expect(adminTools.map((item) => item.href)).toEqual([
-      '/administration/utilisateurs',
-      '/systeme/parametres',
-      '/systeme/journal-activite',
-    ]);
-    expect(getLiveNavigationSpaceTools('system', buildUser())).toEqual([]);
-    expect(
-      getLiveNavigationSpaceTools('system', buildUser({}, true)).map(
-        (item) => item.href,
-      ),
-    ).toEqual([
-      '/administration/utilisateurs',
-      '/systeme/parametres',
-      '/systeme/journal-activite',
-    ]);
   });
 
   it('keeps the desktop sidebar live on a direct planned route', () => {
@@ -305,6 +237,14 @@ describe('navigation availability', () => {
     expect(
       getActiveNavigationSpace('/vie-interne/repertoire', personSpaces).id,
     ).toBe('internal');
+    // The system pole has no hub page anymore: its remaining destinations must
+    // still resolve to the system space for the sidebar highlight.
+    expect(
+      getActiveNavigationSpace(
+        '/systeme/parametres',
+        getVisibleNavigationSpaces(buildAdmin()),
+      ).id,
+    ).toBe('system');
   });
 
   it('hides a live feature whose operational readiness is unavailable', () => {
@@ -357,7 +297,6 @@ describe('navigation availability', () => {
       '/recherche',
       '/vie-interne/actualite-interne',
       '/vie-interne/repertoire',
-      '/systeme',
       '/administration/utilisateurs',
       '/systeme/parametres',
       '/systeme/journal-activite',

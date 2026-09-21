@@ -171,7 +171,7 @@ sont documentes dans `docs/PERMISSIONS.md`.
 
 | Route                            | Statut       | Modele cible         | Donnees principales  | Permissions                                                                     | Liens a prevoir          |
 | -------------------------------- | ------------ | -------------------- | -------------------- | ------------------------------------------------------------------------------- | ------------------------ |
-| `/systeme`                       | Live partiel | SettingsHub          | resume systeme       | au moins `users:view` ou `audit:view`                                           | utilisateurs, journal    |
+| `/systeme`                       | Retire       | —                    | aucune               | —                                                                               | —                        |
 | `/systeme/parametres`            | A connecter  | SettingsHub          | reglages globaux     | API active non attribuable : `settings:view`, `settings:update`; ecran planifie | audit                    |
 | `/systeme/validations`           | A connecter  | ApprovalQueue        | validations globales | `system:validate`                                                               | finance, documents       |
 | `/systeme/exports-sauvegardes`   | A connecter  | SettingsHub / Export | exports, backups     | `backups:view`                                                                  | archives                 |

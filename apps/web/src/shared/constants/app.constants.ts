@@ -71,11 +71,6 @@ const systemExportAccess = [ROADMAP_PERMISSIONS.BACKUPS.VIEW] as const;
 const systemSettingsAccess = [PERMISSIONS.SETTINGS.VIEW] as const;
 const systemValidationAccess = [ROADMAP_PERMISSIONS.SYSTEM.VALIDATE] as const;
 const usersAccess = [PERMISSIONS.USERS.VIEW] as const;
-const systemHubAccess = [
-  PERMISSIONS.USERS.VIEW,
-  PERMISSIONS.AUDIT.VIEW,
-  PERMISSIONS.SETTINGS.VIEW,
-] as const;
 type NavigationUser = Pick<
   UserType,
   'isProtected' | 'permissions' | 'role'
@@ -198,7 +193,6 @@ export const NAV_SPACES: NavigationSpace[] = [
             description: FEATURES.persons.description,
             featureId: FEATURES.persons.id,
             href: FEATURES.persons.href,
-            hubActionLabel: 'Consulter le répertoire',
             icon: FEATURES.persons.icon,
             label: FEATURES.persons.label,
             requiredPermissions: personsAccess,
@@ -480,31 +474,21 @@ export const NAV_SPACES: NavigationSpace[] = [
   },
   {
     description: 'Administration, sécurité et configuration globale.',
-    href: FEATURES.systemHome.href,
-    icon: FEATURES.systemHome.icon,
+    href: '/systeme',
+    icon: 'Settings',
     id: 'system',
-    label: FEATURES.systemHome.audit.poleLabel,
-    matchHrefs: ['/administration'],
+    label: 'Système',
+    matchHrefs: ['/administration', '/systeme'],
+    routeBaseHref: '/systeme',
     sections: [
       {
         id: 'system-admin',
         items: [
           {
             availability: 'live',
-            description: FEATURES.systemHome.description,
-            featureId: FEATURES.systemHome.id,
-            href: FEATURES.systemHome.href,
-            icon: FEATURES.systemHome.icon,
-            label: FEATURES.systemHome.label,
-            permissionMode: FEATURES.systemHome.permissionMode,
-            requiredPermissions: systemHubAccess,
-          },
-          {
-            availability: 'live',
             description: FEATURES.users.description,
             featureId: FEATURES.users.id,
             href: FEATURES.users.href,
-            hubActionLabel: 'Accéder aux utilisateurs',
             icon: FEATURES.users.icon,
             label: FEATURES.users.label,
             requiredPermissions: usersAccess,
@@ -514,7 +498,6 @@ export const NAV_SPACES: NavigationSpace[] = [
             description: FEATURES.systemSettings.description,
             featureId: FEATURES.systemSettings.id,
             href: FEATURES.systemSettings.href,
-            hubActionLabel: 'Configurer le système',
             icon: FEATURES.systemSettings.icon,
             label: FEATURES.systemSettings.label,
             requiredPermissions: systemSettingsAccess,
@@ -545,7 +528,6 @@ export const NAV_SPACES: NavigationSpace[] = [
             description: FEATURES.systemActivity.description,
             featureId: FEATURES.systemActivity.id,
             href: FEATURES.systemActivity.href,
-            hubActionLabel: 'Consulter le journal',
             icon: FEATURES.systemActivity.icon,
             label: FEATURES.systemActivity.label,
             requiredPermissions: systemAuditAccess,
@@ -848,24 +830,6 @@ export function flattenNavItems(items: readonly NavItem[]): NavItem[] {
 
 export function getNavigationSpaceItems(space: NavigationSpace): NavItem[] {
   return flattenNavItems(space.sections.flatMap((section) => section.items));
-}
-
-export function getLiveNavigationSpaceTools(
-  spaceId: string,
-  user: NavigationUser,
-): NavItem[] {
-  const space = NAV_SPACES.find((item) => item.id === spaceId);
-
-  if (!space) return [];
-
-  return getNavigationSpaceItems(
-    filterNavigationSpace(space, user, 'live'),
-  ).filter(
-    (item) =>
-      item.href !== space.href &&
-      getNavigationAvailability(item) === 'live' &&
-      canAccessNavigationItem(user, item),
-  );
 }
 
 export function getNavigationItemByHref(href: string): NavItem | null {

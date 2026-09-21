@@ -15,7 +15,6 @@ export type NavItem = {
   description?: string;
   featureId?: FeatureId;
   href: string;
-  hubActionLabel?: string;
   icon: NavigationIconName;
   label: string;
   permissionMode?: 'all' | 'any';

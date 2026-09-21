@@ -241,7 +241,6 @@ droits individuels.
 | `/vie-interne/repertoire/[id]`                       | `persons:view` pour la fiche ; les mutations exigent `persons:update` ou `persons:delete`                                                                  |
 | `/tableau-de-bord`                                   | alias de support redirigeant vers `/` ; aucune permission supplémentaire                                                                                   |
 | `/tableau-de-bord/mes-notifications`                 | ancien alias redirigeant vers `/mes-notifications`                                                                                                         |
-| `/systeme`                                           | au moins `users:view`, `settings:view` ou `audit:view` pour un compte non protégé                                                                          |
 | `/administration`                                    | route de support redirigeant vers les utilisateurs                                                                                                         |
 | `/administration/utilisateurs`                       | `users:view`                                                                                                                                               |
 | `/administration/utilisateurs/nouveau`               | `users:create`, donc aussi `users:view`                                                                                                                    |

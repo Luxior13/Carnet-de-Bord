@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import React from 'react';
 
-import { SystemHomePage } from '$components/private-navigation/SystemHomePage';
 import {
   getNavigationAvailability,
   getNavigationPageBySlug,
@@ -17,10 +16,6 @@ export default async function SystemePage({
   params,
 }: SystemePageProps): Promise<React.ReactNode> {
   const { slug = [] } = await params;
-
-  if (slug.length === 0) {
-    return <SystemHomePage />;
-  }
 
   const match = getNavigationPageBySlug('system', slug);
 
