@@ -7,7 +7,6 @@ import {
 } from '$constants/internal-news-permission-category.constants';
 import type { NavigationIconName } from '$constants/navigation-icon.constants';
 import type { NavigationSpaceTone } from '$constants/navigation-theme.constants';
-import { createPartnersPermissionCategory } from '$constants/partners-permission-category.constants';
 import { createPersonsPermissionCategory } from '$constants/persons-permission-category.constants';
 
 /**
@@ -40,11 +39,6 @@ export const PERMISSIONS = {
   NOTIFICATIONS: {
     SEND: 'notifications:send',
     VIEW: 'notifications:view',
-  },
-  PARTNERS: {
-    DELETE: 'partners:delete',
-    MANAGE: 'partners:manage',
-    VIEW: 'partners:view',
   },
   PERSONS: {
     CREATE: 'persons:create',
@@ -118,6 +112,11 @@ export const ROADMAP_PERMISSIONS = {
   },
   NOTIFICATIONS: {
     MANAGE: 'notifications:manage',
+  },
+  PARTNERS: {
+    DELETE: 'partners:delete',
+    MANAGE: 'partners:manage',
+    VIEW: 'partners:view',
   },
   SPORT: {
     PUBLIC_SYNC: 'sport:public_sync',
@@ -468,7 +467,6 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   INTERNAL_NEWS_PERMISSION_CATEGORY,
   createPersonsPermissionCategory(PERMISSIONS.PERSONS),
-  createPartnersPermissionCategory(PERMISSIONS.PARTNERS),
   {
     accessPermissionKey: PERMISSIONS.USERS.VIEW,
     assignment: 'delegable',

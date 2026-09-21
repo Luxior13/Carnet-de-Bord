@@ -1,14 +1,6 @@
 'use client';
 
-import {
-  Handshake,
-  ListFilter,
-  LoaderCircle,
-  Megaphone,
-  Newspaper,
-  Pin,
-  RefreshCw,
-} from 'lucide-react';
+import { LoaderCircle, Pin, RefreshCw } from 'lucide-react';
 import React, {
   type FC,
   useCallback,
@@ -22,14 +14,12 @@ import { ContentState } from '$components/layout/ContentState';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Skeleton } from '$ui/skeleton';
-import { ScrollableTabsList, Tabs, TabsTrigger } from '$ui/tabs';
 
 import {
   fetchInternalNews,
   updateInternalAnnouncementPin,
 } from '../internal-news.api';
 import type {
-  InternalNewsFilter,
   InternalNewsItem,
   InternalNewsResponse,
 } from '../internal-news.types';
@@ -85,24 +75,15 @@ const FeedSkeleton: FC = () => (
 
 type InternalNewsFeedProps = {
   canManage: boolean;
-  canViewPartners: boolean;
-  filter: InternalNewsFilter;
-  initialState?: {
-    data: InternalNewsResponse;
-    filter: InternalNewsFilter;
-  };
+  initialState?: { data: InternalNewsResponse };
   onContentChanged: () => void;
-  onFilterChange: (filter: InternalNewsFilter) => void;
   refreshVersion: number;
 };
 
 export const InternalNewsFeed: FC<InternalNewsFeedProps> = ({
   canManage,
-  canViewPartners,
-  filter,
   initialState,
   onContentChanged,
-  onFilterChange,
   refreshVersion,
 }) => {
   const [error, setError] = useState<Error | null>(null);
@@ -124,7 +105,7 @@ export const InternalNewsFeed: FC<InternalNewsFeedProps> = ({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetchInternalNews({ filter, signal });
+        const response = await fetchInternalNews({ signal });
         setItems(response.items);
         setPinned(response.pinned);
         setNextCursor(response.pagination.nextCursor);
@@ -143,15 +124,11 @@ export const InternalNewsFeed: FC<InternalNewsFeedProps> = ({
         if (!signal?.aborted) setLoading(false);
       }
     },
-    [filter],
+    [],
   );
 
   useEffect(() => {
-    if (
-      refreshVersion === 0 &&
-      initialState &&
-      initialState.filter === filter
-    ) {
+    if (refreshVersion === 0 && initialState) {
       setItems(initialState.data.items);
       setPinned(initialState.data.pinned);
       setNextCursor(initialState.data.pagination.nextCursor);
@@ -165,16 +142,13 @@ export const InternalNewsFeed: FC<InternalNewsFeedProps> = ({
     void loadFirstPage(controller.signal);
 
     return (): void => controller.abort();
-  }, [filter, initialState, loadFirstPage, refreshVersion]);
+  }, [initialState, loadFirstPage, refreshVersion]);
 
   const loadMore = async (): Promise<void> => {
     if (!nextCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const response = await fetchInternalNews({
-        cursor: nextCursor,
-        filter,
-      });
+      const response = await fetchInternalNews({ cursor: nextCursor });
       setItems((currentItems) => {
         const existingIds = new Set(currentItems.map((item) => item.id));
 
@@ -192,7 +166,7 @@ export const InternalNewsFeed: FC<InternalNewsFeedProps> = ({
   };
 
   const togglePin = async (item: InternalNewsItem): Promise<void> => {
-    if (item.kind !== 'ANNOUNCEMENT' || pinPendingId) return;
+    if (pinPendingId) return;
     const announcementId = item.id.slice('announcement:'.length);
     setPinPendingId(item.id);
     try {
@@ -220,157 +194,108 @@ export const InternalNewsFeed: FC<InternalNewsFeedProps> = ({
     return [...groups.entries()];
   }, [items]);
 
+  if (loading) return <FeedSkeleton />;
+
+  if (error) {
+    return (
+      <ContentState
+        action={
+          <Button onClick={() => void loadFirstPage()} size="sm">
+            <RefreshCw className="size-4" />
+            Réessayer
+          </Button>
+        }
+        description="Le fil n’a pas pu être récupéré pour le moment."
+        kind="error"
+        layout="panel"
+        title="Actualité indisponible"
+      />
+    );
+  }
+
   return (
     <div className="space-y-5">
-      <section
-        aria-label="Filtres des actualités"
-        className="border-border-default bg-surface-panel flex flex-col gap-3 rounded-xl border p-3 shadow-[var(--shadow-panel)] sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div className="flex items-center gap-3 px-1">
-          <span className="border-border-default bg-surface-inset text-muted-foreground flex size-9 items-center justify-center rounded-lg border">
-            <ListFilter className="size-4" />
-          </span>
-          <div>
-            <p className="text-sm font-semibold">Filtrer le fil</p>
-            <p className="text-muted-foreground text-xs">
-              Affichez uniquement les informations qui vous intéressent.
-            </p>
+      {pinned.length > 0 && (
+        <section aria-labelledby="pinned-news-heading" className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <Pin className="text-primary-emphasis size-4" />
+            <h2 className="text-sm font-semibold" id="pinned-news-heading">
+              À la une
+            </h2>
+            <Badge variant="secondary">{pinned.length}</Badge>
           </div>
-        </div>
-        <Tabs
-          onValueChange={(value) => onFilterChange(value as InternalNewsFilter)}
-          value={filter}
-        >
-          <ScrollableTabsList>
-            <TabsTrigger value="all">
-              <Newspaper className="size-4" />
-              Tout
-            </TabsTrigger>
-            <TabsTrigger value="announcements">
-              <Megaphone className="size-4" />
-              Annonces
-            </TabsTrigger>
-            {canViewPartners && (
-              <TabsTrigger value="partners">
-                <Handshake className="size-4" />
-                Partenaires
-              </TabsTrigger>
-            )}
-          </ScrollableTabsList>
-        </Tabs>
-      </section>
+          <div className="grid gap-3 xl:grid-cols-2">
+            {pinned.map((item) => (
+              <InternalNewsCard
+                canManage={canManage}
+                item={item}
+                key={item.id}
+                onTogglePin={(selectedItem) => void togglePin(selectedItem)}
+                pinPending={pinPendingId === item.id}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
-      {loading ? (
-        <FeedSkeleton />
-      ) : error ? (
+      {groupedItems.length === 0 ? (
         <ContentState
-          action={
-            <Button onClick={() => void loadFirstPage()} size="sm">
-              <RefreshCw className="size-4" />
-              Réessayer
-            </Button>
-          }
-          description="Le fil n’a pas pu être récupéré pour le moment."
-          kind="error"
+          description="Les annonces publiées pour la structure apparaîtront ici."
           layout="panel"
-          title="Actualité indisponible"
+          title="Aucune actualité pour le moment"
         />
       ) : (
-        <>
-          {pinned.length > 0 && (
-            <section
-              aria-labelledby="pinned-news-heading"
-              className="space-y-3"
-            >
-              <div className="flex items-center gap-2 px-1">
-                <Pin className="text-primary-emphasis size-4" />
-                <h2 className="text-sm font-semibold" id="pinned-news-heading">
-                  À la une
-                </h2>
-                <Badge variant="secondary">{pinned.length}</Badge>
-              </div>
-              <div className="grid gap-3 xl:grid-cols-2">
-                {pinned.map((item) => (
-                  <InternalNewsCard
-                    canManage={canManage}
-                    item={item}
-                    key={item.id}
-                    onTogglePin={(selectedItem) => void togglePin(selectedItem)}
-                    pinPending={pinPendingId === item.id}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+        <div className="space-y-6">
+          {groupedItems.map(([label, groupItems]) => {
+            const headingId = `news-group-${getDateKey(
+              new Date(groupItems[0]?.occurredAt ?? Date.now()),
+            )}`;
 
-          {groupedItems.length === 0 ? (
-            <ContentState
-              description={
-                filter === 'partners'
-                  ? 'Les prochains changements importants de relation apparaîtront ici.'
-                  : filter === 'announcements'
-                    ? 'Aucune annonce non épinglée ne correspond à ce filtre.'
-                    : 'Les annonces et événements importants apparaîtront ici.'
-              }
-              layout="panel"
-              title="Aucune actualité pour le moment"
-            />
-          ) : (
-            <div className="space-y-6">
-              {groupedItems.map(([label, groupItems]) => {
-                const headingId = `news-group-${getDateKey(
-                  new Date(groupItems[0]?.occurredAt ?? Date.now()),
-                )}`;
-
-                return (
-                  <section
-                    aria-labelledby={headingId}
-                    className="space-y-3"
-                    key={label}
-                  >
-                    <div className="flex items-center gap-3 px-1">
-                      <h2
-                        className="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
-                        id={headingId}
-                      >
-                        {label}
-                      </h2>
-                      <span className="bg-border-subtle h-px flex-1" />
-                    </div>
-                    <div className="space-y-3">
-                      {groupItems.map((item) => (
-                        <InternalNewsCard
-                          canManage={canManage}
-                          item={item}
-                          key={item.id}
-                          onTogglePin={(selectedItem) =>
-                            void togglePin(selectedItem)
-                          }
-                          pinPending={pinPendingId === item.id}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                );
-              })}
-            </div>
-          )}
-
-          {nextCursor && (
-            <div className="flex justify-center pt-1">
-              <Button
-                disabled={loadingMore}
-                onClick={() => void loadMore()}
-                variant="outline"
+            return (
+              <section
+                aria-labelledby={headingId}
+                className="space-y-3"
+                key={label}
               >
-                {loadingMore && (
-                  <LoaderCircle className="size-4 animate-spin" />
-                )}
-                Charger la suite
-              </Button>
-            </div>
-          )}
-        </>
+                <div className="flex items-center gap-3 px-1">
+                  <h2
+                    className="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
+                    id={headingId}
+                  >
+                    {label}
+                  </h2>
+                  <span className="bg-border-subtle h-px flex-1" />
+                </div>
+                <div className="space-y-3">
+                  {groupItems.map((item) => (
+                    <InternalNewsCard
+                      canManage={canManage}
+                      item={item}
+                      key={item.id}
+                      onTogglePin={(selectedItem) =>
+                        void togglePin(selectedItem)
+                      }
+                      pinPending={pinPendingId === item.id}
+                    />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      )}
+
+      {nextCursor && (
+        <div className="flex justify-center pt-1">
+          <Button
+            disabled={loadingMore}
+            onClick={() => void loadMore()}
+            variant="outline"
+          >
+            {loadingMore && <LoaderCircle className="size-4 animate-spin" />}
+            Charger la suite
+          </Button>
+        </div>
       )}
     </div>
   );

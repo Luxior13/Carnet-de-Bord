@@ -13,7 +13,10 @@ Chaque ligne pourra ensuite avoir son propre fichier detaille.
 
 - Utilisateurs et permissions - Partie deja presente pour gerer les comptes, roles et acces au site.
 - [Répertoire](features/personnes-contacts.md) - Répertoire central des personnes internes ou externes avec identité, coordonnées et statut dans la structure.
-- [Sponsors & partenaires](features/sponsors.md) - Organisations, contacts, périodes de relation et suivi interne.
+
+## Retire volontairement
+
+- [Sponsors & partenaires](features/pages/bureau-juridique/sponsors-partenaires.md) - Module retire le 21 septembre 2026 avec ses donnees, pour reconstruire proprement la base du site. Il reste annonce sur `/feuille-de-route`. Le fichier detaille conserve le systeme de suivi, les contacts et les champs exacts a remettre plus tard.
 
 ## Fonctionnalites transversales
 
@@ -71,3 +74,4 @@ Chaque ligne pourra ensuite avoir son propre fichier detaille.
 - Import/export site public - A ajouter plus tard pour importer en prive les donnees publiques utiles sans les recopier a la main.
 - Messagerie interne - Envoyer des messages importants aux joueurs, staffs ou equipes.
 - API privee - Prevoir des integrations securisees avec le site public et les outils externes.
+- Sponsors & partenaires - A reconstruire plus tard ; voir `features/pages/bureau-juridique/sponsors-partenaires.md`.

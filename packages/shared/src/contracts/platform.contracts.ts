@@ -18,6 +18,8 @@ export const AuditAction = {
   MFA_RECOVERY_CODES_REGENERATED: 'MFA_RECOVERY_CODES_REGENERATED',
   MFA_RESET: 'MFA_RESET',
   NOTIFICATION_SEND: 'NOTIFICATION_SEND',
+  // Historical only: the partner module was removed on 2026-09-21. These
+  // values stay mirrored so older journal entries keep rendering.
   PARTNER_CONTACTS_UPDATE: 'PARTNER_CONTACTS_UPDATE',
   PARTNER_CREATE: 'PARTNER_CREATE',
   PARTNER_DELETE: 'PARTNER_DELETE',
@@ -110,22 +112,3 @@ export const UserRole = {
 } as const;
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
-
-export const PartnerOrganizationCategoryType = {
-  PARTNER: 'PARTNER',
-  SPONSOR: 'SPONSOR',
-} as const;
-
-export type PartnerOrganizationCategoryType =
-  (typeof PartnerOrganizationCategoryType)[keyof typeof PartnerOrganizationCategoryType];
-
-export const PartnerOrganizationStatus = {
-  ACTIVE: 'ACTIVE',
-  CLOSED: 'CLOSED',
-  DISCUSSION: 'DISCUSSION',
-  ENDED: 'ENDED',
-  PROSPECT: 'PROSPECT',
-} as const;
-
-export type PartnerOrganizationStatus =
-  (typeof PartnerOrganizationStatus)[keyof typeof PartnerOrganizationStatus];

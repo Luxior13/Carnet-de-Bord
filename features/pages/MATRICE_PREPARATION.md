@@ -138,7 +138,7 @@ sont documentes dans `docs/PERMISSIONS.md`.
 | Route                                   | Statut      | Modele cible                 | Donnees principales      | Permissions         | Liens a prevoir                 |
 | --------------------------------------- | ----------- | ---------------------------- | ------------------------ | ------------------- | ------------------------------- |
 | `/bureau-juridique`                     | Squelette   | ActionHub                    | resume juridique         | `legal:view`        | documents, incidents, decisions |
-| `/bureau-juridique/sponsors`            | A connecter | DataList                     | sponsors, partenaires    | `legal:view`        | contrats, recettes              |
+| `/bureau-juridique/partenaires`         | Plus tard   | DataList / EntityDetail      | organisations, contacts, suivi | `partners:view`     | contrats, recettes              |
 | `/bureau-juridique/documents`           | A connecter | DocumentVault                | documents et chartes     | `documents:view`    | acceptations, modeles           |
 | `/bureau-juridique/documents-officiels` | A connecter | DocumentVault                | documents officiels      | `documents:view`    | exports, archives               |
 | `/bureau-juridique/contrats`            | A connecter | DocumentVault / EntityDetail | contrats                 | `contracts:view`    | sponsors, finance               |

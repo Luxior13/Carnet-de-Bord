@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 import { getNavigationItemByHref } from '$constants/app.constants';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
-import { getPartnerNewsCopy } from '$features/internal-news/internal-news.mapper';
 import { getInternalNewsCapabilities } from '$features/internal-news/internal-news.permissions';
 import {
   internalNewsListQuerySchema,
@@ -57,29 +56,26 @@ describe('internal news foundation', () => {
     expect(hasPermission('ADMIN', PERMISSIONS.INTERNAL_NEWS.MANAGE)).toBe(true);
   });
 
-  it('keeps partner visibility independent from internal-news access', () => {
+  it('keeps the feed limited to its own announcements', () => {
     expect(
       getInternalNewsCapabilities({
         isProtected: false,
         permissions: null,
         role: 'USER',
       }),
-    ).toEqual({
-      canManage: false,
-      canView: true,
-      canViewPartners: false,
-    });
+    ).toEqual({ canManage: false, canView: true });
     expect(
       getInternalNewsCapabilities({
         isProtected: true,
         permissions: null,
         role: 'ADMIN',
       }),
-    ).toEqual({
-      canManage: true,
-      canView: true,
-      canViewPartners: true,
-    });
+    ).toEqual({ canManage: true, canView: true });
+    expect(serviceSource).not.toContain('partner');
+    expect(serviceSource).not.toContain('PARTNER');
+    expect(feedSource).not.toContain('partner');
+    expect(feedSource).not.toContain('PARTNER');
+    expect(pageSource).not.toContain('canViewPartners');
   });
 
   it('bounds publication, pinning and pagination inputs', () => {
@@ -109,54 +105,18 @@ describe('internal news foundation', () => {
     expect(
       updateInternalAnnouncementPinSchema.parse({ isPinned: true }),
     ).toEqual({ isPinned: true });
+    expect(internalNewsListQuerySchema.parse({ limit: '50' })).toMatchObject({
+      limit: 50,
+    });
     expect(
-      internalNewsListQuerySchema.parse({ filter: 'partners', limit: '50' }),
-    ).toMatchObject({ filter: 'partners', limit: 50 });
-    expect(
-      internalNewsListQuerySchema.safeParse({ filter: 'audit' }).success,
+      internalNewsListQuerySchema.safeParse({ filter: 'partners' }).success,
     ).toBe(false);
-  });
-
-  it('turns relationship changes into concise business copy', () => {
-    expect(
-      getPartnerNewsCopy('Acme', 'RELATIONSHIP_CREATED', {
-        status: 'PROSPECT',
-      }),
-    ).toMatchObject({
-      statusTransition: { from: null, to: 'PROSPECT' },
-      title: 'Nouvelle relation suivie : Acme',
-    });
-    expect(
-      getPartnerNewsCopy('Acme', 'STATUS_CHANGED', {
-        fromStatus: 'DISCUSSION',
-        toStatus: 'ACTIVE',
-      }),
-    ).toEqual({
-      body: 'Statut passé de « En discussion » à « Actif ».',
-      statusTransition: { from: 'DISCUSSION', to: 'ACTIVE' },
-      title: 'Acme devient partenaire actif',
-    });
-    expect(
-      getPartnerNewsCopy('Acme', 'STATUS_CHANGED', {
-        fromStatus: 'ENDED',
-        toStatus: 'DISCUSSION',
-      }).title,
-    ).toBe('Les échanges reprennent avec Acme');
-  });
-
-  it('only promotes significant partner events into the shared feed', () => {
-    expect(serviceSource).toContain("'RELATIONSHIP_CREATED'");
-    expect(serviceSource).toContain("'STATUS_CHANGED'");
-    expect(serviceSource).not.toContain("'PERIOD_CORRECTED'");
-    expect(serviceSource).not.toContain("'ACTION_UPDATED'");
-    expect(serviceSource).toContain('canViewPartners');
-    expect(serviceSource).toContain('buildCursorPaginationMeta');
   });
 
   it('protects reads, publications and pin changes independently', () => {
     expect(collectionRouteSource).toContain('PERMISSIONS.INTERNAL_NEWS.VIEW');
     expect(collectionRouteSource).toContain('PERMISSIONS.INTERNAL_NEWS.MANAGE');
-    expect(collectionRouteSource).toContain('PERMISSIONS.PARTNERS.VIEW');
+    expect(collectionRouteSource).not.toContain('PERMISSIONS.PARTNERS');
     expect(itemRouteSource).toContain('PERMISSIONS.INTERNAL_NEWS.MANAGE');
     expect(collectionRouteSource).toContain('assertInternalNewsFeatureReady()');
     expect(itemRouteSource).toContain('assertInternalNewsFeatureReady()');
@@ -173,12 +133,10 @@ describe('internal news foundation', () => {
     );
   });
 
-  it('renders a permission-aware, filterable and pinnable feed', () => {
+  it('renders a permission-aware and pinnable feed', () => {
     expect(pageSource).toContain('Publier une actualité');
     expect(pageSource).toContain('FEATURES.internalNews.id');
     expect(feedSource).toContain('À la une');
-    expect(feedSource).toContain('value="announcements"');
-    expect(feedSource).toContain('value="partners"');
     expect(feedSource).toContain('Charger la suite');
     expect(feedSource).toContain('updateInternalAnnouncementPin');
   });

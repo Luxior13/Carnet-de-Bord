@@ -1,3 +1,10 @@
+> **Module retire le 21 septembre 2026.** La page, ses routes API, ses
+> permissions actives et ses donnees ont ete supprimees pour reconstruire la
+> base du site. Le module reste annonce sur `/feuille-de-route` et sera
+> reconstruit plus tard. La specification complete a conserver est
+> `features/pages/bureau-juridique/sponsors-partenaires.md` ; ce document-ci
+> reste la description produit du module au moment de sa mise en ligne.
+
 # Sponsors & partenaires
 
 ## État

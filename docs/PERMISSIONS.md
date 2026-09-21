@@ -183,42 +183,13 @@ La suppression exige une confirmation explicite et une version courante ; elle
 ne demande pas de nouvelle preuve à l'usage. Comme toute permission critique,
 son attribution reste soumise aux protections générales du moteur.
 
-### Page Sponsors & partenaires
+### Page Sponsors & partenaires (planifiée)
 
-Les trois permissions acceptent une surcharge individuelle. Leur preset est
-`false` pour USER et `true` pour ADMIN. Le compte racine les possède
-implicitement.
-
-| Clé canonique     | Action couverte                                                        | Dépend de       | Risque   | Step-up à l'usage |
-| ----------------- | ---------------------------------------------------------------------- | --------------- | -------- | ----------------- |
-| `partners:view`   | consulter les organisations, coordonnées générales, périodes et suivis | —               | sensible | Non               |
-| `partners:manage` | créer et modifier organisations, coordonnées, interlocuteurs et suivis | `partners:view` | sensible | Non               |
-| `partners:delete` | supprimer uniquement une fiche vide créée par erreur                   | `partners:view` | critique | Non               |
-
-Les emails et téléphones généraux appartiennent à l'organisation : ils restent
-visibles avec `partners:view` et leurs mutations granulaires exigent
-`partners:manage`. Ils ne doivent contenir que des coordonnées réellement
-génériques, par exemple le standard, la facturation ou les partenariats.
-
-L'identité et les coordonnées personnelles d'un interlocuteur restent
-conditionnées par `persons:view`. Sans cette permission, la fiche partenaire
-ne révèle ni la personne, ni ses coordonnées sélectionnées, ni sa liaison.
-Associer un interlocuteur ou choisir, parmi sa fiche du Répertoire, l'email et
-le téléphone à utiliser exige simultanément `partners:manage` et
-`persons:view`. Ce choix ne modifie pas la fiche source : ajouter, corriger ou
-supprimer une de ses coordonnées continue d'exiger `persons:update`.
-
-Les références `selectedEmailId` et `selectedPhoneId` pointent vers les
-coordonnées du Répertoire sans en copier la valeur dans la liaison partenaire.
-Elles deviennent `null` si leur source disparaît. La suppression définitive de
-la fiche source clôt et anonymise ses liaisons, retire leur statut principal et
-ne conserve aucun nom ni aucune coordonnée personnelle. Les créations,
-modifications et suppressions de coordonnées générales utilisent des mutations
-dédiées, sans créer de permission supplémentaire.
-
-Une fiche possédant une période, un interlocuteur ou un suivi ne peut plus être
-supprimée ; elle doit être terminée ou, pour un doublon, fusionnée lorsque
-cette opération sera activée.
+Le module a été retiré le 21 septembre 2026 et sera reconstruit plus tard. Ses
+trois clés sont réservées dans `ROADMAP_PERMISSIONS` : elles ne sont connues ni
+de `hasPermission`, ni des presets, ni des surcharges acceptées, et la page
+correspondante n'existe plus. La spécification complète est conservée dans
+`features/pages/bureau-juridique/sponsors-partenaires.md`.
 
 ### Journal global et historique contextuel
 
@@ -268,9 +239,6 @@ droits individuels.
 | `/vie-interne/repertoire`                            | `persons:view` pour consulter et rechercher le répertoire                                                                                                  |
 | `/vie-interne/repertoire/nouveau`                    | `persons:create`, donc aussi `persons:view`                                                                                                                |
 | `/vie-interne/repertoire/[id]`                       | `persons:view` pour la fiche ; les mutations exigent `persons:update` ou `persons:delete`                                                                  |
-| `/bureau-juridique/partenaires`                      | `partners:view` pour la liste ; les coordonnées générales sont visibles, mais les interlocuteurs exigent aussi `persons:view`                              |
-| `/bureau-juridique/partenaires/nouveau`              | `partners:manage` ; un premier interlocuteur exige aussi `persons:view`                                                                                    |
-| `/bureau-juridique/partenaires/[id]`                 | `partners:view` pour la fiche ; `partners:manage` pour les mutations ; `persons:view` en plus pour les interlocuteurs et leurs coordonnées sélectionnées   |
 | `/tableau-de-bord`                                   | alias de support redirigeant vers `/` ; aucune permission supplémentaire                                                                                   |
 | `/tableau-de-bord/mes-notifications`                 | ancien alias redirigeant vers `/mes-notifications`                                                                                                         |
 | `/systeme`                                           | au moins `users:view`, `settings:view` ou `audit:view` pour un compte non protégé                                                                          |
@@ -370,6 +338,8 @@ pas des permissions effectives :
   `tasks:delete` ;
 - notifications : `notifications:manage` ;
 - vie interne : `internal:view`, `meetings:view`, `meetings:update` ;
+- sponsors et partenaires : `partners:view`, `partners:manage`,
+  `partners:delete` ;
 - documents et juridique : `documents:view`, `documents:create`,
   `documents:update`, `documents:approve`, `documents:archive`, `legal:view`,
   `contracts:view`, `contracts:update`, `incidents:view`, `incidents:update` ;

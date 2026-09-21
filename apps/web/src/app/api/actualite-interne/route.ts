@@ -1,6 +1,6 @@
 import type { NextRequest, NextResponse } from 'next/server';
 
-import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
+import { PERMISSIONS } from '$constants/permissions.constants';
 import {
   internalNewsListQuerySchema,
   publishInternalAnnouncementSchema,
@@ -18,17 +18,6 @@ import { assertInternalNewsFeatureReady } from '$features/internal-news/server/i
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors, apiSuccess, parseJsonBody } from '$server/api-response';
 
-const canViewPartners = (
-  user: Awaited<ReturnType<typeof requireAuth>>,
-): boolean =>
-  user.success &&
-  (user.user.isProtected ||
-    hasPermission(
-      user.user.role,
-      PERMISSIONS.PARTNERS.VIEW,
-      user.user.permissions,
-    ));
-
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const auth = await requireAuth();
   if (!auth.success) return auth.response;
@@ -41,7 +30,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const params = request.nextUrl.searchParams;
   const parsed = internalNewsListQuerySchema.safeParse({
     cursor: params.get('cursor') ?? undefined,
-    filter: params.get('filter') ?? undefined,
     limit: params.get('limit') ?? undefined,
   });
   if (!parsed.success) {
@@ -55,11 +43,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     await assertInternalNewsFeatureReady();
 
     return withInternalNewsNoStore(
-      apiSuccess(
-        await listInternalNews(parsed.data, {
-          canViewPartners: canViewPartners(auth),
-        }),
-      ),
+      apiSuccess(await listInternalNews(parsed.data)),
     );
   } catch (error) {
     return handleInternalNewsApiError('INTERNAL_NEWS_LIST', error, request);

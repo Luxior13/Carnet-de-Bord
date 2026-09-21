@@ -34,33 +34,6 @@ enum PersonStructureStatus {
   OUTSIDE_STRUCTURE
 }
 
-enum PartnerOrganizationCategoryType {
-  SPONSOR
-  PARTNER
-}
-
-enum PartnerOrganizationStatus {
-  PROSPECT
-  DISCUSSION
-  ACTIVE
-  ENDED
-  CLOSED
-}
-
-enum PartnerContactChannelType {
-  EMAIL
-  PHONE
-}
-
-enum PartnerTimelineEventType {
-  RELATIONSHIP_CREATED
-  STATUS_CHANGED
-  PERIOD_CORRECTED
-  ACTION_COMPLETED
-  ACTION_REOPENED
-  ACTION_UPDATED
-}
-
 enum AuditFieldChangeType {
   CREATE
   UPDATE
@@ -113,11 +86,6 @@ model User {
   notificationRecipients      NotificationRecipient[]
   internalAnnouncements       InternalAnnouncement[]  @relation("InternalAnnouncementAuthor")
   updatedSystemSettings       SystemSetting[]         @relation("SystemSettingUpdater")
-  createdPartnerOrganizations PartnerOrganization[]   @relation("PartnerOrganizationCreator")
-  updatedPartnerOrganizations PartnerOrganization[]   @relation("PartnerOrganizationUpdater")
-  createdPartnerFollowUps     PartnerFollowUpEntry[]  @relation("PartnerFollowUpAuthor")
-  completedPartnerActions     PartnerFollowUpAction[] @relation("PartnerFollowUpActionCompleter")
-  partnerTimelineEvents       PartnerTimelineEvent[]  @relation("PartnerTimelineEventActor")
 
   @@index([contactEmail])
   @@index([role])
@@ -278,6 +246,9 @@ enum AuditAction {
   PERSON_CREATE
   PERSON_UPDATE
   PERSON_DELETE
+  /// Historical only. The partner module was removed from the application on
+  /// 2026-09-21; these values stay declared so older journal entries remain
+  /// readable. No code produces them anymore.
   PARTNER_CREATE
   PARTNER_UPDATE
   PARTNER_STATUS_UPDATE
@@ -298,6 +269,7 @@ enum AuditCategory {
   PERMISSION
   SYSTEM
   PERSON
+  /// Historical only, kept for the same reason as `AuditAction.PARTNER_*`.
   PARTNER
 }
 
@@ -436,7 +408,6 @@ model Person {
   emails          PersonEmail[]
   phones          PersonPhone[]
   socialProfiles  PersonSocialProfile[]
-  partnerContacts PartnerContact[]
 
   @@index([createdAt, id])
   @@index([structureStatus, createdAt, id])
@@ -464,7 +435,6 @@ model PersonEmail {
   updatedAt       DateTime @updatedAt
 
   person                   Person           @relation(fields: [personId], references: [id], onDelete: Cascade)
-  partnerContactSelections PartnerContact[] @relation("PartnerContactSelectedEmail")
 
   @@unique([personId, normalizedEmail])
   @@index([normalizedEmail])
@@ -483,7 +453,6 @@ model PersonPhone {
   updatedAt       DateTime @updatedAt
 
   person                   Person           @relation(fields: [personId], references: [id], onDelete: Cascade)
-  partnerContactSelections PartnerContact[] @relation("PartnerContactSelectedPhone")
 
   @@unique([personId, normalizedPhone])
   @@index([normalizedPhone])
@@ -518,210 +487,6 @@ model PersonDeletionTombstone {
   personId            String   @id @db.VarChar(128)
   deletionOperationId String   @unique @db.VarChar(191)
   deletedAt           DateTime @default(now())
-}
-
-model PartnerOrganization {
-  id               String                    @id @default(cuid())
-  name             String                    @db.VarChar(200)
-  normalizedName   String                    @db.VarChar(400)
-  description      String?                   @db.VarChar(500)
-  status           PartnerOrganizationStatus @default(PROSPECT)
-  website          String?                   @db.VarChar(2048)
-  normalizedDomain String?                   @db.VarChar(253)
-  createdById      String?
-  updatedById      String?
-  version          Int                       @default(1)
-  createdAt        DateTime                  @default(now())
-  updatedAt        DateTime                  @updatedAt
-
-  createdBy      User?                               @relation("PartnerOrganizationCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  updatedBy      User?                               @relation("PartnerOrganizationUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
-  categories     PartnerOrganizationCategory[]
-  channels       PartnerOrganizationContactChannel[]
-  periods        PartnerRelationshipPeriod[]
-  contacts       PartnerContact[]
-  followUps      PartnerFollowUpEntry[]
-  timelineEvents PartnerTimelineEvent[]
-  mergeRedirects PartnerOrganizationMergeRedirect[]  @relation("PartnerOrganizationMergeTarget")
-
-  @@index([normalizedName, id])
-  @@index([status, normalizedName, id])
-  @@index([updatedAt, id])
-  @@index([status, updatedAt, id])
-  @@index([normalizedDomain])
-  @@index([normalizedName(ops: raw("gin_trgm_ops"))], type: Gin, map: "PartnerOrganization_normalizedName_trgm_idx")
-}
-
-model PartnerOrganizationCategory {
-  id             String                          @id @default(cuid())
-  organizationId String
-  category       PartnerOrganizationCategoryType
-  createdAt      DateTime                        @default(now())
-
-  organization PartnerOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@unique([organizationId, category])
-  @@index([category, organizationId])
-}
-
-model PartnerOrganizationContactChannel {
-  id              String                    @id @default(cuid())
-  organizationId  String
-  type            PartnerContactChannelType
-  value           String                    @db.VarChar(320)
-  normalizedValue String                    @db.VarChar(320)
-  label           String                    @db.VarChar(40)
-  isPrimary       Boolean                   @default(false)
-  version         Int                       @default(1)
-  createdAt       DateTime                  @default(now())
-  updatedAt       DateTime                  @updatedAt
-
-  organization PartnerOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@unique([organizationId, type, normalizedValue])
-  @@index([normalizedValue])
-  @@index([organizationId, type, createdAt])
-}
-
-model PartnerRelationshipPeriod {
-  id             String    @id @default(cuid())
-  organizationId String
-  startedOn      DateTime? @db.Date
-  endedOn        DateTime? @db.Date
-  closedAt       DateTime?
-  closingNote    String?   @db.VarChar(300)
-  version        Int       @default(1)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  organization   PartnerOrganization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  timelineEvents PartnerTimelineEvent[]
-
-  @@index([organizationId, createdAt])
-  @@index([organizationId, closedAt])
-  @@index([startedOn])
-  @@index([endedOn])
-}
-
-model PartnerContact {
-  id              String    @id @default(cuid())
-  organizationId  String
-  personId        String?
-  selectedEmailId String?
-  selectedPhoneId String?
-  label           String    @db.VarChar(80)
-  isPrimary       Boolean   @default(false)
-  startedOn       DateTime? @db.Date
-  endedOn         DateTime? @db.Date
-  closedAt        DateTime?
-  version         Int       @default(1)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  organization  PartnerOrganization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  person        Person?                @relation(fields: [personId], references: [id], onDelete: SetNull)
-  selectedEmail PersonEmail?           @relation("PartnerContactSelectedEmail", fields: [selectedEmailId], references: [id], onDelete: SetNull)
-  selectedPhone PersonPhone?           @relation("PartnerContactSelectedPhone", fields: [selectedPhoneId], references: [id], onDelete: SetNull)
-  followUps     PartnerFollowUpEntry[]
-
-  @@index([organizationId, closedAt, createdAt])
-  @@index([personId, closedAt])
-  @@index([selectedEmailId])
-  @@index([selectedPhoneId])
-}
-
-model PartnerFollowUpEntry {
-  id                        String   @id @default(cuid())
-  organizationId            String
-  partnerContactId          String?
-  text                      String   @db.VarChar(4000)
-  occurredAt                DateTime
-  authorId                  String?
-  authorDisplayNameSnapshot String?  @db.VarChar(200)
-  authorLoginNameSnapshot   String?  @db.VarChar(64)
-  version                   Int      @default(1)
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
-
-  organization   PartnerOrganization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  partnerContact PartnerContact?        @relation(fields: [partnerContactId], references: [id], onDelete: SetNull)
-  author         User?                  @relation("PartnerFollowUpAuthor", fields: [authorId], references: [id], onDelete: SetNull)
-  action         PartnerFollowUpAction?
-  timelineEvents PartnerTimelineEvent[]
-
-  @@index([organizationId, occurredAt, id])
-  @@index([partnerContactId])
-  @@index([authorId])
-}
-
-model PartnerFollowUpAction {
-  id                             String    @id @default(cuid())
-  entryId                        String    @unique
-  description                    String    @db.VarChar(300)
-  dueOn                          DateTime? @db.Date
-  completedAt                    DateTime?
-  completedById                  String?
-  completedByDisplayNameSnapshot String?   @db.VarChar(200)
-  completedByLoginNameSnapshot   String?   @db.VarChar(64)
-  version                        Int       @default(1)
-  createdAt                      DateTime  @default(now())
-  updatedAt                      DateTime  @updatedAt
-
-  entry          PartnerFollowUpEntry   @relation(fields: [entryId], references: [id], onDelete: Cascade)
-  completedBy    User?                  @relation("PartnerFollowUpActionCompleter", fields: [completedById], references: [id], onDelete: SetNull)
-  timelineEvents PartnerTimelineEvent[]
-
-  @@index([completedAt, dueOn, id])
-  @@index([completedById])
-}
-
-/// Durable business history for a partner relationship. These immutable facts
-/// complement the technical audit journal and remain readable even when their
-/// optional source rows or actor account no longer exist.
-model PartnerTimelineEvent {
-  id                       String                   @id @default(cuid())
-  organizationId           String
-  type                     PartnerTimelineEventType
-  operationId              String                   @unique @db.VarChar(191)
-  actorId                  String?
-  actorDisplayNameSnapshot String?                  @db.VarChar(200)
-  actorLoginNameSnapshot   String?                  @db.VarChar(64)
-  occurredAt               DateTime
-  createdAt                DateTime                 @default(now())
-  formatVersion            Int                      @default(1)
-  periodId                 String?
-  actionId                 String?
-  followUpEntryId          String?
-  payload                  Json
-
-  organization  PartnerOrganization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  actor         User?                      @relation("PartnerTimelineEventActor", fields: [actorId], references: [id], onDelete: SetNull)
-  period        PartnerRelationshipPeriod? @relation(fields: [periodId], references: [id], onDelete: SetNull)
-  action        PartnerFollowUpAction?     @relation(fields: [actionId], references: [id], onDelete: SetNull)
-  followUpEntry PartnerFollowUpEntry?      @relation(fields: [followUpEntryId], references: [id], onDelete: SetNull)
-
-  @@index([organizationId, occurredAt(sort: Desc), id(sort: Desc)])
-  @@index([actorId])
-  @@index([periodId])
-  @@index([actionId])
-  @@index([followUpEntryId])
-}
-
-model PartnerOrganizationDeletionTombstone {
-  organizationId      String   @id @db.VarChar(128)
-  deletionOperationId String   @unique @db.VarChar(191)
-  deletedAt           DateTime @default(now())
-}
-
-model PartnerOrganizationMergeRedirect {
-  sourceOrganizationId String   @id @db.VarChar(128)
-  targetOrganizationId String
-  mergeOperationId     String   @unique @db.VarChar(191)
-  mergedAt             DateTime @default(now())
-
-  targetOrganization PartnerOrganization @relation("PartnerOrganizationMergeTarget", fields: [targetOrganizationId], references: [id], onDelete: Restrict)
-
-  @@index([targetOrganizationId])
 }
 
 /// Read-only archive of the legacy StaffProfile table.

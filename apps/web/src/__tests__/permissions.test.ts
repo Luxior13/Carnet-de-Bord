@@ -496,9 +496,6 @@ describe('permission catalogue', () => {
       'persons:create',
       'persons:update',
       'persons:delete',
-      'partners:view',
-      'partners:manage',
-      'partners:delete',
       'users:view',
       'users:create',
       'users:view_contact',
@@ -537,14 +534,13 @@ describe('permission catalogue', () => {
     expect(PERMISSION_CATEGORIES.map((category) => category.key)).toEqual([
       'internal-news',
       'persons',
-      'partners',
       'users',
       'system-settings',
       'system-activity',
     ]);
     expect(
       DELEGABLE_PERMISSION_CATEGORIES.map((category) => category.key),
-    ).toEqual(['persons', 'partners', 'users', 'system-activity']);
+    ).toEqual(['persons', 'users', 'system-activity']);
     expect(getAccessPermissionKeys()).toEqual(
       DELEGABLE_PERMISSION_CATEGORIES.flatMap((category) =>
         category.permissions.map((permission) => permission.key),
@@ -587,20 +583,6 @@ describe('permission catalogue', () => {
       )?.route,
     ).toBe('/vie-interne/repertoire/nouveau');
 
-    const partnersCategory = PERMISSION_CATEGORIES.find(
-      (category) => category.key === 'partners',
-    );
-    expect(partnersCategory).toMatchObject({
-      accessPermissionKey: PERMISSIONS.PARTNERS.VIEW,
-      assignment: 'delegable',
-      poleKey: 'legal',
-      routes: [
-        '/bureau-juridique/partenaires',
-        '/bureau-juridique/partenaires/nouveau',
-        '/bureau-juridique/partenaires/[id]',
-      ],
-    });
-
     expect(getAccessPermissionKeys()).not.toEqual(
       expect.arrayContaining([
         PERMISSIONS.SETTINGS.VIEW,
@@ -637,7 +619,6 @@ describe('permission catalogue', () => {
     expect(PERMISSION_CATEGORIES.map((category) => category.label)).toEqual([
       'Actualité interne',
       'Répertoire',
-      'Sponsors & partenaires',
       'Utilisateurs',
       'Paramètres système',
       "Journal d'activité",

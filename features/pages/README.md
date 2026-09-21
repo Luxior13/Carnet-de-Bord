@@ -34,7 +34,7 @@ Chaque fichier explique le contenu attendu, les actions, les donnees gerees et l
 ## Bureau & juridique
 
 - [Vue d'ensemble](bureau-juridique.md) - `/bureau-juridique`
-- [Sponsors & partenaires](bureau-juridique/sponsors.md) - `/bureau-juridique/sponsors`
+- [Sponsors & partenaires](bureau-juridique/sponsors-partenaires.md) - `/bureau-juridique/partenaires` (module retire le 21 septembre 2026, a reconstruire)
 - [Personnes & contacts](bureau-juridique/personnes-contacts.md) - `/bureau-juridique/personnes-contacts`
 - [Documents & chartes](bureau-juridique/documents.md) - `/bureau-juridique/documents`
 - [Documents officiels](bureau-juridique/documents-officiels.md) - `/bureau-juridique/documents-officiels`

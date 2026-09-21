@@ -5,23 +5,12 @@ import { FEATURES } from '$constants/feature-registry.constants';
 import { InternalNewsPage } from '$features/internal-news/components/InternalNewsPage';
 import { getInternalNewsCapabilities } from '$features/internal-news/internal-news.permissions';
 import { internalNewsListQuerySchema } from '$features/internal-news/internal-news.schemas';
-import type {
-  InternalNewsFilter,
-  InternalNewsResponse,
-} from '$features/internal-news/internal-news.types';
+import type { InternalNewsResponse } from '$features/internal-news/internal-news.types';
 import { listInternalNews } from '$features/internal-news/server/internal-news.service';
 import { assertInternalNewsFeatureReady } from '$features/internal-news/server/internal-news-readiness';
 import { getPageAuthSession } from '$server/auth';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
-
-type InternalNewsPageQuery = {
-  filtre?: string | string[];
-};
-
-type InternalNewsRouteProps = {
-  searchParams?: Promise<InternalNewsPageQuery>;
-};
 
 const Loading = (): React.JSX.Element => (
   <PageShell className="py-0">
@@ -33,32 +22,11 @@ const Loading = (): React.JSX.Element => (
   </PageShell>
 );
 
-const readRequestedFilter = (
-  value: string | string[] | undefined,
-  canViewPartners: boolean,
-): InternalNewsFilter => {
-  const filter = Array.isArray(value) ? value[0] : value;
-  if (filter === 'announcements') return filter;
-  if (filter === 'partners' && canViewPartners) return filter;
-
-  return 'all';
-};
-
-export default async function InternalNewsRoute({
-  searchParams,
-}: InternalNewsRouteProps): Promise<React.JSX.Element> {
-  const [params, { user }] = await Promise.all([
-    searchParams ?? Promise.resolve<InternalNewsPageQuery>({}),
-    getPageAuthSession(),
-  ]);
+export default async function InternalNewsRoute(): Promise<React.JSX.Element> {
+  const { user } = await getPageAuthSession();
   const capabilities = getInternalNewsCapabilities(user);
-  const filter = readRequestedFilter(
-    params.filtre,
-    capabilities.canViewPartners,
-  );
-  const parsed = internalNewsListQuerySchema.safeParse({ filter, limit: 20 });
-  let initialState:
-    { data: InternalNewsResponse; filter: InternalNewsFilter } | undefined;
+  const parsed = internalNewsListQuerySchema.safeParse({ limit: 20 });
+  let initialState: { data: InternalNewsResponse } | undefined;
 
   if (
     user &&
@@ -68,12 +36,7 @@ export default async function InternalNewsRoute({
   ) {
     try {
       await assertInternalNewsFeatureReady();
-      initialState = {
-        data: await listInternalNews(parsed.data, {
-          canViewPartners: capabilities.canViewPartners,
-        }),
-        filter,
-      };
+      initialState = { data: await listInternalNews(parsed.data) };
     } catch {
       // The client preserves the existing unavailable/retry states when the
       // server cannot produce a safe initial snapshot.

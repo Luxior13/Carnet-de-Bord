@@ -37,7 +37,6 @@ describe('Person and User isolation contract', () => {
       'PersonEmail',
       'PersonPhone',
       'PersonSocialProfile',
-      'PartnerContact',
     ]);
     expect(personRelations).not.toContain('User');
     expect(userRelations).not.toContain('Person');

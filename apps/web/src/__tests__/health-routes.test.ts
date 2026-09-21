@@ -5,7 +5,6 @@ vi.mock('server-only', () => ({}));
 const mocks = vi.hoisted(() => ({
   auditEncryptionKeyVersion: { findMany: vi.fn() },
   isInternalNewsSchemaReady: vi.fn(),
-  isPartnerSchemaReady: vi.fn(),
   isPersonEnvironmentConfigured: vi.fn(),
   isPersonSchemaCatalogReady: vi.fn(),
   queryRaw: vi.fn(),
@@ -28,10 +27,6 @@ vi.mock('$features/persons/server/person-readiness', () => ({
 vi.mock('$features/internal-news/server/internal-news-readiness', () => ({
   isInternalNewsSchemaReady: mocks.isInternalNewsSchemaReady,
 }));
-vi.mock('$features/partners/server/partner-readiness', () => ({
-  isPartnerSchemaReady: mocks.isPartnerSchemaReady,
-}));
-
 import { createReadinessResponse } from '$server/health';
 
 describe('readiness without a background worker', () => {
@@ -39,7 +34,6 @@ describe('readiness without a background worker', () => {
     vi.clearAllMocks();
     mocks.queryRaw.mockResolvedValue([{ ready: true }]);
     mocks.isInternalNewsSchemaReady.mockResolvedValue(true);
-    mocks.isPartnerSchemaReady.mockResolvedValue(true);
     mocks.isPersonSchemaCatalogReady.mockResolvedValue(true);
     mocks.auditEncryptionKeyVersion.findMany.mockResolvedValue([
       { version: 1 },
@@ -56,7 +50,6 @@ describe('readiness without a background worker', () => {
       checks: {
         database: 'connected',
         internalNews: 'ready',
-        partners: 'ready',
         persons: 'ready',
         schema: 'ready',
       },
@@ -112,7 +105,6 @@ describe('readiness without a background worker', () => {
       checks: {
         database: 'disconnected',
         internalNews: 'unknown',
-        partners: 'unknown',
         persons: 'unknown',
         schema: 'unknown',
       },

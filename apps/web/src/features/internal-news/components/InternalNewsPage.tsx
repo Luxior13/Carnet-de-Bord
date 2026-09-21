@@ -2,7 +2,6 @@
 
 import { Newspaper, Plus, ShieldCheck } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { useRouter, useSearchParams } from 'next/navigation';
 import React, { type FC, useState } from 'react';
 
 import { PageHero } from '$components/layout/PageHero';
@@ -16,10 +15,7 @@ import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 
 import { getInternalNewsCapabilities } from '../internal-news.permissions';
-import type {
-  InternalNewsFilter,
-  InternalNewsResponse,
-} from '../internal-news.types';
+import type { InternalNewsResponse } from '../internal-news.types';
 import { InternalNewsFeed } from './InternalNewsFeed';
 
 const PublishAnnouncementDialog = dynamic(() =>
@@ -27,8 +23,6 @@ const PublishAnnouncementDialog = dynamic(() =>
     (module) => module.PublishAnnouncementDialog,
   ),
 );
-
-const INTERNAL_NEWS_PATH = '/vie-interne/actualite-interne';
 
 const PageSkeleton: FC = () => (
   <PageShell className="py-0">
@@ -40,54 +34,25 @@ const PageSkeleton: FC = () => (
   </PageShell>
 );
 
-const readFilter = (
-  value: string | null,
-  canViewPartners: boolean,
-): InternalNewsFilter => {
-  if (value === 'announcements') return value;
-  if (value === 'partners' && canViewPartners) return value;
-
-  return 'all';
-};
-
 type InternalNewsPageProps = {
-  initialState?: {
-    data: InternalNewsResponse;
-    filter: InternalNewsFilter;
-  };
+  initialState?: { data: InternalNewsResponse };
 };
 
 export const InternalNewsPage: FC<InternalNewsPageProps> = ({
   initialState,
 }) => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const { userData } = useUser();
   const {
     featureAvailabilityLoaded,
     operationalFeatureIds,
     refreshFeatureAvailability,
   } = useFeatureAvailability();
-  const { canManage, canView, canViewPartners } =
-    getInternalNewsCapabilities(userData);
-  const filter = readFilter(searchParams.get('filtre'), canViewPartners);
+  const { canManage, canView } = getInternalNewsCapabilities(userData);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
 
   const refreshFeed = (): void => {
     setRefreshVersion((version) => version + 1);
-  };
-
-  const updateFilter = (nextFilter: InternalNewsFilter): void => {
-    const next = new URLSearchParams(searchParams.toString());
-    if (nextFilter === 'all') next.delete('filtre');
-    else next.set('filtre', nextFilter);
-    router.replace(
-      next.size ? `${INTERNAL_NEWS_PATH}?${next}` : INTERNAL_NEWS_PATH,
-      {
-        scroll: false,
-      },
-    );
   };
 
   if (!canView) {
@@ -136,25 +101,15 @@ export const InternalNewsPage: FC<InternalNewsPageProps> = ({
               </Badge>
             }
             icon={<Newspaper className="size-5" />}
-            meta={
-              <>
-                <Badge variant="outline">Annonces internes</Badge>
-                {canViewPartners && (
-                  <Badge variant="outline">Événements partenaires</Badge>
-                )}
-              </>
-            }
+            meta={<Badge variant="outline">Annonces internes</Badge>}
             title="Actualité interne"
             tone="internal"
           />
 
           <InternalNewsFeed
             canManage={canManage}
-            canViewPartners={canViewPartners}
-            filter={filter}
             initialState={initialState}
             onContentChanged={refreshFeed}
-            onFilterChange={updateFilter}
             refreshVersion={refreshVersion}
           />
         </PageCanvas>

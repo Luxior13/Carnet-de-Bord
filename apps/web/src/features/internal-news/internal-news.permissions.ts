@@ -9,7 +9,6 @@ type InternalNewsPermissionUser = Pick<
 export type InternalNewsCapabilities = {
   canManage: boolean;
   canView: boolean;
-  canViewPartners: boolean;
 };
 
 export const getInternalNewsCapabilities = (
@@ -25,6 +24,5 @@ export const getInternalNewsCapabilities = (
   return {
     canManage: permitted(PERMISSIONS.INTERNAL_NEWS.MANAGE),
     canView: permitted(PERMISSIONS.INTERNAL_NEWS.VIEW),
-    canViewPartners: permitted(PERMISSIONS.PARTNERS.VIEW),
   };
 };

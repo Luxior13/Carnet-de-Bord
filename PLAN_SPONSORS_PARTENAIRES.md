@@ -1,3 +1,9 @@
+> **Module retire le 21 septembre 2026.** Les cases cochees ci-dessous
+> decrivent ce qui existait avant le retrait : la page, les routes API, les
+> permissions actives et les dix tables ont ete supprimes. Le module reste
+> annonce sur `/feuille-de-route`. Pour le remettre en service, suivre la
+> checklist de `features/pages/bureau-juridique/sponsors-partenaires.md`.
+
 # Plan — Sponsors & partenaires
 
 Statut : socle V1 implémenté le 24 juillet 2026 et migration du fil appliquée à

@@ -28,8 +28,8 @@ test('persists internal announcements with durable author snapshots', () => {
   );
 });
 
-test('backs up announcements after their parent user in format v8', () => {
-  assert.equal(DATABASE_BACKUP_FORMAT_VERSION, 8);
+test('backs up announcements after their parent user in format v9', () => {
+  assert.equal(DATABASE_BACKUP_FORMAT_VERSION, 9);
   const userIndex = DATABASE_BACKUP_TABLES.findIndex(
     ({ tableName }) => tableName === 'User',
   );

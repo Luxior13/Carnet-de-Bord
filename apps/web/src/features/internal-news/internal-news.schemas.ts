@@ -1,11 +1,8 @@
 import { z } from 'zod';
 
-import { INTERNAL_NEWS_FILTERS } from './internal-news.types';
-
 export const internalNewsListQuerySchema = z
   .object({
     cursor: z.string().trim().min(1).max(2_048).optional(),
-    filter: z.enum(INTERNAL_NEWS_FILTERS).default('all'),
     limit: z.coerce.number().int().min(1).max(50).default(20),
   })
   .strict();

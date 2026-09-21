@@ -7,7 +7,6 @@ vi.mock('server-only', () => ({}));
 const mocks = vi.hoisted(() => {
   const transaction = {
     $queryRaw: vi.fn(),
-    partnerContact: { updateMany: vi.fn() },
     person: { deleteMany: vi.fn() },
     personDeletionTombstone: {
       create: vi.fn(),
@@ -63,10 +62,8 @@ describe('synchronous person deletion', () => {
     );
     mocks.transaction.$queryRaw
       .mockResolvedValueOnce([{ id: 'person-1', version: 3 }])
-      .mockResolvedValueOnce([{ deletedCount: 4n }])
-      .mockResolvedValueOnce([{ ready: true, selectedCoordinatesReady: true }]);
+      .mockResolvedValueOnce([{ deletedCount: 4n }]);
     mocks.transaction.person.deleteMany.mockResolvedValue({ count: 1 });
-    mocks.transaction.partnerContact.updateMany.mockResolvedValue({ count: 2 });
     mocks.transaction.personDeletionTombstone.create.mockResolvedValue({
       personId: 'person-1',
     });
@@ -89,19 +86,7 @@ describe('synchronous person deletion', () => {
     expect(mocks.transaction.person.deleteMany).toHaveBeenCalledWith({
       where: { id: 'person-1', version: 3 },
     });
-    expect(mocks.transaction.partnerContact.updateMany).toHaveBeenCalledWith({
-      data: {
-        closedAt: expect.any(Date),
-        endedOn: null,
-        isPrimary: false,
-        label: 'Interlocuteur supprimé',
-        personId: null,
-        selectedEmailId: null,
-        selectedPhoneId: null,
-        version: { increment: 1 },
-      },
-      where: { personId: 'person-1' },
-    });
+    expect(mocks.transaction.$queryRaw).toHaveBeenCalledTimes(2);
     expect(
       mocks.transaction.personDeletionTombstone.create,
     ).toHaveBeenCalledWith({
@@ -134,35 +119,6 @@ describe('synchronous person deletion', () => {
 
     expect(mocks.transaction.$queryRaw).not.toHaveBeenCalled();
     expect(mocks.transaction.person.deleteMany).not.toHaveBeenCalled();
-  });
-
-  it('uses the legacy anonymization payload during a rolling migration', async () => {
-    mocks.transaction.$queryRaw
-      .mockReset()
-      .mockResolvedValueOnce([{ id: 'person-1', version: 3 }])
-      .mockResolvedValueOnce([{ deletedCount: 4n }])
-      .mockResolvedValueOnce([
-        { ready: true, selectedCoordinatesReady: false },
-      ]);
-
-    await deletePerson({
-      actor,
-      idempotencyKey: 'operation-legacy-schema',
-      personId: 'person-1',
-      version: 3,
-    });
-
-    expect(mocks.transaction.partnerContact.updateMany).toHaveBeenCalledWith({
-      data: {
-        closedAt: expect.any(Date),
-        endedOn: null,
-        isPrimary: false,
-        label: 'Interlocuteur supprimé',
-        personId: null,
-        version: { increment: 1 },
-      },
-      where: { personId: 'person-1' },
-    });
   });
 
   it('refuses a stale version before purging personal field history', async () => {

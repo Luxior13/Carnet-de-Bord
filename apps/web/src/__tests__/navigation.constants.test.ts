@@ -97,6 +97,7 @@ describe('navigation availability', () => {
     expect(hrefs).toContain('/vie-interne/calendrier-interne');
     expect(hrefs).not.toContain('/vie-interne/repertoire');
     expect(hrefs).toContain('/bureau-juridique');
+    expect(hrefs).toContain('/bureau-juridique/partenaires');
     expect(hrefs).toContain('/tresorerie/operations');
     expect(hrefs).toContain('/sport-team-control');
     expect(hrefs).not.toContain('/systeme/parametres');
@@ -356,7 +357,6 @@ describe('navigation availability', () => {
       '/recherche',
       '/vie-interne/actualite-interne',
       '/vie-interne/repertoire',
-      '/bureau-juridique/partenaires',
       '/systeme',
       '/administration/utilisateurs',
       '/systeme/parametres',

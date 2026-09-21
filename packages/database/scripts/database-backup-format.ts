@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
 
-export const DATABASE_BACKUP_FORMAT_VERSION = 8;
+export const DATABASE_BACKUP_FORMAT_VERSION = 9;
 export const DATABASE_BACKUP_BATCH_SIZE = 500;
 export const MAX_DATABASE_BACKUP_BYTES = 2 * 1024 * 1024 * 1024;
 export const MAX_BACKUP_LINE_BYTES = 16 * 1024 * 1024;
@@ -126,66 +126,6 @@ export const DATABASE_BACKUP_TABLES = [
     cursorKind: 'text',
     property: 'personSocialProfiles',
     tableName: 'PersonSocialProfile',
-  },
-  {
-    cursorColumn: 'organizationId',
-    cursorKind: 'text',
-    property: 'partnerOrganizationDeletionTombstones',
-    tableName: 'PartnerOrganizationDeletionTombstone',
-  },
-  {
-    cursorColumn: 'id',
-    cursorKind: 'text',
-    property: 'partnerOrganizations',
-    tableName: 'PartnerOrganization',
-  },
-  {
-    cursorColumn: 'id',
-    cursorKind: 'text',
-    property: 'partnerOrganizationCategories',
-    tableName: 'PartnerOrganizationCategory',
-  },
-  {
-    cursorColumn: 'id',
-    cursorKind: 'text',
-    property: 'partnerOrganizationContactChannels',
-    tableName: 'PartnerOrganizationContactChannel',
-  },
-  {
-    cursorColumn: 'id',
-    cursorKind: 'text',
-    property: 'partnerRelationshipPeriods',
-    tableName: 'PartnerRelationshipPeriod',
-  },
-  {
-    cursorColumn: 'id',
-    cursorKind: 'text',
-    property: 'partnerContacts',
-    tableName: 'PartnerContact',
-  },
-  {
-    cursorColumn: 'id',
-    cursorKind: 'text',
-    property: 'partnerFollowUpEntries',
-    tableName: 'PartnerFollowUpEntry',
-  },
-  {
-    cursorColumn: 'id',
-    cursorKind: 'text',
-    property: 'partnerFollowUpActions',
-    tableName: 'PartnerFollowUpAction',
-  },
-  {
-    cursorColumn: 'id',
-    cursorKind: 'text',
-    property: 'partnerTimelineEvents',
-    tableName: 'PartnerTimelineEvent',
-  },
-  {
-    cursorColumn: 'sourceOrganizationId',
-    cursorKind: 'text',
-    property: 'partnerOrganizationMergeRedirects',
-    tableName: 'PartnerOrganizationMergeRedirect',
   },
   {
     cursorColumn: 'id',

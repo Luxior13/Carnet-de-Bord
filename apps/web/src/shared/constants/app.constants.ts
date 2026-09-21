@@ -50,7 +50,7 @@ const meetingsAccess = [ROADMAP_PERMISSIONS.MEETINGS.VIEW] as const;
 const meetingsUpdateAccess = [ROADMAP_PERMISSIONS.MEETINGS.UPDATE] as const;
 const notificationsAccess = [PERMISSIONS.NOTIFICATIONS.VIEW] as const;
 const personsAccess = [PERMISSIONS.PERSONS.VIEW] as const;
-const partnersAccess = [PERMISSIONS.PARTNERS.VIEW] as const;
+const partnersAccess = [ROADMAP_PERMISSIONS.PARTNERS.VIEW] as const;
 const notificationsManageAccess = [
   ROADMAP_PERMISSIONS.NOTIFICATIONS.MANAGE,
 ] as const;
@@ -273,13 +273,13 @@ export const NAV_SPACES: NavigationSpace[] = [
             requiredPermissions: legalAccess,
           },
           {
-            availability: 'live',
-            description: 'Sponsors, contacts, livrables et partenaires.',
-            featureId: FEATURES.partners.id,
+            description:
+              'Organisations, contacts, périodes de relation et suivi interne.',
             href: '/bureau-juridique/partenaires',
             icon: 'Handshake',
             label: 'Sponsors & partenaires',
             requiredPermissions: partnersAccess,
+            status: 'À refaire',
           },
           {
             children: [

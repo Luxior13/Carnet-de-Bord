@@ -17,7 +17,7 @@ import { useUser } from '$context/UserContext';
 const REFRESH_INTERVAL_MS = 30_000;
 
 type ReadinessPayload = {
-  checks?: { internalNews?: string; partners?: string; persons?: string };
+  checks?: { internalNews?: string; persons?: string };
 };
 
 type FeatureAvailabilityContextValue = {
@@ -31,8 +31,7 @@ const ALWAYS_OPERATIONAL_FEATURE_IDS = Object.values(FEATURES)
     (feature) =>
       feature.availability === 'live' &&
       feature.id !== FEATURES.internalNews.id &&
-      feature.id !== FEATURES.persons.id &&
-      feature.id !== FEATURES.partners.id,
+      feature.id !== FEATURES.persons.id,
   )
   .map((feature) => feature.id);
 
@@ -47,13 +46,11 @@ export const FeatureAvailabilityProvider: FC<{ children: ReactNode }> = ({
     useState(false);
   const [internalNewsReady, setInternalNewsReady] = useState(false);
   const [personsReady, setPersonsReady] = useState(false);
-  const [partnersReady, setPartnersReady] = useState(false);
 
   const refreshFeatureAvailability = useCallback(async (): Promise<void> => {
     if (!userData) {
       setInternalNewsReady(false);
       setPersonsReady(false);
-      setPartnersReady(false);
       setFeatureAvailabilityLoaded(false);
 
       return;
@@ -68,11 +65,9 @@ export const FeatureAvailabilityProvider: FC<{ children: ReactNode }> = ({
       const payload = (await response.json()) as ReadinessPayload;
       setInternalNewsReady(payload.checks?.internalNews === 'ready');
       setPersonsReady(payload.checks?.persons === 'ready');
-      setPartnersReady(payload.checks?.partners === 'ready');
     } catch {
       setInternalNewsReady(false);
       setPersonsReady(false);
-      setPartnersReady(false);
     } finally {
       setFeatureAvailabilityLoaded(true);
     }
@@ -82,7 +77,6 @@ export const FeatureAvailabilityProvider: FC<{ children: ReactNode }> = ({
     if (!userData) {
       setInternalNewsReady(false);
       setPersonsReady(false);
-      setPartnersReady(false);
       setFeatureAvailabilityLoaded(false);
 
       return;
@@ -102,9 +96,8 @@ export const FeatureAvailabilityProvider: FC<{ children: ReactNode }> = ({
         ...ALWAYS_OPERATIONAL_FEATURE_IDS,
         ...(internalNewsReady ? [FEATURES.internalNews.id] : []),
         ...(personsReady ? [FEATURES.persons.id] : []),
-        ...(partnersReady ? [FEATURES.partners.id] : []),
       ]),
-    [internalNewsReady, partnersReady, personsReady],
+    [internalNewsReady, personsReady],
   );
   const value = useMemo(
     () => ({

@@ -2,7 +2,6 @@ import { apiFetchJson, jsonRequest } from '$utils/api.utils';
 
 import type {
   InternalAnnouncementItem,
-  InternalNewsFilter,
   InternalNewsResponse,
   PublishInternalAnnouncementInput,
   UpdateInternalAnnouncementPinInput,
@@ -12,14 +11,15 @@ const INTERNAL_NEWS_API_PATH = '/api/actualite-interne';
 
 export const fetchInternalNews = async (input: {
   cursor?: string;
-  filter: InternalNewsFilter;
   signal?: AbortSignal;
 }): Promise<InternalNewsResponse> => {
-  const searchParams = new URLSearchParams({ filter: input.filter });
+  const searchParams = new URLSearchParams();
   if (input.cursor) searchParams.set('cursor', input.cursor);
 
   return apiFetchJson<InternalNewsResponse>(
-    `${INTERNAL_NEWS_API_PATH}?${searchParams}`,
+    searchParams.size
+      ? `${INTERNAL_NEWS_API_PATH}?${searchParams}`
+      : INTERNAL_NEWS_API_PATH,
     { signal: input.signal },
   );
 };
