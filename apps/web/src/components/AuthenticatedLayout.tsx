@@ -179,7 +179,9 @@ export const PersistentAuthenticatedShell: FC<AuthenticatedShellProps> = ({
             role="alert"
           >
             <AlertTriangle className="text-destructive mx-auto size-8" />
-            <h1 className="mt-4 text-lg font-semibold">Session indisponible</h1>
+            <h1 className="mt-4 text-xl leading-7 font-semibold sm:text-2xl sm:leading-8">
+              Session indisponible
+            </h1>
             <p className="text-muted-foreground mt-2 text-sm">{error}</p>
             <Button
               className="mt-4"

@@ -93,9 +93,10 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --text-caption: 0.6875rem;
+  /* Readable metadata and navigation labels, expressed in rem for text zoom. */
+  --text-caption: 0.75rem;
   --text-caption--line-height: 1rem;
-  --text-label: 0.8125rem;
+  --text-label: 0.875rem;
   --text-label--line-height: 1.25rem;
   /* 12px controls, 16px overlays, 20px panels, all derived from one scale. */
   --radius-2xl: calc(var(--radius) + 8px);
@@ -247,7 +248,16 @@
   }
 
   body {
-    @apply bg-background text-foreground min-h-svh antialiased;
+    @apply bg-background text-foreground min-h-svh font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    overflow-wrap: anywhere;
   }
 
   ::selection {

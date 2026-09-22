@@ -16,8 +16,15 @@ const NotFoundPage: FC = () => {
             <SearchX className="size-7" />
           </ServiceIcon>
           <div className="space-y-2">
-            <h1 className="text-5xl font-semibold tracking-normal">404</h1>
-            <h2 className="text-xl font-semibold">Page introuvable</h2>
+            <p
+              aria-hidden="true"
+              className="text-5xl font-semibold tracking-normal"
+            >
+              404
+            </p>
+            <h1 className="text-xl leading-7 font-semibold sm:text-2xl sm:leading-8">
+              Page introuvable
+            </h1>
           </div>
           <p className="text-muted-foreground">
             La page que vous recherchez n&apos;existe pas ou a été déplacée.

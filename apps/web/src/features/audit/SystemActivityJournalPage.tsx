@@ -757,12 +757,12 @@ const JournalCard: FC<{
             )}
             {changes.length > 0 && (
               <section aria-labelledby={`${detailsId}-changes`}>
-                <h4
+                <h3
                   className="text-foreground mb-2 text-xs font-semibold"
                   id={`${detailsId}-changes`}
                 >
                   Changements ({changes.length})
-                </h4>
+                </h3>
                 <div className="space-y-1.5">
                   {changes.map((change) => (
                     <ChangeItem

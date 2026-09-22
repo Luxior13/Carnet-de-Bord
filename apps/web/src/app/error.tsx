@@ -24,7 +24,9 @@ const ErrorPage: FC<ErrorPageProps> = ({ error, reset }) => {
             <AlertTriangle className="text-destructive h-7 w-7" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold">Une erreur est survenue</h1>
+            <h1 className="text-xl leading-7 font-semibold sm:text-2xl sm:leading-8">
+              Une erreur est survenue
+            </h1>
             <p className="text-muted-foreground">
               Quelque chose s&apos;est mal passé. Veuillez réessayer ou
               contacter un administrateur si le problème persiste.

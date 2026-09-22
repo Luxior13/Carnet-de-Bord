@@ -84,23 +84,37 @@ les variantes `dark:` des primitives soient effectivement actives.
 
 Police : Geist pour le texte, Geist Mono pour les identifiants techniques.
 
-| Échelle                  | Valeur          | Usage                                |
-| ------------------------ | --------------- | ------------------------------------ |
-| `text-caption`           | 11px            | métadonnées, badges très compacts    |
-| `text-label`             | 13px            | étiquettes de navigation secondaire  |
-| `text-xs`                | 12px            | aide, badges                         |
-| `text-sm`                | 14px            | corps de table et de liste           |
-| `text-base`              | 16px            | contenu de fiche                     |
-| `text-lg`                | 18px            | titre de dialogue ou de grand groupe |
-| `text-xl`, `sm:text-2xl` | 20px, puis 24px | titre de page                        |
+| Échelle                  | Valeur          | Usage                                           |
+| ------------------------ | --------------- | ----------------------------------------------- |
+| `text-caption`           | 12px            | métadonnées, compteurs et groupes de navigation |
+| `text-label`             | 14px            | étiquettes de navigation secondaire             |
+| `text-xs`                | 12px            | aide, badges                                    |
+| `text-sm`                | 14px            | corps de table et de liste                      |
+| `text-base`              | 16px            | contenu de fiche                                |
+| `text-lg`                | 18px            | titre de dialogue ou de grand groupe            |
+| `text-xl`, `sm:text-2xl` | 20px, puis 24px | titre de page                                   |
 
 Les titres des panneaux de gestion utilisent 14px, ceux des cartes éditoriales
-16 à 18px. La hiérarchie HTML reste indépendante de la taille : un `h1` par
+16px. La hiérarchie HTML reste indépendante de la taille : un `h1` par
 page, puis `h2` et `h3`. `CardTitle` rend un `h2` par défaut et accepte `as`.
 `SectionPanel` accepte `titleAs="h3"` lorsqu'il est imbriqué dans une section.
 Les titres de page restent neutres ; une zone dangereuse peut porter un statut.
 Les titres et descriptions essentiels reviennent à la ligne. Un libellé tronqué
 reste complet dans le DOM et dispose, si utile, d'un attribut `title`.
+
+Interlignages : titre de page 20/28px puis 24/32px ; titre de groupe 16/24px ;
+titre de panneau et label 14/20px ; titre de fenêtre 18/24px ; description longue
+14/24px ; métadonnées 12/16px. Graisses : 400 pour le texte, 500 pour les labels
+et badges, 600 pour les titres et actions. Les tailles sont définies en `rem`.
+
+Les champs de saisie restent à 16px sur mobile et passent à 14px sur grand écran.
+Les codes MFA restent à 16px partout ; l'espacement renforcé est réservé aux six
+chiffres TOTP, pas aux longs codes de secours. Les notifications Sonner utilisent
+explicitement Geist et un texte de 14px ; leur style natif ne doit pas réintroduire
+une police système différente. Le grand « 404 » est un repère décoratif, tandis
+que « Page introuvable » est le titre `h1`.
+
+Voir [AUDIT_TYPOGRAPHIE.md](AUDIT_TYPOGRAPHIE.md) pour les constats et mesures.
 
 ---
 

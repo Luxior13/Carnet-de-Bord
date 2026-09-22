@@ -116,7 +116,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
               </span>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-foreground font-semibold">
+                  <h3 className="text-foreground text-base leading-6 font-semibold">
                     Autorisations du super-administrateur
                   </h3>
                   <Badge

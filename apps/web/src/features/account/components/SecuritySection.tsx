@@ -426,7 +426,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         <header className="space-y-1 px-1">
           <h2
             id="account-security-heading"
-            className="text-foreground text-lg font-semibold"
+            className="text-foreground text-base leading-6 font-semibold"
           >
             Sécurité
           </h2>

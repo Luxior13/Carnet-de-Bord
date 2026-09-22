@@ -49,7 +49,7 @@ export const PageState: FC<PageStateProps> = ({
               </ServiceIcon>
               <div className="min-w-0 space-y-3 [overflow-wrap:anywhere]">
                 <div>
-                  <h1 className="text-xl font-semibold tracking-normal">
+                  <h1 className="text-xl leading-7 font-semibold tracking-normal sm:text-2xl sm:leading-8">
                     {title}
                   </h1>
                   <p className="text-muted-foreground mt-1 text-sm leading-6">

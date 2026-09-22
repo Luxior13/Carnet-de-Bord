@@ -288,7 +288,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
             </span>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-foreground font-semibold">
+                <h2 className="text-foreground text-base leading-6 font-semibold">
                   Autonomie du compte
                 </h2>
                 <Badge

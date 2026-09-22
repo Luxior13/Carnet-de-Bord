@@ -36,7 +36,7 @@ export const SectionPanel: FC<SectionPanelProps> = ({
             <div className="min-w-0">
               <Heading
                 id={titleId}
-                className="text-foreground text-sm leading-6 font-semibold tracking-normal [overflow-wrap:anywhere]"
+                className="text-foreground text-sm leading-5 font-semibold tracking-normal [overflow-wrap:anywhere]"
               >
                 {title}
               </Heading>

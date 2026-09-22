@@ -249,7 +249,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
         >
           <Bell aria-hidden="true" className="size-4" />
           {unreadNotificationsCount > 0 && (
-            <span className="ring-surface-page bg-primary text-primary-foreground text-caption absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 font-bold ring-2">
+            <span className="ring-surface-page bg-primary text-primary-foreground text-caption absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 font-semibold tabular-nums ring-2">
               {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
               <span className="sr-only">notifications non lues</span>
             </span>

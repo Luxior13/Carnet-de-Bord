@@ -844,7 +844,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
           <div className="flex flex-col gap-4 p-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-foreground font-semibold">
+                <h3 className="text-foreground text-base leading-6 font-semibold">
                   Autorisations administratives
                 </h3>
                 {customPermissionCount > 0 && (
@@ -910,7 +910,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                 </span>
                 <div className="min-w-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-foreground font-semibold">
+                    <h3 className="text-foreground text-base leading-6 font-semibold">
                       {selectedCategory.label}
                     </h3>
                     <Badge variant="secondary" className="text-xs">

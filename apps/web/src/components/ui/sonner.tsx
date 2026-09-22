@@ -9,6 +9,7 @@ const Toaster: FC<ToasterProps> = ({ ...props }) => {
       mobileOffset={{ bottom: 16, left: 16, right: 16 }}
       theme="dark"
       className="toaster group"
+      style={{ fontFamily: 'var(--font-geist-sans)' }}
       toastOptions={{
         classNames: {
           actionButton:
@@ -19,6 +20,7 @@ const Toaster: FC<ToasterProps> = ({ ...props }) => {
           toast:
             'group toast group-[.toaster]:border-border-strong group-[.toaster]:bg-surface-floating group-[.toaster]:text-foreground group-[.toaster]:rounded-xl group-[.toaster]:shadow-[var(--shadow-panel-strong)]',
         },
+        style: { fontSize: '0.875rem' },
       }}
       {...props}
     />

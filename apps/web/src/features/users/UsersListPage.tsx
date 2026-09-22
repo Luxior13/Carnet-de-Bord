@@ -24,7 +24,6 @@ import { ContentState } from '$components/layout/ContentState';
 import { UserAvatar } from '$components/users/UserAvatar';
 import {
   getAccessLabel,
-  getRoleColor,
   hasPermission,
   PERMISSIONS,
 } from '$constants/permissions.constants';
@@ -165,6 +164,25 @@ const buildUsersPageUrlParams = ({
   if (sort !== 'name') params.set('sort', sort);
 
   return params;
+};
+
+const UserAccessBadge: FC<{
+  user: Pick<UserType, 'isProtected' | 'role'>;
+}> = ({ user }) => {
+  const isAdministrator = user.isProtected || user.role === UserRole.ADMIN;
+  const Icon = isAdministrator ? Shield : User;
+  const color = user.isProtected
+    ? 'border-warning/40 bg-warning/15 text-warning'
+    : isAdministrator
+      ? 'border-info/40 bg-info/15 text-info'
+      : undefined;
+
+  return (
+    <Badge variant="secondary" className={color}>
+      <Icon aria-hidden="true" />
+      {getAccessLabel(user)}
+    </Badge>
+  );
 };
 
 const UserStatusBadge: FC<{ isActive: boolean }> = ({ isActive }) => {
@@ -767,17 +785,7 @@ export const UsersListPage: FC = () => {
                       </Link>
                     </TableCell>
                     <TableCell className="pointer-events-none py-2">
-                      <Badge
-                        variant={getRoleColor(user.role)}
-                        className="shrink-0 text-xs"
-                      >
-                        {user.role === 'ADMIN' ? (
-                          <Shield size={10} className="mr-1" />
-                        ) : (
-                          <User size={10} className="mr-1" />
-                        )}
-                        {getAccessLabel(user)}
-                      </Badge>
+                      <UserAccessBadge user={user} />
                     </TableCell>
                     <TableCell className="pointer-events-none py-2">
                       <UserStatusBadge isActive={user.isActive} />
@@ -894,12 +902,7 @@ export const UsersListPage: FC = () => {
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <Badge
-                        variant={getRoleColor(user.role)}
-                        className="text-xs"
-                      >
-                        {getAccessLabel(user)}
-                      </Badge>
+                      <UserAccessBadge user={user} />
                       <UserStatusBadge isActive={user.isActive} />
                       {securityDetailsVisible && user.mustChangePassword && (
                         <Badge

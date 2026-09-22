@@ -70,7 +70,7 @@ export const PageHero: FC<PageHeroProps> = ({
             >
               <h1
                 className={cn(
-                  'text-xl font-semibold tracking-normal [overflow-wrap:anywhere] sm:text-2xl',
+                  'text-xl leading-7 font-semibold tracking-normal [overflow-wrap:anywhere] sm:text-2xl sm:leading-8',
                   eyebrow && 'mt-2',
                 )}
               >

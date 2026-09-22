@@ -273,7 +273,10 @@ function LoginPage(): React.ReactNode {
               )}
               Espace privé
             </div>
-            <CardTitle as="h1" className="text-2xl tracking-normal">
+            <CardTitle
+              as="h1"
+              className="text-xl leading-7 tracking-normal sm:text-2xl sm:leading-8"
+            >
               {title}
             </CardTitle>
             <CardDescription className="max-w-sm leading-6">

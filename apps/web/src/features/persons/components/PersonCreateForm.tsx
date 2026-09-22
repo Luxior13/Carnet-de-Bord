@@ -140,7 +140,7 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({ returnHref }) => {
                 <UserPlus className="size-4" />
               </ServiceIcon>
               <div className="min-w-0">
-                <CardTitle className="text-base">
+                <CardTitle className="text-base leading-6">
                   Informations essentielles
                 </CardTitle>
                 <CardDescription className="mt-1">

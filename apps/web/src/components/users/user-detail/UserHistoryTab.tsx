@@ -2070,7 +2070,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
           <div className="border-destructive/35 bg-destructive/10 text-destructive flex size-16 items-center justify-center rounded-md border">
             <XCircle className="size-8" />
           </div>
-          <h3 className="text-foreground mt-5 text-lg font-semibold">
+          <h3 className="text-foreground mt-5 text-base leading-6 font-semibold">
             Activité indisponible
           </h3>
           <p className="text-muted-foreground mt-2 max-w-sm text-sm">{error}</p>
@@ -2094,7 +2094,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
           <div className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-20 items-center justify-center rounded-md border">
             <History className="size-10" />
           </div>
-          <h3 className="text-foreground mt-6 text-lg font-semibold">
+          <h3 className="text-foreground mt-6 text-base leading-6 font-semibold">
             Aucune activité
           </h3>
           <p className="text-muted-foreground mt-2 max-w-xs text-center text-sm">
@@ -2132,7 +2132,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                   <div className="flex flex-wrap items-center gap-2">
                     <h2
                       id="managed-activity-heading"
-                      className="text-foreground font-semibold"
+                      className="text-foreground text-base leading-6 font-semibold"
                     >
                       {journalTitle}
                     </h2>
@@ -2220,7 +2220,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
             {isPersonalPerspective ? (
               <div className="border-border/55 space-y-4 border-b px-4 py-3">
                 <div className="space-y-1">
-                  <h2 className="text-foreground text-lg font-semibold">
+                  <h2 className="text-foreground text-base leading-6 font-semibold">
                     Activité
                   </h2>
                   <p className="text-muted-foreground text-sm leading-6">

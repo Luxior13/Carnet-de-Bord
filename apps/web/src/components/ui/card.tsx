@@ -48,7 +48,7 @@ const CardTitle: FC<CardTitleProps> = ({
     <Heading
       data-slot="card-title"
       className={cn(
-        'text-base leading-6 font-semibold tracking-normal [overflow-wrap:anywhere]',
+        'text-sm leading-5 font-semibold tracking-normal [overflow-wrap:anywhere]',
         className,
       )}
       {...props}
@@ -60,7 +60,10 @@ const CardDescription: FC<CardProps> = ({ className, ...props }) => {
   return (
     <div
       data-slot="card-description"
-      className={cn('text-muted-foreground text-sm', className)}
+      className={cn(
+        'text-muted-foreground text-sm leading-6 [overflow-wrap:anywhere]',
+        className,
+      )}
       {...props}
     />
   );
