@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 
 import { useUser } from '$context/UserContext';
+import { Button } from '$ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 
 import { getPersonFieldHistory } from '../person.api';
@@ -111,14 +112,16 @@ export const PersonFieldProvenanceHint: FC<PersonFieldProvenanceHintProps> = ({
   return (
     <Tooltip onOpenChange={handleOpenChange} open={isOpen}>
       <TooltipTrigger asChild>
-        <button
+        <Button
+          variant="ghost"
+          size="inline"
           aria-label={`Voir l'origine : ${target.label}`}
           className="text-muted-foreground hover:bg-surface-control-hover hover:text-foreground focus-visible:ring-ring/40 inline-flex size-6 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-2"
           onClick={() => handleOpenChange(!isOpen)}
           type="button"
         >
           <Info className="size-3.5" />
-        </button>
+        </Button>
       </TooltipTrigger>
       <TooltipContent className="max-w-72 space-y-0.5 px-3 py-2" side="top">
         {loading ? (

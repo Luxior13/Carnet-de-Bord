@@ -27,6 +27,7 @@ import { useUser } from '$context/UserContext';
 import { buildSearchCatalog } from '$features/search/search-catalog';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
+import { Card } from '$ui/card';
 import { Input } from '$ui/input';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import {
@@ -131,7 +132,7 @@ export const SearchPage: FC = () => {
       <PageShell className="py-0">
         <PageCanvas contentClassName="space-y-5">
           <PageHero
-            description="Explorez toutes les destinations actuellement disponibles pour votre compte. Les futures sources métier rejoindront ce même catalogue sans modifier l’accès rapide."
+            description="Retrouvez les pages accessibles à votre compte et affinez les résultats par pôle ou par catégorie."
             icon={<Search className="size-5" />}
             meta={
               <>
@@ -144,14 +145,15 @@ export const SearchPage: FC = () => {
             title="Recherche avancée"
           />
 
-          <section
+          <Card
+            as="section"
             aria-labelledby="search-filters-title"
-            className="border-border-default bg-surface-panel rounded-xl border p-4 shadow-[var(--shadow-panel)]"
+            className="p-4"
           >
             <div className="mb-3 flex items-center gap-2">
               <SlidersHorizontal
                 aria-hidden="true"
-                className="text-primary-emphasis size-4"
+                className="text-muted-foreground size-4"
               />
               <h2 className="text-sm font-semibold" id="search-filters-title">
                 Recherche et filtres
@@ -179,7 +181,9 @@ export const SearchPage: FC = () => {
                   value={queryInput}
                 />
                 {queryInput && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="inline"
                     aria-label="Effacer la recherche"
                     className="text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground focus-visible:ring-ring/50 absolute top-1/2 right-1 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg outline-none focus-visible:ring-2"
                     onClick={() => {
@@ -189,7 +193,7 @@ export const SearchPage: FC = () => {
                     type="button"
                   >
                     <CircleX className="size-4" />
-                  </button>
+                  </Button>
                 )}
               </div>
               <Select
@@ -233,7 +237,7 @@ export const SearchPage: FC = () => {
                 Rechercher
               </Button>
             </form>
-          </section>
+          </Card>
 
           <section aria-labelledby="search-results-title">
             <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
@@ -276,39 +280,41 @@ export const SearchPage: FC = () => {
 
                   return (
                     <li key={result.id}>
-                      <Link
-                        className="border-border-default bg-surface-panel hover:border-primary/35 hover:bg-surface-tile-hover focus-visible:ring-ring/40 group flex h-full min-w-0 items-start gap-3 rounded-xl border p-4 shadow-[var(--shadow-panel)] transition-[background-color,border-color] outline-none focus-visible:ring-2"
-                        href={result.href}
+                      <Card
+                        asChild
+                        className="hover:border-border-strong hover:bg-surface-tile-hover focus-visible:ring-ring/40 group h-full min-w-0 flex-row items-start gap-3 p-4 transition-[background-color,border-color] outline-none focus-visible:ring-2"
                       >
-                        <span
-                          aria-hidden="true"
-                          className={cn(
-                            'flex size-10 shrink-0 items-center justify-center rounded-lg border',
-                            tone.icon,
-                          )}
-                        >
-                          <Icon className="size-4" />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="flex flex-wrap items-center gap-2">
-                            <span className="text-foreground text-sm font-semibold sm:text-base">
-                              {result.label}
-                            </span>
-                            <Badge variant="outline">
-                              {result.sourceLabel}
-                            </Badge>
+                        <Link href={result.href}>
+                          <span
+                            aria-hidden="true"
+                            className={cn(
+                              'flex size-10 shrink-0 items-center justify-center rounded-lg border',
+                              tone.icon,
+                            )}
+                          >
+                            <Icon className="size-4" />
                           </span>
-                          {result.description && (
-                            <span className="text-muted-foreground mt-1.5 line-clamp-2 block text-sm leading-5">
-                              {result.description}
+                          <span className="min-w-0 flex-1">
+                            <span className="flex flex-wrap items-center gap-2">
+                              <span className="text-foreground text-sm font-semibold sm:text-base">
+                                {result.label}
+                              </span>
+                              <Badge variant="outline">
+                                {result.sourceLabel}
+                              </Badge>
                             </span>
-                          )}
-                          <span className="text-muted-foreground mt-2 block text-xs font-medium">
-                            {result.groupLabel}
+                            {result.description && (
+                              <span className="text-muted-foreground mt-1.5 line-clamp-2 block text-sm leading-5">
+                                {result.description}
+                              </span>
+                            )}
+                            <span className="text-muted-foreground mt-2 block text-xs font-medium">
+                              {result.groupLabel}
+                            </span>
                           </span>
-                        </span>
-                        <ArrowRight className="text-muted-foreground group-hover:text-primary-emphasis mt-1 size-4 shrink-0 transition-colors" />
-                      </Link>
+                          <ArrowRight className="text-muted-foreground group-hover:text-primary-emphasis mt-1 size-4 shrink-0 transition-colors" />
+                        </Link>
+                      </Card>
                     </li>
                   );
                 })}

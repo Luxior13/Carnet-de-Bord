@@ -219,7 +219,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
           )}
         </CardHeader>
         <CardContent className="p-3 sm:p-4">
-          <dl className="divide-border/60 divide-y">
+          <dl className="divide-border-divider border-border-divider [&>div:nth-child(even)]:bg-surface-row-alternate divide-y overflow-hidden rounded-xl border [&>div]:px-4">
             <div className="grid gap-1 py-3 sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-4">
               <dt className="text-muted-foreground text-sm">Identité</dt>
               <dd className="text-foreground text-sm font-medium sm:text-right">
@@ -266,7 +266,11 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">
           <div className="grid gap-3 xl:grid-cols-2">
-            <SectionPanel icon={<User className="size-3.5" />} title="Identité">
+            <SectionPanel
+              titleAs="h3"
+              icon={<User className="size-3.5" />}
+              title="Identité"
+            >
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label
@@ -331,6 +335,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
               </div>
             </SectionPanel>
             <SectionPanel
+              titleAs="h3"
               icon={<AtSign className="size-3.5" />}
               title="Connexion et contact"
             >

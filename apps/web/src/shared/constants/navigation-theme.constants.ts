@@ -1,12 +1,17 @@
 export type NavigationSpaceTone =
-  'dashboard' | 'internal' | 'legal' | 'sport' | 'system' | 'treasury';
+  | 'activity'
+  | 'dashboard'
+  | 'internal'
+  | 'legal'
+  | 'sport'
+  | 'system'
+  | 'treasury';
 
 export type NavigationSpaceToneClasses = {
   accent: string;
   activeItem: string;
   branchButton: string;
   dot: string;
-  hero: string;
   icon: string;
   menuButton: string;
   row: string;
@@ -14,26 +19,34 @@ export type NavigationSpaceToneClasses = {
   subButton: string;
 };
 
-const baseHero =
-  'border-border/70 bg-surface text-foreground shadow-[var(--shadow-panel)]';
 const baseRow =
-  'hover:bg-sidebar-accent/55 focus:bg-sidebar-accent/65 focus:text-sidebar-foreground';
+  'hover:bg-surface-navigation-hover focus:bg-surface-navigation-hover focus:text-foreground';
 const baseActiveItem =
-  'bg-primary/10 text-sidebar-foreground [&>svg]:text-primary';
+  'bg-surface-navigation-active text-sidebar-foreground [&>svg]:text-sidebar-foreground';
 const baseBranchButton =
-  'bg-primary/5 text-sidebar-foreground [&>svg]:text-primary';
+  'bg-surface-navigation-hover text-sidebar-foreground [&>svg]:text-sidebar-foreground';
 const baseMenuButton =
-  'data-[active=true]:bg-primary/10 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-primary';
+  'data-[active=true]:bg-surface-navigation-active data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground';
 const baseSubButton =
-  'data-[active=true]:bg-primary/10 data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-primary';
+  'data-[active=true]:bg-surface-navigation-active data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground';
 
 export const NAVIGATION_SPACE_TONE_CLASSES = {
+  activity: {
+    accent: 'bg-nav-activity',
+    activeItem: baseActiveItem,
+    branchButton: baseBranchButton,
+    dot: 'bg-nav-activity',
+    icon: 'border-nav-activity/30 bg-nav-activity/10 text-nav-activity-icon',
+    menuButton: baseMenuButton,
+    row: baseRow,
+    soft: 'border-nav-activity/25 bg-nav-activity/10 text-nav-activity-foreground',
+    subButton: baseSubButton,
+  },
   dashboard: {
     accent: 'bg-nav-dashboard',
     activeItem: baseActiveItem,
     branchButton: baseBranchButton,
     dot: 'bg-nav-dashboard',
-    hero: baseHero,
     icon: 'border-nav-dashboard/30 bg-nav-dashboard/10 text-nav-dashboard-icon',
     menuButton: baseMenuButton,
     row: baseRow,
@@ -45,7 +58,6 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
     activeItem: baseActiveItem,
     branchButton: baseBranchButton,
     dot: 'bg-nav-internal',
-    hero: baseHero,
     icon: 'border-nav-internal/30 bg-nav-internal/10 text-nav-internal-icon',
     menuButton: baseMenuButton,
     row: baseRow,
@@ -57,7 +69,6 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
     activeItem: baseActiveItem,
     branchButton: baseBranchButton,
     dot: 'bg-nav-legal',
-    hero: baseHero,
     icon: 'border-nav-legal/30 bg-nav-legal/10 text-nav-legal-icon',
     menuButton: baseMenuButton,
     row: baseRow,
@@ -69,7 +80,6 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
     activeItem: baseActiveItem,
     branchButton: baseBranchButton,
     dot: 'bg-nav-sport',
-    hero: baseHero,
     icon: 'border-nav-sport/30 bg-nav-sport/10 text-nav-sport-icon',
     menuButton: baseMenuButton,
     row: baseRow,
@@ -81,7 +91,6 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
     activeItem: baseActiveItem,
     branchButton: baseBranchButton,
     dot: 'bg-nav-system',
-    hero: baseHero,
     icon: 'border-nav-system/30 bg-nav-system/10 text-nav-system-icon',
     menuButton: baseMenuButton,
     row: baseRow,
@@ -93,7 +102,6 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
     activeItem: baseActiveItem,
     branchButton: baseBranchButton,
     dot: 'bg-nav-treasury',
-    hero: baseHero,
     icon: 'border-nav-treasury/30 bg-nav-treasury/10 text-nav-treasury-icon',
     menuButton: baseMenuButton,
     row: baseRow,
@@ -106,6 +114,8 @@ export function getNavigationSpaceToneClasses(
   tone: NavigationSpaceTone,
 ): NavigationSpaceToneClasses {
   switch (tone) {
+    case 'activity':
+      return NAVIGATION_SPACE_TONE_CLASSES.activity;
     case 'dashboard':
       return NAVIGATION_SPACE_TONE_CLASSES.dashboard;
     case 'internal':

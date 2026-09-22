@@ -5,6 +5,35 @@ import type { PersonDetail, PersonStructureStatus } from './types/person.types';
 
 export type PersonFormErrors = Record<string, string>;
 
+export const PERSON_DIRECTORY_PATH = '/vie-interne/repertoire';
+
+const RETURN_PATH_ORIGIN = 'https://team-control.local';
+
+/**
+ * Reads a `returnTo` value coming from the URL and keeps it only when it stays
+ * on the directory page. Any other value silently falls back to the directory
+ * root, so a crafted query string can never turn into an external redirect.
+ */
+export const getSafePersonReturnHref = (
+  value: string | string[] | null | undefined,
+): string => {
+  const candidate = Array.isArray(value) ? value[0] : value;
+  if (!candidate?.startsWith('/')) return PERSON_DIRECTORY_PATH;
+  try {
+    const parsed = new URL(candidate, RETURN_PATH_ORIGIN);
+    if (
+      parsed.origin !== RETURN_PATH_ORIGIN ||
+      parsed.pathname !== PERSON_DIRECTORY_PATH
+    ) {
+      return PERSON_DIRECTORY_PATH;
+    }
+
+    return `${parsed.pathname}${parsed.search}`;
+  } catch {
+    return PERSON_DIRECTORY_PATH;
+  }
+};
+
 const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('fr-FR', {
   dateStyle: 'medium',
   timeStyle: 'short',

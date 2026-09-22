@@ -1,9 +1,10 @@
 'use client';
 
 import { UserRole } from '@repo/shared';
-import { ChevronDown, CircleAlert, RotateCcw, ShieldCheck } from 'lucide-react';
+import { CircleAlert, RotateCcw, ShieldCheck } from 'lucide-react';
 import React, { type FC, memo, useCallback, useMemo } from 'react';
 
+import { Disclosure } from '$components/layout/Disclosure';
 import {
   buildPermissionOverrideChange as buildPermissionOverrideChangeData,
   buildResetPermissionOverrides as buildResetPermissionOverridesData,
@@ -34,6 +35,7 @@ import {
   type PermissionsData,
 } from '$constants/permissions.constants';
 import { Badge } from '$ui/badge';
+import { Label } from '$ui/label';
 import {
   Select,
   SelectContent,
@@ -421,11 +423,10 @@ const PermissionCard: FC<PermissionCardProps> = memo(
                 {view.missingDependencyLabels.join(', ')}
               </p>
             ) : null}
-            <details className="group/details w-fit max-w-full">
-              <summary className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer list-none items-center gap-1 text-xs font-medium transition-colors [&::-webkit-details-marker]:hidden">
-                Détails et héritage
-                <ChevronDown className="size-3.5 transition-transform group-open/details:rotate-180" />
-              </summary>
+            <Disclosure
+              label="Détails et héritage"
+              className="w-fit max-w-full"
+            >
               <div className="border-border/55 text-muted-foreground mt-2 space-y-1.5 border-l pl-3 text-xs leading-5">
                 <p>Action : {ACTION_LABELS[permission.action]}</p>
                 <p>
@@ -441,7 +442,7 @@ const PermissionCard: FC<PermissionCardProps> = memo(
                   </p>
                 )}
               </div>
-            </details>
+            </Disclosure>
           </div>
           {permission.grantable ? (
             <PermissionStatePicker
@@ -937,12 +938,12 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
               </div>
               <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
                 <div className="min-w-0 space-y-2">
-                  <label
+                  <Label
                     htmlFor="permission-pole"
                     className="text-muted-foreground text-xs font-medium"
                   >
                     Pôle
-                  </label>
+                  </Label>
                   <Select
                     value={selectedPole?.key}
                     onValueChange={handlePoleChange}
@@ -981,12 +982,12 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                   </Select>
                 </div>
                 <div className="min-w-0 space-y-2">
-                  <label
+                  <Label
                     htmlFor="permission-page"
                     className="text-muted-foreground text-xs font-medium"
                   >
                     Page
-                  </label>
+                  </Label>
                   <Select
                     value={selectedCategory.key}
                     onValueChange={onSelectedPageChange}

@@ -22,7 +22,7 @@ export const UsersAdminHero: FC<UsersAdminHeroProps> = ({
   icon,
   iconClassName,
   meta,
-  showSpaceBadge = true,
+  showSpaceBadge = false,
   title,
 }) => {
   const tone = getNavigationSpaceToneClasses('system');

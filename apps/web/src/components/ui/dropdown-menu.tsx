@@ -89,7 +89,7 @@ const DropdownMenuItem: FC<DropdownMenuItemProps> = ({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "focus:bg-surface-tile-hover focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive [&_svg:not([class*='text-'])]:text-muted-foreground relative flex min-h-10 cursor-default items-center gap-2 rounded-lg px-2 py-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 lg:min-h-0 lg:py-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus:bg-surface-tile-hover focus:text-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive [&_svg:not([class*='text-'])]:text-muted-foreground relative flex min-h-10 cursor-default items-center gap-2 rounded-xl px-2 py-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 lg:min-h-0 lg:py-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}
@@ -111,7 +111,7 @@ const DropdownMenuCheckboxItem: FC<DropdownMenuCheckboxItemProps> = ({
     <DropdownMenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
       className={cn(
-        "focus:bg-surface-tile-hover focus:text-accent-foreground relative flex min-h-10 cursor-default items-center gap-2 rounded-lg py-2 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 lg:min-h-0 lg:py-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus:bg-surface-tile-hover focus:text-foreground relative flex min-h-10 cursor-default items-center gap-2 rounded-xl py-2 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 lg:min-h-0 lg:py-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       checked={checked}
@@ -155,7 +155,7 @@ const DropdownMenuRadioItem: FC<DropdownMenuRadioItemProps> = ({
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       className={cn(
-        "focus:bg-surface-tile-hover focus:text-accent-foreground relative flex min-h-10 cursor-default items-center gap-2 rounded-lg py-2 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 lg:min-h-0 lg:py-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus:bg-surface-tile-hover focus:text-foreground relative flex min-h-10 cursor-default items-center gap-2 rounded-xl py-2 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 lg:min-h-0 lg:py-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}
@@ -254,7 +254,7 @@ const DropdownMenuSubTrigger: FC<DropdownMenuSubTriggerProps> = ({
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
       className={cn(
-        'focus:bg-surface-tile-hover focus:text-accent-foreground data-[state=open]:bg-surface-tile-hover data-[state=open]:text-accent-foreground flex min-h-10 cursor-default items-center rounded-lg px-2 py-2 text-sm outline-hidden select-none data-[inset]:pl-8 lg:min-h-0 lg:py-1.5',
+        'focus:bg-surface-tile-hover focus:text-foreground data-[state=open]:bg-primary/10 data-[state=open]:text-foreground flex min-h-10 cursor-default items-center rounded-xl px-2 py-2 text-sm outline-hidden select-none data-[inset]:pl-8 lg:min-h-0 lg:py-1.5',
         className,
       )}
       {...props}
@@ -277,7 +277,7 @@ const DropdownMenuSubContent: FC<DropdownMenuSubContentProps> = ({
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
       className={cn(
-        'border-border-strong bg-surface-floating text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem] overflow-hidden rounded-xl border p-1 shadow-[var(--shadow-panel-strong)]',
+        'border-border-strong bg-surface-floating text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem] overflow-hidden rounded-2xl border p-1 shadow-[var(--shadow-panel-strong)]',
         className,
       )}
       {...props}

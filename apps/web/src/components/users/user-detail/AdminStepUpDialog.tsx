@@ -163,7 +163,7 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
         if (!isOpen && !submissionInFlightRef.current) onCancel();
       }}
     >
-      <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto p-0 sm:max-w-lg">
+      <DialogContent className="p-0 sm:max-w-lg">
         <div className="bg-primary h-1" />
         <div className="p-6">
           <DialogHeader>

@@ -27,6 +27,7 @@ import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
+import { Disclosure } from '$components/layout/Disclosure';
 import { PageHero } from '$components/layout/PageHero';
 import { AccessDeniedState } from '$components/layout/PageState';
 import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
@@ -55,6 +56,7 @@ import { type ApiResponse, ErrorCode } from '$types/api.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Input } from '$ui/input';
+import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import {
   Select,
@@ -490,7 +492,7 @@ const ChangeItem: FC<AuditChangeDiff> = ({ after, before, fieldKey }) => {
         </span>
       ) : (
         <div className="flex min-w-0 flex-wrap items-start gap-1.5">
-          <span className="text-muted-foreground/70 font-medium uppercase">
+          <span className="text-muted-foreground font-medium uppercase">
             Avant
           </span>
           <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 break-all whitespace-pre-wrap line-through">
@@ -627,7 +629,9 @@ const JournalCard: FC<{
             <EventIcon className="size-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <button
+            <Button
+              variant="ghost"
+              size="inline"
               aria-controls={detailsId}
               aria-expanded={isOpen}
               className="text-foreground block w-full text-left text-sm font-semibold"
@@ -645,10 +649,12 @@ const JournalCard: FC<{
                   sur son compte
                 </span>
               )}
-            </button>
+            </Button>
             <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
               {actorLabel !== 'Système' && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="inline"
                   className="hover:text-foreground underline-offset-2 hover:underline"
                   onClick={() =>
                     onIdentityFilter(actorLabel, 'actor', log.userId)
@@ -656,10 +662,12 @@ const JournalCard: FC<{
                   type="button"
                 >
                   Acteur : {actorLabel}
-                </button>
+                </Button>
               )}
               {targetLabel && !sameIdentity && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="inline"
                   className="hover:text-foreground underline-offset-2 hover:underline"
                   onClick={() =>
                     onIdentityFilter(targetLabel, 'target', log.targetUserId)
@@ -667,7 +675,7 @@ const JournalCard: FC<{
                   type="button"
                 >
                   Cible : {targetLabel}
-                </button>
+                </Button>
               )}
               {personEntityLabel && (
                 <span title={personEntityLabel}>
@@ -767,12 +775,10 @@ const JournalCard: FC<{
                 </div>
               </section>
             )}
-            <details className="group/technical">
-              <summary className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium transition-colors [&::-webkit-details-marker]:hidden">
-                <Key className="size-3" />
-                Détails techniques
-                <ChevronDown className="size-3 transition-transform group-open/technical:rotate-180" />
-              </summary>
+            <Disclosure
+              label="Détails techniques"
+              icon={<Key aria-hidden="true" className="size-3" />}
+            >
               <div className="mt-2 space-y-1.5">
                 {technicalValues.map(([label, value]) => (
                   <CopyableTechnicalValue
@@ -788,7 +794,7 @@ const JournalCard: FC<{
                   />
                 )}
               </div>
-            </details>
+            </Disclosure>
           </div>
         </div>
       )}
@@ -1344,12 +1350,14 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                 </span>
                 <div className="border-border-control bg-input inline-flex h-10 rounded-md border p-1">
                   {(['activity', 'connections'] as const).map((logType) => (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="inline"
                       aria-pressed={filters.logType === logType}
                       className={cn(
                         'rounded px-3 text-sm font-medium transition-colors',
                         filters.logType === logType
-                          ? 'bg-primary/15 text-primary-emphasis'
+                          ? 'bg-surface-navigation-active text-foreground'
                           : 'text-muted-foreground hover:text-foreground',
                       )}
                       key={logType}
@@ -1359,18 +1367,18 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                       type="button"
                     >
                       {logType === 'activity' ? 'Activité' : 'Connexions'}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label
+                <Label
                   className="text-muted-foreground mb-1.5 block text-xs font-medium"
                   htmlFor="journal-search"
                 >
                   Acteur, cible ou événement
-                </label>
+                </Label>
                 <div className="relative">
                   <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                   <Input
@@ -1398,12 +1406,12 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
               </div>
 
               <div>
-                <label
+                <Label
                   className="text-muted-foreground mb-1.5 block text-xs font-medium"
                   htmlFor="journal-period"
                 >
                   Période
-                </label>
+                </Label>
                 <Select
                   value={filters.period}
                   onValueChange={handlePeriodChange}
@@ -1469,12 +1477,12 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                 id={filtersId}
               >
                 <div>
-                  <label
+                  <Label
                     className="text-muted-foreground mb-1.5 block text-xs font-medium"
                     htmlFor="journal-action"
                   >
                     Action
-                  </label>
+                  </Label>
                   <Select
                     value={filters.action}
                     onValueChange={(action) => updateFilters({ action })}
@@ -1505,12 +1513,12 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                 {filters.logType === 'activity' && (
                   <>
                     <div>
-                      <label
+                      <Label
                         className="text-muted-foreground mb-1.5 block text-xs font-medium"
                         htmlFor="journal-category"
                       >
                         Catégorie
-                      </label>
+                      </Label>
                       <Select
                         value={filters.category}
                         onValueChange={(category) =>
@@ -1538,12 +1546,12 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                     </div>
 
                     <div>
-                      <label
+                      <Label
                         className="text-muted-foreground mb-1.5 block text-xs font-medium"
                         htmlFor="journal-pole"
                       >
                         Pôle
-                      </label>
+                      </Label>
                       <Select
                         value={filters.poleKey}
                         onValueChange={(poleKey) =>
@@ -1573,12 +1581,12 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                     </div>
 
                     <div>
-                      <label
+                      <Label
                         className="text-muted-foreground mb-1.5 block text-xs font-medium"
                         htmlFor="journal-page"
                       >
                         Page
-                      </label>
+                      </Label>
                       <Select
                         disabled={filters.poleKey === ALL_FILTER_VALUE}
                         value={filters.pageKey}
@@ -1657,14 +1665,16 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                       variant="secondary"
                     >
                       <span className="truncate">{chip.label}</span>
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="inline"
                         aria-label={`Retirer le filtre ${chip.label}`}
                         className="hover:text-foreground rounded p-0.5"
                         onClick={() => removeFilter(chip.key)}
                         type="button"
                       >
                         <X className="size-3" />
-                      </button>
+                      </Button>
                     </Badge>
                   ))
                 )}

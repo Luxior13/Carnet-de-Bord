@@ -2,12 +2,9 @@ import { Prisma } from '@prisma/client';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import {
-  handlePersonApiError,
-  withPrivateNoStore,
-  zodErrorDetails,
-} from '$features/persons/server/person-api';
+import { handlePersonApiError } from '$features/persons/server/person-api';
 import { PersonDomainError } from '$features/persons/server/person-errors';
+import { withPrivateNoStore, zodErrorDetails } from '$server/api-response';
 import { ErrorCode } from '$types/api.types';
 
 const mocks = vi.hoisted(() => ({

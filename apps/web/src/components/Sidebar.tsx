@@ -23,6 +23,7 @@ import {
 } from '$constants/navigation-theme.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
+import { Button } from '$ui/button';
 import {
   Collapsible,
   CollapsibleContent,
@@ -63,26 +64,26 @@ type SidebarProps = {
 };
 
 const SIDEBAR_POPOVER_PANEL_CLASS =
-  'border-border-default bg-surface-floating text-popover-foreground flex max-h-[var(--radix-dropdown-menu-content-available-height)] flex-col overflow-hidden rounded-lg border p-0 shadow-[var(--shadow-panel-strong)]';
+  'border-border-default bg-surface-floating text-popover-foreground flex max-h-[var(--radix-dropdown-menu-content-available-height)] flex-col overflow-hidden rounded-xl border p-0 shadow-[var(--shadow-panel-strong)]';
 const SIDEBAR_POPOVER_SCROLL_CLASS =
   'min-h-0 flex-1 overflow-y-auto overscroll-contain p-2';
 const SIDEBAR_POPOVER_SECTION_CLASS = 'space-y-0.5';
 const SIDEBAR_POPOVER_SECTION_LABEL_CLASS =
   'text-muted-foreground px-2 py-1.5 text-xs font-medium';
 const SIDEBAR_POPOVER_ACTION_BASE_CLASS =
-  'group/menu-action text-foreground flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm font-medium transition-colors duration-150';
+  'group/menu-action text-foreground flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150';
 const SIDEBAR_POPOVER_ACTION_CLASS =
-  'hover:bg-surface-tile-hover focus:bg-surface-tile-hover focus:text-foreground';
+  'hover:bg-surface-navigation-hover hover:text-foreground focus:bg-surface-navigation-hover focus:text-foreground';
 const SIDEBAR_POPOVER_DANGER_ACTION_CLASS =
   'hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive';
 const SIDEBAR_POPOVER_ICON_BASE_CLASS =
-  'flex size-8 shrink-0 items-center justify-center rounded-md transition-colors duration-150';
+  'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150';
 const SIDEBAR_POPOVER_ICON_ACTION_CLASS =
-  'bg-primary/10 text-primary-emphasis ring-primary/15 ring-1 group-hover/menu-action:bg-primary/15 group-focus/menu-action:bg-primary/15';
+  'bg-surface-inset text-muted-foreground ring-border-default ring-1 group-hover/menu-action:text-foreground group-focus/menu-action:text-foreground';
 const SIDEBAR_POPOVER_ICON_DANGER_CLASS =
   'bg-surface-panel text-muted-foreground ring-border-subtle ring-1 group-hover/menu-action:bg-destructive/10 group-hover/menu-action:text-destructive group-hover/menu-action:ring-destructive/20 group-focus/menu-action:bg-destructive/10 group-focus/menu-action:text-destructive group-focus/menu-action:ring-destructive/20';
 const SIDEBAR_POPOVER_CHEVRON_CLASS =
-  'text-muted-foreground size-3.5 shrink-0 transition-[color,opacity,transform] duration-150 group-hover/menu-action:translate-x-0.5 group-hover/menu-action:text-foreground';
+  'text-muted-foreground size-3.5 shrink-0 transition-[color,opacity,transform] duration-150 group-hover/menu-action:text-foreground';
 
 function isActivePath(pathname: string, href: string, exact = false): boolean {
   if (exact) return pathname === href;
@@ -136,14 +137,14 @@ const SpaceSwitcher: FC<{
     if (!isCollapsed) setIsTooltipOpen(false);
   }, [isCollapsed]);
   const rowClassName = cn(
-    'flex h-11 w-full min-w-0 items-center gap-2.5 rounded-md bg-transparent px-2 text-left transition-[background-color,color] outline-none lg:h-10',
+    'flex h-11 w-full min-w-0 items-center gap-2.5 rounded-lg border border-border-default bg-surface-panel px-3 text-left transition-[background-color,border-color,color] outline-none hover:bg-surface-panel-raised lg:h-10',
     'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-3',
   );
   const rowContent = (
     <>
       <span
         className={cn(
-          'flex size-8 shrink-0 items-center justify-center rounded-md border',
+          'flex size-8 shrink-0 items-center justify-center rounded-lg border',
           activeTone.icon,
         )}
       >
@@ -167,17 +168,18 @@ const SpaceSwitcher: FC<{
   }
 
   const switcherButton = (
-    <button
+    <Button
+      variant="outline"
       type="button"
       aria-label={`Changer de pôle. Pôle actuel : ${activeSpace.label}`}
       className={cn(
         rowClassName,
-        'group/space-switcher hover:bg-sidebar-accent/55 focus-visible:ring-sidebar-ring data-[state=open]:bg-sidebar-accent/65 focus-visible:ring-2',
+        'group/space-switcher hover:bg-surface-panel-raised focus-visible:ring-sidebar-ring data-[state=open]:bg-surface-panel-raised focus-visible:ring-2',
       )}
     >
       {rowContent}
-      <ChevronDown className="text-sidebar-foreground/60 size-4 shrink-0 transition-transform group-data-[collapsible=icon]/sidebar:hidden group-data-[state=open]/space-switcher:rotate-180 motion-reduce:transition-none" />
-    </button>
+      <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform group-data-[collapsible=icon]/sidebar:hidden group-data-[state=open]/space-switcher:rotate-180 motion-reduce:transition-none" />
+    </Button>
   );
 
   const renderSpaceItem = (space: NavigationSpace): React.ReactNode => {
@@ -229,17 +231,15 @@ const SpaceSwitcher: FC<{
             </span>
             <span
               className={cn(
-                'mt-0.5 block truncate text-[11px] leading-4',
-                isActive
-                  ? 'text-sidebar-foreground/70'
-                  : 'text-sidebar-foreground/60',
+                'text-caption mt-0.5 block truncate leading-4',
+                isActive ? 'text-muted-foreground' : 'text-muted-foreground',
               )}
             >
               {space.summary}
             </span>
           </span>
           {isActive ? (
-            <span className="bg-primary/10 text-primary-emphasis inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-semibold">
+            <span className="bg-surface-navigation-active text-foreground text-caption inline-flex shrink-0 items-center rounded-full px-2 py-0.5 font-semibold">
               Actuel
             </span>
           ) : (
@@ -452,7 +452,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               <DropdownMenuContent
                 align="start"
                 aria-label={item.label}
-                className="border-border-default bg-surface-floating text-popover-foreground w-64 overflow-hidden rounded-lg border p-2 shadow-[var(--shadow-panel-strong)]"
+                className="border-border-default bg-surface-floating text-popover-foreground w-64 overflow-hidden rounded-xl border p-2 shadow-[var(--shadow-panel-strong)]"
                 side="right"
                 sideOffset={8}
               >
@@ -678,12 +678,13 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
         {userData && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
+              <Button
+                variant="outline"
                 type="button"
                 aria-label={`Menu utilisateur de ${userDisplayName}`}
                 title={isCollapsed ? userDisplayName : undefined}
                 className={cn(
-                  'group/account-menu hover:bg-sidebar-accent/55 focus-visible:ring-sidebar-ring data-[state=open]:bg-sidebar-accent/65 flex h-11 min-w-0 items-center gap-2.5 overflow-hidden rounded-md px-2 text-left transition-colors outline-none focus-visible:ring-2 lg:h-10',
+                  'group/account-menu hover:bg-surface-panel-raised focus-visible:ring-sidebar-ring data-[state=open]:bg-surface-panel-raised border-border-default bg-surface-panel flex h-11 min-w-0 items-center gap-2.5 overflow-hidden rounded-lg border px-3 text-left transition-colors outline-none focus-visible:ring-2 lg:h-10',
                   'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-3',
                 )}
               >
@@ -696,8 +697,8 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                     {userAccessLabel}
                   </span>
                 </span>
-                <ChevronDown className="text-sidebar-foreground/60 size-4 shrink-0 transition-transform group-data-[collapsible=icon]/sidebar:hidden group-data-[state=open]/account-menu:rotate-180 motion-reduce:transition-none" />
-              </button>
+                <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform group-data-[collapsible=icon]/sidebar:hidden group-data-[state=open]/account-menu:rotate-180 motion-reduce:transition-none" />
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               aria-label={`Compte de ${userDisplayName}`}
@@ -710,15 +711,11 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 'border-border-strong w-[min(19rem,calc(100vw-2rem))] shadow-[var(--shadow-account-popover)]',
               )}
             >
-              <div className="border-border-default bg-primary/5 relative border-b px-3.5 py-3.5">
-                <span
-                  aria-hidden="true"
-                  className="bg-border-strong absolute inset-x-0 top-0 h-px opacity-70"
-                />
+              <div className="border-border-divider bg-surface-panel-header border-b px-4 py-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <UserAvatar
                     user={userData}
-                    className="ring-primary/25 size-11 rounded-lg ring-2"
+                    className="ring-border-default size-11 rounded-lg ring-1"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="text-foreground block truncate text-sm leading-5 font-semibold">
@@ -739,10 +736,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 </DropdownMenuLabel>
                 <DropdownMenuGroup
                   aria-label="Accès au compte"
-                  className={cn(
-                    SIDEBAR_POPOVER_SECTION_CLASS,
-                    'bg-surface-panel-raised/55 ring-border-subtle rounded-lg p-1 ring-1',
-                  )}
+                  className={SIDEBAR_POPOVER_SECTION_CLASS}
                 >
                   <DropdownMenuItem
                     asChild
@@ -750,7 +744,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                       SIDEBAR_POPOVER_ACTION_BASE_CLASS,
                       'min-h-12',
                       isAccountActive
-                        ? 'bg-primary/10 text-foreground focus:bg-primary/15'
+                        ? 'bg-surface-navigation-active text-foreground focus:bg-surface-navigation-active'
                         : SIDEBAR_POPOVER_ACTION_CLASS,
                     )}
                   >
@@ -773,7 +767,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate">Mon compte</span>
-                        <span className="text-muted-foreground block truncate text-[11px] leading-4 font-normal">
+                        <span className="text-muted-foreground text-caption block truncate leading-4 font-normal">
                           Profil, sécurité et activité
                         </span>
                       </span>
@@ -786,7 +780,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 </DropdownMenuGroup>
               </div>
 
-              <div className="border-border-default bg-surface-page/65 border-t p-2">
+              <div className="border-border-default bg-surface-inset border-t p-2">
                 <DropdownMenuItem
                   onSelect={() => {
                     setOpenMobile(false);

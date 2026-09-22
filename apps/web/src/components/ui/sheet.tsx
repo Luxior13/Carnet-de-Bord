@@ -31,7 +31,7 @@ const SheetOverlay = React.forwardRef<
 SheetOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 const sheetVariants = cva(
-  'border-border-strong bg-surface text-popover-foreground fixed z-50 gap-4 border p-6 shadow-[var(--shadow-panel-strong)] transition ease-out data-[state=closed]:duration-200 data-[state=open]:duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out',
+  'border-border-strong bg-surface text-popover-foreground fixed z-50 max-h-dvh overflow-y-auto overscroll-contain gap-4 border p-6 shadow-[var(--shadow-panel-strong)] transition ease-out data-[state=closed]:duration-200 data-[state=open]:duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out',
   {
     defaultVariants: {
       side: 'right',
@@ -80,10 +80,7 @@ const SheetHeader = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>): React.ReactNode => (
   <div
-    className={cn(
-      'flex flex-col space-y-2 text-center sm:text-left',
-      className,
-    )}
+    className={cn('flex flex-col space-y-2 pr-8 text-left', className)}
     {...props}
   />
 );
@@ -95,7 +92,7 @@ const SheetFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>): React.ReactNode => (
   <div
     className={cn(
-      'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2',
+      'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
       className,
     )}
     {...props}

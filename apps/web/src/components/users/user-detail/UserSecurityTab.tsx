@@ -2,7 +2,6 @@
 
 import {
   AlertTriangle,
-  ChevronDown,
   Clipboard,
   KeyRound,
   Laptop,
@@ -22,6 +21,7 @@ import {
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+import { Disclosure } from '$components/layout/Disclosure';
 import type { UserSessionInfo, UserType } from '$types/auth.types';
 import {
   AlertDialog,
@@ -37,6 +37,7 @@ import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
 import { Label } from '$ui/label';
+import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
 import { Switch } from '$ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
@@ -193,9 +194,7 @@ const SectionTitle: FC<{
     id={id}
     className="text-foreground flex items-center gap-2 text-sm font-semibold"
   >
-    <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-7 items-center justify-center rounded-lg border">
-      {icon}
-    </span>
+    <ServiceIcon className="size-7">{icon}</ServiceIcon>
     {children}
   </h3>
 );
@@ -250,9 +249,9 @@ const SessionRow: FC<{
 
   return (
     <div className="border-border/60 bg-surface-inset flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center">
-      <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-9 shrink-0 items-center justify-center rounded-lg border">
+      <ServiceIcon className="size-9">
         <DeviceIcon className="size-4" />
-      </span>
+      </ServiceIcon>
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <p className="text-foreground truncate text-sm font-medium">
@@ -271,11 +270,10 @@ const SessionRow: FC<{
             {session.ipAddress ? `IP ${session.ipAddress}` : 'IP inconnue'}
           </span>
         </div>
-        <details className="group/session mt-1.5 w-fit max-w-full">
-          <summary className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer list-none items-center gap-1 text-xs transition-colors [&::-webkit-details-marker]:hidden">
-            Voir les limites de session
-            <ChevronDown className="size-3.5 transition-transform group-open/session:rotate-180" />
-          </summary>
+        <Disclosure
+          label="Voir les limites de session"
+          className="group/session mt-1.5 w-fit max-w-full"
+        >
           <div className="text-muted-foreground mt-1 flex flex-col gap-1 text-xs">
             <span>
               Inactivité jusqu’au {formatSessionDateTime(session.idleExpiresAt)}
@@ -284,7 +282,7 @@ const SessionRow: FC<{
               Limite absolue {formatSessionDateTime(session.expiresAt)}
             </span>
           </div>
-        </details>
+        </Disclosure>
       </div>
       {showRevokeAction && (
         <Button

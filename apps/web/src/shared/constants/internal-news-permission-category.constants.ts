@@ -53,7 +53,7 @@ export const INTERNAL_NEWS_PERMISSION_CATEGORY: PermissionCategory = {
   key: 'internal-news',
   label: 'Actualité interne',
   permissions: INTERNAL_NEWS_PERMISSION_ITEMS,
-  poleKey: 'internal',
+  poleKey: 'activity',
   routes: ['/vie-interne/actualite-interne'],
   surface: 'page',
   tone: 'internal',

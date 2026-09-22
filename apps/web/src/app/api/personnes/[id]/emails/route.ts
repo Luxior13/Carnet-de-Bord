@@ -3,14 +3,16 @@ import type { NextRequest, NextResponse } from 'next/server';
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { createPersonEmailSchema } from '$features/persons/schemas/person.schemas';
 import { addPersonEmail } from '$features/persons/server/person.service';
-import {
-  handlePersonApiError,
-  withPrivateNoStore,
-  zodErrorDetails,
-} from '$features/persons/server/person-api';
+import { handlePersonApiError } from '$features/persons/server/person-api';
 import { assertPersonFeatureReady } from '$features/persons/server/person-deletion';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors, apiSuccess, parseJsonBody } from '$server/api-response';
+import {
+  apiErrors,
+  apiSuccess,
+  parseJsonBody,
+  withPrivateNoStore,
+  zodErrorDetails,
+} from '$server/api-response';
 
 type RouteContext = { params: Promise<{ id: string }> };
 

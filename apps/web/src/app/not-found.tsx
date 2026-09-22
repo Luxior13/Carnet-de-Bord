@@ -8,7 +8,7 @@ import { ServiceIcon } from '$ui/service-icon';
 
 const NotFoundPage: FC = () => {
   return (
-    <div className="relative isolate flex min-h-svh items-center justify-center overflow-hidden p-4">
+    <div className="route-state relative isolate flex items-center justify-center p-4">
       <div aria-hidden="true" className="site-background-column" />
       <Card className="relative z-10 w-full max-w-md text-center">
         <CardContent className="space-y-6 px-6">

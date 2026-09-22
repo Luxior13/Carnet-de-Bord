@@ -122,7 +122,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
       onOpenChange={(isOpen) => !isOpen && canCancel && onCancel()}
     >
       <DialogContent
-        className="overflow-hidden p-0 sm:max-w-md"
+        className="overflow-y-auto p-0 sm:max-w-md"
         hideCloseButton={!canCancel}
       >
         <div className="p-6">
@@ -213,7 +213,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                       <div
                         key={bar}
                         className={cn(
-                          'h-1.5 flex-1 rounded-full transition-all duration-300',
+                          'h-1.5 flex-1 rounded-full transition-colors duration-200',
                           bar <= passwordValidation.score
                             ? strengthColor
                             : 'bg-secondary',

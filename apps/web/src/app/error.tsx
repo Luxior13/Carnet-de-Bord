@@ -13,7 +13,10 @@ type ErrorPageProps = {
 
 const ErrorPage: FC<ErrorPageProps> = ({ error, reset }) => {
   return (
-    <div className="relative isolate flex min-h-svh items-center justify-center overflow-hidden p-4">
+    <div
+      className="route-state relative isolate flex items-center justify-center p-4"
+      role="alert"
+    >
       <div aria-hidden="true" className="site-background-column" />
       <Card className="relative z-10 w-full max-w-md text-center">
         <CardContent className="space-y-5 p-6">

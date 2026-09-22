@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import React, { type MouseEvent } from 'react';
 
+import { Button } from '$ui/button';
 import { cn } from '$utils/css.utils';
 
 import {
@@ -67,61 +68,67 @@ export const UserDetailSectionRail = <
     const isDesktop = display === 'desktop';
 
     return (
-      <Link
+      <Button
+        asChild
+        variant="navigation"
         key={section.id}
-        href={getSectionHref(section.id)}
-        replace={replace}
-        aria-current={isActive ? 'page' : undefined}
-        title={isDesktop ? section.label : undefined}
-        onClick={(event) => {
-          if (!onSectionChange || shouldLetBrowserHandleClick(event)) return;
-
-          event.preventDefault();
-          onSectionChange(section.id);
-        }}
         className={cn(
-          'group focus-visible:border-ring focus-visible:ring-ring/50 relative flex min-w-0 items-center rounded-md border border-transparent font-medium transition-colors outline-none focus-visible:ring-[3px]',
+          'group relative flex min-w-0 items-center justify-start rounded-lg font-medium',
           isDesktop
-            ? 'h-10 gap-2 px-2 text-sm'
-            : 'h-11 min-w-[4.75rem] flex-1 justify-center gap-1.5 px-2 text-xs',
+            ? 'h-10 gap-2 px-2 text-sm lg:h-10'
+            : 'h-11 min-w-[4.75rem] flex-1 justify-center gap-1.5 px-2 text-xs lg:h-11',
           isActive
-            ? 'border-primary/35 bg-primary/15 text-foreground shadow-none'
-            : 'text-muted-foreground hover:bg-surface-muted/85 hover:text-foreground',
+            ? 'border-border-default bg-surface-navigation-active text-foreground'
+            : 'text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground',
         )}
       >
-        <span
-          className={cn(
-            'flex shrink-0 items-center justify-center rounded-md transition-colors',
-            isDesktop ? 'size-7' : 'size-5',
-            isActive
-              ? 'bg-primary/20 text-primary-emphasis'
-              : 'bg-surface-muted text-muted-foreground group-hover:text-foreground',
-          )}
+        <Link
+          key={section.id}
+          href={getSectionHref(section.id)}
+          replace={replace}
+          aria-current={isActive ? 'page' : undefined}
+          title={section.label}
+          onClick={(event) => {
+            if (!onSectionChange || shouldLetBrowserHandleClick(event)) return;
+
+            event.preventDefault();
+            onSectionChange(section.id);
+          }}
         >
-          {section.icon}
-        </span>
-        <span
-          className={cn(
-            isDesktop ? 'min-w-0 truncate' : 'max-w-[4.25rem] truncate',
+          <span
+            className={cn(
+              'flex shrink-0 items-center justify-center rounded-md transition-colors',
+              isDesktop ? 'size-7' : 'size-5',
+              isActive
+                ? 'text-foreground'
+                : 'text-muted-foreground group-hover:text-foreground',
+            )}
+          >
+            {section.icon}
+          </span>
+          <span
+            className={cn(
+              isDesktop ? 'min-w-0 truncate' : 'max-w-[4.25rem] truncate',
+            )}
+          >
+            {section.label}
+          </span>
+          {hasChanges && (
+            <>
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'bg-warning ring-surface shrink-0 rounded-full ring-2',
+                  isDesktop
+                    ? 'ml-auto size-2'
+                    : 'absolute top-1 right-1 size-1.5',
+                )}
+              />
+              <span className="sr-only">Modifications non enregistrées</span>
+            </>
           )}
-        >
-          {section.label}
-        </span>
-        {hasChanges && (
-          <>
-            <span
-              aria-hidden="true"
-              className={cn(
-                'bg-warning ring-surface shrink-0 rounded-full ring-2',
-                isDesktop
-                  ? 'ml-auto size-2'
-                  : 'absolute top-1 right-1 size-1.5',
-              )}
-            />
-            <span className="sr-only">Modifications non enregistrées</span>
-          </>
-        )}
-      </Link>
+        </Link>
+      </Button>
     );
   };
 
@@ -129,10 +136,10 @@ export const UserDetailSectionRail = <
     return (
       <nav
         aria-label={ariaLabel}
-        className="sticky top-2 z-20 -mx-1 2xl:hidden"
+        className="private-rail-fallback sticky top-2 z-20 -mx-1"
       >
         <div className="overflow-x-auto px-1 pb-1">
-          <div className="border-border/70 bg-surface/95 inline-flex min-w-full gap-1 rounded-lg border p-1 shadow-[var(--shadow-panel)] backdrop-blur">
+          <div className="border-border-default bg-surface-inset inline-flex min-w-full gap-1 rounded-xl border p-1">
             {visibleSections.map((section) =>
               renderSectionLink(section, 'mobile'),
             )}
@@ -143,12 +150,15 @@ export const UserDetailSectionRail = <
   }
 
   return (
-    <nav aria-label={ariaLabel} className={cn('hidden 2xl:block', className)}>
-      <div className="border-border/70 bg-surface/90 sticky top-4 rounded-lg border p-1 shadow-[var(--shadow-panel)] backdrop-blur">
-        <div className="text-muted-foreground px-2 py-2 text-xs font-medium">
+    <nav
+      aria-label={ariaLabel}
+      className={cn('private-rail-desktop', className)}
+    >
+      <div className="border-border-default bg-surface-inset sticky top-4 overflow-hidden rounded-xl border">
+        <div className="border-border-divider bg-surface-panel-header text-muted-foreground border-b px-3 py-2 text-xs font-medium">
           {heading}
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1 p-1">
           {visibleSections.map((section) =>
             renderSectionLink(section, 'desktop'),
           )}

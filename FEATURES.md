@@ -5,6 +5,12 @@ Chaque ligne pourra ensuite avoir son propre fichier detaille.
 
 ## Organisation globale
 
+- [Navigation du site](docs/NAVIGATION.md) — conception de référence : pôles, lieux, règles d'admission d'une entrée de menu, garanties de ressenti.
+- [Structure et forme juridique](docs/STRUCTURE.md) — profil de structure, vocabulaire dérivé, finance en natures, saison et exercice.
+- [Feuille de route](docs/FEUILLE_DE_ROUTE.md) — décisions de tri, entités et ordre de construction.
+- [Rôles et portée des permissions](docs/ROLES_ET_PERMISSIONS.md) — patrons de rôle et périmètres de visibilité.
+- [Feedback utilisateur](docs/FEEDBACK.md) — toasts, notifications, alertes et rappels, avec leur checklist de modification.
+- [Design system](docs/DESIGN_SYSTEM.md) — hiérarchie de couleurs, typographie, états, onglets et règles de construction.
 - [Organisation UX et relations](features/organisation-ux.md) - Regle generale pour lier les donnees entre modules sans les dupliquer.
 - [Documentation des pages](features/pages/README.md) - Detail page par page avec contenu attendu, actions, donnees et liaisons entre modules.
 - [Raisons des autres features](features/tri-autres-features.md) - Aide pour decider quelles features garder, fusionner ou repousser.

@@ -42,7 +42,7 @@ function BreadcrumbList({
   return (
     <ol
       className={cn(
-        'flex max-w-full min-w-0 items-center gap-1 overflow-hidden text-[13px] whitespace-nowrap',
+        'text-label flex max-w-full min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap',
         className,
       )}
       {...props}

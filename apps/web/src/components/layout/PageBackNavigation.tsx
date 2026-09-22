@@ -72,7 +72,7 @@ export const PageBackNavigation: FC<PageBackNavigationProps> = (props) => (
         <PageBackButton {...props} fullWidth />
       </div>
     </nav>
-    <nav aria-label={props.label} className="2xl:hidden">
+    <nav aria-label={props.label} className="private-rail-fallback">
       <PageBackButton {...props} />
     </nav>
   </>

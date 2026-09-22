@@ -47,7 +47,7 @@ export const PageState: FC<PageStateProps> = ({
               <ServiceIcon className={cn(getToneClassName(tone))}>
                 {icon ?? <ShieldAlert className="size-5" />}
               </ServiceIcon>
-              <div className="space-y-3">
+              <div className="min-w-0 space-y-3 [overflow-wrap:anywhere]">
                 <div>
                   <h1 className="text-xl font-semibold tracking-normal">
                     {title}

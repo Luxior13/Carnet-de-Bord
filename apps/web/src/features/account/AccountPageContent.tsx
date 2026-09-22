@@ -553,7 +553,7 @@ export const AccountPageContent: FC = () => {
         <UserDetailSectionRail
           activeSection={activeSection}
           ariaLabel="Navigation du compte"
-          className="2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:w-44"
+          className="private-left-rail"
           dirtySections={[]}
           getSectionHref={(sectionId) =>
             buildAccountSectionHref(pathname, currentQueryString, sectionId)
@@ -581,7 +581,7 @@ export const AccountPageContent: FC = () => {
         <UserDetailSectionRail
           activeSection={activeSection}
           ariaLabel="Navigation du compte"
-          className="2xl:absolute 2xl:top-0 2xl:right-[calc(100%+2.5rem)] 2xl:bottom-0 2xl:w-44"
+          className="private-left-rail"
           dirtySections={dirtySections}
           getSectionHref={(sectionId) =>
             buildAccountSectionHref(pathname, currentQueryString, sectionId)
@@ -672,7 +672,7 @@ export const AccountPageContent: FC = () => {
           handleCancelPendingNavigation();
         }}
       >
-        <AlertDialogContent className="border-border overflow-hidden rounded-lg p-0">
+        <AlertDialogContent className="border-border overflow-y-auto rounded-xl p-0">
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">

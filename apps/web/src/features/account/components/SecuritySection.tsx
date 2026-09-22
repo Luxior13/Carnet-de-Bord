@@ -16,6 +16,7 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { ChangePasswordDialog } from '$components/ChangePasswordDialog';
+import { Disclosure } from '$components/layout/Disclosure';
 import { MfaActionDialog } from '$features/auth/components/MfaActionDialog';
 import { MfaSetupDialog } from '$features/auth/components/MfaSetupDialog';
 import { type ApiResponse, RoutesApi } from '$types/api.types';
@@ -38,6 +39,7 @@ import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
 import { Separator } from '$ui/separator';
+import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
 import { apiFetch } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
@@ -74,9 +76,7 @@ const SectionTitle: FC<{
     id={id}
     className="text-foreground flex items-center gap-2 text-sm font-semibold"
   >
-    <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-7 items-center justify-center rounded-lg border">
-      {icon}
-    </span>
+    <ServiceIcon className="size-7">{icon}</ServiceIcon>
     {children}
   </h3>
 );
@@ -128,9 +128,9 @@ const SessionRow: FC<SessionRowProps> = ({ isRevoking, onRevoke, session }) => {
       )}
     >
       <div className="flex min-w-0 flex-1 items-start gap-3">
-        <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-9 shrink-0 items-center justify-center rounded-lg border">
+        <ServiceIcon className="size-9">
           <DeviceIcon className="size-4" />
-        </span>
+        </ServiceIcon>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <p className="text-foreground truncate text-sm font-medium">
@@ -150,10 +150,10 @@ const SessionRow: FC<SessionRowProps> = ({ isRevoking, onRevoke, session }) => {
           <p className="text-muted-foreground mt-1 text-xs">
             Dernière activité {formatRelativeAccountTime(session.lastSeenAt)}
           </p>
-          <details className="border-border/60 mt-2 border-t pt-2 text-xs">
-            <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2">
-              Détails techniques
-            </summary>
+          <Disclosure
+            label="Détails techniques"
+            className="border-border/60 mt-2 border-t pt-2 text-xs"
+          >
             <dl className="mt-2 grid gap-x-4 gap-y-2 sm:grid-cols-2">
               <div>
                 <dt className="text-muted-foreground">Adresse IP</dt>
@@ -182,7 +182,7 @@ const SessionRow: FC<SessionRowProps> = ({ isRevoking, onRevoke, session }) => {
                 </dd>
               </div>
             </dl>
-          </details>
+          </Disclosure>
         </div>
       </div>
       {canRevoke && (
@@ -435,11 +435,8 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           </p>
         </header>
         {canViewPasswordSecurity && (
-          <Card
-            aria-labelledby="account-password-heading"
-            className="border-border/70 overflow-hidden rounded-lg py-0"
-          >
-            <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
+          <Card aria-labelledby="account-password-heading" className="min-w-0">
+            <CardHeader className="p-4 sm:p-5">
               <SectionTitle
                 icon={<KeyRound className="size-3.5" />}
                 id="account-password-heading"
@@ -447,7 +444,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 Mot de passe
               </SectionTitle>
             </CardHeader>
-            <CardContent className="space-y-3 p-3 sm:p-4">
+            <CardContent className="space-y-3 p-4 sm:p-5">
               <div className="border-border/60 bg-surface-inset space-y-3 rounded-md border p-3">
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground text-sm">État</span>
@@ -490,7 +487,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               </div>
             </CardContent>
             {canChangePassword && (
-              <CardFooter className="border-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
+              <CardFooter className="justify-end p-4 sm:p-5">
                 <Button
                   type="button"
                   variant="outline"
@@ -509,9 +506,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           <Card
             aria-busy={loadingMfaStatus}
             aria-labelledby="account-mfa-heading"
-            className="border-border/70 overflow-hidden rounded-lg py-0"
+            className="min-w-0"
           >
-            <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
+            <CardHeader className="p-4 sm:p-5">
               <SectionTitle
                 icon={<QrCode className="size-3.5" />}
                 id="account-mfa-heading"
@@ -519,7 +516,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 Application d’authentification
               </SectionTitle>
             </CardHeader>
-            <CardContent className="space-y-3 p-3 sm:p-4">
+            <CardContent className="space-y-3 p-4 sm:p-5">
               {loadingMfaStatus ? (
                 <div aria-live="polite" role="status">
                   <span className="sr-only">
@@ -652,9 +649,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           <Card
             aria-busy={loadingSessions}
             aria-labelledby="account-sessions-heading"
-            className="border-border/70 overflow-hidden rounded-lg py-0"
+            className="min-w-0"
           >
-            <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
+            <CardHeader className="p-4 sm:p-5">
               <SectionTitle
                 icon={<Monitor className="size-3.5" />}
                 id="account-sessions-heading"
@@ -729,7 +726,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               )}
             </CardContent>
             {otherSessions.length > 0 && (
-              <CardFooter className="border-border/65 bg-surface-muted justify-end border-t p-3 sm:p-4">
+              <CardFooter className="justify-end p-4 sm:p-5">
                 <Button
                   type="button"
                   variant="outline"
@@ -782,7 +779,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           if (!open && !revokingId) setSessionToRevoke(null);
         }}
       >
-        <AlertDialogContent className="overflow-hidden p-0">
+        <AlertDialogContent className="overflow-y-auto p-0">
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">
@@ -819,7 +816,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         </AlertDialogContent>
       </AlertDialog>
       <AlertDialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
-        <AlertDialogContent className="overflow-hidden p-0">
+        <AlertDialogContent className="overflow-y-auto p-0">
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">

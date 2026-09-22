@@ -21,9 +21,7 @@ const authenticatedLayoutSource = readSourceFile(
 const rootLayoutSource = readSourceFile('../app/layout.tsx');
 const globalStylesSource = readSourceFile('../app/globals.css');
 const inputSource = readSourceFile('../components/ui/input.tsx');
-const navigationThemeSource = readSourceFile(
-  '../shared/constants/navigation-theme.constants.ts',
-);
+const pageHeroSource = readSourceFile('../components/layout/PageHero.tsx');
 const pageBackNavigationSource = readSourceFile(
   '../components/layout/PageBackNavigation.tsx',
 );
@@ -159,7 +157,7 @@ describe('design system contracts', () => {
     expect(globalStylesSource).toContain(
       '50% - var(--private-content-half-width)',
     );
-    expect(pageBackNavigationSource).toContain('2xl:hidden');
+    expect(pageBackNavigationSource).toContain('private-rail-fallback');
     expect(pageBackNavigationSource).toContain(
       'w-full min-w-0 justify-start overflow-hidden',
     );
@@ -326,6 +324,45 @@ describe('design system contracts', () => {
   });
 
   it.each([
+    '--surface-canvas',
+    '--surface-page',
+    '--surface-inset',
+    '--surface-panel',
+    '--surface-panel-raised',
+    '--surface-panel-header',
+    '--surface-floating',
+  ])('keeps secondary text readable on %s, including overlays', (surface) => {
+    expect(
+      getContrastRatio(
+        getRequiredGlobalColorToken('--muted-foreground'),
+        getRequiredGlobalColorToken(surface),
+      ),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each(['primary', 'destructive', 'success', 'warning', 'info'])(
+    'keeps filled %s actions readable at rest and on hover',
+    (tone) => {
+      const fill = getRequiredGlobalColorToken(
+        tone === 'destructive' ? '--destructive-fill' : `--${tone}`,
+      );
+      const foreground = getRequiredGlobalColorToken(`--${tone}-foreground`);
+
+      for (const opacity of [1, 0.9]) {
+        const background = compositeHexColors(
+          fill,
+          getRequiredGlobalColorToken('--surface-floating'),
+          opacity,
+        );
+
+        expect(getContrastRatio(foreground, background)).toBeGreaterThanOrEqual(
+          4.5,
+        );
+      }
+    },
+  );
+
+  it.each([
     ['--primary', '--primary-emphasis'],
     ['--destructive', '--destructive'],
     ['--success', '--success'],
@@ -369,16 +406,13 @@ describe('design system contracts', () => {
     }
   });
 
-  it('keeps the shared navigation hero independent from sidebar colors', () => {
-    const heroStart = navigationThemeSource.indexOf('const baseHero');
-    const heroEnd = navigationThemeSource.indexOf(';', heroStart);
-    const heroDeclaration = navigationThemeSource.slice(heroStart, heroEnd + 1);
-
-    expect(heroStart).toBeGreaterThanOrEqual(0);
-    expect(heroEnd).toBeGreaterThan(heroStart);
-    expect(heroDeclaration).not.toContain('-sidebar-');
+  it('keeps the shared page heading flat and independent from sidebar colors', () => {
+    expect(pageHeroSource).toContain('data-slot="page-heading"');
+    expect(pageHeroSource).toContain('border-border-divider min-w-0 border-b');
+    expect(pageHeroSource).not.toContain('shadow-');
+    expect(pageHeroSource).not.toContain('bg-gradient');
+    expect(pageHeroSource).not.toContain('-sidebar-');
   });
-
   it('keeps generic actions touch-friendly below the desktop breakpoint', () => {
     expect(buttonVariants()).toContain('h-10');
     expect(buttonVariants({ size: 'icon' })).toContain('size-10');

@@ -35,7 +35,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 bg-overlay/68 fixed inset-0 z-50 duration-200',
+        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 bg-overlay/65 fixed inset-0 z-50 duration-200',
         className,
       )}
       {...props}
@@ -62,7 +62,7 @@ function DialogContent({
         className={cn(
           'pointer-events-none fixed inset-0 z-50 flex justify-center',
           centered
-            ? 'items-center p-4'
+            ? 'items-center overflow-y-auto p-4'
             : fullscreenOnMobile
               ? 'items-start overflow-y-auto p-0 sm:items-start sm:px-4 sm:pt-[7.5vh] sm:pb-4'
               : 'items-start overflow-y-auto px-4 pt-[7.5vh] pb-4',
@@ -70,8 +70,13 @@ function DialogContent({
       >
         <DialogPrimitive.Content
           className={cn(
-            'border-border-strong bg-surface text-popover-foreground data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=open]:animate-in pointer-events-auto relative grid w-full max-w-lg border p-5 shadow-[var(--shadow-panel-strong)] duration-200',
-            fullscreenOnMobile ? 'sm:rounded-xl' : 'rounded-xl',
+            'border-border-strong bg-surface text-popover-foreground data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=open]:animate-in pointer-events-auto relative grid w-full max-w-lg overflow-y-auto overscroll-contain border p-5 shadow-[var(--shadow-panel-strong)] duration-200',
+            centered
+              ? 'max-h-[calc(100dvh-2rem)]'
+              : 'max-h-[calc(92.5dvh-1rem)]',
+            fullscreenOnMobile
+              ? 'max-h-dvh sm:max-h-[calc(92.5dvh-1rem)] sm:rounded-xl'
+              : 'rounded-xl',
             className,
           )}
           {...props}
@@ -96,7 +101,7 @@ function DialogHeader({
   return (
     <div
       data-slot="dialog-header"
-      className={cn('flex flex-col gap-2 text-center sm:text-left', className)}
+      className={cn('flex flex-col gap-2 pr-8 text-left', className)}
       {...props}
     />
   );
@@ -126,7 +131,7 @@ function DialogTitle({
     <DialogPrimitive.Title
       data-slot="dialog-title"
       className={cn(
-        'text-lg leading-none font-semibold tracking-normal',
+        'text-lg leading-6 font-semibold tracking-normal [overflow-wrap:anywhere]',
         className,
       )}
       {...props}

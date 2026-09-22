@@ -25,7 +25,7 @@ function TableHeader({
     <thead
       data-slot="table-header"
       className={cn(
-        'bg-surface-panel-header [&_tr]:border-border-divider [&_tr]:border-b',
+        'bg-surface-panel-header [&_tr]:border-border-divider [&_tr]:border-b [&_tr:hover]:bg-transparent',
         className,
       )}
       {...props}
@@ -41,7 +41,7 @@ function TableBody({
     <tbody
       data-slot="table-body"
       className={cn(
-        'bg-surface [&_tr:nth-child(even)]:bg-surface-inset/70 [&_tr:nth-child(even):hover]:bg-surface-tile-hover [&_tr:last-child]:border-0',
+        'bg-surface [&_tr:nth-child(even):not([data-state=selected])]:bg-surface-row-alternate [&_tr:nth-child(even):not([data-state=selected]):hover]:bg-surface-tile-hover [&_tr:last-child]:border-0',
         className,
       )}
       {...props}
@@ -73,7 +73,7 @@ function TableRow({
     <tr
       data-slot="table-row"
       className={cn(
-        'border-border-divider hover:bg-surface-tile-hover data-[state=selected]:bg-primary/10 border-b transition-colors',
+        'border-border-divider hover:bg-surface-tile-hover data-[state=selected]:bg-surface-selected border-b transition-colors',
         className,
       )}
       {...props}

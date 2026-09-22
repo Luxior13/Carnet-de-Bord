@@ -9,14 +9,16 @@ import {
   listInternalNews,
   publishInternalAnnouncement,
 } from '$features/internal-news/server/internal-news.service';
-import {
-  handleInternalNewsApiError,
-  internalNewsZodErrorDetails,
-  withInternalNewsNoStore,
-} from '$features/internal-news/server/internal-news-api';
+import { handleInternalNewsApiError } from '$features/internal-news/server/internal-news-api';
 import { assertInternalNewsFeatureReady } from '$features/internal-news/server/internal-news-readiness';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors, apiSuccess, parseJsonBody } from '$server/api-response';
+import {
+  apiErrors,
+  apiSuccess,
+  parseJsonBody,
+  withPrivateNoStore,
+  zodErrorDetails,
+} from '$server/api-response';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const auth = await requireAuth();
@@ -35,16 +37,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!parsed.success) {
     return apiErrors.validation(
       "Paramètres de l'actualité interne invalides",
-      internalNewsZodErrorDetails(parsed.error),
+      zodErrorDetails(parsed.error),
     );
   }
 
   try {
     await assertInternalNewsFeatureReady();
 
-    return withInternalNewsNoStore(
-      apiSuccess(await listInternalNews(parsed.data)),
-    );
+    return withPrivateNoStore(apiSuccess(await listInternalNews(parsed.data)));
   } catch (error) {
     return handleInternalNewsApiError('INTERNAL_NEWS_LIST', error, request);
   }
@@ -65,14 +65,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!parsed.success) {
     return apiErrors.validation(
       'Actualité interne invalide',
-      internalNewsZodErrorDetails(parsed.error),
+      zodErrorDetails(parsed.error),
     );
   }
 
   try {
     await assertInternalNewsFeatureReady();
 
-    return withInternalNewsNoStore(
+    return withPrivateNoStore(
       apiSuccess(
         await publishInternalAnnouncement(parsed.data, auth.user),
         201,

@@ -28,7 +28,7 @@ describe('header notification UX contracts', () => {
     expect(notificationCenterSource).toContain(
       'border-border-default bg-surface-floating',
     );
-    expect(notificationCenterSource).toContain('rounded-lg p-0');
+    expect(notificationCenterSource).toContain('rounded-2xl p-0');
     expect(notificationCenterSource).toContain('variant="ghost"');
     expect(notificationCenterSource).toContain(
       "'bg-primary/5 hover:bg-primary/10'",

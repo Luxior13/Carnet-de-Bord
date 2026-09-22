@@ -150,7 +150,7 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({ returnHref }) => {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="border-border-divider border-t p-4 sm:p-5">
+          <CardContent className="p-4 sm:p-5">
             <PersonIdentityFields
               disabled={isSubmitting}
               errors={errors}

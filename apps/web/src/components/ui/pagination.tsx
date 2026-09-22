@@ -91,7 +91,7 @@ const Pagination: FC<PaginationProps> = ({
                 aria-current={p === page ? 'page' : undefined}
                 aria-label={`Page ${p}`}
                 key={p}
-                variant={p === page ? 'default' : 'ghost'}
+                variant="navigation"
                 size="icon"
                 className="size-8 text-xs"
                 onClick={() => onPageChange(p)}

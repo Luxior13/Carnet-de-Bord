@@ -112,7 +112,7 @@ describe('/mon-compte UX contracts', () => {
   it('keeps personal activity compact with advanced filters on demand', () => {
     expect(activitySource).toContain('personal-activity-scope-label');
     expect(activitySource).toContain('personal-activity-period');
-    expect(activitySource).toMatch(/<details[\s\S]{0,600}Filtres avancés/);
+    expect(activitySource).toMatch(/<Collapsible[\s\S]{0,600}Filtres avancés/);
     expect(activitySource).not.toContain('CardFooter');
     expect(activitySource).toContain(
       'const displayedLogs = filteredLogs.slice(0, showCount)',

@@ -130,7 +130,7 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
       }}
     >
       <DialogContent
-        className="max-h-[calc(100svh-2rem)] overflow-y-auto p-0 sm:max-w-lg"
+        className="p-0 sm:max-w-lg"
         hideCloseButton={!!recoveryCodes}
       >
         <div className="p-6">

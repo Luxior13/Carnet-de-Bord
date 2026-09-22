@@ -4,12 +4,9 @@ import { ArrowRight, CircleX, Search, X } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import React, {
   type FC,
-  type KeyboardEvent as ReactKeyboardEvent,
   useCallback,
   useEffect,
-  useId,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 
@@ -22,14 +19,22 @@ import {
   getVisibleNavigationSpaces,
 } from '$constants/app.constants';
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
-import { getNavigationSpaceToneClasses } from '$constants/navigation-theme.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
 import {
   buildSearchCatalog,
   getSuggestedSearchItems,
-  type SearchCatalogItem,
 } from '$features/search/search-catalog';
+import { Badge } from '$ui/badge';
+import { Button } from '$ui/button';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '$ui/command';
 import {
   Dialog,
   DialogClose,
@@ -39,8 +44,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '$ui/dialog';
-import { Input } from '$ui/input';
-import { cn } from '$utils/css.utils';
 import { requestGuardedNavigation } from '$utils/guarded-navigation.utils';
 
 export const QuickNavigation: FC = () => {
@@ -49,12 +52,9 @@ export const QuickNavigation: FC = () => {
   const { userData } = useUser();
   const { featureAvailabilityLoaded, operationalFeatureIds } =
     useFeatureAvailability();
-  const listboxId = useId();
-  const activeResultRef = useRef<HTMLButtonElement | null>(null);
-  const [activeResultHref, setActiveResultHref] = useState<string | null>(null);
+  const [activeResultHref, setActiveResultHref] = useState('');
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-
   const spaces = useMemo(
     () =>
       getVisibleNavigationSpaces(
@@ -73,28 +73,18 @@ export const QuickNavigation: FC = () => {
     [spaces, userData],
   );
   const normalizedQuery = normalizeSearchValue(query);
-  const results = useMemo(() => {
-    if (!normalizedQuery) {
-      return getSuggestedSearchItems(allResults, activeSpace);
-    }
-
-    return rankSearchResults(allResults, normalizedQuery, 10);
-  }, [activeSpace, allResults, normalizedQuery]);
+  const results = useMemo(
+    () =>
+      normalizedQuery
+        ? rankSearchResults(allResults, normalizedQuery, 10)
+        : getSuggestedSearchItems(allResults, activeSpace),
+    [activeSpace, allResults, normalizedQuery],
+  );
   const advancedSearchHref = normalizedQuery
     ? `/recherche?q=${encodeURIComponent(query.trim())}`
     : '/recherche';
-  const activeIndex = useMemo(() => {
-    const selectedIndex = activeResultHref
-      ? results.findIndex((result) => result.href === activeResultHref)
-      : -1;
-
-    if (selectedIndex >= 0) return selectedIndex;
-
-    return results.length > 0 ? 0 : -1;
-  }, [activeResultHref, results]);
   const currentResultHref = useMemo(() => {
     const exactResult = results.find((result) => result.href === pathname);
-
     if (exactResult) return exactResult.href;
 
     return results.reduce<string | null>((currentHref, result) => {
@@ -102,9 +92,8 @@ export const QuickNavigation: FC = () => {
         result.href === '/' ||
         !pathname.startsWith(`${result.href}/`) ||
         (currentHref && currentHref.length >= result.href.length)
-      ) {
+      )
         return currentHref;
-      }
 
       return result.href;
     }, null);
@@ -113,83 +102,42 @@ export const QuickNavigation: FC = () => {
   const closeSearch = useCallback((): void => {
     setOpen(false);
     setQuery('');
-    setActiveResultHref(null);
+    setActiveResultHref('');
   }, []);
-
   const navigateToHref = useCallback(
     (href: string): void => {
       closeSearch();
-      if (href === pathname) return;
-      if (requestGuardedNavigation(href)) router.push(href);
+      if (href !== pathname && requestGuardedNavigation(href))
+        router.push(href);
     },
     [closeSearch, pathname, router],
   );
-  const navigateToResult = useCallback(
-    (result: SearchCatalogItem): void => navigateToHref(result.href),
-    [navigateToHref],
-  );
 
   useEffect(() => {
-    if (
-      activeResultHref &&
-      !results.some((result) => result.href === activeResultHref)
-    ) {
-      setActiveResultHref(null);
-    }
+    if (!results.some((result) => result.href === activeResultHref))
+      setActiveResultHref(results.at(0)?.href ?? '');
   }, [activeResultHref, results]);
-
-  useEffect(() => {
-    activeResultRef.current?.scrollIntoView({ block: 'nearest' });
-  }, [activeIndex, results]);
-
-  const handleInputKeyDown = (
-    event: ReactKeyboardEvent<HTMLInputElement>,
-  ): void => {
-    if (event.nativeEvent.isComposing) return;
-    if (results.length === 0) return;
-
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      const nextIndex = activeIndex >= results.length - 1 ? 0 : activeIndex + 1;
-      setActiveResultHref(results.at(nextIndex)?.href ?? null);
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      const nextIndex = activeIndex <= 0 ? results.length - 1 : activeIndex - 1;
-      setActiveResultHref(results.at(nextIndex)?.href ?? null);
-    } else if (event.key === 'Enter' && activeIndex >= 0) {
-      event.preventDefault();
-      const activeResult = results.at(activeIndex);
-      if (activeResult) navigateToResult(activeResult);
-    }
-  };
-
-  const activeOptionId =
-    activeIndex >= 0 && results.at(activeIndex)
-      ? `${listboxId}-option-${activeIndex}`
-      : undefined;
 
   return (
     <Dialog
       open={open}
-      onOpenChange={(nextOpen) => {
-        if (nextOpen) setOpen(true);
-        else closeSearch();
-      }}
+      onOpenChange={(nextOpen) => (nextOpen ? setOpen(true) : closeSearch())}
     >
       <DialogTrigger asChild>
-        <button
+        <Button
           aria-label="Ouvrir la navigation rapide"
-          className="border-border-subtle bg-surface-canvas/45 text-muted-foreground hover:border-border-default hover:bg-surface-panel hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/35 flex h-10 min-w-10 shrink-0 items-center justify-center gap-2 rounded-md border px-2.5 text-sm transition-[background-color,border-color,color,box-shadow] outline-none focus-visible:ring-[3px] lg:h-9 lg:min-w-56 lg:justify-start xl:min-w-64"
+          variant="outline"
+          className="text-muted-foreground min-w-10 gap-2 px-2.5 font-normal lg:min-w-56 lg:justify-start xl:min-w-64"
           type="button"
         >
           <Search aria-hidden="true" className="size-4" />
           <span className="hidden lg:inline">Rechercher une page</span>
-        </button>
+        </Button>
       </DialogTrigger>
       <DialogContent
-        className="border-border-default bg-surface-floating h-dvh max-w-2xl grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 shadow-[var(--shadow-panel-strong)] sm:h-auto sm:max-h-[min(38rem,85vh)] sm:rounded-lg"
         fullscreenOnMobile
         hideCloseButton
+        className="bg-surface-floating h-dvh max-w-2xl overflow-hidden p-0 sm:h-auto sm:max-h-[min(38rem,85dvh)]"
       >
         <DialogHeader className="sr-only">
           <DialogTitle>Navigation rapide</DialogTitle>
@@ -197,195 +145,121 @@ export const QuickNavigation: FC = () => {
             Accès rapide aux pages disponibles et autorisées.
           </DialogDescription>
         </DialogHeader>
-        <div className="group/search border-border-divider flex items-center gap-2 border-b px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 sm:pt-2">
-          <Search
-            aria-hidden="true"
-            className="text-muted-foreground group-focus-within/search:text-primary-emphasis ml-1 size-4 shrink-0 transition-colors"
-          />
-          <Input
-            aria-activedescendant={activeOptionId}
-            aria-autocomplete="list"
-            aria-controls={listboxId}
-            aria-expanded="true"
+        <Command
+          label="Rechercher une page"
+          shouldFilter={false}
+          loop
+          value={activeResultHref}
+          onValueChange={setActiveResultHref}
+          className="min-h-0 rounded-none"
+        >
+          <CommandInput
             aria-label="Rechercher une page"
             autoComplete="off"
             autoFocus
-            className="h-11 rounded-none border-0 bg-transparent px-1 shadow-none focus-visible:bg-transparent focus-visible:ring-0 lg:h-10"
-            enterKeyHint="go"
-            inputMode="search"
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setActiveResultHref(null);
-            }}
-            onKeyDown={handleInputKeyDown}
             placeholder="Rechercher une page..."
-            role="combobox"
             value={query}
+            onValueChange={setQuery}
+            trailing={
+              <>
+                {query && (
+                  <Button
+                    aria-label="Effacer la recherche"
+                    className="size-11"
+                    onClick={() => setQuery('')}
+                    onMouseDown={(event) => event.preventDefault()}
+                    size="icon"
+                    type="button"
+                    variant="ghost"
+                  >
+                    <CircleX aria-hidden="true" className="size-4" />
+                  </Button>
+                )}
+                <DialogClose asChild>
+                  <Button
+                    aria-label="Fermer la navigation rapide"
+                    className="size-11"
+                    size="icon"
+                    type="button"
+                    variant="ghost"
+                  >
+                    <X aria-hidden="true" className="size-4" />
+                  </Button>
+                </DialogClose>
+              </>
+            }
           />
-          {query && (
-            <button
-              aria-label="Effacer la recherche"
-              className="text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground focus-visible:ring-ring/50 flex size-11 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-2"
-              onClick={() => {
-                setQuery('');
-                setActiveResultHref(null);
-              }}
-              onMouseDown={(event) => event.preventDefault()}
-              type="button"
-            >
-              <CircleX aria-hidden="true" className="size-4" />
-            </button>
-          )}
-          <div className="border-border-divider ml-1 border-l pl-1">
-            <DialogClose asChild>
-              <button
-                aria-label="Fermer la navigation rapide"
-                className="text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground focus-visible:ring-ring/50 flex size-11 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-2"
-                type="button"
-              >
-                <X aria-hidden="true" className="size-4" />
-              </button>
-            </DialogClose>
-          </div>
-        </div>
-        <div className="min-h-0 overflow-y-auto px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:pb-2">
           <span aria-live="polite" className="sr-only" role="status">
             {results.length} résultat{results.length !== 1 ? 's' : ''}
           </span>
-          {!normalizedQuery && results.length > 0 && (
-            <p className="text-muted-foreground px-2 pt-1 pb-2 text-xs font-medium">
-              Pages suggérées
-            </p>
-          )}
-          <div
-            aria-label="Pages disponibles"
-            className="space-y-1"
-            id={listboxId}
-            role="listbox"
+          <CommandList
+            label="Pages disponibles"
+            className="max-h-none min-h-0 flex-1 p-2 sm:max-h-96"
           >
-            {results.map((result, index) => {
-              const Icon = getNavigationIcon(result.icon);
-              const tone = getNavigationSpaceToneClasses(result.space.tone);
-              const isActive = index === activeIndex;
-              const isCurrentPage = pathname === result.href;
-              const isCurrentResult = result.href === currentResultHref;
-              const optionId = `${listboxId}-option-${index}`;
+            <CommandEmpty>
+              Aucune page trouvée. Essayez une autre recherche.
+            </CommandEmpty>
+            <CommandGroup
+              heading={normalizedQuery ? 'Résultats' : 'Pages suggérées'}
+            >
+              {results.map((result) => {
+                const Icon = getNavigationIcon(result.icon);
+                const isCurrentResult = result.href === currentResultHref;
 
-              return (
-                <button
-                  aria-current={
-                    isCurrentResult
-                      ? isCurrentPage
-                        ? 'page'
-                        : 'location'
-                      : undefined
-                  }
-                  aria-selected={isActive}
-                  className={cn(
-                    'group focus-visible:ring-ring/50 flex w-full min-w-0 items-center gap-3 rounded-md px-2.5 py-2.5 text-left transition-colors outline-none focus-visible:ring-2',
-                    isActive ? 'bg-primary/10' : 'hover:bg-surface-tile-hover',
-                  )}
-                  id={optionId}
-                  key={result.href}
-                  onClick={() => navigateToResult(result)}
-                  onMouseEnter={() => setActiveResultHref(result.href)}
-                  ref={isActive ? activeResultRef : undefined}
-                  role="option"
-                  tabIndex={-1}
-                  type="button"
-                >
-                  <span
-                    className={cn(
-                      'flex size-9 shrink-0 items-center justify-center rounded-md border',
-                      tone.icon,
-                    )}
+                return (
+                  <CommandItem
+                    aria-current={
+                      isCurrentResult
+                        ? pathname === result.href
+                          ? 'page'
+                          : 'location'
+                        : undefined
+                    }
+                    className="gap-3 py-3"
+                    key={result.href}
+                    value={result.href}
+                    onSelect={() => navigateToHref(result.href)}
                   >
                     <Icon aria-hidden="true" className="size-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="text-foreground block truncate text-sm font-semibold">
-                      {result.label}
-                    </span>
-                    <span className="text-muted-foreground mt-0.5 flex min-w-0 items-center gap-1.5 text-xs">
-                      <span className="shrink-0">{result.groupLabel}</span>
-                      {result.description && (
-                        <>
-                          <span aria-hidden="true" className="hidden sm:inline">
-                            ·
-                          </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">
+                        {result.label}
+                      </span>
+                      <span className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-xs">
+                        <span>{result.groupLabel}</span>
+                        {result.description && (
                           <span className="hidden truncate sm:inline">
-                            {result.description}
+                            · {result.description}
                           </span>
-                        </>
-                      )}
+                        )}
+                      </span>
                     </span>
-                  </span>
-                  {isCurrentResult ? (
-                    <span className="bg-primary/10 text-primary-emphasis shrink-0 rounded px-1.5 py-0.5 text-[11px]">
-                      {isCurrentPage ? 'Actuelle' : 'Section actuelle'}
-                    </span>
-                  ) : (
-                    <ArrowRight
-                      aria-hidden="true"
-                      className={cn(
-                        'text-muted-foreground size-4 shrink-0 transition-opacity',
-                        isActive
-                          ? 'text-primary-emphasis opacity-100'
-                          : 'opacity-0',
-                      )}
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-          {results.length === 0 && (
-            <div className="flex flex-col items-center px-4 py-10 text-center">
-              <span className="border-border-subtle bg-surface-inset text-muted-foreground flex size-10 items-center justify-center rounded-md border">
-                <Search aria-hidden="true" className="size-4" />
-              </span>
-              <p className="text-foreground mt-3 text-sm font-semibold">
-                Aucune page trouvée
-              </p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                Essayez avec moins de mots ou une autre formulation.
-              </p>
+                    {isCurrentResult && (
+                      <Badge variant="secondary">Actuelle</Badge>
+                    )}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+          <div className="border-border-divider bg-surface-page text-muted-foreground shrink-0 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span>Besoin de plus de filtres ?</span>
+              <Button
+                onClick={() => navigateToHref(advancedSearchHref)}
+                size="inline"
+                type="button"
+                variant="link"
+              >
+                Recherche avancée
+                <ArrowRight aria-hidden="true" className="size-3.5" />
+              </Button>
             </div>
-          )}
-        </div>
-        <div className="border-border-divider bg-surface-page text-muted-foreground border-t text-[11px]">
-          <div className="flex items-center justify-between gap-3 px-3 py-2 sm:px-4">
-            <span>Besoin de plus de filtres ?</span>
-            <button
-              className="text-primary-emphasis focus-visible:ring-ring/50 inline-flex h-9 items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold outline-none hover:underline focus-visible:ring-2"
-              onClick={() => navigateToHref(advancedSearchHref)}
-              type="button"
-            >
-              Recherche avancée
-              <ArrowRight aria-hidden="true" className="size-3.5" />
-            </button>
+            <p className="mt-3 hidden sm:block">
+              ↑↓ Parcourir · Entrée Ouvrir · Échap Fermer
+            </p>
           </div>
-          <div className="border-border-divider hidden items-center gap-4 border-t px-4 py-2 sm:flex">
-            <span className="flex items-center gap-1.5">
-              <kbd className="border-border-subtle bg-surface-control rounded-md border px-1.5 py-0.5 font-mono">
-                ↑↓
-              </kbd>
-              Parcourir
-            </span>
-            <span className="flex items-center gap-1.5">
-              <kbd className="border-border-subtle bg-surface-control rounded-md border px-1.5 py-0.5 font-mono">
-                Entrée
-              </kbd>
-              Ouvrir
-            </span>
-            <span className="ml-auto flex items-center gap-1.5">
-              <kbd className="border-border-subtle bg-surface-control rounded-md border px-1.5 py-0.5 font-mono">
-                Échap
-              </kbd>
-              Fermer
-            </span>
-          </div>
-        </div>
+        </Command>
       </DialogContent>
     </Dialog>
   );

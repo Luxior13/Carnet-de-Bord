@@ -1,15 +1,20 @@
+import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentProps, type FC } from 'react';
 
 import { cn } from '$utils/css.utils';
 
 type CardProps = ComponentProps<'div'>;
 
-const Card: FC<CardProps> = ({ className, ...props }) => {
+const Card: FC<
+  CardProps & { as?: 'article' | 'div' | 'section'; asChild?: boolean }
+> = ({ as = 'div', asChild = false, className, ...props }) => {
+  const Component = asChild ? Slot : as;
+
   return (
-    <div
+    <Component
       data-slot="card"
       className={cn(
-        'border-border-default bg-surface text-card-foreground flex flex-col gap-0 overflow-hidden rounded-xl border py-0 shadow-[var(--shadow-panel)]',
+        'border-border-default bg-surface text-card-foreground flex flex-col gap-0 overflow-hidden rounded-2xl border py-0 shadow-[var(--shadow-panel)]',
         className,
       )}
       {...props}
@@ -30,11 +35,22 @@ const CardHeader: FC<CardProps> = ({ className, ...props }) => {
   );
 };
 
-const CardTitle: FC<CardProps> = ({ className, ...props }) => {
+type CardTitleProps = ComponentProps<'h2'> & {
+  as?: 'h1' | 'h2' | 'h3' | 'h4';
+};
+
+const CardTitle: FC<CardTitleProps> = ({
+  as: Heading = 'h2',
+  className,
+  ...props
+}) => {
   return (
-    <div
+    <Heading
       data-slot="card-title"
-      className={cn('leading-none font-semibold tracking-normal', className)}
+      className={cn(
+        'text-base leading-6 font-semibold tracking-normal [overflow-wrap:anywhere]',
+        className,
+      )}
       {...props}
     />
   );
@@ -52,7 +68,7 @@ const CardDescription: FC<CardProps> = ({ className, ...props }) => {
 
 const CardContent: FC<CardProps> = ({ className, ...props }) => {
   return (
-    <div data-slot="card-content" className={cn('p-4', className)} {...props} />
+    <div data-slot="card-content" className={cn('p-5', className)} {...props} />
   );
 };
 

@@ -64,7 +64,7 @@ export const EntityDetailLayout = <SectionId extends string>({
         </div>
       </div>
 
-      <div className="2xl:hidden">
+      <div className="private-rail-fallback">
         <PageBackButton href={backHref} label={backLabel} />
       </div>
 

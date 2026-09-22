@@ -129,7 +129,7 @@ export const AccountHeader: FC<{ userData: UserType }> = ({ userData }) => (
 export const AccountPageContentSkeleton: FC = () => (
   <div className="space-y-5" role="status" aria-label="Chargement">
     <Skeleton className="h-28 rounded-md" />
-    <Skeleton className="h-12 rounded-md 2xl:hidden" />
+    <Skeleton className="private-rail-fallback h-12 rounded-md" />
     <Skeleton className="h-[32rem] rounded-md" />
   </div>
 );

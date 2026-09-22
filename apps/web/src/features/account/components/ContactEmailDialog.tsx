@@ -189,7 +189,7 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
           if (!isOpen) requestClose();
         }}
       >
-        <DialogContent className="overflow-hidden p-0 sm:max-w-md">
+        <DialogContent className="overflow-y-auto p-0 sm:max-w-md">
           <div className="p-6">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -373,7 +373,7 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
         open={showDiscardConfirm}
         onOpenChange={setShowDiscardConfirm}
       >
-        <AlertDialogContent className="border-border overflow-hidden rounded-lg p-0">
+        <AlertDialogContent className="border-border overflow-y-auto rounded-xl p-0">
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">

@@ -5,6 +5,7 @@ import {
   type PersonDetailSection,
 } from '$features/persons/components/PersonDetailPage';
 import { getPersonCapabilities } from '$features/persons/person.permissions';
+import { getSafePersonReturnHref } from '$features/persons/person.ui';
 import { getPerson } from '$features/persons/server/person.service';
 import { assertPersonFeatureReady } from '$features/persons/server/person-deletion';
 import type { PersonDetail } from '$features/persons/types/person.types';
@@ -16,26 +17,6 @@ type PersonPageProps = {
     returnTo?: string | string[];
     section?: string | string[];
   }>;
-};
-
-const DIRECTORY_PATH = '/vie-interne/repertoire';
-
-const getSafeReturnHref = (value: string | string[] | undefined): string => {
-  const candidate = Array.isArray(value) ? value[0] : value;
-  if (!candidate?.startsWith('/')) return DIRECTORY_PATH;
-  try {
-    const parsed = new URL(candidate, 'https://team-control.local');
-    if (
-      parsed.origin !== 'https://team-control.local' ||
-      parsed.pathname !== DIRECTORY_PATH
-    ) {
-      return DIRECTORY_PATH;
-    }
-
-    return `${parsed.pathname}${parsed.search}`;
-  } catch {
-    return DIRECTORY_PATH;
-  }
 };
 
 export default async function PersonPage({
@@ -71,7 +52,7 @@ export default async function PersonPage({
       activeSection={activeSection}
       initialPerson={initialPerson}
       personId={id}
-      returnHref={getSafeReturnHref(query.returnTo)}
+      returnHref={getSafePersonReturnHref(query.returnTo)}
     />
   );
 }

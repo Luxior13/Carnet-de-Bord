@@ -79,10 +79,9 @@ describe('navigation availability', () => {
 
     expect(hrefs).toEqual([
       '/',
-      '/feuille-de-route',
       '/mes-notifications',
-      '/recherche',
       '/vie-interne/actualite-interne',
+      '/feuille-de-route',
     ]);
     expect(hrefs).not.toContain('/tableau-de-bord/mes-taches');
     expect(hrefs).not.toContain('/vie-interne');
@@ -92,10 +91,10 @@ describe('navigation availability', () => {
     const hrefs = getRoadmapHrefs();
 
     expect(hrefs).toContain('/tableau-de-bord/mes-taches');
-    expect(hrefs).toContain('/vie-interne');
+    expect(hrefs).toContain('/vie-interne/reunions');
     expect(hrefs).toContain('/vie-interne/calendrier-interne');
     expect(hrefs).not.toContain('/vie-interne/repertoire');
-    expect(hrefs).toContain('/bureau-juridique');
+    expect(hrefs).toContain('/bureau-juridique/documents');
     expect(hrefs).toContain('/bureau-juridique/partenaires');
     expect(hrefs).toContain('/tresorerie/operations');
     expect(hrefs).toContain('/sport-team-control');
@@ -214,12 +213,7 @@ describe('navigation availability', () => {
       '/vie-interne/calendrier-interne',
     ).flatMap((section) => flattenHrefs(section.items));
 
-    expect(sidebarHrefs).toEqual([
-      '/',
-      '/feuille-de-route',
-      '/mes-notifications',
-      '/recherche',
-    ]);
+    expect(sidebarHrefs).toEqual(['/vie-interne/actualite-interne']);
     expect(sidebarHrefs).not.toContain('/vie-interne/calendrier-interne');
   });
 
@@ -276,7 +270,7 @@ describe('navigation availability', () => {
   it('returns only planned destinations from the roadmap helper', () => {
     const hrefs = getRoadmapHrefs();
 
-    expect(hrefs).toContain('/vie-interne');
+    expect(hrefs).toContain('/vie-interne/reunions');
     expect(hrefs).not.toContain('/vie-interne/repertoire');
     expect(hrefs).not.toContain('/');
     expect(hrefs).not.toContain('/mon-compte');
@@ -292,14 +286,13 @@ describe('navigation availability', () => {
 
     expect(liveHrefs).toEqual([
       '/',
-      '/feuille-de-route',
       '/mes-notifications',
-      '/recherche',
-      '/vie-interne/actualite-interne',
       '/vie-interne/repertoire',
+      '/vie-interne/actualite-interne',
       '/administration/utilisateurs',
-      '/systeme/parametres',
       '/systeme/journal-activite',
+      '/systeme/parametres',
+      '/feuille-de-route',
     ]);
     expect(allHrefs).toEqual(rawHrefs);
   });

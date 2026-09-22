@@ -61,7 +61,7 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "hover:bg-surface-tile-hover hover:text-foreground data-[state=active]:border-border-default data-[state=active]:bg-surface-panel-header data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/35 focus-visible:outline-ring inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-none lg:h-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "hover:bg-surface-navigation-hover hover:text-foreground data-[state=active]:border-border-default data-[state=active]:bg-surface-navigation-active data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/35 focus-visible:outline-ring inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:ring-[var(--ring-width)] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-none lg:h-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}

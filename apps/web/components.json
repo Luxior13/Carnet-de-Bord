@@ -13,8 +13,8 @@
   "aliases": {
     "components": "$components",
     "utils": "$utils/css.utils",
-    "ui": "$components/ui",
-    "lib": "$lib",
+    "ui": "$ui",
+    "lib": "$shared",
     "hooks": "$hooks"
   },
   "iconLibrary": "lucide"

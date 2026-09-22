@@ -1,6 +1,15 @@
 import { AlertTriangle, Inbox, Loader2 } from 'lucide-react';
 import React, { type ComponentProps, type FC, type ReactNode } from 'react';
 
+import { Alert, AlertDescription, AlertTitle } from '$ui/alert';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '$ui/empty';
 import { cn } from '$utils/css.utils';
 
 type ContentStateKind = 'empty' | 'error' | 'loading' | 'warning';
@@ -49,48 +58,44 @@ export const ContentState: FC<ContentStateProps> = ({
   title,
   ...props
 }) => {
-  const isPanel = layout === 'panel';
+  const role =
+    kind === 'error' ? 'alert' : kind === 'loading' ? 'status' : undefined;
+
+  if (layout === 'panel') {
+    return (
+      <Empty
+        role={role}
+        aria-live={kind === 'loading' ? 'polite' : undefined}
+        className={cn('min-h-44 border', getToneClasses(kind), className)}
+        {...props}
+      >
+        <EmptyHeader>
+          <EmptyMedia
+            variant="icon"
+            className="bg-surface-inset text-current"
+            aria-hidden="true"
+          >
+            {icon ?? getDefaultIcon(kind)}
+          </EmptyMedia>
+          <EmptyTitle>{title}</EmptyTitle>
+          {description && <EmptyDescription>{description}</EmptyDescription>}
+        </EmptyHeader>
+        {action && <EmptyContent>{action}</EmptyContent>}
+      </Empty>
+    );
+  }
 
   return (
-    <div
+    <Alert
       aria-live={kind === 'loading' ? 'polite' : undefined}
-      className={cn(
-        'rounded-lg border',
-        getToneClasses(kind),
-        isPanel
-          ? 'flex min-h-44 flex-col items-center justify-center p-6 text-center'
-          : 'flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between',
-        className,
-      )}
-      role={
-        kind === 'error' ? 'alert' : kind === 'loading' ? 'status' : undefined
-      }
+      className={cn(getToneClasses(kind), className)}
+      role={role}
       {...props}
     >
-      <div
-        className={cn(
-          'flex min-w-0',
-          isPanel ? 'flex-col items-center' : 'items-start gap-3',
-        )}
-      >
-        <span
-          className={cn(
-            'flex shrink-0 items-center justify-center rounded-md border border-current/25 bg-current/10',
-            isPanel ? 'size-12' : 'size-9',
-          )}
-        >
-          {icon ?? getDefaultIcon(kind)}
-        </span>
-        <div className={cn('min-w-0', isPanel ? 'mt-3' : 'pt-0.5')}>
-          <p className="text-sm font-semibold">{title}</p>
-          {description && (
-            <div className="text-muted-foreground mt-1 text-sm leading-5">
-              {description}
-            </div>
-          )}
-        </div>
-      </div>
-      {action && <div className="shrink-0">{action}</div>}
-    </div>
+      {icon ?? getDefaultIcon(kind)}
+      <AlertTitle>{title}</AlertTitle>
+      {description && <AlertDescription>{description}</AlertDescription>}
+      {action && <div className="col-start-2 mt-3">{action}</div>}
+    </Alert>
   );
 };

@@ -28,6 +28,7 @@ import {
   type LoginResult,
   type UserType,
 } from '$types/auth.types';
+import { Alert, AlertDescription, AlertTitle } from '$ui/alert';
 import { apiFetch } from '$utils/api.utils';
 
 // Auto-logout after 30 minutes of inactivity
@@ -545,23 +546,23 @@ export const UserProvider: FC<UserProviderProps> = ({
     >
       {children}
       {showSessionWarning && (
-        <div
+        <Alert
           aria-describedby="session-warning-description"
           aria-labelledby="session-warning-title"
           aria-live="assertive"
-          className="bg-card fixed right-4 bottom-4 z-50 max-w-sm rounded-md border p-4 shadow-[var(--shadow-panel)]"
+          className="fixed right-4 bottom-4 z-50 w-[calc(100%-2rem)] max-w-sm shadow-[var(--shadow-panel-strong)]"
           role="alert"
         >
-          <p id="session-warning-title" className="mb-2 font-medium">
+          <AlertTitle id="session-warning-title" className="mb-2">
             Session bientôt expirée
-          </p>
-          <p
+          </AlertTitle>
+          <AlertDescription
             id="session-warning-description"
             className="text-muted-foreground mb-3 text-sm"
           >
             Votre session va expirer dans quelques minutes pour inactivité.
-          </p>
-          <div className="flex gap-2">
+          </AlertDescription>
+          <div className="col-start-2 flex flex-wrap gap-2">
             <Button size="sm" onClick={() => void extendSession()}>
               Rester connecté
             </Button>
@@ -569,7 +570,7 @@ export const UserProvider: FC<UserProviderProps> = ({
               Se déconnecter
             </Button>
           </div>
-        </div>
+        </Alert>
       )}
     </UserContext.Provider>
   );

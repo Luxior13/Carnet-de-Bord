@@ -249,7 +249,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
         >
           <Bell aria-hidden="true" className="size-4" />
           {unreadNotificationsCount > 0 && (
-            <span className="ring-surface-page bg-primary text-primary-foreground absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold ring-2">
+            <span className="ring-surface-page bg-primary text-primary-foreground text-caption absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 font-bold ring-2">
               {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
               <span className="sr-only">notifications non lues</span>
             </span>
@@ -258,7 +258,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
       </PopoverTrigger>
       <PopoverContent
         align="end"
-        className="border-border-default bg-surface-floating flex max-h-[var(--radix-popover-content-available-height)] w-[min(calc(100vw-2rem),22rem)] flex-col overflow-hidden rounded-lg p-0 shadow-[var(--shadow-panel-strong)]"
+        className="border-border-default bg-surface-floating flex max-h-[var(--radix-popover-content-available-height)] w-[min(calc(100vw-2rem),22rem)] flex-col overflow-hidden rounded-2xl p-0 shadow-[var(--shadow-panel-strong)]"
         collisionPadding={8}
         sideOffset={8}
       >

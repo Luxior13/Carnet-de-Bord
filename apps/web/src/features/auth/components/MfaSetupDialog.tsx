@@ -51,7 +51,7 @@ export const MfaSetupDialog: FC<MfaSetupDialogProps> = ({
       }}
     >
       <DialogContent
-        className="max-h-[calc(100svh-2rem)] overflow-y-auto p-0 sm:max-w-lg"
+        className="p-0 sm:max-w-lg"
         hideCloseButton
         onEscapeKeyDown={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => event.preventDefault()}

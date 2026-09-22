@@ -196,13 +196,19 @@ export const PERMISSION_POLES = [
   {
     icon: 'Users',
     key: 'internal',
-    label: 'Vie interne',
+    label: 'Personnes',
     tone: 'internal',
+  },
+  {
+    icon: 'Activity',
+    key: 'activity',
+    label: 'Activité',
+    tone: 'activity',
   },
   {
     icon: 'Handshake',
     key: 'legal',
-    label: 'Bureau & juridique',
+    label: 'Relations',
     tone: 'legal',
   },
   {

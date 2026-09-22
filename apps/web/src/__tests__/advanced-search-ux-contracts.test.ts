@@ -13,10 +13,9 @@ const catalogSource = readSourceFile('../features/search/search-catalog.ts');
 const navigationSource = readSourceFile('../shared/constants/app.constants.ts');
 
 describe('advanced search UX contracts', () => {
-  it('promotes search as a live registered destination', () => {
-    expect(navigationSource).toContain('featureId: FEATURES.search.id');
-    expect(navigationSource).toContain("href: '/recherche'");
-    expect(navigationSource).toContain("label: 'Recherche avancée'");
+  it('keeps search outside the sidebar navigation contract', () => {
+    expect(navigationSource).not.toContain('featureId: FEATURES.search.id');
+    expect(navigationSource).not.toContain("label: 'Recherche avancée'");
   });
 
   it('uses one permission-filtered catalogue for quick and advanced search', () => {

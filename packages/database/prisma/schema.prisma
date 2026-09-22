@@ -141,7 +141,6 @@ model Session {
   @@index([userId, expiresAt])
   @@index([userId, idleExpiresAt])
   @@index([userId, createdAt])
-  @@index([token])
 }
 
 /// Encrypted active TOTP seed. Secrets never live on the User row so ordinary
@@ -523,7 +522,6 @@ model RateLimit {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  @@index([key])
   @@index([blockedUntil])
 }
 

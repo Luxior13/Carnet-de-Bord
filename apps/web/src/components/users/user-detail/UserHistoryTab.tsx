@@ -26,6 +26,7 @@ import {
 import React, { type FC, memo, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { Disclosure } from '$components/layout/Disclosure';
 import { FEATURES } from '$constants/feature-registry.constants';
 import {
   getNavigationIcon,
@@ -45,6 +46,12 @@ import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent } from '$ui/card';
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '$ui/collapsible';
+import { Label } from '$ui/label';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -53,10 +60,6 @@ import {
 } from '$ui/select';
 import { Skeleton } from '$ui/skeleton';
 import { cn } from '$utils/css.utils';
-
-// ============================================
-// TYPES
-// ============================================
 
 type UserHistoryTabProps = {
   auditLogs: AuditLogEntry[];
@@ -1433,7 +1436,7 @@ const ChangeItem: FC<{
         </span>
       ) : (
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-          <span className="text-muted-foreground/70 text-xs font-medium uppercase">
+          <span className="text-muted-foreground text-xs font-medium uppercase">
             Avant
           </span>
           <span className="bg-muted text-muted-foreground max-w-full rounded px-1.5 py-0.5 break-words line-through">
@@ -1487,7 +1490,9 @@ const ActivityListRow: FC<{
           locationToneClasses.accent,
         )}
       />
-      <button
+      <Button
+        variant="ghost"
+        size="inline"
         type="button"
         aria-expanded={isOpen}
         className="group w-full cursor-pointer text-left"
@@ -1602,9 +1607,7 @@ const ActivityListRow: FC<{
                     locationToneClasses.dot,
                   )}
                 />
-                <span className="text-muted-foreground/80 shrink-0">
-                  Onglet
-                </span>
+                <span className="text-muted-foreground shrink-0">Onglet</span>
                 <span
                   className="min-w-0 truncate font-medium"
                   title={location.tabLabel}
@@ -1618,7 +1621,7 @@ const ActivityListRow: FC<{
             <p className="text-foreground truncate text-xs font-medium">
               {formatRelativeTime(log.createdAt)}
             </p>
-            <p className="text-muted-foreground/70 mt-0.5 truncate text-xs">
+            <p className="text-muted-foreground mt-0.5 truncate text-xs">
               {formatFullDate(log.createdAt)}
             </p>
           </div>
@@ -1630,7 +1633,7 @@ const ActivityListRow: FC<{
             )}
           />
         </div>
-      </button>
+      </Button>
       {isOpen && (
         <div className="border-border/55 bg-background/20 border-t px-3 py-3 sm:px-4">
           <div className="space-y-3 md:ml-[3.25rem]">
@@ -1659,12 +1662,10 @@ const ActivityListRow: FC<{
                 </div>
               </section>
             )}
-            <details className="group/technical">
-              <summary className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium transition-colors [&::-webkit-details-marker]:hidden">
-                <Key className="size-3" />
-                Détails techniques
-                <ChevronDown className="size-3 transition-transform group-open/technical:rotate-180" />
-              </summary>
+            <Disclosure
+              label="Détails techniques"
+              icon={<Key aria-hidden="true" className="size-3" />}
+            >
               <div className="bg-surface-muted/35 mt-2 px-3 py-2">
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                   <span className="text-muted-foreground">
@@ -1695,7 +1696,7 @@ const ActivityListRow: FC<{
                   )}
                 </div>
               </div>
-            </details>
+            </Disclosure>
           </div>
         </div>
       )}
@@ -2251,7 +2252,9 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                         const isActiveScope = activityScope === scope.value;
 
                         return (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="inline"
                             key={scope.value}
                             type="button"
                             aria-pressed={isActiveScope}
@@ -2261,23 +2264,23 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                             className={cn(
                               'text-muted-foreground hover:text-foreground min-h-11 rounded-md px-2 text-xs font-medium transition-colors sm:text-sm',
                               isActiveScope &&
-                                'bg-primary/15 text-primary-emphasis shadow-sm',
+                                'bg-surface-navigation-active text-foreground shadow-none',
                             )}
                           >
                             {scope.label}
-                          </button>
+                          </Button>
                         );
                       })}
                     </div>
                   </div>
 
                   <div className="min-w-44 space-y-2 xl:w-52">
-                    <label
+                    <Label
                       htmlFor="personal-activity-period"
                       className="text-muted-foreground block text-xs font-medium"
                     >
                       Période
-                    </label>
+                    </Label>
                     <Select
                       value={dateFilter}
                       onValueChange={handleDateFilterChange}
@@ -2303,115 +2306,124 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                   </div>
                 </div>
 
-                <details className="group/filters border-border/60 bg-background/25 rounded-lg border">
-                  <summary className="text-muted-foreground hover:text-foreground flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-sm font-medium transition-colors [&::-webkit-details-marker]:hidden">
-                    <Filter className="size-4" />
-                    Filtres avancés
-                    {hasAdvancedLocationFilters && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-primary/15 text-primary-emphasis ml-1 text-xs"
-                      >
-                        Actifs
-                      </Badge>
-                    )}
-                    <ChevronDown className="ml-auto size-4 transition-transform group-open/filters:rotate-180" />
-                  </summary>
-                  <div className="border-border/55 grid gap-3 border-t p-3 sm:grid-cols-2">
-                    <div className="min-w-0 space-y-2">
-                      <label
-                        htmlFor="personal-activity-pole"
-                        className="text-muted-foreground text-xs font-medium"
-                      >
-                        Pôle
-                      </label>
-                      <Select
-                        value={poleFilter}
-                        onValueChange={handlePoleFilterChange}
-                      >
-                        <SelectTrigger
-                          id="personal-activity-pole"
-                          className={activitySelectTriggerClassName}
+                <Collapsible className="group/filters border-border/60 bg-background/25 rounded-lg border">
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="inline"
+                      className="text-muted-foreground hover:text-foreground flex min-h-11 w-full items-center gap-2 px-3 text-sm font-medium transition-colors"
+                    >
+                      <Filter className="size-4" />
+                      Filtres avancés
+                      {hasAdvancedLocationFilters && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-primary/15 text-primary-emphasis ml-1 text-xs"
                         >
-                          <SelectValue>
-                            <ActivitySelectVisualOption
-                              icon={selectedPoleOption.icon}
-                              label={selectedPoleOption.label}
-                              count={selectedPoleOption.count}
-                              tone={selectedPoleOption.tone}
-                            />
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent
-                          className={activitySelectContentClassName}
+                          Actifs
+                        </Badge>
+                      )}
+                      <ChevronDown className="ml-auto size-4 transition-transform group-data-[state=open]/filters:rotate-180" />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="border-border/55 grid gap-3 border-t p-3 sm:grid-cols-2">
+                      <div className="min-w-0 space-y-2">
+                        <Label
+                          htmlFor="personal-activity-pole"
+                          className="text-muted-foreground text-xs font-medium"
                         >
-                          {poleOptions.map((filter) => (
-                            <SelectItem
-                              key={filter.value}
-                              value={filter.value}
-                              className={activitySelectItemClassName}
-                            >
+                          Pôle
+                        </Label>
+                        <Select
+                          value={poleFilter}
+                          onValueChange={handlePoleFilterChange}
+                        >
+                          <SelectTrigger
+                            id="personal-activity-pole"
+                            className={activitySelectTriggerClassName}
+                          >
+                            <SelectValue>
                               <ActivitySelectVisualOption
-                                icon={filter.icon}
-                                label={filter.label}
-                                count={filter.count}
-                                tone={filter.tone}
+                                icon={selectedPoleOption.icon}
+                                label={selectedPoleOption.label}
+                                count={selectedPoleOption.count}
+                                tone={selectedPoleOption.tone}
                               />
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="min-w-0 space-y-2">
-                      <label
-                        htmlFor="personal-activity-page"
-                        className="text-muted-foreground text-xs font-medium"
-                      >
-                        Page
-                      </label>
-                      <Select
-                        value={effectivePageFilter}
-                        onValueChange={handlePageFilterChange}
-                        disabled={isPageFilterLocked}
-                      >
-                        <SelectTrigger
-                          id="personal-activity-page"
-                          className={cn(
-                            activitySelectTriggerClassName,
-                            isPageFilterLocked && 'opacity-70',
-                          )}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent
+                            className={activitySelectContentClassName}
+                          >
+                            {poleOptions.map((filter) => (
+                              <SelectItem
+                                key={filter.value}
+                                value={filter.value}
+                                className={activitySelectItemClassName}
+                              >
+                                <ActivitySelectVisualOption
+                                  icon={filter.icon}
+                                  label={filter.label}
+                                  count={filter.count}
+                                  tone={filter.tone}
+                                />
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="min-w-0 space-y-2">
+                        <Label
+                          htmlFor="personal-activity-page"
+                          className="text-muted-foreground text-xs font-medium"
                         >
-                          <SelectValue>
-                            <ActivitySelectVisualOption
-                              icon={selectedPageOption.icon}
-                              label={selectedPageOption.label}
-                              count={selectedPageOption.count}
-                              tone={selectedPageOption.tone}
-                            />
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent
-                          className={activitySelectContentClassName}
+                          Page
+                        </Label>
+                        <Select
+                          value={effectivePageFilter}
+                          onValueChange={handlePageFilterChange}
+                          disabled={isPageFilterLocked}
                         >
-                          {pageOptions.map((filter) => (
-                            <SelectItem
-                              key={filter.value}
-                              value={filter.value}
-                              className={activitySelectItemClassName}
-                            >
+                          <SelectTrigger
+                            id="personal-activity-page"
+                            className={cn(
+                              activitySelectTriggerClassName,
+                              isPageFilterLocked && 'opacity-70',
+                            )}
+                          >
+                            <SelectValue>
                               <ActivitySelectVisualOption
-                                icon={filter.icon}
-                                label={filter.label}
-                                count={filter.count}
-                                tone={filter.tone}
+                                icon={selectedPageOption.icon}
+                                label={selectedPageOption.label}
+                                count={selectedPageOption.count}
+                                tone={selectedPageOption.tone}
                               />
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent
+                            className={activitySelectContentClassName}
+                          >
+                            {pageOptions.map((filter) => (
+                              <SelectItem
+                                key={filter.value}
+                                value={filter.value}
+                                className={activitySelectItemClassName}
+                              >
+                                <ActivitySelectVisualOption
+                                  icon={filter.icon}
+                                  label={filter.label}
+                                  count={filter.count}
+                                  tone={filter.tone}
+                                />
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                  </div>
-                </details>
+                  </CollapsibleContent>
+                </Collapsible>
 
                 <div className="flex flex-wrap justify-end gap-2">
                   {hasActiveFilters && (
@@ -2461,7 +2473,9 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                       const isActiveScope = activityScope === scope.value;
 
                       return (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="inline"
                           key={scope.value}
                           type="button"
                           aria-pressed={isActiveScope}
@@ -2470,7 +2484,7 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                           className={cn(
                             'text-muted-foreground hover:text-foreground flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-md px-2 text-xs font-medium transition-colors sm:text-sm',
                             isActiveScope &&
-                              'bg-primary/15 text-primary-emphasis shadow-sm',
+                              'bg-surface-navigation-active text-foreground shadow-none',
                           )}
                         >
                           <span className="truncate">{scope.label}</span>
@@ -2479,24 +2493,24 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                               'shrink-0 text-xs tabular-nums',
                               isActiveScope
                                 ? 'text-primary-emphasis'
-                                : 'text-muted-foreground/75',
+                                : 'text-muted-foreground',
                             )}
                           >
                             {getScopeCount(scope.value)}
                           </span>
-                        </button>
+                        </Button>
                       );
                     })}
                   </div>
                 </div>
                 <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
                   <div className="min-w-0 space-y-2">
-                    <label
+                    <Label
                       htmlFor="activity-pole"
                       className="text-muted-foreground text-xs font-medium"
                     >
                       Pôle
-                    </label>
+                    </Label>
                     <Select
                       value={poleFilter}
                       onValueChange={handlePoleFilterChange}
@@ -2533,12 +2547,12 @@ export const UserHistoryTab: FC<UserHistoryTabProps> = ({
                     </Select>
                   </div>
                   <div className="min-w-0 space-y-2">
-                    <label
+                    <Label
                       htmlFor="activity-page"
                       className="text-muted-foreground text-xs font-medium"
                     >
                       Page
-                    </label>
+                    </Label>
                     <Select
                       value={effectivePageFilter}
                       onValueChange={handlePageFilterChange}

@@ -9,14 +9,16 @@ import {
   createPerson,
   listPersons,
 } from '$features/persons/server/person.service';
-import {
-  handlePersonApiError,
-  withPrivateNoStore,
-  zodErrorDetails,
-} from '$features/persons/server/person-api';
+import { handlePersonApiError } from '$features/persons/server/person-api';
 import { assertPersonFeatureReady } from '$features/persons/server/person-deletion';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors, apiSuccess, parseJsonBody } from '$server/api-response';
+import {
+  apiErrors,
+  apiSuccess,
+  parseJsonBody,
+  withPrivateNoStore,
+  zodErrorDetails,
+} from '$server/api-response';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const auth = await requireAuth();

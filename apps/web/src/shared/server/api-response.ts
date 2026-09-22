@@ -2,6 +2,7 @@ import 'server-only';
 
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
+import type { ZodError } from 'zod';
 
 import { PAGINATION } from '$constants/pagination.constants';
 import { logger } from '$server/logger';
@@ -44,6 +45,31 @@ export function isPrismaUniqueConstraintError(error: unknown): boolean {
     'code' in error &&
     error.code === 'P2002'
   );
+}
+
+/**
+ * Marks a private API response so neither the browser nor a shared cache keeps
+ * it. Every protected route that may return personal data uses this.
+ */
+export const withPrivateNoStore = <T extends NextResponse>(response: T): T => {
+  response.headers.set('Cache-Control', 'private, no-store');
+  response.headers.set('Pragma', 'no-cache');
+
+  return response;
+};
+
+/**
+ * Groups Zod issues by field path so a client can display field-level errors.
+ * An issue without a path is reported under `_form`.
+ */
+export function zodErrorDetails(error: ZodError): Record<string, string[]> {
+  const details = new Map<string, string[]>();
+  for (const issue of error.issues) {
+    const key = issue.path.join('.') || '_form';
+    details.set(key, [...(details.get(key) ?? []), issue.message]);
+  }
+
+  return Object.fromEntries(details);
 }
 
 /**

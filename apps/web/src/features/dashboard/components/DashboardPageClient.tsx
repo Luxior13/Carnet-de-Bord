@@ -191,8 +191,8 @@ const DashboardAttentionCard: FC<{
   ].filter((item) => item.count > 0);
 
   return (
-    <Card className="border-warning/25 overflow-hidden rounded-lg py-0">
-      <CardHeader className="border-border/65 bg-surface-muted border-b p-4">
+    <Card className="border-warning/25">
+      <CardHeader className="p-4">
         <h2 className="text-sm font-semibold">À traiter</h2>
         <CardDescription>
           Uniquement les comptes nécessitant une action.
@@ -225,7 +225,7 @@ const DashboardAttentionCard: FC<{
           })}
         </div>
       </CardContent>
-      <CardFooter className="border-border/65 bg-surface-muted justify-end border-t p-4">
+      <CardFooter className="justify-end p-4">
         <Button asChild size="sm" variant="outline">
           <Link href="/administration/utilisateurs">
             Examiner les comptes
@@ -241,8 +241,8 @@ const DashboardActivityCard: FC<{
   activities: DashboardActivityItem[];
   canOpenJournal: boolean;
 }> = ({ activities, canOpenJournal }) => (
-  <Card className="border-border/70 overflow-hidden rounded-lg py-0">
-    <CardHeader className="border-border/65 bg-surface-muted border-b p-4">
+  <Card className="min-w-0">
+    <CardHeader className="p-4">
       <h2 className="text-sm font-semibold">Activité récente</h2>
       <CardDescription>Les trois derniers événements utiles.</CardDescription>
     </CardHeader>
@@ -250,7 +250,7 @@ const DashboardActivityCard: FC<{
       <DashboardActivityList activities={activities} />
     </CardContent>
     {canOpenJournal && (
-      <CardFooter className="border-border/65 bg-surface-muted justify-end border-t p-4">
+      <CardFooter className="justify-end p-4">
         <Button asChild size="sm" variant="outline">
           <Link href="/systeme/journal-activite">
             Voir le journal

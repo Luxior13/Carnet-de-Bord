@@ -5,6 +5,10 @@ Chaque fichier explique le contenu attendu, les actions, les donnees gerees et l
 
 ## Cadrage avant implementation
 
+- [Navigation du site](../../docs/NAVIGATION.md) - poles, lieux, regles d'admission d'une entree de menu et garanties de ressenti. A lire avant toute nouvelle page.
+- [Feuille de route](../../docs/FEUILLE_DE_ROUTE.md) - decisions de tri et ordre de construction.
+- [Structure et forme juridique](../../docs/STRUCTURE.md) - profil de structure et finance en natures.
+- [Roles et portee des permissions](../../docs/ROLES_ET_PERMISSIONS.md) - patrons de role et perimetres de visibilite.
 - [Matrice de preparation long terme](MATRICE_PREPARATION.md) - statuts, permissions, modeles UI, donnees et liens entre modules.
 
 ## Tableau de bord

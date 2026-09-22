@@ -42,6 +42,13 @@ const searchCatalogSource = readFileSync(
   'utf8',
 );
 
+// Static, test-owned path only.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const commandSource = readFileSync(
+  new URL('../components/ui/command.tsx', import.meta.url),
+  'utf8',
+);
+
 describe('global page search', () => {
   it('normalizes accents, ligatures, punctuation and repeated spaces', () => {
     expect(
@@ -109,15 +116,17 @@ describe('global page search', () => {
     ).toEqual(['first', 'second']);
   });
 
-  it('provides the command-palette keyboard and ARIA contract', () => {
-    expect(globalSearchSource).toContain("event.key === 'ArrowDown'");
-    expect(globalSearchSource).toContain("event.key === 'ArrowUp'");
-    expect(globalSearchSource).toContain("event.key === 'Enter'");
-    expect(globalSearchSource).toContain('role="combobox"');
-    expect(globalSearchSource).toContain('role="listbox"');
-    expect(globalSearchSource).toContain('role="option"');
-    expect(globalSearchSource).toContain('aria-activedescendant');
-    expect(globalSearchSource).toContain('aria-selected={isActive}');
+  it('delegates keyboard and ARIA behavior to the shadcn Command primitive', () => {
+    expect(commandSource).toContain("from 'cmdk'");
+    for (const primitive of ['CommandInput', 'CommandList', 'CommandItem'])
+      expect(globalSearchSource).toContain('<' + primitive);
+    expect(globalSearchSource).toContain('shouldFilter={false}');
+    expect(globalSearchSource).toMatch(/<Command[\s\S]+?\bloop\b/);
+    expect(globalSearchSource).toContain('value={activeResultHref}');
+    expect(globalSearchSource).toContain('onValueChange={setActiveResultHref}');
+    expect(globalSearchSource).toContain(
+      'onSelect={() => navigateToHref(result.href)}',
+    );
   });
 
   it('opens only from the header button without a global shortcut', () => {
@@ -161,23 +170,21 @@ describe('global page search', () => {
 
   it('keeps a flat dialog hierarchy and explicit mobile safe areas', () => {
     expect(globalSearchSource).toContain('bg-surface-floating h-dvh');
-    expect(globalSearchSource).toContain(
-      'border-border-divider flex items-center',
+    expect(commandSource).toContain(
+      'border-border-divider bg-surface-panel-header',
     );
     expect(globalSearchSource).toContain(
       'bg-surface-page text-muted-foreground',
     );
-    expect(globalSearchSource).toContain(
-      "isActive ? 'bg-primary/10' : 'hover:bg-surface-tile-hover'",
+    expect(commandSource).toContain(
+      'data-[selected=true]:bg-surface-panel-header',
     );
     expect(globalSearchSource).not.toContain('bg-surface-panel-raised/95');
     expect(globalSearchSource).not.toContain('ring-primary/30');
     expect(globalSearchSource).toContain('Pages suggérées');
-    expect(globalSearchSource).toContain('safe-area-inset-top');
+    expect(commandSource).toContain('safe-area-inset-top');
     expect(globalSearchSource).toContain('safe-area-inset-bottom');
-    expect(globalSearchSource).toContain('ml-1 border-l pl-1');
     expect(globalSearchSource).toContain('hidden truncate sm:inline');
-    expect(globalSearchSource).toContain('focus-visible:bg-transparent');
     expect(globalSearchSource).not.toContain('focus-within:border-primary');
   });
 });

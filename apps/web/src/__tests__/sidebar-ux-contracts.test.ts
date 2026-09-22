@@ -77,19 +77,23 @@ describe('sidebar UX contracts', () => {
     expect(sidebarSource).toContain(
       'group-data-[state=open]/account-menu:rotate-180',
     );
-    expect(sidebarSource).toContain('data-[state=open]:bg-sidebar-accent/65');
-    expect(sidebarSource).toContain('bg-primary/10 text-primary-emphasis');
+    expect(sidebarSource).toContain(
+      'data-[state=open]:bg-surface-panel-raised',
+    );
+    expect(sidebarSource).toContain(
+      'bg-surface-navigation-active text-foreground',
+    );
     expect(sidebarSource).toContain('Actuel');
     expect(sidebarSource).toContain('aria-current={isActive');
-    expect(sidebarPrimitiveSource).toContain('before:bg-primary');
+    expect(sidebarPrimitiveSource).not.toContain('before:bg-primary');
     expect(sidebarPrimitiveSource).toContain(
-      'data-[active=true]:before:opacity-100',
+      'data-[active=true]:bg-surface-navigation-active',
     );
   });
 
   it('keeps the pole switcher readable in expanded, collapsed and mobile layouts', () => {
     expect(sidebarSource).toContain('w-[min(20rem,calc(100vw-2rem))]');
-    expect(sidebarSource).toContain('hover:bg-sidebar-accent/55');
+    expect(sidebarSource).toContain('hover:bg-surface-panel-raised');
     expect(sidebarSource).toContain('Changer de pôle — {activeSpace.label}');
     expect(sidebarSource).toContain('open={isTooltipOpen && !isMenuOpen}');
     expect(sidebarSource).not.toContain('Changer d’espace');
@@ -107,31 +111,32 @@ describe('sidebar UX contracts', () => {
     expect(sidebarSource).toContain(
       "const SIDEBAR_POPOVER_SECTION_CLASS = 'space-y-0.5'",
     );
-    expect(sidebarSource).toContain('hover:bg-surface-tile-hover');
+    expect(sidebarSource).toContain('hover:bg-surface-navigation-hover');
     expect(sidebarSource).toContain('text-muted-foreground');
-    expect(sidebarSource).toContain('text-sidebar-foreground/60');
+    expect(sidebarSource).toContain('text-muted-foreground');
     expect(sidebarSource).not.toContain('text-sidebar-foreground/45');
   });
 
   it('gives the account popover controlled tonal depth', () => {
     expect(sidebarSource).toContain('w-[min(19rem,calc(100vw-2rem))]');
-    expect(sidebarSource).not.toContain('bg-gradient');
+    expect(sidebarSource).not.toContain('bg-gradient-to-br');
     expect(sidebarSource).not.toContain('from-surface-muted');
     expect(sidebarSource).toContain('shadow-[var(--shadow-account-popover)]');
-    expect(sidebarSource).toContain('bg-primary/5 relative border-b');
-    expect(sidebarSource).toContain('bg-surface-panel-raised/55');
-    expect(sidebarSource).toContain('bg-surface-page/65');
+    expect(sidebarSource).toContain('bg-surface-panel-header border-b');
+    expect(sidebarSource).toContain('bg-surface-inset border-t');
     expect(sidebarSource).toContain(
-      'bg-primary/10 text-primary-emphasis ring-primary/15',
+      'bg-surface-inset text-muted-foreground ring-border-default',
     );
-    expect(sidebarSource).toContain('bg-primary/10 text-foreground');
+    expect(sidebarSource).toContain(
+      'bg-surface-navigation-active text-foreground',
+    );
     expect(sidebarSource).toContain('hover:bg-destructive/10');
     expect(sidebarSource).toContain('text-muted-foreground');
     expect(globalStylesSource).toContain('--shadow-account-popover:');
   });
 
   it('keeps compact proportions without decorative texture or nested cards', () => {
-    expect(sidebarSource).toContain('rounded-lg border p-0');
+    expect(sidebarSource).toContain('rounded-xl border p-0');
     expect(sidebarSource).toContain('size-11');
     expect(sidebarSource).toContain('size-8');
     expect(sidebarSource).toContain('min-h-10');

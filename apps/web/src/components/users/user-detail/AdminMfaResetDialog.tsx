@@ -105,7 +105,7 @@ export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = ({
         if (!isOpen && !isSubmitting) onCancel();
       }}
     >
-      <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto p-0 sm:max-w-lg">
+      <DialogContent className="p-0 sm:max-w-lg">
         <div className="bg-warning h-1" />
         <div className="p-6">
           <DialogHeader>

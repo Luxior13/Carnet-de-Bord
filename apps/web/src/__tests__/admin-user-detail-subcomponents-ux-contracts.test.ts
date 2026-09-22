@@ -75,7 +75,7 @@ describe('administrative user detail subcomponent UX contracts', () => {
   });
 
   it('keeps account autonomy compact, direct and progressively disclosed', () => {
-    expect(accountSource).toContain('<details');
+    expect(accountSource).toContain('<Collapsible');
     expect(accountSource).toContain('Autonomie du compte');
     expect(accountSource).toContain('Voir les droits essentiels');
     expect(accountSource).toContain('aria-label="Options configurables"');
@@ -107,7 +107,7 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(accountSource).not.toContain('sticky bottom-3');
     expect(
       accountSource.indexOf('CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.map'),
-    ).toBeLessThan(accountSource.indexOf('<details'));
+    ).toBeLessThan(accountSource.indexOf('<Collapsible'));
   });
 
   it('focuses security on modules and confirms individual session revocation', () => {

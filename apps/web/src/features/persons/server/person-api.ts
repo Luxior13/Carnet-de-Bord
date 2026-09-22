@@ -2,31 +2,11 @@ import 'server-only';
 
 import { Prisma } from '@prisma/client';
 import { NextResponse } from 'next/server';
-import type { z } from 'zod';
 
-import { apiError, apiErrors } from '$server/api-response';
+import { apiError, apiErrors, withPrivateNoStore } from '$server/api-response';
 import { ErrorCode } from '$types/api.types';
 
 import { PersonDomainError } from './person-errors';
-
-export const zodErrorDetails = (
-  error: z.ZodError,
-): Record<string, string[]> => {
-  const details = new Map<string, string[]>();
-  for (const issue of error.issues) {
-    const key = issue.path.join('.') || '_form';
-    details.set(key, [...(details.get(key) ?? []), issue.message]);
-  }
-
-  return Object.fromEntries(details);
-};
-
-export const withPrivateNoStore = <T extends NextResponse>(response: T): T => {
-  response.headers.set('Cache-Control', 'private, no-store');
-  response.headers.set('Pragma', 'no-cache');
-
-  return response;
-};
 
 export const handlePersonApiError = async (
   action: string,

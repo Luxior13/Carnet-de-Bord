@@ -11,6 +11,7 @@ import React, {
 import { toast } from 'sonner';
 
 import { ContentState } from '$components/layout/ContentState';
+import { DEFAULT_APPLICATION_TIME_ZONE } from '$constants/time.constants';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Skeleton } from '$ui/skeleton';
@@ -25,16 +26,15 @@ import type {
 } from '../internal-news.types';
 import { InternalNewsCard } from './InternalNewsCard';
 
-const APPLICATION_TIME_ZONE = 'Europe/Paris';
 const dateKeyFormatter = new Intl.DateTimeFormat('fr-FR', {
   day: '2-digit',
   month: '2-digit',
-  timeZone: APPLICATION_TIME_ZONE,
+  timeZone: DEFAULT_APPLICATION_TIME_ZONE,
   year: 'numeric',
 });
 const dateLabelFormatter = new Intl.DateTimeFormat('fr-FR', {
   dateStyle: 'full',
-  timeZone: APPLICATION_TIME_ZONE,
+  timeZone: DEFAULT_APPLICATION_TIME_ZONE,
 });
 
 const getDateKey = (value: Date): string => {

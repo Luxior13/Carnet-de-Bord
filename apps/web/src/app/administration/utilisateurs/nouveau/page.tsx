@@ -293,6 +293,7 @@ const NewUserContent: FC = () => {
               <CardContent className="space-y-3 p-3 sm:p-4">
                 <div className="grid gap-3 lg:grid-cols-[1fr_280px]">
                   <SectionPanel
+                    titleAs="h3"
                     icon={<KeyRound className="size-3.5" />}
                     title="Mot de passe temporaire"
                   >
@@ -318,6 +319,7 @@ const NewUserContent: FC = () => {
                     </div>
                   </SectionPanel>
                   <SectionPanel
+                    titleAs="h3"
                     icon={<Shield className="size-3.5" />}
                     title="Accès"
                   >
@@ -404,6 +406,7 @@ const NewUserContent: FC = () => {
                 <CardContent className="space-y-3 p-3 sm:p-4">
                   <div className="grid gap-3 lg:grid-cols-[1fr_320px]">
                     <SectionPanel
+                      titleAs="h3"
                       icon={<User className="size-3.5" />}
                       title="Identité"
                     >
@@ -586,6 +589,7 @@ const NewUserContent: FC = () => {
                       </div>
                     </SectionPanel>
                     <SectionPanel
+                      titleAs="h3"
                       icon={<Shield className="size-3.5" />}
                       title="Accès initial"
                     >

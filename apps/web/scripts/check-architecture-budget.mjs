@@ -19,7 +19,7 @@ const LEGACY_LIMITS = new Map([
   ['features/audit/SystemActivityJournalPage.tsx', 1_875],
   ['features/users/UsersListPage.tsx', 1_100],
   ['shared/constants/app.constants.ts', 1_000],
-  ['shared/constants/permissions.constants.ts', 1_375],
+  ['shared/constants/permissions.constants.ts', 1_400],
   ['shared/server/auth.ts', 1_450],
 ]);
 

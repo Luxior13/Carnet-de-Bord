@@ -25,6 +25,11 @@ import type { UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '$ui/collapsible';
 import { Switch } from '$ui/switch';
 
 type UserAccountTabProps = {
@@ -361,32 +366,41 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
           </div>
         </section>
 
-        <details className="group">
-          <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/40 -mx-1 flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-md px-1 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
-            <LockKeyhole className="size-3.5 shrink-0" />
-            <span className="min-w-0 flex-1 text-sm font-medium">
-              Voir les droits essentiels
-            </span>
-            <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-180" />
-          </summary>
-          <div className="border-border/55 bg-surface-muted/50 mt-2 rounded-lg border p-3">
-            <p className="text-muted-foreground text-xs leading-5">
-              Ces actions restent disponibles et ne peuvent pas être retirées.
-            </p>
-            <ul className="mt-3 grid gap-x-6 gap-y-3 sm:grid-cols-2">
-              {ESSENTIAL_ACCOUNT_PERMISSION_ITEMS.map((permission) => (
-                <li key={permission.key} className="min-w-0">
-                  <p className="text-foreground text-sm font-medium">
-                    {permission.label}
-                  </p>
-                  <p className="text-muted-foreground mt-0.5 text-xs leading-5">
-                    {permission.description}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </details>
+        <Collapsible className="group">
+          <CollapsibleTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="inline"
+              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/40 -mx-1 flex min-h-10 w-full items-center gap-2 rounded-md px-1 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <LockKeyhole className="size-3.5 shrink-0" />
+              <span className="min-w-0 flex-1 text-sm font-medium">
+                Voir les droits essentiels
+              </span>
+              <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="border-border/55 bg-surface-muted/50 mt-2 rounded-lg border p-3">
+              <p className="text-muted-foreground text-xs leading-5">
+                Ces actions restent disponibles et ne peuvent pas être retirées.
+              </p>
+              <ul className="mt-3 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+                {ESSENTIAL_ACCOUNT_PERMISSION_ITEMS.map((permission) => (
+                  <li key={permission.key} className="min-w-0">
+                    <p className="text-foreground text-sm font-medium">
+                      {permission.label}
+                    </p>
+                    <p className="text-muted-foreground mt-0.5 text-xs leading-5">
+                      {permission.description}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </CardContent>
       {canManagePermissions && (hasChanges || hasConfigurableOverrides) && (
         <CardFooter className="flex-col items-stretch justify-between gap-3 p-3 sm:flex-row sm:items-center">

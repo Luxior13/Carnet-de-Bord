@@ -56,12 +56,7 @@ const DataTableSection: FC<DataTableSectionProps> = ({
   toolbar,
   toolbarClassName,
 }) => (
-  <Card
-    className={cn(
-      'border-border-default bg-surface overflow-hidden rounded-xl py-0',
-      className,
-    )}
-  >
+  <Card className={cn('min-w-0', className)}>
     <CardHeader
       className={cn(
         'border-border-divider bg-surface-panel-header p-4',
@@ -76,7 +71,7 @@ const DataTableSection: FC<DataTableSectionProps> = ({
         )}
       >
         <div className="min-w-0">
-          <CardTitle className="text-base">{title}</CardTitle>
+          <CardTitle className="text-sm">{title}</CardTitle>
           {description && <CardDescription>{description}</CardDescription>}
         </div>
         {toolbar && (
@@ -132,7 +127,7 @@ const DataTableMobileList: FC<DataTableSlotProps> = ({
 }) => (
   <div
     className={cn(
-      'divide-border-divider bg-surface [&>*:nth-child(even)]:bg-surface-inset/70 divide-y lg:hidden',
+      'divide-border-divider bg-surface [&>*:nth-child(even)]:bg-surface-row-alternate [&>*:nth-child(even):hover]:bg-surface-tile-hover divide-y lg:hidden',
       className,
     )}
   >

@@ -560,7 +560,7 @@ describe('permission catalogue', () => {
     expect(internalNewsCategory).toMatchObject({
       accessPermissionKey: PERMISSIONS.INTERNAL_NEWS.VIEW,
       assignment: 'role-bound',
-      poleKey: 'internal',
+      poleKey: 'activity',
       routes: ['/vie-interne/actualite-interne'],
     });
     expect(
@@ -612,8 +612,9 @@ describe('permission catalogue', () => {
 
   it('uses a coherent user-facing taxonomy and action labels', () => {
     expect(PERMISSION_POLES).toMatchObject([
-      { key: 'internal', label: 'Vie interne' },
-      { key: 'legal', label: 'Bureau & juridique' },
+      { key: 'internal', label: 'Personnes' },
+      { key: 'activity', label: 'Activité' },
+      { key: 'legal', label: 'Relations' },
       { key: 'system', label: 'Système' },
     ]);
     expect(PERMISSION_CATEGORIES.map((category) => category.label)).toEqual([

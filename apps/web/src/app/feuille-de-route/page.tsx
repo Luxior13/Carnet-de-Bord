@@ -88,10 +88,7 @@ export default function RoadmapPage(): React.ReactNode {
                           const ItemIcon = getNavigationIcon(item.icon);
 
                           return (
-                            <Card
-                              className="border-border/70 rounded-md py-0"
-                              key={item.href}
-                            >
+                            <Card className="min-w-0" key={item.href}>
                               <CardHeader className="p-4 pb-2">
                                 <div className="flex items-start justify-between gap-3">
                                   <ServiceIcon
@@ -103,11 +100,11 @@ export default function RoadmapPage(): React.ReactNode {
                                     {item.status ?? 'Planifié'}
                                   </Badge>
                                 </div>
-                                <CardTitle className="pt-2 text-sm">
+                                <CardTitle as="h3" className="pt-2 text-sm">
                                   {item.label}
                                 </CardTitle>
                               </CardHeader>
-                              <CardContent className="space-y-3 p-4 pt-0">
+                              <CardContent className="space-y-3 p-4">
                                 <p className="text-muted-foreground text-sm leading-6">
                                   {item.description ?? space.description}
                                 </p>

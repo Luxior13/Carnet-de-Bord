@@ -154,7 +154,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
             type="button"
             variant="outline"
             size="sm"
-            className="border-border/70 bg-background/35 hover:bg-accent/20 rounded-lg"
+
             onClick={() => setIsEditing(true)}
           >
             <Edit className="size-4" />
@@ -165,9 +165,9 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
     >
       {!isEditing ? (
         <div className="space-y-4">
-          <dl className="divide-border/45 divide-y">
+          <dl className="divide-border-divider border-border-divider [&>div:nth-child(even)]:bg-surface-row-alternate divide-y overflow-hidden rounded-xl border [&>div]:px-4">
             <div className="grid gap-1 py-3 sm:grid-cols-[10rem_1fr]">
-              <dt className="text-foreground text-sm font-bold tracking-normal">
+              <dt className="text-muted-foreground text-sm font-medium">
                 Prénom
               </dt>
               <dd className="text-foreground min-w-0 text-sm font-medium">
@@ -175,15 +175,13 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
               </dd>
             </div>
             <div className="grid gap-1 py-3 sm:grid-cols-[10rem_1fr]">
-              <dt className="text-foreground text-sm font-bold tracking-normal">
-                Nom
-              </dt>
+              <dt className="text-muted-foreground text-sm font-medium">Nom</dt>
               <dd className="text-foreground min-w-0 text-sm font-medium">
                 {userData.lastName}
               </dd>
             </div>
             <div className="grid gap-1 py-3 sm:grid-cols-[10rem_1fr]">
-              <dt className="text-foreground text-sm font-bold tracking-normal">
+              <dt className="text-muted-foreground text-sm font-medium">
                 Identifiant
               </dt>
               <dd className="min-w-0">
@@ -198,7 +196,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
               </dd>
             </div>
             <div className="grid gap-1 py-3 sm:grid-cols-[10rem_1fr]">
-              <dt className="text-foreground text-sm font-bold tracking-normal">
+              <dt className="text-muted-foreground text-sm font-medium">
                 Email de contact
               </dt>
               <dd className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

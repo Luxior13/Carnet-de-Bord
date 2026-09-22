@@ -3,14 +3,16 @@ import type { NextRequest, NextResponse } from 'next/server';
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { updateInternalAnnouncementPinSchema } from '$features/internal-news/internal-news.schemas';
 import { updateInternalAnnouncementPin } from '$features/internal-news/server/internal-news.service';
-import {
-  handleInternalNewsApiError,
-  internalNewsZodErrorDetails,
-  withInternalNewsNoStore,
-} from '$features/internal-news/server/internal-news-api';
+import { handleInternalNewsApiError } from '$features/internal-news/server/internal-news-api';
 import { assertInternalNewsFeatureReady } from '$features/internal-news/server/internal-news-readiness';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors, apiSuccess, parseJsonBody } from '$server/api-response';
+import {
+  apiErrors,
+  apiSuccess,
+  parseJsonBody,
+  withPrivateNoStore,
+  zodErrorDetails,
+} from '$server/api-response';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -32,7 +34,7 @@ export async function PATCH(
   if (!parsed.success) {
     return apiErrors.validation(
       "Modification de l'actualité interne invalide",
-      internalNewsZodErrorDetails(parsed.error),
+      zodErrorDetails(parsed.error),
     );
   }
   const { id } = await context.params;
@@ -43,7 +45,7 @@ export async function PATCH(
   try {
     await assertInternalNewsFeatureReady();
 
-    return withInternalNewsNoStore(
+    return withPrivateNoStore(
       apiSuccess(
         await updateInternalAnnouncementPin(
           id,

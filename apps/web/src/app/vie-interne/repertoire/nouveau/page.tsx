@@ -13,27 +13,9 @@ import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
 import { PersonCreateForm } from '$features/persons/components/PersonCreateForm';
 import { getPersonCapabilities } from '$features/persons/person.permissions';
+import { getSafePersonReturnHref } from '$features/persons/person.ui';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
-
-const DIRECTORY_PATH = '/vie-interne/repertoire';
-
-const getSafeReturnHref = (candidate: string | null): string => {
-  if (!candidate?.startsWith('/')) return DIRECTORY_PATH;
-  try {
-    const parsed = new URL(candidate, 'https://team-control.local');
-    if (
-      parsed.origin !== 'https://team-control.local' ||
-      parsed.pathname !== DIRECTORY_PATH
-    ) {
-      return DIRECTORY_PATH;
-    }
-
-    return `${parsed.pathname}${parsed.search}`;
-  } catch {
-    return DIRECTORY_PATH;
-  }
-};
 
 const NewPersonPageSkeleton: FC = () => (
   <PageShell className="max-w-3xl py-0" width="narrow">
@@ -55,7 +37,9 @@ const NewPersonContent: FC = () => {
   } = useFeatureAvailability();
   const { userData } = useUser();
   const { canCreate } = getPersonCapabilities(userData);
-  const returnHref = getSafeReturnHref(searchParams?.get('returnTo') ?? null);
+  const returnHref = getSafePersonReturnHref(
+    searchParams?.get('returnTo') ?? null,
+  );
 
   if (!canCreate) {
     return (

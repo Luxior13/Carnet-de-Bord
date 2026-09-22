@@ -42,6 +42,7 @@ import type {
 } from '$types/platform.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
+import { Card } from '$ui/card';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 import { apiFetchJson, jsonRequest } from '$utils/api.utils';
@@ -158,10 +159,11 @@ const NotificationRow: FC<NotificationRowProps> = ({
 
   return (
     <li>
-      <article
+      <Card
+        as="article"
         className={cn(
-          'border-border-default bg-surface-panel rounded-xl border p-4 shadow-[var(--shadow-panel)] transition-colors',
-          isUnread && !isArchived && 'border-primary/45 bg-primary/[0.045]',
+          'p-4 transition-colors',
+          isUnread && !isArchived && 'border-primary/45 bg-surface-selected',
         )}
       >
         <div className="flex items-start gap-3">
@@ -190,7 +192,7 @@ const NotificationRow: FC<NotificationRowProps> = ({
                 <p className="text-muted-foreground mt-2 text-sm leading-6 [overflow-wrap:anywhere]">
                   {item.body}
                 </p>
-                <p className="text-muted-foreground/80 mt-2 text-xs font-medium">
+                <p className="text-muted-foreground mt-2 text-xs font-medium">
                   <time dateTime={item.createdAt}>
                     {formatDate(item.createdAt)}
                   </time>{' '}
@@ -246,7 +248,7 @@ const NotificationRow: FC<NotificationRowProps> = ({
             </div>
           </div>
         </div>
-      </article>
+      </Card>
     </li>
   );
 };

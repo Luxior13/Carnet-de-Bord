@@ -4,6 +4,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* 1. Tailwind bridge: components consume these semantic utilities. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -43,6 +44,10 @@
   --color-surface-control-hover: var(--surface-control-hover);
   --color-surface-control-focus: var(--surface-control-focus);
   --color-surface-tile-hover: var(--surface-tile-hover);
+  --color-surface-row-alternate: var(--surface-row-alternate);
+  --color-surface-selected: var(--surface-selected);
+  --color-surface-navigation-active: var(--surface-navigation-active);
+  --color-surface-navigation-hover: var(--surface-navigation-hover);
   --color-surface-muted: var(--surface-muted);
   --color-surface-raised: var(--surface-raised);
   --color-surface-subtle: var(--surface-subtle);
@@ -61,6 +66,9 @@
   --color-nav-internal: var(--nav-internal);
   --color-nav-internal-icon: var(--nav-internal-icon);
   --color-nav-internal-foreground: var(--nav-internal-foreground);
+  --color-nav-activity: var(--nav-activity);
+  --color-nav-activity-icon: var(--nav-activity-icon);
+  --color-nav-activity-foreground: var(--nav-activity-foreground);
   --color-nav-legal: var(--nav-legal);
   --color-nav-legal-icon: var(--nav-legal-icon);
   --color-nav-legal-foreground: var(--nav-legal-foreground);
@@ -85,36 +93,51 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --text-caption: 0.6875rem;
+  --text-caption--line-height: 1rem;
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.25rem;
+  /* 12px controls, 16px overlays, 20px panels, all derived from one scale. */
+  --radius-2xl: calc(var(--radius) + 8px);
 }
 
-/* Dark is the default theme. Components consume semantic tokens so a future
-   light theme can replace this palette without changing component classes. */
+/* 2. Theme values: the only owner of application colors and geometry.
+   Semantic aliases keep existing components on the same palette. */
 :root {
   color-scheme: dark;
 
   /* Calm graphite surface scale. */
-  --surface-canvas: #090d14;
-  --surface-page: #0e1520;
-  --surface-inset: #101824;
-  --surface-panel: #172231;
-  --surface-panel-raised: #192534;
-  --surface-panel-header: #1b2838;
-  --surface-floating: #1d2a3b;
-  --surface-control-hover: #17212f;
-  --surface-control-focus: #1a2534;
-  --surface-tile-hover: #1c2837;
+  --surface-canvas: #090a0e;
+  --surface-page: #0f1219;
+  --surface-inset: #12161f;
+  --surface-panel: #1b202b;
+  --surface-panel-raised: #202631;
+  --surface-panel-header: #242b38;
+  --surface-floating: #292f3d;
+  --surface-control-hover: #191e28;
+  --surface-control-focus: #202631;
+  --surface-tile-hover: #2b3242;
+  /* The user-list table is the reference for repeated content surfaces. */
+  --surface-row-alternate: #151923;
+  --surface-navigation-active: var(--surface-panel-header);
+  --surface-navigation-hover: var(--surface-panel-raised);
+  --surface-selected: color-mix(
+    in srgb,
+    var(--primary) 10%,
+    var(--surface-panel)
+  );
 
   /* Canonical text and border scale. */
-  --text-primary: #f3f6fb;
-  --text-secondary: #c2ccd9;
-  --text-muted: #98a6b9;
-  --text-disabled: #6f7d90;
-  --overlay: #02060c;
-  --border-steel: #8fa1b8;
-  --border-subtle: rgba(143, 161, 184, 0.12);
-  --border-default: rgba(143, 161, 184, 0.2);
-  --border-strong: rgba(143, 161, 184, 0.3);
-  --border-divider: rgba(143, 161, 184, 0.13);
+  --text-primary: #f5f7fa;
+  --text-secondary: #d1d6e0;
+  --text-muted: #9aa3b5;
+  --text-disabled: #6f7a8e;
+  --overlay: #05060a;
+  --border-steel: #a7b0c2;
+  --border-subtle: #1d222b;
+  --border-default: #333a47;
+  --border-strong: #4a5364;
+  --border-divider: #272d38;
 
   /* Backward-compatible semantic aliases used throughout the application. */
   --background: var(--surface-canvas);
@@ -128,34 +151,35 @@
   --card-foreground: var(--foreground);
   --popover: var(--surface-raised);
   --popover-foreground: var(--foreground);
-  --primary: #8795ff;
-  --primary-emphasis: #e2e6ff;
-  --primary-foreground: #07111f;
+  --primary: #a3e635;
+  --primary-emphasis: #d9f99d;
+  --primary-foreground: #0a1405;
   --secondary: var(--surface-muted);
   --secondary-foreground: var(--foreground);
   --muted: var(--surface-inset);
   --muted-foreground: var(--text-muted);
   --accent: color-mix(in srgb, var(--primary) 12%, var(--surface-panel));
   --accent-foreground: var(--foreground);
-  --destructive: #f47784;
-  --destructive-fill: #b84455;
-  --destructive-foreground: #fff7f8;
-  --success: #51d6a0;
-  --success-foreground: #04150e;
-  --warning: #f2b95c;
-  --warning-foreground: #1b1002;
-  --info: #7dc1f3;
-  --info-foreground: #04121c;
+  --destructive: #fda4af;
+  --destructive-fill: #b91c1c;
+  --destructive-foreground: #fff1f2;
+  --success: #4ade80;
+  --success-foreground: #052e16;
+  --warning: #fbbf24;
+  --warning-foreground: #451a03;
+  --info: #7dd3fc;
+  --info-foreground: #082f49;
   --border: color-mix(in srgb, var(--border-steel) 34%, var(--surface-panel));
-  --border-control: #586780;
+  --border-control: #7f8aa0;
   --input: var(--surface-control);
-  --ring: #9ca8ff;
-  --radius: 0.5rem;
+  --ring: var(--primary);
+  --ring-width: 3px;
+  --radius: 0.75rem;
   --sidebar: var(--surface-page);
   --sidebar-foreground: var(--text-secondary);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--surface-panel);
+  --sidebar-accent: var(--surface-navigation-active);
   --sidebar-accent-foreground: var(--text-primary);
   --sidebar-border: color-mix(
     in srgb,
@@ -165,37 +189,40 @@
   --sidebar-ring: var(--ring);
   --public-column-width: 66rem;
   --private-content-width: 76rem;
-  --private-content-half-width: 38rem;
+  --private-content-half-width: calc(var(--private-content-width) / 2);
   --private-content-width-wide: 92rem;
   --private-content-padding: clamp(1rem, 1.8vw, 1.75rem);
   --private-left-rail-width: 11rem;
   --private-left-rail-gap: 2.5rem;
   --public-column-border: var(--border-subtle);
-  --public-column-shadow: 0 30px 72px -40px rgba(0, 0, 0, 0.98);
+  --public-column-shadow: 0 24px 60px -32px rgba(0, 0, 0, 0.55);
   --column-surface-start: var(--surface-inset);
   --column-surface-end: var(--surface-page);
-  --nav-dashboard: #6db8b1;
-  --nav-dashboard-icon: #9bded8;
-  --nav-dashboard-foreground: #c6f2ee;
-  --nav-internal: #65a9c8;
-  --nav-internal-icon: #a8d8ec;
-  --nav-internal-foreground: #d0eef8;
-  --nav-legal: #d0aa5f;
-  --nav-legal-icon: #ecd294;
-  --nav-legal-foreground: #f3dfb3;
-  --nav-sport: #d9798e;
-  --nav-sport-icon: #f2b4c1;
-  --nav-sport-foreground: #f6d0d8;
-  --nav-system: #8ea0bb;
-  --nav-system-icon: #c5cfdd;
-  --nav-system-foreground: #d9e1eb;
-  --nav-treasury: #79bd70;
-  --nav-treasury-icon: #b4e5ad;
-  --nav-treasury-foreground: #d8f2d3;
-  --sidebar-scrollbar-thumb: rgba(152, 166, 185, 0.34);
-  --sidebar-scrollbar-thumb-hover: rgba(152, 166, 185, 0.55);
-  --shadow-panel: 0 12px 32px -24px rgba(0, 0, 0, 0.85);
-  --shadow-panel-strong: 0 20px 52px -24px rgba(0, 0, 0, 0.9);
+  --nav-dashboard: #2dd4bf;
+  --nav-dashboard-icon: #5eead4;
+  --nav-dashboard-foreground: #ccfbf1;
+  --nav-internal: #38bdf8;
+  --nav-internal-icon: #7dd3fc;
+  --nav-internal-foreground: #e0f2fe;
+  --nav-activity: #a78bfa;
+  --nav-activity-icon: #c4b5fd;
+  --nav-activity-foreground: #ede9fe;
+  --nav-legal: #facc15;
+  --nav-legal-icon: #fde047;
+  --nav-legal-foreground: #fef9c3;
+  --nav-sport: #f472b6;
+  --nav-sport-icon: #f9a8d4;
+  --nav-sport-foreground: #fce7f3;
+  --nav-system: #94a3b8;
+  --nav-system-icon: #cbd5e1;
+  --nav-system-foreground: #f1f5f9;
+  --nav-treasury: #4ade80;
+  --nav-treasury-icon: #86efac;
+  --nav-treasury-foreground: #dcfce7;
+  --sidebar-scrollbar-thumb: rgba(168, 176, 198, 0.28);
+  --sidebar-scrollbar-thumb-hover: rgba(168, 176, 198, 0.45);
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --shadow-panel-strong: 0 18px 44px -22px rgba(0, 0, 0, 0.6);
   --shadow-account-popover:
     0 24px 60px -22px rgba(0, 0, 0, 0.96), 0 0 0 1px rgba(255, 255, 255, 0.025);
   --site-background-column-bg: linear-gradient(
@@ -209,6 +236,7 @@
   scrollbar-gutter: stable both-edges;
 }
 
+/* 3. Document defaults; component-specific states stay with the primitives. */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -225,9 +253,31 @@
   ::selection {
     @apply bg-primary text-primary-foreground;
   }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
 }
 
+/* 4. Shared shell geometry and scrollbars. No feature-specific CSS here. */
 @layer components {
+  .private-viewport {
+    container: private-viewport / inline-size;
+  }
+
+  .route-state {
+    min-height: 100svh;
+  }
+
+  .private-viewport .route-state {
+    min-height: 100%;
+  }
+
+  .private-viewport .route-state .site-background-column {
+    display: none;
+  }
+
   .site-background-column {
     pointer-events: none;
     position: fixed;
@@ -246,11 +296,22 @@
    * Keep secondary page navigation anchored to the application column,
    * independently from the width chosen by the page content itself.
    */
-  .private-left-rail {
+  .private-left-rail,
+  .private-rail-desktop {
     display: none;
   }
 
-  @media (width >= 96rem) {
+  /* 76rem content + two 13.5rem gutters, with room for scrollbar gutters.
+     Measure the application column, so expanding the sidebar cannot clip a rail. */
+  @container private-viewport (width >= 104rem) {
+    .private-rail-desktop {
+      display: block;
+    }
+
+    .private-rail-fallback {
+      display: none;
+    }
+
     .private-left-rail {
       position: absolute;
       inset-block: 0;
@@ -289,8 +350,7 @@
     background-clip: content-box;
   }
 
-  /* The current shell stays expanded, but the shared sidebar component still
-     supports icon-collapse mode. Keep its scrollbar visually hidden there. */
+  /* Hide the scrollbar when the sidebar is collapsed to icons. */
   [data-sidebar='sidebar'][data-collapsible='icon'] .sidebar-scrollbar {
     scrollbar-width: none;
   }
@@ -301,19 +361,18 @@
   }
 }
 
+/* 5. User accessibility preferences override the palette and motion. */
 @media (prefers-contrast: more) {
   :root {
-    --border-subtle: rgba(148, 170, 207, 0.26);
-    --border-default: rgba(148, 170, 207, 0.4);
-    --border-strong: rgba(148, 170, 207, 0.62);
-    --border: color-mix(in srgb, var(--border-steel) 48%, var(--surface-panel));
-    --border-control: #70809a;
+    --border-subtle: #7f8aa0;
+    --border-default: #a7b0c2;
+    --border-strong: #d1d6e0;
+    --border-divider: var(--border-subtle);
+    --border: var(--border-default);
+    --border-control: var(--border-strong);
+    --text-muted: var(--text-secondary);
     --muted-foreground: var(--text-secondary);
-    --sidebar-border: color-mix(
-      in srgb,
-      var(--border-steel) 44%,
-      var(--surface-page)
-    );
+    --sidebar-border: var(--border-default);
   }
 }
 

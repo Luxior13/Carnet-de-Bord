@@ -2,7 +2,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { cn } from '$utils/css.utils';
+import { Avatar, AvatarFallback, AvatarImage } from '$ui/avatar';
 
 type DiceBearAvatarProps = {
   className?: string;
@@ -25,28 +25,15 @@ export const DiceBearAvatar: FC<DiceBearAvatarProps> = ({
   );
 
   return (
-    <span
-      aria-label={label}
-      className={cn(
-        'bg-primary text-primary-foreground relative flex shrink-0 items-center justify-center overflow-hidden shadow-none',
-        className,
-      )}
-      role="img"
-    >
-      <span aria-hidden="true" className="text-xs font-semibold">
-        {fallback || '?'}
-      </span>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+    <Avatar aria-label={label} className={className} role="img">
+      <AvatarImage
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 size-full object-cover"
+        className="object-cover"
         draggable={false}
-        onError={(event) => {
-          event.currentTarget.style.display = 'none';
-        }}
         src={avatarDataUri}
       />
-    </span>
+      <AvatarFallback aria-hidden="true">{fallback || '?'}</AvatarFallback>
+    </Avatar>
   );
 };
