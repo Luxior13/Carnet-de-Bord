@@ -24,10 +24,10 @@ const buttonVariants = cva(
         default:
           'border-primary/80 bg-primary text-primary-foreground shadow-none hover:bg-primary/90',
         destructive:
-          'border-destructive-fill/80 bg-destructive-fill text-destructive-foreground shadow-none hover:bg-destructive-fill/90 focus-visible:ring-destructive/25 dark:focus-visible:ring-destructive/35',
+          'border-destructive-fill/80 bg-destructive-fill text-destructive-foreground shadow-none hover:bg-destructive-fill/90',
         ghost:
           'text-muted-foreground hover:border-border-default hover:bg-surface-tile-hover hover:text-accent-foreground',
-        info: 'border-info/80 bg-info text-info-foreground shadow-none hover:bg-info/90 focus-visible:ring-info/30',
+        info: 'border-info/80 bg-info text-info-foreground shadow-none hover:bg-info/90',
         link: 'text-primary-emphasis underline-offset-4 hover:underline',
         navigation:
           'text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground aria-[current=page]:border-border-default aria-[current=page]:bg-surface-navigation-active aria-[current=page]:text-foreground aria-[current=location]:bg-surface-navigation-active aria-[current=location]:text-foreground data-[active=true]:border-border-default data-[active=true]:bg-surface-navigation-active data-[active=true]:text-foreground',
@@ -36,9 +36,9 @@ const buttonVariants = cva(
         secondary:
           'border-border-subtle bg-surface-inset text-secondary-foreground shadow-none hover:border-border-default hover:bg-surface-tile-hover',
         success:
-          'border-success/80 bg-success text-success-foreground shadow-none hover:bg-success/90 focus-visible:ring-success/30',
+          'border-success/80 bg-success text-success-foreground shadow-none hover:bg-success/90',
         warning:
-          'border-warning/80 bg-warning text-warning-foreground shadow-none hover:bg-warning/90 focus-visible:ring-warning/30',
+          'border-warning/80 bg-warning text-warning-foreground shadow-none hover:bg-warning/90',
       },
     },
   },

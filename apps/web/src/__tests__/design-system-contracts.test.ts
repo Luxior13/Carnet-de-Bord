@@ -33,6 +33,7 @@ const userDetailSectionRailSource = readSourceFile(
 const sourceRootUrl = new URL('../', import.meta.url);
 const sidebarTokenOwners = new Set([
   'components/Sidebar.tsx',
+  'components/layout/PoleNavigation.tsx',
   'components/ui/sidebar.tsx',
   'shared/constants/navigation-theme.constants.ts',
 ]);
@@ -274,7 +275,7 @@ describe('design system contracts', () => {
     expect(getContrastRatio(background, surfaceRaised)).toBeGreaterThan(1.3);
   });
 
-  it('keeps the canonical midnight scale behind stable semantic aliases', () => {
+  it('keeps the reference palette behind stable semantic aliases', () => {
     expect(getRawGlobalColorToken('--background')).toBe(
       'var(--surface-canvas)',
     );

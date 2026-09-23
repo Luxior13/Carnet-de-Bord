@@ -26,7 +26,7 @@ fines et badges de statut lisibles. Cette hiérarchie se décline selon l'usage 
   `surface-selected` pour la sélection ou un contenu à remarquer. Une ligne
   sélectionnée conserve sa couleur quelle que soit sa parité.
 - Navigation : `surface-navigation-active` et `surface-navigation-hover`,
-  neutres, partagés entre sidebar, rail de fiche, onglets et pagination.
+  bleu ardoise, partagés entre sidebar, rail de fiche, onglets et pagination.
 - Icônes génériques et badges descriptifs : neutres. Les couleurs restent utiles
   pour les statuts, les pôles, les actions principales, l'épinglage et le non-lu.
 
@@ -54,6 +54,32 @@ structure restent adaptées au contenu de chaque écran.
 
 ## 2. La hiérarchie de couleurs
 
+La palette retenue le 23 septembre 2026 reprend les surfaces de la capture de
+résultats esport fournie par l’utilisateur : fond charbon bleuté `#0d111c`,
+panneaux `#182434`, en-têtes de tableaux `#202c3e`, lignes alternées `#1e2c3e`
+et sélection `#355f8c`. Les contrôles en retrait utilisent `#111925`.
+
+La sidebar reprend `#202c3e`, avec une bordure `#455b78`, pour se détacher du
+fond général sans devenir un grand aplat bleu clair. Le header général utilise
+`surface-page` (`#111925`). Les surfaces flottantes reprennent `#2a3c58`, la
+teinte des en-têtes accentués de la référence. Le bleu le plus marqué reste
+localisé aux sélections et aux états actifs.
+
+Les éléments de navigation sélectionnés utilisent un bleu plus soutenu que
+le survol, pour repérer immédiatement le pôle et la page actifs. Le texte clair
+garde un contraste supérieur à 5:1 sur cette sélection.
+
+Le rose décoratif de la capture n’est pas repris. Les actions principales
+utilisent un bleu lumineux `#70b5fa`, avec un texte sombre `#0c1a2b` ; les liens
+et accents textuels utilisent `#b9dafe`. Les statuts et les icônes des pôles
+gardent leurs repères fonctionnels. Les valeurs sont centralisées dans
+`globals.css` pour les futurs modules.
+
+Le focus clavier utilise un bleu acier `#92acd0` via `--ring`.
+Les boutons partagent cet indicateur quelle que soit leur variante ;
+la couleur de leur fond conserve le sens de l’action. La sidebar et les champs
+utilisent le même jeton de focus.
+
 | Rôle                  | Jetons                                                                                                  | Usage                                  |
 | --------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------- |
 | Fond d'application    | `surface-canvas`                                                                                        | derrière tout, visible dans les marges |
@@ -74,7 +100,7 @@ vivent jamais en dur dans un composant.
 Les classes de texte courantes sont `text-foreground` et `text-muted-foreground`.
 `text-primary-emphasis` désigne l'accent de marque, pas le texte courant.
 Ne pas diminuer l'opacité d'un texte secondaire informatif : son contraste est
-testé sur les sept surfaces, y compris `surface-floating` (environ 5,28:1).
+testé sur les sept surfaces, y compris `surface-floating` (plus de 5:1).
 La racine HTML porte `dark`, en complément de `color-scheme: dark`, afin que
 les variantes `dark:` des primitives soient effectivement actives.
 

@@ -107,38 +107,34 @@
 :root {
   color-scheme: dark;
 
-  /* Calm graphite surface scale. */
-  --surface-canvas: #090a0e;
-  --surface-page: #0f1219;
-  --surface-inset: #12161f;
-  --surface-panel: #1b202b;
-  --surface-panel-raised: #202631;
-  --surface-panel-header: #242b38;
-  --surface-floating: #292f3d;
-  --surface-control-hover: #191e28;
-  --surface-control-focus: #202631;
-  --surface-tile-hover: #2b3242;
+  /* Reference palette: charcoal canvas, slate panels, localized blue emphasis. */
+  --surface-canvas: #0d111c;
+  --surface-page: #111925;
+  --surface-inset: #111925;
+  --surface-panel: #182434;
+  --surface-panel-raised: #202c3e;
+  --surface-panel-header: #202c3e;
+  --surface-floating: #2a3c58;
+  --surface-control-hover: #1e2c3e;
+  --surface-control-focus: #253b55;
+  --surface-tile-hover: #293d58;
   /* The user-list table is the reference for repeated content surfaces. */
-  --surface-row-alternate: #151923;
-  --surface-navigation-active: var(--surface-panel-header);
-  --surface-navigation-hover: var(--surface-panel-raised);
-  --surface-selected: color-mix(
-    in srgb,
-    var(--primary) 10%,
-    var(--surface-panel)
-  );
+  --surface-row-alternate: #1e2c3e;
+  --surface-navigation-active: #355f8c;
+  --surface-navigation-hover: #273750;
+  --surface-selected: var(--surface-navigation-active);
 
   /* Canonical text and border scale. */
-  --text-primary: #f5f7fa;
-  --text-secondary: #d1d6e0;
-  --text-muted: #9aa3b5;
-  --text-disabled: #6f7a8e;
-  --overlay: #05060a;
-  --border-steel: #a7b0c2;
-  --border-subtle: #1d222b;
-  --border-default: #333a47;
-  --border-strong: #4a5364;
-  --border-divider: #272d38;
+  --text-primary: #e7edf7;
+  --text-secondary: #c6d0df;
+  --text-muted: #a9b7cc;
+  --text-disabled: #75859c;
+  --overlay: #070b12;
+  --border-steel: #91a3be;
+  --border-subtle: #29374b;
+  --border-default: #34445c;
+  --border-strong: #627fa7;
+  --border-divider: #304057;
 
   /* Backward-compatible semantic aliases used throughout the application. */
   --background: var(--surface-canvas);
@@ -147,46 +143,42 @@
   --surface: var(--surface-panel);
   --surface-muted: var(--surface-panel-raised);
   --surface-raised: var(--surface-floating);
-  --surface-control: var(--surface-page);
+  --surface-control: var(--surface-inset);
   --card: var(--surface);
   --card-foreground: var(--foreground);
   --popover: var(--surface-raised);
   --popover-foreground: var(--foreground);
-  --primary: #a3e635;
-  --primary-emphasis: #d9f99d;
-  --primary-foreground: #0a1405;
+  --primary: #70b5fa;
+  --primary-emphasis: #b9dafe;
+  --primary-foreground: #0c1a2b;
   --secondary: var(--surface-muted);
   --secondary-foreground: var(--foreground);
   --muted: var(--surface-inset);
   --muted-foreground: var(--text-muted);
-  --accent: color-mix(in srgb, var(--primary) 12%, var(--surface-panel));
+  --accent: var(--surface-navigation-hover);
   --accent-foreground: var(--foreground);
-  --destructive: #fda4af;
+  --destructive: #fca5a5;
   --destructive-fill: #b91c1c;
   --destructive-foreground: #fff1f2;
-  --success: #4ade80;
+  --success: #86efac;
   --success-foreground: #052e16;
-  --warning: #fbbf24;
+  --warning: #fcd34d;
   --warning-foreground: #451a03;
-  --info: #7dd3fc;
+  --info: #bae6fd;
   --info-foreground: #082f49;
   --border: color-mix(in srgb, var(--border-steel) 34%, var(--surface-panel));
-  --border-control: #7f8aa0;
+  --border-control: #6f86a5;
   --input: var(--surface-control);
-  --ring: var(--primary);
+  --ring: #92acd0;
   --ring-width: 3px;
   --radius: 0.75rem;
-  --sidebar: var(--surface-page);
+  --sidebar: #202c3e;
   --sidebar-foreground: var(--text-secondary);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
   --sidebar-accent: var(--surface-navigation-active);
   --sidebar-accent-foreground: var(--text-primary);
-  --sidebar-border: color-mix(
-    in srgb,
-    var(--border-steel) 28%,
-    var(--surface-page)
-  );
+  --sidebar-border: #455b78;
   --sidebar-ring: var(--ring);
   --public-column-width: 66rem;
   --private-content-width: 76rem;
@@ -222,10 +214,10 @@
   --nav-treasury-foreground: #dcfce7;
   --sidebar-scrollbar-thumb: rgba(168, 176, 198, 0.28);
   --sidebar-scrollbar-thumb-hover: rgba(168, 176, 198, 0.45);
-  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.28);
-  --shadow-panel-strong: 0 18px 44px -22px rgba(0, 0, 0, 0.6);
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.18);
+  --shadow-panel-strong: 0 18px 44px -22px rgba(0, 0, 0, 0.42);
   --shadow-account-popover:
-    0 24px 60px -22px rgba(0, 0, 0, 0.96), 0 0 0 1px rgba(255, 255, 255, 0.025);
+    0 24px 60px -22px rgba(0, 0, 0, 0.58), 0 0 0 1px rgba(255, 255, 255, 0.04);
   --site-background-column-bg: linear-gradient(
     180deg,
     var(--column-surface-start),

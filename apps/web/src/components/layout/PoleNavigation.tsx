@@ -112,7 +112,7 @@ export const PoleNavigation: FC<PoleNavigationProps> = ({
     <Collapsible
       open={isOpen}
       onOpenChange={changeOpen}
-      className="group/poles min-w-0"
+      className="group/poles min-w-0 pb-4 lg:pb-3"
     >
       {!isOpen && (
         <div
