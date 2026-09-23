@@ -2,6 +2,10 @@ import { readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
+import { getNavigationItemByHref } from '$constants/app.constants';
+import { FEATURES } from '$constants/feature-registry.constants';
+import { PERMISSIONS } from '$constants/permissions.constants';
+
 const readSourceFile = (relativePath: string): string => {
   // Test-owned paths only; the helper never receives external input.
   // eslint-disable-next-line security/detect-non-literal-fs-filename
@@ -21,13 +25,14 @@ const routeSource = readSourceFile('../app/api/notifications/route.ts');
 const itemRouteSource = readSourceFile(
   '../app/api/notifications/[id]/route.ts',
 );
-const navigationSource = readSourceFile('../shared/constants/app.constants.ts');
 
 describe('notification inbox UX contracts', () => {
   it('promotes the personal inbox as a live permission-protected destination', () => {
-    expect(navigationSource).toContain("href: '/mes-notifications'");
-    expect(navigationSource).toContain('featureId: FEATURES.notifications.id');
-    expect(navigationSource).toContain("availability: 'live'");
+    expect(getNavigationItemByHref('/mes-notifications')).toMatchObject({
+      availability: 'live',
+      featureId: FEATURES.notifications.id,
+      requiredPermissions: [PERMISSIONS.NOTIFICATIONS.VIEW],
+    });
   });
 
   it('covers loading, empty, error, refresh and cursor pagination states', () => {

@@ -1,3 +1,5 @@
+> Fiche historique : le statut, le placement et le périmètre actuels sont définis dans la [matrice de préparation](../MATRICE_PREPARATION.md). Relire cette fiche à partir du chantier cible avant implémentation.
+
 # Inventaire et acces
 
 Route : `/bureau-juridique/inventaire-acces`

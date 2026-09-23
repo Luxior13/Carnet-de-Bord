@@ -8,7 +8,6 @@ import {
   getNavigationAvailability,
   getNavigationItemByHref,
   getNavigationPageBySlug,
-  getPlannedNavigationSpaces,
   getVisibleNavigationSpaces,
   getVisibleNavSections,
   NAV_SECTIONS,
@@ -20,6 +19,7 @@ import {
   PERMISSIONS,
   ROADMAP_PERMISSIONS,
 } from '$constants/permissions.constants';
+import { ROADMAP_ITEMS } from '$features/roadmap/roadmap.constants';
 
 type TestUser = {
   isProtected: boolean;
@@ -64,10 +64,8 @@ function getVisibleHrefs(
   ).flatMap((section) => flattenHrefs(section.items));
 }
 
-function getRoadmapHrefs(permissions: Record<string, boolean> = {}): string[] {
-  return getPlannedNavigationSpaces(buildUser(permissions)).flatMap((space) =>
-    space.sections.flatMap((section) => flattenHrefs(section.items)),
-  );
+function getRoadmapHrefs(): string[] {
+  return ROADMAP_ITEMS.flatMap((item) => item.legacyHrefs ?? []);
 }
 
 describe('navigation availability', () => {
@@ -101,17 +99,19 @@ describe('navigation availability', () => {
     expect(hrefs).not.toContain('/systeme/parametres');
   });
 
-  it('keeps roadmap capability names on planned navigation items', () => {
-    const tasks = getNavigationItemByHref('/tableau-de-bord/mes-taches');
-
-    expect(tasks?.requiredPermissions).toEqual([
-      ROADMAP_PERMISSIONS.TASKS.VIEW,
-    ]);
-    expect(tasks && getNavigationAvailability(tasks)).toBe('planned');
+  it('keeps planned capabilities ineffective and outside the operational menu', () => {
+    const tasks: NavItem = {
+      href: '/tableau-de-bord/mes-taches',
+      icon: 'ClipboardList',
+      label: 'Mes tâches',
+      requiredPermissions: [ROADMAP_PERMISSIONS.TASKS.VIEW],
+    };
+    expect(getNavigationItemByHref(tasks.href)).toBeNull();
+    expect(getNavigationAvailability(tasks)).toBe('planned');
     expect(
       canAccessNavigationItem(
         buildUser({ [ROADMAP_PERMISSIONS.TASKS.VIEW]: true }),
-        tasks as NavItem,
+        tasks,
       ),
     ).toBe(false);
   });
@@ -260,10 +260,8 @@ describe('navigation availability', () => {
     expect(hrefs).toContain('/');
   });
 
-  it('resolves historical dashboard routes against their route base', () => {
-    expect(
-      getNavigationPageBySlug('dashboard', ['mes-taches'])?.item.href,
-    ).toBe('/tableau-de-bord/mes-taches');
+  it('does not resolve unimplemented dashboard routes as operational pages', () => {
+    expect(getNavigationPageBySlug('dashboard', ['mes-taches'])).toBeNull();
     expect(getNavigationPageBySlug('dashboard', [])).toBeNull();
   });
 

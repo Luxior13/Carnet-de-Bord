@@ -5,12 +5,11 @@ import {
   getRoleLabel as getPermissionRoleLabel,
   hasPermission,
   isKnownPermissionKey,
-  PERMISSIONS,
   type PermissionsData,
   PROTECTED_ROLE_LABEL,
-  ROADMAP_PERMISSIONS,
   ROLE_LABELS,
 } from '$constants/permissions.constants';
+import { RESERVED_PLANNED_HREFS } from '$constants/reserved-planned-hrefs.constants';
 import type { UserType } from '$types/auth.types';
 import type {
   NavigationAvailability,
@@ -37,44 +36,23 @@ export type {
   NavSection,
 } from '$types/navigation.types';
 
-const dashboardAccess = [PERMISSIONS.DASHBOARD.VIEW] as const;
-const documentsAccess = [ROADMAP_PERMISSIONS.DOCUMENTS.VIEW] as const;
-const documentsApprovalAccess = [
-  ROADMAP_PERMISSIONS.DOCUMENTS.APPROVE,
-] as const;
-const contractsAccess = [ROADMAP_PERMISSIONS.CONTRACTS.VIEW] as const;
-const incidentsAccess = [ROADMAP_PERMISSIONS.INCIDENTS.VIEW] as const;
-const internalAccess = [ROADMAP_PERMISSIONS.INTERNAL.VIEW] as const;
-const legalAccess = [ROADMAP_PERMISSIONS.LEGAL.VIEW] as const;
-const meetingsAccess = [ROADMAP_PERMISSIONS.MEETINGS.VIEW] as const;
-const meetingsUpdateAccess = [ROADMAP_PERMISSIONS.MEETINGS.UPDATE] as const;
-const notificationsAccess = [PERMISSIONS.NOTIFICATIONS.VIEW] as const;
-const personsAccess = [PERMISSIONS.PERSONS.VIEW] as const;
-const partnersAccess = [ROADMAP_PERMISSIONS.PARTNERS.VIEW] as const;
-const notificationsManageAccess = [
-  ROADMAP_PERMISSIONS.NOTIFICATIONS.MANAGE,
-] as const;
-const sportAccess = [ROADMAP_PERMISSIONS.SPORT.VIEW] as const;
-const sportUpdateAccess = [ROADMAP_PERMISSIONS.SPORT.UPDATE] as const;
-const tasksAccess = [ROADMAP_PERMISSIONS.TASKS.VIEW] as const;
-const treasuryAccess = [ROADMAP_PERMISSIONS.TREASURY.VIEW] as const;
-const treasuryArchiveAccess = [ROADMAP_PERMISSIONS.TREASURY.ARCHIVES] as const;
-const treasuryAuditAccess = [ROADMAP_PERMISSIONS.TREASURY.AUDIT] as const;
-const treasuryExportAccess = [ROADMAP_PERMISSIONS.TREASURY.EXPORT] as const;
-const treasuryValidationAccess = [
-  ROADMAP_PERMISSIONS.TREASURY.VALIDATE,
-] as const;
-const systemArchiveAccess = [ROADMAP_PERMISSIONS.SYSTEM.ARCHIVES] as const;
-const systemAuditAccess = [PERMISSIONS.AUDIT.VIEW] as const;
-const systemAutomationAccess = [ROADMAP_PERMISSIONS.SYSTEM.AUTOMATION] as const;
-const systemExportAccess = [ROADMAP_PERMISSIONS.BACKUPS.VIEW] as const;
-const systemSettingsAccess = [PERMISSIONS.SETTINGS.VIEW] as const;
-const systemValidationAccess = [ROADMAP_PERMISSIONS.SYSTEM.VALIDATE] as const;
-const usersAccess = [PERMISSIONS.USERS.VIEW] as const;
 type NavigationUser = Pick<
   UserType,
   'isProtected' | 'permissions' | 'role'
 > | null;
+
+const featureNavigation = (
+  feature: (typeof FEATURES)[keyof typeof FEATURES],
+): NavItem => ({
+  availability: 'live',
+  description: feature.description,
+  featureId: feature.id,
+  href: feature.href,
+  icon: feature.icon,
+  label: feature.label,
+  permissionMode: feature.permissionMode,
+  requiredPermissions: feature.requiredPermissions,
+});
 
 export const NAV_SPACES: NavigationSpace[] = [
   {
@@ -89,52 +67,8 @@ export const NAV_SPACES: NavigationSpace[] = [
       {
         id: 'today',
         items: [
-          {
-            availability: 'live',
-            description: 'Tâches, validations, documents à lire et échéances.',
-            featureId: FEATURES.dashboard.id,
-            href: '/',
-            icon: 'LayoutDashboard',
-            label: 'Mon travail',
-            requiredPermissions: dashboardAccess,
-          },
-          {
-            availability: 'live',
-            description: 'Historique personnel des notifications internes.',
-            featureId: FEATURES.notifications.id,
-            href: '/mes-notifications',
-            icon: 'Bell',
-            label: 'Mes notifications',
-            requiredPermissions: notificationsAccess,
-          },
-          {
-            description: 'Actions personnelles à suivre.',
-            href: '/tableau-de-bord/mes-taches',
-            icon: 'ClipboardList',
-            label: 'Mes tâches',
-            requiredPermissions: tasksAccess,
-          },
-          {
-            description: 'Réunions proches à préparer.',
-            href: '/tableau-de-bord/prochaines-reunions',
-            icon: 'CalendarClock',
-            label: 'Prochaines réunions',
-            requiredPermissions: meetingsAccess,
-          },
-          {
-            description: 'Chartes et documents à lire ou accepter.',
-            href: '/tableau-de-bord/documents-a-accepter',
-            icon: 'FileCheck2',
-            label: 'Documents à accepter',
-            requiredPermissions: documentsAccess,
-          },
-          {
-            description: 'Points importants à traiter rapidement.',
-            href: '/tableau-de-bord/alertes-importantes',
-            icon: 'ShieldCheck',
-            label: 'Alertes importantes',
-            requiredPermissions: notificationsAccess,
-          },
+          featureNavigation(FEATURES.dashboard),
+          featureNavigation(FEATURES.notifications),
         ],
         label: 'Pilotage',
         position: 'top',
@@ -158,38 +92,7 @@ export const NAV_SPACES: NavigationSpace[] = [
     sections: [
       {
         id: 'people',
-        items: [
-          {
-            availability: 'live',
-            description: FEATURES.persons.description,
-            featureId: FEATURES.persons.id,
-            href: FEATURES.persons.href,
-            icon: FEATURES.persons.icon,
-            label: FEATURES.persons.label,
-            requiredPermissions: personsAccess,
-          },
-          {
-            description: 'Candidatures, essais et décisions de recrutement.',
-            href: '/vie-interne/recrutement-tryouts',
-            icon: 'UserPlus',
-            label: 'Candidatures',
-            requiredPermissions: internalAccess,
-          },
-          {
-            description: 'Incidents, avertissements et décisions sensibles.',
-            href: '/bureau-juridique/incidents-sanctions',
-            icon: 'ShieldCheck',
-            label: 'Incidents',
-            requiredPermissions: incidentsAccess,
-          },
-          {
-            description: 'Matériel, licences, maillots et accès confiés.',
-            href: '/bureau-juridique/inventaire-acces',
-            icon: 'Archive',
-            label: 'Matériel',
-            requiredPermissions: legalAccess,
-          },
-        ],
+        items: [featureNavigation(FEATURES.persons)],
         label: 'Identité',
         position: 'top',
       },
@@ -213,317 +116,13 @@ export const NAV_SPACES: NavigationSpace[] = [
     sections: [
       {
         id: 'activity',
-        items: [
-          {
-            availability: 'live',
-            description: FEATURES.internalNews.description,
-            featureId: FEATURES.internalNews.id,
-            href: FEATURES.internalNews.href,
-            icon: FEATURES.internalNews.icon,
-            label: FEATURES.internalNews.label,
-            requiredPermissions: FEATURES.internalNews.requiredPermissions,
-          },
-          {
-            description: 'Organisation et compte rendu des réunions.',
-            href: '/vie-interne/reunions',
-            icon: 'ClipboardList',
-            label: 'Réunions',
-            requiredPermissions: meetingsUpdateAccess,
-          },
-          {
-            description: 'Échéances et événements internes.',
-            href: '/vie-interne/calendrier-interne',
-            icon: 'CalendarClock',
-            label: 'Calendrier',
-            requiredPermissions: meetingsAccess,
-          },
-          {
-            description: 'Retours après réunions, matchs, scrims ou tests.',
-            href: '/vie-interne/debriefs',
-            icon: 'FileText',
-            label: 'Débriefs',
-            requiredPermissions: meetingsAccess,
-          },
-          {
-            description: 'Rappels transversaux et notifications internes.',
-            href: '/vie-interne/notifications-rappels',
-            icon: 'Bell',
-            label: 'Rappels',
-            requiredPermissions: notificationsManageAccess,
-          },
-        ],
+        items: [featureNavigation(FEATURES.internalNews)],
         label: 'Quotidien',
         position: 'top',
       },
     ],
     summary: 'La vie de la structure',
     tone: 'activity',
-  },
-  {
-    description: 'Organisations, documents, contrats et décisions.',
-    href: '/bureau-juridique',
-    icon: 'BriefcaseBusiness',
-    id: 'legal',
-    label: 'Relations',
-    matchHrefs: ['/bureau-juridique'],
-    sections: [
-      {
-        id: 'relations',
-        items: [
-          {
-            description: 'Sponsors, contacts, livrables et partenaires.',
-            href: '/bureau-juridique/partenaires',
-            icon: 'Handshake',
-            label: 'Organisations',
-            requiredPermissions: partnersAccess,
-          },
-          {
-            children: [
-              {
-                description: 'Chartes, règlements et documents officiels.',
-                href: '/bureau-juridique/documents-officiels',
-                icon: 'FileText',
-                label: 'Documents officiels',
-                requiredPermissions: documentsAccess,
-              },
-              {
-                description: 'Contrats sponsors, membres ou administratifs.',
-                href: '/bureau-juridique/contrats',
-                icon: 'FileCheck2',
-                label: 'Contrats',
-                requiredPermissions: contractsAccess,
-              },
-              {
-                description: 'Suivi des lectures et acceptations.',
-                href: '/bureau-juridique/acceptation-chartes',
-                icon: 'CheckCircle2',
-                label: 'Acceptation des chartes',
-                requiredPermissions: documentsApprovalAccess,
-              },
-            ],
-            description: 'Chartes, documents officiels et contrats.',
-            href: '/bureau-juridique/documents',
-            icon: 'FileText',
-            label: 'Documents & contrats',
-            requiredPermissions: documentsAccess,
-          },
-          {
-            description: 'Décisions structurelles importantes du bureau.',
-            href: '/bureau-juridique/decisions-bureau',
-            icon: 'ClipboardList',
-            label: 'Décisions',
-            requiredPermissions: legalAccess,
-          },
-        ],
-        label: 'Confidentiel',
-        position: 'top',
-      },
-    ],
-    summary: 'Organisations, documents et décisions',
-    tone: 'legal',
-  },
-  {
-    description: 'Le sportif et la liaison avec le site public.',
-    href: '/sport-team-control',
-    icon: 'Activity',
-    id: 'sport',
-    label: 'Équipe',
-    matchHrefs: ['/sport-team-control'],
-    sections: [
-      {
-        id: 'team',
-        items: [
-          {
-            children: [
-              {
-                description: 'Jeux déjà gérés côté public.',
-                href: '/sport-team-control/jeux',
-                icon: 'Activity',
-                label: 'Jeux',
-                requiredPermissions: sportAccess,
-              },
-              {
-                description: 'Rosters déjà gérés côté public.',
-                href: '/sport-team-control/rosters',
-                icon: 'Users',
-                label: 'Rosters',
-                requiredPermissions: sportAccess,
-              },
-              {
-                description: 'Profils esport déjà gérés côté public.',
-                href: '/sport-team-control/membres-esport',
-                icon: 'Users',
-                label: 'Membres esport',
-                requiredPermissions: sportAccess,
-              },
-            ],
-            description: 'Jeux, rosters et membres de l’équipe.',
-            href: '/sport-team-control',
-            icon: 'Activity',
-            label: 'Vue d’équipe',
-            requiredPermissions: sportAccess,
-          },
-          {
-            children: [
-              {
-                description: 'Scrims déjà gérés côté public.',
-                href: '/sport-team-control/scrims',
-                icon: 'CalendarClock',
-                label: 'Scrims',
-                requiredPermissions: sportUpdateAccess,
-              },
-              {
-                description: 'Calendrier esport lié au public plus tard.',
-                href: '/sport-team-control/calendrier-esport',
-                icon: 'CalendarClock',
-                label: 'Calendrier esport',
-                requiredPermissions: sportAccess,
-              },
-            ],
-            description: 'Scrims, matchs et tournois.',
-            href: '/sport-team-control/tournois-matchs',
-            icon: 'CalendarClock',
-            label: 'Matchs & tournois',
-            requiredPermissions: sportUpdateAccess,
-          },
-          {
-            description: 'Suivi de la progression individuelle et collective.',
-            href: '/sport-team-control/performance',
-            icon: 'Activity',
-            label: 'Performance',
-            requiredPermissions: sportAccess,
-          },
-        ],
-        label: 'Équipe',
-        position: 'top',
-      },
-    ],
-    summary: 'Le sportif et la liaison avec le site public',
-    tone: 'sport',
-  },
-  {
-    description: 'Comptes, opérations, budget et contrôles.',
-    href: '/tresorerie',
-    icon: 'Wallet',
-    id: 'treasury',
-    label: 'Finances',
-    matchHrefs: ['/tresorerie'],
-    routeBaseHref: '/tresorerie',
-    sections: [
-      {
-        id: 'finance',
-        items: [
-          {
-            description: 'Comptes, caisses ou supports financiers.',
-            href: '/tresorerie/comptes',
-            icon: 'CircleDollarSign',
-            label: 'Comptes',
-            requiredPermissions: treasuryAccess,
-          },
-          {
-            children: [
-              {
-                description: 'Argent entrant dans la structure.',
-                href: '/tresorerie/recettes',
-                icon: 'CircleDollarSign',
-                label: 'Recettes',
-                requiredPermissions: treasuryAccess,
-              },
-              {
-                description: 'Dépenses et sorties de trésorerie.',
-                href: '/tresorerie/depenses',
-                icon: 'Wallet',
-                label: 'Dépenses',
-                requiredPermissions: treasuryAccess,
-              },
-              {
-                description: 'Cotisations et paiements adhérents.',
-                href: '/tresorerie/cotisations-adherents',
-                icon: 'UserCheck',
-                label: 'Cotisations adhérents',
-                requiredPermissions: treasuryAccess,
-              },
-              {
-                description: 'Paiements, factures et montants sponsors.',
-                href: '/tresorerie/sponsoring-financier',
-                icon: 'Handshake',
-                label: 'Sponsoring financier',
-                requiredPermissions: treasuryAccess,
-              },
-              {
-                description: 'Factures, devis et justificatifs.',
-                href: '/tresorerie/factures-justificatifs',
-                icon: 'FileCheck2',
-                label: 'Factures / justificatifs',
-                requiredPermissions: treasuryAccess,
-              },
-              {
-                description: 'Remboursements membres ou staff.',
-                href: '/tresorerie/remboursements',
-                icon: 'CircleDollarSign',
-                label: 'Remboursements',
-                requiredPermissions: treasuryValidationAccess,
-              },
-            ],
-            description: 'Liste centrale des mouvements financiers.',
-            href: '/tresorerie/operations',
-            icon: 'ClipboardList',
-            label: 'Opérations',
-            requiredPermissions: treasuryAccess,
-          },
-          {
-            children: [
-              {
-                description: 'Bilans mensuels, saisonniers ou annuels.',
-                href: '/tresorerie/bilans',
-                icon: 'FileText',
-                label: 'Bilans',
-                requiredPermissions: treasuryAccess,
-              },
-            ],
-            description: 'Prévisions et bilans budgétaires.',
-            href: '/tresorerie/budget',
-            icon: 'ClipboardList',
-            label: 'Budget & bilans',
-            requiredPermissions: treasuryAccess,
-          },
-          {
-            children: [
-              {
-                description: 'Exports financiers et comptables.',
-                href: '/tresorerie/exports-finance',
-                icon: 'FileText',
-                label: 'Exports finance',
-                requiredPermissions: treasuryExportAccess,
-              },
-              {
-                description: 'Historique des actions financières.',
-                href: '/tresorerie/journal-financier',
-                icon: 'History',
-                label: 'Journal financier',
-                requiredPermissions: treasuryAuditAccess,
-              },
-              {
-                description: 'Anciennes périodes et données financières.',
-                href: '/tresorerie/archives-finance',
-                icon: 'Archive',
-                label: 'Archives finance',
-                requiredPermissions: treasuryArchiveAccess,
-              },
-            ],
-            description: 'Validations, journal, exports et archives.',
-            href: '/tresorerie/validations-finance',
-            icon: 'CheckCircle2',
-            label: 'Contrôles',
-            requiredPermissions: treasuryValidationAccess,
-          },
-        ],
-        label: 'Finance',
-        position: 'top',
-      },
-    ],
-    summary: 'Comptes, opérations et contrôles',
-    tone: 'treasury',
   },
   {
     description: 'Comptes, sécurité, configuration et données.',
@@ -537,95 +136,10 @@ export const NAV_SPACES: NavigationSpace[] = [
       {
         id: 'system',
         items: [
-          {
-            availability: 'live',
-            description: FEATURES.users.description,
-            featureId: FEATURES.users.id,
-            href: FEATURES.users.href,
-            icon: FEATURES.users.icon,
-            label: FEATURES.users.label,
-            requiredPermissions: usersAccess,
-          },
-          {
-            availability: 'live',
-            description: FEATURES.systemActivity.description,
-            featureId: FEATURES.systemActivity.id,
-            href: FEATURES.systemActivity.href,
-            icon: FEATURES.systemActivity.icon,
-            label: FEATURES.systemActivity.label,
-            requiredPermissions: systemAuditAccess,
-          },
-          {
-            availability: 'live',
-            description: FEATURES.systemSettings.description,
-            featureId: FEATURES.systemSettings.id,
-            href: FEATURES.systemSettings.href,
-            icon: FEATURES.systemSettings.icon,
-            label: FEATURES.systemSettings.label,
-            requiredPermissions: systemSettingsAccess,
-          },
-          {
-            children: [
-              {
-                description: 'Modèles de chartes, contrats et documents.',
-                href: '/systeme/modeles-documents',
-                icon: 'FileText',
-                label: 'Modèles de documents',
-                requiredPermissions: systemSettingsAccess,
-              },
-              {
-                description: 'Modèles de messages, rappels et notifications.',
-                href: '/systeme/modeles-notifications',
-                icon: 'Bell',
-                label: 'Modèles de notifications',
-                requiredPermissions: systemSettingsAccess,
-              },
-              {
-                description: 'Actions automatiques futures.',
-                href: '/systeme/automatisations',
-                icon: 'ClipboardList',
-                label: 'Automatisations',
-                requiredPermissions: systemAutomationAccess,
-              },
-            ],
-            description:
-              'Modèles de documents, notifications et automatisations.',
-            href: '/systeme/modeles',
-            icon: 'FileText',
-            label: 'Modèles',
-            requiredPermissions: systemSettingsAccess,
-          },
-          {
-            children: [
-              {
-                description: 'Actions sensibles à approuver.',
-                href: '/systeme/validations',
-                icon: 'CheckCircle2',
-                label: 'Validations globales',
-                requiredPermissions: systemValidationAccess,
-              },
-              {
-                description: 'Archives transversales du site privé.',
-                href: '/systeme/archives',
-                icon: 'Archive',
-                label: 'Archives globales',
-                requiredPermissions: systemArchiveAccess,
-              },
-            ],
-            description: 'Exports, sauvegardes, validations et archives.',
-            href: '/systeme/exports-sauvegardes',
-            icon: 'Archive',
-            label: 'Données',
-            requiredPermissions: systemExportAccess,
-          },
-          {
-            availability: 'live',
-            description: FEATURES.roadmap.description,
-            featureId: FEATURES.roadmap.id,
-            href: FEATURES.roadmap.href,
-            icon: FEATURES.roadmap.icon,
-            label: FEATURES.roadmap.label,
-          },
+          featureNavigation(FEATURES.users),
+          featureNavigation(FEATURES.systemActivity),
+          featureNavigation(FEATURES.systemSettings),
+          featureNavigation(FEATURES.roadmap),
         ],
         label: 'Administration',
         position: 'top',
@@ -816,7 +330,7 @@ export function canOpenNavigationHref(
   const pathname = getSafeInternalPathname(href);
   if (!pathname) return false;
   const item = getNavigationItemByHref(pathname);
-  if (!item) return true;
+  if (!item) return !RESERVED_PLANNED_HREFS.has(pathname);
 
   return getVisibleNavigationSpaces(user).some((space) =>
     getNavigationSpaceItems(space).some((nav) => nav.href === pathname),
@@ -831,16 +345,6 @@ export function getVisibleNavigationSpaces(
   return NAV_SPACES.map((space) =>
     filterNavigationSpace(space, user, availability, operationalFeatureIds),
   ).filter((space) => space.sections.length > 0);
-}
-
-export function getPlannedNavigationSpaces(
-  user: NavigationUser,
-): NavigationSpace[] {
-  if (!user) return [];
-
-  // Roadmap cards are a non-interactive product catalogue, not an
-  // authorization surface. Showing them must never require dormant grants.
-  return getVisibleNavigationSpaces({ ...user, isProtected: true }, 'planned');
 }
 
 export function getDefaultNavigationSpace(): NavigationSpace {

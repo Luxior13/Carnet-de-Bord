@@ -1,3 +1,5 @@
+> Fiche historique : le statut, le placement et le périmètre actuels sont définis dans la [matrice de préparation](../MATRICE_PREPARATION.md). Relire cette fiche à partir du chantier cible avant implémentation.
+
 > **Module retire le 21 septembre 2026.** La page, ses routes API et ses donnees
 > ont ete supprimees. Ce document est conserve comme historique. Pour
 > reconstruire le module, utiliser

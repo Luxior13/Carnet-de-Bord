@@ -1,220 +1,151 @@
-# Matrice de preparation long terme des pages
+# Matrice de préparation — état réel et projets
 
-Ce document prepare les futures implementations sans remplir les pages encore vides.
-Les routes qui utilisent encore le gabarit generique doivent rester comme elles sont
-tant que leur module metier n'est pas pret.
+Référence révisée le 22 septembre 2026. Les chantiers proviennent du [catalogue de la feuille de route](../../apps/web/src/features/roadmap/roadmap.constants.ts). L’ordre et les décisions sont décrits dans [FEUILLE_DE_ROUTE.md](../../docs/FEUILLE_DE_ROUTE.md).
 
-## Regles de cadrage
+## Pages actuellement disponibles
 
-- Ne pas transformer une page squelette en faux module.
-- Ne pas ajouter de donnees fictives dans une page vide.
-- Avant de coder une page, definir ses donnees, permissions, liens, audit et tests.
-- Garder le meme langage UI que les pages deja completes: sombre, dense, sobre, oriente gestion.
-- Toute action sensible doit creer une entree d'audit avec `poleKey`, `pageKey` et `tabKey`.
-- Toute nouvelle page metier doit avoir au minimum: etat vide, etat chargement, erreur, acces refuse, mobile.
+| Route ou famille | État | Placement |
+| --- | --- | --- |
+| `/` | Accueil livré, vues métier à enrichir | Aujourd’hui |
+| `/mes-notifications` | Boîte de notifications livrée | Aujourd’hui et outils globaux |
+| `/mon-compte` | Profil et sécurité du compte livrés | Outils globaux |
+| `/recherche` | Recherche de pages livrée ; recherche de dossiers future | Outils globaux |
+| `/vie-interne/repertoire`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Personne livrées | Personnes |
+| `/vie-interne/actualite-interne` | Actualité livrée | Activité |
+| `/administration/utilisateurs`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Utilisateur livrées | Système |
+| `/systeme/journal-activite` | Journal livré | Système |
+| `/systeme/parametres` | Paramètres techniques livrés | Système |
+| `/feuille-de-route` | Catalogue de projets livré | Système |
+| `/login` | Connexion | Authentification |
+| `/administration`, `/tableau-de-bord`, `/tableau-de-bord/mes-notifications`, `/systeme` | Accès de compatibilité ou entrée de pôle | Routes d’appui |
 
-## Statuts
+Les libellés de familles ci-dessus ne créent pas des routes racines `/nouveau` ou `/[id]`. Les écrans d’erreur, chargement et refus sont des états de parcours, pas des modules supplémentaires.
 
-- `Live`: page deja fonctionnelle.
-- `Live partiel`: page fonctionnelle mais a renforcer avant gros volume.
-- `Squelette`: page volontairement generique, a laisser telle quelle.
-- `A connecter`: page presente mais elle depend d'un module transverse a creer.
-- `Plus tard`: page planifiee mais pas prioritaire.
-- `Support`: page technique ou route d'appui.
+Les anciennes routes prévues ne sont pas des « squelettes disponibles ». Certaines sont absentes, d’autres rencontrent un refus ou une route générique sans module livré. Les organisations partenaires sont à reconstruire ; les anciens modèles supprimés ne sont pas comptés comme existants.
 
-## Modeles UI cibles
+## Statuts des projets
 
-| Modele          | Usage                                         | Composants de base                                            |
-| --------------- | --------------------------------------------- | ------------------------------------------------------------- |
-| `ActionHub`     | Tableau de bord, alertes, taches, validations | `PageShell`, `PageHeader`, grilles de stats, listes d'actions |
-| `DataList`      | Listes de membres, documents, operations      | filtres, recherche, tri, pagination, actions ligne            |
-| `EntityDetail`  | Detail utilisateur, membre, document, contrat | header, rail d'onglets, sections, audit lateral               |
-| `FormFlow`      | Creation ou modification guidee               | formulaire par sections, validation, resume avant envoi       |
-| `ApprovalQueue` | Validations sensibles                         | files d'attente, priorite, decision, commentaire obligatoire  |
-| `DocumentVault` | Documents, chartes, contrats                  | liste, statut, version, acceptation, pieces jointes           |
-| `Ledger`        | Tresorerie et operations                      | tableaux denses, filtres periode, totaux, exports             |
-| `CalendarBoard` | Reunions, calendrier, matchs                  | vues liste/calendrier, dates, participants                    |
-| `AuditJournal`  | Journaux systeme, finance, activite           | filtres, cursor pagination, export, details                   |
-| `SettingsHub`   | Parametres, modeles, automatisations          | groupes de reglages, etats sauvegardes                        |
-| `SearchResults` | Recherche globale                             | resultats groupes par module, permissions, filtres            |
+- **À cadrer** : périmètre nouveau, à concevoir puis construire.
+- **À compléter** : socle existant décrit dans la carte, extension à réaliser.
+- Une carte livrée devra être retirée ou recentrée sur son reste à faire, avec une mise à jour de cette matrice.
+- Chaque carte de l’interface précise public, première version, prérequis, critère de livraison et suite éventuelle. Les étapes ne sont pas des échéances.
 
-## Permissions cibles
+## Les 37 chantiers
 
-Le socle de permissions est structure par pole pour preparer les futures pages
-sans donner un acces trop large via `dashboard:view`.
+| Identifiant stable | Chantier | Pôle cible | Étape | État | Prérequis |
+| --- | --- | --- | --- | --- | --- |
+| `legal-entities` | Identité juridique & périmètres | Structure | 1 | À cadrer | — |
+| `compliance` | Confidentialité, image & mineurs | Structure | 1 | À cadrer | Identité juridique & périmètres ; Accès & responsabilités métier |
+| `access-scopes` | Accès & responsabilités métier | Système | 1 | À compléter | — |
+| `person-relationships` | Répertoire & engagements | Personnes | 2 | À compléter | Identité juridique & périmètres ; Accès & responsabilités métier |
+| `sport-teams` | Équipes & saisons | Esport | 2 | À cadrer | Répertoire & engagements |
+| `sport-planning` | Planning & disponibilités | Esport | 2 | À cadrer | Équipes & saisons |
+| `personal-work` | Mon travail & espace personnel | Aujourd’hui | 3 | À compléter | Accès & responsabilités métier ; Planning & disponibilités ; Documents & acceptations ; Projets & tâches |
+| `recruitment` | Candidatures & essais | Personnes | 3 | À cadrer | Répertoire & engagements ; Équipes & saisons |
+| `onboarding` | Arrivées & départs | Personnes | 3 | À cadrer | Répertoire & engagements ; Documents & acceptations ; Projets & tâches |
+| `competitions` | Compétitions & inscriptions | Esport | 3 | À cadrer | Équipes & saisons ; Planning & disponibilités |
+| `governance` | Gouvernance & décisions | Structure | 3 | À cadrer | Identité juridique & périmètres ; Documents & acceptations ; Réunions & décisions de séance |
+| `documents` | Documents & acceptations | Structure | 3 | À cadrer | Identité juridique & périmètres ; Accès & responsabilités métier |
+| `incidents` | Incidents & sanctions | Structure | 3 | À cadrer | Répertoire & engagements ; Confidentialité, image & mineurs |
+| `approvals` | À valider | Aujourd’hui | 3 | À cadrer | Accès & responsabilités métier |
+| `tasks` | Projets & tâches | Activité | 3 | À cadrer | Accès & responsabilités métier |
+| `calendar` | Calendrier commun | Activité | 3 | À cadrer | Planning & disponibilités |
+| `meetings` | Réunions & décisions de séance | Activité | 3 | À cadrer | Répertoire & engagements ; Projets & tâches |
+| `debriefs` | Débriefs | Activité | 3 | À cadrer | Projets & tâches ; Planning & disponibilités |
+| `internal-news` | Actualité interne & audiences | Activité | 3 | À compléter | Accès & responsabilités métier |
+| `contracts` | Contrats & obligations | Structure | 4 | À cadrer | Documents & acceptations ; Répertoire & engagements |
+| `logistics` | Ressources & logistique | Activité | 4 | À cadrer | Répertoire & engagements ; Projets & tâches |
+| `organizations` | Organisations & contacts | Relations | 4 | À cadrer | Répertoire & engagements |
+| `partnerships` | Partenariats & opportunités | Relations | 4 | À cadrer | Organisations & contacts ; Contrats & obligations ; Projets & tâches |
+| `accounts` | Comptes & rapprochement | Finances | 4 | À cadrer | Identité juridique & périmètres |
+| `payments` | Opérations & règlements | Finances | 4 | À cadrer | Comptes & rapprochement ; Répertoire & engagements ; Organisations & contacts |
+| `invoices` | Facturation & achats | Finances | 4 | À cadrer | Opérations & règlements ; Contrats & obligations |
+| `expenses` | Notes de frais & remboursements | Finances | 4 | À cadrer | Opérations & règlements ; À valider |
+| `finance-controls` | Contrôles & clôtures | Finances | 4 | À cadrer | Opérations & règlements ; À valider |
+| `data` | Données, imports & sauvegardes | Système | 4 | À compléter | Identité juridique & périmètres ; Accès & responsabilités métier |
+| `preparation` | Préparation & analyse vidéo | Esport | 5 | À cadrer | Planning & disponibilités ; Débriefs |
+| `performance` | Performance & objectifs | Esport | 5 | À cadrer | Compétitions & inscriptions ; Débriefs |
+| `budget` | Budget & pilotage | Finances | 5 | À cadrer | Opérations & règlements ; Facturation & achats |
+| `prizes` | Gains de compétition & primes | Finances | 5 | À cadrer | Compétitions & inscriptions ; Contrats & obligations ; Opérations & règlements |
+| `business-search` | Recherche dans les dossiers | Système | 5 | À compléter | Accès & responsabilités métier ; Documents & acceptations |
+| `communication` | Communication & contenus | Activité | 6 | À cadrer | Projets & tâches ; Confidentialité, image & mineurs ; Partenariats & opportunités |
+| `automations` | Rappels & automatisations | Système | 6 | À cadrer | Projets & tâches ; Documents & acceptations ; Accès & responsabilités métier |
+| `integrations` | Intégrations & publication publique | Système | 6 | À cadrer | Équipes & saisons ; Organisations & contacts ; Données, imports & sauvegardes |
 
-Important : les permissions citees pour une page `Squelette`, `A connecter` ou
-`Plus tard` sont uniquement des identifiants de feuille de route dans
-`ROADMAP_PERMISSIONS`. Elles ne sont jamais effectives, stockables ou
-attribuables avant que la page, sa politique serveur, son audit et ses tests ne
-passent ensemble au statut `Live`. Le catalogue actif et la matrice des roles
-sont documentes dans `docs/PERMISSIONS.md`.
+## Correspondance des anciennes destinations
 
-| Famille           | Permissions a prevoir                                                                                                                                                                                         | Notes                                                                    |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Dashboard         | `dashboard:view`, `dashboard:manage_widgets`                                                                                                                                                                  | Widgets visibles selon les droits metier.                                |
-| Taches et rappels | `tasks:view`, `tasks:create`, `tasks:update`, `tasks:assign`, `tasks:delete`                                                                                                                                  | Alimente dashboard et notifications.                                     |
-| Notifications     | `notifications:view`, `notifications:manage`, `notifications:send`                                                                                                                                            | Doit devenir persistant en base.                                         |
-| Vie interne       | actifs : `persons:view`, `persons:create`, `persons:update`, `persons:delete`; planifies : `internal:view`, `meetings:view`, `meetings:update`                                                                | Repertoire canonique des personnes et futures fonctions internes.        |
-| Documents         | `documents:view`, `documents:create`, `documents:update`, `documents:approve`, `documents:archive`                                                                                                            | Commun au juridique, systeme et dashboard.                               |
-| Juridique         | `legal:view`, `contracts:view`, `contracts:update`, `incidents:view`, `incidents:update`                                                                                                                      | Donnees sensibles, audit obligatoire.                                    |
-| Tresorerie        | `treasury:view`, `treasury:edit`, `treasury:validate`, `treasury:export`, `treasury:audit`, `treasury:archives`                                                                                               | Finance isolee avec controles separes.                                   |
-| Systeme           | actifs : `audit:view`, `audit:view_field_history`, `audit:export`; API sans ecran : `settings:view`, `settings:update`; planifies : `system:validate`, `backups:view`, `system:archives`, `system:automation` | Le journal global et l'historique contextuel ont des portees distinctes. |
-| Sport             | `sport:view`, `sport:update`, `sport:public_sync`                                                                                                                                                             | Priorite plus tard, lecture publique separee.                            |
+Les références suivantes préservent le périmètre des anciennes propositions. Ce sont des **URL historiques de conception**, pas des liens vers des pages disponibles ni les futures routes canoniques. Plusieurs anciennes pages deviennent des vues du même chantier.
 
-## Entites transversales a prevoir
+| Ancienne destination | Chantier qui reprend le besoin | Étape |
+| --- | --- | --- |
+| `/tableau-de-bord/mes-taches` | Aujourd’hui → Mon travail & espace personnel | 3 |
+| `/tableau-de-bord/prochaines-reunions` | Aujourd’hui → Mon travail & espace personnel | 3 |
+| `/tableau-de-bord/documents-a-accepter` | Aujourd’hui → Mon travail & espace personnel | 3 |
+| `/tableau-de-bord/alertes-importantes` | Aujourd’hui → Mon travail & espace personnel | 3 |
+| `/tableau-de-bord/mes-rappels` | Aujourd’hui → Mon travail & espace personnel | 3 |
+| `/vie-interne/membres-adherents` | Personnes → Répertoire & engagements | 2 |
+| `/vie-interne/membres` | Personnes → Répertoire & engagements | 2 |
+| `/vie-interne/adherents` | Personnes → Répertoire & engagements | 2 |
+| `/bureau-juridique/personnes-contacts` | Personnes → Répertoire & engagements | 2 |
+| `/vie-interne/recrutement-tryouts` | Personnes → Candidatures & essais | 3 |
+| `/sport-team-control/recrutement-tryouts` | Personnes → Candidatures & essais | 3 |
+| `/vie-interne/onboarding-depart` | Personnes → Arrivées & départs | 3 |
+| `/sport-team-control` | Esport → Équipes & saisons | 2 |
+| `/sport-team-control/jeux` | Esport → Équipes & saisons | 2 |
+| `/sport-team-control/rosters` | Esport → Équipes & saisons | 2 |
+| `/sport-team-control/membres-esport` | Esport → Équipes & saisons | 2 |
+| `/sport-team-control/scrims` | Esport → Planning & disponibilités | 2 |
+| `/sport-team-control/calendrier-esport` | Esport → Planning & disponibilités | 2 |
+| `/sport-team-control/tournois-matchs` | Esport → Compétitions & inscriptions | 3 |
+| `/sport-team-control/performance` | Esport → Performance & objectifs | 5 |
+| `/bureau-juridique/decisions-bureau` | Structure → Gouvernance & décisions | 3 |
+| `/bureau-juridique/documents` | Structure → Documents & acceptations | 3 |
+| `/bureau-juridique/documents-officiels` | Structure → Documents & acceptations | 3 |
+| `/bureau-juridique/acceptation-chartes` | Structure → Documents & acceptations | 3 |
+| `/systeme/modeles-documents` | Structure → Documents & acceptations | 3 |
+| `/bureau-juridique/contrats` | Structure → Contrats & obligations | 4 |
+| `/bureau-juridique/incidents-sanctions` | Structure → Incidents & sanctions | 3 |
+| `/systeme/validations` | Aujourd’hui → À valider | 3 |
+| `/vie-interne/calendrier-interne` | Activité → Calendrier commun | 3 |
+| `/vie-interne/reunions` | Activité → Réunions & décisions de séance | 3 |
+| `/vie-interne/reunions-suivi` | Activité → Réunions & décisions de séance | 3 |
+| `/vie-interne/debriefs` | Activité → Débriefs | 3 |
+| `/sport-team-control/debriefs` | Activité → Débriefs | 3 |
+| `/bureau-juridique/inventaire-acces` | Activité → Ressources & logistique | 4 |
+| `/bureau-juridique/partenaires` | Relations → Organisations & contacts | 4 |
+| `/bureau-juridique/sponsors` | Relations → Organisations & contacts | 4 |
+| `/tresorerie/comptes` | Finances → Comptes & rapprochement | 4 |
+| `/tresorerie/operations` | Finances → Opérations & règlements | 4 |
+| `/tresorerie/recettes` | Finances → Opérations & règlements | 4 |
+| `/tresorerie/depenses` | Finances → Opérations & règlements | 4 |
+| `/tresorerie/cotisations-adherents` | Finances → Opérations & règlements | 4 |
+| `/tresorerie/sponsoring-financier` | Finances → Opérations & règlements | 4 |
+| `/tresorerie/factures-justificatifs` | Finances → Facturation & achats | 4 |
+| `/tresorerie/remboursements` | Finances → Notes de frais & remboursements | 4 |
+| `/tresorerie/budget` | Finances → Budget & pilotage | 5 |
+| `/tresorerie/bilans` | Finances → Budget & pilotage | 5 |
+| `/tresorerie/validations-finance` | Finances → Contrôles & clôtures | 4 |
+| `/tresorerie/exports-finance` | Finances → Contrôles & clôtures | 4 |
+| `/tresorerie/journal-financier` | Finances → Contrôles & clôtures | 4 |
+| `/tresorerie/archives-finance` | Finances → Contrôles & clôtures | 4 |
+| `/vie-interne/notifications-rappels` | Système → Rappels & automatisations | 6 |
+| `/systeme/modeles` | Système → Rappels & automatisations | 6 |
+| `/systeme/modeles-notifications` | Système → Rappels & automatisations | 6 |
+| `/systeme/automatisations` | Système → Rappels & automatisations | 6 |
+| `/systeme/exports-sauvegardes` | Système → Données, imports & sauvegardes | 4 |
+| `/systeme/archives` | Système → Données, imports & sauvegardes | 4 |
 
-| Entite               | Sert a                                            | Liee a                               |
-| -------------------- | ------------------------------------------------- | ------------------------------------ |
-| `User`               | Connexion, permissions, audit                     | toutes les actions                   |
-| `Person`             | Identite, statut dans la structure et coordonnees | futures relations metier             |
-| `Task`               | Travail a faire                                   | dashboard, rappels, validations      |
-| `Reminder`           | Relance personnelle ou equipe                     | notifications, reunions, documents   |
-| `Notification`       | Centre de notifications persistant                | taches, validations, alertes         |
-| `Meeting`            | Reunions et debriefs                              | calendrier, decisions, documents     |
-| `Document`           | Fichier, charte, modele, contrat                  | acceptations, validations, juridique |
-| `DocumentAcceptance` | Signature ou acceptation                          | dashboard, adherents, juridique      |
-| `SponsorPartner`     | Sponsor ou partenaire                             | contrats, recettes, contacts         |
-| `Incident`           | Incident, sanction, suivi                         | membre, juridique, audit             |
-| `AssetAccess`        | Inventaire et acces                               | utilisateur, membre, juridique       |
-| `Decision`           | Decision du bureau                                | reunion, document, audit             |
-| `TreasuryAccount`    | Compte financier                                  | operations, bilans                   |
-| `FiscalYear`         | Exercice                                          | budget, bilans, exports              |
-| `FinancialOperation` | Recette ou depense                                | justificatif, validation, journal    |
-| `InvoiceAttachment`  | Facture ou justificatif                           | operation, remboursement             |
-| `Reimbursement`      | Remboursement                                     | membre, depense, validation          |
-| `Approval`           | Validation transverse                             | finance, documents, systeme          |
-| `Template`           | Modele document ou notification                   | automatisations                      |
-| `AutomationRule`     | Regle automatique                                 | notifications, rappels, exports      |
-| `SportRoster`        | Equipe esport                                     | joueurs, matchs, performance         |
-| `SportEvent`         | Scrim, match, tournoi                             | calendrier, debriefs                 |
+Les accueils de pôles sans synthèse utile ne sont pas recréés. La messagerie interne autonome est écartée du périmètre actuel. Une ancienne fiche qui décrit un besoin plus large doit être relue à la lumière du chantier cible avant développement.
 
-## Matrice des pages live et support
+## Contrat de préparation et livraison
 
-| Route                                  | Statut       | Modele cible           | Donnees principales                 | Permissions                                            | Liens a prevoir                |
-| -------------------------------------- | ------------ | ---------------------- | ----------------------------------- | ------------------------------------------------------ | ------------------------------ |
-| `/login`                               | Live         | FormFlow auth          | session, user, rate-limit           | public                                                 | audit connexions               |
-| `/`                                    | Live partiel | ActionHub              | stats users, audit recent           | `dashboard:view`                                       | taches, rappels, validations   |
-| `/mon-compte`                          | Live partiel | EntityDetail personnel | user, sessions, audit               | `account:*`                                            | audit, securite, notifications |
-| `/mes-notifications`                   | Live         | DataList personnel     | notifications du compte connecte    | `notifications:view`                                   | dashboard, modules emetteurs   |
-| `/feuille-de-route`                    | Live         | ActionHub informatif   | catalogue des pages planifiees      | authentification, aucune permission planifiee          | fiches de preparation          |
-| `/administration`                      | Support      | Redirect               | aucune                              | users selon cible                                      | redirige vers utilisateurs     |
-| `/administration/utilisateurs`         | Live         | DataList               | users, stats, filtres               | `users:view`                                           | fiche utilisateur, export      |
-| `/administration/utilisateurs/nouveau` | Live         | FormFlow               | user, role, mot de passe temporaire | `users:create`                                         | fiche utilisateur, audit       |
-| `/administration/utilisateurs/[id]`    | Live partiel | EntityDetail           | user, permissions, sessions, audit  | `users:*`                                              | compte, securite, historique   |
-| `/systeme/journal-activite`            | Live         | AuditJournal           | audit logs, filtres, utilisateurs   | `audit:view`; `audit:export` reste separe et dependant | toutes pages auditees          |
-| `/recherche`                           | Live         | SearchResults          | destinations actives autorisees     | authentification puis filtrage selon modules           | toutes entites indexees        |
-| `/not-found`                           | Support      | PageState              | aucune                              | public                                                 | retour contextuel plus tard    |
-| `/error`                               | Support      | PageState              | digest erreur                       | public                                                 | support/admin plus tard        |
+1. Identifier la source des données, le responsable métier et un parcours utile de bout en bout.
+2. Définir le rattachement à l’entité, la saison/période et les relations nécessaires, sans fusionner des objets aux cycles différents.
+3. Décrire les actions autorisées, la confidentialité, les pièces jointes, l’audit, la conservation et les cas de révocation.
+4. Concevoir les états vide, chargement, erreur, accès refusé, mobile et conflit de modification lorsqu’il s’applique.
+5. Vérifier le critère de livraison de la carte, les dépendances et les politiques serveur.
+6. Activer ensemble route, fonctionnalité, permissions et navigation ; actualiser cette matrice et le catalogue.
 
-## Tableau de bord
+Le socle visuel existant doit être réutilisé. Une carte de projet ne justifie pas d’ajouter une table dormante, une permission active ou une fausse page métier.
 
-| Route                                   | Statut      | Modele cible         | Donnees principales    | Permissions                          | Liens a prevoir                    |
-| --------------------------------------- | ----------- | -------------------- | ---------------------- | ------------------------------------ | ---------------------------------- |
-| `/tableau-de-bord`                      | Support     | Redirect             | aucune                 | `dashboard:view` sur la cible        | redirige vers `/`                  |
-| `/tableau-de-bord/mes-notifications`    | Support     | Redirect             | aucune                 | `notifications:view` sur la cible    | redirige vers `/mes-notifications` |
-| `/tableau-de-bord/mes-taches`           | A connecter | DataList / ActionHub | taches assignees       | `tasks:view`                         | membres, validations, documents    |
-| `/tableau-de-bord/mes-rappels`          | A connecter | DataList             | rappels personnels     | `tasks:view` ou `notifications:view` | notifications, calendrier          |
-| `/tableau-de-bord/prochaines-reunions`  | A connecter | CalendarBoard        | reunions a venir       | `meetings:view`                      | vie interne, debriefs              |
-| `/tableau-de-bord/documents-a-accepter` | A connecter | ApprovalQueue        | documents en attente   | `documents:view`                     | juridique, documents               |
-| `/tableau-de-bord/alertes-importantes`  | A connecter | ActionHub            | alertes systeme/metier | `notifications:view`                 | tous modules sensibles             |
-
-## Vie interne
-
-| Route                                | Statut      | Modele cible            | Donnees principales                            | Permissions                                                          | Liens a prevoir            |
-| ------------------------------------ | ----------- | ----------------------- | ---------------------------------------------- | -------------------------------------------------------------------- | -------------------------- |
-| `/vie-interne/repertoire`            | Live        | DataList / EntityDetail | identite, statut, coordonnees, reseaux sociaux | `persons:view`, `persons:create`, `persons:update`, `persons:delete` | audit contextuel           |
-| `/vie-interne`                       | Squelette   | ActionHub               | resume pole                                    | `internal:view`                                                      | membres, reunions, rappels |
-| `/vie-interne/actualite-interne`     | A connecter | DataList                | annonces internes                              | `internal:view`                                                      | notifications              |
-| `/vie-interne/reunions-suivi`        | A connecter | ActionHub               | reunions, decisions, actions                   | `meetings:view`                                                      | taches, decisions          |
-| `/vie-interne/reunions`              | A connecter | DataList / FormFlow     | reunions                                       | `meetings:update`                                                    | calendrier, debriefs       |
-| `/vie-interne/calendrier-interne`    | A connecter | CalendarBoard           | evenements internes                            | `meetings:view`                                                      | dashboard, rappels         |
-| `/vie-interne/debriefs`              | A connecter | DataList                | comptes rendus                                 | `meetings:view`                                                      | reunions, taches           |
-| `/vie-interne/recrutement-tryouts`   | A connecter | DataList                | candidatures, essais                           | `internal:view`                                                      | sport, onboarding          |
-| `/vie-interne/notifications-rappels` | A connecter | SettingsHub / DataList  | rappels, notifications                         | `notifications:manage`                                               | centre notifications       |
-
-## Bureau juridique
-
-| Route                                   | Statut      | Modele cible                 | Donnees principales      | Permissions         | Liens a prevoir                 |
-| --------------------------------------- | ----------- | ---------------------------- | ------------------------ | ------------------- | ------------------------------- |
-| `/bureau-juridique`                     | Squelette   | ActionHub                    | resume juridique         | `legal:view`        | documents, incidents, decisions |
-| `/bureau-juridique/partenaires`         | Plus tard   | DataList / EntityDetail      | organisations, contacts, suivi | `partners:view`     | contrats, recettes              |
-| `/bureau-juridique/documents`           | A connecter | DocumentVault                | documents et chartes     | `documents:view`    | acceptations, modeles           |
-| `/bureau-juridique/documents-officiels` | A connecter | DocumentVault                | documents officiels      | `documents:view`    | exports, archives               |
-| `/bureau-juridique/contrats`            | A connecter | DocumentVault / EntityDetail | contrats                 | `contracts:view`    | sponsors, finance               |
-| `/bureau-juridique/acceptation-chartes` | A connecter | ApprovalQueue                | signatures, acceptations | `documents:approve` | dashboard, membres              |
-| `/bureau-juridique/incidents-sanctions` | A connecter | DataList / EntityDetail      | incidents, sanctions     | `incidents:view`    | membres, audit                  |
-| `/bureau-juridique/inventaire-acces`    | A connecter | DataList                     | materiel, acces, comptes | `legal:view`        | utilisateurs, depart            |
-| `/bureau-juridique/decisions-bureau`    | A connecter | DataList                     | decisions                | `legal:view`        | reunions, documents             |
-
-## Tresorerie
-
-| Route                                | Statut      | Modele cible         | Donnees principales    | Permissions         | Liens a prevoir          |
-| ------------------------------------ | ----------- | -------------------- | ---------------------- | ------------------- | ------------------------ |
-| `/tresorerie`                        | Squelette   | ActionHub finance    | resume financier       | `treasury:view`     | operations, validations  |
-| `/tresorerie/comptes`                | A connecter | DataList             | comptes financiers     | `treasury:view`     | operations, bilans       |
-| `/tresorerie/budget`                 | A connecter | Ledger               | budget par exercice    | `treasury:view`     | bilans, operations       |
-| `/tresorerie/bilans`                 | A connecter | Ledger               | bilans, exercices      | `treasury:view`     | exports, archives        |
-| `/tresorerie/operations`             | A connecter | Ledger               | operations financieres | `treasury:edit`     | justificatifs, journal   |
-| `/tresorerie/recettes`               | A connecter | Ledger               | recettes               | `treasury:view`     | sponsors, cotisations    |
-| `/tresorerie/depenses`               | A connecter | Ledger               | depenses               | `treasury:view`     | factures, remboursements |
-| `/tresorerie/cotisations-adherents`  | A connecter | Ledger / DataList    | cotisations            | `treasury:view`     | adherents, rappels       |
-| `/tresorerie/sponsoring-financier`   | A connecter | Ledger               | paiements sponsors     | `treasury:view`     | sponsors, contrats       |
-| `/tresorerie/factures-justificatifs` | A connecter | DocumentVault        | justificatifs          | `treasury:view`     | operations               |
-| `/tresorerie/remboursements`         | A connecter | ApprovalQueue        | demandes remboursement | `treasury:validate` | membres, depenses        |
-| `/tresorerie/exports-finance`        | A connecter | SettingsHub / Export | exports                | `treasury:export`   | bilans, operations       |
-| `/tresorerie/validations-finance`    | A connecter | ApprovalQueue        | validations sensibles  | `treasury:validate` | operations, audit        |
-| `/tresorerie/journal-financier`      | A connecter | AuditJournal         | audit financier        | `treasury:audit`    | operations               |
-| `/tresorerie/archives-finance`       | A connecter | DocumentVault        | archives               | `treasury:archives` | exports, bilans          |
-
-## Systeme
-
-| Route                            | Statut       | Modele cible         | Donnees principales  | Permissions                                                                     | Liens a prevoir          |
-| -------------------------------- | ------------ | -------------------- | -------------------- | ------------------------------------------------------------------------------- | ------------------------ |
-| `/systeme`                       | Retire       | —                    | aucune               | —                                                                               | —                        |
-| `/systeme/parametres`            | A connecter  | SettingsHub          | reglages globaux     | API active non attribuable : `settings:view`, `settings:update`; ecran planifie | audit                    |
-| `/systeme/validations`           | A connecter  | ApprovalQueue        | validations globales | `system:validate`                                                               | finance, documents       |
-| `/systeme/exports-sauvegardes`   | A connecter  | SettingsHub / Export | exports, backups     | `backups:view`                                                                  | archives                 |
-| `/systeme/archives`              | A connecter  | DocumentVault        | archives globales    | `system:archives`                                                               | documents, finance       |
-| `/systeme/modeles`               | A connecter  | SettingsHub          | modeles              | `system:settings`                                                               | documents, notifications |
-| `/systeme/modeles-documents`     | A connecter  | DocumentVault        | modeles documents    | `documents:update`                                                              | juridique                |
-| `/systeme/modeles-notifications` | A connecter  | SettingsHub          | modeles messages     | `notifications:manage`                                                          | automatisations          |
-| `/systeme/automatisations`       | A connecter  | SettingsHub          | regles automatiques  | `system:automation`                                                             | notifications, rappels   |
-
-## Sport / Team Control
-
-| Route                                     | Statut    | Modele cible            | Donnees principales | Permissions    | Liens a prevoir       |
-| ----------------------------------------- | --------- | ----------------------- | ------------------- | -------------- | --------------------- |
-| `/sport-team-control`                     | Plus tard | ActionHub sport         | resume esport       | `sport:view`   | site public plus tard |
-| `/sport-team-control/jeux`                | Plus tard | DataList                | jeux suivis         | `sport:view`   | rosters               |
-| `/sport-team-control/rosters`             | Plus tard | DataList / EntityDetail | equipes             | `sport:view`   | membres esport        |
-| `/sport-team-control/membres-esport`      | Plus tard | DataList                | joueurs             | `sport:view`   | membres internes      |
-| `/sport-team-control/scrims`              | Plus tard | CalendarBoard           | scrims              | `sport:update` | calendrier            |
-| `/sport-team-control/tournois-matchs`     | Plus tard | CalendarBoard           | matchs, tournois    | `sport:update` | debriefs              |
-| `/sport-team-control/calendrier-esport`   | Plus tard | CalendarBoard           | calendrier esport   | `sport:view`   | dashboard             |
-| `/sport-team-control/recrutement-tryouts` | Plus tard | DataList                | tryouts esport      | `sport:update` | onboarding            |
-| `/sport-team-control/debriefs`            | Plus tard | DataList                | debriefs matchs     | `sport:view`   | performance           |
-| `/sport-team-control/performance`         | Plus tard | ActionHub               | stats performance   | `sport:view`   | matchs                |
-
-## Checklist avant implementation d'une page
-
-1. Confirmer que la page passe de `Squelette` a `A connecter`.
-2. Creer ou etendre les modeles Prisma necessaires.
-3. Ajouter les permissions dans les constantes, avec dependances.
-4. Definir les routes API et leurs contrats de reponse.
-5. Ajouter les cles d'audit: `poleKey`, `pageKey`, `tabKey`.
-6. Choisir le modele UI cible dans ce document.
-7. Ajouter etats vide, chargement, erreur, acces refuse.
-8. Ajouter tests unitaires pour permissions et API.
-9. Ajouter un scenario e2e minimal quand la page devient live.
-10. Mettre a jour cette matrice avec le nouveau statut.
-
-## Ordre conseille
-
-1. Stabiliser les transverses: notifications, taches, documents, validations.
-2. Brancher le dashboard sur ces transverses.
-3. Construire Vie interne: membres, adherents, reunions.
-4. Construire Juridique: documents, contrats, acceptations.
-5. Construire Tresorerie: comptes, operations, validations, exports.
-6. Construire Systeme: parametres, modeles, automatisations.
-7. Garder Sport / Team Control pour une phase ulterieure.
+Les anciennes fiches détaillées sont conservées comme historique et matière de conception. Elles ne font plus autorité sur le statut actuel, le découpage ni la navigation.

@@ -1,3 +1,5 @@
+> Proposition historique : la [feuille de route courante](../docs/FEUILLE_DE_ROUTE.md) et la [navigation cible](../docs/NAVIGATION.md) remplacent les décisions de découpage et de priorité de ce document.
+
 # Organisation UX
 
 ## Objectif

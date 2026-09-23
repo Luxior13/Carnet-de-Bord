@@ -1,3 +1,5 @@
+> Fiche historique : le statut, le placement et le périmètre actuels sont définis dans la [matrice de préparation](../MATRICE_PREPARATION.md). Relire cette fiche à partir du chantier cible avant implémentation.
+
 # Jeux
 
 Route : `/sport-team-control/jeux`
