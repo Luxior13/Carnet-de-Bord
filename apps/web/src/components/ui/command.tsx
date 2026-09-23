@@ -14,7 +14,7 @@ function Command({
     <CommandPrimitive
       data-slot="command"
       className={cn(
-        'bg-surface-floating text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-xl',
+        'bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-xl',
         className,
       )}
       {...props}
@@ -32,7 +32,7 @@ function CommandInput({
   return (
     <div
       data-slot="command-input-wrapper"
-      className="border-border-divider bg-surface-panel-header flex min-h-14 shrink-0 items-center gap-2 border-b px-3 pt-[env(safe-area-inset-top)]"
+      className="border-border-divider mx-4 flex min-h-14 shrink-0 items-center gap-2 border-b px-0 pt-[env(safe-area-inset-top)]"
     >
       <SearchIcon
         aria-hidden="true"
@@ -102,7 +102,7 @@ function CommandSeparator({
   return (
     <CommandPrimitive.Separator
       data-slot="command-separator"
-      className={cn('bg-border -mx-1 h-px', className)}
+      className={cn('bg-border-divider mx-2 h-px', className)}
       {...props}
     />
   );
@@ -116,7 +116,7 @@ function CommandItem({
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "data-[selected=true]:bg-surface-panel-header data-[selected=true]:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex min-h-10 cursor-default items-center gap-2 rounded-lg px-3 py-2 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "data-[selected=true]:border-border-strong/60 data-[selected=true]:bg-surface-navigation-active data-[selected=true]:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex min-h-10 cursor-default items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}

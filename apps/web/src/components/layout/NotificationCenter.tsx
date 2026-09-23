@@ -8,6 +8,7 @@ import {
   RefreshCcw,
   Settings,
   TriangleAlert,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -31,7 +32,12 @@ import { useUser } from '$context/UserContext';
 import { useAsyncResource } from '$hooks/useAsyncResource';
 import type { NotificationListData } from '$types/platform.types';
 import { Button } from '$ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '$ui/popover';
+import {
+  Popover,
+  PopoverClose,
+  PopoverContent,
+  PopoverTrigger,
+} from '$ui/popover';
 import { apiFetchJson, jsonRequest } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 
@@ -63,7 +69,7 @@ const QUICK_LINKS = [
   },
 ] as const;
 
-const defaultAccentClassName = 'bg-primary/10 text-primary-emphasis';
+const defaultAccentClassName = 'text-muted-foreground';
 const NOTIFICATION_REFRESH_MIN_INTERVAL_MS = 30_000;
 const NOTIFICATION_CHANGED_DEBOUNCE_MS = 200;
 
@@ -243,7 +249,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
               ? `Ouvrir les notifications (${unreadNotificationsCount} non lues)`
               : 'Ouvrir les notifications'
           }
-          className="text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground relative rounded-md bg-transparent shadow-none hover:border-transparent"
+          className="text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground data-[state=open]:border-border-strong/60 data-[state=open]:bg-surface-navigation-active data-[state=open]:text-foreground relative rounded-lg bg-transparent shadow-none hover:border-transparent"
           size="icon"
           variant="ghost"
         >
@@ -258,11 +264,12 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
       </PopoverTrigger>
       <PopoverContent
         align="end"
-        className="border-border-default bg-surface-floating flex max-h-[var(--radix-popover-content-available-height)] w-[min(calc(100vw-2rem),22rem)] flex-col overflow-hidden rounded-2xl p-0 shadow-[var(--shadow-panel-strong)]"
+        aria-label="Notifications"
+        className="flex max-h-[var(--radix-popover-content-available-height)] w-[min(calc(100vw-2rem),22rem)] flex-col overflow-y-auto p-2"
         collisionPadding={8}
         sideOffset={8}
       >
-        <div className="border-border-divider shrink-0 border-b px-4 py-3">
+        <div className="border-border-divider mx-3 shrink-0 border-b py-3">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-foreground text-sm font-semibold">
@@ -276,15 +283,19 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                     : notificationResource.isRefreshing
                       ? 'Mise à jour en cours'
                       : unreadNotificationsCount > 0
-                        ? `${unreadNotificationsCount} point${unreadNotificationsCount > 1 ? 's' : ''} à traiter`
-                        : 'Aucun point en attente'}
+                        ? `${unreadNotificationsCount} notification${unreadNotificationsCount > 1 ? 's' : ''} non lue${unreadNotificationsCount > 1 ? 's' : ''}`
+                        : 'Vous êtes à jour'}
               </p>
             </div>
-            {unreadNotificationsCount > 0 && (
-              <span className="bg-primary/10 text-primary-emphasis rounded-full px-2 py-0.5 text-xs font-semibold">
-                {unreadNotificationsCount}
-              </span>
-            )}
+            <PopoverClose asChild>
+              <Button
+                aria-label="Fermer les notifications"
+                size="icon"
+                variant="ghost"
+              >
+                <X aria-hidden="true" className="size-4" />
+              </Button>
+            </PopoverClose>
           </div>
         </div>
         {hasRefreshError && (
@@ -312,7 +323,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
             className="flex flex-col items-center px-4 py-7 text-center"
             role="status"
           >
-            <span className="border-border-subtle bg-surface-inset text-muted-foreground flex size-10 items-center justify-center rounded-md border">
+            <span className="text-muted-foreground flex size-10 items-center justify-center">
               <Loader2 aria-hidden="true" className="size-4 animate-spin" />
             </span>
             <p className="text-foreground mt-3 text-sm font-semibold">
@@ -327,7 +338,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
             className="flex flex-col items-center px-4 py-7 text-center"
             role="alert"
           >
-            <span className="border-destructive/30 bg-destructive/10 text-destructive flex size-10 items-center justify-center rounded-md border">
+            <span className="text-destructive flex size-10 items-center justify-center">
               <TriangleAlert aria-hidden="true" className="size-4" />
             </span>
             <p className="text-foreground mt-3 text-sm font-semibold">
@@ -348,19 +359,14 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
             </Button>
           </div>
         ) : visibleNotifications.length > 0 ? (
-          <div className="max-h-80 min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
+          <div className="max-h-80 min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain py-2">
             {visibleNotifications.map((notification) => {
               const NotificationIcon = notification.icon ?? BellRing;
               const isUnread = !notification.read;
 
               return (
                 <Link
-                  className={cn(
-                    'focus-visible:ring-ring/50 flex gap-3 rounded-md px-2 py-2.5 transition-colors outline-none focus-visible:ring-2',
-                    isUnread
-                      ? 'bg-primary/5 hover:bg-primary/10'
-                      : 'hover:bg-surface-tile-hover',
-                  )}
+                  className="hover:bg-surface-navigation-hover focus-visible:bg-surface-navigation-active focus-visible:ring-ring/50 flex gap-3 rounded-lg px-3 py-3 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset"
                   href={notification.href}
                   key={notification.id}
                   onClick={() => {
@@ -378,28 +384,33 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
                 >
                   <span
                     className={cn(
-                      'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md',
+                      'mt-0.5 flex size-5 shrink-0 items-center justify-center',
                       notification.accentClassName ?? defaultAccentClassName,
                     )}
                   >
                     <NotificationIcon aria-hidden="true" className="size-4" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="flex min-w-0 items-center gap-2">
-                      <span className="text-foreground truncate text-sm font-semibold">
+                    <span className="flex min-w-0 items-start gap-2">
+                      <span
+                        className={cn(
+                          'text-foreground line-clamp-2 text-sm [overflow-wrap:anywhere]',
+                          isUnread ? 'font-semibold' : 'font-medium',
+                        )}
+                      >
                         {notification.title}
                       </span>
                       {isUnread && (
                         <>
                           <span
                             aria-hidden="true"
-                            className="bg-primary size-1.5 shrink-0 rounded-full"
+                            className="bg-primary mt-1.5 size-1.5 shrink-0 rounded-full"
                           />
                           <span className="sr-only">Non lue</span>
                         </>
                       )}
                     </span>
-                    <span className="text-muted-foreground mt-0.5 line-clamp-2 text-xs leading-5">
+                    <span className="text-muted-foreground mt-0.5 line-clamp-2 text-xs leading-5 [overflow-wrap:anywhere]">
                       {notification.description}
                     </span>
                     {notification.meta && (
@@ -414,7 +425,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
           </div>
         ) : hasLoadedNotifications ? (
           <div className="flex flex-col items-center px-4 py-7 text-center">
-            <span className="border-border-subtle bg-surface-inset text-muted-foreground flex size-10 items-center justify-center rounded-md border">
+            <span className="text-muted-foreground flex size-10 items-center justify-center">
               <Bell aria-hidden="true" className="size-4" />
             </span>
             <p className="text-foreground mt-3 text-sm font-semibold">
@@ -428,20 +439,16 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
         {visibleQuickLinks.length > 0 && (
           <div
             className={cn(
-              'border-border-divider bg-surface-page grid shrink-0 border-t',
+              'border-border-divider mx-3 grid shrink-0 gap-1 border-t pt-2',
               visibleQuickLinks.length > 1 ? 'grid-cols-2' : 'grid-cols-1',
             )}
           >
-            {visibleQuickLinks.map((link, index) => {
+            {visibleQuickLinks.map((link) => {
               const LinkIcon = link.icon;
 
               return (
                 <Link
-                  className={cn(
-                    'text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground flex h-10 items-center justify-center gap-2 text-xs font-semibold transition-colors',
-                    index < visibleQuickLinks.length - 1 &&
-                      'border-border-divider border-r',
-                  )}
+                  className="text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground focus-visible:ring-ring/50 flex min-h-11 items-center justify-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold transition-colors outline-none focus-visible:ring-2"
                   href={link.href}
                   key={link.href}
                   onClick={() => setOpen(false)}

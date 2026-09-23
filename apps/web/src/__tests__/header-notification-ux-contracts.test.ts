@@ -25,13 +25,11 @@ describe('header notification UX contracts', () => {
     expect(headerSource).toContain('bg-surface-page');
     expect(headerSource).not.toContain('backdrop-blur');
     expect(headerSource).not.toContain('bg-surface-page/95');
-    expect(notificationCenterSource).toContain(
-      'border-border-default bg-surface-floating',
-    );
-    expect(notificationCenterSource).toContain('rounded-2xl p-0');
+    expect(notificationCenterSource).not.toContain('bg-surface-floating');
+    expect(notificationCenterSource).toContain('overflow-y-auto p-2');
     expect(notificationCenterSource).toContain('variant="ghost"');
     expect(notificationCenterSource).toContain(
-      "'bg-primary/5 hover:bg-primary/10'",
+      'hover:bg-surface-navigation-hover',
     );
     expect(notificationCenterSource).not.toContain(
       'bg-surface-panel-raised/85',

@@ -60,6 +60,10 @@ affiche le nom complet, l’identifiant et le rôle sur des lignes distinctes,
 puis Mon compte et Déconnexion. Il défile entièrement lorsque la hauteur
 disponible est réduite. La marge inférieure respecte la zone sûre du téléphone.
 
+Le popover utilisateur utilise une surface ardoise uniforme, des séparateurs
+en retrait et des icônes sans pastille. Le survol ou la sélection colore
+uniquement l’action concernée. Sa largeur de 18rem reste limitée au viewport.
+
 Une nouvelle entrée répond à un usage récurrent, porte un nom clair et possède un état vide utile. Un filtre, une action isolée et un accueil qui répète le menu ne justifient pas automatiquement une page.
 
 La hiérarchie privilégiée est pôle → lieu → fiche ou vue. Le fil d’Ariane situe l’utilisateur ; le retour conserve les filtres. Sur mobile, les mêmes destinations restent accessibles sans forcer un menu de huit pôles dépliés.

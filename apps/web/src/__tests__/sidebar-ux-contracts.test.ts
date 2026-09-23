@@ -110,9 +110,7 @@ describe('sidebar UX contracts', () => {
   it('keeps pole placement stable with restrained color hierarchy', () => {
     expect(poleNavigationSource).toContain('spaces.map((space) =>');
     expect(poleNavigationSource).not.toContain('Autres pôles');
-    expect(sidebarSource).toContain(
-      'border-border-default bg-surface-floating',
-    );
+    expect(sidebarSource).not.toContain('bg-surface-floating');
     expect(poleNavigationSource).toContain('aria-label="Pôles disponibles"');
     expect(sidebarSource).toContain(
       "const SIDEBAR_POPOVER_SECTION_CLASS = 'space-y-0.5'",
@@ -123,16 +121,17 @@ describe('sidebar UX contracts', () => {
     expect(sidebarSource).not.toContain('text-sidebar-foreground/45');
   });
 
-  it('gives the account popover controlled tonal depth', () => {
-    expect(sidebarSource).toContain('w-[min(19rem,calc(100vw-2rem))]');
+  it('keeps the account popover on one surface with inset separators', () => {
+    expect(sidebarSource).toContain('w-[min(18rem,calc(100vw-2rem))]');
     expect(sidebarSource).not.toContain('bg-gradient-to-br');
     expect(sidebarSource).not.toContain('from-surface-muted');
     expect(sidebarSource).toContain('shadow-[var(--shadow-account-popover)]');
-    expect(sidebarSource).toContain('bg-surface-panel-header border-b');
-    expect(sidebarSource).toContain('bg-surface-inset border-t');
     expect(sidebarSource).toContain(
-      'bg-surface-inset text-muted-foreground ring-border-default',
+      'bg-surface-panel-raised text-popover-foreground',
     );
+    expect(sidebarSource).toContain('bg-border-divider mx-3 my-1');
+    expect(sidebarSource).not.toContain('bg-surface-panel-header border-b');
+    expect(sidebarSource).not.toContain('bg-surface-inset border-t');
     expect(sidebarSource).toContain(
       'bg-surface-navigation-active text-foreground',
     );
@@ -142,10 +141,10 @@ describe('sidebar UX contracts', () => {
   });
 
   it('keeps compact proportions without decorative texture or nested cards', () => {
-    expect(sidebarSource).toContain('rounded-xl border p-0');
-    expect(sidebarSource).toContain('size-11');
+    expect(sidebarSource).toContain('rounded-xl border p-2');
+    expect(sidebarSource).toContain('size-10');
     expect(sidebarSource).toContain('size-8');
-    expect(sidebarSource).toContain('min-h-10');
+    expect(sidebarSource).toContain('min-h-11');
     expect(sidebarSource).toContain('text-sm font-medium');
     expect(sidebarSource).not.toContain('tracking-[0.16em]');
     expect(sidebarSource).toContain('collisionPadding={8}');

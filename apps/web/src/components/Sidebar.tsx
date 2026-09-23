@@ -60,20 +60,20 @@ type SidebarProps = {
 };
 
 const SIDEBAR_POPOVER_PANEL_CLASS =
-  'border-border-default bg-surface-floating text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto overscroll-contain rounded-xl border p-0 shadow-[var(--shadow-panel-strong)]';
+  'border-border-default bg-surface-panel-raised text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto overscroll-contain rounded-xl border p-2 shadow-[var(--shadow-panel-strong)]';
 const SIDEBAR_POPOVER_SECTION_CLASS = 'space-y-0.5';
 const SIDEBAR_POPOVER_ACTION_BASE_CLASS =
-  'group/menu-action text-foreground flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150';
+  'group/menu-action text-foreground flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150 lg:min-h-11';
 const SIDEBAR_POPOVER_ACTION_CLASS =
   'hover:bg-surface-navigation-hover hover:text-foreground focus:bg-surface-navigation-hover focus:text-foreground';
 const SIDEBAR_POPOVER_DANGER_ACTION_CLASS =
   'hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive';
 const SIDEBAR_POPOVER_ICON_BASE_CLASS =
-  'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150';
+  'flex size-5 shrink-0 items-center justify-center transition-colors duration-150';
 const SIDEBAR_POPOVER_ICON_ACTION_CLASS =
-  'bg-surface-inset text-muted-foreground ring-border-default ring-1 group-hover/menu-action:text-foreground group-focus/menu-action:text-foreground';
+  'text-muted-foreground group-hover/menu-action:text-foreground group-focus/menu-action:text-foreground';
 const SIDEBAR_POPOVER_ICON_DANGER_CLASS =
-  'bg-surface-panel text-muted-foreground ring-border-subtle ring-1 group-hover/menu-action:bg-destructive/10 group-hover/menu-action:text-destructive group-hover/menu-action:ring-destructive/20 group-focus/menu-action:bg-destructive/10 group-focus/menu-action:text-destructive group-focus/menu-action:ring-destructive/20';
+  'text-muted-foreground group-hover/menu-action:text-destructive group-focus/menu-action:text-destructive';
 const SIDEBAR_POPOVER_CHEVRON_CLASS =
   'text-muted-foreground size-3.5 shrink-0 transition-[color,opacity,transform] duration-150 group-hover/menu-action:text-foreground';
 
@@ -261,7 +261,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               <DropdownMenuContent
                 align="start"
                 aria-label={item.label}
-                className="border-border-default bg-surface-floating text-popover-foreground w-64 overflow-hidden rounded-xl border p-2 shadow-[var(--shadow-panel-strong)]"
+                className="w-64"
                 side="right"
                 sideOffset={8}
               >
@@ -537,14 +537,14 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               collisionPadding={8}
               className={cn(
                 SIDEBAR_POPOVER_PANEL_CLASS,
-                'border-border-strong w-[min(19rem,calc(100vw-2rem))] shadow-[var(--shadow-account-popover)]',
+                'w-[min(18rem,calc(100vw-2rem))] shadow-[var(--shadow-account-popover)]',
               )}
             >
-              <div className="border-border-divider bg-surface-panel-header border-b px-4 py-4">
+              <div className="px-3 py-3">
                 <div className="flex min-w-0 items-start gap-3">
                   <UserAvatar
                     user={userData}
-                    className="ring-border-default size-11 shrink-0 rounded-lg ring-1"
+                    className="size-10 shrink-0 rounded-lg"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="text-foreground block text-sm leading-5 font-semibold [overflow-wrap:anywhere]">
@@ -553,14 +553,15 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                     <span className="text-muted-foreground mt-0.5 block text-xs leading-5 [overflow-wrap:anywhere]">
                       @{userData.loginName}
                     </span>
-                    <span className="text-foreground mt-2 block text-xs leading-4 font-medium [overflow-wrap:anywhere]">
+                    <span className="text-muted-foreground mt-1 block text-xs leading-4 [overflow-wrap:anywhere]">
                       {userAccessLabel}
                     </span>
                   </span>
                 </div>
               </div>
 
-              <div className="p-2">
+              <DropdownMenuSeparator className="bg-border-divider mx-3 my-1" />
+              <div className="py-1">
                 <DropdownMenuGroup
                   aria-label="Accès au compte"
                   className={SIDEBAR_POPOVER_SECTION_CLASS}
@@ -569,7 +570,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                     asChild
                     className={cn(
                       SIDEBAR_POPOVER_ACTION_BASE_CLASS,
-                      'min-h-12',
+                      'min-h-14 lg:min-h-14',
                       isAccountActive
                         ? 'bg-surface-navigation-active text-foreground focus:bg-surface-navigation-active'
                         : SIDEBAR_POPOVER_ACTION_CLASS,
@@ -596,7 +597,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                         <span className="block truncate">Mon compte</span>
                         <span
                           className={cn(
-                            'text-muted-foreground text-caption block leading-4 font-normal',
+                            'text-muted-foreground text-caption mt-0.5 block leading-4 font-normal',
                             isAccountActive && 'text-foreground',
                           )}
                         >
@@ -612,7 +613,8 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 </DropdownMenuGroup>
               </div>
 
-              <div className="border-border-default bg-surface-inset border-t p-2">
+              <DropdownMenuSeparator className="bg-border-divider mx-3 my-1" />
+              <div className="pt-1">
                 <DropdownMenuItem
                   onSelect={() => {
                     setOpenMobile(false);

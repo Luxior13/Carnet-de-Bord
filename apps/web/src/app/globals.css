@@ -146,7 +146,7 @@
   --surface-control: var(--surface-inset);
   --card: var(--surface);
   --card-foreground: var(--foreground);
-  --popover: var(--surface-raised);
+  --popover: var(--surface-panel-raised);
   --popover-foreground: var(--foreground);
   --primary: #70b5fa;
   --primary-emphasis: #b9dafe;

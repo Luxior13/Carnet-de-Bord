@@ -61,9 +61,10 @@ et sélection `#2c425e`. Les contrôles en retrait utilisent `#111925`.
 
 La sidebar reprend `#202c3e`, avec une bordure `#455b78`, pour se détacher du
 fond général sans devenir un grand aplat bleu clair. Le header général utilise
-`surface-page` (`#111925`). Les surfaces flottantes reprennent `#2a3c58`, la
-teinte des en-têtes accentués de la référence. Le bleu le plus marqué reste
-localisé aux sélections et aux états actifs.
+`surface-page` (`#111925`). La teinte `surface-floating` (`#2a3c58`) reste
+disponible pour les surfaces accentuées ; les menus utilisent le jeton
+`popover` décrit ci-dessous. Le bleu le plus marqué reste localisé aux
+sélections et aux états actifs.
 
 Les éléments de navigation sélectionnés utilisent un bleu ardoise proche des
 panneaux, avec une bordure fine `border-strong/60` pour délimiter le pôle et la
@@ -74,6 +75,15 @@ utilisent un bleu lumineux `#70b5fa`, avec un texte sombre `#0c1a2b` ; les liens
 et accents textuels utilisent `#b9dafe`. Les statuts et les icônes des pôles
 gardent leurs repères fonctionnels. Les valeurs sont centralisées dans
 `globals.css` pour les futurs modules.
+
+Les surfaces flottantes de navigation utilisent le jeton `popover`, relié à
+`surface-panel-raised` (`#202c3e`) : menus, filtres, recherche rapide,
+notifications, infobulles et toasts. Elles partagent une bordure `border-default`,
+des angles `rounded-xl` et une ombre discrète. Les séparateurs restent en
+retrait ; les icônes de navigation n’ont pas de fond décoratif. Le champ, les
+résultats et le pied de la recherche conservent le même fond. Les notifications
+non lues sont signalées par un point et un titre plus marqué, sans colorer
+toute leur ligne. Les sélections utilisent `surface-navigation-active`.
 
 Le focus clavier utilise un bleu acier `#92acd0` via `--ring`.
 Les boutons partagent cet indicateur quelle que soit leur variante ;

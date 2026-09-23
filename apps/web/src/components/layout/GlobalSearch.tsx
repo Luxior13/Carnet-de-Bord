@@ -137,7 +137,7 @@ export const QuickNavigation: FC = () => {
       <DialogContent
         fullscreenOnMobile
         hideCloseButton
-        className="bg-surface-floating h-dvh max-w-2xl overflow-hidden p-0 sm:h-auto sm:max-h-[min(38rem,85dvh)]"
+        className="border-border-default bg-popover h-dvh max-w-2xl overflow-hidden p-0 sm:h-auto sm:max-h-[min(38rem,85dvh)]"
       >
         <DialogHeader className="sr-only">
           <DialogTitle>Navigation rapide</DialogTitle>
@@ -242,7 +242,7 @@ export const QuickNavigation: FC = () => {
               })}
             </CommandGroup>
           </CommandList>
-          <div className="border-border-divider bg-surface-page text-muted-foreground shrink-0 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-xs">
+          <div className="border-border-divider text-muted-foreground mx-4 shrink-0 border-t pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-xs">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <span>Besoin de plus de filtres ?</span>
               <Button

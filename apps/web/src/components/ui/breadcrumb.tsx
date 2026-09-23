@@ -215,7 +215,7 @@ function BreadcrumbTrail({
                     <DropdownMenuContent
                       align="start"
                       aria-label="Niveaux intermédiaires"
-                      className="border-border-default bg-surface-floating w-[min(18rem,calc(100vw-2rem))] rounded-lg"
+                      className="w-[min(18rem,calc(100vw-2rem))]"
                       collisionPadding={8}
                       sideOffset={6}
                     >

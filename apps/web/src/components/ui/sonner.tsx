@@ -18,7 +18,7 @@ const Toaster: FC<ToasterProps> = ({ ...props }) => {
             'group-[.toast]:border-border-default group-[.toast]:bg-surface-inset group-[.toast]:text-muted-foreground font-medium',
           description: 'group-[.toast]:text-muted-foreground',
           toast:
-            'group toast group-[.toaster]:border-border-strong group-[.toaster]:bg-surface-floating group-[.toaster]:text-foreground group-[.toaster]:rounded-xl group-[.toaster]:shadow-[var(--shadow-panel-strong)]',
+            'group toast group-[.toaster]:border-border-default group-[.toaster]:bg-popover group-[.toaster]:text-foreground group-[.toaster]:rounded-xl group-[.toaster]:shadow-[var(--shadow-panel-strong)]',
         },
         style: { fontSize: '0.875rem' },
       }}

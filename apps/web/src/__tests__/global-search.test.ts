@@ -169,15 +169,13 @@ describe('global page search', () => {
   });
 
   it('keeps a flat dialog hierarchy and explicit mobile safe areas', () => {
-    expect(globalSearchSource).toContain('bg-surface-floating h-dvh');
-    expect(commandSource).toContain(
-      'border-border-divider bg-surface-panel-header',
-    );
+    expect(globalSearchSource).toContain('bg-popover h-dvh');
+    expect(commandSource).toContain('border-border-divider mx-4');
     expect(globalSearchSource).toContain(
-      'bg-surface-page text-muted-foreground',
+      'border-border-divider text-muted-foreground mx-4',
     );
     expect(commandSource).toContain(
-      'data-[selected=true]:bg-surface-panel-header',
+      'data-[selected=true]:bg-surface-navigation-active',
     );
     expect(globalSearchSource).not.toContain('bg-surface-panel-raised/95');
     expect(globalSearchSource).not.toContain('ring-primary/30');

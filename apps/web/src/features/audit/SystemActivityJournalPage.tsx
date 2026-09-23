@@ -224,8 +224,7 @@ const JOURNAL_POLE_OPTIONS: ActivityFilterOption[] = [
 
 const selectTriggerClassName =
   'border-border-control bg-surface-control text-foreground hover:border-border-strong hover:bg-surface-control-hover focus-visible:border-primary/45 focus-visible:bg-surface-control-focus focus-visible:ring-ring/35 h-10 w-full rounded-lg shadow-none';
-const selectContentClassName =
-  'border-border-strong bg-popover text-foreground rounded-xl p-1.5 shadow-[var(--shadow-panel-strong)]';
+const selectContentClassName = 'text-foreground';
 const selectItemClassName =
   'focus:bg-surface-tile-hover focus:text-accent-foreground rounded-lg py-2';
 
