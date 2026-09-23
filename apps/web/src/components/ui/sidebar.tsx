@@ -304,8 +304,13 @@ function Sidebar({
           data-slot="sidebar"
           id={id ?? SIDEBAR_ID}
           side={side}
+          style={
+            {
+              '--sidebar-width-mobile': SIDEBAR_WIDTH_MOBILE,
+            } as React.CSSProperties
+          }
           className={cn(
-            'bg-sidebar text-sidebar-foreground w-[var(--sidebar-width-mobile)] overflow-hidden p-0 [&_[data-sidebar=header]]:pr-14 [&>button]:z-10 [&>button]:size-11 [&>button]:opacity-100',
+            'bg-sidebar text-sidebar-foreground w-[var(--sidebar-width-mobile)] max-w-[calc(100vw-1rem)] overflow-hidden p-0 [&_[data-sidebar=header]]:pr-14 [&>button]:z-10 [&>button]:size-11 [&>button]:opacity-100',
           )}
         >
           <SheetTitle className="sr-only">Menu</SheetTitle>
@@ -697,7 +702,7 @@ function SidebarMenuButton({
       data-slot="sidebar-menu-button"
       className={cn(
         'hover:bg-surface-navigation-hover hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-muted-foreground relative flex w-full max-w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-lg border border-transparent px-3 text-left text-sm font-medium transition-[background-color,color,box-shadow] outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
-        'data-[active=true]:bg-surface-navigation-active data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground data-[active=true]:border-border-default data-[active=true]:font-medium',
+        'data-[active=true]:bg-surface-navigation-active data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground data-[active=true]:border-border-strong/60 data-[active=true]:font-medium',
         size === 'sm' && 'h-11 text-xs lg:h-9',
         size === 'default' && 'h-11 lg:h-10',
         size === 'lg' && 'h-12',
@@ -829,7 +834,7 @@ function SidebarMenuSubButton({
       data-slot="sidebar-menu-sub-button"
       className={cn(
         'hover:bg-surface-navigation-hover hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-muted-foreground flex h-11 w-full min-w-0 items-center gap-2 overflow-hidden rounded-xl border border-transparent px-2.5 text-sm font-medium transition-[background-color,color,box-shadow] outline-none focus-visible:ring-2 lg:h-8 [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
-        'data-[active=true]:bg-surface-navigation-active data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground data-[active=true]:border-border-default data-[active=true]:font-medium',
+        'data-[active=true]:bg-surface-navigation-active data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground data-[active=true]:border-border-strong/60 data-[active=true]:font-medium',
         className,
       )}
       {...props}

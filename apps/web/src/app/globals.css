@@ -120,7 +120,7 @@
   --surface-tile-hover: #293d58;
   /* The user-list table is the reference for repeated content surfaces. */
   --surface-row-alternate: #1e2c3e;
-  --surface-navigation-active: #355f8c;
+  --surface-navigation-active: #2c425e;
   --surface-navigation-hover: #273750;
   --surface-selected: var(--surface-navigation-active);
 

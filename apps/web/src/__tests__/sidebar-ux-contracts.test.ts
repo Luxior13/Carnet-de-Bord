@@ -36,7 +36,7 @@ describe('sidebar UX contracts', () => {
       "const isCollapsed = !isMobile && sidebarState === 'collapsed'",
     );
     expect(sidebarSource).toContain('flex h-11 w-full min-w-0 items-center');
-    expect(sidebarSource).toContain('flex h-11 min-w-0 items-center');
+    expect(sidebarSource).toContain('flex h-14 w-full min-w-0 items-center');
     expect(sidebarPrimitiveSource).toContain('[&>button]:size-11');
     expect(sidebarPrimitiveSource).not.toContain('[&>button]:hidden');
     expect(sidebarPrimitiveSource).toContain("'Basculer la navigation'");
@@ -81,7 +81,7 @@ describe('sidebar UX contracts', () => {
       'group-data-[state=open]/account-menu:rotate-180',
     );
     expect(sidebarSource).toContain(
-      'data-[state=open]:bg-surface-panel-raised',
+      'data-[state=open]:bg-surface-navigation-active',
     );
     expect(sidebarSource).toContain(
       'bg-surface-navigation-active text-foreground',

@@ -57,7 +57,7 @@ structure restent adaptées au contenu de chaque écran.
 La palette retenue le 23 septembre 2026 reprend les surfaces de la capture de
 résultats esport fournie par l’utilisateur : fond charbon bleuté `#0d111c`,
 panneaux `#182434`, en-têtes de tableaux `#202c3e`, lignes alternées `#1e2c3e`
-et sélection `#355f8c`. Les contrôles en retrait utilisent `#111925`.
+et sélection `#2c425e`. Les contrôles en retrait utilisent `#111925`.
 
 La sidebar reprend `#202c3e`, avec une bordure `#455b78`, pour se détacher du
 fond général sans devenir un grand aplat bleu clair. Le header général utilise
@@ -65,9 +65,9 @@ fond général sans devenir un grand aplat bleu clair. Le header général utili
 teinte des en-têtes accentués de la référence. Le bleu le plus marqué reste
 localisé aux sélections et aux états actifs.
 
-Les éléments de navigation sélectionnés utilisent un bleu plus soutenu que
-le survol, pour repérer immédiatement le pôle et la page actifs. Le texte clair
-garde un contraste supérieur à 5:1 sur cette sélection.
+Les éléments de navigation sélectionnés utilisent un bleu ardoise proche des
+panneaux, avec une bordure fine `border-strong/60` pour délimiter le pôle et la
+page actifs. Le texte clair garde un contraste supérieur à 5:1 sur cette sélection.
 
 Le rose décoratif de la capture n’est pas repris. Les actions principales
 utilisent un bleu lumineux `#70b5fa`, avec un texte sombre `#0c1a2b` ; les liens

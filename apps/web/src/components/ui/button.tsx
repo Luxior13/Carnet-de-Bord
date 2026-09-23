@@ -30,7 +30,7 @@ const buttonVariants = cva(
         info: 'border-info/80 bg-info text-info-foreground shadow-none hover:bg-info/90',
         link: 'text-primary-emphasis underline-offset-4 hover:underline',
         navigation:
-          'text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground aria-[current=page]:border-border-default aria-[current=page]:bg-surface-navigation-active aria-[current=page]:text-foreground aria-[current=location]:bg-surface-navigation-active aria-[current=location]:text-foreground data-[active=true]:border-border-default data-[active=true]:bg-surface-navigation-active data-[active=true]:text-foreground',
+          'text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground aria-[current=page]:border-border-strong/60 aria-[current=page]:bg-surface-navigation-active aria-[current=page]:text-foreground aria-[current=location]:border-border-strong/60 aria-[current=location]:bg-surface-navigation-active aria-[current=location]:text-foreground data-[active=true]:border-border-strong/60 data-[active=true]:bg-surface-navigation-active data-[active=true]:text-foreground',
         outline:
           'border-border-default bg-surface-control text-foreground shadow-none hover:border-border-strong hover:bg-surface-control-hover hover:text-accent-foreground focus-visible:bg-surface-control-focus',
         secondary:

@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, ChevronRight, LogOut, User } from 'lucide-react';
+import { ChevronRight, ChevronUp, LogOut, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -60,12 +60,8 @@ type SidebarProps = {
 };
 
 const SIDEBAR_POPOVER_PANEL_CLASS =
-  'border-border-default bg-surface-floating text-popover-foreground flex max-h-[var(--radix-dropdown-menu-content-available-height)] flex-col overflow-hidden rounded-xl border p-0 shadow-[var(--shadow-panel-strong)]';
-const SIDEBAR_POPOVER_SCROLL_CLASS =
-  'min-h-0 flex-1 overflow-y-auto overscroll-contain p-2';
+  'border-border-default bg-surface-floating text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto overscroll-contain rounded-xl border p-0 shadow-[var(--shadow-panel-strong)]';
 const SIDEBAR_POPOVER_SECTION_CLASS = 'space-y-0.5';
-const SIDEBAR_POPOVER_SECTION_LABEL_CLASS =
-  'text-muted-foreground px-2 py-1.5 text-xs font-medium';
 const SIDEBAR_POPOVER_ACTION_BASE_CLASS =
   'group/menu-action text-foreground flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150';
 const SIDEBAR_POPOVER_ACTION_CLASS =
@@ -171,7 +167,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
     activeGroupHref,
   );
   const userDisplayName = userData
-    ? `${userData.firstName} ${userData.lastName}`
+    ? `${userData.firstName} ${userData.lastName}`.trim() || userData.loginName
     : '';
   const userAccessLabel = userData ? getAccessLabel(userData) : '';
   const accountAriaCurrent =
@@ -474,7 +470,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
           })}
         </nav>
       </SidebarContent>
-      <SidebarFooter className="border-sidebar-border/60 border-t group-data-[collapsible=icon]/sidebar:px-0">
+      <SidebarFooter className="border-sidebar-border/60 shrink-0 border-t pb-[max(0.75rem,env(safe-area-inset-bottom))] group-data-[collapsible=icon]/sidebar:px-1">
         {bottomSections.length > 0 && (
           <nav aria-label="Navigation secondaire">
             {bottomSections.map((section) => {
@@ -502,22 +498,35 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 variant="outline"
                 type="button"
                 aria-label={`Menu utilisateur de ${userDisplayName}`}
-                title={isCollapsed ? userDisplayName : undefined}
+                title={`${userDisplayName} · ${userAccessLabel}`}
                 className={cn(
-                  'group/account-menu hover:bg-surface-panel-raised focus-visible:ring-sidebar-ring data-[state=open]:bg-surface-panel-raised border-border-default bg-surface-panel flex h-11 min-w-0 items-center gap-2.5 overflow-hidden rounded-lg border px-3 text-left transition-colors outline-none focus-visible:ring-2 lg:h-10',
-                  'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-3',
+                  'group/account-menu border-border-default bg-surface-panel hover:border-border-strong hover:bg-surface-navigation-hover focus-visible:ring-sidebar-ring data-[state=open]:border-border-strong data-[state=open]:bg-surface-navigation-active flex h-14 w-full min-w-0 items-center gap-3 overflow-hidden rounded-lg border px-3 text-left transition-colors outline-none focus-visible:ring-2 lg:h-14',
+                  'group-data-[collapsible=icon]/sidebar:h-11 group-data-[collapsible=icon]/sidebar:w-11 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:self-center group-data-[collapsible=icon]/sidebar:px-0',
+                  isAccountActive &&
+                    'border-border-strong bg-surface-navigation-active hover:bg-surface-navigation-active',
                 )}
               >
-                <UserAvatar user={userData} className="size-8 rounded-lg" />
-                <span className="min-w-0 flex-1 overflow-hidden transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:max-w-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150">
-                  <span className="text-sidebar-accent-foreground block truncate text-sm font-medium">
+                <UserAvatar
+                  user={userData}
+                  className="size-9 shrink-0 rounded-lg group-data-[collapsible=icon]/sidebar:size-8"
+                />
+                <span className="min-w-0 flex-1 space-y-0.5 overflow-hidden transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:hidden group-data-[state=expanded]/sidebar:delay-150">
+                  <span className="text-sidebar-accent-foreground block truncate text-sm leading-5 font-semibold">
                     {userDisplayName}
                   </span>
-                  <span className="text-muted-foreground block truncate text-xs">
+                  <span
+                    className={cn(
+                      'text-muted-foreground group-data-[state=open]/account-menu:text-foreground block truncate text-xs leading-4 font-normal',
+                      isAccountActive && 'text-foreground',
+                    )}
+                  >
                     {userAccessLabel}
                   </span>
                 </span>
-                <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform group-data-[collapsible=icon]/sidebar:hidden group-data-[state=open]/account-menu:rotate-180 motion-reduce:transition-none" />
+                <ChevronUp
+                  aria-hidden="true"
+                  className="text-muted-foreground group-data-[state=open]/account-menu:text-foreground size-4 shrink-0 transition-transform group-data-[collapsible=icon]/sidebar:hidden group-data-[state=open]/account-menu:rotate-180 motion-reduce:transition-none"
+                />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -532,28 +541,26 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               )}
             >
               <div className="border-border-divider bg-surface-panel-header border-b px-4 py-4">
-                <div className="flex min-w-0 items-center gap-3">
+                <div className="flex min-w-0 items-start gap-3">
                   <UserAvatar
                     user={userData}
-                    className="ring-border-default size-11 rounded-lg ring-1"
+                    className="ring-border-default size-11 shrink-0 rounded-lg ring-1"
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="text-foreground block truncate text-sm leading-5 font-semibold">
+                    <span className="text-foreground block text-sm leading-5 font-semibold [overflow-wrap:anywhere]">
                       {userDisplayName}
                     </span>
-                    <span className="text-muted-foreground block truncate text-xs leading-5">
-                      @{userData.loginName} · {userAccessLabel}
+                    <span className="text-muted-foreground mt-0.5 block text-xs leading-5 [overflow-wrap:anywhere]">
+                      @{userData.loginName}
+                    </span>
+                    <span className="text-foreground mt-2 block text-xs leading-4 font-medium [overflow-wrap:anywhere]">
+                      {userAccessLabel}
                     </span>
                   </span>
                 </div>
               </div>
 
-              <div className={SIDEBAR_POPOVER_SCROLL_CLASS}>
-                <DropdownMenuLabel
-                  className={SIDEBAR_POPOVER_SECTION_LABEL_CLASS}
-                >
-                  Compte
-                </DropdownMenuLabel>
+              <div className="p-2">
                 <DropdownMenuGroup
                   aria-label="Accès au compte"
                   className={SIDEBAR_POPOVER_SECTION_CLASS}
@@ -587,7 +594,12 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate">Mon compte</span>
-                        <span className="text-muted-foreground text-caption block truncate leading-4 font-normal">
+                        <span
+                          className={cn(
+                            'text-muted-foreground text-caption block leading-4 font-normal',
+                            isAccountActive && 'text-foreground',
+                          )}
+                        >
                           Profil, sécurité et activité
                         </span>
                       </span>

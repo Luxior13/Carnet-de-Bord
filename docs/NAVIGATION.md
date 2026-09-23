@@ -52,6 +52,14 @@ Le choix des pôles est un bloc dépliable au-dessus des pages, séparé par une
 
 Le bloc est ouvert par défaut sur ordinateur et réduit par défaut sur mobile. Un choix explicite est mémorisé dans le navigateur pour le compte concerné et conservé lors des changements de page ou de pôle. En mode sidebar réduite en icônes, le bouton sur la séparation déploie la sidebar et ouvre la liste. Sur un petit écran, la liste peut défiler pour préserver l’accès aux pages et au menu utilisateur.
 
+Le bouton utilisateur reste en bas, séparé des pages : 56 px de hauteur pour
+l’avatar, le nom et le rôle, ou une cible de 44 px en mode icônes. Son fond bleu
+signale un menu ouvert ou la page Mon compte active. La flèche pointe vers le
+menu situé au-dessus ; en mode icônes, celui-ci s’ouvre à droite. Le menu
+affiche le nom complet, l’identifiant et le rôle sur des lignes distinctes,
+puis Mon compte et Déconnexion. Il défile entièrement lorsque la hauteur
+disponible est réduite. La marge inférieure respecte la zone sûre du téléphone.
+
 Une nouvelle entrée répond à un usage récurrent, porte un nom clair et possède un état vide utile. Un filtre, une action isolée et un accueil qui répète le menu ne justifient pas automatiquement une page.
 
 La hiérarchie privilégiée est pôle → lieu → fiche ou vue. Le fil d’Ariane situe l’utilisateur ; le retour conserve les filtres. Sur mobile, les mêmes destinations restent accessibles sans forcer un menu de huit pôles dépliés.
