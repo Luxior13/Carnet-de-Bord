@@ -9,6 +9,9 @@ const readSourceFile = (relativePath: string): string => {
 };
 
 const sidebarSource = readSourceFile('../components/Sidebar.tsx');
+const poleNavigationSource = readSourceFile(
+  '../components/layout/PoleNavigation.tsx',
+);
 const sidebarPrimitiveSource = readSourceFile('../components/ui/sidebar.tsx');
 const navigationSource = readSourceFile('../shared/constants/app.constants.ts');
 const globalStylesSource = readSourceFile('../app/globals.css');
@@ -59,7 +62,7 @@ describe('sidebar UX contracts', () => {
   it('keeps identity and account actions compact without duplicate navigation', () => {
     expect(sidebarSource).not.toContain('SITE_CONFIG.subtitle');
     expect(sidebarSource).not.toContain('Pôle actif');
-    expect(sidebarSource).toContain('Changer de pôle');
+    expect(sidebarSource).toContain('<PoleNavigation');
     expect(sidebarSource).toContain('href="/mon-compte"');
     expect(sidebarSource).toContain('Déconnexion');
     expect(sidebarSource).toContain('@{userData.loginName}');
@@ -70,9 +73,9 @@ describe('sidebar UX contracts', () => {
     );
   });
 
-  it('gives both menus a visible open and current state', () => {
-    expect(sidebarSource).toContain(
-      'group-data-[state=open]/space-switcher:rotate-180',
+  it('gives the pole list and account menu visible open and current states', () => {
+    expect(poleNavigationSource).toContain(
+      'group-data-[state=open]/poles:rotate-180',
     );
     expect(sidebarSource).toContain(
       'group-data-[state=open]/account-menu:rotate-180',
@@ -83,31 +86,34 @@ describe('sidebar UX contracts', () => {
     expect(sidebarSource).toContain(
       'bg-surface-navigation-active text-foreground',
     );
-    expect(sidebarSource).toContain('Actuel');
-    expect(sidebarSource).toContain('aria-current={isActive');
+    expect(poleNavigationSource).toContain(
+      "aria-current={isActive ? 'location' : undefined}",
+    );
     expect(sidebarPrimitiveSource).not.toContain('before:bg-primary');
     expect(sidebarPrimitiveSource).toContain(
       'data-[active=true]:bg-surface-navigation-active',
     );
   });
 
-  it('keeps the pole switcher readable in expanded, collapsed and mobile layouts', () => {
-    expect(sidebarSource).toContain('w-[min(20rem,calc(100vw-2rem))]');
-    expect(sidebarSource).toContain('hover:bg-surface-panel-raised');
-    expect(sidebarSource).toContain('Changer de pôle — {activeSpace.label}');
-    expect(sidebarSource).toContain('open={isTooltipOpen && !isMenuOpen}');
-    expect(sidebarSource).not.toContain('Changer d’espace');
+  it('keeps the pole list inline and usable when the sidebar is collapsed', () => {
+    expect(poleNavigationSource).toContain('<Collapsible');
+    expect(poleNavigationSource).not.toContain('DropdownMenu');
+    expect(poleNavigationSource).toContain('if (isCollapsed) setOpen(true)');
+    expect(poleNavigationSource).toContain(
+      'Afficher les pôles et déployer la navigation',
+    );
+    expect(poleNavigationSource).toContain('max-h-[min(40svh,20rem)]');
+    expect(poleNavigationSource).toContain('team-control:sidebar:poles-open:');
+    expect(poleNavigationSource).toContain('preference ?? !isMobile');
   });
 
   it('keeps pole placement stable with restrained color hierarchy', () => {
-    expect(sidebarSource).toContain(
-      'spaces.map((space) => renderSpaceItem(space))',
-    );
-    expect(sidebarSource).not.toContain('Autres pôles');
+    expect(poleNavigationSource).toContain('spaces.map((space) =>');
+    expect(poleNavigationSource).not.toContain('Autres pôles');
     expect(sidebarSource).toContain(
       'border-border-default bg-surface-floating',
     );
-    expect(sidebarSource).toContain('aria-label="Pôles disponibles"');
+    expect(poleNavigationSource).toContain('aria-label="Pôles disponibles"');
     expect(sidebarSource).toContain(
       "const SIDEBAR_POPOVER_SECTION_CLASS = 'space-y-0.5'",
     );

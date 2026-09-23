@@ -6,21 +6,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
+import { PoleNavigation } from '$components/layout/PoleNavigation';
 import { UserAvatar } from '$components/users/UserAvatar';
 import {
   getAccessLabel,
   getActiveNavigationSpace,
   getDesktopSidebarSections,
   getVisibleNavigationSpaces,
-  type NavigationSpace,
   type NavItem,
   SITE_CONFIG,
 } from '$constants/app.constants';
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
-import {
-  getNavigationSpaceBadgeClasses,
-  getNavigationSpaceToneClasses,
-} from '$constants/navigation-theme.constants';
+import { getNavigationSpaceToneClasses } from '$constants/navigation-theme.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
 import { Button } from '$ui/button';
@@ -55,7 +52,6 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from '$ui/sidebar';
-import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 import { requestGuardedNavigation } from '$utils/guarded-navigation.utils';
 
@@ -120,189 +116,6 @@ function getActiveGroupHref(
 
   return activeGroup?.href ?? null;
 }
-
-const SpaceSwitcher: FC<{
-  activeSpace: NavigationSpace;
-  spaces: NavigationSpace[];
-}> = ({ activeSpace, spaces }) => {
-  const { isMobile, setOpenMobile, state: sidebarState } = useSidebar();
-  const ActiveIcon = getNavigationIcon(activeSpace.icon);
-  const activeTone = getNavigationSpaceToneClasses(activeSpace.tone);
-  const isCollapsed = !isMobile && sidebarState === 'collapsed';
-  const hasAlternatives = spaces.length > 1;
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
-
-  useEffect(() => {
-    if (!isCollapsed) setIsTooltipOpen(false);
-  }, [isCollapsed]);
-  const rowClassName = cn(
-    'flex h-11 w-full min-w-0 items-center gap-2.5 rounded-lg border border-border-default bg-surface-panel px-3 text-left transition-[background-color,border-color,color] outline-none hover:bg-surface-panel-raised lg:h-10',
-    'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-3',
-  );
-  const rowContent = (
-    <>
-      <span
-        className={cn(
-          'flex size-8 shrink-0 items-center justify-center rounded-lg border',
-          activeTone.icon,
-        )}
-      >
-        <ActiveIcon className="size-4" />
-      </span>
-      <span className="min-w-0 flex-1 truncate text-sm font-semibold transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:max-w-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150">
-        {activeSpace.label}
-      </span>
-    </>
-  );
-
-  if (!hasAlternatives) {
-    return (
-      <div
-        className={rowClassName}
-        title={isCollapsed ? `Pôle actuel : ${activeSpace.label}` : undefined}
-      >
-        {rowContent}
-      </div>
-    );
-  }
-
-  const switcherButton = (
-    <Button
-      variant="outline"
-      type="button"
-      aria-label={`Changer de pôle. Pôle actuel : ${activeSpace.label}`}
-      className={cn(
-        rowClassName,
-        'group/space-switcher hover:bg-surface-panel-raised focus-visible:ring-sidebar-ring data-[state=open]:bg-surface-panel-raised focus-visible:ring-2',
-      )}
-    >
-      {rowContent}
-      <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform group-data-[collapsible=icon]/sidebar:hidden group-data-[state=open]/space-switcher:rotate-180 motion-reduce:transition-none" />
-    </Button>
-  );
-
-  const renderSpaceItem = (space: NavigationSpace): React.ReactNode => {
-    const SpaceIcon = getNavigationIcon(space.icon);
-    const isActive = activeSpace.id === space.id;
-    const tone = getNavigationSpaceToneClasses(space.tone);
-
-    return (
-      <DropdownMenuItem
-        key={space.id}
-        asChild
-        className={cn(
-          SIDEBAR_POPOVER_ACTION_BASE_CLASS,
-          'min-h-12',
-          isActive
-            ? 'bg-primary/10 text-foreground hover:bg-primary/15 focus:bg-primary/15'
-            : SIDEBAR_POPOVER_ACTION_CLASS,
-        )}
-      >
-        <Link
-          aria-current={isActive ? 'location' : undefined}
-          href={space.href}
-          onClick={() => setOpenMobile(false)}
-          className="min-w-0"
-        >
-          <span className={cn(SIDEBAR_POPOVER_ICON_BASE_CLASS, tone.icon)}>
-            <SpaceIcon className="size-4 text-current" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="flex min-w-0 items-center gap-1.5">
-              <span
-                className={cn(
-                  'truncate',
-                  isActive ? 'font-semibold' : 'font-medium',
-                )}
-              >
-                {space.label}
-              </span>
-              {space.badge && (
-                <span
-                  className={cn(
-                    'inline-flex shrink-0 items-center rounded-full border px-1.5 py-0.5 text-xs leading-none font-medium',
-                    getNavigationSpaceBadgeClasses(space.badge),
-                  )}
-                >
-                  {space.badge}
-                </span>
-              )}
-            </span>
-            <span
-              className={cn(
-                'text-caption mt-0.5 block truncate leading-4',
-                isActive ? 'text-muted-foreground' : 'text-muted-foreground',
-              )}
-            >
-              {space.summary}
-            </span>
-          </span>
-          {isActive ? (
-            <span className="bg-surface-navigation-active text-foreground text-caption inline-flex shrink-0 items-center rounded-full px-2 py-0.5 font-semibold">
-              Actuel
-            </span>
-          ) : (
-            <ChevronRight
-              aria-hidden="true"
-              className={SIDEBAR_POPOVER_CHEVRON_CLASS}
-            />
-          )}
-        </Link>
-      </DropdownMenuItem>
-    );
-  };
-
-  return (
-    <DropdownMenu
-      onOpenChange={(nextOpen) => {
-        setIsMenuOpen(nextOpen);
-        if (nextOpen) setIsTooltipOpen(false);
-      }}
-    >
-      {isCollapsed ? (
-        <Tooltip
-          open={isTooltipOpen && !isMenuOpen}
-          onOpenChange={(nextOpen) => {
-            if (!isMenuOpen) setIsTooltipOpen(nextOpen);
-          }}
-        >
-          <DropdownMenuTrigger asChild>
-            <TooltipTrigger asChild>{switcherButton}</TooltipTrigger>
-          </DropdownMenuTrigger>
-          <TooltipContent side="right" sideOffset={8}>
-            Changer de pôle — {activeSpace.label}
-          </TooltipContent>
-        </Tooltip>
-      ) : (
-        <DropdownMenuTrigger asChild>{switcherButton}</DropdownMenuTrigger>
-      )}
-      <DropdownMenuContent
-        aria-label="Changer de pôle"
-        side={isCollapsed ? 'right' : 'bottom'}
-        align="start"
-        sideOffset={8}
-        collisionPadding={8}
-        className={cn(
-          SIDEBAR_POPOVER_PANEL_CLASS,
-          'w-[min(20rem,calc(100vw-2rem))]',
-        )}
-      >
-        <div className={SIDEBAR_POPOVER_SCROLL_CLASS}>
-          <DropdownMenuLabel className={SIDEBAR_POPOVER_SECTION_LABEL_CLASS}>
-            Changer de pôle
-          </DropdownMenuLabel>
-          <DropdownMenuGroup
-            aria-label="Pôles disponibles"
-            className={SIDEBAR_POPOVER_SECTION_CLASS}
-          >
-            {spaces.map((space) => renderSpaceItem(space))}
-          </DropdownMenuGroup>
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-};
 
 const Sidebar: FC<SidebarProps> = ({ className }) => {
   const pathname = usePathname();
@@ -593,7 +406,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
 
   return (
     <SidebarRoot collapsible="icon" variant="sidebar" className={className}>
-      <SidebarHeader className="border-sidebar-border/60 bg-sidebar gap-2 border-b p-3 group-data-[collapsible=icon]/sidebar:px-0">
+      <SidebarHeader className="border-sidebar-border/60 bg-sidebar relative mb-2 gap-2 border-b p-3 group-data-[collapsible=icon]/sidebar:px-0">
         <Link
           href="/"
           aria-label="Retour au tableau de bord"
@@ -619,7 +432,14 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
           </span>
         </Link>
         {visibleSpaces.length > 0 && (
-          <SpaceSwitcher activeSpace={activeSpace} spaces={visibleSpaces} />
+          <div className={cn('min-w-0', isMobile && '-mr-11')}>
+            <PoleNavigation
+              key={userData?.id ?? 'anonymous'}
+              activeSpace={activeSpace}
+              spaces={visibleSpaces}
+              userId={userData?.id ?? 'anonymous'}
+            />
+          </div>
         )}
       </SidebarHeader>
       <SidebarContent

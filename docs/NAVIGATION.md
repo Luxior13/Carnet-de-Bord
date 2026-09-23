@@ -48,6 +48,10 @@ Ce tableau décrit les lieux logiques, pas un engagement à créer autant d’en
 
 ## Admission et expérience utilisateur
 
+Le choix des pôles est un bloc dépliable au-dessus des pages, séparé par une bordure. Un petit bouton à flèche centré sur cette séparation ouvre ou réduit la liste ; le nom du pôle n’est pas le bouton de dépliage. Ouvert, le bloc affiche tous les pôles accessibles dans un ordre stable et met en évidence le pôle courant. Réduit, il affiche uniquement ce dernier. Seules les pages du pôle courant apparaissent en dessous.
+
+Le bloc est ouvert par défaut sur ordinateur et réduit par défaut sur mobile. Un choix explicite est mémorisé dans le navigateur pour le compte concerné et conservé lors des changements de page ou de pôle. En mode sidebar réduite en icônes, le bouton sur la séparation déploie la sidebar et ouvre la liste. Sur un petit écran, la liste peut défiler pour préserver l’accès aux pages et au menu utilisateur.
+
 Une nouvelle entrée répond à un usage récurrent, porte un nom clair et possède un état vide utile. Un filtre, une action isolée et un accueil qui répète le menu ne justifient pas automatiquement une page.
 
 La hiérarchie privilégiée est pôle → lieu → fiche ou vue. Le fil d’Ariane situe l’utilisateur ; le retour conserve les filtres. Sur mobile, les mêmes destinations restent accessibles sans forcer un menu de huit pôles dépliés.
