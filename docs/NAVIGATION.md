@@ -9,11 +9,13 @@ Huit entrées sont déclarées dans quatre pôles. Leur visibilité dépend des 
 | Pôle actuel | Entrées actives | Placement |
 | --- | --- | --- |
 | Aujourd’hui | Accueil `/`, notifications `/mes-notifications` | Travail personnel et messages reçus |
-| Personnes | Répertoire `/vie-interne/repertoire` | Identités, création et fiches |
+| Membres | Répertoire `/vie-interne/repertoire` | Membres et contacts de la structure |
 | Activité | Actualité interne `/vie-interne/actualite-interne` | Informations collectives |
 | Système | Utilisateurs `/administration/utilisateurs`, journal `/systeme/journal-activite`, paramètres `/systeme/parametres`, feuille de route `/feuille-de-route` | Comptes, technique et plan produit |
 
 `/mon-compte` et `/recherche` sont accessibles par les outils globaux. `/login` appartient au parcours de connexion. Les formulaires de création et fiches de personnes ou utilisateurs restent sous leur liste principale.
+
+Le pôle « Membres » regroupe le Répertoire actuel et les futurs espaces Adhésions et rôles, Recrutement, Arrivées et départs. La page actuelle conserve le titre « Répertoire » et l’action « Ajouter une fiche » ; une fiche porte le nom ou le pseudo de la personne. Le fil d’Ariane présente « Membres → Répertoire → fiche » ; le nom du pôle ne crée pas un lien vers une page d’accueil fictive.
 
 `/administration`, `/tableau-de-bord` et `/tableau-de-bord/mes-notifications` sont des accès de compatibilité. `/systeme` sert d’entrée au pôle. Les routes non livrées ne sont pas des écrans vides utilisables.
 
@@ -24,7 +26,7 @@ Les 46 anciennes destinations planifiées ont été retirées du catalogue de na
 | Pôle | Responsabilité | Espaces ou vues prévus |
 | --- | --- | --- |
 | Aujourd’hui | Ce qui concerne le compte connecté | Mon travail, notifications, éléments à valider |
-| Personnes | Identité et parcours des personnes | Répertoire et engagements, candidatures, arrivées/départs |
+| Membres | Identité, engagements et parcours des membres | Répertoire, adhésions et rôles, recrutement, arrivées et départs |
 | Esport | Vie des équipes et saisons | Effectifs, planning sportif, compétitions, préparation, performance |
 | Activité | Travail collectif quotidien | Actualité, tâches, calendrier partagé, réunions, débriefs, logistique, communication |
 | Relations | Relations avec les organisations externes | Organisations, partenariats et livrables |
@@ -67,6 +69,10 @@ uniquement l’action concernée. Sa largeur de 18rem reste limitée au viewport
 Une nouvelle entrée répond à un usage récurrent, porte un nom clair et possède un état vide utile. Un filtre, une action isolée et un accueil qui répète le menu ne justifient pas automatiquement une page.
 
 La hiérarchie privilégiée est pôle → lieu → fiche ou vue. Le fil d’Ariane situe l’utilisateur ; le retour conserve les filtres. Sur mobile, les mêmes destinations restent accessibles sans forcer un menu de huit pôles dépliés.
+
+Les pages se centrent dans l’espace restant après la sidebar. Le header conserve le fil d’Ariane et les outils globaux. Les fiches Personne, Utilisateur et Mon compte placent leur navigation horizontale sous le titre, à toutes les largeurs : liens soulignés, libellés complets, défilement horizontal sur petit écran et barre collante dans le contenu. Le retour vers la liste reste avant le titre. La navigation locale n’occupe plus de rail dans la marge. Les filtres de listes utilisent des contrôles distincts de cette navigation.
+
+Les gabarits partagés limitent la largeur extérieure à 76rem par défaut, 52rem pour les créations et 56rem pour la lecture (actualité, notifications, recherche). Une variante de 92rem reste disponible pour les données denses. Les listes basculent entre tableau et présentation mobile selon la largeur de leur conteneur. Voir la [proposition UX/UI et son suivi](UX_UI_PROPOSITION_2026-09-23.md).
 
 Chaque module traite les états de chargement, absence de données, erreur réessayable, accès refusé et conflit de modification lorsqu’il s’applique. L’interface explique une action indisponible sans révéler l’existence d’un dossier confidentiel.
 

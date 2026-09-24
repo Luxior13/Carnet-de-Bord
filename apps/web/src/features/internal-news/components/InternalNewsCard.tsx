@@ -71,7 +71,7 @@ export const InternalNewsCard: FC<InternalNewsCardProps> = ({
             <h3 className="mt-3 text-base leading-6 font-semibold [overflow-wrap:anywhere]">
               {item.title}
             </h3>
-            <p className="text-muted-foreground mt-1.5 text-sm leading-6 [overflow-wrap:anywhere] whitespace-pre-wrap">
+            <p className="text-muted-foreground mt-1.5 max-w-[70ch] text-sm leading-6 [overflow-wrap:anywhere] whitespace-pre-wrap">
               {item.body}
             </p>
 

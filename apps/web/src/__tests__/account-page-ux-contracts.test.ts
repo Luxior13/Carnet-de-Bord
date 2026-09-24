@@ -24,7 +24,7 @@ const activitySource = readSourceFile(
   '../components/users/user-detail/UserHistoryTab.tsx',
 );
 const sectionRailSource = readSourceFile(
-  '../components/users/user-detail/UserDetailSectionRail.tsx',
+  '../components/layout/PageSectionNavigation.tsx',
 );
 const userDetailPageSource = readSourceFile(
   '../components/users/UserDetailPage.tsx',
@@ -120,26 +120,11 @@ describe('/mon-compte UX contracts', () => {
     expect(activitySource).toContain('!hasMore && hasMoreAuditLogs');
   });
 
-  it('gives mobile section tabs a 44 px touch target', () => {
-    const layoutClassPairs = [
-      ...sectionRailSource.matchAll(
-        /isDesktop\s*\?\s*'([^']*)'\s*:\s*'([^']*)'/g,
-      ),
-    ];
-    const heightClassPair = layoutClassPairs.find((match) => {
-      const desktopClasses = match[1];
-      const mobileClasses = match[2];
-
-      return (
-        typeof desktopClasses === 'string' &&
-        typeof mobileClasses === 'string' &&
-        desktopClasses.includes('h-') &&
-        mobileClasses.includes('min-w-[4.75rem]')
-      );
-    });
-    const mobileLayoutClasses = heightClassPair?.[2];
-
-    expect(mobileLayoutClasses?.split(/\s+/)).toContain('h-11');
+  it('keeps section links touch-friendly with complete labels at every size', () => {
+    expect(sectionRailSource).toContain('min-h-12');
+    expect(sectionRailSource).toContain('overflow-x-auto');
+    expect(sectionRailSource).not.toContain('truncate');
+    expect(accountPageSource.match(/<PageSectionNavigation/g)).toHaveLength(1);
   });
 
   it('keeps the current user read-only in Administration and directs self-service to /mon-compte', () => {

@@ -2,7 +2,8 @@ import React, { type ComponentProps, type FC } from 'react';
 
 import { cn } from '$utils/css.utils';
 
-type PageShellWidth = 'default' | 'full' | 'narrow' | 'wide';
+type PageShellWidth =
+  'default' | 'form' | 'full' | 'narrow' | 'reading' | 'wide';
 
 type PageShellProps = ComponentProps<'div'> & {
   width?: PageShellWidth;
@@ -14,8 +15,12 @@ function getPageShellWidthClass(width: PageShellWidth): string {
       return 'max-w-[var(--private-content-width)]';
     case 'full':
       return 'max-w-none';
+    case 'form':
+      return 'max-w-[var(--private-content-width-form)]';
     case 'narrow':
       return 'max-w-5xl';
+    case 'reading':
+      return 'max-w-[var(--private-content-width-reading)]';
     case 'wide':
       return 'max-w-[var(--private-content-width-wide)]';
   }
@@ -28,8 +33,9 @@ const PageShell: FC<PageShellProps> = ({
 }) => {
   return (
     <div
+      data-page-width={width}
       className={cn(
-        'relative z-10 mx-auto w-full px-[var(--private-content-padding)] py-5 sm:py-6',
+        '@container/page relative z-10 mx-auto w-full min-w-0 px-[var(--private-content-padding)] py-5 sm:py-6',
         getPageShellWidthClass(width),
         className,
       )}
@@ -50,7 +56,7 @@ const PageCanvas: FC<PageCanvasProps> = ({
 }) => {
   return (
     <div className={cn('relative z-10 min-w-0', className)} {...props}>
-      <div className={cn('space-y-5 py-4 sm:py-5', contentClassName)}>
+      <div className={cn('space-y-6 py-4 sm:py-6', contentClassName)}>
         {children}
       </div>
     </div>

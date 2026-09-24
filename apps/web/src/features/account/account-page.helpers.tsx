@@ -1,13 +1,13 @@
 import { Activity, ShieldCheck, User } from 'lucide-react';
 import type { FC } from 'react';
 
+import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
 import { PageHero } from '$components/layout/PageHero';
 import type { UserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
 import { UserAvatar } from '$components/users/UserAvatar';
 import { getAccessLabel } from '$constants/permissions.constants';
 import type { UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
-import { Skeleton } from '$ui/skeleton';
 import type { GuardedNavigationAction } from '$utils/guarded-navigation.utils';
 
 export type AccountSectionId = 'activity' | 'profile' | 'security';
@@ -107,6 +107,8 @@ const getAccountDisplayName = (userData: UserType): string =>
 
 export const AccountHeader: FC<{ userData: UserType }> = ({ userData }) => (
   <PageHero
+    compact
+    hasNavigation
     title={getAccountDisplayName(userData)}
     description={`Identifiant de connexion : ${userData.loginName}`}
     eyebrow={
@@ -126,10 +128,4 @@ export const AccountHeader: FC<{ userData: UserType }> = ({ userData }) => (
   />
 );
 
-export const AccountPageContentSkeleton: FC = () => (
-  <div className="space-y-5" role="status" aria-label="Chargement">
-    <Skeleton className="h-28 rounded-md" />
-    <Skeleton className="private-rail-fallback h-12 rounded-md" />
-    <Skeleton className="h-[32rem] rounded-md" />
-  </div>
-);
+export const AccountPageContentSkeleton: FC = () => <PageDetailSkeleton />;

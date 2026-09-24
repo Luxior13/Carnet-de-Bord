@@ -3,7 +3,9 @@ import * as React from 'react';
 
 import { cn } from '$utils/css.utils';
 
-type TabsListProps = React.ComponentProps<typeof TabsPrimitive.List>;
+type TabsListProps = React.ComponentProps<typeof TabsPrimitive.List> & {
+  variant?: 'default' | 'line';
+};
 
 type ScrollableTabsListProps = TabsListProps & {
   viewportClassName?: string;
@@ -22,12 +24,20 @@ function Tabs({
   );
 }
 
-function TabsList({ className, ...props }: TabsListProps): React.JSX.Element {
+function TabsList({
+  className,
+  variant = 'default',
+  ...props
+}: TabsListProps): React.JSX.Element {
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
+      data-variant={variant}
       className={cn(
-        'border-border-default bg-surface-inset text-muted-foreground inline-flex h-12 w-fit items-center justify-start gap-1 rounded-xl border p-1 shadow-none lg:h-10',
+        'group/tabs-list text-muted-foreground inline-flex w-fit items-center justify-start gap-1 shadow-none',
+        variant === 'line'
+          ? 'border-border-divider h-12 rounded-none border-b bg-transparent p-0'
+          : 'border-border-default bg-surface-inset h-12 rounded-xl border p-1 lg:h-10',
         className,
       )}
       {...props}
@@ -62,6 +72,7 @@ function TabsTrigger({
       data-slot="tabs-trigger"
       className={cn(
         "hover:bg-surface-navigation-hover hover:text-foreground data-[state=active]:border-border-default data-[state=active]:bg-surface-navigation-active data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/35 focus-visible:outline-ring inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:ring-[var(--ring-width)] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-none lg:h-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        'group-data-[variant=line]/tabs-list:data-[state=active]:border-primary group-data-[variant=line]/tabs-list:h-12 group-data-[variant=line]/tabs-list:flex-none group-data-[variant=line]/tabs-list:rounded-none group-data-[variant=line]/tabs-list:border-0 group-data-[variant=line]/tabs-list:border-b-2 group-data-[variant=line]/tabs-list:focus-visible:ring-inset group-data-[variant=line]/tabs-list:data-[state=active]:bg-transparent',
         className,
       )}
       {...props}

@@ -278,6 +278,8 @@ function Sidebar({
 }: SidebarProps): React.ReactNode {
   const { desktopStateReady, isMobile, openMobile, setOpenMobile, state } =
     useSidebar();
+  const returnFocusRef = React.useRef<HTMLElement | null>(null);
+  const openedAtHrefRef = React.useRef<string | null>(null);
 
   if (collapsible === 'none') {
     return (
@@ -300,6 +302,18 @@ function Sidebar({
     return (
       <Sheet open={openMobile} onOpenChange={setOpenMobile}>
         <SheetContent
+          onOpenAutoFocus={() => {
+            returnFocusRef.current = document.querySelector<HTMLElement>(
+              '[data-sidebar="trigger"]',
+            );
+            openedAtHrefRef.current = window.location.href;
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            if (openedAtHrefRef.current === window.location.href) {
+              returnFocusRef.current?.focus({ preventScroll: true });
+            }
+          }}
           data-sidebar="sidebar"
           data-slot="sidebar"
           id={id ?? SIDEBAR_ID}

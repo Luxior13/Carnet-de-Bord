@@ -13,7 +13,7 @@ import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 
 const Loading = (): React.JSX.Element => (
-  <PageShell className="py-0">
+  <PageShell className="py-0" width="reading">
     <PageCanvas contentClassName="space-y-5">
       <Skeleton className="h-32 rounded-xl" />
       <Skeleton className="h-20 rounded-xl" />

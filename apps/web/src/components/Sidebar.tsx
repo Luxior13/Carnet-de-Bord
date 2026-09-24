@@ -115,7 +115,7 @@ function getActiveGroupHref(
 
 const Sidebar: FC<SidebarProps> = ({ className }) => {
   const pathname = usePathname();
-  const { featureAvailabilityLoaded, operationalFeatureIds } =
+  const { featureAvailabilityLoaded, navigableFeatureIds } =
     useFeatureAvailability();
   const { logout, userData } = useUser();
   const { isMobile, setOpenMobile, state: sidebarState } = useSidebar();
@@ -126,9 +126,9 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
       getVisibleNavigationSpaces(
         userData,
         'live',
-        featureAvailabilityLoaded ? operationalFeatureIds : undefined,
+        featureAvailabilityLoaded ? navigableFeatureIds : undefined,
       ),
-    [featureAvailabilityLoaded, operationalFeatureIds, userData],
+    [featureAvailabilityLoaded, navigableFeatureIds, userData],
   );
   const activeSpace = useMemo(
     () => getActiveNavigationSpace(pathname, visibleSpaces),
@@ -143,9 +143,9 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
       getDesktopSidebarSections(
         userData,
         pathname,
-        featureAvailabilityLoaded ? operationalFeatureIds : undefined,
+        featureAvailabilityLoaded ? navigableFeatureIds : undefined,
       ),
-    [featureAvailabilityLoaded, operationalFeatureIds, pathname, userData],
+    [featureAvailabilityLoaded, navigableFeatureIds, pathname, userData],
   );
 
   const topSections = sections.filter(

@@ -84,91 +84,107 @@ export function RoadmapPage(): React.ReactNode {
               </div>
             }
           />
-          <ContentState
-            title="Le plan de construction"
-            description="Ce catalogue est visible par tous les comptes connectés. Il présente les nouveaux modules et les fonctions existantes à compléter. Les étapes donnent un ordre de priorité, sans date de livraison promise."
-            icon={<ClipboardList className="size-4" />}
-          />
-          <section aria-labelledby="roadmap-phases-title" className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 id="roadmap-phases-title" className="text-base font-semibold">
-                Dans quel ordre ?
-              </h2>
-              <Button
-                size="sm"
-                variant="outline"
-                aria-pressed={phase === null}
-                onClick={() => setPhase(null)}
-              >
-                Toutes les étapes
-              </Button>
-            </div>
-            <ol className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-              {ROADMAP_PHASES.map((step) => (
-                <li key={step.id}>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="inline"
-                    aria-pressed={phase === step.id}
-                    onClick={() => setPhase(phase === step.id ? null : step.id)}
-                    className={cn(
-                      'block h-full w-full rounded-lg border p-3 text-left',
-                      phase === step.id
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border bg-card hover:bg-accent',
-                    )}
-                  >
-                    <span className="text-sm font-medium">
-                      {step.id}. {step.label}
-                    </span>
-                    <span className="text-muted-foreground mt-1 block text-xs leading-5">
-                      {step.description}
-                    </span>
-                  </Button>
-                </li>
-              ))}
-            </ol>
-            <p className="text-muted-foreground text-sm">
-              Les obligations déjà présentes et les besoins urgents passent en
-              priorité. L’espace personnel se complète à mesure que les modules
-              sont livrés.
-            </p>
-          </section>
           <Disclosure
-            className="border-border rounded-lg border p-4 text-sm"
-            label="Les principes retenus et le socle disponible"
+            className="border-border-divider border-b pb-4"
+            label="Comprendre les étapes et les principes du projet"
           >
-            <ul className="text-muted-foreground mt-3 list-disc space-y-2 pl-5 leading-6">
-              <li>
-                Déjà présents : comptes et sécurité, répertoire, actualité
-                interne, notifications, journal, paramètres techniques et
-                recherche de pages.
-              </li>
-              <li>
-                Une personne garde la même identité ; ses adhésions, rôles et
-                affectations ont leur propre historique.
-              </li>
-              <li>
-                Association et société peuvent avoir des contrats et finances
-                séparés. Les anciens dossiers gardent leur entité d’origine.
-              </li>
-              <li>
-                Facture, paiement, budget et remboursement suivent des parcours
-                distincts.
-              </li>
-              <li>
-                Le quotidien esport arrive tôt : effectifs, disponibilités,
-                entraînements et convocations.
-              </li>
-              <li>
-                Les vues partagées évitent les doublons ; un chantier ne
-                correspond pas forcément à une nouvelle entrée de menu.
-              </li>
-            </ul>
+            <div className="space-y-5 pt-4">
+              <ContentState
+                title="Le plan de construction"
+                description="Ce catalogue est visible par tous les comptes connectés. Il présente les nouveaux modules et les fonctions existantes à compléter. Les étapes donnent un ordre de priorité, sans date de livraison promise."
+                icon={<ClipboardList className="size-4" />}
+              />
+              <section
+                aria-labelledby="roadmap-phases-title"
+                className="space-y-3"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2
+                    id="roadmap-phases-title"
+                    className="text-base font-semibold"
+                  >
+                    Dans quel ordre ?
+                  </h2>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    aria-pressed={phase === null}
+                    onClick={() => setPhase(null)}
+                  >
+                    Toutes les étapes
+                  </Button>
+                </div>
+                <ol className="grid gap-2 @min-[32rem]/page:grid-cols-2 @min-[60rem]/page:grid-cols-3">
+                  {ROADMAP_PHASES.map((step) => (
+                    <li key={step.id}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="inline"
+                        aria-pressed={phase === step.id}
+                        onClick={() =>
+                          setPhase(phase === step.id ? null : step.id)
+                        }
+                        className={cn(
+                          'block h-full w-full rounded-lg border p-3 text-left',
+                          phase === step.id
+                            ? 'border-primary bg-primary/10'
+                            : 'border-border bg-card hover:bg-accent',
+                        )}
+                      >
+                        <span className="text-sm font-medium">
+                          {step.id}. {step.label}
+                        </span>
+                        <span className="text-muted-foreground mt-1 block text-xs leading-5">
+                          {step.description}
+                        </span>
+                      </Button>
+                    </li>
+                  ))}
+                </ol>
+                <p className="text-muted-foreground text-sm">
+                  Les obligations déjà présentes et les besoins urgents passent
+                  en priorité. L’espace personnel se complète à mesure que les
+                  modules sont livrés.
+                </p>
+              </section>
+              <Disclosure
+                className="border-border rounded-lg border p-4 text-sm"
+                label="Les principes retenus et le socle disponible"
+              >
+                <ul className="text-muted-foreground mt-3 list-disc space-y-2 pl-5 leading-6">
+                  <li>
+                    Déjà présents : comptes et sécurité, répertoire, actualité
+                    interne, notifications, journal, paramètres techniques et
+                    recherche de pages.
+                  </li>
+                  <li>
+                    Une personne garde la même identité ; ses adhésions, rôles
+                    et affectations ont leur propre historique.
+                  </li>
+                  <li>
+                    Association et société peuvent avoir des contrats et
+                    finances séparés. Les anciens dossiers gardent leur entité
+                    d’origine.
+                  </li>
+                  <li>
+                    Facture, paiement, budget et remboursement suivent des
+                    parcours distincts.
+                  </li>
+                  <li>
+                    Le quotidien esport arrive tôt : effectifs, disponibilités,
+                    entraînements et convocations.
+                  </li>
+                  <li>
+                    Les vues partagées évitent les doublons ; un chantier ne
+                    correspond pas forcément à une nouvelle entrée de menu.
+                  </li>
+                </ul>
+              </Disclosure>
+            </div>
           </Disclosure>
-          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_240px_auto] sm:items-end">
-            <div className="space-y-1.5">
+          <div className="grid gap-3 @min-[44rem]/page:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] @min-[44rem]/page:items-end">
+            <div className="space-y-1.5 @min-[44rem]/page:col-span-3">
               <Label htmlFor="roadmap-search">Rechercher un chantier</Label>
               <Input
                 id="roadmap-search"
@@ -189,6 +205,30 @@ export function RoadmapPage(): React.ReactNode {
                   {ROADMAP_AREAS.map((area) => (
                     <SelectItem key={area.id} value={area.id}>
                       {area.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="roadmap-phase">Étape</Label>
+              <Select
+                value={phase === null ? 'all' : String(phase)}
+                onValueChange={(value) =>
+                  setPhase(
+                    ROADMAP_PHASES.find((step) => String(step.id) === value)
+                      ?.id ?? null,
+                  )
+                }
+              >
+                <SelectTrigger id="roadmap-phase" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les étapes</SelectItem>
+                  {ROADMAP_PHASES.map((step) => (
+                    <SelectItem key={step.id} value={String(step.id)}>
+                      {step.id}. {step.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -242,7 +282,7 @@ export function RoadmapPage(): React.ReactNode {
                     </p>
                   </div>
                 </div>
-                <div className="grid items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid items-start gap-3 @min-[32rem]/page:grid-cols-2 @min-[60rem]/page:grid-cols-3">
                   {items.map((item) => (
                     <RoadmapCard key={item.id} item={item} />
                   ))}

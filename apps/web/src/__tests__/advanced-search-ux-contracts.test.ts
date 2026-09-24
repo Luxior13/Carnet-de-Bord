@@ -46,9 +46,11 @@ describe('advanced search UX contracts', () => {
   });
 
   it('keeps the page inside its private background at sidebar widths', () => {
-    expect(pageSource).toContain('<PageShell className="py-0">');
     expect(pageSource).toContain(
-      'md:grid-cols-2 xl:grid-cols-[minmax(16rem,1fr)_12rem_12rem_auto]',
+      '<PageShell className="py-0" width="reading">',
+    );
+    expect(pageSource).toContain(
+      '@min-[32rem]/page:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]',
     );
     expect(pageSource).not.toContain('width="wide"');
     expect(pageSource).not.toContain(

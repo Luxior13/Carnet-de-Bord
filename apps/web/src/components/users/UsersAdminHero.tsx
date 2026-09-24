@@ -8,6 +8,7 @@ type UsersAdminHeroProps = {
   actions?: ReactNode;
   compact?: boolean;
   description?: ReactNode;
+  hasNavigation?: boolean;
   icon: ReactNode;
   iconClassName?: string;
   meta?: ReactNode;
@@ -19,6 +20,7 @@ export const UsersAdminHero: FC<UsersAdminHeroProps> = ({
   actions,
   compact = false,
   description,
+  hasNavigation,
   icon,
   iconClassName,
   meta,
@@ -32,6 +34,7 @@ export const UsersAdminHero: FC<UsersAdminHeroProps> = ({
       actions={actions}
       compact={compact}
       description={description}
+      hasNavigation={hasNavigation}
       eyebrow={
         showSpaceBadge ? (
           <Badge variant="outline" className={tone.soft}>

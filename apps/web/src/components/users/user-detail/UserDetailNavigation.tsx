@@ -1,15 +1,13 @@
 import { History, Key, Shield, User } from 'lucide-react';
 import React from 'react';
 
+import type { PageSection } from '$components/layout/PageSectionNavigation';
+
 export type UserDetailSectionId =
   'profile' | 'access' | 'account' | 'security' | 'history';
 
 export type UserDetailSection<SectionId extends string = UserDetailSectionId> =
-  {
-    icon: React.ReactNode;
-    id: SectionId;
-    label: string;
-  };
+  PageSection<SectionId>;
 
 export const USER_DETAIL_SECTIONS: UserDetailSection[] = [
   { icon: <User className="h-4 w-4" />, id: 'profile', label: 'Profil' },

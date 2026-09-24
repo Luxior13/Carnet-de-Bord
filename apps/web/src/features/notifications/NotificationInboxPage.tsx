@@ -117,14 +117,11 @@ const formatDate = (value: string): string => {
 const NotificationListSkeleton: FC = () => (
   <div
     aria-label="Chargement des notifications"
-    className="space-y-3"
+    className="divide-border-divider border-border-default bg-surface divide-y overflow-hidden rounded-xl border"
     role="status"
   >
     {Array.from({ length: 5 }, (_, index) => (
-      <div
-        className="border-border-default bg-surface-panel flex gap-3 rounded-xl border p-4"
-        key={index}
-      >
+      <div className="flex gap-3 p-4" key={index}>
         <Skeleton className="size-10 shrink-0 rounded-lg" />
         <div className="min-w-0 flex-1 space-y-2">
           <Skeleton className="h-4 w-2/5" />
@@ -162,8 +159,8 @@ const NotificationRow: FC<NotificationRowProps> = ({
       <Card
         as="article"
         className={cn(
-          'p-4 transition-colors',
-          isUnread && !isArchived && 'border-primary/45 bg-surface-selected',
+          'rounded-none border-0 p-4 shadow-none transition-colors',
+          isUnread && !isArchived && 'bg-surface-selected',
         )}
       >
         <div className="flex items-start gap-3">
@@ -466,7 +463,7 @@ export const NotificationInboxPage: FC<NotificationInboxPageProps> = ({
   if (!canViewNotifications) {
     return (
       <AuthenticatedLayout breadcrumbs={[{ label: 'Mes notifications' }]}>
-        <PageShell className="py-0">
+        <PageShell className="py-0" width="reading">
           <PageCanvas>
             <ContentState
               description="Votre compte ne possède pas la permission de consulter les notifications."
@@ -487,7 +484,7 @@ export const NotificationInboxPage: FC<NotificationInboxPageProps> = ({
         { href: NOTIFICATION_INBOX_HREF, label: 'Mes notifications' },
       ]}
     >
-      <PageShell className="py-0">
+      <PageShell className="py-0" width="reading">
         <PageCanvas contentClassName="space-y-5">
           <PageHero
             actions={
@@ -530,22 +527,21 @@ export const NotificationInboxPage: FC<NotificationInboxPageProps> = ({
 
           <section
             aria-label="Filtres des notifications"
-            className="border-border-default bg-surface-panel flex flex-col gap-3 rounded-xl border p-3 shadow-[var(--shadow-panel)] sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-3 @min-[36rem]/page:flex-row @min-[36rem]/page:items-center @min-[36rem]/page:justify-between"
           >
             <div
               aria-label="Afficher"
-              className="flex flex-wrap gap-2"
-              role="tablist"
+              className="bg-surface-inset inline-flex w-fit flex-wrap gap-1 rounded-lg p-1"
+              role="group"
             >
               {FILTERS.map((entry) => (
                 <Button
-                  aria-selected={filter === entry.value}
+                  aria-pressed={filter === entry.value}
                   key={entry.value}
                   onClick={() => setFilter(entry.value)}
-                  role="tab"
                   size="sm"
                   type="button"
-                  variant={filter === entry.value ? 'default' : 'ghost'}
+                  variant={filter === entry.value ? 'secondary' : 'ghost'}
                 >
                   {entry.label}
                   {entry.value === 'unread' && unreadCount > 0 && (
@@ -576,7 +572,10 @@ export const NotificationInboxPage: FC<NotificationInboxPageProps> = ({
             loadingFallback={<NotificationListSkeleton />}
             onRetry={() => void resource.refresh()}
           >
-            <ul aria-label="Notifications personnelles" className="space-y-3">
+            <ul
+              aria-label="Notifications personnelles"
+              className="divide-border-divider border-border-default bg-surface divide-y overflow-hidden rounded-xl border"
+            >
               {items.map((item) => (
                 <NotificationRow
                   href={

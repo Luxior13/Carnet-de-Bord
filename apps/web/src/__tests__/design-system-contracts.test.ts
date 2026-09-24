@@ -27,7 +27,7 @@ const pageBackNavigationSource = readSourceFile(
 );
 const tabsSource = readSourceFile('../components/ui/tabs.tsx');
 const userDetailSectionRailSource = readSourceFile(
-  '../components/users/user-detail/UserDetailSectionRail.tsx',
+  '../components/layout/PageSectionNavigation.tsx',
 );
 
 const sourceRootUrl = new URL('../', import.meta.url);
@@ -152,20 +152,13 @@ describe('design system contracts', () => {
     ]);
   });
 
-  it('keeps parent-page navigation in the desktop rail with a responsive fallback', () => {
-    expect(pageBackNavigationSource).toContain('className="private-left-rail"');
-    expect(globalStylesSource).toContain('.private-left-rail');
-    expect(globalStylesSource).toContain(
-      '50% - var(--private-content-half-width)',
-    );
-    expect(pageBackNavigationSource).toContain('private-rail-fallback');
-    expect(pageBackNavigationSource).toContain(
-      'w-full min-w-0 justify-start overflow-hidden',
-    );
-    expect(pageBackNavigationSource).toContain("'min-w-0 truncate'");
-    expect(pageBackNavigationSource).toContain('px-2.5 text-xs');
+  it('keeps a single parent-page link inside the content at every size', () => {
+    expect(pageBackNavigationSource.match(/<nav\b/g)).toHaveLength(1);
+    expect(pageBackNavigationSource).not.toContain('private-left-rail');
+    expect(globalStylesSource).not.toContain('.private-left-rail');
+    expect(pageBackNavigationSource).not.toContain('private-rail-fallback');
     expect(pageBackNavigationSource).toContain('<ArrowLeft');
-    expect(pageBackNavigationSource).toContain('variant="outline"');
+    expect(pageBackNavigationSource).toContain('variant="ghost"');
   });
 
   it('keeps feature availability above page-level authenticated shells', () => {
@@ -409,7 +402,7 @@ describe('design system contracts', () => {
 
   it('keeps the shared page heading flat and independent from sidebar colors', () => {
     expect(pageHeroSource).toContain('data-slot="page-heading"');
-    expect(pageHeroSource).toContain('border-border-divider min-w-0 border-b');
+    expect(pageHeroSource).toContain('border-border-divider min-w-0');
     expect(pageHeroSource).not.toContain('shadow-');
     expect(pageHeroSource).not.toContain('bg-gradient');
     expect(pageHeroSource).not.toContain('-sidebar-');

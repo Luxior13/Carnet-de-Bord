@@ -46,8 +46,8 @@ export const createUnsavedHistoryTraversalGuard = (
 
     const requestedHref = port.getCurrentHref();
 
-    // At Window, a capture listener runs before Next.js' bubble listener. Do
-    // not let the router unmount the dirty form while the decision is pending.
+    // The early dispatcher runs before the router's listener. Keep the dirty
+    // form mounted while the decision is pending.
     event.stopImmediatePropagation();
     port.pushEntry(guardedState, guardedHref);
     pendingTraversal = true;

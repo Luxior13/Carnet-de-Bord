@@ -1,6 +1,6 @@
 'use client';
 
-import { Newspaper, Plus, ShieldCheck } from 'lucide-react';
+import { Newspaper, Plus } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { type FC, useState } from 'react';
 
@@ -9,7 +9,6 @@ import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
-import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
@@ -25,7 +24,7 @@ const PublishAnnouncementDialog = dynamic(() =>
 );
 
 const PageSkeleton: FC = () => (
-  <PageShell className="py-0">
+  <PageShell className="py-0" width="reading">
     <PageCanvas contentClassName="space-y-5">
       <Skeleton className="h-32 rounded-xl" />
       <Skeleton className="h-20 rounded-xl" />
@@ -73,7 +72,7 @@ export const InternalNewsPage: FC<InternalNewsPageProps> = ({
     return (
       <PageState
         actionLabel="Revérifier"
-        description="La migration du fil interne n’est pas encore disponible."
+        description="Ce service ne peut pas être confirmé comme disponible pour le moment. Réessayez dans quelques instants."
         onAction={() => void refreshFeatureAvailability()}
         title="Actualité interne temporairement indisponible"
       />
@@ -82,7 +81,7 @@ export const InternalNewsPage: FC<InternalNewsPageProps> = ({
 
   return (
     <>
-      <PageShell className="py-0">
+      <PageShell className="py-0" width="reading">
         <PageCanvas contentClassName="space-y-5">
           <PageHero
             actions={
@@ -94,14 +93,7 @@ export const InternalNewsPage: FC<InternalNewsPageProps> = ({
               ) : null
             }
             description="Les annonces partagées et les changements importants de la structure, réunis dans un fil lisible."
-            eyebrow={
-              <Badge variant="secondary">
-                <ShieldCheck className="size-3" />
-                Contenu adapté à vos droits
-              </Badge>
-            }
             icon={<Newspaper className="size-5" />}
-            meta={<Badge variant="outline">Annonces internes</Badge>}
             title="Actualité interne"
             tone="internal"
           />

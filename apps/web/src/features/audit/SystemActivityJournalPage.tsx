@@ -1325,14 +1325,6 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
               </Button>
             }
             description="Recherchez qui a fait quoi, sur quel compte, quand et dans quel contexte."
-            eyebrow={
-              <Badge
-                className={getNavigationSpaceToneClasses(space.tone).soft}
-                variant="outline"
-              >
-                {space.label}
-              </Badge>
-            }
             icon={<Icon className="size-5" />}
             title={item.label}
             tone={space.tone}
@@ -1340,9 +1332,9 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
 
           <section
             aria-label="Filtres du journal"
-            className="border-border/70 bg-surface rounded-lg border p-4 shadow-[var(--shadow-panel)]"
+            className="border-border-default bg-surface rounded-xl border p-4"
           >
-            <div className="grid gap-3 xl:grid-cols-[auto_minmax(14rem,1fr)_13rem_auto_auto] xl:items-end">
+            <div className="grid gap-3 @min-[36rem]/page:grid-cols-2 @min-[36rem]/page:items-end @min-[64rem]/page:grid-cols-[auto_minmax(14rem,1fr)_13rem_auto_auto]">
               <div>
                 <span className="text-muted-foreground mb-1.5 block text-xs font-medium">
                   Journal
@@ -1472,7 +1464,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
 
             {showAdvancedFilters && (
               <div
-                className="border-border/60 mt-4 grid gap-3 border-t pt-4 md:grid-cols-2 xl:grid-cols-4"
+                className="border-border/60 mt-4 grid gap-3 border-t pt-4 @min-[36rem]/page:grid-cols-2 @min-[64rem]/page:grid-cols-4"
                 id={filtersId}
               >
                 <div>

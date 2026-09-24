@@ -7,8 +7,8 @@ import { SearchPage } from '$features/search/SearchPage';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 
 const SearchPageFallback = (): React.ReactNode => (
-  <AuthenticatedLayout breadcrumbs={[{ label: 'Recherche avancée' }]}>
-    <PageShell className="py-0">
+  <AuthenticatedLayout breadcrumbs={[{ label: 'Rechercher une page' }]}>
+    <PageShell className="py-0" width="reading">
       <PageCanvas>
         <ContentState
           icon={<Search className="size-4" />}

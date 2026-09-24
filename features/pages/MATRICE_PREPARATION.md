@@ -10,7 +10,7 @@ Référence révisée le 22 septembre 2026. Les chantiers proviennent du [catalo
 | `/mes-notifications` | Boîte de notifications livrée | Aujourd’hui et outils globaux |
 | `/mon-compte` | Profil et sécurité du compte livrés | Outils globaux |
 | `/recherche` | Recherche de pages livrée ; recherche de dossiers future | Outils globaux |
-| `/vie-interne/repertoire`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Personne livrées | Personnes |
+| `/vie-interne/repertoire`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Personne livrées | Membres |
 | `/vie-interne/actualite-interne` | Actualité livrée | Activité |
 | `/administration/utilisateurs`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Utilisateur livrées | Système |
 | `/systeme/journal-activite` | Journal livré | Système |
@@ -37,28 +37,28 @@ Les anciennes routes prévues ne sont pas des « squelettes disponibles ». Cert
 | `legal-entities` | Identité juridique & périmètres | Structure | 1 | À cadrer | — |
 | `compliance` | Confidentialité, image & mineurs | Structure | 1 | À cadrer | Identité juridique & périmètres ; Accès & responsabilités métier |
 | `access-scopes` | Accès & responsabilités métier | Système | 1 | À compléter | — |
-| `person-relationships` | Répertoire & engagements | Personnes | 2 | À compléter | Identité juridique & périmètres ; Accès & responsabilités métier |
-| `sport-teams` | Équipes & saisons | Esport | 2 | À cadrer | Répertoire & engagements |
+| `person-relationships` | Adhésions et rôles | Membres | 2 | À compléter | Identité juridique & périmètres ; Accès & responsabilités métier |
+| `sport-teams` | Équipes & saisons | Esport | 2 | À cadrer | Adhésions et rôles |
 | `sport-planning` | Planning & disponibilités | Esport | 2 | À cadrer | Équipes & saisons |
 | `personal-work` | Mon travail & espace personnel | Aujourd’hui | 3 | À compléter | Accès & responsabilités métier ; Planning & disponibilités ; Documents & acceptations ; Projets & tâches |
-| `recruitment` | Candidatures & essais | Personnes | 3 | À cadrer | Répertoire & engagements ; Équipes & saisons |
-| `onboarding` | Arrivées & départs | Personnes | 3 | À cadrer | Répertoire & engagements ; Documents & acceptations ; Projets & tâches |
+| `recruitment` | Recrutement | Membres | 3 | À cadrer | Adhésions et rôles ; Équipes & saisons |
+| `onboarding` | Arrivées et départs | Membres | 3 | À cadrer | Adhésions et rôles ; Documents & acceptations ; Projets & tâches |
 | `competitions` | Compétitions & inscriptions | Esport | 3 | À cadrer | Équipes & saisons ; Planning & disponibilités |
 | `governance` | Gouvernance & décisions | Structure | 3 | À cadrer | Identité juridique & périmètres ; Documents & acceptations ; Réunions & décisions de séance |
 | `documents` | Documents & acceptations | Structure | 3 | À cadrer | Identité juridique & périmètres ; Accès & responsabilités métier |
-| `incidents` | Incidents & sanctions | Structure | 3 | À cadrer | Répertoire & engagements ; Confidentialité, image & mineurs |
+| `incidents` | Incidents & sanctions | Structure | 3 | À cadrer | Adhésions et rôles ; Confidentialité, image & mineurs |
 | `approvals` | À valider | Aujourd’hui | 3 | À cadrer | Accès & responsabilités métier |
 | `tasks` | Projets & tâches | Activité | 3 | À cadrer | Accès & responsabilités métier |
 | `calendar` | Calendrier commun | Activité | 3 | À cadrer | Planning & disponibilités |
-| `meetings` | Réunions & décisions de séance | Activité | 3 | À cadrer | Répertoire & engagements ; Projets & tâches |
+| `meetings` | Réunions & décisions de séance | Activité | 3 | À cadrer | Adhésions et rôles ; Projets & tâches |
 | `debriefs` | Débriefs | Activité | 3 | À cadrer | Projets & tâches ; Planning & disponibilités |
 | `internal-news` | Actualité interne & audiences | Activité | 3 | À compléter | Accès & responsabilités métier |
-| `contracts` | Contrats & obligations | Structure | 4 | À cadrer | Documents & acceptations ; Répertoire & engagements |
-| `logistics` | Ressources & logistique | Activité | 4 | À cadrer | Répertoire & engagements ; Projets & tâches |
-| `organizations` | Organisations & contacts | Relations | 4 | À cadrer | Répertoire & engagements |
+| `contracts` | Contrats & obligations | Structure | 4 | À cadrer | Documents & acceptations ; Adhésions et rôles |
+| `logistics` | Ressources & logistique | Activité | 4 | À cadrer | Adhésions et rôles ; Projets & tâches |
+| `organizations` | Organisations & contacts | Relations | 4 | À cadrer | Adhésions et rôles |
 | `partnerships` | Partenariats & opportunités | Relations | 4 | À cadrer | Organisations & contacts ; Contrats & obligations ; Projets & tâches |
 | `accounts` | Comptes & rapprochement | Finances | 4 | À cadrer | Identité juridique & périmètres |
-| `payments` | Opérations & règlements | Finances | 4 | À cadrer | Comptes & rapprochement ; Répertoire & engagements ; Organisations & contacts |
+| `payments` | Opérations & règlements | Finances | 4 | À cadrer | Comptes & rapprochement ; Adhésions et rôles ; Organisations & contacts |
 | `invoices` | Facturation & achats | Finances | 4 | À cadrer | Opérations & règlements ; Contrats & obligations |
 | `expenses` | Notes de frais & remboursements | Finances | 4 | À cadrer | Opérations & règlements ; À valider |
 | `finance-controls` | Contrôles & clôtures | Finances | 4 | À cadrer | Opérations & règlements ; À valider |
@@ -83,13 +83,13 @@ Les références suivantes préservent le périmètre des anciennes propositions
 | `/tableau-de-bord/documents-a-accepter` | Aujourd’hui → Mon travail & espace personnel | 3 |
 | `/tableau-de-bord/alertes-importantes` | Aujourd’hui → Mon travail & espace personnel | 3 |
 | `/tableau-de-bord/mes-rappels` | Aujourd’hui → Mon travail & espace personnel | 3 |
-| `/vie-interne/membres-adherents` | Personnes → Répertoire & engagements | 2 |
-| `/vie-interne/membres` | Personnes → Répertoire & engagements | 2 |
-| `/vie-interne/adherents` | Personnes → Répertoire & engagements | 2 |
-| `/bureau-juridique/personnes-contacts` | Personnes → Répertoire & engagements | 2 |
-| `/vie-interne/recrutement-tryouts` | Personnes → Candidatures & essais | 3 |
-| `/sport-team-control/recrutement-tryouts` | Personnes → Candidatures & essais | 3 |
-| `/vie-interne/onboarding-depart` | Personnes → Arrivées & départs | 3 |
+| `/vie-interne/membres-adherents` | Membres → Adhésions et rôles | 2 |
+| `/vie-interne/membres` | Membres → Adhésions et rôles | 2 |
+| `/vie-interne/adherents` | Membres → Adhésions et rôles | 2 |
+| `/bureau-juridique/personnes-contacts` | Membres → Adhésions et rôles | 2 |
+| `/vie-interne/recrutement-tryouts` | Membres → Recrutement | 3 |
+| `/sport-team-control/recrutement-tryouts` | Membres → Recrutement | 3 |
+| `/vie-interne/onboarding-depart` | Membres → Arrivées et départs | 3 |
 | `/sport-team-control` | Esport → Équipes & saisons | 2 |
 | `/sport-team-control/jeux` | Esport → Équipes & saisons | 2 |
 | `/sport-team-control/rosters` | Esport → Équipes & saisons | 2 |

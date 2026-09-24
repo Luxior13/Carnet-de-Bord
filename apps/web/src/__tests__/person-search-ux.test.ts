@@ -617,21 +617,21 @@ describe('person short-lived sensitive UX contracts', () => {
       "sans lien avec un compte d'accès au site",
     );
     expect(detailPageSource).toContain(
-      '<Tabs className="gap-3" value={activeSection}>',
+      '<section aria-label="Identité" className="space-y-5">',
     );
     expect(detailPageSource).toContain('backLabel="Retour au répertoire"');
     expect(entityDetailLayoutSource).toContain('<PageBackButton');
-    expect(entityDetailLayoutSource).toContain('className="private-left-rail"');
-    expect(entityDetailLayoutSource).toContain('<UserDetailSectionRail');
-    expect(entityDetailLayoutSource).toContain('className="!block"');
-    expect(entityDetailLayoutSource).toContain('layout="mobile"');
+    expect(entityDetailLayoutSource).not.toContain('private-left-rail');
+    expect(
+      entityDetailLayoutSource.match(/<PageSectionNavigation/g),
+    ).toHaveLength(1);
     expect(detailPageSource).toContain('sections={PERSON_DETAIL_SECTIONS}');
     expect(detailPageSource).not.toContain('<ScrollableTabsList');
     expect(detailPageSource).not.toContain('<PageHero\n          actions=');
     expect(newPersonPageSource).toContain('<PageBackNavigation');
-    expect(newPersonPageSource).toContain('max-w-3xl py-0');
+    expect(newPersonPageSource).toContain('width="form"');
     expect(newPersonPageSource).toContain('contentClassName="relative');
-    expect(personLoadingSource).toContain('h-28 rounded-xl');
+    expect(personLoadingSource).toContain('<PageDetailSkeleton showBack />');
   });
 
   it('guards sidebar and breadcrumb links for both dirty person forms', () => {
@@ -666,13 +666,14 @@ describe('person short-lived sensitive UX contracts', () => {
     );
   });
 
-  it('shows the Vie interne hierarchy without inventing a pole hub link', () => {
+  it('shows the members pole and directory hierarchy without inventing a pole hub link', () => {
     for (const source of [
       personsPageSource,
       newPersonPageSource,
       detailPageSource,
       personLoadingSource,
     ]) {
+      expect(source).toContain('FEATURES.persons.label');
       expect(source).toContain('FEATURES.persons.audit.poleLabel');
     }
     expect(newPersonPageSource).toContain(

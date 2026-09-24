@@ -81,7 +81,7 @@ const SettingsSkeleton: FC = () => (
     role="status"
   >
     <Skeleton className="h-24 rounded-xl" />
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid gap-4 @min-[52rem]/page:grid-cols-2">
       {[...Array(4)].map((_, index) => (
         <Skeleton className="h-72 rounded-xl" key={index} />
       ))}
@@ -360,14 +360,6 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
               tone="system"
             />
 
-            <ContentState
-              description="Les réglages s'appliquent à tout le site. Réduire une durée de conservation peut entraîner une suppression irréversible lors de la prochaine maintenance planifiée."
-              icon={<ShieldAlert className="size-4" />}
-              kind="warning"
-              role="status"
-              title="Configuration globale"
-            />
-
             {!settings && !loadError ? (
               <SettingsSkeleton />
             ) : loadError && !settings ? (
@@ -419,7 +411,16 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
                         {section.description}
                       </p>
                     </div>
-                    <div className="grid gap-4 lg:grid-cols-2">
+                    {section.id === 'retention' && (
+                      <ContentState
+                        description="Les réglages s'appliquent à tout le site. Réduire une durée de conservation peut entraîner une suppression irréversible lors de la prochaine maintenance planifiée."
+                        icon={<ShieldAlert className="size-4" />}
+                        kind="warning"
+                        role="status"
+                        title="Configuration globale"
+                      />
+                    )}
+                    <div className="grid gap-4 @min-[52rem]/page:grid-cols-2">
                       {section.keys.map((key) => {
                         const definition = getSystemSettingDefinition(key);
                         const presentation = getSettingPresentation(key);
@@ -449,11 +450,11 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
                         return (
                           <Card
                             aria-labelledby={titleId}
-                            className="h-full"
+                            className="h-full shadow-none"
                             key={key}
                             role="group"
                           >
-                            <CardHeader>
+                            <CardHeader className="bg-transparent">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex min-w-0 items-start gap-3">
                                   <ServiceIcon className="bg-primary/10 text-primary-emphasis size-9">

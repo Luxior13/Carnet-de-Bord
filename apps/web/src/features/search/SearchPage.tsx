@@ -49,7 +49,7 @@ export const SearchPage: FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { userData } = useUser();
-  const { featureAvailabilityLoaded, operationalFeatureIds } =
+  const { featureAvailabilityLoaded, navigableFeatureIds } =
     useFeatureAvailability();
   const urlQuery = sanitizeQuery(searchParams.get('q'));
   const requestedSpace = searchParams.get('pole') ?? 'all';
@@ -65,9 +65,9 @@ export const SearchPage: FC = () => {
       getVisibleNavigationSpaces(
         userData,
         'live',
-        featureAvailabilityLoaded ? operationalFeatureIds : undefined,
+        featureAvailabilityLoaded ? navigableFeatureIds : undefined,
       ),
-    [featureAvailabilityLoaded, operationalFeatureIds, userData],
+    [featureAvailabilityLoaded, navigableFeatureIds, userData],
   );
   const catalog = useMemo(
     () => buildSearchCatalog(spaces, userData),
@@ -126,23 +126,15 @@ export const SearchPage: FC = () => {
     <AuthenticatedLayout
       breadcrumbs={[
         { href: '/', label: 'Tableau de bord' },
-        { href: '/recherche', label: 'Recherche avancée' },
+        { href: '/recherche', label: 'Rechercher une page' },
       ]}
     >
-      <PageShell className="py-0">
+      <PageShell className="py-0" width="reading">
         <PageCanvas contentClassName="space-y-5">
           <PageHero
             description="Retrouvez les pages accessibles à votre compte et affinez les résultats par pôle ou par catégorie."
             icon={<Search className="size-5" />}
-            meta={
-              <>
-                <Badge variant="secondary">Pages autorisées uniquement</Badge>
-                <Badge variant="outline">
-                  {catalog.length} destination{catalog.length > 1 ? 's' : ''}
-                </Badge>
-              </>
-            }
-            title="Recherche avancée"
+            title="Rechercher une page"
           />
 
           <Card
@@ -160,11 +152,11 @@ export const SearchPage: FC = () => {
               </h2>
             </div>
             <form
-              className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(16rem,1fr)_12rem_12rem_auto]"
+              className="grid gap-3 @min-[32rem]/page:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
               onSubmit={submitSearch}
               role="search"
             >
-              <div className="relative min-w-0">
+              <div className="relative min-w-0 @min-[32rem]/page:col-span-3">
                 <Search
                   aria-hidden="true"
                   className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
@@ -172,7 +164,7 @@ export const SearchPage: FC = () => {
                 <Input
                   aria-label="Rechercher dans les destinations"
                   autoComplete="off"
-                  className="pr-11 pl-9"
+                  className="h-12 pr-11 pl-9"
                   maxLength={160}
                   name="q"
                   onChange={(event) => setQueryInput(event.target.value)}
@@ -273,7 +265,10 @@ export const SearchPage: FC = () => {
             </div>
 
             {results.length > 0 ? (
-              <ul className="grid gap-3 md:grid-cols-2" role="list">
+              <ul
+                className="divide-border-divider border-border-default bg-surface divide-y overflow-hidden rounded-xl border"
+                role="list"
+              >
                 {results.map((result) => {
                   const Icon = getNavigationIcon(result.icon);
                   const tone = getNavigationSpaceToneClasses(result.space.tone);
@@ -282,7 +277,7 @@ export const SearchPage: FC = () => {
                     <li key={result.id}>
                       <Card
                         asChild
-                        className="hover:border-border-strong hover:bg-surface-tile-hover focus-visible:ring-ring/40 group h-full min-w-0 flex-row items-start gap-3 p-4 transition-[background-color,border-color] outline-none focus-visible:ring-2"
+                        className="hover:border-border-strong hover:bg-surface-tile-hover focus-visible:ring-ring/40 group h-full min-w-0 flex-row items-start gap-3 rounded-none border-0 p-4 shadow-none transition-[background-color,border-color] outline-none focus-visible:ring-2"
                       >
                         <Link href={result.href}>
                           <span

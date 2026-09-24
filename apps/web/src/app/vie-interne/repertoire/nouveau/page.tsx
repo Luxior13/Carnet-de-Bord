@@ -18,7 +18,7 @@ import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 
 const NewPersonPageSkeleton: FC = () => (
-  <PageShell className="max-w-3xl py-0" width="narrow">
+  <PageShell className="py-0" width="form">
     <PageCanvas>
       <div aria-label="Chargement" className="space-y-3" role="status">
         <Skeleton className="h-24 rounded-xl" />
@@ -58,7 +58,7 @@ const NewPersonContent: FC = () => {
     return (
       <PageState
         actionLabel="Revérifier"
-        description="La création reste désactivée tant que la migration et la clé de chiffrement d’audit ne sont pas opérationnelles."
+        description="Ce service ne peut pas être confirmé comme disponible pour le moment. Réessayez dans quelques instants."
         onAction={() => void refreshFeatureAvailability()}
         title="Répertoire temporairement indisponible"
       />
@@ -70,7 +70,7 @@ const NewPersonContent: FC = () => {
   }
 
   return (
-    <PageShell className="max-w-3xl py-0" width="narrow">
+    <PageShell className="py-0" width="form">
       <PageCanvas contentClassName="relative space-y-5">
         <PageBackNavigation href={returnHref} label="Retour au répertoire" />
         <PageHero

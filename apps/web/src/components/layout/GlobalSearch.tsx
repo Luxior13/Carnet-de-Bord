@@ -50,7 +50,7 @@ export const QuickNavigation: FC = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { userData } = useUser();
-  const { featureAvailabilityLoaded, operationalFeatureIds } =
+  const { featureAvailabilityLoaded, navigableFeatureIds } =
     useFeatureAvailability();
   const [activeResultHref, setActiveResultHref] = useState('');
   const [open, setOpen] = useState(false);
@@ -60,9 +60,9 @@ export const QuickNavigation: FC = () => {
       getVisibleNavigationSpaces(
         userData,
         'live',
-        featureAvailabilityLoaded ? operationalFeatureIds : undefined,
+        featureAvailabilityLoaded ? navigableFeatureIds : undefined,
       ),
-    [featureAvailabilityLoaded, operationalFeatureIds, userData],
+    [featureAvailabilityLoaded, navigableFeatureIds, userData],
   );
   const activeSpace = useMemo(
     () => getActiveNavigationSpace(pathname, spaces),
@@ -251,7 +251,7 @@ export const QuickNavigation: FC = () => {
                 type="button"
                 variant="link"
               >
-                Recherche avancée
+                Rechercher une page
                 <ArrowRight aria-hidden="true" className="size-3.5" />
               </Button>
             </div>

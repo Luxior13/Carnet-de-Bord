@@ -224,7 +224,7 @@ export const InternalNewsFeed: FC<InternalNewsFeedProps> = ({
             </h2>
             <Badge variant="secondary">{pinned.length}</Badge>
           </div>
-          <div className="grid gap-3 xl:grid-cols-2">
+          <div className="grid gap-3 @min-[44rem]/page:grid-cols-2">
             {pinned.map((item) => (
               <InternalNewsCard
                 canManage={canManage}
@@ -238,7 +238,7 @@ export const InternalNewsFeed: FC<InternalNewsFeedProps> = ({
         </section>
       )}
 
-      {groupedItems.length === 0 ? (
+      {groupedItems.length === 0 && pinned.length === 0 ? (
         <ContentState
           description="Les annonces publiées pour la structure apparaîtront ici."
           layout="panel"

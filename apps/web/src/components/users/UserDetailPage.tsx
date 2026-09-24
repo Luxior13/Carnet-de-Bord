@@ -16,6 +16,8 @@ import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { PageBackButton } from '$components/layout/PageBackNavigation';
+import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
+import { PageSectionNavigation } from '$components/layout/PageSectionNavigation';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { useAdminStepUpController } from '$components/users/user-detail/useAdminStepUpController';
 import {
@@ -56,7 +58,6 @@ import {
   USER_DETAIL_SECTIONS,
   type UserDetailSectionId,
 } from '$components/users/user-detail/UserDetailNavigation';
-import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailSectionRail';
 import {
   type UserHistoryFacets,
   type UserHistoryFilters,
@@ -90,11 +91,9 @@ import {
 } from '$ui/alert-dialog';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import { Card, CardContent } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
-import { Skeleton } from '$ui/skeleton';
 import { apiFetch } from '$utils/api.utils';
 import {
   getGuardedNavigationRequest,
@@ -114,38 +113,7 @@ type UserDetailPageProps = {
 const DetailSkeleton: FC = () => (
   <PageShell className="py-0">
     <PageCanvas contentClassName="relative space-y-4">
-      <div className="private-left-rail">
-        <div className="border-border/70 bg-surface sticky top-4 rounded-lg border p-1 shadow-[var(--shadow-panel)]">
-          <Skeleton className="mx-2 my-2 h-4 w-14" />
-          <div className="space-y-1">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton key={index} className="h-10 rounded-md" />
-            ))}
-          </div>
-        </div>
-      </div>
-      <div className="min-w-0 space-y-4">
-        <Card className="shrink-0 overflow-hidden py-0">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex min-w-0 items-center gap-3">
-                <Skeleton className="size-10 rounded-lg" />
-                <div className="min-w-0 flex-1 space-y-2">
-                  <Skeleton className="h-5 w-52 max-w-full" />
-                  <Skeleton className="h-4 w-72 max-w-full" />
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Skeleton className="h-7 w-32 rounded-md" />
-                <Skeleton className="h-7 w-24 rounded-md" />
-                <Skeleton className="h-7 w-28 rounded-md" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Skeleton className="private-rail-fallback h-11 w-full rounded-lg" />
-        <Skeleton className="min-h-96 w-full rounded-lg" />
-      </div>
+      <PageDetailSkeleton showBack />
     </PageCanvas>
   </PageShell>
 );
@@ -1886,12 +1854,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         {canViewTargetAccess && canViewTargetPersonalAccount && (
           <div
             aria-label="Catégorie d'autorisations"
-            className="border-border/70 bg-surface-muted/75 inline-flex min-h-11 w-full items-center gap-1 rounded-lg border p-1 sm:w-auto"
+            className="border-border/70 bg-surface-muted/75 grid min-h-11 w-full gap-1 rounded-lg border p-1 @min-[32rem]/page:inline-flex @min-[32rem]/page:w-auto"
             role="group"
           >
             <Button
               aria-pressed={selectedView === 'access'}
-              className="min-h-9 flex-1 sm:flex-none"
+              className="h-auto min-h-10 min-w-0 whitespace-normal"
               onClick={() => handleSectionChange('access')}
               size="sm"
               type="button"
@@ -1907,7 +1875,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
             </Button>
             <Button
               aria-pressed={selectedView === 'account'}
-              className="min-h-9 flex-1 sm:flex-none"
+              className="h-auto min-h-10 min-w-0 whitespace-normal"
               onClick={() => handleSectionChange('account')}
               size="sm"
               type="button"
@@ -2246,47 +2214,14 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     >
       <PageShell className="py-0">
         <PageCanvas contentClassName="relative space-y-3">
-          <div className="private-left-rail">
-            <div className="sticky top-4 space-y-2">
-              <PageBackButton
-                fullWidth
-                label="Retour aux utilisateurs"
-                onClick={handleNavigateBackToUsers}
-              />
-              <UserDetailSectionRail
-                activeSection={activeRailSection}
-                className="!block"
-                dirtySections={railDirtySections}
-                getSectionHref={(sectionId) =>
-                  buildUserDetailSectionHref(
-                    pathname,
-                    currentQueryString,
-                    resolveRailSection(sectionId),
-                  )
-                }
-                onSectionChange={(sectionId) => {
-                  if (
-                    sectionId === 'access' &&
-                    activeRailSection === 'access'
-                  ) {
-                    return;
-                  }
-
-                  handleSectionChange(resolveRailSection(sectionId));
-                }}
-                sections={visibleUserDetailSections}
-              />
-            </div>
-          </div>
-          <div className="min-w-0 space-y-3">
-            <div className="private-rail-fallback">
-              <PageBackButton
-                label="Retour aux utilisateurs"
-                onClick={handleNavigateBackToUsers}
-              />
-            </div>
+          <div className="min-w-0 space-y-4">
+            <PageBackButton
+              label="Retour aux utilisateurs"
+              onClick={handleNavigateBackToUsers}
+            />
             <UsersAdminHero
               compact
+              hasNavigation
               title={getUserDisplayName(user)}
               icon={
                 <UserAvatar user={user} className="size-full rounded-full" />
@@ -2328,6 +2263,26 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
                 </>
               }
             />
+            <PageSectionNavigation
+              activeSection={activeRailSection}
+              ariaLabel="Navigation de la fiche utilisateur"
+              dirtySections={railDirtySections}
+              getSectionHref={(sectionId) =>
+                buildUserDetailSectionHref(
+                  pathname,
+                  currentQueryString,
+                  resolveRailSection(sectionId),
+                )
+              }
+              onSectionChange={(sectionId) => {
+                if (sectionId === 'access' && activeRailSection === 'access') {
+                  return;
+                }
+
+                handleSectionChange(resolveRailSection(sectionId));
+              }}
+              sections={visibleUserDetailSections}
+            />
             {isTargetIdentityMasked && (
               <div className="border-warning/30 bg-warning/10 text-foreground flex gap-3 rounded-lg border p-3 sm:p-4">
                 <AlertTriangle className="text-warning mt-0.5 size-4 shrink-0" />
@@ -2361,26 +2316,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
             <p aria-live="polite" className="sr-only">
               Section {getUserDetailSectionLabel(activeSection)} affichée
             </p>
-            <UserDetailSectionRail
-              activeSection={activeRailSection}
-              dirtySections={railDirtySections}
-              getSectionHref={(sectionId) =>
-                buildUserDetailSectionHref(
-                  pathname,
-                  currentQueryString,
-                  resolveRailSection(sectionId),
-                )
-              }
-              layout="mobile"
-              onSectionChange={(sectionId) => {
-                if (sectionId === 'access' && activeRailSection === 'access') {
-                  return;
-                }
-
-                handleSectionChange(resolveRailSection(sectionId));
-              }}
-              sections={visibleUserDetailSections}
-            />
             <div className="min-w-0">{renderContent()}</div>
           </div>
         </PageCanvas>

@@ -196,7 +196,7 @@ export const PERMISSION_POLES = [
   {
     icon: 'Users',
     key: 'internal',
-    label: 'Personnes',
+    label: 'Membres',
     tone: 'internal',
   },
   {

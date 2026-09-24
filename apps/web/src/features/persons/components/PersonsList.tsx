@@ -514,9 +514,9 @@ export const PersonsList: FC<PersonsListProps> = ({
       headerLayout="stacked"
       title="Toutes les fiches"
       toolbar={
-        <div className="grid w-full min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(16rem,1fr)_13rem_13rem]">
+        <div className="grid w-full min-w-0 gap-2 @min-[32rem]/data-table:grid-cols-2 @min-[56rem]/data-table:grid-cols-[minmax(16rem,1fr)_12rem_12rem_auto]">
           <form
-            className="relative min-w-0 sm:col-span-2 xl:col-span-1"
+            className="relative min-w-0 @min-[32rem]/data-table:col-span-2 @min-[56rem]/data-table:col-span-1"
             onSubmit={(event) => {
               event.preventDefault();
               applyFilters(draftQuery, status, sort);
@@ -586,6 +586,18 @@ export const PersonsList: FC<PersonsListProps> = ({
               ))}
             </SelectContent>
           </Select>
+          {isFiltered && (
+            <Button
+              className="text-muted-foreground min-h-10 justify-self-start @min-[32rem]/data-table:col-span-2 @min-[56rem]/data-table:col-span-1"
+              onClick={() => applyFilters('', 'ALL', sort)}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              <X className="size-4" />
+              Réinitialiser
+            </Button>
+          )}
         </div>
       }
     >

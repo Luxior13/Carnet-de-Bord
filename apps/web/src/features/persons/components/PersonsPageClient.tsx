@@ -59,7 +59,7 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
     return (
       <PageState
         actionLabel="Revérifier"
-        description="La migration ou la clé de chiffrement d’audit n’est pas encore prête. La fonctionnalité reste masquée jusqu’à la fin de sa configuration."
+        description="Ce service ne peut pas être confirmé comme disponible pour le moment. Réessayez dans quelques instants."
         onAction={() => void refreshFeatureAvailability()}
         title="Répertoire temporairement indisponible"
       />
@@ -76,14 +76,14 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
               <Button asChild size="sm">
                 <Link href={createHref}>
                   <Plus className="size-4" />
-                  Nouvelle fiche
+                  Ajouter une fiche
                 </Link>
               </Button>
             ) : null
           }
-          description="Identité, statut dans la structure et coordonnées utiles, réunis dans un répertoire unique."
+          description={FEATURES.persons.description}
           icon={<Users className="size-5" />}
-          title="Répertoire"
+          title={FEATURES.persons.label}
           tone="internal"
         />
         <PersonsList

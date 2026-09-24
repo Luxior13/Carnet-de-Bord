@@ -17,10 +17,11 @@ export const ROADMAP_AREAS: readonly RoadmapArea[] = [
     tone: 'dashboard',
   },
   {
-    description: 'Identités, engagements, candidatures et parcours.',
+    description:
+      'Répertoire, adhésions, rôles, recrutement et parcours des membres.',
     icon: 'Users',
     id: 'people',
-    label: 'Personnes',
+    label: 'Membres',
     tone: 'internal',
   },
   {

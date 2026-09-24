@@ -8,20 +8,23 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
 import { FEATURES } from '$constants/feature-registry.constants';
 import { useUser } from '$context/UserContext';
 
-const REFRESH_INTERVAL_MS = 30_000;
+import {
+  readFeatureReadiness,
+  UNKNOWN_FEATURE_READINESS,
+} from './feature-readiness';
 
-type ReadinessPayload = {
-  checks?: { internalNews?: string; persons?: string };
-};
+const REFRESH_INTERVAL_MS = 30_000;
 
 type FeatureAvailabilityContextValue = {
   featureAvailabilityLoaded: boolean;
+  navigableFeatureIds: ReadonlySet<string>;
   operationalFeatureIds: ReadonlySet<string>;
   refreshFeatureAvailability: () => Promise<void>;
 };
@@ -42,43 +45,46 @@ export const FeatureAvailabilityProvider: FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { userData } = useUser();
+  const userId = userData?.id;
   const [featureAvailabilityLoaded, setFeatureAvailabilityLoaded] =
     useState(false);
-  const [internalNewsReady, setInternalNewsReady] = useState(false);
-  const [personsReady, setPersonsReady] = useState(false);
+  const [readiness, setReadiness] = useState(UNKNOWN_FEATURE_READINESS);
+  const requestRef = useRef<AbortController | null>(null);
 
   const refreshFeatureAvailability = useCallback(async (): Promise<void> => {
-    if (!userData) {
-      setInternalNewsReady(false);
-      setPersonsReady(false);
-      setFeatureAvailabilityLoaded(false);
-
-      return;
-    }
+    if (!userId || requestRef.current) return;
+    const controller = new AbortController();
+    requestRef.current = controller;
+    const timeout = window.setTimeout(() => controller.abort(), 10_000);
 
     try {
       const response = await fetch('/api/health/ready', {
         cache: 'no-store',
         credentials: 'same-origin',
         headers: { Accept: 'application/json' },
+        signal: controller.signal,
       });
-      const payload = (await response.json()) as ReadinessPayload;
-      setInternalNewsReady(payload.checks?.internalNews === 'ready');
-      setPersonsReady(payload.checks?.persons === 'ready');
+      const payload: unknown = await response.json();
+      if (!controller.signal.aborted) {
+        setReadiness((previous) =>
+          readFeatureReadiness(previous, payload, response.status),
+        );
+      }
     } catch {
-      setInternalNewsReady(false);
-      setPersonsReady(false);
+      // Keep the last confirmed state on transport errors and timeouts.
     } finally {
-      setFeatureAvailabilityLoaded(true);
+      window.clearTimeout(timeout);
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+        setFeatureAvailabilityLoaded(true);
+      }
     }
-  }, [userData]);
+  }, [userId]);
 
   useEffect(() => {
-    if (!userData) {
-      setInternalNewsReady(false);
-      setPersonsReady(false);
-      setFeatureAvailabilityLoaded(false);
-
+    setReadiness(UNKNOWN_FEATURE_READINESS);
+    setFeatureAvailabilityLoaded(false);
+    if (!userId) {
       return;
     }
 
@@ -87,26 +93,41 @@ export const FeatureAvailabilityProvider: FC<{ children: ReactNode }> = ({
       void refreshFeatureAvailability();
     }, REFRESH_INTERVAL_MS);
 
-    return (): void => window.clearInterval(interval);
-  }, [refreshFeatureAvailability, userData]);
+    return (): void => {
+      window.clearInterval(interval);
+      requestRef.current?.abort();
+      requestRef.current = null;
+    };
+  }, [refreshFeatureAvailability, userId]);
 
   const operationalFeatureIds = useMemo(
     () =>
       new Set([
         ...ALWAYS_OPERATIONAL_FEATURE_IDS,
-        ...(internalNewsReady ? [FEATURES.internalNews.id] : []),
-        ...(personsReady ? [FEATURES.persons.id] : []),
+        ...(readiness.internalNews ? [FEATURES.internalNews.id] : []),
+        ...(readiness.persons ? [FEATURES.persons.id] : []),
       ]),
-    [internalNewsReady, personsReady],
+    [readiness],
+  );
+  const navigableFeatureIds = useMemo(
+    () =>
+      new Set([
+        ...ALWAYS_OPERATIONAL_FEATURE_IDS,
+        ...(readiness.internalNews !== false ? [FEATURES.internalNews.id] : []),
+        ...(readiness.persons !== false ? [FEATURES.persons.id] : []),
+      ]),
+    [readiness],
   );
   const value = useMemo(
     () => ({
       featureAvailabilityLoaded,
+      navigableFeatureIds,
       operationalFeatureIds,
       refreshFeatureAvailability,
     }),
     [
       featureAvailabilityLoaded,
+      navigableFeatureIds,
       operationalFeatureIds,
       refreshFeatureAvailability,
     ],

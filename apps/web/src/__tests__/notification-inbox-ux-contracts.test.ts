@@ -77,7 +77,9 @@ describe('notification inbox UX contracts', () => {
   });
 
   it('keeps the inbox inside the shared private content column', () => {
-    expect(inboxSource).toContain('<PageShell className="py-0">');
+    expect(inboxSource).toContain(
+      '<PageShell className="py-0" width="reading">',
+    );
     expect(inboxSource).not.toContain('width="narrow"');
     expect(inboxSource).not.toContain('width="wide"');
     expect(inboxSource).toContain('[overflow-wrap:anywhere]');

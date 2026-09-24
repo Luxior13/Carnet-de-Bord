@@ -7,6 +7,7 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
 import { EntityDetailLayout } from '$components/layout/EntityDetailLayout';
+import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import type { UserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
 import { FEATURES } from '$constants/feature-registry.constants';
@@ -14,8 +15,6 @@ import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
 import { Card, CardFooter } from '$ui/card';
 import { PageCanvas, PageShell } from '$ui/page-shell';
-import { Skeleton } from '$ui/skeleton';
-import { Tabs, TabsContent } from '$ui/tabs';
 import { ApiClientError } from '$utils/api.utils';
 
 import { getPerson } from '../person.api';
@@ -66,8 +65,7 @@ const PERSON_DETAIL_SECTIONS: readonly UserDetailSection<PersonDetailSection>[] 
 const DetailSkeleton: FC = () => (
   <PageShell className="py-0">
     <PageCanvas>
-      <Skeleton className="h-28 rounded-xl" />
-      <Skeleton className="h-[34rem] rounded-xl" />
+      <PageDetailSkeleton showBack />
     </PageCanvas>
   </PageShell>
 );
@@ -186,7 +184,7 @@ const parseStoredDuplicateWarning = (raw: string): PersonDuplicateWarning => {
   }
 };
 
-const PersonDetailContent: FC<PersonDetailPageProps> = ({
+export const PersonDetailPage: FC<PersonDetailPageProps> = ({
   activeSection,
   initialPerson,
   personId,
@@ -267,157 +265,158 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
     setDuplicateWarning(parseStoredDuplicateWarning(storedWarning));
   }, [personId]);
 
-  if (!canView) {
+  const renderContent = (): React.ReactNode => {
+    if (!canView) {
+      return (
+        <AccessDeniedState
+          actionHref={returnHref}
+          actionLabel="Retour au répertoire"
+          description="Vous n'avez pas la permission de consulter cette fiche."
+        />
+      );
+    }
+
+    if (!featureAvailabilityLoaded && !initialPerson) return <DetailSkeleton />;
+
+    if (featureAvailabilityLoaded && !initialPerson && !featureOperational) {
+      return (
+        <PageState
+          actionLabel="Revérifier"
+          description="Ce service ne peut pas être confirmé comme disponible pour le moment. Réessayez dans quelques instants."
+          onAction={() => void refreshFeatureAvailability()}
+          title="Répertoire temporairement indisponible"
+        />
+      );
+    }
+
+    if (isLoading) return <DetailSkeleton />;
+
+    if (error instanceof ApiClientError && error.status === 410) {
+      return (
+        <PageState
+          actionHref={returnHref}
+          actionLabel="Retour au répertoire"
+          description="Cette fiche est masquée pendant sa suppression définitive. Aucune autre action n'est possible."
+          icon={<Clock3 className="size-5" />}
+          title="Suppression en cours"
+        />
+      );
+    }
+
+    if (error instanceof ApiClientError && error.status === 404) {
+      return (
+        <PageState
+          actionHref={returnHref}
+          actionLabel="Retour au répertoire"
+          description="Cette fiche n'existe pas ou a été supprimée."
+          title="Fiche introuvable"
+        />
+      );
+    }
+
+    if (error || !person) {
+      return (
+        <PageState
+          actionLabel="Réessayer"
+          description={error?.message ?? 'La fiche ne peut pas être chargée.'}
+          icon={<RefreshCw className="size-5" />}
+          onAction={() => {
+            setIsLoading(true);
+            void load()
+              .catch((caught) =>
+                setError(
+                  caught instanceof Error
+                    ? caught
+                    : new Error('Erreur inconnue'),
+                ),
+              )
+              .finally(() => setIsLoading(false));
+          }}
+          title="Chargement impossible"
+          tone="destructive"
+        />
+      );
+    }
+
+    const sectionHref = (section: PersonDetailSection): string => {
+      const params = new URLSearchParams({ returnTo: returnHref, section });
+
+      return `${FEATURES.persons.href}/${encodeURIComponent(personId)}?${params}`;
+    };
+
     return (
-      <AccessDeniedState
-        actionHref={returnHref}
-        actionLabel="Retour au répertoire"
-        description="Vous n'avez pas la permission de consulter cette fiche."
-      />
-    );
-  }
-
-  if (!featureAvailabilityLoaded && !initialPerson) return <DetailSkeleton />;
-
-  if (featureAvailabilityLoaded && !initialPerson && !featureOperational) {
-    return (
-      <PageState
-        actionLabel="Revérifier"
-        description="La migration ou la clé de chiffrement d’audit n’est pas encore prête. La fiche reste masquée jusqu’à la fin de sa configuration."
-        onAction={() => void refreshFeatureAvailability()}
-        title="Répertoire temporairement indisponible"
-      />
-    );
-  }
-
-  if (isLoading) return <DetailSkeleton />;
-
-  if (error instanceof ApiClientError && error.status === 410) {
-    return (
-      <PageState
-        actionHref={returnHref}
-        actionLabel="Retour au répertoire"
-        description="Cette fiche est masquée pendant sa suppression définitive. Aucune autre action n'est possible."
-        icon={<Clock3 className="size-5" />}
-        title="Suppression en cours"
-      />
-    );
-  }
-
-  if (error instanceof ApiClientError && error.status === 404) {
-    return (
-      <PageState
-        actionHref={returnHref}
-        actionLabel="Retour au répertoire"
-        description="Cette fiche n'existe pas ou a été supprimée."
-        title="Fiche introuvable"
-      />
-    );
-  }
-
-  if (error || !person) {
-    return (
-      <PageState
-        actionLabel="Réessayer"
-        description={error?.message ?? 'La fiche ne peut pas être chargée.'}
-        icon={<RefreshCw className="size-5" />}
-        onAction={() => {
-          setIsLoading(true);
-          void load()
-            .catch((caught) =>
-              setError(
-                caught instanceof Error ? caught : new Error('Erreur inconnue'),
-              ),
-            )
-            .finally(() => setIsLoading(false));
-        }}
-        title="Chargement impossible"
-        tone="destructive"
-      />
-    );
-  }
-
-  const sectionHref = (section: PersonDetailSection): string => {
-    const params = new URLSearchParams({ returnTo: returnHref, section });
-
-    return `${FEATURES.persons.href}/${encodeURIComponent(personId)}?${params}`;
-  };
-
-  return (
-    <EntityDetailLayout
-      activeSection={activeSection}
-      afterHero={
-        duplicateWarning && (
-          <ContentState
-            description={getDuplicateWarningDescription(duplicateWarning)}
-            kind="warning"
-            title="Correspondance détectée"
-          />
-        )
-      }
-      ariaLiveLabel={`Section ${activeSection === 'identite' ? 'Identité' : 'Coordonnées'} affichée`}
-      backHref={returnHref}
-      backLabel="Retour au répertoire"
-      heroIcon={
-        <PersonAvatar className="size-full rounded-full" person={person} />
-      }
-      heroIconClassName="overflow-hidden rounded-full p-0"
-      heroMeta={<PersonStatusBadge status={person.structureStatus} />}
-      heroTitle={getPersonDisplayName(person)}
-      railAriaLabel="Navigation de la fiche du répertoire"
-      sectionHref={sectionHref}
-      sections={PERSON_DETAIL_SECTIONS}
-      tone="internal"
-    >
-      <Tabs className="gap-3" value={activeSection}>
-        <TabsContent className="space-y-5" value="identite">
-          <Card>
-            <PersonIdentitySection
+      <EntityDetailLayout
+        activeSection={activeSection}
+        afterHero={
+          duplicateWarning && (
+            <ContentState
+              description={getDuplicateWarningDescription(duplicateWarning)}
+              kind="warning"
+              title="Correspondance détectée"
+            />
+          )
+        }
+        ariaLiveLabel={`Section ${activeSection === 'identite' ? 'Identité' : 'Coordonnées'} affichée`}
+        backHref={returnHref}
+        backLabel="Retour au répertoire"
+        heroIcon={
+          <PersonAvatar className="size-full rounded-full" person={person} />
+        }
+        heroIconClassName="overflow-hidden rounded-full p-0"
+        heroMeta={<PersonStatusBadge status={person.structureStatus} />}
+        heroTitle={getPersonDisplayName(person)}
+        navigationAriaLabel="Navigation de la fiche du répertoire"
+        sectionHref={sectionHref}
+        sections={PERSON_DETAIL_SECTIONS}
+        tone="internal"
+      >
+        {activeSection === 'identite' ? (
+          <section aria-label="Identité" className="space-y-5">
+            <Card>
+              <PersonIdentitySection
+                canUpdate={canUpdate}
+                canViewProvenance={canViewProvenance}
+                onChange={setPerson}
+                onReload={load}
+                person={person}
+              />
+              <PersonLastChangeFooter person={person} />
+            </Card>
+            {canDelete && <PersonDangerZone onReload={load} person={person} />}
+          </section>
+        ) : (
+          <section aria-label="Coordonnées" className="space-y-5">
+            <PersonCollectionsSection
               canUpdate={canUpdate}
               canViewProvenance={canViewProvenance}
+              duplicateMatches={duplicateWarning?.matches ?? []}
               onChange={setPerson}
               onReload={load}
               person={person}
             />
-            <PersonLastChangeFooter person={person} />
-          </Card>
-          {canDelete && <PersonDangerZone onReload={load} person={person} />}
-        </TabsContent>
+            <div className="px-1">
+              <PersonLastChangeSummary person={person} />
+            </div>
+          </section>
+        )}
+      </EntityDetailLayout>
+    );
+  };
 
-        <TabsContent className="space-y-5" value="coordonnees">
-          <PersonCollectionsSection
-            canUpdate={canUpdate}
-            canViewProvenance={canViewProvenance}
-            duplicateMatches={duplicateWarning?.matches ?? []}
-            onChange={setPerson}
-            onReload={load}
-            person={person}
-          />
-          <div className="px-1">
-            <PersonLastChangeSummary person={person} />
-          </div>
-        </TabsContent>
-      </Tabs>
-    </EntityDetailLayout>
+  return (
+    <AuthenticatedLayout
+      breadcrumbs={[
+        { label: FEATURES.persons.audit.poleLabel },
+        { href: FEATURES.persons.href, label: FEATURES.persons.label },
+        {
+          label:
+            canView && person?.id === personId && !error
+              ? getPersonDisplayName(person)
+              : 'Fiche',
+        },
+      ]}
+    >
+      {renderContent()}
+    </AuthenticatedLayout>
   );
 };
-
-export const PersonDetailPage: FC<PersonDetailPageProps> = ({
-  activeSection,
-  personId,
-  returnHref,
-}) => (
-  <AuthenticatedLayout
-    breadcrumbs={[
-      { label: FEATURES.persons.audit.poleLabel },
-      { href: FEATURES.persons.href, label: FEATURES.persons.label },
-      { label: 'Fiche' },
-    ]}
-  >
-    <PersonDetailContent
-      activeSection={activeSection}
-      personId={personId}
-      returnHref={returnHref}
-    />
-  </AuthenticatedLayout>
-);

@@ -572,8 +572,8 @@ export const UsersListPage: FC = () => {
         }
         toolbarClassName="@container/users-toolbar"
         toolbar={
-          <div className="grid w-full min-w-0 gap-2 sm:grid-cols-2 @min-[56rem]/users-toolbar:grid-cols-[minmax(12rem,1fr)_10rem_10rem_11rem_auto]">
-            <div className="relative min-w-0 sm:col-span-2 @min-[56rem]/users-toolbar:col-span-1">
+          <div className="grid w-full min-w-0 gap-2 @min-[32rem]/users-toolbar:grid-cols-2 @min-[56rem]/users-toolbar:grid-cols-[minmax(12rem,1fr)_10rem_10rem_11rem_auto]">
+            <div className="relative min-w-0 @min-[32rem]/users-toolbar:col-span-2 @min-[56rem]/users-toolbar:col-span-1">
               <Search
                 size={16}
                 className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"

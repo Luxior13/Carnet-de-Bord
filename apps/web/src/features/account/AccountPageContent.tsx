@@ -13,7 +13,7 @@ import React, {
 } from 'react';
 
 import { ContentState } from '$components/layout/ContentState';
-import { UserDetailSectionRail } from '$components/users/user-detail/UserDetailSectionRail';
+import { PageSectionNavigation } from '$components/layout/PageSectionNavigation';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import {
@@ -547,25 +547,7 @@ export const AccountPageContent: FC = () => {
     ],
   );
 
-  if (!userData) {
-    return (
-      <div className="relative space-y-5">
-        <UserDetailSectionRail
-          activeSection={activeSection}
-          ariaLabel="Navigation du compte"
-          className="private-left-rail"
-          dirtySections={[]}
-          getSectionHref={(sectionId) =>
-            buildAccountSectionHref(pathname, currentQueryString, sectionId)
-          }
-          heading="Compte"
-          onSectionChange={handleSectionChange}
-          sections={ACCOUNT_SECTIONS}
-        />
-        <AccountPageContentSkeleton />
-      </div>
-    );
-  }
+  if (!userData) return <AccountPageContentSkeleton />;
 
   const shouldShowAuditLoading =
     isLoadingAudit ||
@@ -578,27 +560,14 @@ export const AccountPageContent: FC = () => {
   return (
     <>
       <div className="relative space-y-5">
-        <UserDetailSectionRail
-          activeSection={activeSection}
-          ariaLabel="Navigation du compte"
-          className="private-left-rail"
-          dirtySections={dirtySections}
-          getSectionHref={(sectionId) =>
-            buildAccountSectionHref(pathname, currentQueryString, sectionId)
-          }
-          heading="Compte"
-          onSectionChange={handleSectionChange}
-          sections={visibleAccountSections}
-        />
         <AccountHeader userData={userData} />
-        <UserDetailSectionRail
+        <PageSectionNavigation
           activeSection={activeSection}
           ariaLabel="Navigation du compte"
           dirtySections={dirtySections}
           getSectionHref={(sectionId) =>
             buildAccountSectionHref(pathname, currentQueryString, sectionId)
           }
-          layout="mobile"
           onSectionChange={handleSectionChange}
           sections={visibleAccountSections}
         />

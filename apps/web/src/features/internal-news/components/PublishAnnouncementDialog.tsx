@@ -4,6 +4,8 @@ import { LoaderCircle, Newspaper, Pin } from 'lucide-react';
 import React, { type FC, type FormEvent, useState } from 'react';
 import { toast } from 'sonner';
 
+import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
+import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
 import { Button } from '$ui/button';
 import {
   Dialog,
@@ -35,6 +37,13 @@ export const PublishAnnouncementDialog: FC<PublishAnnouncementDialogProps> = ({
   const [isPinned, setIsPinned] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [title, setTitle] = useState('');
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const hasDraft = title !== '' || body !== '' || isPinned;
+  const {
+    cancelPendingNavigation,
+    confirmPendingNavigation,
+    pendingNavigationHref,
+  } = useUnsavedNavigationGuard(open && hasDraft);
 
   const reset = (): void => {
     setBody('');
@@ -44,6 +53,11 @@ export const PublishAnnouncementDialog: FC<PublishAnnouncementDialogProps> = ({
 
   const handleOpenChange = (nextOpen: boolean): void => {
     if (isSubmitting) return;
+    if (!nextOpen && hasDraft) {
+      setConfirmDiscard(true);
+
+      return;
+    }
     if (!nextOpen) reset();
     onOpenChange(nextOpen);
   };
@@ -92,13 +106,17 @@ export const PublishAnnouncementDialog: FC<PublishAnnouncementDialogProps> = ({
         >
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <Label htmlFor="internal-news-title">Titre</Label>
+              <Label htmlFor="internal-news-title" required>
+                Titre
+              </Label>
               <span className="text-muted-foreground text-xs">
                 {title.length}/160
               </span>
             </div>
             <Input
               autoFocus
+              disabled={isSubmitting}
+              required
               id="internal-news-title"
               maxLength={160}
               onChange={(event) => setTitle(event.target.value)}
@@ -109,13 +127,17 @@ export const PublishAnnouncementDialog: FC<PublishAnnouncementDialogProps> = ({
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <Label htmlFor="internal-news-body">Contenu</Label>
+              <Label htmlFor="internal-news-body" required>
+                Contenu
+              </Label>
               <span className="text-muted-foreground text-xs">
                 {body.length}/2 000
               </span>
             </div>
             <Textarea
               className="min-h-36 resize-y"
+              disabled={isSubmitting}
+              required
               id="internal-news-body"
               maxLength={2000}
               onChange={(event) => setBody(event.target.value)}
@@ -138,6 +160,7 @@ export const PublishAnnouncementDialog: FC<PublishAnnouncementDialogProps> = ({
             </div>
             <Switch
               checked={isPinned}
+              disabled={isSubmitting}
               id="internal-news-pinned"
               onCheckedChange={setIsPinned}
             />
@@ -165,6 +188,23 @@ export const PublishAnnouncementDialog: FC<PublishAnnouncementDialogProps> = ({
             </Button>
           </DialogFooter>
         </form>
+        <UnsavedNavigationDialog
+          cancelLabel="Continuer la rédaction"
+          confirmLabel="Abandonner le brouillon"
+          description="Le titre, le contenu et l’épinglage de cette actualité seront perdus."
+          onCancel={() => {
+            setConfirmDiscard(false);
+            cancelPendingNavigation();
+          }}
+          onConfirm={() => {
+            setConfirmDiscard(false);
+            reset();
+            onOpenChange(false);
+            confirmPendingNavigation();
+          }}
+          open={confirmDiscard || pendingNavigationHref !== null}
+          title="Abandonner cette actualité ?"
+        />
       </DialogContent>
     </Dialog>
   );

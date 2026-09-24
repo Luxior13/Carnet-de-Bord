@@ -9,6 +9,7 @@ import {
   type GuardedNavigationAction,
 } from '$utils/guarded-navigation.utils';
 
+import { subscribeToUnsavedHistoryEvents } from './unsaved-history-events';
 import {
   createUnsavedHistoryTraversalGuard,
   type UnsavedHistoryTraversalGuard,
@@ -97,16 +98,7 @@ export const useUnsavedNavigationGuard = (
         back: (): void => window.history.back(),
         getCurrentHref: getCurrentRelativeHref,
         getCurrentState: (): unknown => window.history.state,
-        listen: (listener) => {
-          const handlePopState = (event: PopStateEvent): void =>
-            listener(event);
-
-          window.addEventListener('popstate', handlePopState, true);
-
-          return (): void => {
-            window.removeEventListener('popstate', handlePopState, true);
-          };
-        },
+        listen: subscribeToUnsavedHistoryEvents,
         pushEntry: (state, href): void => {
           window.history.pushState(state, '', href);
         },

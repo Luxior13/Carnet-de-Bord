@@ -21,11 +21,13 @@ import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { PageBackNavigation } from '$components/layout/PageBackNavigation';
 import { AccessDeniedState } from '$components/layout/PageState';
 import { SectionPanel } from '$components/layout/SectionPanel';
+import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
 import { UsersAdminHero } from '$components/users/UsersAdminHero';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
+import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
 import { ErrorCode } from '$types/api.types';
 import type { UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
@@ -95,6 +97,18 @@ const NewUserContent: FC = () => {
   const [temporaryPassword, setTemporaryPassword] = useState<string | null>(
     null,
   );
+  const hasUnsavedChanges =
+    !createdUser &&
+    (form.contactEmail !== '' ||
+      form.firstName !== '' ||
+      form.lastName !== '' ||
+      form.loginName !== '' ||
+      form.role !== EMPTY_USER_FORM.role);
+  const {
+    cancelPendingNavigation,
+    confirmPendingNavigation,
+    pendingNavigationHref,
+  } = useUnsavedNavigationGuard(hasUnsavedChanges);
 
   const resetForm = (): void => {
     setForm(EMPTY_USER_FORM);
@@ -232,9 +246,9 @@ const NewUserContent: FC = () => {
   const headerRole = createdUser?.role ?? form.role;
 
   return (
-    <PageShell className="py-0">
+    <PageShell className="py-0" width="form">
       <PageCanvas contentClassName="space-y-5">
-        <div className="relative mx-auto w-full max-w-4xl space-y-5">
+        <div className="relative w-full space-y-5">
           <PageBackNavigation
             href="/administration/utilisateurs"
             label="Retour aux utilisateurs"
@@ -666,6 +680,12 @@ const NewUserContent: FC = () => {
           )}
         </div>
       </PageCanvas>
+      <UnsavedNavigationDialog
+        description="Les informations saisies pour ce nouveau compte seront perdues."
+        onCancel={cancelPendingNavigation}
+        onConfirm={confirmPendingNavigation}
+        open={pendingNavigationHref !== null}
+      />
       {userData && (
         <AdminStepUpDialog
           actorLoginName={userData.loginName}

@@ -9,6 +9,7 @@ type PageHeroProps = Omit<ComponentProps<'section'>, 'title'> & {
   compact?: boolean;
   description?: ReactNode;
   eyebrow?: ReactNode;
+  hasNavigation?: boolean;
   icon?: ReactNode;
   iconClassName?: string;
   meta?: ReactNode;
@@ -22,6 +23,7 @@ export const PageHero: FC<PageHeroProps> = ({
   compact = false,
   description,
   eyebrow,
+  hasNavigation = false,
   icon,
   iconClassName,
   meta,
@@ -33,26 +35,24 @@ export const PageHero: FC<PageHeroProps> = ({
     <section
       data-slot="page-heading"
       data-tone={tone}
-      className={cn('border-border-divider min-w-0 border-b pb-5', className)}
+      className={cn(
+        'border-border-divider min-w-0',
+        !hasNavigation && 'border-b pb-5',
+        className,
+      )}
       {...props}
     >
       <div
         className={cn(
-          'flex min-w-0 flex-col lg:flex-row lg:items-center lg:justify-between',
+          'flex min-w-0 flex-col @min-[44rem]/page:flex-row @min-[44rem]/page:items-center @min-[44rem]/page:justify-between',
           compact ? 'gap-3' : 'gap-4',
         )}
       >
-        <div
-          className={cn(
-            'flex min-w-0 flex-1 gap-3',
-            compact ? 'items-center' : 'items-start',
-          )}
-        >
+        <div className="flex min-w-0 flex-1 items-start gap-3">
           {icon && (
             <ServiceIcon
               className={cn(
-                'size-10 rounded-lg [&_svg]:size-5',
-                !compact && 'mt-0.5',
+                'mt-0.5 size-10 rounded-lg [&_svg]:size-5',
                 iconClassName,
               )}
             >
@@ -88,14 +88,14 @@ export const PageHero: FC<PageHeroProps> = ({
               </p>
             )}
             {!compact && meta && (
-              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 {meta}
               </div>
             )}
           </div>
         </div>
         {actions && (
-          <div className="flex w-full shrink-0 flex-wrap items-center gap-2 lg:w-auto lg:justify-end">
+          <div className="flex w-full shrink-0 flex-wrap items-center gap-2 @min-[44rem]/page:w-auto @min-[44rem]/page:max-w-[45%] @min-[44rem]/page:justify-end">
             {actions}
           </div>
         )}

@@ -56,18 +56,15 @@ const DataTableSection: FC<DataTableSectionProps> = ({
   toolbar,
   toolbarClassName,
 }) => (
-  <Card className={cn('min-w-0', className)}>
+  <Card className={cn('@container/data-table min-w-0 shadow-none', className)}>
     <CardHeader
-      className={cn(
-        'border-border-divider bg-surface-panel-header p-4',
-        headerClassName,
-      )}
+      className={cn('border-border-divider bg-surface p-4', headerClassName)}
     >
       <div
         className={cn(
           'flex flex-col gap-1',
           headerLayout === 'inline' &&
-            'xl:flex-row xl:items-center xl:justify-between xl:gap-4',
+            '@min-[56rem]/data-table:flex-row @min-[56rem]/data-table:items-center @min-[56rem]/data-table:justify-between @min-[56rem]/data-table:gap-4',
         )}
       >
         <div className="min-w-0">
@@ -77,8 +74,9 @@ const DataTableSection: FC<DataTableSectionProps> = ({
         {toolbar && (
           <div
             className={cn(
-              'mt-3 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between',
-              headerLayout === 'inline' && 'xl:mt-0 xl:min-w-0 xl:flex-1',
+              'mt-3 flex flex-col gap-3',
+              headerLayout === 'inline' &&
+                '@min-[56rem]/data-table:mt-0 @min-[56rem]/data-table:min-w-0 @min-[56rem]/data-table:flex-1',
               toolbarClassName,
             )}
           >
@@ -118,7 +116,9 @@ const DataTableSection: FC<DataTableSectionProps> = ({
 );
 
 const DataTableDesktop: FC<DataTableSlotProps> = ({ children, className }) => (
-  <div className={cn('hidden lg:block', className)}>{children}</div>
+  <div className={cn('hidden @min-[48rem]/data-table:block', className)}>
+    {children}
+  </div>
 );
 
 const DataTableMobileList: FC<DataTableSlotProps> = ({
@@ -127,7 +127,7 @@ const DataTableMobileList: FC<DataTableSlotProps> = ({
 }) => (
   <div
     className={cn(
-      'divide-border-divider bg-surface [&>*:nth-child(even)]:bg-surface-row-alternate [&>*:nth-child(even):hover]:bg-surface-tile-hover divide-y lg:hidden',
+      'divide-border-divider bg-surface [&>*:nth-child(even)]:bg-surface-row-alternate [&>*:nth-child(even):hover]:bg-surface-tile-hover divide-y @min-[48rem]/data-table:hidden',
       className,
     )}
   >

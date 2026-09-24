@@ -78,11 +78,11 @@ export const NAV_SPACES: NavigationSpace[] = [
     tone: 'dashboard',
   },
   {
-    description: 'Les personnes de la structure et leur suivi.',
+    description: 'Identités, adhésions, recrutement et parcours des membres.',
     href: '/vie-interne/repertoire',
     icon: 'Users',
     id: 'internal',
-    label: 'Personnes',
+    label: 'Membres',
     matchHrefs: [
       '/vie-interne/repertoire',
       '/vie-interne/recrutement-tryouts',
@@ -97,7 +97,7 @@ export const NAV_SPACES: NavigationSpace[] = [
         position: 'top',
       },
     ],
-    summary: 'Les personnes et leur suivi',
+    summary: 'Le suivi des membres',
     tone: 'internal',
   },
   {

@@ -114,7 +114,7 @@ describe('system settings page contracts', () => {
       "document.addEventListener('click'",
     );
     expect(navigationGuardSource).toContain(
-      "window.addEventListener('popstate', handlePopState, true)",
+      'listen: subscribeToUnsavedHistoryEvents',
     );
   });
 });

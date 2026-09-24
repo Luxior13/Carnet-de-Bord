@@ -1,0 +1,63 @@
+[
+  {
+    "name": "D01 — lien Accueil du pôle et breadcrumb Système",
+    "passed": true
+  },
+  {
+    "name": "D02 — Annuler, rester et abandonner le brouillon utilisateur",
+    "passed": true
+  },
+  {
+    "name": "D02 — retour navigateur protégé",
+    "passed": true
+  },
+  {
+    "name": "D03 — Échap et fermeture protègent la rédaction",
+    "passed": true
+  },
+  {
+    "name": "D03/D08 — publication épinglée, saisie bloquée en vol, état vide cohérent",
+    "passed": true
+  },
+  {
+    "name": "D04 — Échap rend le focus au menu mobile",
+    "passed": true
+  },
+  {
+    "name": "D05 — autorisations à 390 et 320 px",
+    "passed": true
+  },
+  {
+    "name": "D06 — libellé MFA entièrement visible à 320 px",
+    "passed": true
+  },
+  {
+    "name": "D02 — rechargement natif annulé conserve le brouillon",
+    "passed": true,
+    "note": "Contrôle rejoué après attente de la fin du rendu initial."
+  },
+  {
+    "name": "Garde partagée — retour depuis la création de personne",
+    "passed": true
+  },
+  {
+    "name": "Garde partagée — retour depuis les paramètres",
+    "passed": true
+  },
+  {
+    "name": "D07 — premier contrôle 429, navigation conservée et récupération",
+    "passed": true
+  },
+  {
+    "name": "D07 — 429 après succès conserve la page ; indisponibilité explicite et reprise",
+    "passed": true
+  },
+  {
+    "name": "D02 — navigation Suivant protégée",
+    "passed": true
+  },
+  {
+    "name": "D02 — une création réussie libère la navigation",
+    "passed": true
+  }
+]

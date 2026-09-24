@@ -31,13 +31,14 @@ export const CORE_ROADMAP_ITEMS: readonly RoadmapItem[] = [
     area: 'people',
     audience: 'Direction, responsables d’équipe et secrétariat',
     baseline:
-      'Le répertoire gère déjà l’identité, les coordonnées et le statut dedans/dehors.',
+      'Le répertoire gère déjà les identités, les coordonnées et la présence dans la structure. Les adhésions et les rôles métier restent à construire.',
     dependsOn: ['legal-entities', 'access-scopes'],
-    description: 'Une identité par personne, plusieurs relations datées.',
+    description:
+      'Suivre les engagements et les rôles de chaque membre dans le temps.',
     doneWhen:
       'Changer un rôle conserve son historique et ne crée pas une nouvelle identité.',
     firstRelease:
-      'Adhésions, campagnes, rôles et affectations datés ; distinction avec le compte de connexion.',
+      'Adhésions, campagnes, rôles et affectations datés, rattachés aux fiches du répertoire et distincts des droits du compte de connexion.',
     id: 'person-relationships',
     kind: 'extension',
     later:
@@ -50,7 +51,7 @@ export const CORE_ROADMAP_ITEMS: readonly RoadmapItem[] = [
     ],
     phase: 2,
     status: 'partial',
-    title: 'Répertoire & engagements',
+    title: 'Adhésions et rôles',
   },
   {
     area: 'people',
@@ -70,11 +71,11 @@ export const CORE_ROADMAP_ITEMS: readonly RoadmapItem[] = [
     ],
     phase: 3,
     status: 'planned',
-    title: 'Candidatures & essais',
+    title: 'Recrutement',
   },
   {
     area: 'people',
-    audience: 'Responsables de personnes et administrateurs habilités',
+    audience: 'Responsables des membres et administrateurs habilités',
     dependsOn: ['person-relationships', 'documents', 'tasks'],
     description: 'Éviter les oublis de documents, d’accès ou de matériel.',
     doneWhen:
@@ -87,7 +88,7 @@ export const CORE_ROADMAP_ITEMS: readonly RoadmapItem[] = [
     legacyHrefs: ['/vie-interne/onboarding-depart'],
     phase: 3,
     status: 'planned',
-    title: 'Arrivées & départs',
+    title: 'Arrivées et départs',
   },
   {
     area: 'esport',

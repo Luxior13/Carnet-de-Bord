@@ -23,6 +23,7 @@ export const PageBackButton: FC<PageBackButtonProps> = ({
   ...target
 }) => {
   const buttonClassName = cn(
+    'text-muted-foreground hover:text-foreground -ml-2 min-h-11 justify-start whitespace-normal text-left',
     fullWidth && 'w-full min-w-0 justify-start overflow-hidden px-2.5 text-xs',
     className,
   );
@@ -35,7 +36,7 @@ export const PageBackButton: FC<PageBackButtonProps> = ({
 
   if (target.href) {
     return (
-      <Button asChild className={buttonClassName} size="sm" variant="outline">
+      <Button asChild className={buttonClassName} size="sm" variant="ghost">
         <Link href={target.href} title={fullWidth ? label : undefined}>
           {content}
         </Link>
@@ -50,7 +51,7 @@ export const PageBackButton: FC<PageBackButtonProps> = ({
       size="sm"
       title={fullWidth ? label : undefined}
       type="button"
-      variant="outline"
+      variant="ghost"
     >
       {content}
     </Button>
@@ -61,19 +62,9 @@ type PageBackNavigationProps = PageBackTarget & {
   label: string;
 };
 
-/**
- * Responsive back navigation anchored to the application's left content rail.
- * Its desktop position does not depend on the current page content width.
- */
+/** The parent link stays before the heading at every viewport size. */
 export const PageBackNavigation: FC<PageBackNavigationProps> = (props) => (
-  <>
-    <nav aria-label={props.label} className="private-left-rail">
-      <div className="sticky top-4">
-        <PageBackButton {...props} fullWidth />
-      </div>
-    </nav>
-    <nav aria-label={props.label} className="private-rail-fallback">
-      <PageBackButton {...props} />
-    </nav>
-  </>
+  <nav aria-label={props.label}>
+    <PageBackButton {...props} />
+  </nav>
 );

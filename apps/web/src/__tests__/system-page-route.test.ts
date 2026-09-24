@@ -1,8 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PERMISSIONS } from '$constants/permissions.constants';
+
 const mocks = vi.hoisted(() => ({
+  getPageAuthSession: vi.fn(),
   notFound: vi.fn(() => {
     throw new Error('NOT_FOUND');
+  }),
+  redirect: vi.fn((href: string) => {
+    throw new Error(`REDIRECT:${href}`);
   }),
   SystemActivityJournalPage: vi.fn(() => null),
   SystemSettingsPage: vi.fn(() => null),
@@ -10,6 +16,11 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('next/navigation', () => ({
   notFound: mocks.notFound,
+  redirect: mocks.redirect,
+}));
+
+vi.mock('$server/auth', () => ({
+  getPageAuthSession: mocks.getPageAuthSession,
 }));
 
 vi.mock('$features/audit/SystemActivityJournalPage', () => ({
@@ -25,14 +36,48 @@ describe('/systeme route availability', () => {
     vi.clearAllMocks();
   });
 
-  it('rejects the removed system space root', async () => {
+  it.each([
+    [null, '/login'],
+    [
+      { isProtected: true, permissions: {}, role: 'ADMIN' },
+      '/administration/utilisateurs',
+    ],
+    [
+      {
+        isProtected: false,
+        permissions: { [PERMISSIONS.AUDIT.VIEW]: true },
+        role: 'USER',
+      },
+      '/systeme/journal-activite',
+    ],
+    [
+      {
+        isProtected: false,
+        permissions: { [PERMISSIONS.SETTINGS.VIEW]: true },
+        role: 'USER',
+      },
+      '/feuille-de-route',
+    ],
+    [
+      {
+        isProtected: false,
+        permissions: {
+          [PERMISSIONS.AUDIT.VIEW]: false,
+          [PERMISSIONS.USERS.VIEW]: false,
+        },
+        role: 'ADMIN',
+      },
+      '/systeme/parametres',
+    ],
+  ])('redirects the system root to an accessible page', async (user, href) => {
+    mocks.getPageAuthSession.mockResolvedValue({ user });
     const { default: SystemePage } =
       await import('$app/systeme/[[...slug]]/page');
 
     await expect(
       SystemePage({ params: Promise.resolve({ slug: [] }) }),
-    ).rejects.toThrow('NOT_FOUND');
-    expect(mocks.notFound).toHaveBeenCalledTimes(1);
+    ).rejects.toThrow(`REDIRECT:${href}`);
+    expect(mocks.notFound).not.toHaveBeenCalled();
   });
 
   it('renders the operational activity journal', async () => {

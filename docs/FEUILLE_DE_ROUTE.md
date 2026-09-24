@@ -18,7 +18,7 @@ Le module partenaires a été retiré le 21 septembre 2026 : sa reconstruction e
 
 ## Décisions structurantes
 
-1. **Huit pôles** : Aujourd’hui, Personnes, Esport, Activité, Relations, Structure, Finances, Système. Le menu n’affiche que les pôles ayant des fonctions livrées et accessibles.
+1. **Huit pôles** : Aujourd’hui, Membres, Esport, Activité, Relations, Structure, Finances, Système. Le menu n’affiche que les pôles ayant des fonctions livrées et accessibles.
 2. **Esport dès l’étape 2** : équipes, saisons, effectifs, disponibilités et convocations avant les analyses avancées.
 3. **Personne et compte restent distincts**. Les adhésions, mandats, contrats et affectations sont des relations datées, pas un statut unique. Aucun rapprochement automatique par email.
 4. **Préparer plusieurs entités juridiques**, avec leurs dossiers et historiques propres, tout en commençant par l’association réellement utilisée. Une évolution vers une société ne renomme pas les anciens engagements.
@@ -37,7 +37,7 @@ Le module partenaires a été retiré le 21 septembre 2026 : sa reconstruction e
 | Calendriers interne et esport | Événements métier d’origine, calendrier partagé en projection |
 | Préparation match/scrim, stratégie, VOD | Un espace Préparation avec vues adaptées |
 | Recettes et dépenses | Filtres des règlements ; factures et demandes de remboursement restent distinctes |
-| Cotisations | Adhésion/campagne chez Personnes, montant attendu et règlement côté Finances |
+| Cotisations | Adhésion/campagne chez Membres, montant attendu et règlement côté Finances |
 | Sponsoring | Accord et livrables chez Relations, factures et règlements côté Finances |
 | Validations globales | File personnelle transverse ; décision et permission contrôlées dans le module source |
 | Archives, exports, modèles | Dans les modules propriétaires ; outils transverses limités à leur responsabilité |
@@ -58,7 +58,7 @@ Clarifier la structure, les périmètres d’accès et les règles communes.
 
 Organiser les équipes, les disponibilités et les convocations.
 
-- **Répertoire & engagements** (Personnes) : Adhésions, campagnes, rôles et affectations datés ; distinction avec le compte de connexion.
+- **Adhésions et rôles** (Membres) : Adhésions, campagnes, rôles et affectations datés ; distinction avec le compte de connexion.
 - **Équipes & saisons** (Esport) : Jeux, saisons, équipes, rosters datés, titulaires, remplaçants et staff.
 - **Planning & disponibilités** (Esport) : Entraînements, scrims, disponibilités, convocations et confirmations par équipe.
 
@@ -67,8 +67,8 @@ Organiser les équipes, les disponibilités et les convocations.
 Suivre les documents, les personnes, les réunions et les actions.
 
 - **Mon travail & espace personnel** (Aujourd’hui) : Tâches, planning personnel, documents attendus, rappels et éléments à valider.
-- **Candidatures & essais** (Personnes) : Poste ou équipe visée, essais, évaluations confidentielles et décision.
-- **Arrivées & départs** (Personnes) : Checklists datées, responsables, étapes et vue collective des dossiers ouverts.
+- **Recrutement** (Membres) : Poste ou équipe visée, essais, évaluations confidentielles et décision.
+- **Arrivées et départs** (Membres) : Checklists datées, responsables, étapes et vue collective des dossiers ouverts.
 - **Compétitions & inscriptions** (Esport) : Tournois, inscriptions, échéances, règlements, éligibilité, roster enregistré, matchs et résultats.
 - **Gouvernance & décisions** (Structure) : Instances, mandats, délégations, décisions et pièces liées.
 - **Documents & acceptations** (Structure) : Bibliothèque, versions publiées, modèles et demandes de lecture ou d’acceptation.

@@ -476,13 +476,25 @@ export default function DashboardPageClient({
             />
           )}
 
+          {!hasDashboardContent &&
+            !dashboardError &&
+            !isLoadingDashboard &&
+            (!canLoadDashboardData || dashboardStats !== null) && (
+              <ContentState
+                description="Les informations et actions accessibles à votre compte apparaîtront ici lorsqu’elles seront disponibles."
+                icon={<Home aria-hidden="true" className="size-5" />}
+                layout="panel"
+                title="Rien à traiter pour le moment"
+              />
+            )}
+
           {hasDashboardContent && (
             <div
               className={cn(
                 'grid items-start gap-4',
                 hasSecurityAttention &&
                   hasRecentActivity &&
-                  'xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)]',
+                  '@min-[52rem]/page:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)]',
               )}
             >
               {hasSecurityAttention && (

@@ -612,7 +612,7 @@ describe('permission catalogue', () => {
 
   it('uses a coherent user-facing taxonomy and action labels', () => {
     expect(PERMISSION_POLES).toMatchObject([
-      { key: 'internal', label: 'Personnes' },
+      { key: 'internal', label: 'Membres' },
       { key: 'activity', label: 'Activité' },
       { key: 'legal', label: 'Relations' },
       { key: 'system', label: 'Système' },

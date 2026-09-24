@@ -182,11 +182,10 @@
   --sidebar-ring: var(--ring);
   --public-column-width: 66rem;
   --private-content-width: 76rem;
-  --private-content-half-width: calc(var(--private-content-width) / 2);
+  --private-content-width-form: 52rem;
+  --private-content-width-reading: 56rem;
   --private-content-width-wide: 92rem;
-  --private-content-padding: clamp(1rem, 1.8vw, 1.75rem);
-  --private-left-rail-width: 11rem;
-  --private-left-rail-gap: 2.5rem;
+  --private-content-padding: clamp(1rem, 2vw, 2rem);
   --public-column-border: var(--border-subtle);
   --public-column-shadow: 0 24px 60px -32px rgba(0, 0, 0, 0.55);
   --column-surface-start: var(--surface-inset);
@@ -292,39 +291,6 @@
     border-inline: 1px solid var(--public-column-border);
     background: var(--site-background-column-bg);
     box-shadow: var(--public-column-shadow);
-  }
-
-  /*
-   * Keep secondary page navigation anchored to the application column,
-   * independently from the width chosen by the page content itself.
-   */
-  .private-left-rail,
-  .private-rail-desktop {
-    display: none;
-  }
-
-  /* 76rem content + two 13.5rem gutters, with room for scrollbar gutters.
-     Measure the application column, so expanding the sidebar cannot clip a rail. */
-  @container private-viewport (width >= 104rem) {
-    .private-rail-desktop {
-      display: block;
-    }
-
-    .private-rail-fallback {
-      display: none;
-    }
-
-    .private-left-rail {
-      position: absolute;
-      inset-block: 0;
-      left: calc(
-        50% - var(--private-content-half-width) +
-          var(--private-content-padding) - var(--private-left-rail-width) -
-          var(--private-left-rail-gap)
-      );
-      display: block;
-      width: var(--private-left-rail-width);
-    }
   }
 
   .sidebar-scrollbar {

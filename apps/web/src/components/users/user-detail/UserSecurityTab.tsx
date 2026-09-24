@@ -667,7 +667,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
         {canResetMfa && (
           <CardFooter className="justify-end p-3 sm:p-4">
             <Button
-              className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning gap-2"
+              className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning h-auto min-h-10 w-full min-w-0 gap-2 whitespace-normal sm:w-auto"
               onClick={onResetMfa}
               size="sm"
               type="button"
