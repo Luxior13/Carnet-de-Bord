@@ -23,7 +23,7 @@ type DataTableSectionProps = {
   mobileList?: ReactNode;
   pagination?: PaginationProps;
   table?: ReactNode;
-  title: ReactNode;
+  title?: ReactNode;
   toolbar?: ReactNode;
   toolbarClassName?: string;
 };
@@ -67,14 +67,17 @@ const DataTableSection: FC<DataTableSectionProps> = ({
             '@min-[56rem]/data-table:flex-row @min-[56rem]/data-table:items-center @min-[56rem]/data-table:justify-between @min-[56rem]/data-table:gap-4',
         )}
       >
-        <div className="min-w-0">
-          <CardTitle className="text-sm">{title}</CardTitle>
-          {description && <CardDescription>{description}</CardDescription>}
-        </div>
+        {(title || description) && (
+          <div className="min-w-0">
+            {title && <CardTitle className="text-sm">{title}</CardTitle>}
+            {description && <CardDescription>{description}</CardDescription>}
+          </div>
+        )}
         {toolbar && (
           <div
             className={cn(
-              'mt-3 flex flex-col gap-3',
+              'flex flex-col gap-3',
+              (title || description) && 'mt-3',
               headerLayout === 'inline' &&
                 '@min-[56rem]/data-table:mt-0 @min-[56rem]/data-table:min-w-0 @min-[56rem]/data-table:flex-1',
               toolbarClassName,

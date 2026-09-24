@@ -21,6 +21,7 @@ import {
 } from '$constants/permissions.constants';
 import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
+import { UsersOverview } from '$features/users/UsersOverview';
 import type {
   PaginationInfo,
   UserStatsType,
@@ -73,6 +74,9 @@ const FILTER_ROLE_OPTIONS: readonly FilterRole[] = [
 ];
 const SORT_OPTIONS: readonly SortOption[] = ['name', 'recent', 'created'];
 const USER_SEARCH_MAX_LENGTH = 100;
+// Extend into the right margin only when the full table and a 15rem rail fit.
+const USERS_LIST_LAYOUT_CLASS_NAME =
+  'grid min-w-0 grid-cols-1 items-start gap-4 min-[110rem]:w-[calc(100%+16.25rem)] min-[110rem]:grid-cols-[minmax(0,1fr)_15rem] min-[110rem]:gap-5';
 
 const getSortLabel = (sort: SortOption): string => {
   switch (sort) {
@@ -485,7 +489,16 @@ export const UsersListPage: FC = () => {
 
   if (isLoading) {
     return (
-      <div role="status" aria-label="Chargement">
+      <div
+        className={USERS_LIST_LAYOUT_CLASS_NAME}
+        role="status"
+        aria-label="Chargement"
+      >
+        <UsersOverview
+          isLoading
+          securityDetailsVisible={canRequestSecurityDetails}
+          stats={null}
+        />
         <Skeleton className="h-96 rounded-xl" />
       </div>
     );
@@ -528,372 +541,366 @@ export const UsersListPage: FC = () => {
           title={loadError}
         />
       )}
-      <DataTableSection
-        title={
-          <span className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-normal">
-            <span>
-              <span className="text-foreground font-semibold tabular-nums">
-                {totalFiltered}
-              </span>{' '}
-              compte{totalFiltered !== 1 ? 's' : ''}
-              <span className="sr-only"> utilisateurs</span>
-              {hasActiveFilters && stats ? ` sur ${stats.total}` : ''}
-              {stats
-                ? ` · ${stats.active} actif${stats.active !== 1 ? 's' : ''}`
-                : ''}
-            </span>
-            {securityDetailsVisible &&
-              stats?.pendingPasswordChange !== null &&
-              stats?.pendingPasswordChange !== undefined &&
-              stats.pendingPasswordChange > 0 && (
-                <span className="text-warning font-medium">
-                  · {stats.pendingPasswordChange} mot
-                  {stats.pendingPasswordChange !== 1 ? 's' : ''} de passe à
-                  changer
-                </span>
-              )}
-            {isRefreshing && <span>· Actualisation…</span>}
-          </span>
-        }
-        headerClassName="p-4 sm:p-5"
-        contentClassName={
-          isRefreshing ? 'opacity-60 transition-opacity' : undefined
-        }
-        toolbarClassName="@container/users-toolbar"
-        toolbar={
-          <div className="grid w-full min-w-0 items-center gap-2 @min-[32rem]/users-toolbar:grid-cols-3 @min-[64rem]/users-toolbar:grid-cols-[minmax(18rem,1fr)_10rem_10rem_11rem]">
-            <div className="relative min-w-0 @min-[32rem]/users-toolbar:col-span-3 @min-[64rem]/users-toolbar:col-span-1">
-              <Search
-                size={16}
-                className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
-              />
-              <Input
-                aria-label="Rechercher un compte utilisateur"
-                placeholder="Nom, identifiant ou email…"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                maxLength={USER_SEARCH_MAX_LENGTH}
-                className="h-11 pr-10 pl-9 lg:h-11"
-              />
-              {searchQuery && (
+      <div className={USERS_LIST_LAYOUT_CLASS_NAME}>
+        <UsersOverview
+          securityDetailsVisible={securityDetailsVisible}
+          stats={stats}
+        />
+        <DataTableSection
+          headerClassName="p-4 sm:p-5"
+          contentClassName={
+            isRefreshing ? 'opacity-60 transition-opacity' : undefined
+          }
+          toolbarClassName="@container/users-toolbar"
+          toolbar={
+            <div className="grid w-full min-w-0 items-center gap-2 @min-[32rem]/users-toolbar:grid-cols-3 @min-[64rem]/users-toolbar:grid-cols-[minmax(18rem,1fr)_10rem_10rem_11rem]">
+              <div className="relative min-w-0 @min-[32rem]/users-toolbar:col-span-3 @min-[64rem]/users-toolbar:col-span-1">
+                <Search
+                  size={16}
+                  className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
+                />
+                <Input
+                  aria-label="Rechercher un compte utilisateur"
+                  placeholder="Nom, identifiant ou email…"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  maxLength={USER_SEARCH_MAX_LENGTH}
+                  className="h-11 pr-10 pl-9 lg:h-11"
+                />
+                {searchQuery && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSearchQuery('')}
+                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 size-8 -translate-y-1/2"
+                    aria-label="Effacer la recherche"
+                  >
+                    <X size={14} />
+                  </Button>
+                )}
+              </div>
+              <Select
+                value={filterStatus}
+                onValueChange={(value) => handleFilterChange('status', value)}
+              >
+                <SelectTrigger
+                  aria-label="Filtrer par état du compte"
+                  className="text-muted-foreground h-10 w-full min-w-0 bg-transparent lg:h-10"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les états</SelectItem>
+                  <SelectItem value="active">Actifs</SelectItem>
+                  <SelectItem value="inactive">Désactivés</SelectItem>
+                  {canRequestSecurityDetails && (
+                    <SelectItem value="pending">
+                      Mot de passe à changer
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <Select
+                value={filterRole}
+                onValueChange={(value) => handleFilterChange('role', value)}
+              >
+                <SelectTrigger
+                  aria-label="Filtrer par rôle"
+                  className="text-muted-foreground h-10 w-full min-w-0 bg-transparent lg:h-10"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les rôles</SelectItem>
+                  <SelectItem value="ADMIN">Administrateurs</SelectItem>
+                  <SelectItem value="USER">Utilisateurs</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={sortBy}
+                onValueChange={(value) => handleFilterChange('sort', value)}
+              >
+                <SelectTrigger
+                  aria-label="Trier les comptes utilisateurs"
+                  className="text-muted-foreground h-10 w-full min-w-0 bg-transparent lg:h-10"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">{getSortLabel('name')}</SelectItem>
+                  <SelectItem value="recent">
+                    {getSortLabel('recent')}
+                  </SelectItem>
+                  <SelectItem value="created">
+                    {getSortLabel('created')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {hasActiveFilters && (
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon"
-                  onClick={() => setSearchQuery('')}
-                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 size-8 -translate-y-1/2"
-                  aria-label="Effacer la recherche"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="text-muted-foreground min-h-10 justify-self-start @min-[32rem]/users-toolbar:col-span-3 @min-[64rem]/users-toolbar:col-span-4"
                 >
                   <X size={14} />
+                  Réinitialiser
                 </Button>
               )}
+              <p
+                role="status"
+                className={
+                  hasActiveFilters || isRefreshing
+                    ? 'text-muted-foreground col-span-full text-xs'
+                    : 'sr-only'
+                }
+              >
+                {isRefreshing
+                  ? 'Actualisation…'
+                  : `${totalFiltered} compte${totalFiltered !== 1 ? 's' : ''} affiché${totalFiltered !== 1 ? 's' : ''}`}
+              </p>
             </div>
-            <Select
-              value={filterStatus}
-              onValueChange={(value) => handleFilterChange('status', value)}
-            >
-              <SelectTrigger
-                aria-label="Filtrer par état du compte"
-                className="text-muted-foreground h-10 w-full min-w-0 bg-transparent lg:h-10"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les états</SelectItem>
-                <SelectItem value="active">Actifs</SelectItem>
-                <SelectItem value="inactive">Désactivés</SelectItem>
-                {canRequestSecurityDetails && (
-                  <SelectItem value="pending">
-                    Mot de passe à changer
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-            <Select
-              value={filterRole}
-              onValueChange={(value) => handleFilterChange('role', value)}
-            >
-              <SelectTrigger
-                aria-label="Filtrer par rôle"
-                className="text-muted-foreground h-10 w-full min-w-0 bg-transparent lg:h-10"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les rôles</SelectItem>
-                <SelectItem value="ADMIN">Administrateurs</SelectItem>
-                <SelectItem value="USER">Utilisateurs</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={sortBy}
-              onValueChange={(value) => handleFilterChange('sort', value)}
-            >
-              <SelectTrigger
-                aria-label="Trier les comptes utilisateurs"
-                className="text-muted-foreground h-10 w-full min-w-0 bg-transparent lg:h-10"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name">{getSortLabel('name')}</SelectItem>
-                <SelectItem value="recent">{getSortLabel('recent')}</SelectItem>
-                <SelectItem value="created">
-                  {getSortLabel('created')}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            {hasActiveFilters && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
-                className="text-muted-foreground min-h-10 justify-self-start @min-[32rem]/users-toolbar:col-span-3 @min-[64rem]/users-toolbar:col-span-4"
-              >
-                <X size={14} />
-                Réinitialiser
-              </Button>
-            )}
-          </div>
-        }
-        pagination={
-          totalPages > 1
-            ? {
-                limit: pagination?.limit ?? 1,
-                onPageChange: setCurrentPage,
-                page: currentPage,
-                total: totalFiltered,
-                totalPages,
-              }
-            : undefined
-        }
-      >
-        <DataTableDesktop>
-          <Table>
-            <TableHeader className="[&_th]:h-9">
-              <TableRow>
-                <TableHead>Compte</TableHead>
-                <TableHead>Accès</TableHead>
-                <TableHead>État</TableHead>
-                {securityDetailsVisible && <TableHead>Sécurité</TableHead>}
-                <TableHead>Dernière connexion</TableHead>
-                <TableHead className="w-14">
-                  <span className="sr-only">Action</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {displayedUsers.length === 0 ? (
+          }
+          pagination={
+            totalPages > 1
+              ? {
+                  limit: pagination?.limit ?? 1,
+                  onPageChange: setCurrentPage,
+                  page: currentPage,
+                  total: totalFiltered,
+                  totalPages,
+                }
+              : undefined
+          }
+        >
+          <DataTableDesktop>
+            <Table aria-label="Comptes utilisateurs">
+              <TableHeader className="[&_th]:h-9">
                 <TableRow>
-                  <TableCell
-                    colSpan={securityDetailsVisible ? 6 : 5}
-                    className="h-44 text-center"
-                  >
-                    <ContentState
-                      className="min-h-0 border-0 bg-transparent p-0"
-                      icon={<UserMinus className="size-5" />}
-                      layout="panel"
-                      title={
-                        loadError
-                          ? 'Utilisateurs indisponibles'
-                          : 'Aucun utilisateur trouvé'
-                      }
-                      action={
-                        !loadError &&
-                        hasActiveFilters && (
-                          <Button
-                            type="button"
-                            variant="link"
-                            size="sm"
-                            onClick={clearFilters}
-                          >
-                            Réinitialiser
-                          </Button>
-                        )
-                      }
-                    />
-                  </TableCell>
+                  <TableHead>Compte</TableHead>
+                  <TableHead>Accès</TableHead>
+                  <TableHead>État</TableHead>
+                  {securityDetailsVisible && <TableHead>Sécurité</TableHead>}
+                  <TableHead>Dernière connexion</TableHead>
+                  <TableHead className="w-14">
+                    <span className="sr-only">Action</span>
+                  </TableHead>
                 </TableRow>
-              ) : (
-                displayedUsers.map((user) => (
-                  <TableRow
-                    className="group/row focus-within:ring-ring/40 relative cursor-pointer focus-within:ring-2 focus-within:ring-inset"
-                    key={user.id}
-                  >
-                    <TableCell className="py-3">
-                      <Link
-                        aria-label={
-                          user.id === currentUser?.id
-                            ? 'Ouvrir mon compte'
-                            : `Ouvrir le compte de ${getUserDisplayName(user)}`
+              </TableHeader>
+              <TableBody>
+                {displayedUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={securityDetailsVisible ? 6 : 5}
+                      className="h-44 text-center"
+                    >
+                      <ContentState
+                        className="min-h-0 border-0 bg-transparent p-0"
+                        icon={<UserMinus className="size-5" />}
+                        layout="panel"
+                        title={
+                          loadError
+                            ? 'Utilisateurs indisponibles'
+                            : 'Aucun utilisateur trouvé'
                         }
-                        className="group/link flex min-w-0 items-center gap-2.5 rounded-md outline-none after:absolute after:inset-0 after:z-10 after:content-['']"
-                        href={getUserDetailHref(user.id)}
-                        prefetch={false}
-                      >
-                        <UserAvatar
-                          user={user}
-                          className="border-border-default group-hover/link:border-primary/35 size-9 shrink-0 rounded-full border transition-colors"
-                        />
-                        <div className="min-w-0">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <span className="text-foreground group-hover/link:text-primary-emphasis truncate text-sm font-semibold transition-colors">
-                              {getUserDisplayName(user)}
-                            </span>
-                            {isUserIdentityMasked(user) && (
-                              <Badge
-                                variant="outline"
-                                className="border-warning/35 text-warning shrink-0 px-1.5 py-0 text-xs"
-                              >
-                                Identité protégée
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-muted-foreground mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-xs">
-                            <span className="shrink-0 font-mono">
-                              {getUserLoginDisplay(user)}
-                            </span>
-                            {user.contactEmail && (
-                              <span className="truncate">
-                                · {user.contactEmail}
+                        action={
+                          !loadError &&
+                          hasActiveFilters && (
+                            <Button
+                              type="button"
+                              variant="link"
+                              size="sm"
+                              onClick={clearFilters}
+                            >
+                              Réinitialiser
+                            </Button>
+                          )
+                        }
+                      />
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  displayedUsers.map((user) => (
+                    <TableRow
+                      className="group/row focus-within:ring-ring/40 relative cursor-pointer focus-within:ring-2 focus-within:ring-inset"
+                      key={user.id}
+                    >
+                      <TableCell className="py-3">
+                        <Link
+                          aria-label={
+                            user.id === currentUser?.id
+                              ? 'Ouvrir mon compte'
+                              : `Ouvrir le compte de ${getUserDisplayName(user)}`
+                          }
+                          className="group/link flex min-w-0 items-center gap-2.5 rounded-md outline-none after:absolute after:inset-0 after:z-10 after:content-['']"
+                          href={getUserDetailHref(user.id)}
+                          prefetch={false}
+                        >
+                          <UserAvatar
+                            user={user}
+                            className="border-border-default group-hover/link:border-primary/35 size-9 shrink-0 rounded-full border transition-colors"
+                          />
+                          <div className="min-w-0">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <span className="text-foreground group-hover/link:text-primary-emphasis truncate text-sm font-semibold transition-colors">
+                                {getUserDisplayName(user)}
                               </span>
-                            )}
-                          </p>
-                        </div>
-                      </Link>
-                    </TableCell>
-                    <TableCell className="pointer-events-none py-3">
-                      <UserAccessLabel user={user} />
-                    </TableCell>
-                    <TableCell className="pointer-events-none py-3">
-                      <UserStatusLabel isActive={user.isActive} />
-                    </TableCell>
-                    {securityDetailsVisible && (
+                              {isUserIdentityMasked(user) && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-warning/35 text-warning shrink-0 px-1.5 py-0 text-xs"
+                                >
+                                  Identité protégée
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-muted-foreground mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-xs">
+                              <span className="shrink-0 font-mono">
+                                {getUserLoginDisplay(user)}
+                              </span>
+                              {user.contactEmail && (
+                                <span className="truncate">
+                                  · {user.contactEmail}
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        </Link>
+                      </TableCell>
                       <TableCell className="pointer-events-none py-3">
-                        {user.mustChangePassword ? (
+                        <UserAccessLabel user={user} />
+                      </TableCell>
+                      <TableCell className="pointer-events-none py-3">
+                        <UserStatusLabel isActive={user.isActive} />
+                      </TableCell>
+                      {securityDetailsVisible && (
+                        <TableCell className="pointer-events-none py-3">
+                          {user.mustChangePassword ? (
+                            <Badge
+                              variant="outline"
+                              className="border-warning/30 bg-warning/10 text-warning text-xs"
+                            >
+                              <Key size={10} className="mr-1" />
+                              Mot de passe à changer
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">
+                              À jour
+                            </span>
+                          )}
+                        </TableCell>
+                      )}
+                      <TableCell className="text-muted-foreground pointer-events-none py-3 text-xs tabular-nums">
+                        {formatRelativeTime(user.lastLoginAt)}
+                      </TableCell>
+                      <TableCell className="pointer-events-none py-3">
+                        <ArrowRight
+                          aria-hidden="true"
+                          className="text-muted-foreground size-4 transition-transform group-hover/row:translate-x-0.5"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </DataTableDesktop>
+          <DataTableMobileList>
+            {displayedUsers.length === 0 ? (
+              <ContentState
+                className="min-h-48 border-0 bg-transparent"
+                icon={<UserMinus className="size-5" />}
+                layout="panel"
+                title={
+                  loadError
+                    ? 'Utilisateurs indisponibles'
+                    : 'Aucun utilisateur trouvé'
+                }
+                action={
+                  !loadError &&
+                  hasActiveFilters && (
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      onClick={clearFilters}
+                    >
+                      Réinitialiser
+                    </Button>
+                  )
+                }
+              />
+            ) : (
+              displayedUsers.map((user) => (
+                <Link
+                  aria-label={
+                    user.id === currentUser?.id
+                      ? 'Ouvrir mon compte'
+                      : `Ouvrir le compte de ${getUserDisplayName(user)}`
+                  }
+                  className="hover:bg-surface-tile-hover focus-visible:bg-primary/10 focus-visible:ring-primary/70 block p-4 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+                  href={getUserDetailHref(user.id)}
+                  key={user.id}
+                  prefetch={false}
+                >
+                  <div className="flex items-start gap-3">
+                    <UserAvatar
+                      user={user}
+                      className="border-border-default size-10 shrink-0 rounded-full border"
+                    />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="min-w-0">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <h3 className="text-foreground truncate text-sm font-semibold">
+                            {getUserDisplayName(user)}
+                          </h3>
+                          {isUserIdentityMasked(user) && (
+                            <Badge
+                              variant="outline"
+                              className="border-warning/35 text-warning shrink-0 px-1.5 py-0 text-xs"
+                            >
+                              Identité protégée
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-muted-foreground mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-xs">
+                          <span className="shrink-0 font-mono">
+                            {getUserLoginDisplay(user)}
+                          </span>
+                          {user.contactEmail && (
+                            <span className="truncate">
+                              · {user.contactEmail}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <UserAccessLabel user={user} />
+                        <UserStatusLabel isActive={user.isActive} />
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                        {securityDetailsVisible && user.mustChangePassword && (
                           <Badge
                             variant="outline"
                             className="border-warning/30 bg-warning/10 text-warning text-xs"
                           >
-                            <Key size={10} className="mr-1" />
                             Mot de passe à changer
                           </Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">
-                            À jour
-                          </span>
                         )}
-                      </TableCell>
-                    )}
-                    <TableCell className="text-muted-foreground pointer-events-none py-3 text-xs tabular-nums">
-                      {formatRelativeTime(user.lastLoginAt)}
-                    </TableCell>
-                    <TableCell className="pointer-events-none py-3">
-                      <ArrowRight
-                        aria-hidden="true"
-                        className="text-muted-foreground size-4 transition-transform group-hover/row:translate-x-0.5"
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </DataTableDesktop>
-        <DataTableMobileList>
-          {displayedUsers.length === 0 ? (
-            <ContentState
-              className="min-h-48 border-0 bg-transparent"
-              icon={<UserMinus className="size-5" />}
-              layout="panel"
-              title={
-                loadError
-                  ? 'Utilisateurs indisponibles'
-                  : 'Aucun utilisateur trouvé'
-              }
-              action={
-                !loadError &&
-                hasActiveFilters && (
-                  <Button
-                    type="button"
-                    variant="link"
-                    size="sm"
-                    onClick={clearFilters}
-                  >
-                    Réinitialiser
-                  </Button>
-                )
-              }
-            />
-          ) : (
-            displayedUsers.map((user) => (
-              <Link
-                aria-label={
-                  user.id === currentUser?.id
-                    ? 'Ouvrir mon compte'
-                    : `Ouvrir le compte de ${getUserDisplayName(user)}`
-                }
-                className="hover:bg-surface-tile-hover focus-visible:bg-primary/10 focus-visible:ring-primary/70 block p-4 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
-                href={getUserDetailHref(user.id)}
-                key={user.id}
-                prefetch={false}
-              >
-                <div className="flex items-start gap-3">
-                  <UserAvatar
-                    user={user}
-                    className="border-border-default size-10 shrink-0 rounded-full border"
-                  />
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <div className="min-w-0">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <h3 className="text-foreground truncate text-sm font-semibold">
-                          {getUserDisplayName(user)}
-                        </h3>
-                        {isUserIdentityMasked(user) && (
-                          <Badge
-                            variant="outline"
-                            className="border-warning/35 text-warning shrink-0 px-1.5 py-0 text-xs"
-                          >
-                            Identité protégée
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-muted-foreground mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-xs">
-                        <span className="shrink-0 font-mono">
-                          {getUserLoginDisplay(user)}
+                        <span className="text-muted-foreground text-xs tabular-nums">
+                          Connexion {formatRelativeTime(user.lastLoginAt)}
                         </span>
-                        {user.contactEmail && (
-                          <span className="truncate">
-                            · {user.contactEmail}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                      <UserAccessLabel user={user} />
-                      <UserStatusLabel isActive={user.isActive} />
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                      {securityDetailsVisible && user.mustChangePassword && (
-                        <Badge
-                          variant="outline"
-                          className="border-warning/30 bg-warning/10 text-warning text-xs"
-                        >
-                          Mot de passe à changer
-                        </Badge>
-                      )}
-                      <span className="text-muted-foreground text-xs tabular-nums">
-                        Connexion {formatRelativeTime(user.lastLoginAt)}
-                      </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))
-          )}
-        </DataTableMobileList>
-      </DataTableSection>
+                </Link>
+              ))
+            )}
+          </DataTableMobileList>
+        </DataTableSection>
+      </div>
     </div>
   );
 };

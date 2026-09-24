@@ -42,7 +42,7 @@ describe('administrative users list accessibility contracts', () => {
   });
 
   it('keeps the directory compact and uses one coherent filter bar', () => {
-    expect(usersListSource).toContain('className="sr-only"> utilisateurs');
+    expect(usersListSource).toContain('aria-label="Comptes utilisateurs"');
     expect(usersListSource).not.toContain('title="Comptes utilisateurs"');
     expect(usersListSource).toContain('Nom, identifiant ou email…');
     expect(usersListSource).toContain('Tous les états');
