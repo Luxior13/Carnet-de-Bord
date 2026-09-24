@@ -40,7 +40,7 @@ describe('/systeme route availability', () => {
     [null, '/login'],
     [
       { isProtected: true, permissions: {}, role: 'ADMIN' },
-      '/administration/utilisateurs',
+      '/systeme/utilisateurs',
     ],
     [
       {
@@ -56,7 +56,7 @@ describe('/systeme route availability', () => {
         permissions: { [PERMISSIONS.SETTINGS.VIEW]: true },
         role: 'USER',
       },
-      '/feuille-de-route',
+      '/systeme/feuille-de-route',
     ],
     [
       {

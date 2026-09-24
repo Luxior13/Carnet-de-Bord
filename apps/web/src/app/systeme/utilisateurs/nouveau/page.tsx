@@ -14,11 +14,12 @@ import {
   UserPlus,
 } from 'lucide-react';
 import Link from 'next/link';
-import React, { type FC, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import React, { type FC, Suspense, useState } from 'react';
 import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
-import { PageBackNavigation } from '$components/layout/PageBackNavigation';
+import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
 import { AccessDeniedState } from '$components/layout/PageState';
 import { SectionPanel } from '$components/layout/SectionPanel';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
@@ -26,6 +27,7 @@ import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDial
 import { UsersAdminHero } from '$components/users/UsersAdminHero';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
+import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
 import { ErrorCode } from '$types/api.types';
@@ -52,6 +54,7 @@ import {
 } from '$ui/select';
 import { Separator } from '$ui/separator';
 import { apiFetch } from '$utils/api.utils';
+import { getSafeCollectionReturnHref } from '$utils/navigation.utils';
 
 type NewUserForm = {
   contactEmail: string;
@@ -77,7 +80,7 @@ const inputClassName = 'border-border/80 bg-input';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
 const LOGIN_NAME_PATTERN = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/;
 
-const NewUserContent: FC = () => {
+const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
   const { userData } = useUser();
   const canCreateUsers = userData
     ? userData.isProtected ||
@@ -230,7 +233,7 @@ const NewUserContent: FC = () => {
   if (!canCreateUsers) {
     return (
       <AccessDeniedState
-        actionHref="/administration/utilisateurs"
+        actionHref={returnHref}
         actionLabel="Retour aux utilisateurs"
         description="Vous n'avez pas la permission de créer des utilisateurs."
       />
@@ -249,10 +252,6 @@ const NewUserContent: FC = () => {
     <PageShell className="py-0" width="form">
       <PageCanvas contentClassName="space-y-5">
         <div className="relative w-full space-y-5">
-          <PageBackNavigation
-            href="/administration/utilisateurs"
-            label="Retour aux utilisateurs"
-          />
           <UsersAdminHero
             title={headerTitle}
             description={headerSubtitle}
@@ -392,7 +391,9 @@ const NewUserContent: FC = () => {
               </CardContent>
               <CardFooter className="border-border/65 bg-surface-muted flex flex-wrap gap-2 border-t p-4">
                 <Button asChild>
-                  <Link href={`/administration/utilisateurs/${createdUser.id}`}>
+                  <Link
+                    href={`${userDetailPath(createdUser.id)}?${new URLSearchParams({ returnTo: returnHref })}`}
+                  >
                     Ouvrir la fiche
                   </Link>
                 </Button>
@@ -650,7 +651,7 @@ const NewUserContent: FC = () => {
                   </p>
                   <div className="ml-auto flex gap-2">
                     <Button asChild variant="outline">
-                      <Link href="/administration/utilisateurs">Annuler</Link>
+                      <Link href={returnHref}>Annuler</Link>
                     </Button>
                     <Button
                       type="submit"
@@ -703,21 +704,38 @@ const NewUserContent: FC = () => {
   );
 };
 
+const NewUserPageContent: FC = () => {
+  const searchParams = useSearchParams();
+  const returnHref = getSafeCollectionReturnHref(
+    searchParams.get('returnTo'),
+    PAGE_PATHS.users,
+  );
+
+  return (
+    <AuthenticatedLayout
+      breadcrumbs={[
+        { label: FEATURES.users.audit.poleLabel },
+        { href: returnHref, label: FEATURES.users.label },
+        { href: PAGE_PATHS.newUser, label: 'Nouvel utilisateur' },
+      ]}
+    >
+      <NewUserContent returnHref={returnHref} />
+    </AuthenticatedLayout>
+  );
+};
+
 const NewUserPage: FC = () => (
-  <AuthenticatedLayout
-    breadcrumbs={[
-      {
-        label: FEATURES.users.audit.poleLabel,
-      },
-      { href: FEATURES.users.href, label: FEATURES.users.label },
-      {
-        href: '/administration/utilisateurs/nouveau',
-        label: 'Nouvel utilisateur',
-      },
-    ]}
+  <Suspense
+    fallback={
+      <PageShell className="py-0" width="form">
+        <PageCanvas>
+          <PageDetailSkeleton />
+        </PageCanvas>
+      </PageShell>
+    }
   >
-    <NewUserContent />
-  </AuthenticatedLayout>
+    <NewUserPageContent />
+  </Suspense>
 );
 
 export default NewUserPage;

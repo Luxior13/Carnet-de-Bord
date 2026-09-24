@@ -1,23 +1,31 @@
 import { FEATURE_LIST } from '$constants/feature-registry.constants';
+import {
+  getCanonicalPagePathname,
+  PAGE_PATHS,
+} from '$constants/routes.constants';
 
 const INTERNAL_HREF_BASE_URL = new URL('https://team-control.local');
 const INVALID_ENCODED_URL_BYTE_PATTERN =
   /%(?:0[0-9a-f]|1[0-9a-f]|25|2f|5c|7f)/i;
 const INVALID_PERCENT_ENCODING_PATTERN = /%(?![0-9a-f]{2})/i;
-const KNOWN_INTERNAL_PAGE_PATHS = new Set([
+const KNOWN_INTERNAL_PAGE_PATHS = new Set<string>([
   ...FEATURE_LIST.filter(({ availability }) => availability === 'live').map(
     ({ href }) => href,
   ),
-  '/administration',
-  '/administration/utilisateurs/nouveau',
-  '/mon-compte',
-  '/vie-interne/repertoire/nouveau',
-  // Compatibilité des notifications créées avant le renommage du répertoire.
-  '/personnes/nouveau',
+  PAGE_PATHS.newUser,
+  PAGE_PATHS.account,
+  PAGE_PATHS.newPerson,
 ]);
-const USER_DETAIL_PATH_PATTERN = /^\/administration\/utilisateurs\/[^/]+$/;
-const PERSON_DETAIL_PATH_PATTERN = /^\/vie-interne\/repertoire\/[^/]+$/;
-const LEGACY_PERSON_DETAIL_PATH_PATTERN = /^\/personnes\/[^/]+$/;
+
+const isResourceDetailPath = (
+  pathname: string,
+  collection: string,
+): boolean => {
+  if (!pathname.startsWith(`${collection}/`)) return false;
+  const id = pathname.slice(collection.length + 1);
+
+  return id.length > 0 && !id.includes('/');
+};
 
 const containsUrlControlCharacter = (value: string): boolean =>
   [...value].some((character) => {
@@ -43,7 +51,9 @@ export const isSafeInternalHref = (value: string): boolean => {
   }
   if (
     INVALID_PERCENT_ENCODING_PATTERN.test(value) ||
-    INVALID_ENCODED_URL_BYTE_PATTERN.test(value)
+    // Encoded slashes are needed in query values such as returnTo. Validate
+    // those destinations separately, while rejecting ambiguous routing paths.
+    INVALID_ENCODED_URL_BYTE_PATTERN.test(value.split(/[?#]/u, 1)[0] ?? '')
   ) {
     return false;
   }
@@ -99,7 +109,16 @@ export const isSafeInternalHref = (value: string): boolean => {
 export const getSafeInternalPathname = (value: string): string | null => {
   if (!isSafeInternalHref(value)) return null;
 
-  return new URL(value, INTERNAL_HREF_BASE_URL).pathname;
+  return getCanonicalPagePathname(
+    new URL(value, INTERNAL_HREF_BASE_URL).pathname,
+  );
+};
+
+export const getCanonicalInternalHref = (value: string): string | null => {
+  if (!isSafeInternalHref(value)) return null;
+  const url = new URL(value, INTERNAL_HREF_BASE_URL);
+
+  return `${getCanonicalPagePathname(url.pathname)}${url.search}${url.hash}`;
 };
 
 /**
@@ -113,8 +132,7 @@ export const isKnownInternalPageHref = (value: string): boolean => {
 
   return (
     KNOWN_INTERNAL_PAGE_PATHS.has(pathname) ||
-    USER_DETAIL_PATH_PATTERN.test(pathname) ||
-    PERSON_DETAIL_PATH_PATTERN.test(pathname) ||
-    LEGACY_PERSON_DETAIL_PATH_PATTERN.test(pathname)
+    isResourceDetailPath(pathname, PAGE_PATHS.users) ||
+    isResourceDetailPath(pathname, PAGE_PATHS.persons)
   );
 };

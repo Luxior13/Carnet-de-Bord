@@ -10,12 +10,12 @@ Référence révisée le 22 septembre 2026. Les chantiers proviennent du [catalo
 | `/mes-notifications` | Boîte de notifications livrée | Aujourd’hui et outils globaux |
 | `/mon-compte` | Profil et sécurité du compte livrés | Outils globaux |
 | `/recherche` | Recherche de pages livrée ; recherche de dossiers future | Outils globaux |
-| `/vie-interne/repertoire`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Personne livrées | Membres |
-| `/vie-interne/actualite-interne` | Actualité livrée | Activité |
-| `/administration/utilisateurs`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Utilisateur livrées | Système |
+| `/membres/repertoire`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Personne livrées | Membres |
+| `/activite/actualites` | Actualité livrée | Activité |
+| `/systeme/utilisateurs`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Utilisateur livrées | Système |
 | `/systeme/journal-activite` | Journal livré | Système |
 | `/systeme/parametres` | Paramètres techniques livrés | Système |
-| `/feuille-de-route` | Catalogue de projets livré | Système |
+| `/systeme/feuille-de-route` | Catalogue de projets livré | Système |
 | `/login` | Connexion | Authentification |
 | `/administration`, `/tableau-de-bord`, `/tableau-de-bord/mes-notifications`, `/systeme` | Accès de compatibilité ou entrée de pôle | Routes d’appui |
 

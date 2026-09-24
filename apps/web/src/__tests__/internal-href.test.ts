@@ -9,8 +9,9 @@ describe('safe internal notification hrefs', () => {
   it.each([
     '/',
     '/mon-compte',
-    '/administration/utilisateurs/user-1?section=access#permissions',
+    '/systeme/utilisateurs/user-1?section=access#permissions',
     '/recherche?q=%C3%A9quipe',
+    '/systeme/utilisateurs/user-1?returnTo=%2Fsysteme%2Futilisateurs%3Fsearch%3DAlex',
   ])('accepts the canonical internal page %s', (href) => {
     expect(isSafeInternalHref(href)).toBe(true);
   });
@@ -52,9 +53,9 @@ describe('known notification destinations', () => {
     '/mon-compte?section=security',
     '/systeme/journal-activite?period=7d',
     '/systeme/parametres',
-    '/vie-interne/repertoire/nouveau',
-    '/vie-interne/repertoire/person-1?section=contacts',
-    '/administration/utilisateurs/user-1?section=access',
+    '/membres/repertoire/nouveau',
+    '/membres/repertoire/person-1?section=contacts',
+    '/systeme/utilisateurs/user-1?section=access',
   ])('accepts the live destination %s', (href) => {
     expect(isKnownInternalPageHref(href)).toBe(true);
   });
@@ -66,7 +67,7 @@ describe('known notification destinations', () => {
     },
   );
 
-  it.each(['/future-module', '/administration/utilisateurs/user-1/unknown'])(
+  it.each(['/future-module', '/systeme/utilisateurs/user-1/unknown'])(
     'rejects the unknown or planned destination %s',
     (href) => {
       expect(isKnownInternalPageHref(href)).toBe(false);

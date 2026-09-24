@@ -15,7 +15,6 @@ import React, {
 import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
-import { PageBackButton } from '$components/layout/PageBackNavigation';
 import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
 import { PageSectionNavigation } from '$components/layout/PageSectionNavigation';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
@@ -73,6 +72,7 @@ import {
   PERMISSIONS,
   type PermissionsData,
 } from '$constants/permissions.constants';
+import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
 import type {
   AuditLogEntry,
@@ -99,6 +99,7 @@ import {
   getGuardedNavigationRequest,
   GUARDED_NAVIGATION_REQUEST_EVENT,
 } from '$utils/guarded-navigation.utils';
+import { getSafeCollectionReturnHref } from '$utils/navigation.utils';
 import {
   getUserDisplayName,
   getUserLoginDisplay,
@@ -113,16 +114,19 @@ type UserDetailPageProps = {
 const DetailSkeleton: FC = () => (
   <PageShell className="py-0">
     <PageCanvas contentClassName="relative space-y-4">
-      <PageDetailSkeleton showBack />
+      <PageDetailSkeleton />
     </PageCanvas>
   </PageShell>
 );
 
-export const UserDetailPageSkeleton: FC = () => (
+export const UserDetailPageSkeleton: FC<{ returnHref?: string }> = ({
+  returnHref = PAGE_PATHS.users,
+}) => (
   <AuthenticatedLayout
     breadcrumbs={[
       { label: FEATURES.users.audit.poleLabel },
-      { href: FEATURES.users.href, label: FEATURES.users.label },
+      { href: returnHref, label: FEATURES.users.label },
+      { label: 'Fiche' },
     ]}
   >
     <DetailSkeleton />
@@ -136,6 +140,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const returnHref = getSafeCollectionReturnHref(
+    searchParams.get('returnTo'),
+    PAGE_PATHS.users,
+  );
   const currentQueryString = searchParams.toString();
   const requestedSection = normalizeUserDetailSection(
     searchParams.get('section'),
@@ -715,18 +723,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     },
     [user],
   );
-
-  const handleNavigateBackToUsers = useCallback((): void => {
-    const usersHref = '/administration/utilisateurs';
-
-    if (hasUnsavedChanges) {
-      requestPendingNavigation({ href: usersHref, kind: 'href' });
-
-      return;
-    }
-
-    router.push(usersHref);
-  }, [hasUnsavedChanges, requestPendingNavigation, router]);
 
   const fetchUser = useCallback(
     async (options: { background?: boolean } = {}): Promise<void> => {
@@ -1801,7 +1797,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
 
       if (response.ok && data.success) {
         toast.success('Compte supprimé définitivement');
-        router.push('/administration/utilisateurs');
+        router.push(returnHref);
       } else {
         if (
           requestPasswordReauthenticationForResponse(data, {
@@ -2121,7 +2117,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
   };
 
   if (isCurrentUserLoading && !currentUser) {
-    return <UserDetailPageSkeleton />;
+    return <UserDetailPageSkeleton returnHref={returnHref} />;
   }
 
   if (!canViewUsers) {
@@ -2131,11 +2127,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
           {
             label: FEATURES.users.audit.poleLabel,
           },
-          { href: FEATURES.users.href, label: FEATURES.users.label },
+          { href: returnHref, label: FEATURES.users.label },
+          { label: 'Fiche' },
         ]}
       >
         <AccessDeniedState
-          actionHref="/administration/utilisateurs"
+          actionHref={returnHref}
           actionLabel="Retour aux utilisateurs"
           description="Vous n'avez pas la permission de consulter cet utilisateur."
         />
@@ -2144,7 +2141,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
   }
 
   if (isLoading) {
-    return <UserDetailPageSkeleton />;
+    return <UserDetailPageSkeleton returnHref={returnHref} />;
   }
 
   if (errorMessage || !user) {
@@ -2156,18 +2153,19 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
           {
             label: FEATURES.users.audit.poleLabel,
           },
-          { href: FEATURES.users.href, label: FEATURES.users.label },
+          { href: returnHref, label: FEATURES.users.label },
+          { label: 'Fiche' },
         ]}
       >
         {errorStatus === 403 ? (
           <AccessDeniedState
-            actionHref="/administration/utilisateurs"
+            actionHref={returnHref}
             actionLabel="Retour aux utilisateurs"
             description="Vous n'avez pas la permission de consulter cet utilisateur."
           />
         ) : (
           <PageState
-            actionHref={isNotFound ? '/administration/utilisateurs' : undefined}
+            actionHref={isNotFound ? returnHref : undefined}
             actionLabel={isNotFound ? 'Retour aux utilisateurs' : 'Réessayer'}
             description={
               isNotFound
@@ -2181,9 +2179,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
                     void fetchUser();
                   }
             }
-            secondaryActionHref={
-              isNotFound ? undefined : '/administration/utilisateurs'
-            }
+            secondaryActionHref={isNotFound ? undefined : returnHref}
             secondaryActionLabel={
               isNotFound ? undefined : 'Retour aux utilisateurs'
             }
@@ -2205,9 +2201,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         {
           label: FEATURES.users.audit.poleLabel,
         },
-        { href: FEATURES.users.href, label: FEATURES.users.label },
+        { href: returnHref, label: FEATURES.users.label },
         {
-          href: `/administration/utilisateurs/${user.id}`,
+          href: userDetailPath(user.id),
           label: getUserDisplayName(user),
         },
       ]}
@@ -2215,10 +2211,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       <PageShell className="py-0">
         <PageCanvas contentClassName="relative space-y-3">
           <div className="min-w-0 space-y-4">
-            <PageBackButton
-              label="Retour aux utilisateurs"
-              onClick={handleNavigateBackToUsers}
-            />
             <UsersAdminHero
               compact
               hasNavigation

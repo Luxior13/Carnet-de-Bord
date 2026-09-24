@@ -9,6 +9,7 @@ import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { PageHero } from '$components/layout/PageHero';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { FEATURES } from '$constants/feature-registry.constants';
+import { PAGE_PATHS } from '$constants/routes.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
 import { PersonsList } from '$features/persons/components/PersonsList';
@@ -36,8 +37,8 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
   const { userData } = useUser();
   const { canCreate, canView } = getPersonCapabilities(userData);
   const searchParamsString = searchParams?.toString() ?? '';
-  const returnHref = `/vie-interne/repertoire${searchParamsString ? `?${searchParamsString}` : ''}`;
-  const createHref = `/vie-interne/repertoire/nouveau?${new URLSearchParams({ returnTo: returnHref })}`;
+  const returnHref = `${PAGE_PATHS.persons}${searchParamsString ? `?${searchParamsString}` : ''}`;
+  const createHref = `${PAGE_PATHS.newPerson}?${new URLSearchParams({ returnTo: returnHref })}`;
 
   if (!canView) {
     return (
@@ -81,7 +82,7 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
               </Button>
             ) : null
           }
-          description={FEATURES.persons.description}
+          description="Retrouvez les membres et leurs coordonnées."
           icon={<Users className="size-5" />}
           title={FEATURES.persons.label}
           tone="internal"

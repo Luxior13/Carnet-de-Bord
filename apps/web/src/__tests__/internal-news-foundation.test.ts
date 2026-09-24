@@ -44,7 +44,7 @@ describe('internal news foundation', () => {
   it('publishes one live feature with role-bound editorial management', () => {
     expect(FEATURES.internalNews).toMatchObject({
       availability: 'live',
-      href: '/vie-interne/actualite-interne',
+      href: '/activite/actualites',
       requiredPermissions: [PERMISSIONS.INTERNAL_NEWS.VIEW],
     });
     expect(getNavigationItemByHref(FEATURES.internalNews.href)).toMatchObject({

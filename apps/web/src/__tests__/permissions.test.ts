@@ -561,7 +561,7 @@ describe('permission catalogue', () => {
       accessPermissionKey: PERMISSIONS.INTERNAL_NEWS.VIEW,
       assignment: 'role-bound',
       poleKey: 'activity',
-      routes: ['/vie-interne/actualite-interne'],
+      routes: ['/activite/actualites'],
     });
     expect(
       internalNewsCategory?.permissions.every(
@@ -573,15 +573,15 @@ describe('permission catalogue', () => {
       (category) => category.key === 'persons',
     );
     expect(personsCategory?.routes).toEqual([
-      '/vie-interne/repertoire',
-      '/vie-interne/repertoire/nouveau',
-      '/vie-interne/repertoire/[id]',
+      '/membres/repertoire',
+      '/membres/repertoire/nouveau',
+      '/membres/repertoire/[id]',
     ]);
     expect(
       personsCategory?.permissions.find(
         (permission) => permission.key === PERMISSIONS.PERSONS.CREATE,
       )?.route,
-    ).toBe('/vie-interne/repertoire/nouveau');
+    ).toBe('/membres/repertoire/nouveau');
 
     expect(getAccessPermissionKeys()).not.toEqual(
       expect.arrayContaining([

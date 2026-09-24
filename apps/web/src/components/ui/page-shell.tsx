@@ -12,17 +12,17 @@ type PageShellProps = ComponentProps<'div'> & {
 function getPageShellWidthClass(width: PageShellWidth): string {
   switch (width) {
     case 'default':
-      return 'max-w-[var(--private-content-width)]';
+      return '[--page-shell-max-width:var(--private-content-width)]';
     case 'full':
-      return 'max-w-none';
+      return '[--page-shell-max-width:100%]';
     case 'form':
-      return 'max-w-[var(--private-content-width-form)]';
+      return '[--page-shell-max-width:var(--private-content-width-form)]';
     case 'narrow':
-      return 'max-w-5xl';
+      return '[--page-shell-max-width:64rem]';
     case 'reading':
-      return 'max-w-[var(--private-content-width-reading)]';
+      return '[--page-shell-max-width:var(--private-content-width-reading)]';
     case 'wide':
-      return 'max-w-[var(--private-content-width-wide)]';
+      return '[--page-shell-max-width:var(--private-content-width-wide)]';
   }
 }
 
@@ -35,7 +35,7 @@ const PageShell: FC<PageShellProps> = ({
     <div
       data-page-width={width}
       className={cn(
-        '@container/page relative z-10 mx-auto w-full min-w-0 px-[var(--private-content-padding)] py-5 sm:py-6',
+        '@container/page relative z-10 mx-auto w-full max-w-[var(--page-shell-max-width)] min-w-0 px-[var(--private-content-padding)]',
         getPageShellWidthClass(width),
         className,
       )}

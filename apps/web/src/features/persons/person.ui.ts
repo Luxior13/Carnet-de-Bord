@@ -1,13 +1,14 @@
 import type { ZodError } from 'zod';
 
+import { PAGE_PATHS } from '$constants/routes.constants';
+import { getSafeCollectionReturnHref } from '$utils/navigation.utils';
+
 import { calculateCivilAge } from './person.utils';
 import type { PersonDetail, PersonStructureStatus } from './types/person.types';
 
 export type PersonFormErrors = Record<string, string>;
 
-export const PERSON_DIRECTORY_PATH = '/vie-interne/repertoire';
-
-const RETURN_PATH_ORIGIN = 'https://team-control.local';
+export const PERSON_DIRECTORY_PATH = PAGE_PATHS.persons;
 
 /**
  * Reads a `returnTo` value coming from the URL and keeps it only when it stays
@@ -16,23 +17,7 @@ const RETURN_PATH_ORIGIN = 'https://team-control.local';
  */
 export const getSafePersonReturnHref = (
   value: string | string[] | null | undefined,
-): string => {
-  const candidate = Array.isArray(value) ? value[0] : value;
-  if (!candidate?.startsWith('/')) return PERSON_DIRECTORY_PATH;
-  try {
-    const parsed = new URL(candidate, RETURN_PATH_ORIGIN);
-    if (
-      parsed.origin !== RETURN_PATH_ORIGIN ||
-      parsed.pathname !== PERSON_DIRECTORY_PATH
-    ) {
-      return PERSON_DIRECTORY_PATH;
-    }
-
-    return `${parsed.pathname}${parsed.search}`;
-  } catch {
-    return PERSON_DIRECTORY_PATH;
-  }
-};
+): string => getSafeCollectionReturnHref(value, PERSON_DIRECTORY_PATH);
 
 const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('fr-FR', {
   dateStyle: 'medium',

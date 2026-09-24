@@ -2,6 +2,8 @@ import '$env';
 
 import type { NextConfig } from 'next';
 
+import { PAGE_REDIRECTS } from './src/shared/constants/routes.constants';
+
 const nextConfig: NextConfig = {
   // Keep `next dev` from rewriting production build chunks when both commands
   // run in the same workspace. Next sets NODE_ENV before loading this config.
@@ -12,18 +14,7 @@ const nextConfig: NextConfig = {
   },
   poweredByHeader: false,
   reactStrictMode: true,
-  redirects: async () => [
-    {
-      destination: '/vie-interne/repertoire',
-      permanent: true,
-      source: '/personnes',
-    },
-    {
-      destination: '/vie-interne/repertoire/:path*',
-      permanent: true,
-      source: '/personnes/:path*',
-    },
-  ],
+  redirects: async () => PAGE_REDIRECTS,
   transpilePackages: ['@repo/database', '@repo/shared'],
 };
 

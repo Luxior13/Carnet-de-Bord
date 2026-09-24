@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import React, { type FC } from 'react';
 
 import { EntityDangerZone } from '$components/layout/EntityDangerZone';
+import { PAGE_PATHS } from '$constants/routes.constants';
 
 import { deletePerson } from '../person.api';
 import type { PersonDetail } from '../types/person.types';
@@ -31,7 +32,7 @@ export const PersonDangerZone: FC<PersonDangerZoneProps> = ({
           version,
         })
       }
-      onDeleted={() => router.replace('/vie-interne/repertoire')}
+      onDeleted={() => router.replace(PAGE_PATHS.persons)}
       onReloadVersion={async () => (await onReload()).version}
       version={person.version}
     />

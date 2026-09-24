@@ -2,6 +2,7 @@
 
 import { Plus, Users } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import React, { type FC, Suspense } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
@@ -9,6 +10,7 @@ import { AccessDeniedState } from '$components/layout/PageState';
 import { UsersAdminHero } from '$components/users/UsersAdminHero';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
+import { PAGE_PATHS } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
 import { UsersListPage } from '$features/users/UsersListPage';
 import { Button } from '$ui/button';
@@ -20,6 +22,9 @@ const UsersListFallback: FC = () => (
 );
 
 const UsersAdministrationContent: FC = () => {
+  const searchParams = useSearchParams();
+  const query = searchParams.toString();
+  const returnHref = `${PAGE_PATHS.users}${query ? `?${query}` : ''}`;
   const { userData } = useUser();
   const canViewUsers = userData
     ? userData.isProtected ||
@@ -49,11 +54,13 @@ const UsersAdministrationContent: FC = () => {
       <PageCanvas contentClassName="space-y-5">
         <UsersAdminHero
           title={FEATURES.users.label}
-          description="Comptes ayant accès au site, rôles et état de sécurité."
+          description="Gérez les comptes et les accès à votre espace."
           actions={
             canCreateUsers ? (
               <Button asChild size="sm">
-                <Link href="/administration/utilisateurs/nouveau">
+                <Link
+                  href={`${PAGE_PATHS.newUser}?${new URLSearchParams({ returnTo: returnHref })}`}
+                >
                   <Plus className="size-4" />
                   Nouvel utilisateur
                 </Link>

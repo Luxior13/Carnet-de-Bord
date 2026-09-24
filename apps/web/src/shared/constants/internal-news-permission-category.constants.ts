@@ -1,3 +1,5 @@
+import { PAGE_PATHS } from '$constants/routes.constants';
+
 import type {
   PermissionCategory,
   PermissionItem,
@@ -27,7 +29,7 @@ export const INTERNAL_NEWS_PERMISSION_ITEMS: PermissionItem[] = [
     label: "Consulter l'actualité interne",
     module: 'Actualité interne',
     risk: 'default',
-    route: '/vie-interne/actualite-interne',
+    route: PAGE_PATHS.internalNews,
     surface: 'page',
   }),
   permission({
@@ -39,7 +41,7 @@ export const INTERNAL_NEWS_PERMISSION_ITEMS: PermissionItem[] = [
     label: "Publier dans l'actualité interne",
     module: 'Actualité interne',
     risk: 'sensitive',
-    route: '/vie-interne/actualite-interne',
+    route: PAGE_PATHS.internalNews,
     surface: 'page',
   }),
 ];
@@ -54,7 +56,7 @@ export const INTERNAL_NEWS_PERMISSION_CATEGORY: PermissionCategory = {
   label: 'Actualité interne',
   permissions: INTERNAL_NEWS_PERMISSION_ITEMS,
   poleKey: 'activity',
-  routes: ['/vie-interne/actualite-interne'],
+  routes: [PAGE_PATHS.internalNews],
   surface: 'page',
   tone: 'internal',
 };

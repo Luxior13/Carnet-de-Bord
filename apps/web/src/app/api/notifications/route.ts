@@ -32,7 +32,10 @@ import type {
   NotificationItem,
   NotificationListData,
 } from '$types/platform.types';
-import { isKnownInternalPageHref } from '$utils/internal-href.utils';
+import {
+  getCanonicalInternalHref,
+  isKnownInternalPageHref,
+} from '$utils/internal-href.utils';
 
 const NOTIFICATION_RESOURCE = 'notifications';
 const NOTIFICATION_MAX_LIMIT = 50;
@@ -184,7 +187,7 @@ export async function GET(
       href:
         recipient.notification.href &&
         isKnownInternalPageHref(recipient.notification.href)
-          ? recipient.notification.href
+          ? getCanonicalInternalHref(recipient.notification.href)
           : null,
       id: recipient.notification.id,
       readAt: recipient.readAt?.toISOString() ?? null,

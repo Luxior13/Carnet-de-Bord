@@ -16,7 +16,7 @@ export default function PersonLoading(): React.ReactNode {
     >
       <PageShell className="py-0">
         <PageCanvas>
-          <PageDetailSkeleton showBack />
+          <PageDetailSkeleton />
         </PageCanvas>
       </PageShell>
     </AuthenticatedLayout>

@@ -21,7 +21,7 @@ type FakeHarness = {
 };
 
 const createHarness = (): FakeHarness => {
-  let currentHref = '/vie-interne/repertoire/abc?section=identite#coordonnees';
+  let currentHref = '/membres/repertoire/abc?section=identite#coordonnees';
   let currentState: unknown = { __NA: true, tree: 'person' };
   let listener: ((event: FakePopStateEvent) => void) | null = null;
   const routerPopStateListener = vi.fn();
@@ -75,8 +75,8 @@ const createHarness = (): FakeHarness => {
 
 describe('unsaved history traversal guard', () => {
   it.each([
-    ['/vie-interne/repertoire', 'Précédent'],
-    ['/vie-interne/repertoire/abc?section=notes', 'Suivant'],
+    ['/membres/repertoire', 'Précédent'],
+    ['/membres/repertoire/abc?section=notes', 'Suivant'],
   ])(
     'restores the dirty entry before the router handles %s (%s)',
     (requestedHref) => {
@@ -92,11 +92,11 @@ describe('unsaved history traversal guard', () => {
       expect(event.propagationStopped).toBe(true);
       expect(harness.routerPopStateListener).not.toHaveBeenCalled();
       expect(harness.getCurrentHref()).toBe(
-        '/vie-interne/repertoire/abc?section=identite#coordonnees',
+        '/membres/repertoire/abc?section=identite#coordonnees',
       );
       expect(harness.pushedEntries).toEqual([
         {
-          href: '/vie-interne/repertoire/abc?section=identite#coordonnees',
+          href: '/membres/repertoire/abc?section=identite#coordonnees',
           state: { __NA: true, tree: 'person' },
         },
       ]);
@@ -113,11 +113,11 @@ describe('unsaved history traversal guard', () => {
       onPendingNavigation,
     );
 
-    harness.traverse('/vie-interne/repertoire', { tree: 'list' });
+    harness.traverse('/membres/repertoire', { tree: 'list' });
     guard.cancel();
 
     expect(harness.back).not.toHaveBeenCalled();
-    expect(harness.getCurrentHref()).toContain('/vie-interne/repertoire/abc');
+    expect(harness.getCurrentHref()).toContain('/membres/repertoire/abc');
 
     harness.traverse('/tableau-de-bord', { tree: 'dashboard' });
     expect(onPendingNavigation).toHaveBeenCalledTimes(2);
@@ -128,12 +128,12 @@ describe('unsaved history traversal guard', () => {
     const harness = createHarness();
     const guard = createUnsavedHistoryTraversalGuard(harness.port, vi.fn());
 
-    harness.traverse('/vie-interne/repertoire', { tree: 'list' });
+    harness.traverse('/membres/repertoire', { tree: 'list' });
 
     expect(guard.confirm()).toBe(true);
     expect(harness.back).toHaveBeenCalledOnce();
 
-    const replayedEvent = harness.traverse('/vie-interne/repertoire', {
+    const replayedEvent = harness.traverse('/membres/repertoire', {
       tree: 'list',
     });
 
@@ -144,7 +144,7 @@ describe('unsaved history traversal guard', () => {
 
     harness.traverse('/tableau-de-bord', { tree: 'dashboard' });
     expect(harness.pushedEntries.at(-1)).toEqual({
-      href: '/vie-interne/repertoire',
+      href: '/membres/repertoire',
       state: { tree: 'list' },
     });
   });
@@ -158,7 +158,7 @@ describe('unsaved history traversal guard', () => {
     guard.dispose();
     expect(harness.hasListener()).toBe(false);
 
-    const event = harness.traverse('/vie-interne/repertoire', {
+    const event = harness.traverse('/membres/repertoire', {
       tree: 'list',
     });
 

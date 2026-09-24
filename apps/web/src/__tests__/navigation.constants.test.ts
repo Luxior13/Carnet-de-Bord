@@ -78,8 +78,8 @@ describe('navigation availability', () => {
     expect(hrefs).toEqual([
       '/',
       '/mes-notifications',
-      '/vie-interne/actualite-interne',
-      '/feuille-de-route',
+      '/activite/actualites',
+      '/systeme/feuille-de-route',
     ]);
     expect(hrefs).not.toContain('/tableau-de-bord/mes-taches');
     expect(hrefs).not.toContain('/vie-interne');
@@ -91,7 +91,7 @@ describe('navigation availability', () => {
     expect(hrefs).toContain('/tableau-de-bord/mes-taches');
     expect(hrefs).toContain('/vie-interne/reunions');
     expect(hrefs).toContain('/vie-interne/calendrier-interne');
-    expect(hrefs).not.toContain('/vie-interne/repertoire');
+    expect(hrefs).not.toContain('/membres/repertoire');
     expect(hrefs).toContain('/bureau-juridique/documents');
     expect(hrefs).toContain('/bureau-juridique/partenaires');
     expect(hrefs).toContain('/tresorerie/operations');
@@ -170,7 +170,7 @@ describe('navigation availability', () => {
   it('groups live user administration under the system space', () => {
     const hrefs = getVisibleHrefs({ [PERMISSIONS.USERS.VIEW]: true });
 
-    expect(hrefs).toContain('/administration/utilisateurs');
+    expect(hrefs).toContain('/systeme/utilisateurs');
     expect(hrefs).not.toContain('/systeme');
     expect(hrefs).not.toContain('/systeme/parametres');
     expect(hrefs).not.toContain('/systeme/journal-activite');
@@ -180,11 +180,11 @@ describe('navigation availability', () => {
     const user = buildUser({ [PERMISSIONS.PERSONS.VIEW]: true });
     const hrefs = getVisibleHrefs(user.permissions);
 
-    expect(hrefs).toContain('/vie-interne/repertoire');
+    expect(hrefs).toContain('/membres/repertoire');
     expect(hrefs).not.toContain('/vie-interne/membres');
     expect(hrefs).not.toContain('/bureau-juridique/personnes-contacts');
     expect(
-      getActiveNavigationSpace('/vie-interne/repertoire', [
+      getActiveNavigationSpace('/membres/repertoire', [
         ...getVisibleNavigationSpaces(user),
       ]).id,
     ).toBe('internal');
@@ -200,7 +200,7 @@ describe('navigation availability', () => {
 
     expect(liveHrefs).toContain('/systeme/journal-activite');
     expect(liveHrefs).not.toContain('/systeme');
-    expect(liveHrefs).not.toContain('/administration/utilisateurs');
+    expect(liveHrefs).not.toContain('/systeme/utilisateurs');
     expect(liveHrefs).not.toContain('/systeme/parametres');
     expect(adminHrefs).toContain('/systeme/parametres');
     expect(roadmapHrefs).not.toContain('/systeme/parametres');
@@ -213,7 +213,7 @@ describe('navigation availability', () => {
       '/vie-interne/calendrier-interne',
     ).flatMap((section) => flattenHrefs(section.items));
 
-    expect(sidebarHrefs).toEqual(['/vie-interne/actualite-interne']);
+    expect(sidebarHrefs).toEqual(['/activite/actualites']);
     expect(sidebarHrefs).not.toContain('/vie-interne/calendrier-interne');
   });
 
@@ -222,14 +222,14 @@ describe('navigation availability', () => {
     const spaces = getVisibleNavigationSpaces(user);
 
     expect(getActiveNavigationSpace('/', spaces).id).toBe('dashboard');
-    expect(
-      getActiveNavigationSpace('/administration/utilisateurs', spaces).id,
-    ).toBe('system');
+    expect(getActiveNavigationSpace('/systeme/utilisateurs', spaces).id).toBe(
+      'system',
+    );
     const personSpaces = getVisibleNavigationSpaces(
       buildUser({ [PERMISSIONS.PERSONS.VIEW]: true }),
     );
     expect(
-      getActiveNavigationSpace('/vie-interne/repertoire', personSpaces).id,
+      getActiveNavigationSpace('/membres/repertoire', personSpaces).id,
     ).toBe('internal');
     // The system pole has no hub page anymore: its remaining destinations must
     // still resolve to the system space for the sidebar highlight.
@@ -256,7 +256,7 @@ describe('navigation availability', () => {
       space.sections.flatMap((section) => flattenHrefs(section.items)),
     );
 
-    expect(hrefs).not.toContain('/vie-interne/repertoire');
+    expect(hrefs).not.toContain('/membres/repertoire');
     expect(hrefs).toContain('/');
   });
 
@@ -269,10 +269,10 @@ describe('navigation availability', () => {
     const hrefs = getRoadmapHrefs();
 
     expect(hrefs).toContain('/vie-interne/reunions');
-    expect(hrefs).not.toContain('/vie-interne/repertoire');
+    expect(hrefs).not.toContain('/membres/repertoire');
     expect(hrefs).not.toContain('/');
     expect(hrefs).not.toContain('/mon-compte');
-    expect(hrefs).not.toContain('/administration/utilisateurs');
+    expect(hrefs).not.toContain('/systeme/utilisateurs');
   });
 
   it('shows only live destinations to protected users by default', () => {
@@ -285,12 +285,12 @@ describe('navigation availability', () => {
     expect(liveHrefs).toEqual([
       '/',
       '/mes-notifications',
-      '/vie-interne/repertoire',
-      '/vie-interne/actualite-interne',
-      '/administration/utilisateurs',
+      '/membres/repertoire',
+      '/activite/actualites',
+      '/systeme/utilisateurs',
       '/systeme/journal-activite',
       '/systeme/parametres',
-      '/feuille-de-route',
+      '/systeme/feuille-de-route',
     ]);
     expect(allHrefs).toEqual(rawHrefs);
   });

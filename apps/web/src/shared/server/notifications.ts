@@ -3,7 +3,10 @@ import 'server-only';
 import type { NotificationSeverity, Prisma } from '@prisma/client';
 
 import { prisma } from '$server/prisma';
-import { isKnownInternalPageHref } from '$utils/internal-href.utils';
+import {
+  getCanonicalInternalHref,
+  isKnownInternalPageHref,
+} from '$utils/internal-href.utils';
 
 type NotificationWriteClient = Pick<
   Prisma.TransactionClient,
@@ -105,7 +108,9 @@ const hasSameNotificationIdentity = (
   stored.createdById === expected.createdById &&
   stored.dedupeKey === expected.dedupeKey &&
   datesEqual(stored.expiresAt, expected.expiresAt) &&
-  stored.href === expected.href &&
+  (stored.href
+    ? (getCanonicalInternalHref(stored.href) ?? stored.href)
+    : stored.href) === expected.href &&
   stored.severity === expected.severity &&
   stored.title === expected.title &&
   stored.type === expected.type;
@@ -145,7 +150,7 @@ export const createNotification = async (
     createdById: input.createdById ?? null,
     dedupeKey: input.dedupeKey ?? null,
     expiresAt: input.expiresAt ?? null,
-    href: input.href ?? null,
+    href: input.href ? getCanonicalInternalHref(input.href) : null,
     severity: input.severity ?? ('INFO' as const),
     title: input.title,
     type: input.type,

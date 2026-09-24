@@ -5,8 +5,8 @@ import { getSafeReturnPath } from '$utils/navigation.utils';
 describe('getSafeReturnPath', () => {
   it('keeps a local deep link with its query string', () => {
     expect(
-      getSafeReturnPath('/administration/utilisateurs?page=2&status=active'),
-    ).toBe('/administration/utilisateurs?page=2&status=active');
+      getSafeReturnPath('/systeme/utilisateurs?page=2&status=active'),
+    ).toBe('/systeme/utilisateurs?page=2&status=active');
   });
 
   it.each([

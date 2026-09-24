@@ -145,7 +145,7 @@ const personsPageSource = [
   // Test-owned path only; the URL never receives external input.
   // eslint-disable-next-line security/detect-non-literal-fs-filename
   readFileSync(
-    new URL('../app/vie-interne/repertoire/page.tsx', import.meta.url),
+    new URL('../app/membres/repertoire/page.tsx', import.meta.url),
     'utf8',
   ),
   // Test-owned path only; the URL never receives external input.
@@ -165,12 +165,12 @@ const personsListSource = readFileSync(
 );
 // eslint-disable-next-line security/detect-non-literal-fs-filename
 const newPersonPageSource = readFileSync(
-  new URL('../app/vie-interne/repertoire/nouveau/page.tsx', import.meta.url),
+  new URL('../app/membres/repertoire/nouveau/page.tsx', import.meta.url),
   'utf8',
 );
 // eslint-disable-next-line security/detect-non-literal-fs-filename
 const personLoadingSource = readFileSync(
-  new URL('../app/vie-interne/repertoire/[id]/loading.tsx', import.meta.url),
+  new URL('../app/membres/repertoire/[id]/loading.tsx', import.meta.url),
   'utf8',
 );
 
@@ -619,8 +619,10 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(detailPageSource).toContain(
       '<section aria-label="Identité" className="space-y-5">',
     );
-    expect(detailPageSource).toContain('backLabel="Retour au répertoire"');
-    expect(entityDetailLayoutSource).toContain('<PageBackButton');
+    expect(detailPageSource).toContain(
+      '{ href: returnHref, label: FEATURES.persons.label }',
+    );
+    expect(entityDetailLayoutSource).not.toContain('<PageBackButton');
     expect(entityDetailLayoutSource).not.toContain('private-left-rail');
     expect(
       entityDetailLayoutSource.match(/<PageSectionNavigation/g),
@@ -628,10 +630,13 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(detailPageSource).toContain('sections={PERSON_DETAIL_SECTIONS}');
     expect(detailPageSource).not.toContain('<ScrollableTabsList');
     expect(detailPageSource).not.toContain('<PageHero\n          actions=');
-    expect(newPersonPageSource).toContain('<PageBackNavigation');
+    expect(newPersonPageSource).not.toContain('<PageBackNavigation');
+    expect(newPersonPageSource).toContain(
+      '{ href: returnHref, label: FEATURES.persons.label }',
+    );
     expect(newPersonPageSource).toContain('width="form"');
     expect(newPersonPageSource).toContain('contentClassName="relative');
-    expect(personLoadingSource).toContain('<PageDetailSkeleton showBack />');
+    expect(personLoadingSource).toContain('<PageDetailSkeleton />');
   });
 
   it('guards sidebar and breadcrumb links for both dirty person forms', () => {
@@ -677,7 +682,7 @@ describe('person short-lived sensitive UX contracts', () => {
       expect(source).toContain('FEATURES.persons.audit.poleLabel');
     }
     expect(newPersonPageSource).toContain(
-      '{ href: FEATURES.persons.href, label: FEATURES.persons.label }',
+      '{ href: returnHref, label: FEATURES.persons.label }',
     );
     expect(newPersonPageSource).toContain("{ label: 'Nouvelle fiche' }");
   });

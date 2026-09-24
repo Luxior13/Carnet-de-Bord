@@ -11,6 +11,7 @@ import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import type { UserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
 import { FEATURES } from '$constants/feature-registry.constants';
+import { personDetailPath } from '$constants/routes.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
 import { Card, CardFooter } from '$ui/card';
@@ -65,7 +66,7 @@ const PERSON_DETAIL_SECTIONS: readonly UserDetailSection<PersonDetailSection>[] 
 const DetailSkeleton: FC = () => (
   <PageShell className="py-0">
     <PageCanvas>
-      <PageDetailSkeleton showBack />
+      <PageDetailSkeleton />
     </PageCanvas>
   </PageShell>
 );
@@ -341,7 +342,7 @@ export const PersonDetailPage: FC<PersonDetailPageProps> = ({
     const sectionHref = (section: PersonDetailSection): string => {
       const params = new URLSearchParams({ returnTo: returnHref, section });
 
-      return `${FEATURES.persons.href}/${encodeURIComponent(personId)}?${params}`;
+      return `${personDetailPath(personId)}?${params}`;
     };
 
     return (
@@ -357,8 +358,6 @@ export const PersonDetailPage: FC<PersonDetailPageProps> = ({
           )
         }
         ariaLiveLabel={`Section ${activeSection === 'identite' ? 'Identité' : 'Coordonnées'} affichée`}
-        backHref={returnHref}
-        backLabel="Retour au répertoire"
         heroIcon={
           <PersonAvatar className="size-full rounded-full" person={person} />
         }
@@ -407,7 +406,7 @@ export const PersonDetailPage: FC<PersonDetailPageProps> = ({
     <AuthenticatedLayout
       breadcrumbs={[
         { label: FEATURES.persons.audit.poleLabel },
-        { href: FEATURES.persons.href, label: FEATURES.persons.label },
+        { href: returnHref, label: FEATURES.persons.label },
         {
           label:
             canView && person?.id === personId && !error

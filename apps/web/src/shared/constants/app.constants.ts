@@ -10,6 +10,7 @@ import {
   ROLE_LABELS,
 } from '$constants/permissions.constants';
 import { RESERVED_PLANNED_HREFS } from '$constants/reserved-planned-hrefs.constants';
+import { PAGE_PATHS } from '$constants/routes.constants';
 import type { UserType } from '$types/auth.types';
 import type {
   NavigationAvailability,
@@ -79,16 +80,11 @@ export const NAV_SPACES: NavigationSpace[] = [
   },
   {
     description: 'Identités, adhésions, recrutement et parcours des membres.',
-    href: '/vie-interne/repertoire',
+    href: PAGE_PATHS.persons,
     icon: 'Users',
     id: 'internal',
     label: 'Membres',
-    matchHrefs: [
-      '/vie-interne/repertoire',
-      '/vie-interne/recrutement-tryouts',
-      '/bureau-juridique/incidents-sanctions',
-      '/bureau-juridique/inventaire-acces',
-    ],
+    matchHrefs: ['/membres'],
     sections: [
       {
         id: 'people',
@@ -102,12 +98,12 @@ export const NAV_SPACES: NavigationSpace[] = [
   },
   {
     description: 'La vie de la structure : réunions, calendrier et retours.',
-    href: '/vie-interne/actualite-interne',
+    href: PAGE_PATHS.internalNews,
     icon: 'Activity',
     id: 'activity',
     label: 'Activité',
     matchHrefs: [
-      '/vie-interne/actualite-interne',
+      '/activite',
       '/vie-interne/reunions',
       '/vie-interne/calendrier-interne',
       '/vie-interne/debriefs',
@@ -130,7 +126,7 @@ export const NAV_SPACES: NavigationSpace[] = [
     icon: 'Settings',
     id: 'system',
     label: 'Système',
-    matchHrefs: ['/administration', '/systeme', '/feuille-de-route'],
+    matchHrefs: ['/administration', '/systeme', PAGE_PATHS.roadmap],
     routeBaseHref: '/systeme',
     sections: [
       {

@@ -7,6 +7,7 @@ import React, { type FC, useState } from 'react';
 import { toast } from 'sonner';
 
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
+import { personDetailPath } from '$constants/routes.constants';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
 import { Button } from '$ui/button';
 import {
@@ -105,9 +106,7 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({ returnHref }) => {
         returnTo: returnHref,
         section: 'identite',
       });
-      router.push(
-        `/vie-interne/repertoire/${encodeURIComponent(result.person.id)}?${params}`,
-      );
+      router.push(`${personDetailPath(result.person.id)}?${params}`);
     } catch (caught) {
       if (caught instanceof ApiClientError && caught.details) {
         setErrors(

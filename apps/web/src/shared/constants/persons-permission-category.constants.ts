@@ -1,3 +1,5 @@
+import { PAGE_PATHS } from '$constants/routes.constants';
+
 import type {
   PermissionCategory,
   PermissionItem,
@@ -39,7 +41,7 @@ export const createPersonsPermissionCategory = (
       label: 'Consulter le répertoire',
       module: 'Répertoire',
       risk: 'sensitive',
-      route: '/vie-interne/repertoire',
+      route: PAGE_PATHS.persons,
       surface: 'page',
     }),
     permission({
@@ -52,7 +54,7 @@ export const createPersonsPermissionCategory = (
       label: 'Ajouter des fiches au répertoire',
       module: 'Gestion des fiches',
       risk: 'sensitive',
-      route: '/vie-interne/repertoire/nouveau',
+      route: PAGE_PATHS.newPerson,
       surface: 'page',
     }),
     permission({
@@ -65,7 +67,7 @@ export const createPersonsPermissionCategory = (
       label: 'Modifier les fiches du répertoire',
       module: 'Gestion des fiches',
       risk: 'sensitive',
-      route: '/vie-interne/repertoire/[id]',
+      route: `${PAGE_PATHS.persons}/[id]`,
       surface: 'page',
     }),
     permission({
@@ -78,15 +80,15 @@ export const createPersonsPermissionCategory = (
       label: 'Supprimer définitivement des fiches',
       module: 'Cycle de vie',
       risk: 'critical',
-      route: '/vie-interne/repertoire/[id]',
+      route: `${PAGE_PATHS.persons}/[id]`,
       surface: 'page',
     }),
   ],
   poleKey: 'internal',
   routes: [
-    '/vie-interne/repertoire',
-    '/vie-interne/repertoire/nouveau',
-    '/vie-interne/repertoire/[id]',
+    PAGE_PATHS.persons,
+    PAGE_PATHS.newPerson,
+    `${PAGE_PATHS.persons}/[id]`,
   ],
   surface: 'page',
   tone: 'internal',

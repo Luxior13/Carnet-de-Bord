@@ -23,6 +23,7 @@ import React, {
 } from 'react';
 
 import { ContentState } from '$components/layout/ContentState';
+import { PAGE_PATHS, personDetailPath } from '$constants/routes.constants';
 import { Button } from '$ui/button';
 import {
   DataTableDesktop,
@@ -83,7 +84,7 @@ type StatusFilter = 'ALL' | PersonStructureStatus;
 
 const PAGE_LIMIT = 25;
 const SEARCH_DEBOUNCE_MS = 300;
-const LIST_PATH = '/vie-interne/repertoire';
+const LIST_PATH = PAGE_PATHS.persons;
 
 const SORT_LABELS = {
   created: 'Ajoutées récemment',
@@ -255,7 +256,7 @@ const PersonLastModifiedAt: FC<{
 const buildPersonHref = (personId: string, returnHref: string): string => {
   const params = new URLSearchParams({ returnTo: returnHref });
 
-  return `${LIST_PATH}/${encodeURIComponent(personId)}?${params}`;
+  return `${personDetailPath(personId)}?${params}`;
 };
 
 const PersonMobileRow: FC<{

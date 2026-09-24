@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
+import { normalizeInboxFilter } from '$features/notifications/notification-filters';
 import { NotificationInboxPage } from '$features/notifications/NotificationInboxPage';
 import {
   getDefaultNotificationListLimit,
@@ -9,7 +10,12 @@ import {
 import { getPageAuthSession } from '$server/auth';
 import type { NotificationListData } from '$types/platform.types';
 
-export default async function NotificationsPage(): Promise<React.ReactNode> {
+export default async function NotificationsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ status?: string | string[] }>;
+}): Promise<React.ReactNode> {
+  const filter = normalizeInboxFilter((await searchParams)?.status);
   const { user } = await getPageAuthSession();
   const canView = Boolean(
     user &&
@@ -28,7 +34,7 @@ export default async function NotificationsPage(): Promise<React.ReactNode> {
       const limit = await getDefaultNotificationListLimit();
       initialData = await listNotifications({
         limit,
-        status: 'all',
+        status: filter,
         userId: user.id,
       });
     } catch {
@@ -37,5 +43,7 @@ export default async function NotificationsPage(): Promise<React.ReactNode> {
     }
   }
 
-  return <NotificationInboxPage initialData={initialData} />;
+  return (
+    <NotificationInboxPage initialData={initialData} initialFilter={filter} />
+  );
 }

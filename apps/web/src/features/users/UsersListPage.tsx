@@ -1,15 +1,7 @@
 'use client';
 
 import { UserRole } from '@repo/shared';
-import {
-  ArrowRight,
-  Key,
-  Search,
-  Shield,
-  User,
-  UserMinus,
-  X,
-} from 'lucide-react';
+import { ArrowRight, Key, Search, Shield, UserMinus, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import React, {
@@ -27,6 +19,7 @@ import {
   hasPermission,
   PERMISSIONS,
 } from '$constants/permissions.constants';
+import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
 import type {
   PaginationInfo,
@@ -166,35 +159,28 @@ const buildUsersPageUrlParams = ({
   return params;
 };
 
-const UserAccessBadge: FC<{
+const UserAccessLabel: FC<{
   user: Pick<UserType, 'isProtected' | 'role'>;
 }> = ({ user }) => {
   const isAdministrator = user.isProtected || user.role === UserRole.ADMIN;
-  const Icon = isAdministrator ? Shield : User;
-  const color = user.isProtected
-    ? 'border-warning/40 bg-warning/15 text-warning'
-    : isAdministrator
-      ? 'border-info/40 bg-info/15 text-info'
-      : undefined;
 
   return (
-    <Badge variant="secondary" className={color}>
-      <Icon aria-hidden="true" />
+    <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs whitespace-nowrap">
+      {isAdministrator && <Shield aria-hidden="true" className="size-3.5" />}
       {getAccessLabel(user)}
-    </Badge>
+    </span>
   );
 };
 
-const UserStatusBadge: FC<{ isActive: boolean }> = ({ isActive }) => {
-  if (isActive) return <Badge variant="success">Actif</Badge>;
-
+const UserStatusLabel: FC<{ isActive: boolean }> = ({ isActive }) => {
   return (
-    <Badge
-      variant="outline"
-      className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
-    >
-      Désactivé
-    </Badge>
+    <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs whitespace-nowrap">
+      <span
+        aria-hidden="true"
+        className={`size-1.5 shrink-0 rounded-full ${isActive ? 'bg-success' : 'bg-muted-foreground/50'}`}
+      />
+      {isActive ? 'Actif' : 'Désactivé'}
+    </span>
   );
 };
 
@@ -461,7 +447,7 @@ export const UsersListPage: FC = () => {
   const getUserDetailHref = (userId: string): string =>
     userId === currentUser?.id
       ? '/mon-compte'
-      : `/administration/utilisateurs/${userId}`;
+      : `${userDetailPath(userId)}?${new URLSearchParams({ returnTo: `${PAGE_PATHS.users}${currentQueryString ? `?${currentQueryString}` : ''}` })}`;
 
   const hasActiveFilters =
     !!searchQuery ||
@@ -543,11 +529,14 @@ export const UsersListPage: FC = () => {
         />
       )}
       <DataTableSection
-        title="Comptes utilisateurs"
-        description={
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        title={
+          <span className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-normal">
             <span>
-              {totalFiltered} compte{totalFiltered !== 1 ? 's' : ''}
+              <span className="text-foreground font-semibold tabular-nums">
+                {totalFiltered}
+              </span>{' '}
+              compte{totalFiltered !== 1 ? 's' : ''}
+              <span className="sr-only"> utilisateurs</span>
               {hasActiveFilters && stats ? ` sur ${stats.total}` : ''}
               {stats
                 ? ` · ${stats.active} actif${stats.active !== 1 ? 's' : ''}`
@@ -557,7 +546,7 @@ export const UsersListPage: FC = () => {
               stats?.pendingPasswordChange !== null &&
               stats?.pendingPasswordChange !== undefined &&
               stats.pendingPasswordChange > 0 && (
-                <span className="text-warning">
+                <span className="text-warning font-medium">
                   · {stats.pendingPasswordChange} mot
                   {stats.pendingPasswordChange !== 1 ? 's' : ''} de passe à
                   changer
@@ -566,14 +555,14 @@ export const UsersListPage: FC = () => {
             {isRefreshing && <span>· Actualisation…</span>}
           </span>
         }
-        headerClassName="p-3 sm:p-4"
+        headerClassName="p-4 sm:p-5"
         contentClassName={
           isRefreshing ? 'opacity-60 transition-opacity' : undefined
         }
         toolbarClassName="@container/users-toolbar"
         toolbar={
-          <div className="grid w-full min-w-0 gap-2 @min-[32rem]/users-toolbar:grid-cols-2 @min-[56rem]/users-toolbar:grid-cols-[minmax(12rem,1fr)_10rem_10rem_11rem_auto]">
-            <div className="relative min-w-0 @min-[32rem]/users-toolbar:col-span-2 @min-[56rem]/users-toolbar:col-span-1">
+          <div className="grid w-full min-w-0 items-center gap-2 @min-[32rem]/users-toolbar:grid-cols-3 @min-[64rem]/users-toolbar:grid-cols-[minmax(18rem,1fr)_10rem_10rem_11rem]">
+            <div className="relative min-w-0 @min-[32rem]/users-toolbar:col-span-3 @min-[64rem]/users-toolbar:col-span-1">
               <Search
                 size={16}
                 className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
@@ -584,7 +573,7 @@ export const UsersListPage: FC = () => {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 maxLength={USER_SEARCH_MAX_LENGTH}
-                className="pr-10 pl-9"
+                className="h-11 pr-10 pl-9 lg:h-11"
               />
               {searchQuery && (
                 <Button
@@ -605,7 +594,7 @@ export const UsersListPage: FC = () => {
             >
               <SelectTrigger
                 aria-label="Filtrer par état du compte"
-                className="w-full min-w-0"
+                className="text-muted-foreground h-10 w-full min-w-0 bg-transparent lg:h-10"
               >
                 <SelectValue />
               </SelectTrigger>
@@ -626,7 +615,7 @@ export const UsersListPage: FC = () => {
             >
               <SelectTrigger
                 aria-label="Filtrer par rôle"
-                className="w-full min-w-0"
+                className="text-muted-foreground h-10 w-full min-w-0 bg-transparent lg:h-10"
               >
                 <SelectValue />
               </SelectTrigger>
@@ -642,7 +631,7 @@ export const UsersListPage: FC = () => {
             >
               <SelectTrigger
                 aria-label="Trier les comptes utilisateurs"
-                className="w-full min-w-0"
+                className="text-muted-foreground h-10 w-full min-w-0 bg-transparent lg:h-10"
               >
                 <SelectValue />
               </SelectTrigger>
@@ -660,7 +649,7 @@ export const UsersListPage: FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="text-muted-foreground min-h-10"
+                className="text-muted-foreground min-h-10 justify-self-start @min-[32rem]/users-toolbar:col-span-3 @min-[64rem]/users-toolbar:col-span-4"
               >
                 <X size={14} />
                 Réinitialiser
@@ -732,7 +721,7 @@ export const UsersListPage: FC = () => {
                     className="group/row focus-within:ring-ring/40 relative cursor-pointer focus-within:ring-2 focus-within:ring-inset"
                     key={user.id}
                   >
-                    <TableCell className="py-2">
+                    <TableCell className="py-3">
                       <Link
                         aria-label={
                           user.id === currentUser?.id
@@ -745,23 +734,13 @@ export const UsersListPage: FC = () => {
                       >
                         <UserAvatar
                           user={user}
-                          className="border-border-default group-hover/link:border-primary/35 size-8 rounded-full border transition-colors"
+                          className="border-border-default group-hover/link:border-primary/35 size-9 shrink-0 rounded-full border transition-colors"
                         />
                         <div className="min-w-0">
                           <div className="flex min-w-0 items-center gap-2">
-                            <span className="text-foreground group-hover/link:text-primary-emphasis truncate text-sm font-medium transition-colors">
+                            <span className="text-foreground group-hover/link:text-primary-emphasis truncate text-sm font-semibold transition-colors">
                               {getUserDisplayName(user)}
                             </span>
-                            {user.isProtected && (
-                              <span title="Compte racine">
-                                <Shield
-                                  aria-hidden="true"
-                                  size={14}
-                                  className="text-warning shrink-0"
-                                />
-                                <span className="sr-only">Compte racine</span>
-                              </span>
-                            )}
                             {isUserIdentityMasked(user) && (
                               <Badge
                                 variant="outline"
@@ -771,7 +750,7 @@ export const UsersListPage: FC = () => {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-muted-foreground flex min-w-0 items-center gap-1.5 truncate text-xs">
+                          <p className="text-muted-foreground mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-xs">
                             <span className="shrink-0 font-mono">
                               {getUserLoginDisplay(user)}
                             </span>
@@ -784,18 +763,18 @@ export const UsersListPage: FC = () => {
                         </div>
                       </Link>
                     </TableCell>
-                    <TableCell className="pointer-events-none py-2">
-                      <UserAccessBadge user={user} />
+                    <TableCell className="pointer-events-none py-3">
+                      <UserAccessLabel user={user} />
                     </TableCell>
-                    <TableCell className="pointer-events-none py-2">
-                      <UserStatusBadge isActive={user.isActive} />
+                    <TableCell className="pointer-events-none py-3">
+                      <UserStatusLabel isActive={user.isActive} />
                     </TableCell>
                     {securityDetailsVisible && (
-                      <TableCell className="pointer-events-none py-2">
+                      <TableCell className="pointer-events-none py-3">
                         {user.mustChangePassword ? (
                           <Badge
                             variant="outline"
-                            className="border-warning/40 text-warning text-xs"
+                            className="border-warning/30 bg-warning/10 text-warning text-xs"
                           >
                             <Key size={10} className="mr-1" />
                             Mot de passe à changer
@@ -807,10 +786,10 @@ export const UsersListPage: FC = () => {
                         )}
                       </TableCell>
                     )}
-                    <TableCell className="text-muted-foreground pointer-events-none py-2 text-xs">
+                    <TableCell className="text-muted-foreground pointer-events-none py-3 text-xs tabular-nums">
                       {formatRelativeTime(user.lastLoginAt)}
                     </TableCell>
-                    <TableCell className="pointer-events-none py-2">
+                    <TableCell className="pointer-events-none py-3">
                       <ArrowRight
                         aria-hidden="true"
                         className="text-muted-foreground size-4 transition-transform group-hover/row:translate-x-0.5"
@@ -855,7 +834,7 @@ export const UsersListPage: FC = () => {
                     ? 'Ouvrir mon compte'
                     : `Ouvrir le compte de ${getUserDisplayName(user)}`
                 }
-                className="hover:bg-surface-tile-hover focus-visible:bg-primary/10 focus-visible:ring-primary/70 block p-3 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+                className="hover:bg-surface-tile-hover focus-visible:bg-primary/10 focus-visible:ring-primary/70 block p-4 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
                 href={getUserDetailHref(user.id)}
                 key={user.id}
                 prefetch={false}
@@ -863,24 +842,14 @@ export const UsersListPage: FC = () => {
                 <div className="flex items-start gap-3">
                   <UserAvatar
                     user={user}
-                    className="border-border-default size-10 rounded-full border"
+                    className="border-border-default size-10 shrink-0 rounded-full border"
                   />
                   <div className="min-w-0 flex-1 space-y-2">
                     <div className="min-w-0">
                       <div className="flex min-w-0 items-center gap-2">
-                        <h3 className="text-foreground truncate font-medium">
+                        <h3 className="text-foreground truncate text-sm font-semibold">
                           {getUserDisplayName(user)}
                         </h3>
-                        {user.isProtected && (
-                          <span title="Compte racine">
-                            <Shield
-                              aria-hidden="true"
-                              size={14}
-                              className="text-warning shrink-0"
-                            />
-                            <span className="sr-only">Compte racine</span>
-                          </span>
-                        )}
                         {isUserIdentityMasked(user) && (
                           <Badge
                             variant="outline"
@@ -890,7 +859,7 @@ export const UsersListPage: FC = () => {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-muted-foreground flex min-w-0 items-center gap-1.5 truncate text-xs">
+                      <p className="text-muted-foreground mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-xs">
                         <span className="shrink-0 font-mono">
                           {getUserLoginDisplay(user)}
                         </span>
@@ -901,18 +870,20 @@ export const UsersListPage: FC = () => {
                         )}
                       </p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <UserAccessBadge user={user} />
-                      <UserStatusBadge isActive={user.isActive} />
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                      <UserAccessLabel user={user} />
+                      <UserStatusLabel isActive={user.isActive} />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                       {securityDetailsVisible && user.mustChangePassword && (
                         <Badge
                           variant="outline"
-                          className="border-warning/40 text-warning text-xs"
+                          className="border-warning/30 bg-warning/10 text-warning text-xs"
                         >
                           Mot de passe à changer
                         </Badge>
                       )}
-                      <span className="text-muted-foreground ml-auto text-xs">
+                      <span className="text-muted-foreground text-xs tabular-nums">
                         Connexion {formatRelativeTime(user.lastLoginAt)}
                       </span>
                     </div>

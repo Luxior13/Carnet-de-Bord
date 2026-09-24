@@ -5,7 +5,6 @@ import React, { type ReactNode } from 'react';
 import type { NavigationSpaceTone } from '$constants/navigation-theme.constants';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 
-import { PageBackButton } from './PageBackNavigation';
 import { PageHero } from './PageHero';
 import {
   type PageSection,
@@ -16,8 +15,6 @@ type EntityDetailLayoutProps<SectionId extends string> = {
   activeSection: SectionId;
   afterHero?: ReactNode;
   ariaLiveLabel?: string;
-  backHref: string;
-  backLabel: string;
   children: ReactNode;
   heroIcon: ReactNode;
   heroIconClassName?: string;
@@ -30,14 +27,12 @@ type EntityDetailLayoutProps<SectionId extends string> = {
 };
 
 /**
- * Structure commune des fiches : retour, identité et navigation par sections.
+ * Structure commune des fiches : identité et navigation par sections.
  */
 export const EntityDetailLayout = <SectionId extends string>({
   activeSection,
   afterHero,
   ariaLiveLabel,
-  backHref,
-  backLabel,
   children,
   heroIcon,
   heroIconClassName,
@@ -50,8 +45,6 @@ export const EntityDetailLayout = <SectionId extends string>({
 }: EntityDetailLayoutProps<SectionId>): React.JSX.Element => (
   <PageShell className="py-0">
     <PageCanvas contentClassName="relative space-y-4">
-      <PageBackButton href={backHref} label={backLabel} />
-
       <PageHero
         compact
         hasNavigation

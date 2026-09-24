@@ -36,6 +36,7 @@ import {
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import { useAsyncResource } from '$hooks/useAsyncResource';
+import { usePageQuery } from '$hooks/usePageQuery';
 import type {
   NotificationItem,
   NotificationListData,
@@ -48,7 +49,7 @@ import { Skeleton } from '$ui/skeleton';
 import { apiFetchJson, jsonRequest } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 
-type InboxFilter = 'all' | 'archived' | 'unread';
+import { type InboxFilter, normalizeInboxFilter } from './notification-filters';
 type NotificationAction = 'archive' | 'read' | 'restore' | 'unread';
 type SeverityDisplay = {
   badge: 'destructive' | 'info' | 'success' | 'warning';
@@ -252,13 +253,40 @@ const NotificationRow: FC<NotificationRowProps> = ({
 
 type NotificationInboxPageProps = {
   initialData?: NotificationListData;
+  initialFilter?: InboxFilter;
 };
 
 export const NotificationInboxPage: FC<NotificationInboxPageProps> = ({
   initialData,
+  initialFilter = 'all',
 }) => {
+  const { searchParams, updateQuery } = usePageQuery();
+  const filter = normalizeInboxFilter(searchParams.get('status'));
+  const [hasChangedFilter, setHasChangedFilter] = useState(false);
+  useEffect(() => {
+    if (filter !== initialFilter) setHasChangedFilter(true);
+  }, [filter, initialFilter]);
+
+  return (
+    <NotificationInboxContent
+      key={filter}
+      filter={filter}
+      initialData={
+        !hasChangedFilter && filter === initialFilter ? initialData : undefined
+      }
+      setFilter={(status) =>
+        updateQuery({ status: status === 'all' ? null : status })
+      }
+    />
+  );
+};
+
+const NotificationInboxContent: FC<{
+  filter: InboxFilter;
+  initialData?: NotificationListData;
+  setFilter: (filter: InboxFilter) => void;
+}> = ({ filter, initialData, setFilter }) => {
   const { userData } = useUser();
-  const [filter, setFilter] = useState<InboxFilter>('all');
   const [items, setItems] = useState<NotificationItem[]>(
     initialData?.items ?? [],
   );

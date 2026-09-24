@@ -1,7 +1,7 @@
 'use client';
 
 import { ClipboardList } from 'lucide-react';
-import React, { useState } from 'react';
+import React from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
@@ -10,6 +10,7 @@ import { normalizeSearchValue } from '$components/layout/global-search.utils';
 import { PageHero } from '$components/layout/PageHero';
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
 import { getNavigationSpaceToneClasses } from '$constants/navigation-theme.constants';
+import { usePageQuery } from '$hooks/usePageQuery';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Input } from '$ui/input';
@@ -34,9 +35,16 @@ import type { RoadmapPhaseId } from './roadmap.types';
 import { RoadmapCard } from './RoadmapCard';
 
 export function RoadmapPage(): React.ReactNode {
-  const [phase, setPhase] = useState<RoadmapPhaseId | null>(null);
-  const [areaId, setAreaId] = useState('all');
-  const [query, setQuery] = useState('');
+  const { searchParams, updateQuery } = usePageQuery();
+  const setPhase = (value: RoadmapPhaseId | null): void =>
+    updateQuery({ phase: value === null ? null : String(value) });
+  const phase =
+    ROADMAP_PHASES.find((step) => String(step.id) === searchParams.get('phase'))
+      ?.id ?? null;
+  const areaId =
+    ROADMAP_AREAS.find((area) => area.id === searchParams.get('pole'))?.id ??
+    'all';
+  const query = (searchParams.get('q') ?? '').slice(0, 200);
   const search = normalizeSearchValue(query);
   const visibleItems = ROADMAP_ITEMS.filter((item) => {
     const area = ROADMAP_AREAS.find((candidate) => candidate.id === item.area);
@@ -59,16 +67,17 @@ export function RoadmapPage(): React.ReactNode {
     );
   });
   const resetFilters = (): void => {
-    setPhase(null);
-    setAreaId('all');
-    setQuery('');
+    updateQuery({ phase: null, pole: null, q: null });
   };
 
   return (
-    <AuthenticatedLayout breadcrumbs={[{ label: 'Feuille de route' }]}>
+    <AuthenticatedLayout
+      breadcrumbs={[{ label: 'Système' }, { label: 'Feuille de route' }]}
+    >
       <PageShell className="py-0">
         <PageCanvas contentClassName="space-y-6">
           <PageHero
+            tone="system"
             title="Feuille de route"
             description="Construire la gestion de la structure esport, de l’association d’aujourd’hui à une éventuelle société."
             icon={<ClipboardList className="size-5" />}
@@ -189,14 +198,22 @@ export function RoadmapPage(): React.ReactNode {
               <Input
                 id="roadmap-search"
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                maxLength={200}
+                onChange={(event) =>
+                  updateQuery({ q: event.target.value }, 'replace')
+                }
                 placeholder="Disponibilités, factures, documents…"
                 type="search"
               />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="roadmap-area">Pôle cible</Label>
-              <Select value={areaId} onValueChange={setAreaId}>
+              <Select
+                value={areaId}
+                onValueChange={(value) =>
+                  updateQuery({ pole: value === 'all' ? null : value })
+                }
+              >
                 <SelectTrigger id="roadmap-area" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -215,10 +232,7 @@ export function RoadmapPage(): React.ReactNode {
               <Select
                 value={phase === null ? 'all' : String(phase)}
                 onValueChange={(value) =>
-                  setPhase(
-                    ROADMAP_PHASES.find((step) => String(step.id) === value)
-                      ?.id ?? null,
-                  )
+                  updateQuery({ phase: value === 'all' ? null : value })
                 }
               >
                 <SelectTrigger id="roadmap-phase" className="w-full">

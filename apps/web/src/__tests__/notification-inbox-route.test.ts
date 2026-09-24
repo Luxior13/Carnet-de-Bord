@@ -127,6 +127,34 @@ describe('personal notification routes', () => {
     expect(body.data.unreadCount).toBe(3);
   });
 
+  it('returns the canonical destination for a stored historical notification', async () => {
+    mocks.findMany.mockResolvedValueOnce([
+      {
+        archivedAt: null,
+        createdAt: new Date('2026-07-17T12:00:00.000Z'),
+        notification: {
+          body: 'Message personnel',
+          createdBy: null,
+          href: '/administration/utilisateurs/user-1?section=security',
+          id: 'notification-1',
+          severity: 'INFO',
+          title: 'Information',
+          type: 'account.info',
+        },
+        notificationId: 'notification-1',
+        readAt: null,
+      },
+    ]);
+    const { GET } = await import('$app/api/notifications/route');
+    const response = await GET(
+      new NextRequest('http://localhost/api/notifications'),
+    );
+    expect(response.status).toBe(200);
+    expect((await response.json()).data.items[0].href).toBe(
+      '/systeme/utilisateurs/user-1?section=security',
+    );
+  });
+
   it('uses the archived recipient index scope for the archive view', async () => {
     const { GET } = await import('$app/api/notifications/route');
     const response = await GET(

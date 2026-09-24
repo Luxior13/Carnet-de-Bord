@@ -267,6 +267,16 @@
     container: private-viewport / inline-size;
   }
 
+  .private-viewport [data-page-width] {
+    /* Shift only the page toward the screen center, limited by its free margin.
+       The viewport container tracks the sidebar's actual width as it folds. */
+    left: clamp(
+      calc((100cqw - 100vw) / 2),
+      calc((var(--page-shell-max-width) - 100%) / 2),
+      0px
+    );
+  }
+
   .route-state {
     min-height: 100svh;
   }

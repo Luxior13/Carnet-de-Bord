@@ -26,7 +26,7 @@ describe('middleware security', () => {
   it('preserves a protected deep link when redirecting to login', () => {
     const response = middleware(
       new NextRequest(
-        'http://localhost/administration/utilisateurs?page=2&status=active',
+        'http://localhost/systeme/utilisateurs?page=2&status=active',
       ),
     );
     const location = new URL(response.headers.get('location') ?? '');
@@ -34,7 +34,7 @@ describe('middleware security', () => {
     expect(response.status).toBe(307);
     expect(location.pathname).toBe('/login');
     expect(location.searchParams.get('next')).toBe(
-      '/administration/utilisateurs?page=2&status=active',
+      '/systeme/utilisateurs?page=2&status=active',
     );
   });
 

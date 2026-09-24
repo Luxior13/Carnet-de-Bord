@@ -1,0 +1,82 @@
+{
+  "date": "2026-09-24",
+  "environment": "Build de production, Chromium, base PostgreSQL locale fictive isolée",
+  "unitTests": {
+    "files": 87,
+    "passed": 1026
+  },
+  "checks": {
+    "productionBuild": true,
+    "lint": true,
+    "typecheck": true,
+    "architecture": true,
+    "performance": true
+  },
+  "browser": {
+    "scenarios": [
+      {
+        "name": "Redirections historiques : destination directe et paramètres conservés",
+        "passed": true
+      },
+      {
+        "name": "Connexion : ancien lien profond et onglet préservés",
+        "passed": true
+      },
+      {
+        "name": "Retour utilisateur : recherche, tri et pagination conservés",
+        "passed": true
+      },
+      {
+        "name": "Création utilisateur : annulation et retour filtré",
+        "passed": true
+      },
+      {
+        "name": "Répertoire : anciens liens et ancien returnTo",
+        "passed": true
+      },
+      {
+        "name": "Feuille de route : lien filtré, rechargement et historique",
+        "passed": true
+      },
+      {
+        "name": "Notifications : filtres partagés et données correctes après rechargement",
+        "passed": true
+      },
+      {
+        "name": "Notifications historiques : le lien enregistré reste disponible",
+        "passed": true
+      },
+      {
+        "name": "Routes canoniques : écrans présents et URL inconnues refusées",
+        "passed": true
+      },
+      {
+        "name": "Navigation cliente : Répertoire, Activité, Système et recherche",
+        "passed": true
+      },
+      {
+        "name": "Vues filtrées sur mobile : URL et sélection conservées",
+        "passed": true
+      },
+      {
+        "name": "Aucune erreur JavaScript",
+        "passed": true
+      },
+      {
+        "name": "Notifications : aucun retour de données périmées après changement de filtre",
+        "passed": true
+      }
+    ],
+    "historicalRedirectsChecked": 13,
+    "viewports": [
+      {
+        "width": 1440,
+        "height": 1000
+      },
+      {
+        "width": 390,
+        "height": 844
+      }
+    ]
+  }
+}

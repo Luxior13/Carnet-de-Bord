@@ -1,6 +1,6 @@
 # Navigation — état actuel et cible
 
-Référence révisée le 22 septembre 2026. Le catalogue des projets est séparé de la navigation active. Voir la [feuille de route](FEUILLE_DE_ROUTE.md) pour les étapes et la [matrice](../features/pages/MATRICE_PREPARATION.md) pour les correspondances historiques.
+Référence révisée le 24 septembre 2026. Le catalogue des projets est séparé de la navigation active. Voir la [feuille de route](FEUILLE_DE_ROUTE.md) pour les étapes et la [matrice](../features/pages/MATRICE_PREPARATION.md) pour les correspondances historiques.
 
 ## Navigation actuelle
 
@@ -9,9 +9,9 @@ Huit entrées sont déclarées dans quatre pôles. Leur visibilité dépend des 
 | Pôle actuel | Entrées actives | Placement |
 | --- | --- | --- |
 | Aujourd’hui | Accueil `/`, notifications `/mes-notifications` | Travail personnel et messages reçus |
-| Membres | Répertoire `/vie-interne/repertoire` | Membres et contacts de la structure |
-| Activité | Actualité interne `/vie-interne/actualite-interne` | Informations collectives |
-| Système | Utilisateurs `/administration/utilisateurs`, journal `/systeme/journal-activite`, paramètres `/systeme/parametres`, feuille de route `/feuille-de-route` | Comptes, technique et plan produit |
+| Membres | Répertoire `/membres/repertoire` | Membres et contacts de la structure |
+| Activité | Actualité interne `/activite/actualites` | Informations collectives |
+| Système | Utilisateurs `/systeme/utilisateurs`, journal `/systeme/journal-activite`, paramètres `/systeme/parametres`, feuille de route `/systeme/feuille-de-route` | Comptes, technique et plan produit |
 
 `/mon-compte` et `/recherche` sont accessibles par les outils globaux. `/login` appartient au parcours de connexion. Les formulaires de création et fiches de personnes ou utilisateurs restent sous leur liste principale.
 
@@ -80,6 +80,12 @@ Une entrée masquée n’est jamais une protection suffisante : le serveur contr
 
 ## Routes et maintenance
 
-Les routes fonctionnelles actuelles restent stables. Les anciennes URL planifiées sont des références de conception, pas des liens à exposer. La route canonique d’un nouveau module sera fixée à sa livraison ; les redirections nécessaires seront explicites et testées.
+Les routes ont été harmonisées le 24 septembre 2026 : Répertoire sous `/membres/repertoire`, Actualité sous `/activite/actualites`, Utilisateurs sous `/systeme/utilisateurs` et Feuille de route sous `/systeme/feuille-de-route`. Les créations et fiches restent sous leur collection. Les anciennes adresses redirigent directement vers leur destination actuelle, avec leurs paramètres. `/systeme` conserve son entrée dépendante des permissions.
+
+Les chemins, constructeurs de fiches et alias sont centralisés dans `apps/web/src/shared/constants/routes.constants.ts`. Les notifications historiques restent lisibles et leurs liens sont traduits à la lecture. Les retours de fiches et de créations conservent la liste filtrée ; les retours historiques vers le Répertoire sont également acceptés et traduits. Les liens d’onglets existants sont conservés ; `section=contacts` est accepté comme alias de Coordonnées dans le Répertoire.
+
+Les notifications partagent leur filtre par `?status=unread` ou `?status=archived`. La feuille de route partage ses filtres avec `pole`, `phase` et `q` ; ses identifiants de pôles restent ceux du catalogue (par exemple `people` pour Membres). Les changements de filtre participent à l’historique ; la saisie de recherche remplace l’entrée courante pour éviter une étape d’historique à chaque caractère.
+
+Les anciennes URL planifiées sont des références de conception, pas des liens à exposer. Les préfixes futurs sont `/esport`, `/relations`, `/structure` et `/finances`. La route précise d’un nouveau module sera fixée à sa livraison, avec ses permissions et ses tests. Les noms de menu peuvent évoluer sans entraîner un nouveau changement de chemin.
 
 Mettre à jour ensemble le registre de fonctionnalités, la navigation active, les permissions, les politiques serveur, les fils d’Ariane et les tests de contrat lors de l’ouverture d’un module. Les libellés historiques internes ne se renomment pas implicitement à partir de la cible produit.

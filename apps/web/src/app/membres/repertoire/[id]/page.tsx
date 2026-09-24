@@ -33,7 +33,9 @@ export default async function PersonPage({
     getPageAuthSession(),
   ]);
   const activeSection: PersonDetailSection =
-    query.section === 'coordonnees' ? 'coordonnees' : 'identite';
+    query.section === 'coordonnees' || query.section === 'contacts'
+      ? 'coordonnees'
+      : 'identite';
   const capabilities = getPersonCapabilities(user);
   let initialPerson: PersonDetail | undefined;
 

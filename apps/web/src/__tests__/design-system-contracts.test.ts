@@ -22,9 +22,6 @@ const rootLayoutSource = readSourceFile('../app/layout.tsx');
 const globalStylesSource = readSourceFile('../app/globals.css');
 const inputSource = readSourceFile('../components/ui/input.tsx');
 const pageHeroSource = readSourceFile('../components/layout/PageHero.tsx');
-const pageBackNavigationSource = readSourceFile(
-  '../components/layout/PageBackNavigation.tsx',
-);
 const tabsSource = readSourceFile('../components/ui/tabs.tsx');
 const userDetailSectionRailSource = readSourceFile(
   '../components/layout/PageSectionNavigation.tsx',
@@ -150,15 +147,6 @@ describe('design system contracts', () => {
       'features/auth/components/MfaCodeInput.tsx',
       'features/auth/components/MfaSetupFlow.tsx',
     ]);
-  });
-
-  it('keeps a single parent-page link inside the content at every size', () => {
-    expect(pageBackNavigationSource.match(/<nav\b/g)).toHaveLength(1);
-    expect(pageBackNavigationSource).not.toContain('private-left-rail');
-    expect(globalStylesSource).not.toContain('.private-left-rail');
-    expect(pageBackNavigationSource).not.toContain('private-rail-fallback');
-    expect(pageBackNavigationSource).toContain('<ArrowLeft');
-    expect(pageBackNavigationSource).toContain('variant="ghost"');
   });
 
   it('keeps feature availability above page-level authenticated shells', () => {
@@ -400,9 +388,9 @@ describe('design system contracts', () => {
     }
   });
 
-  it('keeps the shared page heading flat and independent from sidebar colors', () => {
+  it('gives the shared page heading a distinct surface independent from sidebar colors', () => {
     expect(pageHeroSource).toContain('data-slot="page-heading"');
-    expect(pageHeroSource).toContain('border-border-divider min-w-0');
+    expect(pageHeroSource).toContain('border-border-default bg-surface-panel');
     expect(pageHeroSource).not.toContain('shadow-');
     expect(pageHeroSource).not.toContain('bg-gradient');
     expect(pageHeroSource).not.toContain('-sidebar-');

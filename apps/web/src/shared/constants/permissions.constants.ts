@@ -8,6 +8,7 @@ import {
 import type { NavigationIconName } from '$constants/navigation-icon.constants';
 import type { NavigationSpaceTone } from '$constants/navigation-theme.constants';
 import { createPersonsPermissionCategory } from '$constants/persons-permission-category.constants';
+import { PAGE_PATHS } from '$constants/routes.constants';
 
 /**
  * Canonical, effective permissions.
@@ -491,7 +492,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Consulter les utilisateurs',
         module: 'Annuaire',
         risk: 'default',
-        route: '/administration/utilisateurs',
+        route: PAGE_PATHS.users,
         surface: 'page',
       }),
       activePermission({
@@ -504,7 +505,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Créer des utilisateurs standards',
         module: 'Création de comptes',
         risk: 'sensitive',
-        route: '/administration/utilisateurs/nouveau',
+        route: PAGE_PATHS.newUser,
         surface: 'page',
       }),
       activePermission({
@@ -516,7 +517,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Consulter les adresses de contact',
         module: 'Profil et contact',
         risk: 'sensitive',
-        route: '/administration/utilisateurs/[id]?section=profile',
+        route: `${PAGE_PATHS.users}/[id]?section=profile`,
         surface: 'page',
       }),
       activePermission({
@@ -528,7 +529,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Modifier le profil',
         module: 'Profil et contact',
         risk: 'sensitive',
-        route: '/administration/utilisateurs/[id]?section=profile',
+        route: `${PAGE_PATHS.users}/[id]?section=profile`,
         surface: 'page',
       }),
       activePermission({
@@ -541,7 +542,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: "Modifier l'adresse de contact",
         module: 'Profil et contact',
         risk: 'sensitive',
-        route: '/administration/utilisateurs/[id]?section=profile',
+        route: `${PAGE_PATHS.users}/[id]?section=profile`,
         surface: 'page',
       }),
       activePermission({
@@ -554,7 +555,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: "Modifier l'identifiant de connexion",
         module: 'Connexion',
         risk: 'critical',
-        route: '/administration/utilisateurs/[id]?section=profile',
+        route: `${PAGE_PATHS.users}/[id]?section=profile`,
         stepUpOnUse: true,
         surface: 'page',
       }),
@@ -568,7 +569,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Consulter la sécurité des comptes',
         module: 'Sécurité',
         risk: 'sensitive',
-        route: '/administration/utilisateurs/[id]?section=security',
+        route: `${PAGE_PATHS.users}/[id]?section=security`,
         surface: 'page',
       }),
       activePermission({
@@ -580,7 +581,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Désactiver ou réactiver un compte',
         module: 'Sécurité',
         risk: 'critical',
-        route: '/administration/utilisateurs/[id]?section=security',
+        route: `${PAGE_PATHS.users}/[id]?section=security`,
         stepUpOnUse: true,
         surface: 'page',
       }),
@@ -593,7 +594,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Consulter les autorisations administratives',
         module: 'Autorisations',
         risk: 'sensitive',
-        route: '/administration/utilisateurs/[id]?section=access',
+        route: `${PAGE_PATHS.users}/[id]?section=access`,
         surface: 'page',
       }),
       activePermission({
@@ -606,7 +607,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Accorder des autorisations administratives',
         module: 'Autorisations',
         risk: 'critical',
-        route: '/administration/utilisateurs/[id]?section=access',
+        route: `${PAGE_PATHS.users}/[id]?section=access`,
         surface: 'page',
       }),
       activePermission({
@@ -619,7 +620,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Retirer des autorisations administratives',
         module: 'Autorisations',
         risk: 'critical',
-        route: '/administration/utilisateurs/[id]?section=access',
+        route: `${PAGE_PATHS.users}/[id]?section=access`,
         surface: 'page',
       }),
       activePermission({
@@ -635,7 +636,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Déléguer la gestion des autorisations',
         module: 'Délégation',
         risk: 'critical',
-        route: '/administration/utilisateurs/[id]?section=access',
+        route: `${PAGE_PATHS.users}/[id]?section=access`,
         surface: 'page',
       }),
       activePermission({
@@ -648,7 +649,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: "Consulter l'autonomie du compte",
         module: 'Compte personnel',
         risk: 'sensitive',
-        route: '/administration/utilisateurs/[id]?section=account',
+        route: `${PAGE_PATHS.users}/[id]?section=account`,
         surface: 'page',
       }),
       activePermission({
@@ -661,7 +662,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: "Modifier l'autonomie du compte",
         module: 'Compte personnel',
         risk: 'sensitive',
-        route: '/administration/utilisateurs/[id]?section=account',
+        route: `${PAGE_PATHS.users}/[id]?section=account`,
         surface: 'page',
       }),
       activePermission({
@@ -673,7 +674,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Réinitialiser le mot de passe',
         module: 'Sécurité',
         risk: 'critical',
-        route: '/administration/utilisateurs/[id]?section=security',
+        route: `${PAGE_PATHS.users}/[id]?section=security`,
         stepUpOnUse: true,
         surface: 'page',
       }),
@@ -686,7 +687,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Consulter les sessions actives',
         module: 'Sessions',
         risk: 'sensitive',
-        route: '/administration/utilisateurs/[id]?section=security',
+        route: `${PAGE_PATHS.users}/[id]?section=security`,
         surface: 'page',
       }),
       activePermission({
@@ -698,7 +699,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Révoquer les sessions',
         module: 'Sessions',
         risk: 'critical',
-        route: '/administration/utilisateurs/[id]?section=security',
+        route: `${PAGE_PATHS.users}/[id]?section=security`,
         stepUpOnUse: true,
         surface: 'page',
       }),
@@ -711,7 +712,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: "Consulter l'activité d'un utilisateur",
         module: 'Activité',
         risk: 'sensitive',
-        route: '/administration/utilisateurs/[id]?section=history',
+        route: `${PAGE_PATHS.users}/[id]?section=history`,
         surface: 'page',
       }),
       activePermission({
@@ -723,7 +724,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: "Exporter l'activité d'un utilisateur",
         module: 'Activité',
         risk: 'critical',
-        route: '/administration/utilisateurs/[id]?section=history',
+        route: `${PAGE_PATHS.users}/[id]?section=history`,
         stepUpOnUse: true,
         surface: 'page',
       }),
@@ -737,16 +738,12 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         label: 'Supprimer définitivement un utilisateur',
         module: 'Cycle de vie',
         risk: 'critical',
-        route: '/administration/utilisateurs/[id]?section=security',
+        route: `${PAGE_PATHS.users}/[id]?section=security`,
         surface: 'page',
       }),
     ],
     poleKey: 'system',
-    routes: [
-      '/administration/utilisateurs',
-      '/administration/utilisateurs/nouveau',
-      '/administration/utilisateurs/[id]',
-    ],
+    routes: [PAGE_PATHS.users, PAGE_PATHS.newUser, `${PAGE_PATHS.users}/[id]`],
     surface: 'page',
     tone: 'system',
   },

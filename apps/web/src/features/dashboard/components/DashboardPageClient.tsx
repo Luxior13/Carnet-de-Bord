@@ -23,6 +23,7 @@ import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
 import { PageHero } from '$components/layout/PageHero';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
+import { PAGE_PATHS } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
 import { getAuditActionDisplay } from '$features/audit/audit-display';
 import type { ApiResponse } from '$types/api.types';
@@ -227,7 +228,7 @@ const DashboardAttentionCard: FC<{
       </CardContent>
       <CardFooter className="justify-end p-4">
         <Button asChild size="sm" variant="outline">
-          <Link href="/administration/utilisateurs">
+          <Link href={PAGE_PATHS.users}>
             Examiner les comptes
             <ArrowRight aria-hidden="true" className="size-4" />
           </Link>

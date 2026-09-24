@@ -81,15 +81,13 @@ describe('feature registry', () => {
   });
 
   it('resolves features without exposing mutable registry state', () => {
-    expect(getFeatureByHref('/administration/utilisateurs')).toBe(
-      FEATURES.users,
-    );
+    expect(getFeatureByHref('/systeme/utilisateurs')).toBe(FEATURES.users);
     expect(getFeatureById('system-activity')).toBe(FEATURES.systemActivity);
     expect(getFeatureById('system-settings')).toBe(FEATURES.systemSettings);
     expect(getFeatureByHref('/systeme/parametres')).toBe(
       FEATURES.systemSettings,
     );
-    expect(getFeatureByHref('/vie-interne/repertoire')).toBe(FEATURES.persons);
+    expect(getFeatureByHref('/membres/repertoire')).toBe(FEATURES.persons);
     expect(getFeatureById('persons')).toBe(FEATURES.persons);
     expect(getFeatureByHref('/inconnu')).toBeNull();
   });

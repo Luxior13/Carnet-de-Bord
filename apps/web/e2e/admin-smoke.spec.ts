@@ -296,9 +296,7 @@ async function expectPersonsListFilteringAndPagination(
       !url.searchParams.has('structureStatus')
     );
   });
-  await page.goto(
-    `/vie-interne/repertoire?q=${encodeURIComponent(listPrefix)}`,
-  );
+  await page.goto(`/membres/repertoire?q=${encodeURIComponent(listPrefix)}`);
   const firstPageResponse = await firstPageResponsePromise;
   expect(firstPageResponse.status()).toBe(200);
   const firstPage = await readApiData<PersonsListResponse>(firstPageResponse);
@@ -365,7 +363,7 @@ async function expectPersonsListFilteringAndPagination(
   ).toBe(true);
   await expect(page).toHaveURL((url) => {
     return (
-      url.pathname === '/vie-interne/repertoire' &&
+      url.pathname === '/membres/repertoire' &&
       url.searchParams.get('q') === listPrefix &&
       url.searchParams.get('structureStatus') === 'IN_STRUCTURE'
     );
@@ -392,7 +390,7 @@ async function expectPersonsListFilteringAndPagination(
   expect((await resetResponsePromise).status()).toBe(200);
   await expect(page).toHaveURL((url) => {
     return (
-      url.pathname === '/vie-interne/repertoire' &&
+      url.pathname === '/membres/repertoire' &&
       url.searchParams.get('q') === listPrefix &&
       !url.searchParams.has('structureStatus')
     );
@@ -462,7 +460,7 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
     duplicateSourceResponse,
   );
 
-  await page.goto('/vie-interne/repertoire/nouveau');
+  await page.goto('/membres/repertoire/nouveau');
   await expect(
     page.getByRole('heading', { name: 'Ajouter une personne' }),
   ).toBeVisible();
@@ -557,7 +555,7 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
   expect(duplicateWarningWire).not.toContain(duplicateSource.person.id);
   expect(duplicateWarningWire).not.toContain(duplicateSourceNickname);
 
-  await expect(page).toHaveURL(/\/vie-interne\/repertoire\/[^/]+$/);
+  await expect(page).toHaveURL(/\/membres\/repertoire\/[^/]+$/);
   const personId = creationResult.person.id;
   expect(page.url()).toContain(personId);
   await expect(
@@ -857,7 +855,7 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
   page.off('request', onHistoryRequest);
 
   await expectPersonsListFilteringAndPagination(page, uniqueSuffix);
-  await page.goto(`/vie-interne/repertoire/${personId}`);
+  await page.goto(`/membres/repertoire/${personId}`);
   await expect(
     page.getByRole('heading', { exact: true, name: updatedNickname }),
   ).toBeVisible();
@@ -882,7 +880,7 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
       { timeout: 30_000 },
     )
     .toEqual({ personId });
-  await expect(page).toHaveURL('/vie-interne/repertoire', {
+  await expect(page).toHaveURL('/membres/repertoire', {
     timeout: 30_000,
   });
   await expect(
@@ -914,14 +912,14 @@ test('authenticates and reaches the admin surfaces', async ({ page }) => {
   ).toBeVisible();
   await expectAccessiblePageStructure(page);
 
-  await page.goto('/administration/utilisateurs');
+  await page.goto('/systeme/utilisateurs');
   await expect(
     page.getByRole('heading', { name: 'Utilisateurs' }),
   ).toBeVisible();
   await expect(page.getByText('Annuaire utilisateurs')).toBeVisible();
   await expectAccessiblePageStructure(page);
 
-  await page.goto('/administration/utilisateurs/nouveau');
+  await page.goto('/systeme/utilisateurs/nouveau');
   await expect(
     page.getByRole('heading', { name: /Nouvel utilisateur|Compte créé/ }),
   ).toBeVisible();

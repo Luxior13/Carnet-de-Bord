@@ -1,3 +1,5 @@
+'use client';
+
 import { Slot } from '@radix-ui/react-slot';
 import { ChevronRight, Home, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
@@ -166,6 +168,7 @@ function BreadcrumbTrail({
   showHome = true,
   ...props
 }: BreadcrumbTrailProps): React.ReactNode {
+  const [collapsedMenuOpen, setCollapsedMenuOpen] = React.useState(false);
   const normalizedItems =
     showHome && items[0]?.href === '/' ? items.slice(1) : items;
   const allItems = showHome
@@ -208,7 +211,11 @@ function BreadcrumbTrail({
                 )}
               >
                 {isCollapsedItem ? (
-                  <DropdownMenu>
+                  <DropdownMenu
+                    modal={false}
+                    open={collapsedMenuOpen}
+                    onOpenChange={setCollapsedMenuOpen}
+                  >
                     <DropdownMenuTrigger asChild>
                       <BreadcrumbEllipsis />
                     </DropdownMenuTrigger>
@@ -226,7 +233,10 @@ function BreadcrumbTrail({
                             asChild
                             key={`${collapsedItem.href}-${collapsedIndex}`}
                           >
-                            <Link href={collapsedItem.href}>
+                            <Link
+                              href={collapsedItem.href}
+                              onClick={() => setCollapsedMenuOpen(false)}
+                            >
                               <span className="truncate">
                                 {collapsedItem.label}
                               </span>

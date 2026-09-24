@@ -44,9 +44,9 @@ describe('notification inbox UX contracts', () => {
   });
 
   it('provides personal read, unread, archive and restore actions', () => {
-    expect(inboxSource).toContain(
-      "type InboxFilter = 'all' | 'archived' | 'unread'",
-    );
+    expect(
+      readSourceFile('../features/notifications/notification-filters.ts'),
+    ).toContain("type InboxFilter = 'all' | 'archived' | 'unread'");
     expect(inboxSource).toContain("'archive' | 'read' | 'restore' | 'unread'");
     expect(inboxSource).toContain('Tout marquer comme lu');
     expect(itemRouteSource).toContain(

@@ -2,11 +2,8 @@ import React, { type FC } from 'react';
 
 import { Skeleton } from '$ui/skeleton';
 
-export const PageDetailSkeleton: FC<{ showBack?: boolean }> = ({
-  showBack = false,
-}) => (
+export const PageDetailSkeleton: FC = () => (
   <div aria-label="Chargement de la fiche" className="space-y-4" role="status">
-    {showBack && <Skeleton className="h-11 w-44 rounded-md" />}
     <div aria-hidden="true" className="flex min-h-16 items-start gap-3">
       <Skeleton className="size-10 shrink-0 rounded-full" />
       <div className="min-w-0 flex-1 space-y-2">

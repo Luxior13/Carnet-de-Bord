@@ -1,4 +1,5 @@
 import { PERMISSIONS } from '$constants/permissions.constants';
+import { PAGE_PATHS } from '$constants/routes.constants';
 
 export type FeatureAuditLocation = Readonly<{
   pageKey: string;
@@ -33,7 +34,7 @@ export const FEATURES = {
     },
     availability: 'live',
     description: 'Vue globale du site privé selon les permissions.',
-    href: '/',
+    href: PAGE_PATHS.home,
     icon: 'LayoutDashboard',
     id: 'dashboard',
     label: 'Mon travail',
@@ -50,7 +51,7 @@ export const FEATURES = {
     availability: 'live',
     description:
       'Annonces partagées et changements importants issus des modules autorisés.',
-    href: '/vie-interne/actualite-interne',
+    href: PAGE_PATHS.internalNews,
     icon: 'Newspaper',
     id: 'internal-news',
     label: 'Actualité interne',
@@ -66,7 +67,7 @@ export const FEATURES = {
     },
     availability: 'live',
     description: 'Boîte personnelle de notifications internes.',
-    href: '/mes-notifications',
+    href: PAGE_PATHS.notifications,
     icon: 'Bell',
     id: 'notifications',
     label: 'Mes notifications',
@@ -82,7 +83,7 @@ export const FEATURES = {
     },
     availability: 'live',
     description: 'Membres et contacts de la structure.',
-    href: '/vie-interne/repertoire',
+    href: PAGE_PATHS.persons,
     icon: 'Users',
     id: 'persons',
     label: 'Répertoire',
@@ -98,7 +99,7 @@ export const FEATURES = {
     },
     availability: 'live',
     description: 'Fonctionnalités prévues et état de leur préparation.',
-    href: '/feuille-de-route',
+    href: PAGE_PATHS.roadmap,
     icon: 'ClipboardList',
     id: 'roadmap',
     label: 'Feuille de route',
@@ -114,7 +115,7 @@ export const FEATURES = {
     },
     availability: 'live',
     description: 'Recherche complète dans les destinations autorisées.',
-    href: '/recherche',
+    href: PAGE_PATHS.search,
     icon: 'Search',
     id: 'search',
     label: 'Rechercher une page',
@@ -130,7 +131,7 @@ export const FEATURES = {
     },
     availability: 'live',
     description: 'Historique admin et actions sensibles.',
-    href: '/systeme/journal-activite',
+    href: PAGE_PATHS.systemActivity,
     icon: 'History',
     id: 'system-activity',
     label: "Journal d'activité",
@@ -147,7 +148,7 @@ export const FEATURES = {
     availability: 'live',
     description:
       "Configuration globale de l'interface et de la conservation des données.",
-    href: '/systeme/parametres',
+    href: PAGE_PATHS.systemSettings,
     icon: 'Settings',
     id: 'system-settings',
     label: 'Paramètres système',
@@ -163,7 +164,7 @@ export const FEATURES = {
     },
     availability: 'live',
     description: 'Comptes, rôles et autorisations administratives.',
-    href: '/administration/utilisateurs',
+    href: PAGE_PATHS.users,
     icon: 'Users',
     id: 'users',
     label: 'Utilisateurs',

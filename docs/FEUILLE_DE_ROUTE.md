@@ -1,6 +1,6 @@
 # Feuille de route — priorités de construction
 
-Référence produit révisée le 22 septembre 2026. La page `/feuille-de-route` présente **37 chantiers, 8 pôles cibles et 6 étapes**. Un chantier peut être un module, une extension, une vue partagée ou une intégration ; ce nombre ne représente pas 37 nouvelles pages.
+Référence produit révisée le 22 septembre 2026. La page `/systeme/feuille-de-route` présente **37 chantiers, 8 pôles cibles et 6 étapes**. Un chantier peut être un module, une extension, une vue partagée ou une intégration ; ce nombre ne représente pas 37 nouvelles pages.
 
 Le catalogue exécutable se trouve dans [features/roadmap](../apps/web/src/features/roadmap/roadmap.constants.ts). Ce document fixe les décisions ; la [matrice](../features/pages/MATRICE_PREPARATION.md) conserve la correspondance avec les anciens projets de pages. Lors d’une modification de priorité ou de périmètre, mettre ces trois références à jour ensemble.
 

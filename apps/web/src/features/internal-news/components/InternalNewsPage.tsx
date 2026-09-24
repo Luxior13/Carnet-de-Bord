@@ -92,10 +92,10 @@ export const InternalNewsPage: FC<InternalNewsPageProps> = ({
                 </Button>
               ) : null
             }
-            description="Les annonces partagées et les changements importants de la structure, réunis dans un fil lisible."
+            description="Les annonces et les nouvelles de votre structure."
             icon={<Newspaper className="size-5" />}
             title="Actualité interne"
-            tone="internal"
+            tone="activity"
           />
 
           <InternalNewsFeed

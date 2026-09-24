@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import React, { type FC, Suspense } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
-import { PageBackNavigation } from '$components/layout/PageBackNavigation';
 import { PageHero } from '$components/layout/PageHero';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { FEATURES } from '$constants/feature-registry.constants';
@@ -28,8 +27,7 @@ const NewPersonPageSkeleton: FC = () => (
   </PageShell>
 );
 
-const NewPersonContent: FC = () => {
-  const searchParams = useSearchParams();
+const NewPersonContent: FC<{ returnHref: string }> = ({ returnHref }) => {
   const {
     featureAvailabilityLoaded,
     operationalFeatureIds,
@@ -37,9 +35,6 @@ const NewPersonContent: FC = () => {
   } = useFeatureAvailability();
   const { userData } = useUser();
   const { canCreate } = getPersonCapabilities(userData);
-  const returnHref = getSafePersonReturnHref(
-    searchParams?.get('returnTo') ?? null,
-  );
 
   if (!canCreate) {
     return (
@@ -72,7 +67,6 @@ const NewPersonContent: FC = () => {
   return (
     <PageShell className="py-0" width="form">
       <PageCanvas contentClassName="relative space-y-5">
-        <PageBackNavigation href={returnHref} label="Retour au répertoire" />
         <PageHero
           compact
           description="Créez l'identité essentielle, puis complétez la fiche si nécessaire."
@@ -86,18 +80,27 @@ const NewPersonContent: FC = () => {
   );
 };
 
+const NewPersonPageContent: FC = () => {
+  const searchParams = useSearchParams();
+  const returnHref = getSafePersonReturnHref(searchParams.get('returnTo'));
+
+  return (
+    <AuthenticatedLayout
+      breadcrumbs={[
+        { label: FEATURES.persons.audit.poleLabel },
+        { href: returnHref, label: FEATURES.persons.label },
+        { label: 'Nouvelle fiche' },
+      ]}
+    >
+      <NewPersonContent returnHref={returnHref} />
+    </AuthenticatedLayout>
+  );
+};
+
 const NewPersonPage: FC = () => (
-  <AuthenticatedLayout
-    breadcrumbs={[
-      { label: FEATURES.persons.audit.poleLabel },
-      { href: FEATURES.persons.href, label: FEATURES.persons.label },
-      { label: 'Nouvelle fiche' },
-    ]}
-  >
-    <Suspense fallback={<NewPersonPageSkeleton />}>
-      <NewPersonContent />
-    </Suspense>
-  </AuthenticatedLayout>
+  <Suspense fallback={<NewPersonPageSkeleton />}>
+    <NewPersonPageContent />
+  </Suspense>
 );
 
 export default NewPersonPage;
