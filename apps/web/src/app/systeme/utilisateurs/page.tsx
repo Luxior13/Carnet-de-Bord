@@ -7,6 +7,7 @@ import { AccessDeniedState } from '$components/layout/PageState';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
+import { getUsersListVisibilityKey } from '$features/users/users-list.utils';
 import styles from '$features/users/UsersListLayout.module.css';
 import { UsersListPage } from '$features/users/UsersListPage';
 import { PageShell } from '$ui/page-shell';
@@ -28,7 +29,7 @@ const UsersAdministrationContent: FC = () => {
       hasPermission(userData.role, PERMISSIONS.USERS.VIEW, userData.permissions)
     : false;
 
-  if (!canViewUsers) {
+  if (!userData || !canViewUsers) {
     return (
       <AccessDeniedState
         actionHref="/"
@@ -54,7 +55,7 @@ const UsersAdministrationContent: FC = () => {
         </p>
       </header>
       <Suspense fallback={<UsersListFallback />}>
-        <UsersListPage />
+        <UsersListPage key={getUsersListVisibilityKey(userData)} />
       </Suspense>
     </PageShell>
   );

@@ -4132,6 +4132,25 @@ describe('users access hardening', () => {
     });
   });
 
+  it.each(['name', 'recent', 'created'])(
+    'uses a unique final ordering key for paginated users (%s)',
+    async (sort) => {
+      mockPrisma.user.count.mockResolvedValue(2);
+      mockPrisma.user.findMany.mockResolvedValueOnce([]);
+      const route = await import('$app/api/users/route');
+      const response = await route.GET(
+        new Request(
+          `http://localhost/api/users?sort=${sort}&page=2&limit=1`,
+        ) as never,
+      );
+
+      expect(response.status).toBe(200);
+      const query = mockPrisma.user.findMany.mock.calls[0]?.[0];
+      expect(query.orderBy.at(-1)).toEqual({ id: 'asc' });
+      expect(query).toMatchObject({ skip: 1, take: 1 });
+    },
+  );
+
   it('normalizes invalid users list pagination params', async () => {
     mockPrisma.user.count.mockResolvedValue(0);
     mockPrisma.user.findMany.mockResolvedValueOnce([]);

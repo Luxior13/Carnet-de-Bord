@@ -22,6 +22,7 @@ import React, {
 
 import { ContentState } from '$components/layout/ContentState';
 import { UserAvatar } from '$components/users/UserAvatar';
+import { PAGINATION } from '$constants/pagination.constants';
 import {
   getAccessLabel,
   hasPermission,
@@ -29,6 +30,10 @@ import {
 } from '$constants/permissions.constants';
 import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
+import {
+  canSearchUserContact,
+  formatUserLastLogin,
+} from '$features/users/users-list.utils';
 import styles from '$features/users/UsersListLayout.module.css';
 import { UsersOverview } from '$features/users/UsersOverview';
 import type {
@@ -113,7 +118,9 @@ const normalizeSortOption = (value: string | null): SortOption =>
 const normalizePage = (value: string | null): number => {
   const parsed = Number.parseInt(value ?? '1', 10);
 
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+  return Number.isFinite(parsed) && parsed > 0
+    ? Math.min(parsed, PAGINATION.MAX_PAGE)
+    : 1;
 };
 
 const normalizeSearchQuery = (value: string | null): string =>
@@ -307,6 +314,17 @@ export const UsersListPage: FC = () => {
         const response = await fetch(`/api/users?${params.toString()}`, {
           signal: controller.signal,
         });
+        if (controller.signal.aborted) return;
+
+        // A network failure may keep the last response; an access refusal must
+        // discard it, even when the refusal body is not valid JSON.
+        if (response.status === 401 || response.status === 403) {
+          setUsers([]);
+          setStats(null);
+          setPagination(null);
+          setSecurityDetailsVisible(false);
+          setLastSuccessfulLoadAt(null);
+        }
         const data = await response.json();
 
         if (controller.signal.aborted) return;
@@ -499,30 +517,10 @@ export const UsersListPage: FC = () => {
   const displayedUsers = users;
 
   // Total pages from server pagination
-  const totalPages = pagination?.totalPages || 1;
-  const totalFiltered = pagination?.total || users.length;
-
-  const formatRelativeTime = (date: Date | string | null): string => {
-    if (!date) return 'Jamais';
-    const now = new Date();
-    const then = new Date(date);
-    if (Number.isNaN(then.getTime())) return 'Jamais';
-
-    const diffMs = now.getTime() - then.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return "À l'instant";
-    if (diffMins < 60) return `Il y a ${diffMins} min`;
-    if (diffHours < 24) return `Il y a ${diffHours} h`;
-    if (diffDays < 30) return `Il y a ${diffDays} j`;
-
-    return new Date(date).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-    });
-  };
+  const totalPages = Math.min(pagination?.totalPages || 1, PAGINATION.MAX_PAGE);
+  const hasTruncatedPagination =
+    (pagination?.totalPages ?? 0) > PAGINATION.MAX_PAGE;
+  const totalFiltered = pagination?.total ?? users.length;
 
   return (
     <>
@@ -555,7 +553,7 @@ export const UsersListPage: FC = () => {
               </Button>
             }
             description={
-              lastSuccessfulLoadAt && users.length > 0
+              lastSuccessfulLoadAt
                 ? `Les dernières données fiables, actualisées à ${lastSuccessfulLoadAt.toLocaleTimeString(
                     'fr-FR',
                     {
@@ -605,7 +603,11 @@ export const UsersListPage: FC = () => {
                   name="directory-search"
                   placeholder="Rechercher…"
                   spellCheck={false}
-                  title="Nom, identifiant ou email"
+                  title={
+                    currentUser && canSearchUserContact(currentUser)
+                      ? 'Nom, identifiant ou email'
+                      : 'Nom ou identifiant'
+                  }
                   type="search"
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
@@ -747,7 +749,10 @@ export const UsersListPage: FC = () => {
               <p
                 role="status"
                 className={
-                  hasActiveFilters || isRefreshing
+                  hasActiveFilters ||
+                  isRefreshing ||
+                  loadError ||
+                  hasTruncatedPagination
                     ? 'text-muted-foreground col-span-full text-[0.8125rem] leading-5'
                     : 'sr-only'
                 }
@@ -756,7 +761,19 @@ export const UsersListPage: FC = () => {
                   ? 'Chargement…'
                   : isRefreshing
                     ? 'Actualisation…'
-                    : `${totalFiltered} compte${totalFiltered !== 1 ? 's' : ''} affiché${totalFiltered !== 1 ? 's' : ''}`}
+                    : loadError
+                      ? 'Résultats non actualisés'
+                      : `${totalFiltered.toLocaleString('fr-FR')} compte${totalFiltered !== 1 ? 's' : ''} trouvé${totalFiltered !== 1 ? 's' : ''}`}
+                {!isLoading &&
+                  !isRefreshing &&
+                  !loadError &&
+                  hasTruncatedPagination && (
+                    <>
+                      . Affinez la recherche : seules les{' '}
+                      {PAGINATION.MAX_PAGE.toLocaleString('fr-FR')} premières
+                      pages sont accessibles.
+                    </>
+                  )}
               </p>
             </div>
           }
@@ -767,7 +784,7 @@ export const UsersListPage: FC = () => {
                     '[&_p]:text-[0.8125rem] [&_span]:text-[0.8125rem] [&_button]:text-[0.8125rem]',
                   limit: pagination?.limit ?? 1,
                   onPageChange: setCurrentPage,
-                  page: currentPage,
+                  page: pagination?.page ?? currentPage,
                   total: totalFiltered,
                   totalPages,
                 }
@@ -898,7 +915,7 @@ export const UsersListPage: FC = () => {
                             <UserStatusLabel isActive={user.isActive} />
                           </TableCell>
                           <TableCell className="text-muted-foreground pointer-events-none py-3 text-[0.8125rem] leading-5 tabular-nums">
-                            {formatRelativeTime(user.lastLoginAt)}
+                            {formatUserLastLogin(user)}
                           </TableCell>
                           <TableCell className="pointer-events-none py-3">
                             <ArrowRight
@@ -970,6 +987,11 @@ export const UsersListPage: FC = () => {
                             <p className="text-muted-foreground mt-0.5 truncate text-[0.8125rem] leading-5">
                               {getUserLoginDisplay(user)}
                             </p>
+                            {user.contactEmail && (
+                              <p className="text-muted-foreground mt-0.5 text-[0.8125rem] leading-5 [overflow-wrap:anywhere]">
+                                {user.contactEmail}
+                              </p>
+                            )}
                           </div>
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                             <UserAccessLabel user={user} />
@@ -988,7 +1010,7 @@ export const UsersListPage: FC = () => {
                             )}
                           <p className="text-muted-foreground text-[0.8125rem] leading-5 tabular-nums">
                             Dernière connexion :{' '}
-                            {formatRelativeTime(user.lastLoginAt).toLowerCase()}
+                            {formatUserLastLogin(user).toLowerCase()}
                           </p>
                         </div>
                       </div>

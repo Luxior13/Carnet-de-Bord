@@ -44,7 +44,8 @@ describe('administrative users list accessibility contracts', () => {
   it('keeps the directory compact and uses one coherent filter bar', () => {
     expect(usersListSource).toContain('aria-label="Comptes utilisateurs"');
     expect(usersListSource).not.toContain('title="Comptes utilisateurs"');
-    expect(usersListSource).toContain('title="Nom, identifiant ou email"');
+    expect(usersListSource).toContain("'Nom, identifiant ou email'");
+    expect(usersListSource).toContain("'Nom ou identifiant'");
     expect(usersListSource).toContain('Tous les états');
     expect(usersListSource).toContain('Mot de passe à changer');
     expect(usersListSource).not.toContain('UsersStatCard');

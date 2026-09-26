@@ -94,11 +94,12 @@ function getUserOrderBy(
       ...protectedOrder,
       { lastLoginAt: { nulls: 'last', sort: 'desc' } },
       { createdAt: 'desc' },
+      { id: 'asc' },
     ];
   }
 
   if (sort === 'created') {
-    return [...protectedOrder, { createdAt: 'desc' }];
+    return [...protectedOrder, { createdAt: 'desc' }, { id: 'asc' }];
   }
 
   return [
@@ -106,6 +107,7 @@ function getUserOrderBy(
     { lastName: 'asc' },
     { firstName: 'asc' },
     { createdAt: 'desc' },
+    { id: 'asc' },
   ];
 }
 
