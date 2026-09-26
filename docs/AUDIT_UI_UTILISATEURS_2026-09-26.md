@@ -27,6 +27,9 @@ questions suivantes dans chaque nouvel audit, puis vérifier les réponses au re
 | Quel volume et quelle fréquence d'utilisation faut-il prévoir ? | Plusieurs pages de comptes, consultation répétée ; lignes compactes, filtres, tri et pagination. |
 | Quelles colonnes aident réellement la comparaison ? | Compte, accès, état, dernière connexion. L'alerte de sécurité reste attachée au compte concerné. |
 | La largeur sert-elle les données ou crée-t-elle simplement du vide ? | Liste large pour l'identité et les colonnes ; rail de statistiques uniquement si l'espace disponible le permet. |
+| Quel axe doit centrer le contenu : l'écran ou l'espace après navigation ? | Le tableau est centré sur l'écran. Sa largeur diminue symétriquement si nécessaire pour respecter la sidebar et le rail, avec un plafond de 80 rem. |
+| Le rail dépend-il du tableau ou du bord de la zone de travail ? | Rail aligné au bord droit de la zone disponible, à 16 px de l'espace réservé à la scrollbar ; maintien au défilement sur grand écran. |
+| Déplacer un bloc secondaire doit-il élargir ou décaler le contenu principal ? | Non ici : le tableau garde son axe central, le rail son bord droit. L'espace entre eux peut grandir sur grand écran. |
 | Comment regrouper les informations secondaires sans concurrencer la liste ? | Une carte compacte pour les statistiques, avec trois lignes alignées. Le filet isolé a été abandonné car les chiffres paraissaient détachés. Résumé dépliable sur mobile. |
 | Que signifie chaque couleur ? | Bleu nuit pour les surfaces ; violet pour superadmin, bleu pour administrateur, cyan pour utilisateur ; vert pour actif et jaune pour une attention requise. |
 | La sobriété a-t-elle rendu la page trop terne ? | Palette du bleu de navigation conservée ; badges d'accès et d'état avec texte lisible et contour fin. |
@@ -113,6 +116,25 @@ Sur largeur intermédiaire, recherche et création précèdent les filtres ; sur
 écran, le bouton reste visible sous la recherche, hors du bloc de filtres dépliable.
 La barre d'outils reste disponible pendant le chargement de la liste.
 
+Le cadre extérieur occupe toute la zone disponible, mais le tableau est centré
+sur l'écran et limité à 80 rem. La grille calcule sa largeur maximale des deux
+côtés de cet axe pour éviter la sidebar et le rail, sans déplacer la navigation.
+Le titre suit exactement les bords du tableau. À 1 920 px, le tableau mesure
+1 280 px, commence à 320 px et son centre est à 960 px ; à 2 560 px, il conserve
+cette largeur et son centre passe à 1 280 px. Sur les écrans intermédiaires, ce
+centrage strict réduit davantage la largeur utile ; les contrôles et comptes
+adoptent alors leur présentation compacte selon la place réelle.
+
+Le rail reste indépendant, au bord droit, même sur grand écran. Sa largeur est
+de 15 rem et l'écart avec le tableau d'au moins 1,25 rem ; cet écart peut grandir.
+Une marge de 1 rem le sépare du bord intérieur de la zone défilante ; la place
+réservée à la scrollbar s'ajoute à cette marge. Le rail utilise
+`position: sticky` avec un retrait supérieur de 1 rem, dans la grille et sous
+l'en-tête de navigation. La sidebar reste ancrée à gauche. Si la zone disponible
+après sidebar n'atteint pas 94 rem, les statistiques passent au-dessus de la
+liste, sans position collante. Elles se replient en résumé lorsque leur largeur
+propre est inférieure à 32 rem ; le rail latéral reste toujours développé.
+
 Ce rapport ne certifie pas une conformité WCAG complète ni toutes les pages du
 produit. Les limites et les contrôles complémentaires sont explicités plus bas.
 
@@ -137,11 +159,15 @@ Légende utilisée dans les tableaux :
 - Agrandissement du texte à 200 % par augmentation de la taille racine ; ce test
   est distinct du zoom natif du navigateur et d'un test sur téléphone physique.
 - Contrôles spécifiques de survol et de focus à 1 920 et 390 px.
+- Géométrie avec sidebar ouverte et réduite à 1 024, 1 440, 1 560, 1 784 et
+  1 920 px : axe du tableau conservé, rail sans chevauchement lorsqu'il est visible.
 
 ### Preuves conservées
 
 - [Page sur ordinateur](ux-ui-utilisateurs-2026-09-26/ordinateur.png).
 - [Page sur mobile](ux-ui-utilisateurs-2026-09-26/mobile.png).
+- [Grand écran avec rail au bord droit](ux-ui-utilisateurs-2026-09-26/grand-ecran.png).
+- [Rail pendant le défilement](ux-ui-utilisateurs-2026-09-26/rail-defilement.png).
 - [Focus d'une ligne sur ordinateur](ux-ui-utilisateurs-2026-09-26/focus-ordinateur.png).
 - [Focus d'une carte sur mobile](ux-ui-utilisateurs-2026-09-26/focus-mobile.png).
 - [Mesures des états interactifs](ux-ui-utilisateurs-2026-09-26/etats-interactifs.json).
@@ -155,15 +181,17 @@ les états échantillonnés, pas chaque combinaison possible de données et de p
 | Élément | Décision ou constat final | Preuve / réserve |
 | --- | --- | --- |
 | Sidebar | Ancrée à gauche ; ne se déplace pas avec le contenu. | V lors du contrôle de géométrie, ouverte et repliée. |
-| Largeur de page | Utilise l'espace disponible ; largeur totale plafonnée à 104 rem. | V, D. Choix spécifique à cette liste avec statistiques. |
+| Cadre et largeur principale | Cadre extérieur pleine largeur ; tableau plafonné à 80 rem, centré sur l'écran, réduit symétriquement pour respecter les zones latérales. | V, D. Axe vérifié aux onze largeurs de 320 à 2 560 px ; aucun débordement. |
 | Marge supérieure | Une seule respiration : 24 px à partir du palier `sm`, 16 px en dessous. | V lors du contrôle du cadre de page. |
 | En-tête | Titre seul à 24 px, sans description générique, panneau ni action isolée. | V, D. Le tableau devient la principale surface de travail. |
 | Action principale | « Nouvel utilisateur » dans la barre d'outils, à droite des filtres sur grand écran ; hauteur de 40 px sur ordinateur, 44 px sur mobile, visible sans ouvrir les filtres. | V pour rendu, focus et autorisation d'affichage avec profils simulés. |
 | Hauteurs des commandes | Recherche, création, filtres, tri, effacement et réinitialisation harmonisés : 44 px avant le palier `lg` (1 024 px), 40 px à partir de ce palier. | V, hauteurs calculées vérifiées à 390 et 1 920 px, y compris filtres mobiles dépliés. |
 | Création et états de liste | Bouton conservé pendant le chargement, sur liste vide et en erreur ; URL de retour conservant recherche, filtres et tri. | V pour visibilité et paramètres état/rôle/tri ; navigation réelle vers le formulaire hors audit isolé. |
 | Fil d'Ariane | Donne la position dans la navigation ; pas de retour redondant dans cette liste. | C. Parcours complet des pages de destination hors de cet audit. |
-| Alignement | En-tête et tableau ont les mêmes bords ; les statistiques commencent au niveau du tableau. | V. |
-| Statistiques latérales | Rail de 15 rem, séparé de 1,25 rem ; présent quand le conteneur disponible atteint 94 rem. | V. Le seuil dépend de la place après la sidebar, pas seulement de l'écran. |
+| Alignement | Titre et tableau ont les mêmes bords ; tableau centré sur l'écran, même lorsque la sidebar se replie ; statistiques au niveau du bloc de liste. | V. Axe stable à 960 px sur écran de 1 920 px, sidebar ouverte et réduite. |
+| Statistiques latérales | Rail de 15 rem, séparé d'au moins 1,25 rem ; présent quand le conteneur disponible atteint 94 rem. | V. Le seuil dépend de la place après la sidebar, pas seulement de l'écran. |
+| Bord droit et scrollbar | Marge de 16 px dans la zone utile, en plus de l'espace de scrollbar réservé par le layout. | V à 1 784, 1 920 et 2 560 px ; bord droit stable avec sidebar ouverte/repliée à 1 920 px. |
+| Statistiques au défilement | Rail collant à 16 px du haut de la zone défilante sur grand écran ; demeure dans les limites de sa grille. | V avec 20 lignes visibles sur 43 comptes et un défilement de 500 px. |
 | Poids des statistiques | Carte compacte avec titre et trois lignes ; libellés secondaires, valeurs alignées, jaune localisé sur l'alerte. | V, D. Le regroupement donne une structure au rail. |
 | Statistiques sur mobile | Résumé compact, dépliable ; indication d'une attention nécessaire conservée. | V. Ouverture au clavier et fermeture testées. |
 | Recherche | Toujours disponible, avant les filtres ; nom accessible explicite. | V. Recherche, effacement et état sans résultat contrôlés dans les passages de vérification. |
@@ -174,7 +202,7 @@ les états échantillonnés, pas chaque combinaison possible de données et de p
 | Retour aux valeurs initiales | Réinitialisation explicite, visible lorsqu'un réglage ou une recherche est actif. | V. |
 | En-têtes de colonnes | Compte, Accès, État, Dernière connexion, Action accessible sans libellé visuel encombrant. | V. Structure de tableau native conservée. |
 | Proportions des colonnes | Identité prioritaire ; largeur encadrée pour accès, état et date. | V. Pas de colonne « Sécurité » presque toujours vide. |
-| Densité | Lignes courantes de 64 px ; hauteur minimale, pas plafond qui coupe le texte. | V à 1 440/1 920 px ; croissance vérifiée avec contenu plus long. |
+| Densité | Lignes courantes de 64 px ; hauteur minimale, pas plafond qui coupe le texte. | V à 1 784/1 920/2 560 px ; croissance autorisée sur largeur intermédiaire et vérifiée avec contenu plus long. |
 | Avatar | Aligné sur le haut du bloc d'identité. | V avec et sans alerte. |
 | Nom | 14 px semi-gras, visible en premier. | V. Sur mobile, les noms longs peuvent revenir à la ligne. |
 | Identifiant et email | Police sans empattement commune, 13 px ; email conservé sur ordinateur. | V. L'email n'alourdit pas la carte mobile. |
@@ -306,6 +334,8 @@ l'état ouvert/fermé.
 | UI-13 | Moyenne | Arrondis trop prononcés pour le rendu de gestion souhaité. | Échelle locale de 8 px pour panneaux et contrôles, 4 px pour badges ; mesure des rayons réels dans le navigateur. |
 | UI-14 | Moyenne | Suggestions de gestionnaire de mots de passe dans la recherche. | Champ explicitement déclaré comme recherche, autocomplétion désactivée et attributs d'exclusion conservés ; bouton d'effacement unique. |
 | UI-15 | Moyenne | Action de création isolée du tableau. | Déplacée avec les commandes de liste, accessible pendant le chargement et sur mobile ; contrôle de permission préservé, filtres conservés dans l'URL de retour. |
+| UI-16 | Moyenne | Le plafond de largeur éloignait le rail du bord droit sur grand écran. | Conteneur pleine largeur, marge droite de 16 px après prise en compte de la scrollbar, rail collant et adaptation mobile préservée. |
+| UI-17 | Moyenne | Étendre le tableau pour déplacer le rail rompait son centrage sur l'écran et le collait au bloc secondaire. | Grille locale séparant les deux placements : tableau centré, largeur plafonnée et limitée par les obstacles ; rail ancré à droite, espace intermédiaire flexible. Mesures avec sidebar ouverte et réduite, grands écrans et scrollbar. |
 
 ### Recherche et gestionnaires de mots de passe
 
@@ -380,8 +410,12 @@ et une preuve. Une case n'est pas validée parce qu'une classe CSS semble correc
 - [ ] Placer l'action au niveau du contenu qu'elle concerne ; une action de liste peut appartenir à sa barre d'outils plutôt qu'au hero.
 - [ ] Vérifier qu'un déplacement d'action ne la masque pas pendant le chargement, en erreur ou quand le contenu est vide.
 - [ ] La sidebar reste ancrée ; les marges et le centrage sont adaptés au type de contenu.
+- [ ] Définir l'axe de centrage : écran entier ou zone disponible ; vérifier sa position réelle, y compris avec sidebar réduite.
 - [ ] La largeur principale sert la lecture ; le formulaire ou le texte long ne reprend pas automatiquement la largeur d'un tableau.
 - [ ] Les colonnes secondaires ont une utilité et une place clairement définies.
+- [ ] Définir l'ancrage d'un rail : bord du contenu ou bord de la zone de travail ; vérifier les grands écrans, sidebar ouverte/repliée et apparition de la scrollbar.
+- [ ] L'ancrage du rail ne force pas le contenu principal à s'étirer ou à changer d'axe ; conserver une distance minimale sans chevauchement.
+- [ ] Un rail collant reste sous l'en-tête, ne recouvre pas le tableau et reprend un placement normal lorsque l'espace disponible est insuffisant.
 - [ ] Les informations secondaires forment un ensemble lisible : une carte discrète peut mieux les regrouper qu'un simple filet isolé.
 - [ ] En-têtes, panneaux et listes partagent des alignements stables.
 
@@ -510,6 +544,7 @@ Fichiers principaux de la page :
 - [`page.tsx`](../apps/web/src/app/systeme/utilisateurs/page.tsx) : en-tête compact, palette locale et largeur.
 - [`UsersListPage.tsx`](../apps/web/src/features/users/UsersListPage.tsx) : recherche, filtres, tableau, cartes et pagination.
 - [`UsersOverview.tsx`](../apps/web/src/features/users/UsersOverview.tsx) : statistiques et résumé mobile.
+- [`UsersListLayout.module.css`](../apps/web/src/features/users/UsersListLayout.module.css) : grille locale, centrage écran, largeur maximale de 80 rem et placement indépendant du rail. Calcul CSS à partir du viewport privé, de la zone utile et de l'écran, tenant compte des marges et gouttières de scrollbar ; aucun déplacement de la sidebar ni mesure JavaScript.
 - [`page-shell.tsx`](../apps/web/src/components/ui/page-shell.tsx) et [`globals.css`](../apps/web/src/app/globals.css) : géométrie et jetons.
 - [`button.tsx`](../apps/web/src/components/ui/button.tsx), [`input.tsx`](../apps/web/src/components/ui/input.tsx), [`select.tsx`](../apps/web/src/components/ui/select.tsx) : correction du focus commun.
 

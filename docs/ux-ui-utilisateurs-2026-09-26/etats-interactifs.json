@@ -247,7 +247,7 @@
   {
     "control": "highlighted-option",
     "style": {
-      "background": "rgb(45, 65, 92)",
+      "background": "rgb(44, 66, 94)",
       "border": "rgb(59, 81, 109)",
       "shadow": "none",
       "outline": "2px",
@@ -262,12 +262,89 @@
   {
     "control": "indigo-composition-and-enhanced-contrast",
     "headingHeight": 32,
-    "headingLeft": 311,
-    "tableLeft": 312
+    "headingLeft": 320,
+    "tableLeft": 321
   },
   {
     "control": "colored-role-and-status-hover",
     "badges": []
+  },
+  {
+    "control": "screen-centered-table-and-right-rail-sidebar-open-collapsed",
+    "tableCenter": 960,
+    "right": 1889
+  },
+  {
+    "width": 1784,
+    "control": "screen-centering-across-sidebar-and-rail-breakpoints",
+    "geometry": [
+      {
+        "sidebar": "open",
+        "center": 892,
+        "tableWidth": 1162,
+        "railVisible": true
+      },
+      {
+        "sidebar": "collapsed",
+        "center": 892,
+        "tableWidth": 1202,
+        "railVisible": true
+      }
+    ]
+  },
+  {
+    "width": 1560,
+    "control": "screen-centering-across-sidebar-and-rail-breakpoints",
+    "geometry": [
+      {
+        "sidebar": "open",
+        "center": 780,
+        "tableWidth": 939.625,
+        "railVisible": false
+      },
+      {
+        "sidebar": "collapsed",
+        "center": 779.984375,
+        "tableWidth": 978,
+        "railVisible": true
+      }
+    ]
+  },
+  {
+    "width": 1440,
+    "control": "screen-centering-across-sidebar-and-rail-breakpoints",
+    "geometry": [
+      {
+        "sidebar": "open",
+        "center": 720,
+        "tableWidth": 824.40625,
+        "railVisible": false
+      },
+      {
+        "sidebar": "collapsed",
+        "center": 720,
+        "tableWidth": 1240.40625,
+        "railVisible": false
+      }
+    ]
+  },
+  {
+    "width": 1024,
+    "control": "screen-centering-across-sidebar-and-rail-breakpoints",
+    "geometry": [
+      {
+        "sidebar": "open",
+        "center": 512,
+        "tableWidth": 425.0625,
+        "railVisible": false
+      },
+      {
+        "sidebar": "collapsed",
+        "center": 512,
+        "tableWidth": 841.0625,
+        "railVisible": false
+      }
+    ]
   },
   {
     "width": 390,

@@ -5,6 +5,8 @@ import type { UserStatsType } from '$types/auth.types';
 import { Skeleton } from '$ui/skeleton';
 import { cn } from '$utils/css.utils';
 
+import styles from './UsersListLayout.module.css';
+
 type UsersOverviewProps = {
   isLoading?: boolean;
   securityDetailsVisible: boolean;
@@ -85,9 +87,12 @@ export const UsersOverview: FC<UsersOverviewProps> = ({
     <aside
       aria-label="Vue d’ensemble"
       aria-busy={isLoading}
-      className="border-border-default bg-surface-panel @container/users-overview order-first min-w-0 overflow-hidden rounded-lg border @min-[94rem]/private-viewport:order-last"
+      className={cn(
+        styles.overview,
+        'border-border-default bg-surface-panel @container/users-overview min-w-0 overflow-hidden rounded-lg border',
+      )}
     >
-      <details className="group/overview @min-[32rem]/page:hidden">
+      <details className="group/overview @min-[32rem]/users-overview:hidden @min-[94rem]/private-viewport:hidden">
         <summary className="hover:bg-surface-tile-hover focus-visible:ring-ring flex cursor-pointer list-none items-center justify-between gap-3 p-4 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset [&::-webkit-details-marker]:hidden">
           <span className="min-w-0">
             <span className="block text-sm font-semibold">Vue d’ensemble</span>
@@ -121,7 +126,7 @@ export const UsersOverview: FC<UsersOverviewProps> = ({
         </summary>
         <div className="border-border-divider border-t">{metricsList}</div>
       </details>
-      <div className="hidden @min-[32rem]/page:block">
+      <div className="hidden @min-[32rem]/users-overview:block @min-[94rem]/private-viewport:block">
         <h2 className="border-border-divider border-b px-4 py-3.5 text-sm font-semibold">
           Vue d’ensemble
         </h2>

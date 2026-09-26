@@ -7,12 +7,18 @@ import { AccessDeniedState } from '$components/layout/PageState';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
+import styles from '$features/users/UsersListLayout.module.css';
 import { UsersListPage } from '$features/users/UsersListPage';
-import { PageCanvas, PageShell } from '$ui/page-shell';
+import { PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
+import { cn } from '$utils/css.utils';
 
 const UsersListFallback: FC = () => (
-  <Skeleton className="h-96 rounded-lg" role="status" aria-label="Chargement" />
+  <Skeleton
+    className={cn(styles.main, 'h-96 rounded-lg')}
+    role="status"
+    aria-label="Chargement"
+  />
 );
 
 const UsersAdministrationContent: FC = () => {
@@ -36,21 +42,17 @@ const UsersAdministrationContent: FC = () => {
     <PageShell
       alignment="available"
       data-surface-tone="indigo"
-      className="py-0 [--page-shell-max-width:104rem]"
+      className={cn(styles.page, 'py-4 sm:py-6')}
+      width="full"
     >
-      <PageCanvas contentClassName="space-y-5">
-        <header
-          data-slot="page-heading"
-          className="min-w-0 @min-[94rem]/private-viewport:w-[calc(100%-16.25rem)]"
-        >
-          <h1 className="text-2xl leading-8 font-semibold tracking-tight">
-            {FEATURES.users.label}
-          </h1>
-        </header>
-        <Suspense fallback={<UsersListFallback />}>
-          <UsersListPage />
-        </Suspense>
-      </PageCanvas>
+      <header data-slot="page-heading" className={styles.main}>
+        <h1 className="text-2xl leading-8 font-semibold tracking-tight">
+          {FEATURES.users.label}
+        </h1>
+      </header>
+      <Suspense fallback={<UsersListFallback />}>
+        <UsersListPage />
+      </Suspense>
     </PageShell>
   );
 };

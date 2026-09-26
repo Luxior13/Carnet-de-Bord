@@ -29,6 +29,7 @@ import {
 } from '$constants/permissions.constants';
 import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
+import styles from '$features/users/UsersListLayout.module.css';
 import { UsersOverview } from '$features/users/UsersOverview';
 import type {
   PaginationInfo,
@@ -83,9 +84,6 @@ const FILTER_ROLE_OPTIONS: readonly FilterRole[] = [
 ];
 const SORT_OPTIONS: readonly SortOption[] = ['name', 'recent', 'created'];
 const USER_SEARCH_MAX_LENGTH = 100;
-// Keep the table wide; show the 15rem rail when the available workspace fits it.
-const USERS_LIST_LAYOUT_CLASS_NAME =
-  'grid min-w-0 grid-cols-1 items-start gap-4 @min-[94rem]/private-viewport:grid-cols-[minmax(0,1fr)_15rem] @min-[94rem]/private-viewport:gap-5';
 
 const getSortLabel = (sort: SortOption): string => {
   switch (sort) {
@@ -527,50 +525,50 @@ export const UsersListPage: FC = () => {
   };
 
   return (
-    <div className="space-y-4">
-      {loadError && (
-        <ContentState
-          action={
-            <Button
-              onClick={() =>
-                void fetchUsers(
-                  currentPage,
-                  debouncedSearch,
-                  effectiveFilterStatus,
-                  filterRole,
-                  sortBy,
-                )
-              }
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              Réessayer
-            </Button>
-          }
-          description={
-            lastSuccessfulLoadAt && users.length > 0
-              ? `Les dernières données fiables, actualisées à ${lastSuccessfulLoadAt.toLocaleTimeString(
-                  'fr-FR',
-                  {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  },
-                )}, restent affichées.`
-              : undefined
-          }
-          kind="error"
-          title={loadError}
-        />
-      )}
-      <div className={USERS_LIST_LAYOUT_CLASS_NAME}>
-        <UsersOverview
-          isLoading={isLoading}
-          securityDetailsVisible={
-            isLoading ? canRequestSecurityDetails : securityDetailsVisible
-          }
-          stats={stats}
-        />
+    <>
+      <UsersOverview
+        isLoading={isLoading}
+        securityDetailsVisible={
+          isLoading ? canRequestSecurityDetails : securityDetailsVisible
+        }
+        stats={stats}
+      />
+      <div className={cn(styles.main, 'space-y-4')}>
+        {loadError && (
+          <ContentState
+            action={
+              <Button
+                onClick={() =>
+                  void fetchUsers(
+                    currentPage,
+                    debouncedSearch,
+                    effectiveFilterStatus,
+                    filterRole,
+                    sortBy,
+                  )
+                }
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                Réessayer
+              </Button>
+            }
+            description={
+              lastSuccessfulLoadAt && users.length > 0
+                ? `Les dernières données fiables, actualisées à ${lastSuccessfulLoadAt.toLocaleTimeString(
+                    'fr-FR',
+                    {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    },
+                  )}, restent affichées.`
+                : undefined
+            }
+            kind="error"
+            title={loadError}
+          />
+        )}
         <DataTableSection
           className="rounded-lg"
           headerClassName="p-4 sm:p-5"
@@ -1002,6 +1000,6 @@ export const UsersListPage: FC = () => {
           )}
         </DataTableSection>
       </div>
-    </div>
+    </>
   );
 };
