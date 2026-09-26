@@ -2,7 +2,7 @@
 
 ## Décisions courantes
 
-Revue du 26 septembre 2026. Composants partagés par les pages privées. Besoin :
+Décisions actualisées le 27 septembre 2026. Composants partagés par les pages privées. Besoin :
 changer souvent de rubrique, prévoir huit rubriques et conserver des pages lisibles.
 Le rail latéral a été abandonné à la demande de l’utilisateur au profit d’une
 **grille en haut de la sidebar**. Les décisions ci-dessous remplacent ce rail.
@@ -14,14 +14,14 @@ Sources : [Sidebar](../../../apps/web/src/components/Sidebar.tsx),
 [fil d’Ariane](../../../apps/web/src/components/ui/breadcrumb.tsx),
 [navigation canonique](../../NAVIGATION.md).
 
-- Sidebar ancrée à gauche, largeur rétablie à 264 px ouverte et 56 px réduite
-  sur ordinateur à la demande de l’utilisateur.
+- Sidebar ancrée à gauche, toujours ouverte à 264 px sur ordinateur.
+  Réduction et bouton desktop retirés à la demande de l’utilisateur le 27 septembre.
   Fond bleu conservé, sans nouvelle texture ni dégradé.
 - Identité Noctambule : zone fixe de 56 px, séparateur aligné sur le header,
   logo de 36 px centré dans son emplacement fixe de 28 px, nom de 15 px semi-gras et
   espacement de 12 px après cet emplacement. Lien vers l’accueil de 44 px de haut, survol sémantique
-  et focus intérieur ; nom accessible « Noctambule — Accueil ». Logo seul
-  centré en mode réduit, fermeture mobile contenue dans la hauteur de l’identité.
+  et focus intérieur ; nom accessible « Noctambule — Accueil ».
+  Fermeture mobile contenue dans la hauteur de l’identité.
 - Rubriques sous le logo : quatre icônes par ligne, une ligne avec les quatre
   rubriques livrées, deux lignes avec huit. Aucun bouton de pagination. Catalogue
   filtré par les droits et la disponibilité ; aucun module futur activé pour le décor.
@@ -37,31 +37,31 @@ Sources : [Sidebar](../../../apps/web/src/components/Sidebar.tsx),
 - Pages : icônes neutres de 16 px, texte de 14 px, hauteur de 40 px sur ordinateur
   et 44 px sur mobile. Page courante bleue et texte renforcé, également sur ses
   fiches. Rayons de 8 px, focus intérieur. Branche active plus discrète.
-- Mode réduit : icônes sur une colonne défilable, infobulles à droite. Choisir
-  une autre rubrique ouvre sa première destination autorisée et déploie les pages.
-  Choisir la rubrique courante déploie en conservant la fiche et les paramètres
-  d’URL. Clics modifiés et liens natifs conservés.
 - Mobile : grille de quatre icônes au-dessus des pages, volet de 288 px limité
   au viewport. Changer de rubrique garde le volet ouvert ; choisir une page le
-  ferme. Le repli desktop ne masque pas les pages mobiles.
+  ferme. L’ouverture du volet reste indépendante de la sidebar fixe desktop.
 - Groupes imbriqués : lien parent distinct du dépliage. La sous-page courante
   reste visible lorsqu’elle est montée après l’ouverture de son groupe. La zone
   des pages révèle aussi la destination active lorsqu’elle change de taille.
   Ouvrir un groupe sans lien courant ne déclenche pas ce repositionnement.
-- Profil : fond transparent au repos, hauteur 56 px ouverte ou 44 px réduite.
+- Profil : fond transparent au repos, hauteur 56 px.
   Nom complet dans le menu, bleu à l’ouverture ou sur Mon compte, déconnexion
-  protégée en cas de saisie non enregistrée. Logo et profil centrés en mode réduit.
-- Header de 56 px : contexte à gauche, recherche et notifications à droite.
+  protégée en cas de saisie non enregistrée.
+- Header de 56 px sur fond `surface-panel` : contexte à gauche, recherche et notifications à droite.
   Zone centrale souple pour les chemins longs ; outils supplémentaires à justifier
   par un usage global et à regrouper sur petit écran si nécessaire.
 - Contrôles principaux du header de 40 px de haut sur ordinateur et 44 px sous
   1024 px. Recherche de 224/256 px sur ordinateur, icône en dessous. Sous 640 px,
   menu « … » pour les ancêtres et page courante à côté. Fermeture du menu lors
-  du changement de présentation. Ces choix du header sont conservés.
+  du changement de présentation. Page courante semi-grasse, focus intérieur.
+- Menu de sidebar réservé au mobile ; séparateur visible de 640 à 1023 px.
+  Infobulles de recherche, notifications et menu après 300 ms. Recherche accessible
+  par Ctrl + K ou ⌘ + K, indication à partir de 1280 px, retour au focus d’origine.
+  Le raccourci respecte les autres fenêtres ouvertes et les compositions de saisie.
 
-La préférence de largeur desktop et le défilement des pages par rubrique restent
-mémorisés. La clé historique `team-control:sidebar:poles-open:<compte>` n’est plus
-utilisée ; aucun effacement de stockage nécessaire. Routes, permissions, API,
+Le défilement des pages par rubrique reste mémorisé. Le shell contrôle la sidebar
+ouverte ; l’ancienne préférence `team-control:sidebar:desktop-open` et la clé
+`team-control:sidebar:poles-open:<compte>` sont ignorées. Aucun effacement de stockage nécessaire. Routes, permissions, API,
 schéma et dépendances inchangés. Les couleurs de pôles des autres composants
 restent celles du thème existant.
 
@@ -81,7 +81,7 @@ La zone des pages observe sa taille et l’insertion d’un lien courant ; les
 observateurs sont nettoyés et ne déclenchent pas de requête supplémentaire.
 Q09 vérifie les règles existantes de visibilité, sans remplacer un audit serveur.
 
-## Dernières vérifications — grille en haut
+## Vérifications de la grille — 26 septembre 2026
 
 Le 26 septembre 2026, depuis `apps/web` :
 
@@ -171,6 +171,40 @@ dans le code applicatif. Aucun nouveau test décoratif ni nouvelle capture.
 Ces contrôles ne rejouent pas une connexion réelle, le téléchargement dans un
 navigateur ou un enrôlement sur téléphone ; les contrôles visuels précédents
 restent datés. Références canoniques et contexte d’AGENTS.md actualisés.
+
+## Header et sidebar fixe — 27 septembre 2026
+
+Périmètre fonctionnel : présentation du header, raccourci de navigation et retrait
+du repli desktop. À examiner : Q01–Q04, Q08, Q09, Q16, Q19, Q27, Q30.
+Hors impact : Q05–Q07, Q10–Q15, Q17, Q20, Q22, Q24, Q25, Q28, Q29 : mêmes
+recherche, mutations, données, autorisations, API et exploitation. Non applicable :
+Q18, Q21, Q23, Q26, aucun cache, import/export, automatisme ou engagement financier.
+
+75 tests existants réussis (recherche, header/notifications, sidebar, shell,
+design system et navigation protégée), TypeScript et lint des fichiers modifiés
+réussis. Les anciens contrats imposant l’absence de raccourci et le repli desktop
+ont été actualisés. Les contrôles fonctionnels ci-dessous complètent ces contrats de source.
+
+Banc Chromium avec vrais Header, Sidebar, primitives, recherche, CSS et Geist ;
+session, navigation Next et API de notifications simulées. Largeurs 320, 390, 768,
+1024, 1280, 1440 et 1920 px : sidebar de 264 px même avec ancienne préférence
+fermée, bouton desktop absent, menu mobile fonctionnel, cibles 40/44 px, header
+56 px, fil d’Ariane court/long lisible et aucun débordement horizontal.
+
+Ctrl/⌘ + K ouvre et ferme la palette ; Échap rend le focus au champ initial sans
+modifier son texte. Répétition, composition, Alt/Shift et événement déjà traité
+ignorés ; autre dialogue et volet mobile respectés. Navigation par Entrée,
+infobulles et Échap, notifications avec compteur 99+, menu des ancêtres, focus
+en couleurs forcées et indication Mac contrôlés. Aucun défaut JavaScript observé.
+Un conflit avec le Ctrl + K natif de cmdk a été constaté, corrigé via
+`vimBindings={false}` dans cette palette et revérifié.
+
+Contrastes calculés sur le fond du header : texte courant 13,32:1, texte secondaire
+7,71:1, couleur de focus 6,74:1. Captures desktop/mobile inspectées, puis banc et
+captures supprimés. Ces mesures ne constituent pas un audit d’accessibilité complet.
+Documentation Context7 : composition Radix `asChild` et retour du focus, puis
+gestion des raccourcis cmdk ; API comparées aux paquets installés. Les données
+réelles, un lecteur d’écran, Safari/iOS et le zoom natif ne sont pas validés par ce banc.
 
 ## Historique utile
 

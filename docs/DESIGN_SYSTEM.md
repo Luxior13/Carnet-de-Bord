@@ -201,7 +201,9 @@ Les ombres montent avec l'élévation et restent très douces :
 
 De haut en bas :
 
-1. **En-tête** : bascule de sidebar, fil d'Ariane, recherche, notifications.
+1. **En-tête** : fil d'Ariane, recherche, notifications ; bouton de menu sur mobile.
+   Hauteur de 56 px, fond `surface-panel`, page courante semi-grasse et focus intérieur.
+   La sidebar reste ouverte à 264 px sur ordinateur.
 2. **Héro de page** : titre, description, éventuellement une action principale.
 3. **Toile de page** : `PageShell` puis `PageCanvas`, largeur bornée.
 4. **Sections** : `SectionPanel`, chacune avec un titre et une action locale.

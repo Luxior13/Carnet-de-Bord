@@ -254,7 +254,7 @@ function BreadcrumbTrail({
                       <BreadcrumbEllipsis
                         className={
                           compactOnMobile
-                            ? 'size-11 rounded-sm focus-visible:ring-inset sm:size-8'
+                            ? 'focus-visible:ring-ring size-11 rounded-sm focus-visible:ring-[length:var(--ring-width)] focus-visible:ring-inset sm:size-8'
                             : undefined
                         }
                       />
@@ -296,7 +296,14 @@ function BreadcrumbTrail({
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : item.href && !isLast ? (
-                  <BreadcrumbLink asChild>
+                  <BreadcrumbLink
+                    asChild
+                    className={
+                      compactOnMobile
+                        ? 'focus-visible:ring-ring rounded-sm focus-visible:ring-[length:var(--ring-width)] focus-visible:ring-inset'
+                        : undefined
+                    }
+                  >
                     <Link
                       className={cn(
                         isFirst
@@ -323,7 +330,12 @@ function BreadcrumbTrail({
                     {item.label}
                   </span>
                 ) : (
-                  <BreadcrumbPage className="max-w-40 sm:max-w-64 lg:max-w-80">
+                  <BreadcrumbPage
+                    className={cn(
+                      'max-w-40 sm:max-w-64 lg:max-w-80',
+                      compactOnMobile && 'font-semibold',
+                    )}
+                  >
                     {isFirst ? (
                       <>
                         <Home

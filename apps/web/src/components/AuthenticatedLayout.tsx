@@ -201,7 +201,7 @@ export const PersistentAuthenticatedShell: FC<AuthenticatedShellProps> = ({
 
   return (
     <AuthenticatedShellContext.Provider value={shellContextValue}>
-      <SidebarProvider>
+      <SidebarProvider open>
         {/* Skip to main content link for accessibility */}
         <a
           href="#main-content"

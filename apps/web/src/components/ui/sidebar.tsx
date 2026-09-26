@@ -388,25 +388,32 @@ function SidebarTrigger({
   const TriggerIcon = isExpanded ? PanelLeftClose : PanelLeftOpen;
 
   return (
-    <Button
-      aria-controls={SIDEBAR_ID}
-      aria-expanded={isExpanded}
-      aria-label={actionLabel}
-      data-sidebar="trigger"
-      data-slot="sidebar-trigger"
-      type="button"
-      variant="ghost"
-      size="icon"
-      className={cn('size-11 lg:size-10', className)}
-      onClick={(event) => {
-        onClick?.(event);
-        toggleSidebar();
-      }}
-      {...props}
-    >
-      <TriggerIcon className="size-4" />
-      <span className="sr-only">{actionLabel}</span>
-    </Button>
+    <Tooltip delayDuration={300}>
+      <TooltipTrigger asChild>
+        <Button
+          aria-controls={SIDEBAR_ID}
+          aria-expanded={isExpanded}
+          aria-label={actionLabel}
+          data-sidebar="trigger"
+          data-slot="sidebar-trigger"
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={cn('size-11 lg:size-10', className)}
+          onClick={(event) => {
+            onClick?.(event);
+            toggleSidebar();
+          }}
+          {...props}
+        >
+          <TriggerIcon className="size-4" />
+          <span className="sr-only">{actionLabel}</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="rounded-sm">
+        {actionLabel}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

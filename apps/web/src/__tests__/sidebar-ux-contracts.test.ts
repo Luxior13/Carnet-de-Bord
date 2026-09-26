@@ -13,22 +13,20 @@ const poleNavigationSource = readSourceFile(
   '../components/layout/PoleNavigation.tsx',
 );
 const sidebarPrimitiveSource = readSourceFile('../components/ui/sidebar.tsx');
+const authenticatedLayoutSource = readSourceFile(
+  '../components/AuthenticatedLayout.tsx',
+);
+const headerSource = readSourceFile('../components/layout/Header.tsx');
 const navigationSource = readSourceFile('../shared/constants/app.constants.ts');
 const globalStylesSource = readSourceFile('../app/globals.css');
 
 describe('sidebar UX contracts', () => {
-  it('keeps the desktop sidebar genuinely collapsible and remembers its state', () => {
-    expect(sidebarPrimitiveSource).toContain(
-      "const state = open ? 'expanded' : 'collapsed'",
+  it('keeps the shared desktop sidebar open regardless of old preferences', () => {
+    expect(authenticatedLayoutSource).toContain('<SidebarProvider open>');
+    expect(sidebarPrimitiveSource).toContain('if (isControlled) return;');
+    expect(headerSource).toMatch(
+      /<SidebarTrigger[\s\S]*?className="[^"]*lg:hidden/,
     );
-    expect(sidebarPrimitiveSource).toContain(
-      "'team-control:sidebar:desktop-open'",
-    );
-    expect(sidebarPrimitiveSource).toContain('cachedDesktopOpen');
-    expect(sidebarPrimitiveSource).toContain('React.useLayoutEffect');
-    expect(sidebarPrimitiveSource).toContain('desktopStateReady &&');
-    expect(sidebarPrimitiveSource).not.toContain("const state = 'expanded'");
-    expect(sidebarPrimitiveSource).not.toContain('lg:hidden');
   });
 
   it('keeps mobile controls usable without leaking the desktop state', () => {

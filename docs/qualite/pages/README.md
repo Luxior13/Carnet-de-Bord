@@ -7,7 +7,7 @@ Utiliser un nom stable compréhensible, sans multiplier les copies datées.
 | Page | Suivi | État du document |
 | --- | --- | --- |
 | Utilisateurs — liste | [systeme-utilisateurs.md](systeme-utilisateurs.md) | Repères issus du travail existant ; aucun nouvel audit exécuté pour créer ce référentiel |
-| Navigation générale — sidebar et header | [navigation-generale.md](navigation-generale.md) | Rubriques en grille en haut, pages en pleine largeur et header ; vérifications du 26 septembre 2026 |
+| Navigation générale — sidebar et header | [navigation-generale.md](navigation-generale.md) | Sidebar fixe sur ordinateur, grille des rubriques, header et raccourci de recherche ; vérifications du 27 septembre 2026 |
 
 Pour commencer un nouveau suivi : [modèle de revue](../modeles/revue-page.md).
 Les spécifications métier historiques de `features/pages` restent consultables

@@ -38,6 +38,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '$ui/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { apiFetchJson, jsonRequest } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 
@@ -242,26 +243,35 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
         handlePopoverOpenChange(nextOpen);
       }}
     >
-      <PopoverTrigger asChild>
-        <Button
-          aria-label={
-            unreadNotificationsCount > 0
-              ? `Ouvrir les notifications (${unreadNotificationsCount} non lues)`
-              : 'Ouvrir les notifications'
-          }
-          className="text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground data-[state=open]:border-border-strong/60 data-[state=open]:bg-surface-navigation-active data-[state=open]:text-foreground relative size-11 rounded-sm bg-transparent shadow-none hover:border-transparent lg:size-10"
-          size="icon"
-          variant="ghost"
-        >
-          <Bell aria-hidden="true" className="size-4" />
-          {unreadNotificationsCount > 0 && (
-            <span className="ring-surface-page bg-primary text-primary-foreground text-caption absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 font-semibold tabular-nums ring-2">
-              {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
-              <span className="sr-only">notifications non lues</span>
-            </span>
-          )}
-        </Button>
-      </PopoverTrigger>
+      <Tooltip delayDuration={300}>
+        <TooltipTrigger asChild>
+          <PopoverTrigger asChild>
+            <Button
+              aria-label={
+                unreadNotificationsCount > 0
+                  ? `Ouvrir les notifications (${unreadNotificationsCount} non lues)`
+                  : 'Ouvrir les notifications'
+              }
+              className="text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground data-[state=open]:border-border-strong/60 data-[state=open]:bg-surface-navigation-active data-[state=open]:text-foreground relative size-11 rounded-sm bg-transparent shadow-none hover:border-transparent focus-visible:ring-inset lg:size-10"
+              size="icon"
+              variant="ghost"
+            >
+              <Bell aria-hidden="true" className="size-4" />
+              {unreadNotificationsCount > 0 && (
+                <span className="ring-surface-panel bg-primary text-primary-foreground text-caption absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 font-semibold tabular-nums ring-2">
+                  {unreadNotificationsCount > 99
+                    ? '99+'
+                    : unreadNotificationsCount}
+                  <span className="sr-only">notifications non lues</span>
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" align="end" className="rounded-sm">
+          Notifications
+        </TooltipContent>
+      </Tooltip>
       <PopoverContent
         align="end"
         aria-label="Notifications"

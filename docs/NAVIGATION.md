@@ -60,8 +60,7 @@ L’identité Noctambule occupe une zone fixe de 56 px, alignée sur le header
 et séparée des rubriques par la même bordure fine. Logo de 36 px centré dans
 un emplacement fixe de 28 px pour conserver la position du texte ; nom en Geist
 semi-gras de 15 px (`0.9375rem`), espacement de 12 px après cet emplacement. Le lien vers l’accueil
-offre une cible de 44 px de haut et un focus intérieur ; en mode réduit, seul
-le logo reste visible et centré. Sur mobile, le bouton de fermeture de 44 px
+offre une cible de 44 px de haut et un focus intérieur. Sur mobile, le bouton de fermeture de 44 px
 est centré dans cette hauteur, à l’écart du nom.
 
 Les pôles accessibles sont regroupés sous le logo, en haut de la sidebar :
@@ -69,7 +68,8 @@ quatre icônes par ligne, donc une ligne avec les quatre pôles actuels et deux
 avec les huit pôles cibles. Les pages apparaissent en dessous sur toute la
 largeur, précédées du nom du pôle et des intitulés de groupe. L’ordre reste
 stable, sans pagination ni rubrique future affichée avant sa livraison.
-La sidebar retrouve 264 px sur ordinateur et 56 px en mode réduit. Les libellés
+La sidebar reste ouverte à 264 px sur ordinateur (à partir de 1024 px). Le mode réduit
+et son bouton sont retirés du site depuis le 27 septembre 2026. Les libellés
 restent à 14 px. Sur les écrans bas ou avec davantage de pôles, le bloc d’icônes
 est limité à `min(35svh, 8rem)` et peut défiler ; les pages ont leur propre
 défilement. Leur titre défile avec elles pour préserver l’accès aux liens.
@@ -83,24 +83,20 @@ renforcée, également lorsqu’on visite une de ses fiches. Une branche contena
 la page active reste discrète. Les lignes ont des arrondis de 8 px ; le focus des
 liens est tracé à l’intérieur de leur cible.
 
-En mode réduit, les icônes de pôle occupent une seule colonne défilable et leurs
-infobulles s’ouvrent à droite. Choisir un autre
-pôle ouvre ses pages et déploie la sidebar. Choisir le pôle courant la déploie
-sans quitter la fiche ni perdre les paramètres de l’URL. La préférence de largeur
-desktop et la position de défilement des pages par pôle restent mémorisées.
-L’ancienne préférence de repli de la liste des pôles n’est plus utilisée.
+La position de défilement des pages par pôle reste mémorisée. Le shell impose
+l’état ouvert sur ordinateur ; les anciennes préférences de réduction desktop
+et de repli de la liste des pôles sont ignorées, sans purge de stockage.
 
 Sur mobile, le volet conserve la grille de quatre icônes et les pages en dessous dans ses 288 px,
 limités à la largeur d’écran disponible. Changer de pôle garde le volet ouvert
-pour choisir une page ; choisir une page ferme le volet. Le repli desktop ne
-masque pas les pages dans le volet mobile. Échap et le bouton de fermeture
-restent disponibles.
+pour choisir une page ; choisir une page ferme le volet. Le bouton du header,
+Échap et le bouton de fermeture restent disponibles sur mobile.
 
 Le bouton utilisateur reste en bas, séparé des pages : 56 px de hauteur pour
-l’avatar, le nom et le rôle, ou une cible de 44 px en mode icônes. Au repos, son
+l’avatar, le nom et le rôle. Au repos, son
 fond transparent l’intègre à la sidebar sans carte supplémentaire. Son fond bleu
 signale un menu ouvert ou la page Mon compte active. La flèche pointe vers le
-menu situé au-dessus ; en mode icônes, celui-ci s’ouvre à droite. Le menu
+menu situé au-dessus. Le menu
 affiche le nom complet, l’identifiant et le rôle sur des lignes distinctes,
 puis Mon compte et Déconnexion. Il défile entièrement lorsque la hauteur
 disponible est réduite. La marge inférieure respecte la zone sûre du téléphone.
@@ -125,7 +121,7 @@ centrage à une liste et à une page de lecture.
 
 Le header conserve le fil d’Ariane et les outils globaux. Les fiches Personne, Utilisateur et Mon compte placent leur navigation horizontale sous le titre, à toutes les largeurs : liens soulignés, libellés complets, défilement horizontal sur petit écran et barre collante dans le contenu. Le retour vers la liste reste avant le titre. La navigation locale n’occupe plus de rail dans la marge. Les filtres de listes utilisent des contrôles distincts de cette navigation.
 
-Le header garde une hauteur de 56 px : bouton de sidebar et fil d’Ariane à gauche,
+Le header garde une hauteur de 56 px et un fond bleu ardoise `surface-panel` : fil d’Ariane à gauche,
 recherche et notifications à droite. La zone centrale reste souple pour les
 chemins longs ; les outils futurs s’ajoutent seulement avec un usage global
 identifié, en prévoyant leur regroupement sur les petites largeurs. Les rubriques
@@ -135,6 +131,18 @@ Les contrôles principaux mesurent 40 px de haut sur ordinateur et 44 px sous
 sur les tailles inférieures. Sous 640 px, le fil d’Ariane privilégie la page
 courante : le bouton « … » ouvre les ancêtres, accueil compris. Le menu se ferme
 au changement de présentation pour ne pas rester attaché à un bouton masqué.
+Le bouton du menu mobile reste visible sous 1024 px ; son séparateur apparaît
+entre 640 et 1023 px. La page courante est en semi-gras, les ancêtres plus discrets.
+Les contrôles disposent d’un focus intérieur et les boutons de recherche,
+notifications et menu mobile d’une infobulle après 300 ms.
+
+`Ctrl + K` ou `⌘ + K` ouvre et ferme la navigation rapide. Le raccourci est
+affiché dans le bouton à partir de 1280 px et annoncé par `aria-keyshortcuts`.
+Il respecte une autre fenêtre déjà ouverte, les compositions de saisie et les
+événements déjà traités ; la fermeture restitue le focus d’origine s’il est
+encore disponible. Les flèches et Entrée parcourent et ouvrent les résultats.
+Les anciennes combinaisons Vim de cette palette sont désactivées pour éviter
+le conflit avec Ctrl + K. Les gardes de formulaire restent appliquées aux destinations.
 
 Les gabarits partagés limitent la largeur extérieure à 76rem par défaut, 52rem pour les créations et 56rem pour la lecture (actualité, notifications, recherche). Une variante de 92rem reste disponible pour les données denses. Les listes basculent entre tableau et présentation mobile selon la largeur de leur conteneur. Voir la [proposition UX/UI et son suivi](UX_UI_PROPOSITION_2026-09-23.md).
 
