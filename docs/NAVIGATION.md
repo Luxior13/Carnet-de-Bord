@@ -70,7 +70,14 @@ Une nouvelle entrée répond à un usage récurrent, porte un nom clair et poss�
 
 La hiérarchie privilégiée est pôle → lieu → fiche ou vue. Le fil d’Ariane situe l’utilisateur ; le retour conserve les filtres. Sur mobile, les mêmes destinations restent accessibles sans forcer un menu de huit pôles dépliés.
 
-Les pages se centrent dans l’espace restant après la sidebar. Le header conserve le fil d’Ariane et les outils globaux. Les fiches Personne, Utilisateur et Mon compte placent leur navigation horizontale sous le titre, à toutes les largeurs : liens soulignés, libellés complets, défilement horizontal sur petit écran et barre collante dans le contenu. Le retour vers la liste reste avant le titre. La navigation locale n’occupe plus de rail dans la marge. Les filtres de listes utilisent des contrôles distincts de cette navigation.
+Le placement dépend du gabarit et du contenu : la sidebar reste ancrée à gauche,
+la colonne principale garde une largeur de travail adaptée et aucun rail ne la
+recouvre. Le centrage écran peut être retenu tant qu'il préserve cette largeur ;
+sur les tailles intermédiaires, la zone utile peut devenir prioritaire. Consigner
+ce choix dans le [suivi de la page](qualite/pages/README.md), sans imposer le même
+centrage à une liste et à une page de lecture.
+
+Le header conserve le fil d’Ariane et les outils globaux. Les fiches Personne, Utilisateur et Mon compte placent leur navigation horizontale sous le titre, à toutes les largeurs : liens soulignés, libellés complets, défilement horizontal sur petit écran et barre collante dans le contenu. Le retour vers la liste reste avant le titre. La navigation locale n’occupe plus de rail dans la marge. Les filtres de listes utilisent des contrôles distincts de cette navigation.
 
 Les gabarits partagés limitent la largeur extérieure à 76rem par défaut, 52rem pour les créations et 56rem pour la lecture (actualité, notifications, recherche). Une variante de 92rem reste disponible pour les données denses. Les listes basculent entre tableau et présentation mobile selon la largeur de leur conteneur. Voir la [proposition UX/UI et son suivi](UX_UI_PROPOSITION_2026-09-23.md).
 

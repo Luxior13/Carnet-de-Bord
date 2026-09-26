@@ -2,6 +2,12 @@
 
 Date : 26 septembre 2026. Page de référence : `/systeme/utilisateurs`.
 
+Référence historique de cette page. Pour tout nouveau changement, utiliser la
+[revue générale](qualite/REVUE_GENERALE.md), ses fiches conditionnelles et le
+[suivi courant Utilisateurs](qualite/pages/systeme-utilisateurs.md). Les grilles
+réutilisables ci-dessous témoignent du passage initial ; le nouveau référentiel
+porte désormais la méthode commune.
+
 Ce document rassemble les décisions prises sur cette page, les contrôles réellement
 effectués, les défauts corrigés et une grille à réutiliser sur les autres pages.
 Une capture au repos ne suffit pas à valider une interface : les interactions,

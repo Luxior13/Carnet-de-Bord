@@ -4,6 +4,12 @@ Ce document décrit l'identité visuelle du site, de la couleur jusqu'à la
 hiérarchie des pages. C'est la référence à suivre pour toute nouvelle page,
 nouveau composant ou retouche de style.
 
+La [revue générale](qualite/REVUE_GENERALE.md) et la
+[fiche Interface visuelle](qualite/fiches/interface-visuelle.md) organisent les
+contrôles. Les valeurs de cette référence décrivent le socle partagé ; les
+adaptations locales justifiées restent dans le suivi de la page. Elles ne deviennent
+pas automatiquement une nouvelle règle pour tous les écrans.
+
 Le parti pris : un outil de gestion privé, dense, calme et lisible, où
 l'information passe avant la décoration.
 

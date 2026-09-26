@@ -4,6 +4,10 @@ Toute nouvelle page fonctionnelle suit ce contrat. L'objectif est de pouvoir
 ajouter des dizaines de modules sans dupliquer les décisions de sécurité, de
 pagination, d'audit ou d'UX.
 
+Pour choisir les sujets à examiner selon le changement, commencer par la
+[revue générale](qualite/REVUE_GENERALE.md). Ce contrat décrit les responsabilités
+des fonctionnalités ; il ne demande pas d'ajouter une capacité inutile à chaque page.
+
 ## 1. Manifeste
 
 Déclarer la fonctionnalité dans `feature-registry.constants.ts`, puis relier
@@ -56,11 +60,14 @@ dans les composants React.
 
 ## 5. États UX obligatoires
 
-Chaque vue couvre : skeleton initial, rafraîchissement non bloquant, résultat,
-état vide, erreur avec nouvelle tentative, permission refusée et conflit de
-version. Utiliser `apiFetchJson`, `useAsyncResource` et
-`ResourceStateBoundary`. Les mutations importantes confirment l'intention et
-affichent un toast final unique.
+Chaque vue couvre les états applicables à son parcours : chargement initial,
+rafraîchissement non bloquant, résultat, état vide, erreur avec nouvelle tentative,
+permission refusée et conflit de version pour une édition concurrente. Réutiliser
+les primitives adaptées (`apiFetchJson`, `useAsyncResource`, `ResourceStateBoundary`)
+sans refonte automatique d'une page existante pour une petite retouche.
+Les mutations reçoivent un retour visible ; la confirmation d'intention dépend
+du risque et le toast est retenu lorsqu'il apporte une information utile, selon
+[FEEDBACK](FEEDBACK.md).
 
 ## 6. Tests et exploitation
 

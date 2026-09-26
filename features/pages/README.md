@@ -4,6 +4,7 @@ La référence courante est la [matrice de préparation](MATRICE_PREPARATION.md)
 
 ## À lire avant de développer
 
+- [Revue générale](../../docs/qualite/REVUE_GENERALE.md) : questions de sélection puis fiches utiles au changement ; [suivi courant des pages](../../docs/qualite/pages/README.md).
 - [Feuille de route](../../docs/FEUILLE_DE_ROUTE.md) : décisions, six étapes et périmètres.
 - [Navigation](../../docs/NAVIGATION.md) : quatre pôles actifs, huit pôles cibles et règles de placement.
 - [Structure](../../docs/STRUCTURE.md) : entités juridiques, historique, saisons et objets financiers.
