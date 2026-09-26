@@ -292,28 +292,28 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
 
   return (
     <SidebarRoot collapsible="icon" variant="sidebar" className={className}>
-      <SidebarHeader className="bg-sidebar relative gap-2 p-3 pb-2 group-data-[collapsible=icon]/sidebar:px-0">
+      <SidebarHeader className="border-border-divider bg-sidebar relative h-14 shrink-0 justify-center gap-0 border-b px-3 py-0 group-data-[collapsible=icon]/sidebar:px-0">
         <Link
           href="/"
-          aria-label="Retour au tableau de bord"
+          aria-label={`${SITE_CONFIG.name} — Accueil`}
           onClick={() => setOpenMobile(false)}
           title={isCollapsed ? SITE_CONFIG.name : undefined}
           className={cn(
-            'hover:bg-sidebar-accent/45 focus-visible:ring-sidebar-ring flex h-11 w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-md px-2 text-left transition-colors outline-none focus-visible:ring-2 lg:h-9',
+            'hover:bg-surface-navigation-hover focus-visible:ring-sidebar-ring flex h-11 w-full min-w-0 items-center gap-3 overflow-hidden rounded-sm px-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset',
             'group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0',
           )}
         >
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-md">
+          <span className="flex size-7 shrink-0 items-center justify-center">
             <Image
               src="/assets/noc.png"
               alt=""
-              width={28}
-              height={28}
-              className="object-contain"
+              width={36}
+              height={36}
+              className="size-9 max-w-none shrink-0 object-contain"
               priority
             />
           </span>
-          <span className="text-sidebar-accent-foreground max-w-40 min-w-0 truncate text-sm font-semibold tracking-normal transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:max-w-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150">
+          <span className="text-sidebar-accent-foreground max-w-40 min-w-0 truncate text-[0.9375rem] leading-5 font-semibold tracking-normal transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:max-w-0 group-data-[collapsible=icon]/sidebar:opacity-0 group-data-[collapsible=icon]/sidebar:delay-0 group-data-[state=expanded]/sidebar:delay-150">
             {SITE_CONFIG.name}
           </span>
         </Link>

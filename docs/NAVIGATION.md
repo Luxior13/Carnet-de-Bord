@@ -50,6 +50,20 @@ Ce tableau décrit les lieux logiques, pas un engagement à créer autant d’en
 
 ## Admission et expérience utilisateur
 
+Depuis le 27 septembre 2026, le nom affiché est **Noctambule**, défini dans
+`SITE_CONFIG`. La connexion présente « Espace de gestion » sous le nom.
+Les titres spécifiques existants suivent « Utilisateurs · Noctambule » et
+« Mon compte · Noctambule » ; la connexion dispose de « Connexion · Noctambule ».
+Les autres pages héritent du nom global, avec le repère Dev en développement.
+
+L’identité Noctambule occupe une zone fixe de 56 px, alignée sur le header
+et séparée des rubriques par la même bordure fine. Logo de 36 px centré dans
+un emplacement fixe de 28 px pour conserver la position du texte ; nom en Geist
+semi-gras de 15 px (`0.9375rem`), espacement de 12 px après cet emplacement. Le lien vers l’accueil
+offre une cible de 44 px de haut et un focus intérieur ; en mode réduit, seul
+le logo reste visible et centré. Sur mobile, le bouton de fermeture de 44 px
+est centré dans cette hauteur, à l’écart du nom.
+
 Les pôles accessibles sont regroupés sous le logo, en haut de la sidebar :
 quatre icônes par ligne, donc une ligne avec les quatre pôles actuels et deux
 avec les huit pôles cibles. Les pages apparaissent en dessous sur toute la

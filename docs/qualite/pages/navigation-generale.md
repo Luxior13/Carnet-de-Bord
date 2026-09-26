@@ -17,6 +17,11 @@ Sources : [Sidebar](../../../apps/web/src/components/Sidebar.tsx),
 - Sidebar ancrée à gauche, largeur rétablie à 264 px ouverte et 56 px réduite
   sur ordinateur à la demande de l’utilisateur.
   Fond bleu conservé, sans nouvelle texture ni dégradé.
+- Identité Noctambule : zone fixe de 56 px, séparateur aligné sur le header,
+  logo de 36 px centré dans son emplacement fixe de 28 px, nom de 15 px semi-gras et
+  espacement de 12 px après cet emplacement. Lien vers l’accueil de 44 px de haut, survol sémantique
+  et focus intérieur ; nom accessible « Noctambule — Accueil ». Logo seul
+  centré en mode réduit, fermeture mobile contenue dans la hauteur de l’identité.
 - Rubriques sous le logo : quatre icônes par ligne, une ligne avec les quatre
   rubriques livrées, deux lignes avec huit. Aucun bouton de pagination. Catalogue
   filtré par les droits et la disponibilité ; aucun module futur activé pour le décor.
@@ -112,6 +117,60 @@ huit rubriques, 26 pages principales plus un groupe avec une sous-page.
 
 Captures et banc temporaires supprimés après vérification. Liens documentaires
 locaux et `git diff --check` contrôlés avant clôture.
+
+## Retouche de l’identité — 26 septembre 2026
+
+Niveau léger : améliorer les proportions et alignements du haut de la sidebar.
+À examiner : Q01, Q02, Q03, Q04, Q27, Q30. Hors impact : Q05–Q17, Q19, Q20,
+Q22, Q24, Q25, Q28, Q29, car la retouche conserve les données, accès, parcours
+métier, image source, architecture et exploitation. Non applicable : Q18, Q21,
+Q23, Q26, aucun cache, import/export, automatisme ni engagement financier requis.
+
+13 tests existants réussis (`sidebar-ux-contracts`, `authenticated-shell-ux-contracts`),
+TypeScript et lint des deux composants modifiés réussis. Aucun test décoratif ajouté.
+Banc Chromium avec Sidebar, primitives, CSS et Geist réels ; contexte utilisateur,
+navigation Next et header adjacent de 56 px simulés. Vérifiés : dimensions du logo
+et du texte, bordure alignée, survol sans déplacement, focus au clavier, centrage
+à 56 px en mode réduit, mobiles de 390 et 320 px, nom non tronqué et fermeture
+de 44 px sans chevauchement. Lien d’accueil, fermeture du volet par ce lien et
+focus en couleurs forcées contrôlés ; aucune erreur JavaScript. Captures inspectées.
+Cette passe ne rejoue pas l’audit fonctionnel complet de la grille ni une session réelle.
+Banc et captures temporaires supprimés après vérification.
+
+Complément : logo agrandi de 28 à 36 px dans le même emplacement de 28 px.
+Contrôle géométrique Chromium sur le balisage d’identité isolé et le CSS réel :
+positions du texte, du lien, du header et du bloc suivant identiques avant/après,
+logo contenu dans le lien en modes ouvert, réduit et mobile. Ce contrôle ciblé
+ne rejoue pas les parcours ci-dessus. Script temporaire supprimé.
+
+## Nom Noctambule — 27 septembre 2026
+
+L’identité affichée remplace Team Control par Noctambule, nom de la structure.
+Source commune : `SITE_CONFIG`, consommée par la sidebar, les métadonnées,
+la connexion (« Espace de gestion »), les nouveaux QR de configuration MFA
+et l’en-tête des fichiers de secours. Titres spécifiques : « Utilisateurs ·
+Noctambule », « Mon compte · Noctambule » et « Connexion · Noctambule ».
+Le logo de 36 px, son emplacement et la typographie restent ceux validés plus haut.
+
+Niveau léger, changement de libellés. À examiner : Q01–Q04, Q10, Q19–Q21,
+Q27, Q30. Hors impact : Q05–Q09, Q11–Q17, Q22, Q24, Q25, Q28, Q29 : aucun
+changement de règles métier, données, accès, sessions, rétention ou déploiement.
+Non applicable : Q18, Q23, Q26, aucun besoin de cache, automatisme ou finance.
+
+La nouvelle désignation MFA concerne les prochains enrôlements. Les entrées déjà
+enregistrées dans les applications d’authentification ne sont pas renommées à distance.
+Les préfixes cryptographiques, noms de cookies, clés de stockage et anciennes routes
+restent stables : un renommage visuel ne doit pas invalider les secrets, codes ou
+préférences existants. Le fichier de secours conserve son contenu utile et porte
+désormais le nom `codes-secours-noctambule-AAAA-MM-JJ.txt`.
+
+Vérifications : 43 tests existants réussis (navigation, sidebar, shell, serveur MFA,
+configuration MFA et contrats de présentation MFA), TypeScript et lint des fichiers
+modifiés réussis. Relecture des consommateurs et recherche de l’ancien nom visible
+dans le code applicatif. Aucun nouveau test décoratif ni nouvelle capture.
+Ces contrôles ne rejouent pas une connexion réelle, le téléchargement dans un
+navigateur ou un enrôlement sur téléphone ; les contrôles visuels précédents
+restent datés. Références canoniques et contexte d’AGENTS.md actualisés.
 
 ## Historique utile
 

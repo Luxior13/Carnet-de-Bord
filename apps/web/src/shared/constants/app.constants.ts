@@ -21,11 +21,11 @@ import type {
 } from '$types/navigation.types';
 import { getSafeInternalPathname } from '$utils/internal-href.utils';
 export const SITE_CONFIG = {
-  description: "Gestion privée d'équipe esport",
+  description: 'Espace de gestion de Noctambule.',
   logo: '/assets/noc.png',
-  name: 'Team Control',
-  subtitle: 'Gestion privée',
-  tag: 'TC',
+  name: 'Noctambule',
+  subtitle: 'Espace de gestion',
+  tag: 'NC',
 };
 
 export { DEFAULT_ROLE_LABEL, PROTECTED_ROLE_LABEL, ROLE_LABELS };

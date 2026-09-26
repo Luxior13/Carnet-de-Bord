@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     follow: false,
     index: false,
   },
-  title: `${SITE_CONFIG.name}${env.NODE_ENV === 'development' ? ' - Dev' : ''}`,
+  title: `${SITE_CONFIG.name}${env.NODE_ENV === 'development' ? ' · Dev' : ''}`,
 };
 
 // Every page request must be evaluated with its real middleware context. The

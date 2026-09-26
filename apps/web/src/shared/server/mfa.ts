@@ -19,6 +19,7 @@ import { cookies } from 'next/headers';
 import { generateSecret, generateURI, verify } from 'otplib';
 import QRCode from 'qrcode';
 
+import { SITE_CONFIG } from '$constants/app.constants';
 import { env } from '$env';
 
 import { prisma } from './prisma';
@@ -141,7 +142,7 @@ export const createTotpProvisioningData = async (
   const uri = generateURI({
     algorithm: 'sha1',
     digits: 6,
-    issuer: 'Team Control',
+    issuer: SITE_CONFIG.name,
     label: loginName,
     period: MFA_TOTP_PERIOD_SECONDS,
     secret,

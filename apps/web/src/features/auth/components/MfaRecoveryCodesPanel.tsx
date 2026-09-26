@@ -4,6 +4,7 @@ import { Check, Copy, Download } from 'lucide-react';
 import React, { type FC, useState } from 'react';
 import { toast } from 'sonner';
 
+import { SITE_CONFIG } from '$constants/app.constants';
 import { Button } from '$ui/button';
 import { Checkbox } from '$ui/checkbox';
 import { Label } from '$ui/label';
@@ -16,7 +17,7 @@ type MfaRecoveryCodesPanelProps = {
 
 const buildRecoveryCodesFile = (codes: string[]): string =>
   [
-    'Codes de secours Team Control',
+    `Codes de secours ${SITE_CONFIG.name}`,
     'Chaque code ne peut être utilisé qu’une seule fois.',
     '',
     ...codes,
@@ -46,7 +47,7 @@ export const MfaRecoveryCodesPanel: FC<MfaRecoveryCodesPanelProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
 
-    link.download = `codes-secours-team-control-${new Date()
+    link.download = `codes-secours-${SITE_CONFIG.name.toLowerCase()}-${new Date()
       .toISOString()
       .slice(0, 10)}.txt`;
     link.href = url;

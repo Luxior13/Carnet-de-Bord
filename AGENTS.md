@@ -25,7 +25,7 @@ une API, une tâche, un schéma ou un composant partagé, même sans page.
 
 ## Contexte et références
 
-Outil de gestion de Team Control : structure esport actuellement associative,
+Outil de gestion de Noctambule : structure esport actuellement associative,
 préparée à évoluer vers une société. Séparer personnes, comptes, relations datées,
 équipes, entités juridiques, saisons et exercices. Ne pas réécrire les anciens
 engagements lors d’une évolution de structure.

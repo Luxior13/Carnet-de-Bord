@@ -324,7 +324,7 @@ function Sidebar({
             } as React.CSSProperties
           }
           className={cn(
-            'bg-sidebar text-sidebar-foreground w-[var(--sidebar-width-mobile)] max-w-[calc(100vw-1rem)] overflow-hidden p-0 [&_[data-sidebar=header]]:pr-14 [&>button]:z-10 [&>button]:size-11 [&>button]:opacity-100',
+            'bg-sidebar text-sidebar-foreground w-[var(--sidebar-width-mobile)] max-w-[calc(100vw-1rem)] overflow-hidden p-0 [&_[data-sidebar=header]]:pr-14 [&>button]:top-1.5 [&>button]:right-1.5 [&>button]:z-10 [&>button]:size-11 [&>button]:opacity-100',
           )}
         >
           <SheetTitle className="sr-only">Menu</SheetTitle>
