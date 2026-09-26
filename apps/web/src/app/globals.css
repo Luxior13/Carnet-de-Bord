@@ -32,6 +32,9 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
+  --color-access-privileged: var(--access-privileged);
+  --color-access-admin: var(--access-admin);
+  --color-access-member: var(--access-member);
   --color-overlay: var(--overlay);
   --color-surface: var(--surface);
   --color-surface-canvas: var(--surface-canvas);
@@ -118,7 +121,7 @@
   --surface-control-hover: #1e2c3e;
   --surface-control-focus: #253b55;
   --surface-tile-hover: #293d58;
-  /* The user-list table is the reference for repeated content surfaces. */
+  /* Repeated content surfaces in the default slate palette. */
   --surface-row-alternate: #1e2c3e;
   --surface-navigation-active: #2c425e;
   --surface-navigation-hover: #273750;
@@ -166,6 +169,9 @@
   --warning-foreground: #451a03;
   --info: #bae6fd;
   --info-foreground: #082f49;
+  --access-privileged: #c2b8e7;
+  --access-admin: #acc6e8;
+  --access-member: #a3c9d8;
   --border: color-mix(in srgb, var(--border-steel) 34%, var(--surface-panel));
   --border-control: #6f86a5;
   --input: var(--surface-control);
@@ -224,6 +230,33 @@
   );
 }
 
+/* Opt-in blue surfaces matching the sidebar. Apply the same scope to portals.
+   Navigation, action colors and focus retain the common application palette. */
+[data-surface-tone='indigo'] {
+  --radius: 0.5rem;
+  --surface-panel: var(--sidebar);
+  --surface-panel-raised: #27364b;
+  --surface-panel-header: #27364b;
+  --surface-inset: #10182a;
+  --surface-control-hover: #293d59;
+  --surface-control-focus: #2b4262;
+  --surface-tile-hover: #2d415c;
+  --surface-row-alternate: #233145;
+  --border-default: #3b516d;
+  --border-divider: #344761;
+  --border-control: #7891b5;
+  --border-strong: #a4c5f5;
+  --surface: var(--surface-panel);
+  --surface-control: var(--surface-inset);
+  --card: var(--surface-panel);
+  --popover: var(--surface-panel-raised);
+  --input: var(--surface-inset);
+  --muted: var(--surface-inset);
+  --secondary: var(--surface-panel-raised);
+  --accent: var(--surface-tile-hover);
+  --border: var(--border-default);
+}
+
 @utility scrollbar-gutter-both-edges {
   scrollbar-gutter: stable both-edges;
 }
@@ -267,7 +300,7 @@
     container: private-viewport / inline-size;
   }
 
-  .private-viewport [data-page-width] {
+  .private-viewport [data-page-width][data-page-alignment='screen'] {
     /* Shift only the page toward the screen center, limited by its free margin.
        The viewport container tracks the sidebar's actual width as it folds. */
     left: clamp(
@@ -341,7 +374,8 @@
 
 /* 5. User accessibility preferences override the palette and motion. */
 @media (prefers-contrast: more) {
-  :root {
+  :root,
+  [data-surface-tone='indigo'] {
     --border-subtle: #7f8aa0;
     --border-default: #a7b0c2;
     --border-strong: #d1d6e0;

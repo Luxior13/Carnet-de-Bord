@@ -6,6 +6,7 @@ type PageShellWidth =
   'default' | 'form' | 'full' | 'narrow' | 'reading' | 'wide';
 
 type PageShellProps = ComponentProps<'div'> & {
+  alignment?: 'screen' | 'available';
   width?: PageShellWidth;
 };
 
@@ -27,12 +28,14 @@ function getPageShellWidthClass(width: PageShellWidth): string {
 }
 
 const PageShell: FC<PageShellProps> = ({
+  alignment = 'screen',
   className,
   width = 'default',
   ...props
 }) => {
   return (
     <div
+      data-page-alignment={alignment}
       data-page-width={width}
       className={cn(
         '@container/page relative z-10 mx-auto w-full max-w-[var(--page-shell-max-width)] min-w-0 px-[var(--private-content-padding)]',

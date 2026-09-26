@@ -1,42 +1,25 @@
 'use client';
 
-import { Plus, Users } from 'lucide-react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import React, { type FC, Suspense } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { AccessDeniedState } from '$components/layout/PageState';
-import { UsersAdminHero } from '$components/users/UsersAdminHero';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
-import { PAGE_PATHS } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
 import { UsersListPage } from '$features/users/UsersListPage';
-import { Button } from '$ui/button';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 
 const UsersListFallback: FC = () => (
-  <Skeleton className="h-96 rounded-xl" role="status" aria-label="Chargement" />
+  <Skeleton className="h-96 rounded-lg" role="status" aria-label="Chargement" />
 );
 
 const UsersAdministrationContent: FC = () => {
-  const searchParams = useSearchParams();
-  const query = searchParams.toString();
-  const returnHref = `${PAGE_PATHS.users}${query ? `?${query}` : ''}`;
   const { userData } = useUser();
   const canViewUsers = userData
     ? userData.isProtected ||
       hasPermission(userData.role, PERMISSIONS.USERS.VIEW, userData.permissions)
-    : false;
-  const canCreateUsers = userData
-    ? userData.isProtected ||
-      hasPermission(
-        userData.role,
-        PERMISSIONS.USERS.CREATE,
-        userData.permissions,
-      )
     : false;
 
   if (!canViewUsers) {
@@ -50,25 +33,20 @@ const UsersAdministrationContent: FC = () => {
   }
 
   return (
-    <PageShell className="py-0">
+    <PageShell
+      alignment="available"
+      data-surface-tone="indigo"
+      className="py-0 [--page-shell-max-width:104rem]"
+    >
       <PageCanvas contentClassName="space-y-5">
-        <UsersAdminHero
-          title={FEATURES.users.label}
-          description="Gérez les comptes et les accès à votre espace."
-          actions={
-            canCreateUsers ? (
-              <Button asChild size="sm">
-                <Link
-                  href={`${PAGE_PATHS.newUser}?${new URLSearchParams({ returnTo: returnHref })}`}
-                >
-                  <Plus className="size-4" />
-                  Nouvel utilisateur
-                </Link>
-              </Button>
-            ) : null
-          }
-          icon={<Users className="size-5" />}
-        />
+        <header
+          data-slot="page-heading"
+          className="min-w-0 @min-[94rem]/private-viewport:w-[calc(100%-16.25rem)]"
+        >
+          <h1 className="text-2xl leading-8 font-semibold tracking-tight">
+            {FEATURES.users.label}
+          </h1>
+        </header>
         <Suspense fallback={<UsersListFallback />}>
           <UsersListPage />
         </Suspense>
