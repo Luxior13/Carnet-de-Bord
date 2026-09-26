@@ -44,10 +44,13 @@ describe('sidebar UX contracts', () => {
 
   it('keeps nested destinations available in expanded and icon modes', () => {
     expect(sidebarSource).toContain('<SidebarMenuAction');
-    expect(sidebarSource).toContain('if (isCollapsed)');
-    expect(sidebarSource).toMatch(/aria-label=\{`Ouvrir \$\{item\.label\}`\}/);
-    expect(sidebarSource).toContain('Vue d’ensemble');
-    expect(sidebarSource).toContain('side="right"');
+    expect(sidebarSource).toContain('<CollapsibleTrigger asChild>');
+    expect(sidebarSource).toContain('children.map(renderSubNavItem)');
+    expect(poleNavigationSource).toContain('if (isCollapsed)');
+    expect(poleNavigationSource).toContain('setOpen(true)');
+    expect(poleNavigationSource).toContain(
+      'if (isActive) event.preventDefault()',
+    );
     expect(sidebarSource).toContain("? 'location'");
   });
 
@@ -73,10 +76,10 @@ describe('sidebar UX contracts', () => {
     );
   });
 
-  it('gives the pole list and account menu visible open and current states', () => {
-    expect(poleNavigationSource).toContain(
-      'group-data-[state=open]/poles:rotate-180',
-    );
+  it('gives the switcher and account menu visible current and open states', () => {
+    expect(poleNavigationSource).toContain('bottom-0 h-0.5');
+    expect(poleNavigationSource).toContain('bg-current');
+    expect(poleNavigationSource).toContain('bg-surface-navigation-active');
     expect(sidebarSource).toContain(
       'group-data-[state=open]/account-menu:rotate-180',
     );
@@ -95,23 +98,35 @@ describe('sidebar UX contracts', () => {
     );
   });
 
-  it('keeps the pole list inline and usable when the sidebar is collapsed', () => {
-    expect(poleNavigationSource).toContain('<Collapsible');
+  it('keeps section switching above the full-width destinations', () => {
+    expect(poleNavigationSource).not.toContain('Collapsible');
     expect(poleNavigationSource).not.toContain('DropdownMenu');
-    expect(poleNavigationSource).toContain('if (isCollapsed) setOpen(true)');
-    expect(poleNavigationSource).toContain(
-      'Afficher les pôles et déployer la navigation',
+    expect(poleNavigationSource).toContain('data-sidebar="space-switcher"');
+    expect(poleNavigationSource).toContain('grid-cols-4');
+    expect(poleNavigationSource).toContain('sidebar:grid-cols-1');
+    expect(poleNavigationSource).toContain('overflow-y-auto');
+    expect(poleNavigationSource).toContain('new ResizeObserver');
+    expect(poleNavigationSource).not.toContain(
+      'team-control:sidebar:poles-open:',
     );
-    expect(poleNavigationSource).toContain('max-h-[min(40svh,20rem)]');
-    expect(poleNavigationSource).toContain('team-control:sidebar:poles-open:');
-    expect(poleNavigationSource).toContain('preference ?? !isMobile');
+    expect(sidebarSource).toContain('data-sidebar="space-pages"');
+    expect(sidebarSource).toContain(
+      'pendingMobileSpaceHref.current !== pathname',
+    );
+    expect(poleNavigationSource).not.toContain('setOpenMobile(false)');
+    expect(poleNavigationSource).toContain('event.metaKey');
   });
 
   it('keeps pole placement stable with restrained color hierarchy', () => {
     expect(poleNavigationSource).toContain('spaces.map((space) =>');
     expect(poleNavigationSource).not.toContain('Autres pôles');
     expect(sidebarSource).not.toContain('bg-surface-floating');
-    expect(poleNavigationSource).toContain('aria-label="Pôles disponibles"');
+    expect(poleNavigationSource).toContain('aria-label="Rubriques"');
+    expect(poleNavigationSource).toContain('tone.iconForeground');
+    expect(poleNavigationSource).toContain('aria-label={space.label}');
+    expect(poleNavigationSource).toContain(
+      "side={isCollapsed ? 'right' : 'bottom'}",
+    );
     expect(sidebarSource).toContain(
       "const SIDEBAR_POPOVER_SECTION_CLASS = 'space-y-0.5'",
     );
@@ -141,7 +156,7 @@ describe('sidebar UX contracts', () => {
   });
 
   it('keeps compact proportions without decorative texture or nested cards', () => {
-    expect(sidebarSource).toContain('rounded-xl border p-2');
+    expect(sidebarSource).toContain('rounded-sm border p-2');
     expect(sidebarSource).toContain('size-10');
     expect(sidebarSource).toContain('size-8');
     expect(sidebarSource).toContain('min-h-11');

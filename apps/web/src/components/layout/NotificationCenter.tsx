@@ -249,7 +249,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
               ? `Ouvrir les notifications (${unreadNotificationsCount} non lues)`
               : 'Ouvrir les notifications'
           }
-          className="text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground data-[state=open]:border-border-strong/60 data-[state=open]:bg-surface-navigation-active data-[state=open]:text-foreground relative rounded-lg bg-transparent shadow-none hover:border-transparent"
+          className="text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground data-[state=open]:border-border-strong/60 data-[state=open]:bg-surface-navigation-active data-[state=open]:text-foreground relative size-11 rounded-sm bg-transparent shadow-none hover:border-transparent lg:size-10"
           size="icon"
           variant="ghost"
         >

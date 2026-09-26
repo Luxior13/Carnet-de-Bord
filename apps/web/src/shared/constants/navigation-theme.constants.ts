@@ -13,6 +13,7 @@ export type NavigationSpaceToneClasses = {
   branchButton: string;
   dot: string;
   icon: string;
+  iconForeground: string;
   menuButton: string;
   row: string;
   soft: string;
@@ -24,7 +25,7 @@ const baseRow =
 const baseActiveItem =
   'bg-surface-navigation-active text-sidebar-foreground [&>svg]:text-sidebar-foreground';
 const baseBranchButton =
-  'bg-surface-navigation-hover text-sidebar-foreground [&>svg]:text-sidebar-foreground';
+  'text-sidebar-accent-foreground font-semibold [&>svg]:text-sidebar-accent-foreground';
 const baseMenuButton =
   'data-[active=true]:bg-surface-navigation-active data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground';
 const baseSubButton =
@@ -37,6 +38,7 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
     branchButton: baseBranchButton,
     dot: 'bg-nav-activity',
     icon: 'border-nav-activity/30 bg-nav-activity/10 text-nav-activity-icon',
+    iconForeground: 'text-nav-activity-icon',
     menuButton: baseMenuButton,
     row: baseRow,
     soft: 'border-nav-activity/25 bg-nav-activity/10 text-nav-activity-foreground',
@@ -48,6 +50,7 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
     branchButton: baseBranchButton,
     dot: 'bg-nav-dashboard',
     icon: 'border-nav-dashboard/30 bg-nav-dashboard/10 text-nav-dashboard-icon',
+    iconForeground: 'text-nav-dashboard-icon',
     menuButton: baseMenuButton,
     row: baseRow,
     soft: 'border-nav-dashboard/25 bg-nav-dashboard/10 text-nav-dashboard-foreground',
@@ -59,6 +62,7 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
     branchButton: baseBranchButton,
     dot: 'bg-nav-internal',
     icon: 'border-nav-internal/30 bg-nav-internal/10 text-nav-internal-icon',
+    iconForeground: 'text-nav-internal-icon',
     menuButton: baseMenuButton,
     row: baseRow,
     soft: 'border-nav-internal/25 bg-nav-internal/10 text-nav-internal-foreground',
@@ -70,6 +74,7 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
     branchButton: baseBranchButton,
     dot: 'bg-nav-legal',
     icon: 'border-nav-legal/30 bg-nav-legal/10 text-nav-legal-icon',
+    iconForeground: 'text-nav-legal-icon',
     menuButton: baseMenuButton,
     row: baseRow,
     soft: 'border-nav-legal/25 bg-nav-legal/10 text-nav-legal-foreground',
@@ -81,6 +86,7 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
     branchButton: baseBranchButton,
     dot: 'bg-nav-sport',
     icon: 'border-nav-sport/30 bg-nav-sport/10 text-nav-sport-icon',
+    iconForeground: 'text-nav-sport-icon',
     menuButton: baseMenuButton,
     row: baseRow,
     soft: 'border-nav-sport/25 bg-nav-sport/10 text-nav-sport-foreground',
@@ -92,6 +98,7 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
     branchButton: baseBranchButton,
     dot: 'bg-nav-system',
     icon: 'border-nav-system/30 bg-nav-system/10 text-nav-system-icon',
+    iconForeground: 'text-nav-system-icon',
     menuButton: baseMenuButton,
     row: baseRow,
     soft: 'border-nav-system/25 bg-nav-system/10 text-nav-system-foreground',
@@ -103,6 +110,7 @@ export const NAVIGATION_SPACE_TONE_CLASSES = {
     branchButton: baseBranchButton,
     dot: 'bg-nav-treasury',
     icon: 'border-nav-treasury/30 bg-nav-treasury/10 text-nav-treasury-icon',
+    iconForeground: 'text-nav-treasury-icon',
     menuButton: baseMenuButton,
     row: baseRow,
     soft: 'border-nav-treasury/25 bg-nav-treasury/10 text-nav-treasury-foreground',

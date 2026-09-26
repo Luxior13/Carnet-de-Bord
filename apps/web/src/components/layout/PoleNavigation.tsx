@@ -1,203 +1,124 @@
 'use client';
 
-import { Check, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useRef } from 'react';
 
 import type { NavigationSpace } from '$constants/app.constants';
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
 import { getNavigationSpaceToneClasses } from '$constants/navigation-theme.constants';
-import { Button } from '$ui/button';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '$ui/collapsible';
 import { useSidebar } from '$ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
 type PoleNavigationProps = {
   activeSpace: NavigationSpace;
+  onNavigate: (href: string) => void;
   spaces: NavigationSpace[];
-  userId: string;
 };
 
 export const PoleNavigation: FC<PoleNavigationProps> = ({
   activeSpace,
+  onNavigate,
   spaces,
-  userId,
 }) => {
-  const { isMobile, setOpen, setOpenMobile, state } = useSidebar();
+  const { isMobile, setOpen, state } = useSidebar();
   const isCollapsed = !isMobile && state === 'collapsed';
-  const storageKey = `team-control:sidebar:poles-open:${userId}`;
-  const [preference, setPreference] = useState<boolean | null>(null);
-  const expanded = preference ?? !isMobile;
-  const hasAlternatives = spaces.length > 1;
-  const isOpen = hasAlternatives && !isCollapsed && expanded;
-  const ActiveIcon = getNavigationIcon(activeSpace.icon);
-  const activeTone = getNavigationSpaceToneClasses(activeSpace.tone);
+  const viewportRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(storageKey);
-      setPreference(
-        stored === 'true' ? true : stored === 'false' ? false : null,
-      );
-    } catch {
-      // Keep navigation usable when browser storage is unavailable.
-    }
+    const viewport = viewportRef.current;
+    if (!viewport) return;
 
-    const syncPreference = (event: StorageEvent): void => {
-      if (event.key !== storageKey && event.key !== null) return;
-      setPreference(
-        event.newValue === 'true'
-          ? true
-          : event.newValue === 'false'
-            ? false
-            : null,
+    // Reveal the current space inside the switcher without scrolling the page
+    // or its destinations below, including on short viewports.
+    const revealActiveSpace = (): void => {
+      const activeLink = viewport.querySelector<HTMLElement>(
+        '[aria-current="location"]',
       );
+      if (!activeLink) return;
+      const viewportRect = viewport.getBoundingClientRect();
+      const linkRect = activeLink.getBoundingClientRect();
+      if (linkRect.top < viewportRect.top) {
+        viewport.scrollTop -= viewportRect.top - linkRect.top;
+      } else if (linkRect.bottom > viewportRect.bottom) {
+        viewport.scrollTop += linkRect.bottom - viewportRect.bottom;
+      }
     };
-    window.addEventListener('storage', syncPreference);
 
-    return (): void => window.removeEventListener('storage', syncPreference);
-  }, [storageKey]);
+    revealActiveSpace();
+    const observer = new ResizeObserver(revealActiveSpace);
+    observer.observe(viewport);
 
-  const changeOpen = (nextOpen: boolean): void => {
-    const nextPreference = isCollapsed || nextOpen;
-    if (isCollapsed) setOpen(true);
-    setPreference(nextPreference);
-    try {
-      window.localStorage.setItem(storageKey, String(nextPreference));
-    } catch {
-      // The current session still remembers the user's choice.
-    }
-  };
-
-  const currentPole = (
-    <>
-      <span
-        className={cn(
-          'flex size-8 shrink-0 items-center justify-center rounded-lg border',
-          activeTone.icon,
-        )}
-      >
-        <ActiveIcon aria-hidden="true" className="size-4" />
-      </span>
-      <span className="min-w-0 flex-1 truncate text-left text-sm font-semibold group-data-[collapsible=icon]/sidebar:hidden">
-        {activeSpace.label}
-      </span>
-    </>
-  );
-
-  if (!hasAlternatives) {
-    return (
-      <div
-        aria-label={`Pôle actuel : ${activeSpace.label}`}
-        title={activeSpace.label}
-        className="flex h-11 min-w-0 items-center gap-2 rounded-lg px-2 group-data-[collapsible=icon]/sidebar:px-3"
-      >
-        {currentPole}
-      </div>
-    );
-  }
-
-  const actionLabel = isCollapsed
-    ? `Afficher les pôles et déployer la navigation. Pôle actuel : ${activeSpace.label}`
-    : isOpen
-      ? 'Réduire la liste des pôles'
-      : `Afficher les pôles. Pôle actuel : ${activeSpace.label}`;
+    return (): void => observer.disconnect();
+  }, [activeSpace.id, isCollapsed, isMobile, spaces.length]);
 
   return (
-    <Collapsible
-      open={isOpen}
-      onOpenChange={changeOpen}
-      className="group/poles min-w-0 pb-4 lg:pb-3"
+    <nav
+      ref={viewportRef}
+      aria-label="Rubriques"
+      data-sidebar="space-switcher"
+      className="sidebar-scrollbar border-border-divider max-h-[min(35svh,8rem)] min-h-0 w-full shrink-0 overflow-x-hidden overflow-y-auto overscroll-contain border-b px-3 py-2 group-data-[collapsible=icon]/sidebar:max-h-none group-data-[collapsible=icon]/sidebar:flex-1 group-data-[collapsible=icon]/sidebar:border-b-0 group-data-[collapsible=icon]/sidebar:px-0"
     >
-      {!isOpen && (
-        <div
-          aria-label={`Pôle actuel : ${activeSpace.label}`}
-          title={activeSpace.label}
-          className="flex h-11 min-w-0 items-center gap-2 rounded-lg px-2 group-data-[collapsible=icon]/sidebar:px-3"
-        >
-          {currentPole}
-        </div>
-      )}
-      <CollapsibleContent>
-        <nav
-          aria-label="Pôles disponibles"
-          className="max-h-[min(40svh,20rem)] overflow-y-auto overscroll-contain pt-1"
-        >
-          <ul className="space-y-0.5">
-            {spaces.map((space) => {
-              const Icon = getNavigationIcon(space.icon);
-              const isActive = space.id === activeSpace.id;
-              const tone = getNavigationSpaceToneClasses(space.tone);
+      <ul className="grid grid-cols-4 justify-items-center gap-2 group-data-[collapsible=icon]/sidebar:grid-cols-1">
+        {spaces.map((space) => {
+          const Icon = getNavigationIcon(space.icon);
+          const isActive = space.id === activeSpace.id;
+          const tone = getNavigationSpaceToneClasses(space.tone);
 
-              return (
-                <li key={space.id}>
-                  <Button
-                    asChild
-                    variant="navigation"
-                    size="inline"
-                    className="min-h-11 w-full gap-2.5 px-2 py-1.5 text-sm has-[>svg]:px-2 lg:min-h-9"
+          return (
+            <li key={space.id}>
+              <Tooltip delayDuration={250}>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={space.href}
+                    aria-label={space.label}
+                    aria-current={isActive ? 'location' : undefined}
+                    onClick={(event) => {
+                      if (
+                        event.button !== 0 ||
+                        event.metaKey ||
+                        event.ctrlKey ||
+                        event.shiftKey ||
+                        event.altKey
+                      )
+                        return;
+                      if (isCollapsed) {
+                        setOpen(true);
+                        // Reopening the current space must preserve its current
+                        // detail page and filters instead of returning to its root.
+                        if (isActive) event.preventDefault();
+                      }
+                      if (!event.defaultPrevented) onNavigate(space.href);
+                    }}
+                    className={cn(
+                      'focus-visible:ring-sidebar-ring relative flex size-11 items-center justify-center rounded-sm border border-transparent outline-none focus-visible:ring-2 focus-visible:ring-inset',
+                      tone.iconForeground,
+                      isActive
+                        ? 'bg-surface-navigation-active'
+                        : 'hover:bg-surface-navigation-hover',
+                    )}
                   >
-                    <Link
-                      href={space.href}
-                      aria-current={isActive ? 'location' : undefined}
-                      title={space.summary}
-                      onClick={() => setOpenMobile(false)}
-                    >
+                    {isActive && (
                       <span
-                        className={cn(
-                          'flex size-6 shrink-0 items-center justify-center rounded-md',
-                          tone.icon,
-                        )}
-                      >
-                        <Icon aria-hidden="true" className="size-4" />
-                      </span>
-                      <span
-                        className={cn(
-                          'min-w-0 flex-1 truncate',
-                          isActive && 'font-semibold',
-                        )}
-                      >
-                        {space.label}
-                      </span>
-                      {isActive && (
-                        <Check
-                          aria-hidden="true"
-                          className="size-3.5 shrink-0"
-                        />
-                      )}
-                    </Link>
-                  </Button>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      </CollapsibleContent>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <CollapsibleTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              aria-label={actionLabel}
-              className="border-sidebar-border bg-sidebar text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground absolute -bottom-4 left-1/2 z-10 h-8 w-11 -translate-x-1/2 rounded-full p-0 has-[>svg]:px-0 lg:-bottom-3 lg:h-6 lg:w-9"
-            >
-              <ChevronDown
-                aria-hidden="true"
-                className="size-3.5 transition-transform group-data-[state=open]/poles:rotate-180 motion-reduce:transition-none"
-              />
-            </Button>
-          </CollapsibleTrigger>
-        </TooltipTrigger>
-        <TooltipContent side={isCollapsed ? 'right' : 'bottom'}>
-          {actionLabel}
-        </TooltipContent>
-      </Tooltip>
-    </Collapsible>
+                        aria-hidden="true"
+                        className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-current"
+                      />
+                    )}
+                    <Icon aria-hidden="true" className="size-5 shrink-0" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent
+                  side={isCollapsed ? 'right' : 'bottom'}
+                  sideOffset={10}
+                  className="rounded-sm"
+                >
+                  {space.label}
+                </TooltipContent>
+              </Tooltip>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 };

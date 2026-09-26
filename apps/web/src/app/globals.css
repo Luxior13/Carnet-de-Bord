@@ -361,12 +361,12 @@
     background-clip: content-box;
   }
 
-  /* Hide the scrollbar when the sidebar is collapsed to icons. */
-  [data-sidebar='sidebar'][data-collapsible='icon'] .sidebar-scrollbar {
+  /* Keep full icon targets when collapsed; scrolling remains available. */
+  [data-slot='sidebar'][data-collapsible='icon'] .sidebar-scrollbar {
     scrollbar-width: none;
   }
 
-  [data-sidebar='sidebar'][data-collapsible='icon']
+  [data-slot='sidebar'][data-collapsible='icon']
     .sidebar-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -409,6 +409,11 @@
   *:focus-visible {
     outline: 2px solid CanvasText !important;
     outline-offset: 2px !important;
+  }
+
+  [data-sidebar='space-switcher'] a:focus-visible,
+  [data-slot='sidebar'][data-collapsible='icon'] :focus-visible {
+    outline-offset: -2px !important;
   }
 
   .sidebar-scrollbar {

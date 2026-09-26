@@ -127,7 +127,7 @@ export const QuickNavigation: FC = () => {
         <Button
           aria-label="Ouvrir la navigation rapide"
           variant="outline"
-          className="text-muted-foreground min-w-10 gap-2 px-2.5 font-normal lg:min-w-56 lg:justify-start xl:min-w-64"
+          className="text-muted-foreground size-11 gap-2 rounded-sm p-0 font-normal has-[>svg]:px-0 lg:h-10 lg:w-56 lg:justify-start lg:px-3 lg:has-[>svg]:px-3 xl:w-64"
           type="button"
         >
           <Search aria-hidden="true" className="size-4" />

@@ -42,9 +42,9 @@ describe('persistent authenticated shell UX contracts', () => {
       'aria-label="Afficher les niveaux intermédiaires"',
     );
     expect(breadcrumbSource).toContain('collapsedItems.map');
-    expect(breadcrumbSource).toContain(
-      'allItems.length > 3 ? allItems.slice(1, -1) : []',
-    );
+    expect(breadcrumbSource).toContain('compactOnMobile');
+    expect(breadcrumbSource).toContain('allItems.slice(0, -1)');
+    expect(breadcrumbSource).toContain('allItems.slice(1, -1)');
     expect(breadcrumbSource).toContain(
       "showHome && items[0]?.href === '/' ? items.slice(1) : items",
     );

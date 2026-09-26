@@ -150,32 +150,59 @@ function BreadcrumbEllipsis({
 }
 
 type BreadcrumbTrailProps = BreadcrumbProps & {
+  compactOnMobile?: boolean;
   items: BreadcrumbEntry[];
   showHome?: boolean;
 };
 
 function getDisplayItems(
   items: BreadcrumbEntry[],
+  compactOnMobile: boolean,
 ): Array<BreadcrumbEntry | null> {
-  if (items.length <= 3) return items;
+  if (items.length <= 3) {
+    // The mobile menu keeps ancestors available while prioritizing the current
+    // page; it is hidden on desktop when the full short path fits.
+    if (compactOnMobile && items.length > 1) {
+      return [items[0] ?? null, null, ...items.slice(1)];
+    }
+
+    return items;
+  }
 
   return [items[0] ?? null, null, ...items.slice(-2)];
 }
 
 function BreadcrumbTrail({
   className,
+  compactOnMobile = false,
   items,
   showHome = true,
   ...props
 }: BreadcrumbTrailProps): React.ReactNode {
   const [collapsedMenuOpen, setCollapsedMenuOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!compactOnMobile) return;
+
+    const desktopQuery = window.matchMedia('(min-width: 40rem)');
+    // The compact trigger may disappear when the full path becomes visible.
+    const closeMenu = (): void => setCollapsedMenuOpen(false);
+    desktopQuery.addEventListener('change', closeMenu);
+
+    return (): void => desktopQuery.removeEventListener('change', closeMenu);
+  }, [compactOnMobile]);
+
   const normalizedItems =
     showHome && items[0]?.href === '/' ? items.slice(1) : items;
   const allItems = showHome
     ? [{ href: '/', label: 'Accueil' }, ...normalizedItems]
     : items;
-  const displayItems = getDisplayItems(allItems);
-  const collapsedItems = allItems.length > 3 ? allItems.slice(1, -1) : [];
+  const displayItems = getDisplayItems(allItems, compactOnMobile);
+  const collapsedItems = compactOnMobile
+    ? allItems.slice(0, -1)
+    : allItems.length > 3
+      ? allItems.slice(1, -1)
+      : [];
 
   return (
     <Breadcrumb className={className} {...props}>
@@ -191,8 +218,10 @@ function BreadcrumbTrail({
               );
           const isLast = index === displayItems.length - 1;
           const isFirst = index === 0 && showHome;
-          const hideOnMobile =
-            allItems.length > 3 && !isFirst && !isLast && !isCollapsedItem;
+          const hideOnMobile = compactOnMobile
+            ? !isLast && !isCollapsedItem
+            : allItems.length > 3 && !isFirst && !isLast && !isCollapsedItem;
+          const mobileOnlyCollapsed = isCollapsedItem && allItems.length <= 3;
           const itemKey = isCollapsedItem
             ? 'breadcrumb-collapsed'
             : `${item.href ?? 'current'}-${item.label}-${sourceIndex}`;
@@ -201,13 +230,18 @@ function BreadcrumbTrail({
             <React.Fragment key={itemKey}>
               {index > 0 && (
                 <BreadcrumbSeparator
-                  className={cn(hideOnMobile && 'hidden sm:inline-flex')}
+                  className={cn(
+                    (hideOnMobile || (compactOnMobile && isCollapsedItem)) &&
+                      'hidden sm:inline-flex',
+                    mobileOnlyCollapsed && 'hidden sm:hidden',
+                  )}
                 />
               )}
               <BreadcrumbItem
                 className={cn(
                   isLast ? 'min-w-0 flex-shrink' : 'shrink-0',
                   hideOnMobile && 'hidden sm:inline-flex',
+                  mobileOnlyCollapsed && 'sm:hidden',
                 )}
               >
                 {isCollapsedItem ? (
@@ -217,7 +251,13 @@ function BreadcrumbTrail({
                     onOpenChange={setCollapsedMenuOpen}
                   >
                     <DropdownMenuTrigger asChild>
-                      <BreadcrumbEllipsis />
+                      <BreadcrumbEllipsis
+                        className={
+                          compactOnMobile
+                            ? 'size-11 rounded-sm focus-visible:ring-inset sm:size-8'
+                            : undefined
+                        }
+                      />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="start"

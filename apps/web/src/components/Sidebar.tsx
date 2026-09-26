@@ -4,7 +4,7 @@ import { ChevronRight, ChevronUp, LogOut, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { PoleNavigation } from '$components/layout/PoleNavigation';
 import { UserAvatar } from '$components/users/UserAvatar';
@@ -31,7 +31,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '$ui/dropdown-menu';
@@ -60,10 +59,10 @@ type SidebarProps = {
 };
 
 const SIDEBAR_POPOVER_PANEL_CLASS =
-  'border-border-default bg-surface-panel-raised text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto overscroll-contain rounded-xl border p-2 shadow-[var(--shadow-panel-strong)]';
+  'border-border-default bg-surface-panel-raised text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto overscroll-contain rounded-sm border p-2 shadow-[var(--shadow-panel-strong)]';
 const SIDEBAR_POPOVER_SECTION_CLASS = 'space-y-0.5';
 const SIDEBAR_POPOVER_ACTION_BASE_CLASS =
-  'group/menu-action text-foreground flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150 lg:min-h-11';
+  'group/menu-action text-foreground flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150 lg:min-h-11';
 const SIDEBAR_POPOVER_ACTION_CLASS =
   'hover:bg-surface-navigation-hover hover:text-foreground focus:bg-surface-navigation-hover focus:text-foreground';
 const SIDEBAR_POPOVER_DANGER_ACTION_CLASS =
@@ -77,37 +76,27 @@ const SIDEBAR_POPOVER_ICON_DANGER_CLASS =
 const SIDEBAR_POPOVER_CHEVRON_CLASS =
   'text-muted-foreground size-3.5 shrink-0 transition-[color,opacity,transform] duration-150 group-hover/menu-action:text-foreground';
 
-function isActivePath(pathname: string, href: string, exact = false): boolean {
-  if (exact) return pathname === href;
-
+function isActivePath(pathname: string, href: string): boolean {
   return pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
 }
 
-function isNavItemActive(
-  pathname: string,
-  item: NavItem,
-  spaceRootHref: string,
-): boolean {
-  if (isActivePath(pathname, item.href, item.href === spaceRootHref)) {
+function isNavItemActive(pathname: string, item: NavItem): boolean {
+  if (isActivePath(pathname, item.href)) {
     return true;
   }
 
   return (
-    item.children?.some((child) =>
-      isNavItemActive(pathname, child, spaceRootHref),
-    ) ?? false
+    item.children?.some((child) => isNavItemActive(pathname, child)) ?? false
   );
 }
 
 function getActiveGroupHref(
   items: readonly NavItem[],
   pathname: string,
-  spaceRootHref: string,
 ): string | null {
   const activeGroup = items.find(
     (item) =>
-      (item.children?.length ?? 0) > 0 &&
-      isNavItemActive(pathname, item, spaceRootHref),
+      (item.children?.length ?? 0) > 0 && isNavItemActive(pathname, item),
   );
 
   return activeGroup?.href ?? null;
@@ -120,6 +109,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
   const { logout, userData } = useUser();
   const { isMobile, setOpenMobile, state: sidebarState } = useSidebar();
   const isCollapsed = !isMobile && sidebarState === 'collapsed';
+  const pendingMobileSpaceHref = useRef<string | null>(null);
 
   const visibleSpaces = useMemo(
     () =>
@@ -160,8 +150,8 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
     [sections],
   );
   const activeGroupHref = useMemo(
-    () => getActiveGroupHref(navItems, pathname, activeSpace.href),
-    [activeSpace.href, navItems, pathname],
+    () => getActiveGroupHref(navItems, pathname),
+    [navItems, pathname],
   );
   const [openGroupHref, setOpenGroupHref] = useState<string | null>(
     activeGroupHref,
@@ -183,17 +173,16 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
   }, [activeGroupHref]);
 
   useEffect(() => {
-    setOpenMobile(false);
+    if (pendingMobileSpaceHref.current !== pathname) {
+      setOpenMobile(false);
+    }
+    pendingMobileSpaceHref.current = null;
   }, [pathname, setOpenMobile]);
 
   const renderSubNavItem = (item: NavItem): React.ReactNode => {
     const Icon = getNavigationIcon(item.icon);
     const isExactActive = pathname === item.href;
-    const isActive = isActivePath(
-      pathname,
-      item.href,
-      item.href === activeSpace.href,
-    );
+    const isActive = isActivePath(pathname, item.href);
 
     return (
       <SidebarMenuSubItem key={item.href}>
@@ -221,112 +210,13 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
     const Icon = getNavigationIcon(item.icon);
     const children = item.children ?? [];
     const hasActiveChild = children.some((child) =>
-      isNavItemActive(pathname, child, activeSpace.href),
+      isNavItemActive(pathname, child),
     );
     const isExactActive = pathname === item.href;
-    const isActive = isActivePath(
-      pathname,
-      item.href,
-      item.href === activeSpace.href,
-    );
+    const isActive = isActivePath(pathname, item.href);
 
     if (children.length > 0) {
       const isGroupOpen = openGroupHref === item.href;
-
-      if (isCollapsed) {
-        return (
-          <DropdownMenu key={item.href}>
-            <SidebarMenuItem>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  aria-label={`Ouvrir ${item.label}`}
-                  aria-current={
-                    isExactActive
-                      ? 'page'
-                      : hasActiveChild
-                        ? 'location'
-                        : undefined
-                  }
-                  isActive={isActive || hasActiveChild}
-                  title={item.label}
-                  className={cn(
-                    activeTone.menuButton,
-                    hasActiveChild && activeTone.branchButton,
-                  )}
-                >
-                  <Icon className="size-4" />
-                  <span>{item.label}</span>
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                aria-label={item.label}
-                className="w-64"
-                side="right"
-                sideOffset={8}
-              >
-                <DropdownMenuLabel className="text-muted-foreground truncate px-2 py-1.5 text-xs font-medium">
-                  {item.label}
-                </DropdownMenuLabel>
-                <DropdownMenuItem
-                  asChild
-                  className={cn(
-                    'focus:text-foreground cursor-pointer rounded-md px-2.5 py-2 text-sm',
-                    activeTone.row,
-                    isExactActive && activeTone.activeItem,
-                  )}
-                >
-                  <Link
-                    aria-current={isExactActive ? 'page' : undefined}
-                    href={item.href}
-                    onClick={() => setOpenMobile(false)}
-                  >
-                    <Icon className="size-4" />
-                    <span className="truncate">Vue d’ensemble</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-border-divider mx-1 my-1" />
-                {children.map((child) => {
-                  const ChildIcon = getNavigationIcon(child.icon);
-                  const isChildExactActive = pathname === child.href;
-                  const isChildActive = isActivePath(
-                    pathname,
-                    child.href,
-                    child.href === activeSpace.href,
-                  );
-
-                  return (
-                    <DropdownMenuItem
-                      key={child.href}
-                      asChild
-                      className={cn(
-                        'focus:text-foreground cursor-pointer rounded-md px-2.5 py-2 text-sm',
-                        activeTone.row,
-                        isChildActive && activeTone.activeItem,
-                      )}
-                    >
-                      <Link
-                        aria-current={
-                          isChildExactActive
-                            ? 'page'
-                            : isChildActive
-                              ? 'location'
-                              : undefined
-                        }
-                        href={child.href}
-                        onClick={() => setOpenMobile(false)}
-                      >
-                        <ChildIcon className="size-4" />
-                        <span className="truncate">{child.label}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </SidebarMenuItem>
-          </DropdownMenu>
-        );
-      }
 
       return (
         <Collapsible
@@ -342,7 +232,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               isActive={isActive && !hasActiveChild}
               tooltip={item.label}
               className={cn(
-                'pr-10 group-data-[collapsible=icon]/sidebar:pr-0',
+                'gap-2 pr-10 pl-2 group-data-[collapsible=icon]/sidebar:pr-0',
                 activeTone.menuButton,
                 hasActiveChild && activeTone.branchButton,
               )}
@@ -351,7 +241,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 aria-current={
                   isExactActive
                     ? 'page'
-                    : hasActiveChild
+                    : hasActiveChild || isActive
                       ? 'location'
                       : undefined
                 }
@@ -383,7 +273,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
           asChild
           isActive={isActive}
           tooltip={item.label}
-          className={activeTone.menuButton}
+          className={cn('gap-2 px-2', activeTone.menuButton)}
         >
           <Link
             aria-current={
@@ -402,7 +292,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
 
   return (
     <SidebarRoot collapsible="icon" variant="sidebar" className={className}>
-      <SidebarHeader className="border-sidebar-border/60 bg-sidebar relative mb-2 gap-2 border-b p-3 group-data-[collapsible=icon]/sidebar:px-0">
+      <SidebarHeader className="bg-sidebar relative gap-2 p-3 pb-2 group-data-[collapsible=icon]/sidebar:px-0">
         <Link
           href="/"
           aria-label="Retour au tableau de bord"
@@ -410,7 +300,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
           title={isCollapsed ? SITE_CONFIG.name : undefined}
           className={cn(
             'hover:bg-sidebar-accent/45 focus-visible:ring-sidebar-ring flex h-11 w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-md px-2 text-left transition-colors outline-none focus-visible:ring-2 lg:h-9',
-            'group-data-[collapsible=icon]/sidebar:justify-start group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0 group-data-[collapsible=icon]/sidebar:pl-3',
+            'group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:bg-transparent group-data-[collapsible=icon]/sidebar:px-0',
           )}
         >
           <span className="flex size-8 shrink-0 items-center justify-center rounded-md">
@@ -427,88 +317,104 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
             {SITE_CONFIG.name}
           </span>
         </Link>
-        {visibleSpaces.length > 0 && (
-          <div className={cn('min-w-0', isMobile && '-mr-11')}>
-            <PoleNavigation
-              key={userData?.id ?? 'anonymous'}
-              activeSpace={activeSpace}
-              spaces={visibleSpaces}
-              userId={userData?.id ?? 'anonymous'}
-            />
-          </div>
-        )}
       </SidebarHeader>
-      <SidebarContent
-        scrollRestoreKey={pathname}
-        scrollStorageKey={activeSpace.id}
+      <div
+        data-sidebar="navigation-body"
+        className="flex min-h-0 flex-1 flex-col"
       >
-        <nav
-          aria-label="Navigation principale"
-          className="flex min-w-0 flex-col gap-2"
-        >
-          {topSections.map((section) => {
-            const sectionLabelId = `sidebar-section-${activeSpace.id}-${section.id}`;
-
-            return (
-              <SidebarGroup key={section.id}>
-                {section.label ? (
-                  <SidebarGroupLabel id={sectionLabelId}>
-                    {section.label}
-                  </SidebarGroupLabel>
-                ) : (
-                  <span id={sectionLabelId} className="sr-only">
-                    Navigation {activeSpace.label}
-                  </span>
-                )}
-                <SidebarGroupContent>
-                  <SidebarMenu aria-labelledby={sectionLabelId}>
-                    {section.items.map(renderNavItem)}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            );
-          })}
-        </nav>
-      </SidebarContent>
-      <SidebarFooter className="border-sidebar-border/60 shrink-0 border-t pb-[max(0.75rem,env(safe-area-inset-bottom))] group-data-[collapsible=icon]/sidebar:px-1">
-        {bottomSections.length > 0 && (
-          <nav aria-label="Navigation secondaire">
-            {bottomSections.map((section) => {
-              const sectionLabelId = `sidebar-footer-section-${activeSpace.id}-${section.id}`;
-
-              return (
-                <SidebarGroup key={section.id} className="p-0">
-                  <span id={sectionLabelId} className="sr-only">
-                    {section.label ?? 'Navigation secondaire'}
-                  </span>
-                  <SidebarGroupContent>
-                    <SidebarMenu aria-labelledby={sectionLabelId}>
-                      {section.items.map(renderNavItem)}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
-              );
-            })}
-          </nav>
+        {visibleSpaces.length > 0 && (
+          <PoleNavigation
+            key={userData?.id ?? 'anonymous'}
+            activeSpace={activeSpace}
+            spaces={visibleSpaces}
+            onNavigate={(href) => {
+              if (isMobile && pathname !== href) {
+                pendingMobileSpaceHref.current = href;
+              }
+            }}
+          />
         )}
+        <div
+          data-sidebar="space-pages"
+          className="flex min-h-0 min-w-0 flex-1 flex-col group-data-[collapsible=icon]/sidebar:hidden"
+        >
+          <SidebarContent
+            className="px-3 pt-0"
+            scrollRestoreKey={`${pathname}:${sidebarState}`}
+            scrollStorageKey={activeSpace.id}
+          >
+            <h2 className="text-sidebar-accent-foreground px-2 pt-3 pb-1 text-sm font-semibold">
+              {activeSpace.label}
+            </h2>
+            <nav
+              aria-label="Navigation principale"
+              className="flex min-w-0 flex-col gap-2"
+            >
+              {topSections.map((section) => {
+                const sectionLabelId = `sidebar-section-${activeSpace.id}-${section.id}`;
+
+                return (
+                  <SidebarGroup key={section.id}>
+                    {section.label ? (
+                      <SidebarGroupLabel id={sectionLabelId} className="px-2">
+                        {section.label}
+                      </SidebarGroupLabel>
+                    ) : (
+                      <span id={sectionLabelId} className="sr-only">
+                        Navigation {activeSpace.label}
+                      </span>
+                    )}
+                    <SidebarGroupContent>
+                      <SidebarMenu aria-labelledby={sectionLabelId}>
+                        {section.items.map(renderNavItem)}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                );
+              })}
+            </nav>
+            {bottomSections.length > 0 && (
+              <nav aria-label="Navigation secondaire">
+                {bottomSections.map((section) => {
+                  const sectionLabelId = `sidebar-footer-section-${activeSpace.id}-${section.id}`;
+
+                  return (
+                    <SidebarGroup key={section.id} className="p-0">
+                      <span id={sectionLabelId} className="sr-only">
+                        {section.label ?? 'Navigation secondaire'}
+                      </span>
+                      <SidebarGroupContent>
+                        <SidebarMenu aria-labelledby={sectionLabelId}>
+                          {section.items.map(renderNavItem)}
+                        </SidebarMenu>
+                      </SidebarGroupContent>
+                    </SidebarGroup>
+                  );
+                })}
+              </nav>
+            )}
+          </SidebarContent>
+        </div>
+      </div>
+      <SidebarFooter className="border-sidebar-border/60 shrink-0 border-t pb-[max(0.75rem,env(safe-area-inset-bottom))] group-data-[collapsible=icon]/sidebar:px-1">
         {userData && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                variant="outline"
+                variant="ghost"
                 type="button"
                 aria-label={`Menu utilisateur de ${userDisplayName}`}
                 title={`${userDisplayName} · ${userAccessLabel}`}
                 className={cn(
-                  'group/account-menu border-border-default bg-surface-panel hover:border-border-strong hover:bg-surface-navigation-hover focus-visible:ring-sidebar-ring data-[state=open]:border-border-strong data-[state=open]:bg-surface-navigation-active flex h-14 w-full min-w-0 items-center gap-3 overflow-hidden rounded-lg border px-3 text-left transition-colors outline-none focus-visible:ring-2 lg:h-14',
+                  'group/account-menu hover:bg-surface-navigation-hover focus-visible:ring-sidebar-ring data-[state=open]:bg-surface-navigation-active flex h-14 w-full min-w-0 items-center gap-3 overflow-hidden rounded-sm border-0 bg-transparent px-2 text-left shadow-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset lg:h-14',
                   'group-data-[collapsible=icon]/sidebar:h-11 group-data-[collapsible=icon]/sidebar:w-11 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:self-center group-data-[collapsible=icon]/sidebar:px-0',
                   isAccountActive &&
-                    'border-border-strong bg-surface-navigation-active hover:bg-surface-navigation-active',
+                    'bg-surface-navigation-active hover:bg-surface-navigation-active',
                 )}
               >
                 <UserAvatar
                   user={userData}
-                  className="size-9 shrink-0 rounded-lg group-data-[collapsible=icon]/sidebar:size-8"
+                  className="size-9 shrink-0 rounded-sm group-data-[collapsible=icon]/sidebar:size-8"
                 />
                 <span className="min-w-0 flex-1 space-y-0.5 overflow-hidden transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:hidden group-data-[state=expanded]/sidebar:delay-150">
                   <span className="text-sidebar-accent-foreground block truncate text-sm leading-5 font-semibold">
@@ -544,7 +450,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 <div className="flex min-w-0 items-start gap-3">
                   <UserAvatar
                     user={userData}
-                    className="size-10 shrink-0 rounded-lg"
+                    className="size-10 shrink-0 rounded-sm"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="text-foreground block text-sm leading-5 font-semibold [overflow-wrap:anywhere]">

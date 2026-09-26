@@ -489,9 +489,7 @@ function SidebarContent({
       }
     }
 
-    const restoreScroll = (): void => {
-      viewport.scrollTop = Number.isFinite(scrollTop) ? scrollTop : 0;
-
+    const revealActiveItem = (): void => {
       const activeItem = [
         '[aria-current="page"]',
         '[aria-current="location"]',
@@ -513,12 +511,35 @@ function SidebarContent({
         viewport.scrollTop += activeItemRect.bottom - viewportRect.bottom;
       }
     };
+    const restoreScroll = (): void => {
+      viewport.scrollTop = Number.isFinite(scrollTop) ? scrollTop : 0;
+      revealActiveItem();
+    };
     const frameId = window.requestAnimationFrame(restoreScroll);
 
     restoreScroll();
 
+    const resizeObserver = new ResizeObserver(revealActiveItem);
+    resizeObserver.observe(viewport);
+    // A current subpage can mount after its parent group opens. Revealing only
+    // newly inserted current links avoids jumping when exploring other groups.
+    const contentObserver = new MutationObserver((records) => {
+      const currentLinkAdded = records.some((record) =>
+        Array.from(record.addedNodes).some(
+          (node) =>
+            node instanceof HTMLElement &&
+            (node.matches('[aria-current]') ||
+              node.querySelector('[aria-current]')),
+        ),
+      );
+      if (currentLinkAdded) revealActiveItem();
+    });
+    contentObserver.observe(viewport, { childList: true, subtree: true });
+
     return (): void => {
       window.cancelAnimationFrame(frameId);
+      resizeObserver.disconnect();
+      contentObserver.disconnect();
     };
   }, [scrollRestoreKey, storageKey]);
 
@@ -715,8 +736,8 @@ function SidebarMenuButton({
       data-size={size}
       data-slot="sidebar-menu-button"
       className={cn(
-        'hover:bg-surface-navigation-hover hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-muted-foreground relative flex w-full max-w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-lg border border-transparent px-3 text-left text-sm font-medium transition-[background-color,color,box-shadow] outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
-        'data-[active=true]:bg-surface-navigation-active data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground data-[active=true]:border-border-strong/60 data-[active=true]:font-medium',
+        'hover:bg-surface-navigation-hover hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-muted-foreground relative flex w-full max-w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-sm border border-transparent px-3 text-left text-sm font-medium transition-[background-color,color,box-shadow] outline-none focus-visible:ring-2 focus-visible:ring-inset disabled:pointer-events-none disabled:opacity-50 [&>span]:max-w-full [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate [&>span]:overflow-hidden [&>span]:whitespace-nowrap [&>span]:transition-opacity [&>span]:duration-100 [&>svg]:size-4 [&>svg]:shrink-0',
+        'data-[active=true]:bg-surface-navigation-active data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground data-[active=true]:font-semibold',
         size === 'sm' && 'h-11 text-xs lg:h-9',
         size === 'default' && 'h-11 lg:h-10',
         size === 'lg' && 'h-12',
@@ -847,8 +868,8 @@ function SidebarMenuSubButton({
       data-sidebar="menu-sub-button"
       data-slot="sidebar-menu-sub-button"
       className={cn(
-        'hover:bg-surface-navigation-hover hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-muted-foreground flex h-11 w-full min-w-0 items-center gap-2 overflow-hidden rounded-xl border border-transparent px-2.5 text-sm font-medium transition-[background-color,color,box-shadow] outline-none focus-visible:ring-2 lg:h-8 [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
-        'data-[active=true]:bg-surface-navigation-active data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground data-[active=true]:border-border-strong/60 data-[active=true]:font-medium',
+        'hover:bg-surface-navigation-hover hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring [&>svg]:text-muted-foreground flex h-11 w-full min-w-0 items-center gap-2 overflow-hidden rounded-sm border border-transparent px-2.5 text-sm font-medium transition-[background-color,color,box-shadow] outline-none focus-visible:ring-2 focus-visible:ring-inset lg:h-8 [&>span]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+        'data-[active=true]:bg-surface-navigation-active data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground data-[active=true]:font-semibold',
         className,
       )}
       {...props}
