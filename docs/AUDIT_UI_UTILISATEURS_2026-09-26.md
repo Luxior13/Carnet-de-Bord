@@ -21,15 +21,16 @@ questions suivantes dans chaque nouvel audit, puis vérifier les réponses au re
 | Quelle information doit être repérée en premier ? | L'identité du compte, puis son rôle et son état. |
 | Quelle action mérite le plus de visibilité ? | « Nouvel utilisateur », selon les permissions. Une seule action principale, dans la barre d'outils du tableau. |
 | L'action concerne-t-elle la page entière ou son contenu principal ? | La création concerne les comptes : bouton regroupé avec recherche, filtres et tri, plutôt qu'isolé dans le haut de page. |
-| L'en-tête sert-il à travailler, expliquer ou présenter ? | Identifier la page : un titre compact suffit. Suppression de la description générique qui n'apportait pas d'information utile. |
+| L'en-tête sert-il à travailler, expliquer ou présenter ? | Identifier la page et préciser sa fonction : titre compact, puis « Gérez les comptes et leurs accès. » en texte secondaire de 14 px. Une ligne en usage normal, retour autorisé si l'espace ou le zoom l'exige. |
 | Un hero encadré, une illustration ou une icône apporte-t-il une information utile ? | Non ici. Suppression du grand panneau, de l'icône encadrée, de l'accent vertical et du séparateur d'action. |
 | Quels blocs se disputent inutilement l'attention ? | L'ancien hero, le tableau et la carte de statistiques avaient un poids proche. Priorité donnée au tableau. |
 | Quel volume et quelle fréquence d'utilisation faut-il prévoir ? | Plusieurs pages de comptes, consultation répétée ; lignes compactes, filtres, tri et pagination. |
 | Quelles colonnes aident réellement la comparaison ? | Compte, accès, état, dernière connexion. L'alerte de sécurité reste attachée au compte concerné. |
 | La largeur sert-elle les données ou crée-t-elle simplement du vide ? | Liste large pour l'identité et les colonnes ; rail de statistiques uniquement si l'espace disponible le permet. |
-| Quel axe doit centrer le contenu : l'écran ou l'espace après navigation ? | Le tableau est centré sur l'écran. Sa largeur diminue symétriquement si nécessaire pour respecter la sidebar et le rail, avec un plafond de 80 rem. |
+| Quel axe doit centrer le contenu : l'écran ou l'espace après navigation ? | Centrage écran dès qu'il permet une largeur confortable ; sur écran intermédiaire, priorité à une largeur de 64 rem, ou à toute la place disponible si elle est moindre. Plafond de 80 rem, sans chevaucher sidebar ni rail. |
+| Le centrage esthétique dégrade-t-il l'usage sur un écran intermédiaire ? | Le centrage strict réduisait la liste à 425 px sur un écran de 1 024 px. Elle utilise maintenant environ 689 px ; à 1 140 px, la présentation en tableau est conservée. |
 | Le rail dépend-il du tableau ou du bord de la zone de travail ? | Rail aligné au bord droit de la zone disponible, à 16 px de l'espace réservé à la scrollbar ; maintien au défilement sur grand écran. |
-| Déplacer un bloc secondaire doit-il élargir ou décaler le contenu principal ? | Non ici : le tableau garde son axe central, le rail son bord droit. L'espace entre eux peut grandir sur grand écran. |
+| Déplacer un bloc secondaire doit-il élargir ou décaler le contenu principal ? | Le rail garde son bord droit indépendamment du tableau. L'espace entre eux peut grandir sur grand écran ; la place nécessaire aux données prime sur le centrage strict aux largeurs intermédiaires. |
 | Comment regrouper les informations secondaires sans concurrencer la liste ? | Une carte compacte pour les statistiques, avec trois lignes alignées. Le filet isolé a été abandonné car les chiffres paraissaient détachés. Résumé dépliable sur mobile. |
 | Que signifie chaque couleur ? | Bleu nuit pour les surfaces ; violet pour superadmin, bleu pour administrateur, cyan pour utilisateur ; vert pour actif et jaune pour une attention requise. |
 | La sobriété a-t-elle rendu la page trop terne ? | Palette du bleu de navigation conservée ; badges d'accès et d'état avec texte lisible et contour fin. |
@@ -110,20 +111,29 @@ Les arrondis de cette page et de ses menus sont réduits : panneaux et contrôle
 à 8 px, badges à 4 px. Cette échelle est locale ; la navigation et les autres pages
 ne sont pas redessinées. Les avatars et les points d'état restent circulaires.
 
-Le haut de page se limite désormais au titre « Utilisateurs » à 24 px. Le bouton
+Le haut de page associe le titre « Utilisateurs » à 24 px et la phrase courte
+« Gérez les comptes et leurs accès. » à 14 px, en couleur secondaire, avec 4 px
+d'espacement. La description vise une seule ligne en usage normal ; elle peut
+revenir à la ligne au zoom ou en espace réduit, sans troncature. Le bouton
 de création est intégré à la barre d'outils, à droite des filtres sur grand écran.
 Sur largeur intermédiaire, recherche et création précèdent les filtres ; sur petit
 écran, le bouton reste visible sous la recherche, hors du bloc de filtres dépliable.
 La barre d'outils reste disponible pendant le chargement de la liste.
 
-Le cadre extérieur occupe toute la zone disponible, mais le tableau est centré
-sur l'écran et limité à 80 rem. La grille calcule sa largeur maximale des deux
-côtés de cet axe pour éviter la sidebar et le rail, sans déplacer la navigation.
-Le titre suit exactement les bords du tableau. À 1 920 px, le tableau mesure
-1 280 px, commence à 320 px et son centre est à 960 px ; à 2 560 px, il conserve
-cette largeur et son centre passe à 1 280 px. Sur les écrans intermédiaires, ce
-centrage strict réduit davantage la largeur utile ; les contrôles et comptes
-adoptent alors leur présentation compacte selon la place réelle.
+Le cadre extérieur occupe toute la zone disponible, mais la liste reste limitée
+à 80 rem. La grille privilégie le centre de l'écran tant qu'il permet une largeur
+de travail d'au moins 64 rem. Sinon, elle rapproche le tableau de la zone utile
+pour conserver cette largeur ; si moins de 64 rem sont disponibles, elle utilise
+toute cette place. Cette largeur de confort n'est donc jamais un minimum qui
+provoque un débordement. Le titre suit les bords du tableau, la navigation reste
+ancrée et le rail conserve son placement indépendant.
+
+À 1 920 px, le tableau mesure 1 280 px, commence à 320 px et son centre est à
+960 px ; à 2 560 px, il conserve cette largeur et son centre passe à 1 280 px.
+Avec la sidebar ouverte dans Chromium, la colonne passe de 425 à environ 689 px
+sur un écran de 1 024 px, de 536 à 800 px sur un écran de 1 140 px, et de 824 à
+1 024 px sur un écran de 1 440 px. À 1 140 px, les colonnes du tableau restent
+visibles ; les cartes sont réservées aux largeurs réellement insuffisantes.
 
 Le rail reste indépendant, au bord droit, même sur grand écran. Sa largeur est
 de 15 rem et l'écart avec le tableau d'au moins 1,25 rem ; cet écart peut grandir.
@@ -150,45 +160,53 @@ Légende utilisée dans les tableaux :
 - Composants réels de la page, du tableau, de l'en-tête, de la sidebar et des contrôles.
 - CSS recompilé depuis `globals.css` et les sources ; police Geist chargée depuis
   le fichier local produit par Next.js, sans substitution par Arial pour l'audit final.
-- Navigateur Chromium automatisé ; captures et mesures de styles calculés.
+- Chromium pour le passage complet de typographie, contrastes et états ;
+  Firefox 151 et WebKit 26.5 sous Windows pour le passage complémentaire de
+  géométrie, clavier, pagination, réponses réseau et agrandissement du texte.
+  WebKit automatisé ne vaut pas essai dans Safari sur macOS ou iOS.
 - Environnement isolé avec authentification, contexte utilisateur, navigation
   Next.js et réponses API simulés. Aucun compte réel n'a été créé ou modifié.
 - Jeux fictifs : quatre comptes courants, identité protégée, compte désactivé,
-  mot de passe à changer, noms/identifiants/emails longs, puis 43 comptes paginés.
+  mot de passe à changer, noms/identifiants/emails longs, puis 43 et 10 003 comptes
+  paginés. Le dernier scénario ne transmet que 20 comptes par réponse : il vérifie
+  le comportement de l'interface, pas les performances d'une base de données.
 - Largeurs : **320, 390, 640, 768, 1 024, 1 140, 1 200, 1 440, 1 784, 1 920 et 2 560 px**.
 - Agrandissement du texte à 200 % par augmentation de la taille racine ; ce test
   est distinct du zoom natif du navigateur et d'un test sur téléphone physique.
 - Contrôles spécifiques de survol et de focus à 1 920 et 390 px.
 - Géométrie avec sidebar ouverte et réduite à 1 024, 1 440, 1 560, 1 784 et
-  1 920 px : axe du tableau conservé, rail sans chevauchement lorsqu'il est visible.
+  1 920 px : centrage conservé lorsque la largeur de travail le permet ; priorité
+  à la largeur utile sinon, sans chevaucher le rail ou la navigation.
 
-### Preuves conservées
+### Historique des vérifications
 
-- [Page sur ordinateur](ux-ui-utilisateurs-2026-09-26/ordinateur.png).
-- [Page sur mobile](ux-ui-utilisateurs-2026-09-26/mobile.png).
-- [Grand écran avec rail au bord droit](ux-ui-utilisateurs-2026-09-26/grand-ecran.png).
-- [Rail pendant le défilement](ux-ui-utilisateurs-2026-09-26/rail-defilement.png).
-- [Focus d'une ligne sur ordinateur](ux-ui-utilisateurs-2026-09-26/focus-ordinateur.png).
-- [Focus d'une carte sur mobile](ux-ui-utilisateurs-2026-09-26/focus-mobile.png).
-- [Mesures des états interactifs](ux-ui-utilisateurs-2026-09-26/etats-interactifs.json).
-- [Journal des vérifications navigateur](ux-ui-utilisateurs-2026-09-26/verifications-navigateur.txt).
+Les captures, relevés JSON, journaux et scripts temporaires de cet audit ont été
+supprimés à la demande de l'utilisateur. Ce document conserve les décisions,
+les résultats résumés et la grille réutilisable ; les tests existants du projet
+sont conservés.
 
-Les captures contiennent uniquement des données fictives. Les mesures décrivent
-les états échantillonnés, pas chaque combinaison possible de données et de préférences.
+Les contrôles décrits ont utilisé des données fictives et des états échantillonnés.
+Ils ne couvrent pas chaque combinaison possible de données et de préférences.
+
+Réserve visuelle relevée pendant la comparaison : dans WebKit sous Windows,
+les graisses de titre et d'en-tête paraissent plus légères que dans Chromium et
+Firefox. L'inspection confirme Geist chargée (`100 900`) et `font-weight: 600`
+sur le titre et les en-têtes. La cause de cette différence de rendu n'est pas
+établie ici ; vérifier Safari réel avant de modifier la typographie du produit.
 
 ## 2. Audit de la composition et du contenu
 
 | Élément | Décision ou constat final | Preuve / réserve |
 | --- | --- | --- |
 | Sidebar | Ancrée à gauche ; ne se déplace pas avec le contenu. | V lors du contrôle de géométrie, ouverte et repliée. |
-| Cadre et largeur principale | Cadre extérieur pleine largeur ; tableau plafonné à 80 rem, centré sur l'écran, réduit symétriquement pour respecter les zones latérales. | V, D. Axe vérifié aux onze largeurs de 320 à 2 560 px ; aucun débordement. |
+| Cadre et largeur principale | Cadre extérieur pleine largeur ; plafond de 80 rem ; priorité à une largeur de travail de 64 rem si possible, puis au centrage écran. | V, D. Onze largeurs de 320 à 2 560 px dans Chromium et dix dans Firefox/WebKit, sans débordement. |
 | Marge supérieure | Une seule respiration : 24 px à partir du palier `sm`, 16 px en dessous. | V lors du contrôle du cadre de page. |
-| En-tête | Titre seul à 24 px, sans description générique, panneau ni action isolée. | V, D. Le tableau devient la principale surface de travail. |
+| En-tête | Titre à 24 px et description courte à 14 px, espacés de 4 px ; aucun panneau ni action isolée. | C, D pour l'ajout de la description ; composition précédente vérifiée au navigateur. |
 | Action principale | « Nouvel utilisateur » dans la barre d'outils, à droite des filtres sur grand écran ; hauteur de 40 px sur ordinateur, 44 px sur mobile, visible sans ouvrir les filtres. | V pour rendu, focus et autorisation d'affichage avec profils simulés. |
 | Hauteurs des commandes | Recherche, création, filtres, tri, effacement et réinitialisation harmonisés : 44 px avant le palier `lg` (1 024 px), 40 px à partir de ce palier. | V, hauteurs calculées vérifiées à 390 et 1 920 px, y compris filtres mobiles dépliés. |
 | Création et états de liste | Bouton conservé pendant le chargement, sur liste vide et en erreur ; URL de retour conservant recherche, filtres et tri. | V pour visibilité et paramètres état/rôle/tri ; navigation réelle vers le formulaire hors audit isolé. |
 | Fil d'Ariane | Donne la position dans la navigation ; pas de retour redondant dans cette liste. | C. Parcours complet des pages de destination hors de cet audit. |
-| Alignement | Titre et tableau ont les mêmes bords ; tableau centré sur l'écran, même lorsque la sidebar se replie ; statistiques au niveau du bloc de liste. | V. Axe stable à 960 px sur écran de 1 920 px, sidebar ouverte et réduite. |
+| Alignement | Titre et tableau ont les mêmes bords ; centre de l'écran privilégié dans les limites d'une largeur utile suffisante ; statistiques au niveau du bloc de liste. | V. Axe stable à 960 px sur écran de 1 920 px, sidebar ouverte et réduite ; adaptation contrôlée aux tailles intermédiaires. |
 | Statistiques latérales | Rail de 15 rem, séparé d'au moins 1,25 rem ; présent quand le conteneur disponible atteint 94 rem. | V. Le seuil dépend de la place après la sidebar, pas seulement de l'écran. |
 | Bord droit et scrollbar | Marge de 16 px dans la zone utile, en plus de l'espace de scrollbar réservé par le layout. | V à 1 784, 1 920 et 2 560 px ; bord droit stable avec sidebar ouverte/repliée à 1 920 px. |
 | Statistiques au défilement | Rail collant à 16 px du haut de la zone défilante sur grand écran ; demeure dans les limites de sa grille. | V avec 20 lignes visibles sur 43 comptes et un défilement de 500 px. |
@@ -220,6 +238,7 @@ les états échantillonnés, pas chaque combinaison possible de données et de p
 | Usage | Taille à une racine de 16 px | Graisse / comportement |
 | --- | --- | --- |
 | Titre principal | 24 px | 600, interligne 32 px ; retour à la ligne autorisé |
+| Description de page | 14 px | Couleur secondaire, interligne 20 px, marge supérieure 4 px ; phrase courte sans troncature |
 | Noms | 14 px | 600 |
 | En-têtes du tableau | 13 px | 600 |
 | Identifiants, emails et dates | 13 px | Normale, interligne 20 px |
@@ -280,7 +299,7 @@ bordure de champ/fond de champ **5,49:1**.
 Les libellés d'accès et d'état sont opaques, dans des badges à fond transparent
 et contour teinté à 30 %. Leur contraste
 est également mesuré sur le fond de chaque ligne au survol ; chaque libellé mesuré
-dépasse 4,5:1. Les relevés sont conservés dans les états interactifs. La visibilité
+dépasse 4,5:1 lors du passage de vérification. La visibilité
 vient du contraste et de la hiérarchie, sans accumulation d'effets décoratifs.
 
 Le relevé des textes visibles des scénarios standards atteint au moins 4,5:1.
@@ -326,7 +345,7 @@ l'état ouvert/fermé.
 | UI-05 | Mineure | Identité protégée présentée comme une alerte. | Mention neutre sans badge dans la version retenue. |
 | UI-06 | Moyenne | Une hauteur de 96 px limitait la densité de la liste. | 64 px minimum ; alerte regroupée avec les métadonnées, croissance autorisée si nécessaire. |
 | UI-07 | Moyenne | Statistiques et filtres repoussaient les premiers comptes sur mobile. | Résumé dépliable et filtres regroupés avec compteur. |
-| UI-08 | Moyenne | Le hero prenait une place excessive pour une liste de travail. | Titre compact seul, description générique retirée et création intégrée à la barre d'outils du tableau. |
+| UI-08 | Moyenne | Le hero prenait une place excessive pour une liste de travail. | En-tête compact avec titre et description d'une phrase courte ; création intégrée à la barre d'outils du tableau. |
 | UI-09 | Moyenne | Grandes surfaces et carte de statistiques en concurrence avec les comptes. | Statistiques secondaires et en-tête compact ; tableau principal conservant la priorité. |
 | UI-10 | Moyenne | L'essai anthracite et l'absence de repères colorés rendaient la page trop terne. | Surfaces indigo et couleurs fonctionnelles ; densité de 64 px conservée sur ordinateur. |
 | UI-11 | Moyenne | Les fonds colorés des badges de rôle et d'état concurrençaient les noms. | Badges conservés avec fond transparent, contour fin et teintes atténuées ; suppression des effets décoratifs de survol sur nom, avatar et flèche. |
@@ -336,6 +355,7 @@ l'état ouvert/fermé.
 | UI-15 | Moyenne | Action de création isolée du tableau. | Déplacée avec les commandes de liste, accessible pendant le chargement et sur mobile ; contrôle de permission préservé, filtres conservés dans l'URL de retour. |
 | UI-16 | Moyenne | Le plafond de largeur éloignait le rail du bord droit sur grand écran. | Conteneur pleine largeur, marge droite de 16 px après prise en compte de la scrollbar, rail collant et adaptation mobile préservée. |
 | UI-17 | Moyenne | Étendre le tableau pour déplacer le rail rompait son centrage sur l'écran et le collait au bloc secondaire. | Grille locale séparant les deux placements : tableau centré, largeur plafonnée et limitée par les obstacles ; rail ancré à droite, espace intermédiaire flexible. Mesures avec sidebar ouverte et réduite, grands écrans et scrollbar. |
+| UI-18 | Moyenne | Le centrage devenu strict réduisait trop la colonne aux tailles intermédiaires, malgré l'espace utilisable à droite. | Priorité à une largeur de confort de 64 rem, limitée à la place disponible ; centrage écran dès que cette largeur le permet. Vérifié sur Chromium, Firefox et WebKit. |
 
 ### Recherche et gestionnaires de mots de passe
 
@@ -378,21 +398,44 @@ autres consommateurs. Cela ne signifie pas que les autres pages ont été audit�
 | Scénario | Contrôle effectué | Niveau |
 | --- | --- | --- |
 | Chargement initial | Squelette visible, statut de chargement explicite, pas de zéro présenté comme donnée finale. | V |
-| Actualisation | Anciennes données conservées avec indication d'actualisation et atténuation. | C ; comportement des filtres observé, coupure réseau après un succès non rejouée ici. |
+| Actualisation | Anciennes données conservées ; après une réponse 503, message explicite sur les dernières données fiables, puis récupération par « Réessayer ». | V sur Chromium, Firefox et WebKit avec réponse réseau simulée après succès. |
 | Liste vide | État vide et géométrie contrôlés. | V |
 | Recherche sans résultat | Retour aux valeurs initiales proposé. | V dans les vérifications de la liste. |
 | Erreur initiale | Message d'erreur, action « Réessayer », retour à la liste après réponse valide. | V |
 | 43 comptes | 20 comptes, puis 20, puis 3 ; compteur et désactivation à la dernière page. | V sur réponses simulées. |
+| 10 003 comptes | 20 lignes par réponse, accès direct à la page 501 avec 3 lignes, retour à la page 500, nombre de boutons borné, pagination lisible à 320/390/1 024 px. | V sur les trois moteurs avec réponses simulées ; aucun benchmark backend. |
+| Recherches concurrentes | La réponse retardée à « Louise » n'écrase pas la recherche plus récente « Camille ». | V sur les trois moteurs ; annulation et protection contre les réponses obsolètes déjà présentes dans le code. |
 | Noms et coordonnées longs | Pas de débordement de page ; nom mobile multiligne et métadonnées tronquées si nécessaire. | V ; lire le détail du compte reste nécessaire pour une valeur tronquée. |
 | Identité protégée + alerte | Coexistence de la mention et du badge, augmentation de hauteur lorsque nécessaire. | V |
-| Informations de sécurité masquées | Résumé et badges retirés lorsque la réponse API masque les détails. | V sur fixtures ; contrôle d'autorisation serveur hors périmètre. |
+| Informations de sécurité masquées | Résumé et badges retirés lorsque la réponse API masque les détails. | V sur fixtures ; suite serveur `users-access-hardening` exécutée avec dépendances simulées, session réelle restant à valider. |
 | Paramètres dans l'URL | Filtres restaurés, compteur cohérent et réinitialisation. | V sur navigation simulée. |
 | Statistiques globales | Restent distinctes du nombre de résultats filtrés. | V, C |
 | Navigation clavier | Recherche, menu de filtre, cartes, résumé, focus et fermeture par Échap. | V |
 | Zoom texte 200 % | Recomposition sans débordement horizontal de la page contrôlée. | V ; pas une couverture de toutes les combinaisons de zoom navigateur. |
 | Contraste renforcé | Émulation Chromium : contour de recherche renforcé et palette du menu porté hors de la page vérifiés. | V pour ces éléments ; contrôle système réel et autres composants à compléter. |
-| Couleurs forcées | Règle globale de contour système présente. | C ; session réelle Windows avec couleurs forcées à tester. |
+| Couleurs forcées | Contour système solide de 2 px mesuré sur recherche et lien de compte au focus. | V en émulation Chromium et Firefox ; session réelle Windows avec couleurs forcées à tester. |
 | Lecteurs d'écran | Noms accessibles, tableau natif, boutons et liens examinés. | C et assertions navigateur ; pas de session NVDA/VoiceOver. |
+
+### Contrôles nécessaires avant de conclure sur les performances réelles
+
+Le code limite les comptes retournés avec `take`/`skip` côté serveur et envoie
+recherche, filtres et tri à l'API. Les statistiques déclenchent aussi plusieurs
+requêtes d'agrégation. Les essais d'interface ne mesurent ni leur coût ni celui
+des pages éloignées dans une vraie base.
+
+Dans cet environnement, `E2E_DATABASE_URL`, `E2E_SUPERADMIN_LOGIN_NAME` et
+`E2E_SUPERADMIN_PASSWORD` ne sont pas configurés. Le parcours avec authentification
+et base réelles n'a donc pas été exécuté. Pour compléter ce passage :
+
+1. Préparer une base de test isolée avec des volumes représentatifs, par exemple
+   1 000, 10 000 puis 50 000 comptes, et des profils autorisés, limités et refusés.
+2. Mesurer liste initiale, recherche, chaque filtre/tri et dernières pages, à froid
+   puis à chaud, avec une concurrence représentative ; relever médiane, p95,
+   erreurs, temps des agrégations et plans de requêtes lentes.
+3. Fixer le budget de latence selon l'usage attendu, puis corriger les goulots
+   observés avant d'ajouter cache, index ou changement de pagination.
+4. Rejouer connexion, expiration de session, retrait de permission et parcours
+   liste → fiche → retour avec conservation des filtres.
 
 ## 6. Grille réutilisable pour une autre page
 
@@ -411,6 +454,7 @@ et une preuve. Une case n'est pas validée parce qu'une classe CSS semble correc
 - [ ] Vérifier qu'un déplacement d'action ne la masque pas pendant le chargement, en erreur ou quand le contenu est vide.
 - [ ] La sidebar reste ancrée ; les marges et le centrage sont adaptés au type de contenu.
 - [ ] Définir l'axe de centrage : écran entier ou zone disponible ; vérifier sa position réelle, y compris avec sidebar réduite.
+- [ ] Un centrage strict ne doit pas imposer les cartes mobiles quand un tableau lisible tient dans la zone utile ; définir la largeur de confort et son adaptation.
 - [ ] La largeur principale sert la lecture ; le formulaire ou le texte long ne reprend pas automatiquement la largeur d'un tableau.
 - [ ] Les colonnes secondaires ont une utilité et une place clairement définies.
 - [ ] Définir l'ancrage d'un rail : bord du contenu ou bord de la zone de travail ; vérifier les grands écrans, sidebar ouverte/repliée et apparition de la scrollbar.
@@ -482,6 +526,9 @@ et une preuve. Une case n'est pas validée parce qu'une classe CSS semble correc
 - [ ] Tester zéro, un, plusieurs et assez d'éléments pour paginer.
 - [ ] Tester des noms, emails et libellés longs, ainsi que des valeurs manquantes.
 - [ ] Tester chargement lent, échec initial et échec après une première réponse valide.
+- [ ] Une recherche récente garde la priorité sur une réponse plus ancienne et retardée.
+- [ ] Avec un grand total, le nombre de lignes rendues et de boutons de pagination reste borné ; vérifier aussi la dernière page et les grands compteurs sur mobile.
+- [ ] Distinguer les tests d'interface avec réponses simulées des mesures de performance et de permission sur une base réelle.
 - [ ] Les totaux globaux et les résultats filtrés sont explicitement distingués.
 - [ ] Tester les profils autorisés, limités et refusés avec les vraies règles serveur avant livraison métier.
 - [ ] Les URL de détail et de retour gardent les filtres attendus.
@@ -526,10 +573,11 @@ Pour Tailwind, préciser le type d'une valeur arbitraire lorsque la variable peu
 | Priorité | Point | Suite recommandée |
 | --- | --- | --- |
 | P1 | Même syntaxe ambiguë de focus repérée dans `checkbox.tsx`, `switch.tsx`, `textarea.tsx`, `tabs.tsx` et `badge.tsx`. | Examiner les usages interactifs, corriger le type de longueur et vérifier chaque composant dans le navigateur. Ces fichiers n'ont pas été modifiés dans ce passage. |
-| P1 | Validation réelle de l'authentification, des permissions, des routes de destination et de l'API. | Exécuter les parcours avec une base de test et une session réelle avant une conclusion fonctionnelle globale. |
-| P2 | Firefox, Safari, iOS/Android physiques et lecteurs d'écran. | Ajouter une passe de compatibilité ; Chromium seul ne couvre pas ces environnements. |
-| P2 | Zoom natif du navigateur et préférences système réelles. | Compléter les essais réels de couleurs forcées et contraste renforcé ; l'émulation Chromium de contraste renforcé a couvert le champ et son menu, pas l'ensemble du système. |
-| P2 | Échec réseau après succès, transitions de permissions en session, volumes très importants. | Compléter les scénarios d'intégration ; 43 comptes fictifs ne constituent pas un benchmark backend. |
+| P1 | Validation réelle de l'authentification, des permissions, des routes de destination et de l'API. | Configurer la base E2E dédiée et ses identifiants, absents de cet environnement, puis exécuter les parcours réels. La suite serveur avec dépendances simulées passe. |
+| P2 | Safari sur macOS/iOS, iOS/Android physiques et lecteurs d'écran. | Chromium, Firefox et WebKit ont passé les scénarios complémentaires sur Windows ; ajouter les essais sur les appareils et outils réels. |
+| P2 | Différence visuelle de graisse dans WebKit sous Windows. | Comparer dans Safari réel : Geist est chargée et les graisses calculées sont correctes, mais le rendu de la capture paraît plus léger. Aucune cause ni correction générale n'est déduite de cette seule observation. |
+| P2 | Zoom natif du navigateur et préférences système réelles. | Compléter les essais réels ; émulation des couleurs forcées validée sur recherche et lien de compte dans Chromium/Firefox, contraste renforcé testé sur champ et menu dans Chromium. |
+| P2 | Transitions réelles de permissions en session et performances backend. | Suivre le protocole ci-dessus ; 10 003 comptes simulés ne constituent pas un benchmark. Échec réseau après succès et réponses de recherche retardées sont désormais vérifiés sur les trois moteurs. |
 | P2 | Textes accessibles riches des cartes. | Les liens ont un nom de destination ; contrôler avec un lecteur d'écran l'accès pratique aux métadonnées et aux alertes. |
 | P3 | Variantes d'en-tête dans les documents et les autres pages. | La liste utilise un en-tête compact ; réévaluer les autres pages selon leur rôle avant toute harmonisation. |
 
@@ -544,21 +592,22 @@ Fichiers principaux de la page :
 - [`page.tsx`](../apps/web/src/app/systeme/utilisateurs/page.tsx) : en-tête compact, palette locale et largeur.
 - [`UsersListPage.tsx`](../apps/web/src/features/users/UsersListPage.tsx) : recherche, filtres, tableau, cartes et pagination.
 - [`UsersOverview.tsx`](../apps/web/src/features/users/UsersOverview.tsx) : statistiques et résumé mobile.
-- [`UsersListLayout.module.css`](../apps/web/src/features/users/UsersListLayout.module.css) : grille locale, centrage écran, largeur maximale de 80 rem et placement indépendant du rail. Calcul CSS à partir du viewport privé, de la zone utile et de l'écran, tenant compte des marges et gouttières de scrollbar ; aucun déplacement de la sidebar ni mesure JavaScript.
+- [`UsersListLayout.module.css`](../apps/web/src/features/users/UsersListLayout.module.css) : grille locale, largeur de confort de 64 rem dans les limites de la zone utile, plafond de 80 rem, centrage écran et placement indépendant du rail. Calcul CSS à partir du viewport privé, de la zone utile et de l'écran, tenant compte des marges et gouttières de scrollbar ; aucun déplacement de la sidebar ni mesure JavaScript.
 - [`page-shell.tsx`](../apps/web/src/components/ui/page-shell.tsx) et [`globals.css`](../apps/web/src/app/globals.css) : géométrie et jetons.
 - [`button.tsx`](../apps/web/src/components/ui/button.tsx), [`input.tsx`](../apps/web/src/components/ui/input.tsx), [`select.tsx`](../apps/web/src/components/ui/select.tsx) : correction du focus commun.
 
-À la fin du passage : TypeScript et lint sans erreur ; **47 tests existants réussis**
-dans les suites `admin-users-list-a11y-contracts`, `design-system-contracts` et
-`authenticated-shell-ux-contracts`. Ces tests ne remplacent pas les mesures de
-rendu conservées avec ce rapport.
+TypeScript et lint de la page validés après l'ajout de la description courte.
+Lors du passage de validation de la disposition : **177 tests existants réussis** dans les suites
+`admin-users-list-a11y-contracts`, `design-system-contracts`,
+`authenticated-shell-ux-contracts` et `users-access-hardening`. Ces tests ne
+remplacent pas les mesures de rendu ni les essais sur une base réelle.
 
 Depuis `apps/web`, les commandes de validation du dépôt sont :
 
 ```powershell
 bunx tsc --noEmit
 bunx eslint src/app/systeme/utilisateurs/page.tsx src/components/ui/button.tsx src/components/ui/input.tsx src/components/ui/select.tsx src/features/users/UsersListPage.tsx src/features/users/UsersOverview.tsx src/__tests__/admin-users-list-a11y-contracts.test.ts
-bunx vitest run src/__tests__/admin-users-list-a11y-contracts.test.ts src/__tests__/design-system-contracts.test.ts src/__tests__/authenticated-shell-ux-contracts.test.ts
+bunx vitest run src/__tests__/admin-users-list-a11y-contracts.test.ts src/__tests__/design-system-contracts.test.ts src/__tests__/authenticated-shell-ux-contracts.test.ts src/__tests__/users-access-hardening.test.ts
 ```
 
 Pour une nouvelle page, reprendre la grille et produire ses propres preuves :

@@ -12,23 +12,33 @@
       ) /
       2
   );
-  --users-main-width: max(
-    0px,
+  --users-main-available: calc(
+    100% - var(--users-rail-width) - var(--users-rail-gap)
+  );
+  --users-centered-width: max(
+    0rem,
     min(
       80rem,
       calc(2 * var(--users-screen-center)),
-      calc(
-        2 *
-          (
-            100% - var(--users-rail-width) - var(--users-rail-gap) -
-              var(--users-screen-center)
-          )
-      )
+      calc(2 * (var(--users-main-available) - var(--users-screen-center)))
     )
+  );
+  /* Preserve a comfortable table width before strict screen centering. Below
+     64rem of available space, use all of it and let the content reflow. */
+  --users-main-width: min(
+    var(--users-main-available),
+    max(64rem, var(--users-centered-width))
   );
   display: grid;
   grid-template-columns:
-    minmax(0, calc(var(--users-screen-center) - var(--users-main-width) / 2))
+    minmax(
+      0,
+      clamp(
+        0rem,
+        calc(var(--users-screen-center) - var(--users-main-width) / 2),
+        calc(var(--users-main-available) - var(--users-main-width))
+      )
+    )
     minmax(0, var(--users-main-width))
     minmax(0, 1fr)
     var(--users-rail-width);

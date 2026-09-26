@@ -49,6 +49,9 @@ const UsersAdministrationContent: FC = () => {
         <h1 className="text-2xl leading-8 font-semibold tracking-tight">
           {FEATURES.users.label}
         </h1>
+        <p className="text-muted-foreground mt-1 text-sm leading-5">
+          Gérez les comptes et leurs accès.
+        </p>
       </header>
       <Suspense fallback={<UsersListFallback />}>
         <UsersListPage />
