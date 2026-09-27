@@ -7,7 +7,6 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 
@@ -57,8 +56,6 @@ export const QuickNavigation: FC = () => {
   const [activeResultHref, setActiveResultHref] = useState('');
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [shortcutLabel, setShortcutLabel] = useState('Ctrl K');
-  const shortcutReturnFocusRef = useRef<HTMLElement | null>(null);
   const spaces = useMemo(
     () =>
       getVisibleNavigationSpaces(
@@ -122,52 +119,6 @@ export const QuickNavigation: FC = () => {
       setActiveResultHref(results.at(0)?.href ?? '');
   }, [activeResultHref, results]);
 
-  useEffect(() => {
-    setShortcutLabel(
-      /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? '⌘ K' : 'Ctrl K',
-    );
-  }, []);
-
-  useEffect(() => {
-    const handleShortcut = (event: KeyboardEvent): void => {
-      if (
-        event.defaultPrevented ||
-        event.repeat ||
-        event.isComposing ||
-        event.altKey ||
-        event.shiftKey ||
-        !(event.ctrlKey || event.metaKey) ||
-        event.key.toLowerCase() !== 'k'
-      )
-        return;
-
-      // Keep another dialog's focus trap and workflow in charge.
-      if (
-        !open &&
-        Array.from(
-          document.querySelectorAll<HTMLElement>(
-            '[role="dialog"], [role="alertdialog"]',
-          ),
-        ).some((dialog) => dialog.getClientRects().length > 0)
-      )
-        return;
-
-      event.preventDefault();
-      if (open) {
-        closeSearch();
-      } else {
-        shortcutReturnFocusRef.current =
-          document.activeElement instanceof HTMLElement
-            ? document.activeElement
-            : null;
-        setOpen(true);
-      }
-    };
-    document.addEventListener('keydown', handleShortcut);
-
-    return (): void => document.removeEventListener('keydown', handleShortcut);
-  }, [closeSearch, open]);
-
   return (
     <Dialog
       open={open}
@@ -178,41 +129,23 @@ export const QuickNavigation: FC = () => {
           <DialogTrigger asChild>
             <Button
               aria-label="Rechercher une page"
-              aria-keyshortcuts="Control+k Meta+k"
               variant="outline"
               className="text-muted-foreground data-[state=open]:border-border-strong data-[state=open]:bg-surface-control-focus size-11 gap-2 rounded-sm p-0 font-normal focus-visible:ring-inset has-[>svg]:px-0 lg:h-10 lg:w-56 lg:justify-start lg:px-3 lg:has-[>svg]:px-3 xl:w-64"
               type="button"
             >
               <Search aria-hidden="true" className="size-4" />
               <span className="hidden lg:inline">Rechercher une page</span>
-              <kbd
-                aria-hidden="true"
-                className="border-border-subtle bg-surface-panel text-caption ml-auto hidden h-5 shrink-0 items-center rounded border px-1 font-sans xl:inline-flex"
-              >
-                {shortcutLabel}
-              </kbd>
             </Button>
           </DialogTrigger>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="rounded-sm">
-          Rechercher une page ({shortcutLabel})
+          Rechercher une page
         </TooltipContent>
       </Tooltip>
       <DialogContent
         fullscreenOnMobile
         hideCloseButton
         className="border-border-default bg-popover h-dvh max-w-2xl overflow-hidden p-0 sm:h-auto sm:max-h-[min(38rem,85dvh)]"
-        onCloseAutoFocus={(event) => {
-          const previousFocus = shortcutReturnFocusRef.current;
-          shortcutReturnFocusRef.current = null;
-          if (
-            previousFocus?.isConnected &&
-            previousFocus.getClientRects().length > 0
-          ) {
-            event.preventDefault();
-            previousFocus.focus({ preventScroll: true });
-          }
-        }}
       >
         <DialogHeader className="sr-only">
           <DialogTitle>Navigation rapide</DialogTitle>

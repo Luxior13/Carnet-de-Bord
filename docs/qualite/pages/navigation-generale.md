@@ -55,9 +55,9 @@ Sources : [Sidebar](../../../apps/web/src/components/Sidebar.tsx),
   menu « … » pour les ancêtres et page courante à côté. Fermeture du menu lors
   du changement de présentation. Page courante semi-grasse, focus intérieur.
 - Menu de sidebar réservé au mobile ; séparateur visible de 640 à 1023 px.
-  Infobulles de recherche, notifications et menu après 300 ms. Recherche accessible
-  par Ctrl + K ou ⌘ + K, indication à partir de 1280 px, retour au focus d’origine.
-  Le raccourci respecte les autres fenêtres ouvertes et les compositions de saisie.
+  Infobulles de recherche, notifications et menu après 300 ms. Recherche ouverte
+  depuis son bouton, sans raccourci global ni indication de raccourci dans la barre.
+  Échap ferme la recherche et rend le focus au bouton.
 
 Le défilement des pages par rubrique reste mémorisé. Le shell contrôle la sidebar
 ouverte ; l’ancienne préférence `team-control:sidebar:desktop-open` et la clé
@@ -174,6 +174,8 @@ restent datés. Références canoniques et contexte d’AGENTS.md actualisés.
 
 ## Header et sidebar fixe — 27 septembre 2026
 
+Les contrôles ci-dessous précèdent le retrait du raccourci demandé ensuite.
+
 Périmètre fonctionnel : présentation du header, raccourci de navigation et retrait
 du repli desktop. À examiner : Q01–Q04, Q08, Q09, Q16, Q19, Q27, Q30.
 Hors impact : Q05–Q07, Q10–Q15, Q17, Q20, Q22, Q24, Q25, Q28, Q29 : mêmes
@@ -205,6 +207,79 @@ captures supprimés. Ces mesures ne constituent pas un audit d’accessibilité 
 Documentation Context7 : composition Radix `asChild` et retour du focus, puis
 gestion des raccourcis cmdk ; API comparées aux paquets installés. Les données
 réelles, un lecteur d’écran, Safari/iOS et le zoom natif ne sont pas validés par ce banc.
+
+## Retrait du raccourci — 27 septembre 2026
+
+Décision finale de l’utilisateur : aucun raccourci dans la barre de recherche.
+Écouteur global Ctrl/⌘ + K, indication, annonce ARIA et gestion du focus propre
+au raccourci supprimés. Ouverture par le bouton et retour du focus natif conservés.
+Cette décision remplace les passages précédents concernant le raccourci.
+
+Niveau léger. À examiner : Q01–Q04, Q16, Q27, Q30. Hors impact : Q05–Q15, Q17,
+Q19, Q20, Q22, Q24, Q25, Q28, Q29 : mêmes recherche, accès, données, architecture
+et exploitation. Non applicable : Q18, Q21, Q23, Q26, aucun cache, import/export,
+automatisme ou finance. Contrat existant actualisé ; 21 tests ciblés de recherche,
+header et shell réussis, TypeScript et lint réussis. Le banc visuel précédent
+n’a pas été rejoué pour ce retrait.
+
+## Analyse du panneau de notifications — 27 septembre 2026
+
+Demande : examiner le popover et proposer les améliorations adaptées à un aperçu
+rapide. **Analyse uniquement : aucune correction du composant appliquée.**
+Sources : [NotificationCenter](../../../apps/web/src/components/layout/NotificationCenter.tsx),
+[popover partagé](../../../apps/web/src/components/ui/popover.tsx),
+[lecture API](../../../apps/web/src/app/api/notifications/route.ts) et
+[action individuelle](../../../apps/web/src/app/api/notifications/[id]/route.ts).
+
+Sélection fonctionnelle :
+
+- À examiner : Q01–Q09, Q14, Q17, Q22, Q27, Q30 : aperçu, présentation,
+  clavier, collection, lecture, échecs, notifications, visibilité, requêtes,
+  fraîcheur, dates et trace de revue.
+- Hors impact : Q10–Q13, Q15, Q16, Q19, Q20, Q24, Q25, Q28, Q29 : aucune
+  modification des données, règles de sécurité, schéma, architecture ou exploitation.
+  Ce classement ne constitue pas un audit de confidentialité ou de sécurité.
+- Non applicable : Q18, Q21, Q23, Q26 : aucun cache supplémentaire, transfert
+  de masse, canal externe ou engagement financier dans cette revue du popover.
+
+**À conserver.** Ancrage à droite, fond uni bleu ardoise `#202c3e`, titres de
+14 px et métadonnées de 12 px, compteur plafonné à `99+`, aperçu borné aux dix
+dernières notifications, accès à la boîte complète. Chargement, vide confirmé,
+erreur initiale avec nouvelle tentative et erreur d’actualisation conservant les
+dernières données sont distincts. La seule ouverture ne marque pas tout comme lu.
+Le lien futur « Tout gérer » est actuellement filtré par les routes disponibles ;
+ne pas le décrire comme une action visible aujourd’hui.
+
+| Constat | Amélioration proposée / point ouvert |
+| --- | --- |
+| Panneau de 352 px ; lignes d’environ 106 px avec les exemples courants, zone de liste de 320 px : environ trois éléments visibles | Essayer une largeur desktop de 380–400 px et alléger les espacements ; conserver les titres utiles et une hauteur naturelle pour les textes longs |
+| Rayon extérieur de 16 px, lignes de 12 px, ombre et animation d’entrée héritées du popover | Pour ce panneau, rapprocher les rayons du header et atténuer les effets selon la préférence exprimée ; ne pas changer toutes les fenêtres implicitement |
+| État non lu porté par un petit point après le titre et une différence de graisse | Garder ces deux signes, réserver une place stable au point ; aucune grande pastille de fond coloré nécessaire |
+| Toutes les données API utilisent la même cloche neutre ; `severity` et `type` ne sont pas exploités | Donner un repère discret aux alertes importantes, avec une icône ou un libellé en plus de la couleur ; ne pas confondre gravité et non-lecture |
+| Date numérique sans heure : deux arrivées du même jour sont indifférenciées | Temps relatif pour le récent, date et heure complètes accessibles ; date explicite pour l’ancien |
+| Focus des liens en bleu à 50 %, fermeture de 36 px desktop / 40 px mobile | Harmoniser le focus avec les commandes du header et prévoir une cible mobile de 44 px ; ce sont des écarts de cohérence, pas une déclaration de non-conformité complète |
+| L’échec de la commande « lu » est absorbé sans retour ; confirmé avec une panne simulée | Prévoir un retour compréhensible et une reprise sans empêcher l’ouverture de la destination |
+| Actualisation à l’ouverture, au retour sur l’onglet et aux événements locaux ; aucune réception continue | Définir la fraîcheur attendue avant de choisir une actualisation périodique ou un mécanisme serveur ; aucune promesse de notification instantanée actuellement |
+| Sur arrivée directe dans `/mes-notifications`, la lecture du header est différée et le compteur reste absent avant ouverture | Partager ou synchroniser le compteur avec la boîte sans réintroduire une lecture de collection inutile |
+
+**Contrôles exécutés.** Banc Chromium temporaire avec le vrai NotificationCenter,
+ses primitives, son chargeur et le CSS du projet ; cadre de header simplifié,
+session, autorisations, navigation et API simulées, sans écriture réelle.
+Rendu inspecté à 1440 × 900, 390 × 844 et 320 × 320. Dans ces cas, panneau contenu
+dans le viewport, liste défilante, titre et pied accessibles. À 320 × 320, la
+zone de liste tombe à environ 119 px et ne montre plus une notification longue
+entière : point de confort à améliorer, pas un débordement hors écran.
+Tabulation, focus puis Échap et retour à la cloche vérifiés. Cas liste, vide,
+chargement, erreurs initiale/d’actualisation, échec de lecture, arrivée directe
+dans la boîte et `99+` contrôlés ; aucune erreur JavaScript observée.
+
+Contrastes calculés sur les couleurs du panneau au repos : titre 11,97:1,
+texte secondaire 6,93:1. Ces mesures ne valident pas tous les états ni un lecteur
+d’écran. Les garde-fous API de session, permission et destinataire ont été lus,
+pas testés sur une base réelle. Révocation d’accès, parcours de formulaire non
+enregistré, arrivée depuis un autre utilisateur, Safari, appareil physique,
+zoom et lecteur d’écran restent non vérifiés. Aucun benchmark réseau/SQL.
+Captures et banc temporaires supprimés après inspection.
 
 ## Historique utile
 

@@ -129,17 +129,11 @@ describe('global page search', () => {
     );
   });
 
-  it('declares the keyboard shortcut and preserves focus when it closes', () => {
-    expect(globalSearchSource).toContain(
-      'aria-keyshortcuts="Control+k Meta+k"',
-    );
-    expect(globalSearchSource).toContain(
-      "document.removeEventListener('keydown', handleShortcut)",
-    );
-    expect(globalSearchSource).toContain('onCloseAutoFocus=');
-    expect(globalSearchSource).toContain(
-      'previousFocus.focus({ preventScroll: true })',
-    );
+  it('opens from its accessible button without a global keyboard shortcut', () => {
+    expect(globalSearchSource).toContain('<DialogTrigger asChild>');
+    expect(globalSearchSource).not.toContain('aria-keyshortcuts');
+    expect(globalSearchSource).not.toContain("addEventListener('keydown'");
+    expect(globalSearchSource).not.toContain('<kbd');
   });
 
   it('keeps mobile dismissal explicit and only indexes live pages', () => {

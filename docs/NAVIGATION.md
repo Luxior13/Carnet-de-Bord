@@ -136,13 +136,12 @@ entre 640 et 1023 px. La page courante est en semi-gras, les ancêtres plus disc
 Les contrôles disposent d’un focus intérieur et les boutons de recherche,
 notifications et menu mobile d’une infobulle après 300 ms.
 
-`Ctrl + K` ou `⌘ + K` ouvre et ferme la navigation rapide. Le raccourci est
-affiché dans le bouton à partir de 1280 px et annoncé par `aria-keyshortcuts`.
-Il respecte une autre fenêtre déjà ouverte, les compositions de saisie et les
-événements déjà traités ; la fermeture restitue le focus d’origine s’il est
-encore disponible. Les flèches et Entrée parcourent et ouvrent les résultats.
-Les anciennes combinaisons Vim de cette palette sont désactivées pour éviter
-le conflit avec Ctrl + K. Les gardes de formulaire restent appliquées aux destinations.
+La navigation rapide s’ouvre depuis son bouton, à la souris ou par son activation
+clavier standard. Aucun raccourci global ni indication de raccourci dans la barre,
+sur décision de l’utilisateur du 27 septembre 2026. Les flèches et Entrée parcourent
+et ouvrent les résultats ; Échap ferme la fenêtre et rend le focus au bouton.
+Les combinaisons Vim de cette palette restent désactivées. Les gardes de formulaire
+restent appliquées aux destinations.
 
 Les gabarits partagés limitent la largeur extérieure à 76rem par défaut, 52rem pour les créations et 56rem pour la lecture (actualité, notifications, recherche). Une variante de 92rem reste disponible pour les données denses. Les listes basculent entre tableau et présentation mobile selon la largeur de leur conteneur. Voir la [proposition UX/UI et son suivi](UX_UI_PROPOSITION_2026-09-23.md).
 
