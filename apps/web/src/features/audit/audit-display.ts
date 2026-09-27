@@ -58,6 +58,33 @@ const FIELD_LABELS = new Map<string, string>([
 
 export const AUDIT_ACTION_DISPLAY = new Map<string, AuditActionDisplayConfig>([
   [
+    'PERSON_CREATE',
+    {
+      color: 'border-success/35 text-success',
+      icon: UserPlus,
+      label: 'Fiche personne créée',
+      sentence: 'a créé une fiche personne',
+    },
+  ],
+  [
+    'PERSON_UPDATE',
+    {
+      color: 'border-info/35 text-info',
+      icon: Pencil,
+      label: 'Fiche personne modifiée',
+      sentence: 'a modifié une fiche personne',
+    },
+  ],
+  [
+    'PERSON_DELETE',
+    {
+      color: 'border-destructive/35 text-destructive',
+      icon: Trash2,
+      label: 'Fiche personne supprimée',
+      sentence: 'a supprimé une fiche personne',
+    },
+  ],
+  [
     'ACCOUNT_LOCKED',
     {
       color: 'border-destructive/35 bg-destructive/10 text-destructive',
@@ -292,6 +319,29 @@ export const AUDIT_ACTION_DISPLAY = new Map<string, AuditActionDisplayConfig>([
     },
   ],
 ]);
+
+// Keep facts from the retired module understandable without bringing it back.
+for (const [action, label] of [
+  ['PARTNER_CREATE', 'Partenaire créé'],
+  ['PARTNER_UPDATE', 'Partenaire modifié'],
+  ['PARTNER_DELETE', 'Partenaire supprimé'],
+  ['PARTNER_MERGE', 'Partenaires fusionnés'],
+  ['PARTNER_CONTACTS_UPDATE', 'Contacts du partenaire modifiés'],
+  ['PARTNER_STATUS_UPDATE', 'Statut du partenaire modifié'],
+  ['PARTNER_PERIOD_CREATE', 'Période de partenariat créée'],
+  ['PARTNER_PERIOD_UPDATE', 'Période de partenariat modifiée'],
+  ['PARTNER_FOLLOW_UP_CREATE', 'Suivi de partenaire créé'],
+  ['PARTNER_FOLLOW_UP_UPDATE', 'Suivi de partenaire modifié'],
+  ['PARTNER_FOLLOW_UP_DELETE', 'Suivi de partenaire supprimé'],
+  ['PARTNER_FOLLOW_UP_COMPLETE', 'Suivi de partenaire terminé'],
+] as const) {
+  AUDIT_ACTION_DISPLAY.set(action, {
+    color: 'border-border text-muted-foreground',
+    icon: History,
+    label: `${label} (historique)`,
+    sentence: `a enregistré : ${label.toLocaleLowerCase('fr')} (historique)`,
+  });
+}
 
 export const DEFAULT_AUDIT_ACTION_DISPLAY: AuditActionDisplayConfig = {
   color: 'border-border/70 bg-surface-muted text-muted-foreground',

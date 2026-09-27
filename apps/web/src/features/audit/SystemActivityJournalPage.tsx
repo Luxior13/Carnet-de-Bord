@@ -1,19 +1,6 @@
 'use client';
 
-import {
-  ChevronDown,
-  Clipboard,
-  Download,
-  Filter,
-  Home,
-  Key,
-  Loader2,
-  RefreshCw,
-  Search,
-  SlidersHorizontal,
-  X,
-} from 'lucide-react';
-import Link from 'next/link';
+import { ChevronDown, Filter, Loader2, RefreshCw } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, {
   type FC,
@@ -27,8 +14,6 @@ import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
-import { Disclosure } from '$components/layout/Disclosure';
-import { PageHero } from '$components/layout/PageHero';
 import { AccessDeniedState } from '$components/layout/PageState';
 import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
 import {
@@ -36,59 +21,38 @@ import {
   type NavigationSpace,
   type NavItem,
 } from '$constants/app.constants';
-import { FEATURES } from '$constants/feature-registry.constants';
-import {
-  getNavigationIcon,
-  type NavigationIconName,
-} from '$constants/navigation-icon.constants';
-import {
-  getNavigationSpaceToneClasses,
-  type NavigationSpaceTone,
-} from '$constants/navigation-theme.constants';
-import {
-  hasPermission,
-  PERMISSION_CATEGORIES,
-  PERMISSION_POLES,
-  PERMISSIONS,
-} from '$constants/permissions.constants';
+import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import { type ApiResponse, ErrorCode } from '$types/api.types';
-import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import { Input } from '$ui/input';
-import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '$ui/select';
 import { Skeleton } from '$ui/skeleton';
-import { cn } from '$utils/css.utils';
 
 import {
-  AUDIT_CONTEXT_FILTER_DEFAULTS,
-  AUDIT_CONTEXT_FILTER_QUERY_KEYS,
-  type AuditContextFilters,
-  getAuditContextFilterChips,
-  readAuditContextFilters,
-  writeAuditContextFilters,
-} from './audit-context-filters';
+  getPersonAuditFieldLabel,
+  getPersonAuditSectionLabel,
+} from '../persons/person-audit-display';
+import { getAuditContextFilterChips } from './audit-context-filters';
+import { AUDIT_ACTION_OPTIONS, formatAuditFullDate } from './audit-display';
 import {
-  AUDIT_ACTION_OPTIONS,
-  type AuditChangeDiff,
-  formatAuditChangeValue,
-  formatAuditFullDate,
-  formatAuditRelativeTime,
-  getAuditActionDisplay,
-  getAuditChangeDiffs,
-  getAuditChangeFieldLabel,
-  toValidAuditDate,
-} from './audit-display';
+  type ActiveFilterChip,
+  ALL_FILTER_VALUE,
+  AUDIT_CATEGORY_OPTIONS,
+  buildServerQuery,
+  DEFAULT_FILTERS,
+  getFiltersFromSearchParams,
+  getPageOptions,
+  JOURNAL_POLE_OPTIONS,
+  type JournalExportFormat,
+  type JournalFilters,
+  normalizeJournalFilters,
+  normalizeJournalSearch,
+  PERIOD_OPTIONS,
+  writeFiltersToSearchParams,
+} from './journal-filters';
+import { JournalEventRow } from './JournalEventRow';
+import { JournalToolbar } from './JournalToolbar';
 import type {
-  AuditIdentitySnapshot as IdentitySnapshot,
   SystemActivityJournalLog as JournalLog,
   SystemActivityJournalResponse as JournalResponse,
 } from './system-activity.types';
@@ -98,709 +62,6 @@ type SystemActivityJournalPageProps = {
   space: NavigationSpace;
 };
 
-type JournalLogType = 'activity' | 'connections';
-type JournalExportFormat = 'csv' | 'json';
-
-type JournalFilters = AuditContextFilters & {
-  action: string;
-  actorId: string;
-  category: string;
-  from: string;
-  logType: JournalLogType;
-  pageKey: string;
-  period: string;
-  poleKey: string;
-  search: string;
-  targetUserId: string;
-  to: string;
-};
-
-type ActivityLocationInfo = {
-  icon: NavigationIconName;
-  pageLabel: string;
-  poleLabel: string;
-  tabLabel: string;
-  tone: NavigationSpaceTone;
-};
-
-type ActivityFilterOption = {
-  icon: NavigationIconName;
-  label: string;
-  tone: NavigationSpaceTone;
-  value: string;
-};
-
-type ActiveFilterChip = {
-  key: keyof JournalFilters;
-  label: string;
-};
-
-const ALL_FILTER_VALUE = 'all';
-const FILTER_QUERY_KEYS = [
-  'action',
-  'actorId',
-  'category',
-  ...AUDIT_CONTEXT_FILTER_QUERY_KEYS,
-  'from',
-  'logType',
-  'pageKey',
-  'period',
-  'poleKey',
-  'search',
-  'targetUserId',
-  'to',
-] as const;
-
-const DEFAULT_FILTERS: JournalFilters = {
-  action: ALL_FILTER_VALUE,
-  actorId: '',
-  category: ALL_FILTER_VALUE,
-  ...AUDIT_CONTEXT_FILTER_DEFAULTS,
-  from: '',
-  logType: 'activity',
-  pageKey: ALL_FILTER_VALUE,
-  period: '30d',
-  poleKey: ALL_FILTER_VALUE,
-  search: '',
-  targetUserId: '',
-  to: '',
-};
-
-const normalizeJournalPageKey = (pageKey: string): string =>
-  pageKey === 'activity-journal' || pageKey === 'audit'
-    ? FEATURES.systemActivity.audit.pageKey
-    : pageKey;
-
-const PERIOD_OPTIONS = [
-  { label: '24 dernières heures', value: '24h' },
-  { label: '7 derniers jours', value: '7d' },
-  { label: '30 derniers jours', value: '30d' },
-  { label: '90 derniers jours', value: '90d' },
-  { label: 'Toute période', value: ALL_FILTER_VALUE },
-  { label: 'Plage personnalisée', value: 'custom' },
-] as const;
-
-const AUDIT_CATEGORY_OPTIONS = [
-  { label: 'Toutes les catégories', value: ALL_FILTER_VALUE },
-  { label: 'Authentification', value: 'AUTH' },
-  { label: 'Utilisateurs', value: 'USER' },
-  { label: 'Autorisations', value: 'PERMISSION' },
-  { label: 'Système', value: 'SYSTEM' },
-] as const;
-
-const CONNECTION_ACTIONS = new Set([
-  'ACCOUNT_LOCKED',
-  'LOGIN_FAILED',
-  'LOGIN_SUCCESS',
-  'LOGOUT',
-]);
-
-const CONNECTION_ACTION_OPTIONS = AUDIT_ACTION_OPTIONS.filter((option) => {
-  return (
-    option.value === ALL_FILTER_VALUE || CONNECTION_ACTIONS.has(option.value)
-  );
-});
-
-const JOURNAL_POLE_OPTIONS: ActivityFilterOption[] = [
-  {
-    icon: 'Search',
-    label: 'Tous les pôles',
-    tone: 'internal',
-    value: ALL_FILTER_VALUE,
-  },
-  {
-    icon: 'UserCheck',
-    label: 'Espace personnel',
-    tone: 'internal',
-    value: 'account',
-  },
-  ...PERMISSION_POLES.map((pole) => ({
-    icon: pole.icon,
-    label: pole.label,
-    tone: pole.tone,
-    value: pole.key,
-  })),
-];
-
-const selectTriggerClassName =
-  'border-border-control bg-surface-control text-foreground hover:border-border-strong hover:bg-surface-control-hover focus-visible:border-primary/45 focus-visible:bg-surface-control-focus focus-visible:ring-ring/35 h-10 w-full rounded-lg shadow-none';
-const selectContentClassName = 'text-foreground';
-const selectItemClassName =
-  'focus:bg-surface-tile-hover focus:text-accent-foreground rounded-lg py-2';
-
-const getPageOptions = (poleKey: string): ActivityFilterOption[] => {
-  const options: ActivityFilterOption[] = [
-    {
-      icon: 'Search',
-      label: 'Toutes les pages',
-      tone: 'internal',
-      value: ALL_FILTER_VALUE,
-    },
-  ];
-
-  if (poleKey === 'account') {
-    options.push({
-      icon: 'UserCheck',
-      label: 'Mon compte',
-      tone: 'internal',
-      value: 'account',
-    });
-  }
-  if (poleKey === 'system') {
-    options.push({
-      icon: 'ShieldCheck',
-      label: 'Authentification',
-      tone: 'system',
-      value: 'authentication',
-    });
-  }
-
-  options.push(
-    ...PERMISSION_CATEGORIES.filter((category) => {
-      return category.poleKey === poleKey;
-    }).map((category) => ({
-      icon: category.icon,
-      label: category.label,
-      tone: category.tone,
-      value: category.key,
-    })),
-  );
-
-  return options;
-};
-
-const normalizeJournalSearch = (value: string): string => {
-  const normalizedValue = value.trim().slice(0, 120);
-  const searchableCharacterCount =
-    normalizedValue.match(/[\p{L}\p{N}]/gu)?.length ?? 0;
-
-  return searchableCharacterCount >= 3 ? normalizedValue : '';
-};
-
-const getFiltersFromSearchParams = (
-  params: URLSearchParams,
-): JournalFilters => {
-  const logType = params.get('logType');
-  const period = params.get('period');
-  const from = params.get('from') ?? '';
-  const to = params.get('to') ?? '';
-  const isCustomPeriod =
-    period === 'custom' && !!toValidAuditDate(from) && !!toValidAuditDate(to);
-
-  return {
-    action: params.get('action') || DEFAULT_FILTERS.action,
-    actorId: params.get('actorId') || '',
-    category: params.get('category') || DEFAULT_FILTERS.category,
-    ...readAuditContextFilters(params),
-    from: isCustomPeriod ? from : '',
-    logType: logType === 'connections' ? 'connections' : 'activity',
-    pageKey: normalizeJournalPageKey(
-      params.get('pageKey') || DEFAULT_FILTERS.pageKey,
-    ),
-    period:
-      period &&
-      PERIOD_OPTIONS.some((option) => option.value === period) &&
-      (period !== 'custom' || isCustomPeriod)
-        ? period
-        : DEFAULT_FILTERS.period,
-    poleKey: params.get('poleKey') || DEFAULT_FILTERS.poleKey,
-    search: normalizeJournalSearch(params.get('search') ?? ''),
-    targetUserId: params.get('targetUserId') || '',
-    to: isCustomPeriod ? to : '',
-  };
-};
-
-const writeFiltersToSearchParams = (
-  params: URLSearchParams,
-  filters: JournalFilters,
-): URLSearchParams => {
-  FILTER_QUERY_KEYS.forEach((key) => params.delete(key));
-  if (filters.logType !== DEFAULT_FILTERS.logType) {
-    params.set('logType', filters.logType);
-  }
-  if (filters.period !== DEFAULT_FILTERS.period)
-    params.set('period', filters.period);
-  if (filters.search) params.set('search', filters.search);
-  if (filters.actorId) params.set('actorId', filters.actorId);
-  if (filters.targetUserId) params.set('targetUserId', filters.targetUserId);
-  writeAuditContextFilters(params, filters);
-
-  if (filters.logType === 'connections') {
-    if (filters.action !== ALL_FILTER_VALUE)
-      params.set('action', filters.action);
-  } else {
-    if (filters.action !== ALL_FILTER_VALUE)
-      params.set('action', filters.action);
-    if (filters.category !== ALL_FILTER_VALUE) {
-      params.set('category', filters.category);
-    }
-    if (filters.poleKey !== ALL_FILTER_VALUE)
-      params.set('poleKey', filters.poleKey);
-    if (
-      filters.poleKey !== ALL_FILTER_VALUE &&
-      filters.pageKey !== ALL_FILTER_VALUE
-    ) {
-      params.set('pageKey', filters.pageKey);
-    }
-  }
-  if (filters.period === 'custom' && filters.from && filters.to) {
-    params.set('from', filters.from);
-    params.set('to', filters.to);
-  }
-
-  return params;
-};
-
-const buildServerQuery = (
-  filters: JournalFilters,
-  options: { exportFormat?: JournalExportFormat } = {},
-): string => {
-  const params = new URLSearchParams({
-    logType: filters.logType,
-    period: filters.period,
-  });
-
-  if (options.exportFormat) params.set('format', options.exportFormat);
-  if (filters.search) params.set('search', filters.search);
-  if (filters.actorId) params.set('actorId', filters.actorId);
-  if (filters.targetUserId) params.set('targetUserId', filters.targetUserId);
-  writeAuditContextFilters(params, filters);
-  if (filters.period === 'custom') {
-    params.set('from', filters.from);
-    params.set('to', filters.to);
-  }
-  if (filters.logType === 'connections') {
-    if (filters.action !== ALL_FILTER_VALUE) {
-      params.set('connectionAction', filters.action);
-    }
-  } else {
-    if (filters.action !== ALL_FILTER_VALUE)
-      params.set('action', filters.action);
-    if (filters.category !== ALL_FILTER_VALUE) {
-      params.set('category', filters.category);
-    }
-    if (filters.poleKey !== ALL_FILTER_VALUE)
-      params.set('poleKey', filters.poleKey);
-    if (filters.pageKey !== ALL_FILTER_VALUE)
-      params.set('pageKey', filters.pageKey);
-  }
-
-  return params.toString();
-};
-
-const getLocation = (log: JournalLog): ActivityLocationInfo => {
-  const metadata = log.metadata;
-  const poleKey =
-    log.poleKey ??
-    (typeof metadata?.poleKey === 'string' ? metadata.poleKey : null) ??
-    (log.category === 'AUTH' ? 'system' : 'system');
-  const pageKey = normalizeJournalPageKey(
-    log.pageKey ??
-      (typeof metadata?.pageKey === 'string' ? metadata.pageKey : null) ??
-      (log.category === 'AUTH' ? 'authentication' : 'users'),
-  );
-  const pole = PERMISSION_POLES.find((candidate) => candidate.key === poleKey);
-  const page = PERMISSION_CATEGORIES.find(
-    (candidate) => candidate.key === pageKey,
-  );
-  const poleLabel =
-    pole?.label ??
-    (typeof metadata?.poleLabel === 'string' ? metadata.poleLabel : null) ??
-    (poleKey === 'account' ? 'Espace personnel' : 'Système');
-  const pageLabel =
-    page?.label ??
-    (typeof metadata?.pageLabel === 'string' ? metadata.pageLabel : null) ??
-    (pageKey === 'authentication'
-      ? 'Authentification'
-      : pageKey === 'account'
-        ? 'Mon compte'
-        : 'Utilisateurs');
-  const tabLabel =
-    (typeof metadata?.tabLabel === 'string' ? metadata.tabLabel : null) ??
-    log.tabKey ??
-    (log.action === 'PERMISSION_UPDATE' ? 'Autorisations' : 'Page');
-
-  return {
-    icon:
-      page?.icon ??
-      pole?.icon ??
-      (pageKey === 'authentication' ? 'ShieldCheck' : 'Users'),
-    pageLabel,
-    poleLabel,
-    tabLabel,
-    tone: page?.tone ?? pole?.tone ?? 'system',
-  };
-};
-
-const isSameIdentity = (log: JournalLog): boolean => {
-  if (log.userId && log.targetUserId) return log.userId === log.targetUserId;
-  if (!log.actorName || !log.targetName) return false;
-
-  return (
-    log.actorName.trim().toLocaleLowerCase('fr') ===
-    log.targetName.trim().toLocaleLowerCase('fr')
-  );
-};
-
-const getIdentityLabel = (
-  directName: string | null,
-  snapshot: IdentitySnapshot | null | undefined,
-  id: string | null,
-): string | null => {
-  return directName ?? snapshot?.displayName ?? snapshot?.loginName ?? id;
-};
-
-const ActivitySelectOption: FC<ActivityFilterOption> = ({
-  icon,
-  label,
-  tone,
-}) => {
-  const Icon = getNavigationIcon(icon);
-  const toneClasses = getNavigationSpaceToneClasses(tone);
-
-  return (
-    <div className="flex min-w-0 items-center gap-2">
-      <span
-        className={cn(
-          'flex size-6 shrink-0 items-center justify-center rounded-md border',
-          toneClasses.icon,
-        )}
-      >
-        <Icon className="size-3" />
-      </span>
-      <span className="truncate">{label}</span>
-    </div>
-  );
-};
-
-const ChangeItem: FC<AuditChangeDiff> = ({ after, before, fieldKey }) => {
-  const factOnly = [
-    'passwordChange',
-    'passwordReset',
-    'revokedSessions',
-  ].includes(fieldKey);
-
-  return (
-    <div className="border-border/60 bg-background/40 grid gap-2 rounded-md border px-2.5 py-2 text-xs sm:grid-cols-[minmax(11rem,14rem)_minmax(0,1fr)] sm:items-start">
-      <span className="text-foreground font-semibold break-words">
-        {getAuditChangeFieldLabel(fieldKey)}
-      </span>
-      {factOnly ? (
-        <span className="bg-primary/10 text-primary-emphasis rounded px-1.5 py-0.5 font-medium break-all whitespace-pre-wrap">
-          {formatAuditChangeValue(fieldKey, after)}
-        </span>
-      ) : (
-        <div className="flex min-w-0 flex-wrap items-start gap-1.5">
-          <span className="text-muted-foreground font-medium uppercase">
-            Avant
-          </span>
-          <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 break-all whitespace-pre-wrap line-through">
-            {formatAuditChangeValue(fieldKey, before)}
-          </span>
-          <span aria-hidden="true" className="text-muted-foreground">
-            →
-          </span>
-          <span className="text-primary-emphasis font-medium uppercase">
-            Après
-          </span>
-          <span className="bg-primary/10 text-primary-emphasis rounded px-1.5 py-0.5 break-all whitespace-pre-wrap">
-            {formatAuditChangeValue(fieldKey, after)}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const CopyableTechnicalValue: FC<{ label: string; value: string }> = ({
-  label,
-  value,
-}) => {
-  const handleCopy = async (): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(value);
-      toast.success(`${label} copié`);
-    } catch {
-      toast.error('Impossible de copier cette valeur');
-    }
-  };
-
-  return (
-    <div className="border-border/50 bg-background/35 grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)_auto] items-start gap-2 rounded-md border px-2.5 py-2 text-xs">
-      <span className="text-muted-foreground">{label}</span>
-      <code className="text-foreground font-mono break-all whitespace-pre-wrap">
-        {value}
-      </code>
-      <Button
-        aria-label={`Copier ${label}`}
-        className="size-7"
-        onClick={() => void handleCopy()}
-        size="icon"
-        type="button"
-        variant="ghost"
-      >
-        <Clipboard className="size-3.5" />
-      </Button>
-    </div>
-  );
-};
-
-const JournalCard: FC<{
-  isOpen: boolean;
-  log: JournalLog;
-  onIdentityFilter: (
-    identity: string,
-    scope: 'actor' | 'target',
-    userId: string | null,
-  ) => void;
-  onToggle: () => void;
-}> = ({ isOpen, log, onIdentityFilter, onToggle }) => {
-  const config = getAuditActionDisplay(log.action, log.metadata);
-  const EventIcon = config.icon;
-  const changes =
-    log.fieldChanges && log.fieldChanges.length > 0
-      ? log.fieldChanges.map(({ after, before, fieldKey }) => ({
-          after,
-          before,
-          fieldKey,
-        }))
-      : getAuditChangeDiffs(log.metadata);
-  const location = getLocation(log);
-  const LocationIcon = getNavigationIcon(location.icon);
-  const actorLabel =
-    getIdentityLabel(log.actorName, log.actorSnapshot, log.userId) ?? 'Système';
-  const targetLabel = getIdentityLabel(
-    log.targetName,
-    log.targetSnapshot,
-    log.targetUserId,
-  );
-  const sameIdentity = isSameIdentity(log);
-  const personEntityLabel =
-    log.entityType === 'PERSON' && log.entityId
-      ? (log.entityDisplayName ?? `Fiche supprimée · ${log.entityId}`)
-      : null;
-  const detailsId = `journal-details-${log.id}`;
-  const normalizedOutcome = log.outcome?.toUpperCase();
-  const normalizedSeverity = log.severity?.toUpperCase();
-  const summaryStatus =
-    normalizedSeverity === 'CRITICAL'
-      ? { className: 'text-destructive', label: 'Critique' }
-      : normalizedOutcome === 'FAILURE'
-        ? { className: 'text-destructive', label: 'Échec' }
-        : normalizedSeverity === 'WARNING'
-          ? { className: 'text-warning', label: 'À surveiller' }
-          : null;
-  const technicalValues = [
-    ['Action', log.action],
-    ['Catégorie', log.category],
-    ['Identifiant', log.id],
-    ['Requête', log.requestId],
-    ['Adresse IP', log.ipAddress],
-    ['Navigateur', log.userAgent],
-    ['Type', log.eventKind],
-    ['Flux', log.stream],
-    ['Résultat', log.outcome],
-    ['Gravité', log.severity],
-    ['Version', log.eventVersion?.toString()],
-    ['Type d’entité', log.entityType],
-    ['Nom de l’entité', log.entityDisplayName],
-    ['Identifiant d’entité', log.entityId],
-  ].filter((entry): entry is [string, string] => !!entry[1]);
-
-  return (
-    <article
-      className={cn(
-        'border-border/60 bg-surface-muted/35 overflow-hidden rounded-lg border transition-colors',
-        isOpen
-          ? 'border-primary/35 bg-surface-inset/75'
-          : 'hover:border-border hover:bg-surface-muted/60',
-      )}
-      data-log-id={log.id}
-    >
-      <div className="grid gap-2 px-3 py-2.5 sm:px-4 md:grid-cols-[minmax(0,1fr)_14rem_10rem_2rem] md:items-center">
-        <div className="flex min-w-0 items-start gap-2.5">
-          <span
-            className={cn(
-              'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md border',
-              config.color,
-            )}
-          >
-            <EventIcon className="size-4" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <Button
-              variant="ghost"
-              size="inline"
-              aria-controls={detailsId}
-              aria-expanded={isOpen}
-              className="text-foreground block w-full text-left text-sm font-semibold"
-              onClick={onToggle}
-              type="button"
-            >
-              <span>{actorLabel}</span>{' '}
-              <span className="text-muted-foreground font-normal">
-                {config.sentence}
-              </span>
-              {targetLabel && !sameIdentity && <span> {targetLabel}</span>}
-              {sameIdentity && (
-                <span className="text-muted-foreground font-normal">
-                  {' '}
-                  sur son compte
-                </span>
-              )}
-            </Button>
-            <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-              {actorLabel !== 'Système' && (
-                <Button
-                  variant="ghost"
-                  size="inline"
-                  className="hover:text-foreground underline-offset-2 hover:underline"
-                  onClick={() =>
-                    onIdentityFilter(actorLabel, 'actor', log.userId)
-                  }
-                  type="button"
-                >
-                  Acteur : {actorLabel}
-                </Button>
-              )}
-              {targetLabel && !sameIdentity && (
-                <Button
-                  variant="ghost"
-                  size="inline"
-                  className="hover:text-foreground underline-offset-2 hover:underline"
-                  onClick={() =>
-                    onIdentityFilter(targetLabel, 'target', log.targetUserId)
-                  }
-                  type="button"
-                >
-                  Cible : {targetLabel}
-                </Button>
-              )}
-              {personEntityLabel && (
-                <span title={personEntityLabel}>
-                  Entité : {personEntityLabel}
-                </span>
-              )}
-              {changes.length > 0 && (
-                <span className="text-primary-emphasis">
-                  {changes.length}{' '}
-                  {changes.length > 1 ? 'changements' : 'changement'}
-                </span>
-              )}
-              {summaryStatus && (
-                <span className={summaryStatus.className}>
-                  {summaryStatus.label}
-                </span>
-              )}
-            </div>
-            <time
-              className="text-muted-foreground mt-1 block text-xs md:hidden"
-              dateTime={log.createdAt}
-              title={formatAuditFullDate(log.createdAt)}
-            >
-              {formatAuditRelativeTime(log.createdAt)} ·{' '}
-              {formatAuditFullDate(log.createdAt)}
-            </time>
-          </div>
-        </div>
-        <div className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-xs">
-          <LocationIcon className="size-3.5 shrink-0" />
-          <span
-            className="truncate"
-            title={`${location.poleLabel} · ${location.pageLabel} · ${location.tabLabel}`}
-          >
-            {location.poleLabel} · {location.pageLabel} · {location.tabLabel}
-          </span>
-        </div>
-        <time
-          className="hidden min-w-0 text-right text-xs md:block"
-          dateTime={log.createdAt}
-          title={formatAuditFullDate(log.createdAt)}
-        >
-          <span className="text-foreground block font-medium">
-            {formatAuditRelativeTime(log.createdAt)}
-          </span>
-          <span className="text-muted-foreground mt-0.5 block">
-            {formatAuditFullDate(log.createdAt)}
-          </span>
-        </time>
-        <Button
-          aria-controls={detailsId}
-          aria-expanded={isOpen}
-          aria-label={isOpen ? 'Replier les détails' : 'Afficher les détails'}
-          className="hidden size-8 md:inline-flex"
-          onClick={onToggle}
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          <ChevronDown
-            className={cn(
-              'size-4 transition-transform',
-              isOpen && 'rotate-180',
-            )}
-          />
-        </Button>
-      </div>
-
-      {isOpen && (
-        <div
-          className="border-border/65 bg-background/25 border-t px-3 py-3 sm:px-4"
-          id={detailsId}
-        >
-          <div className="space-y-3 md:ml-10">
-            {log.description && (
-              <p className="text-muted-foreground text-sm leading-6">
-                {log.description}
-              </p>
-            )}
-            {changes.length > 0 && (
-              <section aria-labelledby={`${detailsId}-changes`}>
-                <h3
-                  className="text-foreground mb-2 text-xs font-semibold"
-                  id={`${detailsId}-changes`}
-                >
-                  Changements ({changes.length})
-                </h3>
-                <div className="space-y-1.5">
-                  {changes.map((change) => (
-                    <ChangeItem
-                      key={`${change.fieldKey}-${String(change.before)}-${String(change.after)}`}
-                      after={change.after}
-                      before={change.before}
-                      fieldKey={change.fieldKey}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-            <Disclosure
-              label="Détails techniques"
-              icon={<Key aria-hidden="true" className="size-3" />}
-            >
-              <div className="mt-2 space-y-1.5">
-                {technicalValues.map(([label, value]) => (
-                  <CopyableTechnicalValue
-                    key={label}
-                    label={label}
-                    value={value}
-                  />
-                ))}
-                {log.metadata && (
-                  <CopyableTechnicalValue
-                    label="Métadonnées"
-                    value={JSON.stringify(log.metadata, null, 2)}
-                  />
-                )}
-              </div>
-            </Disclosure>
-          </div>
-        </div>
-      )}
-    </article>
-  );
-};
-
 const JournalSkeleton: FC = () => (
   <div aria-label="Chargement du journal" className="space-y-2" role="status">
     {Array.from({ length: 6 }).map((_, index) => (
@@ -808,20 +69,6 @@ const JournalSkeleton: FC = () => (
     ))}
   </div>
 );
-
-const toDateInputValue = (isoValue: string): string => {
-  const date = toValidAuditDate(isoValue);
-
-  return date ? date.toLocaleDateString('sv-SE') : '';
-};
-
-const toIsoDateBoundary = (dateValue: string, endOfDay: boolean): string => {
-  const date = new Date(
-    `${dateValue}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}`,
-  );
-
-  return date.toISOString();
-};
 
 const getDownloadFilename = (
   response: Response,
@@ -862,17 +109,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
         PERMISSIONS.AUDIT.EXPORT,
         userData.permissions,
       ));
-  const Icon = getNavigationIcon(item.icon);
   const [searchInput, setSearchInput] = useState(filters.search);
-  const [customFrom, setCustomFrom] = useState(toDateInputValue(filters.from));
-  const [customTo, setCustomTo] = useState(toDateInputValue(filters.to));
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(
-    filters.action !== ALL_FILTER_VALUE ||
-      filters.category !== ALL_FILTER_VALUE ||
-      filters.poleKey !== ALL_FILTER_VALUE ||
-      Boolean(filters.entityId) ||
-      filters.period === 'custom',
-  );
   const [logs, setLogs] = useState<JournalLog[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [openLogId, setOpenLogId] = useState<string | null>(null);
@@ -884,14 +121,20 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
   const [failedCursor, setFailedCursor] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [snapshotAt, setSnapshotAt] = useState<string | null>(null);
-  const [sensitiveDetailsVisible, setSensitiveDetailsVisible] = useState(false);
-  const [visibilityResolved, setVisibilityResolved] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [pendingExportFormat, setPendingExportFormat] =
-    useState<JournalExportFormat | null>(null);
+  const [pendingExport, setPendingExport] = useState<{
+    format: JournalExportFormat;
+    query: string;
+  } | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const exportControllerRef = useRef<AbortController | null>(null);
+  useEffect(
+    () => (): void => {
+      exportControllerRef.current?.abort();
+    },
+    [],
+  );
   const hasLoadedOnceRef = useRef(false);
-  const filtersId = 'journal-advanced-filters';
   const eventsId = 'journal-events';
   const pageOptions = useMemo(
     () => getPageOptions(filters.poleKey),
@@ -901,7 +144,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
     (option) => option.value === filters.poleKey,
   ) ?? {
     icon: 'Search' as const,
-    label: 'Tous les pôles',
+    label: filters.poleKey.replaceAll('-', ' '),
     tone: 'internal' as const,
     value: ALL_FILTER_VALUE,
   };
@@ -931,26 +174,26 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
 
   const updateFilters = useCallback(
     (patch: Partial<JournalFilters>, replace = false): void => {
-      const nextFilters = { ...filters, ...patch };
-
-      if (nextFilters.poleKey === ALL_FILTER_VALUE) {
-        nextFilters.pageKey = ALL_FILTER_VALUE;
-      }
-      if (nextFilters.logType === 'connections') {
-        nextFilters.category = ALL_FILTER_VALUE;
-        nextFilters.pageKey = ALL_FILTER_VALUE;
-        nextFilters.poleKey = ALL_FILTER_VALUE;
-      }
+      const nextFilters = normalizeJournalFilters({ ...filters, ...patch });
       navigateToFilters(nextFilters, replace);
     },
     [filters, navigateToFilters],
   );
 
   useEffect(() => {
+    const normalized = writeFiltersToSearchParams(
+      new URLSearchParams(currentQueryString),
+      filters,
+    ).toString();
+    if (normalized !== currentQueryString)
+      router.replace(normalized ? `${pathname}?${normalized}` : pathname, {
+        scroll: false,
+      });
+  }, [currentQueryString, filters, pathname, router]);
+
+  useEffect(() => {
     setSearchInput(filters.search);
-    setCustomFrom(toDateInputValue(filters.from));
-    setCustomTo(toDateInputValue(filters.to));
-  }, [filters.from, filters.search, filters.to]);
+  }, [filters.search]);
 
   useEffect(() => {
     const normalizedSearch = normalizeJournalSearch(searchInput);
@@ -1006,8 +249,6 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
         );
         setNextCursor(body.data.nextCursor);
         setSnapshotAt(body.data.snapshotAt ?? null);
-        setSensitiveDetailsVisible(body.data.sensitiveDetailsVisible ?? false);
-        setVisibilityResolved(true);
         setFailedCursor(null);
         setUpdatedAt(new Date());
         hasLoadedOnceRef.current = true;
@@ -1022,7 +263,11 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
           });
         }
       } catch (fetchError) {
-        if ((fetchError as { name?: string }).name === 'AbortError') return;
+        if (
+          controller.signal.aborted ||
+          (fetchError as { name?: string }).name === 'AbortError'
+        )
+          return;
         setError(
           fetchError instanceof Error
             ? fetchError.message
@@ -1072,64 +317,26 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
     updateFilters({ search: identity });
   };
 
-  const handlePeriodChange = (period: string): void => {
-    if (period !== 'custom') {
-      updateFilters({ from: '', period, to: '' });
-
-      return;
-    }
-
-    const to = new Date();
-    const from = new Date(to);
-    from.setDate(from.getDate() - 7);
-    const fromInput = from.toLocaleDateString('sv-SE');
-    const toInput = to.toLocaleDateString('sv-SE');
-    setCustomFrom(fromInput);
-    setCustomTo(toInput);
-    setShowAdvancedFilters(true);
-    updateFilters({
-      from: toIsoDateBoundary(fromInput, false),
-      period: 'custom',
-      to: toIsoDateBoundary(toInput, true),
-    });
-  };
-
-  const handleApplyCustomPeriod = (): void => {
-    if (!customFrom || !customTo) {
-      toast.error('Choisissez une date de début et une date de fin');
-
-      return;
-    }
-    if (customFrom > customTo) {
-      toast.error('La date de début doit précéder la date de fin');
-
-      return;
-    }
-
-    updateFilters({
-      from: toIsoDateBoundary(customFrom, false),
-      period: 'custom',
-      to: toIsoDateBoundary(customTo, true),
-    });
-  };
-
   const handleResetFilters = (): void => {
     setSearchInput('');
-    setCustomFrom('');
-    setCustomTo('');
     navigateToFilters(DEFAULT_FILTERS);
   };
 
   const handleExport = useCallback(
-    async (format: JournalExportFormat): Promise<void> => {
+    async (request: {
+      format: JournalExportFormat;
+      query: string;
+    }): Promise<void> => {
+      const { format, query } = request;
+      if (exportControllerRef.current) return;
+      const controller = new AbortController();
+      exportControllerRef.current = controller;
       try {
         setIsExporting(true);
-        const response = await fetch(
-          `/api/systeme/journal-activite?${buildServerQuery(filters, {
-            exportFormat: format,
-          })}`,
-          { cache: 'no-store' },
-        );
+        const response = await fetch(`/api/systeme/journal-activite?${query}`, {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
 
         if (!response.ok) {
           let errorBody: ApiResponse<never> | null = null;
@@ -1143,7 +350,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
             !errorBody.success &&
             errorBody.error.code === ErrorCode.REAUTHENTICATION_REQUIRED
           ) {
-            setPendingExportFormat(format);
+            setPendingExport(request);
 
             return;
           }
@@ -1171,16 +378,18 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
           toast.success(`Export ${format.toUpperCase()} prêt`);
         }
       } catch (exportError) {
+        if (controller.signal.aborted) return;
         toast.error(
           exportError instanceof Error
             ? exportError.message
             : 'Impossible d’exporter le journal',
         );
       } finally {
+        exportControllerRef.current = null;
         setIsExporting(false);
       }
     },
-    [filters],
+    [],
   );
 
   const activeFilterChips = useMemo<ActiveFilterChip[]>(() => {
@@ -1192,7 +401,7 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
 
       chips.push({
         key: 'actorId',
-        label: `Acteur : ${actor?.actorName ?? filters.actorId}`,
+        label: `Auteur : ${actor?.actorName ?? filters.actorId}`,
       });
     }
     if (filters.targetUserId) {
@@ -1202,16 +411,38 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
 
       chips.push({
         key: 'targetUserId',
-        label: `Cible : ${target?.targetName ?? filters.targetUserId}`,
+        label: `Compte concerné : ${target?.targetName ?? filters.targetUserId}`,
       });
     }
-    chips.push(...getAuditContextFilterChips(filters));
+    chips.push(
+      ...getAuditContextFilterChips(filters).map((chip) => {
+        if (filters.entityType !== 'PERSON') return chip;
+        if (chip.key === 'entityId') {
+          const entityName = logs.find(
+            (log) =>
+              log.entityId === filters.entityId && log.entityType === 'PERSON',
+          )?.entityDisplayName;
+
+          return {
+            ...chip,
+            label: `Personne : ${entityName ?? filters.entityId}`,
+          };
+        }
+
+        return {
+          ...chip,
+          label: `${getPersonAuditSectionLabel(filters.sectionKey)} · ${getPersonAuditFieldLabel(filters.fieldKey)}${filters.recordId ? ` · ${filters.recordId}` : ''}`,
+        };
+      }),
+    );
     if (filters.period !== DEFAULT_FILTERS.period) {
       chips.push({
         key: 'period',
         label:
-          PERIOD_OPTIONS.find((option) => option.value === filters.period)
-            ?.label ?? filters.period,
+          filters.period === 'custom'
+            ? `Du ${new Date(filters.from).toLocaleDateString('fr-FR')} au ${new Date(filters.to).toLocaleDateString('fr-FR')}`
+            : (PERIOD_OPTIONS.find((option) => option.value === filters.period)
+                ?.label ?? filters.period),
       });
     }
     if (filters.action !== ALL_FILTER_VALUE) {
@@ -1287,7 +518,9 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
     ? 'Chargement du journal'
     : isRefreshing
       ? 'Actualisation du journal'
-      : `${logs.length} événements chargés${nextCursor ? ', davantage disponibles' : ''}`;
+      : isLoadingMore
+        ? 'Chargement des événements suivants'
+        : `${logs.length} événements chargés${nextCursor ? ', davantage disponibles' : ''}`;
 
   if (!canAccessPage) {
     return (
@@ -1315,397 +548,36 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
     >
       <PageShell className="py-0">
         <PageCanvas contentClassName="space-y-5">
-          <PageHero
-            actions={
-              <Button asChild variant="outline">
-                <Link href={space.href}>
-                  <Home className="size-4" />
-                  Accueil du pôle
-                </Link>
-              </Button>
+          <header className="space-y-2">
+            <h1 className="text-foreground text-2xl font-semibold tracking-tight sm:text-3xl">
+              {item.label}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Retrouvez les actions, leurs auteurs et les changements associés.
+            </p>
+          </header>
+          <JournalToolbar
+            activeFilterChips={activeFilterChips}
+            canExport={canExport}
+            exportBlocked={
+              !hasLoadedOnce || Boolean(error) || pendingExport !== null
             }
-            description="Recherchez qui a fait quoi, sur quel compte, quand et dans quel contexte."
-            icon={<Icon className="size-5" />}
-            title={item.label}
-            tone={space.tone}
+            filters={filters}
+            isExporting={isExporting}
+            onExport={(format) => {
+              void handleExport({
+                format,
+                query: buildServerQuery(filters, { exportFormat: format }),
+              });
+            }}
+            onFilter={updateFilters}
+            onRefresh={() => void fetchLogs()}
+            onRemove={removeFilter}
+            onReset={handleResetFilters}
+            onSearch={setSearchInput}
+            refreshing={isRefreshing || isInitialLoading || isLoadingMore}
+            search={searchInput}
           />
-
-          <section
-            aria-label="Filtres du journal"
-            className="border-border-default bg-surface rounded-xl border p-4"
-          >
-            <div className="grid gap-3 @min-[36rem]/page:grid-cols-2 @min-[36rem]/page:items-end @min-[64rem]/page:grid-cols-[auto_minmax(14rem,1fr)_13rem_auto_auto]">
-              <div>
-                <span className="text-muted-foreground mb-1.5 block text-xs font-medium">
-                  Journal
-                </span>
-                <div className="border-border-control bg-input inline-flex h-10 rounded-md border p-1">
-                  {(['activity', 'connections'] as const).map((logType) => (
-                    <Button
-                      variant="ghost"
-                      size="inline"
-                      aria-pressed={filters.logType === logType}
-                      className={cn(
-                        'rounded px-3 text-sm font-medium transition-colors',
-                        filters.logType === logType
-                          ? 'bg-surface-navigation-active text-foreground'
-                          : 'text-muted-foreground hover:text-foreground',
-                      )}
-                      key={logType}
-                      onClick={() =>
-                        updateFilters({ action: ALL_FILTER_VALUE, logType })
-                      }
-                      type="button"
-                    >
-                      {logType === 'activity' ? 'Activité' : 'Connexions'}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <Label
-                  className="text-muted-foreground mb-1.5 block text-xs font-medium"
-                  htmlFor="journal-search"
-                >
-                  Acteur, cible ou événement
-                </Label>
-                <div className="relative">
-                  <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                  <Input
-                    className="h-10 pr-9 pl-9"
-                    id="journal-search"
-                    maxLength={120}
-                    onChange={(event) => setSearchInput(event.target.value)}
-                    placeholder="Rechercher un membre (3 caractères minimum)…"
-                    type="search"
-                    value={searchInput}
-                  />
-                  {searchInput && (
-                    <Button
-                      aria-label="Effacer la recherche"
-                      className="absolute top-1/2 right-1 size-8 -translate-y-1/2"
-                      onClick={() => setSearchInput('')}
-                      size="icon"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <X className="size-3.5" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <Label
-                  className="text-muted-foreground mb-1.5 block text-xs font-medium"
-                  htmlFor="journal-period"
-                >
-                  Période
-                </Label>
-                <Select
-                  value={filters.period}
-                  onValueChange={handlePeriodChange}
-                >
-                  <SelectTrigger
-                    className={selectTriggerClassName}
-                    id="journal-period"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className={selectContentClassName}>
-                    {PERIOD_OPTIONS.map((option) => (
-                      <SelectItem
-                        className={selectItemClassName}
-                        key={option.value}
-                        value={option.value}
-                      >
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button
-                aria-controls={filtersId}
-                aria-expanded={showAdvancedFilters}
-                className="h-10"
-                onClick={() => setShowAdvancedFilters((visible) => !visible)}
-                type="button"
-                variant="outline"
-              >
-                <SlidersHorizontal className="size-4" />
-                Filtres
-                {activeFilterChips.length > 0 && (
-                  <Badge className="ml-1 px-1.5" variant="secondary">
-                    {activeFilterChips.length}
-                  </Badge>
-                )}
-              </Button>
-
-              <Button
-                aria-controls={eventsId}
-                className="h-10"
-                disabled={isRefreshing || isInitialLoading}
-                onClick={() => void fetchLogs()}
-                type="button"
-                variant="outline"
-              >
-                <RefreshCw
-                  className={cn(
-                    'size-4',
-                    (isRefreshing || isInitialLoading) && 'animate-spin',
-                  )}
-                />
-                Actualiser
-              </Button>
-            </div>
-
-            {showAdvancedFilters && (
-              <div
-                className="border-border/60 mt-4 grid gap-3 border-t pt-4 @min-[36rem]/page:grid-cols-2 @min-[64rem]/page:grid-cols-4"
-                id={filtersId}
-              >
-                <div>
-                  <Label
-                    className="text-muted-foreground mb-1.5 block text-xs font-medium"
-                    htmlFor="journal-action"
-                  >
-                    Action
-                  </Label>
-                  <Select
-                    value={filters.action}
-                    onValueChange={(action) => updateFilters({ action })}
-                  >
-                    <SelectTrigger
-                      className={selectTriggerClassName}
-                      id="journal-action"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className={selectContentClassName}>
-                      {(filters.logType === 'connections'
-                        ? CONNECTION_ACTION_OPTIONS
-                        : AUDIT_ACTION_OPTIONS
-                      ).map((option) => (
-                        <SelectItem
-                          className={selectItemClassName}
-                          key={option.value}
-                          value={option.value}
-                        >
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {filters.logType === 'activity' && (
-                  <>
-                    <div>
-                      <Label
-                        className="text-muted-foreground mb-1.5 block text-xs font-medium"
-                        htmlFor="journal-category"
-                      >
-                        Catégorie
-                      </Label>
-                      <Select
-                        value={filters.category}
-                        onValueChange={(category) =>
-                          updateFilters({ category })
-                        }
-                      >
-                        <SelectTrigger
-                          className={selectTriggerClassName}
-                          id="journal-category"
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className={selectContentClassName}>
-                          {AUDIT_CATEGORY_OPTIONS.map((option) => (
-                            <SelectItem
-                              className={selectItemClassName}
-                              key={option.value}
-                              value={option.value}
-                            >
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label
-                        className="text-muted-foreground mb-1.5 block text-xs font-medium"
-                        htmlFor="journal-pole"
-                      >
-                        Pôle
-                      </Label>
-                      <Select
-                        value={filters.poleKey}
-                        onValueChange={(poleKey) =>
-                          updateFilters({ pageKey: ALL_FILTER_VALUE, poleKey })
-                        }
-                      >
-                        <SelectTrigger
-                          className={selectTriggerClassName}
-                          id="journal-pole"
-                        >
-                          <SelectValue>
-                            <ActivitySelectOption {...selectedPole} />
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent className={selectContentClassName}>
-                          {JOURNAL_POLE_OPTIONS.map((option) => (
-                            <SelectItem
-                              className={selectItemClassName}
-                              key={option.value}
-                              value={option.value}
-                            >
-                              <ActivitySelectOption {...option} />
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label
-                        className="text-muted-foreground mb-1.5 block text-xs font-medium"
-                        htmlFor="journal-page"
-                      >
-                        Page
-                      </Label>
-                      <Select
-                        disabled={filters.poleKey === ALL_FILTER_VALUE}
-                        value={filters.pageKey}
-                        onValueChange={(pageKey) => updateFilters({ pageKey })}
-                      >
-                        <SelectTrigger
-                          className={selectTriggerClassName}
-                          id="journal-page"
-                        >
-                          <SelectValue>
-                            <ActivitySelectOption {...selectedPage} />
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent className={selectContentClassName}>
-                          {pageOptions.map((option) => (
-                            <SelectItem
-                              className={selectItemClassName}
-                              key={option.value}
-                              value={option.value}
-                            >
-                              <ActivitySelectOption {...option} />
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </>
-                )}
-
-                <div className="md:col-span-2 xl:col-span-4">
-                  <span className="text-muted-foreground mb-1.5 block text-xs font-medium">
-                    Plage de dates exacte
-                  </span>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <Input
-                      aria-label="Date de début"
-                      className="h-10 sm:max-w-48"
-                      onChange={(event) => setCustomFrom(event.target.value)}
-                      type="date"
-                      value={customFrom}
-                    />
-                    <span className="text-muted-foreground hidden text-xs sm:block">
-                      au
-                    </span>
-                    <Input
-                      aria-label="Date de fin"
-                      className="h-10 sm:max-w-48"
-                      onChange={(event) => setCustomTo(event.target.value)}
-                      type="date"
-                      value={customTo}
-                    />
-                    <Button
-                      className="h-10"
-                      onClick={handleApplyCustomPeriod}
-                      type="button"
-                      variant="outline"
-                    >
-                      Appliquer la plage
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="border-border/60 mt-4 flex flex-col gap-3 border-t pt-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                {activeFilterChips.length === 0 ? (
-                  <span className="text-muted-foreground text-xs">
-                    Filtres par défaut
-                  </span>
-                ) : (
-                  activeFilterChips.map((chip) => (
-                    <Badge
-                      className="max-w-full gap-1 pl-2"
-                      key={chip.key}
-                      variant="secondary"
-                    >
-                      <span className="truncate">{chip.label}</span>
-                      <Button
-                        variant="ghost"
-                        size="inline"
-                        aria-label={`Retirer le filtre ${chip.label}`}
-                        className="hover:text-foreground rounded p-0.5"
-                        onClick={() => removeFilter(chip.key)}
-                        type="button"
-                      >
-                        <X className="size-3" />
-                      </Button>
-                    </Badge>
-                  ))
-                )}
-                {activeFilterChips.length > 0 && (
-                  <Button
-                    className="h-7 px-2 text-xs"
-                    onClick={handleResetFilters}
-                    type="button"
-                    variant="ghost"
-                  >
-                    Réinitialiser
-                  </Button>
-                )}
-              </div>
-              {canExport && (
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground mr-1 text-xs">
-                    Exporter la vue
-                  </span>
-                  {(['csv', 'json'] as const).map((format) => (
-                    <Button
-                      className="h-8 px-2.5 text-xs"
-                      disabled={isExporting}
-                      key={format}
-                      onClick={() => void handleExport(format)}
-                      type="button"
-                      variant="outline"
-                    >
-                      {isExporting ? (
-                        <Loader2 className="size-3.5 animate-spin" />
-                      ) : (
-                        <Download className="size-3.5" />
-                      )}
-                      {format.toUpperCase()}
-                    </Button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
 
           <section aria-labelledby="journal-events-title" className="space-y-2">
             <div className="flex flex-wrap items-end justify-between gap-2 px-1">
@@ -1727,20 +599,6 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                     : ''}
                 </p>
               </div>
-              {hasLoadedOnce && visibilityResolved && (
-                <Badge
-                  title={
-                    sensitiveDetailsVisible
-                      ? 'Les détails techniques et confidentiels sont visibles.'
-                      : 'Les changements de nom et de statut restent visibles. Les identifiants, emails, rôles, permissions, adresses IP et détails techniques sont masqués.'
-                  }
-                  variant="outline"
-                >
-                  {sensitiveDetailsVisible
-                    ? 'Détails sensibles visibles'
-                    : 'Détails sensibles masqués'}
-                </Badge>
-              )}
             </div>
 
             <div aria-live="polite" className="sr-only">
@@ -1752,7 +610,10 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
               </span>
             )}
 
-            <div aria-busy={isInitialLoading || isRefreshing} id={eventsId}>
+            <div
+              aria-busy={isInitialLoading || isRefreshing || isLoadingMore}
+              id={eventsId}
+            >
               {!hasLoadedOnce && isInitialLoading ? (
                 <JournalSkeleton />
               ) : error && logs.length === 0 ? (
@@ -1802,31 +663,51 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
                           Réessayer
                         </Button>
                       }
-                      description="Les événements déjà chargés restent affichés."
+                      description="Les résultats de la dernière lecture réussie restent affichés ; ils peuvent différer des filtres sélectionnés."
                       kind="error"
                       title={error}
                     />
                   )}
-                  {logs.map((log) => (
-                    <JournalCard
-                      isOpen={openLogId === log.id}
-                      key={log.id}
-                      log={log}
-                      onIdentityFilter={handleIdentityFilter}
-                      onToggle={() =>
-                        setOpenLogId((currentId) =>
-                          currentId === log.id ? null : log.id,
-                        )
-                      }
-                    />
-                  ))}
-                  {nextCursor && (
+                  <div className="border-border-default bg-surface-panel-raised overflow-hidden rounded-[8px] border">
+                    <div
+                      aria-hidden="true"
+                      className="text-muted-foreground border-border-divider hidden grid-cols-[1.25rem_minmax(0,1fr)_10rem_10rem_1.25rem] gap-3 border-b px-4 py-2 text-xs @min-[48rem]/page:grid @min-[64rem]/page:grid-cols-[1.25rem_minmax(0,1fr)_13rem_10rem_1.25rem]"
+                    >
+                      <span />
+                      <span>Événement · objet concerné</span>
+                      <span>Auteur</span>
+                      <span className="text-right">Date et heure</span>
+                      <span />
+                    </div>
+                    {logs.map((log) => (
+                      <JournalEventRow
+                        isOpen={openLogId === log.id}
+                        key={log.id}
+                        log={log}
+                        onIdentityFilter={handleIdentityFilter}
+                        onToggle={() =>
+                          setOpenLogId((currentId) =>
+                            currentId === log.id ? null : log.id,
+                          )
+                        }
+                      />
+                    ))}
+                  </div>
+                  {nextCursor && !error && (
                     <div className="pt-2 text-center">
                       <Button
-                        disabled={
+                        className="h-11 rounded-[8px] lg:h-10"
+                        aria-disabled={
                           isLoadingMore || isRefreshing || isInitialLoading
                         }
-                        onClick={() => void fetchLogs(nextCursor)}
+                        onClick={() => {
+                          if (
+                            !isLoadingMore &&
+                            !isRefreshing &&
+                            !isInitialLoading
+                          )
+                            void fetchLogs(nextCursor);
+                        }}
                         size="sm"
                         type="button"
                         variant="outline"
@@ -1850,13 +731,13 @@ export const SystemActivityJournalPage: FC<SystemActivityJournalPageProps> = ({
       <AdminStepUpDialog
         actorLoginName={userData?.loginName ?? ''}
         description="Confirmez votre identité pour exporter les événements et leurs détails autorisés."
-        onCancel={() => setPendingExportFormat(null)}
+        onCancel={() => setPendingExport(null)}
         onComplete={async () => {
-          const format = pendingExportFormat;
-          setPendingExportFormat(null);
-          if (format) await handleExport(format);
+          const request = pendingExport;
+          setPendingExport(null);
+          if (request) await handleExport(request);
         }}
-        open={pendingExportFormat !== null}
+        open={pendingExport !== null}
         title="Confirmer l’export du journal"
       />
     </AuthenticatedLayout>
