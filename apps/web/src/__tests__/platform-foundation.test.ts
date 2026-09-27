@@ -41,7 +41,7 @@ describe('platform foundation without a persistent worker', () => {
     );
 
     expect(source).toContain('purge_expired_audit_logs');
-    expect(source).toContain('notification.deleteMany');
+    expect(source).toContain('purgeExpiredNotifications(transaction, now)');
     expect(source).not.toContain('backgroundJob');
     expect(source).not.toContain('while (');
   });

@@ -7,6 +7,7 @@ Utiliser un nom stable compréhensible, sans multiplier les copies datées.
 | Page | Suivi | État du document |
 | --- | --- | --- |
 | Utilisateurs — liste | [systeme-utilisateurs.md](systeme-utilisateurs.md) | Repères issus du travail existant ; aucun nouvel audit exécuté pour créer ce référentiel |
+| Paramètres système | [systeme-parametres.md](systeme-parametres.md) | Refonte compacte du 27 septembre 2026 ; brouillons préservés, conflits explicites et concurrence de conservation vérifiée sur PostgreSQL |
 | Navigation générale — sidebar et header | [navigation-generale.md](navigation-generale.md) | Sidebar fixe, recherche affinée et clavier corrigé, notifications compactes avec compteur partagé ; suivi du 27 septembre 2026 |
 
 Pour commencer un nouveau suivi : [modèle de revue](../modeles/revue-page.md).

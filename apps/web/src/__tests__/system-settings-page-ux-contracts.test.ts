@@ -10,6 +10,7 @@ import type { SystemSettingItem } from '$types/platform.types';
 
 import {
   getValidationMessage,
+  isSettingDraftChanged,
   normalizeSetting,
   normalizeSettings,
   SYSTEM_SETTING_KEYS,
@@ -24,6 +25,7 @@ const readSourceFile = (relativePath: string): string => {
 const pageSource = readSourceFile(
   '../features/settings/SystemSettingsPage.tsx',
 );
+const rowSource = readSourceFile('../features/settings/SystemSettingRow.tsx');
 const navigationGuardSource = readSourceFile(
   '../shared/hooks/useUnsavedNavigationGuard.ts',
 );
@@ -86,6 +88,14 @@ describe('system settings page contracts', () => {
     expect(getValidationMessage('ui.defaultPageSize', '25')).toBeNull();
   });
 
+  it('compares numeric drafts consistently while protecting invalid input', () => {
+    expect(isSettingDraftChanged('025', 25)).toBe(false);
+    expect(isSettingDraftChanged('25.0', 25)).toBe(false);
+    expect(isSettingDraftChanged('50', 25)).toBe(true);
+    expect(isSettingDraftChanged('', 25)).toBe(true);
+    expect(isSettingDraftChanged('25.5', 25)).toBe(true);
+  });
+
   it('keeps destructive reductions explicit and password-only', () => {
     expect(pageSource).toContain('Réduire la durée de conservation ?');
     expect(pageSource).toContain('proofKind="password"');
@@ -102,13 +112,10 @@ describe('system settings page contracts', () => {
     expect(pageSource).toContain('hasUnsavedChanges');
     expect(pageSource).toContain('Abandonner les modifications ?');
     expect(pageSource).toContain('Actualisation impossible');
-    expect(pageSource).toContain('const reloaded = await loadSettings()');
     expect(pageSource).toContain('onClick={requestRefresh}');
-    expect(pageSource).toContain('aria-labelledby={titleId}');
-    expect(pageSource).toContain('role="group"');
-    expect(pageSource).toContain('required');
-    expect(pageSource).toContain('aria-label={`Enregistrer — ');
-    expect(pageSource).toContain('actionsDisabled');
+    expect(rowSource).toContain('<form');
+    expect(rowSource).toContain('required');
+    expect(rowSource).toContain('aria-label={`Enregistrer — ');
     expect(navigationGuardSource).toContain("'beforeunload'");
     expect(navigationGuardSource).toContain(
       "document.addEventListener('click'",

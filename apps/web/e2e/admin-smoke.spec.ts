@@ -8,6 +8,7 @@ import type {
   PersonMutationResponse,
   PersonsListResponse,
 } from '../src/features/persons/types/person.types';
+import { expectSystemSettingsDraftSafety } from './system-settings.checks';
 
 function requireEnvironmentVariable(
   name: string,
@@ -955,6 +956,7 @@ test('authenticates and reaches the admin surfaces', async ({ page }) => {
   await expect(page).toHaveURL(/\/recherche\?q=compte$/);
   await expect(searchDialog).toHaveCount(0);
 
+  await expectSystemSettingsDraftSafety(page);
   await page.goto('/systeme/utilisateurs/nouveau');
   await expect(
     page.getByRole('heading', { name: /Nouvel utilisateur|Compte créé/ }),

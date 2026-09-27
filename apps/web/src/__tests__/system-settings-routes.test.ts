@@ -362,6 +362,15 @@ describe('system settings routes', () => {
     expect(mocks.requireRecentPasswordReauthentication).toHaveBeenCalledTimes(
       1,
     );
+    expect(String(mocks.transaction.$queryRaw.mock.calls[0]?.[0])).toContain(
+      'system-setting:notifications.retentionDays',
+    );
+    expect(
+      mocks.transaction.$queryRaw.mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      mocks.transaction.systemSetting.updateMany.mock
+        .invocationCallOrder[0] as number,
+    );
   });
 
   it('compares a missing retention row with its reviewed default', async () => {

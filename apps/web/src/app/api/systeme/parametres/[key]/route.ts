@@ -18,6 +18,7 @@ import {
   parseJsonBody,
 } from '$server/api-response';
 import { createAuditLogWithHeaders } from '$server/auth';
+import { lockNotificationRetention } from '$server/notification-retention';
 import { prisma } from '$server/prisma';
 import { requireRecentPasswordReauthentication } from '$server/sensitive-action';
 import {
@@ -121,8 +122,10 @@ export async function PUT(
         await transaction.$queryRaw`
           SELECT pg_catalog.pg_advisory_xact_lock(
             pg_catalog.hashtextextended('system-setting:audit.retentionDays', 0)
-          )
+          )::text
         `;
+      } else if (key === 'notifications.retentionDays') {
+        await lockNotificationRetention(transaction);
       }
       let updated: Awaited<ReturnType<typeof createSystemSetting>>;
       if (parsed.data.expectedVersion === 0) {

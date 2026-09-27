@@ -1,5 +1,3 @@
-import { Bell, History, ListFilter, type LucideIcon } from 'lucide-react';
-
 import {
   getSystemSettingDefinition,
   isSystemSettingKey,
@@ -10,7 +8,6 @@ import {
 import type { SystemSettingItem } from '$types/platform.types';
 
 type SettingPresentation = {
-  icon: LucideIcon;
   impact: string;
 };
 
@@ -22,19 +19,16 @@ export type NormalizedSystemSettingItem = Omit<SystemSettingItem, 'value'> & {
 /* eslint-disable sort-keys-custom-order/object-keys */
 const SETTING_PRESENTATION = {
   'ui.defaultPageSize': {
-    icon: ListFilter,
     impact:
-      'La nouvelle valeur sera proposée lors des prochains chargements de listes.',
+      'Valeur proposée pour les comptes utilisateurs, les journaux et les notifications. Les listes avec leur propre pagination, comme le répertoire, conservent leur réglage.',
   },
   'notifications.retentionDays': {
-    icon: Bell,
     impact:
-      'La maintenance planifiée supprimera les notifications plus anciennes lors de sa prochaine exécution. Une augmentation ne restaure pas ce qui a déjà été supprimé.',
+      'Concerne les notifications lues, non lues et archivées. Une date d’expiration individuelle peut entraîner leur suppression plus tôt.',
   },
   'audit.retentionDays': {
-    icon: History,
     impact:
-      "La maintenance planifiée supprimera les événements plus anciens lors de sa prochaine exécution. Une augmentation ne restaure pas l'historique supprimé.",
+      'Concerne les événements du journal et les détails des changements associés, y compris l’historique des personnes.',
   },
 } as const satisfies Record<SystemSettingKey, SettingPresentation>;
 /* eslint-enable sort-keys-custom-order/object-keys */
@@ -45,14 +39,13 @@ export const SECTION_DEFINITIONS: ReadonlyArray<{
   title: string;
 }> = [
   {
-    description:
-      "Réglages de présentation appliqués à l'ensemble des utilisateurs.",
+    description: 'Valeurs communes proposées dans les listes concernées.',
     id: 'interface',
     title: 'Interface générale',
   },
   {
     description:
-      'Durées de conservation appliquées par la maintenance planifiée.',
+      'Durées globales appliquées lors des prochaines exécutions de maintenance.',
     id: 'retention',
     title: 'Conservation des données',
   },
@@ -76,9 +69,10 @@ export const formatSettingValue = (
   value: number,
   unit: SystemSettingUnit,
 ): string => {
-  if (unit === 'rows') return `${value} ligne${value > 1 ? 's' : ''}`;
+  const formatted = value.toLocaleString('fr-FR');
+  if (unit === 'rows') return `${formatted} ligne${value > 1 ? 's' : ''}`;
 
-  return `${value} jour${value > 1 ? 's' : ''}`;
+  return `${formatted} jour${value > 1 ? 's' : ''}`;
 };
 
 export const formatUpdatedAt = (updatedAt: string): string => {
@@ -97,6 +91,11 @@ export const getDraftNumber = (value: string): number | null => {
 
   return Number.isInteger(parsedValue) ? parsedValue : null;
 };
+
+export const isSettingDraftChanged = (
+  draft: string,
+  currentValue: number,
+): boolean => getDraftNumber(draft) !== currentValue;
 
 export const getValidationMessage = (
   key: SystemSettingKey,
