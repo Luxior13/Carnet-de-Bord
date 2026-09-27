@@ -67,14 +67,16 @@ const SettingsSkeleton: FC = () => (
     className="space-y-5"
     role="status"
   >
-    {[1, 2].map((rows) => (
+    {SECTION_DEFINITIONS.map((section) => (
       <div
         className="border-border-default overflow-hidden rounded-[8px] border"
-        key={rows}
+        key={section.id}
       >
         <Skeleton className="h-20 rounded-none" />
-        {Array.from({ length: rows }, (_, index) => (
-          <Skeleton className="mt-px h-36 rounded-none" key={index} />
+        {SYSTEM_SETTING_KEYS.filter(
+          (key) => getSystemSettingDefinition(key).section === section.id,
+        ).map((key) => (
+          <Skeleton className="mt-px h-36 rounded-none" key={key} />
         ))}
       </div>
     ))}

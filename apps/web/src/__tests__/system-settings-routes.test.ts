@@ -104,23 +104,29 @@ describe('system settings routes', () => {
     mocks.transaction.$queryRaw.mockResolvedValue([]);
     mocks.transaction.systemSetting.updateMany.mockResolvedValue({ count: 1 });
     mocks.transaction.systemSetting.findUnique.mockResolvedValue({
-      description: 'Nombre de lignes proposé par défaut dans les listes',
-      key: 'ui.defaultPageSize',
+      description: 'Durée de conservation des notifications en jours',
+      key: 'notifications.retentionDays',
       updatedAt: UPDATED_AT,
-      value: 50,
+      value: 365,
       version: 3,
     });
     mocks.createAuditLogWithHeaders.mockResolvedValue(undefined);
   });
 
-  it('returns the three closed settings and ignores stored descriptions or unknown keys', async () => {
+  it('returns the two closed settings and ignores stored descriptions, retired or unknown keys', async () => {
     mocks.prisma.systemSetting.findMany.mockResolvedValue([
       {
         description: '<script>unsafe</script>',
+        key: 'notifications.retentionDays',
+        updatedAt: UPDATED_AT,
+        value: 365,
+        version: 2,
+      },
+      {
         key: 'ui.defaultPageSize',
         updatedAt: UPDATED_AT,
-        value: 50,
-        version: 2,
+        value: 100,
+        version: 4,
       },
       {
         key: 'unknown.setting',
@@ -145,21 +151,17 @@ describe('system settings routes', () => {
       expect.objectContaining({
         where: {
           key: {
-            in: expect.arrayContaining([
-              'audit.retentionDays',
-              'notifications.retentionDays',
-              'ui.defaultPageSize',
-            ]),
+            in: ['audit.retentionDays', 'notifications.retentionDays'],
           },
         },
       }),
     );
-    expect(body.data).toHaveLength(3);
+    expect(body.data).toHaveLength(2);
     expect(body.data).toContainEqual(
       expect.objectContaining({
-        description: 'Nombre de lignes proposé par défaut dans les listes',
-        key: 'ui.defaultPageSize',
-        value: 50,
+        description: 'Durée de conservation des notifications en jours',
+        key: 'notifications.retentionDays',
+        value: 365,
         version: 2,
       }),
     );
@@ -196,11 +198,7 @@ describe('system settings routes', () => {
     expect(mocks.prisma.systemSetting.findMany).not.toHaveBeenCalled();
   });
 
-  it('updates page size without requesting a password', async () => {
-    mocks.prisma.systemSetting.findUnique.mockResolvedValueOnce({
-      value: 25,
-      version: 2,
-    });
+  it('rejects the retired page-size setting before reading or writing it', async () => {
     const { PUT } = await import('$app/api/systeme/parametres/[key]/route');
 
     const response = await PUT(
@@ -211,29 +209,31 @@ describe('system settings routes', () => {
       routeParams('ui.defaultPageSize'),
     );
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(404);
     expect(mocks.requirePermission).toHaveBeenCalledWith(
       actor,
       PERMISSIONS.SETTINGS.UPDATE,
     );
     expect(mocks.requireRecentPasswordReauthentication).not.toHaveBeenCalled();
-    expect(mocks.transaction.systemSetting.updateMany).toHaveBeenCalled();
+    expect(mocks.prisma.systemSetting.findUnique).not.toHaveBeenCalled();
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+    expect(mocks.createAuditLogWithHeaders).not.toHaveBeenCalled();
   });
 
   it('returns the existing value without a version or audit change for a no-op', async () => {
     mocks.prisma.systemSetting.findUnique.mockResolvedValueOnce({
       updatedAt: UPDATED_AT,
-      value: 25,
+      value: 180,
       version: 2,
     });
     const { PUT } = await import('$app/api/systeme/parametres/[key]/route');
 
     const response = await PUT(
-      createPutRequest('ui.defaultPageSize', {
+      createPutRequest('notifications.retentionDays', {
         expectedVersion: 2,
-        value: 25,
+        value: 180,
       }),
-      routeParams('ui.defaultPageSize'),
+      routeParams('notifications.retentionDays'),
     );
     const body = await response.json();
 
@@ -258,11 +258,11 @@ describe('system settings routes', () => {
     const { PUT } = await import('$app/api/systeme/parametres/[key]/route');
 
     const response = await PUT(
-      createPutRequest('ui.defaultPageSize', {
+      createPutRequest('notifications.retentionDays', {
         expectedVersion: 0,
-        value: 50,
+        value: 365,
       }),
-      routeParams('ui.defaultPageSize'),
+      routeParams('notifications.retentionDays'),
     );
 
     expect(response.status).toBe(403);
@@ -496,26 +496,26 @@ describe('system settings routes', () => {
 
   it('does not disguise an audit unique error as a setting conflict', async () => {
     mocks.prisma.systemSetting.findUnique.mockResolvedValueOnce({
-      value: 25,
+      value: 180,
       version: 2,
     });
     mocks.createAuditLogWithHeaders.mockRejectedValueOnce({ code: 'P2002' });
     const { PUT } = await import('$app/api/systeme/parametres/[key]/route');
 
     const response = await PUT(
-      createPutRequest('ui.defaultPageSize', {
+      createPutRequest('notifications.retentionDays', {
         expectedVersion: 2,
-        value: 50,
+        value: 365,
       }),
-      routeParams('ui.defaultPageSize'),
+      routeParams('notifications.retentionDays'),
     );
 
     expect(response.status).toBe(500);
   });
 
   it.each([
-    ['ui.defaultPageSize', 9],
-    ['ui.defaultPageSize', 101],
+    ['notifications.retentionDays', 29],
+    ['audit.retentionDays', 3651],
     ['audit.retentionDays', 364],
     ['notifications.retentionDays', 731],
   ])('rejects the out-of-range value for %s', async (key, value) => {

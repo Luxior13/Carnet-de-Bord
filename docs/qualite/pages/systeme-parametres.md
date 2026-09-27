@@ -4,7 +4,8 @@
 
 - Route : `/systeme/parametres`, module `features/settings`.
 - Public : administrateurs autorisés à consulter et modifier la configuration globale.
-- Dernière passe : 27 septembre 2026, après accord sur l'analyse initiale du code `b24dcdf`.
+- Dernière passe : 27 septembre 2026, retrait approuvé du réglage global de pagination,
+  après la refonte et les corrections de conservation.
 - État : présentation et corrections implémentées, contrôles ciblés réussis.
   Les limites d'exploitation et de validation complète figurent ci-dessous.
 - Références : [revue générale](../REVUE_GENERALE.md),
@@ -21,7 +22,6 @@ indépendant par réglage, car leurs risques diffèrent.
 
 | Réglage | Défaut logiciel | Bornes | Portée réelle |
 | --- | --- | --- | --- |
-| Lignes par défaut | 25 | 10–100 | Pagination de certaines API lorsque la requête ne fournit pas sa propre limite ; le répertoire conserve sa pagination |
 | Notifications | 180 jours | 30–730 | Notifications lues, non lues et archivées ; une expiration individuelle peut entraîner une suppression antérieure |
 | Journal d'activité | 1 095 jours | 365–3 650 | Journal et détails des changements associés, y compris historique des personnes |
 
@@ -30,15 +30,28 @@ La portée est globale, sans déclinaison par équipe, saison ou entité juridiq
 Une augmentation ne restaure pas les données purgées. Une réduction conserve la
 confirmation explicite et la preuve récente de mot de passe côté serveur.
 
+Le nombre de lignes est désormais un défaut logiciel commun de **25**, porté par
+`PAGINATION.DEFAULT_LIMIT`. Les utilisateurs, journaux, notifications et répertoire
+utilisent cette base ; leurs limites explicites et plafonds restent inchangés.
+Une exception doit être justifiée par la page. Un sélecteur local ou une préférence
+personnelle ne s'ajoute que si utile, sans réglage administrateur global.
+
+`ui.defaultPageSize` est retiré du catalogue et n'est plus lu : une ancienne ligne
+en base est ignorée et un PUT sur cette clé retourne 404. Elle n'est pas supprimée
+physiquement, et les événements d'audit historiques sont préservés. Aucune migration
+SQL n'est nécessaire. Une ancienne page de paramètres ouverte doit être rechargée
+après déploiement. Le cache local dédié à cette clé est supprimé ; les durées
+restent relues en base avant utilisation.
+
 ### Composition retenue
 
 - Titre simple, description courte « Réglages globaux de Noctambule. » et Actualiser secondaire.
-- Deux panneaux compacts : Interface générale et Conservation des données.
+- Un panneau compact : Conservation des données, avec ses deux réglages.
 - Fond `surface-panel-raised`, bleu de la famille de la sidebar ; rayons locaux
   de 8 px, pas d'ombre sur les panneaux ni de hero décoratif.
 - Explication à gauche, champ/unité/action à droite quand la largeur le permet ;
   empilement sur petit écran. Sidebar et géométrie globale inchangées.
-- Trois boutons Enregistrer au repos ; Annuler et Rétablir le défaut seulement
+- Deux boutons Enregistrer au repos ; Annuler et Rétablir le défaut seulement
   quand utiles. Hauteur des actions de réglage : 40 px sur grand écran, 44 px en mobile.
 - État « Non enregistré » discret, sans fond coloré ; valeur appliquée affichée
   lorsqu'elle diffère. « Valeur par défaut » remplace « Recommandé ».
@@ -73,11 +86,11 @@ Profondeur fonctionnelle pour l'interface, sensible pour les effets de conservat
 
 | ID | Sujet | Classement | Motif |
 | --- | --- | --- | --- |
-| Q01 | Besoin et métier | À examiner | Trois réglages globaux et des conséquences différentes |
+| Q01 | Besoin et métier | À examiner | Deux réglages globaux de conservation ; pagination sortie de la configuration administrateur |
 | Q02 | Parcours et contenu | À examiner | Compréhension de la portée, du défaut et de l'enregistrement |
 | Q03 | Composition et couleurs | À examiner | Hero, cartes, densité, actions et badges |
 | Q04 | Accessibilité et adaptation | À examiner | Champs, focus, clavier, dialogues et petit écran |
-| Q05 | Listes et pagination | À examiner | Consommateurs indirects du nombre de lignes |
+| Q05 | Listes et pagination | À examiner | Défaut partagé de 25, limites explicites et plafonds préservés |
 | Q06 | Formulaires et validations | À examiner | Brouillons, bornes, annulation et confirmation |
 | Q07 | Retours immédiats | À examiner | Succès, erreur et conflit |
 | Q08 | Notifications | À examiner | Conservation des notifications existantes, sans nouvel événement requis |
@@ -85,12 +98,12 @@ Profondeur fonctionnelle pour l'interface, sensible pour les effets de conservat
 | Q10 | Sécurité | À examiner | API, CSRF et preuve de mot de passe |
 | Q11 | Confidentialité et conservation | À examiner | Suppression différée et portée réelle des durées |
 | Q12 | Schéma Prisma | À examiner | Valeur JSON, version, auteur et relations supprimées en cascade |
-| Q13 | Migrations | Hors impact | Correction sans modification de format ; SQL existant lu pour comprendre la purge |
+| Q13 | Migrations | À examiner | Clé retirée sans changement de schéma ; ancienne valeur ignorée, compatibilité de déploiement documentée |
 | Q14 | API et concurrence | À examiner | Versions concurrentes et maintenance destructive |
 | Q15 | Audit | À examiner | Modification tracée et historique lui-même soumis à conservation |
-| Q16 | Suppression | À examiner | Réduction d'une durée et nettoyage ultérieur |
+| Q16 | Suppression | À examiner | Retrait du réglage de pagination ; réduction d'une durée et nettoyage ultérieur |
 | Q17 | Performance | À examiner | Catalogue borné ; coût indirect de la pagination et des purges |
-| Q18 | Cache | À examiner | Fraîcheur des réglages consommés ailleurs |
+| Q18 | Cache | À examiner | Cache du nombre de lignes supprimé ; conservation toujours lue sans cache |
 | Q19 | Architecture | À examiner | Catalogue partagé, écran, routes et maintenance |
 | Q20 | Documents et fichiers | Non applicable | Aucun dépôt ou document produit par cette page ; sauvegarde traitée en Q29 |
 | Q21 | Imports et exports | Non applicable | Aucun parcours d'import/export métier nécessaire ici |
@@ -104,6 +117,13 @@ Profondeur fonctionnelle pour l'interface, sensible pour les effets de conservat
 | Q29 | Sauvegarde et restauration | À examiner | Persistance des réglages et limites de récupération après purge |
 | Q30 | Configuration et documentation | À examiner | Catalogue fermé, portée documentée et suivi réutilisable |
 
+Pour le seul retrait de pagination : Q01–Q06, Q09–Q10, Q12–Q14, Q16–Q19 et
+Q27–Q30 examinés (parcours, consommateurs, compatibilité et documentation).
+Q07–Q08, Q11, Q15 et Q22–Q23 hors impact : retours, événements, durées,
+historique et maintenance inchangés ; les régressions ciblées protègent leur usage.
+Q20–Q21 et Q24–Q26 non applicables : aucun fichier métier, échange en masse,
+engagement juridique, parcours sportif ou financier concerné.
+
 ## Résolution des constats initiaux
 
 | ID | Constat initial | Traitement et état actuel |
@@ -115,14 +135,36 @@ Profondeur fonctionnelle pour l'interface, sensible pour les effets de conservat
 | PAR-05 | Surfaces trop sombres, arrondis et effets | Panneaux bleus, arrondis locaux de 8 px, dialogues de confirmation locaux sans ombre/zoom ; primitives générales inchangées |
 | PAR-06 | “Recommandé” sans recommandation contextuelle | Libellés remplacés par “Valeur par défaut”, champs nommés et bornes explicites |
 | PAR-07 | Valeur appliquée confondue avec la saisie | État non enregistré et valeur appliquée affichés ; actions secondaires contextuelles |
-| PAR-08 | Portée trop générale de la pagination | Texte précisant les consommateurs et les paginations propres, sans changer les autres listes |
+| PAR-08 | Portée trop générale de la pagination | Réglage global retiré après décision utilisateur ; défaut partagé de 25 dans le code, exceptions locales à justifier |
 | PAR-09 | Alertes répétées, conséquences incomplètes | Texte de portée par réglage, détail des notifications expirées et de l'historique lié, alerte au moment d'une diminution |
 | PAR-10 | Planification annoncée sans observation | Texte corrigé en “prochaines exécutions de maintenance” ; planificateur réel toujours à vérifier en exploitation |
 | PAR-11 | Erreur uniquement dans un toast éphémère | Retour local persistant et brouillon conservé, vérifiés avec erreur 500 et conflit suivi d'une erreur de lecture |
 | PAR-12 | Faux changement pour `025` | Corrigé ; régression unitaire et navigateur sur une valeur numériquement équivalente |
-| PAR-13 | Clavier, tailles et chargement | Soumission Entrée, focus restauré, cibles harmonisées et squelette de deux groupes ; auteur de modification et lien historique restent à qualifier selon le besoin |
+| PAR-13 | Clavier, tailles et chargement | Soumission Entrée, focus restauré, cibles harmonisées et squelette dérivé du catalogue (un groupe, deux réglages) ; auteur de modification et lien historique restent à qualifier selon le besoin |
 
 ## Contrôles exécutés
+
+### Retrait du réglage de pagination
+
+- **261 tests réussis dans 14 fichiers** : paramètres, catalogue, pagination,
+  notifications, permissions, répertoire et conservation. TypeScript, lint ciblé,
+  formatage du scénario navigateur et `git diff --check` réussis.
+- Le GET expose uniquement les deux durées, même si une ancienne clé de pagination
+  est stockée ; le PUT de la clé retirée est refusé avant lecture ou mutation.
+- Les tests de listes vérifient le défaut de 25, les limites explicites, les plafonds
+  et l'absence de lecture du réglage retiré. Les lectures successives des deux
+  durées utilisent la valeur courante en base.
+- Régression Chromium exécutée sur le composant réel avec shell, session et API
+  simulés : deux champs, absence de la section Interface générale, sauvegarde par
+  Entrée, conservation des deux brouillons, conflit/version, erreur de lecture et
+  reprise, erreur persistante, focus et saisie numérique équivalente.
+- Rendu inspecté à 1 440 et 320 px ; contrôles de débordement à 1 440, 390 et
+  320 px réussis, aucune erreur JavaScript. Le parcours avec authentification réelle
+  et les tests PostgreSQL de maintenance n'ont pas été rejoués pour ce retrait.
+- Captures et montage temporaires supprimés après inspection. La régression
+  navigateur durable reste dans `e2e/system-settings.checks.ts`.
+
+### Passe précédente : refonte et concurrence de conservation
 
 - **53 tests réussis dans 9 fichiers**, dont trois tests PostgreSQL réels.
   Suites : `system-settings-page-ux-contracts`, `system-settings-routes`,
@@ -135,7 +177,7 @@ Profondeur fonctionnelle pour l'interface, sensible pour les effets de conservat
   fin d'une purge. Vérification de l'attente réelle dans `pg_locks`, des données
   conservées et de l'expiration individuelle. Aucune purge des données du site.
 - Régression navigateur durable dans
-  [system-settings.checks.ts](../../../apps/web/e2e/system-settings.checks.ts),
+  [system-settings.checks.ts](../../../../apps/web/e2e/system-settings.checks.ts),
   appelée depuis le smoke administrateur. Exécutée ici sur le montage isolé ;
   le smoke complet avec authentification réelle n'a pas été rejoué.
 - Montage Chromium : composant, styles, formulaires et dialogues réels ; shell,
@@ -170,8 +212,8 @@ Profondeur fonctionnelle pour l'interface, sensible pour les effets de conservat
 
 Les protections de permission, CSRF, preuve de mot de passe, version et audit
 transactionnel ont été examinées dans le code et les tests ciblés. La sauvegarde
-inclut `SystemSetting` ; aucune restauration n'a été exécutée ici. Le cache local
-reste limité au nombre de lignes, jamais aux durées de conservation.
+inclut `SystemSetting` ; aucune restauration n'a été exécutée ici. Les réglages
+de conservation n'utilisent aucun cache local.
 
 ## Questions à reprendre lors de chaque évolution
 
@@ -185,7 +227,7 @@ reste limité au nombre de lignes, jamais aux durées de conservation.
 - Une purge peut-elle utiliser une durée obsolète ? Quelles données et relations
   supprime-t-elle, y compris notifications non lues et historique des personnes ?
 - Qui assume les durées et exceptions ? L'évolution association/société ne doit
-  pas appliquer ces trois réglages à tous les contrats et documents par défaut.
+  pas appliquer ces deux durées à tous les contrats et documents par défaut.
 - Comment constate-t-on l'exécution de la maintenance et ses échecs ? L'écran
   promet-il uniquement ce que le système peut effectivement connaître ?
 - Comment restaurer configuration et données de manière cohérente ? Augmenter
@@ -209,3 +251,4 @@ commande globale de maintenance.
 | --- | --- | --- |
 | 27 septembre 2026 | Analyse complète initiale | Perte de brouillons reproduite, course de purge identifiée, proposition compacte |
 | 27 septembre 2026 | Mise en œuvre approuvée | Présentation reprise, conflits préservant la saisie, concurrence PostgreSQL testée ; incompatibilité `void`/Prisma révélée puis corrigée |
+| 27 septembre 2026 | Retrait du nombre de lignes global | Base commune de 25 dans le code ; deux réglages de conservation, ancienne clé ignorée et cache retiré |

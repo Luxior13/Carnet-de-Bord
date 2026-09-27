@@ -9,12 +9,6 @@ export async function expectSystemSettingsDraftSafety(
     url.pathname.startsWith('/api/systeme/parametres/');
   const settings = [
     {
-      key: 'ui.defaultPageSize',
-      updatedAt: new Date(0).toISOString(),
-      value: 25,
-      version: 0,
-    },
-    {
       key: 'notifications.retentionDays',
       updatedAt: new Date(0).toISOString(),
       value: 180,
@@ -51,7 +45,7 @@ export async function expectSystemSettingsDraftSafety(
       settings[0] = {
         ...current,
         updatedAt: '2026-09-27T12:00:00Z',
-        value: 60,
+        value: 200,
         version: 3,
       };
 
@@ -85,63 +79,72 @@ export async function expectSystemSettingsDraftSafety(
   });
   try {
     await page.goto('/systeme/parametres');
-    const rows = page.locator('[data-setting-key="ui.defaultPageSize"]');
     const notificationsRow = page.locator(
       '[data-setting-key="notifications.retentionDays"]',
     );
-    const input = rows.getByRole('spinbutton');
-    const notifications = notificationsRow.getByRole('spinbutton');
-    const save = rows.getByRole('button', { name: /^Enregistrer/ });
-    await expect(input).toHaveValue('25');
-    await input.fill('50');
-    await notifications.fill('200');
+    const auditRow = page.locator('[data-setting-key="audit.retentionDays"]');
+    const input = notificationsRow.getByRole('spinbutton');
+    const audit = auditRow.getByRole('spinbutton');
+    const save = notificationsRow.getByRole('button', { name: /^Enregistrer/ });
+    await expect(input).toHaveValue('180');
+    await expect(page.getByRole('spinbutton')).toHaveCount(2);
+    await expect(
+      page.getByText('Interface générale', { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByText('Lignes par page', { exact: true }),
+    ).toHaveCount(0);
+    await input.fill('365');
+    await audit.fill('1200');
     await input.press('Enter');
     await expect(
-      rows.getByRole('button', { name: 'Conserver ma saisie' }),
+      notificationsRow.getByRole('button', { name: 'Conserver ma saisie' }),
     ).toBeVisible();
-    await expect(input).toHaveValue('50');
-    await expect(notifications).toHaveValue('200');
+    await expect(input).toHaveValue('365');
+    await expect(audit).toHaveValue('1200');
     await expect(save).toBeDisabled();
-    await rows.getByRole('button', { name: 'Conserver ma saisie' }).click();
+    await notificationsRow
+      .getByRole('button', { name: 'Conserver ma saisie' })
+      .click();
     await expect(input).toBeFocused();
     mode = 'success';
     await save.click();
     await expect(save).toBeDisabled();
-    expect(writes.at(-1)).toEqual({ expectedVersion: 3, value: 50 });
-    await expect(notifications).toHaveValue('200');
-    await notificationsRow
+    expect(writes.at(-1)).toEqual({ expectedVersion: 3, value: 365 });
+    await expect(audit).toHaveValue('1200');
+    await auditRow
       .getByRole('button', { exact: true, name: 'Annuler' })
       .click();
 
-    await input.fill('050');
+    await input.fill('0365');
     await expect(save).toBeDisabled();
     await page.getByRole('button', { exact: true, name: 'Actualiser' }).click();
-    await expect(input).toHaveValue('50');
+    await expect(input).toHaveValue('365');
     await expect(page.getByRole('alertdialog')).toHaveCount(0);
 
     mode = 'error';
-    await input.fill('70');
+    await input.fill('400');
     await save.click();
-    await expect(rows.getByRole('alert')).toHaveText(
+    await expect(notificationsRow.getByRole('alert')).toHaveText(
       'Enregistrement indisponible',
     );
-    await expect(input).toHaveValue('70');
+    await expect(input).toHaveValue('400');
     mode = 'conflict';
     failConflictRead = true;
     await save.click();
-    const retry = rows.getByRole('button', {
+    const retry = notificationsRow.getByRole('button', {
       name: 'Vérifier la valeur actuelle',
     });
     await expect(retry).toBeEnabled();
-    await expect(input).toHaveValue('70');
+    await expect(input).toHaveValue('400');
     await expect(save).toBeDisabled();
     failConflictRead = false;
     const writeCount = writes.length;
     await retry.click();
-    await rows
+    await notificationsRow
       .getByRole('button', { name: 'Utiliser la valeur actuelle' })
       .click();
-    await expect(input).toHaveValue('60');
+    await expect(input).toHaveValue('200');
     await expect(input).toBeFocused();
     await expect(save).toBeDisabled();
     expect(writes).toHaveLength(writeCount);

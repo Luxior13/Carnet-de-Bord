@@ -5,6 +5,8 @@ import {
 } from 'libphonenumber-js';
 import { z } from 'zod';
 
+import { PAGINATION } from '$constants/pagination.constants';
+
 import {
   isKnownPersonSocialNetwork,
   isSelectablePersonSocialNetwork,
@@ -450,7 +452,12 @@ export const deletePersonSchema = z
 export const personsListQuerySchema = z
   .object({
     cursor: z.string().max(2_048).optional(),
-    limit: z.coerce.number().int().min(1).max(100).default(25),
+    limit: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(100)
+      .default(PAGINATION.DEFAULT_LIMIT),
     q: z.string().trim().max(100).default(''),
     sort: z.enum(PERSON_LIST_SORTS).default('name'),
     structureStatus: z.enum(PERSON_STRUCTURE_STATUSES).optional(),

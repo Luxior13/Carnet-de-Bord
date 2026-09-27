@@ -212,6 +212,13 @@ De haut en bas :
 5. **Listes** : `DataTableSection` avec recherche, filtres, tri et pagination.
 6. **Fiche** : héro compact, puis rail d'onglets, puis sections de l'onglet.
 
+Pagination : partir de **25 éléments**, via `PAGINATION.DEFAULT_LIMIT` partagé
+entre client et serveur. Une page peut définir une exception justifiée par sa
+densité et son usage ; conserver ses plafonds de requête côté serveur. Le nombre
+de lignes ne relève pas des paramètres système administrateur. Ajouter un choix
+local et sa mémorisation par utilisateur/page seulement si le besoin est établi,
+sans imposer ce contrôle à toutes les listes.
+
 Règles : une page n'a qu'un héro ; une action globale vit dans le héro, une
 action locale dans sa section ; un retour contextuel ramène à la liste avec ses
 filtres.

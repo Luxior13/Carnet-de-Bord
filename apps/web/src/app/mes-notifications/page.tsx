@@ -31,7 +31,7 @@ export default async function NotificationsPage({
 
   if (user && canView) {
     try {
-      const limit = await getDefaultNotificationListLimit();
+      const limit = getDefaultNotificationListLimit();
       initialData = await listNotifications({
         limit,
         status: filter,

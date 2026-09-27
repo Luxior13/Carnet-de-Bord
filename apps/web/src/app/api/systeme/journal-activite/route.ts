@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { FEATURES } from '$constants/feature-registry.constants';
+import { PAGINATION } from '$constants/pagination.constants';
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { env } from '$env';
 import type {
@@ -38,13 +39,11 @@ import {
 import { createAuditLog, getAuditRequestContext } from '$server/auth';
 import { prisma } from '$server/prisma';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
-import { getSystemSettingValue } from '$server/system-settings';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
 } from '$types/api.types';
 
-const DEFAULT_LIMIT = 40;
 const MAX_LIMIT = 100;
 const EXPORT_BATCH_SIZE = 500;
 const MAX_EXPORT_ROWS = 50_000;
@@ -100,7 +99,12 @@ const JOURNAL_QUERY_SCHEMA = z
     ...PERSON_JOURNAL_QUERY_SHAPE,
     format: z.enum(['csv', 'json']).optional(),
     from: ISO_DATE_TIME_SCHEMA.optional(),
-    limit: z.coerce.number().int().min(1).max(MAX_LIMIT).default(DEFAULT_LIMIT),
+    limit: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(MAX_LIMIT)
+      .default(PAGINATION.DEFAULT_LIMIT),
     logType: z.enum(['activity', 'connections']).default('activity'),
     outcome: z.enum(AuditOutcome).optional(),
     pageKey: LOCATION_KEY_SCHEMA.optional(),
@@ -272,7 +276,6 @@ const getValidationDetails = (error: z.ZodError): Record<string, string[]> => {
 
 const parseJournalQuery = (
   searchParams: URLSearchParams,
-  defaultPageSize: number,
 ):
   | { data: JournalQuery; success: true }
   | { response: NextResponse<ApiErrorResponse>; success: false } => {
@@ -295,7 +298,6 @@ const parseJournalQuery = (
   }
 
   const query = Object.fromEntries(entries);
-  if (query.limit === undefined) query.limit = String(defaultPageSize);
   const parsedQuery = JOURNAL_QUERY_SCHEMA.safeParse(query);
   if (!parsedQuery.success) {
     return {
@@ -900,11 +902,7 @@ export async function GET(
     );
     if (!permissionCheck.success) return permissionCheck.response;
 
-    const defaultPageSize = await getSystemSettingValue('ui.defaultPageSize');
-    const parsedQuery = parseJournalQuery(
-      new URL(request.url).searchParams,
-      defaultPageSize,
-    );
+    const parsedQuery = parseJournalQuery(new URL(request.url).searchParams);
     if (!parsedQuery.success) return parsedQuery.response;
 
     const query = parsedQuery.data;

@@ -66,10 +66,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
     definition.passwordWhenDecreasing &&
     parsed < setting.value;
   const id = `system-setting-${setting.key.replaceAll('.', '-')}`;
-  const fieldLabel =
-    definition.unit === 'rows'
-      ? 'Lignes par page'
-      : `Durée de conservation — ${definition.label}`;
+  const fieldLabel = `Durée de conservation — ${definition.label}`;
 
   return (
     <form
@@ -96,9 +93,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
               className="text-foreground text-sm font-semibold"
               id={`${id}-title`}
             >
-              {definition.unit === 'rows'
-                ? 'Lignes par page'
-                : definition.label}
+              {definition.label}
             </h3>
             {dirty ? (
               <span className="text-warning border-warning/40 rounded-[4px] border px-1.5 text-xs leading-5">

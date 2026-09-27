@@ -105,7 +105,9 @@ validation de l’intégration réelle.
 - Recherche différée de 400 ms. Filtre ou tri changé : page 1. Rechargement et
   retour depuis une fiche reprennent le contexte URL. La pagination ne constitue
   pas un instantané immuable si un autre administrateur modifie des comptes.
-- Taille de page issue de `ui.defaultPageSize`, plafonnée à 100 par le GET.
+- Taille de page par défaut : `PAGINATION.DEFAULT_LIMIT` (25), plafonnée à 100 par
+  le GET. Les limites explicites restent prises en compte ; aucun réglage global
+  administrateur ne pilote plus cette préférence d'affichage.
   La taille effective est conservée pour les pages suivantes. Borne partagée de
   1 000 pages : filtrer au-delà ; réexaminer la stratégie si ce plafond devient réel.
 - Tri par nom, dernière connexion décroissante (absences en fin), ou création

@@ -23,7 +23,6 @@ import { prisma } from '$server/prisma';
 import { requireRecentPasswordReauthentication } from '$server/sensitive-action';
 import {
   createSystemSetting,
-  invalidateSystemSettingCache,
   SystemSettingConflictError,
   updateSystemSetting,
 } from '$server/system-settings';
@@ -181,7 +180,6 @@ export async function PUT(
 
       return updated;
     });
-    invalidateSystemSettingCache(key);
 
     return NextResponse.json({
       data: {

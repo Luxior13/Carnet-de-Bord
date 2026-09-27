@@ -117,10 +117,7 @@ describe('managed user audit server pagination', () => {
 
     expect(response.status).toBe(200);
     expect(body.data.pagination).toMatchObject({ page: 1, pageSize: 25 });
-    expect(mockPrisma.systemSetting.findUnique).toHaveBeenCalledWith({
-      select: { value: true },
-      where: { key: 'ui.defaultPageSize' },
-    });
+    expect(mockPrisma.systemSetting.findUnique).not.toHaveBeenCalled();
     expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ take: 26 }),
     );

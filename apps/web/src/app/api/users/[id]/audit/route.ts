@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { FEATURES } from '$constants/feature-registry.constants';
+import { PAGINATION } from '$constants/pagination.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { env } from '$env';
 import { requireAuth, requirePermission } from '$server/api-auth';
@@ -17,7 +18,6 @@ import {
 import { createAuditLog, getAuditRequestContext } from '$server/auth';
 import { prisma } from '$server/prisma';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
-import { getSystemSettingValue } from '$server/system-settings';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -769,10 +769,9 @@ export async function GET(
       });
     }
 
-    const defaultPageSize = await getSystemSettingValue('ui.defaultPageSize');
     const { limit: pageSize, page } = parsePagination(
       searchParams,
-      defaultPageSize,
+      PAGINATION.DEFAULT_LIMIT,
       {
         limitParam: 'pageSize',
       },

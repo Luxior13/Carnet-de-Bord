@@ -9,28 +9,39 @@ import {
   isSystemSettingKey,
   SYSTEM_SETTING_CATALOG,
 } from '$constants/system-setting-catalog.constants';
-import { isSystemSettingLocallyCacheable } from '$server/system-settings';
+import { prisma } from '$server/prisma';
+import { getSystemSettingValue } from '$server/system-settings';
+
+vi.mock('$server/prisma', () => ({
+  prisma: { systemSetting: { findUnique: vi.fn() } },
+}));
 
 describe('platform foundation without a persistent worker', () => {
   it('keeps only settings backed by an active runtime capability', () => {
     expect(Object.keys(SYSTEM_SETTING_CATALOG)).toEqual([
       'audit.retentionDays',
       'notifications.retentionDays',
-      'ui.defaultPageSize',
     ]);
     expect(isSystemSettingKey('jobs.retentionDays')).toBe(false);
+    expect(isSystemSettingKey('ui.defaultPageSize')).toBe(false);
     expect(getSystemSettingDefinition('audit.retentionDays').defaultValue).toBe(
       1_095,
     );
   });
 
-  it('never caches destructive retention values locally', () => {
-    expect(isSystemSettingLocallyCacheable('audit.retentionDays')).toBe(false);
-    expect(isSystemSettingLocallyCacheable('notifications.retentionDays')).toBe(
-      false,
-    );
-    expect(isSystemSettingLocallyCacheable('ui.defaultPageSize')).toBe(true);
-  });
+  it.each(['audit.retentionDays', 'notifications.retentionDays'] as const)(
+    'reads the latest stored retention value for %s',
+    async (key) => {
+      const read = vi.mocked(prisma.systemSetting.findUnique);
+      read.mockReset();
+      read.mockResolvedValueOnce({ value: 365 } as never);
+      read.mockResolvedValueOnce({ value: 730 } as never);
+
+      expect(await getSystemSettingValue(key)).toBe(365);
+      expect(await getSystemSettingValue(key)).toBe(730);
+      expect(read).toHaveBeenCalledTimes(2);
+    },
+  );
 
   it('uses a one-shot maintenance command and no durable queue', () => {
     // The URL is a test-owned constant resolved relative to this test file.

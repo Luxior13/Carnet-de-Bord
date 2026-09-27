@@ -18,10 +18,6 @@ export type NormalizedSystemSettingItem = Omit<SystemSettingItem, 'value'> & {
 /* UI order follows the page, not lexical key order. */
 /* eslint-disable sort-keys-custom-order/object-keys */
 const SETTING_PRESENTATION = {
-  'ui.defaultPageSize': {
-    impact:
-      'Valeur proposée pour les comptes utilisateurs, les journaux et les notifications. Les listes avec leur propre pagination, comme le répertoire, conservent leur réglage.',
-  },
   'notifications.retentionDays': {
     impact:
       'Concerne les notifications lues, non lues et archivées. Une date d’expiration individuelle peut entraîner leur suppression plus tôt.',
@@ -39,11 +35,6 @@ export const SECTION_DEFINITIONS: ReadonlyArray<{
   title: string;
 }> = [
   {
-    description: 'Valeurs communes proposées dans les listes concernées.',
-    id: 'interface',
-    title: 'Interface générale',
-  },
-  {
     description:
       'Durées globales appliquées lors des prochaines exécutions de maintenance.',
     id: 'retention',
@@ -52,7 +43,6 @@ export const SECTION_DEFINITIONS: ReadonlyArray<{
 ];
 
 export const SYSTEM_SETTING_KEYS = [
-  'ui.defaultPageSize',
   'notifications.retentionDays',
   'audit.retentionDays',
 ] as const satisfies readonly SystemSettingKey[];

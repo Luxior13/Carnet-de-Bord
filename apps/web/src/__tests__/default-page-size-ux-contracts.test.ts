@@ -26,7 +26,7 @@ const historySource = readSourceFile(
 );
 
 describe('reviewed default page-size UX contracts', () => {
-  it('lets list APIs apply ui.defaultPageSize instead of client constants', () => {
+  it('lets list APIs apply the shared page size instead of client constants', () => {
     expect(usersSource).not.toContain('USERS_PER_PAGE');
     expect(usersSource).toContain(
       'const effectivePageSizeRef = useRef<number | null>(null)',

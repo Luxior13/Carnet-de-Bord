@@ -3,6 +3,7 @@ import { AuditAction, AuditCategory } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { PAGINATION } from '$constants/pagination.constants';
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { PROTECTED_USER_PUBLIC_DISPLAY_NAME } from '$constants/protected-user.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
@@ -22,7 +23,6 @@ import {
 } from '$server/notifications';
 import { prisma } from '$server/prisma';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
-import { getSystemSettingValue } from '$server/system-settings';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -88,11 +88,9 @@ export async function GET(
       return apiErrors.validation('Filtre de notifications invalide');
     }
     const status = parsedStatus.data;
-    const configuredDefaultLimit =
-      await getSystemSettingValue('ui.defaultPageSize');
     const defaultLimit = Math.max(
       1,
-      Math.min(configuredDefaultLimit, NOTIFICATION_MAX_LIMIT),
+      Math.min(PAGINATION.DEFAULT_LIMIT, NOTIFICATION_MAX_LIMIT),
     );
     const limit = parseCursorPageSize(
       searchParams,

@@ -5,7 +5,6 @@ const mocks = vi.hoisted(() => ({
   createAuditLogWithHeaders: vi.fn(),
   createNotification: vi.fn(),
   findMany: vi.fn(),
-  getSystemSettingValue: vi.fn(),
   notificationCount: vi.fn(),
   recipientUpdateMany: vi.fn(),
   requireAuth: vi.fn(),
@@ -52,10 +51,6 @@ vi.mock('$server/sensitive-action', () => ({
   requireRecentSensitiveActionProof: mocks.requireRecentSensitiveActionProof,
 }));
 
-vi.mock('$server/system-settings', () => ({
-  getSystemSettingValue: mocks.getSystemSettingValue,
-}));
-
 const currentUser = {
   id: 'user-current',
   isProtected: false,
@@ -72,7 +67,6 @@ describe('personal notification routes', () => {
       user: currentUser,
     });
     mocks.requirePermission.mockReturnValue({ success: true });
-    mocks.getSystemSettingValue.mockResolvedValue(37);
     mocks.notificationCount.mockResolvedValue(3);
     mocks.findMany.mockResolvedValue([
       {
@@ -164,23 +158,21 @@ describe('personal notification routes', () => {
     expect(response.status).toBe(200);
     expect(mocks.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        take: 38,
+        take: 26,
         where: expect.objectContaining({
           archivedAt: { not: null },
           userId: currentUser.id,
         }),
       }),
     );
-    expect(mocks.getSystemSettingValue).toHaveBeenCalledWith(
-      'ui.defaultPageSize',
-    );
   });
 
-  it('caps the configured default page size to the notification limit', async () => {
-    mocks.getSystemSettingValue.mockResolvedValueOnce(100);
+  it('caps an explicit page size to the notification limit', async () => {
     const { GET } = await import('$app/api/notifications/route');
     const response = await GET(
-      new NextRequest('http://localhost/api/notifications?status=all'),
+      new NextRequest(
+        'http://localhost/api/notifications?status=all&limit=100',
+      ),
     );
 
     expect(response.status).toBe(200);

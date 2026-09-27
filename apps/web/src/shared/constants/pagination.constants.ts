@@ -6,7 +6,7 @@ export const PAGINATION = {
   /**
    * Default number of items per page when not specified.
    */
-  DEFAULT_LIMIT: 50,
+  DEFAULT_LIMIT: 25,
 
   /**
    * Maximum number of items that can be requested per page.

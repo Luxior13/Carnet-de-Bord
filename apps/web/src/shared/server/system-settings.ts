@@ -11,19 +11,6 @@ import { prisma } from '$server/prisma';
 
 type SettingWriteClient = Pick<Prisma.TransactionClient, 'systemSetting'>;
 type SettingReadClient = Pick<Prisma.TransactionClient, 'systemSetting'>;
-const SYSTEM_SETTING_CACHE_TTL_MS = 30_000;
-const settingCache = new Map<
-  SystemSettingKey,
-  { expiresAt: number; value: unknown }
->();
-
-export const invalidateSystemSettingCache = (key: SystemSettingKey): void => {
-  settingCache.delete(key);
-};
-
-export const isSystemSettingLocallyCacheable = (
-  key: SystemSettingKey,
-): boolean => key === 'ui.defaultPageSize';
 
 export type SystemSettingValue = number;
 
@@ -49,15 +36,6 @@ export const getSystemSettingValue = async <TKey extends SystemSettingKey>(
   const definition = SYSTEM_SETTING_DEFINITIONS[key];
   // Retention values are intentionally never cached: a maintenance command
   // must always read the latest reviewed duration before deleting data.
-  const canUseCache =
-    isSystemSettingLocallyCacheable(key) &&
-    client === prisma &&
-    process.env.NODE_ENV !== 'test';
-  const cached = canUseCache ? settingCache.get(key) : undefined;
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.value as SystemSettingValue;
-  }
-
   const setting = await client.systemSetting.findUnique({
     select: { value: true },
     where: { key },
@@ -72,12 +50,6 @@ export const getSystemSettingValue = async <TKey extends SystemSettingKey>(
         metadata: { key },
       });
     }
-  }
-  if (canUseCache) {
-    settingCache.set(key, {
-      expiresAt: Date.now() + SYSTEM_SETTING_CACHE_TTL_MS,
-      value,
-    });
   }
 
   return value;

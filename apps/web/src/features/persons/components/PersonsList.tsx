@@ -23,6 +23,7 @@ import React, {
 } from 'react';
 
 import { ContentState } from '$components/layout/ContentState';
+import { PAGINATION } from '$constants/pagination.constants';
 import { PAGE_PATHS, personDetailPath } from '$constants/routes.constants';
 import { Button } from '$ui/button';
 import {
@@ -82,7 +83,7 @@ type PersonsListProps = {
 
 type StatusFilter = 'ALL' | PersonStructureStatus;
 
-const PAGE_LIMIT = 25;
+const PAGE_LIMIT = PAGINATION.DEFAULT_LIMIT;
 const SEARCH_DEBOUNCE_MS = 300;
 const LIST_PATH = PAGE_PATHS.persons;
 

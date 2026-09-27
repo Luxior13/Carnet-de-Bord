@@ -30,7 +30,6 @@ export default async function PersonsPage({
   ]);
   const parsed = personsListQuerySchema.safeParse({
     cursor: firstValue(params.cursor),
-    limit: 25,
     q: firstValue(params.q),
     sort: firstValue(params.sort),
     structureStatus: firstValue(params.structureStatus),

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { FEATURES } from '$constants/feature-registry.constants';
+import { PAGINATION } from '$constants/pagination.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { matchesProtectedUserPublicIdentity } from '$constants/protected-user.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
@@ -20,7 +21,6 @@ import {
 } from '$server/auth';
 import { prisma } from '$server/prisma';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
-import { getSystemSettingValue } from '$server/system-settings';
 import { protectUserIdentityForActor } from '$server/user-visibility';
 import {
   type ApiErrorResponse,
@@ -147,10 +147,9 @@ export async function GET(
       : { isProtected: false };
 
     const { searchParams } = new URL(request.url);
-    const defaultPageSize = await getSystemSettingValue('ui.defaultPageSize');
     const { limit, page, skip } = parsePagination(
       searchParams,
-      defaultPageSize,
+      PAGINATION.DEFAULT_LIMIT,
       {
         maxLimit: 100,
       },

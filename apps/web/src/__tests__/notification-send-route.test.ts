@@ -42,9 +42,6 @@ vi.mock('$server/prisma', () => ({
 vi.mock('$server/sensitive-action', () => ({
   requireRecentSensitiveActionProof: mocks.requireRecentSensitiveActionProof,
 }));
-vi.mock('$server/system-settings', () => ({
-  getSystemSettingValue: vi.fn(),
-}));
 
 const actor = {
   id: 'admin-1',

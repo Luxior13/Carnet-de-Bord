@@ -41,12 +41,11 @@ const buildSetting = (key: SystemSettingKey): SystemSettingItem => ({
 describe('system settings page contracts', () => {
   it('renders the complete reviewed catalog in deliberate UI order', () => {
     expect(SYSTEM_SETTING_KEYS).toEqual([
-      'ui.defaultPageSize',
       'notifications.retentionDays',
       'audit.retentionDays',
     ]);
     expect(normalizeSettings(SYSTEM_SETTING_KEYS.map(buildSetting)).size).toBe(
-      3,
+      2,
     );
   });
 
@@ -60,32 +59,34 @@ describe('system settings page contracts', () => {
           ...buildSetting('notifications.retentionDays'),
           key: 'notifications.retentionDays',
         },
-        'ui.defaultPageSize',
+        'audit.retentionDays',
       ),
     ).toThrow('Catalogue de paramètres incomplet');
     expect(() =>
       normalizeSetting(
         {
-          ...buildSetting('ui.defaultPageSize'),
+          ...buildSetting('notifications.retentionDays'),
           updatedAt: 'not-a-date',
           version: 1,
         },
-        'ui.defaultPageSize',
+        'notifications.retentionDays',
       ),
     ).toThrow('Catalogue de paramètres incomplet');
   });
 
   it('validates integer values and the reviewed bounds locally', () => {
-    expect(getValidationMessage('ui.defaultPageSize', '')).toBe(
+    expect(getValidationMessage('notifications.retentionDays', '')).toBe(
       'Saisissez un nombre entier.',
     );
-    expect(getValidationMessage('ui.defaultPageSize', '10.5')).toBe(
+    expect(getValidationMessage('notifications.retentionDays', '10.5')).toBe(
       'Saisissez un nombre entier.',
     );
-    expect(getValidationMessage('ui.defaultPageSize', '9')).toContain(
-      'entre 10 et 100',
+    expect(getValidationMessage('notifications.retentionDays', '29')).toContain(
+      'entre 30 et 730',
     );
-    expect(getValidationMessage('ui.defaultPageSize', '25')).toBeNull();
+    expect(
+      getValidationMessage('notifications.retentionDays', '180'),
+    ).toBeNull();
   });
 
   it('compares numeric drafts consistently while protecting invalid input', () => {

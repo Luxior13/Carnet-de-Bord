@@ -3,6 +3,7 @@ import 'server-only';
 import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
+import { PAGINATION } from '$constants/pagination.constants';
 import { PROTECTED_USER_PUBLIC_DISPLAY_NAME } from '$constants/protected-user.constants';
 import {
   buildCursorPaginationMeta,
@@ -10,7 +11,6 @@ import {
   hashCursorFilters,
 } from '$server/cursor-pagination';
 import { prisma } from '$server/prisma';
-import { getSystemSettingValue } from '$server/system-settings';
 import type {
   NotificationItem,
   NotificationListData,
@@ -32,11 +32,8 @@ export type NotificationListStatus = z.infer<
   typeof notificationListStatusSchema
 >;
 
-export const getDefaultNotificationListLimit = async (): Promise<number> => {
-  const configured = await getSystemSettingValue('ui.defaultPageSize');
-
-  return Math.max(1, Math.min(configured, NOTIFICATION_MAX_LIMIT));
-};
+export const getDefaultNotificationListLimit = (): number =>
+  Math.max(1, Math.min(PAGINATION.DEFAULT_LIMIT, NOTIFICATION_MAX_LIMIT));
 
 export const listNotifications = async (input: {
   cursor?: string;

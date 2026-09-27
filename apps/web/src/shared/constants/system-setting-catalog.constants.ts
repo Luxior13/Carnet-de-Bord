@@ -1,4 +1,4 @@
-export type SystemSettingSection = 'interface' | 'retention';
+export type SystemSettingSection = 'retention';
 export type SystemSettingUnit = 'days' | 'rows';
 
 export type SystemSettingCatalogItem = Readonly<{
@@ -40,16 +40,6 @@ export const SYSTEM_SETTING_CATALOG = {
     passwordWhenDecreasing: true,
     section: 'retention',
     unit: 'days',
-  }),
-  'ui.defaultPageSize': defineSystemSetting({
-    defaultValue: 25,
-    description: 'Nombre de lignes proposé par défaut dans les listes',
-    label: 'Nombre de lignes par défaut',
-    max: 100,
-    min: 10,
-    passwordWhenDecreasing: false,
-    section: 'interface',
-    unit: 'rows',
   }),
 } as const satisfies Record<string, SystemSettingCatalogItem>;
 

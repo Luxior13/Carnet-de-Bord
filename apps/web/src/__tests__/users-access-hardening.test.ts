@@ -4169,10 +4169,7 @@ describe('users access hardening', () => {
       total: 0,
       totalPages: 0,
     });
-    expect(mockPrisma.systemSetting.findUnique).toHaveBeenCalledWith({
-      select: { value: true },
-      where: { key: 'ui.defaultPageSize' },
-    });
+    expect(mockPrisma.systemSetting.findUnique).not.toHaveBeenCalled();
     expect(mockPrisma.user.findMany).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({

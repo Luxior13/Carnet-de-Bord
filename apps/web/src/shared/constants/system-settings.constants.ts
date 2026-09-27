@@ -25,9 +25,6 @@ export const SYSTEM_SETTING_DEFINITIONS = {
   'notifications.retentionDays': defineSystemSetting(
     SYSTEM_SETTING_CATALOG['notifications.retentionDays'],
   ),
-  'ui.defaultPageSize': defineSystemSetting(
-    SYSTEM_SETTING_CATALOG['ui.defaultPageSize'],
-  ),
 } as const;
 
 export const parseSystemSettingValue = (
