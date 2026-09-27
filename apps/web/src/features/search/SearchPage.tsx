@@ -17,6 +17,7 @@ import { ContentState } from '$components/layout/ContentState';
 import {
   normalizeSearchValue,
   rankSearchResults,
+  SEARCH_QUERY_MAX_LENGTH,
 } from '$components/layout/global-search.utils';
 import { PageHero } from '$components/layout/PageHero';
 import { getVisibleNavigationSpaces } from '$constants/app.constants';
@@ -42,7 +43,7 @@ import { cn } from '$utils/css.utils';
 type SearchSourceFilter = 'account' | 'all' | 'navigation';
 
 const sanitizeQuery = (value: string | null): string =>
-  (value ?? '').trim().slice(0, 160);
+  (value ?? '').trim().slice(0, SEARCH_QUERY_MAX_LENGTH);
 
 export const SearchPage: FC = () => {
   const pathname = usePathname();
@@ -165,7 +166,7 @@ export const SearchPage: FC = () => {
                   aria-label="Rechercher dans les destinations"
                   autoComplete="off"
                   className="h-12 pr-11 pl-9"
-                  maxLength={160}
+                  maxLength={SEARCH_QUERY_MAX_LENGTH}
                   name="q"
                   onChange={(event) => setQueryInput(event.target.value)}
                   placeholder="Nom d’une page, pôle ou description…"

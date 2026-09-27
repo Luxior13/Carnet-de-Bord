@@ -1,3 +1,5 @@
+export const SEARCH_QUERY_MAX_LENGTH = 160;
+
 export type RankedSearchItem = {
   labelSearchText: string;
   searchText: string;

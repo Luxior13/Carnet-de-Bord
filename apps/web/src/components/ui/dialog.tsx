@@ -49,15 +49,17 @@ function DialogContent({
   className,
   fullscreenOnMobile = false,
   hideCloseButton = false,
+  overlayClassName,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   centered?: boolean;
   fullscreenOnMobile?: boolean;
   hideCloseButton?: boolean;
+  overlayClassName?: string;
 }): React.ReactNode {
   return (
     <DialogPortal>
-      <DialogOverlay />
+      <DialogOverlay className={overlayClassName} />
       <div
         className={cn(
           'pointer-events-none fixed inset-0 z-50 flex justify-center',

@@ -58,6 +58,15 @@ Sources : [Sidebar](../../../apps/web/src/components/Sidebar.tsx),
   Infobulles de recherche, notifications et menu après 300 ms. Recherche ouverte
   depuis son bouton, sans raccourci global ni indication de raccourci dans la barre.
   Échap ferme la recherche et rend le focus au bouton.
+- Recherche rapide : fenêtre centrale de 672 px maximum, plein écran sous 640 px,
+  fond bleu ardoise, rayons de 8 px desktop, sans ombre ni animation. Focus intérieur,
+  noms pouvant revenir à la ligne, contexte textuel « Page actuelle » ou « Section
+  actuelle ». Effacement et fermeture de 44 px, action de pied de 40/44 px.
+- Catalogue commun aux deux recherches : titre, description propre et rubrique,
+  sans résumé générique de rubrique. Saisie bornée à 160 caractères ; huit suggestions
+  et dix résultats rapides. Pied explicite selon saisie et résultats ; aucun groupe
+  vide. Fermeture sur changement de chemin, infobulle masquée pendant l’ouverture.
+  Les boutons n’activent pas le résultat sélectionné par propagation d’Entrée.
 - Notifications : panneau de 400 px maximum sur fond ardoise, rayon de 8 px,
   sans ombre ni animation d’ouverture. Liste compacte, focus intérieur de 3 px,
   fermeture 40/44 px. Point non lu aligné ; gravité indiquée par icône et texte
@@ -354,6 +363,128 @@ Pas de test de base réelle, de charge, de session réelle, de lecteur d’écra
 de Safari/appareil physique. La stratégie de 30 secondes devra être reconsidérée
 si le nombre de sessions actives, le coût des compteurs ou le besoin de réception
 instantanée le justifie. Aucune conformité ni performance globale revendiquée.
+
+## Analyse de la recherche rapide — 27 septembre 2026
+
+Demande : analyser le panneau ouvert depuis le header. **État initial avant les
+corrections autorisées et décrites ci-dessous.** Il s’agit d’une fenêtre modale
+centrale sur ordinateur, plein écran sur mobile, qui recherche des pages autorisées,
+pas des personnes ou des dossiers métier. Conserver cette portée explicite.
+Sources : [QuickNavigation](../../../apps/web/src/components/layout/GlobalSearch.tsx),
+[classement](../../../apps/web/src/components/layout/global-search.utils.ts),
+[catalogue](../../../apps/web/src/features/search/search-catalog.ts) et
+[recherche complète](../../../apps/web/src/features/search/SearchPage.tsx).
+
+Sélection fonctionnelle : à examiner Q01–Q07, Q09, Q17, Q19, Q27, Q30 : besoin,
+contenu, présentation, clavier, collection, saisie, absence de résultat, accès,
+volume et composants partagés. Hors impact Q08, Q10–Q16, Q20, Q22, Q24, Q25,
+Q28, Q29 : aucune modification des notifications, règles de sécurité, données,
+API, cycle de vie ou exploitation. Non applicable Q18, Q21, Q23, Q26 : aucun
+cache supplémentaire, import/export, automatisme ou engagement financier requis.
+
+**À conserver.** Fenêtre centrale de 672 px maximum, fond bleu ardoise, titre de
+page dominant et contexte secondaire, sélection bleue perceptible, effacement et
+fermeture de 44 px. Recherche locale sans appel serveur par frappe ; suggestions
+de la rubrique active, huit suggestions et dix résultats maximum. Le classement
+privilégie le titre ; accents et casse sont normalisés. Aucun raccourci global à
+réintroduire. Les indications flèches/Entrée/Échap expliquent le parcours dans la
+fenêtre et ne constituent pas un raccourci global d’ouverture.
+
+| Priorité | Constat initial | Proposition à l’issue de l’analyse |
+| --- | --- | --- |
+| Haute | « compte » place correctement Mon compte en premier, mais remonte aussi Journal d’activité, Paramètres système et Feuille de route : le résumé générique de Système contient « comptes » | Réduire le bruit lié au résumé de rubrique ; conserver les correspondances pertinentes dans le nom, la description propre et le nom de rubrique |
+| Haute | Bas de fenêtre « Besoin de plus de filtres ? » / « Rechercher une page » ambigu ; action de 22 px de haut, y compris sur mobile | Nommer la destination : « Voir tous les résultats » après saisie, « Ouvrir la recherche » à vide ; agrandir la cible tactile |
+| Haute | Sans résultat, un en-tête « Résultats » vide demeure sous le message ; le texte sur les filtres n’aide pas à comprendre cette absence | Masquer le groupe vide et proposer une nouvelle formulation de recherche ; ne pas suggérer que des filtres créeront des résultats |
+| Moyenne | Rayons extérieurs de 16 px, lignes de 12 px, ombre et animation d’entrée héritées, contrairement au panneau de notifications | Harmoniser localement vers des rayons sobres d’environ 8 px et retirer les effets décoratifs ; préserver la sélection visible |
+| Moyenne | La pastille « Actuelle » désigne aussi la liste Utilisateurs depuis une fiche utilisateur | Distinguer page exacte et section parente avec un libellé juste et discret, sans fond de badge dominant |
+| Moyenne | Le champ focalisé ne dispose ni d’un contour visible ni d’une ombre de focus ; le curseur reste présent | Ajouter un repère local de focus cohérent avec le header ; ce constat seul ne constitue pas un audit de conformité |
+| Moyenne | Un changement de chemin extérieur à la palette la laisse ouverte | Fermer la fenêtre lors d’une navigation effective, en respectant les navigations annulées |
+| Basse | Pas de limite de saisie rapide ; la page complète tronque à 160 caractères | Aligner les limites pour ne pas modifier silencieusement la requête lors du passage à la recherche complète |
+| À réexaminer | Noms sur une seule ligne tronquée ; descriptions masquées sur mobile ; certains textes décrivent la technique plutôt que l’usage | Vérifier les vrais futurs noms longs et autoriser deux lignes si nécessaire ; reformuler les descriptions sans promettre de fonctionnalités absentes |
+
+**Vérifié dans Chromium.** Banc isolé avec vrais QuickNavigation, catalogue,
+classement, composants UI, CSS et Geist ; session, disponibilité et navigation
+simulées. Formats 1440 × 900, 768 × 700, 390 × 844 et 320 × 320 : panneau contenu,
+liste défilante sur faible hauteur, boutons de fermeture accessibles. Bureau :
+lignes de 64 px, hauteur initiale de 517 px ; état vide de 253 px, champ conservant
+sa position. Captures des suggestions, résultats et état vide inspectées.
+
+Focus initial, effacement sans perte de focus, flèches et Entrée, Échap avec retour
+au déclencheur, absence d’ouverture par Ctrl + K contrôlés. « SYSTÈME » retrouve
+les pages attendues ; « compte » sélectionne bien Mon compte, sans sélection
+résiduelle erronée. Requête transmise à la page complète avec encodage, annulation
+simulée de navigation respectée. Profil USER simulé : destinations administratives
+non autorisées retirées. Changement de chemin simulé : fenêtre demeurant ouverte,
+défaut reproduit. Aucune erreur JavaScript constatée.
+
+**Limites.** Pas de modification produit, de nouveau test permanent ni de nouvelle
+exécution des suites unitaires pour cette analyse. Pas de session réelle, de test
+des autorisations serveur, de benchmark, de lecteur d’écran ni d’appareil physique.
+Le clavier virtuel mobile, l’historique natif du navigateur, les noms artificiellement
+longs et Bitwarden ne sont pas validés par ce banc. `autoComplete="off"` existe,
+mais cela ne prouve pas le comportement des extensions. Les fautes de frappe ne
+sont pas corrigées ; des alias utiles pourront être envisagés selon les usages,
+sans imposer une recherche approximative. Banc et captures temporaires supprimés
+après inspection. Cette analyse ne vaut pas validation des corrections proposées.
+
+## Corrections de la recherche rapide — 27 septembre 2026
+
+Les décisions courantes ci-dessus sont implémentées dans QuickNavigation. Le
+résumé commun de rubrique n’alimente plus les correspondances : « compte » rend
+Mon compte puis Utilisateurs, et « SYSTÈME » conserve les quatre pages de cette
+rubrique. Cette correction bénéficie aussi à la recherche complète via le même
+catalogue ; sa disposition est conservée. Les deux saisies partagent la limite
+de 160 caractères. Aucune nouvelle dépendance, permission, API ni donnée stockée.
+
+Le pied distingue accès à la recherche, tous les résultats et parcours des pages
+en cas d’absence de résultat. Titres longs lisibles par retour à la ligne, repère
+de page/section courante sans fond de badge. La recherche se ferme au changement
+de chemin. Les styles sans effet et le voile sans animation sont locaux : une
+fenêtre témoin conserve ses styles par défaut. Les attributs d’exclusion des
+gestionnaires de mots de passe complètent `autoComplete="off"`, sans garantie
+sur toutes les extensions.
+
+La vérification a révélé puis corrigé trois interactions supplémentaires : Entrée
+sur un bouton déclenchait également le résultat sélectionné ; une taille héritée
+réduisait fermeture/effacement sur ordinateur ; l’infobulle du déclencheur pouvait
+recouvrir le panneau. En couleurs forcées, seul le résultat sélectionné reçoit
+désormais un contour de sélection distinct. L’effacement conserve le focus au
+clic et le restitue explicitement au clavier. Aucun toast ajouté.
+
+Sélection Q inchangée par rapport à l’analyse : niveau fonctionnel, Q19/Q30 incluent
+le point de personnalisation optionnel du voile, Q06/Q07 la saisie bornée et le
+retour local, Q09 le catalogue filtré existant. Q17 vérifie le nombre de résultats
+et l’absence de nouvelle requête par frappe, sans promesse de performance globale.
+
+**Validations.** 61 tests réussis : recherche rapide, contrats de recherche complète,
+design system et navigation protégée. Deux régressions de catalogue ajoutées
+(pertinence et compte limité). TypeScript et lint ciblé réussis. Le scénario E2E
+existant contient désormais les régressions Entrée sur Effacer, Fermer et Voir
+tous les résultats ; la suite E2E avec base dédiée n’a pas été exécutée ici.
+
+Banc Chromium avec composants, catalogue, CSS et Geist réels ; session, disponibilité
+et navigation simulées. Contrôlés à 1440 × 900, 768 × 700, 390 × 844 et 320 × 320 :
+dimensions, survol, focus, Tab, flèches, Entrée, Échap, effacement souris/clavier,
+fermeture clavier sans navigation, action de pied avec requête encodée, état vide,
+limite de saisie, absence de Ctrl + K, compte limité et annulation simulée de
+navigation. Changement de chemin extérieur fermant le panneau vérifié. Quatorze
+noms longs fictifs : huit suggestions, dix résultats, retour à la ligne et accès
+au dernier résultat au clavier. Couleurs forcées et mouvement réduit inspectés.
+
+CSS calculé : rayon desktop de 8 px, aucune animation de contenu/voile, focus de
+3 px intérieur ; fermeture/effacement de 44 px, pied de 40/44 px. Aucun débordement
+horizontal ni erreur JavaScript observé. Captures inspectées, banc et captures
+supprimés après contrôle. Documentation Context7 Radix/cmdk consultée et comparée
+aux versions installées. Le contrôle d’architecture global reste en échec sur
+`components/ui/sidebar.tsx` (925 lignes / plafond 900), fichier inchangé de cette
+passe, défaut préexistant déjà consigné.
+
+**Limites et réexamen.** Ni session réelle, droits serveur, lecteur d’écran, clavier
+virtuel physique, Safari/iOS ou Bitwarden vérifiés. Pas de benchmark ni audit
+d’accessibilité complet. L’historique natif n’est pas couvert par le changement
+de chemin simulé. Les descriptions communes restent celles du catalogue : revoir
+leur vocabulaire lors du travail sur les pages propriétaires. Vérifier les vrais
+futurs libellés/rubriques et n’ajouter des alias que si un usage les justifie.
 
 ## Historique utile
 

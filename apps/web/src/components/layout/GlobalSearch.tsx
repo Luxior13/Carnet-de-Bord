@@ -7,12 +7,14 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
 import {
   normalizeSearchValue,
   rankSearchResults,
+  SEARCH_QUERY_MAX_LENGTH,
 } from '$components/layout/global-search.utils';
 import {
   getActiveNavigationSpace,
@@ -25,7 +27,6 @@ import {
   buildSearchCatalog,
   getSuggestedSearchItems,
 } from '$features/search/search-catalog';
-import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import {
   Command,
@@ -47,6 +48,13 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { requestGuardedNavigation } from '$utils/guarded-navigation.utils';
 
+function isolateSearchButtonKeys(
+  event: React.KeyboardEvent<HTMLButtonElement>,
+): void {
+  // Command handles Enter on its root; buttons must only activate their own action.
+  if (event.key !== 'Escape') event.stopPropagation();
+}
+
 export const QuickNavigation: FC = () => {
   const pathname = usePathname();
   const router = useRouter();
@@ -55,7 +63,9 @@ export const QuickNavigation: FC = () => {
     useFeatureAvailability();
   const [activeResultHref, setActiveResultHref] = useState('');
   const [open, setOpen] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const spaces = useMemo(
     () =>
       getVisibleNavigationSpaces(
@@ -81,9 +91,11 @@ export const QuickNavigation: FC = () => {
         : getSuggestedSearchItems(allResults, activeSpace),
     [activeSpace, allResults, normalizedQuery],
   );
-  const advancedSearchHref = normalizedQuery
-    ? `/recherche?q=${encodeURIComponent(query.trim())}`
-    : '/recherche';
+  const hasResults = results.length > 0;
+  const advancedSearchHref =
+    normalizedQuery && hasResults
+      ? `/recherche?q=${encodeURIComponent(query.trim())}`
+      : '/recherche';
   const currentResultHref = useMemo(() => {
     const exactResult = results.find((result) => result.href === pathname);
     if (exactResult) return exactResult.href;
@@ -114,6 +126,8 @@ export const QuickNavigation: FC = () => {
     [closeSearch, pathname, router],
   );
 
+  useEffect(() => closeSearch(), [closeSearch, pathname]);
+
   useEffect(() => {
     if (!results.some((result) => result.href === activeResultHref))
       setActiveResultHref(results.at(0)?.href ?? '');
@@ -124,7 +138,11 @@ export const QuickNavigation: FC = () => {
       open={open}
       onOpenChange={(nextOpen) => (nextOpen ? setOpen(true) : closeSearch())}
     >
-      <Tooltip delayDuration={300}>
+      <Tooltip
+        delayDuration={300}
+        open={!open && tooltipOpen}
+        onOpenChange={setTooltipOpen}
+      >
         <TooltipTrigger asChild>
           <DialogTrigger asChild>
             <Button
@@ -138,14 +156,18 @@ export const QuickNavigation: FC = () => {
             </Button>
           </DialogTrigger>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="rounded-sm">
+        <TooltipContent
+          side="bottom"
+          className="animate-none! rounded-sm shadow-none"
+        >
           Rechercher une page
         </TooltipContent>
       </Tooltip>
       <DialogContent
         fullscreenOnMobile
         hideCloseButton
-        className="border-border-default bg-popover h-dvh max-w-2xl overflow-hidden p-0 sm:h-auto sm:max-h-[min(38rem,85dvh)]"
+        overlayClassName="animate-none!"
+        className="border-border-default bg-popover h-dvh max-w-2xl animate-none! overflow-hidden p-0 shadow-none sm:h-auto sm:max-h-[min(38rem,85dvh)] sm:rounded-sm"
       >
         <DialogHeader className="sr-only">
           <DialogTitle>Navigation rapide</DialogTitle>
@@ -164,9 +186,19 @@ export const QuickNavigation: FC = () => {
         >
           <CommandInput
             aria-label="Rechercher une page"
+            autoCapitalize="none"
             autoComplete="off"
+            autoCorrect="off"
             autoFocus
+            className="focus-visible:ring-ring rounded-sm px-2 focus-visible:ring-[length:var(--ring-width)] focus-visible:ring-inset"
+            data-1p-ignore="true"
+            data-bwignore="true"
+            data-lpignore="true"
+            maxLength={SEARCH_QUERY_MAX_LENGTH}
+            name="page-search"
             placeholder="Rechercher une page..."
+            ref={searchInputRef}
+            spellCheck={false}
             value={query}
             onValueChange={setQuery}
             trailing={
@@ -174,8 +206,12 @@ export const QuickNavigation: FC = () => {
                 {query && (
                   <Button
                     aria-label="Effacer la recherche"
-                    className="size-11"
-                    onClick={() => setQuery('')}
+                    className="size-11 rounded-sm transition-none focus-visible:ring-inset lg:size-11"
+                    onClick={() => {
+                      setQuery('');
+                      searchInputRef.current?.focus();
+                    }}
+                    onKeyDown={isolateSearchButtonKeys}
                     onMouseDown={(event) => event.preventDefault()}
                     size="icon"
                     type="button"
@@ -187,7 +223,8 @@ export const QuickNavigation: FC = () => {
                 <DialogClose asChild>
                   <Button
                     aria-label="Fermer la navigation rapide"
-                    className="size-11"
+                    className="size-11 rounded-sm transition-none focus-visible:ring-inset lg:size-11"
+                    onKeyDown={isolateSearchButtonKeys}
                     size="icon"
                     type="button"
                     variant="ghost"
@@ -199,74 +236,87 @@ export const QuickNavigation: FC = () => {
             }
           />
           <span aria-live="polite" className="sr-only" role="status">
-            {results.length} résultat{results.length !== 1 ? 's' : ''}
+            {results.length} résultat{results.length !== 1 ? 's' : ''} affiché
+            {results.length !== 1 ? 's' : ''}
           </span>
           <CommandList
             label="Pages disponibles"
             className="max-h-none min-h-0 flex-1 p-2 sm:max-h-96"
           >
-            <CommandEmpty>
-              Aucune page trouvée. Essayez une autre recherche.
+            <CommandEmpty className="px-4 py-8 text-center text-sm">
+              <p className="font-medium">Aucune page trouvée</p>
+              <p className="text-muted-foreground mt-1">
+                Essayez un autre nom ou une rubrique.
+              </p>
             </CommandEmpty>
-            <CommandGroup
-              heading={normalizedQuery ? 'Résultats' : 'Pages suggérées'}
-            >
-              {results.map((result) => {
-                const Icon = getNavigationIcon(result.icon);
-                const isCurrentResult = result.href === currentResultHref;
-
-                return (
-                  <CommandItem
-                    aria-current={
-                      isCurrentResult
-                        ? pathname === result.href
-                          ? 'page'
-                          : 'location'
-                        : undefined
-                    }
-                    className="gap-3 py-3"
-                    key={result.href}
-                    value={result.href}
-                    onSelect={() => navigateToHref(result.href)}
-                  >
-                    <Icon aria-hidden="true" className="size-4" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">
-                        {result.label}
-                      </span>
-                      <span className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-xs">
-                        <span>{result.groupLabel}</span>
-                        {result.description && (
-                          <span className="hidden truncate sm:inline">
-                            · {result.description}
-                          </span>
-                        )}
-                      </span>
-                    </span>
-                    {isCurrentResult && (
-                      <Badge variant="secondary">Actuelle</Badge>
-                    )}
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-          </CommandList>
-          <div className="border-border-divider text-muted-foreground mx-4 shrink-0 border-t pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-xs">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <span>Besoin de plus de filtres ?</span>
-              <Button
-                onClick={() => navigateToHref(advancedSearchHref)}
-                size="inline"
-                type="button"
-                variant="link"
+            {hasResults && (
+              <CommandGroup
+                heading={normalizedQuery ? 'Résultats' : 'Pages suggérées'}
               >
-                Rechercher une page
-                <ArrowRight aria-hidden="true" className="size-3.5" />
-              </Button>
-            </div>
-            <p className="mt-3 hidden sm:block">
+                {results.map((result) => {
+                  const Icon = getNavigationIcon(result.icon);
+                  const isCurrentResult = result.href === currentResultHref;
+
+                  return (
+                    <CommandItem
+                      aria-current={
+                        isCurrentResult
+                          ? pathname === result.href
+                            ? 'page'
+                            : 'location'
+                          : undefined
+                      }
+                      className="gap-3 rounded-sm py-3 outline-none forced-colors:-outline-offset-2 forced-colors:data-[selected=true]:[outline:2px_solid_Highlight]"
+                      key={result.href}
+                      value={result.href}
+                      onSelect={() => navigateToHref(result.href)}
+                    >
+                      <Icon aria-hidden="true" className="size-4" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-medium [overflow-wrap:anywhere]">
+                          {result.label}
+                        </span>
+                        <span className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-xs">
+                          <span className="shrink-0">{result.groupLabel}</span>
+                          {isCurrentResult && (
+                            <span className="shrink-0">
+                              ·{' '}
+                              {pathname === result.href
+                                ? 'Page actuelle'
+                                : 'Section actuelle'}
+                            </span>
+                          )}
+                          {result.description && (
+                            <span className="hidden truncate sm:inline">
+                              · {result.description}
+                            </span>
+                          )}
+                        </span>
+                      </span>
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            )}
+          </CommandList>
+          <div className="border-border-divider text-muted-foreground mx-4 flex shrink-0 flex-wrap items-center justify-end gap-x-4 gap-y-1 border-t pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-xs">
+            <p className="hidden sm:block">
               ↑↓ Parcourir · Entrée Ouvrir · Échap Fermer
             </p>
+            <Button
+              className="text-primary-emphasis h-11 rounded-sm px-3 font-medium transition-none focus-visible:ring-inset sm:ml-auto lg:h-10"
+              onClick={() => navigateToHref(advancedSearchHref)}
+              onKeyDown={isolateSearchButtonKeys}
+              type="button"
+              variant="ghost"
+            >
+              {normalizedQuery
+                ? hasResults
+                  ? 'Voir tous les résultats'
+                  : 'Parcourir les pages'
+                : 'Ouvrir la recherche'}
+              <ArrowRight aria-hidden="true" className="size-3.5" />
+            </Button>
           </div>
         </Command>
       </DialogContent>

@@ -7,6 +7,8 @@ import {
   type RankedSearchItem,
   rankSearchResults,
 } from '$components/layout/global-search.utils';
+import { getVisibleNavigationSpaces } from '$constants/app.constants';
+import { buildSearchCatalog } from '$features/search/search-catalog';
 
 type SearchFixture = RankedSearchItem & {
   id: string;
@@ -50,6 +52,47 @@ const commandSource = readFileSync(
 );
 
 describe('global page search', () => {
+  it('matches page content without inheriting unrelated section summary terms', () => {
+    const user = { isProtected: true, permissions: {}, role: 'ADMIN' as const };
+    const catalog = buildSearchCatalog(
+      getVisibleNavigationSpaces(user, 'live'),
+      user,
+    );
+
+    expect(
+      rankSearchResults(catalog, normalizeSearchValue('compte')).map(
+        (item) => item.href,
+      ),
+    ).toEqual(['/mon-compte', '/systeme/utilisateurs']);
+    expect(
+      rankSearchResults(catalog, normalizeSearchValue('SYSTÈME')).map(
+        (item) => item.href,
+      ),
+    ).toEqual([
+      '/systeme/parametres',
+      '/systeme/utilisateurs',
+      '/systeme/journal-activite',
+      '/systeme/feuille-de-route',
+    ]);
+  });
+
+  it('keeps forbidden destinations out of matching page descriptions', () => {
+    const user = { isProtected: false, permissions: {}, role: 'USER' as const };
+    const catalog = buildSearchCatalog(
+      getVisibleNavigationSpaces(user, 'live'),
+      user,
+    );
+
+    expect(
+      rankSearchResults(catalog, normalizeSearchValue('compte')).map(
+        (item) => item.href,
+      ),
+    ).toEqual(['/mon-compte']);
+    expect(
+      rankSearchResults(catalog, normalizeSearchValue('autorisations')),
+    ).toEqual([]);
+  });
+
   it('normalizes accents, ligatures, punctuation and repeated spaces', () => {
     expect(
       normalizeSearchValue('  Modèles—d’activité / ÉQUIPE & œuvre  '),

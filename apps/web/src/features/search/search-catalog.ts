@@ -45,7 +45,7 @@ const createCatalogItem = (
     label: item.label,
     labelSearchText: normalizeSearchValue(item.label),
     searchText: normalizeSearchValue(
-      `${groupLabel} ${space.summary} ${item.label} ${item.description ?? ''}`,
+      `${groupLabel} ${item.label} ${item.description ?? ''}`,
     ),
     source: options.source ?? 'navigation',
     sourceLabel: options.sourceLabel ?? 'Pages',

@@ -919,6 +919,42 @@ test('authenticates and reaches the admin surfaces', async ({ page }) => {
   await expect(page.getByText('Annuaire utilisateurs')).toBeVisible();
   await expectAccessiblePageStructure(page);
 
+  // Enter on a palette button must not also open the selected destination.
+  const searchTrigger = page.getByRole('button', {
+    exact: true,
+    name: 'Rechercher une page',
+  });
+  const searchDialog = page.getByRole('dialog', { name: 'Navigation rapide' });
+  const searchInput = searchDialog.getByRole('combobox', {
+    name: 'Rechercher une page',
+  });
+  await searchTrigger.click();
+  await searchInput.fill('compte');
+  await searchInput.press('Tab');
+  const clearSearch = searchDialog.getByRole('button', {
+    name: 'Effacer la recherche',
+  });
+  await expect(clearSearch).toBeFocused();
+  await clearSearch.press('Enter');
+  await expect(searchInput).toBeFocused();
+  await expect(searchInput).toHaveValue('');
+  await expect(page).toHaveURL(/\/systeme\/utilisateurs$/);
+
+  await searchDialog
+    .getByRole('button', { name: 'Fermer la navigation rapide' })
+    .press('Enter');
+  await expect(searchDialog).toHaveCount(0);
+  await expect(searchTrigger).toBeFocused();
+  await expect(page).toHaveURL(/\/systeme\/utilisateurs$/);
+
+  await searchTrigger.click();
+  await searchInput.fill('compte');
+  await searchDialog
+    .getByRole('button', { name: 'Voir tous les résultats' })
+    .press('Enter');
+  await expect(page).toHaveURL(/\/recherche\?q=compte$/);
+  await expect(searchDialog).toHaveCount(0);
+
   await page.goto('/systeme/utilisateurs/nouveau');
   await expect(
     page.getByRole('heading', { name: /Nouvel utilisateur|Compte créé/ }),

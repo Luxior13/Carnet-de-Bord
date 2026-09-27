@@ -273,6 +273,11 @@ conserver un article ou une section, et `asChild` pour une carte-lien.
 La recherche rapide délègue ses interactions clavier à `Command`. Le classement
 et les permissions restent dans le catalogue applicatif, avec
 `shouldFilter={false}` pour éviter un second filtrage divergent.
+Les boutons inclus dans cette palette isolent leurs touches de celles de la
+liste : Entrée sur Effacer, Fermer ou l’accès à la recherche complète ne doit pas
+ouvrir aussi le résultat sélectionné. Le style sobre de la recherche reste local ;
+`DialogContent.overlayClassName` permet d’adapter son voile sans modifier les
+autres fenêtres.
 
 Un lien de navigation de fiche utilise `Button asChild` et reste un vrai lien.
 Il n'est pas transformé en onglet ARIA : chaque section possède une URL.

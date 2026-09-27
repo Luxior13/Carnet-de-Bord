@@ -143,6 +143,23 @@ et ouvrent les résultats ; Échap ferme la fenêtre et rend le focus au bouton.
 Les combinaisons Vim de cette palette restent désactivées. Les gardes de formulaire
 restent appliquées aux destinations.
 
+La recherche rapide conserve une fenêtre centrale de 672 px maximum et le plein
+écran sous 640 px. Fond bleu ardoise, rayons de 8 px sur ordinateur, aucune ombre
+ni animation ; focus intérieur et sélection explicite, également en couleurs
+forcées. Les noms peuvent revenir à la ligne. Le contexte distingue « Page
+actuelle » et « Section actuelle » sans pastille de fond. Effacement et fermeture
+mesurent 44 px ; le lien vers la recherche complète, 40 px sur ordinateur et
+44 px sous 1024 px. L’infobulle du déclencheur est masquée pendant l’ouverture.
+
+Le catalogue commun aux deux recherches indexe le nom, la description propre et
+la rubrique, sans hériter du résumé générique de celle-ci. Saisie limitée à
+160 caractères, huit suggestions et dix résultats dans la fenêtre. Après une
+saisie donnant des résultats, « Voir tous les résultats » transmet la requête ;
+sans résultat, « Parcourir les pages » ouvre le catalogue sans filtre. Sans saisie,
+l’action s’appelle « Ouvrir la recherche ». Aucun groupe vide n’est affiché.
+Un changement effectif de chemin ferme le panneau. Entrée sur ses boutons
+exécute seulement leur action, et l’effacement rend le focus au champ.
+
 Le panneau de notifications reste ancré à droite. Largeur maximale de 400 px,
 fond bleu ardoise, rayon de 8 px, sans ombre ni animation d’ouverture ; lignes
 compactes, point non lu aligné et gravité portée par une icône et un libellé,
