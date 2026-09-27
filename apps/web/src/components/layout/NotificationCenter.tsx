@@ -3,10 +3,11 @@
 import {
   Bell,
   BellRing,
+  CircleCheck,
   Loader2,
   type LucideIcon,
   RefreshCcw,
-  Settings,
+  ShieldAlert,
   TriangleAlert,
   X,
 } from 'lucide-react';
@@ -20,6 +21,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { toast } from 'sonner';
 
 import { canOpenNavigationHref } from '$constants/app.constants';
 import {
@@ -29,8 +31,14 @@ import {
 } from '$constants/notification.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
+import { notificationCountStore } from '$features/notifications/notification-count-store';
+import { formatNotificationTime } from '$features/notifications/notification-time';
+import { useNotificationCount } from '$features/notifications/useNotificationCount';
 import { useAsyncResource } from '$hooks/useAsyncResource';
-import type { NotificationListData } from '$types/platform.types';
+import type {
+  NotificationItem,
+  NotificationListData,
+} from '$types/platform.types';
 import { Button } from '$ui/button';
 import {
   Popover,
@@ -44,12 +52,15 @@ import { cn } from '$utils/css.utils';
 
 export type NotificationCenterItem = {
   accentClassName?: string;
+  createdAt?: string;
   description: string;
   href: string;
   icon?: LucideIcon;
   id: string;
   meta?: string;
   read?: boolean;
+  severity?: NotificationItem['severity'];
+  sourceLabel?: string;
   title: string;
 };
 
@@ -63,11 +74,6 @@ const QUICK_LINKS = [
     icon: Bell,
     label: 'Toutes les notifications',
   },
-  {
-    href: '/vie-interne/notifications-rappels',
-    icon: Settings,
-    label: 'Tout gérer',
-  },
 ] as const;
 
 const defaultAccentClassName = 'text-muted-foreground';
@@ -77,8 +83,23 @@ const NOTIFICATION_CHANGED_DEBOUNCE_MS = 200;
 export const NotificationCenter: FC<NotificationCenterProps> = ({
   notifications,
 }) => {
+  const { authorizationRevision, userData } = useUser();
+
+  return (
+    <NotificationCenterContent
+      key={`${userData?.id ?? 'anonymous'}:${authorizationRevision}`}
+      notifications={notifications}
+    />
+  );
+};
+
+const NotificationCenterContent: FC<NotificationCenterProps> = ({
+  notifications,
+}) => {
   const pathname = usePathname();
-  const { userData } = useUser();
+  const { authorizationRevision, userData } = useUser();
+  const scope = `${userData?.id ?? 'anonymous'}:${authorizationRevision}`;
+  const [sharedUnreadCount, publishUnreadCount] = useNotificationCount(scope);
   const [
     hasActivatedNotificationResource,
     setHasActivatedNotificationResource,
@@ -86,6 +107,8 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
   const lastNotificationRequestAtRef = useRef(0);
   const notificationChangedTimerRef = useRef<number | null>(null);
   const [open, setOpen] = useState(false);
+  const [now, setNow] = useState(Date.now);
+  const pendingReadsRef = useRef(new Set<string>());
   const canViewNotifications =
     !!userData &&
     (userData.isProtected ||
@@ -99,13 +122,22 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
     notifications === undefined &&
     canViewNotifications &&
     (!isNotificationInboxRoute || hasActivatedNotificationResource);
-  const loadNotifications = useCallback((signal: AbortSignal) => {
-    lastNotificationRequestAtRef.current = Date.now();
+  const loadNotifications = useCallback(
+    async (signal: AbortSignal) => {
+      const requestedAt = Date.now();
+      lastNotificationRequestAtRef.current = requestedAt;
+      const data = await apiFetchJson<NotificationListData>(
+        '/api/notifications?limit=10',
+        {
+          signal,
+        },
+      );
+      if (!signal.aborted) publishUnreadCount(data.unreadCount, requestedAt);
 
-    return apiFetchJson<NotificationListData>('/api/notifications?limit=10', {
-      signal,
-    });
-  }, []);
+      return data;
+    },
+    [publishUnreadCount],
+  );
   const notificationResource = useAsyncResource(loadNotifications, {
     enabled: shouldLoadNotificationResource,
   });
@@ -169,17 +201,72 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
     };
   }, [refreshNotificationResource, shouldLoadNotificationResource]);
   useEffect(() => {
-    if (!shouldLoadNotificationResource) return;
-
-    const refreshWhenVisible = (): void => {
-      if (document.visibilityState !== 'visible') return;
-      refreshNotificationResourceIfStale();
+    if (notifications !== undefined || !canViewNotifications) return;
+    let disposed = false;
+    let running = false;
+    let timer: number;
+    const controller = new AbortController();
+    const poll = async (): Promise<void> => {
+      if (disposed || running) return;
+      running = true;
+      if (document.visibilityState === 'visible' && navigator.onLine) {
+        setNow(Date.now());
+        if (shouldLoadNotificationResource) {
+          if (
+            Date.now() - lastNotificationRequestAtRef.current >=
+            NOTIFICATION_REFRESH_MIN_INTERVAL_MS
+          ) {
+            await refreshNotificationResource();
+          }
+        } else {
+          // On the inbox, keep its initial read and only refresh a minimal preview.
+          const requestedAt = Date.now();
+          try {
+            const data = await apiFetchJson<NotificationListData>(
+              '/api/notifications?limit=1',
+              {
+                signal: controller.signal,
+              },
+            );
+            if (!disposed) publishUnreadCount(data.unreadCount, requestedAt);
+          } catch {
+            // Keep the last known count; the inbox owns its visible loading errors.
+          }
+        }
+      }
+      running = false;
+      if (!disposed)
+        timer = window.setTimeout(
+          () => void poll(),
+          NOTIFICATION_REFRESH_MIN_INTERVAL_MS,
+        );
     };
-    document.addEventListener('visibilitychange', refreshWhenVisible);
+    const resume = (): void => {
+      window.clearTimeout(timer);
+      if (document.visibilityState !== 'visible') return;
+      void poll();
+    };
+    timer = window.setTimeout(
+      () => void poll(),
+      NOTIFICATION_REFRESH_MIN_INTERVAL_MS,
+    );
+    document.addEventListener('visibilitychange', resume);
+    window.addEventListener('online', resume);
 
-    return (): void =>
-      document.removeEventListener('visibilitychange', refreshWhenVisible);
-  }, [refreshNotificationResourceIfStale, shouldLoadNotificationResource]);
+    return (): void => {
+      disposed = true;
+      controller.abort();
+      window.clearTimeout(timer);
+      document.removeEventListener('visibilitychange', resume);
+      window.removeEventListener('online', resume);
+    };
+  }, [
+    canViewNotifications,
+    notifications,
+    publishUnreadCount,
+    refreshNotificationResource,
+    shouldLoadNotificationResource,
+  ]);
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
@@ -187,11 +274,13 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
     () =>
       notifications ??
       notificationResource.data?.items.map((notification) => ({
+        createdAt: notification.createdAt,
         description: notification.body,
         href: notification.href ?? NOTIFICATION_INBOX_HREF,
         id: notification.id,
-        meta: `${new Date(notification.createdAt).toLocaleDateString('fr-FR')} · ${notification.source.label}`,
         read: notification.readAt !== null,
+        severity: notification.severity,
+        sourceLabel: notification.source.label,
         title: notification.title,
       })) ??
       [],
@@ -214,7 +303,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
   );
   const unreadNotificationsCount =
     notifications === undefined
-      ? (notificationResource.data?.unreadCount ?? 0)
+      ? (sharedUnreadCount ?? notificationResource.data?.unreadCount ?? 0)
       : visibleNotifications.filter((notification) => !notification.read)
           .length;
   const hasLoadedNotifications =
@@ -233,6 +322,36 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
     notificationResource.data !== null &&
     notificationResource.error !== null;
 
+  const markAsRead = useCallback(
+    async (id: string): Promise<void> => {
+      if (
+        pendingReadsRef.current.has(id) ||
+        notificationCountStore.get(scope) === null
+      )
+        return;
+      pendingReadsRef.current.add(id);
+      try {
+        await apiFetchJson(
+          `/api/notifications/${id}`,
+          jsonRequest('PATCH', { action: 'read' }),
+        );
+        toast.dismiss(`notification-read-${id}`);
+        publishUnreadCount((count) => Math.max(0, count - 1));
+        notifyNotificationsChanged();
+      } catch {
+        if (notificationCountStore.get(scope) !== null)
+          toast.error('La notification n’a pas pu être marquée comme lue.', {
+            action: { label: 'Réessayer', onClick: () => void markAsRead(id) },
+            duration: 10_000,
+            id: `notification-read-${id}`,
+          });
+      } finally {
+        pendingReadsRef.current.delete(id);
+      }
+    },
+    [publishUnreadCount, scope],
+  );
+
   if (!canViewNotifications) return null;
 
   return (
@@ -240,6 +359,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
       open={open}
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen);
+        if (nextOpen) setNow(Date.now());
         handlePopoverOpenChange(nextOpen);
       }}
     >
@@ -275,11 +395,11 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
       <PopoverContent
         align="end"
         aria-label="Notifications"
-        className="flex max-h-[var(--radix-popover-content-available-height)] w-[min(calc(100vw-2rem),22rem)] flex-col overflow-y-auto p-2"
+        className="flex max-h-[var(--radix-popover-content-available-height)] w-[min(calc(100vw-2rem),25rem)] animate-none! flex-col overflow-y-auto rounded-sm p-1 shadow-none"
         collisionPadding={8}
         sideOffset={8}
       >
-        <div className="border-border-divider mx-3 shrink-0 border-b py-3">
+        <div className="border-border-divider mx-2 shrink-0 border-b py-2">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-foreground text-sm font-semibold">
@@ -300,6 +420,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
             <PopoverClose asChild>
               <Button
                 aria-label="Fermer les notifications"
+                className="size-11 rounded-sm focus-visible:ring-inset lg:size-10"
                 size="icon"
                 variant="ghost"
               >
@@ -369,70 +490,127 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
             </Button>
           </div>
         ) : visibleNotifications.length > 0 ? (
-          <div className="max-h-80 min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain py-2">
+          <ul
+            aria-label="Dernières notifications"
+            className="max-h-96 min-h-0 flex-1 overflow-y-auto overscroll-contain py-1"
+          >
             {visibleNotifications.map((notification) => {
-              const NotificationIcon = notification.icon ?? BellRing;
+              const severity = notification.severity;
+              const NotificationIcon =
+                notification.icon ??
+                (severity === 'CRITICAL'
+                  ? ShieldAlert
+                  : severity === 'WARNING'
+                    ? TriangleAlert
+                    : severity === 'SUCCESS'
+                      ? CircleCheck
+                      : BellRing);
+              const severityLabel =
+                severity === 'CRITICAL'
+                  ? 'Critique'
+                  : severity === 'WARNING'
+                    ? 'À surveiller'
+                    : severity === 'SUCCESS'
+                      ? 'Succès'
+                      : null;
+              const severityClass =
+                severity === 'CRITICAL'
+                  ? 'text-destructive'
+                  : severity === 'WARNING'
+                    ? 'text-warning'
+                    : severity === 'SUCCESS'
+                      ? 'text-success'
+                      : defaultAccentClassName;
               const isUnread = !notification.read;
+              const time = notification.createdAt
+                ? formatNotificationTime(notification.createdAt, now)
+                : null;
 
               return (
-                <Link
-                  className="hover:bg-surface-navigation-hover focus-visible:bg-surface-navigation-active focus-visible:ring-ring/50 flex gap-3 rounded-lg px-3 py-3 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset"
-                  href={notification.href}
-                  key={notification.id}
-                  onClick={() => {
-                    setOpen(false);
-                    if (notification.read) return;
-                    void apiFetchJson(
-                      `/api/notifications/${notification.id}`,
-                      jsonRequest('PATCH', { action: 'read' }),
-                    )
-                      .then(() => {
-                        notifyNotificationsChanged();
-                      })
-                      .catch(() => undefined);
-                  }}
-                >
-                  <span
-                    className={cn(
-                      'mt-0.5 flex size-5 shrink-0 items-center justify-center',
-                      notification.accentClassName ?? defaultAccentClassName,
-                    )}
+                <li key={notification.id}>
+                  <Link
+                    className="hover:bg-surface-navigation-hover focus-visible:bg-surface-navigation-active focus-visible:ring-ring flex gap-2.5 rounded-sm px-3 py-2.5 outline-none focus-visible:ring-[length:var(--ring-width)] focus-visible:ring-inset"
+                    href={notification.href}
+                    onClick={(event) => {
+                      setOpen(false);
+                      if (event.defaultPrevented) return;
+                      if (notification.read) return;
+                      void markAsRead(notification.id);
+                    }}
                   >
-                    <NotificationIcon aria-hidden="true" className="size-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex min-w-0 items-start gap-2">
-                      <span
-                        className={cn(
-                          'text-foreground line-clamp-2 text-sm [overflow-wrap:anywhere]',
-                          isUnread ? 'font-semibold' : 'font-medium',
-                        )}
-                      >
-                        {notification.title}
+                    <span
+                      className={cn(
+                        'mt-0.5 flex size-5 shrink-0 items-center justify-center',
+                        notification.accentClassName ?? severityClass,
+                      )}
+                    >
+                      <NotificationIcon aria-hidden="true" className="size-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex min-w-0 items-start gap-2">
+                        <span
+                          className={cn(
+                            'text-foreground line-clamp-2 min-w-0 flex-1 text-sm [overflow-wrap:anywhere]',
+                            isUnread ? 'font-semibold' : 'font-medium',
+                          )}
+                        >
+                          {notification.title}
+                        </span>
+                        <span className="flex w-1.5 shrink-0 justify-center">
+                          {isUnread && (
+                            <>
+                              <span
+                                aria-hidden="true"
+                                className="bg-primary mt-1.5 size-1.5 shrink-0 rounded-full"
+                              />
+                              <span className="sr-only">Non lue</span>
+                            </>
+                          )}
+                        </span>
                       </span>
-                      {isUnread && (
-                        <>
-                          <span
-                            aria-hidden="true"
-                            className="bg-primary mt-1.5 size-1.5 shrink-0 rounded-full"
-                          />
-                          <span className="sr-only">Non lue</span>
-                        </>
+                      <span className="text-muted-foreground mt-0.5 line-clamp-2 text-xs leading-4 [overflow-wrap:anywhere]">
+                        {notification.description}
+                      </span>
+                      {(time || notification.sourceLabel || severityLabel) && (
+                        <span className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-1.5 text-xs leading-4">
+                          {severityLabel && (
+                            <span className={cn('font-medium', severityClass)}>
+                              {severityLabel}
+                            </span>
+                          )}
+                          {severityLabel && time && (
+                            <span aria-hidden="true">·</span>
+                          )}
+                          {time && (
+                            <time
+                              dateTime={time.dateTime}
+                              title={time.full}
+                              aria-label={time.full}
+                            >
+                              {time.label}
+                            </time>
+                          )}
+                          {notification.sourceLabel && (
+                            <span
+                              className="min-w-0 truncate"
+                              title={notification.sourceLabel}
+                            >
+                              · {notification.sourceLabel}
+                            </span>
+                          )}
+                        </span>
+                      )}
+                      {notification.meta && (
+                        <span className="text-muted-foreground mt-1 block text-xs [overflow-wrap:anywhere]">
+                          {notification.meta}
+                        </span>
                       )}
                     </span>
-                    <span className="text-muted-foreground mt-0.5 line-clamp-2 text-xs leading-5 [overflow-wrap:anywhere]">
-                      {notification.description}
-                    </span>
-                    {notification.meta && (
-                      <span className="text-muted-foreground mt-1 block text-xs [overflow-wrap:anywhere]">
-                        {notification.meta}
-                      </span>
-                    )}
-                  </span>
-                </Link>
+                  </Link>
+                </li>
               );
             })}
-          </div>
+          </ul>
         ) : hasLoadedNotifications ? (
           <div className="flex flex-col items-center px-4 py-7 text-center">
             <span className="text-muted-foreground flex size-10 items-center justify-center">
@@ -449,7 +627,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
         {visibleQuickLinks.length > 0 && (
           <div
             className={cn(
-              'border-border-divider mx-3 grid shrink-0 gap-1 border-t pt-2',
+              'border-border-divider mx-2 grid shrink-0 gap-1 border-t pt-1',
               visibleQuickLinks.length > 1 ? 'grid-cols-2' : 'grid-cols-1',
             )}
           >
@@ -458,7 +636,7 @@ export const NotificationCenter: FC<NotificationCenterProps> = ({
 
               return (
                 <Link
-                  className="text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground focus-visible:ring-ring/50 flex min-h-11 items-center justify-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold transition-colors outline-none focus-visible:ring-2"
+                  className="text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground focus-visible:ring-ring flex min-h-11 items-center justify-center gap-2 rounded-sm px-2 py-2 text-sm font-medium outline-none focus-visible:ring-[length:var(--ring-width)] focus-visible:ring-inset"
                   href={link.href}
                   key={link.href}
                   onClick={() => setOpen(false)}

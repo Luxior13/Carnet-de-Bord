@@ -26,7 +26,7 @@ describe('header notification UX contracts', () => {
     expect(headerSource).not.toContain('backdrop-blur');
     expect(headerSource).not.toContain('bg-surface-page/95');
     expect(notificationCenterSource).not.toContain('bg-surface-floating');
-    expect(notificationCenterSource).toContain('overflow-y-auto p-2');
+    expect(notificationCenterSource).toContain('animate-none!');
     expect(notificationCenterSource).toContain('variant="ghost"');
     expect(notificationCenterSource).toContain(
       'hover:bg-surface-navigation-hover',
@@ -69,7 +69,7 @@ describe('header notification UX contracts', () => {
     );
   });
 
-  it('refreshes on meaningful re-entry without polling or request spam', () => {
+  it('refreshes on re-entry and bounds background refreshes to visible online tabs', () => {
     expect(notificationCenterSource).toContain('open={open}');
     expect(notificationCenterSource).toContain(
       'handlePopoverOpenChange(nextOpen)',
@@ -87,6 +87,12 @@ describe('header notification UX contracts', () => {
       'NOTIFICATION_CHANGED_DEBOUNCE_MS',
     );
     expect(notificationCenterSource).not.toContain('setInterval(');
+    expect(notificationCenterSource).toContain(
+      "document.visibilityState === 'visible' && navigator.onLine",
+    );
+    expect(notificationCenterSource).toContain(
+      'if (disposed || running) return;',
+    );
   });
 
   it('stays usable in constrained viewports and exposes unread state', () => {
@@ -111,5 +117,6 @@ describe('header notification UX contracts', () => {
     expect(notificationCenterSource).toContain(
       'setHasActivatedNotificationResource(true)',
     );
+    expect(notificationCenterSource).toContain('useNotificationCount(');
   });
 });

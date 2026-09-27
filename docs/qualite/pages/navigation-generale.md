@@ -58,6 +58,15 @@ Sources : [Sidebar](../../../apps/web/src/components/Sidebar.tsx),
   Infobulles de recherche, notifications et menu après 300 ms. Recherche ouverte
   depuis son bouton, sans raccourci global ni indication de raccourci dans la barre.
   Échap ferme la recherche et rend le focus au bouton.
+- Notifications : panneau de 400 px maximum sur fond ardoise, rayon de 8 px,
+  sans ombre ni animation d’ouverture. Liste compacte, focus intérieur de 3 px,
+  fermeture 40/44 px. Point non lu aligné ; gravité indiquée par icône et texte
+  colorés sans badge de fond. Temps relatif récent et date/heure complètes accessibles.
+- Compteur partagé avec la boîte personnelle, isolé par compte et révision
+  d’autorisation. Rafraîchissement toutes les 30 secondes quand l’onglet est
+  visible et connecté, sans chevauchement périodique ; aucun transport temps réel.
+  Échec de lecture signalé par un toast avec reprise. La lecture n’est confirmée
+  qu’après succès serveur ; pas de toast de succès à chaque ouverture.
 
 Le défilement des pages par rubrique reste mémorisé. Le shell contrôle la sidebar
 ouverte ; l’ancienne préférence `team-control:sidebar:desktop-open` et la clé
@@ -225,7 +234,7 @@ n’a pas été rejoué pour ce retrait.
 ## Analyse du panneau de notifications — 27 septembre 2026
 
 Demande : examiner le popover et proposer les améliorations adaptées à un aperçu
-rapide. **Analyse uniquement : aucune correction du composant appliquée.**
+rapide. **État initial avant les corrections autorisées et décrites ci-dessous.**
 Sources : [NotificationCenter](../../../apps/web/src/components/layout/NotificationCenter.tsx),
 [popover partagé](../../../apps/web/src/components/ui/popover.tsx),
 [lecture API](../../../apps/web/src/app/api/notifications/route.ts) et
@@ -280,6 +289,71 @@ pas testés sur une base réelle. Révocation d’accès, parcours de formulaire
 enregistré, arrivée depuis un autre utilisateur, Safari, appareil physique,
 zoom et lecteur d’écran restent non vérifiés. Aucun benchmark réseau/SQL.
 Captures et banc temporaires supprimés après inspection.
+
+## Corrections du panneau de notifications — 27 septembre 2026
+
+Les propositions précédentes ont été autorisées. Mise en œuvre : panneau de
+400 px maximum, coins de 8 px, sans ombre ni animation. `animate-none!` neutralise
+les animations héritées uniquement ici, sans modifier la primitive partagée.
+Lignes de hauteur naturelle, texte descriptif plus compact, liste de 384 px
+maximum qui se réduit avec le viewport ; titre et pied restent accessibles.
+Repères de gravité distincts de la non-lecture. Dates relatives jusqu’à sept
+jours, puis date explicite, date/heure complètes dans le nom accessible et le
+titre du `<time>`. Source en dehors de la valeur temporelle.
+
+La boîte et la cloche utilisent un compteur commun en mémoire via
+`useSyncExternalStore` : état serveur initial neutre, abonnements nettoyés,
+isolation compte/révision d’autorisation, rejet des publications plus anciennes,
+libération après le dernier abonné. Aucun localStorage ni cache serveur ajouté.
+La boîte publie son résultat initial ; son action d’ouverture confirme maintenant
+la lecture après la réponse serveur et propose aussi une reprise en cas d’échec.
+Le popover se réinitialise lors d’un changement de compte ou d’autorisation.
+
+Rafraîchissement périodique après 30 secondes, lorsque l’onglet est visible et
+connecté ; minuteur relancé après la requête et protégé contre le chevauchement.
+Retour visible et retour en ligne réactivent la lecture. Les événements locaux
+restent regroupés sur 200 ms. Sur la boîte non activée, seule une lecture bornée
+à un élément renouvelle le compteur ; l’ouverture charge les dix éléments.
+Les réponses anciennes ne remplacent pas un compteur confirmé plus récemment.
+Les erreurs de rafraîchissement conservent les données disponibles ; une erreur
+du compteur seul sur la boîte laisse à celle-ci ses messages de chargement.
+Un échec de marquage lu produit un toast de dix secondes, identifié par notification,
+avec « Réessayer » ; aucune confirmation de lecture optimiste. Une reprise liée
+à un ancien compte sans abonné actif ne lance pas de commande.
+
+Sélection mise à jour : à examiner Q01–Q11, Q14, Q16–Q19, Q22, Q27, Q28, Q30.
+Compteurs partagés, échec de mutation, fraîcheur, isolation et coûts de lecture
+s’ajoutent au visuel. Q16 concerne uniquement le retrait du lien futur « Tout gérer »,
+déjà masqué. Hors impact Q12, Q13, Q15, Q20, Q24, Q25, Q29 : schéma, audit,
+fichiers, gouvernance, métier esport et sauvegardes inchangés. Non applicable
+Q21, Q23, Q26 : pas d’import/export, canal externe, tâche durable ou finance.
+
+**Validations.** 31 tests ciblés réussis : compteur, dates, contrats header/boîte
+et route de boîte avec dépendances simulées. TypeScript et lint ciblé réussis.
+Banc Chromium avec NotificationCenter, NotificationInboxPage, hooks, primitives,
+CSS et Geist réels ; cadre de header simplifié, session, navigation et API simulées.
+Le compteur initial de la boîte apparaît dans la cloche sans GET supplémentaire.
+Horloge contrôlée : renouvellement à 30 secondes, pause masquée, reprise visible,
+lecture bornée sur la boîte et arrêt après retrait simulé de permission vérifiés.
+Lecture échouée sans baisse du compteur, toast puis reprise réussie ; navigation
+annulée sans mutation ; vide, erreur initiale et erreur après succès contrôlés.
+Survol, Tab, focus et Échap avec retour à la cloche vérifiés ; aucune erreur JS.
+Documentation Context7 consultée pour le store React, le popover Radix et la
+priorité des utilitaires Tailwind v4 ; comportement comparé aux versions installées.
+
+Rendu inspecté à 1440 × 900, 390 × 844 et 320 × 320 : panneau contenu, largeur
+400 px desktop, lignes courantes d’environ 94 px, environ quatre éléments visibles
+sur l’exemple desktop, focus calculé plein à 3 px, animation calculée `none`.
+À faible hauteur, le défilement reste nécessaire ; les textes longs ne sont pas
+forcés dans une hauteur fixe. Captures et banc supprimés après vérification.
+
+Le contrôle global d’architecture échoue sur un dépassement **préexistant** :
+`components/ui/sidebar.tsx`, 925 lignes pour un plafond de 900, identique dans HEAD
+et hors de cette modification. Aucun seuil relevé pour masquer ce résultat.
+Pas de test de base réelle, de charge, de session réelle, de lecteur d’écran ni
+de Safari/appareil physique. La stratégie de 30 secondes devra être reconsidérée
+si le nombre de sessions actives, le coût des compteurs ou le besoin de réception
+instantanée le justifie. Aucune conformité ni performance globale revendiquée.
 
 ## Historique utile
 

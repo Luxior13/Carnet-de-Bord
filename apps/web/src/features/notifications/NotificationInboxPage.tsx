@@ -20,6 +20,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { toast } from 'sonner';
@@ -49,7 +50,9 @@ import { Skeleton } from '$ui/skeleton';
 import { apiFetchJson, jsonRequest } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 
+import { notificationCountStore } from './notification-count-store';
 import { type InboxFilter, normalizeInboxFilter } from './notification-filters';
+import { useNotificationCount } from './useNotificationCount';
 type NotificationAction = 'archive' | 'read' | 'restore' | 'unread';
 type SeverityDisplay = {
   badge: 'destructive' | 'info' | 'success' | 'warning';
@@ -286,14 +289,17 @@ const NotificationInboxContent: FC<{
   initialData?: NotificationListData;
   setFilter: (filter: InboxFilter) => void;
 }> = ({ filter, initialData, setFilter }) => {
-  const { userData } = useUser();
+  const { authorizationRevision, userData } = useUser();
+  const scope = `${userData?.id ?? 'anonymous'}:${authorizationRevision}`;
+  const pendingReadsRef = useRef(new Set<string>());
   const [items, setItems] = useState<NotificationItem[]>(
     initialData?.items ?? [],
   );
   const [pagination, setPagination] = useState<
     NotificationListData['pagination'] | null
   >(initialData?.pagination ?? null);
-  const [unreadCount, setUnreadCount] = useState(initialData?.unreadCount ?? 0);
+  const [sharedUnreadCount, setUnreadCount] = useNotificationCount(scope);
+  const unreadCount = sharedUnreadCount ?? initialData?.unreadCount ?? 0;
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const canViewNotifications =
@@ -305,12 +311,17 @@ const NotificationInboxContent: FC<{
         userData.permissions,
       ));
   const loadFirstPage = useCallback(
-    (signal: AbortSignal) =>
-      apiFetchJson<NotificationListData>(
+    async (signal: AbortSignal) => {
+      const requestedAt = Date.now();
+      const data = await apiFetchJson<NotificationListData>(
         `/api/notifications?status=${filter}`,
         { signal },
-      ),
-    [filter],
+      );
+      if (!signal.aborted) setUnreadCount(data.unreadCount, requestedAt);
+
+      return data;
+    },
+    [filter, setUnreadCount],
   );
   const resource = useAsyncResource(loadFirstPage, {
     enabled: canViewNotifications,
@@ -318,6 +329,11 @@ const NotificationInboxContent: FC<{
     keepPreviousData: false,
     skipInitialRefresh: Boolean(initialData),
   });
+
+  useEffect(() => {
+    if (canViewNotifications && initialData)
+      setUnreadCount(initialData.unreadCount);
+  }, [canViewNotifications, initialData, setUnreadCount]);
 
   useEffect(() => {
     setItems([]);
@@ -328,7 +344,6 @@ const NotificationInboxContent: FC<{
     if (!resource.data) return;
     setItems(resource.data.items);
     setPagination(resource.data.pagination);
-    setUnreadCount(resource.data.unreadCount);
   }, [resource.data]);
 
   const isInitialLoading =
@@ -416,26 +431,50 @@ const NotificationInboxContent: FC<{
         setPendingAction(null);
       }
     },
-    [filter],
+    [filter, setUnreadCount],
   );
 
-  const markReadOnOpen = useCallback((item: NotificationItem): void => {
-    if (item.readAt !== null || item.archivedAt !== null) return;
-    setItems((currentItems) =>
-      currentItems.map((notification) =>
-        notification.id === item.id
-          ? { ...notification, readAt: new Date().toISOString() }
-          : notification,
-      ),
-    );
-    setUnreadCount((count) => Math.max(0, count - 1));
-    void apiFetchJson(
-      `/api/notifications/${item.id}`,
-      jsonRequest('PATCH', { action: 'read' }),
-    )
-      .then(() => notifyNotificationsChanged())
-      .catch(() => undefined);
-  }, []);
+  const markReadOnOpen = useCallback(
+    (item: NotificationItem): void => {
+      if (
+        item.readAt !== null ||
+        item.archivedAt !== null ||
+        pendingReadsRef.current.has(item.id) ||
+        notificationCountStore.get(scope) === null
+      )
+        return;
+      pendingReadsRef.current.add(item.id);
+      void apiFetchJson(
+        `/api/notifications/${item.id}`,
+        jsonRequest('PATCH', { action: 'read' }),
+      )
+        .then(() => {
+          toast.dismiss(`notification-read-${item.id}`);
+          setItems((currentItems) =>
+            currentItems.map((notification) =>
+              notification.id === item.id
+                ? { ...notification, readAt: new Date().toISOString() }
+                : notification,
+            ),
+          );
+          setUnreadCount((count) => Math.max(0, count - 1));
+          notifyNotificationsChanged();
+        })
+        .catch(() => {
+          if (notificationCountStore.get(scope) !== null)
+            toast.error('La notification n’a pas pu être marquée comme lue.', {
+              action: {
+                label: 'Réessayer',
+                onClick: () => markReadOnOpen(item),
+              },
+              duration: 10_000,
+              id: `notification-read-${item.id}`,
+            });
+        })
+        .finally(() => pendingReadsRef.current.delete(item.id));
+    },
+    [scope, setUnreadCount],
+  );
 
   const markAllRead = useCallback(async (): Promise<void> => {
     setPendingAction('read-all');
@@ -462,11 +501,12 @@ const NotificationInboxContent: FC<{
     } finally {
       setPendingAction(null);
     }
-  }, [filter]);
+  }, [filter, setUnreadCount]);
 
   const loadMore = useCallback(async (): Promise<void> => {
     if (!pagination?.nextCursor || isLoadingMore) return;
     setIsLoadingMore(true);
+    const requestedAt = Date.now();
     try {
       const nextPage = await apiFetchJson<NotificationListData>(
         `/api/notifications?status=${filter}&cursor=${encodeURIComponent(pagination.nextCursor)}`,
@@ -480,13 +520,13 @@ const NotificationInboxContent: FC<{
         ];
       });
       setPagination(nextPage.pagination);
-      setUnreadCount(nextPage.unreadCount);
+      setUnreadCount(nextPage.unreadCount, requestedAt);
     } catch {
       toast.error('Impossible de charger la suite des notifications');
     } finally {
       setIsLoadingMore(false);
     }
-  }, [filter, isLoadingMore, pagination?.nextCursor]);
+  }, [filter, isLoadingMore, pagination?.nextCursor, setUnreadCount]);
 
   if (!canViewNotifications) {
     return (

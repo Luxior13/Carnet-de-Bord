@@ -143,6 +143,25 @@ et ouvrent les résultats ; Échap ferme la fenêtre et rend le focus au bouton.
 Les combinaisons Vim de cette palette restent désactivées. Les gardes de formulaire
 restent appliquées aux destinations.
 
+Le panneau de notifications reste ancré à droite. Largeur maximale de 400 px,
+fond bleu ardoise, rayon de 8 px, sans ombre ni animation d’ouverture ; lignes
+compactes, point non lu aligné et gravité portée par une icône et un libellé,
+sans fond de badge coloré. Les dates récentes sont relatives ; la date complète
+avec heure reste disponible via le libellé accessible et le titre du temps.
+La boîte complète conserve les textes et dates détaillés.
+
+Le compteur est partagé en mémoire avec « Mes notifications », séparé par compte
+et révision des autorisations, puis libéré sans stockage persistant. La lecture
+initiale de la boîte alimente aussi la cloche, sans seconde lecture de collection.
+Une actualisation est prévue toutes les 30 secondes lorsque l’onglet est visible
+et connecté, après la fin de la précédente ; retour à l’onglet, reconnexion et
+actions locales permettent aussi de réactualiser. La requête reste limitée à
+dix notifications, ou une seule pour le compteur sur la boîte avant ouverture
+de la cloche. Ce fonctionnement ne promet pas une réception instantanée.
+Une lecture échouée conserve le compteur et propose « Réessayer » dans un toast ;
+la navigation reste possible. Les liens du panneau respectent une navigation
+annulée par la garde d’un formulaire.
+
 Les gabarits partagés limitent la largeur extérieure à 76rem par défaut, 52rem pour les créations et 56rem pour la lecture (actualité, notifications, recherche). Une variante de 92rem reste disponible pour les données denses. Les listes basculent entre tableau et présentation mobile selon la largeur de leur conteneur. Voir la [proposition UX/UI et son suivi](UX_UI_PROPOSITION_2026-09-23.md).
 
 Chaque module traite les états de chargement, absence de données, erreur réessayable, accès refusé et conflit de modification lorsqu’il s’applique. L’interface explique une action indisponible sans révéler l’existence d’un dossier confidentiel.
