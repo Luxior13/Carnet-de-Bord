@@ -146,8 +146,7 @@ export const FEATURES = {
       poleLabel: 'Système',
     },
     availability: 'live',
-    description:
-      "Configuration globale de l'interface et de la conservation des données.",
+    description: 'Configuration globale de la conservation des données.',
     href: PAGE_PATHS.systemSettings,
     icon: 'Settings',
     id: 'system-settings',

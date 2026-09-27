@@ -1,7 +1,7 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
-import React, { type FC, useRef } from 'react';
+import { Loader2, Minus, Plus } from 'lucide-react';
+import React, { type FC, useEffect, useRef } from 'react';
 
 import { getSystemSettingDefinition } from '$constants/system-setting-catalog.constants';
 import { Button } from '$ui/button';
@@ -24,8 +24,11 @@ type SystemSettingRowProps = {
   disabled: boolean;
   draft: string;
   error?: string;
+  isEditing: boolean;
   isSaving: boolean;
+  onCancel: () => void;
   onChange: (value: string) => void;
+  onEdit: () => void;
   onKeepDraft: () => void;
   onReloadConflict: () => void;
   onReset: () => void;
@@ -34,6 +37,8 @@ type SystemSettingRowProps = {
 };
 
 const actionClass = 'h-11 rounded-[8px] px-3 lg:h-10';
+const stepButtonClass =
+  'border-border-control bg-input size-11 focus-visible:relative focus-visible:z-10 lg:size-10';
 
 export const SystemSettingRow: FC<SystemSettingRowProps> = ({
   canUpdate,
@@ -41,8 +46,11 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
   disabled,
   draft,
   error,
+  isEditing,
   isSaving,
+  onCancel,
   onChange,
+  onEdit,
   onKeepDraft,
   onReloadConflict,
   onReset,
@@ -51,6 +59,34 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
 }) => {
   const definition = getSystemSettingDefinition(setting.key);
   const inputRef = useRef<HTMLInputElement>(null);
+  const editButtonRef = useRef<HTMLButtonElement>(null);
+  const wasEditing = useRef(false);
+  const editing = canUpdate && isEditing;
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    } else if (wasEditing.current && document.activeElement === document.body) {
+      editButtonRef.current?.focus();
+    }
+    wasEditing.current = editing;
+    if (!editing) return;
+
+    const input = inputRef.current;
+    const preventWheelStep = (event: WheelEvent): void => {
+      if (
+        document.activeElement === input &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        event.cancelable
+      )
+        event.preventDefault();
+    };
+    // Protect the focused duration without blurring it or blocking browser zoom.
+    input?.addEventListener('wheel', preventWheelStep, { passive: false });
+
+    return (): void => input?.removeEventListener('wheel', preventWheelStep);
+  }, [editing]);
   const resetDraft = (): void => {
     onReset();
     inputRef.current?.focus();
@@ -59,6 +95,16 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
   const dirty = isSettingDraftChanged(draft, setting.value);
   const validation = getValidationMessage(setting.key, draft);
   const parsed = getDraftNumber(draft);
+  const canStep = !disabled && parsed !== null && !validation;
+  const stepDuration = (direction: -1 | 1): void => {
+    if (!canStep || parsed === null) return;
+    onChange(
+      String(
+        Math.min(definition.max, Math.max(definition.min, parsed + direction)),
+      ),
+    );
+    inputRef.current?.focus();
+  };
   const reducing =
     dirty &&
     parsed !== null &&
@@ -66,7 +112,6 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
     definition.passwordWhenDecreasing &&
     parsed < setting.value;
   const id = `system-setting-${setting.key.replaceAll('.', '-')}`;
-  const fieldLabel = `Durée de conservation — ${definition.label}`;
 
   return (
     <form
@@ -76,17 +121,11 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        if (
-          canUpdate &&
-          dirty &&
-          !disabled &&
-          !validation &&
-          conflict === 'none'
-        )
+        if (editing && dirty && !disabled && !validation && conflict === 'none')
           onSave();
       }}
     >
-      <div className="grid min-w-0 gap-4 @min-[56rem]/page:grid-cols-[minmax(0,1fr)_19rem] @min-[56rem]/page:gap-8">
+      <div className="grid min-w-0 gap-4 @min-[56rem]/page:grid-cols-[minmax(0,1fr)_16rem] @min-[56rem]/page:gap-8">
         <div className="min-w-0 space-y-2">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
             <h3
@@ -113,60 +152,80 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
           >
             {presentation.impact}
           </p>
-          <p className="text-muted-foreground text-xs leading-5">
-            {dirty
-              ? `Valeur appliquée : ${formatSettingValue(setting.value, definition.unit)}.`
-              : setting.version === 0
-                ? 'Jamais modifié.'
+          {(dirty || setting.version > 0) && (
+            <p className="text-muted-foreground text-xs leading-5">
+              {dirty
+                ? `Valeur appliquée : ${formatSettingValue(setting.value, definition.unit)}.`
                 : `Modifié le ${formatUpdatedAt(setting.updatedAt)}.`}
-          </p>
+            </p>
+          )}
         </div>
-        {canUpdate ? (
-          <div className="min-w-0 space-y-2">
-            <Label className="sr-only" htmlFor={id}>
-              {fieldLabel}
+        {editing ? (
+          <div className="w-full max-w-64 min-w-0 space-y-2">
+            <Label
+              className="text-muted-foreground text-xs leading-5"
+              htmlFor={id}
+            >
+              Durée de conservation
+              <span className="sr-only"> — {definition.label}</span>
             </Label>
-            <div className="flex flex-wrap items-center gap-2">
-              <Input
-                aria-describedby={`${id}-help ${id}-impact${validation ? ` ${id}-validation` : ''}`}
-                aria-invalid={validation ? true : undefined}
-                className="h-11 w-24 rounded-[8px] tabular-nums lg:h-10"
-                disabled={disabled}
-                id={id}
-                inputMode="numeric"
-                max={definition.max}
-                min={definition.min}
-                onChange={(event) => onChange(event.target.value)}
-                required
-                ref={inputRef}
-                step={1}
-                type="number"
-                value={draft}
-              />
+            <div className="flex items-center gap-2">
+              <div className="flex min-w-0 flex-1 items-center">
+                <Button
+                  aria-controls={id}
+                  aria-label={`Diminuer d’un jour — ${definition.label}`}
+                  className={`${stepButtonClass} rounded-l-[8px] rounded-r-none`}
+                  disabled={!canStep || parsed === definition.min}
+                  onClick={() => stepDuration(-1)}
+                  size="icon"
+                  type="button"
+                  variant="outline"
+                >
+                  <Minus aria-hidden="true" className="size-4" />
+                </Button>
+                <Input
+                  aria-describedby={`${id}-help ${id}-impact${validation ? ` ${id}-validation` : ''}`}
+                  aria-invalid={validation ? true : undefined}
+                  className="h-11 min-w-0 flex-1 [appearance:textfield] rounded-none border-x-0 px-2 text-center tabular-nums focus-visible:relative focus-visible:z-10 lg:h-10 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  disabled={disabled}
+                  id={id}
+                  inputMode="numeric"
+                  max={definition.max}
+                  min={definition.min}
+                  onChange={(event) => onChange(event.target.value)}
+                  required
+                  ref={inputRef}
+                  step={1}
+                  type="number"
+                  value={draft}
+                />
+                <Button
+                  aria-controls={id}
+                  aria-label={`Augmenter d’un jour — ${definition.label}`}
+                  className={`${stepButtonClass} rounded-l-none rounded-r-[8px]`}
+                  disabled={!canStep || parsed === definition.max}
+                  onClick={() => stepDuration(1)}
+                  size="icon"
+                  type="button"
+                  variant="outline"
+                >
+                  <Plus aria-hidden="true" className="size-4" />
+                </Button>
+              </div>
               <span className="text-muted-foreground text-sm">
                 {definition.unit === 'days' ? 'jours' : 'lignes'}
               </span>
-              <Button
-                aria-label={`Enregistrer — ${definition.label}`}
-                className={`${actionClass} ml-auto`}
-                disabled={
-                  disabled || !dirty || !!validation || conflict !== 'none'
-                }
-                type="submit"
-              >
-                {isSaving && (
-                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-                )}
-                Enregistrer
-              </Button>
             </div>
             <p
               className="text-muted-foreground text-xs leading-5"
               id={`${id}-help`}
             >
-              {definition.min.toLocaleString('fr-FR')}–
-              {definition.max.toLocaleString('fr-FR')}. Par défaut :{' '}
-              {definition.defaultValue.toLocaleString('fr-FR')}.
+              Entre {definition.min.toLocaleString('fr-FR')} et{' '}
+              {formatSettingValue(definition.max, definition.unit)}.{' '}
+              <span className="inline-block">
+                Défaut :{' '}
+                {formatSettingValue(definition.defaultValue, definition.unit)}.
+              </span>
             </p>
             {validation && (
               <p
@@ -177,42 +236,77 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
                 {validation}
               </p>
             )}
-            {(dirty || parsed !== definition.defaultValue) &&
-              conflict === 'none' && (
-                <div className="flex flex-wrap items-center gap-1">
-                  {dirty && (
-                    <Button
-                      className={actionClass}
-                      disabled={disabled}
-                      onClick={resetDraft}
-                      type="button"
-                      variant="ghost"
-                    >
-                      Annuler
-                    </Button>
-                  )}
-                  {parsed !== definition.defaultValue && (
-                    <Button
-                      aria-label={`Rétablir la valeur par défaut — ${definition.label}`}
-                      className={actionClass}
-                      disabled={disabled}
-                      onClick={() => {
-                        onChange(String(definition.defaultValue));
-                        inputRef.current?.focus();
-                      }}
-                      type="button"
-                      variant="ghost"
-                    >
-                      Rétablir le défaut
-                    </Button>
-                  )}
-                </div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {conflict === 'none' && parsed !== definition.defaultValue && (
+                <Button
+                  aria-label={`Rétablir la valeur par défaut — ${definition.label}`}
+                  className={actionClass}
+                  disabled={disabled}
+                  onClick={() => {
+                    onChange(String(definition.defaultValue));
+                    inputRef.current?.focus();
+                  }}
+                  type="button"
+                  variant="ghost"
+                >
+                  Rétablir le défaut
+                </Button>
               )}
+              <div className="ml-auto flex shrink-0 items-center gap-2">
+                {conflict === 'none' && (
+                  <Button
+                    className={actionClass}
+                    disabled={disabled}
+                    onClick={onCancel}
+                    type="button"
+                    variant="ghost"
+                  >
+                    Annuler
+                  </Button>
+                )}
+                <Button
+                  aria-label={`Enregistrer — ${definition.label}`}
+                  className={actionClass}
+                  disabled={
+                    disabled || !dirty || !!validation || conflict !== 'none'
+                  }
+                  type="submit"
+                >
+                  {isSaving && (
+                    <Loader2
+                      aria-hidden="true"
+                      className="size-4 animate-spin"
+                    />
+                  )}
+                  Enregistrer
+                </Button>
+              </div>
+            </div>
           </div>
         ) : (
-          <p className="text-foreground text-lg font-semibold tabular-nums">
-            {formatSettingValue(setting.value, definition.unit)}
-          </p>
+          <div className="flex w-full max-w-64 min-w-0 flex-wrap items-center justify-between gap-3 self-start">
+            <div>
+              <p className="text-muted-foreground text-xs leading-5">
+                Durée appliquée
+              </p>
+              <p className="text-foreground text-xl font-semibold tabular-nums">
+                {formatSettingValue(setting.value, definition.unit)}
+              </p>
+            </div>
+            {canUpdate && (
+              <Button
+                aria-label={`Modifier — ${definition.label}`}
+                className={actionClass}
+                disabled={disabled}
+                onClick={onEdit}
+                ref={editButtonRef}
+                type="button"
+                variant="outline"
+              >
+                Modifier
+              </Button>
+            )}
+          </div>
         )}
       </div>
       {reducing && parsed !== null && conflict === 'none' && (

@@ -48,7 +48,7 @@ classement si l’implémentation révèle une dépendance ou élargit le périm
 | --- | --- | --- |
 | Q01 | [Besoin, périmètre et règles métier](fiches/cadrage-metier.md) | À chaque changement : quel problème résout-on, pour qui et avec quel résultat observable ? |
 | Q02 | [Parcours, navigation et contenu](fiches/parcours-navigation.md) | Une page, un lien, une action, un état ou un libellé change-t-il ? |
-| Q03 | [Composition, couleurs et composants](fiches/interface-visuelle.md) | Le rendu, la densité, la hiérarchie ou un état visuel change-t-il ? |
+| Q03 | [Composition, couleurs et composants](fiches/interface-visuelle.md) | Pour chaque élément, le composant choisi sert-il le besoin ? Son rendu, sa densité, sa hiérarchie ou un état visuel change-t-il ? |
 | Q04 | [Accessibilité et adaptation](fiches/accessibilite.md) | Une interaction, un contenu ou une présentation est-il ajouté ou modifié ? |
 | Q05 | [Listes, recherche, filtres et pagination](fiches/listes-recherche.md) | Y a-t-il une collection, une synthèse, une recherche ou des résultats volumineux ? |
 | Q06 | [Formulaires, actions et validations](fiches/formulaires-actions.md) | L’utilisateur saisit-il, décide-t-il, publie-t-il ou déclenche-t-il une mutation ? |
@@ -95,6 +95,23 @@ ne signifie jamais « pas de contrôle d’accès ».
 | API/automatisation sans écran | Exécuter une règle fiable | Contrat, permission, idempotence, erreurs, observabilité et reprise |
 
 Ces priorités ne prescrivent pas toutes les fiches. Une page peut combiner des types.
+
+### Examiner aussi le choix de chaque élément
+
+Parcourir les éléments du périmètre un par un : champ, bouton, filtre, menu,
+badge, tableau, carte, dialogue et retour utilisateur. Ne pas se limiter à leur
+couleur ou à leur placement : **est-ce le bon composant pour cette tâche et ces
+données ?** Examiner sa nécessité, sa variante, ses interactions, ses états et
+ses alternatives. Lors d'une revue complète de page, faire ce passage sur tous
+ses éléments ; lors d'une retouche, sur les éléments touchés et leurs dépendances.
+
+Exemple : un nombre peut demander une saisie directe, des boutons −/+, une liste
+de valeurs ou une simple lecture selon son sens, sa plage et la fréquence des
+ajustements. Des boutons −/+ complètent une saisie utile ; ils ne deviennent pas
+une règle universelle pour les durées, montants ou identifiants. Justifier le
+choix et contrôler bornes, clavier, tactile, erreurs et attente avec
+[les formulaires](fiches/formulaires-actions.md) et
+[l'accessibilité](fiches/accessibilite.md).
 
 ## 5. Examiner les liens entre les sujets sélectionnés
 

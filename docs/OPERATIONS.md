@@ -142,6 +142,12 @@ les requêtes ordinaires. La purge des valeurs liées à une fiche supprimée pa
 exclusivement par `purge_person_audit_field_changes(text)` dans la transaction
 de suppression.
 
+La durée d'audit est actuellement commune à toutes les catégories d'événements.
+La suppression d'un événement entraîne celle de ses `AuditFieldChange`, utilisés
+par l'historique des personnes. Les catégories existantes ne sont pas des classes
+de conservation. Voir [l'examen de portée et la séparation à préparer](qualite/pages/systeme-parametres.md#portée-du-journal--constat-et-séparation-à-préparer)
+avant de changer cette politique ; aucune séparation de durées n'est encore appliquée.
+
 Surveiller la sortie et le code de retour de `bun run maintenance`. Une erreur
 n’empêche pas le web de servir du trafic, mais doit déclencher une alerte afin
 que la conservation ne dérive pas silencieusement.

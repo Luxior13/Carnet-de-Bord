@@ -303,7 +303,7 @@ const SETTINGS_PERMISSION_ITEMS: PermissionItem[] = [
     action: 'update',
     dependencies: [PERMISSIONS.SETTINGS.VIEW],
     description:
-      "Modifier l'interface globale et les durées de conservation ; une réduction demande le mot de passe",
+      'Modifier les durées de conservation ; une réduction demande le mot de passe',
     grantable: false,
     key: PERMISSIONS.SETTINGS.UPDATE,
     label: 'Modifier les paramètres système',
@@ -750,8 +750,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   {
     accessPermissionKey: PERMISSIONS.SETTINGS.VIEW,
     assignment: 'role-bound',
-    description:
-      "Configuration globale de l'interface et de la conservation des données.",
+    description: 'Configuration globale de la conservation des données.',
     icon: 'Settings',
     key: 'system-settings',
     label: 'Paramètres système',

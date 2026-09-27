@@ -7,7 +7,7 @@ Utiliser un nom stable compréhensible, sans multiplier les copies datées.
 | Page | Suivi | État du document |
 | --- | --- | --- |
 | Utilisateurs — liste | [systeme-utilisateurs.md](systeme-utilisateurs.md) | Repères issus du travail existant ; aucun nouvel audit exécuté pour créer ce référentiel |
-| Paramètres système | [systeme-parametres.md](systeme-parametres.md) | Deux réglages de conservation ; pagination sortie des paramètres le 27 septembre 2026, défaut commun de 25 ; brouillons et concurrence vérifiés |
+| Paramètres système | [systeme-parametres.md](systeme-parametres.md) | Durées en lecture avec Modifier ; portée du journal et séparation future documentées ; pagination retirée, défaut commun de 25 |
 | Navigation générale — sidebar et header | [navigation-generale.md](navigation-generale.md) | Sidebar fixe, recherche affinée et clavier corrigé, notifications compactes avec compteur partagé ; suivi du 27 septembre 2026 |
 
 Pour commencer un nouveau suivi : [modèle de revue](../modeles/revue-page.md).

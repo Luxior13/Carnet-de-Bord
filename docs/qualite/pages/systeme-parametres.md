@@ -4,8 +4,8 @@
 
 - Route : `/systeme/parametres`, module `features/settings`.
 - Public : administrateurs autorisés à consulter et modifier la configuration globale.
-- Dernière passe : 27 septembre 2026, retrait approuvé du réglage global de pagination,
-  après la refonte et les corrections de conservation.
+- Dernière passe : 27 septembre 2026, édition à la demande des durées et examen
+  de la portée du journal, après retrait du réglage global de pagination.
 - État : présentation et corrections implémentées, contrôles ciblés réussis.
   Les limites d'exploitation et de validation complète figurent ci-dessous.
 - Références : [revue générale](../REVUE_GENERALE.md),
@@ -51,10 +51,35 @@ restent relues en base avant utilisation.
   de 8 px, pas d'ombre sur les panneaux ni de hero décoratif.
 - Explication à gauche, champ/unité/action à droite quand la largeur le permet ;
   empilement sur petit écran. Sidebar et géométrie globale inchangées.
-- Deux boutons Enregistrer au repos ; Annuler et Rétablir le défaut seulement
-  quand utiles. Hauteur des actions de réglage : 40 px sur grand écran, 44 px en mobile.
+- Au repos : durée appliquée lisible et bouton Modifier par réglage pour les
+  administrateurs autorisés. Aucun champ ou bouton Enregistrer permanent.
+- Modifier ouvre la saisie et place le focus dans le champ. Annuler reste disponible
+  même sans changement ; il abandonne ce seul brouillon et referme son édition.
+  Un succès confirmé referme le réglage ; erreur, conflit et confirmation annulée
+  le gardent ouvert. Les autres brouillons restent indépendants.
+- Hauteur des actions de réglage : 40 px sur grand écran, 44 px en mobile.
+- En édition, Annuler précède immédiatement Enregistrer dans un même groupe
+  aligné à droite, sous le champ et son aide. Le groupe reste sur une seule ligne
+  en mobile ; Rétablir le défaut peut passer sur une ligne séparée.
+- Bloc de valeur limité à 16 rem, empilé sous l'explication sur petit écran.
+  En édition, le libellé visible « Durée de conservation » précède le champ ;
+  son nom accessible précise le réglage. Bornes et défaut indiquent les jours.
+- Champ de durée composé « − valeur + », avec unité à droite et flèches natives
+  masquées localement. Pas d'un jour ; saisie directe conservée pour les écarts
+  importants. Boutons de 40 px sur grand écran et 44 px sur petit écran,
+  noms accessibles contextualisés, flèches haut/bas du clavier conservées.
+  Chaque ajustement garde le focus dans le champ et ne soumet pas le formulaire.
+- L'ajustement est désactivé à la borne correspondante, pendant l'attente et
+  sur une saisie vide, fractionnaire ou hors plage. La saisie invalide reste
+  corrigeable et n'est pas remplacée silencieusement par une valeur par défaut.
+  Une réduction garde l'avertissement et la confirmation d'enregistrement existants.
+- La molette est neutralisée au-dessus du champ actif pour éviter de modifier
+  une durée par accident, sans retirer le focus. Le défilement doit alors se faire
+  hors de cette cible ; le geste de zoom avec Ctrl/Cmd n'est pas intercepté.
+  Le comportement reste local à ces deux réglages, sans modifier la primitive Input.
 - État « Non enregistré » discret, sans fond coloré ; valeur appliquée affichée
   lorsqu'elle diffère. « Valeur par défaut » remplace « Recommandé ».
+  Aucun « Jamais modifié » au repos : seule une modification réelle affiche sa date.
 - Avertissement contextualisé pour une diminution ; rappel d'irréversibilité
   commun. Pas de rail statistique, de recherche ou d'onglets injustifiés.
 
@@ -68,8 +93,10 @@ restent relues en base avant utilisation.
   Les succès gardent leur toast ; aucun nouvel événement de notification.
 - Une même comparaison numérique pilote le garde de navigation et la sauvegarde :
   `025` et `25` ne créent plus un faux changement ; une saisie invalide reste protégée.
-- Entrée soumet le réglage. Le focus revient au champ après annulation,
-  restauration du défaut ou résolution du conflit.
+- Entrée soumet le réglage. Le focus revient à Modifier après annulation ou succès,
+  et au champ après restauration du défaut ou résolution du conflit. Une
+  actualisation réussie referme les éditions ; le bouton Actualiser garde le focus
+  pendant la lecture, reste annoncé occupé et ignore les activations répétées.
 - La modification de conservation des notifications et sa purge partagent un
   verrou PostgreSQL transactionnel, même avant la première ligne de configuration.
   La durée est lue après acquisition, dans la transaction `ReadCommitted`.
@@ -78,6 +105,62 @@ restent relues en base avant utilisation.
 - Les requêtes de verrou exposées à Prisma convertissent le résultat `void` en
   `text` ; le test PostgreSQL a révélé l'incompatibilité de la forme précédente.
 - Pas de migration, de changement de bornes, de nouvelle permission ou de table métier.
+
+### Portée du journal : constat et séparation à préparer
+
+Examen du code le 27 septembre 2026, sans changement de durée ni exécution de purge.
+Le défaut logiciel reste **1 095 jours** ; ce maintien ne valide pas sa pertinence
+pour chaque finalité. Les notifications restent à **180 jours** par défaut.
+Archiver une notification ne prolonge pas sa conservation.
+
+| Ensemble constaté | Données et usages actuels | Point à trancher avant de séparer les durées |
+| --- | --- | --- |
+| Connexions et sécurité | Connexions réussies/échouées, verrouillages, sessions, mot de passe, MFA, preuves d'action sensible ; acteur, IP et navigateur selon événement | Finalité de sécurité, durée utile à l'analyse et métadonnées minimales |
+| Administration | Comptes, autorisations, paramètres, exports, envois de notifications et publications internes | Séparer la preuve de l'action administrative du contenu métier qu'elle concerne |
+| Historique des personnes | `PERSON_*` et anciennes/nouvelles valeurs dans `AuditFieldChange`, dont certaines chiffrées ; lecture depuis la fiche personne | Justifier les champs nécessaires et leur horizon d'utilisation ; cet historique ne constitue pas à lui seul un parcours sportif daté |
+| Événements historiques | Anciennes actions `PARTNER_*` et traitements retirés toujours lisibles | Préserver leur interprétation ; définir le sort de chaque type ancien avant une classification rétroactive |
+
+Constats structurants :
+
+- La fonction SQL `purge_expired_audit_logs` filtre uniquement la date de création
+  avec la durée globale. Elle ne distingue ni action, ni catégorie, ni finalité.
+- `AuditFieldChange` dépend de `AuditLog` avec suppression en cascade. L'historique
+  affiché par `getPersonFieldHistory` disparaît donc avec l'événement parent ; le
+  chiffrement ne modifie pas cette règle. La suppression d'une personne dispose
+  en plus de sa procédure de purge des valeurs, distincte de la maintenance.
+- `ACTIVITY` couvre aussi la sécurité ; `IDENTITY` contient comptes et personnes ;
+  `SYSTEM` mélange configuration, publications et anciens partenaires. Ces champs
+  existants ne suffisent pas à déduire une politique de conservation métier.
+- Une trace de modification métier reste une trace applicative. La renommer
+  « historique métier » ne justifie ni une conservation illimitée ni trois ans
+  par défaut. Les engagements datés, pièces et faits métier à conserver ont leur
+  propre finalité et ne doivent pas dépendre uniquement d'un journal technique.
+
+La [CNIL recommande généralement six mois à un an pour la journalisation](https://www.cnil.fr/fr/securite-tracer-les-operations),
+y compris les traces applicatives, avec des exceptions à justifier. Source consultée
+le 27 septembre 2026. Ce repère ne fixe pas la durée des dossiers et documents métier.
+
+Séparation future, **non implémentée dans cette passe** :
+
+1. Définir par finalité les événements/champs nécessaires, leurs lecteurs,
+   le début du délai, la durée et les éventuelles exceptions, avec le responsable
+   de la structure. Qualifier séparément traces et faits métier durables.
+2. Établir un classement exhaustif des actions actuelles et historiques ; ne pas
+   traiter automatiquement une action inconnue comme supprimable. Prévoir ce
+   classement pour chaque nouvel événement.
+3. Faire évoluer la purge, les liens parent/détails, les contrôles de schéma et
+   les réglages de manière cohérente. Prévoir migration compatible, sauvegarde
+   et simulation des volumes concernés avant toute nouvelle suppression.
+4. Tester frontières de dates, concurrence, détails chiffrés, anciennes actions,
+   droits et restauration sur une base isolée. Afficher plusieurs durées seulement
+   lorsque leurs périmètres sont réellement distincts dans le traitement.
+
+Références d'implémentation examinées :
+[classification des événements](../../../../apps/web/src/shared/server/audit-event.ts),
+[schéma et relations](../../../../packages/database/prisma/schema.prisma),
+[procédures de purge](../../../../packages/database/prisma/migrations/20260721120000_person_identity_foundation/migration.sql),
+[écriture de l'historique personne](../../../../apps/web/src/features/persons/server/person-audit.ts),
+[lecture de cet historique](../../../../apps/web/src/features/persons/server/person-history.service.ts).
 
 ## Sélection des sujets
 
@@ -124,6 +207,26 @@ historique et maintenance inchangés ; les régressions ciblées protègent leur
 Q20–Q21 et Q24–Q26 non applicables : aucun fichier métier, échange en masse,
 engagement juridique, parcours sportif ou financier concerné.
 
+Pour l'édition à la demande et l'examen du journal : Q01–Q04, Q06–Q07,
+Q09–Q12, Q14–Q16, Q19, Q22, Q27 et Q30 examinés (parcours, focus, droits,
+portée des durées et liens d'historique). Q05, Q08, Q13, Q17–Q18, Q23 et
+Q28–Q29 hors impact : pagination, événements de notification, schéma, coût des
+requêtes, cache, maintenance et sauvegardes non modifiés. Q20–Q21 et Q24–Q26
+non applicables : aucun nouveau document, échange, engagement ou parcours métier.
+
+Retouches de placement et de lisibilité du bloc d'édition : Q01–Q04, Q06, Q22,
+Q27 et Q30 examinés (regroupement, libellé, unités, ordre visuel/clavier,
+adaptation et suivi). Q05, Q07–Q19, Q23 et Q28–Q29 hors impact : seuls la
+composition et les textes changent, sans effet sur les durées ou leur validation. Q20–Q21 et
+Q24–Q26 non applicables : mêmes absences de fonctions métier que ci-dessus.
+
+Champ avec boutons −/+ : profondeur fonctionnelle ; Q01–Q04, Q06–Q07, Q19,
+Q22, Q27 et Q30 examinés (adéquation du contrôle, unité/pas, validation locale,
+focus, défilement, états et documentation). Q05, Q08–Q18, Q23 et Q28–Q29 hors
+impact : seules l'édition du brouillon et sa présentation changent, sans nouveau
+contrat serveur, changement de bornes, de permission, de durée stockée ou de purge.
+Q20–Q21 et Q24–Q26 non applicables : aucun document, échange ou parcours métier ajouté.
+
 ## Résolution des constats initiaux
 
 | ID | Constat initial | Traitement et état actuel |
@@ -143,6 +246,68 @@ engagement juridique, parcours sportif ou financier concerné.
 | PAR-13 | Clavier, tailles et chargement | Soumission Entrée, focus restauré, cibles harmonisées et squelette dérivé du catalogue (un groupe, deux réglages) ; auteur de modification et lien historique restent à qualifier selon le besoin |
 
 ## Contrôles exécutés
+
+### Champ de durée avec boutons −/+
+
+- Régression navigateur conservée dans `e2e/system-settings.checks.ts` : clic,
+  activation clavier, retour du focus, flèches haut/bas, bornes des deux durées,
+  saisies vides/fractionnaires/hors plage, retour à une valeur valide et molette.
+  La modification reste un brouillon ; les boutons ne soumettent pas le formulaire.
+- Cette régression du champ a été exécutée dans Chromium sur le composant et les
+  styles réels avec état local simulé, pour les deux durées à 1 440, 1 024, 768,
+  390 et 320 px. Clics répétés, tabulation, espace, attente, cibles, focus visible
+  et absence de débordement contrôlés ; aucune erreur JavaScript.
+- Une variation involontaire à la molette a été reproduite dans le premier rendu,
+  puis corrigée et revérifiée avec la molette du navigateur. Le geste Ctrl+molette
+  reste non intercepté. Rendus ordinateur/mobile et couleurs forcées inspectés,
+  texte agrandi à 200 % contrôlé à 768 px. Ce dernier contrôle ne remplace pas
+  un zoom natif ou un appareil physique.
+- Les 6 tests existants de contrats/validation des paramètres passent. TypeScript,
+  lint ciblé et contrôle de diff réussis. Le parcours complet avec API/authentification
+  n'a pas été rejoué pour ce champ ; aucune configuration persistante modifiée.
+  Captures et montage temporaires supprimés après inspection.
+- Références consultées pour conserver la sémantique numérique et les interactions :
+  [champ numérique HTML (MDN)](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/number),
+  [interaction spinbutton (W3C)](https://www.w3.org/WAI/ARIA/apg/patterns/spinbutton/),
+  [événement wheel (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event).
+
+### Placement des actions et lisibilité de l'édition
+
+- Groupe Annuler / Enregistrer contrôlé dans Chromium à 1 440, 768, 390 et
+  320 px, avec saisie inchangée, modifiée et en cours d'enregistrement : boutons
+  côte à côte sous le champ, sans débordement. Annulation au clavier et retour
+  du focus vérifiés sur le composant réel monté avec état local simulé.
+- Captures inspectées sur ordinateur et mobile, TypeScript et lint ciblé réussis,
+  `git diff --check` réussi. Aucun nouveau test permanent pour cette retouche
+  de disposition ; les fichiers temporaires sont supprimés après contrôle.
+- Après ajout du libellé visible et compactage : 24 cas Chromium sur les deux
+  réglages, aux mêmes quatre largeurs, avec saisie inchangée, modifiée ou bloquée
+  pendant l'enregistrement. Bornes et défaut avec unités, absence de débordement,
+  groupe d'actions et focus vérifiés ; aucune erreur JavaScript. La date reste
+  affichée pour une version modifiée ; « Jamais modifié » est retiré.
+  Contrôle sur composant et styles réels avec état local simulé, sans appel API
+  ni modification d'une durée persistante.
+
+### Édition à la demande et examen de la conservation
+
+- **54 tests réussis dans 8 fichiers** : paramètres, routes et catalogue,
+  protections de navigation, historique des personnes et contrats de purge.
+  L'examen des procédures SQL est une lecture de code, pas une purge exécutée.
+- Régression Chromium durable adaptée : lecture initiale sans champ, ouverture
+  au clavier, focus du champ, annulation sans changement ni PUT, sauvegarde fermant
+  uniquement le réglage concerné, autre brouillon conservé, erreur, conflit/version,
+  relecture échouée puis réussie, saisie numériquement identique, confirmation de
+  réduction annulée sans mutation et retour du focus. Réduction confirmée avec
+  réponse serveur retardée : champ/actions bloqués, édition refermée seulement
+  après succès. Rejouée à 1 440 et 390 px.
+- Deux modes inspectés à 1 440 et 320 px ; absence de débordement horizontal
+  contrôlée à 1 440, 1 024, 768, 390 et 320 px. Aucun incident JavaScript.
+  Profil `USER` refusé avec les règles de permission réelles du client.
+- Montage avec composant/styles réels et shell, utilisateur, routeur et API simulés.
+  Aucun compte réel ni durée persistante modifiés ; pas de migration, purge,
+  restauration ou parcours complet avec authentification réelle exécutés.
+- TypeScript, lint ciblé, formatage du scénario et `git diff --check` réussis.
+  Captures et montage temporaires supprimés après inspection.
 
 ### Retrait du réglage de pagination
 
@@ -206,6 +371,7 @@ engagement juridique, parcours sportif ou financier concerné.
 | Exploitation | Planificateur quotidien et alerte de maintenance non vérifiés sur le déploiement | Vérifier la configuration et un compte rendu de passage dans l'environnement exploité |
 | Volumes | Pas de mesure de purge à fort volume ; transaction bornée à 60 s | Mesurer avant de changer index, lots ou architecture de traitement |
 | Conservation | Défauts logiciels, sans qualification universelle des obligations et exceptions | Faire qualifier les durées pour les données réellement détenues et les entités concernées |
+| Portée du journal | Une seule durée purge aussi les détails de l'historique personne ; catégories insuffisantes pour séparer les finalités | Suivre le classement et les étapes documentés ci-dessus avant d'ajouter plusieurs durées ou de réduire le défaut global |
 | Donnée stockée invalide | Repli existant vers le défaut ; avertissement serveur, sans diagnostic dédié dans la page | Qualifier un besoin d'observation avant d'ajouter une interface d'incident |
 | Historique | Date affichée ; auteur et lien direct vers l'audit non ajoutés | Si nécessaire, réutiliser le journal et ses droits, sans nouvelle collection d'historique |
 | Validation complète | Pas de lecteur d'écran, mobile physique, restauration, test de charge ni parcours complet avec session réelle | Contrôler selon le risque du prochain déploiement ; ne pas assimiler simulation API et test d'accès réel |
@@ -252,3 +418,4 @@ commande globale de maintenance.
 | 27 septembre 2026 | Analyse complète initiale | Perte de brouillons reproduite, course de purge identifiée, proposition compacte |
 | 27 septembre 2026 | Mise en œuvre approuvée | Présentation reprise, conflits préservant la saisie, concurrence PostgreSQL testée ; incompatibilité `void`/Prisma révélée puis corrigée |
 | 27 septembre 2026 | Retrait du nombre de lignes global | Base commune de 25 dans le code ; deux réglages de conservation, ancienne clé ignorée et cache retiré |
+| 27 septembre 2026 | Édition à la demande et portée du journal | Durées en lecture, action Modifier, focus et brouillons préservés ; distinction sécurité/historique documentée, durées et purge inchangées |

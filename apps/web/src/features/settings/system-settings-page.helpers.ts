@@ -20,11 +20,11 @@ export type NormalizedSystemSettingItem = Omit<SystemSettingItem, 'value'> & {
 const SETTING_PRESENTATION = {
   'notifications.retentionDays': {
     impact:
-      'Concerne les notifications lues, non lues et archivées. Une date d’expiration individuelle peut entraîner leur suppression plus tôt.',
+      'Les notifications lues, non lues et archivées sont concernées. L’archivage ne prolonge pas leur conservation. Une expiration peut les supprimer plus tôt.',
   },
   'audit.retentionDays': {
     impact:
-      'Concerne les événements du journal et les détails des changements associés, y compris l’historique des personnes.',
+      'Tous les événements du journal sont concernés : connexions, sécurité, administration et modifications des personnes, avec leurs détails.',
   },
 } as const satisfies Record<SystemSettingKey, SettingPresentation>;
 /* eslint-enable sort-keys-custom-order/object-keys */

@@ -5,6 +5,18 @@
 ## Questions
 
 - Quels champs sont indispensables ? Valeur absente, zéro, chaîne vide et valeur par défaut ont-ils le même sens ?
+- Pour chaque champ, quel contrôle facilite réellement la tâche : texte, nombre,
+  liste, choix multiples, calendrier, interrupteur ou lecture seule ? Le choix
+  tient-il compte de la quantité de valeurs, de leur sens et de la fréquence d'usage ?
+- Pour un nombre, faut-il ajuster par petits pas, saisir une valeur éloignée, ou
+  les deux ? Des boutons −/+ sont-ils utiles et leur pas est-il explicite ? Ne pas
+  les imposer à un identifiant, ni un curseur à une valeur exigeant de la précision.
+- Si le contrôle natif est adapté visuellement ou remplacé, garde-t-on saisie,
+  clavier, nom accessible, unité et focus ? Les boutons annexes soumettent-ils
+  involontairement le formulaire ou changent-ils une valeur au défilement ?
+- Que font les ajustements à la borne, sur une saisie vide/invalide et pendant
+  l'enregistrement ? Une valeur est-elle corrigée silencieusement ? Le contrôle
+  reste-t-il compréhensible au tactile, au zoom et avec une valeur longue ?
 - Les labels, aides, formats et règles de validation expliquent-ils la saisie avant l’erreur ?
 - Les règles sont-elles validées côté serveur, indépendamment du navigateur ?
 - Une donnée calculée est-elle présentée comme telle plutôt que rendue artificiellement éditable ?

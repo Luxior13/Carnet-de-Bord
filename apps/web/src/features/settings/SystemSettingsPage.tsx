@@ -104,6 +104,9 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
   const [drafts, setDrafts] = useState<Map<SystemSettingKey, string>>(
     () => new Map(),
   );
+  const [editingKeys, setEditingKeys] = useState<Set<SystemSettingKey>>(
+    () => new Set(),
+  );
   const [saveErrors, setSaveErrors] = useState<Map<SystemSettingKey, string>>(
     () => new Map(),
   );
@@ -153,6 +156,7 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
         setSettings(normalizedSettings);
         setSaveErrors(new Map());
         setConflicts(new Map());
+        setEditingKeys(new Set());
         setDrafts(
           new Map(
             SYSTEM_SETTING_KEYS.map((key) => {
@@ -310,6 +314,12 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
 
           return nextDrafts;
         });
+        setEditingKeys((current) => {
+          const next = new Set(current);
+          next.delete(key);
+
+          return next;
+        });
         toast.success(
           `Paramètre « ${getSystemSettingDefinition(key).label} » mis à jour avec succès`,
         );
@@ -328,7 +338,14 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
   );
 
   const handleSaveRequest = (key: SystemSettingKey): void => {
-    if (!canUpdate || !settings || isLoading || savingKey || conflicts.has(key))
+    if (
+      !canUpdate ||
+      !editingKeys.has(key) ||
+      !settings ||
+      isLoading ||
+      savingKey ||
+      conflicts.has(key)
+    )
       return;
     const setting = settings.get(key);
     if (!setting) return;
@@ -397,10 +414,10 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
                 </p>
               </div>
               <Button
-                className="h-11 rounded-[8px] lg:h-10"
-                disabled={
-                  (!settings && !loadError) || isLoading || savingKey !== null
-                }
+                aria-busy={isLoading || undefined}
+                aria-disabled={isLoading || undefined}
+                className="h-11 rounded-[8px] aria-disabled:pointer-events-none aria-disabled:opacity-50 lg:h-10"
+                disabled={(!settings && !loadError) || savingKey !== null}
                 onClick={requestRefresh}
                 type="button"
                 variant="outline"
@@ -476,8 +493,24 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
                             disabled={isLoading || savingKey !== null}
                             draft={drafts.get(key) ?? String(setting.value)}
                             error={saveErrors.get(key)}
+                            isEditing={editingKeys.has(key)}
                             isSaving={savingKey === key}
                             key={key}
+                            onCancel={() => {
+                              setDrafts((current) =>
+                                new Map(current).set(
+                                  key,
+                                  String(setting.value),
+                                ),
+                              );
+                              clearSettingFeedback(key);
+                              setEditingKeys((current) => {
+                                const next = new Set(current);
+                                next.delete(key);
+
+                                return next;
+                              });
+                            }}
                             onChange={(value) => {
                               setDrafts((current) =>
                                 new Map(current).set(key, value),
@@ -489,6 +522,11 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
                                 return next;
                               });
                             }}
+                            onEdit={() =>
+                              setEditingKeys((current) =>
+                                new Set(current).add(key),
+                              )
+                            }
                             onKeepDraft={() => clearSettingFeedback(key)}
                             onReloadConflict={() => void reloadConflict(key)}
                             onReset={() => {

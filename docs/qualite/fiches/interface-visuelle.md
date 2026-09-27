@@ -5,6 +5,12 @@
 ## Questions
 
 - La composition correspond-elle à une liste, fiche, saisie, lecture ou synthèse ?
+- Pour chaque élément examiné, est-ce le bon composant et la bonne variante pour
+  le besoin, ou seulement le composant déjà présent ? Faut-il le conserver,
+  simplifier, remplacer ou retirer ? Comparer les alternatives utiles avant de styliser.
+- Les éléments composés (champ avec unité et actions, recherche avec filtres,
+  menu avec badges) forment-ils un ensemble cohérent, sans multiplier les contours
+  ou les contrôles concurrents ?
 - Le regard trouve-t-il d’abord l’information et l’action prioritaires ?
 - Le hero apporte-t-il quelque chose ? Titre seul ou titre avec une phrase courte suffit-il ?
 - L’axe de centrage sert-il le travail ? La largeur reste-t-elle confortable avec sidebar, rail et scrollbar ?

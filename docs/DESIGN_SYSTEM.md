@@ -219,6 +219,12 @@ de lignes ne relève pas des paramètres système administrateur. Ajouter un cho
 local et sa mémorisation par utilisateur/page seulement si le besoin est établi,
 sans imposer ce contrôle à toutes les listes.
 
+Pour des réglages globaux rarement modifiés, afficher d'abord la valeur appliquée
+et une action **Modifier**. Ouvrir la saisie à la demande, avec Annuler et
+Enregistrer ; refermer après succès, conserver le brouillon après erreur ou conflit.
+Gérer le focus à l'ouverture et au retour en lecture. Adapter ce principe au
+besoin réel : un formulaire de création reste directement en saisie.
+
 Règles : une page n'a qu'un héro ; une action globale vit dans le héro, une
 action locale dans sa section ; un retour contextuel ramène à la liste avec ses
 filtres.
