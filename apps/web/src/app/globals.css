@@ -138,8 +138,8 @@
   /* Repeated content surfaces in the default slate palette. */
   --surface-row-alternate: #202f44;
   --surface-row-hover: #2b4060;
-  --surface-navigation-active: #24344f;
-  --surface-navigation-hover: #1f2d42;
+  --surface-navigation-active: var(--surface-row-hover);
+  --surface-navigation-hover: var(--surface-tile-hover);
   --surface-selected: var(--surface-navigation-active);
 
   /* Lifted band used by record lists and data tables. */
@@ -199,13 +199,14 @@
   --ring: #92acd0;
   --ring-width: 3px;
   --radius: 0.625rem;
-  --sidebar: #1b2740;
+  /* Shell chrome reuses the reference table band (content + separator). */
+  --sidebar: var(--surface-content);
   --sidebar-foreground: var(--text-secondary);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
   --sidebar-accent: var(--surface-navigation-active);
   --sidebar-accent-foreground: var(--text-primary);
-  --sidebar-border: #3a5070;
+  --sidebar-border: var(--border-content);
   --sidebar-ring: var(--ring);
   --public-column-width: 66rem;
   --private-content-width: 76rem;

@@ -297,6 +297,9 @@
 /* The Radix viewport ships with its own 8px padding and a clamped height
    (equal to the trigger). Restore normal padding and let the menu size itself. */
 .selectContent > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   height: auto;
   padding: 0;
 }
@@ -305,7 +308,7 @@
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 34px;
+  min-height: 38px;
   padding: 0 1.75rem 0 8px;
   border-radius: 4px;
   color: var(--text-primary);

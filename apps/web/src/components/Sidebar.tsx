@@ -59,10 +59,10 @@ type SidebarProps = {
 };
 
 const SIDEBAR_POPOVER_PANEL_CLASS =
-  'border-border-default bg-surface-panel-raised text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto overscroll-contain rounded-sm border p-2 shadow-[var(--shadow-panel-strong)]';
+  'border-border-default bg-surface-panel text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto overscroll-contain rounded-sm border p-1.5';
 const SIDEBAR_POPOVER_SECTION_CLASS = 'space-y-0.5';
 const SIDEBAR_POPOVER_ACTION_BASE_CLASS =
-  'group/menu-action text-foreground flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150 lg:min-h-11';
+  'group/menu-action text-foreground flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-sm px-2.5 py-2 text-left text-sm font-medium transition-colors duration-150';
 const SIDEBAR_POPOVER_ACTION_CLASS =
   'hover:bg-surface-navigation-hover hover:text-foreground focus:bg-surface-navigation-hover focus:text-foreground';
 const SIDEBAR_POPOVER_DANGER_ACTION_CLASS =
@@ -339,13 +339,10 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
           className="flex min-h-0 min-w-0 flex-1 flex-col group-data-[collapsible=icon]/sidebar:hidden"
         >
           <SidebarContent
-            className="px-3 pt-0"
+            className="px-3 pt-2"
             scrollRestoreKey={`${pathname}:${sidebarState}`}
             scrollStorageKey={activeSpace.id}
           >
-            <h2 className="text-sidebar-accent-foreground px-2 pt-3 pb-1 text-sm font-semibold">
-              {activeSpace.label}
-            </h2>
             <nav
               aria-label="Navigation principale"
               className="flex min-w-0 flex-col gap-2"
@@ -404,9 +401,8 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 variant="ghost"
                 type="button"
                 aria-label={`Menu utilisateur de ${userDisplayName}`}
-                title={`${userDisplayName} · ${userAccessLabel}`}
                 className={cn(
-                  'group/account-menu hover:bg-surface-navigation-hover focus-visible:ring-sidebar-ring data-[state=open]:bg-surface-navigation-active flex h-14 w-full min-w-0 items-center gap-3 overflow-hidden rounded-sm border-0 bg-transparent px-2 text-left shadow-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset lg:h-14',
+                  'group/account-menu hover:bg-surface-navigation-hover focus-visible:ring-sidebar-ring data-[state=open]:bg-surface-navigation-active flex h-11 w-full min-w-0 items-center gap-2.5 overflow-hidden rounded-sm border-0 bg-transparent px-2 text-left shadow-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset lg:h-11',
                   'group-data-[collapsible=icon]/sidebar:h-11 group-data-[collapsible=icon]/sidebar:w-11 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:self-center group-data-[collapsible=icon]/sidebar:px-0',
                   isAccountActive &&
                     'bg-surface-navigation-active hover:bg-surface-navigation-active',
@@ -414,7 +410,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               >
                 <UserAvatar
                   user={userData}
-                  className="size-9 shrink-0 rounded-sm group-data-[collapsible=icon]/sidebar:size-8"
+                  className="size-8 shrink-0 rounded-sm group-data-[collapsible=icon]/sidebar:size-7"
                 />
                 <span className="min-w-0 flex-1 space-y-0.5 overflow-hidden transition-opacity duration-100 group-data-[collapsible=icon]/sidebar:hidden group-data-[state=expanded]/sidebar:delay-150">
                   <span className="text-sidebar-accent-foreground block truncate text-sm leading-5 font-semibold">
@@ -443,30 +439,27 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               collisionPadding={8}
               className={cn(
                 SIDEBAR_POPOVER_PANEL_CLASS,
-                'w-[min(18rem,calc(100vw-2rem))] shadow-[var(--shadow-account-popover)]',
+                'w-[min(16rem,calc(100vw-2rem))] shadow-[var(--shadow-account-popover)]',
               )}
             >
-              <div className="px-3 py-3">
-                <div className="flex min-w-0 items-start gap-3">
+              <div className="px-2.5 py-2">
+                <div className="flex min-w-0 items-center gap-2.5">
                   <UserAvatar
                     user={userData}
-                    className="size-10 shrink-0 rounded-sm"
+                    className="size-8 shrink-0 rounded-sm"
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="text-foreground block text-sm leading-5 font-semibold [overflow-wrap:anywhere]">
+                    <span className="text-foreground block truncate text-sm leading-5 font-semibold">
                       {userDisplayName}
                     </span>
-                    <span className="text-muted-foreground mt-0.5 block text-xs leading-5 [overflow-wrap:anywhere]">
+                    <span className="text-muted-foreground mt-0.5 block truncate text-xs leading-4">
                       @{userData.loginName}
-                    </span>
-                    <span className="text-muted-foreground mt-1 block text-xs leading-4 [overflow-wrap:anywhere]">
-                      {userAccessLabel}
                     </span>
                   </span>
                 </div>
               </div>
 
-              <DropdownMenuSeparator className="bg-border-divider mx-3 my-1" />
+              <DropdownMenuSeparator className="bg-border-content mx-2.5 my-1.5" />
               <div className="py-1">
                 <DropdownMenuGroup
                   aria-label="Accès au compte"
@@ -476,7 +469,6 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                     asChild
                     className={cn(
                       SIDEBAR_POPOVER_ACTION_BASE_CLASS,
-                      'min-h-14 lg:min-h-14',
                       isAccountActive
                         ? 'bg-surface-navigation-active text-foreground focus:bg-surface-navigation-active'
                         : SIDEBAR_POPOVER_ACTION_CLASS,
@@ -503,7 +495,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                         <span className="block truncate">Mon compte</span>
                         <span
                           className={cn(
-                            'text-muted-foreground text-caption mt-0.5 block leading-4 font-normal',
+                            'text-muted-foreground mt-0.5 block text-xs leading-4 font-normal',
                             isAccountActive && 'text-foreground',
                           )}
                         >
@@ -519,7 +511,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                 </DropdownMenuGroup>
               </div>
 
-              <DropdownMenuSeparator className="bg-border-divider mx-3 my-1" />
+              <DropdownMenuSeparator className="bg-border-content mx-2.5 my-1.5" />
               <div className="pt-1">
                 <DropdownMenuItem
                   onSelect={() => {

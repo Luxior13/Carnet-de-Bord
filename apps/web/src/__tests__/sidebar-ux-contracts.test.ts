@@ -34,7 +34,8 @@ describe('sidebar UX contracts', () => {
       "const isCollapsed = !isMobile && sidebarState === 'collapsed'",
     );
     expect(sidebarSource).toContain('flex h-11 w-full min-w-0 items-center');
-    expect(sidebarSource).toContain('flex h-14 w-full min-w-0 items-center');
+    expect(sidebarSource).toContain('h-11 w-full min-w-0 items-center gap-2.5');
+    expect(sidebarSource).not.toContain('lg:h-14');
     expect(sidebarPrimitiveSource).toContain('[&>button]:size-11');
     expect(sidebarPrimitiveSource).not.toContain('[&>button]:hidden');
     expect(sidebarPrimitiveSource).toContain("'Basculer la navigation'");
@@ -75,8 +76,10 @@ describe('sidebar UX contracts', () => {
   });
 
   it('gives the switcher and account menu visible current and open states', () => {
-    expect(poleNavigationSource).toContain('bottom-0 h-0.5');
-    expect(poleNavigationSource).toContain('bg-current');
+    expect(poleNavigationSource).toContain('ChevronDown');
+    expect(poleNavigationSource).toContain(
+      'group-data-[state=open]/rubriques:rotate-180',
+    );
     expect(poleNavigationSource).toContain('bg-surface-navigation-active');
     expect(sidebarSource).toContain(
       'group-data-[state=open]/account-menu:rotate-180',
@@ -98,12 +101,11 @@ describe('sidebar UX contracts', () => {
 
   it('keeps section switching above the full-width destinations', () => {
     expect(poleNavigationSource).not.toContain('Collapsible');
-    expect(poleNavigationSource).not.toContain('DropdownMenu');
+    expect(poleNavigationSource).toContain('<DropdownMenuTrigger asChild>');
+    expect(poleNavigationSource).toContain('<DropdownMenuContent');
     expect(poleNavigationSource).toContain('data-sidebar="space-switcher"');
-    expect(poleNavigationSource).toContain('grid-cols-4');
-    expect(poleNavigationSource).toContain('sidebar:grid-cols-1');
     expect(poleNavigationSource).toContain('overflow-y-auto');
-    expect(poleNavigationSource).toContain('new ResizeObserver');
+    expect(poleNavigationSource).not.toContain('ResizeObserver');
     expect(poleNavigationSource).not.toContain(
       'team-control:sidebar:poles-open:',
     );
@@ -135,14 +137,12 @@ describe('sidebar UX contracts', () => {
   });
 
   it('keeps the account popover on one surface with inset separators', () => {
-    expect(sidebarSource).toContain('w-[min(18rem,calc(100vw-2rem))]');
+    expect(sidebarSource).toContain('w-[min(16rem,calc(100vw-2rem))]');
     expect(sidebarSource).not.toContain('bg-gradient-to-br');
     expect(sidebarSource).not.toContain('from-surface-muted');
     expect(sidebarSource).toContain('shadow-[var(--shadow-account-popover)]');
-    expect(sidebarSource).toContain(
-      'bg-surface-panel-raised text-popover-foreground',
-    );
-    expect(sidebarSource).toContain('bg-border-divider mx-3 my-1');
+    expect(sidebarSource).toContain('bg-surface-panel text-popover-foreground');
+    expect(sidebarSource).toContain('bg-border-content mx-2.5 my-1.5');
     expect(sidebarSource).not.toContain('bg-surface-panel-header border-b');
     expect(sidebarSource).not.toContain('bg-surface-inset border-t');
     expect(sidebarSource).toContain(
@@ -154,10 +154,10 @@ describe('sidebar UX contracts', () => {
   });
 
   it('keeps compact proportions without decorative texture or nested cards', () => {
-    expect(sidebarSource).toContain('rounded-sm border p-2');
-    expect(sidebarSource).toContain('size-10');
+    expect(sidebarSource).toContain('rounded-sm border p-1.5');
+    expect(sidebarSource).toContain('size-9');
     expect(sidebarSource).toContain('size-8');
-    expect(sidebarSource).toContain('min-h-11');
+    expect(sidebarSource).toContain('min-h-10');
     expect(sidebarSource).toContain('text-sm font-medium');
     expect(sidebarSource).not.toContain('tracking-[0.16em]');
     expect(sidebarSource).toContain('collisionPadding={8}');

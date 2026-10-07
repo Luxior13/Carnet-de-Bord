@@ -148,7 +148,7 @@ export const QuickNavigation: FC = () => {
             <Button
               aria-label="Rechercher une page"
               variant="outline"
-              className="text-muted-foreground data-[state=open]:border-border-strong data-[state=open]:bg-surface-control-focus size-11 gap-2 rounded-sm p-0 font-normal focus-visible:ring-inset has-[>svg]:px-0 lg:h-10 lg:w-56 lg:justify-start lg:px-3 lg:has-[>svg]:px-3 xl:w-64"
+              className="text-muted-foreground data-[state=open]:border-border-strong data-[state=open]:bg-surface-control-focus size-11 gap-2 rounded-sm p-0 font-normal focus-visible:ring-inset has-[>svg]:px-0 lg:h-9 lg:w-56 lg:justify-start lg:px-3 lg:has-[>svg]:px-3 xl:w-64"
               type="button"
             >
               <Search aria-hidden="true" className="size-4" />

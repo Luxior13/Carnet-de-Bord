@@ -312,6 +312,8 @@ describe('design system contracts', () => {
     '--surface-panel',
     '--surface-panel-raised',
     '--surface-panel-header',
+    '--surface-content',
+    '--surface-content-header',
     '--surface-floating',
   ])('keeps secondary text readable on %s, including overlays', (surface) => {
     expect(

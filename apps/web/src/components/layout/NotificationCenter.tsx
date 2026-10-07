@@ -372,7 +372,7 @@ const NotificationCenterContent: FC<NotificationCenterProps> = ({
                   ? `Ouvrir les notifications (${unreadNotificationsCount} non lues)`
                   : 'Ouvrir les notifications'
               }
-              className="text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground data-[state=open]:border-border-strong/60 data-[state=open]:bg-surface-navigation-active data-[state=open]:text-foreground relative size-11 rounded-sm bg-transparent shadow-none hover:border-transparent focus-visible:ring-inset lg:size-10"
+              className="text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground data-[state=open]:border-border-strong/60 data-[state=open]:bg-surface-navigation-active data-[state=open]:text-foreground relative size-11 rounded-sm bg-transparent shadow-none hover:border-transparent focus-visible:ring-inset lg:size-9"
               size="icon"
               variant="ghost"
             >

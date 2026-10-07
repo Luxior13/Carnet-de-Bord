@@ -22,7 +22,7 @@ describe('header notification UX contracts', () => {
   });
 
   it('uses a matte header and flat floating surfaces', () => {
-    expect(headerSource).toContain('bg-surface-panel');
+    expect(headerSource).toContain('bg-surface-content-header');
     expect(headerSource).not.toContain('backdrop-blur');
     expect(headerSource).not.toContain('bg-surface-page/95');
     expect(notificationCenterSource).not.toContain('bg-surface-floating');
