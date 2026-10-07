@@ -19,6 +19,6 @@ export const PageDetailSkeleton: FC = () => (
       <Skeleton className="h-5 w-24" />
       <Skeleton className="h-5 w-16" />
     </div>
-    <Skeleton className="h-[32rem] rounded-xl" />
+    <Skeleton className="h-[32rem] rounded-lg" />
   </div>
 );

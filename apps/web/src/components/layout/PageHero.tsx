@@ -40,19 +40,12 @@ export const PageHero: FC<PageHeroProps> = ({
       data-slot="page-heading"
       data-tone={tone}
       className={cn(
-        'border-border-default bg-surface-panel relative min-w-0 rounded-2xl border p-4 @min-[28rem]/page:p-5 @min-[44rem]/page:p-7',
+        'border-border-default bg-surface-panel relative min-w-0 rounded-lg border p-4 @min-[28rem]/page:p-5',
         hasNavigation && 'pb-5 @min-[44rem]/page:pb-5',
         className,
       )}
       {...props}
     >
-      <span
-        aria-hidden="true"
-        className={cn(
-          'pointer-events-none absolute inset-y-5 left-0 w-0.5 rounded-r-full @min-[44rem]/page:inset-y-7',
-          toneClasses.accent,
-        )}
-      />
       <div className="flex min-w-0 flex-col gap-5 @min-[44rem]/page:flex-row @min-[44rem]/page:items-center @min-[44rem]/page:justify-between @min-[44rem]/page:gap-6">
         <div className="flex min-w-0 flex-1 items-start gap-3 @min-[44rem]/page:gap-4">
           {icon && (
@@ -60,7 +53,7 @@ export const PageHero: FC<PageHeroProps> = ({
               aria-hidden="true"
               className={cn(
                 toneClasses.icon,
-                'mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl border @min-[44rem]/page:size-14 [&>svg]:size-6 [&>svg]:stroke-[1.6]',
+                'mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-lg border @min-[44rem]/page:size-11 [&>svg]:size-5 [&>svg]:stroke-[1.6]',
                 iconClassName,
               )}
             >
@@ -79,7 +72,7 @@ export const PageHero: FC<PageHeroProps> = ({
                 compact && 'flex flex-wrap items-center gap-x-3 gap-y-1',
               )}
             >
-              <h1 className="text-foreground min-w-0 text-[1.625rem] leading-[2.125rem] font-semibold tracking-[-0.02em] [overflow-wrap:anywhere] @min-[44rem]/page:text-[2rem] @min-[44rem]/page:leading-10">
+              <h1 className="text-foreground min-w-0 text-2xl font-semibold tracking-[-0.02em] [overflow-wrap:anywhere]">
                 {title}
               </h1>
               {compact && meta && (

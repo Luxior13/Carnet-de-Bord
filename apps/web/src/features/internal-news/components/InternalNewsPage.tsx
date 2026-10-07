@@ -28,7 +28,7 @@ const PageSkeleton: FC = () => (
     <PageCanvas contentClassName="space-y-5">
       <Skeleton className="h-32 rounded-xl" />
       <Skeleton className="h-20 rounded-xl" />
-      <Skeleton className="h-52 rounded-2xl" />
+      <Skeleton className="h-52 rounded-lg" />
     </PageCanvas>
   </PageShell>
 );

@@ -133,16 +133,14 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({ returnHref }) => {
     <>
       <form noValidate onSubmit={(event) => void handleSubmit(event)}>
         <Card>
-          <CardHeader className="p-4 sm:p-5">
+          <CardHeader className="p-3.5 sm:p-4">
             <div className="flex items-start gap-3">
-              <ServiceIcon className="size-9 rounded-lg">
+              <ServiceIcon className="border-primary/30 bg-primary/10 text-primary-emphasis size-8">
                 <UserPlus className="size-4" />
               </ServiceIcon>
               <div className="min-w-0">
-                <CardTitle className="text-base leading-6">
-                  Informations essentielles
-                </CardTitle>
-                <CardDescription className="mt-1">
+                <CardTitle>Informations essentielles</CardTitle>
+                <CardDescription className="mt-1 text-xs leading-5">
                   Un pseudo suffit. Sans pseudo, le prénom et le nom sont
                   nécessaires.
                 </CardDescription>

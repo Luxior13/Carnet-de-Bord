@@ -25,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '$ui/dialog';
+import { ServiceIcon } from '$ui/service-icon';
 import { ApiClientError } from '$utils/api.utils';
 
 import { updatePerson } from '../person.api';
@@ -260,9 +261,9 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
         <CardHeader className="p-3.5 sm:p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-start gap-3">
-              <span className="border-primary/30 bg-primary/10 text-primary-emphasis flex size-8 shrink-0 items-center justify-center rounded-lg border">
+              <ServiceIcon className="border-primary/30 bg-primary/10 text-primary-emphasis size-8">
                 <UserRound className="size-4" />
-              </span>
+              </ServiceIcon>
               <div className="min-w-0">
                 <h2 className="text-sm font-semibold">
                   Informations personnelles

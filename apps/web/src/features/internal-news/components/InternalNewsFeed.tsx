@@ -67,8 +67,8 @@ const FeedSkeleton: FC = () => (
     role="status"
   >
     <Skeleton className="h-20 rounded-xl" />
-    <Skeleton className="h-48 rounded-2xl" />
-    <Skeleton className="h-44 rounded-2xl" />
+    <Skeleton className="h-48 rounded-lg" />
+    <Skeleton className="h-44 rounded-lg" />
     <span className="sr-only">Chargement…</span>
   </div>
 );

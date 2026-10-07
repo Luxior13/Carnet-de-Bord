@@ -16,6 +16,7 @@ type EntityDetailLayoutProps<SectionId extends string> = {
   afterHero?: ReactNode;
   ariaLiveLabel?: string;
   children: ReactNode;
+  heroActions?: ReactNode;
   heroIcon: ReactNode;
   heroIconClassName?: string;
   heroMeta?: ReactNode;
@@ -34,6 +35,7 @@ export const EntityDetailLayout = <SectionId extends string>({
   afterHero,
   ariaLiveLabel,
   children,
+  heroActions,
   heroIcon,
   heroIconClassName,
   heroMeta,
@@ -46,6 +48,7 @@ export const EntityDetailLayout = <SectionId extends string>({
   <PageShell className="py-0">
     <PageCanvas contentClassName="relative space-y-4">
       <PageHero
+        actions={heroActions}
         compact
         hasNavigation
         icon={heroIcon}

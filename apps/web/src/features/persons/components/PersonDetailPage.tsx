@@ -1,6 +1,14 @@
 'use client';
 
-import { AtSign, Clock3, RefreshCw, UserRound } from 'lucide-react';
+import {
+  AtSign,
+  Clock3,
+  Mail,
+  Phone,
+  RefreshCw,
+  Share2,
+  UserRound,
+} from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 
@@ -91,6 +99,42 @@ const PersonLastChangeFooter: FC<{ person: PersonDetail }> = ({ person }) => (
     <PersonLastChangeSummary person={person} />
   </CardFooter>
 );
+
+const PersonContactSummary: FC<{ person: PersonDetail }> = ({ person }) => {
+  const items = [
+    {
+      count: person.emails.length,
+      icon: <Mail aria-hidden="true" className="size-3.5" />,
+      label: 'email(s)',
+    },
+    {
+      count: person.phones.length,
+      icon: <Phone aria-hidden="true" className="size-3.5" />,
+      label: 'téléphone(s)',
+    },
+    {
+      count: person.socialProfiles.length,
+      icon: <Share2 aria-hidden="true" className="size-3.5" />,
+      label: 'profil(s) social(aux)',
+    },
+  ];
+
+  return (
+    <div className="text-muted-foreground flex items-center gap-3 text-xs tabular-nums">
+      {items.map((item) => (
+        <span
+          aria-label={`${item.count} ${item.label}`}
+          className={`inline-flex items-center gap-1 ${item.count === 0 ? 'opacity-45' : ''}`}
+          key={item.label}
+          title={`${item.count} ${item.label}`}
+        >
+          {item.icon}
+          {item.count}
+        </span>
+      ))}
+    </div>
+  );
+};
 
 const getDuplicateFieldLabel = (field: string): string | null => {
   const match = /^(emails|phones|socialProfiles)\.(\d+)\.(\w+)$/.exec(field);
@@ -358,10 +402,11 @@ export const PersonDetailPage: FC<PersonDetailPageProps> = ({
           )
         }
         ariaLiveLabel={`Section ${activeSection === 'identite' ? 'Identité' : 'Coordonnées'} affichée`}
+        heroActions={<PersonContactSummary person={person} />}
         heroIcon={
-          <PersonAvatar className="size-full rounded-full" person={person} />
+          <PersonAvatar className="size-full rounded-md" person={person} />
         }
-        heroIconClassName="overflow-hidden rounded-full p-0"
+        heroIconClassName="overflow-hidden rounded-md p-0"
         heroMeta={<PersonStatusBadge status={person.structureStatus} />}
         heroTitle={getPersonDisplayName(person)}
         navigationAriaLabel="Navigation de la fiche du répertoire"

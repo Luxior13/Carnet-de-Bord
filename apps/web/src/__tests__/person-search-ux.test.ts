@@ -586,8 +586,7 @@ describe('person short-lived sensitive UX contracts', () => {
       "import styles from './PersonsDirectory.module.css'",
     );
     expect(personsListSource).toContain('styles.table');
-    expect(personsListSource).toContain('styles.statusBadge');
-    expect(personsListSource).toContain('data-status={person.structureStatus}');
+    expect(personsListSource).toContain('<PersonStatusBadge');
     expect(personsListSource).toContain('styles.search');
     expect(personsListSource).toContain('styles.pagination');
     expect(personsListSource).toContain('styles.iconButton');
@@ -604,7 +603,7 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(identitySectionSource).toContain(
       '<CardContent className="p-4 sm:p-5">',
     );
-    expect(identitySectionSource).toContain('flex size-8 shrink-0');
+    expect(identitySectionSource).toContain('<ServiceIcon');
     expect(identitySectionSource).toContain("Modifier l'identité");
     expect(identitySectionSource).toContain('sm:max-w-2xl');
     expect(identitySectionSource).not.toContain('sm:max-w-4xl');

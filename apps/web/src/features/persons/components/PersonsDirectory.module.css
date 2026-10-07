@@ -40,9 +40,7 @@
 
   /* Statuts sémantiques (inchangés quel que soit le thème). */
   --m-dot-current: #80ddba;
-  --m-current: #a4efd6;
   --m-external: #aecfff;
-  --m-former: #f0d492;
 
   color: var(--m-foreground);
   color-scheme: dark;
@@ -544,42 +542,6 @@ a.name {
 }
 
 /* ------------------------------------------------------------ Badge statut */
-.statusBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 7px;
-  border: 1px solid #4d62834d;
-  border-radius: 5px;
-  background: #91a4c10a;
-  color: #b3c2d9;
-  font-size: 10px;
-  font-weight: 500;
-  line-height: 1.5;
-  white-space: nowrap;
-}
-
-.statusBadge > span {
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.statusBadge[data-status='IN_STRUCTURE'] {
-  border-color: #3b8270;
-  background: #204f48;
-  color: var(--m-current);
-}
-
-.statusBadge[data-status='OUTSIDE_STRUCTURE'] {
-  border-color: #80693f;
-  background: #50432a;
-  color: var(--m-former);
-}
-
 /* ------------------------------------------------------- Badge coordonnées */
 .access {
   display: inline-flex;

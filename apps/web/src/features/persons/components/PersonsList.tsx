@@ -57,6 +57,7 @@ import type {
 } from '../types/person.types';
 import { PersonAvatar } from './PersonAvatar';
 import styles from './PersonsDirectory.module.css';
+import { PersonStatusBadge } from './PersonStatusBadge';
 
 type PersonsListProps = {
   canCreate: boolean;
@@ -716,13 +717,7 @@ export const PersonsList: FC<PersonsListProps> = ({
                     <PersonIdentity href={href} person={person} />
                   </td>
                   <td className={styles.statusCell}>
-                    <span
-                      className={styles.statusBadge}
-                      data-status={person.structureStatus}
-                    >
-                      <span aria-hidden="true" />
-                      {getStatusLabel(person.structureStatus)}
-                    </span>
+                    <PersonStatusBadge status={person.structureStatus} />
                   </td>
                   <td className={styles.accessCell}>
                     <PersonContacts person={person} />
