@@ -6,7 +6,6 @@ import { useSearchParams } from 'next/navigation';
 import React, { type FC, Suspense } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
-import { PageHero } from '$components/layout/PageHero';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGE_PATHS } from '$constants/routes.constants';
@@ -16,9 +15,10 @@ import { PersonsList } from '$features/persons/components/PersonsList';
 import { getPersonCapabilities } from '$features/persons/person.permissions';
 import type { PersonsListRequest } from '$features/persons/person-list-state';
 import type { PersonsListResponse } from '$features/persons/types/person.types';
-import { Button } from '$ui/button';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
+
+import styles from './PersonsDirectory.module.css';
 
 type PersonsPageClientProps = {
   initialState?: {
@@ -69,30 +69,36 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
 
   return (
     <PageShell className="py-0">
-      <PageCanvas contentClassName="space-y-5">
-        <PageHero
-          compact
-          actions={
-            canCreate ? (
-              <Button asChild size="sm">
-                <Link href={createHref}>
-                  <Plus className="size-4" />
+      <PageCanvas contentClassName="py-6">
+        <div className={styles.directory}>
+          <div className={styles.page}>
+            <header className={styles.hero}>
+              <div className={styles.heroIdentity}>
+                <span aria-hidden="true" className={styles.heroLogo}>
+                  <Users />
+                </span>
+                <div>
+                  <div className={styles.titleLine}>
+                    <h1>{FEATURES.persons.label}</h1>
+                  </div>
+                  <p>Profils, coordonnées et statut dans la structure.</p>
+                </div>
+              </div>
+              {canCreate ? (
+                <Link className={styles.addButton} href={createHref}>
+                  <Plus aria-hidden="true" />
                   Ajouter une fiche
                 </Link>
-              </Button>
-            ) : null
-          }
-          description="Retrouvez les membres et leurs coordonnées."
-          icon={<Users className="size-5" />}
-          title={FEATURES.persons.label}
-          tone="internal"
-        />
-        <PersonsList
-          canCreate={canCreate}
-          createHref={createHref}
-          initialState={initialState}
-          returnHref={returnHref}
-        />
+              ) : null}
+            </header>
+            <PersonsList
+              canCreate={canCreate}
+              createHref={createHref}
+              initialState={initialState}
+              returnHref={returnHref}
+            />
+          </div>
+        </div>
       </PageCanvas>
     </PageShell>
   );

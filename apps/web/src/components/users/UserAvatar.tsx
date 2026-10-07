@@ -1,7 +1,7 @@
 'use client';
 
-import { createAvatar } from '@dicebear/core';
-import * as notionistsNeutral from '@dicebear/notionists-neutral';
+import { Avatar, Style } from '@dicebear/core';
+import notionistsDefinition from '@dicebear/styles/notionists-neutral.json';
 import React, { type FC } from 'react';
 
 import type { UserType } from '$types/auth.types';
@@ -23,10 +23,12 @@ const ACCOUNT_BACKGROUND_COLORS = [
   'c9b4e8',
 ];
 
+const NOTIONISTS_STYLE = new Style(notionistsDefinition);
+
 const createAccountAvatarDataUri = (seed: string): string =>
-  createAvatar(notionistsNeutral, {
+  new Avatar(NOTIONISTS_STYLE, {
     backgroundColor: ACCOUNT_BACKGROUND_COLORS,
-    radius: 12,
+    borderRadius: 12,
     seed,
     size: 96,
   }).toDataUri();

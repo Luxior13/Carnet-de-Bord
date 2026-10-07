@@ -48,6 +48,10 @@
   --color-surface-control-focus: var(--surface-control-focus);
   --color-surface-tile-hover: var(--surface-tile-hover);
   --color-surface-row-alternate: var(--surface-row-alternate);
+  --color-surface-row-hover: var(--surface-row-hover);
+  --color-surface-content: var(--surface-content);
+  --color-surface-content-header: var(--surface-content-header);
+  --color-surface-table-head: var(--surface-table-head);
   --color-surface-selected: var(--surface-selected);
   --color-surface-navigation-active: var(--surface-navigation-active);
   --color-surface-navigation-hover: var(--surface-navigation-hover);
@@ -60,6 +64,7 @@
   --color-border-default: var(--border-default);
   --color-border-strong: var(--border-strong);
   --color-border-divider: var(--border-divider);
+  --color-border-content: var(--border-content);
   --color-border-control: var(--border-control);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -110,34 +115,50 @@
 :root {
   color-scheme: dark;
 
-  /* Reference palette: charcoal canvas, slate panels, localized blue emphasis. */
-  --surface-canvas: #0d111c;
-  --surface-page: #111925;
-  --surface-inset: #111925;
-  --surface-panel: #182434;
-  --surface-panel-raised: #202c3e;
-  --surface-panel-header: #202c3e;
-  --surface-floating: #2a3c58;
-  --surface-control-hover: #1e2c3e;
-  --surface-control-focus: #253b55;
-  --surface-tile-hover: #293d58;
+  /* Dense admin type scale matching the reference design (11 / 13 / 14px). */
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-lg: 1rem;
+  --text-xl: 1.125rem;
+  --text-2xl: 1.375rem;
+  --text-3xl: 1.625rem;
+
+  /* Reference palette: midnight canvas, steel-blue panels, blue emphasis. */
+  --surface-canvas: #060a11;
+  --surface-page: #0b111b;
+  --surface-inset: #0e1622;
+  --surface-panel: #15202f;
+  --surface-panel-raised: #18243a;
+  --surface-panel-header: #1d2c48;
+  --surface-floating: #1b2942;
+  --surface-control-hover: #182433;
+  --surface-control-focus: #1e2c40;
+  --surface-tile-hover: #22304a;
   /* Repeated content surfaces in the default slate palette. */
-  --surface-row-alternate: #1e2c3e;
-  --surface-navigation-active: #2c425e;
-  --surface-navigation-hover: #273750;
+  --surface-row-alternate: #202f44;
+  --surface-row-hover: #2b4060;
+  --surface-navigation-active: #24344f;
+  --surface-navigation-hover: #1f2d42;
   --surface-selected: var(--surface-navigation-active);
 
+  /* Lifted band used by record lists and data tables. */
+  --surface-content: #172333;
+  --surface-content-header: #24334a;
+  --surface-table-head: #2c3e59;
+  --border-content: #3a4d69;
+
   /* Canonical text and border scale. */
-  --text-primary: #e7edf7;
-  --text-secondary: #c6d0df;
-  --text-muted: #a9b7cc;
-  --text-disabled: #75859c;
-  --overlay: #070b12;
-  --border-steel: #91a3be;
-  --border-subtle: #29374b;
-  --border-default: #34445c;
-  --border-strong: #627fa7;
-  --border-divider: #304057;
+  --text-primary: #f3f6fb;
+  --text-secondary: #c4cedc;
+  --text-muted: #8e9baf;
+  --text-disabled: #6d7a90;
+  --overlay: #05080e;
+  --border-steel: #8fa6c6;
+  --border-subtle: #26344b;
+  --border-default: #354863;
+  --border-strong: #5b7699;
+  --border-divider: #2a3a52;
 
   /* Backward-compatible semantic aliases used throughout the application. */
   --background: var(--surface-canvas);
@@ -151,9 +172,9 @@
   --card-foreground: var(--foreground);
   --popover: var(--surface-panel-raised);
   --popover-foreground: var(--foreground);
-  --primary: #70b5fa;
+  --primary: #698cdd;
   --primary-emphasis: #b9dafe;
-  --primary-foreground: #0c1a2b;
+  --primary-foreground: #091321;
   --secondary: var(--surface-muted);
   --secondary-foreground: var(--foreground);
   --muted: var(--surface-inset);
@@ -177,14 +198,14 @@
   --input: var(--surface-control);
   --ring: #92acd0;
   --ring-width: 3px;
-  --radius: 0.75rem;
-  --sidebar: #202c3e;
+  --radius: 0.625rem;
+  --sidebar: #1b2740;
   --sidebar-foreground: var(--text-secondary);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
   --sidebar-accent: var(--surface-navigation-active);
   --sidebar-accent-foreground: var(--text-primary);
-  --sidebar-border: #455b78;
+  --sidebar-border: #3a5070;
   --sidebar-ring: var(--ring);
   --public-column-width: 66rem;
   --private-content-width: 76rem;

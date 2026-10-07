@@ -1,5 +1,5 @@
-import { createAvatar } from '@dicebear/core';
-import * as loreleiNeutral from '@dicebear/lorelei-neutral';
+import { Avatar, Style } from '@dicebear/core';
+import glyphsDefinition from '@dicebear/styles/glyphs.json';
 import React, { type FC } from 'react';
 
 import { DiceBearAvatar } from '$ui/dicebear-avatar';
@@ -26,10 +26,13 @@ const DIRECTORY_BACKGROUND_COLORS = [
   '91c9bd',
 ];
 
+const GLYPHS_STYLE = new Style(glyphsDefinition);
+
 const createDirectoryAvatarDataUri = (seed: string): string =>
-  createAvatar(loreleiNeutral, {
+  new Avatar(GLYPHS_STYLE, {
     backgroundColor: DIRECTORY_BACKGROUND_COLORS,
-    radius: 50,
+    // Square canvas: list and detail containers own the corner radius.
+    borderRadius: 0,
     seed,
     size: 96,
   }).toDataUri();

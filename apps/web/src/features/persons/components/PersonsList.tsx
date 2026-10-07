@@ -1,12 +1,12 @@
 'use client';
 
 import {
-  ArrowRight,
   ChevronLeft,
   ChevronRight,
   Mail,
   Phone,
   Plus,
+  RotateCcw,
   Search,
   Share2,
   Users,
@@ -18,19 +18,14 @@ import React, {
   type FC,
   useCallback,
   useEffect,
+  useId,
   useRef,
   useState,
 } from 'react';
 
-import { ContentState } from '$components/layout/ContentState';
 import { PAGINATION } from '$constants/pagination.constants';
 import { PAGE_PATHS, personDetailPath } from '$constants/routes.constants';
 import { Button } from '$ui/button';
-import {
-  DataTableDesktop,
-  DataTableMobileList,
-  DataTableSection,
-} from '$ui/data-table-section';
 import { Input } from '$ui/input';
 import {
   Select,
@@ -40,14 +35,6 @@ import {
   SelectValue,
 } from '$ui/select';
 import { Skeleton } from '$ui/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '$ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
@@ -69,7 +56,7 @@ import type {
   PersonSummary,
 } from '../types/person.types';
 import { PersonAvatar } from './PersonAvatar';
-import { PersonStatusBadge } from './PersonStatusBadge';
+import styles from './PersonsDirectory.module.css';
 
 type PersonsListProps = {
   canCreate: boolean;
@@ -129,40 +116,19 @@ const normalizeCursor = (value: string | null): string | undefined =>
 
 const PersonsListSkeleton: FC = () => (
   <div
-    className="space-y-2 p-4"
-    role="status"
     aria-label="Chargement du répertoire"
+    className={styles.list}
+    role="status"
   >
-    {[...Array(7)].map((_, index) => (
-      <Skeleton className="h-12 rounded-lg" key={index} />
-    ))}
-  </div>
-);
-
-const PersonIdentity: FC<{
-  href: string;
-  person: PersonSummary;
-}> = ({ href, person }) => (
-  <Link
-    aria-label={`Ouvrir la fiche de ${getPersonDisplayName(person)}`}
-    className="group flex min-w-0 items-center gap-2.5 rounded-md outline-none after:absolute after:inset-0 after:z-10 after:content-['']"
-    href={href}
-  >
-    <PersonAvatar
-      className="border-border-default group-hover:border-primary/35 size-8 rounded-full border transition-colors"
-      person={person}
-    />
-    <div className="min-w-0">
-      <p className="group-hover:text-primary-emphasis truncate text-sm font-medium transition-colors">
-        {getPersonDisplayName(person)}
-      </p>
-      {person.matchedByContact && (
-        <p className="text-muted-foreground mt-0.5 text-xs">
-          Trouvée grâce à une coordonnée
-        </p>
-      )}
+    <div className={styles.toolbar}>
+      <Skeleton className="h-[38px] w-full rounded-md" />
     </div>
-  </Link>
+    <div className="space-y-px">
+      {[...Array(7)].map((_, index) => (
+        <Skeleton className="h-[58px] rounded-none" key={index} />
+      ))}
+    </div>
+  </div>
 );
 
 const ContactCount: FC<{
@@ -172,10 +138,7 @@ const ContactCount: FC<{
 }> = ({ count, icon, label }) => (
   <span
     aria-label={`${count} ${label}`}
-    className={cn(
-      'inline-flex items-center gap-1 tabular-nums',
-      count === 0 && 'opacity-45',
-    )}
+    className={cn(styles.contactItem, count === 0 && styles.contactMuted)}
     title={`${count} ${label}`}
   >
     {icon}
@@ -183,67 +146,76 @@ const ContactCount: FC<{
   </span>
 );
 
-const PersonContactCounts: FC<{ person: PersonSummary }> = ({ person }) => (
-  <div className="text-muted-foreground flex items-center gap-3 text-xs">
-    {person.contactCounts.emails > 0 && (
-      <ContactCount
-        count={person.contactCounts.emails}
-        icon={<Mail aria-hidden="true" className="size-3.5" />}
-        label="email(s)"
-      />
-    )}
-    {person.contactCounts.phones > 0 && (
-      <ContactCount
-        count={person.contactCounts.phones}
-        icon={<Phone aria-hidden="true" className="size-3.5" />}
-        label="téléphone(s)"
-      />
-    )}
-    {person.contactCounts.socialProfiles > 0 && (
-      <ContactCount
-        count={person.contactCounts.socialProfiles}
-        icon={<Share2 aria-hidden="true" className="size-3.5" />}
-        label="profil(s) social(aux)"
-      />
-    )}
-    {person.contactCounts.emails === 0 &&
-      person.contactCounts.phones === 0 &&
-      person.contactCounts.socialProfiles === 0 && (
-        <span>Aucune coordonnée</span>
-      )}
-  </div>
-);
+const PersonContacts: FC<{ person: PersonSummary }> = ({ person }) => {
+  const { emails, phones, socialProfiles } = person.contactCounts;
+  const total = emails + phones + socialProfiles;
 
-const getLastModifiedByLabel = (person: PersonSummary): string | null => {
-  const actor = person.lastModifiedBy;
-  if (!actor) return null;
+  if (total === 0) {
+    return (
+      <span className={styles.standardAccess} aria-label="Aucune coordonnée">
+        —
+      </span>
+    );
+  }
 
-  return `Modifiée par ${actor.displayName}${
-    actor.loginName && actor.loginName !== actor.displayName
-      ? ` (${actor.loginName})`
-      : ''
-  }`;
+  return (
+    <div className={styles.contacts}>
+      <span className={styles.access}>
+        <Share2 aria-hidden="true" />
+        {total} coordonnée{total > 1 ? 's' : ''}
+      </span>
+      <span className={styles.contactRow}>
+        <ContactCount
+          count={emails}
+          icon={<Mail aria-hidden="true" />}
+          label="email(s)"
+        />
+        <ContactCount
+          count={phones}
+          icon={<Phone aria-hidden="true" />}
+          label="téléphone(s)"
+        />
+        <ContactCount
+          count={socialProfiles}
+          icon={<Share2 aria-hidden="true" />}
+          label="profil(s) social(aux)"
+        />
+      </span>
+    </div>
+  );
 };
 
-const PersonLastModifiedAt: FC<{
-  href?: string;
+const PersonLastModified: FC<{
+  href: string;
   person: PersonSummary;
 }> = ({ href, person }) => {
-  const actorLabel = getLastModifiedByLabel(person);
+  const actor = person.lastModifiedBy;
   const time = (
     <time dateTime={person.updatedAt}>
       {formatPersonDateTime(person.updatedAt)}
     </time>
   );
 
-  if (!actorLabel || !href) return time;
+  if (!actor) {
+    return (
+      <Link className={styles.updated} href={href}>
+        {time}
+      </Link>
+    );
+  }
+
+  const actorLabel = `Modifiée par ${actor.displayName}${
+    actor.loginName && actor.loginName !== actor.displayName
+      ? ` (${actor.loginName})`
+      : ''
+  }`;
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <Link
-          aria-label={`Ouvrir la fiche — ${actorLabel}, le ${formatPersonDateTime(person.updatedAt)}`}
-          className="focus-visible:ring-ring/40 relative z-20 inline-flex cursor-help rounded-sm underline decoration-dotted underline-offset-4 outline-none focus-visible:ring-2"
+          aria-label={`${actorLabel}, le ${formatPersonDateTime(person.updatedAt)}`}
+          className={styles.updated}
           href={href}
         >
           {time}
@@ -254,41 +226,58 @@ const PersonLastModifiedAt: FC<{
   );
 };
 
+const PersonIdentity: FC<{
+  href: string;
+  person: PersonSummary;
+}> = ({ href, person }) => (
+  <div className={styles.identity}>
+    <span aria-hidden="true" className={styles.avatar}>
+      <PersonAvatar person={person} />
+    </span>
+    <div className={styles.info}>
+      <div className={styles.nameLine}>
+        <Link className={styles.name} href={href}>
+          {getPersonDisplayName(person)}
+        </Link>
+      </div>
+      {person.matchedByContact && (
+        <p className={styles.subline} data-state="active">
+          <Search aria-hidden="true" />
+          <span>Trouvée grâce à une coordonnée</span>
+        </p>
+      )}
+    </div>
+  </div>
+);
+
 const buildPersonHref = (personId: string, returnHref: string): string => {
   const params = new URLSearchParams({ returnTo: returnHref });
 
   return `${personDetailPath(personId)}?${params}`;
 };
 
-const PersonMobileRow: FC<{
-  href: string;
-  person: PersonSummary;
-}> = ({ href, person }) => (
-  <Link
-    aria-label={`Ouvrir la fiche de ${getPersonDisplayName(person)}`}
-    className="hover:bg-surface-tile-hover focus-visible:ring-ring/40 flex items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset"
-    href={href}
-  >
-    <div className="min-w-0 flex-1 space-y-2">
-      <div className="flex min-w-0 items-center gap-2.5">
-        <PersonAvatar
-          className="border-border-default size-8 rounded-full border"
-          person={person}
-        />
-        <p className="truncate text-sm font-medium">
-          {getPersonDisplayName(person)}
-        </p>
-      </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-        <PersonStatusBadge status={person.structureStatus} />
-        <PersonContactCounts person={person} />
-      </div>
-      <p className="text-muted-foreground text-xs">
-        Modifiée le <PersonLastModifiedAt person={person} />
-      </p>
-    </div>
-    <ArrowRight className="text-muted-foreground size-4 shrink-0" />
-  </Link>
+const DirectorySelect: FC<{
+  ariaLabel: string;
+  onValueChange: (value: string) => void;
+  options: ReadonlyArray<{ label: string; value: string }>;
+  value: string;
+}> = ({ ariaLabel, onValueChange, options, value }) => (
+  <Select onValueChange={onValueChange} value={value}>
+    <SelectTrigger aria-label={ariaLabel} className={styles.selectTrigger}>
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent className={styles.selectContent}>
+      {options.map((option) => (
+        <SelectItem
+          className={styles.selectOption}
+          key={option.value}
+          value={option.value}
+        >
+          {option.label}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
 );
 
 export const PersonsList: FC<PersonsListProps> = ({
@@ -299,6 +288,7 @@ export const PersonsList: FC<PersonsListProps> = ({
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const searchInputId = useId();
   const searchParamsString = searchParams.toString();
   const initialPageIndex = normalizePageIndex(searchParams.get('page'));
   const initialCursor = normalizeCursor(searchParams.get('cursor'));
@@ -489,6 +479,51 @@ export const PersonsList: FC<PersonsListProps> = ({
   const previousCursor = cursorStack.at(pageIndex - 1);
   const canGoPrevious =
     pageIndex === 1 || (pageIndex > 1 && previousCursor !== undefined);
+  const visibleCount = data?.items.length ?? 0;
+
+  const statusOptions = [
+    { label: 'Tous les statuts', value: 'ALL' },
+    ...PERSON_STRUCTURE_STATUSES.map((item) => ({
+      label: getStatusLabel(item),
+      value: item,
+    })),
+  ];
+  const sortOptions = PERSON_LIST_SORTS.map((item) => ({
+    label: getSortLabel(item),
+    value: item,
+  }));
+
+  const activeFilters: React.ReactNode[] = [];
+  if (appliedQuery) {
+    activeFilters.push(
+      <Button
+        aria-label={`Retirer le filtre Recherche : ${appliedQuery}`}
+        key="query"
+        onClick={() => applyFilters('', status, sort)}
+        size="inline"
+        type="button"
+        variant="ghost"
+      >
+        <span>Recherche : {appliedQuery}</span>
+        <X aria-hidden="true" />
+      </Button>,
+    );
+  }
+  if (status !== 'ALL') {
+    activeFilters.push(
+      <Button
+        aria-label={`Retirer le filtre Statut : ${getStatusLabel(status)}`}
+        key="status"
+        onClick={() => applyFilters(appliedQuery, 'ALL', sort)}
+        size="inline"
+        type="button"
+        variant="ghost"
+      >
+        <span>Statut : {getStatusLabel(status)}</span>
+        <X aria-hidden="true" />
+      </Button>,
+    );
+  }
 
   const emptyAction = isFiltered ? (
     <Button
@@ -497,7 +532,7 @@ export const PersonsList: FC<PersonsListProps> = ({
       size="sm"
       variant="outline"
     >
-      <Users className="size-4" />
+      <RotateCcw className="size-4" />
       Réinitialiser les filtres
     </Button>
   ) : canCreate ? (
@@ -509,270 +544,264 @@ export const PersonsList: FC<PersonsListProps> = ({
     </Button>
   ) : undefined;
 
-  return (
-    <DataTableSection
-      description="Recherchez une identité ou une coordonnée. Les données privées restent dans chaque fiche."
-      headerClassName="p-3 sm:p-4"
-      headerLayout="stacked"
-      title="Toutes les fiches"
-      toolbar={
-        <div className="grid w-full min-w-0 gap-2 @min-[32rem]/data-table:grid-cols-2 @min-[56rem]/data-table:grid-cols-[minmax(16rem,1fr)_12rem_12rem_auto]">
-          <form
-            className="relative min-w-0 @min-[32rem]/data-table:col-span-2 @min-[56rem]/data-table:col-span-1"
-            onSubmit={(event) => {
-              event.preventDefault();
-              applyFilters(draftQuery, status, sort);
-            }}
-            role="search"
+  if (!data && isLoading) return <PersonsListSkeleton />;
+
+  if (error && !data) {
+    return (
+      <section className={styles.list}>
+        <div className={styles.empty}>
+          <Users aria-hidden="true" />
+          <h2>Chargement impossible</h2>
+          <p>{error.message}</p>
+          <Button
+            className="mt-2"
+            onClick={() => void load()}
+            size="sm"
+            variant="outline"
           >
-            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+            Réessayer
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
+  if (showEmpty) {
+    return (
+      <section className={styles.list}>
+        <div className={styles.empty}>
+          <Users aria-hidden="true" />
+          <h2>{isFiltered ? 'Aucune fiche trouvée' : 'Répertoire vide'}</h2>
+          <p>
+            {isFiltered
+              ? 'Essayez une autre recherche ou retirez les filtres.'
+              : 'Créez la première fiche pour commencer le répertoire.'}
+          </p>
+          {emptyAction}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section aria-label="Liste des membres" className={styles.list}>
+      <div className={styles.toolbar}>
+        <form
+          aria-label="Rechercher et filtrer les membres"
+          className={styles.filterForm}
+          onSubmit={(event) => {
+            event.preventDefault();
+            applyFilters(draftQuery, status, sort);
+          }}
+          role="search"
+        >
+          <div className={styles.search}>
+            <Search aria-hidden="true" />
             <Input
-              aria-label="Rechercher dans le répertoire"
-              className="pr-10 pl-9"
+              aria-label="Rechercher par pseudo, nom ou coordonnée"
+              autoComplete="off"
+              id={searchInputId}
               maxLength={100}
               onChange={(event) => setDraftQuery(event.target.value)}
               placeholder="Pseudo, nom ou coordonnée…"
+              type="search"
               value={draftQuery}
             />
-            {draftQuery && (
+            {draftQuery ? (
               <Button
                 aria-label="Effacer la recherche"
-                className="absolute top-1/2 right-1 size-8 -translate-y-1/2"
                 onClick={() => applyFilters('', status, sort)}
                 size="icon"
                 type="button"
                 variant="ghost"
               >
-                <X className="size-4" />
+                <X aria-hidden="true" />
+              </Button>
+            ) : (
+              <Button
+                aria-label="Rechercher les membres"
+                size="icon"
+                type="submit"
+                variant="ghost"
+              >
+                <ChevronRight aria-hidden="true" />
               </Button>
             )}
-          </form>
-          <Select
-            onValueChange={(value) =>
-              applyFilters(draftQuery, value as StatusFilter, sort)
-            }
-            value={status}
-          >
-            <SelectTrigger
-              aria-label="Filtrer par statut dans la structure"
-              className="w-full min-w-0"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Tous les statuts</SelectItem>
-              {PERSON_STRUCTURE_STATUSES.map((item) => (
-                <SelectItem key={item} value={item}>
-                  {getStatusLabel(item)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            onValueChange={(value) =>
-              applyFilters(draftQuery, status, value as PersonListSort)
-            }
-            value={sort}
-          >
-            <SelectTrigger
-              aria-label="Trier le répertoire"
-              className="w-full min-w-0"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PERSON_LIST_SORTS.map((item) => (
-                <SelectItem key={item} value={item}>
-                  {getSortLabel(item)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {isFiltered && (
-            <Button
-              className="text-muted-foreground min-h-10 justify-self-start @min-[32rem]/data-table:col-span-2 @min-[56rem]/data-table:col-span-1"
-              onClick={() => applyFilters('', 'ALL', sort)}
-              size="sm"
-              type="button"
-              variant="ghost"
-            >
-              <X className="size-4" />
-              Réinitialiser
-            </Button>
-          )}
+          </div>
+          <div className={styles.filterSelects}>
+            <DirectorySelect
+              ariaLabel="Filtrer par statut"
+              onValueChange={(value) =>
+                applyFilters(draftQuery, value as StatusFilter, sort)
+              }
+              options={statusOptions}
+              value={status}
+            />
+            <DirectorySelect
+              ariaLabel="Trier le répertoire"
+              onValueChange={(value) =>
+                applyFilters(draftQuery, status, value as PersonListSort)
+              }
+              options={sortOptions}
+              value={sort}
+            />
+            {isFiltered && (
+              <Button
+                aria-label="Réinitialiser les filtres"
+                className={styles.iconButton}
+                onClick={() => applyFilters('', 'ALL', sort)}
+                size="icon"
+                type="button"
+                variant="ghost"
+              >
+                <RotateCcw aria-hidden="true" />
+              </Button>
+            )}
+          </div>
+        </form>
+        {activeFilters.length > 0 && (
+          <div aria-label="Filtres actifs" className={styles.activeFilters}>
+            {activeFilters}
+          </div>
+        )}
+        <div className={styles.listCaption}>
+          <p aria-live="polite" role="status">
+            {visibleCount} membre{visibleCount > 1 ? 's' : ''} affiché
+            {visibleCount > 1 ? 's' : ''}
+            {isRefreshing ? ' · Actualisation…' : ''}
+          </p>
+          <span>{PAGE_LIMIT} par page</span>
         </div>
-      }
-    >
-      {!data && isLoading ? (
-        <PersonsListSkeleton />
-      ) : error && !data ? (
-        <ContentState
-          action={
-            <Button onClick={() => void load()} size="sm" variant="outline">
+      </div>
+
+      <div
+        aria-busy={isRefreshing}
+        className={cn(isRefreshing && 'opacity-55')}
+      >
+        {error && (
+          <div className={styles.empty}>
+            <Users aria-hidden="true" />
+            <h2>Actualisation impossible</h2>
+            <p>Les résultats précédents restent affichés.</p>
+            <Button
+              className="mt-2"
+              onClick={() => void load()}
+              size="sm"
+              variant="outline"
+            >
               Réessayer
             </Button>
-          }
-          description={error.message}
-          kind="error"
-          layout="panel"
-          title="Chargement impossible"
-        />
-      ) : showEmpty ? (
-        <ContentState
-          action={emptyAction}
-          description={
-            isFiltered
-              ? 'Essayez une autre recherche ou retirez les filtres.'
-              : 'Créez la première fiche pour commencer le répertoire.'
-          }
-          layout="panel"
-          title={isFiltered ? 'Aucune fiche trouvée' : 'Répertoire vide'}
-        />
-      ) : (
-        <div
-          aria-busy={isRefreshing}
-          className={cn('transition-opacity', isRefreshing && 'opacity-55')}
-        >
-          {error && (
-            <ContentState
-              action={
-                <Button onClick={() => void load()} size="sm" variant="outline">
-                  Réessayer
-                </Button>
-              }
-              className="m-3"
-              description="Les résultats précédents restent affichés."
-              kind="error"
-              title="Actualisation impossible"
-            />
-          )}
-          <DataTableDesktop>
-            <Table>
-              <TableHeader className="[&_th]:h-9">
-                <TableRow>
-                  <TableHead>Fiche</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Coordonnées</TableHead>
-                  <TableHead>Dernière modification</TableHead>
-                  <TableHead className="w-14">
-                    <span className="sr-only">Action</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data?.items.map((person) => {
-                  const href = personHref(person.id);
-
-                  return (
-                    <TableRow
-                      className="group/row focus-within:ring-ring/40 relative cursor-pointer focus-within:ring-2 focus-within:ring-inset"
-                      key={person.id}
-                    >
-                      <TableCell className="py-2">
-                        <PersonIdentity href={href} person={person} />
-                      </TableCell>
-                      <TableCell className="py-2">
-                        <PersonStatusBadge status={person.structureStatus} />
-                      </TableCell>
-                      <TableCell className="py-2">
-                        <PersonContactCounts person={person} />
-                      </TableCell>
-                      <TableCell className="text-muted-foreground py-2 text-sm">
-                        <PersonLastModifiedAt href={href} person={person} />
-                      </TableCell>
-                      <TableCell className="pointer-events-none py-1.5">
-                        <ArrowRight
-                          aria-hidden="true"
-                          className="text-muted-foreground size-4 transition-transform group-hover/row:translate-x-0.5"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </DataTableDesktop>
-          <DataTableMobileList>
-            {data?.items.map((person) => (
-              <PersonMobileRow
-                href={personHref(person.id)}
-                key={person.id}
-                person={person}
-              />
-            ))}
-          </DataTableMobileList>
-          <div className="border-border-divider bg-surface-inset flex items-center justify-between gap-3 border-t px-4 py-2">
-            <p aria-live="polite" className="text-muted-foreground text-xs">
-              Page {pageIndex + 1} · {data?.items.length ?? 0} fiche
-              {(data?.items.length ?? 0) > 1 ? 's' : ''}
-              {isRefreshing ? ' · Actualisation…' : ''}
-            </p>
-            <div className="flex items-center gap-1">
-              <Button
-                aria-label="Page précédente"
-                className="lg:size-8"
-                disabled={!canGoPrevious || isLoading}
-                onClick={() => {
-                  if (!canGoPrevious) return;
-                  const nextPage = pageIndex - 1;
-                  const cursor = cursorStack.at(nextPage);
-                  setPageIndex(nextPage);
-                  updateUrl({
-                    cursor,
-                    mode: 'push',
-                    page: nextPage,
-                    query: appliedQuery,
-                    sort,
-                    status,
-                  });
-                }}
-                size="icon"
-                variant="ghost"
-              >
-                <ChevronLeft className="size-4" />
-              </Button>
-              <Button
-                aria-label="Page suivante"
-                className="lg:size-8"
-                disabled={
-                  !data?.pagination.hasMore ||
-                  !data.pagination.nextCursor ||
-                  isLoading
-                }
-                onClick={() => {
-                  const cursor = data?.pagination.nextCursor;
-                  if (!cursor) return;
-                  const nextPage = pageIndex + 1;
-                  setCursorStack((current) => {
-                    const next = current.slice(0, pageIndex + 1);
-                    next.push(cursor);
-
-                    return next;
-                  });
-                  setPageIndex(nextPage);
-                  updateUrl({
-                    cursor,
-                    mode: 'push',
-                    page: nextPage,
-                    query: appliedQuery,
-                    sort,
-                    status,
-                  });
-                }}
-                size="icon"
-                variant="ghost"
-              >
-                <ChevronRight className="size-4" />
-              </Button>
-            </div>
           </div>
+        )}
+
+        <table className={styles.table}>
+          <caption className="sr-only">
+            Les fiches du répertoire, leur statut et leurs coordonnées
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Membre</th>
+              <th scope="col">Statut</th>
+              <th scope="col">Coordonnées</th>
+              <th scope="col">Dernière modification</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data?.items.map((person) => {
+              const href = personHref(person.id);
+
+              return (
+                <tr className={styles.row} key={person.id}>
+                  <td className={styles.memberCell}>
+                    <PersonIdentity href={href} person={person} />
+                  </td>
+                  <td className={styles.statusCell}>
+                    <span
+                      className={styles.statusBadge}
+                      data-status={person.structureStatus}
+                    >
+                      <span aria-hidden="true" />
+                      {getStatusLabel(person.structureStatus)}
+                    </span>
+                  </td>
+                  <td className={styles.accessCell}>
+                    <PersonContacts person={person} />
+                  </td>
+                  <td className={styles.updatedCell}>
+                    <PersonLastModified href={href} person={person} />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <nav aria-label="Pagination des membres" className={styles.pagination}>
+        <p>
+          Page <strong>{pageIndex + 1}</strong>
+        </p>
+        <div className={styles.paginationActions}>
+          <Button
+            aria-label="Page précédente"
+            className={styles.pageButton}
+            disabled={!canGoPrevious || isLoading}
+            onClick={() => {
+              if (!canGoPrevious) return;
+              const nextPage = pageIndex - 1;
+              const cursor = cursorStack.at(nextPage);
+              setPageIndex(nextPage);
+              updateUrl({
+                cursor,
+                mode: 'push',
+                page: nextPage,
+                query: appliedQuery,
+                sort,
+                status,
+              });
+            }}
+            size="icon"
+            type="button"
+            variant="ghost"
+          >
+            <ChevronLeft aria-hidden="true" />
+          </Button>
+          <Button
+            aria-label="Page suivante"
+            className={styles.pageButton}
+            disabled={
+              !data?.pagination.hasMore ||
+              !data.pagination.nextCursor ||
+              isLoading
+            }
+            onClick={() => {
+              const cursor = data?.pagination.nextCursor;
+              if (!cursor) return;
+              const nextPage = pageIndex + 1;
+              setCursorStack((current) => {
+                const next = current.slice(0, pageIndex + 1);
+                next.push(cursor);
+
+                return next;
+              });
+              setPageIndex(nextPage);
+              updateUrl({
+                cursor,
+                mode: 'push',
+                page: nextPage,
+                query: appliedQuery,
+                sort,
+                status,
+              });
+            }}
+            size="icon"
+            type="button"
+            variant="ghost"
+          >
+            <ChevronRight aria-hidden="true" />
+          </Button>
         </div>
-      )}
-      {data && !showEmpty && (
-        <div className="sr-only" aria-live="polite">
-          {data.items.length} fiches affichées sur cette page
-        </div>
-      )}
-    </DataTableSection>
+      </nav>
+    </section>
   );
 };

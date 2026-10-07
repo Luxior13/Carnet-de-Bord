@@ -1,0 +1,2417 @@
+<!doctype html>
+<html lang="fr" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Membres — tableau admin (reproduction)</title>
+    <!--
+      Reproduction autonome du module "Membres" de /admin/membres.
+      Aucune dependance : CSS + JS + SVG inline.
+      Source d'origine :
+        - apps/web/src/app/admin/membres/members-overview-panel.tsx
+        - apps/web/src/app/admin/membres/members-filters-toolbar.tsx
+        - apps/web/src/app/admin/membres/members-overview-summary.tsx
+        - apps/web/src/app/admin/membres/members-overview.module.css
+        - apps/web/src/app/admin/structure/structure-identity.module.css (hero)
+      Palette "Midnight steel" (globals.css) + tokens admin (admin.css).
+    -->
+    <style>
+      /* ============================================================
+         1. Tokens (globals.css + admin.css) — couleurs & typographie
+         ============================================================ */
+      :root {
+        color-scheme: dark;
+
+        --surface-canvas: #060a11;
+        --surface-page: #0b111b;
+        --surface-panel: #121c2b;
+        --surface-panel-raised: #18243a;
+        --surface-panel-header: #1d2c48;
+        --surface-inset: #0e1622;
+        --surface-control: #0b111b;
+        --surface-floating: #1b2942;
+
+        --text-primary: #f3f6fb;
+        --text-secondary: #c4cedc;
+        --text-muted: #8e9baf;
+
+        --accent-primary: #698cdd;
+        --accent-primary-hover: #87a7ee;
+        --accent-text: #adc5f5;
+
+        /* Typographie canonique admin (admin.css) */
+        --admin-type-micro-size: 0.6875rem;
+        --admin-type-caption-size: 0.75rem;
+        --admin-type-title-size: 0.875rem;
+
+        --font-sans:
+          system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+
+        /* Couleurs specifiques au module Membres (members-overview.module.css) */
+        --member-foreground: #eef2fa;
+        --member-muted: #92a2be;
+        --member-border: #435978;
+        --member-list-bg: #172333;
+        --member-toolbar-bg: #24334a;
+        --member-control-bg: #101824;
+        --member-control-border: #374963;
+        --member-accent: #698cdd;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        background-color: var(--surface-page);
+      }
+
+      body {
+        margin: 0;
+        min-height: 100svh;
+        background-color: var(--surface-page);
+        color: var(--member-foreground);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      svg {
+        display: block;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button {
+        font: inherit;
+        color: inherit;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* ============================================================
+         2. Page
+         ============================================================ */
+      .membres-page {
+        display: grid;
+        min-width: 0;
+        gap: 18px;
+        padding: 24px;
+        color: var(--member-foreground);
+        color-scheme: dark;
+      }
+
+      .membres-page
+        :is(a, button, summary, [tabindex="0"]):focus-visible {
+        outline: 2px solid #8eaff2;
+        outline-offset: 3px;
+      }
+
+      /* ============================================================
+         3. Hero (structure-identity.module.css + surcharge Membres)
+         ============================================================ */
+      .membres-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+        padding: 19px 20px;
+        border: 1px solid #4b6285;
+        border-radius: 10px;
+        background: linear-gradient(110deg, #2b3c57, #1d2a3f 75%);
+        color: var(--member-foreground);
+      }
+
+      .membres-hero-identity {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        min-width: 0;
+      }
+
+      .membres-hero-logo {
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 40px;
+        height: 40px;
+        color: var(--accent-text);
+      }
+
+      .membres-hero-logo svg {
+        width: 27px;
+        height: 27px;
+      }
+
+      .membres-hero h1 {
+        margin: 0;
+        font-size: 23px;
+        line-height: 1.3;
+        font-weight: 650;
+        letter-spacing: -0.025em;
+      }
+
+      .membres-hero p {
+        margin: 4px 0 0;
+        color: #9cacc6;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .membres-title-line {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .membres-total {
+        padding: 2px 7px;
+        border: 1px solid #698cdd80;
+        border-radius: 5px;
+        background: #698cdd26;
+        color: #d4e3ff;
+        font-size: 11px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .membres-add-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 36px;
+        padding: 8px 11px;
+        border: 1px solid #698cdd;
+        border-radius: 6px;
+        background: #698cdd;
+        color: #091321;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .membres-add-button:hover {
+        background: #87a7ee;
+        border-color: #87a7ee;
+      }
+
+      .membres-add-button svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      /* ============================================================
+         4. Layout liste + rail resumé
+         ============================================================ */
+      .membres-layout {
+        display: grid;
+        min-width: 0;
+        gap: 18px;
+      }
+
+      .membres-rail {
+        display: none;
+        min-width: 0;
+      }
+
+      .membres-rail-mobile {
+        margin-bottom: 16px;
+      }
+
+      @media (min-width: 1024px) {
+        .membres-layout {
+          grid-template-columns: minmax(0, 1fr) 288px;
+          align-items: start;
+        }
+
+        .membres-rail {
+          display: block;
+          position: sticky;
+          top: 80px;
+        }
+
+        .membres-rail-mobile {
+          display: none;
+        }
+      }
+
+      /* ============================================================
+         5. Carte liste + toolbar
+         ============================================================ */
+      .membres-list {
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--member-border);
+        border-radius: 10px;
+        background: var(--member-list-bg);
+        container-type: inline-size;
+      }
+
+      .membres-toolbar {
+        padding: 16px 16px 12px;
+        background: var(--member-toolbar-bg);
+      }
+
+      .membres-filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .membres-search {
+        position: relative;
+        min-width: 180px;
+        flex: 1;
+      }
+
+      .membres-search > svg {
+        position: absolute;
+        top: 11px;
+        left: 11px;
+        width: 16px;
+        height: 16px;
+        color: #92a2be;
+        pointer-events: none;
+      }
+
+      .membres-search input {
+        width: 100%;
+        min-width: 0;
+        height: 38px;
+        padding: 8px 40px 8px 35px;
+        border: 1px solid var(--member-control-border);
+        border-radius: 6px;
+        background: var(--member-control-bg);
+        color: var(--member-foreground);
+        font-size: 12px;
+        outline: none;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+
+      .membres-search input::placeholder {
+        color: #8799b5;
+      }
+
+      .membres-search input:hover {
+        border-color: #526b92;
+      }
+
+      .membres-search input:focus {
+        border-color: #698cdd;
+        box-shadow: 0 0 0 2px #698cdd22;
+      }
+
+      .membres-search input::-webkit-search-cancel-button {
+        display: none;
+      }
+
+      .membres-search > button {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        display: grid;
+        width: 30px;
+        height: 30px;
+        place-items: center;
+        border-radius: 4px;
+        color: #b2c8ef;
+      }
+
+      .membres-search > button:hover {
+        background: #263852;
+        color: var(--member-foreground);
+      }
+
+      .membres-search > button svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .membres-filter-selects {
+        display: flex;
+        min-width: 0;
+        gap: 8px;
+      }
+
+      /* --- Select custom (Radix reimplemente) --- */
+      .membres-select {
+        position: relative;
+      }
+
+      .membres-select-trigger {
+        display: flex;
+        align-items: center;
+        width: 170px;
+        min-width: 0;
+        height: 38px;
+        padding: 8px 10px;
+        gap: 7px;
+        border: 1px solid var(--member-control-border);
+        border-radius: 6px;
+        background: var(--member-control-bg);
+        color: #c9d6eb;
+        font-size: 11px;
+        font-weight: 500;
+        box-shadow: none;
+      }
+
+      .membres-select-trigger > svg {
+        width: 15px;
+        height: 15px;
+        flex-shrink: 0;
+        color: #92add8;
+      }
+
+      .membres-select-value {
+        min-width: 0;
+        flex: 1;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .membres-select-trigger:hover {
+        border-color: #526b92;
+        background: #152135;
+      }
+
+      .membres-select-trigger[aria-expanded="true"],
+      .membres-select-trigger:focus {
+        border-color: #698cdd;
+        background: #152135;
+        box-shadow: 0 0 0 2px #698cdd22;
+      }
+
+      .membres-select-menu {
+        position: absolute;
+        z-index: 60;
+        top: calc(100% + 4px);
+        left: 0;
+        min-width: 100%;
+        width: max-content;
+        max-width: calc(100vw - 24px);
+        padding: 4px;
+        border: 1px solid var(--member-control-border);
+        border-radius: 7px;
+        background: #121d2d;
+        color: #dce6f7;
+        box-shadow: 0 16px 36px #0006;
+      }
+
+      .membres-select-menu[hidden] {
+        display: none;
+      }
+
+      .membres-select-option {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        min-height: 34px;
+        padding: 0 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        text-align: left;
+      }
+
+      .membres-select-option:hover,
+      .membres-select-option[data-state="checked"] {
+        background: #273b5b;
+        color: var(--member-foreground);
+      }
+
+      /* --- Filtres actifs --- */
+      .membres-active-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 12px;
+      }
+
+      .membres-active-filters a {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        min-width: 0;
+        min-height: 26px;
+        gap: 6px;
+        padding: 3px 7px;
+        border: 1px solid #435777;
+        border-radius: 5px;
+        background: #1d2c43;
+        color: #bdcef0;
+        font-size: 10px;
+      }
+
+      .membres-active-filters a span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .membres-active-filters a svg {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+      }
+
+      .membres-active-filters a:hover {
+        background: #2b3e5c;
+        color: var(--member-foreground);
+      }
+
+      .membres-list-caption {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 12px;
+        color: #b4c5de;
+        font-size: 11px;
+      }
+
+      .membres-list-caption > p {
+        margin: 0;
+      }
+
+      .membres-list-caption > span {
+        color: #9eafc9;
+      }
+
+      /* ============================================================
+         6. Tableau
+         ============================================================ */
+      .membres-table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+      }
+
+      .membres-table th {
+        padding: 9px 12px;
+        border-top: 1px solid var(--member-border);
+        border-bottom: 1px solid var(--member-border);
+        background: #2c3e59;
+        color: #c7d5ea;
+        font-size: 11px;
+        font-weight: 500;
+        text-align: left;
+      }
+
+      .membres-table th:first-child {
+        padding-left: 16px;
+      }
+
+      .membres-table th:nth-child(2) {
+        width: 146px;
+      }
+
+      .membres-table[data-sensitive="true"] th:nth-child(3) {
+        width: 145px;
+      }
+
+      .membres-table th:last-child {
+        width: 100px;
+      }
+
+      .membres-row {
+        background: var(--member-list-bg);
+      }
+
+      .membres-row:nth-child(even) {
+        background: #202f44;
+      }
+
+      .membres-row + .membres-row {
+        border-top: 1px solid #3a4d69;
+      }
+
+      .membres-row:hover,
+      .membres-row:focus-within {
+        background: #2b4060;
+      }
+
+      .membres-row > td {
+        padding: 11px 12px;
+        vertical-align: middle;
+      }
+
+      .membres-row > td:first-child {
+        padding-left: 16px;
+      }
+
+      .membres-row > td:last-child {
+        padding-right: 16px;
+      }
+
+      /* --- Cellule identite --- */
+      .membres-identity {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .membres-avatar {
+        position: relative;
+        display: flex;
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border: 1px solid #3b4f6d;
+        border-radius: 7px;
+        background: #0d1523;
+      }
+
+      .membres-avatar-fallback {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: #adc5f5;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .membres-avatar-image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .membres-info {
+        min-width: 0;
+      }
+
+      .membres-name-line {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .membres-name {
+        overflow: hidden;
+        color: var(--member-foreground);
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.6;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .membres-name:hover {
+        color: #bcd1fa;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      .membres-flag {
+        display: grid;
+        width: 16px;
+        height: 12px;
+        flex-shrink: 0;
+        border-radius: 2px;
+        overflow: hidden;
+      }
+
+      .membres-flag img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .membres-hidden-profile {
+        display: inline-flex;
+        color: #91a0b7;
+      }
+
+      .membres-hidden-profile svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      .membres-discord {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        gap: 5px;
+        margin: 2px 0 0;
+        color: #a7b8d2;
+        font-size: 10px;
+        line-height: 1.5;
+      }
+
+      .membres-discord svg {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+      }
+
+      .membres-discord span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .membres-discord[data-state="active"] {
+        color: #80ddba;
+      }
+
+      .membres-discord[data-state="pending"] {
+        color: #f0cb80;
+      }
+
+      .membres-discord[data-state="disabled"] {
+        color: #ff9caa;
+      }
+
+      /* --- Badge statut --- */
+      .membres-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 7px;
+        border: 1px solid #4d62834d;
+        border-radius: 5px;
+        background: #91a4c10a;
+        color: #b3c2d9;
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1.5;
+        white-space: nowrap;
+      }
+
+      .membres-status-badge > span {
+        display: inline-block;
+        width: 5px;
+        height: 5px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .membres-status-badge[data-status="CURRENT_MEMBER"] {
+        border-color: #3b8270;
+        background: #204f48;
+        color: #a4efd6;
+      }
+
+      .membres-status-badge[data-status="EXTERNAL"] {
+        border-color: #4a70a8;
+        background: #263f68;
+        color: #aecfff;
+      }
+
+      .membres-status-badge[data-status="FORMER_MEMBER"] {
+        border-color: #80693f;
+        background: #50432a;
+        color: #f0d492;
+      }
+
+      /* --- Badge acces --- */
+      .membres-access {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 7px;
+        border: 1px solid #4a70a8;
+        border-radius: 5px;
+        background: #263f68;
+        color: #aecfff;
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1.5;
+        white-space: nowrap;
+      }
+
+      .membres-access svg {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+      }
+
+      .membres-access[data-level="administrator"] {
+        border-color: #6b5294;
+        background: #3c315b;
+        color: #d9c4ff;
+      }
+
+      .membres-standard-access {
+        color: #a7b8d2;
+        font-size: 11px;
+      }
+
+      /* --- Actions de ligne --- */
+      .membres-row-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      .membres-icon-button,
+      .membres-disabled-action {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: 1px solid #33445e;
+        border-radius: 5px;
+        background: var(--member-control-bg);
+        color: #a9bddc;
+        transition:
+          background 0.15s,
+          border-color 0.15s;
+      }
+
+      .membres-icon-button svg,
+      .membres-disabled-action svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .membres-icon-button:hover {
+        border-color: #698cdd88;
+        background: #283b5b;
+        color: #e1ebff;
+      }
+
+      .membres-disabled-action {
+        color: #62718a;
+        border-color: #2b384a;
+        background: transparent;
+      }
+
+      .membres-filter-selects > .membres-icon-button {
+        width: 38px;
+        height: 38px;
+      }
+
+      /* ============================================================
+         7. Pagination
+         ============================================================ */
+      .membres-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px 16px;
+        border-top: 1px solid var(--member-border);
+        background: var(--member-toolbar-bg);
+      }
+
+      .membres-pagination > p {
+        margin: 0;
+        color: #b4c5de;
+        font-size: 11px;
+      }
+
+      .membres-pagination > p strong {
+        color: #dce6f7;
+        font-weight: 500;
+      }
+
+      .membres-pagination-actions,
+      .membres-page-numbers {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .membres-page-button {
+        display: inline-flex;
+        min-width: 30px;
+        height: 30px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 6px;
+        border: 1px solid #33445e;
+        border-radius: 5px;
+        background: var(--member-control-bg);
+        color: #b5c7e5;
+        font-size: 11px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .membres-page-button svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      .membres-page-button[aria-current="page"] {
+        border-color: #698cdd88;
+        background: #698cdd26;
+        color: #d5e3ff;
+      }
+
+      a.membres-page-button:hover {
+        background: #283b5b;
+        border-color: #698cdd88;
+      }
+
+      .membres-page-button:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+
+      .membres-ellipsis {
+        color: #92a2be;
+        font-size: 11px;
+        padding: 0 3px;
+      }
+
+      /* ============================================================
+         8. Etat vide
+         ============================================================ */
+      .membres-empty {
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        padding: 44px 18px;
+        border-top: 1px solid #30405a;
+        text-align: center;
+      }
+
+      .membres-empty > svg {
+        width: 30px;
+        height: 30px;
+        margin-bottom: 6px;
+        color: #89a4d3;
+      }
+
+      .membres-empty h2 {
+        margin: 0;
+        color: #e5ecfa;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .membres-empty p {
+        max-width: 320px;
+        margin: 0;
+        color: #92a2be;
+        font-size: 12px;
+        line-height: 1.7;
+      }
+
+      /* ============================================================
+         9. Rail resumé
+         ============================================================ */
+      .membres-summary {
+        overflow: hidden;
+        border: 1px solid var(--member-border);
+        border-radius: 10px;
+        background: #1a273a;
+      }
+
+      .membres-summary-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 13px 16px;
+        background: #2a3d58;
+        color: #e4ecfa;
+        font-size: 12px;
+        font-weight: 600;
+        list-style: none;
+      }
+
+      .membres-summary-header h2 {
+        margin: 0;
+        font-size: inherit;
+        font-weight: inherit;
+      }
+
+      summary.membres-summary-header {
+        cursor: pointer;
+      }
+
+      summary.membres-summary-header:hover {
+        background: #344c6e;
+      }
+
+      .membres-summary-header::-webkit-details-marker {
+        display: none;
+      }
+
+      .membres-summary-header svg {
+        width: 15px;
+        height: 15px;
+        color: #a1b7dc;
+      }
+
+      .membres-summary[open] .membres-summary-header svg {
+        transform: rotate(180deg);
+      }
+
+      .membres-summary-body {
+        display: grid;
+        gap: 16px;
+        padding: 16px;
+        border-top: 1px solid var(--member-border);
+      }
+
+      .membres-summary-caption {
+        margin: 0;
+        color: #92a2be;
+        font-size: 11px;
+        line-height: 1.6;
+      }
+
+      .membres-stat-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .membres-stat-link {
+        display: grid;
+        gap: 7px;
+        color: #86b4f4;
+      }
+
+      .membres-stat-link[data-tone="current"] {
+        color: #80ddba;
+      }
+
+      .membres-stat-link[data-tone="former"] {
+        color: #e7c478;
+      }
+
+      .membres-stat-heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .membres-stat-heading > span {
+        color: #b5c4da;
+        font-size: 11px;
+      }
+
+      .membres-stat-heading strong {
+        color: var(--member-foreground);
+        font-size: 15px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .membres-stat-link:hover .membres-stat-heading > span {
+        color: var(--member-foreground);
+      }
+
+      .membres-stat-track {
+        height: 3px;
+        overflow: hidden;
+        border-radius: 3px;
+        background: #304059;
+      }
+
+      .membres-stat-track > span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: currentColor;
+      }
+
+      .membres-discord-summary {
+        padding-top: 16px;
+        border-top: 1px solid #30405a;
+      }
+
+      .membres-discord-summary h3 {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin: 0 0 12px;
+        color: #c4c5f4;
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .membres-discord-summary h3 svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      .membres-discord-summary dl {
+        display: grid;
+        gap: 12px;
+        margin: 0;
+      }
+
+      .membres-discord-summary dl > div {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .membres-discord-summary dt a {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: #a6b5cd;
+        font-size: 11px;
+      }
+
+      .membres-discord-summary dt a:hover {
+        color: var(--member-foreground);
+      }
+
+      .membres-discord-summary dd {
+        margin: 0;
+        color: #dae4f6;
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .membres-dot {
+        display: inline-block;
+        width: 5px;
+        height: 5px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .membres-dot[data-tone="current"] {
+        color: #80ddba;
+      }
+
+      .membres-dot[data-tone="disabled"] {
+        color: #ff9caa;
+      }
+
+      .membres-dot[data-tone="external"] {
+        color: #7ea8ff;
+      }
+
+      /* ============================================================
+         10. Tooltip flottante (Radix reimplemente)
+         ============================================================ */
+      .membres-tooltip-floating {
+        position: fixed;
+        z-index: 190;
+        max-width: min(280px, calc(100vw - 24px));
+        padding: 7px 10px;
+        border: 1px solid var(--member-control-border);
+        border-radius: 6px;
+        background: #0e1724;
+        color: #dbe5f5;
+        font-size: 11px;
+        line-height: 1.5;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(2px);
+        transition:
+          opacity 0.12s ease,
+          transform 0.12s ease;
+      }
+
+      .membres-tooltip-floating.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* ============================================================
+         11. Responsive (container queries identiques a l'origine)
+         ============================================================ */
+      @container (max-width: 740px) {
+        .membres-search {
+          flex-basis: 100%;
+        }
+
+        .membres-table,
+        .membres-table tbody {
+          display: block;
+        }
+
+        .membres-table thead {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          overflow: hidden;
+          clip-path: inset(50%);
+          white-space: nowrap;
+        }
+
+        .membres-table tbody {
+          border-top: 1px solid var(--member-border);
+        }
+
+        .membres-row {
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr) 70px;
+          align-items: center;
+          gap: 6px 10px;
+          padding: 12px 16px;
+        }
+
+        .membres-row > td,
+        .membres-row > td:first-child,
+        .membres-row > td:last-child {
+          padding: 0;
+        }
+
+        .membres-member-cell {
+          grid-column: 1 / 3;
+          grid-row: 1;
+          min-width: 0;
+        }
+
+        .membres-actions-cell {
+          grid-column: 3;
+          grid-row: 1;
+        }
+
+        .membres-status-cell {
+          grid-column: 1;
+          grid-row: 2;
+          margin-left: 46px;
+        }
+
+        .membres-access-cell {
+          grid-column: 2 / 4;
+          grid-row: 2;
+        }
+
+        .membres-standard-access {
+          font-size: 10px;
+        }
+      }
+
+      @container (max-width: 450px) {
+        .membres-toolbar {
+          padding: 12px;
+        }
+
+        .membres-filter-selects {
+          width: 100%;
+          gap: 6px;
+        }
+
+        .membres-select {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .membres-select-trigger {
+          width: 100%;
+          gap: 5px;
+          padding-right: 7px;
+          padding-left: 7px;
+          font-size: 10px;
+        }
+
+        .membres-select-trigger > svg {
+          width: 13px;
+          height: 13px;
+        }
+
+        .membres-filter-selects > .membres-icon-button {
+          width: 32px;
+        }
+
+        .membres-row {
+          padding: 11px 12px;
+          gap: 6px 8px;
+        }
+
+        .membres-page-numbers {
+          display: none;
+        }
+
+        .membres-pagination {
+          padding: 12px;
+        }
+      }
+
+      @media (max-width: 639px) {
+        .membres-hero {
+          padding: 16px;
+        }
+
+        .membres-add-button {
+          margin-left: 53px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .membres-icon-button,
+        .membres-search input {
+          transition: none;
+        }
+
+        .membres-tooltip-floating {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="membres-page">
+      <!-- ============================ HERO ============================ -->
+      <header class="membres-hero">
+        <div class="membres-hero-identity">
+          <span class="membres-hero-logo" aria-hidden="true">
+            <!-- lucide: users-round -->
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 21a8 8 0 0 0-16 0" />
+              <circle cx="10" cy="8" r="5" />
+              <path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3" />
+            </svg>
+          </span>
+          <div>
+            <div class="membres-title-line">
+              <h1>Membres</h1>
+              <span class="membres-total">128</span>
+            </div>
+            <p>Profils, comptes Discord et accès au site.</p>
+          </div>
+        </div>
+        <a class="membres-add-button" href="/admin/membres/nouveau">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M5 12h14" />
+            <path d="M12 5v14" />
+          </svg>
+          Ajouter un membre
+        </a>
+      </header>
+
+      <!-- ============== RESUME MOBILE (details repliables) ============== -->
+      <aside class="membres-rail-mobile" aria-label="Résumé des membres">
+        <details class="membres-summary">
+          <summary class="membres-summary-header">
+            <span>Répartition des membres</span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </summary>
+          <div class="membres-summary-body">
+            <p class="membres-summary-caption">Tous les membres</p>
+            <div class="membres-stat-list">
+              <a class="membres-stat-link" data-tone="current" href="#">
+                <span class="membres-stat-heading">
+                  <span>Dans la structure</span>
+                  <strong>86</strong>
+                </span>
+                <span class="membres-stat-track" aria-hidden="true">
+                  <span style="width: 67.2%"></span>
+                </span>
+              </a>
+              <a class="membres-stat-link" data-tone="external" href="#">
+                <span class="membres-stat-heading">
+                  <span>Externes</span>
+                  <strong>24</strong>
+                </span>
+                <span class="membres-stat-track" aria-hidden="true">
+                  <span style="width: 18.8%"></span>
+                </span>
+              </a>
+              <a class="membres-stat-link" data-tone="former" href="#">
+                <span class="membres-stat-heading">
+                  <span>Anciens membres</span>
+                  <strong>18</strong>
+                </span>
+                <span class="membres-stat-track" aria-hidden="true">
+                  <span style="width: 14.1%"></span>
+                </span>
+              </a>
+            </div>
+            <div class="membres-discord-summary">
+              <h3>
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M20.317 4.369a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.211.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0c-.164-.39-.405-.874-.617-1.249a.077.077 0 0 0-.079-.037 19.736 19.736 0 0 0-4.885 1.515.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.077.077 0 0 0 .084-.027c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.009c.12.1.246.198.373.292a.077.077 0 0 1-.006.127 12.298 12.298 0 0 1-1.873.892.076.076 0 0 0-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.028 19.876 19.876 0 0 0 6.002-3.03.077.077 0 0 0 .031-.055c.5-5.177-.838-9.674-3.548-13.66a.061.061 0 0 0-.031-.028ZM8.02 15.331c-1.182 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.333-.955 2.419-2.157 2.419Zm7.974 0c-1.182 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.333-.946 2.419-2.157 2.419Z"
+                  />
+                </svg>
+                Comptes Discord
+              </h3>
+              <dl>
+                <div>
+                  <dt>
+                    <a href="#">
+                      <span
+                        class="membres-dot"
+                        data-tone="current"
+                        aria-hidden="true"
+                      ></span>
+                      Liaisons actives
+                    </a>
+                  </dt>
+                  <dd>74</dd>
+                </div>
+                <div>
+                  <dt>
+                    <a href="#">
+                      <span
+                        class="membres-dot"
+                        data-tone="disabled"
+                        aria-hidden="true"
+                      ></span>
+                      Désactivées
+                    </a>
+                  </dt>
+                  <dd>9</dd>
+                </div>
+                <div>
+                  <dt>
+                    <a href="#">
+                      <span
+                        class="membres-dot"
+                        data-tone="external"
+                        aria-hidden="true"
+                      ></span>
+                      Sans liaison
+                    </a>
+                  </dt>
+                  <dd>45</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </details>
+      </aside>
+
+      <div class="membres-layout">
+        <!-- ============================ LISTE ============================ -->
+        <section class="membres-list" aria-label="Liste des membres">
+          <!-- ------------------------ Toolbar ------------------------ -->
+          <div class="membres-toolbar">
+            <form
+              class="membres-filter-form"
+              action="/admin/membres"
+              method="get"
+              role="search"
+              aria-label="Rechercher et filtrer les membres"
+            >
+              <div class="membres-search">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+                <input
+                  id="membres-search"
+                  type="search"
+                  name="query"
+                  maxlength="120"
+                  placeholder="Rechercher un membre…"
+                  aria-label="Rechercher par pseudo, prénom, nom, slug ou compte Discord"
+                  autocomplete="off"
+                />
+                <button type="submit" aria-label="Rechercher les membres" title="Rechercher">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              <div class="membres-filter-selects">
+                <!-- Select : statut -->
+                <div class="membres-select" data-select>
+                  <button
+                    type="button"
+                    class="membres-select-trigger"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                    aria-label="Filtrer par statut"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M18 21a8 8 0 0 0-16 0" />
+                      <circle cx="10" cy="8" r="5" />
+                      <path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3" />
+                    </svg>
+                    <span class="membres-select-value">Tous les statuts</span>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
+                  <div class="membres-select-menu" role="listbox" hidden>
+                    <button type="button" class="membres-select-option" role="option" data-state="checked">
+                      Tous les statuts
+                    </button>
+                    <button type="button" class="membres-select-option" role="option">
+                      Dans la structure
+                    </button>
+                    <button type="button" class="membres-select-option" role="option">
+                      Externes
+                    </button>
+                    <button type="button" class="membres-select-option" role="option">
+                      Anciens membres
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Select : liaison Discord -->
+                <div class="membres-select" data-select>
+                  <button
+                    type="button"
+                    class="membres-select-trigger"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                    aria-label="Filtrer par liaison Discord"
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path
+                        d="M20.317 4.369a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.211.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0c-.164-.39-.405-.874-.617-1.249a.077.077 0 0 0-.079-.037 19.736 19.736 0 0 0-4.885 1.515.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.077.077 0 0 0 .084-.027c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.009c.12.1.246.198.373.292a.077.077 0 0 1-.006.127 12.298 12.298 0 0 1-1.873.892.076.076 0 0 0-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.028 19.876 19.876 0 0 0 6.002-3.03.077.077 0 0 0 .031-.055c.5-5.177-.838-9.674-3.548-13.66a.061.061 0 0 0-.031-.028ZM8.02 15.331c-1.182 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.333-.955 2.419-2.157 2.419Zm7.974 0c-1.182 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.333-.946 2.419-2.157 2.419Z"
+                      />
+                    </svg>
+                    <span class="membres-select-value">Tous les comptes</span>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
+                  <div class="membres-select-menu" role="listbox" hidden>
+                    <button type="button" class="membres-select-option" role="option" data-state="checked">
+                      Tous les comptes
+                    </button>
+                    <button type="button" class="membres-select-option" role="option">
+                      Discord lié
+                    </button>
+                    <button type="button" class="membres-select-option" role="option">
+                      Sans liaison
+                    </button>
+                    <button type="button" class="membres-select-option" role="option">
+                      Liaison désactivée
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Reset (visible quand des filtres sont actifs) -->
+                <a
+                  class="membres-icon-button"
+                  href="/admin/membres"
+                  aria-label="Réinitialiser les filtres"
+                  data-tooltip="Réinitialiser les filtres"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                  </svg>
+                </a>
+              </div>
+            </form>
+
+            <!-- Filtres actifs (exemple : recherche + statut) -->
+            <div class="membres-active-filters" aria-label="Filtres actifs">
+              <a href="#" aria-label="Retirer le filtre Recherche : auro">
+                <span>Recherche : auro</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </a>
+              <a href="#" aria-label="Retirer le filtre Statut : Dans la structure">
+                <span>Statut : Dans la structure</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </a>
+            </div>
+
+            <div class="membres-list-caption">
+              <p role="status">1–5 sur 128 membres</p>
+              <span>25 par page</span>
+            </div>
+          </div>
+
+          <!-- ------------------------ Tableau ------------------------ -->
+          <table class="membres-table" data-sensitive="true">
+            <caption class="sr-only">
+              Les membres et leurs profils, comptes Discord et accès
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Membre</th>
+                <th scope="col">Statut</th>
+                <th scope="col">Accès</th>
+                <th scope="col"><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Ligne 1 : actuel, administrateur, Discord actif -->
+              <tr class="membres-row">
+                <td class="membres-member-cell">
+                  <div class="membres-identity">
+                    <span class="membres-avatar" aria-hidden="true">
+                      <span class="membres-avatar-fallback">AU</span>
+                    </span>
+                    <div class="membres-info">
+                      <div class="membres-name-line">
+                        <a class="membres-name" href="#" title="Aurore">Aurore</a>
+                        <span class="membres-flag" tabindex="0" data-tooltip="France">
+                          <img
+                            src="https://flagcdn.com/w40/fr.png"
+                            alt="France"
+                            width="16"
+                            height="12"
+                            loading="lazy"
+                          />
+                        </span>
+                      </div>
+                      <p class="membres-discord" data-state="active" title="@aurore">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path
+                            d="M20.317 4.369a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.211.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0c-.164-.39-.405-.874-.617-1.249a.077.077 0 0 0-.079-.037 19.736 19.736 0 0 0-4.885 1.515.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.077.077 0 0 0 .084-.027c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.009c.12.1.246.198.373.292a.077.077 0 0 1-.006.127 12.298 12.298 0 0 1-1.873.892.076.076 0 0 0-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.028 19.876 19.876 0 0 0 6.002-3.03.077.077 0 0 0 .031-.055c.5-5.177-.838-9.674-3.548-13.66a.061.061 0 0 0-.031-.028ZM8.02 15.331c-1.182 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.333-.955 2.419-2.157 2.419Zm7.974 0c-1.182 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.333-.946 2.419-2.157 2.419Z"
+                          />
+                        </svg>
+                        <span>@aurore</span>
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td class="membres-status-cell">
+                  <span class="membres-status-badge" data-status="CURRENT_MEMBER">
+                    <span aria-hidden="true"></span>
+                    Actuel
+                  </span>
+                </td>
+                <td class="membres-access-cell">
+                  <span class="membres-access" data-level="administrator">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M10 15H6a4 4 0 0 0-4 4v2" />
+                      <circle cx="10" cy="7.5" r="4" />
+                      <circle cx="19" cy="18" r="3" />
+                      <path d="M19 15v-1.5" />
+                      <path d="M19 22.5V21" />
+                      <path d="m16.4 16.5 1.3.75" />
+                      <path d="m20.3 18.75 1.3.75" />
+                      <path d="m16.4 19.5 1.3-.75" />
+                      <path d="m20.3 17.25 1.3-.75" />
+                    </svg>
+                    Administrateur
+                  </span>
+                </td>
+                <td class="membres-actions-cell">
+                  <div class="membres-row-actions">
+                    <a
+                      class="membres-icon-button"
+                      href="#"
+                      aria-label="Ouvrir la fiche de Aurore"
+                      data-tooltip="Ouvrir la fiche"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+                      </svg>
+                    </a>
+                    <a
+                      class="membres-icon-button"
+                      href="#"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Voir le profil public de Aurore dans un nouvel onglet"
+                      data-tooltip="Voir le profil public"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M15 3h6v6" />
+                        <path d="M10 14 21 3" />
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      </svg>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Ligne 2 : actuel, 3 droits, Discord en attente, profil masque -->
+              <tr class="membres-row">
+                <td class="membres-member-cell">
+                  <div class="membres-identity">
+                    <span class="membres-avatar" aria-hidden="true">
+                      <span class="membres-avatar-fallback">BA</span>
+                    </span>
+                    <div class="membres-info">
+                      <div class="membres-name-line">
+                        <a class="membres-name" href="#" title="Baptiste">Baptiste</a>
+                        <span class="membres-flag" tabindex="0" data-tooltip="Belgique">
+                          <img
+                            src="https://flagcdn.com/w40/be.png"
+                            alt="Belgique"
+                            width="16"
+                            height="12"
+                            loading="lazy"
+                          />
+                        </span>
+                        <span
+                          class="membres-hidden-profile"
+                          tabindex="0"
+                          data-tooltip="Profil public masqué"
+                          aria-label="Profil public masqué"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" />
+                            <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" />
+                            <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" />
+                            <path d="m2 2 20 20" />
+                          </svg>
+                        </span>
+                      </div>
+                      <p class="membres-discord" data-state="pending" title="Liaison en attente">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" />
+                          <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" />
+                        </svg>
+                        <span>Liaison en attente</span>
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td class="membres-status-cell">
+                  <span class="membres-status-badge" data-status="CURRENT_MEMBER">
+                    <span aria-hidden="true"></span>
+                    Actuel
+                  </span>
+                </td>
+                <td class="membres-access-cell">
+                  <span class="membres-access" data-level="permissions">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+                      <path d="m9 12 2 2 4-4" />
+                    </svg>
+                    3 droits
+                  </span>
+                </td>
+                <td class="membres-actions-cell">
+                  <div class="membres-row-actions">
+                    <a
+                      class="membres-icon-button"
+                      href="#"
+                      aria-label="Ouvrir la fiche de Baptiste"
+                      data-tooltip="Ouvrir la fiche"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+                      </svg>
+                    </a>
+                    <span
+                      class="membres-disabled-action"
+                      tabindex="0"
+                      role="img"
+                      aria-label="Profil public masqué"
+                      data-tooltip="Profil public masqué"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M15 3h6v6" />
+                        <path d="M10 14 21 3" />
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      </svg>
+                    </span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Ligne 3 : externe, standard, Discord desactive, action "audience" -->
+              <tr class="membres-row">
+                <td class="membres-member-cell">
+                  <div class="membres-identity">
+                    <span class="membres-avatar" aria-hidden="true">
+                      <span class="membres-avatar-fallback">CA</span>
+                    </span>
+                    <div class="membres-info">
+                      <div class="membres-name-line">
+                        <a class="membres-name" href="#" title="Camille">Camille</a>
+                      </div>
+                      <p class="membres-discord" data-state="disabled" title="@camille · désactivé">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M9 17H7A5 5 0 0 1 7 7" />
+                          <path d="M15 7h2a5 5 0 0 1 4 8" />
+                          <line x1="8" x2="12" y1="12" y2="12" />
+                          <line x1="2" x2="22" y1="2" y2="22" />
+                        </svg>
+                        <span>@camille · désactivé</span>
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td class="membres-status-cell">
+                  <span class="membres-status-badge" data-status="EXTERNAL">
+                    <span aria-hidden="true"></span>
+                    Externe
+                  </span>
+                </td>
+                <td class="membres-access-cell">
+                  <span class="membres-standard-access">Standard</span>
+                </td>
+                <td class="membres-actions-cell">
+                  <div class="membres-row-actions">
+                    <a
+                      class="membres-icon-button"
+                      href="#"
+                      aria-label="Ouvrir la fiche de Camille"
+                      data-tooltip="Consulter l'audience"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M3 3v16a2 2 0 0 0 2 2h16" />
+                        <path d="m19 9-5 5-4-4-3 3" />
+                      </svg>
+                    </a>
+                    <a
+                      class="membres-icon-button"
+                      href="#"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Voir le profil public de Camille dans un nouvel onglet"
+                      data-tooltip="Voir le profil public"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M15 3h6v6" />
+                        <path d="M10 14 21 3" />
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      </svg>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Ligne 4 : ancien membre, donnees sensibles masquees (acces = "—") -->
+              <tr class="membres-row">
+                <td class="membres-member-cell">
+                  <div class="membres-identity">
+                    <span class="membres-avatar" aria-hidden="true">
+                      <span class="membres-avatar-fallback">DO</span>
+                    </span>
+                    <div class="membres-info">
+                      <div class="membres-name-line">
+                        <span class="membres-name" title="Dorian">Dorian</span>
+                        <span class="membres-flag" tabindex="0" data-tooltip="Allemagne">
+                          <img
+                            src="https://flagcdn.com/w40/de.png"
+                            alt="Allemagne"
+                            width="16"
+                            height="12"
+                            loading="lazy"
+                          />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="membres-status-cell">
+                  <span class="membres-status-badge" data-status="FORMER_MEMBER">
+                    <span aria-hidden="true"></span>
+                    Ancien membre
+                  </span>
+                </td>
+                <td class="membres-access-cell">
+                  <span class="membres-standard-access">—</span>
+                </td>
+                <td class="membres-actions-cell">
+                  <div class="membres-row-actions">
+                    <a
+                      class="membres-icon-button"
+                      href="#"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Voir le profil public de Dorian dans un nouvel onglet"
+                      data-tooltip="Voir le profil public"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M15 3h6v6" />
+                        <path d="M10 14 21 3" />
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      </svg>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Ligne 5 : actuel, 1 droit, Discord actif, profil masque -->
+              <tr class="membres-row">
+                <td class="membres-member-cell">
+                  <div class="membres-identity">
+                    <span class="membres-avatar" aria-hidden="true">
+                      <span class="membres-avatar-fallback">EL</span>
+                    </span>
+                    <div class="membres-info">
+                      <div class="membres-name-line">
+                        <a class="membres-name" href="#" title="Élodie">Élodie</a>
+                        <span class="membres-flag" tabindex="0" data-tooltip="Espagne">
+                          <img
+                            src="https://flagcdn.com/w40/es.png"
+                            alt="Espagne"
+                            width="16"
+                            height="12"
+                            loading="lazy"
+                          />
+                        </span>
+                        <span
+                          class="membres-hidden-profile"
+                          tabindex="0"
+                          data-tooltip="Profil public masqué"
+                          aria-label="Profil public masqué"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" />
+                            <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" />
+                            <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" />
+                            <path d="m2 2 20 20" />
+                          </svg>
+                        </span>
+                      </div>
+                      <p class="membres-discord" data-state="active" title="@elodie">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path
+                            d="M20.317 4.369a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.211.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0c-.164-.39-.405-.874-.617-1.249a.077.077 0 0 0-.079-.037 19.736 19.736 0 0 0-4.885 1.515.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.077.077 0 0 0 .084-.027c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.009c.12.1.246.198.373.292a.077.077 0 0 1-.006.127 12.298 12.298 0 0 1-1.873.892.076.076 0 0 0-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.028 19.876 19.876 0 0 0 6.002-3.03.077.077 0 0 0 .031-.055c.5-5.177-.838-9.674-3.548-13.66a.061.061 0 0 0-.031-.028ZM8.02 15.331c-1.182 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.333-.955 2.419-2.157 2.419Zm7.974 0c-1.182 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.333-.946 2.419-2.157 2.419Z"
+                          />
+                        </svg>
+                        <span>@elodie</span>
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td class="membres-status-cell">
+                  <span class="membres-status-badge" data-status="CURRENT_MEMBER">
+                    <span aria-hidden="true"></span>
+                    Actuel
+                  </span>
+                </td>
+                <td class="membres-access-cell">
+                  <span class="membres-access" data-level="permissions">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+                      <path d="m9 12 2 2 4-4" />
+                    </svg>
+                    1 droit
+                  </span>
+                </td>
+                <td class="membres-actions-cell">
+                  <div class="membres-row-actions">
+                    <a
+                      class="membres-icon-button"
+                      href="#"
+                      aria-label="Ouvrir la fiche de Élodie"
+                      data-tooltip="Ouvrir la fiche"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+                      </svg>
+                    </a>
+                    <span
+                      class="membres-disabled-action"
+                      tabindex="0"
+                      role="img"
+                      aria-label="Profil public masqué"
+                      data-tooltip="Profil public masqué"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M15 3h6v6" />
+                        <path d="M10 14 21 3" />
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      </svg>
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- ------------------------ Pagination ------------------------ -->
+          <nav class="membres-pagination" aria-label="Pagination des membres">
+            <p>Page <strong>1</strong> sur 6</p>
+            <div class="membres-pagination-actions">
+              <button
+                type="button"
+                class="membres-page-button"
+                disabled
+                aria-label="Page précédente"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m15 18-6-6 6-6" />
+                </svg>
+              </button>
+              <div class="membres-page-numbers">
+                <span class="membres-page-button" aria-current="page" aria-label="Page 1">1</span>
+                <a class="membres-page-button" href="#" aria-label="Page 2">2</a>
+                <a class="membres-page-button" href="#" aria-label="Page 3">3</a>
+                <a class="membres-page-button" href="#" aria-label="Page 4">4</a>
+                <a class="membres-page-button" href="#" aria-label="Page 5">5</a>
+                <a class="membres-page-button" href="#" aria-label="Page 6">6</a>
+              </div>
+              <a class="membres-page-button" href="#" aria-label="Page suivante">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </a>
+            </div>
+          </nav>
+        </section>
+
+        <!-- ======================= RAIL RESUME (desktop) ======================= -->
+        <aside class="membres-rail" aria-label="Résumé des membres">
+          <section class="membres-summary" aria-label="Répartition des membres">
+            <h2 class="membres-summary-header">Répartition</h2>
+            <div class="membres-summary-body">
+              <p class="membres-summary-caption">Tous les membres</p>
+              <div class="membres-stat-list">
+                <a class="membres-stat-link" data-tone="current" href="#">
+                  <span class="membres-stat-heading">
+                    <span>Dans la structure</span>
+                    <strong>86</strong>
+                  </span>
+                  <span class="membres-stat-track" aria-hidden="true">
+                    <span style="width: 67.2%"></span>
+                  </span>
+                </a>
+                <a class="membres-stat-link" data-tone="external" href="#">
+                  <span class="membres-stat-heading">
+                    <span>Externes</span>
+                    <strong>24</strong>
+                  </span>
+                  <span class="membres-stat-track" aria-hidden="true">
+                    <span style="width: 18.8%"></span>
+                  </span>
+                </a>
+                <a class="membres-stat-link" data-tone="former" href="#">
+                  <span class="membres-stat-heading">
+                    <span>Anciens membres</span>
+                    <strong>18</strong>
+                  </span>
+                  <span class="membres-stat-track" aria-hidden="true">
+                    <span style="width: 14.1%"></span>
+                  </span>
+                </a>
+              </div>
+              <div class="membres-discord-summary">
+                <h3>
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path
+                      d="M20.317 4.369a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.211.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0c-.164-.39-.405-.874-.617-1.249a.077.077 0 0 0-.079-.037 19.736 19.736 0 0 0-4.885 1.515.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.077.077 0 0 0 .084-.027c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.009c.12.1.246.198.373.292a.077.077 0 0 1-.006.127 12.298 12.298 0 0 1-1.873.892.076.076 0 0 0-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.028 19.876 19.876 0 0 0 6.002-3.03.077.077 0 0 0 .031-.055c.5-5.177-.838-9.674-3.548-13.66a.061.061 0 0 0-.031-.028ZM8.02 15.331c-1.182 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.333-.955 2.419-2.157 2.419Zm7.974 0c-1.182 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.333-.946 2.419-2.157 2.419Z"
+                    />
+                  </svg>
+                  Comptes Discord
+                </h3>
+                <dl>
+                  <div>
+                    <dt>
+                      <a href="#">
+                        <span class="membres-dot" data-tone="current" aria-hidden="true"></span>
+                        Liaisons actives
+                      </a>
+                    </dt>
+                    <dd>74</dd>
+                  </div>
+                  <div>
+                    <dt>
+                      <a href="#">
+                        <span class="membres-dot" data-tone="disabled" aria-hidden="true"></span>
+                        Désactivées
+                      </a>
+                    </dt>
+                    <dd>9</dd>
+                  </div>
+                  <div>
+                    <dt>
+                      <a href="#">
+                        <span class="membres-dot" data-tone="external" aria-hidden="true"></span>
+                        Sans liaison
+                      </a>
+                    </dt>
+                    <dd>45</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <script>
+      /* ============================================================
+         Selects custom (remplace Radix Select)
+         ============================================================ */
+      (function () {
+        function closeAll(except) {
+          document.querySelectorAll("[data-select]").forEach(function (root) {
+            if (root === except) return;
+            root.querySelector(".membres-select-menu").hidden = true;
+            root
+              .querySelector(".membres-select-trigger")
+              .setAttribute("aria-expanded", "false");
+          });
+        }
+
+        document.querySelectorAll("[data-select]").forEach(function (root) {
+          var trigger = root.querySelector(".membres-select-trigger");
+          var menu = root.querySelector(".membres-select-menu");
+          var valueEl = root.querySelector(".membres-select-value");
+
+          trigger.addEventListener("click", function (event) {
+            event.stopPropagation();
+            var willOpen = menu.hidden;
+            closeAll(root);
+            menu.hidden = !willOpen;
+            trigger.setAttribute("aria-expanded", String(willOpen));
+          });
+
+          menu.querySelectorAll(".membres-select-option").forEach(function (opt) {
+            opt.addEventListener("click", function (event) {
+              event.stopPropagation();
+              valueEl.textContent = opt.textContent.trim();
+              menu
+                .querySelectorAll(".membres-select-option")
+                .forEach(function (other) {
+                  other.removeAttribute("data-state");
+                });
+              opt.setAttribute("data-state", "checked");
+              menu.hidden = true;
+              trigger.setAttribute("aria-expanded", "false");
+            });
+          });
+        });
+
+        document.addEventListener("click", function () {
+          closeAll(null);
+        });
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") closeAll(null);
+        });
+      })();
+
+      /* ============================================================
+         Tooltip flottante (remplace Radix Tooltip, delay 250ms)
+         ============================================================ */
+      (function () {
+        var bubble = document.createElement("div");
+        bubble.className = "membres-tooltip-floating";
+        bubble.setAttribute("role", "tooltip");
+        document.body.appendChild(bubble);
+
+        var timer = null;
+        var current = null;
+
+        function show(target) {
+          current = target;
+          var label = target.getAttribute("data-tooltip");
+          if (!label) return;
+          bubble.textContent = label;
+          bubble.classList.add("is-visible");
+          position(target);
+        }
+
+        function position(target) {
+          var rect = target.getBoundingClientRect();
+          var bw = bubble.offsetWidth;
+          var bh = bubble.offsetHeight;
+          var left = rect.left + rect.width / 2 - bw / 2;
+          var top = rect.top - bh - 8;
+
+          left = Math.max(8, Math.min(left, window.innerWidth - bw - 8));
+          if (top < 8) top = rect.bottom + 8;
+
+          bubble.style.left = left + "px";
+          bubble.style.top = top + "px";
+        }
+
+        function hide() {
+          clearTimeout(timer);
+          timer = null;
+          current = null;
+          bubble.classList.remove("is-visible");
+        }
+
+        document.addEventListener("pointerover", function (event) {
+          var target = event.target.closest("[data-tooltip]");
+          if (!target || target === current) return;
+          clearTimeout(timer);
+          timer = setTimeout(function () {
+            show(target);
+          }, 250);
+        });
+
+        document.addEventListener("pointerout", function (event) {
+          var target = event.target.closest("[data-tooltip]");
+          if (!target) return;
+          if (event.relatedTarget && target.contains(event.relatedTarget)) return;
+          hide();
+        });
+
+        document.addEventListener("focusin", function (event) {
+          var target = event.target.closest("[data-tooltip]");
+          if (!target) return;
+          clearTimeout(timer);
+          timer = setTimeout(function () {
+            show(target);
+          }, 250);
+        });
+
+        document.addEventListener("focusout", hide);
+        window.addEventListener("scroll", hide, true);
+        window.addEventListener("resize", hide);
+      })();
+    </script>
+  </body>
+</html>

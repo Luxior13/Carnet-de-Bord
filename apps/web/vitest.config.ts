@@ -2,6 +2,12 @@ import { resolve } from 'path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  // Tests run server-side and only need CSS module class names, not the
+  // Tailwind pipeline. Skipping the project PostCSS config avoids the
+  // Vite/PostCSS plugin-resolution clash while keeping class mapping intact.
+  css: {
+    postcss: { plugins: [] },
+  },
   resolve: {
     alias: {
       $app: resolve(__dirname, 'src/app'),

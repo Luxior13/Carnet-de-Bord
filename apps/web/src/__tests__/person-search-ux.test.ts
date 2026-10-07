@@ -415,12 +415,16 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(diceBearAvatarSource).toContain('fallback ||');
     expect(diceBearAvatarSource).not.toContain('fetch(');
     expect(diceBearAvatarSource).not.toContain('@dicebear/lorelei-neutral');
-    expect(personAvatarSource).toContain("from '@dicebear/lorelei-neutral'");
-    expect(userAvatarSource).toContain("from '@dicebear/notionists-neutral'");
-    expect(userAvatarSource).not.toContain('@dicebear/lorelei-neutral');
+    expect(personAvatarSource).toContain("from '@dicebear/styles/glyphs.json'");
+    expect(personAvatarSource).toContain('new Avatar(');
+    expect(personAvatarSource).toContain('new Style(');
+    expect(userAvatarSource).toContain(
+      "from '@dicebear/styles/notionists-neutral.json'",
+    );
+    expect(userAvatarSource).not.toContain('@dicebear/styles/glyphs.json');
     expect(personAvatarSource).toContain('seed={`person:');
     expect(personAvatarSource).toContain('person.id');
-    expect(personAvatarSource).toContain('radius: 50');
+    expect(personAvatarSource).toContain('borderRadius: 0');
     expect(personAvatarSource).toContain('getPersonInitials(person)');
     expect(personAvatarSource).toContain('bg-nav-internal');
     expect(userAvatarSource).toContain('bg-nav-system');
@@ -578,15 +582,15 @@ describe('person short-lived sensitive UX contracts', () => {
   it('uses the directory width and a compact list hierarchy', () => {
     expect(detailPageSource).not.toContain('width="narrow"');
     expect(personLoadingSource).not.toContain('width="narrow"');
-    expect(personsListSource).toContain('headerLayout="stacked"');
-    expect(personsListSource).toContain('className="[&_th]:h-9"');
-    expect(personsListSource).toContain('className="py-2"');
-    expect(personsListSource).toContain('border-t px-4 py-2');
-    expect(personsListSource).toContain('after:absolute after:inset-0');
-    expect(personsListSource).toContain('group/row');
-    expect(personsListSource).toContain('focus-within:ring-2');
-    expect(personsListSource).toContain('<PersonLastModifiedAt href={href}');
-    expect(personsListSource).toContain('<TooltipContent>{actorLabel}');
+    expect(personsListSource).toContain(
+      "import styles from './PersonsDirectory.module.css'",
+    );
+    expect(personsListSource).toContain('styles.table');
+    expect(personsListSource).toContain('styles.statusBadge');
+    expect(personsListSource).toContain('data-status={person.structureStatus}');
+    expect(personsListSource).toContain('styles.search');
+    expect(personsListSource).toContain('styles.pagination');
+    expect(personsListSource).toContain('styles.iconButton');
     expect(dataTableSectionSource).toContain(
       "headerLayout?: 'inline' | 'stacked'",
     );

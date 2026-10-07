@@ -1,0 +1,903 @@
+/*
+ * Design « Membres » — porté depuis membres-admin-table.html.
+ *
+ * Toutes les couleurs sont déclarées une seule fois comme tokens locaux sur
+ * `.directory`, puis réutilisées. Cela rend le rendu identique au fichier de
+ * référence sans disperser de valeurs hexadécimales dans le markup, et laisse
+ * la porte ouverte à une promotion ultérieure vers `globals.css`.
+ */
+.directory {
+  /* Surfaces, texte et bordures dérivés des tokens globaux (une seule source). */
+  --m-panel: var(--surface-panel);
+  --m-inset: var(--surface-inset);
+  --m-control: var(--surface-inset);
+  --m-foreground: var(--text-primary);
+  --m-text-secondary: var(--text-secondary);
+  --m-muted: var(--text-muted);
+  --m-caption: var(--text-secondary);
+
+  /* Accent dérivé de la couleur primaire de l'application. */
+  --m-accent: var(--primary);
+  --m-accent-hover: color-mix(in srgb, var(--primary) 84%, white);
+  --m-accent-text: var(--primary-emphasis);
+  --m-accent-soft: color-mix(in srgb, var(--primary) 15%, transparent);
+  --m-accent-soft-border: color-mix(in srgb, var(--primary) 50%, transparent);
+  --m-accent-ring: color-mix(in srgb, var(--primary) 13%, transparent);
+
+  /* File's member border (#435978), lighter than the app-wide border-default. */
+  --m-border: #435978;
+  --m-border-soft: var(--border-content);
+  --m-border-control: var(--border-control);
+  --m-border-button: var(--border-subtle);
+  --m-border-hover: var(--border-strong);
+  --m-divider: var(--border-divider);
+
+  --m-row-bg: var(--surface-content);
+  --m-row-alt: var(--surface-row-alternate);
+  --m-row-hover: var(--surface-row-hover);
+  --m-toolbar: var(--surface-content-header);
+  --m-table-head: var(--surface-table-head);
+
+  /* Statuts sémantiques (inchangés quel que soit le thème). */
+  --m-dot-current: #80ddba;
+  --m-current: #a4efd6;
+  --m-external: #aecfff;
+  --m-former: #f0d492;
+
+  color: var(--m-foreground);
+  color-scheme: dark;
+}
+
+.page {
+  display: grid;
+  min-width: 0;
+  gap: 18px;
+}
+
+.page :is(a, button, summary, [tabindex='0']):focus-visible {
+  outline: 2px solid #8eaff2;
+  outline-offset: 3px;
+}
+
+/* ---------------------------------------------------------------- Hero */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 19px 20px;
+  border: 1px solid #4b6285;
+  border-radius: 10px;
+  background: linear-gradient(110deg, #2b3c57, #1d2a3f 75%);
+  color: var(--m-foreground);
+}
+
+.heroIdentity {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.heroLogo {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  color: var(--m-accent-text);
+}
+
+.heroLogo svg {
+  width: 27px;
+  height: 27px;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 23px;
+  line-height: 1.3;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+.hero p {
+  margin: 4px 0 0;
+  color: #9cacc6;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.titleLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 11px;
+  border: 1px solid var(--m-accent);
+  border-radius: 6px;
+  background: var(--m-accent);
+  color: #091321;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.addButton:hover {
+  background: var(--m-accent-hover);
+  border-color: var(--m-accent-hover);
+}
+
+.addButton svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* --------------------------------------------------- Carte liste + toolbar */
+.list {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--m-border);
+  border-radius: 10px;
+  background: var(--m-row-bg);
+  container-type: inline-size;
+}
+
+.toolbar {
+  padding: 16px 16px 12px;
+  background: var(--m-toolbar);
+}
+
+.filterForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.search {
+  position: relative;
+  min-width: 180px;
+  flex: 1;
+}
+
+.search > svg {
+  position: absolute;
+  top: 11px;
+  left: 11px;
+  width: 16px;
+  height: 16px;
+  color: var(--m-muted);
+  pointer-events: none;
+}
+
+.search input {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 8px 40px 8px 35px;
+  border: 1px solid var(--m-border-control);
+  border-radius: 6px;
+  background: var(--m-control);
+  color: var(--m-foreground);
+  font-size: 12px;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.search input::placeholder {
+  color: #8799b5;
+}
+
+.search input:hover {
+  border-color: var(--m-border-hover);
+}
+
+.search input:focus {
+  border-color: var(--m-accent);
+  box-shadow: 0 0 0 2px var(--m-accent-ring);
+}
+
+.search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search > button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 4px;
+  color: #b2c8ef;
+}
+
+.search > button:hover {
+  background: #263852;
+  color: var(--m-foreground);
+}
+
+.search > button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.filterSelects {
+  display: flex;
+  min-width: 0;
+  gap: 8px;
+}
+
+.selectTrigger {
+  display: flex;
+  align-items: center;
+  width: 170px;
+  min-width: 0;
+  height: 38px;
+  padding: 8px 10px;
+  gap: 7px;
+  border: 1px solid var(--border-control);
+  border-radius: 6px;
+  background: var(--surface-inset);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.selectTrigger > svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: var(--primary-emphasis);
+  opacity: 1;
+}
+
+.selectTrigger:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-control-hover);
+}
+
+.selectTrigger[aria-expanded='true'],
+.selectTrigger:focus {
+  border-color: var(--primary);
+  background: var(--surface-control-focus);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+.selectTrigger [data-slot='select-value'] {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Appearance only: Radix owns the positioning of the portalled content. */
+.selectContent {
+  padding: 4px;
+  border: 1px solid var(--border-control);
+  border-radius: 7px;
+  background: #121d2d;
+  color: #dce6f7;
+  box-shadow: 0 16px 36px #0006;
+}
+
+/* The Radix viewport ships with its own 8px padding and a clamped height
+   (equal to the trigger). Restore normal padding and let the menu size itself. */
+.selectContent > div {
+  height: auto;
+  padding: 0;
+}
+
+.selectOption {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 34px;
+  padding: 0 1.75rem 0 8px;
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 12px;
+  text-align: left;
+}
+
+.selectOption:hover,
+.selectOption[data-state='checked'] {
+  background: #273b5b;
+  color: var(--text-primary);
+}
+
+.activeFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.activeFilters button {
+  display: inline-flex;
+  align-items: center;
+  height: auto;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 26px;
+  gap: 6px;
+  padding: 3px 7px;
+  border: 1px solid #435777;
+  border-radius: 5px;
+  background: #1d2c43;
+  color: #bdcef0;
+  font-size: 10px;
+}
+
+.activeFilters button span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activeFilters button svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.activeFilters button:hover {
+  background: #2b3e5c;
+  color: var(--m-foreground);
+}
+
+.listCaption {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  color: var(--m-caption);
+  font-size: 11px;
+}
+
+.listCaption > p {
+  margin: 0;
+}
+
+.listCaption > span {
+  color: #9eafc9;
+}
+
+/* ---------------------------------------------------------------- Tableau */
+.table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: 9px 12px;
+  border-top: 1px solid var(--m-border);
+  border-bottom: 1px solid var(--m-border);
+  background: var(--m-table-head);
+  color: #c7d5ea;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.table th:first-child {
+  padding-left: 16px;
+}
+
+.table th:nth-child(2) {
+  width: 130px;
+}
+
+.table th:nth-child(3) {
+  width: 220px;
+}
+
+.table th:nth-child(4) {
+  width: 150px;
+}
+
+.row {
+  position: relative;
+  background: var(--m-row-bg);
+}
+
+.row:nth-child(even) {
+  background: var(--m-row-alt);
+}
+
+.row + .row {
+  border-top: 1px solid var(--m-border-soft);
+}
+
+.row:hover,
+.row:focus-within {
+  background: var(--m-row-hover);
+}
+
+.row > td {
+  padding: 11px 12px;
+  vertical-align: middle;
+}
+
+.row > td:first-child {
+  padding-left: 16px;
+}
+
+.row > td:last-child {
+  padding-right: 16px;
+}
+
+/* --------------------------------------------------------- Cellule identité */
+.identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  position: relative;
+  display: flex;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid #3b4f6d;
+  border-radius: 7px;
+  background: #0d1523;
+}
+
+.avatar > * {
+  width: 100%;
+  height: 100%;
+  /* The Avatar primitive defaults to `rounded-full`; cancel the circular clip
+     so the square DiceBear canvas fills the tile. */
+  border-radius: inherit;
+}
+
+.info {
+  min-width: 0;
+}
+
+.nameLine {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+}
+
+.name {
+  overflow: hidden;
+  color: var(--m-foreground);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.6;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.name,
+a.name {
+  cursor: pointer;
+  text-align: left;
+}
+
+.name:hover {
+  color: #bcd1fa;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Whole-row click target: the identity link expands over the row. */
+.name::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+}
+
+.subline {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
+  margin: 2px 0 0;
+  color: #a7b8d2;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.subline svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.subline span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subline[data-state='active'] {
+  color: var(--m-dot-current);
+}
+
+/* ------------------------------------------------------------ Badge statut */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 7px;
+  border: 1px solid #4d62834d;
+  border-radius: 5px;
+  background: #91a4c10a;
+  color: #b3c2d9;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.statusBadge > span {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.statusBadge[data-status='IN_STRUCTURE'] {
+  border-color: #3b8270;
+  background: #204f48;
+  color: var(--m-current);
+}
+
+.statusBadge[data-status='OUTSIDE_STRUCTURE'] {
+  border-color: #80693f;
+  background: #50432a;
+  color: var(--m-former);
+}
+
+/* ------------------------------------------------------- Badge coordonnées */
+.access {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 7px;
+  border: 1px solid #4a70a8;
+  border-radius: 5px;
+  background: #263f68;
+  color: var(--m-external);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.access svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.standardAccess {
+  color: #a7b8d2;
+  font-size: 11px;
+}
+
+.contacts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contactRow {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--m-muted);
+  font-size: 10px;
+}
+
+.contactItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.contactItem svg {
+  width: 12px;
+  height: 12px;
+}
+
+.contactMuted {
+  opacity: 0.5;
+}
+
+.updated {
+  position: relative;
+  z-index: 2;
+  color: var(--m-muted);
+  font-size: 11px;
+}
+
+.iconButton {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--m-border-button);
+  border-radius: 5px;
+  background: var(--m-control);
+  color: #a9bddc;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.iconButton svg {
+  width: 14px;
+  height: 14px;
+}
+
+.iconButton:hover {
+  border-color: var(--m-accent-soft-border);
+  background: #283b5b;
+  color: #e1ebff;
+}
+
+.filterSelects > .iconButton {
+  width: 38px;
+  height: 38px;
+}
+
+/* -------------------------------------------------------------- Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--m-border);
+  background: var(--m-toolbar);
+}
+
+.pagination > p {
+  margin: 0;
+  color: var(--m-caption);
+  font-size: 11px;
+}
+
+.pagination > p strong {
+  color: #dce6f7;
+  font-weight: 500;
+}
+
+.paginationActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pageButton {
+  display: inline-flex;
+  min-width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border: 1px solid var(--m-border-button);
+  border-radius: 5px;
+  background: var(--m-control);
+  color: #b5c7e5;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pageButton svg {
+  width: 15px;
+  height: 15px;
+}
+
+.pageButton[aria-current='page'] {
+  border-color: var(--m-accent-soft-border);
+  background: var(--m-accent-soft);
+  color: #d5e3ff;
+}
+
+a.pageButton:hover {
+  background: #283b5b;
+  border-color: var(--m-accent-soft-border);
+}
+
+.pageButton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ------------------------------------------------------------- État vide */
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 44px 18px;
+  border-top: 1px solid var(--m-divider);
+  text-align: center;
+}
+
+.empty > svg {
+  width: 30px;
+  height: 30px;
+  margin-bottom: 6px;
+  color: #89a4d3;
+}
+
+.empty h2 {
+  margin: 0;
+  color: #e5ecfa;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.empty p {
+  max-width: 320px;
+  margin: 0;
+  color: var(--m-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* ---------------------------------------------- Responsive (container queries) */
+@container (max-width: 740px) {
+  .search {
+    flex-basis: 100%;
+  }
+
+  .table,
+  .table tbody {
+    display: block;
+  }
+
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .table tbody {
+    border-top: 1px solid var(--m-border);
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 6px 10px;
+    padding: 12px 16px;
+  }
+
+  .row + .row {
+    border-top: 1px solid var(--m-border-soft);
+  }
+
+  .row > td,
+  .row > td:first-child,
+  .row > td:last-child {
+    padding: 0;
+  }
+
+  .memberCell {
+    grid-column: 1 / 3;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .statusCell {
+    grid-column: 1;
+    grid-row: 2;
+    margin-left: 46px;
+  }
+
+  .accessCell {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .contacts {
+    flex-wrap: wrap;
+  }
+
+  .updatedCell {
+    grid-column: 1 / 3;
+    grid-row: 3;
+    margin-left: 46px;
+  }
+
+  .standardAccess {
+    font-size: 10px;
+  }
+}
+
+@container (max-width: 450px) {
+  .toolbar {
+    padding: 12px;
+  }
+
+  .filterSelects {
+    width: 100%;
+    gap: 6px;
+  }
+
+  .selectTrigger {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    gap: 5px;
+    padding-right: 7px;
+    padding-left: 7px;
+    font-size: 10px;
+  }
+
+  .selectTrigger > svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .filterSelects > .iconButton {
+    width: 32px;
+  }
+
+  .row {
+    padding: 11px 12px;
+    gap: 6px 8px;
+  }
+
+  .pagination {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 639px) {
+  .hero {
+    padding: 16px;
+  }
+
+  .addButton {
+    margin-left: 53px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iconButton,
+  .search input {
+    transition: none;
+  }
+}
