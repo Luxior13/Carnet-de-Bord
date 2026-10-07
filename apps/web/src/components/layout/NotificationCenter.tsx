@@ -372,13 +372,13 @@ const NotificationCenterContent: FC<NotificationCenterProps> = ({
                   ? `Ouvrir les notifications (${unreadNotificationsCount} non lues)`
                   : 'Ouvrir les notifications'
               }
-              className="text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground data-[state=open]:border-border-strong/60 data-[state=open]:bg-surface-navigation-active data-[state=open]:text-foreground relative size-11 rounded-sm bg-transparent shadow-none hover:border-transparent focus-visible:ring-inset lg:size-9"
+              className="text-muted-foreground data-[state=open]:border-border-strong/60 data-[state=open]:bg-surface-navigation-active data-[state=open]:text-foreground relative size-11 rounded-sm focus-visible:ring-inset lg:size-9"
               size="icon"
-              variant="ghost"
+              variant="outline"
             >
               <Bell aria-hidden="true" className="size-4" />
               {unreadNotificationsCount > 0 && (
-                <span className="ring-surface-panel bg-primary text-primary-foreground text-caption absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 font-semibold tabular-nums ring-2">
+                <span className="ring-surface-content-header bg-primary text-primary-foreground text-caption absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 font-semibold tabular-nums ring-2">
                   {unreadNotificationsCount > 99
                     ? '99+'
                     : unreadNotificationsCount}
@@ -395,7 +395,7 @@ const NotificationCenterContent: FC<NotificationCenterProps> = ({
       <PopoverContent
         align="end"
         aria-label="Notifications"
-        className="flex max-h-[var(--radix-popover-content-available-height)] w-[min(calc(100vw-2rem),25rem)] animate-none! flex-col overflow-y-auto rounded-sm p-1 shadow-none"
+        className="bg-surface-panel flex max-h-[var(--radix-popover-content-available-height)] w-[min(calc(100vw-2rem),25rem)] animate-none! flex-col overflow-y-auto rounded-sm p-1.5 shadow-[var(--shadow-panel-strong)]"
         collisionPadding={8}
         sideOffset={8}
       >

@@ -80,7 +80,7 @@ function BreadcrumbLink({
   return (
     <Comp
       className={cn(
-        'text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 inline-flex min-h-8 min-w-0 items-center gap-1.5 truncate rounded-md px-1.5 transition-colors outline-none focus-visible:ring-2',
+        'text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 inline-flex min-h-8 min-w-0 items-center gap-1.5 truncate rounded-sm px-1.5 transition-colors outline-none focus-visible:ring-2',
         className,
       )}
       {...props}
@@ -138,7 +138,7 @@ function BreadcrumbEllipsis({
     <button
       aria-label="Afficher les niveaux intermédiaires"
       className={cn(
-        'text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground focus-visible:ring-ring/50 flex size-8 items-center justify-center rounded-md outline-none focus-visible:ring-2',
+        'text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground focus-visible:ring-ring/50 flex size-8 items-center justify-center rounded-sm outline-none focus-visible:ring-2',
         className,
       )}
       type="button"

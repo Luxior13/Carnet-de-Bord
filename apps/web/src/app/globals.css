@@ -104,8 +104,8 @@
   /* Readable metadata and navigation labels, expressed in rem for text zoom. */
   --text-caption: 0.75rem;
   --text-caption--line-height: 1rem;
-  --text-label: 0.875rem;
-  --text-label--line-height: 1.25rem;
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.125rem;
   /* 12px controls, 16px overlays, 20px panels, all derived from one scale. */
   --radius-2xl: calc(var(--radius) + 8px);
 }
