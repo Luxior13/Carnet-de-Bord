@@ -10,6 +10,7 @@ Utiliser un nom stable compréhensible, sans multiplier les copies datées.
 | Paramètres système | [systeme-parametres.md](systeme-parametres.md) | Durées en lecture avec Modifier ; portée du journal et séparation future documentées ; pagination retirée, défaut commun de 25 |
 | Journal d’activité | [systeme-journal-activite.md](systeme-journal-activite.md) | Page retirée le 9 octobre 2026, replanifiée ; suivi conservé comme historique |
 | Navigation générale — sidebar et header | [navigation-generale.md](navigation-generale.md) | Sidebar fixe, recherche affinée et clavier corrigé, notifications compactes avec compteur partagé ; suivi du 27 septembre 2026 |
+| Membres — répertoire | [membres-repertoire.md](membres-repertoire.md) | Analyse complète A à Z du 9 octobre 2026 (inventaire, typographie, tokens, composants réutilisables) ; aucune modification de code |
 
 Pour commencer un nouveau suivi : [modèle de revue](../modeles/revue-page.md).
 Les spécifications métier historiques de `features/pages` restent consultables

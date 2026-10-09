@@ -88,6 +88,7 @@ export type PersonsListResponse = {
     limit: number;
     nextCursor: string | null;
     snapshotAt: string;
+    total: number;
   };
 };
 

@@ -6,19 +6,21 @@ import { useSearchParams } from 'next/navigation';
 import React, { type FC, Suspense } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
+import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGE_PATHS } from '$constants/routes.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
+import { PersonsDirectorySkeleton } from '$features/persons/components/PersonsDirectorySkeleton';
 import { PersonsList } from '$features/persons/components/PersonsList';
 import { getPersonCapabilities } from '$features/persons/person.permissions';
 import type { PersonsListRequest } from '$features/persons/person-list-state';
 import type { PersonsListResponse } from '$features/persons/types/person.types';
+import { Button } from '$ui/button';
+import directoryStyles from '$ui/directory.module.css';
 import { PageCanvas, PageShell } from '$ui/page-shell';
-import { Skeleton } from '$ui/skeleton';
-
-import styles from './PersonsDirectory.module.css';
+import { cn } from '$utils/css.utils';
 
 type PersonsPageClientProps = {
   initialState?: {
@@ -70,34 +72,28 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
   return (
     <PageShell className="py-0">
       <PageCanvas contentClassName="py-6">
-        <div className={styles.directory}>
-          <div className={styles.page}>
-            <header className={styles.hero}>
-              <div className={styles.heroIdentity}>
-                <span aria-hidden="true" className={styles.heroLogo}>
-                  <Users />
-                </span>
-                <div>
-                  <div className={styles.titleLine}>
-                    <h1>{FEATURES.persons.label}</h1>
-                  </div>
-                  <p>Profils, coordonnées et statut dans la structure.</p>
-                </div>
-              </div>
-              {canCreate ? (
-                <Link className={styles.addButton} href={createHref}>
-                  <Plus aria-hidden="true" />
-                  Ajouter une fiche
-                </Link>
-              ) : null}
-            </header>
-            <PersonsList
-              canCreate={canCreate}
-              createHref={createHref}
-              initialState={initialState}
-              returnHref={returnHref}
-            />
-          </div>
+        <div className={cn(directoryStyles.directory, 'space-y-[18px]')}>
+          <PageIdentityHero
+            actions={
+              canCreate ? (
+                <Button asChild className={directoryStyles.addButton}>
+                  <Link href={createHref}>
+                    <Plus aria-hidden="true" />
+                    Ajouter une fiche
+                  </Link>
+                </Button>
+              ) : undefined
+            }
+            description="Profils, coordonnées et statut dans la structure."
+            icon={<Users aria-hidden="true" />}
+            title={FEATURES.persons.label}
+          />
+          <PersonsList
+            canCreate={canCreate}
+            createHref={createHref}
+            initialState={initialState}
+            returnHref={returnHref}
+          />
         </div>
       </PageCanvas>
     </PageShell>
@@ -106,9 +102,8 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
 
 const ListPageSkeleton: FC = () => (
   <PageShell className="py-0">
-    <PageCanvas contentClassName="space-y-3">
-      <Skeleton className="h-28 rounded-xl" />
-      <Skeleton className="h-96 rounded-xl" />
+    <PageCanvas contentClassName="space-y-[18px]">
+      <PersonsDirectorySkeleton />
     </PageCanvas>
   </PageShell>
 );

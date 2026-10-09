@@ -578,13 +578,13 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(detailPageSource).not.toContain('width="narrow"');
     expect(personLoadingSource).not.toContain('width="narrow"');
     expect(personsListSource).toContain(
-      "import styles from './PersonsDirectory.module.css'",
+      "import directoryStyles from '$ui/directory.module.css'",
     );
-    expect(personsListSource).toContain('styles.table');
+    expect(personsListSource).toContain('directoryStyles.table');
     expect(personsListSource).toContain('<PersonStatusBadge');
-    expect(personsListSource).toContain('styles.search');
-    expect(personsListSource).toContain('styles.pagination');
-    expect(personsListSource).toContain('styles.iconButton');
+    expect(personsListSource).toContain('directoryStyles.search');
+    expect(personsListSource).toContain('directoryStyles.pagination');
+    expect(personsListSource).toContain('directoryStyles.iconButton');
     expect(dataTableSectionSource).toContain(
       "headerLayout?: 'inline' | 'stacked'",
     );

@@ -148,6 +148,16 @@
   --surface-table-head: #2c3e59;
   --border-content: #3a4d69;
 
+  /* Répertoire / bandeau d'identité : surfaces et bordures dédiées. */
+  --surface-hero-start: #2b3c57;
+  --surface-hero-end: #1d2a3f;
+  --border-hero: #4b6285;
+  --text-hero-muted: #9cacc6;
+  --border-list: #435978;
+  --surface-external: #263f68;
+  --border-external: #4a70a8;
+  --text-external: #aecfff;
+
   /* Canonical text and border scale. */
   --text-primary: #f3f6fb;
   --text-secondary: #c4cedc;

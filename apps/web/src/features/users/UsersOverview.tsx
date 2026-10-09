@@ -1,10 +1,9 @@
 import React, { type FC } from 'react';
 
 import type { UserStatsType } from '$types/auth.types';
+import directoryStyles from '$ui/directory.module.css';
 import { Skeleton } from '$ui/skeleton';
 import { cn } from '$utils/css.utils';
-
-import directoryStyles from './UsersDirectory.module.css';
 
 type UsersOverviewProps = {
   isLoading?: boolean;

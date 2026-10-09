@@ -11,11 +11,8 @@ export default function Loading(): React.JSX.Element {
       aria-label="Chargement de la page"
     >
       <PageCanvas contentClassName="space-y-4">
-        <Skeleton className="h-28 rounded-xl" />
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Skeleton className="h-72 rounded-xl" />
-          <Skeleton className="h-72 rounded-xl" />
-        </div>
+        <Skeleton className="h-[78px] rounded-[10px]" />
+        <Skeleton className="h-[30rem] rounded-[10px]" />
       </PageCanvas>
     </PageShell>
   );

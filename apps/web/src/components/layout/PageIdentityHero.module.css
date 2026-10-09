@@ -1,7 +1,7 @@
 /*
- * Bandeau d'identité de page, aligné sur le héros du Répertoire
- * (`PersonsDirectory.module.css`). Les couleurs reprennent les tokens globaux
- * afin de rester utilisables hors du module « Membres ».
+ * Bandeau d'identité de page. Les couleurs reprennent les tokens globaux
+ * (`--surface-hero-*`, `--border-hero`, `--text-hero-muted`) afin de rester
+ * utilisables hors du module « Membres ».
  */
 .hero {
   display: flex;
@@ -10,9 +10,13 @@
   flex-wrap: wrap;
   gap: 14px;
   padding: 19px 20px;
-  border: 1px solid #4b6285;
+  border: 1px solid var(--border-hero);
   border-radius: 10px;
-  background: linear-gradient(110deg, #2b3c57, #1d2a3f 75%);
+  background: linear-gradient(
+    110deg,
+    var(--surface-hero-start),
+    var(--surface-hero-end) 75%
+  );
   color: var(--text-primary);
 }
 
@@ -47,7 +51,7 @@
 
 .hero p {
   margin: 4px 0 0;
-  color: #9cacc6;
+  color: var(--text-hero-muted);
   font-size: 11px;
   line-height: 1.5;
 }

@@ -39,7 +39,6 @@ import {
   canSearchUserContact,
   formatUserLastLogin,
 } from '$features/users/users-list.utils';
-import directoryStyles from '$features/users/UsersDirectory.module.css';
 import { UsersOverview } from '$features/users/UsersOverview';
 import type {
   PaginationInfo,
@@ -52,6 +51,7 @@ import {
   DataTableMobileList,
   DataTableSection,
 } from '$ui/data-table-section';
+import directoryStyles from '$ui/directory.module.css';
 import { Input } from '$ui/input';
 import {
   Select,

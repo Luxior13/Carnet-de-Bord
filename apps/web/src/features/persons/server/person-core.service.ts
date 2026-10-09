@@ -72,6 +72,7 @@ type PersonListRow = {
   socialProfileCount: number;
   sortName: string;
   structureStatus: 'IN_STRUCTURE' | 'OUTSIDE_STRUCTURE';
+  totalCount: bigint;
   updatedAt: Date;
   version: number;
 };
@@ -314,6 +315,7 @@ export const listPersons = async (input: {
 
   const rows = await prisma.$queryRaw<PersonListRow[]>(Prisma.sql`
     SELECT
+      COUNT(*) OVER() AS "totalCount",
       p."id",
       p."nickname",
       p."firstName",
@@ -352,6 +354,7 @@ export const listPersons = async (input: {
     ORDER BY ${orderClause}
     LIMIT ${input.limit + 1}
   `);
+  const total = rows[0]?.totalCount != null ? Number(rows[0].totalCount) : 0;
   const paginated = buildCursorPaginationMeta(
     rows,
     input.limit,
@@ -372,7 +375,7 @@ export const listPersons = async (input: {
 
   return {
     items: paginated.items.map(toPersonSummary),
-    pagination: paginated.pagination,
+    pagination: { ...paginated.pagination, total },
   };
 };
 

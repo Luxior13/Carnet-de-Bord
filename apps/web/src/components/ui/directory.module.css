@@ -1,8 +1,10 @@
 /*
- * Design « annuaire » de la page Utilisateurs, aligné sur le Répertoire
- * (`PersonsDirectory.module.css`) : mêmes tokens, mêmes contrôles, même tableau.
- * Les sélecteurs sont composés (`.directory .x`) pour rester prioritaires sur
- * les utilitaires des primitives sans modifier les composants partagés.
+ * Design « annuaire » partagé des pages de listes (Répertoire et Utilisateurs).
+ * Les couleurs viennent exclusivement des tokens de `globals.css` ; ce module
+ * ne porte que la géométrie et la composition du « bandeau liste ».
+ *
+ * Les sélecteurs sont scopés sous `.directory` pour rester prioritaires sur les
+ * utilitaires Tailwind des primitives, sans modifier les composants partagés.
  */
 .directory {
   --m-panel: var(--surface-panel);
@@ -20,7 +22,7 @@
   --m-accent-soft-border: color-mix(in srgb, var(--primary) 50%, transparent);
   --m-accent-ring: color-mix(in srgb, var(--primary) 13%, transparent);
 
-  --m-border: #435978;
+  --m-border: var(--border-list);
   --m-border-soft: var(--border-content);
   --m-border-control: var(--border-control);
   --m-border-button: var(--border-subtle);
@@ -35,11 +37,6 @@
 
   color: var(--m-foreground);
   color-scheme: dark;
-}
-
-.directory :is(a, button, summary, [tabindex='0']):focus-visible {
-  outline: 2px solid #8eaff2;
-  outline-offset: 3px;
 }
 
 /* ---------------------------------------------------------------- Contrôles */
@@ -87,6 +84,21 @@
   pointer-events: none;
 }
 
+.directory .searchClear {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+}
+
+.directory .searchClear:hover {
+  background: var(--surface-tile-hover);
+  color: var(--m-foreground);
+}
+
 .directory .searchClear svg {
   width: 16px;
   height: 16px;
@@ -109,33 +121,18 @@
   border: 1px solid var(--m-border-button);
   border-radius: 6px;
   background: var(--m-control);
-  color: #a9bddc;
+  color: var(--text-secondary);
 }
 
 .directory .iconButton:hover {
   border-color: var(--m-accent-soft-border);
-  background: #283b5b;
-  color: #e1ebff;
+  background: var(--surface-navigation-hover);
+  color: var(--text-primary);
 }
 
 .directory .iconButton svg {
   width: 15px;
   height: 15px;
-}
-
-.directory .searchClear {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 30px;
-  height: 30px;
-  border-radius: 4px;
-  color: #b2c8ef;
-}
-
-.directory .searchClear:hover {
-  background: #263852;
-  color: var(--m-foreground);
 }
 
 .directory .selectTrigger {
@@ -174,18 +171,6 @@
   opacity: 1;
 }
 
-.directory .filterToggle {
-  height: 38px;
-  gap: 7px;
-  padding: 8px 11px;
-  border: 1px solid var(--m-border-button);
-  border-radius: 6px;
-  background: var(--m-control);
-  color: #a9bddc;
-  font-size: 11px;
-  font-weight: 500;
-}
-
 .directory .addButton {
   min-height: 36px;
   gap: 8px;
@@ -193,7 +178,7 @@
   border: 1px solid var(--m-accent);
   border-radius: 6px;
   background: var(--m-accent);
-  color: #091321;
+  color: var(--primary-foreground);
   font-size: 11px;
   font-weight: 600;
 }
@@ -206,28 +191,6 @@
 .directory .addButton svg {
   width: 15px;
   height: 15px;
-}
-
-.directory .resetButton {
-  min-height: 36px;
-  padding: 8px 11px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: #a9bddc;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.directory .resetButton:hover {
-  border-color: var(--m-border-button);
-  background: #283b5b;
-  color: #e1ebff;
-}
-
-.directory .caption {
-  color: var(--m-caption);
-  font-size: 11px;
-  line-height: 1.5;
 }
 
 .directory .listCaption {
@@ -246,7 +209,7 @@
 }
 
 .directory .listCaption span {
-  color: #9eafc9;
+  color: var(--m-muted);
 }
 
 /* ------------------------------------------------------------------ Cartes */
@@ -287,7 +250,7 @@
   border-top: 1px solid var(--m-border);
   border-bottom: 1px solid var(--m-border);
   background: var(--m-table-head);
-  color: #c7d5ea;
+  color: var(--text-secondary);
   font-size: 11px;
   font-weight: 500;
   text-align: left;
@@ -354,7 +317,7 @@
 }
 
 .directory .pagination p strong {
-  color: #dce6f7;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -374,7 +337,7 @@
   border: 1px solid var(--m-border-button);
   border-radius: 5px;
   background: var(--m-control);
-  color: #b5c7e5;
+  color: var(--text-secondary);
   font-size: 11px;
 }
 
@@ -385,7 +348,7 @@
 
 .directory .pageButton:hover:not(:disabled) {
   border-color: var(--m-accent-soft-border);
-  background: #283b5b;
+  background: var(--surface-navigation-hover);
 }
 
 .directory .pageButton:disabled {
@@ -400,14 +363,6 @@
 
 .directory .mobileList > * + * {
   border-top-color: var(--m-border);
-}
-
-.directory .mobileRow {
-  padding: 12px 16px;
-}
-
-.directory .mobileRow:hover {
-  background: var(--m-row-hover);
 }
 
 /* ------------------------------------------------------------- Vue d'ensemble */
@@ -438,8 +393,8 @@
   padding: 4px;
   border: 1px solid var(--border-control);
   border-radius: 7px;
-  background: #121d2d;
-  color: #dce6f7;
+  background: var(--surface-floating);
+  color: var(--text-primary);
   box-shadow: 0 16px 36px #0006;
 }
 
@@ -465,6 +420,12 @@
 
 .selectOption:hover,
 .selectOption[data-state='checked'] {
-  background: #273b5b;
+  background: var(--surface-navigation-hover);
   color: var(--text-primary);
+}
+
+@media (max-width: 639px) {
+  .directory .addButton {
+    min-height: 44px;
+  }
 }
