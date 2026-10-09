@@ -192,7 +192,7 @@ describe('navigation availability', () => {
     );
     const roadmapHrefs = getRoadmapHrefs();
 
-    expect(liveHrefs).toContain('/systeme/journal-activite');
+    expect(liveHrefs).not.toContain('/systeme/journal-activite');
     expect(liveHrefs).not.toContain('/systeme');
     expect(liveHrefs).not.toContain('/systeme/utilisateurs');
     expect(liveHrefs).not.toContain('/systeme/parametres');
@@ -280,7 +280,6 @@ describe('navigation availability', () => {
       '/',
       '/membres/repertoire',
       '/systeme/utilisateurs',
-      '/systeme/journal-activite',
       '/systeme/parametres',
       '/systeme/feuille-de-route',
     ]);

@@ -71,7 +71,6 @@ describe('global page search', () => {
     ).toEqual([
       '/systeme/parametres',
       '/systeme/utilisateurs',
-      '/systeme/journal-activite',
       '/systeme/feuille-de-route',
     ]);
   });

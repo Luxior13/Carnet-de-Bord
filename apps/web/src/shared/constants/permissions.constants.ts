@@ -29,7 +29,6 @@ export const PERMISSIONS = {
     VIEW_SECURITY: 'account:view_security',
   },
   AUDIT: {
-    EXPORT: 'audit:export',
     VIEW: 'audit:view',
     VIEW_FIELD_HISTORY: 'audit:view_field_history',
   },
@@ -763,19 +762,6 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         route: 'Pages autorisées',
         surface: 'page',
       }),
-      activePermission({
-        action: 'export',
-        dependencies: [PERMISSIONS.AUDIT.VIEW],
-        description: 'Exporter le journal global en CSV ou JSON',
-        grantable: true,
-        key: PERMISSIONS.AUDIT.EXPORT,
-        label: "Exporter le journal d'activité global",
-        module: 'Export',
-        risk: 'critical',
-        route: '/systeme/journal-activite',
-        stepUpOnUse: true,
-        surface: 'page',
-      }),
     ],
     poleKey: 'system',
     routes: ['/systeme/journal-activite'],
@@ -844,7 +830,6 @@ export const LEGACY_PERMISSION_ALIASES: Readonly<
   Record<string, readonly string[]>
 > = {
   'system:audit': [PERMISSIONS.AUDIT.VIEW],
-  'system:exports': [PERMISSIONS.AUDIT.EXPORT],
   'system:settings': [PERMISSIONS.SETTINGS.VIEW, PERMISSIONS.SETTINGS.UPDATE],
   'users:edit_permissions': [
     PERMISSIONS.USERS.GRANT_ACCESS,
@@ -862,6 +847,7 @@ export const LEGACY_PERMISSION_ALIASES: Readonly<
 };
 
 const LEGACY_PERMISSION_DISPLAY_LABEL_MAP = new Map<string, string>([
+  ['audit:export', "Exporter le journal d'activité global (historique)"],
   [
     'audit:view_sensitive',
     'Consulter les détails sensibles du journal (historique)',
@@ -918,6 +904,7 @@ const ROADMAP_PERMISSION_KEYS = Object.values(ROADMAP_PERMISSIONS).flatMap(
   (family) => Object.values(family),
 );
 const HISTORICAL_ONLY_PERMISSION_KEYS = [
+  'audit:export',
   'audit:view_sensitive',
   'members:update',
   'members:view',
@@ -937,6 +924,7 @@ const HISTORICAL_ONLY_PERMISSION_KEYS = [
  * this version and can be removed only by the explicit rollout-B command.
  */
 const RETIRING_PERMISSION_OVERRIDE_KEYS = [
+  'audit:export',
   'audit:view_sensitive',
   'members:update',
   'members:view',

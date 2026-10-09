@@ -13,11 +13,11 @@ Référence révisée le 9 octobre 2026. Les chantiers proviennent du [catalogue
 | `/membres/repertoire`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Personne livrées | Membres |
 | `/activite/actualites` | Module mis en attente, à reconstruire ; redirige vers la feuille de route | — |
 | `/systeme/utilisateurs`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Utilisateur livrées | Système |
-| `/systeme/journal-activite` | Journal livré | Système |
+| `/systeme/journal-activite` | Vue globale retirée le 9 octobre 2026, à reconstruire ; redirige vers la feuille de route | — |
 | `/systeme/parametres` | Paramètres techniques livrés | Système |
 | `/systeme/feuille-de-route` | Catalogue de projets livré | Système |
 | `/login` | Connexion | Authentification |
-| `/administration`, `/tableau-de-bord`, `/mes-notifications`, `/tableau-de-bord/mes-notifications`, `/systeme` | Accès de compatibilité, redirection ou entrée de pôle | Routes d’appui |
+| `/administration`, `/tableau-de-bord`, `/mes-notifications`, `/tableau-de-bord/mes-notifications`, `/systeme/journal-activite`, `/systeme` | Accès de compatibilité, redirection ou entrée de pôle | Routes d’appui |
 
 Les libellés de familles ci-dessus ne créent pas des routes racines `/nouveau` ou `/[id]`. Les écrans d’erreur, chargement et refus sont des états de parcours, pas des modules supplémentaires.
 

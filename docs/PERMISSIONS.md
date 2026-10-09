@@ -34,8 +34,7 @@ La hiérarchie visible est toujours : **Pôle → Page → Rubrique →
 Autorisation**.
 
 - pôles `Vie interne` et `Système` ;
-- pages `Répertoire`, `Utilisateurs`, `Paramètres système` et
-  `Journal d'activité` ;
+- pages `Répertoire`, `Utilisateurs` et `Paramètres système` ;
 - rubriques telles que `Annuaire`, `Profil et contact`, `Sécurité` ou
   `Autorisations` ;
 - autorisations formulées avec un verbe d'action : `Consulter`, `Créer`,
@@ -196,7 +195,9 @@ correspondante n'existe plus. La spécification complète est conservée dans
 | -------------------------- | -------------------------------------------------------- | ------------ | -------- | ---- | --------- | -------------- | --------- | ------- |
 | `audit:view`               | consulter le journal global et ses détails autorisés     | —            | critique | Non  | Oui, rôle | Oui, implicite | Oui       | Non     |
 | `audit:view_field_history` | voir trois changements d'un champ sur une page autorisée | dynamique    | sensible | Non  | Oui, rôle | Oui, implicite | Oui       | Non     |
-| `audit:export`             | exporter le journal global                               | `audit:view` | critique | Non  | Oui, rôle | Oui, implicite | Oui       | Oui     |
+
+`audit:export` et l'export du journal global ont été retirés le 9 octobre 2026
+avec la page `/systeme/journal-activite`.
 
 `audit:view_field_history` ne dépend statiquement d'aucune page : chaque route
 contextuelle exige simultanément ce droit et le droit de consulter l'entité
@@ -247,7 +248,7 @@ droits individuels.
 | `/systeme/utilisateurs/[id]?section=account`  | `users:view_account_policy` pour lire ; `users:update_account_policy` pour modifier                                                                        |
 | `/systeme/utilisateurs/[id]?section=history`  | `users:view_activity` ; `users:export_activity` pour le CSV                                                                                                |
 | `/systeme/parametres`                                | `settings:view` pour lire ; `settings:update` pour modifier ; droits exclusivement liés au rôle ADMIN                                                      |
-| `/systeme/journal-activite`                          | `audit:view` pour le journal détaillé ; `audit:export` reste nécessaire pour une extraction                                                                |
+| `/systeme/journal-activite`                          | redirection vers `/systeme/feuille-de-route` ; la vue globale est replanifiée, sans permission active                                                       |
 | pages d'erreur et page introuvable                   | support technique, sans capacité métier accordée                                                                                                           |
 
 Les routes génériques présentes pour les pôles Vie interne, Bureau & juridique,
@@ -349,9 +350,10 @@ Elles ne doivent jamais apparaître dans un JSON `User.permissions`, un preset d
 rôle, `PERMISSION_CATEGORIES` ou une politique serveur avant leur activation.
 `hasPermission` les refuse et la normalisation les supprime.
 
-La future capacité de sauvegarde utilise déjà le nom réservé `backups:view`
-afin de ne jamais entrer en collision avec l'alias historique
-`system:exports`, qui signifie temporairement `audit:export`.
+La future capacité de sauvegarde utilise déjà le nom réservé `backups:view`.
+L'alias historique `system:exports` et la permission `audit:export` sont retirés
+avec l'export du journal ; les surcharges stockées sont conservées sans
+autorisation.
 
 ## Cycle de vie planned vers active
 
@@ -407,7 +409,7 @@ lues, mais toute nouvelle écriture doit utiliser les clés canoniques.
 | Clé legacy                    | Clé(s) canonique(s)                                                                                 |
 | ----------------------------- | --------------------------------------------------------------------------------------------------- |
 | `system:audit`                | `audit:view`                                                                                        |
-| `system:exports`              | `audit:export`                                                                                      |
+| `system:exports`              | retirée avec l'export du journal (historique, sans autorisation)                                     |
 | `system:settings`             | aucune surcharge conservée : `settings:view` et `settings:update` sont désormais liés au rôle ADMIN |
 | `users:update_access`         | `users:grant_access`, `users:revoke_access`, `users:delegate_access`                                |
 | `users:edit_permissions`      | `users:grant_access`, `users:revoke_access`, `users:delegate_access`                                |

@@ -368,4 +368,24 @@ export const OPERATIONS_ROADMAP_ITEMS: readonly RoadmapItem[] = [
     status: 'planned',
     title: 'Intégrations & publication publique',
   },
+  {
+    area: 'system',
+    audience: 'Responsables habilités et administrateurs',
+    baseline:
+      'L’audit serveur continue d’enregistrer les actions et les historiques embarqués restent disponibles ; la vue globale a été retirée le 9 octobre 2026.',
+    dependsOn: ['access-scopes'],
+    description:
+      'Expliquer qui a fait quoi, quand et sur quel dossier, sans exposer les données sensibles.',
+    doneWhen:
+      'Chaque événement conserve sa source, sa portée et ses preuves ; les détails sensibles restent filtrés par permission.',
+    firstRelease:
+      'Vue globale filtrable, recherche par acteur et par catégorie, export autorisé et suivi des accès.',
+    id: 'activity-journal',
+    kind: 'module',
+    later:
+      'Rétention par catégorie, tableaux de bord d’anomalies et alertes ciblées.',
+    phase: 3,
+    status: 'partial',
+    title: 'Journal d’activité',
+  },
 ];

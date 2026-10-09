@@ -10,7 +10,6 @@ const mocks = vi.hoisted(() => ({
   redirect: vi.fn((href: string) => {
     throw new Error(`REDIRECT:${href}`);
   }),
-  SystemActivityJournalPage: vi.fn(() => null),
   SystemSettingsPage: vi.fn(() => null),
 }));
 
@@ -21,10 +20,6 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('$server/auth', () => ({
   getPageAuthSession: mocks.getPageAuthSession,
-}));
-
-vi.mock('$features/audit/SystemActivityJournalPage', () => ({
-  SystemActivityJournalPage: mocks.SystemActivityJournalPage,
 }));
 
 vi.mock('$features/settings/SystemSettingsPage', () => ({
@@ -48,7 +43,7 @@ describe('/systeme route availability', () => {
         permissions: { [PERMISSIONS.AUDIT.VIEW]: true },
         role: 'USER',
       },
-      '/systeme/journal-activite',
+      '/systeme/feuille-de-route',
     ],
     [
       {
@@ -80,24 +75,14 @@ describe('/systeme route availability', () => {
     expect(mocks.notFound).not.toHaveBeenCalled();
   });
 
-  it('renders the operational activity journal', async () => {
+  it('rejects the removed activity journal destination', async () => {
     const { default: SystemePage } =
       await import('$app/systeme/[[...slug]]/page');
 
-    const result = await SystemePage({
-      params: Promise.resolve({ slug: ['journal-activite'] }),
-    });
-
-    expect(result).toMatchObject({
-      props: {
-        item: expect.objectContaining({
-          href: '/systeme/journal-activite',
-        }),
-        space: expect.objectContaining({ id: 'system' }),
-      },
-      type: mocks.SystemActivityJournalPage,
-    });
-    expect(mocks.notFound).not.toHaveBeenCalled();
+    await expect(
+      SystemePage({ params: Promise.resolve({ slug: ['journal-activite'] }) }),
+    ).rejects.toThrow('NOT_FOUND');
+    expect(mocks.notFound).toHaveBeenCalledTimes(1);
   });
 
   it('renders the operational system settings page', async () => {

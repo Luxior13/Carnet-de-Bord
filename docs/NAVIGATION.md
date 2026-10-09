@@ -4,19 +4,19 @@ Référence révisée le 26 septembre 2026. Le catalogue des projets est sépar�
 
 ## Navigation actuelle
 
-Six entrées sont déclarées dans trois pôles. Leur visibilité dépend des accès de l’utilisateur. Les noms et routes actifs proviennent du registre des fonctionnalités.
+Cinq entrées sont déclarées dans trois pôles. Leur visibilité dépend des accès de l’utilisateur. Les noms et routes actifs proviennent du registre des fonctionnalités.
 
 | Pôle actuel | Entrées actives | Placement |
 | --- | --- | --- |
 | Aujourd’hui | Accueil `/` | Travail personnel |
 | Membres | Répertoire `/membres/repertoire` | Membres et contacts de la structure |
-| Système | Utilisateurs `/systeme/utilisateurs`, journal `/systeme/journal-activite`, paramètres `/systeme/parametres`, feuille de route `/systeme/feuille-de-route` | Comptes, technique et plan produit |
+| Système | Utilisateurs `/systeme/utilisateurs`, paramètres `/systeme/parametres`, feuille de route `/systeme/feuille-de-route` | Comptes, technique et plan produit |
 
 `/mon-compte` et `/recherche` sont accessibles par les outils globaux. `/login` appartient au parcours de connexion. Les formulaires de création et fiches de personnes ou utilisateurs restent sous leur liste principale.
 
 Le pôle « Membres » regroupe le Répertoire actuel et les futurs espaces Adhésions et rôles, Recrutement, Arrivées et départs. La page actuelle conserve le titre « Répertoire » et l’action « Ajouter une fiche » ; une fiche porte le nom ou le pseudo de la personne. Le fil d’Ariane présente « Membres → Répertoire → fiche » ; le nom du pôle ne crée pas un lien vers une page d’accueil fictive.
 
-`/administration` et `/tableau-de-bord` sont des accès de compatibilité. `/mes-notifications` et `/tableau-de-bord/mes-notifications` redirigent vers la feuille de route, où le module notifications est replanifié. `/systeme` sert d’entrée au pôle. Les routes non livrées ne sont pas des écrans vides utilisables.
+`/administration` et `/tableau-de-bord` sont des accès de compatibilité. `/mes-notifications`, `/tableau-de-bord/mes-notifications` et `/systeme/journal-activite` redirigent vers la feuille de route, où ces modules sont replanifiés. `/systeme` sert d’entrée au pôle. Les routes non livrées ne sont pas des écrans vides utilisables.
 
 Les 46 anciennes destinations planifiées ont été retirées du catalogue de navigation. Elles restent référencées dans le catalogue de projets et dans une liste de destinations réservées pour conserver le refus d’ouverture par les helpers de navigation. Cette liste ne remplace aucune politique serveur.
 

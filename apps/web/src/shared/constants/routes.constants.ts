@@ -68,6 +68,13 @@ export const LEGACY_PAGE_ALIASES = [
     destination: PAGE_PATHS.roadmap,
     source: '/tableau-de-bord/mes-notifications',
   },
+  // The activity journal page is parked on the roadmap: its former URL now
+  // leads to the planning page while the server-side audit log keeps running.
+  {
+    collection: false,
+    destination: PAGE_PATHS.roadmap,
+    source: PAGE_PATHS.systemActivity,
+  },
 ] as const;
 
 export const PAGE_REDIRECTS = LEGACY_PAGE_ALIASES.map((alias) => ({

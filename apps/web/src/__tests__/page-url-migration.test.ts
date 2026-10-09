@@ -163,6 +163,18 @@ describe('page URL migration', () => {
     });
   });
 
+  it('parks the removed activity journal page on the roadmap', () => {
+    expect(isKnownInternalPageHref(PAGE_PATHS.systemActivity)).toBe(true);
+    expect(getCanonicalInternalHref(PAGE_PATHS.systemActivity)).toBe(
+      PAGE_PATHS.roadmap,
+    );
+    expect(PAGE_REDIRECTS).toContainEqual({
+      destination: PAGE_PATHS.roadmap,
+      permanent: true,
+      source: PAGE_PATHS.systemActivity,
+    });
+  });
+
   it('checks the same navigation permission for the canonical and legacy list', () => {
     const user = {
       isProtected: false,

@@ -113,7 +113,7 @@ export const FEATURES = {
       poleKey: 'system',
       poleLabel: 'Système',
     },
-    availability: 'live',
+    availability: 'planned',
     description: 'Historique admin et actions sensibles.',
     href: PAGE_PATHS.systemActivity,
     icon: 'History',

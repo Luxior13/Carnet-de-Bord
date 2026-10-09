@@ -6,7 +6,6 @@ import {
   getNavigationPageBySlug,
   getVisibleNavigationSpaces,
 } from '$constants/app.constants';
-import { SystemActivityJournalPage } from '$features/audit/SystemActivityJournalPage';
 import { SystemSettingsPage } from '$features/settings/SystemSettingsPage';
 import { getPageAuthSession } from '$server/auth';
 
@@ -31,10 +30,6 @@ export default async function SystemePage({
   const match = getNavigationPageBySlug('system', slug);
 
   if (!match || getNavigationAvailability(match.item) !== 'live') notFound();
-
-  if (match.item.href === '/systeme/journal-activite') {
-    return <SystemActivityJournalPage item={match.item} space={match.space} />;
-  }
 
   if (match.item.href === '/systeme/parametres') {
     return <SystemSettingsPage item={match.item} space={match.space} />;

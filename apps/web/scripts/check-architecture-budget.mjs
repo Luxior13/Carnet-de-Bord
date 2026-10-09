@@ -6,7 +6,6 @@ const DEFAULT_SOURCE_LIMIT = 800;
 const SERVER_ONLY_DATABASE_IMPORT_PATTERN =
   /(?:from\s+|import\s*)['"](?:@repo\/database|@prisma\/client)(?:\/[^'"]*)?['"]/u;
 const LEGACY_LIMITS = new Map([
-  ['app/api/systeme/journal-activite/route.ts', 1_050],
   ['app/api/users/[id]/audit/route.ts', 950],
   ['app/api/users/[id]/route.ts', 1_330],
   ['components/Sidebar.tsx', 850],

@@ -240,8 +240,7 @@ const DashboardAttentionCard: FC<{
 
 const DashboardActivityCard: FC<{
   activities: DashboardActivityItem[];
-  canOpenJournal: boolean;
-}> = ({ activities, canOpenJournal }) => (
+}> = ({ activities }) => (
   <Card className="min-w-0">
     <CardHeader className="p-4">
       <h2 className="text-sm font-semibold">Activité récente</h2>
@@ -250,16 +249,6 @@ const DashboardActivityCard: FC<{
     <CardContent className="p-4">
       <DashboardActivityList activities={activities} />
     </CardContent>
-    {canOpenJournal && (
-      <CardFooter className="justify-end p-4">
-        <Button asChild size="sm" variant="outline">
-          <Link href="/systeme/journal-activite">
-            Voir le journal
-            <ArrowRight aria-hidden="true" className="size-4" />
-          </Link>
-        </Button>
-      </CardFooter>
-    )}
   </Card>
 );
 
@@ -502,10 +491,7 @@ export default function DashboardPageClient({
                 <DashboardAttentionCard security={security} />
               )}
               {hasRecentActivity && (
-                <DashboardActivityCard
-                  activities={recentActivity}
-                  canOpenJournal={canViewSystemAudit}
-                />
+                <DashboardActivityCard activities={recentActivity} />
               )}
             </div>
           )}

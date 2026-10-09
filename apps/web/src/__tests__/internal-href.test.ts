@@ -51,7 +51,6 @@ describe('known page destinations', () => {
   it.each([
     '/',
     '/mon-compte?section=security',
-    '/systeme/journal-activite?period=7d',
     '/systeme/parametres',
     '/membres/repertoire/nouveau',
     '/membres/repertoire/person-1?section=contacts',
@@ -60,8 +59,13 @@ describe('known page destinations', () => {
     expect(isKnownInternalPageHref(href)).toBe(true);
   });
 
-  it.each(['/personnes/nouveau', '/personnes/person-1?section=contacts'])(
-    'keeps the legacy repository destination redirectable: %s',
+  it.each([
+    '/personnes/nouveau',
+    '/personnes/person-1?section=contacts',
+    '/systeme/journal-activite?period=7d',
+    '/mes-notifications?status=unread',
+  ])(
+    'keeps legacy or parked destinations redirectable: %s',
     (href) => {
       expect(isKnownInternalPageHref(href)).toBe(true);
     },

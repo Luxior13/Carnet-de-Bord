@@ -82,23 +82,6 @@ export const getStructureStatusTone = (
 ): 'secondary' | 'success' =>
   status === 'IN_STRUCTURE' ? 'success' : 'secondary';
 
-export const getPersonFieldJournalHref = (input: {
-  fieldKey: string;
-  personId: string;
-  recordId?: string;
-  sectionKey: string;
-}): string => {
-  const params = new URLSearchParams({
-    entityId: input.personId,
-    entityType: 'PERSON',
-    fieldKey: input.fieldKey,
-    sectionKey: input.sectionKey,
-  });
-  if (input.recordId) params.set('recordId', input.recordId);
-
-  return `/systeme/journal-activite?${params}`;
-};
-
 export const zodErrorMap = (error: ZodError): PersonFormErrors => {
   const errors = new Map<string, string>();
   for (const issue of error.issues) {

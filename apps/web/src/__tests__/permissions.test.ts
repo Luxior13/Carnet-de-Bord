@@ -262,18 +262,12 @@ describe('hasPermission', () => {
     ).toBe(true);
   });
 
-  it('keeps contextual history independent and export dependent', () => {
+  it('keeps contextual history independent from the journal page', () => {
     expect(
       hasPermission('USER', PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY, {
         [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true,
       }),
     ).toBe(true);
-    expect(
-      hasPermission('USER', PERMISSIONS.AUDIT.EXPORT, {
-        [PERMISSIONS.AUDIT.EXPORT]: true,
-        [PERMISSIONS.AUDIT.VIEW]: false,
-      }),
-    ).toBe(false);
     expect(
       requiresMfaForAccess('USER', {
         [PERMISSIONS.AUDIT.VIEW]: true,
@@ -466,7 +460,6 @@ describe('permission catalogue', () => {
       });
       expect(getPermissionItem(permissionKey)?.stepUpOnUse).toBeUndefined();
     }
-    expect(getPermissionItem(PERMISSIONS.AUDIT.EXPORT)?.stepUpOnUse).toBe(true);
   });
 
   it('contains only the canonical effective permission families', () => {
@@ -502,7 +495,6 @@ describe('permission catalogue', () => {
       'users:delete_account',
       'audit:view',
       'audit:view_field_history',
-      'audit:export',
       'account:view_profile',
       'account:update_profile',
       'account:update_contact',

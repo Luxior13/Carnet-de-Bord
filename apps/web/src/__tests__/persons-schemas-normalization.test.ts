@@ -7,10 +7,7 @@ import {
   PERSON_LIMITS,
   PERSON_STRUCTURE_STATUS_LABELS,
 } from '$features/persons/person.constants';
-import {
-  getPersonFieldJournalHref,
-  getStructureStatusTone,
-} from '$features/persons/person.ui';
+import { getStructureStatusTone } from '$features/persons/person.ui';
 import {
   calculateCivilAge,
   normalizePersonEmail,
@@ -142,25 +139,6 @@ describe('person schemas and stable normalisation', () => {
     expect(outside).toContain(PERSON_STRUCTURE_STATUS_LABELS.OUTSIDE_STRUCTURE);
     expect(getStructureStatusTone('IN_STRUCTURE')).toBe('success');
     expect(getStructureStatusTone('OUTSIDE_STRUCTURE')).toBe('secondary');
-  });
-
-  it('builds a field-journal link with the complete contextual key', () => {
-    const href = getPersonFieldJournalHref({
-      fieldKey: 'email',
-      personId: 'person/with spaces',
-      recordId: 'email-1',
-      sectionKey: 'contacts',
-    });
-    const parsed = new URL(href, 'https://example.test');
-
-    expect(parsed.pathname).toBe('/systeme/journal-activite');
-    expect(Object.fromEntries(parsed.searchParams)).toEqual({
-      entityId: 'person/with spaces',
-      entityType: 'PERSON',
-      fieldKey: 'email',
-      recordId: 'email-1',
-      sectionKey: 'contacts',
-    });
   });
 
   it('rejects duplicate initial contacts and multiple primaries', () => {

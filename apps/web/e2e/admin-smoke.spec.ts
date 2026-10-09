@@ -8,7 +8,6 @@ import type {
   PersonMutationResponse,
   PersonsListResponse,
 } from '../src/features/persons/types/person.types';
-import { expectJournalInvestigation } from './system-activity-journal.checks';
 import { expectSystemSettingsDraftSafety } from './system-settings.checks';
 
 function requireEnvironmentVariable(
@@ -958,7 +957,6 @@ test('authenticates and reaches the admin surfaces', async ({ page }) => {
   await expect(searchDialog).toHaveCount(0);
 
   await expectSystemSettingsDraftSafety(page);
-  await expectJournalInvestigation(page);
   await page.goto('/systeme/utilisateurs/nouveau');
   await expect(
     page.getByRole('heading', { name: /Nouvel utilisateur|Compte créé/ }),

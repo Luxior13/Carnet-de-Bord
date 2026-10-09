@@ -1,14 +1,14 @@
 # Feuille de route — priorités de construction
 
-Référence produit révisée le 9 octobre 2026. La page `/systeme/feuille-de-route` présente **38 chantiers, 8 pôles cibles et 6 étapes**. Un chantier peut être un module, une extension, une vue partagée ou une intégration ; ce nombre ne représente pas 38 nouvelles pages.
+Référence produit révisée le 9 octobre 2026. La page `/systeme/feuille-de-route` présente **39 chantiers, 8 pôles cibles et 6 étapes**. Un chantier peut être un module, une extension, une vue partagée ou une intégration ; ce nombre ne représente pas 39 nouvelles pages.
 
 Le catalogue exécutable se trouve dans [features/roadmap](../apps/web/src/features/roadmap/roadmap.constants.ts). Ce document fixe les décisions ; la [matrice](../features/pages/MATRICE_PREPARATION.md) conserve la correspondance avec les anciens projets de pages. Lors d’une modification de priorité ou de périmètre, mettre ces trois références à jour ensemble.
 
 ## État réel et lecture du plan
 
-Les comptes et leur sécurité, le répertoire, le journal d’activité, les paramètres techniques et la recherche de pages existent. Les paramètres actuels ne constituent pas encore un profil juridique métier. La recherche ne parcourt pas encore les futurs dossiers métier.
+Les comptes et leur sécurité, le répertoire, les paramètres techniques et la recherche de pages existent. Les paramètres actuels ne constituent pas encore un profil juridique métier. La recherche ne parcourt pas encore les futurs dossiers métier. Le journal d’activité continue d’enregistrer les actions côté serveur, mais sa vue globale est retirée.
 
-Le module partenaires a été retiré le 21 septembre 2026 : sa reconstruction est planifiée. Le module notifications a été retiré le 9 octobre 2026 : sa reconstruction est planifiée après clarification du design et des canaux. Les migrations historiques ne prouvent pas qu’un modèle ou un écran est encore présent.
+Le module partenaires a été retiré le 21 septembre 2026 : sa reconstruction est planifiée. Le module notifications a été retiré le 9 octobre 2026 : sa reconstruction est planifiée après clarification du design et des canaux. La vue globale du journal d’activité a été retirée le 9 octobre 2026 : sa reconstruction est planifiée, sans interrompre l’audit serveur. Les migrations historiques ne prouvent pas qu’un modèle ou un écran est encore présent.
 
 - **À cadrer** : nouveau périmètre, non livré.
 - **À compléter** : une base existe ; la carte précise ce qui reste à construire.
@@ -80,6 +80,7 @@ Suivre les documents, les personnes, les réunions et les actions.
 - **Réunions & décisions de séance** (Activité) : Participants du répertoire, ordre du jour, compte rendu, décisions et tâches liées.
 - **Débriefs** (Activité) : Points positifs, axes de progrès, audience et tâches liées à l’événement source.
 - **Actualité interne & audiences** (Activité) : Audiences adaptées aux équipes et aux contenus liés ; annonces distinctes du journal.
+- **Journal d’activité** (Système) : Vue globale filtrable, recherche par acteur et par catégorie, export autorisé et suivi des accès.
 
 ## 4. Relations & finances
 

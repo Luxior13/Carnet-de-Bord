@@ -9,9 +9,6 @@ const readSourceFile = (relativePath: string): string => {
 };
 
 const usersSource = readSourceFile('../features/users/UsersListPage.tsx');
-const journalSource = readSourceFile(
-  '../features/audit/SystemActivityJournalPage.tsx',
-);
 const userDetailSource = readSourceFile(
   '../components/users/UserDetailPage.tsx',
 );
@@ -34,7 +31,6 @@ describe('reviewed default page-size UX contracts', () => {
     expect(usersSource).toContain(
       'effectivePageSizeRef.current = nextPagination.limit',
     );
-    expect(journalSource).not.toMatch(/params\.set\(['"]limit['"]/);
   });
 
   it('lets activity APIs size displayed pages without background summary reads', () => {

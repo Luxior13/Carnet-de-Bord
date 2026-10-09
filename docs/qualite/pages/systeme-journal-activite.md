@@ -1,5 +1,9 @@
 # Suivi de page — Journal d’activité
 
+> Page retirée le 9 octobre 2026 et replanifiée sur `/systeme/feuille-de-route`.
+> Ce suivi est conservé comme historique ; l’audit serveur et les historiques
+> embarqués (fiche utilisateur, provenance des champs) restent actifs.
+
 ## Identité et état
 
 - Route : `/systeme/journal-activite`, module `features/audit`.
