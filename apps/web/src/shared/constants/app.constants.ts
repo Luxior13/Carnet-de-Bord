@@ -62,15 +62,12 @@ export const NAV_SPACES: NavigationSpace[] = [
     icon: 'LayoutDashboard',
     id: 'dashboard',
     label: 'Aujourd’hui',
-    matchHrefs: ['/tableau-de-bord', '/mes-notifications'],
+    matchHrefs: ['/tableau-de-bord'],
     routeBaseHref: '/tableau-de-bord',
     sections: [
       {
         id: 'today',
-        items: [
-          featureNavigation(FEATURES.dashboard),
-          featureNavigation(FEATURES.notifications),
-        ],
+        items: [featureNavigation(FEATURES.dashboard)],
         label: 'Pilotage',
         position: 'top',
       },
@@ -95,30 +92,6 @@ export const NAV_SPACES: NavigationSpace[] = [
     ],
     summary: 'Le suivi des membres',
     tone: 'internal',
-  },
-  {
-    description: 'La vie de la structure : réunions, calendrier et retours.',
-    href: PAGE_PATHS.internalNews,
-    icon: 'Activity',
-    id: 'activity',
-    label: 'Activité',
-    matchHrefs: [
-      '/activite',
-      '/vie-interne/reunions',
-      '/vie-interne/calendrier-interne',
-      '/vie-interne/debriefs',
-      '/vie-interne/notifications-rappels',
-    ],
-    sections: [
-      {
-        id: 'activity',
-        items: [featureNavigation(FEATURES.internalNews)],
-        label: 'Quotidien',
-        position: 'top',
-      },
-    ],
-    summary: 'La vie de la structure',
-    tone: 'activity',
   },
   {
     description: 'Comptes, sécurité, configuration et données.',

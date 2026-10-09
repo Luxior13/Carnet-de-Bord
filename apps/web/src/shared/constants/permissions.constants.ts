@@ -37,10 +37,6 @@ export const PERMISSIONS = {
     VIEW: 'dashboard:view',
   },
   INTERNAL_NEWS: INTERNAL_NEWS_PERMISSION_KEYS,
-  NOTIFICATIONS: {
-    SEND: 'notifications:send',
-    VIEW: 'notifications:view',
-  },
   PERSONS: {
     CREATE: 'persons:create',
     DELETE: 'persons:delete',
@@ -272,19 +268,6 @@ const BASELINE_PERMISSION_ITEMS: PermissionItem[] = [
     route: '/',
     surface: 'page',
   }),
-  activePermission({
-    action: 'view',
-    alwaysEnabled: true,
-    description:
-      'Consulter et classer uniquement les notifications de son propre compte',
-    grantable: false,
-    key: PERMISSIONS.NOTIFICATIONS.VIEW,
-    label: 'Consulter ses notifications personnelles',
-    module: 'Socle',
-    risk: 'default',
-    route: '/mes-notifications',
-    surface: 'page',
-  }),
 ];
 
 const SETTINGS_PERMISSION_ITEMS: PermissionItem[] = [
@@ -319,19 +302,6 @@ const SETTINGS_PERMISSION_ITEMS: PermissionItem[] = [
  * for transparency, but can never be overridden through an individual grant.
  */
 const ROLE_BOUND_PERMISSION_ITEMS: PermissionItem[] = [
-  activePermission({
-    action: 'send',
-    description:
-      "Envoyer une notification interne via l'API sécurisée (interface à venir)",
-    grantable: false,
-    key: PERMISSIONS.NOTIFICATIONS.SEND,
-    label: 'Envoyer des notifications internes',
-    module: 'Notifications',
-    risk: 'critical',
-    route: 'POST /api/notifications',
-    stepUpOnUse: true,
-    surface: 'api',
-  }),
   ...INTERNAL_NEWS_PERMISSION_ITEMS,
   ...SETTINGS_PERMISSION_ITEMS,
 ];
@@ -898,6 +868,11 @@ const LEGACY_PERMISSION_DISPLAY_LABEL_MAP = new Map<string, string>([
   ],
   ['members:update', 'Modifier les membres (historique)'],
   ['members:view', 'Consulter les membres (historique)'],
+  ['notifications:send', 'Envoyer des notifications internes (historique)'],
+  [
+    'notifications:view',
+    'Consulter ses notifications personnelles (historique)',
+  ],
   [
     'system:audit_sensitive',
     'Consulter les détails sensibles du journal (historique)',
@@ -946,6 +921,8 @@ const HISTORICAL_ONLY_PERMISSION_KEYS = [
   'audit:view_sensitive',
   'members:update',
   'members:view',
+  'notifications:send',
+  'notifications:view',
   'system:audit_sensitive',
   'system:view',
   'users:archive',
@@ -1086,8 +1063,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.DASHBOARD.VIEW,
     PERMISSIONS.INTERNAL_NEWS.VIEW,
     PERMISSIONS.INTERNAL_NEWS.MANAGE,
-    PERMISSIONS.NOTIFICATIONS.VIEW,
-    PERMISSIONS.NOTIFICATIONS.SEND,
     PERMISSIONS.SETTINGS.VIEW,
     PERMISSIONS.SETTINGS.UPDATE,
     ...ACCESS_PERMISSION_KEYS,
@@ -1096,7 +1071,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     ...Object.values(PERMISSIONS.ACCOUNT),
     PERMISSIONS.DASHBOARD.VIEW,
     PERMISSIONS.INTERNAL_NEWS.VIEW,
-    PERMISSIONS.NOTIFICATIONS.VIEW,
   ],
 };
 

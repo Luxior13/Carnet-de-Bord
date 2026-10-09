@@ -121,20 +121,15 @@ worker permanent.
 
 ## Conservation des données
 
-Les paramètres `audit.retentionDays` et `notifications.retentionDays` ne sont
-pas mis en cache. Pour les notifications, la maintenance acquiert le même
-verrou transactionnel que la modification du réglage, puis lit la durée dans
-la transaction `ReadCommitted`. Une augmentation validée avant l'acquisition
-du verrou est donc prise en compte ; une modification concurrente attend la fin
-de la purge. Ce verrou couvre aussi l'absence initiale de ligne de configuration.
-La procédure SQL du journal contrôle sa propre durée sous verrou.
+Le paramètre `audit.retentionDays` n'est pas mis en cache. La procédure SQL du
+journal contrôle sa propre durée sous verrou. Une réduction reste protégée par
+mot de passe à la modification du réglage.
 
 Le passage de maintenance reste atomique, avec une limite transactionnelle de
 60 secondes : une erreur ou un dépassement annule les suppressions du passage.
 Mesurer et revoir le découpage si les volumes rendent cette limite insuffisante.
 Une réduction protégée par mot de passe agit à une prochaine exécution de
-maintenance, sans lancer une purge depuis la page de paramètres. Les notifications
-dont `expiresAt` est dépassé peuvent être supprimées avant la durée générale.
+maintenance, sans lancer une purge depuis la page de paramètres.
 
 La purge d’audit passe exclusivement par la fonction SQL
 `purge_expired_audit_logs(integer)`. Les tables d’audit restent append-only pour

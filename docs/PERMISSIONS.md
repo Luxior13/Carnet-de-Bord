@@ -83,7 +83,6 @@ Légende :
 | Clé canonique             | Portée                                | Dépend de               | Risque    | USER       | ADMIN      | Racine         | Surcharge |
 | ------------------------- | ------------------------------------- | ----------------------- | --------- | ---------- | ---------- | -------------- | --------- |
 | `dashboard:view`          | `/`                                   | —                       | `default` | Oui, socle | Oui, socle | Oui, implicite | Non       |
-| `notifications:view`      | `/mes-notifications`, données propres | —                       | `default` | Oui, socle | Oui, socle | Oui, implicite | Non       |
 | `account:view_profile`    | profil propre                         | —                       | `default` | Oui, socle | Oui, socle | Oui, implicite | Non       |
 | `account:update_profile`  | prénom et nom propres                 | `account:view_profile`  | `default` | Oui, rôle  | Oui, rôle  | Oui, implicite | Oui       |
 | `account:update_contact`  | contact propre                        | `account:view_profile`  | sensible  | Oui, socle | Oui, socle | Oui, implicite | Non       |
@@ -217,7 +216,6 @@ retirer par surcharge.
 
 | Clé canonique        | API                                 | Dépend de       | Risque   | USER | ADMIN     | Racine         | Step-up |
 | -------------------- | ----------------------------------- | --------------- | -------- | ---- | --------- | -------------- | ------- |
-| `notifications:send` | `POST /api/notifications`           | —               | critique | Non  | Oui, rôle | Oui, implicite | Oui     |
 | `settings:view`      | `GET /api/systeme/parametres`       | —               | sensible | Non  | Oui, rôle | Oui, implicite | Non     |
 | `settings:update`    | `PUT /api/systeme/parametres/[key]` | `settings:view` | critique | Non  | Oui, rôle | Oui, implicite | Oui     |
 
@@ -232,7 +230,7 @@ droits individuels.
 | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/login`                                             | publique ; le parcours d'authentification impose la MFA                                                                                                    |
 | `/`                                                  | `dashboard:view`, toujours actif ; chaque donnée administrative du tableau de bord conserve ensuite son propre contrôle                                    |
-| `/mes-notifications`                                 | `notifications:view`, limité aux notifications du compte connecté                                                                                          |
+| `/mes-notifications` et `/tableau-de-bord/mes-notifications` | redirection vers `/systeme/feuille-de-route` ; le module notifications est replanifié, sans permission active                                                       |
 | `/mon-compte`                                        | droits `account:*`, toujours limités au compte connecté                                                                                                    |
 | `/systeme/feuille-de-route`                                  | authentification ; catalogue informatif des pages planifiées, sans attribution de droits                                                                   |
 | `/recherche`                                         | authentification ; chaque résultat est filtré selon la destination réellement autorisée                                                                    |
@@ -240,7 +238,6 @@ droits individuels.
 | `/membres/repertoire/nouveau`                    | `persons:create`, donc aussi `persons:view`                                                                                                                |
 | `/membres/repertoire/[id]`                       | `persons:view` pour la fiche ; les mutations exigent `persons:update` ou `persons:delete`                                                                  |
 | `/tableau-de-bord`                                   | alias de support redirigeant vers `/` ; aucune permission supplémentaire                                                                                   |
-| `/tableau-de-bord/mes-notifications`                 | ancien alias redirigeant vers `/mes-notifications`                                                                                                         |
 | `/administration`                                    | route de support redirigeant vers les utilisateurs                                                                                                         |
 | `/systeme/utilisateurs`                       | `users:view`                                                                                                                                               |
 | `/systeme/utilisateurs/nouveau`               | `users:create`, donc aussi `users:view`                                                                                                                    |

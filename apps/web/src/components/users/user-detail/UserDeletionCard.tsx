@@ -23,7 +23,7 @@ export const UserDeletionCard: FC<UserDeletionCardProps> = ({
 }) => (
   <Card
     aria-labelledby="user-security-danger-heading"
-    className="border-destructive/30 bg-destructive/5 rounded-xl"
+    className="border-destructive/30 bg-destructive/5 rounded-lg"
   >
     <CardHeader className="border-destructive/20 bg-destructive/10 border-b p-3 sm:p-4">
       <h3

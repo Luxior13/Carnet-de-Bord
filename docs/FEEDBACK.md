@@ -90,17 +90,17 @@ Avant de terminer une modification, vérifier :
 ## 6. Où cela vit dans le code
 
 - **Toast** : `sonner`, monté une fois dans le layout.
-- **Notification** : `Notification` et `NotificationRecipient`, avec rétention
-  réglable via `notifications.retentionDays`.
+- **Notification** : le module et ses tables ont été retirés le 9 octobre 2026.
+  La boîte personnelle est replanifiée sur la feuille de route ; sa
+  spécification reste dans [features/notifications-rappels.md](../features/notifications-rappels.md).
 - **Alertes et rappels** : futurs blocs de « Mon travail » et du calendrier,
-  branchés sur les mêmes modèles.
-- **Notifications de sécurité** : déjà émises pour les révocations de session,
-  les changements de mot de passe et les réinitialisations de MFA.
+  à raccorder à la future boîte personnelle.
+- **Notifications de sécurité** : plus émises en attendant la reconstruction du
+  module ; les actions sensibles restent tracées dans le journal d'activité.
 
 ---
 
 ## 7. Liens
 
-- [NAVIGATION.md](NAVIGATION.md) — où vivent les notifications et Mon travail.
-- [ROLES_ET_PERMISSIONS.md](ROLES_ET_PERMISSIONS.md) — qui peut envoyer et lire.
-- [PERMISSIONS.md](PERMISSIONS.md) — les permissions `notifications:*`.
+- [NAVIGATION.md](NAVIGATION.md) — où vivent les futures notifications et Mon travail.
+- [FEUILLE_DE_ROUTE.md](FEUILLE_DE_ROUTE.md) — la reconstruction du module.

@@ -32,14 +32,6 @@ const mockPrisma = {
   mfaRecoveryCode: {
     deleteMany: vi.fn(),
   },
-  notification: {
-    create: vi.fn(),
-    upsert: vi.fn(),
-  },
-  notificationRecipient: {
-    createMany: vi.fn(),
-    deleteMany: vi.fn(),
-  },
   person: {
     findMany: vi.fn(),
   },
@@ -207,8 +199,6 @@ describe('users access hardening', () => {
       userAgent: 'TestAgent',
     });
     mockPrisma.loginNameReservation.findUnique.mockResolvedValue(null);
-    mockPrisma.notification.create.mockResolvedValue({ id: 'notification-1' });
-    mockPrisma.notificationRecipient.createMany.mockResolvedValue({ count: 1 });
     mockPrisma.person.findMany.mockResolvedValue([]);
     mockPrisma.systemSetting.findUnique.mockResolvedValue({ value: 25 });
     mockPrisma.user.groupBy.mockResolvedValue([]);
@@ -300,19 +290,6 @@ describe('users access hardening', () => {
     );
     expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
       where: { userId: 'target-1' },
-    });
-    expect(mockPrisma.notification.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        createdById: actor.id,
-        href: '/mon-compte?section=security',
-        severity: 'WARNING',
-        type: 'security.login_name_changed',
-      }),
-      select: { id: true },
-    });
-    expect(mockPrisma.notificationRecipient.createMany).toHaveBeenCalledWith({
-      data: [{ notificationId: 'notification-1', userId: 'target-1' }],
-      skipDuplicates: true,
     });
   });
 
@@ -3554,9 +3531,6 @@ describe('users access hardening', () => {
     expect(mockPrisma.mfaRecoveryCode.deleteMany).toHaveBeenCalledWith({
       where: { userId: 'target-1' },
     });
-    expect(mockPrisma.notificationRecipient.deleteMany).toHaveBeenCalledWith({
-      where: { userId: 'target-1' },
-    });
     expect(mockPrisma.totpCredential.deleteMany).toHaveBeenCalledWith({
       where: { userId: 'target-1' },
     });
@@ -3713,7 +3687,6 @@ describe('users access hardening', () => {
       { client: mockPrisma, required: true },
     );
     expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
-    expect(mockPrisma.notificationRecipient.deleteMany).not.toHaveBeenCalled();
     expect(mockPrisma.totpCredential.deleteMany).not.toHaveBeenCalled();
   });
 

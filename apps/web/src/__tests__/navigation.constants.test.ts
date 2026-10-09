@@ -72,15 +72,9 @@ describe('navigation availability', () => {
   it('shows the live baseline destinations without individual grants', () => {
     const hrefs = getVisibleHrefs({
       [PERMISSIONS.DASHBOARD.VIEW]: false,
-      [PERMISSIONS.NOTIFICATIONS.VIEW]: false,
     });
 
-    expect(hrefs).toEqual([
-      '/',
-      '/mes-notifications',
-      '/activite/actualites',
-      '/systeme/feuille-de-route',
-    ]);
+    expect(hrefs).toEqual(['/', '/systeme/feuille-de-route']);
     expect(hrefs).not.toContain('/tableau-de-bord/mes-taches');
     expect(hrefs).not.toContain('/vie-interne');
   });
@@ -210,11 +204,11 @@ describe('navigation availability', () => {
   it('keeps the desktop sidebar live on a direct planned route', () => {
     const sidebarHrefs = getDesktopSidebarSections(
       buildUser(),
-      '/vie-interne/calendrier-interne',
+      '/vie-interne/reunions',
     ).flatMap((section) => flattenHrefs(section.items));
 
-    expect(sidebarHrefs).toEqual(['/activite/actualites']);
-    expect(sidebarHrefs).not.toContain('/vie-interne/calendrier-interne');
+    expect(sidebarHrefs).toEqual(['/']);
+    expect(sidebarHrefs).not.toContain('/vie-interne/reunions');
   });
 
   it('detects active live spaces for dashboard and administration routes', () => {
@@ -284,9 +278,7 @@ describe('navigation availability', () => {
 
     expect(liveHrefs).toEqual([
       '/',
-      '/mes-notifications',
       '/membres/repertoire',
-      '/activite/actualites',
       '/systeme/utilisateurs',
       '/systeme/journal-activite',
       '/systeme/parametres',

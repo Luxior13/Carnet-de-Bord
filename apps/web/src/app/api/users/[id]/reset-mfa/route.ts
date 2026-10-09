@@ -20,7 +20,6 @@ import {
   recordLoginAttempt,
   reserveSensitiveActionRateLimit,
 } from '$server/rate-limiter';
-import { createSecurityNotification } from '$server/security-notifications';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -349,15 +348,6 @@ export async function POST(
         },
         { client: transaction, required: true },
       );
-      await createSecurityNotification(
-        {
-          actorUserId: root.id,
-          kind: 'MFA_RESET',
-          recipientUserId: target.id,
-        },
-        transaction,
-      );
-
       await transaction.rateLimit.deleteMany({
         where: {
           key: { in: [passwordRateLimitKey, totpRateLimitKey] },

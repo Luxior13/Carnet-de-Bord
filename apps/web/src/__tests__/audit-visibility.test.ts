@@ -174,7 +174,7 @@ describe('audit visibility', () => {
       phase: 'terminal_failure',
       reason: 'lease_expired',
       recipientCount: 12,
-      settingKey: 'notifications.retentionDays',
+      settingKey: 'audit.retentionDays',
       status: 'FAILED',
       type: 'platform.cleanup',
     };
@@ -191,7 +191,7 @@ describe('audit visibility', () => {
       phase: 'terminal_failure',
       reason: 'lease_expired',
       recipientCount: 12,
-      settingKey: 'notifications.retentionDays',
+      settingKey: 'audit.retentionDays',
       status: 'FAILED',
       type: 'platform.cleanup',
     });

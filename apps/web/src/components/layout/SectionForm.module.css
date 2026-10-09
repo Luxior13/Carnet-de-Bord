@@ -1,0 +1,29 @@
+/*
+ * Brique « édition directe » des sections de fiche.
+ *
+ * Au repos, un champ doit se lire comme du texte : pas de bordure, pas de
+ * fond. L'affordance de contrôle n'apparaît qu'au survol et au focus. C'est ce
+ * qui permet de garder la lecture dense de la fiche tout en rendant chaque
+ * valeur modifiable directement.
+ */
+.quietField {
+  border-color: var(--border-subtle);
+  background: color-mix(in srgb, var(--surface-inset) 55%, transparent);
+  box-shadow: none;
+}
+
+.quietField:hover {
+  border-color: var(--border-control);
+  background: var(--surface-inset);
+}
+
+.quietField:focus,
+.quietField:focus-visible {
+  border-color: var(--ring);
+  background: var(--surface-inset);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 22%, transparent);
+}
+
+.quietField::placeholder {
+  color: var(--text-disabled);
+}

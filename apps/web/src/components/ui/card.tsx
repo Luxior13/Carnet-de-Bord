@@ -14,7 +14,7 @@ const Card: FC<
     <Component
       data-slot="card"
       className={cn(
-        'border-border-default bg-surface text-card-foreground flex flex-col gap-0 overflow-hidden rounded-lg border py-0 shadow-[var(--shadow-panel)]',
+        'border-border-default bg-surface text-card-foreground flex flex-col gap-0 overflow-clip rounded-lg border py-0 shadow-[var(--shadow-panel)]',
         className,
       )}
       {...props}

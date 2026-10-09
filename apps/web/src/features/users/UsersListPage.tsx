@@ -185,12 +185,12 @@ const UserAccessLabel: FC<{
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-sm border bg-transparent px-2 py-0.5 text-[0.8125rem] leading-5 whitespace-nowrap',
+        'inline-flex items-center rounded-[5px] border px-2 py-0.5 text-xs leading-5 whitespace-nowrap',
         user.isProtected
-          ? 'border-access-privileged/30 text-access-privileged'
+          ? 'border-access-privileged/30 bg-access-privileged/15 text-access-privileged'
           : isAdministrator
-            ? 'border-access-admin/30 text-access-admin'
-            : 'border-access-member/30 text-access-member',
+            ? 'border-access-admin/30 bg-access-admin/15 text-access-admin'
+            : 'border-access-member/30 bg-access-member/15 text-access-member',
       )}
     >
       {getAccessLabel(user)}
@@ -202,8 +202,10 @@ const UserStatusLabel: FC<{ isActive: boolean }> = ({ isActive }) => {
   return (
     <span
       className={cn(
-        'text-muted-foreground inline-flex items-center gap-1.5 rounded-sm border bg-transparent px-2 py-0.5 text-[0.8125rem] leading-5 whitespace-nowrap',
-        isActive ? 'border-success/30' : 'border-muted-foreground/30',
+        'inline-flex items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 whitespace-nowrap',
+        isActive
+          ? 'border-success/30 bg-success/15 text-success'
+          : 'border-muted-foreground/30 bg-muted-foreground/10 text-muted-foreground',
       )}
     >
       <span
@@ -753,7 +755,7 @@ export const UsersListPage: FC = () => {
                   isRefreshing ||
                   loadError ||
                   hasTruncatedPagination
-                    ? 'text-muted-foreground col-span-full text-[0.8125rem] leading-5'
+                    ? 'text-muted-foreground col-span-full text-sm leading-5'
                     : 'sr-only'
                 }
               >
@@ -781,7 +783,7 @@ export const UsersListPage: FC = () => {
             totalPages > 1
               ? {
                   className:
-                    '[&_p]:text-[0.8125rem] [&_span]:text-[0.8125rem] [&_button]:text-[0.8125rem]',
+                    '[&_p]:text-sm [&_span]:text-sm [&_button]:text-sm',
                   limit: pagination?.limit ?? 1,
                   onPageChange: setCurrentPage,
                   page: pagination?.page ?? currentPage,
@@ -802,7 +804,7 @@ export const UsersListPage: FC = () => {
                   aria-label="Comptes utilisateurs"
                   className="table-fixed"
                 >
-                  <TableHeader className="[&_th]:text-foreground [&_th]:h-11 [&_th]:text-[0.8125rem] [&_th]:leading-5">
+                  <TableHeader className="[&_th]:text-foreground [&_th]:h-11 [&_th]:text-sm [&_th]:leading-5">
                     <TableRow>
                       <TableHead>Compte</TableHead>
                       <TableHead className="w-44 @min-[64rem]/data-table:w-[18%]">
@@ -881,7 +883,7 @@ export const UsersListPage: FC = () => {
                                   )}
                                 </div>
                                 <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                                  <p className="text-muted-foreground flex max-w-full min-w-0 items-center gap-1.5 truncate text-[0.8125rem] leading-5">
+                                  <p className="text-muted-foreground flex max-w-full min-w-0 items-center gap-1.5 truncate text-sm leading-5">
                                     <span className="min-w-0 truncate">
                                       {getUserLoginDisplay(user)}
                                     </span>
@@ -914,7 +916,7 @@ export const UsersListPage: FC = () => {
                           <TableCell className="pointer-events-none py-3">
                             <UserStatusLabel isActive={user.isActive} />
                           </TableCell>
-                          <TableCell className="text-muted-foreground pointer-events-none py-3 text-[0.8125rem] leading-5 tabular-nums">
+                          <TableCell className="text-muted-foreground pointer-events-none py-3 text-sm leading-5 tabular-nums">
                             {formatUserLastLogin(user)}
                           </TableCell>
                           <TableCell className="pointer-events-none py-3">
@@ -984,11 +986,11 @@ export const UsersListPage: FC = () => {
                                 </span>
                               )}
                             </div>
-                            <p className="text-muted-foreground mt-0.5 truncate text-[0.8125rem] leading-5">
+                            <p className="text-muted-foreground mt-0.5 truncate text-sm leading-5">
                               {getUserLoginDisplay(user)}
                             </p>
                             {user.contactEmail && (
-                              <p className="text-muted-foreground mt-0.5 text-[0.8125rem] leading-5 [overflow-wrap:anywhere]">
+                              <p className="text-muted-foreground mt-0.5 text-sm leading-5 [overflow-wrap:anywhere]">
                                 {user.contactEmail}
                               </p>
                             )}
@@ -1008,7 +1010,7 @@ export const UsersListPage: FC = () => {
                                 </Badge>
                               </div>
                             )}
-                          <p className="text-muted-foreground text-[0.8125rem] leading-5 tabular-nums">
+                          <p className="text-muted-foreground text-sm leading-5 tabular-nums">
                             Dernière connexion :{' '}
                             {formatUserLastLogin(user).toLowerCase()}
                           </p>

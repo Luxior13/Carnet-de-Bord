@@ -1,23 +1,23 @@
 # Matrice de préparation — état réel et projets
 
-Référence révisée le 22 septembre 2026. Les chantiers proviennent du [catalogue de la feuille de route](../../apps/web/src/features/roadmap/roadmap.constants.ts). L’ordre et les décisions sont décrits dans [FEUILLE_DE_ROUTE.md](../../docs/FEUILLE_DE_ROUTE.md).
+Référence révisée le 9 octobre 2026. Les chantiers proviennent du [catalogue de la feuille de route](../../apps/web/src/features/roadmap/roadmap.constants.ts). L’ordre et les décisions sont décrits dans [FEUILLE_DE_ROUTE.md](../../docs/FEUILLE_DE_ROUTE.md).
 
 ## Pages actuellement disponibles
 
 | Route ou famille | État | Placement |
 | --- | --- | --- |
 | `/` | Accueil livré, vues métier à enrichir | Aujourd’hui |
-| `/mes-notifications` | Boîte de notifications livrée | Aujourd’hui et outils globaux |
+| `/mes-notifications` | Module retiré le 9 octobre 2026, à reconstruire ; redirige vers la feuille de route | — |
 | `/mon-compte` | Profil et sécurité du compte livrés | Outils globaux |
 | `/recherche` | Recherche de pages livrée ; recherche de dossiers future | Outils globaux |
 | `/membres/repertoire`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Personne livrées | Membres |
-| `/activite/actualites` | Actualité livrée | Activité |
+| `/activite/actualites` | Module mis en attente, à reconstruire ; redirige vers la feuille de route | — |
 | `/systeme/utilisateurs`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Utilisateur livrées | Système |
 | `/systeme/journal-activite` | Journal livré | Système |
 | `/systeme/parametres` | Paramètres techniques livrés | Système |
 | `/systeme/feuille-de-route` | Catalogue de projets livré | Système |
 | `/login` | Connexion | Authentification |
-| `/administration`, `/tableau-de-bord`, `/tableau-de-bord/mes-notifications`, `/systeme` | Accès de compatibilité ou entrée de pôle | Routes d’appui |
+| `/administration`, `/tableau-de-bord`, `/mes-notifications`, `/tableau-de-bord/mes-notifications`, `/systeme` | Accès de compatibilité, redirection ou entrée de pôle | Routes d’appui |
 
 Les libellés de familles ci-dessus ne créent pas des routes racines `/nouveau` ou `/[id]`. Les écrans d’erreur, chargement et refus sont des états de parcours, pas des modules supplémentaires.
 

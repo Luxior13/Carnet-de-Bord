@@ -7,7 +7,6 @@ import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
 import { createAuditLogWithHeaders } from '$server/auth';
 import { prisma } from '$server/prisma';
-import { createSecurityNotification } from '$server/security-notifications';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
 import {
   type ApiErrorResponse,
@@ -325,14 +324,6 @@ export async function DELETE(
           },
           { client: transaction, required: true },
         );
-        await createSecurityNotification(
-          {
-            actorUserId: auth.user.id,
-            kind: 'SESSIONS_REVOKED',
-            recipientUserId: targetUser.id,
-          },
-          transaction,
-        );
 
         return true;
       });
@@ -391,14 +382,6 @@ export async function DELETE(
           userId: auth.user.id,
         },
         { client: transaction, required: true },
-      );
-      await createSecurityNotification(
-        {
-          actorUserId: auth.user.id,
-          kind: 'SESSIONS_REVOKED',
-          recipientUserId: targetUser.id,
-        },
-        transaction,
       );
 
       return deleteResult;

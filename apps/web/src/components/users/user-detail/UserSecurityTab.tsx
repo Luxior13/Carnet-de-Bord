@@ -379,7 +379,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       {tempPassword && (
         <Card
           aria-live="assertive"
-          className="border-warning/25 bg-warning/10 rounded-xl outline-none focus-visible:ring-2"
+          className="border-warning/25 bg-warning/10 rounded-lg outline-none focus-visible:ring-2"
           ref={tempPasswordAnnouncementRef}
           role="status"
           tabIndex={-1}

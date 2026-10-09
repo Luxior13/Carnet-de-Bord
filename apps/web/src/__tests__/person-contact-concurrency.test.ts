@@ -25,8 +25,6 @@ const mocks = vi.hoisted(() => {
   const transaction = {
     auditFieldChange: { findMany: vi.fn() },
     auditLog: { findFirst: vi.fn() },
-    notification: { create: vi.fn() },
-    notificationRecipient: { createMany: vi.fn() },
     person: {
       findUnique: vi.fn(),
       update: vi.fn(),
@@ -426,7 +424,7 @@ describe('person contact optimistic concurrency and primary invariants', () => {
     expect(mocks.createPersonAudit).not.toHaveBeenCalled();
   });
 
-  it('audits an exact structure-status transition and creates no notification', async () => {
+  it('audits an exact structure-status transition', async () => {
     const current = personRecord([], 5, {
       structureStatus: 'OUTSIDE_STRUCTURE',
     });
@@ -465,10 +463,6 @@ describe('person contact optimistic concurrency and primary invariants', () => {
       description: 'Identité de la fiche modifiée',
       entityId: 'person-1',
     });
-    expect(mocks.transaction.notification.create).not.toHaveBeenCalled();
-    expect(
-      mocks.transaction.notificationRecipient.createMany,
-    ).not.toHaveBeenCalled();
   });
 
   it('does not complete an ordinary mutation when its mandatory audit fails', async () => {
@@ -541,7 +535,6 @@ describe('person contact optimistic concurrency and primary invariants', () => {
       structureStatus: 'OUTSIDE_STRUCTURE',
       version: 5,
     });
-    expect(mocks.transaction.notification.create).not.toHaveBeenCalled();
   });
 
   it('forces the first email to primary even when the client sends false', async () => {

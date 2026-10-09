@@ -9,9 +9,6 @@ const readSourceFile = (relativePath: string): string => {
 };
 
 const usersSource = readSourceFile('../features/users/UsersListPage.tsx');
-const notificationsSource = readSourceFile(
-  '../features/notifications/NotificationInboxPage.tsx',
-);
 const journalSource = readSourceFile(
   '../features/audit/SystemActivityJournalPage.tsx',
 );
@@ -36,9 +33,6 @@ describe('reviewed default page-size UX contracts', () => {
     );
     expect(usersSource).toContain(
       'effectivePageSizeRef.current = nextPagination.limit',
-    );
-    expect(notificationsSource).not.toMatch(
-      /\/api\/notifications\?[^'`]*limit=/,
     );
     expect(journalSource).not.toMatch(/params\.set\(['"]limit['"]/);
   });

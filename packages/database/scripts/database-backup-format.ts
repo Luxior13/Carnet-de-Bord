@@ -64,18 +64,6 @@ export const DATABASE_BACKUP_TABLES = [
   {
     cursorColumn: 'id',
     cursorKind: 'text',
-    property: 'notifications',
-    tableName: 'Notification',
-  },
-  {
-    cursorColumn: 'id',
-    cursorKind: 'text',
-    property: 'notificationRecipients',
-    tableName: 'NotificationRecipient',
-  },
-  {
-    cursorColumn: 'id',
-    cursorKind: 'text',
     property: 'internalAnnouncements',
     tableName: 'InternalAnnouncement',
   },

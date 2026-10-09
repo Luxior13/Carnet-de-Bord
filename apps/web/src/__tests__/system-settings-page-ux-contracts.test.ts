@@ -40,12 +40,9 @@ const buildSetting = (key: SystemSettingKey): SystemSettingItem => ({
 
 describe('system settings page contracts', () => {
   it('renders the complete reviewed catalog in deliberate UI order', () => {
-    expect(SYSTEM_SETTING_KEYS).toEqual([
-      'notifications.retentionDays',
-      'audit.retentionDays',
-    ]);
+    expect(SYSTEM_SETTING_KEYS).toEqual(['audit.retentionDays']);
     expect(normalizeSettings(SYSTEM_SETTING_KEYS.map(buildSetting)).size).toBe(
-      2,
+      1,
     );
   });
 
@@ -56,8 +53,8 @@ describe('system settings page contracts', () => {
     expect(() =>
       normalizeSetting(
         {
-          ...buildSetting('notifications.retentionDays'),
-          key: 'notifications.retentionDays',
+          ...buildSetting('audit.retentionDays'),
+          key: 'ui.defaultPageSize' as SystemSettingKey,
         },
         'audit.retentionDays',
       ),
@@ -65,28 +62,26 @@ describe('system settings page contracts', () => {
     expect(() =>
       normalizeSetting(
         {
-          ...buildSetting('notifications.retentionDays'),
+          ...buildSetting('audit.retentionDays'),
           updatedAt: 'not-a-date',
           version: 1,
         },
-        'notifications.retentionDays',
+        'audit.retentionDays',
       ),
     ).toThrow('Catalogue de paramètres incomplet');
   });
 
   it('validates integer values and the reviewed bounds locally', () => {
-    expect(getValidationMessage('notifications.retentionDays', '')).toBe(
+    expect(getValidationMessage('audit.retentionDays', '')).toBe(
       'Saisissez un nombre entier.',
     );
-    expect(getValidationMessage('notifications.retentionDays', '10.5')).toBe(
+    expect(getValidationMessage('audit.retentionDays', '10.5')).toBe(
       'Saisissez un nombre entier.',
     );
-    expect(getValidationMessage('notifications.retentionDays', '29')).toContain(
-      'entre 30 et 730',
+    expect(getValidationMessage('audit.retentionDays', '364')).toContain(
+      'entre 365 et 3650',
     );
-    expect(
-      getValidationMessage('notifications.retentionDays', '180'),
-    ).toBeNull();
+    expect(getValidationMessage('audit.retentionDays', '1095')).toBeNull();
   });
 
   it('compares numeric drafts consistently while protecting invalid input', () => {

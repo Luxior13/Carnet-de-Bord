@@ -22,13 +22,6 @@ enum MfaAuthenticationMethod {
   RECOVERY_CODE
 }
 
-enum NotificationSeverity {
-  INFO
-  SUCCESS
-  WARNING
-  CRITICAL
-}
-
 enum PersonStructureStatus {
   IN_STRUCTURE
   OUTSIDE_STRUCTURE
@@ -82,8 +75,6 @@ model User {
   totpEnrollment              TotpEnrollment?
   mfaRecoveryCodes            MfaRecoveryCode[]
   mfaLoginChallenge           MfaLoginChallenge?
-  createdNotifications        Notification[]          @relation("NotificationCreator")
-  notificationRecipients      NotificationRecipient[]
   internalAnnouncements       InternalAnnouncement[]  @relation("InternalAnnouncementAuthor")
   updatedSystemSettings       SystemSetting[]         @relation("SystemSettingUpdater")
 
@@ -523,44 +514,6 @@ model RateLimit {
   updatedAt    DateTime  @updatedAt
 
   @@index([blockedUntil])
-}
-
-/// Durable in-application notification. Delivery is separated from the
-/// per-user read state so one message can be fanned out without duplication.
-model Notification {
-  id          String               @id @default(cuid())
-  type        String
-  title       String
-  body        String
-  href        String?
-  severity    NotificationSeverity @default(INFO)
-  dedupeKey   String?              @unique
-  createdById String?
-  expiresAt   DateTime?
-  createdAt   DateTime             @default(now())
-
-  createdBy  User?                   @relation("NotificationCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  recipients NotificationRecipient[]
-
-  @@index([createdAt, id])
-  @@index([expiresAt])
-  @@index([type, createdAt, id])
-}
-
-model NotificationRecipient {
-  id             String    @id @default(cuid())
-  notificationId String
-  userId         String
-  readAt         DateTime?
-  archivedAt     DateTime?
-  createdAt      DateTime  @default(now())
-
-  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([notificationId, userId])
-  @@index([userId, archivedAt, createdAt, notificationId])
-  @@index([userId, readAt, archivedAt])
 }
 
 /// Editorial information shared with authenticated members. Author snapshots

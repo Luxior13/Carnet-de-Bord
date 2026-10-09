@@ -6,7 +6,6 @@ export const PAGE_PATHS = {
   login: '/login',
   newPerson: '/membres/repertoire/nouveau',
   newUser: '/systeme/utilisateurs/nouveau',
-  notifications: '/mes-notifications',
   persons: '/membres/repertoire',
   roadmap: '/systeme/feuille-de-route',
   search: '/recherche',
@@ -32,8 +31,15 @@ export const LEGACY_PAGE_ALIASES = [
   },
   {
     collection: false,
-    destination: PAGE_PATHS.internalNews,
+    destination: PAGE_PATHS.roadmap,
     source: '/vie-interne/actualite-interne',
+  },
+  // The internal news module is parked on the roadmap: its former page now
+  // leads to the planning page instead of exposing a removed destination.
+  {
+    collection: false,
+    destination: PAGE_PATHS.roadmap,
+    source: PAGE_PATHS.internalNews,
   },
   {
     collection: false,
@@ -50,9 +56,16 @@ export const LEGACY_PAGE_ALIASES = [
     destination: PAGE_PATHS.home,
     source: '/tableau-de-bord',
   },
+  // The notifications module was parked on the roadmap: its former inbox now
+  // leads to the planning page instead of exposing a removed destination.
   {
     collection: false,
-    destination: PAGE_PATHS.notifications,
+    destination: PAGE_PATHS.roadmap,
+    source: '/mes-notifications',
+  },
+  {
+    collection: false,
+    destination: PAGE_PATHS.roadmap,
     source: '/tableau-de-bord/mes-notifications',
   },
 ] as const;

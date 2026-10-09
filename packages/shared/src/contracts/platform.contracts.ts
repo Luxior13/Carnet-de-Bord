@@ -96,16 +96,6 @@ export const AuditStream = {
 
 export type AuditStream = (typeof AuditStream)[keyof typeof AuditStream];
 
-export const NotificationSeverity = {
-  CRITICAL: 'CRITICAL',
-  INFO: 'INFO',
-  SUCCESS: 'SUCCESS',
-  WARNING: 'WARNING',
-} as const;
-
-export type NotificationSeverity =
-  (typeof NotificationSeverity)[keyof typeof NotificationSeverity];
-
 export const UserRole = {
   ADMIN: 'ADMIN',
   USER: 'USER',

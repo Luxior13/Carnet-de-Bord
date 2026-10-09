@@ -20,7 +20,6 @@ describe('platform foundation without a persistent worker', () => {
   it('keeps only settings backed by an active runtime capability', () => {
     expect(Object.keys(SYSTEM_SETTING_CATALOG)).toEqual([
       'audit.retentionDays',
-      'notifications.retentionDays',
     ]);
     expect(isSystemSettingKey('jobs.retentionDays')).toBe(false);
     expect(isSystemSettingKey('ui.defaultPageSize')).toBe(false);
@@ -29,7 +28,7 @@ describe('platform foundation without a persistent worker', () => {
     );
   });
 
-  it.each(['audit.retentionDays', 'notifications.retentionDays'] as const)(
+  it.each(['audit.retentionDays'] as const)(
     'reads the latest stored retention value for %s',
     async (key) => {
       const read = vi.mocked(prisma.systemSetting.findUnique);
@@ -52,7 +51,6 @@ describe('platform foundation without a persistent worker', () => {
     );
 
     expect(source).toContain('purge_expired_audit_logs');
-    expect(source).toContain('purgeExpiredNotifications(transaction, now)');
     expect(source).not.toContain('backgroundJob');
     expect(source).not.toContain('while (');
   });

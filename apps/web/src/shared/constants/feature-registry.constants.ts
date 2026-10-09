@@ -48,7 +48,7 @@ export const FEATURES = {
       poleKey: 'activity',
       poleLabel: 'Activité',
     },
-    availability: 'live',
+    availability: 'planned',
     description:
       'Annonces partagées et changements importants issus des modules autorisés.',
     href: PAGE_PATHS.internalNews,
@@ -57,22 +57,6 @@ export const FEATURES = {
     label: 'Actualité interne',
     permissionMode: 'all',
     requiredPermissions: [PERMISSIONS.INTERNAL_NEWS.VIEW],
-  }),
-  notifications: defineFeature({
-    audit: {
-      pageKey: 'notifications',
-      pageLabel: 'Mes notifications',
-      poleKey: 'dashboard',
-      poleLabel: 'Aujourd’hui',
-    },
-    availability: 'live',
-    description: 'Boîte personnelle de notifications internes.',
-    href: PAGE_PATHS.notifications,
-    icon: 'Bell',
-    id: 'notifications',
-    label: 'Mes notifications',
-    permissionMode: 'all',
-    requiredPermissions: [PERMISSIONS.NOTIFICATIONS.VIEW],
   }),
   persons: defineFeature({
     audit: {

@@ -31,16 +31,6 @@ export const SYSTEM_SETTING_CATALOG = {
     section: 'retention',
     unit: 'days',
   }),
-  'notifications.retentionDays': defineSystemSetting({
-    defaultValue: 180,
-    description: 'Durée de conservation des notifications en jours',
-    label: 'Notifications',
-    max: 730,
-    min: 30,
-    passwordWhenDecreasing: true,
-    section: 'retention',
-    unit: 'days',
-  }),
 } as const satisfies Record<string, SystemSettingCatalogItem>;
 
 export type SystemSettingKey = keyof typeof SYSTEM_SETTING_CATALOG;

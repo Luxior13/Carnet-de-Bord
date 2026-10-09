@@ -22,9 +22,6 @@ export const SYSTEM_SETTING_DEFINITIONS = {
   'audit.retentionDays': defineSystemSetting(
     SYSTEM_SETTING_CATALOG['audit.retentionDays'],
   ),
-  'notifications.retentionDays': defineSystemSetting(
-    SYSTEM_SETTING_CATALOG['notifications.retentionDays'],
-  ),
 } as const;
 
 export const parseSystemSettingValue = (

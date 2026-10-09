@@ -32,9 +32,7 @@ type FeatureAvailabilityContextValue = {
 const ALWAYS_OPERATIONAL_FEATURE_IDS = Object.values(FEATURES)
   .filter(
     (feature) =>
-      feature.availability === 'live' &&
-      feature.id !== FEATURES.internalNews.id &&
-      feature.id !== FEATURES.persons.id,
+      feature.availability === 'live' && feature.id !== FEATURES.persons.id,
   )
   .map((feature) => feature.id);
 

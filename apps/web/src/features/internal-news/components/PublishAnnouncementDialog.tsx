@@ -89,7 +89,7 @@ export const PublishAnnouncementDialog: FC<PublishAnnouncementDialogProps> = ({
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <div className="mb-1 flex items-center gap-3">
-            <span className="border-primary/25 bg-primary/10 text-primary-emphasis flex size-10 items-center justify-center rounded-xl border">
+            <span className="border-primary/25 bg-primary/10 text-primary-emphasis flex size-8 items-center justify-center rounded-lg border">
               <Newspaper className="size-5" />
             </span>
             <DialogTitle>Publier une actualité</DialogTitle>
@@ -146,7 +146,7 @@ export const PublishAnnouncementDialog: FC<PublishAnnouncementDialogProps> = ({
             />
           </div>
 
-          <div className="border-border-default bg-surface-inset/65 flex items-center justify-between gap-4 rounded-xl border p-3">
+          <div className="border-border-default bg-surface-inset/65 flex items-center justify-between gap-4 rounded-lg border p-3">
             <div className="flex min-w-0 gap-3">
               <span className="border-border-default bg-surface-panel text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg border">
                 <Pin className="size-4" />

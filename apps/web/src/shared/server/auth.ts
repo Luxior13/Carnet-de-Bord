@@ -34,7 +34,6 @@ import {
 import { logger } from './logger';
 import { prisma } from './prisma';
 import { getClientIp, getRequestId, getUserAgent } from './request-context';
-import { createSecurityNotification } from './security-notifications';
 
 export const SESSION_COOKIE_NAME = 'session';
 const SESSION_SHORT_DURATION_DAYS = 1;
@@ -989,7 +988,6 @@ type UpdateUserPasswordOptions = {
   currentSessionToken: string;
   expectedSecurityVersion: number;
   rateLimitKey?: string;
-  securityNotification?: { actorUserId?: string | null };
 };
 
 /**
@@ -1060,16 +1058,6 @@ export const updateUserPassword = async (
         transaction,
       );
     }
-    if (options.securityNotification) {
-      await createSecurityNotification(
-        {
-          actorUserId: options.securityNotification.actorUserId,
-          kind: 'PASSWORD_CHANGED',
-          recipientUserId: userId,
-        },
-        transaction,
-      );
-    }
   });
 };
 
@@ -1083,7 +1071,6 @@ export const resetUserPassword = async (
     expectedRole?: UserRole;
     expectedSecurityVersion?: number;
     expectedUpdatedAt?: Date;
-    notificationActorUserId?: string;
   } = {},
 ): Promise<string> => {
   const tempPassword = generateTemporaryPassword();
@@ -1131,16 +1118,6 @@ export const resetUserPassword = async (
 
     if (audit && requestContext) {
       await createAuditLog({ ...audit, ...requestContext }, transaction);
-    }
-    if (options.notificationActorUserId) {
-      await createSecurityNotification(
-        {
-          actorUserId: options.notificationActorUserId,
-          kind: 'PASSWORD_RESET',
-          recipientUserId: userId,
-        },
-        transaction,
-      );
     }
   });
 

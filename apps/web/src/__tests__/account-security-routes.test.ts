@@ -20,11 +20,6 @@ const mockReserveSensitiveActionRateLimit = vi.fn();
 
 const mockPrisma = {
   $transaction: vi.fn(),
-  notification: {
-    create: vi.fn(),
-    upsert: vi.fn(),
-  },
-  notificationRecipient: { createMany: vi.fn() },
   session: {
     delete: vi.fn(),
     deleteMany: vi.fn(),
@@ -121,8 +116,6 @@ describe('account security routes', () => {
       passwordHash: 'stored-hash',
     });
     mockPrisma.user.updateMany.mockResolvedValue({ count: 1 });
-    mockPrisma.notification.create.mockResolvedValue({ id: 'notice-1' });
-    mockPrisma.notificationRecipient.createMany.mockResolvedValue({ count: 1 });
     mockPrisma.session.deleteMany.mockResolvedValue({ count: 0 });
     mockPrisma.session.findMany.mockResolvedValue([]);
     mockVerifyPassword.mockResolvedValue(false);
@@ -668,7 +661,6 @@ describe('account security routes', () => {
           expectedRole: 'USER',
           expectedSecurityVersion: 4,
           expectedUpdatedAt: updatedAt,
-          notificationActorUserId: 'user-1',
         },
       );
     });
@@ -1042,19 +1034,6 @@ describe('account security routes', () => {
         }),
         { client: mockPrisma, required: true },
       );
-      expect(mockPrisma.notification.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            createdById: 'user-1',
-            severity: 'WARNING',
-            type: 'security.sessions_revoked',
-          }),
-        }),
-      );
-      expect(mockPrisma.notificationRecipient.createMany).toHaveBeenCalledWith({
-        data: [{ notificationId: 'notice-1', userId: 'target-1' }],
-        skipDuplicates: true,
-      });
     });
 
     it('fails closed before deleting sessions when the target version changed', async () => {

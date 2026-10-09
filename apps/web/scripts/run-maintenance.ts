@@ -1,6 +1,5 @@
 import { Prisma } from '@prisma/client';
 
-import { purgeExpiredNotifications } from '../src/shared/server/notification-retention';
 import { prisma } from '../src/shared/server/prisma';
 import { getSystemSettingValue } from '../src/shared/server/system-settings';
 
@@ -17,7 +16,6 @@ try {
       >`
       SELECT "public"."purge_expired_audit_logs"(${auditRetentionDays}) AS "deletedCount"
     `;
-      const notifications = await purgeExpiredNotifications(transaction, now);
       const loginChallenges = await transaction.mfaLoginChallenge.deleteMany({
         where: { expiresAt: { lt: now } },
       });
@@ -44,7 +42,6 @@ try {
       return {
         auditRows,
         loginChallenges,
-        notifications,
         rateLimits,
         sessions,
         totpEnrollments,
@@ -55,20 +52,13 @@ try {
       timeout: 60_000,
     },
   );
-  const {
-    auditRows,
-    loginChallenges,
-    notifications,
-    rateLimits,
-    sessions,
-    totpEnrollments,
-  } = results;
+  const { auditRows, loginChallenges, rateLimits, sessions, totpEnrollments } =
+    results;
   // CLI output is consumed by the maintenance scheduler.
   // eslint-disable-next-line no-console
   console.info('Maintenance completed', {
     auditLogs: Number(auditRows[0]?.deletedCount ?? 0n),
     loginChallenges: loginChallenges.count,
-    notifications: notifications.count,
     rateLimits: rateLimits.count,
     sessions: sessions.count,
     totpEnrollments: totpEnrollments.count,

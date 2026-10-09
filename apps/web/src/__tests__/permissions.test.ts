@@ -48,7 +48,6 @@ describe('hasPermission', () => {
     );
     expect(hasPermission('USER', PERMISSIONS.ACCOUNT.MANAGE_MFA)).toBe(true);
     expect(hasPermission('USER', PERMISSIONS.DASHBOARD.VIEW)).toBe(true);
-    expect(hasPermission('USER', PERMISSIONS.NOTIFICATIONS.VIEW)).toBe(true);
 
     expect(hasPermission('ADMIN', PERMISSIONS.USERS.CREATE)).toBe(true);
     expect(hasPermission('ADMIN', PERMISSIONS.USERS.EXPORT_ACTIVITY)).toBe(
@@ -113,39 +112,27 @@ describe('hasPermission', () => {
     ).toBe(false);
   });
 
-  it('keeps dashboard and personal notifications enabled as baseline access', () => {
+  it('keeps dashboard enabled as baseline access', () => {
     const deniedBaseline = {
       [PERMISSIONS.DASHBOARD.VIEW]: false,
-      [PERMISSIONS.NOTIFICATIONS.VIEW]: false,
     };
 
     expect(
       hasPermission('USER', PERMISSIONS.DASHBOARD.VIEW, deniedBaseline),
     ).toBe(true);
-    expect(
-      hasPermission('USER', PERMISSIONS.NOTIFICATIONS.VIEW, deniedBaseline),
-    ).toBe(true);
     expect(normalizePermissionOverrides(deniedBaseline)).toBeNull();
     expect(isPermissionAlwaysEnabled(PERMISSIONS.DASHBOARD.VIEW)).toBe(true);
-    expect(isPermissionAlwaysEnabled(PERMISSIONS.NOTIFICATIONS.VIEW)).toBe(
-      true,
-    );
   });
 
   it('keeps role-bound capabilities outside per-user overrides', () => {
     const attemptedGrant = {
-      [PERMISSIONS.NOTIFICATIONS.SEND]: true,
       [PERMISSIONS.SETTINGS.UPDATE]: true,
       [PERMISSIONS.SETTINGS.VIEW]: true,
     };
 
     expect(normalizePermissionOverrides(attemptedGrant)).toBeNull();
-    expect(isPermissionGrantable(PERMISSIONS.NOTIFICATIONS.SEND)).toBe(false);
     expect(isPermissionGrantable(PERMISSIONS.SETTINGS.VIEW)).toBe(false);
     expect(isPermissionGrantable(PERMISSIONS.SETTINGS.UPDATE)).toBe(false);
-    expect(
-      hasPermission('USER', PERMISSIONS.NOTIFICATIONS.SEND, attemptedGrant),
-    ).toBe(false);
     expect(
       hasPermission('USER', PERMISSIONS.SETTINGS.VIEW, attemptedGrant),
     ).toBe(false);
@@ -198,7 +185,6 @@ describe('hasPermission', () => {
       expect(userRoleBasePermissionsMap.get(permissionKey)).toBe(true);
     }
     expect(userRoleBasePermissions[PERMISSIONS.DASHBOARD.VIEW]).toBe(true);
-    expect(userRoleBasePermissions[PERMISSIONS.NOTIFICATIONS.VIEW]).toBe(true);
     expect(userRoleBasePermissions[PERMISSIONS.USERS.VIEW]).toBe(false);
     expect(userRoleBasePermissions[PERMISSIONS.AUDIT.VIEW]).toBe(false);
     expect(userRoleBasePermissions).not.toHaveProperty(
@@ -486,8 +472,6 @@ describe('permission catalogue', () => {
   it('contains only the canonical effective permission families', () => {
     expect(getAllPermissionKeys()).toEqual([
       'dashboard:view',
-      'notifications:view',
-      'notifications:send',
       'internal_news:view',
       'internal_news:manage',
       'settings:view',
@@ -883,8 +867,6 @@ describe('permission catalogue', () => {
       PERMISSIONS.DASHBOARD.VIEW,
       PERMISSIONS.INTERNAL_NEWS.VIEW,
       PERMISSIONS.INTERNAL_NEWS.MANAGE,
-      PERMISSIONS.NOTIFICATIONS.VIEW,
-      PERMISSIONS.NOTIFICATIONS.SEND,
       PERMISSIONS.SETTINGS.VIEW,
       PERMISSIONS.SETTINGS.UPDATE,
       ...getAccessPermissionKeys(),
@@ -893,7 +875,6 @@ describe('permission catalogue', () => {
       ...Object.values(PERMISSIONS.ACCOUNT),
       PERMISSIONS.DASHBOARD.VIEW,
       PERMISSIONS.INTERNAL_NEWS.VIEW,
-      PERMISSIONS.NOTIFICATIONS.VIEW,
     ]);
     expect(ROLE_PERMISSIONS.ADMIN).not.toEqual(
       expect.arrayContaining(roadmapPermissionKeys),

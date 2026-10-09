@@ -22,8 +22,12 @@ indépendant par réglage, car leurs risques diffèrent.
 
 | Réglage | Défaut logiciel | Bornes | Portée réelle |
 | --- | --- | --- | --- |
-| Notifications | 180 jours | 30–730 | Notifications lues, non lues et archivées ; une expiration individuelle peut entraîner une suppression antérieure |
 | Journal d'activité | 1 095 jours | 365–3 650 | Journal et détails des changements associés, y compris historique des personnes |
+
+Le réglage de conservation des notifications a été retiré le 9 octobre 2026 avec
+le module : le catalogue ne contient plus que le journal d'activité. Une ancienne
+ligne `notifications.retentionDays` en base est ignorée et un PUT sur cette clé
+retourne 404.
 
 Ces valeurs ne constituent pas une justification métier ou juridique universelle.
 La portée est globale, sans déclinaison par équipe, saison ou entité juridique.
@@ -31,7 +35,7 @@ Une augmentation ne restaure pas les données purgées. Une réduction conserve 
 confirmation explicite et la preuve récente de mot de passe côté serveur.
 
 Le nombre de lignes est désormais un défaut logiciel commun de **25**, porté par
-`PAGINATION.DEFAULT_LIMIT`. Les utilisateurs, journaux, notifications et répertoire
+`PAGINATION.DEFAULT_LIMIT`. Les utilisateurs, journaux et répertoire
 utilisent cette base ; leurs limites explicites et plafonds restent inchangés.
 Une exception doit être justifiée par la page. Un sélecteur local ou une préférence
 personnelle ne s'ajoute que si utile, sans réglage administrateur global.

@@ -153,7 +153,6 @@ export async function POST(
         expectedRole: existingUser.role,
         expectedSecurityVersion: existingUser.securityVersion,
         expectedUpdatedAt: existingUser.updatedAt,
-        notificationActorUserId: auth.user.id,
       },
     );
 

@@ -39,7 +39,6 @@ import {
   reserveSensitiveActionRateLimit,
 } from '$server/rate-limiter';
 import { getClientIp } from '$server/request-context';
-import { createSecurityNotification } from '$server/security-notifications';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -731,14 +730,6 @@ export async function PUT(
               key: { in: [rateLimitKeys.account, rateLimitKeys.challenge] },
             },
           });
-          await createSecurityNotification(
-            {
-              actorUserId: challenge.userId,
-              kind: 'MFA_ENABLED',
-              recipientUserId: challenge.userId,
-            },
-            transaction,
-          );
         },
         requireMfaEnabled: !isMandatoryBootstrap,
         revokeExistingSessions: true,

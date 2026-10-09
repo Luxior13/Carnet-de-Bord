@@ -1,14 +1,14 @@
 # Feuille de route — priorités de construction
 
-Référence produit révisée le 22 septembre 2026. La page `/systeme/feuille-de-route` présente **37 chantiers, 8 pôles cibles et 6 étapes**. Un chantier peut être un module, une extension, une vue partagée ou une intégration ; ce nombre ne représente pas 37 nouvelles pages.
+Référence produit révisée le 9 octobre 2026. La page `/systeme/feuille-de-route` présente **38 chantiers, 8 pôles cibles et 6 étapes**. Un chantier peut être un module, une extension, une vue partagée ou une intégration ; ce nombre ne représente pas 38 nouvelles pages.
 
 Le catalogue exécutable se trouve dans [features/roadmap](../apps/web/src/features/roadmap/roadmap.constants.ts). Ce document fixe les décisions ; la [matrice](../features/pages/MATRICE_PREPARATION.md) conserve la correspondance avec les anciens projets de pages. Lors d’une modification de priorité ou de périmètre, mettre ces trois références à jour ensemble.
 
 ## État réel et lecture du plan
 
-Les comptes et leur sécurité, le répertoire, l’actualité interne, les notifications, le journal d’activité, les paramètres techniques et la recherche de pages existent. Les paramètres actuels ne constituent pas encore un profil juridique métier. La recherche ne parcourt pas encore les futurs dossiers métier.
+Les comptes et leur sécurité, le répertoire, le journal d’activité, les paramètres techniques et la recherche de pages existent. Les paramètres actuels ne constituent pas encore un profil juridique métier. La recherche ne parcourt pas encore les futurs dossiers métier.
 
-Le module partenaires a été retiré le 21 septembre 2026 : sa reconstruction est planifiée. Les migrations historiques ne prouvent pas qu’un modèle ou un écran est encore présent.
+Le module partenaires a été retiré le 21 septembre 2026 : sa reconstruction est planifiée. Le module notifications a été retiré le 9 octobre 2026 : sa reconstruction est planifiée après clarification du design et des canaux. Les migrations historiques ne prouvent pas qu’un modèle ou un écran est encore présent.
 
 - **À cadrer** : nouveau périmètre, non livré.
 - **À compléter** : une base existe ; la carte précise ce qui reste à construire.
@@ -33,7 +33,7 @@ Le module partenaires a été retiré le 21 septembre 2026 : sa reconstruction e
 | --- | --- |
 | Membres, adhérents, contacts, staff | Une identité au Répertoire ; relations et historiques dédiés, vues filtrées |
 | Mes tâches et tâches internes | Même source, vues personnelles et collectives |
-| Prochaines réunions, rappels, alertes | Vues de Mon travail et notifications ; la source garde son échéance |
+| Prochaines réunions, rappels, alertes | Vues de Mon travail ; notifications personnelles à reconstruire ; la source garde son échéance |
 | Calendriers interne et esport | Événements métier d’origine, calendrier partagé en projection |
 | Préparation match/scrim, stratégie, VOD | Un espace Préparation avec vues adaptées |
 | Recettes et dépenses | Filtres des règlements ; factures et demandes de remboursement restent distinctes |
@@ -67,6 +67,7 @@ Organiser les équipes, les disponibilités et les convocations.
 Suivre les documents, les personnes, les réunions et les actions.
 
 - **Mon travail & espace personnel** (Aujourd’hui) : Tâches, planning personnel, documents attendus, rappels et éléments à valider.
+- **Notifications personnelles** (Aujourd’hui) : Boîte personnelle, états lu et archivé, liens vers la source et réglage de conservation.
 - **Recrutement** (Membres) : Poste ou équipe visée, essais, évaluations confidentielles et décision.
 - **Arrivées et départs** (Membres) : Checklists datées, responsables, étapes et vue collective des dossiers ouverts.
 - **Compétitions & inscriptions** (Esport) : Tournois, inscriptions, échéances, règlements, éligibilité, roster enregistré, matchs et résultats.

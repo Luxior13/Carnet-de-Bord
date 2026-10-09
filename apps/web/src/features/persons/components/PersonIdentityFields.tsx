@@ -1,5 +1,6 @@
 import React, { type FC } from 'react';
 
+import styles from '$components/layout/SectionForm.module.css';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import {
@@ -42,6 +43,7 @@ type PersonIdentityFieldsProps = {
   >;
   showBirthDate?: boolean;
   value: PersonIdentityFormValue;
+  variant?: 'default' | 'quiet';
 };
 
 const FieldLabel: FC<{
@@ -70,7 +72,9 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
   provenances,
   showBirthDate = true,
   value,
+  variant = 'default',
 }) => {
+  const quiet = variant === 'quiet';
   const field = (
     key: keyof PersonIdentityFormValue,
   ): {
@@ -92,8 +96,8 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
   const structureStatus = field('structureStatus');
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <div className="space-y-1.5 sm:col-span-2">
+    <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+      <div className="min-w-0 space-y-1.5 sm:col-span-2">
         <FieldLabel
           htmlFor={nickname.id}
           label="Pseudo principal"
@@ -102,6 +106,7 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
         <Input
           aria-describedby={nickname.describedBy ?? `${nickname.id}-hint`}
           aria-invalid={Boolean(nickname.error)}
+          className={cn(quiet && styles.quietField)}
           disabled={disabled}
           id={nickname.id}
           maxLength={80}
@@ -110,7 +115,7 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
           value={value.nickname}
         />
         <FieldError id={`${nickname.id}-error`} message={nickname.error} />
-        {!nickname.error && (
+        {!quiet && !nickname.error && (
           <p
             className="text-muted-foreground text-xs"
             id={`${nickname.id}-hint`}
@@ -119,7 +124,7 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
           </p>
         )}
       </div>
-      <div className="space-y-1.5">
+      <div className="min-w-0 space-y-1.5">
         <FieldLabel
           htmlFor={firstName.id}
           label="Prénom"
@@ -128,15 +133,17 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
         <Input
           aria-describedby={firstName.describedBy}
           aria-invalid={Boolean(firstName.error)}
+          className={cn(quiet && styles.quietField)}
           disabled={disabled}
           id={firstName.id}
           maxLength={100}
           onChange={(event) => onChange('firstName', event.target.value)}
+          placeholder={quiet ? 'Non renseigné' : undefined}
           value={value.firstName}
         />
         <FieldError id={`${firstName.id}-error`} message={firstName.error} />
       </div>
-      <div className="space-y-1.5">
+      <div className="min-w-0 space-y-1.5">
         <FieldLabel
           htmlFor={lastName.id}
           label="Nom"
@@ -145,16 +152,18 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
         <Input
           aria-describedby={lastName.describedBy}
           aria-invalid={Boolean(lastName.error)}
+          className={cn(quiet && styles.quietField)}
           disabled={disabled}
           id={lastName.id}
           maxLength={100}
           onChange={(event) => onChange('lastName', event.target.value)}
+          placeholder={quiet ? 'Non renseigné' : undefined}
           value={value.lastName}
         />
         <FieldError id={`${lastName.id}-error`} message={lastName.error} />
       </div>
       {showBirthDate && (
-        <div className="space-y-1.5">
+        <div className="min-w-0 space-y-1.5">
           <FieldLabel
             htmlFor={birthDate.id}
             label="Date de naissance"
@@ -163,6 +172,7 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
           <Input
             aria-describedby={birthDate.describedBy ?? `${birthDate.id}-hint`}
             aria-invalid={Boolean(birthDate.error)}
+            className={cn(quiet && styles.quietField)}
             disabled={disabled}
             id={birthDate.id}
             onChange={(event) => onChange('birthDate', event.target.value)}
@@ -170,7 +180,7 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
             value={value.birthDate}
           />
           <FieldError id={`${birthDate.id}-error`} message={birthDate.error} />
-          {!birthDate.error && (
+          {!quiet && !birthDate.error && (
             <p
               className="text-muted-foreground text-xs"
               id={`${birthDate.id}-hint`}
@@ -182,7 +192,7 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
       )}
       <div
         className={cn(
-          'space-y-1.5',
+          'min-w-0 space-y-1.5',
           !showBirthDate && 'sm:col-span-2 sm:max-w-sm',
         )}
       >
@@ -201,6 +211,7 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
           <SelectTrigger
             aria-describedby={structureStatus.describedBy}
             aria-invalid={Boolean(structureStatus.error)}
+            className={cn('w-full min-w-0', quiet && styles.quietField)}
             id={structureStatus.id}
           >
             <SelectValue />

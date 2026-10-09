@@ -16,18 +16,13 @@ export type NormalizedSystemSettingItem = Omit<SystemSettingItem, 'value'> & {
 };
 
 /* UI order follows the page, not lexical key order. */
-/* eslint-disable sort-keys-custom-order/object-keys */
+
 const SETTING_PRESENTATION = {
-  'notifications.retentionDays': {
-    impact:
-      'Les notifications lues, non lues et archivées sont concernées. L’archivage ne prolonge pas leur conservation. Une expiration peut les supprimer plus tôt.',
-  },
   'audit.retentionDays': {
     impact:
       'Tous les événements du journal sont concernés : connexions, sécurité, administration et modifications des personnes, avec leurs détails.',
   },
 } as const satisfies Record<SystemSettingKey, SettingPresentation>;
-/* eslint-enable sort-keys-custom-order/object-keys */
 
 export const SECTION_DEFINITIONS: ReadonlyArray<{
   description: string;
@@ -43,7 +38,6 @@ export const SECTION_DEFINITIONS: ReadonlyArray<{
 ];
 
 export const SYSTEM_SETTING_KEYS = [
-  'notifications.retentionDays',
   'audit.retentionDays',
 ] as const satisfies readonly SystemSettingKey[];
 

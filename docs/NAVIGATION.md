@@ -4,20 +4,19 @@ Référence révisée le 26 septembre 2026. Le catalogue des projets est sépar�
 
 ## Navigation actuelle
 
-Huit entrées sont déclarées dans quatre pôles. Leur visibilité dépend des accès de l’utilisateur. Les noms et routes actifs proviennent du registre des fonctionnalités.
+Six entrées sont déclarées dans trois pôles. Leur visibilité dépend des accès de l’utilisateur. Les noms et routes actifs proviennent du registre des fonctionnalités.
 
 | Pôle actuel | Entrées actives | Placement |
 | --- | --- | --- |
-| Aujourd’hui | Accueil `/`, notifications `/mes-notifications` | Travail personnel et messages reçus |
+| Aujourd’hui | Accueil `/` | Travail personnel |
 | Membres | Répertoire `/membres/repertoire` | Membres et contacts de la structure |
-| Activité | Actualité interne `/activite/actualites` | Informations collectives |
 | Système | Utilisateurs `/systeme/utilisateurs`, journal `/systeme/journal-activite`, paramètres `/systeme/parametres`, feuille de route `/systeme/feuille-de-route` | Comptes, technique et plan produit |
 
 `/mon-compte` et `/recherche` sont accessibles par les outils globaux. `/login` appartient au parcours de connexion. Les formulaires de création et fiches de personnes ou utilisateurs restent sous leur liste principale.
 
 Le pôle « Membres » regroupe le Répertoire actuel et les futurs espaces Adhésions et rôles, Recrutement, Arrivées et départs. La page actuelle conserve le titre « Répertoire » et l’action « Ajouter une fiche » ; une fiche porte le nom ou le pseudo de la personne. Le fil d’Ariane présente « Membres → Répertoire → fiche » ; le nom du pôle ne crée pas un lien vers une page d’accueil fictive.
 
-`/administration`, `/tableau-de-bord` et `/tableau-de-bord/mes-notifications` sont des accès de compatibilité. `/systeme` sert d’entrée au pôle. Les routes non livrées ne sont pas des écrans vides utilisables.
+`/administration` et `/tableau-de-bord` sont des accès de compatibilité. `/mes-notifications` et `/tableau-de-bord/mes-notifications` redirigent vers la feuille de route, où le module notifications est replanifié. `/systeme` sert d’entrée au pôle. Les routes non livrées ne sont pas des écrans vides utilisables.
 
 Les 46 anciennes destinations planifiées ont été retirées du catalogue de navigation. Elles restent référencées dans le catalogue de projets et dans une liste de destinations réservées pour conserver le refus d’ouverture par les helpers de navigation. Cette liste ne remplace aucune politique serveur.
 
@@ -45,7 +44,7 @@ Ce tableau décrit les lieux logiques, pas un engagement à créer autant d’en
 - Les incidents sont confidentiels dans Structure. Les notes de recrutement et les dossiers RH ont aussi leur propre périmètre.
 - Les demandes de frais et factures gardent leur parcours distinct des paiements ; les filtres recettes/dépenses ne les remplacent pas.
 - Le profil juridique appartient à Structure ; les réglages techniques restent dans Système.
-- Le compte, la recherche et les notifications restent atteignables depuis les outils globaux, même lorsqu’une vue personnelle a aussi une entrée de navigation.
+- Le compte et la recherche restent atteignables depuis les outils globaux, même lorsqu’une vue personnelle a aussi une entrée de navigation.
 - Une archive reste dans son module ; une restauration technique et un export comptable n’ont pas les mêmes règles.
 
 ## Admission et expérience utilisateur
@@ -122,7 +121,7 @@ centrage à une liste et à une page de lecture.
 Le header conserve le fil d’Ariane et les outils globaux. Les fiches Personne, Utilisateur et Mon compte placent leur navigation horizontale sous le titre, à toutes les largeurs : liens soulignés, libellés complets, défilement horizontal sur petit écran et barre collante dans le contenu. Le retour vers la liste reste avant le titre. La navigation locale n’occupe plus de rail dans la marge. Les filtres de listes utilisent des contrôles distincts de cette navigation.
 
 Le header garde une hauteur de 56 px et un fond bleu ardoise `surface-panel` : fil d’Ariane à gauche,
-recherche et notifications à droite. La zone centrale reste souple pour les
+recherche à droite. La zone centrale reste souple pour les
 chemins longs ; les outils futurs s’ajoutent seulement avec un usage global
 identifié, en prévoyant leur regroupement sur les petites largeurs. Les rubriques
 restent en haut de la sidebar, sans deuxième navigation permanente dans le header.
@@ -133,8 +132,8 @@ courante : le bouton « … » ouvre les ancêtres, accueil compris. Le menu se 
 au changement de présentation pour ne pas rester attaché à un bouton masqué.
 Le bouton du menu mobile reste visible sous 1024 px ; son séparateur apparaît
 entre 640 et 1023 px. La page courante est en semi-gras, les ancêtres plus discrets.
-Les contrôles disposent d’un focus intérieur et les boutons de recherche,
-notifications et menu mobile d’une infobulle après 300 ms.
+Les contrôles disposent d’un focus intérieur et les boutons de recherche
+et menu mobile d’une infobulle après 300 ms.
 
 La navigation rapide s’ouvre depuis son bouton, à la souris ou par son activation
 clavier standard. Aucun raccourci global ni indication de raccourci dans la barre,
@@ -160,26 +159,12 @@ l’action s’appelle « Ouvrir la recherche ». Aucun groupe vide n’est affi
 Un changement effectif de chemin ferme le panneau. Entrée sur ses boutons
 exécute seulement leur action, et l’effacement rend le focus au champ.
 
-Le panneau de notifications reste ancré à droite. Largeur maximale de 400 px,
-fond bleu ardoise, rayon de 8 px, sans ombre ni animation d’ouverture ; lignes
-compactes, point non lu aligné et gravité portée par une icône et un libellé,
-sans fond de badge coloré. Les dates récentes sont relatives ; la date complète
-avec heure reste disponible via le libellé accessible et le titre du temps.
-La boîte complète conserve les textes et dates détaillés.
+Le panneau de notifications et la boîte « Mes notifications » ont été retirés le
+9 octobre 2026 en même temps que le module. Le bouton de la cloche ne figure plus
+dans le header ; les anciennes adresses redirigent vers la feuille de route, où
+le module est replanifié avec ses futurs canaux.
 
-Le compteur est partagé en mémoire avec « Mes notifications », séparé par compte
-et révision des autorisations, puis libéré sans stockage persistant. La lecture
-initiale de la boîte alimente aussi la cloche, sans seconde lecture de collection.
-Une actualisation est prévue toutes les 30 secondes lorsque l’onglet est visible
-et connecté, après la fin de la précédente ; retour à l’onglet, reconnexion et
-actions locales permettent aussi de réactualiser. La requête reste limitée à
-dix notifications, ou une seule pour le compteur sur la boîte avant ouverture
-de la cloche. Ce fonctionnement ne promet pas une réception instantanée.
-Une lecture échouée conserve le compteur et propose « Réessayer » dans un toast ;
-la navigation reste possible. Les liens du panneau respectent une navigation
-annulée par la garde d’un formulaire.
-
-Les gabarits partagés limitent la largeur extérieure à 76rem par défaut, 52rem pour les créations et 56rem pour la lecture (actualité, notifications, recherche). Une variante de 92rem reste disponible pour les données denses. Les listes basculent entre tableau et présentation mobile selon la largeur de leur conteneur. Voir la [proposition UX/UI et son suivi](UX_UI_PROPOSITION_2026-09-23.md).
+Les gabarits partagés limitent la largeur extérieure à 76rem par défaut, 52rem pour les créations et 56rem pour la lecture (actualité, recherche). Une variante de 92rem reste disponible pour les données denses. Les listes basculent entre tableau et présentation mobile selon la largeur de leur conteneur. Voir la [proposition UX/UI et son suivi](UX_UI_PROPOSITION_2026-09-23.md).
 
 Chaque module traite les états de chargement, absence de données, erreur réessayable, accès refusé et conflit de modification lorsqu’il s’applique. L’interface explique une action indisponible sans révéler l’existence d’un dossier confidentiel.
 
@@ -189,9 +174,9 @@ Une entrée masquée n’est jamais une protection suffisante : le serveur contr
 
 Les routes ont été harmonisées le 24 septembre 2026 : Répertoire sous `/membres/repertoire`, Actualité sous `/activite/actualites`, Utilisateurs sous `/systeme/utilisateurs` et Feuille de route sous `/systeme/feuille-de-route`. Les créations et fiches restent sous leur collection. Les anciennes adresses redirigent directement vers leur destination actuelle, avec leurs paramètres. `/systeme` conserve son entrée dépendante des permissions.
 
-Les chemins, constructeurs de fiches et alias sont centralisés dans `apps/web/src/shared/constants/routes.constants.ts`. Les notifications historiques restent lisibles et leurs liens sont traduits à la lecture. Les retours de fiches et de créations conservent la liste filtrée ; les retours historiques vers le Répertoire sont également acceptés et traduits. Les liens d’onglets existants sont conservés ; `section=contacts` est accepté comme alias de Coordonnées dans le Répertoire.
+Les chemins, constructeurs de fiches et alias sont centralisés dans `apps/web/src/shared/constants/routes.constants.ts`. Les retours de fiches et de créations conservent la liste filtrée ; les retours historiques vers le Répertoire sont également acceptés et traduits. Les liens d’onglets existants sont conservés ; `section=contacts` est accepté comme alias de Coordonnées dans le Répertoire.
 
-Les notifications partagent leur filtre par `?status=unread` ou `?status=archived`. La feuille de route partage ses filtres avec `pole`, `phase` et `q` ; ses identifiants de pôles restent ceux du catalogue (par exemple `people` pour Membres). Les changements de filtre participent à l’historique ; la saisie de recherche remplace l’entrée courante pour éviter une étape d’historique à chaque caractère.
+La feuille de route partage ses filtres avec `pole`, `phase` et `q` ; ses identifiants de pôles restent ceux du catalogue (par exemple `people` pour Membres). Les changements de filtre participent à l’historique ; la saisie de recherche remplace l’entrée courante pour éviter une étape d’historique à chaque caractère.
 
 Les anciennes URL planifiées sont des références de conception, pas des liens à exposer. Les préfixes futurs sont `/esport`, `/relations`, `/structure` et `/finances`. La route précise d’un nouveau module sera fixée à sa livraison, avec ses permissions et ses tests. Les noms de menu peuvent évoluer sans entraîner un nouveau changement de chemin.
 

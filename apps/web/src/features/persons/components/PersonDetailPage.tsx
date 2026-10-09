@@ -443,6 +443,9 @@ export const PersonDetailPage: FC<PersonDetailPageProps> = ({
             </div>
           </section>
         )}
+
+        {/* Barre d'action de la fiche : au niveau de la page, hors des sections. */}
+        <div id="person-record-action-bar" />
       </EntityDetailLayout>
     );
   };

@@ -122,9 +122,9 @@ export const getCanonicalInternalHref = (value: string): string | null => {
 };
 
 /**
- * Notification links use a closed list of live pages. This prevents durable
- * messages from advertising stale, planned or mistyped destinations. Dynamic
- * records are admitted only through explicit page patterns.
+ * Durable and stored links use a closed list of live pages. This prevents
+ * saved messages from advertising stale, planned or mistyped destinations.
+ * Dynamic records are admitted only through explicit page patterns.
  */
 export const isKnownInternalPageHref = (value: string): boolean => {
   const pathname = getSafeInternalPathname(value);

@@ -480,7 +480,6 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(childDialogSource).toContain('sm:max-w-2xl');
     expect(childDialogSource).not.toContain('sm:max-w-4xl');
     expect(childDialogSource).not.toContain('Historique des champs');
-    expect(identitySectionSource).toContain('sm:max-w-2xl');
     expect(identitySectionSource).not.toContain('sm:max-w-4xl');
   });
 
@@ -544,14 +543,10 @@ describe('person short-lived sensitive UX contracts', () => {
 
   it('keeps directory editors usable at every viewport size', () => {
     expect(childDialogSource).toContain('fullscreenOnMobile');
-    expect(identitySectionSource).toContain('fullscreenOnMobile');
     expect(childDialogSource).toContain('sm:max-w-2xl');
     expect(childDialogSource).toContain('grid-rows-[auto_minmax(0,1fr)_auto]');
     expect(childDialogSource).toContain('space-y-4 overflow-y-auto');
-    expect(identitySectionSource).toContain(
-      'grid-rows-[auto_minmax(0,1fr)_auto]',
-    );
-    expect(identitySectionSource).toContain('space-y-4 overflow-y-auto');
+    expect(identitySectionSource).toContain('variant="quiet"');
     expect(collectionsSource).toContain(
       "requiresReplacement ? 'sm:max-w-lg' : 'sm:max-w-md'",
     );
@@ -563,7 +558,7 @@ describe('person short-lived sensitive UX contracts', () => {
       createFormSource,
       identitySectionSource,
     ]) {
-      expect(source).toContain('contentClassName="sm:max-w-md"');
+      expect(source).toMatch(/contentClassName="sm:max-w-(md|lg)"/);
     }
   });
 
@@ -593,9 +588,7 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(dataTableSectionSource).toContain(
       "headerLayout?: 'inline' | 'stacked'",
     );
-    expect(identitySectionSource).toContain(
-      'xl:grid-cols-[minmax(0,1fr)_18rem]',
-    );
+    expect(identitySectionSource).toContain('variant="quiet"');
     expect(identitySectionSource).toContain('Informations personnelles');
     expect(identitySectionSource).toContain(
       '<CardHeader className="p-3.5 sm:p-4">',
@@ -604,8 +597,7 @@ describe('person short-lived sensitive UX contracts', () => {
       '<CardContent className="p-4 sm:p-5">',
     );
     expect(identitySectionSource).toContain('<ServiceIcon');
-    expect(identitySectionSource).toContain("Modifier l'identité");
-    expect(identitySectionSource).toContain('sm:max-w-2xl');
+    expect(identitySectionSource).toContain('<SectionActionBar');
     expect(identitySectionSource).not.toContain('sm:max-w-4xl');
     expect(identityFieldsSource).toContain('sm:grid-cols-2');
     expect(identityFieldsSource).not.toContain('xl:grid-cols-3');
@@ -653,12 +645,9 @@ describe('person short-lived sensitive UX contracts', () => {
     );
     expect(identitySectionSource).not.toContain('window.confirm');
     expect(identitySectionSource).toContain('pendingLocalDiscard');
-    expect(identitySectionSource).toContain(
-      'title="Annuler les modifications ?"',
-    );
-    expect(identitySectionSource).toContain(
-      'cancelLabel="Continuer la modification"',
-    );
+    expect(identitySectionSource).toContain("'Annuler les modifications ?'");
+    expect(identitySectionSource).toContain("'Continuer la modification'");
+    expect(identitySectionSource).toContain("'Quitter sans enregistrer ?'");
   });
 
   it('waits for operational readiness before fetching a person detail', () => {

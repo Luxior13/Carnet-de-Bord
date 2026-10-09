@@ -26,8 +26,8 @@ const PublishAnnouncementDialog = dynamic(() =>
 const PageSkeleton: FC = () => (
   <PageShell className="py-0" width="reading">
     <PageCanvas contentClassName="space-y-5">
-      <Skeleton className="h-32 rounded-xl" />
-      <Skeleton className="h-20 rounded-xl" />
+      <Skeleton className="h-32 rounded-lg" />
+      <Skeleton className="h-20 rounded-lg" />
       <Skeleton className="h-52 rounded-lg" />
     </PageCanvas>
   </PageShell>

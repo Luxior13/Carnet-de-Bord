@@ -163,9 +163,8 @@ export function RoadmapPage(): React.ReactNode {
               >
                 <ul className="text-muted-foreground mt-3 list-disc space-y-2 pl-5 leading-6">
                   <li>
-                    Déjà présents : comptes et sécurité, répertoire, actualité
-                    interne, notifications, journal, paramètres techniques et
-                    recherche de pages.
+                    Déjà présents : comptes et sécurité, répertoire, journal,
+                    paramètres techniques et recherche de pages.
                   </li>
                   <li>
                     Une personne garde la même identité ; ses adhésions, rôles

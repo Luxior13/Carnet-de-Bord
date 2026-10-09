@@ -25,7 +25,6 @@ import {
   recordLoginAttempt,
   reserveSensitiveActionRateLimit,
 } from '$server/rate-limiter';
-import { createSecurityNotification } from '$server/security-notifications';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -240,14 +239,6 @@ export async function POST(
           await transaction.rateLimit.deleteMany({
             where: { key: { in: [reauthKey, mfaManageKey] } },
           });
-          await createSecurityNotification(
-            {
-              actorUserId: storedUser.id,
-              kind: 'RECOVERY_CODES_REGENERATED',
-              recipientUserId: storedUser.id,
-            },
-            transaction,
-          );
         },
         requireMfaEnabled: true,
         revokeExistingSessions: true,

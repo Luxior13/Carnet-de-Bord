@@ -14,7 +14,6 @@ import {
   personDetailPath,
   userDetailPath,
 } from '$constants/routes.constants';
-import { normalizeInboxFilter } from '$features/notifications/notification-filters';
 import { getSafePersonReturnHref } from '$features/persons/person.ui';
 import {
   getCanonicalInternalHref,
@@ -40,7 +39,8 @@ describe('page URL migration', () => {
     ],
     ['/administration/utilisateurs/nouveau', '/systeme/utilisateurs/nouveau'],
     ['/administration', '/systeme/utilisateurs'],
-    ['/vie-interne/actualite-interne', '/activite/actualites'],
+    ['/vie-interne/actualite-interne', '/systeme/feuille-de-route'],
+    ['/activite/actualites', '/systeme/feuille-de-route'],
     [
       '/feuille-de-route?pole=people&phase=3',
       '/systeme/feuille-de-route?pole=people&phase=3',
@@ -48,7 +48,11 @@ describe('page URL migration', () => {
     ['/tableau-de-bord', '/'],
     [
       '/tableau-de-bord/mes-notifications?status=unread',
+      '/systeme/feuille-de-route?status=unread',
+    ],
+    [
       '/mes-notifications?status=unread',
+      '/systeme/feuille-de-route?status=unread',
     ],
   ])(
     'preserves the destination of historical links: %s',
@@ -77,7 +81,6 @@ describe('page URL migration', () => {
     'membres/repertoire',
     'membres/repertoire/nouveau',
     'membres/repertoire/[id]',
-    'activite/actualites',
     'systeme/utilisateurs',
     'systeme/utilisateurs/nouveau',
     'systeme/utilisateurs/[id]',
@@ -131,6 +134,35 @@ describe('page URL migration', () => {
     );
   });
 
+  it('parks the removed internal news page on the roadmap', () => {
+    expect(isKnownInternalPageHref(PAGE_PATHS.internalNews)).toBe(true);
+    expect(getCanonicalInternalHref(PAGE_PATHS.internalNews)).toBe(
+      PAGE_PATHS.roadmap,
+    );
+    expect(PAGE_REDIRECTS).toContainEqual({
+      destination: PAGE_PATHS.roadmap,
+      permanent: true,
+      source: PAGE_PATHS.internalNews,
+    });
+  });
+
+  it('parks the removed notifications page on the roadmap', () => {
+    expect(isKnownInternalPageHref('/mes-notifications')).toBe(true);
+    expect(getCanonicalInternalHref('/mes-notifications')).toBe(
+      PAGE_PATHS.roadmap,
+    );
+    expect(PAGE_REDIRECTS).toContainEqual({
+      destination: PAGE_PATHS.roadmap,
+      permanent: true,
+      source: '/mes-notifications',
+    });
+    expect(PAGE_REDIRECTS).toContainEqual({
+      destination: PAGE_PATHS.roadmap,
+      permanent: true,
+      source: '/tableau-de-bord/mes-notifications',
+    });
+  });
+
   it('checks the same navigation permission for the canonical and legacy list', () => {
     const user = {
       isProtected: false,
@@ -148,22 +180,9 @@ describe('page URL migration', () => {
     expect(getActiveNavigationSpace(userDetailPath('user-1')).id).toBe(
       'system',
     );
-    expect(getActiveNavigationSpace(PAGE_PATHS.internalNews).id).toBe(
-      'activity',
-    );
+    expect(getActiveNavigationSpace(PAGE_PATHS.roadmap).id).toBe('system');
     expect(personDetailPath('id with space')).toBe(
       '/membres/repertoire/id%20with%20space',
     );
-  });
-
-  it.each([
-    ['unread', 'unread'],
-    ['archived', 'archived'],
-    ['all', 'all'],
-    ['unknown', 'all'],
-    [null, 'all'],
-    [['archived', 'unread'], 'archived'],
-  ])('normalizes the shared inbox filter %j', (value, expected) => {
-    expect(normalizeInboxFilter(value)).toBe(expected);
   });
 });

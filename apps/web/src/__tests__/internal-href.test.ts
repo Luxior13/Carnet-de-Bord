@@ -5,7 +5,7 @@ import {
   isSafeInternalHref,
 } from '$utils/internal-href.utils';
 
-describe('safe internal notification hrefs', () => {
+describe('safe internal hrefs', () => {
   it.each([
     '/',
     '/mon-compte',
@@ -47,7 +47,7 @@ describe('safe internal notification hrefs', () => {
   });
 });
 
-describe('known notification destinations', () => {
+describe('known page destinations', () => {
   it.each([
     '/',
     '/mon-compte?section=security',

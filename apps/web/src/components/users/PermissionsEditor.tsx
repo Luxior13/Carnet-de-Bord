@@ -865,8 +865,8 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = memo(
                 Le rôle définit les autorisations par défaut. Toutes les pages
                 administratives en ligne apparaissent ici ; les autorisations
                 réservées à un rôle restent visibles en lecture seule. Tableau
-                de bord, recherche, feuille de route, notifications personnelles
-                et Mon compte restent disponibles pour tout compte actif.
+                de bord, recherche, feuille de route et Mon compte restent
+                disponibles pour tout compte actif.
               </p>
             </div>
             {(headerControls || customPermissionCount > 0) && (

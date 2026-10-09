@@ -84,12 +84,11 @@ gardent leurs repères fonctionnels. Les valeurs sont centralisées dans
 
 Les surfaces flottantes de navigation utilisent le jeton `popover`, relié à
 `surface-panel-raised` (`#202c3e`) : menus, filtres, recherche rapide,
-notifications, infobulles et toasts. Elles partagent une bordure `border-default`,
+infobulles et toasts. Elles partagent une bordure `border-default`,
 des angles `rounded-xl` et une ombre discrète. Les séparateurs restent en
 retrait ; les icônes de navigation n’ont pas de fond décoratif. Le champ, les
-résultats et le pied de la recherche conservent le même fond. Les notifications
-non lues sont signalées par un point et un titre plus marqué, sans colorer
-toute leur ligne. Les sélections utilisent `surface-navigation-active`.
+résultats et le pied de la recherche conservent le même fond. Les sélections
+utilisent `surface-navigation-active`.
 
 Le focus clavier utilise un bleu acier `#92acd0` via `--ring`.
 Les boutons partagent cet indicateur quelle que soit leur variante ;
@@ -201,7 +200,7 @@ Les ombres montent avec l'élévation et restent très douces :
 
 De haut en bas :
 
-1. **En-tête** : fil d'Ariane, recherche, notifications ; bouton de menu sur mobile.
+1. **En-tête** : fil d'Ariane, recherche ; bouton de menu sur mobile.
    Hauteur de 56 px, fond `surface-panel`, page courante semi-grasse et focus intérieur.
    La sidebar reste ouverte à 264 px sur ordinateur.
 2. **Héro de page** : titre, description, éventuellement une action principale.
@@ -297,7 +296,7 @@ Il n'est pas transformé en onglet ARIA : chaque section possède une URL.
 
 `components/layout` : en-tête, héro, état de contenu, état de page, panneau de
 section, retour contextuel, mise en page de fiche, zone de danger, recherche
-globale, centre de notifications.
+globale.
 
 `components/users` : fiche utilisateur et son rail d'onglets, éditeur
 d'autorisations, listes.

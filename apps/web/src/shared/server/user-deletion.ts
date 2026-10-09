@@ -98,7 +98,6 @@ export const deleteUserPermanently = async ({
     });
     await transaction.mfaLoginChallenge.deleteMany({ where: { userId } });
     await transaction.mfaRecoveryCode.deleteMany({ where: { userId } });
-    await transaction.notificationRecipient.deleteMany({ where: { userId } });
     await transaction.session.deleteMany({ where: { userId } });
     await transaction.totpCredential.deleteMany({ where: { userId } });
     await transaction.totpEnrollment.deleteMany({ where: { userId } });

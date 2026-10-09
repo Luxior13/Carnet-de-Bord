@@ -26,8 +26,6 @@ export type {
   AuditLog,
   MfaLoginChallenge,
   MfaRecoveryCode,
-  Notification,
-  NotificationRecipient,
   Person,
   PersonDeletionTombstone,
   PersonEmail,
@@ -53,7 +51,6 @@ export {
   AuditValueStorageMode,
   MfaAuthenticationMethod,
   MfaChallengePurpose,
-  NotificationSeverity,
   PersonStructureStatus,
   UserRole,
 } from '@prisma/client';

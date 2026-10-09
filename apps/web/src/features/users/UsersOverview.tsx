@@ -56,7 +56,7 @@ export const UsersOverview: FC<UsersOverviewProps> = ({
           key={label}
           className="border-border-divider flex min-h-16 min-w-0 items-center justify-between gap-3 border-t px-4 py-3 first:border-t-0 @min-[32rem]/users-overview:border-t-0 @min-[32rem]/users-overview:border-l @min-[32rem]/users-overview:first:border-l-0"
         >
-          <dt className="text-muted-foreground min-w-0 text-[0.8125rem] leading-5">
+          <dt className="text-muted-foreground min-w-0 text-sm leading-5">
             <span className="block">{label}</span>
             {detail && (
               <span
@@ -96,7 +96,7 @@ export const UsersOverview: FC<UsersOverviewProps> = ({
         <summary className="hover:bg-surface-tile-hover focus-visible:ring-ring flex cursor-pointer list-none items-center justify-between gap-3 p-4 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset [&::-webkit-details-marker]:hidden">
           <span className="min-w-0">
             <span className="block text-sm font-semibold">Vue d’ensemble</span>
-            <span className="text-muted-foreground mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[0.8125rem] leading-5">
+            <span className="text-muted-foreground mt-1 flex flex-wrap gap-x-2 gap-y-1 text-sm leading-5">
               {isLoading ? (
                 <Skeleton className="h-4 w-24" />
               ) : (

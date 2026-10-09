@@ -5,7 +5,7 @@ export const CORE_ROADMAP_ITEMS: readonly RoadmapItem[] = [
     area: 'today',
     audience: 'Tous les membres',
     baseline:
-      'L’accueil et la boîte de notifications existent ; les vues métier personnelles restent à construire.',
+      'L’accueil existe ; les vues métier personnelles restent à construire.',
     dependsOn: ['access-scopes', 'sport-planning', 'documents', 'tasks'],
     description:
       'Retrouver ce qui me concerne sans accéder à tous les dossiers.',
@@ -26,6 +26,26 @@ export const CORE_ROADMAP_ITEMS: readonly RoadmapItem[] = [
     phase: 3,
     status: 'partial',
     title: 'Mon travail & espace personnel',
+  },
+  {
+    area: 'today',
+    audience: 'Tous les membres selon leurs accès',
+    baseline:
+      'Une première boîte de notifications avait été livrée ; elle a été retirée le temps de clarifier le design et les canaux attendus.',
+    dependsOn: ['access-scopes'],
+    description:
+      'Informer une personne des faits qui la concernent sans multiplier les écrans.',
+    doneWhen:
+      'Chaque message a une source, des destinataires autorisés et un canal décidé ; aucune donnée confidentielle ne fuit.',
+    firstRelease:
+      'Boîte personnelle, états lu et archivé, liens vers la source et réglage de conservation.',
+    id: 'notifications',
+    kind: 'module',
+    later:
+      'Canaux email ou Discord, préférences par personne et modèles par module.',
+    phase: 3,
+    status: 'planned',
+    title: 'Notifications personnelles',
   },
   {
     area: 'people',

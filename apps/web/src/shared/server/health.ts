@@ -74,8 +74,7 @@ const checkCoreSchema = async (): Promise<boolean> => {
       IS NOT NULL
     ) AS "ready"
     FROM (VALUES
-      ('User'), ('Session'), ('AuditLog'), ('Notification'),
-      ('NotificationRecipient'), ('SystemSetting'), ('RateLimit'),
+      ('User'), ('Session'), ('AuditLog'), ('SystemSetting'), ('RateLimit'),
       ('MfaLoginChallenge'), ('MfaRecoveryCode'), ('TotpCredential'),
       ('TotpEnrollment')
     ) AS required_table(name)

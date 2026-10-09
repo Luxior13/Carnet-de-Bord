@@ -73,7 +73,7 @@ export const OPERATIONS_ROADMAP_ITEMS: readonly RoadmapItem[] = [
     area: 'activity',
     audience: 'Direction, communication et membres',
     baseline:
-      'Le fil d’actualité et les annonces internes sont déjà disponibles.',
+      'Page « Actualité interne » retirée du site ; ce chantier la garde en mémoire pour une réintroduction ultérieure.',
     dependsOn: ['access-scopes'],
     description: 'Partager les informations utiles avec les bonnes personnes.',
     doneWhen:
@@ -83,8 +83,9 @@ export const OPERATIONS_ROADMAP_ITEMS: readonly RoadmapItem[] = [
     id: 'internal-news',
     kind: 'extension',
     later: 'Annonces accompagnant certains événements métier après validation.',
+    legacyHrefs: ['/activite/actualites'],
     phase: 3,
-    status: 'partial',
+    status: 'planned',
     title: 'Actualité interne & audiences',
   },
   {

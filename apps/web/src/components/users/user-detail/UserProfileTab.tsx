@@ -219,7 +219,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
           )}
         </CardHeader>
         <CardContent className="p-3 sm:p-4">
-          <dl className="divide-border-divider border-border-divider [&>div:nth-child(even)]:bg-surface-row-alternate divide-y overflow-hidden rounded-xl border [&>div]:px-4">
+          <dl className="divide-border-divider border-border-divider [&>div:nth-child(even)]:bg-surface-row-alternate divide-y overflow-hidden rounded-lg border [&>div]:px-4">
             <div className="grid gap-1 py-3 sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-4">
               <dt className="text-muted-foreground text-sm">Identité</dt>
               <dd className="text-foreground text-sm font-medium sm:text-right">
@@ -503,8 +503,8 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
               Supprimer l&apos;adresse de contact ?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Cette adresse ne pourra plus recevoir de notifications pour ce
-              compte. L&apos;identifiant de connexion ne sera pas modifié.
+              Ce compte n&apos;aura plus d&apos;adresse de contact enregistrée.
+              L&apos;identifiant de connexion ne sera pas modifié.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
