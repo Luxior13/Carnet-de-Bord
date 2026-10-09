@@ -1,14 +1,14 @@
 import React, { type FC, type ReactNode } from 'react';
 
-import type { UserStatsType } from '$types/auth.types';
 import directoryStyles from '$ui/directory.module.css';
 import { Skeleton } from '$ui/skeleton';
 import { cn } from '$utils/css.utils';
 
-type UsersOverviewProps = {
+import type { PersonOverview as PersonOverviewStats } from '../types/person.types';
+
+type PersonOverviewProps = {
   isLoading?: boolean;
-  securityDetailsVisible: boolean;
-  stats: UserStatsType | null;
+  stats: PersonOverviewStats | null;
 };
 
 const OverviewGroupHeader: FC<{ label: string }> = ({ label }) => (
@@ -44,9 +44,8 @@ const OverviewRow: FC<{
   </div>
 );
 
-export const UsersOverview: FC<UsersOverviewProps> = ({
+export const PersonOverview: FC<PersonOverviewProps> = ({
   isLoading = false,
-  securityDetailsVisible,
   stats,
 }) => {
   if (!stats && !isLoading) return null;
@@ -75,7 +74,7 @@ export const UsersOverview: FC<UsersOverviewProps> = ({
       <div className="border-border-divider border-b px-4 py-3">
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-muted-foreground text-xs leading-5">
-            Total des comptes
+            Total des fiches
           </span>
           <span className="text-foreground text-2xl leading-8 font-semibold tabular-nums">
             {displayValue(stats?.total)}
@@ -83,49 +82,26 @@ export const UsersOverview: FC<UsersOverviewProps> = ({
         </div>
       </div>
 
-      <OverviewGroupHeader label="Accès" />
+      <OverviewGroupHeader label="Statut" />
       <OverviewRow
-        dotClassName="bg-destructive"
-        label="Superadmin"
-        value={displayValue(stats?.byRole.SUPERADMIN)}
+        dotClassName="bg-success"
+        label="Dans la structure"
+        value={displayValue(stats?.inStructure)}
       />
       <OverviewRow
         dotClassName="bg-warning"
-        label="Administrateur"
-        value={displayValue(stats?.byRole.ADMIN)}
+        lastInGroup
+        label="Hors structure"
+        value={displayValue(stats?.outsideStructure)}
       />
+
+      <OverviewGroupHeader label="Statistiques" />
       <OverviewRow
         dotClassName="bg-info"
         lastInGroup
-        label="Utilisateur"
-        value={displayValue(stats?.byRole.USER)}
+        label="Sans coordonnées"
+        value={displayValue(stats?.noContacts)}
       />
-
-      <OverviewGroupHeader label="État" />
-      <OverviewRow
-        dotClassName="bg-success"
-        label="Actif"
-        value={displayValue(stats?.active)}
-      />
-      <OverviewRow
-        dotClassName="bg-warning"
-        lastInGroup
-        label="Désactivé"
-        value={displayValue(stats?.inactive)}
-      />
-
-      {securityDetailsVisible &&
-      (isLoading || stats?.pendingPasswordChange != null) ? (
-        <>
-          <OverviewGroupHeader label="Statistiques" />
-          <OverviewRow
-            dotClassName="bg-warning"
-            lastInGroup
-            label="Mot de passe à changer"
-            value={displayValue(stats?.pendingPasswordChange)}
-          />
-        </>
-      ) : null}
     </aside>
   );
 };

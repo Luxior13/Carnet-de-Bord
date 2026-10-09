@@ -83,6 +83,7 @@ export type PersonDetail = Omit<
 
 export type PersonsListResponse = {
   items: PersonSummary[];
+  overview: PersonOverview;
   pagination: {
     hasMore: boolean;
     limit: number;
@@ -90,6 +91,13 @@ export type PersonsListResponse = {
     snapshotAt: string;
     total: number;
   };
+};
+
+export type PersonOverview = {
+  inStructure: number;
+  noContacts: number;
+  outsideStructure: number;
+  total: number;
 };
 
 export type PersonDuplicateWarning = {

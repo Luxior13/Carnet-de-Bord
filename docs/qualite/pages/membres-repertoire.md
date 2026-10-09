@@ -10,8 +10,9 @@
   `features/persons/components/PersonsPageClient.tsx` →
   `PersonsList.tsx`, styles partagés `components/ui/directory.module.css`.
 - Statut : livré, en développement actif.
-- Dernière revue : 2026-10-09 — analyse complète A à Z puis refactorisation
-  sur les primitives partagées (voir « Refactorisation appliquée » ci-dessous).
+- Dernière revue : 2026-10-10 — ajout de la Vue d'ensemble alignée sur
+  `/systeme/utilisateurs`, en plus de l'analyse A à Z et de la refactorisation
+  du 2026-10-09 (voir « Refactorisation appliquée » ci-dessous).
 - Références : intentions historiques `features/pages/vie-interne/membres*.md`,
   `features/pages/bureau-juridique/personnes-contacts.md` ; règles courantes
   `docs/NAVIGATION.md`, `docs/STRUCTURE.md`, `docs/ROLES_ET_PERMISSIONS.md`,
@@ -95,6 +96,24 @@ un contrôle navigateur, lecteur d'écran ou base réelle.
 - Mobile ≤ 639 px : padding 16 px et `margin-left: 53px` sur le bouton
   (magic number destiné à l'aligner sous le titre, fragile).
 
+### Vue d'ensemble
+
+- Composant partagé `features/persons/components/PersonOverview.tsx`, construit
+  sur `directory.module.css` (`overviewCard`, `overviewHeader`), comme
+  `UsersOverview` de la page des utilisateurs. Rendu dans le rail droit de
+  `PageAsideLayout` ; sous ~118 rem, il se place entre le hero et la liste.
+- Carte `aside` : en-tête « Vue d'ensemble », total « Total des fiches » en
+  24 px, puis deux groupes à petites capitales — « Statut » et « Statistiques ».
+- Lignes du groupe Statut : « Dans la structure » (pastille `success`, badge
+  vert de la liste) et « Hors structure » (pastille `warning`, badge ambre).
+- Ligne « Sans coordonnées » (pastille `info`) : fiches sans email, téléphone
+  ni profil social.
+- Les chiffres sont **globaux**, indépendants de la recherche, du filtre et du
+  tri ; le total près des filtres reste **filtré**. Contrat : `overview` dans
+  `PersonsListResponse`, calculé par `listPersons` (trois comptages Prisma).
+- États : squelette pendant le premier chargement, valeurs conservées pendant
+  une actualisation (comportement identique aux utilisateurs).
+
 ### Barre d'outils (recherche, filtres, tri)
 
 - Formulaire `role="search"`, libellé accessible « Rechercher et filtrer les
@@ -107,12 +126,12 @@ un contrôle navigateur, lecteur d'écran ou base réelle.
   (« Tous les statuts », « Dans la structure », « Hors structure ») et tri
   (« Nom (A–Z) », « Ajoutées récemment », « Modifiées récemment »). Trigger
   170 × 38 px, 11 px.
-- Bouton « Réinitialiser les filtres » (icône seule, 38 × 38 px) visible si
-  filtre actif.
-- Filtres actifs en « chips » : « Recherche : X », « Statut : X », avec
-  libellés de retrait accessibles.
-- Légende : « N membres affichés · Actualisation… » + « 25 par page ». Le « N »
-  est le nombre de lignes de la page courante, pas le total.
+- Bouton « Réinitialiser les filtres » (icône seule, 38 × 38 px) visible dès
+  qu'une recherche, un statut ou un tri non défaut est actif — même condition
+  que la liste des utilisateurs. Il réinitialise aussi le tri.
+- Légende : « N membre(s) trouvé(s) · Actualisation… » + « 25 par page », avec
+  séparateur de milliers, alignée sur la liste des utilisateurs. Le « N » est
+  le total filtré côté serveur.
 
 ### Tableau
 
@@ -174,7 +193,7 @@ un contrôle navigateur, lecteur d'écran ou base réelle.
 
 Voir la liste ci-dessus. Points de formulation à surveiller : « email(s) »,
 « téléphone(s) », « profil(s) social(aux) » sont des pluriels lourds ;
-« coordonnée(s) » idem. « N membres affichés » prête à confusion avec un total.
+« coordonnée(s) » idem.
 
 ### Typographie exacte (valeurs en dur)
 
@@ -345,3 +364,5 @@ restent des observations de code, pas des mesures.
 | 2026-10-09 | Analyse complète A à Z de `/membres/repertoire`, création de ce suivi. |
 | 2026-10-09 | Refactorisation : module CSS partagé unique, hero partagé, primitives de liste réutilisées, tokens globaux. |
 | 2026-10-09 | Améliorations UX : total de résultats, pagination « sur N », suppression du lien dupliqué, recherche sans bouton redondant, cible mobile 44 px, libellé de correspondance explicite. |
+| 2026-10-10 | Ajout de la Vue d'ensemble du répertoire, alignée sur `/systeme/utilisateurs` (composant `PersonOverview`, stats globales dans `listPersons`, rail `PageAsideLayout`). |
+| 2026-10-10 | Alignement des comportements de liste : bouton Réinitialiser affiché aussi pour le tri, légende « N membre(s) trouvé(s) » avec séparateur de milliers. |

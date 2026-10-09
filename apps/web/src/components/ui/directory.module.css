@@ -61,6 +61,11 @@
   box-shadow: 0 0 0 2px var(--m-accent-ring);
 }
 
+.directory .searchInput::-webkit-search-cancel-button {
+  display: none;
+  -webkit-appearance: none;
+}
+
 .directory .filterForm {
   display: flex;
   flex-wrap: wrap;
@@ -70,8 +75,9 @@
 
 .directory .search {
   position: relative;
-  min-width: 180px;
-  flex: 1;
+  width: 320px;
+  max-width: 100%;
+  flex: none;
 }
 
 .directory .search > svg {
@@ -138,7 +144,7 @@
 .directory .selectTrigger {
   display: flex;
   align-items: center;
-  width: 170px;
+  width: 220px;
   height: 38px;
   gap: 7px;
   padding: 8px 10px;
@@ -427,5 +433,18 @@
 @media (max-width: 639px) {
   .directory .addButton {
     min-height: 44px;
+  }
+
+  .directory .search {
+    width: 100%;
+  }
+
+  .directory .filterSelects {
+    width: 100%;
+  }
+
+  .directory .selectTrigger {
+    flex: 1;
+    width: auto;
   }
 }

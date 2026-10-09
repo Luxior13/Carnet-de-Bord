@@ -67,6 +67,7 @@ import {
 } from '../person-list-state';
 import type {
   PersonListSort,
+  PersonOverview,
   PersonsListResponse,
   PersonStructureStatus,
   PersonSummary,
@@ -81,6 +82,10 @@ type PersonsListProps = {
     data: PersonsListResponse;
     request: PersonsListRequest;
   };
+  onOverviewChange?: (state: {
+    isLoading: boolean;
+    stats: PersonOverview | null;
+  }) => void;
   returnHref: string;
 };
 
@@ -323,6 +328,7 @@ export const PersonsList: FC<PersonsListProps> = ({
   canCreate,
   createHref,
   initialState,
+  onOverviewChange,
   returnHref,
 }) => {
   const router = useRouter();
@@ -370,6 +376,13 @@ export const PersonsList: FC<PersonsListProps> = ({
       ...(status === 'ALL' ? {} : { structureStatus: status }),
     }),
   );
+
+  useEffect(() => {
+    onOverviewChange?.({
+      isLoading: !data && isLoading,
+      stats: data?.overview ?? null,
+    });
+  }, [data, isLoading, onOverviewChange]);
 
   const updateUrl = useCallback(
     ({
@@ -512,8 +525,10 @@ export const PersonsList: FC<PersonsListProps> = ({
     (personId: string) => buildPersonHref(personId, returnHref),
     [returnHref],
   );
-  const showEmpty = !isLoading && !error && (data?.items.length ?? 0) === 0;
   const isFiltered = Boolean(appliedQuery || status !== 'ALL');
+  const hasActiveToolbarFilters = Boolean(
+    draftQuery || status !== 'ALL' || sort !== 'name',
+  );
   const isRefreshing = isLoading && data !== null;
   const previousCursor = cursorStack.at(pageIndex - 1);
   const canGoPrevious =
@@ -533,50 +548,14 @@ export const PersonsList: FC<PersonsListProps> = ({
     value: item,
   }));
 
-  const activeFilters: React.ReactNode[] = [];
-  if (appliedQuery) {
-    activeFilters.push(
-      <Button
-        aria-label={`Retirer le filtre Recherche : ${appliedQuery}`}
-        className="bg-surface-control-focus text-primary-emphasis hover:bg-surface-navigation-hover border-border-default inline-flex h-auto min-h-[26px] max-w-full items-center gap-1.5 rounded-[5px] border px-1.5 py-0.5 text-[10px]"
-        key="query"
-        onClick={() => applyFilters('', status, sort)}
-        size="inline"
-        type="button"
-        variant="ghost"
-      >
-        <span className="min-w-0 truncate">Recherche : {appliedQuery}</span>
-        <X aria-hidden="true" className="size-3 shrink-0" />
-      </Button>,
-    );
-  }
-  if (status !== 'ALL') {
-    activeFilters.push(
-      <Button
-        aria-label={`Retirer le filtre Statut : ${getStatusLabel(status)}`}
-        className="bg-surface-control-focus text-primary-emphasis hover:bg-surface-navigation-hover border-border-default inline-flex h-auto min-h-[26px] max-w-full items-center gap-1.5 rounded-[5px] border px-1.5 py-0.5 text-[10px]"
-        key="status"
-        onClick={() => applyFilters(appliedQuery, 'ALL', sort)}
-        size="inline"
-        type="button"
-        variant="ghost"
-      >
-        <span className="min-w-0 truncate">
-          Statut : {getStatusLabel(status)}
-        </span>
-        <X aria-hidden="true" className="size-3 shrink-0" />
-      </Button>,
-    );
-  }
-
   const emptyAction = isFiltered ? (
     <Button
-      onClick={() => applyFilters('', 'ALL', sort)}
+      onClick={() => applyFilters('', 'ALL', 'name')}
       size="sm"
-      variant="outline"
+      type="button"
+      variant="link"
     >
-      <RotateCcw className="size-4" />
-      Réinitialiser les filtres
+      Réinitialiser
     </Button>
   ) : canCreate ? (
     <Button asChild size="sm">
@@ -606,116 +585,8 @@ export const PersonsList: FC<PersonsListProps> = ({
     );
   }
 
-  if (showEmpty) {
-    return (
-      <ContentState
-        action={emptyAction}
-        description={
-          isFiltered
-            ? 'Essayez une autre recherche ou retirez les filtres.'
-            : 'Créez la première fiche pour commencer le répertoire.'
-        }
-        icon={<Users aria-hidden="true" className="size-5" />}
-        kind="empty"
-        layout="panel"
-        title={isFiltered ? 'Aucune fiche trouvée' : 'Répertoire vide'}
-      />
-    );
-  }
-
   return (
-    <DataTableSection
-      className="border-border-content bg-surface-content rounded-[10px]"
-      contentClassName={isRefreshing ? 'opacity-55' : undefined}
-      headerClassName="bg-surface-content-header"
-      toolbar={
-        <div className="w-full">
-          <form
-            aria-label="Rechercher et filtrer les membres"
-            className={directoryStyles.filterForm}
-            onSubmit={(event) => {
-              event.preventDefault();
-              applyFilters(draftQuery, status, sort);
-            }}
-            role="search"
-          >
-            <div className={directoryStyles.search}>
-              <Search aria-hidden="true" />
-              <Input
-                aria-label="Rechercher par pseudo, nom ou coordonnée"
-                autoComplete="off"
-                className={directoryStyles.searchInput}
-                enterKeyHint="search"
-                id={searchInputId}
-                maxLength={100}
-                onChange={(event) => setDraftQuery(event.target.value)}
-                placeholder="Pseudo, nom ou coordonnée…"
-                spellCheck={false}
-                type="search"
-                value={draftQuery}
-              />
-              {draftQuery ? (
-                <Button
-                  aria-label="Effacer la recherche"
-                  className={directoryStyles.searchClear}
-                  onClick={() => applyFilters('', status, sort)}
-                  size="icon"
-                  type="button"
-                  variant="ghost"
-                >
-                  <X aria-hidden="true" />
-                </Button>
-              ) : null}
-            </div>
-            <div className={directoryStyles.filterSelects}>
-              <DirectorySelect
-                ariaLabel="Filtrer par statut"
-                onValueChange={(value) =>
-                  applyFilters(draftQuery, value as StatusFilter, sort)
-                }
-                options={statusOptions}
-                value={status}
-              />
-              <DirectorySelect
-                ariaLabel="Trier le répertoire"
-                onValueChange={(value) =>
-                  applyFilters(draftQuery, status, value as PersonListSort)
-                }
-                options={sortOptions}
-                value={sort}
-              />
-              {isFiltered && (
-                <Button
-                  aria-label="Réinitialiser les filtres"
-                  className={directoryStyles.iconButton}
-                  onClick={() => applyFilters('', 'ALL', sort)}
-                  size="icon"
-                  type="button"
-                  variant="ghost"
-                >
-                  <RotateCcw aria-hidden="true" />
-                </Button>
-              )}
-            </div>
-          </form>
-          {activeFilters.length > 0 && (
-            <div
-              aria-label="Filtres actifs"
-              className="mt-3 flex flex-wrap gap-1.5"
-            >
-              {activeFilters}
-            </div>
-          )}
-          <div className={cn(directoryStyles.listCaption, 'mt-3')}>
-            <p aria-live="polite" role="status">
-              {total} membre{total !== 1 ? 's' : ''}
-              {isRefreshing ? ' · Actualisation…' : ''}
-            </p>
-            <span>{PAGE_LIMIT} par page</span>
-          </div>
-        </div>
-      }
-    >
+    <div className="space-y-4">
       {error && data && (
         <ContentState
           action={
@@ -723,181 +594,300 @@ export const PersonsList: FC<PersonsListProps> = ({
               Réessayer
             </Button>
           }
-          className="rounded-none border-0"
           description="Les résultats précédents restent affichés."
           icon={<Users aria-hidden="true" className="size-5" />}
           kind="error"
-          layout="panel"
           title="Actualisation impossible"
         />
       )}
-      <DataTableDesktop>
-        <Table
-          aria-busy={isRefreshing}
-          aria-label="Liste des membres"
-          className={directoryStyles.table}
-        >
-          <TableCaption className="sr-only">
-            Les fiches du répertoire, leur statut et leurs coordonnées
-          </TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Membre</TableHead>
-              <TableHead className="w-[130px]">Statut</TableHead>
-              <TableHead className="w-[220px]">Coordonnées</TableHead>
-              <TableHead className="w-[150px]">Dernière modification</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data?.items.map((person) => {
+      <DataTableSection
+        className="border-border-content bg-surface-content rounded-[10px]"
+        contentClassName={isRefreshing ? 'opacity-55' : undefined}
+        headerClassName="bg-surface-content-header"
+        toolbar={
+          <div className="w-full">
+            <form
+              aria-label="Rechercher et filtrer les membres"
+              className={directoryStyles.filterForm}
+              onSubmit={(event) => {
+                event.preventDefault();
+                applyFilters(draftQuery, status, sort);
+              }}
+              role="search"
+            >
+              <div className={directoryStyles.search}>
+                <Search aria-hidden="true" />
+                <Input
+                  aria-label="Rechercher par pseudo, nom ou coordonnée"
+                  autoComplete="off"
+                  className={directoryStyles.searchInput}
+                  enterKeyHint="search"
+                  id={searchInputId}
+                  maxLength={100}
+                  onChange={(event) => setDraftQuery(event.target.value)}
+                  placeholder="Pseudo, nom ou coordonnée…"
+                  spellCheck={false}
+                  type="search"
+                  value={draftQuery}
+                />
+                {draftQuery ? (
+                  <Button
+                    aria-label="Effacer la recherche"
+                    className={directoryStyles.searchClear}
+                    onClick={() => applyFilters('', status, sort)}
+                    size="icon"
+                    type="button"
+                    variant="ghost"
+                  >
+                    <X aria-hidden="true" />
+                  </Button>
+                ) : null}
+              </div>
+              <div className={directoryStyles.filterSelects}>
+                <DirectorySelect
+                  ariaLabel="Filtrer par statut"
+                  onValueChange={(value) =>
+                    applyFilters(draftQuery, value as StatusFilter, sort)
+                  }
+                  options={statusOptions}
+                  value={status}
+                />
+                <DirectorySelect
+                  ariaLabel="Trier le répertoire"
+                  onValueChange={(value) =>
+                    applyFilters(draftQuery, status, value as PersonListSort)
+                  }
+                  options={sortOptions}
+                  value={sort}
+                />
+                {hasActiveToolbarFilters ? (
+                  <Button
+                    aria-label="Réinitialiser les filtres"
+                    className={directoryStyles.iconButton}
+                    onClick={() => applyFilters('', 'ALL', 'name')}
+                    size="icon"
+                    type="button"
+                    variant="ghost"
+                  >
+                    <RotateCcw aria-hidden="true" />
+                  </Button>
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className={cn(directoryStyles.iconButton, 'invisible')}
+                  />
+                )}
+              </div>
+            </form>
+            <div className={cn(directoryStyles.listCaption, 'mt-3')}>
+              <p aria-live="polite" role="status">
+                {isRefreshing
+                  ? 'Actualisation…'
+                  : error
+                    ? 'Résultats non actualisés'
+                    : `${total.toLocaleString('fr-FR')} membre${total !== 1 ? 's' : ''} trouvé${total !== 1 ? 's' : ''}`}
+              </p>
+              <span>{PAGE_LIMIT} par page</span>
+            </div>
+          </div>
+        }
+      >
+        <DataTableDesktop>
+          <Table
+            aria-busy={isRefreshing}
+            aria-label="Liste des membres"
+            className={directoryStyles.table}
+          >
+            <TableCaption className="sr-only">
+              Les fiches du répertoire, leur statut et leurs coordonnées
+            </TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Membre</TableHead>
+                <TableHead className="w-[130px]">Statut</TableHead>
+                <TableHead className="w-[220px]">Coordonnées</TableHead>
+                <TableHead className="w-[150px]">
+                  Dernière modification
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data?.items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-44 text-center">
+                    <ContentState
+                      action={emptyAction}
+                      className="min-h-0 border-0 bg-transparent p-0"
+                      icon={<Users aria-hidden="true" className="size-5" />}
+                      layout="panel"
+                      title={
+                        isFiltered ? 'Aucune fiche trouvée' : 'Répertoire vide'
+                      }
+                    />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                data?.items.map((person) => {
+                  const href = personHref(person.id);
+
+                  return (
+                    <TableRow
+                      className="relative focus-within:ring-2 focus-within:ring-inset"
+                      key={person.id}
+                    >
+                      <TableCell>
+                        <PersonIdentity href={href} person={person} />
+                      </TableCell>
+                      <TableCell className="pointer-events-none">
+                        <PersonStatusBadge status={person.structureStatus} />
+                      </TableCell>
+                      <TableCell className="pointer-events-none">
+                        <PersonContacts person={person} />
+                      </TableCell>
+                      <TableCell>
+                        <PersonLastModified person={person} />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </DataTableDesktop>
+        <DataTableMobileList className={directoryStyles.mobileList}>
+          {data?.items.length === 0 ? (
+            <ContentState
+              action={emptyAction}
+              className="min-h-48 border-0 bg-transparent"
+              icon={<Users aria-hidden="true" className="size-5" />}
+              layout="panel"
+              title={isFiltered ? 'Aucune fiche trouvée' : 'Répertoire vide'}
+            />
+          ) : (
+            data?.items.map((person) => {
               const href = personHref(person.id);
 
               return (
-                <TableRow
-                  className="relative focus-within:ring-2 focus-within:ring-inset"
+                <Link
+                  aria-label={`Ouvrir la fiche de ${getPersonDisplayName(person)}`}
+                  className="group focus-visible:bg-primary/10 focus-visible:ring-primary/70 block px-4 py-3 hover:bg-[var(--surface-row-hover)] focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+                  href={href}
                   key={person.id}
                 >
-                  <TableCell>
-                    <PersonIdentity href={href} person={person} />
-                  </TableCell>
-                  <TableCell className="pointer-events-none">
-                    <PersonStatusBadge status={person.structureStatus} />
-                  </TableCell>
-                  <TableCell className="pointer-events-none">
-                    <PersonContacts person={person} />
-                  </TableCell>
-                  <TableCell>
-                    <PersonLastModified person={person} />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </DataTableDesktop>
-      <DataTableMobileList className={directoryStyles.mobileList}>
-        {data?.items.map((person) => {
-          const href = personHref(person.id);
-
-          return (
-            <Link
-              aria-label={`Ouvrir la fiche de ${getPersonDisplayName(person)}`}
-              className="group focus-visible:bg-primary/10 focus-visible:ring-primary/70 block px-4 py-3 hover:bg-[var(--surface-row-hover)] focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
-              href={href}
-              key={person.id}
-            >
-              <div className="flex items-start gap-3">
-                <span
-                  aria-hidden="true"
-                  className="border-border-default bg-surface-inset relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-[7px] border"
-                >
-                  <PersonAvatar
-                    className="size-full rounded-[inherit]"
-                    person={person}
-                  />
-                </span>
-                <div className="min-w-0 flex-1 space-y-2">
-                  <div className="min-w-0">
-                    <h3 className="text-foreground group-hover:text-primary-emphasis min-w-0 text-[13px] font-semibold [overflow-wrap:anywhere] group-hover:underline group-hover:underline-offset-[3px]">
-                      {getPersonDisplayName(person)}
-                    </h3>
-                    {person.matchedByContact && (
-                      <p className="text-success mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px] leading-5">
-                        <Search
-                          aria-hidden="true"
-                          className="size-3 shrink-0"
-                        />
-                        <span>Trouvée par email, téléphone ou réseau</span>
+                  <div className="flex items-start gap-3">
+                    <span
+                      aria-hidden="true"
+                      className="border-border-default bg-surface-inset relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-[7px] border"
+                    >
+                      <PersonAvatar
+                        className="size-full rounded-[inherit]"
+                        person={person}
+                      />
+                    </span>
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="min-w-0">
+                        <h3 className="text-foreground group-hover:text-primary-emphasis min-w-0 text-[13px] font-semibold [overflow-wrap:anywhere] group-hover:underline group-hover:underline-offset-[3px]">
+                          {getPersonDisplayName(person)}
+                        </h3>
+                        {person.matchedByContact && (
+                          <p className="text-success mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px] leading-5">
+                            <Search
+                              aria-hidden="true"
+                              className="size-3 shrink-0"
+                            />
+                            <span>Trouvée par email, téléphone ou réseau</span>
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <PersonStatusBadge status={person.structureStatus} />
+                        <PersonContacts person={person} />
+                      </div>
+                      <p className="text-muted-foreground text-[11px] leading-5 tabular-nums">
+                        Modifiée le {formatPersonDateTime(person.updatedAt)}
                       </p>
-                    )}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <PersonStatusBadge status={person.structureStatus} />
-                    <PersonContacts person={person} />
-                  </div>
-                  <p className="text-muted-foreground text-[11px] leading-5 tabular-nums">
-                    Modifiée le {formatPersonDateTime(person.updatedAt)}
-                  </p>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
-      </DataTableMobileList>
-      <nav
-        aria-label="Pagination des membres"
-        className={directoryStyles.pagination}
-      >
-        <p>
-          Page <strong>{pageIndex + 1}</strong>
-          {totalPages > 1 ? (
-            <>
-              {' '}
-              sur <strong>{totalPages}</strong>
-            </>
-          ) : null}
-        </p>
-        <div className={directoryStyles.paginationActions}>
-          <Button
-            aria-label="Page précédente"
-            className={directoryStyles.pageButton}
-            disabled={!canGoPrevious || isLoading}
-            onClick={() => {
-              if (!canGoPrevious) return;
-              const nextPage = pageIndex - 1;
-              const cursor = cursorStack.at(nextPage);
-              setPageIndex(nextPage);
-              updateUrl({
-                cursor,
-                mode: 'push',
-                page: nextPage,
-                query: appliedQuery,
-                sort,
-                status,
-              });
-            }}
-            size="icon"
-            type="button"
-            variant="ghost"
-          >
-            <ChevronLeft aria-hidden="true" />
-          </Button>
-          <Button
-            aria-label="Page suivante"
-            className={directoryStyles.pageButton}
-            disabled={
-              !data?.pagination.hasMore ||
-              !data.pagination.nextCursor ||
-              isLoading
-            }
-            onClick={() => {
-              const cursor = data?.pagination.nextCursor;
-              if (!cursor) return;
-              const nextPage = pageIndex + 1;
-              setCursorStack((current) => {
-                const next = current.slice(0, pageIndex + 1);
-                next.push(cursor);
+                </Link>
+              );
+            })
+          )}
+        </DataTableMobileList>
+        <nav
+          aria-label="Pagination des membres"
+          className={directoryStyles.pagination}
+        >
+          <p>
+            Page <strong>{pageIndex + 1}</strong>
+            {totalPages > 1 ? (
+              <>
+                {' '}
+                sur <strong>{totalPages}</strong>
+              </>
+            ) : null}
+          </p>
+          <div className={directoryStyles.paginationActions}>
+            <Button
+              aria-label="Page précédente"
+              className={directoryStyles.pageButton}
+              disabled={!canGoPrevious || isLoading}
+              onClick={() => {
+                if (!canGoPrevious) return;
+                const nextPage = pageIndex - 1;
+                const cursor = cursorStack.at(nextPage);
+                setPageIndex(nextPage);
+                updateUrl({
+                  cursor,
+                  mode: 'push',
+                  page: nextPage,
+                  query: appliedQuery,
+                  sort,
+                  status,
+                });
+              }}
+              size="icon"
+              type="button"
+              variant="ghost"
+            >
+              <ChevronLeft aria-hidden="true" />
+            </Button>
+            <Button
+              aria-label="Page suivante"
+              className={directoryStyles.pageButton}
+              disabled={
+                !data?.pagination.hasMore ||
+                !data.pagination.nextCursor ||
+                isLoading
+              }
+              onClick={() => {
+                const cursor = data?.pagination.nextCursor;
+                if (!cursor) return;
+                const nextPage = pageIndex + 1;
+                setCursorStack((current) => {
+                  const next = current.slice(0, pageIndex + 1);
+                  next.push(cursor);
 
-                return next;
-              });
-              setPageIndex(nextPage);
-              updateUrl({
-                cursor,
-                mode: 'push',
-                page: nextPage,
-                query: appliedQuery,
-                sort,
-                status,
-              });
-            }}
-            size="icon"
-            type="button"
-            variant="ghost"
-          >
-            <ChevronRight aria-hidden="true" />
-          </Button>
-        </div>
-      </nav>
-    </DataTableSection>
+                  return next;
+                });
+                setPageIndex(nextPage);
+                updateUrl({
+                  cursor,
+                  mode: 'push',
+                  page: nextPage,
+                  query: appliedQuery,
+                  sort,
+                  status,
+                });
+              }}
+              size="icon"
+              type="button"
+              variant="ghost"
+            >
+              <ChevronRight aria-hidden="true" />
+            </Button>
+          </div>
+        </nav>
+      </DataTableSection>
+    </div>
   );
 };

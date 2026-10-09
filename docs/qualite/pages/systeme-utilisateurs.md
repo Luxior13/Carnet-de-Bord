@@ -192,6 +192,15 @@ passe aligne la liste des comptes sans changer le métier :
 - Légende masquée ajoutée au tableau pour l'accessibilité.
 - Avatars des comptes passés en style DiceBear `voxel-bot`, carrés (7 px),
   alignés sur le répertoire.
+- Vue d'ensemble : comptage par rôle (Superadmin, Administrateur, Utilisateur)
+  avec les badges d'accès correspondants pour relier la statistique au badge.
+- Recherche insensible aux accents (et à la casse) via `translate`/`lower` en
+  SQL, avec normalisation du terme côté serveur.
+- Survol d'une ligne : le nom du compte se souligne (et passe en teinte
+  primaire) comme sur le répertoire, pour renforcer le lien cliquable.
+- Lignes du tableau compactées comme sur le répertoire : identifiant et email
+  repliés sur la ligne du nom (12 px), avatar 36 px, suppression de la hauteur
+  minimale forcée de 64 px.
 
 Non appliqué : la recherche reste insensible à la casse mais pas aux accents.
 Une recherche insensible aux accents demande soit des colonnes normalisées sur
@@ -213,7 +222,7 @@ Vérifications : TypeScript, lint, build réussis ; 133 tests ciblés réussis
 | Graisses visuelles dans WebKit Windows | Comparer dans Safari réel avant toute correction globale de police | Revue de compatibilité |
 | Finalité, responsable et conservation du traitement des comptes | Faire qualifier et consigner la politique applicable ; aucune validation organisationnelle ou juridique déduite de la revue du code | Cadrage de l’exploitation avec données réelles ou nouvelle entité |
 | Responsables et fréquence de suivi | Désigner selon l’exploitation réelle | Mise en place du suivi opérationnel |
-| Recherche insensible aux accents | Ajouter des colonnes normalisées sur `User` (migration + backfill) ou utiliser `unaccent`/`translate` en SQL brut | Si la recherche de comptes devient un besoin courant |
+| Chips de filtres actifs | Ajouter les chips retirables (recherche, statut, rôle) comme sur le répertoire, en plus du bouton de réinitialisation | Cohérence avec la page de référence |
 
 Ne pas présenter ces points comme nouveaux défauts prouvés ni comme déjà résolus.
 Les trois variables `E2E_DATABASE_URL`, `E2E_SUPERADMIN_LOGIN_NAME` et

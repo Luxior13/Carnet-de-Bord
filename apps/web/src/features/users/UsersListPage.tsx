@@ -757,7 +757,7 @@ export const UsersListPage: FC = () => {
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  {hasActiveFilters && (
+                  {hasActiveFilters ? (
                     <Button
                       aria-label="Réinitialiser les filtres"
                       className={directoryStyles.iconButton}
@@ -768,6 +768,11 @@ export const UsersListPage: FC = () => {
                     >
                       <RotateCcw aria-hidden="true" />
                     </Button>
+                  ) : (
+                    <span
+                      aria-hidden="true"
+                      className={cn(directoryStyles.iconButton, 'invisible')}
+                    />
                   )}
                 </div>
               </form>
@@ -868,14 +873,14 @@ export const UsersListPage: FC = () => {
                             className="group/row focus-within:ring-ring relative cursor-pointer focus-within:ring-2 focus-within:ring-inset"
                             key={user.id}
                           >
-                            <TableCell className="h-16 py-2 align-top">
+                            <TableCell>
                               <Link
                                 aria-label={
                                   user.id === currentUser?.id
                                     ? 'Ouvrir mon compte'
                                     : `Ouvrir le compte de ${getUserDisplayName(user)}`
                                 }
-                                className="group/link flex min-w-0 items-start gap-2.5 rounded-md outline-none after:absolute after:inset-0 after:z-10 after:content-['']"
+                                className="group/link flex min-w-0 items-center gap-2.5 rounded-md outline-none after:absolute after:inset-0 after:z-10 after:content-['']"
                                 href={getUserDetailHref(user.id)}
                                 prefetch={false}
                               >
@@ -884,28 +889,26 @@ export const UsersListPage: FC = () => {
                                   className="border-border-default size-9 shrink-0 rounded-[7px] border"
                                 />
                                 <div className="min-w-0">
-                                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                    <span className="text-foreground truncate text-sm font-semibold">
+                                  <p className="flex min-w-0 items-center gap-1.5">
+                                    <span className="text-foreground group-hover/link:text-primary-emphasis truncate text-[13px] leading-[1.6] font-semibold group-hover/link:underline group-hover/link:underline-offset-[3px]">
                                       {getUserDisplayName(user)}
                                     </span>
-                                    {isUserIdentityMasked(user) && (
-                                      <span className="text-muted-foreground text-xs leading-5">
-                                        Identité protégée
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                                    <p className="text-muted-foreground flex max-w-full min-w-0 items-center gap-1.5 truncate text-sm leading-5">
+                                    <span className="text-muted-foreground flex min-w-0 items-center gap-1.5 truncate text-xs leading-5">
                                       <span className="min-w-0 truncate">
-                                        {getUserLoginDisplay(user)}
+                                        · {getUserLoginDisplay(user)}
                                       </span>
                                       {user.contactEmail && (
                                         <span className="truncate">
                                           · {user.contactEmail}
                                         </span>
                                       )}
+                                    </span>
+                                  </p>
+                                  {isUserIdentityMasked(user) && (
+                                    <p className="text-muted-foreground text-[10px] leading-5">
+                                      Identité protégée
                                     </p>
-                                  </div>
+                                  )}
                                 </div>
                               </Link>
                             </TableCell>
@@ -993,7 +996,7 @@ export const UsersListPage: FC = () => {
                           <div className="min-w-0 flex-1 space-y-2">
                             <div className="min-w-0">
                               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                <h3 className="text-foreground min-w-0 text-sm font-semibold [overflow-wrap:anywhere]">
+                                <h3 className="text-foreground group-hover:text-primary-emphasis min-w-0 text-sm font-semibold [overflow-wrap:anywhere] group-hover:underline group-hover:underline-offset-[3px]">
                                   {getUserDisplayName(user)}
                                 </h3>
                                 {isUserIdentityMasked(user) && (

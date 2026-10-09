@@ -3,20 +3,25 @@
 import { Plus, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import React, { type FC, Suspense } from 'react';
+import React, { type FC, Suspense, useCallback, useState } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
+import { PageAsideLayout } from '$components/layout/PageAsideLayout';
 import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGE_PATHS } from '$constants/routes.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
+import { PersonOverview } from '$features/persons/components/PersonOverview';
 import { PersonsDirectorySkeleton } from '$features/persons/components/PersonsDirectorySkeleton';
 import { PersonsList } from '$features/persons/components/PersonsList';
 import { getPersonCapabilities } from '$features/persons/person.permissions';
 import type { PersonsListRequest } from '$features/persons/person-list-state';
-import type { PersonsListResponse } from '$features/persons/types/person.types';
+import type {
+  PersonOverview as PersonOverviewStats,
+  PersonsListResponse,
+} from '$features/persons/types/person.types';
 import { Button } from '$ui/button';
 import directoryStyles from '$ui/directory.module.css';
 import { PageCanvas, PageShell } from '$ui/page-shell';
@@ -41,6 +46,20 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
   const searchParamsString = searchParams?.toString() ?? '';
   const returnHref = `${PAGE_PATHS.persons}${searchParamsString ? `?${searchParamsString}` : ''}`;
   const createHref = `${PAGE_PATHS.newPerson}?${new URLSearchParams({ returnTo: returnHref })}`;
+  const [overview, setOverview] = useState<{
+    isLoading: boolean;
+    stats: PersonOverviewStats | null;
+  }>(() => ({
+    isLoading: !initialState,
+    stats: initialState?.data.overview ?? null,
+  }));
+
+  const handleOverviewChange = useCallback(
+    (next: { isLoading: boolean; stats: PersonOverviewStats | null }) => {
+      setOverview(next);
+    },
+    [],
+  );
 
   if (!canView) {
     return (
@@ -73,27 +92,39 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
     <PageShell className="py-0">
       <PageCanvas contentClassName="py-6">
         <div className={cn(directoryStyles.directory, 'space-y-[18px]')}>
-          <PageIdentityHero
-            actions={
-              canCreate ? (
-                <Button asChild className={directoryStyles.addButton}>
-                  <Link href={createHref}>
-                    <Plus aria-hidden="true" />
-                    Ajouter une fiche
-                  </Link>
-                </Button>
-              ) : undefined
+          <PageAsideLayout
+            aside={
+              <PersonOverview
+                isLoading={overview.isLoading}
+                stats={overview.stats}
+              />
             }
-            description="Profils, coordonnées et statut dans la structure."
-            icon={<Users aria-hidden="true" />}
-            title={FEATURES.persons.label}
-          />
-          <PersonsList
-            canCreate={canCreate}
-            createHref={createHref}
-            initialState={initialState}
-            returnHref={returnHref}
-          />
+            header={
+              <PageIdentityHero
+                actions={
+                  canCreate ? (
+                    <Button asChild className={directoryStyles.addButton}>
+                      <Link href={createHref}>
+                        <Plus aria-hidden="true" />
+                        Ajouter une fiche
+                      </Link>
+                    </Button>
+                  ) : undefined
+                }
+                description="Profils, coordonnées et statut dans la structure."
+                icon={<Users aria-hidden="true" />}
+                title={FEATURES.persons.label}
+              />
+            }
+          >
+            <PersonsList
+              canCreate={canCreate}
+              createHref={createHref}
+              initialState={initialState}
+              onOverviewChange={handleOverviewChange}
+              returnHref={returnHref}
+            />
+          </PageAsideLayout>
         </div>
       </PageCanvas>
     </PageShell>

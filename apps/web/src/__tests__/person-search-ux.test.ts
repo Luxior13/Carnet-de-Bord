@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
+  personCount: vi.fn(),
   queryRaw: vi.fn(),
 }));
 
@@ -18,6 +19,9 @@ vi.mock('$env', () => ({
 vi.mock('$server/prisma', () => ({
   prisma: {
     $queryRaw: mocks.queryRaw,
+    person: {
+      count: mocks.personCount,
+    },
   },
 }));
 
@@ -178,6 +182,8 @@ describe('person indexed search', () => {
   beforeEach(() => {
     mocks.queryRaw.mockReset();
     mocks.queryRaw.mockResolvedValue([]);
+    mocks.personCount.mockReset();
+    mocks.personCount.mockResolvedValue(0);
   });
 
   it('uses exact, prefix, and trigram-compatible LIKE branches on normalized identity columns', async () => {
@@ -419,7 +425,7 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(personAvatarSource).toContain('new Avatar(');
     expect(personAvatarSource).toContain('new Style(');
     expect(userAvatarSource).toContain(
-      "from '@dicebear/styles/notionists-neutral.json'",
+      "from '@dicebear/styles/voxel-bot.json'",
     );
     expect(userAvatarSource).not.toContain('@dicebear/styles/glyphs.json');
     expect(personAvatarSource).toContain('seed={`person:');

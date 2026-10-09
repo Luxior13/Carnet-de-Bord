@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { UserRole } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -82,6 +82,27 @@ function normalizeUserStatus(value: string | null): UserStatusOption | null {
     : null;
 }
 
+const USER_SEARCH_ACCENT_FROM = 'àâäéèêëîïôöùûüç';
+const USER_SEARCH_ACCENT_TO = 'aaaeeeeiioouuuc';
+const USER_SEARCH_TRANSLATE_FROM = `${USER_SEARCH_ACCENT_FROM}${USER_SEARCH_ACCENT_FROM.toLocaleUpperCase('fr-FR')}`;
+const USER_SEARCH_TRANSLATE_TO = `${USER_SEARCH_ACCENT_TO}${USER_SEARCH_ACCENT_TO}`;
+
+const normalizeUserSearchValue = (value: string): string => {
+  const lowered = value.toLocaleLowerCase('fr-FR');
+  let normalized = '';
+  for (const character of lowered) {
+    const index = USER_SEARCH_ACCENT_FROM.indexOf(character);
+    // The index is bounded by the fixed accent table above.
+    // eslint-disable-next-line security/detect-object-injection
+    normalized += index >= 0 ? USER_SEARCH_ACCENT_TO[index] : character;
+  }
+
+  return normalized.trim().replace(/\s+/g, ' ');
+};
+
+const escapeUserSearchLikePattern = (value: string): string =>
+  value.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_');
+
 function getUserOrderBy(
   sort: UserSortOption,
   protectedAccountFirst = false,
@@ -154,9 +175,8 @@ export async function GET(
         maxLimit: 100,
       },
     );
-    const search = (
-      searchParams.get('search')?.trim().slice(0, USER_SEARCH_MAX_LENGTH) || ''
-    ).toLowerCase();
+    const search =
+      searchParams.get('search')?.trim().slice(0, USER_SEARCH_MAX_LENGTH) || '';
     const role = normalizeUserRole(searchParams.get('role'));
     const sort = normalizeUserSort(searchParams.get('sort'));
     const status = normalizeUserStatus(searchParams.get('status'));
@@ -178,30 +198,25 @@ export async function GET(
     const where: Prisma.UserWhereInput = { deletedAt: null };
 
     if (search) {
-      const searchFilters: Prisma.UserWhereInput[] = [
-        { loginName: { contains: search, mode: 'insensitive' } },
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
-      ];
+      const normalizedQuery = normalizeUserSearchValue(search);
+      const likePattern = `%${escapeUserSearchLikePattern(normalizedQuery)}%`;
+      const searchColumns = ['loginName', 'firstName', 'lastName'];
+      if (canViewContact) searchColumns.push('contactEmail');
 
-      if (canViewContact) {
-        searchFilters.push({
-          contactEmail: { contains: search, mode: 'insensitive' },
-        });
-      }
+      const fieldConditions = searchColumns.map(
+        (column) =>
+          Prisma.sql`lower(translate(${Prisma.raw(`"${column}"`)}, ${USER_SEARCH_TRANSLATE_FROM}, ${USER_SEARCH_TRANSLATE_TO})) LIKE ${likePattern} ESCAPE '\\'`,
+      );
+      const includeProtected =
+        !auth.user.isProtected && matchesProtectedUserPublicIdentity(search);
+      const searchWhere = auth.user.isProtected
+        ? Prisma.sql`(${Prisma.join(fieldConditions, ' OR ')})`
+        : Prisma.sql`(("isProtected" = false AND (${Prisma.join(fieldConditions, ' OR ')}))${includeProtected ? Prisma.sql` OR "isProtected" = true` : Prisma.empty})`;
 
-      if (auth.user.isProtected) {
-        where.OR = searchFilters;
-      } else {
-        where.OR = [
-          {
-            AND: [{ isProtected: false }, { OR: searchFilters }],
-          },
-          ...(matchesProtectedUserPublicIdentity(search)
-            ? [{ isProtected: true }]
-            : []),
-        ];
-      }
+      const searchRows = await prisma.$queryRaw<Array<{ id: string }>>(
+        Prisma.sql`SELECT "id" FROM "User" WHERE "deletedAt" IS NULL AND ${searchWhere}`,
+      );
+      where.id = { in: searchRows.map((row) => row.id) };
     }
 
     if (role) {
@@ -217,9 +232,6 @@ export async function GET(
       Object.assign(where, visibleSecurityUserWhere);
     }
 
-    const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const baseUserWhere: Prisma.UserWhereInput = { deletedAt: null };
     const countActiveUsers = (
       extraWhere: Prisma.UserWhereInput = {},
@@ -232,10 +244,8 @@ export async function GET(
       statsTotal,
       activeStatusCounts,
       roleCounts,
-      neverLoggedIn,
-      newThisWeek,
       pendingPasswordChange,
-      recentLogins,
+      protectedCount,
     ] = await Promise.all([
       prisma.user.count({ where }),
       prisma.user.findMany({
@@ -256,18 +266,13 @@ export async function GET(
         by: ['role'],
         where: baseUserWhere,
       }),
-      countActiveUsers({ ...visibleSecurityUserWhere, lastLoginAt: null }),
-      countActiveUsers({ createdAt: { gte: oneWeekAgo } }),
       canViewSecurity
         ? countActiveUsers({
             ...visibleSecurityUserWhere,
             mustChangePassword: true,
           })
         : Promise.resolve(null),
-      countActiveUsers({
-        ...visibleSecurityUserWhere,
-        lastLoginAt: { gte: oneDayAgo },
-      }),
+      countActiveUsers({ isProtected: true }),
     ]);
 
     const active =
@@ -286,15 +291,17 @@ export async function GET(
       (roleCounts as (CountGroup & { role: UserRole })[]).find(
         (group) => group.role === UserRole.USER,
       )?._count._all ?? 0;
+    const superadminCount = protectedCount;
 
     const stats = {
       active,
-      byRole: { ADMIN: adminCount, USER: userCount },
+      byRole: {
+        ADMIN: adminCount - superadminCount,
+        SUPERADMIN: superadminCount,
+        USER: userCount,
+      },
       inactive,
-      neverLoggedIn,
-      newThisWeek,
       pendingPasswordChange,
-      recentLogins,
       total: statsTotal,
     };
 

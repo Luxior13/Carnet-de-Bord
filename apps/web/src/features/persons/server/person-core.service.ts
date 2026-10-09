@@ -373,8 +373,29 @@ export const listPersons = async (input: {
     }),
   );
 
+  const [inStructureCount, outsideStructureCount, noContactsCount] =
+    await Promise.all([
+      prisma.person.count({ where: { structureStatus: 'IN_STRUCTURE' } }),
+      prisma.person.count({ where: { structureStatus: 'OUTSIDE_STRUCTURE' } }),
+      prisma.person.count({
+        where: {
+          AND: [
+            { emails: { none: {} } },
+            { phones: { none: {} } },
+            { socialProfiles: { none: {} } },
+          ],
+        },
+      }),
+    ]);
+
   return {
     items: paginated.items.map(toPersonSummary),
+    overview: {
+      inStructure: inStructureCount,
+      noContacts: noContactsCount,
+      outsideStructure: outsideStructureCount,
+      total: inStructureCount + outsideStructureCount,
+    },
     pagination: { ...paginated.pagination, total },
   };
 };

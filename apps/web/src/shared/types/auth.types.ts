@@ -155,12 +155,13 @@ export type UpdateUserRequest = {
 // User statistics
 export type UserStatsType = {
   active: number;
-  byRole: Record<UserRole, number>;
+  byRole: {
+    ADMIN: number;
+    SUPERADMIN: number;
+    USER: number;
+  };
   inactive: number;
-  neverLoggedIn: number;
-  newThisWeek: number;
   pendingPasswordChange: number | null;
-  recentLogins: number;
   total: number;
 };
 
