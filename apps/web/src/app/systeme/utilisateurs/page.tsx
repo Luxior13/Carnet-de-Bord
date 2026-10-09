@@ -8,19 +8,13 @@ import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import { getUsersListVisibilityKey } from '$features/users/users-list.utils';
+import { UsersDirectorySkeleton } from '$features/users/UsersDirectorySkeleton';
 import { UsersListPage } from '$features/users/UsersListPage';
 import directoryStyles from '$ui/directory.module.css';
 import { PageCanvas, PageShell } from '$ui/page-shell';
-import { Skeleton } from '$ui/skeleton';
 import { cn } from '$utils/css.utils';
 
-const UsersListFallback: FC = () => (
-  <Skeleton
-    className="h-96 rounded-[10px]"
-    role="status"
-    aria-label="Chargement"
-  />
-);
+const UsersListFallback: FC = () => <UsersDirectorySkeleton />;
 
 const UsersAdministrationContent: FC = () => {
   const { userData } = useUser();

@@ -64,6 +64,7 @@ import { Skeleton } from '$ui/skeleton';
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -650,17 +651,7 @@ export const UsersListPage: FC = () => {
                     >
                       <X aria-hidden="true" />
                     </Button>
-                  ) : (
-                    <Button
-                      aria-label="Rechercher les comptes"
-                      className={directoryStyles.searchClear}
-                      size="icon"
-                      type="submit"
-                      variant="ghost"
-                    >
-                      <ChevronRight aria-hidden="true" />
-                    </Button>
-                  )}
+                  ) : null}
                 </div>
                 <div className={directoryStyles.filterSelects}>
                   <Select
@@ -780,7 +771,7 @@ export const UsersListPage: FC = () => {
                   )}
                 </div>
               </form>
-              <div className={directoryStyles.listCaption}>
+              <div className={cn(directoryStyles.listCaption, 'mt-3')}>
                 <p role="status" aria-live="polite">
                   {isLoading
                     ? 'Chargement…'
@@ -817,6 +808,10 @@ export const UsersListPage: FC = () => {
                     aria-label="Comptes utilisateurs"
                     className={directoryStyles.table}
                   >
+                    <TableCaption className="sr-only">
+                      Les comptes utilisateurs, leur accès, leur état et leur
+                      dernière connexion
+                    </TableCaption>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Compte</TableHead>
@@ -1050,6 +1045,12 @@ export const UsersListPage: FC = () => {
             >
               <p>
                 Page <strong>{currentPage}</strong>
+                {totalPages > 1 ? (
+                  <>
+                    {' '}
+                    sur <strong>{totalPages}</strong>
+                  </>
+                ) : null}
               </p>
               <div className={directoryStyles.paginationActions}>
                 <Button

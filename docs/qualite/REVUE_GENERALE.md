@@ -105,6 +105,12 @@ données ?** Examiner sa nécessité, sa variante, ses interactions, ses états 
 ses alternatives. Lors d'une revue complète de page, faire ce passage sur tous
 ses éléments ; lors d'une retouche, sur les éléments touchés et leurs dépendances.
 
+Vérifier aussi le **fond** de chaque élément : une colonne affiche-t-elle bien la
+valeur attendue, une date correspond-elle au bon événement, un filtre ou un tri
+produit-il le bon résultat, et une action fait-elle bien ce qu'annonce son
+libellé ? Contrôler les cas limites et les droits quand ils changent le contenu
+visible. Le rendu « propre » ne remplace pas la justesse de la donnée.
+
 Exemple : un nombre peut demander une saisie directe, des boutons −/+, une liste
 de valeurs ou une simple lecture selon son sens, sa plage et la fréquence des
 ajustements. Des boutons −/+ complètent une saisie utile ; ils ne deviennent pas

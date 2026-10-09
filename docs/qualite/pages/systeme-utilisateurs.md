@@ -178,6 +178,27 @@ Les essais antérieurs incluent disposition, clavier, pagination simulée, erreu
 réseau et réponses tardives. Ils ne constituent pas un benchmark de la base réelle.
 Une modification future doit choisir ses propres vérifications pertinentes.
 
+## Alignement sur la page de référence — 10 octobre 2026
+
+`/membres/repertoire` est devenue la page de référence visuelle et UX. Cette
+passe aligne la liste des comptes sans changer le métier :
+
+- Squelette structuré aligné sur la référence : nouveau `loading.tsx` de route
+  et `UsersDirectorySkeleton` (bandeau dégradé + lignes avec avatar et badges),
+  remplaçant le pavé unique.
+- Bouton « valider » de recherche (chevron) retiré : la recherche se déclenche
+  à la frappe et avec Entrée, comme le répertoire.
+- Pagination affiche désormais « Page N sur M ».
+- Légende masquée ajoutée au tableau pour l'accessibilité.
+
+Non appliqué : la recherche reste insensible à la casse mais pas aux accents.
+Une recherche insensible aux accents demande soit des colonnes normalisées sur
+`User` (migration + backfill), soit `unaccent`/`translate` en SQL brut — à cadrer
+comme un petit chantier de schéma, pas comme une retouche visuelle.
+
+Vérifications : TypeScript, lint, build réussis ; 133 tests ciblés réussis
+(contrats d'accessibilité, taille de page, présentation, durcissement des accès).
+
 ## Points ouverts et déclencheurs
 
 | Point | Suite concrète | Déclencheur |
@@ -190,6 +211,7 @@ Une modification future doit choisir ses propres vérifications pertinentes.
 | Graisses visuelles dans WebKit Windows | Comparer dans Safari réel avant toute correction globale de police | Revue de compatibilité |
 | Finalité, responsable et conservation du traitement des comptes | Faire qualifier et consigner la politique applicable ; aucune validation organisationnelle ou juridique déduite de la revue du code | Cadrage de l’exploitation avec données réelles ou nouvelle entité |
 | Responsables et fréquence de suivi | Désigner selon l’exploitation réelle | Mise en place du suivi opérationnel |
+| Recherche insensible aux accents | Ajouter des colonnes normalisées sur `User` (migration + backfill) ou utiliser `unaccent`/`translate` en SQL brut | Si la recherche de comptes devient un besoin courant |
 
 Ne pas présenter ces points comme nouveaux défauts prouvés ni comme déjà résolus.
 Les trois variables `E2E_DATABASE_URL`, `E2E_SUPERADMIN_LOGIN_NAME` et
