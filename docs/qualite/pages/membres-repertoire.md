@@ -8,7 +8,7 @@
 - Module propriétaire : `apps/web/src/features/persons`. Rendu de la liste :
   `app/membres/repertoire/page.tsx` (serveur) →
   `features/persons/components/PersonsPageClient.tsx` →
-  `PersonsList.tsx`, styles `PersonsDirectory.module.css`.
+  `PersonsList.tsx`, styles partagés `components/ui/directory.module.css`.
 - Statut : livré, en développement actif.
 - Dernière revue : 2026-10-09 — analyse complète A à Z puis refactorisation
   sur les primitives partagées (voir « Refactorisation appliquée » ci-dessous).
@@ -16,6 +16,34 @@
   `features/pages/bureau-juridique/personnes-contacts.md` ; règles courantes
   `docs/NAVIGATION.md`, `docs/STRUCTURE.md`, `docs/ROLES_ET_PERMISSIONS.md`,
   `docs/PERMISSIONS.md` ; tokens `apps/web/src/app/globals.css`.
+
+## Rôle de référence (décision du 2026-10-09)
+
+Décision utilisateur : `/membres/repertoire` est la **page de référence
+visuelle et UX** de l'application. Les autres pages s'appuient sur les mêmes
+composants, tokens et rythmes, même si leur contenu diffère ; on adapte
+l'existant au lieu d'inventer un style local.
+
+Référence à réutiliser :
+
+- Bandeau de page : `PageIdentityHero` (dégradé `--surface-hero-start/end`,
+  bordure `--border-hero`, titre 23 px, description 11 px, action à droite).
+- Liste : `DataTableSection` + module partagé `directory.module.css`
+  (`--border-list`, `--surface-content`, rayon 10 px, en-tête
+  `--surface-content-header`).
+- Tableau : primitives `Table*` + surcouche du module (en-têtes 11 px, lignes
+  zébrées `--surface-row-alternate`, survol `--surface-row-hover`).
+- Badges : pastille + teinte sémantique (voir `PersonStatusBadge`) ; sinon la
+  primitive `Badge`.
+- Contrôles : `Input`, `Select`, `Button` ; champs 38 px, sélecteurs 170 px,
+  rayons 6 px.
+- Retours : `ContentState` / `Empty` pour vide et erreur.
+- Squelette : `PersonsDirectorySkeleton` (bandeau dégradé + os visibles
+  `--surface-table-head`).
+- Typographie : échelle dense 11/13/14 px (`--text-*`) ; sections espacées de
+  18 px, paddings 16/20 px, rayons 10 px.
+- Tokens : toutes les couleurs passent par `globals.css` ; aucun hex en dur
+  dans les composants.
 
 ## Fonction et décisions courantes
 
