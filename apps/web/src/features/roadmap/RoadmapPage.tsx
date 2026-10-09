@@ -7,7 +7,7 @@ import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
 import { Disclosure } from '$components/layout/Disclosure';
 import { normalizeSearchValue } from '$components/layout/global-search.utils';
-import { PageHero } from '$components/layout/PageHero';
+import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
 import { getNavigationSpaceToneClasses } from '$constants/navigation-theme.constants';
 import { usePageQuery } from '$hooks/usePageQuery';
@@ -76,11 +76,9 @@ export function RoadmapPage(): React.ReactNode {
     >
       <PageShell className="py-0">
         <PageCanvas contentClassName="space-y-6">
-          <PageHero
-            tone="system"
-            title="Feuille de route"
+          <PageIdentityHero
             description="Construire la gestion de la structure esport, de l’association d’aujourd’hui à une éventuelle société."
-            icon={<ClipboardList className="size-5" />}
+            icon={<ClipboardList aria-hidden="true" />}
             meta={
               <div className="flex flex-wrap gap-2">
                 <Badge variant="outline">
@@ -92,6 +90,7 @@ export function RoadmapPage(): React.ReactNode {
                 <Badge variant="outline">{ROADMAP_PHASES.length} étapes</Badge>
               </div>
             }
+            title="Feuille de route"
           />
           <Disclosure
             className="border-border-divider border-b pb-4"
@@ -277,9 +276,9 @@ export function RoadmapPage(): React.ReactNode {
               <section
                 key={area.id}
                 aria-labelledby={`roadmap-area-${area.id}`}
-                className="space-y-3"
+                className="border-border-content bg-surface-content overflow-hidden rounded-[10px] border"
               >
-                <div className="flex items-start gap-3">
+                <div className="border-border-divider bg-surface-content-header flex items-start gap-3 border-b px-4 py-4 @min-[40rem]/page:px-5">
                   <ServiceIcon className={cn('size-9', tone.icon)}>
                     <Icon className="size-4" />
                   </ServiceIcon>
@@ -295,7 +294,7 @@ export function RoadmapPage(): React.ReactNode {
                     </p>
                   </div>
                 </div>
-                <div className="grid items-start gap-3 @min-[32rem]/page:grid-cols-2 @min-[60rem]/page:grid-cols-3">
+                <div className="grid items-start gap-3 p-4 @min-[32rem]/page:grid-cols-2 @min-[40rem]/page:px-5 @min-[60rem]/page:grid-cols-3">
                   {items.map((item) => (
                     <RoadmapCard key={item.id} item={item} />
                   ))}

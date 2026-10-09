@@ -52,6 +52,10 @@
   line-height: 1.5;
 }
 
+.meta {
+  margin-top: 10px;
+}
+
 .titleLine {
   display: flex;
   align-items: center;

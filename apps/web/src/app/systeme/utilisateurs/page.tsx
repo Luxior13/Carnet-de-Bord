@@ -8,15 +8,15 @@ import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import { getUsersListVisibilityKey } from '$features/users/users-list.utils';
-import styles from '$features/users/UsersListLayout.module.css';
+import directoryStyles from '$features/users/UsersDirectory.module.css';
 import { UsersListPage } from '$features/users/UsersListPage';
-import { PageShell } from '$ui/page-shell';
+import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
 import { cn } from '$utils/css.utils';
 
 const UsersListFallback: FC = () => (
   <Skeleton
-    className={cn(styles.main, 'h-96 rounded-lg')}
+    className="h-96 rounded-[10px]"
     role="status"
     aria-label="Chargement"
   />
@@ -40,23 +40,14 @@ const UsersAdministrationContent: FC = () => {
   }
 
   return (
-    <PageShell
-      alignment="available"
-      data-surface-tone="indigo"
-      className={cn(styles.page, 'py-4 sm:py-6')}
-      width="full"
-    >
-      <header data-slot="page-heading" className={styles.main}>
-        <h1 className="text-2xl leading-8 font-semibold tracking-tight">
-          {FEATURES.users.label}
-        </h1>
-        <p className="text-muted-foreground mt-1 text-sm leading-5">
-          Gérez les comptes et leurs accès.
-        </p>
-      </header>
-      <Suspense fallback={<UsersListFallback />}>
-        <UsersListPage key={getUsersListVisibilityKey(userData)} />
-      </Suspense>
+    <PageShell className="py-0">
+      <PageCanvas contentClassName="py-6">
+        <div className={cn(directoryStyles.directory, 'space-y-[18px]')}>
+          <Suspense fallback={<UsersListFallback />}>
+            <UsersListPage key={getUsersListVisibilityKey(userData)} />
+          </Suspense>
+        </div>
+      </PageCanvas>
     </PageShell>
   );
 };

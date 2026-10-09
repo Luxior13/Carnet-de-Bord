@@ -70,6 +70,7 @@ pnpm-debug.log*
 /temp
 /backups/
 /.codex-tmp/
+/.codex-preview/
 package-lock.json
 
 # Specific App/Project Files

@@ -1,0 +1,470 @@
+/*
+ * Design « annuaire » de la page Utilisateurs, aligné sur le Répertoire
+ * (`PersonsDirectory.module.css`) : mêmes tokens, mêmes contrôles, même tableau.
+ * Les sélecteurs sont composés (`.directory .x`) pour rester prioritaires sur
+ * les utilitaires des primitives sans modifier les composants partagés.
+ */
+.directory {
+  --m-panel: var(--surface-panel);
+  --m-inset: var(--surface-inset);
+  --m-control: var(--surface-inset);
+  --m-foreground: var(--text-primary);
+  --m-text-secondary: var(--text-secondary);
+  --m-muted: var(--text-muted);
+  --m-caption: var(--text-secondary);
+
+  --m-accent: var(--primary);
+  --m-accent-hover: color-mix(in srgb, var(--primary) 84%, white);
+  --m-accent-text: var(--primary-emphasis);
+  --m-accent-soft: color-mix(in srgb, var(--primary) 15%, transparent);
+  --m-accent-soft-border: color-mix(in srgb, var(--primary) 50%, transparent);
+  --m-accent-ring: color-mix(in srgb, var(--primary) 13%, transparent);
+
+  --m-border: #435978;
+  --m-border-soft: var(--border-content);
+  --m-border-control: var(--border-control);
+  --m-border-button: var(--border-subtle);
+  --m-border-hover: var(--border-strong);
+  --m-divider: var(--border-divider);
+
+  --m-row-bg: var(--surface-content);
+  --m-row-alt: var(--surface-row-alternate);
+  --m-row-hover: var(--surface-row-hover);
+  --m-toolbar: var(--surface-content-header);
+  --m-table-head: var(--surface-table-head);
+
+  color: var(--m-foreground);
+  color-scheme: dark;
+}
+
+.directory :is(a, button, summary, [tabindex='0']):focus-visible {
+  outline: 2px solid #8eaff2;
+  outline-offset: 3px;
+}
+
+/* ---------------------------------------------------------------- Contrôles */
+.directory .searchInput {
+  width: 100%;
+  height: 38px;
+  padding: 8px 40px 8px 35px;
+  border: 1px solid var(--m-border-control);
+  border-radius: 6px;
+  background: var(--m-control);
+  color: var(--m-foreground);
+  font-size: 12px;
+  box-shadow: none;
+}
+
+.directory .searchInput:hover {
+  border-color: var(--m-border-hover);
+}
+
+.directory .searchInput:focus {
+  border-color: var(--m-accent);
+  box-shadow: 0 0 0 2px var(--m-accent-ring);
+}
+
+.directory .filterForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.directory .search {
+  position: relative;
+  min-width: 180px;
+  flex: 1;
+}
+
+.directory .search > svg {
+  position: absolute;
+  top: 11px;
+  left: 11px;
+  width: 16px;
+  height: 16px;
+  color: var(--m-muted);
+  pointer-events: none;
+}
+
+.directory .searchClear svg {
+  width: 16px;
+  height: 16px;
+}
+
+.directory .filterSelects {
+  display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
+  gap: 8px;
+}
+
+.directory .iconButton {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--m-border-button);
+  border-radius: 6px;
+  background: var(--m-control);
+  color: #a9bddc;
+}
+
+.directory .iconButton:hover {
+  border-color: var(--m-accent-soft-border);
+  background: #283b5b;
+  color: #e1ebff;
+}
+
+.directory .iconButton svg {
+  width: 15px;
+  height: 15px;
+}
+
+.directory .searchClear {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  color: #b2c8ef;
+}
+
+.directory .searchClear:hover {
+  background: #263852;
+  color: var(--m-foreground);
+}
+
+.directory .selectTrigger {
+  display: flex;
+  align-items: center;
+  width: 170px;
+  height: 38px;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 1px solid var(--m-border-control);
+  border-radius: 6px;
+  background: var(--m-control);
+  color: var(--m-text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.directory .selectTrigger:hover {
+  border-color: var(--m-border-hover);
+  background: var(--surface-control-hover);
+}
+
+.directory .selectTrigger[data-state='open'],
+.directory .selectTrigger:focus {
+  border-color: var(--m-accent);
+  background: var(--surface-control-focus);
+  box-shadow: 0 0 0 2px var(--m-accent-ring);
+}
+
+.directory .selectTrigger svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: var(--m-accent-text);
+  opacity: 1;
+}
+
+.directory .filterToggle {
+  height: 38px;
+  gap: 7px;
+  padding: 8px 11px;
+  border: 1px solid var(--m-border-button);
+  border-radius: 6px;
+  background: var(--m-control);
+  color: #a9bddc;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.directory .addButton {
+  min-height: 36px;
+  gap: 8px;
+  padding: 8px 11px;
+  border: 1px solid var(--m-accent);
+  border-radius: 6px;
+  background: var(--m-accent);
+  color: #091321;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.directory .addButton:hover {
+  border-color: var(--m-accent-hover);
+  background: var(--m-accent-hover);
+}
+
+.directory .addButton svg {
+  width: 15px;
+  height: 15px;
+}
+
+.directory .resetButton {
+  min-height: 36px;
+  padding: 8px 11px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #a9bddc;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.directory .resetButton:hover {
+  border-color: var(--m-border-button);
+  background: #283b5b;
+  color: #e1ebff;
+}
+
+.directory .caption {
+  color: var(--m-caption);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.directory .listCaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  color: var(--m-caption);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.directory .listCaption p {
+  margin: 0;
+}
+
+.directory .listCaption span {
+  color: #9eafc9;
+}
+
+/* ------------------------------------------------------------------ Cartes */
+.directory [data-slot='card'] {
+  border-color: var(--m-border);
+  border-radius: 10px;
+  background: var(--m-row-bg);
+}
+
+.directory [data-slot='card-header'] {
+  padding: 16px 16px 12px;
+}
+
+@media (min-width: 640px) {
+  .directory [data-slot='card-header'] {
+    padding: 16px 20px 12px;
+  }
+}
+
+.directory [data-slot='card-footer'] {
+  border-color: var(--m-border);
+  background: var(--m-toolbar);
+}
+
+/* ----------------------------------------------------------------- Tableau */
+.directory .table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.directory .table thead tr {
+  border: 0;
+}
+
+.directory .table th {
+  padding: 9px 12px;
+  border-top: 1px solid var(--m-border);
+  border-bottom: 1px solid var(--m-border);
+  background: var(--m-table-head);
+  color: #c7d5ea;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.directory .table th:first-child {
+  padding-left: 16px;
+}
+
+.directory .table tbody tr {
+  border-bottom: 0;
+  background: var(--m-row-bg);
+}
+
+.directory .table tbody tr:nth-child(even):not([data-state='selected']) {
+  background: var(--m-row-alt);
+}
+
+.directory .table tbody tr + tr {
+  border-top: 1px solid var(--m-border-soft);
+}
+
+.directory .table tbody tr:hover,
+.directory .table tbody tr:focus-within {
+  background: var(--m-row-hover);
+}
+
+.directory
+  .table
+  tbody
+  tr:nth-child(even):not([data-state='selected']):hover {
+  background: var(--m-row-hover);
+}
+
+.directory .table tbody td {
+  padding: 11px 12px;
+  vertical-align: middle;
+}
+
+.directory .table tbody td:first-child {
+  padding-left: 16px;
+}
+
+.directory .table tbody td:last-child {
+  padding-right: 16px;
+}
+
+/* --------------------------------------------------------------- Pagination */
+.directory .pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--m-border);
+  background: var(--m-toolbar);
+}
+
+.directory .pagination p {
+  margin: 0;
+  color: var(--m-caption);
+  font-size: 11px;
+}
+
+.directory .pagination p strong {
+  color: #dce6f7;
+  font-weight: 500;
+}
+
+.directory .paginationActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.directory .pageButton {
+  display: inline-flex;
+  min-width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border: 1px solid var(--m-border-button);
+  border-radius: 5px;
+  background: var(--m-control);
+  color: #b5c7e5;
+  font-size: 11px;
+}
+
+.directory .pageButton svg {
+  width: 15px;
+  height: 15px;
+}
+
+.directory .pageButton:hover:not(:disabled) {
+  border-color: var(--m-accent-soft-border);
+  background: #283b5b;
+}
+
+.directory .pageButton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ------------------------------------------------------------------- Mobile */
+.directory .mobileList {
+  background: var(--m-row-bg);
+}
+
+.directory .mobileList > * + * {
+  border-top-color: var(--m-border);
+}
+
+.directory .mobileRow {
+  padding: 12px 16px;
+}
+
+.directory .mobileRow:hover {
+  background: var(--m-row-hover);
+}
+
+/* ------------------------------------------------------------- Vue d'ensemble */
+.directory .overviewCard {
+  border: 1px solid var(--m-border);
+  border-radius: 10px;
+  background: var(--m-row-bg);
+  overflow: hidden;
+}
+
+.directory .overviewHeader {
+  border-color: var(--m-border);
+  background: var(--m-toolbar);
+  color: var(--m-foreground);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.directory .overviewMetric {
+  border-color: var(--m-divider);
+}
+
+/*
+ * Panneau déroulant des sélecteurs : rendu dans un portail Radix, donc hors du
+ * conteneur `.directory`. On reprend le style du Répertoire à l'identique.
+ */
+.selectContent {
+  padding: 4px;
+  border: 1px solid var(--border-control);
+  border-radius: 7px;
+  background: #121d2d;
+  color: #dce6f7;
+  box-shadow: 0 16px 36px #0006;
+}
+
+.selectContent > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: auto;
+  padding: 0;
+}
+
+.selectOption {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 1.75rem 0 8px;
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 12px;
+  text-align: left;
+}
+
+.selectOption:hover,
+.selectOption[data-state='checked'] {
+  background: #273b5b;
+  color: var(--text-primary);
+}

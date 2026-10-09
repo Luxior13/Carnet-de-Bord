@@ -1,0 +1,63 @@
+/*
+ * Mise en page « contenu + rail ».
+ *
+ * La colonne principale ne bouge JAMAIS : elle garde exactement la largeur et
+ * le centrage d'une page standard (`PageShell` par défaut). Le rail s'ajoute
+ * dans la marge droite via une colonne de largeur nulle qu'il déborde, ce qui
+ * le sort du calcul de largeur et de centrage. Quand l'écran n'a pas la marge
+ * nécessaire, le rail repasse simplement entre le héros et le contenu.
+ */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  width: 100%;
+}
+
+.header {
+  order: -2;
+  min-width: 0;
+}
+
+.aside {
+  order: -1;
+  min-width: 0;
+}
+
+.main {
+  order: 0;
+  min-width: 0;
+}
+
+/*
+ * 118rem ≈ 1888 px : en dessous, la marge droite ne peut pas contenir le rail
+ * sans provoquer de défilement horizontal.
+ */
+@media (min-width: 118rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 0;
+    column-gap: 0;
+    row-gap: 18px;
+  }
+
+  .header {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .main {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .aside {
+    grid-column: 2;
+    grid-row: 2;
+    order: 0;
+    align-self: start;
+    position: sticky;
+    top: 1rem;
+    width: 20rem;
+    margin-left: 1.25rem;
+  }
+}

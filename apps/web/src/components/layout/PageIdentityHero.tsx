@@ -7,6 +7,8 @@ type PageIdentityHeroProps = {
   actions?: ReactNode;
   description?: ReactNode;
   icon: ReactNode;
+  /** Optional complementary content, displayed under the description. */
+  meta?: ReactNode;
   title: ReactNode;
 };
 
@@ -18,6 +20,7 @@ export const PageIdentityHero: FC<PageIdentityHeroProps> = ({
   actions,
   description,
   icon,
+  meta,
   title,
 }) => (
   <header className={styles.hero} data-slot="page-heading">
@@ -30,6 +33,7 @@ export const PageIdentityHero: FC<PageIdentityHeroProps> = ({
           <h1>{title}</h1>
         </div>
         {description ? <p>{description}</p> : null}
+        {meta ? <div className={styles.meta}>{meta}</div> : null}
       </div>
     </div>
     {actions}

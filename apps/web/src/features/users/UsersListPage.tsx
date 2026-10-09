@@ -3,11 +3,13 @@
 import { UserRole } from '@repo/shared';
 import {
   ArrowRight,
-  Key,
+  ChevronLeft,
+  ChevronRight,
   Plus,
+  RotateCcw,
   Search,
-  SlidersHorizontal,
   UserMinus,
+  Users,
   X,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -21,7 +23,10 @@ import React, {
 } from 'react';
 
 import { ContentState } from '$components/layout/ContentState';
+import { PageAsideLayout } from '$components/layout/PageAsideLayout';
+import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { UserAvatar } from '$components/users/UserAvatar';
+import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGINATION } from '$constants/pagination.constants';
 import {
   getAccessLabel,
@@ -34,14 +39,13 @@ import {
   canSearchUserContact,
   formatUserLastLogin,
 } from '$features/users/users-list.utils';
-import styles from '$features/users/UsersListLayout.module.css';
+import directoryStyles from '$features/users/UsersDirectory.module.css';
 import { UsersOverview } from '$features/users/UsersOverview';
 import type {
   PaginationInfo,
   UserStatsType,
   UserType,
 } from '$types/auth.types';
-import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import {
   DataTableDesktop,
@@ -89,6 +93,22 @@ const FILTER_ROLE_OPTIONS: readonly FilterRole[] = [
 ];
 const SORT_OPTIONS: readonly SortOption[] = ['name', 'recent', 'created'];
 const USER_SEARCH_MAX_LENGTH = 100;
+
+/** Couleur d'accès par niveau d'importance, du plus élevé au plus courant. */
+const ACCESS_LEVEL_TONES = {
+  admin: 'border-warning/40 bg-warning/15 text-warning',
+  protected: 'border-destructive/40 bg-destructive/15 text-destructive',
+  user: 'border-info/40 bg-info/15 text-info',
+} as const;
+
+const getAccessToneClass = (
+  user: Pick<UserType, 'isProtected' | 'role'>,
+): string =>
+  user.isProtected
+    ? ACCESS_LEVEL_TONES.protected
+    : user.role === UserRole.ADMIN
+      ? ACCESS_LEVEL_TONES.admin
+      : ACCESS_LEVEL_TONES.user;
 
 const getSortLabel = (sort: SortOption): string => {
   switch (sort) {
@@ -180,19 +200,17 @@ const buildUsersPageUrlParams = ({
 const UserAccessLabel: FC<{
   user: Pick<UserType, 'isProtected' | 'role'>;
 }> = ({ user }) => {
-  const isAdministrator = user.isProtected || user.role === UserRole.ADMIN;
-
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-[5px] border px-2 py-0.5 text-xs leading-5 whitespace-nowrap',
-        user.isProtected
-          ? 'border-access-privileged/30 bg-access-privileged/15 text-access-privileged'
-          : isAdministrator
-            ? 'border-access-admin/30 bg-access-admin/15 text-access-admin'
-            : 'border-access-member/30 bg-access-member/15 text-access-member',
+        'inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap',
+        getAccessToneClass(user),
       )}
     >
+      <span
+        aria-hidden="true"
+        className="size-1.5 shrink-0 rounded-full bg-current"
+      />
       {getAccessLabel(user)}
     </span>
   );
@@ -202,18 +220,15 @@ const UserStatusLabel: FC<{ isActive: boolean }> = ({ isActive }) => {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 whitespace-nowrap',
+        'inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap',
         isActive
-          ? 'border-success/30 bg-success/15 text-success'
-          : 'border-muted-foreground/30 bg-muted-foreground/10 text-muted-foreground',
+          ? 'border-success/40 bg-success/15 text-success'
+          : 'border-warning/40 bg-warning/15 text-warning',
       )}
     >
       <span
         aria-hidden="true"
-        className={cn(
-          'size-1.5 shrink-0 rounded-full',
-          isActive ? 'bg-success' : 'bg-muted-foreground/50',
-        )}
+        className={cn('size-1.5 shrink-0 rounded-full', 'bg-current')}
       />
       {isActive ? 'Actif' : 'Désactivé'}
     </span>
@@ -267,7 +282,6 @@ export const UsersListPage: FC = () => {
   const [sortBy, setSortBy] = useState<SortOption>(() =>
     normalizeSortOption(searchParams.get('sort')),
   );
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const hasLoadedUsersRef = useRef(false);
   const effectivePageSizeRef = useRef<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -504,17 +518,13 @@ export const UsersListPage: FC = () => {
     userId === currentUser?.id
       ? '/mon-compte'
       : `${userDetailPath(userId)}?${new URLSearchParams({ returnTo: `${PAGE_PATHS.users}${currentQueryString ? `?${currentQueryString}` : ''}` })}`;
+  const createUserHref = `${PAGE_PATHS.newUser}?${new URLSearchParams({ returnTo: `${PAGE_PATHS.users}${currentQueryString ? `?${currentQueryString}` : ''}` })}`;
 
   const hasActiveFilters =
     !!searchQuery ||
     filterStatus !== 'all' ||
     filterRole !== 'all' ||
     sortBy !== 'name';
-
-  const activeFilterCount =
-    Number(effectiveFilterStatus !== 'all') +
-    Number(filterRole !== 'all') +
-    Number(sortBy !== 'name');
 
   const displayedUsers = users;
 
@@ -523,17 +533,38 @@ export const UsersListPage: FC = () => {
   const hasTruncatedPagination =
     (pagination?.totalPages ?? 0) > PAGINATION.MAX_PAGE;
   const totalFiltered = pagination?.total ?? users.length;
+  const pageSize = pagination?.limit ?? PAGINATION.DEFAULT_LIMIT;
 
   return (
-    <>
-      <UsersOverview
-        isLoading={isLoading}
-        securityDetailsVisible={
-          isLoading ? canRequestSecurityDetails : securityDetailsVisible
-        }
-        stats={stats}
-      />
-      <div className={cn(styles.main, 'space-y-4')}>
+    <PageAsideLayout
+      aside={
+        <UsersOverview
+          isLoading={isLoading}
+          securityDetailsVisible={
+            isLoading ? canRequestSecurityDetails : securityDetailsVisible
+          }
+          stats={stats}
+        />
+      }
+      header={
+        <PageIdentityHero
+          actions={
+            canCreateUsers ? (
+              <Button asChild className={directoryStyles.addButton}>
+                <Link href={createUserHref}>
+                  <Plus aria-hidden="true" />
+                  Nouvel utilisateur
+                </Link>
+              </Button>
+            ) : undefined
+          }
+          description="Gérez les comptes et leurs accès."
+          icon={<Users aria-hidden="true" />}
+          title={FEATURES.users.label}
+        />
+      }
+    >
+      <div className="space-y-4">
         {loadError && (
           <ContentState
             action={
@@ -570,460 +601,488 @@ export const UsersListPage: FC = () => {
           />
         )}
         <DataTableSection
-          className="rounded-lg"
-          headerClassName="p-4 sm:p-5"
+          className="border-border-content bg-surface-content rounded-[10px]"
+          headerClassName="bg-surface-content-header"
           contentClassName={
             isRefreshing ? 'opacity-60 transition-opacity' : undefined
           }
-          toolbarClassName="@container/users-toolbar"
           toolbar={
-            <div
-              className={cn(
-                'grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 @min-[32rem]/users-toolbar:grid-cols-6',
-                canCreateUsers
-                  ? '@min-[64rem]/users-toolbar:grid-cols-[minmax(16rem,1fr)_10rem_10rem_11rem_auto]'
-                  : '@min-[64rem]/users-toolbar:grid-cols-[minmax(18rem,1fr)_10rem_10rem_11rem]',
-              )}
-            >
-              <div
-                className={cn(
-                  'relative min-w-0 @min-[64rem]/users-toolbar:col-span-1',
-                  canCreateUsers
-                    ? '@min-[32rem]/users-toolbar:col-span-4'
-                    : '@min-[32rem]/users-toolbar:col-span-6',
-                )}
+            <div className="w-full">
+              <form
+                aria-label="Rechercher et filtrer les utilisateurs"
+                className={directoryStyles.filterForm}
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  setDebouncedSearch(normalizeSearchQuery(searchQuery));
+                  setCurrentPage(1);
+                }}
+                role="search"
               >
-                <Search
-                  size={16}
-                  className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
-                />
-                <Input
-                  aria-label="Rechercher un compte utilisateur"
-                  autoCapitalize="none"
-                  autoComplete="off"
-                  enterKeyHint="search"
-                  name="directory-search"
-                  placeholder="Rechercher…"
-                  spellCheck={false}
-                  title={
-                    currentUser && canSearchUserContact(currentUser)
-                      ? 'Nom, identifiant ou email'
-                      : 'Nom ou identifiant'
-                  }
-                  type="search"
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  maxLength={USER_SEARCH_MAX_LENGTH}
-                  className="h-11 pr-12 pl-9 lg:h-10 [&::-webkit-search-cancel-button]:appearance-none"
-                />
-                {searchQuery && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSearchQuery('')}
-                    className="text-muted-foreground hover:text-foreground absolute top-0 right-0 size-11 lg:size-10"
-                    aria-label="Effacer la recherche"
-                  >
-                    <X size={14} />
-                  </Button>
-                )}
-              </div>
-              <Button
-                aria-controls="users-list-filters"
-                aria-expanded={filtersExpanded}
-                aria-label={`Filtres et tri${activeFilterCount ? ` : ${activeFilterCount} actif${activeFilterCount > 1 ? 's' : ''}` : ''}`}
-                className="h-11 gap-1.5 px-3 lg:h-10 @min-[32rem]/users-toolbar:hidden"
-                onClick={() => setFiltersExpanded((expanded) => !expanded)}
-                type="button"
-                variant="outline"
-              >
-                <SlidersHorizontal aria-hidden="true" className="size-4" />
-                <span className="sr-only @min-[22rem]/users-toolbar:not-sr-only">
-                  Filtres
-                </span>
-                {activeFilterCount > 0 && (
-                  <span className="text-primary-emphasis tabular-nums">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </Button>
-              <div
-                id="users-list-filters"
-                className={cn(
-                  'col-span-full gap-2 @min-[32rem]/users-toolbar:contents',
-                  filtersExpanded ? 'grid' : 'hidden',
-                )}
-              >
-                <Select
-                  value={filterStatus}
-                  onValueChange={(value) => handleFilterChange('status', value)}
-                >
-                  <SelectTrigger
-                    aria-label="Filtrer par état du compte"
-                    className="text-muted-foreground h-11 w-full min-w-0 bg-transparent lg:h-10 @min-[32rem]/users-toolbar:col-span-2 @min-[64rem]/users-toolbar:col-span-1"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent
-                    data-surface-tone="indigo"
-                    className="rounded-lg"
-                  >
-                    <SelectItem value="all">Tous les états</SelectItem>
-                    <SelectItem value="active">Actifs</SelectItem>
-                    <SelectItem value="inactive">Désactivés</SelectItem>
-                    {canRequestSecurityDetails && (
-                      <SelectItem value="pending">
-                        Mot de passe à changer
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={filterRole}
-                  onValueChange={(value) => handleFilterChange('role', value)}
-                >
-                  <SelectTrigger
-                    aria-label="Filtrer par rôle"
-                    className="text-muted-foreground h-11 w-full min-w-0 bg-transparent lg:h-10 @min-[32rem]/users-toolbar:col-span-2 @min-[64rem]/users-toolbar:col-span-1"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent
-                    data-surface-tone="indigo"
-                    className="rounded-lg"
-                  >
-                    <SelectItem value="all">Tous les rôles</SelectItem>
-                    <SelectItem value="ADMIN">Administrateurs</SelectItem>
-                    <SelectItem value="USER">Utilisateurs</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={sortBy}
-                  onValueChange={(value) => handleFilterChange('sort', value)}
-                >
-                  <SelectTrigger
-                    aria-label="Trier les comptes utilisateurs"
-                    className="text-muted-foreground h-11 w-full min-w-0 bg-transparent lg:h-10 @min-[32rem]/users-toolbar:col-span-2 @min-[64rem]/users-toolbar:col-span-1"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent
-                    data-surface-tone="indigo"
-                    className="rounded-lg"
-                  >
-                    <SelectItem value="name">{getSortLabel('name')}</SelectItem>
-                    <SelectItem value="recent">
-                      {getSortLabel('recent')}
-                    </SelectItem>
-                    <SelectItem value="created">
-                      {getSortLabel('created')}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {canCreateUsers && (
-                <Button
-                  asChild
-                  size="sm"
-                  className="col-span-full h-11 justify-self-end lg:h-10 @min-[32rem]/users-toolbar:col-span-2 @min-[32rem]/users-toolbar:col-start-5 @min-[32rem]/users-toolbar:row-start-1 @min-[64rem]/users-toolbar:col-span-1 @min-[64rem]/users-toolbar:col-start-5"
-                >
-                  <Link
-                    href={`${PAGE_PATHS.newUser}?${new URLSearchParams({ returnTo: `${PAGE_PATHS.users}${currentQueryString ? `?${currentQueryString}` : ''}` })}`}
-                  >
-                    <Plus aria-hidden="true" className="size-4" />
-                    Nouvel utilisateur
-                  </Link>
-                </Button>
-              )}
-              {hasActiveFilters && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="text-muted-foreground col-span-full h-11 justify-self-start lg:h-10"
-                >
-                  <X size={14} />
-                  Réinitialiser
-                </Button>
-              )}
-              <p
-                role="status"
-                className={
-                  hasActiveFilters ||
-                  isRefreshing ||
-                  loadError ||
-                  hasTruncatedPagination
-                    ? 'text-muted-foreground col-span-full text-sm leading-5'
-                    : 'sr-only'
-                }
-              >
-                {isLoading
-                  ? 'Chargement…'
-                  : isRefreshing
-                    ? 'Actualisation…'
-                    : loadError
-                      ? 'Résultats non actualisés'
-                      : `${totalFiltered.toLocaleString('fr-FR')} compte${totalFiltered !== 1 ? 's' : ''} trouvé${totalFiltered !== 1 ? 's' : ''}`}
-                {!isLoading &&
-                  !isRefreshing &&
-                  !loadError &&
-                  hasTruncatedPagination && (
-                    <>
-                      . Affinez la recherche : seules les{' '}
-                      {PAGINATION.MAX_PAGE.toLocaleString('fr-FR')} premières
-                      pages sont accessibles.
-                    </>
+                <div className={directoryStyles.search}>
+                  <Search aria-hidden="true" />
+                  <Input
+                    aria-label="Rechercher un compte utilisateur"
+                    autoCapitalize="none"
+                    autoComplete="off"
+                    className={directoryStyles.searchInput}
+                    enterKeyHint="search"
+                    maxLength={USER_SEARCH_MAX_LENGTH}
+                    name="directory-search"
+                    placeholder="Rechercher…"
+                    spellCheck={false}
+                    title={
+                      currentUser && canSearchUserContact(currentUser)
+                        ? 'Nom, identifiant ou email'
+                        : 'Nom ou identifiant'
+                    }
+                    type="search"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                  />
+                  {searchQuery ? (
+                    <Button
+                      aria-label="Effacer la recherche"
+                      className={directoryStyles.searchClear}
+                      onClick={() => setSearchQuery('')}
+                      size="icon"
+                      type="button"
+                      variant="ghost"
+                    >
+                      <X aria-hidden="true" />
+                    </Button>
+                  ) : (
+                    <Button
+                      aria-label="Rechercher les comptes"
+                      className={directoryStyles.searchClear}
+                      size="icon"
+                      type="submit"
+                      variant="ghost"
+                    >
+                      <ChevronRight aria-hidden="true" />
+                    </Button>
                   )}
-              </p>
+                </div>
+                <div className={directoryStyles.filterSelects}>
+                  <Select
+                    value={filterStatus}
+                    onValueChange={(value) =>
+                      handleFilterChange('status', value)
+                    }
+                  >
+                    <SelectTrigger
+                      aria-label="Filtrer par état du compte"
+                      className={directoryStyles.selectTrigger}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className={directoryStyles.selectContent}>
+                      <SelectItem
+                        className={directoryStyles.selectOption}
+                        value="all"
+                      >
+                        Tous les états
+                      </SelectItem>
+                      <SelectItem
+                        className={directoryStyles.selectOption}
+                        value="active"
+                      >
+                        Actifs
+                      </SelectItem>
+                      <SelectItem
+                        className={directoryStyles.selectOption}
+                        value="inactive"
+                      >
+                        Désactivés
+                      </SelectItem>
+                      {canRequestSecurityDetails && (
+                        <SelectItem
+                          className={directoryStyles.selectOption}
+                          value="pending"
+                        >
+                          Mot de passe à changer
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={filterRole}
+                    onValueChange={(value) => handleFilterChange('role', value)}
+                  >
+                    <SelectTrigger
+                      aria-label="Filtrer par rôle"
+                      className={directoryStyles.selectTrigger}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className={directoryStyles.selectContent}>
+                      <SelectItem
+                        className={directoryStyles.selectOption}
+                        value="all"
+                      >
+                        Tous les rôles
+                      </SelectItem>
+                      <SelectItem
+                        className={directoryStyles.selectOption}
+                        value="ADMIN"
+                      >
+                        Administrateurs
+                      </SelectItem>
+                      <SelectItem
+                        className={directoryStyles.selectOption}
+                        value="USER"
+                      >
+                        Utilisateurs
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={sortBy}
+                    onValueChange={(value) => handleFilterChange('sort', value)}
+                  >
+                    <SelectTrigger
+                      aria-label="Trier les comptes utilisateurs"
+                      className={directoryStyles.selectTrigger}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className={directoryStyles.selectContent}>
+                      <SelectItem
+                        className={directoryStyles.selectOption}
+                        value="name"
+                      >
+                        {getSortLabel('name')}
+                      </SelectItem>
+                      <SelectItem
+                        className={directoryStyles.selectOption}
+                        value="recent"
+                      >
+                        {getSortLabel('recent')}
+                      </SelectItem>
+                      <SelectItem
+                        className={directoryStyles.selectOption}
+                        value="created"
+                      >
+                        {getSortLabel('created')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {hasActiveFilters && (
+                    <Button
+                      aria-label="Réinitialiser les filtres"
+                      className={directoryStyles.iconButton}
+                      onClick={clearFilters}
+                      size="icon"
+                      type="button"
+                      variant="ghost"
+                    >
+                      <RotateCcw aria-hidden="true" />
+                    </Button>
+                  )}
+                </div>
+              </form>
+              <div className={directoryStyles.listCaption}>
+                <p role="status" aria-live="polite">
+                  {isLoading
+                    ? 'Chargement…'
+                    : isRefreshing
+                      ? 'Actualisation…'
+                      : loadError
+                        ? 'Résultats non actualisés'
+                        : `${totalFiltered.toLocaleString('fr-FR')} compte${totalFiltered !== 1 ? 's' : ''} trouvé${totalFiltered !== 1 ? 's' : ''}`}
+                  {!isLoading &&
+                    !isRefreshing &&
+                    !loadError &&
+                    hasTruncatedPagination && (
+                      <>
+                        . Affinez la recherche : seules les{' '}
+                        {PAGINATION.MAX_PAGE.toLocaleString('fr-FR')} premières
+                        pages sont accessibles.
+                      </>
+                    )}
+                </p>
+                <span>{pageSize} par page</span>
+              </div>
             </div>
-          }
-          pagination={
-            totalPages > 1
-              ? {
-                  className:
-                    '[&_p]:text-sm [&_span]:text-sm [&_button]:text-sm',
-                  limit: pagination?.limit ?? 1,
-                  onPageChange: setCurrentPage,
-                  page: pagination?.page ?? currentPage,
-                  total: totalFiltered,
-                  totalPages,
-                }
-              : undefined
           }
         >
-          {isLoading ? (
-            <div role="status" aria-label="Chargement" className="p-4">
-              <Skeleton className="h-72 rounded-lg" />
-            </div>
-          ) : (
-            <>
-              <DataTableDesktop>
-                <Table
-                  aria-label="Comptes utilisateurs"
-                  className="table-fixed"
-                >
-                  <TableHeader className="[&_th]:text-foreground [&_th]:h-11 [&_th]:text-sm [&_th]:leading-5">
-                    <TableRow>
-                      <TableHead>Compte</TableHead>
-                      <TableHead className="w-44 @min-[64rem]/data-table:w-[18%]">
-                        Accès
-                      </TableHead>
-                      <TableHead className="w-32 @min-[64rem]/data-table:w-[12%]">
-                        État
-                      </TableHead>
-                      <TableHead className="w-40 @min-[64rem]/data-table:w-[18%]">
-                        Dernière connexion
-                      </TableHead>
-                      <TableHead className="w-12">
-                        <span className="sr-only">Action</span>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {displayedUsers.length === 0 ? (
+          <>
+            {isLoading ? (
+              <div role="status" aria-label="Chargement" className="p-4">
+                <Skeleton className="h-72 rounded-lg" />
+              </div>
+            ) : (
+              <>
+                <DataTableDesktop>
+                  <Table
+                    aria-label="Comptes utilisateurs"
+                    className={directoryStyles.table}
+                  >
+                    <TableHeader>
                       <TableRow>
-                        <TableCell colSpan={5} className="h-44 text-center">
-                          <ContentState
-                            className="min-h-0 border-0 bg-transparent p-0"
-                            icon={<UserMinus className="size-5" />}
-                            layout="panel"
-                            title={
-                              loadError
-                                ? 'Utilisateurs indisponibles'
-                                : 'Aucun utilisateur trouvé'
-                            }
-                            action={
-                              !loadError &&
-                              hasActiveFilters && (
-                                <Button
-                                  type="button"
-                                  variant="link"
-                                  size="sm"
-                                  onClick={clearFilters}
-                                >
-                                  Réinitialiser
-                                </Button>
-                              )
-                            }
-                          />
-                        </TableCell>
+                        <TableHead>Compte</TableHead>
+                        <TableHead className="w-[130px]">Accès</TableHead>
+                        <TableHead className="w-[130px]">État</TableHead>
+                        {securityDetailsVisible && (
+                          <TableHead className="w-[130px]">
+                            Mot de passe
+                          </TableHead>
+                        )}
+                        <TableHead className="w-[150px]">
+                          Dernière connexion
+                        </TableHead>
+                        <TableHead className="w-12">
+                          <span className="sr-only">Action</span>
+                        </TableHead>
                       </TableRow>
-                    ) : (
-                      displayedUsers.map((user) => (
-                        <TableRow
-                          className="group/row focus-within:ring-ring relative cursor-pointer focus-within:ring-2 focus-within:ring-inset"
-                          key={user.id}
-                        >
-                          <TableCell className="h-16 py-2 align-top">
-                            <Link
-                              aria-label={
-                                user.id === currentUser?.id
-                                  ? 'Ouvrir mon compte'
-                                  : `Ouvrir le compte de ${getUserDisplayName(user)}`
+                    </TableHeader>
+                    <TableBody>
+                      {displayedUsers.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={securityDetailsVisible ? 6 : 5}
+                            className="h-44 text-center"
+                          >
+                            <ContentState
+                              className="min-h-0 border-0 bg-transparent p-0"
+                              icon={<UserMinus className="size-5" />}
+                              layout="panel"
+                              title={
+                                loadError
+                                  ? 'Utilisateurs indisponibles'
+                                  : 'Aucun utilisateur trouvé'
                               }
-                              className="group/link flex min-w-0 items-start gap-2.5 rounded-md outline-none after:absolute after:inset-0 after:z-10 after:content-['']"
-                              href={getUserDetailHref(user.id)}
-                              prefetch={false}
-                            >
-                              <UserAvatar
-                                user={user}
-                                className="border-border-default size-9 shrink-0 rounded-full border"
-                              />
-                              <div className="min-w-0">
-                                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                  <span className="text-foreground truncate text-sm font-semibold">
-                                    {getUserDisplayName(user)}
-                                  </span>
-                                  {isUserIdentityMasked(user) && (
-                                    <span className="text-muted-foreground text-xs leading-5">
-                                      Identité protégée
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                                  <p className="text-muted-foreground flex max-w-full min-w-0 items-center gap-1.5 truncate text-sm leading-5">
-                                    <span className="min-w-0 truncate">
-                                      {getUserLoginDisplay(user)}
-                                    </span>
-                                    {user.contactEmail && (
-                                      <span className="truncate">
-                                        · {user.contactEmail}
-                                      </span>
-                                    )}
-                                  </p>
-                                  {securityDetailsVisible &&
-                                    user.mustChangePassword && (
-                                      <Badge
-                                        variant="outline"
-                                        className="border-warning/30 text-warning max-w-full rounded-sm bg-transparent text-left text-xs whitespace-normal"
-                                      >
-                                        <Key
-                                          aria-hidden="true"
-                                          className="shrink-0"
-                                        />
-                                        Mot de passe à changer
-                                      </Badge>
-                                    )}
-                                </div>
-                              </div>
-                            </Link>
-                          </TableCell>
-                          <TableCell className="pointer-events-none py-3">
-                            <UserAccessLabel user={user} />
-                          </TableCell>
-                          <TableCell className="pointer-events-none py-3">
-                            <UserStatusLabel isActive={user.isActive} />
-                          </TableCell>
-                          <TableCell className="text-muted-foreground pointer-events-none py-3 text-sm leading-5 tabular-nums">
-                            {formatUserLastLogin(user)}
-                          </TableCell>
-                          <TableCell className="pointer-events-none py-3">
-                            <ArrowRight
-                              aria-hidden="true"
-                              className="text-muted-foreground size-4"
+                              action={
+                                !loadError &&
+                                hasActiveFilters && (
+                                  <Button
+                                    type="button"
+                                    variant="link"
+                                    size="sm"
+                                    onClick={clearFilters}
+                                  >
+                                    Réinitialiser
+                                  </Button>
+                                )
+                              }
                             />
                           </TableCell>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </DataTableDesktop>
-              <DataTableMobileList>
-                {displayedUsers.length === 0 ? (
-                  <ContentState
-                    className="min-h-48 border-0 bg-transparent"
-                    icon={<UserMinus className="size-5" />}
-                    layout="panel"
-                    title={
-                      loadError
-                        ? 'Utilisateurs indisponibles'
-                        : 'Aucun utilisateur trouvé'
-                    }
-                    action={
-                      !loadError &&
-                      hasActiveFilters && (
-                        <Button
-                          type="button"
-                          variant="link"
-                          size="sm"
-                          onClick={clearFilters}
-                        >
-                          Réinitialiser
-                        </Button>
-                      )
-                    }
-                  />
-                ) : (
-                  displayedUsers.map((user) => (
-                    <Link
-                      aria-label={
-                        user.id === currentUser?.id
-                          ? 'Ouvrir mon compte'
-                          : `Ouvrir le compte de ${getUserDisplayName(user)}`
+                      ) : (
+                        displayedUsers.map((user) => (
+                          <TableRow
+                            className="group/row focus-within:ring-ring relative cursor-pointer focus-within:ring-2 focus-within:ring-inset"
+                            key={user.id}
+                          >
+                            <TableCell className="h-16 py-2 align-top">
+                              <Link
+                                aria-label={
+                                  user.id === currentUser?.id
+                                    ? 'Ouvrir mon compte'
+                                    : `Ouvrir le compte de ${getUserDisplayName(user)}`
+                                }
+                                className="group/link flex min-w-0 items-start gap-2.5 rounded-md outline-none after:absolute after:inset-0 after:z-10 after:content-['']"
+                                href={getUserDetailHref(user.id)}
+                                prefetch={false}
+                              >
+                                <UserAvatar
+                                  user={user}
+                                  className="border-border-default size-9 shrink-0 rounded-full border"
+                                />
+                                <div className="min-w-0">
+                                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                    <span className="text-foreground truncate text-sm font-semibold">
+                                      {getUserDisplayName(user)}
+                                    </span>
+                                    {isUserIdentityMasked(user) && (
+                                      <span className="text-muted-foreground text-xs leading-5">
+                                        Identité protégée
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                                    <p className="text-muted-foreground flex max-w-full min-w-0 items-center gap-1.5 truncate text-sm leading-5">
+                                      <span className="min-w-0 truncate">
+                                        {getUserLoginDisplay(user)}
+                                      </span>
+                                      {user.contactEmail && (
+                                        <span className="truncate">
+                                          · {user.contactEmail}
+                                        </span>
+                                      )}
+                                    </p>
+                                  </div>
+                                </div>
+                              </Link>
+                            </TableCell>
+                            <TableCell className="pointer-events-none py-3">
+                              <UserAccessLabel user={user} />
+                            </TableCell>
+                            <TableCell className="pointer-events-none py-3">
+                              <UserStatusLabel isActive={user.isActive} />
+                            </TableCell>
+                            {securityDetailsVisible && (
+                              <TableCell className="pointer-events-none py-3">
+                                {user.mustChangePassword ? (
+                                  <span className="border-warning/40 bg-warning/15 text-warning inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap">
+                                    <span
+                                      aria-hidden="true"
+                                      className="size-1.5 shrink-0 rounded-full bg-current"
+                                    />
+                                    À changer
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">
+                                    —
+                                  </span>
+                                )}
+                              </TableCell>
+                            )}
+                            <TableCell className="text-muted-foreground pointer-events-none py-3 text-sm leading-5 tabular-nums">
+                              {formatUserLastLogin(user)}
+                            </TableCell>
+                            <TableCell className="pointer-events-none py-3">
+                              <ArrowRight
+                                aria-hidden="true"
+                                className="text-muted-foreground size-4"
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </DataTableDesktop>
+                <DataTableMobileList className={directoryStyles.mobileList}>
+                  {displayedUsers.length === 0 ? (
+                    <ContentState
+                      className="min-h-48 border-0 bg-transparent"
+                      icon={<UserMinus className="size-5" />}
+                      layout="panel"
+                      title={
+                        loadError
+                          ? 'Utilisateurs indisponibles'
+                          : 'Aucun utilisateur trouvé'
                       }
-                      className="hover:bg-surface-tile-hover focus-visible:bg-primary/10 focus-visible:ring-primary/70 block p-4 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
-                      href={getUserDetailHref(user.id)}
-                      key={user.id}
-                      prefetch={false}
-                    >
-                      <div className="flex items-start gap-3">
-                        <UserAvatar
-                          user={user}
-                          className="border-border-default size-10 shrink-0 rounded-full border"
-                        />
-                        <div className="min-w-0 flex-1 space-y-2">
-                          <div className="min-w-0">
-                            <div className="flex min-w-0 flex-wrap items-center gap-2">
-                              <h3 className="text-foreground min-w-0 text-sm font-semibold [overflow-wrap:anywhere]">
-                                {getUserDisplayName(user)}
-                              </h3>
-                              {isUserIdentityMasked(user) && (
-                                <span className="text-muted-foreground text-xs leading-5">
-                                  Identité protégée
-                                </span>
+                      action={
+                        !loadError &&
+                        hasActiveFilters && (
+                          <Button
+                            type="button"
+                            variant="link"
+                            size="sm"
+                            onClick={clearFilters}
+                          >
+                            Réinitialiser
+                          </Button>
+                        )
+                      }
+                    />
+                  ) : (
+                    displayedUsers.map((user) => (
+                      <Link
+                        aria-label={
+                          user.id === currentUser?.id
+                            ? 'Ouvrir mon compte'
+                            : `Ouvrir le compte de ${getUserDisplayName(user)}`
+                        }
+                        className="focus-visible:bg-primary/10 focus-visible:ring-primary/70 block px-4 py-3 hover:bg-[var(--surface-row-hover)] focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+                        href={getUserDetailHref(user.id)}
+                        key={user.id}
+                        prefetch={false}
+                      >
+                        <div className="flex items-start gap-3">
+                          <UserAvatar
+                            user={user}
+                            className="border-border-default size-9 shrink-0 rounded-full border"
+                          />
+                          <div className="min-w-0 flex-1 space-y-2">
+                            <div className="min-w-0">
+                              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                <h3 className="text-foreground min-w-0 text-sm font-semibold [overflow-wrap:anywhere]">
+                                  {getUserDisplayName(user)}
+                                </h3>
+                                {isUserIdentityMasked(user) && (
+                                  <span className="text-muted-foreground text-xs leading-5">
+                                    Identité protégée
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-muted-foreground mt-0.5 truncate text-sm leading-5">
+                                {getUserLoginDisplay(user)}
+                              </p>
+                              {user.contactEmail && (
+                                <p className="text-muted-foreground mt-0.5 text-sm leading-5 [overflow-wrap:anywhere]">
+                                  {user.contactEmail}
+                                </p>
                               )}
                             </div>
-                            <p className="text-muted-foreground mt-0.5 truncate text-sm leading-5">
-                              {getUserLoginDisplay(user)}
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                              <UserAccessLabel user={user} />
+                              <UserStatusLabel isActive={user.isActive} />
+                            </div>
+                            {securityDetailsVisible &&
+                              user.mustChangePassword && (
+                                <div>
+                                  <span className="border-warning/40 bg-warning/15 text-warning inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap">
+                                    <span
+                                      aria-hidden="true"
+                                      className="size-1.5 shrink-0 rounded-full bg-current"
+                                    />
+                                    Mot de passe à changer
+                                  </span>
+                                </div>
+                              )}
+                            <p className="text-muted-foreground text-sm leading-5 tabular-nums">
+                              Dernière connexion :{' '}
+                              {formatUserLastLogin(user).toLowerCase()}
                             </p>
-                            {user.contactEmail && (
-                              <p className="text-muted-foreground mt-0.5 text-sm leading-5 [overflow-wrap:anywhere]">
-                                {user.contactEmail}
-                              </p>
-                            )}
                           </div>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                            <UserAccessLabel user={user} />
-                            <UserStatusLabel isActive={user.isActive} />
-                          </div>
-                          {securityDetailsVisible &&
-                            user.mustChangePassword && (
-                              <div>
-                                <Badge
-                                  variant="outline"
-                                  className="border-warning/30 text-warning max-w-full rounded-sm bg-transparent text-left text-xs whitespace-normal"
-                                >
-                                  Mot de passe à changer
-                                </Badge>
-                              </div>
-                            )}
-                          <p className="text-muted-foreground text-sm leading-5 tabular-nums">
-                            Dernière connexion :{' '}
-                            {formatUserLastLogin(user).toLowerCase()}
-                          </p>
                         </div>
-                      </div>
-                    </Link>
-                  ))
-                )}
-              </DataTableMobileList>
-            </>
-          )}
+                      </Link>
+                    ))
+                  )}
+                </DataTableMobileList>
+              </>
+            )}
+            <nav
+              aria-label="Pagination des utilisateurs"
+              className={directoryStyles.pagination}
+            >
+              <p>
+                Page <strong>{currentPage}</strong>
+              </p>
+              <div className={directoryStyles.paginationActions}>
+                <Button
+                  aria-label="Page précédente"
+                  className={directoryStyles.pageButton}
+                  disabled={isLoading || currentPage <= 1}
+                  onClick={() =>
+                    setCurrentPage((page) => Math.max(1, page - 1))
+                  }
+                  size="icon"
+                  type="button"
+                  variant="ghost"
+                >
+                  <ChevronLeft aria-hidden="true" />
+                </Button>
+                <Button
+                  aria-label="Page suivante"
+                  className={directoryStyles.pageButton}
+                  disabled={isLoading || currentPage >= totalPages}
+                  onClick={() =>
+                    setCurrentPage((page) => Math.min(totalPages, page + 1))
+                  }
+                  size="icon"
+                  type="button"
+                  variant="ghost"
+                >
+                  <ChevronRight aria-hidden="true" />
+                </Button>
+              </div>
+            </nav>
+          </>
         </DataTableSection>
       </div>
-    </>
+    </PageAsideLayout>
   );
 };
