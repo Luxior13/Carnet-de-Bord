@@ -64,12 +64,9 @@ describe('known page destinations', () => {
     '/personnes/person-1?section=contacts',
     '/systeme/journal-activite?period=7d',
     '/mes-notifications?status=unread',
-  ])(
-    'keeps legacy or parked destinations redirectable: %s',
-    (href) => {
-      expect(isKnownInternalPageHref(href)).toBe(true);
-    },
-  );
+  ])('keeps legacy or parked destinations redirectable: %s', (href) => {
+    expect(isKnownInternalPageHref(href)).toBe(true);
+  });
 
   it.each(['/future-module', '/systeme/utilisateurs/user-1/unknown'])(
     'rejects the unknown or planned destination %s',
