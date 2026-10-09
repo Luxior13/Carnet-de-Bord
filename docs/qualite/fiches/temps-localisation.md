@@ -37,5 +37,5 @@ Un simple horodatage technique ne justifie pas un moteur de calendrier.
 
 ## Références
 
-[Structure](../../STRUCTURE.md) · [Notifications](notifications.md) si échéance ·
+[Structure](../../references/STRUCTURE.md) · [Notifications](notifications.md) si échéance ·
 [Finances](finance-contrats.md) si exercice ou montant.

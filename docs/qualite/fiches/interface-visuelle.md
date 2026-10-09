@@ -45,5 +45,5 @@ Utilisateurs à un formulaire, un calendrier ou une page de lecture.
 
 ## Références
 
-[Design system](../../DESIGN_SYSTEM.md) · [Accessibilité](accessibilite.md) ·
-[Audit historique Utilisateurs](../../AUDIT_UI_UTILISATEURS_2026-09-26.md).
+[Design system](../../references/DESIGN_SYSTEM.md) · [Accessibilité](accessibilite.md) ·
+[Audit historique Utilisateurs](../../audits/AUDIT_UI_UTILISATEURS_2026-09-26.md).

@@ -36,5 +36,5 @@ uniquement parce qu’elle a déjà été développée.
 
 ## Références
 
-[Feuille de route](../../FEUILLE_DE_ROUTE.md) · [Navigation](../../NAVIGATION.md) ·
-[Structure](../../STRUCTURE.md).
+[Feuille de route](../../references/FEUILLE_DE_ROUTE.md) · [Navigation](../../references/NAVIGATION.md) ·
+[Structure](../../references/STRUCTURE.md).

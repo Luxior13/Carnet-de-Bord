@@ -35,5 +35,5 @@ ni message. Rouvrir si une règle, un droit ou un état change l’action possib
 
 ## Références
 
-[Navigation](../../NAVIGATION.md) · [UX selon le type de page](../REVUE_GENERALE.md) ·
+[Navigation](../../references/NAVIGATION.md) · [UX selon le type de page](../REVUE_GENERALE.md) ·
 [Formulaires](formulaires-actions.md) si une saisie est concernée.

@@ -39,6 +39,6 @@ Un export utilisateur n’est pas une stratégie de sauvegarde.
 
 ## Références
 
-[Guide d’exploitation](../../OPERATIONS.md) ·
+[Guide d’exploitation](../../references/OPERATIONS.md) ·
 [Base et restauration](../../../packages/database/prisma/README.md) ·
 [Suppression](suppression-archivage.md).

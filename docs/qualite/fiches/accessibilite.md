@@ -41,4 +41,4 @@ sur l’expérience. Toute interaction ou présentation modifiée la réactive.
 
 ## Références
 
-[Design system](../../DESIGN_SYSTEM.md) · [Tests](tests-validation.md).
+[Design system](../../references/DESIGN_SYSTEM.md) · [Tests](tests-validation.md).

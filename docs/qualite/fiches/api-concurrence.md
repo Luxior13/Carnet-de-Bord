@@ -39,5 +39,5 @@ des commandes. Lecture seule ne signifie pas absence de risque d’exposition ou
 
 ## Références
 
-[Architecture](../../FEATURE_ARCHITECTURE.md) · [Permissions](permissions.md) ·
+[Architecture](../../references/FEATURE_ARCHITECTURE.md) · [Permissions](permissions.md) ·
 [Automatisations](automatisations-integrations.md) si un effet différé est nécessaire.

@@ -41,5 +41,5 @@ rappelé. Conserver cette décision sans créer de modèle, de table ou de canal
 
 ## Références
 
-[Feedback](../../FEEDBACK.md) · [Permissions](permissions.md) ·
+[Feedback](../../references/FEEDBACK.md) · [Permissions](permissions.md) ·
 [Automatisations](automatisations-integrations.md) si nécessaire.

@@ -8,7 +8,7 @@
 - Type : liste de gestion privée ; fiche et formulaire de création hors de ce suivi.
 - Sources : [page](../../../apps/web/src/app/systeme/utilisateurs/page.tsx),
   [liste](../../../apps/web/src/features/users/UsersListPage.tsx),
-  [disposition](../../../apps/web/src/features/users/UsersListLayout.module.css).
+  [disposition](../../../apps/web/src/components/ui/directory.module.css).
 - Ce suivi est amorcé le 26 septembre 2026 depuis les décisions et contrôles déjà
   consignés. La création du référentiel n’a pas rejoué ces contrôles.
 - Passe de clôture du 26 septembre 2026 : classement des 30 sujets, lecture des
@@ -25,7 +25,7 @@
   grand écran ; adaptation en cartes selon la largeur réelle.
 - Palette bleue proche de la sidebar, badges discrets sans fond coloré dominant.
 - Recherche, filtres, tri et pagination serveur ; la liste n’affiche pas tous les
-  comptes à la fois. Permissions effectives décrites dans [PERMISSIONS](../../PERMISSIONS.md).
+  comptes à la fois. Permissions effectives décrites dans [PERMISSIONS](../../references/PERMISSIONS.md).
 - Aucun nouveau toast ou événement durable n’est nécessaire pour simplement lire
   la liste ou changer un filtre. Les événements de sécurité des autres parcours
   conservent leurs règles propres.
@@ -170,7 +170,7 @@ Ces exemples ne remplacent pas le passage de toutes les questions de sélection.
 
 ## Contrôles historiques et limites
 
-Le [rapport daté](../../AUDIT_UI_UTILISATEURS_2026-09-26.md) conserve le détail des
+Le [rapport daté](../../audits/AUDIT_UI_UTILISATEURS_2026-09-26.md) conserve le détail des
 mesures, décisions et limites. Les captures, relevés et scripts temporaires ont
 été supprimés à la demande de l’utilisateur.
 
@@ -190,6 +190,8 @@ passe aligne la liste des comptes sans changer le métier :
   à la frappe et avec Entrée, comme le répertoire.
 - Pagination affiche désormais « Page N sur M ».
 - Légende masquée ajoutée au tableau pour l'accessibilité.
+- Avatars des comptes passés en style DiceBear `voxel-bot`, carrés (7 px),
+  alignés sur le répertoire.
 
 Non appliqué : la recherche reste insensible à la casse mais pas aux accents.
 Une recherche insensible aux accents demande soit des colonnes normalisées sur

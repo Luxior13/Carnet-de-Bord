@@ -41,5 +41,5 @@ Rouvrir lors d’une création d’entité, transfert ou évolution des pouvoirs
 
 ## Références
 
-[Structure](../../STRUCTURE.md) · [Rôles cibles](../../ROLES_ET_PERMISSIONS.md) ·
-[Feuille de route](../../FEUILLE_DE_ROUTE.md).
+[Structure](../../references/STRUCTURE.md) · [Rôles cibles](../../references/ROLES_ET_PERMISSIONS.md) ·
+[Feuille de route](../../references/FEUILLE_DE_ROUTE.md).

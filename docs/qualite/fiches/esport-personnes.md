@@ -39,5 +39,5 @@ d’une compétition à tout l’esport.
 
 ## Références
 
-[Structure](../../STRUCTURE.md) · [Feuille de route](../../FEUILLE_DE_ROUTE.md) ·
+[Structure](../../references/STRUCTURE.md) · [Feuille de route](../../references/FEUILLE_DE_ROUTE.md) ·
 [Confidentialité](confidentialite.md) · [Temps](temps-localisation.md).

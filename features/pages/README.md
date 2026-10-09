@@ -5,11 +5,11 @@ La référence courante est la [matrice de préparation](MATRICE_PREPARATION.md)
 ## À lire avant de développer
 
 - [Revue générale](../../docs/qualite/REVUE_GENERALE.md) : questions de sélection puis fiches utiles au changement ; [suivi courant des pages](../../docs/qualite/pages/README.md).
-- [Feuille de route](../../docs/FEUILLE_DE_ROUTE.md) : décisions, six étapes et périmètres.
-- [Navigation](../../docs/NAVIGATION.md) : quatre pôles actifs, huit pôles cibles et règles de placement.
-- [Structure](../../docs/STRUCTURE.md) : entités juridiques, historique, saisons et objets financiers.
-- [Rôles et périmètres](../../docs/ROLES_ET_PERMISSIONS.md) : cible métier et contrôle par ressource.
-- [Permissions actives](../../docs/PERMISSIONS.md) : fonctionnement actuellement livré.
+- [Feuille de route](../../docs/references/FEUILLE_DE_ROUTE.md) : décisions, six étapes et périmètres.
+- [Navigation](../../docs/references/NAVIGATION.md) : quatre pôles actifs, huit pôles cibles et règles de placement.
+- [Structure](../../docs/references/STRUCTURE.md) : entités juridiques, historique, saisons et objets financiers.
+- [Rôles et périmètres](../../docs/references/ROLES_ET_PERMISSIONS.md) : cible métier et contrôle par ressource.
+- [Permissions actives](../../docs/references/PERMISSIONS.md) : fonctionnement actuellement livré.
 - [Catalogue applicatif](../../apps/web/src/features/roadmap/roadmap.constants.ts) : cartes affichées dans `/feuille-de-route`.
 
 ## Fiches historiques

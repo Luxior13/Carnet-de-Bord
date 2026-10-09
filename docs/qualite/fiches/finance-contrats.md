@@ -42,5 +42,5 @@ de revenu, pays, devise, entité, prestataire ou obligation vérifiée.
 
 ## Références
 
-[Structure et objets financiers](../../STRUCTURE.md) · [Permissions](permissions.md) ·
+[Structure et objets financiers](../../references/STRUCTURE.md) · [Permissions](permissions.md) ·
 [Audit](audit-historique.md) · [API/concurrence](api-concurrence.md).

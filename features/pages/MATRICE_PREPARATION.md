@@ -1,6 +1,6 @@
 # Matrice de préparation — état réel et projets
 
-Référence révisée le 9 octobre 2026. Les chantiers proviennent du [catalogue de la feuille de route](../../apps/web/src/features/roadmap/roadmap.constants.ts). L’ordre et les décisions sont décrits dans [FEUILLE_DE_ROUTE.md](../../docs/FEUILLE_DE_ROUTE.md).
+Référence révisée le 9 octobre 2026. Les chantiers proviennent du [catalogue de la feuille de route](../../apps/web/src/features/roadmap/roadmap.constants.ts). L’ordre et les décisions sont décrits dans [FEUILLE_DE_ROUTE.md](../../docs/references/FEUILLE_DE_ROUTE.md).
 
 ## Pages actuellement disponibles
 

@@ -38,5 +38,5 @@ d’audit. Reconsidérer pour les lectures sensibles si la politique du dossier 
 
 ## Références
 
-[Exploitation et purge](../../OPERATIONS.md) ·
-[Confidentialité](confidentialite.md) · [Architecture](../../FEATURE_ARCHITECTURE.md).
+[Exploitation et purge](../../references/OPERATIONS.md) ·
+[Confidentialité](confidentialite.md) · [Architecture](../../references/FEATURE_ARCHITECTURE.md).

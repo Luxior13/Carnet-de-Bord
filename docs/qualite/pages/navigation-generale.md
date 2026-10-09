@@ -12,7 +12,7 @@ Sources : [Sidebar](../../../apps/web/src/components/Sidebar.tsx),
 [primitives](../../../apps/web/src/components/ui/sidebar.tsx),
 [Header](../../../apps/web/src/components/layout/Header.tsx),
 [fil d’Ariane](../../../apps/web/src/components/ui/breadcrumb.tsx),
-[navigation canonique](../../NAVIGATION.md).
+[navigation canonique](../../references/NAVIGATION.md).
 
 - Sidebar ancrée à gauche, toujours ouverte à 264 px sur ordinateur.
   Réduction et bouton desktop retirés à la demande de l’utilisateur le 27 septembre.
@@ -244,10 +244,10 @@ n’a pas été rejoué pour ce retrait.
 
 Demande : examiner le popover et proposer les améliorations adaptées à un aperçu
 rapide. **État initial avant les corrections autorisées et décrites ci-dessous.**
-Sources : [NotificationCenter](../../../apps/web/src/components/layout/NotificationCenter.tsx),
+Sources : [notifications du Header](../../../apps/web/src/components/layout/Header.tsx),
 [popover partagé](../../../apps/web/src/components/ui/popover.tsx),
-[lecture API](../../../apps/web/src/app/api/notifications/route.ts) et
-[action individuelle](../../../apps/web/src/app/api/notifications/[id]/route.ts).
+lecture API (retirée — notifications replanifiées) et
+action individuelle (retirée).
 
 Sélection fonctionnelle :
 
@@ -373,7 +373,7 @@ pas des personnes ou des dossiers métier. Conserver cette portée explicite.
 Sources : [QuickNavigation](../../../apps/web/src/components/layout/GlobalSearch.tsx),
 [classement](../../../apps/web/src/components/layout/global-search.utils.ts),
 [catalogue](../../../apps/web/src/features/search/search-catalog.ts) et
-[recherche complète](../../../apps/web/src/features/search/SearchPage.tsx).
+recherche complète (retirée).
 
 Sélection fonctionnelle : à examiner Q01–Q07, Q09, Q17, Q19, Q27, Q30 : besoin,
 contenu, présentation, clavier, collection, saisie, absence de résultat, accès,

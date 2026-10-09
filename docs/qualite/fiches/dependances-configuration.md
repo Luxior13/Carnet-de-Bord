@@ -41,4 +41,4 @@ Réouvrir à chaque changement de version majeure, fournisseur ou politique.
 ## Références
 
 [AGENTS.md](../../../AGENTS.md) · [Références canoniques](../REFERENCES.md) ·
-[Exploitation](../../OPERATIONS.md).
+[Exploitation](../../references/OPERATIONS.md).

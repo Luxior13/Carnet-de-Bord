@@ -4,6 +4,14 @@ Lire [AGENTS.md](../../AGENTS.md) avant ce guide. Utiliser cette revue pour un
 ajout, une modification, une correction, une optimisation et une suppression.
 Elle s’applique au parcours complet : écran, API, données et effets indirects.
 
+## Règle de lecture
+
+Ne lire que les fiches utiles au besoin **et à ses effets indirects**. Un sujet
+absent est ignoré : aucune lecture de sa fiche, aucun ajout de permission, de
+notification, de cache ou de test pour remplir une grille. Quand plusieurs
+fiches semblent s'appliquer, suivre les dépendances réellement déclenchées ;
+une recherche ciblée des imports et appels suffit souvent.
+
 ## 1. Définir le changement
 
 Répondre brièvement :
@@ -82,6 +90,18 @@ notifications, exports, pièces, caches et liens directs peuvent révéler une d
 Une page privée conserve un contrôle serveur ; « pas de nouvelle permission »
 ne signifie jamais « pas de contrôle d’accès ».
 
+### Exemples de sélection
+
+| Besoin | Fiches à examiner en priorité |
+| --- | --- |
+| Nouvelle page de lecture statique | Q01, Q02, Q03, Q04, Q27 ; le reste est ignoré. |
+| Liste de gestion avec recherche et filtres | Q01, Q02, Q03, Q04, Q05, Q09, Q17, Q19, Q27. |
+| Nouvelle mutation sur une personne | Q01, Q06, Q07, Q09, Q10, Q11, Q12, Q14, Q15, Q25, Q27. |
+| Suppression d'une donnée ou d'un droit | Q16, Q11, Q14, Q29, en plus des fiches de la fonction concernée. |
+
+Ces exemples restent à adapter aux dépendances constatées ; ils ne remplacent pas
+le passage de la table Q01–Q30.
+
 ## 4. Adapter à la forme de la page
 
 | Type | Priorité | Adaptations attendues |
@@ -110,6 +130,11 @@ valeur attendue, une date correspond-elle au bon événement, un filtre ou un tr
 produit-il le bon résultat, et une action fait-elle bien ce qu'annonce son
 libellé ? Contrôler les cas limites et les droits quand ils changent le contenu
 visible. Le rendu « propre » ne remplace pas la justesse de la donnée.
+
+Relire les textes et libellés : sont-ils logiques et cohérents avec la page
+(noms clairs, accords, unités, ton uniforme) ? Un libellé ne doit pas promettre
+une action absente, et le même concept doit garder le même nom d'une page à
+l'autre.
 
 Exemple : un nombre peut demander une saisie directe, des boutons −/+, une liste
 de valeurs ou une simple lecture selon son sens, sa plage et la fréquence des

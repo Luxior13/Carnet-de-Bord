@@ -15,8 +15,8 @@
 - État courant : corrections fonctionnelles et visuelles vérifiées avec API simulée.
   Les contrôles sur session/base réelles et les volumes de production restent ouverts.
 - Références : [revue générale](../REVUE_GENERALE.md),
-  [design system](../../DESIGN_SYSTEM.md), [permissions](../../PERMISSIONS.md),
-  [exploitation](../../OPERATIONS.md),
+  [design system](../../references/DESIGN_SYSTEM.md), [permissions](../../references/PERMISSIONS.md),
+  [exploitation](../../references/OPERATIONS.md),
   [conservation et portée du journal](systeme-parametres.md#portée-du-journal--constat-et-séparation-à-préparer).
 - La [fiche historique](../../../features/pages/systeme/journal-activite.md)
   contient des fonctions et routes prévues ; elle ne décrit pas l’état livré.
@@ -168,7 +168,7 @@ Le journal n’est pas une sauvegarde ni le propriétaire des engagements métie
   du dépôt, avec shell/session/routeur et API simulés. Le vrai dialogue de
   confirmation d’identité est rendu, sa réponse API est simulée. La police de
   l’aperçu est Arial ; le téléchargement de la police de production n’est pas validé.
-- Le parcours réutilisable [system-activity-journal.checks.ts](../../../apps/web/e2e/system-activity-journal.checks.ts)
+- Le parcours réutilisable system-activity-journal.checks.ts (retiré)
   couvre les critères contextuels, la séparation des actions, les détails de deux
   coordonnées, la suppression de filtres, les dates sans soumission implicite,
   erreurs locales, focus Actualiser/Charger plus, conservation des lignes après

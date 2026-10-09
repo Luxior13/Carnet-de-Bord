@@ -37,5 +37,5 @@ Réexaminer après exposition externe, dépendance sensible ou incident.
 
 ## Références
 
-[Permissions](permissions.md) · [Exploitation](../../OPERATIONS.md) ·
+[Permissions](permissions.md) · [Exploitation](../../references/OPERATIONS.md) ·
 [Références de sécurité](../REFERENCES.md).

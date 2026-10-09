@@ -41,5 +41,5 @@ les limites de la requête synchrone sont réellement atteintes.
 
 ## Références
 
-[Exploitation actuelle](../../OPERATIONS.md) · [API](api-concurrence.md) ·
+[Exploitation actuelle](../../references/OPERATIONS.md) · [API](api-concurrence.md) ·
 [Notifications](notifications.md) · [Confidentialité](confidentialite.md).

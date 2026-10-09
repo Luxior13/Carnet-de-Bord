@@ -23,6 +23,7 @@ Q08 non applicable et ne pas lire la fiche Notifications.
 | `AGENTS.md` | Point d’entrée et règles de travail | Quand la méthode de collaboration change |
 | `REVUE_GENERALE.md` | Sélection, niveau de risque et fin de revue | Quand un angle de contrôle manque ou devient redondant |
 | `fiches/*.md` | Questions et vérifications par sujet | Avec les apprentissages réutilisables |
+| `SUJETS_FUTURS.md` | Candidats de fiches à rédiger quand un module devient réel | Avec la création de la fiche correspondante |
 | `REFERENCES.md` | Où trouver les règles canoniques et les sources | Quand leur emplacement ou leur autorité change |
 | `modeles/revue-page.md` | Trame de suivi d’une page ou d’un module | Quand le suivi doit évoluer |
 | `modeles/decision.md` | Trame de décision structurante | Seulement pour les choix durables et contestables |

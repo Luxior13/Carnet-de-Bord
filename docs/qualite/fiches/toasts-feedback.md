@@ -39,5 +39,5 @@ l’action devient asynchrone, partielle ou difficile à constater dans la page.
 
 ## Références
 
-[Politique de feedback](../../FEEDBACK.md) · [Notifications](notifications.md)
+[Politique de feedback](../../references/FEEDBACK.md) · [Notifications](notifications.md)
 uniquement si un événement durable doit être communiqué.

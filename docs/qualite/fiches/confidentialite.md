@@ -41,5 +41,5 @@ destinataire, finalité, pays ou statut de la structure.
 
 ## Références
 
-[Structure](../../STRUCTURE.md) · [Suppression](suppression-archivage.md) ·
+[Structure](../../references/STRUCTURE.md) · [Suppression](suppression-archivage.md) ·
 [Sauvegarde](sauvegarde-restauration.md).

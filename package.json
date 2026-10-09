@@ -22,6 +22,7 @@
     "test:e2e": "turbo run test:e2e --filter=web",
     "typecheck": "turbo run typecheck",
     "clear": "bun scripts/clear-workspace.mjs",
+    "docs:check": "bun scripts/check-docs.mjs",
     "ncu": "ncu -ws -i"
   },
   "workspaces": [

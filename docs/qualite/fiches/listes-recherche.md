@@ -36,5 +36,5 @@ des statistiques ou une action collective change.
 
 ## Références
 
-[Architecture](../../FEATURE_ARCHITECTURE.md) · [Performance](performance.md) ·
+[Architecture](../../references/FEATURE_ARCHITECTURE.md) · [Performance](performance.md) ·
 [Permissions](permissions.md).

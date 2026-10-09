@@ -39,5 +39,5 @@ le même besoin revient, qu’une exception se multiplie ou qu’un module est r
 
 ## Références
 
-[Contrat d’architecture](../../FEATURE_ARCHITECTURE.md) ·
-[Exploitation](../../OPERATIONS.md) · [Modèle de décision](../modeles/decision.md).
+[Contrat d’architecture](../../references/FEATURE_ARCHITECTURE.md) ·
+[Exploitation](../../references/OPERATIONS.md) · [Modèle de décision](../modeles/decision.md).

@@ -1,7 +1,7 @@
 'use client';
 
 import { Avatar, Style } from '@dicebear/core';
-import notionistsDefinition from '@dicebear/styles/notionists-neutral.json';
+import voxelBotDefinition from '@dicebear/styles/voxel-bot.json';
 import React, { type FC } from 'react';
 
 import type { UserType } from '$types/auth.types';
@@ -23,12 +23,12 @@ const ACCOUNT_BACKGROUND_COLORS = [
   'c9b4e8',
 ];
 
-const NOTIONISTS_STYLE = new Style(notionistsDefinition);
+const VOXEL_BOT_STYLE = new Style(voxelBotDefinition);
 
 const createAccountAvatarDataUri = (seed: string): string =>
-  new Avatar(NOTIONISTS_STYLE, {
+  new Avatar(VOXEL_BOT_STYLE, {
     backgroundColor: ACCOUNT_BACKGROUND_COLORS,
-    borderRadius: 12,
+    borderRadius: 0,
     seed,
     size: 96,
   }).toDataUri();

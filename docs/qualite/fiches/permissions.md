@@ -40,5 +40,5 @@ ne peut pas être exemptée au motif qu’il n’y a pas de bouton Modifier.
 
 ## Références
 
-[Permissions actives](../../PERMISSIONS.md) ·
-[Rôles métier cibles](../../ROLES_ET_PERMISSIONS.md).
+[Permissions actives](../../references/PERMISSIONS.md) ·
+[Rôles métier cibles](../../references/ROLES_ET_PERMISSIONS.md).

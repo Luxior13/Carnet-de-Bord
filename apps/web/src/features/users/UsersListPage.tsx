@@ -881,7 +881,7 @@ export const UsersListPage: FC = () => {
                               >
                                 <UserAvatar
                                   user={user}
-                                  className="border-border-default size-9 shrink-0 rounded-full border"
+                                  className="border-border-default size-9 shrink-0 rounded-[7px] border"
                                 />
                                 <div className="min-w-0">
                                   <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -988,7 +988,7 @@ export const UsersListPage: FC = () => {
                         <div className="flex items-start gap-3">
                           <UserAvatar
                             user={user}
-                            className="border-border-default size-9 shrink-0 rounded-full border"
+                            className="border-border-default size-9 shrink-0 rounded-[7px] border"
                           />
                           <div className="min-w-0 flex-1 space-y-2">
                             <div className="min-w-0">

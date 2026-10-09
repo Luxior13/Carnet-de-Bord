@@ -9,6 +9,12 @@ une API, une tâche, un schéma ou un composant partagé, même sans page.
 
 - Respecter le périmètre demandé et les décisions déjà données dans la conversation.
 - Qualifier le besoin avant de développer. Une capacité inutile peut être omise.
+- Consigner au fil de l'eau : tout point de décision, règle ou connaissance
+  durable évoqué en conversation est ajouté au fichier pertinent (suivi de page,
+  fiche, référence ou `SUJETS_FUTURS.md`) sans attendre d'autorisation.
+- Ne pas lire toute la documentation : suivre la « Règle de lecture » de la revue
+  générale et ignorer les fiches dont le sujet est absent du besoin et de ses
+  effets indirects.
 - Adapter la profondeur de contrôle au risque ; une retouche de texte ne demande
   pas le même travail qu’une migration ou un changement de permissions.
 - Ne pas transformer une fiche en exigence de créer une notification, une table,
@@ -18,8 +24,10 @@ une API, une tâche, un schéma ou un composant partagé, même sans page.
 - Ne pas confondre contrôle non effectué et validation réussie.
 - Consulter les décisions courantes de la page et les références canoniques.
   Ne pas recopier un audit daté comme règle générale.
-- Mettre à jour le suivi existant ; créer un suivi de page seulement si des
-  décisions durables le justifient. Aucun nouveau dossier pour chaque retouche.
+- Chaque page travaillée a un suivi dans `docs/qualite/pages/` : créer un
+  document pour chaque nouvelle page, ou mettre à jour celui de la page sur
+  laquelle on travaille si nécessaire. Ne pas créer de suivi vide ; une simple
+  retouche met à jour le suivi existant, sans nouveau dossier.
 - Ces documents n’ajoutent aucune demande de permission pour le travail déjà
   autorisé. Les autorisations explicites de la session restent applicables.
 

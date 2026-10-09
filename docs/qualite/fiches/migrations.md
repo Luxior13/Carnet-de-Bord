@@ -41,4 +41,4 @@ de champ ou un changement de sens la rend applicable même sans nouvelle table.
 ## Références
 
 [Guide de base](../../../packages/database/prisma/README.md) ·
-[Exploitation](../../OPERATIONS.md) · [Sauvegarde](sauvegarde-restauration.md).
+[Exploitation](../../references/OPERATIONS.md) · [Sauvegarde](sauvegarde-restauration.md).

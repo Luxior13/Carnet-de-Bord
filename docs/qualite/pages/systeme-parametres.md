@@ -9,8 +9,8 @@
 - État : présentation et corrections implémentées, contrôles ciblés réussis.
   Les limites d'exploitation et de validation complète figurent ci-dessous.
 - Références : [revue générale](../REVUE_GENERALE.md),
-  [design system](../../DESIGN_SYSTEM.md), [navigation](../../NAVIGATION.md),
-  [permissions](../../PERMISSIONS.md), [exploitation](../../OPERATIONS.md).
+  [design system](../../references/DESIGN_SYSTEM.md), [navigation](../../references/NAVIGATION.md),
+  [permissions](../../references/PERMISSIONS.md), [exploitation](../../references/OPERATIONS.md).
 - La [fiche historique](../../../features/pages/systeme/parametres.md) reste
   consultable ; ce suivi porte les décisions et résultats courants.
 
@@ -160,11 +160,11 @@ Séparation future, **non implémentée dans cette passe** :
    lorsque leurs périmètres sont réellement distincts dans le traitement.
 
 Références d'implémentation examinées :
-[classification des événements](../../../../apps/web/src/shared/server/audit-event.ts),
-[schéma et relations](../../../../packages/database/prisma/schema.prisma),
-[procédures de purge](../../../../packages/database/prisma/migrations/20260721120000_person_identity_foundation/migration.sql),
-[écriture de l'historique personne](../../../../apps/web/src/features/persons/server/person-audit.ts),
-[lecture de cet historique](../../../../apps/web/src/features/persons/server/person-history.service.ts).
+[classification des événements](../../../apps/web/src/shared/server/audit-event.ts),
+[schéma et relations](../../../packages/database/prisma/schema.prisma),
+[procédures de purge](../../../packages/database/prisma/migrations/20260721120000_person_identity_foundation/migration.sql),
+[écriture de l'historique personne](../../../apps/web/src/features/persons/server/person-audit.ts),
+[lecture de cet historique](../../../apps/web/src/features/persons/server/person-history.service.ts).
 
 ## Sélection des sujets
 
@@ -346,7 +346,7 @@ Q20–Q21 et Q24–Q26 non applicables : aucun document, échange ou parcours m�
   fin d'une purge. Vérification de l'attente réelle dans `pg_locks`, des données
   conservées et de l'expiration individuelle. Aucune purge des données du site.
 - Régression navigateur durable dans
-  [system-settings.checks.ts](../../../../apps/web/e2e/system-settings.checks.ts),
+  [system-settings.checks.ts](../../../apps/web/e2e/system-settings.checks.ts),
   appelée depuis le smoke administrateur. Exécutée ici sur le montage isolé ;
   le smoke complet avec authentification réelle n'a pas été rejoué.
 - Montage Chromium : composant, styles, formulaires et dialogues réels ; shell,
