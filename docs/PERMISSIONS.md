@@ -234,7 +234,7 @@ droits individuels.
 | `/mes-notifications` et `/tableau-de-bord/mes-notifications` | redirection vers `/systeme/feuille-de-route` ; le module notifications est replanifié, sans permission active                                                       |
 | `/mon-compte`                                        | droits `account:*`, toujours limités au compte connecté                                                                                                    |
 | `/systeme/feuille-de-route`                                  | authentification ; catalogue informatif des pages planifiées, sans attribution de droits                                                                   |
-| `/recherche`                                         | authentification ; chaque résultat est filtré selon la destination réellement autorisée                                                                    |
+| `/recherche`                                         | redirection vers `/` ; la navigation rapide de l’en-tête reste sans permission supplémentaire et filtre chaque destination autorisée                       |
 | `/membres/repertoire`                            | `persons:view` pour consulter et rechercher le répertoire                                                                                                  |
 | `/membres/repertoire/nouveau`                    | `persons:create`, donc aussi `persons:view`                                                                                                                |
 | `/membres/repertoire/[id]`                       | `persons:view` pour la fiche ; les mutations exigent `persons:update` ou `persons:delete`                                                                  |

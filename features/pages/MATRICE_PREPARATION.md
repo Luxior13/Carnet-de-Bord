@@ -9,7 +9,7 @@ Référence révisée le 9 octobre 2026. Les chantiers proviennent du [catalogue
 | `/` | Accueil livré, vues métier à enrichir | Aujourd’hui |
 | `/mes-notifications` | Module retiré le 9 octobre 2026, à reconstruire ; redirige vers la feuille de route | — |
 | `/mon-compte` | Profil et sécurité du compte livrés | Outils globaux |
-| `/recherche` | Recherche de pages livrée ; recherche de dossiers future | Outils globaux |
+| `/recherche` | Page retirée le 9 octobre 2026 ; navigation rapide conservée ; redirige vers l’accueil | Outils globaux |
 | `/membres/repertoire`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Personne livrées | Membres |
 | `/activite/actualites` | Module mis en attente, à reconstruire ; redirige vers la feuille de route | — |
 | `/systeme/utilisateurs`, `/nouveau`, `/[id]` sous ce chemin | Liste, création et fiche Utilisateur livrées | Système |

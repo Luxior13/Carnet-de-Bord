@@ -8,7 +8,6 @@ export const PAGE_PATHS = {
   newUser: '/systeme/utilisateurs/nouveau',
   persons: '/membres/repertoire',
   roadmap: '/systeme/feuille-de-route',
-  search: '/recherche',
   system: '/systeme',
   systemActivity: '/systeme/journal-activite',
   systemSettings: '/systeme/parametres',
@@ -74,6 +73,13 @@ export const LEGACY_PAGE_ALIASES = [
     collection: false,
     destination: PAGE_PATHS.roadmap,
     source: PAGE_PATHS.systemActivity,
+  },
+  // The full search page was removed: its former URL returns to the home page
+  // while the header quick navigation keeps the shared page catalogue.
+  {
+    collection: false,
+    destination: PAGE_PATHS.home,
+    source: '/recherche',
   },
 ] as const;
 

@@ -193,15 +193,6 @@ describe('global page search', () => {
     expect(globalSearchSource).toContain('aria-label="Effacer la recherche"');
   });
 
-  it('links the quick dialog to the shareable advanced search', () => {
-    expect(globalSearchSource).toContain('advancedSearchHref');
-    expect(globalSearchSource).toContain('Rechercher une page');
-    expect(globalSearchSource).toContain('requestGuardedNavigation(href)');
-    expect(globalSearchSource).toMatch(
-      /\/recherche\?q=.*encodeURIComponent\(query\.trim\(\)\)/,
-    );
-  });
-
   it('preserves selection by destination and marks one current result', () => {
     expect(globalSearchSource).toContain('activeResultHref');
     expect(globalSearchSource).toContain('currentResultHref');

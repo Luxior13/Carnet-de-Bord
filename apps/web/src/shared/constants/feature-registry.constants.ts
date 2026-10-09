@@ -90,22 +90,6 @@ export const FEATURES = {
     permissionMode: 'all',
     requiredPermissions: [],
   }),
-  search: defineFeature({
-    audit: {
-      pageKey: 'search',
-      pageLabel: 'Recherche avancée',
-      poleKey: 'dashboard',
-      poleLabel: 'Tableau de bord',
-    },
-    availability: 'live',
-    description: 'Recherche complète dans les destinations autorisées.',
-    href: PAGE_PATHS.search,
-    icon: 'Search',
-    id: 'search',
-    label: 'Rechercher une page',
-    permissionMode: 'all',
-    requiredPermissions: [],
-  }),
   systemActivity: defineFeature({
     audit: {
       pageKey: 'system-activity',

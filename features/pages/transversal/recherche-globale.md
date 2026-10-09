@@ -1,4 +1,7 @@
 > Fiche historique : le statut, le placement et le périmètre actuels sont définis dans la [matrice de préparation](../MATRICE_PREPARATION.md). Relire cette fiche à partir du chantier cible avant implémentation.
+>
+> Page retirée le 9 octobre 2026. La navigation rapide de l’en-tête reste en
+> place ; cette fiche décrit l’ancienne page de recherche globale.
 
 # Recherche globale
 

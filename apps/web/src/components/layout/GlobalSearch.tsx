@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, CircleX, Search, X } from 'lucide-react';
+import { CircleX, Search, X } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import React, {
   type FC,
@@ -92,10 +92,6 @@ export const QuickNavigation: FC = () => {
     [activeSpace, allResults, normalizedQuery],
   );
   const hasResults = results.length > 0;
-  const advancedSearchHref =
-    normalizedQuery && hasResults
-      ? `/recherche?q=${encodeURIComponent(query.trim())}`
-      : '/recherche';
   const currentResultHref = useMemo(() => {
     const exactResult = results.find((result) => result.href === pathname);
     if (exactResult) return exactResult.href;
@@ -300,23 +296,7 @@ export const QuickNavigation: FC = () => {
             )}
           </CommandList>
           <div className="border-border-divider text-muted-foreground mx-4 flex shrink-0 flex-wrap items-center justify-end gap-x-4 gap-y-1 border-t pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-xs">
-            <p className="hidden sm:block">
-              ↑↓ Parcourir · Entrée Ouvrir · Échap Fermer
-            </p>
-            <Button
-              className="text-primary-emphasis h-11 rounded-sm px-3 font-medium transition-none focus-visible:ring-inset sm:ml-auto lg:h-10"
-              onClick={() => navigateToHref(advancedSearchHref)}
-              onKeyDown={isolateSearchButtonKeys}
-              type="button"
-              variant="ghost"
-            >
-              {normalizedQuery
-                ? hasResults
-                  ? 'Voir tous les résultats'
-                  : 'Parcourir les pages'
-                : 'Ouvrir la recherche'}
-              <ArrowRight aria-hidden="true" className="size-3.5" />
-            </Button>
+            <p>↑↓ Parcourir · Entrée Ouvrir · Échap Fermer</p>
           </div>
         </Command>
       </DialogContent>

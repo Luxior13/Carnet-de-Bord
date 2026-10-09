@@ -6,7 +6,7 @@ Le catalogue exécutable se trouve dans [features/roadmap](../apps/web/src/featu
 
 ## État réel et lecture du plan
 
-Les comptes et leur sécurité, le répertoire, les paramètres techniques et la recherche de pages existent. Les paramètres actuels ne constituent pas encore un profil juridique métier. La recherche ne parcourt pas encore les futurs dossiers métier. Le journal d’activité continue d’enregistrer les actions côté serveur, mais sa vue globale est retirée.
+Les comptes et leur sécurité, le répertoire et les paramètres techniques existent. Les paramètres actuels ne constituent pas encore un profil juridique métier. La recherche ne parcourt pas encore les futurs dossiers métier. La page de recherche de pages et la vue globale du journal d’activité ont été retirées le 9 octobre 2026 ; la navigation rapide de l’en-tête conserve un accès direct aux pages autorisées, et l’audit serveur continue d’enregistrer les actions.
 
 Le module partenaires a été retiré le 21 septembre 2026 : sa reconstruction est planifiée. Le module notifications a été retiré le 9 octobre 2026 : sa reconstruction est planifiée après clarification du design et des canaux. La vue globale du journal d’activité a été retirée le 9 octobre 2026 : sa reconstruction est planifiée, sans interrompre l’audit serveur. Les migrations historiques ne prouvent pas qu’un modèle ou un écran est encore présent.
 

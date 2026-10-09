@@ -36,7 +36,7 @@ describe('guarded programmatic navigation', () => {
   it('allows navigation when no dirty-form guard is mounted', () => {
     vi.stubGlobal('window', new EventTarget());
 
-    expect(requestGuardedNavigation('/recherche')).toBe(true);
+    expect(requestGuardedNavigation('/mon-compte')).toBe(true);
   });
 
   it('lets a dirty-form guard delay navigation and retain its action', () => {

@@ -948,14 +948,6 @@ test('authenticates and reaches the admin surfaces', async ({ page }) => {
   await expect(searchTrigger).toBeFocused();
   await expect(page).toHaveURL(/\/systeme\/utilisateurs$/);
 
-  await searchTrigger.click();
-  await searchInput.fill('compte');
-  await searchDialog
-    .getByRole('button', { name: 'Voir tous les résultats' })
-    .press('Enter');
-  await expect(page).toHaveURL(/\/recherche\?q=compte$/);
-  await expect(searchDialog).toHaveCount(0);
-
   await expectSystemSettingsDraftSafety(page);
   await page.goto('/systeme/utilisateurs/nouveau');
   await expect(

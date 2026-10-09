@@ -336,7 +336,8 @@ export const OPERATIONS_ROADMAP_ITEMS: readonly RoadmapItem[] = [
   {
     area: 'system',
     audience: 'Tous les membres selon leurs droits',
-    baseline: 'La recherche globale actuelle retrouve les pages autorisées.',
+    baseline:
+      'La navigation rapide de l’en-tête retrouve les pages autorisées ; la page de recherche globale a été retirée le 9 octobre 2026.',
     dependsOn: ['access-scopes', 'documents'],
     description:
       'Retrouver les personnes et documents autorisés depuis la recherche globale.',

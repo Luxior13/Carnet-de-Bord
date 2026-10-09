@@ -32,11 +32,8 @@ describe('feature registry', () => {
   });
 
   it('binds every live manifest entry to the navigation contract', () => {
-    // La recherche est une page du socle, atteinte depuis l'en-tête : elle
-    // reste enregistrée et active sans être une destination de la sidebar.
     for (const feature of FEATURE_LIST.filter(
-      (entry) =>
-        entry.availability === 'live' && entry.id !== FEATURES.search.id,
+      (entry) => entry.availability === 'live',
     )) {
       const navigationItem = getNavigationItemByHref(feature.href);
 
