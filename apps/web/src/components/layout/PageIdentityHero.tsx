@@ -20,7 +20,7 @@ export const PageIdentityHero: FC<PageIdentityHeroProps> = ({
   icon,
   title,
 }) => (
-  <header className={styles.hero}>
+  <header className={styles.hero} data-slot="page-heading">
     <div className={styles.heroIdentity}>
       <span aria-hidden="true" className={styles.heroLogo}>
         {icon}

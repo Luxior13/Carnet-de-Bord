@@ -1,6 +1,6 @@
 'use client';
 
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Settings } from 'lucide-react';
 import React, {
   type FC,
   useCallback,
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
+import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { AccessDeniedState } from '$components/layout/PageState';
 import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
 import {
@@ -69,7 +70,7 @@ const SettingsSkeleton: FC = () => (
   >
     {SECTION_DEFINITIONS.map((section) => (
       <div
-        className="border-border-default overflow-hidden rounded-[8px] border"
+        className="border-border-content overflow-hidden rounded-[10px] border"
         key={section.id}
       >
         <Skeleton className="h-20 rounded-none" />
@@ -401,34 +402,28 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
       ) : (
         <PageShell className="py-0">
           <PageCanvas contentClassName="space-y-5">
-            <header
-              className="flex flex-wrap items-start justify-between gap-4"
-              data-slot="page-heading"
-            >
-              <div className="min-w-0">
-                <h1 className="text-foreground text-[1.625rem] leading-tight font-semibold tracking-tight sm:text-[2rem]">
-                  {item.label}
-                </h1>
-                <p className="text-muted-foreground mt-2 text-sm leading-6">
-                  Réglages globaux de Noctambule.
-                </p>
-              </div>
-              <Button
-                aria-busy={isLoading || undefined}
-                aria-disabled={isLoading || undefined}
-                className="h-11 rounded-[8px] aria-disabled:pointer-events-none aria-disabled:opacity-50 lg:h-10"
-                disabled={(!settings && !loadError) || savingKey !== null}
-                onClick={requestRefresh}
-                type="button"
-                variant="outline"
-              >
-                <RefreshCw
-                  aria-hidden="true"
-                  className={isLoading ? 'size-4 animate-spin' : 'size-4'}
-                />
-                Actualiser
-              </Button>
-            </header>
+            <PageIdentityHero
+              actions={
+                <Button
+                  aria-busy={isLoading || undefined}
+                  aria-disabled={isLoading || undefined}
+                  className="h-11 rounded-[8px] aria-disabled:pointer-events-none aria-disabled:opacity-50 lg:h-10"
+                  disabled={(!settings && !loadError) || savingKey !== null}
+                  onClick={requestRefresh}
+                  type="button"
+                  variant="outline"
+                >
+                  <RefreshCw
+                    aria-hidden="true"
+                    className={isLoading ? 'size-4 animate-spin' : 'size-4'}
+                  />
+                  Actualiser
+                </Button>
+              }
+              description="Réglages globaux de Noctambule."
+              icon={<Settings aria-hidden="true" />}
+              title={item.label}
+            />
 
             {!settings && !loadError ? (
               <SettingsSkeleton />
@@ -467,10 +462,10 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
                 {renderedSections.map((section) => (
                   <section
                     aria-labelledby={`settings-${section.id}-title`}
-                    className="border-border-default bg-surface-panel-raised overflow-hidden rounded-[8px] border"
+                    className="border-border-content bg-surface-content overflow-hidden rounded-[10px] border"
                     key={section.id}
                   >
-                    <div className="border-border-divider border-b px-4 py-4 @min-[40rem]/page:px-5">
+                    <div className="border-border-divider bg-surface-content-header border-b px-4 py-4 @min-[40rem]/page:px-5">
                       <h2
                         className="text-foreground text-base font-semibold"
                         id={`settings-${section.id}-title`}
