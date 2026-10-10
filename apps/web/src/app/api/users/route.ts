@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGINATION } from '$constants/pagination.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
-import { matchesProtectedUserPublicIdentity } from '$constants/protected-user.constants';
+import { buildUserSearchQuery } from '$features/users/server/users-list-search';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import {
   apiErrors,
@@ -72,8 +72,14 @@ function normalizeUserSort(value: string | null): UserSortOption {
     : 'name';
 }
 
-function normalizeUserRole(value: string | null): UserRole | null {
-  return value === UserRole.ADMIN || value === UserRole.USER ? value : null;
+function normalizeUserRole(
+  value: string | null,
+): UserRole | 'SUPERADMIN' | null {
+  return value === UserRole.ADMIN ||
+    value === UserRole.USER ||
+    value === 'SUPERADMIN'
+    ? value
+    : null;
 }
 
 function normalizeUserStatus(value: string | null): UserStatusOption | null {
@@ -81,27 +87,6 @@ function normalizeUserStatus(value: string | null): UserStatusOption | null {
     ? (value as UserStatusOption)
     : null;
 }
-
-const USER_SEARCH_ACCENT_FROM = 'àâäéèêëîïôöùûüç';
-const USER_SEARCH_ACCENT_TO = 'aaaeeeeiioouuuc';
-const USER_SEARCH_TRANSLATE_FROM = `${USER_SEARCH_ACCENT_FROM}${USER_SEARCH_ACCENT_FROM.toLocaleUpperCase('fr-FR')}`;
-const USER_SEARCH_TRANSLATE_TO = `${USER_SEARCH_ACCENT_TO}${USER_SEARCH_ACCENT_TO}`;
-
-const normalizeUserSearchValue = (value: string): string => {
-  const lowered = value.toLocaleLowerCase('fr-FR');
-  let normalized = '';
-  for (const character of lowered) {
-    const index = USER_SEARCH_ACCENT_FROM.indexOf(character);
-    // The index is bounded by the fixed accent table above.
-    // eslint-disable-next-line security/detect-object-injection
-    normalized += index >= 0 ? USER_SEARCH_ACCENT_TO[index] : character;
-  }
-
-  return normalized.trim().replace(/\s+/g, ' ');
-};
-
-const escapeUserSearchLikePattern = (value: string): string =>
-  value.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_');
 
 function getUserOrderBy(
   sort: UserSortOption,
@@ -198,29 +183,20 @@ export async function GET(
     const where: Prisma.UserWhereInput = { deletedAt: null };
 
     if (search) {
-      const normalizedQuery = normalizeUserSearchValue(search);
-      const likePattern = `%${escapeUserSearchLikePattern(normalizedQuery)}%`;
-      const searchColumns = ['loginName', 'firstName', 'lastName'];
-      if (canViewContact) searchColumns.push('contactEmail');
-
-      const fieldConditions = searchColumns.map(
-        (column) =>
-          Prisma.sql`lower(translate(${Prisma.raw(`"${column}"`)}, ${USER_SEARCH_TRANSLATE_FROM}, ${USER_SEARCH_TRANSLATE_TO})) LIKE ${likePattern} ESCAPE '\\'`,
-      );
-      const includeProtected =
-        !auth.user.isProtected && matchesProtectedUserPublicIdentity(search);
-      const searchWhere = auth.user.isProtected
-        ? Prisma.sql`(${Prisma.join(fieldConditions, ' OR ')})`
-        : Prisma.sql`(("isProtected" = false AND (${Prisma.join(fieldConditions, ' OR ')}))${includeProtected ? Prisma.sql` OR "isProtected" = true` : Prisma.empty})`;
-
       const searchRows = await prisma.$queryRaw<Array<{ id: string }>>(
-        Prisma.sql`SELECT "id" FROM "User" WHERE "deletedAt" IS NULL AND ${searchWhere}`,
+        buildUserSearchQuery(search, {
+          canViewContact,
+          isProtected: auth.user.isProtected,
+        }),
       );
       where.id = { in: searchRows.map((row) => row.id) };
     }
 
-    if (role) {
+    if (role === 'SUPERADMIN') {
+      where.isProtected = true;
+    } else if (role) {
       where.role = role;
+      where.isProtected = false;
     }
 
     if (status === 'active') {
@@ -229,7 +205,7 @@ export async function GET(
       where.isActive = false;
     } else if (status === 'pending') {
       where.mustChangePassword = true;
-      Object.assign(where, visibleSecurityUserWhere);
+      where.AND = [visibleSecurityUserWhere];
     }
 
     const baseUserWhere: Prisma.UserWhereInput = { deletedAt: null };

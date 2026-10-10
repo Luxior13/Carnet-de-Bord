@@ -48,7 +48,7 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "env": ["PERSONS_LIST_TEST_DATABASE_URL"],
+      "env": ["PERSONS_LIST_TEST_DATABASE_URL", "USERS_LIST_TEST_DATABASE_URL"],
       "outputs": []
     },
     "test:e2e": {

@@ -48,6 +48,8 @@ Sources : [Sidebar](../../../apps/web/src/components/Sidebar.tsx),
 - Profil : fond transparent au repos, hauteur 56 px.
   Nom complet dans le menu, bleu à l’ouverture ou sur Mon compte, déconnexion
   protégée en cas de saisie non enregistrée.
+- Avatar du profil : fond selon le niveau d'accès via `UserAvatar` partagé,
+  dessin conservé ; [décision et contrôle du 10 octobre](systeme-utilisateurs.md#fond-des-avatars-par-accès--10-octobre-2026).
 - Header de 56 px sur fond `surface-panel` : contexte à gauche, navigation rapide à droite.
   Zone centrale souple pour les chemins longs ; outils supplémentaires à justifier
   par un usage global et à regrouper sur petit écran si nécessaire.
@@ -501,9 +503,18 @@ Ces interactions du header n’ont pas été rejouées pour le déplacement de l
 
 ## Points ouverts courants
 
+Le 10 octobre, pendant les corrections Utilisateurs, le contexte React et le
+suivi de viewport sont extraits des primitives dans
+[sidebar-context.ts](../../../apps/web/src/components/ui/sidebar-context.ts).
+L'export public `useSidebar` et le seuil mobile de 1 024 px sont conservés.
+Contrôle proportionné Q19/Q27/Q30 : budget d'architecture, tests sidebar, lint,
+types et build réussis ; shell réel observé aux neuf largeurs du
+[banc Utilisateurs](../../audits/AUDIT_UTILISATEURS_2026-10-10.md#validation-des-corrections).
+Cette extraction ne revalide pas les autres parcours de navigation ci-dessous.
+
 | ID | Constat / preuve | Suite et déclencheur | Responsable / état |
 | --- | --- | --- | --- |
-| NAV-01 | `Sidebar.tsx` dépasse le budget structurel : 925 lignes pour 900, contrôle du 10 octobre dans la [cartographie](../../audits/COMPREHENSION_PROJET_2026-10-10.md) | Examiner un découpage utile puis rejouer le budget, lors de la correction structurelle | À attribuer / ouvert |
+| NAV-01 | `components/ui/sidebar.tsx` dépassait son budget (925/900) ; contexte et suivi de viewport extraits, aucun plafond relevé | Budget, contrats sidebar et build réussis après correction | Clos le 10 octobre 2026 |
 | NAV-02 | Parcours privés réels, sortie avec brouillon et changement de droits non rejoués pendant la cartographie | Exécuter avec des profils isolés avant validation complète de navigation | À attribuer / à vérifier |
 | NAV-03 | La référence décrit des contrôles de header de 40 px sur ordinateur ; le déclencheur de `GlobalSearch.tsx` utilise `lg:h-9`. Écart de code relevé pendant la réconciliation, sans mesure CSS calculée | Vérifier la taille effective et la décision applicable lors de la prochaine retouche du header ; ne pas effacer une décision pour l’aligner silencieusement sur le code | À attribuer / à qualifier |
 

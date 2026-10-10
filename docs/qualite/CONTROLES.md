@@ -33,6 +33,16 @@ et supprime un schéma unique et n'utilise pas `DATABASE_URL`. Le schéma minima
 teste la liste et ses comptages, pas les migrations ni les mutations métier.
 Lancer directement la commande pour une preuve nouvelle, sans cache Turbo.
 
+Régression SQL de la recherche Utilisateurs : depuis `apps/web`, lancer
+`bun run test src/__tests__/users-list-postgres.test.ts` avec
+`USERS_LIST_TEST_DATABASE_URL` pointant vers une base locale jetable nommée
+`users_list_test`. Sans cette variable, ce groupe est ignoré. Il crée et supprime
+son propre schéma unique, refuse une cible non locale ou un autre nom de base,
+et n'utilise jamais `DATABASE_URL` par défaut. Le schéma minimal vérifie la
+recherche et sa visibilité ; il ne valide pas les migrations, les sessions ou
+les mutations. Exécuter directement pour une preuve nouvelle sans cache Turbo.
+La variable est déclarée dans l'environnement de la tâche de test Turbo.
+
 ## Couverture de la documentation
 
 Le [contrôleur](../../scripts/check-docs.mjs) découvre les fichiers Markdown de

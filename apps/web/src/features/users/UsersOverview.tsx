@@ -1,61 +1,86 @@
+import Link from 'next/link';
 import React, { type FC, type ReactNode } from 'react';
 
+import { PAGE_PATHS } from '$constants/routes.constants';
 import type { UserStatsType } from '$types/auth.types';
+import { Button } from '$ui/button';
 import directoryStyles from '$ui/directory.module.css';
 import { Skeleton } from '$ui/skeleton';
 import { cn } from '$utils/css.utils';
 
-type UsersOverviewProps = {
+import {
+  buildUsersPageUrlParams,
+  normalizeSortOption,
+} from './users-list-state';
+import styles from './UsersList.module.css';
+
+type Props = {
   isLoading?: boolean;
+  query?: string;
   securityDetailsVisible: boolean;
   stats: UserStatsType | null;
 };
-
-const OverviewGroupHeader: FC<{ label: string }> = ({ label }) => (
-  <div className="border-border-divider border-t px-4 pt-2.5 pb-1">
-    <span className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">
-      {label}
-    </span>
-  </div>
-);
-
-const OverviewRow: FC<{
-  dotClassName: string;
-  label: string;
-  lastInGroup?: boolean;
-  value: ReactNode;
-}> = ({ dotClassName, label, lastInGroup = false, value }) => (
-  <div
-    className={cn(
-      'flex items-center justify-between gap-3 px-4 py-1.5',
-      lastInGroup && 'pb-2.5',
-    )}
-  >
-    <span className="text-muted-foreground flex min-w-0 items-center gap-2 text-xs leading-5">
-      <span
-        aria-hidden="true"
-        className={cn('size-1.5 shrink-0 rounded-full', dotClassName)}
-      />
-      {label}
-    </span>
-    <span className="text-foreground shrink-0 text-sm leading-5 font-semibold tabular-nums">
-      {value}
-    </span>
-  </div>
-);
-
-export const UsersOverview: FC<UsersOverviewProps> = ({
+export const UsersOverview: FC<Props> = ({
   isLoading = false,
+  query = '',
   securityDetailsVisible,
   stats,
 }) => {
   if (!stats && !isLoading) return null;
+  const params = new URLSearchParams(query);
+  const sort = normalizeSortOption(params.get('sort'));
+  const href = (filter?: [string, string]): string => {
+    const next = buildUsersPageUrlParams({
+      page: 1,
+      role: 'all',
+      search: '',
+      sort,
+      status: 'all',
+    });
+    if (filter) next.set(...filter);
 
-  const displayValue = (rawValue: number | null | undefined): ReactNode =>
+    return PAGE_PATHS.users + (next.size ? '?' + next : '');
+  };
+  const status = params.get('status');
+  const role = params.get('role');
+  const hasQuery = Boolean(params.get('search'));
+  const counters = [
+    {
+      filter: ['role', 'SUPERADMIN'],
+      label: 'Superadmin',
+      value: stats?.byRole.SUPERADMIN,
+    },
+    {
+      filter: ['role', 'ADMIN'],
+      label: 'Administrateurs',
+      value: stats?.byRole.ADMIN,
+    },
+    {
+      filter: ['role', 'USER'],
+      label: 'Utilisateurs',
+      value: stats?.byRole.USER,
+    },
+    { filter: ['status', 'active'], label: 'Actifs', value: stats?.active },
+    {
+      filter: ['status', 'inactive'],
+      label: 'Désactivés',
+      value: stats?.inactive,
+    },
+    ...(securityDetailsVisible
+      ? [
+          {
+            filter: ['status', 'pending'],
+            label: 'Mot de passe à changer',
+            value: stats?.pendingPasswordChange,
+          },
+        ]
+      : []),
+  ];
+  const value = (count: number | null | undefined): ReactNode =>
     isLoading ? (
       <Skeleton className="h-4 w-6" />
     ) : (
-      (rawValue ?? 0).toLocaleString('fr-FR')
+      (count ?? 0).toLocaleString('fr-FR')
     );
 
   return (
@@ -64,68 +89,66 @@ export const UsersOverview: FC<UsersOverviewProps> = ({
       aria-label="Vue d’ensemble"
       className={cn(directoryStyles.overviewCard, 'min-w-0')}
     >
-      <h2
+      <div
         className={cn(
           directoryStyles.overviewHeader,
-          'border-border-divider border-b px-4 py-3 text-sm font-semibold',
+          'flex items-center justify-between gap-3 border-b px-4 py-2',
         )}
       >
-        Vue d’ensemble
-      </h2>
-      <div className="border-border-divider border-b px-4 py-3">
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="text-muted-foreground text-xs leading-5">
-            Total des comptes
-          </span>
-          <span className="text-foreground text-2xl leading-8 font-semibold tabular-nums">
-            {displayValue(stats?.total)}
-          </span>
+        <div>
+          <h2 className="text-sm font-semibold">Vue d’ensemble</h2>
+          <p className="text-muted-foreground text-[11px] font-normal">
+            Tous les comptes
+          </p>
         </div>
+        <Button
+          asChild
+          variant="ghost"
+          className="h-auto min-h-11 px-2 text-2xl font-semibold tabular-nums"
+        >
+          <Link
+            href={href()}
+            scroll={false}
+            aria-label="Afficher tous les comptes"
+            aria-current={!hasQuery && !status && !role ? 'page' : undefined}
+          >
+            {value(stats?.total)}
+          </Link>
+        </Button>
       </div>
+      <div className={styles.counters}>
+        {counters.map((counter) => {
+          const filter = counter.filter as [string, string];
+          const active =
+            !hasQuery &&
+            (filter[0] === 'role'
+              ? !status && role === filter[1]
+              : !role && status === filter[1]);
 
-      <OverviewGroupHeader label="Accès" />
-      <OverviewRow
-        dotClassName="bg-destructive"
-        label="Superadmin"
-        value={displayValue(stats?.byRole.SUPERADMIN)}
-      />
-      <OverviewRow
-        dotClassName="bg-warning"
-        label="Administrateur"
-        value={displayValue(stats?.byRole.ADMIN)}
-      />
-      <OverviewRow
-        dotClassName="bg-info"
-        lastInGroup
-        label="Utilisateur"
-        value={displayValue(stats?.byRole.USER)}
-      />
-
-      <OverviewGroupHeader label="État" />
-      <OverviewRow
-        dotClassName="bg-success"
-        label="Actif"
-        value={displayValue(stats?.active)}
-      />
-      <OverviewRow
-        dotClassName="bg-warning"
-        lastInGroup
-        label="Désactivé"
-        value={displayValue(stats?.inactive)}
-      />
-
-      {securityDetailsVisible &&
-      (isLoading || stats?.pendingPasswordChange != null) ? (
-        <>
-          <OverviewGroupHeader label="Statistiques" />
-          <OverviewRow
-            dotClassName="bg-warning"
-            lastInGroup
-            label="Mot de passe à changer"
-            value={displayValue(stats?.pendingPasswordChange)}
-          />
-        </>
-      ) : null}
+          return (
+            <Button
+              asChild
+              variant="ghost"
+              key={counter.label}
+              className={styles.counter}
+            >
+              <Link
+                href={href(filter)}
+                scroll={false}
+                aria-label={'Afficher les comptes : ' + counter.label}
+                aria-current={active ? 'page' : undefined}
+              >
+                <span className="text-muted-foreground text-[11px] font-normal">
+                  {counter.label}
+                </span>
+                <span className="text-sm font-semibold tabular-nums">
+                  {value(counter.value)}
+                </span>
+              </Link>
+            </Button>
+          );
+        })}
+      </div>
     </aside>
   );
 };

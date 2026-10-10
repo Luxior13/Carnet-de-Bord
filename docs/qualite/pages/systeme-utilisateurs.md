@@ -5,7 +5,8 @@
 - Route : `/systeme/utilisateurs`.
 - Fonction livrée : rechercher et consulter les comptes, leurs accès, leur état
   et leur dernière connexion ; accès à la création selon les droits.
-- Type : liste de gestion privée ; fiche et formulaire de création hors de ce suivi.
+- Type principal : liste de gestion privée ; les passes de création et de fiche
+  sont consignées dans leurs sections dédiées, avec leur périmètre propre.
 - Sources : [page](../../../apps/web/src/app/systeme/utilisateurs/page.tsx),
   [liste](../../../apps/web/src/features/users/UsersListPage.tsx),
   [disposition](../../../apps/web/src/components/ui/directory.module.css).
@@ -17,19 +18,48 @@
   Les vérifications exécutées pendant cette passe sont distinguées ci-dessous.
 - Passe du 10 octobre 2026 : **alignement visuel de la liste terminé**, alignée sur la page
   de référence `/membres/repertoire` (voir la section dédiée plus bas).
+- Analyse puis corrections du 10 octobre 2026 : **USR-09 à USR-17 corrigés et
+  vérifiés**, avec serveur Next et PostgreSQL isolés. Les limites de validation
+  restantes sont distinguées dans les points ouverts.
+  [Rapport et preuves avant/après](../../audits/AUDIT_UTILISATEURS_2026-10-10.md).
+- Audit suivant du formulaire `/systeme/utilisateurs/nouveau` : **corrections
+  nécessaires**, distinctes des correctifs de liste. Voir USR-N01 à USR-N07 et
+  [le rapport de création](../../audits/AUDIT_CREATION_UTILISATEUR_2026-10-10.md).
 
 ## Décisions courantes
 
-- Effet partagé du correctif Répertoire du 10 octobre : les flèches utilisant
-  `directory.module.css` ont une cible de 44 px sous 640 px. Le style a été
-  contrôlé dans le navigateur du répertoire ; la liste Utilisateurs n'a pas
-  fait l'objet d'une nouvelle session navigateur dans cette passe.
+- Les flèches de pagination ont une cible de 44 px sous 640 px, mesurée aussi
+  sur Utilisateurs à 320 et 390 px pendant la correction du 10 octobre.
 - Titre compact, description « Gérez les comptes et leurs accès. » en texte secondaire.
-- Création dans la barre d’outils de la liste, adaptée aux droits.
+- Création dans le hero de la page, adaptée aux droits.
 - Sidebar ancrée à gauche ; rail indépendant à droite lorsque la place le permet.
 - Largeur de travail privilégiée aux tailles intermédiaires ; centrage écran sur
   grand écran ; adaptation en cartes selon la largeur réelle.
+- Seuils de tableau propres à cette liste, selon les colonnes autorisées :
+  48 rem sans contact/sécurité, 52 rem avec sécurité, 56 rem avec contact,
+  64 rem avec les deux. La colonne Compte conserve au moins 260 px au seuil ;
+  les primitives partagées de tableau/cartes et leurs alternances restent utilisées.
+- Synthèse globale compacte en grille lorsqu'elle est empilée, rail vertical
+  à partir de 118 rem. Ses liens ouvrent un sous-ensemble exact en effaçant
+  les autres filtres et la page, tout en conservant le tri.
+- Trois ensembles d'accès exclusifs : Superadmin (`isProtected`),
+  Administrateur (ADMIN non protégé), Utilisateur (USER non protégé).
+  Le filtre `role=SUPERADMIN` est une catégorie de liste, pas un nouveau rôle
+  persistant ni une nouvelle permission.
+- Filtres actifs de recherche, état et rôle effaçables individuellement.
+  Après pagination, défilement et focus reviennent au début des résultats.
+  Le retour d'une fiche ou de Mon compte retrouve critères, page, position et
+  lien focalisé. Un seul instantané de navigation par onglet, valide 30 minutes,
+  est lié au compte, aux droits et aux critères, puis effacé après restauration.
+  Il contient l'URL de recherche (donc les termes saisis), la portée technique,
+  la position et le lien cible ; aucune copie des lignes de réponse.
 - Palette bleue proche de la sidebar, badges discrets sans fond coloré dominant.
+- Fond des avatars de compte selon l'accès (demande du 10 octobre 2026) :
+  Superadmin rouge clair (`destructive`), Administrateur ambre (`warning`),
+  Utilisateur bleu clair (`info`). Seul le fond change ; dessin DiceBear et
+  graine d'identité sont conservés. Le libellé d'accès reste explicite dans son
+  badge. Règle portée par `UserAvatar`, également utilisée dans la fiche,
+  la confirmation de création, Mon compte et la sidebar ; avatars Personnes distincts.
 - Recherche, filtres, tri et pagination serveur ; la liste n’affiche pas tous les
   comptes à la fois. Permissions effectives décrites dans [PERMISSIONS](../../references/PERMISSIONS.md).
 - Aucun nouveau toast ou événement durable n’est nécessaire pour simplement lire
@@ -37,7 +67,7 @@
   conservent leurs règles propres.
 - Les comptes ne sont pas les fiches Personnes du Répertoire.
 
-## Conclusion de la passe de clôture
+## Conclusion de la passe de clôture — 26 septembre 2026
 
 Les corrections identifiées dans cette passe sont vérifiées localement. Le rendu
 retenu est conservé ; cette revue n’impose pas une nouvelle refonte visuelle.
@@ -105,9 +135,12 @@ validation de l’intégration réelle.
 - `users:view` requis côté serveur. Création via `users:create` ; contact via
   `users:view_contact` ou `users:update_contact` ; sécurité via `users:view_security`.
   Les exceptions du compte protégé restent celles de la politique centrale.
-- Recherche de 100 caractères maximum sur identifiant, prénom et nom ; email
-  seulement si autorisé. Recherche insensible à la casse, par sous-chaîne de
-  chaque champ ; aucune promesse de recherche approximative ou insensible aux accents.
+- Recherche de 100 caractères maximum : chaque mot doit correspondre à
+  l'identifiant, au prénom ou au nom, indépendamment de l'ordre des mots.
+  L'email est une alternative sur la saisie complète, seulement si autorisé.
+  Casse et accents français normalisés, caractères LIKE échappés ; aucune
+  recherche approximative. L'identité privée du compte protégé reste exclue
+  pour les tiers, qui peuvent rechercher son nom public.
 - Recherche différée de 400 ms. Filtre ou tri changé : page 1. Rechargement et
   retour depuis une fiche reprennent le contexte URL. La pagination ne constitue
   pas un instantané immuable si un autre administrateur modifie des comptes.
@@ -119,12 +152,15 @@ validation de l’intégration réelle.
 - Tri par nom, dernière connexion décroissante (absences en fin), ou création
   décroissante ; identifiant unique en dernier départage. Le compte protégé est
   placé en premier pour les autres comptes afin de ne pas révéler son identité par le tri.
-- Les trois chiffres de la Vue d’ensemble sont **globaux**, indépendants des
+- Les chiffres de la Vue d’ensemble sont **globaux**, indépendants des
   filtres. Ils excluent les comptes supprimés ; le compteur de changement de mot
   de passe respecte le périmètre de sécurité et masque le compte protégé aux tiers.
   Le total des résultats près des filtres et dans la pagination est **filtré**.
-- Une panne réseau/serveur conserve la dernière réponse et signale son ancienneté.
-  Un refus d’accès efface cette réponse. Une modification connue des droits de
+- Une panne réseau/serveur conserve les lignes seulement si leur contexte
+  correspond aux critères et à la page courants, en signalant leur ancienneté.
+  Sinon elles sont masquées, ainsi que leur pagination et leur date de fraîcheur.
+  Les compteurs globaux peuvent rester visibles après une panne ordinaire.
+  Un refus d'accès efface toute la réponse. Une modification connue des droits de
   lecture recharge la liste sans afficher les anciennes données pendant l’attente.
   Cela ne remplace pas la vérification de session côté serveur.
 
@@ -217,10 +253,9 @@ passe aligne la liste des comptes sans changer le métier :
   modification » du répertoire ; flèche de fin de ligne retirée (le nom et la
   ligne restent cliquables, sans colonne d'action redondante).
 
-Non appliqué : la recherche reste insensible à la casse mais pas aux accents.
-Une recherche insensible aux accents demande soit des colonnes normalisées sur
-`User` (migration + backfill), soit `unaccent`/`translate` en SQL brut — à cadrer
-comme un petit chantier de schéma, pas comme une retouche visuelle.
+Rectification documentaire lors de l'analyse suivante du 10 octobre : la
+normalisation des accents via `translate`/`lower` est bien implémentée dans le GET.
+L'ancien paragraphe « Non appliqué » contredisait le code et la liste ci-dessus.
 
 Vérifications : TypeScript, lint, build réussis ; 133 tests ciblés réussis
 (contrats d'accessibilité, taille de page, présentation, durcissement des accès).
@@ -256,6 +291,38 @@ Vérifications : TypeScript, lint, build réussis ; 133 tests ciblés réussis
   passe temporaire, relance d'authentification pour ADMIN) reste à valider en
   base réelle.
 
+### Audit ciblé du formulaire — 10 octobre 2026
+
+Lecture du formulaire, POST, validation, transaction et droits ; Chromium avec
+composants/CSS réels mais API, acteur, shell et navigation Next simulés, sept
+largeurs. **185 tests ciblés, types, lint et architecture réussis.** Aucun code
+produit changé par cet audit. [Rapport et preuves](../../audits/AUDIT_CREATION_UTILISATEUR_2026-10-10.md).
+
+La protection du brouillon, la conservation des valeurs après erreur, le focus
+sur une erreur locale et l'ouverture du dialogue ADMIN fonctionnent dans ce banc.
+Le nom vide est accepté par la validation métier. Les défauts portent sur les
+dimensions des radios masquées, la sémantique du nom facultatif, les erreurs
+serveur et le focus après transition. La remise et la reprise du secret demandent
+également un cadrage explicite ; aucun envoi automatique ajouté.
+
+USR-10 reste clos pour la réutilisation des primitives et le clavier contrôlés
+précédemment. Sa vérification ne couvrait pas le débordement des radios, désormais
+isolé en USR-N01. Les preuves de liste sur base réelle ne valident pas la création.
+
+| Point | État, preuve et prochaine action | Déclencheur / responsable |
+| --- | --- | --- |
+| USR-N01 — P2, radios et débordement | **Ouvert** : le radio masqué hérite de la largeur de `Input` ; 363 px de débordement à 1 120 px, supprimés par une neutralisation des dimensions dans le DOM du banc. Adapter le contrôle puis rejouer les tailles | Correction du formulaire / à attribuer |
+| USR-N02 — P2, nom facultatif | **Ouvert** : `required` contredit le label et la validation ; supprimer l'attribut, préserver le nom facultatif | Correction du formulaire / à attribuer |
+| USR-N03 — P2, erreurs serveur | **Ouvert** : détails d'email ignorés, doublon et panne seulement en toast ; rattacher les erreurs aux champs et conserver une erreur générale locale | Correction de la validation et des retours / à attribuer |
+| USR-N04 — P2, focus des transitions | **Ouvert** : focus sur `BODY` après succès et « Créer un autre » ; viser confirmation puis premier champ | Correction du parcours clavier / à attribuer |
+| USR-N05 — P2, départ pendant le POST | **Ouvert** : « Quitter sans enregistrer » proposé alors que la demande est en cours ; distinguer brouillon et opération déjà lancée | Correction des états d'attente / à attribuer |
+| USR-N06 — P2, réponse perdue après commit | **Risque à vérifier** : relance refusée par unicité, secret perdu pour le créateur ; définir reprise et nouvelle émission autorisée, sans stockage du secret en clair | Essai de coupure après écriture sur base isolée / à attribuer |
+| USR-N07 — remise du mot de passe | **Suggestion ouverte** : repère de copie/remise ou confirmation ciblée avant effacement du succès ; le comportement actuel est observé, l'obligation n'est pas décidée | Prochain travail sur la remise des identifiants / à attribuer |
+
+Validation encore nécessaire : création USER/ADMIN, défi d'identité, réservation
+d'identifiant, audit atomique et première connexion dans Next/PostgreSQL isolés.
+Lecteur d'écran, Safari et appareils physiques non vérifiés pendant cette passe.
+
 ## Fiche utilisateur (`/systeme/utilisateurs/[id]`) — 10 octobre 2026
 
 - Onglet « Activité » retiré de la navigation (`USER_DETAIL_SECTIONS`) ; le
@@ -278,27 +345,111 @@ Vérifications : TypeScript, lint, build réussis ; 133 tests ciblés réussis
   « Modifier » ni de vue en lecture) avec la barre d'enregistrement partagée
   `SectionActionBar` (récupérée de `/membres/repertoire/[id]`).
 
-## Points ouverts et déclencheurs
+## Analyse de la liste après alignement — 10 octobre 2026
 
-L’alignement visuel terminé ne vaut pas validation fonctionnelle complète. Les
-points ci-dessous restent ouverts ou à vérifier selon leur nature ; responsables
-à attribuer, sauf décision ultérieure consignée dans ce suivi.
+Voir le [rapport daté](../../audits/AUDIT_UTILISATEURS_2026-10-10.md) pour la
+sélection des 30 sujets, les reproductions et les captures. Passe d'analyse :
+**aucun code produit modifié**.
+
+- 225 tests dans 8 fichiers, TypeScript et lint ciblé réussis. Architecture
+  échouée sur la sidebar partagée : 925 lignes pour 900, dépassement préexistant.
+- Chromium isolé, vrais composants/CSS et 60 comptes fictifs, neuf largeurs de
+  320 à 1 920 px. Aucun débordement horizontal global ; noms pourtant invisibles
+  à 1 120 px lorsque contact et sécurité sont affichés. Voir USR-11.
+- Synthèse empilée de 424 px environ, recherche repoussée vers 699 px sur mobile ;
+  besoin de compacter (USR-13). Flèches mobiles 44 × 44 px cette fois mesurées
+  directement sur Utilisateurs, complétant le contrôle précédent du Répertoire.
+- Filtres/URL, rechargement, page hors limites, résultat vide, réponse dépassée,
+  réessai et purge sur 403 non JSON exercés. Défauts de contexte après erreur et
+  de défilement lors de la pagination suivis en USR-14/USR-15.
+- Les scénarios navigateur simulent session/API/routage. `E2E_DATABASE_URL`
+  absente ; aucune validation du parcours Next avec session/base réelles,
+  de la charge SQL, d'un lecteur d'écran ou de Safari réel dans cette passe.
+- Documents réconciliés avec le code : emplacement de création, accents,
+  statistiques et coût apparent du GET. Les résultats de septembre et des
+  passes antérieures ci-dessus restent historiques.
+
+## Corrections après audit — 10 octobre 2026
+
+La demande « corrige tout » autorise la correction des défauts et les améliorations
+de liste retenues. Q06 est réactivé pour les primitives radio de création ; Q02
+couvre aussi le retour de Mon compte et celui du squelette de fiche. Les autres
+sujets sélectionnés dans l'audit restent applicables. Aucune migration produit,
+nouvelle dépendance, permission ou mutation métier ajoutée.
+
+- USR-09/USR-16 : filtres effaçables, synthèse explicitement globale et compteurs
+  cliquables correspondant aux ensembles du GET.
+- USR-10 : cartes radio de création composées avec `Label` et `Input` partagés ;
+  choix au clavier et repère de focus vérifiés.
+- USR-11/USR-13 : seuils selon les colonnes et synthèse compacte. À 390 px,
+  synthèse de 235 px et recherche vers 511 px dans le vrai shell ; à 1 120 px,
+  cartes lisibles avec contact et sécurité, sans débordement.
+- USR-12 : recherche multi-mots réellement exécutée dans PostgreSQL, avec
+  noms composés, ordre inverse, accents, caractères spéciaux et droits de contact.
+- USR-14 : contexte attaché à la réponse ; une erreur de nouveau filtre ne
+  réaffiche plus les anciennes lignes. Purge sur refus 401/403 conservée.
+- USR-15 : reprise de position/focus et `returnTo` sécurisé jusque dans Mon compte
+  et le chargement de fiche ; changement de page repositionné sur les résultats.
+- USR-17 : contrôleur de chargement, filtres, résultats et navigation séparés ;
+  page ramenée à environ 220 lignes. Exception de budget de 1 100 lignes retirée.
+  Extraction du contexte et du suivi de viewport de la sidebar partagée : son
+  dépassement de budget préexistant est également corrigé, sans relever le seuil.
+
+**Preuves.** Build Next de production, types, lint, architecture et budget de build
+réussis. Suite web : **1 018 tests réussis, 15 ignorés** (répertoire PostgreSQL sans
+sa variable dédiée), dont 10 nouveaux tests SQL Utilisateurs et 10 de navigation.
+Chromium avec Next, authentification serveur et PostgreSQL réels : neuf largeurs,
+quatre combinaisons de droits de champs, pagination, retour fiche/Mon compte,
+rechargement, recherche, erreurs injectées et reprise, réponse dépassée, refus
+réels pour visiteur et profil sans droit. Aucune erreur JavaScript capturée.
+[Mesures et captures](../../audits/AUDIT_UTILISATEURS_2026-10-10.md#validation-des-corrections).
+
+Base jetable locale : 51 migrations appliquées, 61 comptes fictifs et sessions
+de test insérées. Le formulaire de connexion et le défi MFA n'ont pas été joués ;
+les mutations de profil/création ne sont pas couvertes par cette passe. Le petit
+jeu de données ne mesure pas la charge de production. Les anciennes preuves
+de septembre et de l'analyse initiale ci-dessus restent datées.
+
+## Fond des avatars par accès — 10 octobre 2026
+
+Retouche visuelle légère : Q01/Q03/Q04/Q19/Q27/Q30 examinés pour la couleur,
+le composant partagé et sa vérification ; autres sujets hors impact, sans
+modification des données, droits, parcours ou interactions. Fond SVG transparent
+et couleurs sémantiques du conteneur ; initiales de secours lisibles sur ce fond.
+
+TypeScript et lint ciblé réussis. Chromium isolé avec le vrai composant et le CSS
+du projet : trois accès contrôlés à 36 et 64 px, même dessin pour une même graine.
+Comparaison SVG sur 40 graines : seule la couleur de fond change. Documentation
+DiceBear 10 consultée via Context7 et comparée à la version installée 10.7.0.
+Les parcours complets des pages consommatrices n'ont pas été rejoués pour cette
+retouche ; les essais de liste précédents restent datés.
+
+## Registre des points et déclencheurs
+
+Les correctifs clos et les validations restantes sont distingués ci-dessous.
+Les responsables opérationnels des points ouverts restent à attribuer.
 
 | Point | Suite concrète | Déclencheur |
 | --- | --- | --- |
-| USR-01 — Parcours réels avec permissions/session/base | Préparer une base E2E isolée et les profils nécessaires | Avant conclusion fonctionnelle globale |
+| USR-01 — Parcours réels avec permissions/session/base | **Validé partiellement le 10 octobre** : liste et retours dans Next/PostgreSQL réels, sessions de test et droits vérifiés. Connexion interactive, défi MFA et mutations hors de cette passe | Avant conclusion fonctionnelle globale sur ces autres parcours |
 | USR-02 — Volumes et coûts serveur | Mesurer requêtes, agrégations et pages éloignées sur données représentatives | Hausse de volume ou travail de performance |
-| USR-03 — Agrégations du GET | Mesurer les neuf opérations de liste/statistiques au maximum, hors auth/réglage ; plusieurs statistiques retournées ne sont pas utilisées par ce rail. Évaluer ensuite une projection plus petite sans casser les consommateurs | Benchmark serveur ; aucun cache ajouté sans mesure |
+| USR-03 — Coût du GET et de la recherche | État relu le 10 octobre : au maximum huit opérations hors auth avec recherche et droit de sécurité ; toutes les statistiques retournées alimentent la synthèse. Mesurer aussi la collecte de tous les identifiants de recherche avant pagination | Benchmark serveur ; aucun cache ajouté sans mesure |
 | USR-04 — Plafond de pagination | Réexaminer curseur, stratégie de recherche ou taille de page si 1 000 pages deviennent nécessaires ; l’interface borne et explique désormais la limite | Volume réellement proche du plafond, selon la taille configurée |
 | USR-05 — Lecteur d’écran, appareils réels, zoom natif | Exécuter les parcours importants dans ces environnements | Revue d’accessibilité complète |
 | USR-06 — Graisses visuelles dans WebKit Windows | Comparer dans Safari réel avant toute correction globale de police | Revue de compatibilité |
 | USR-07 — Finalité, responsable et conservation du traitement des comptes | Faire qualifier et consigner la politique applicable ; aucune validation organisationnelle ou juridique déduite de la revue du code | Cadrage de l’exploitation avec données réelles ou nouvelle entité |
 | USR-08 — Responsables et fréquence de suivi | Désigner selon l’exploitation réelle | Mise en place du suivi opérationnel |
-| USR-09 — Chips de filtres actifs | Ajouter les chips retirables (recherche, statut, rôle) comme sur le répertoire, en plus du bouton de réinitialisation | Cohérence avec la page de référence |
-| USR-10 — Primitives des cartes radio de création | Le 2026-10-10, `shadcn-boundaries.test.ts` échoue sur les `<label>` et `<input>` natifs de `RoleOption` ; conserver le choix des cartes radio en le réconciliant avec le contrat des primitives | Prochaine correction du formulaire ; voir la [cartographie](../../audits/COMPREHENSION_PROJET_2026-10-10.md) |
+| USR-09 — Chips de filtres actifs | **Corrigé et vérifié** : recherche, état et rôle effaçables ; scénario navigateur de recherche et filtre | Clos le 10 octobre ; maintenir avec la barre de filtres |
+| USR-10 — Primitives des cartes radio de création | **Corrigé et vérifié** : primitives partagées, contrat réussi, sélection et focus clavier Chromium | Clos le 10 octobre ; mutations de création non rejouées |
+| USR-11 — P1, identité invisible dans le tableau | **Corrigé et vérifié** : seuils adaptés aux quatre profils de colonnes ; identité mesurée de 303 à 369 px dans les profils proches du seuil | Clos le 10 octobre ; refaire les mesures à tout ajout de colonne |
+| USR-12 — P2, recherche par nom complet | **Corrigé et vérifié** : mots répartis entre les champs, 10 tests PostgreSQL réels et recherche navigateur | Clos le 10 octobre ; conserver les régressions de visibilité |
+| USR-13 — P2, synthèse empilée | **Corrigé et vérifié** : grille compacte, neuf largeurs ; 235 px à 390 px | Clos le 10 octobre ; contrôler les vrais nouveaux compteurs |
+| USR-14 — P2, anciennes lignes sous de nouveaux critères | **Corrigé et vérifié** : anciennes lignes masquées sous un autre contexte ; erreur après page 2, filtre ADMIN et réessai exécutés | Clos le 10 octobre ; préserver lors des changements de chargement |
+| USR-15 — P2, pagination et reprise de position | **Corrigé et vérifié** : résultats remis à portée au changement de page ; retours fiche/Mon compte avec page, défilement et focus dans Next réel | Clos le 10 octobre ; conserver la portée compte/droits de l'instantané |
+| USR-16 — P2, compteurs globaux utilisables | **Corrigé et vérifié** : libellé global, liens natifs et catégories exclusives ; compteur Administrateurs et résultat tous deux à 20 dans le jeu de test | Clos le 10 octobre ; ne pas confondre rôle stocké et catégorie de liste |
+| USR-17 — P2, découpage de la liste | **Corrigé et vérifié** : responsabilités séparées, exception de budget retirée, suite web et build réussis | Clos le 10 octobre ; maintenir les responsabilités par module |
 
-Ces points distinguent défauts observés, mesures manquantes et améliorations
-proposées. Aucun n’est clos par la seule mise à jour documentaire.
-Les trois variables `E2E_DATABASE_URL`, `E2E_SUPERADMIN_LOGIN_NAME` et
-`E2E_SUPERADMIN_PASSWORD` sont absentes de l’environnement de cette passe.
-La base applicative n’a pas été utilisée comme base de test.
+Les preuves avant/après figurent dans le
+[rapport du 10 octobre](../../audits/AUDIT_UTILISATEURS_2026-10-10.md).
+La correction a utilisé sa propre base locale jetable et des sessions fictives,
+sans utiliser la base applicative ni les identifiants E2E de l'exploitant.

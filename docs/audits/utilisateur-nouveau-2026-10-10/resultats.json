@@ -1,0 +1,202 @@
+{
+  "environment": {
+    "browser": "149.0.7827.55",
+    "components": "real page, controls, CSS and navigation guard; Arial fallback; auth, API, router and shell simulated"
+  },
+  "widths": [
+    {
+      "width": 1920,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "formHeight": 690,
+      "submitTop": 808.890625,
+      "overflowElements": []
+    },
+    {
+      "width": 1440,
+      "documentOverflow": 0,
+      "mainOverflow": 70,
+      "formHeight": 690,
+      "submitTop": 808.890625,
+      "overflowElements": [
+        {
+          "tag": "INPUT",
+          "id": "newRole-ADMIN",
+          "width": 774.40625,
+          "position": "absolute",
+          "clip": "auto"
+        }
+      ]
+    },
+    {
+      "width": 1120,
+      "documentOverflow": 0,
+      "mainOverflow": 363,
+      "formHeight": 690,
+      "submitTop": 808.890625,
+      "overflowElements": [
+        {
+          "tag": "INPUT",
+          "id": "newRole-ADMIN",
+          "width": 787.21875,
+          "position": "absolute",
+          "clip": "auto"
+        }
+      ]
+    },
+    {
+      "width": 1024,
+      "documentOverflow": 0,
+      "mainOverflow": 355,
+      "formHeight": 690,
+      "submitTop": 808.890625,
+      "overflowElements": [
+        {
+          "tag": "INPUT",
+          "id": "newRole-USER",
+          "width": 719.0625,
+          "position": "absolute",
+          "clip": "auto"
+        },
+        {
+          "tag": "INPUT",
+          "id": "newRole-ADMIN",
+          "width": 719.0625,
+          "position": "absolute",
+          "clip": "auto"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "documentOverflow": 0,
+      "mainOverflow": 368,
+      "formHeight": 706,
+      "submitTop": 820.890625,
+      "overflowElements": [
+        {
+          "tag": "INPUT",
+          "id": "newRole-USER",
+          "width": 736,
+          "position": "absolute",
+          "clip": "auto"
+        },
+        {
+          "tag": "INPUT",
+          "id": "newRole-ADMIN",
+          "width": 736,
+          "position": "absolute",
+          "clip": "auto"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "documentOverflow": 0,
+      "mainOverflow": 13,
+      "formHeight": 913.1875,
+      "submitTop": 1042.578125,
+      "overflowElements": [
+        {
+          "tag": "INPUT",
+          "id": "newRole-USER",
+          "width": 358,
+          "position": "absolute",
+          "clip": "auto"
+        },
+        {
+          "tag": "INPUT",
+          "id": "newRole-ADMIN",
+          "width": 358,
+          "position": "absolute",
+          "clip": "auto"
+        }
+      ]
+    },
+    {
+      "width": 320,
+      "documentOverflow": 0,
+      "mainOverflow": 13,
+      "formHeight": 947.84375,
+      "submitTop": 1077.234375,
+      "overflowElements": [
+        {
+          "tag": "INPUT",
+          "id": "newRole-USER",
+          "width": 288,
+          "position": "absolute",
+          "clip": "auto"
+        },
+        {
+          "tag": "INPUT",
+          "id": "newRole-ADMIN",
+          "width": 288,
+          "position": "absolute",
+          "clip": "auto"
+        }
+      ]
+    }
+  ],
+  "scenarios": {
+    "radioFocusScroll": 0,
+    "radioOverflowIsolation": {
+      "before": 363,
+      "after": 0
+    },
+    "optionalLastName": {
+      "required": true,
+      "label": "Nom (facultatif)"
+    },
+    "clientErrorFocus": true,
+    "dirtyNavigationWarning": true,
+    "duplicate": {
+      "inlineErrors": 0,
+      "formRetained": "elodie.test",
+      "errorRemains": false
+    },
+    "serverFieldErrors": {
+      "emailAcceptedByClient": true,
+      "emailRejectedByServerSchema": true,
+      "ariaInvalid": "false",
+      "fieldError": 0
+    },
+    "pending": {
+      "firstNameEnabled": true,
+      "cancelEnabled": true
+    },
+    "clipboardSuccess": true,
+    "success": {
+      "emptyLastName": "",
+      "focus": "BODY",
+      "openHref": "/systeme/utilisateurs/created-fixture?returnTo=%2Fsysteme%2Futilisateurs%3Fpage%3D2",
+      "passwordStoredInSession": false
+    },
+    "resetSecretWithoutConfirmation": {
+      "dialog": 0,
+      "secretVisible": 0,
+      "focus": "BODY"
+    },
+    "networkError": {
+      "formRetained": "Élodie",
+      "inlineAlert": 0
+    },
+    "pendingCancel": {
+      "warning": "Quitter sans enregistrer ?Les informations saisies pour ce nouveau compte seront perdues.ResterQuitter sans enregistrer",
+      "mentionsInFlight": 0
+    },
+    "stepupDialog": true,
+    "delegatedAdmin": {
+      "adminRoleChoices": 0,
+      "userRoleChoices": 1
+    },
+    "noPermission": {
+      "formCount": 0
+    },
+    "mobileSuccess": {
+      "scroll": 0,
+      "passwordTop": 361.03125,
+      "focus": "BODY"
+    }
+  },
+  "errors": []
+}

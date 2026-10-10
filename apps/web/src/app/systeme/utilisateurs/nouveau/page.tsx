@@ -94,15 +94,17 @@ const RoleOption: FC<RoleOptionProps> = ({
   onSelect,
   value,
 }) => (
-  <label
+  <Label
+    htmlFor={`newRole-${value}`}
     className={cn(
-      'cursor-pointer rounded-lg border p-3 transition-colors',
+      'focus-within:ring-ring block cursor-pointer rounded-lg border p-3 transition-colors focus-within:ring-2',
       checked
         ? 'border-primary bg-primary/10'
         : 'border-border-control bg-input hover:bg-surface-control-hover',
     )}
   >
-    <input
+    <Input
+      id={`newRole-${value}`}
       checked={checked}
       className="sr-only"
       name="newRole"
@@ -114,7 +116,7 @@ const RoleOption: FC<RoleOptionProps> = ({
     <span className="text-muted-foreground mt-0.5 block text-xs leading-5">
       {description}
     </span>
-  </label>
+  </Label>
 );
 
 const FormSectionTitle: FC<{ children: ReactNode; id: string }> = ({

@@ -8,7 +8,13 @@ const readSourceFile = (relativePath: string): string => {
   return readFileSync(new URL(relativePath, import.meta.url), 'utf8');
 };
 
-const usersListSource = readSourceFile('../features/users/UsersListPage.tsx');
+const usersListSource = [
+  '../features/users/UsersListPage.tsx',
+  '../features/users/UsersListResults.tsx',
+  '../features/users/UsersListToolbar.tsx',
+]
+  .map(readSourceFile)
+  .join('\n');
 
 describe('administrative users list accessibility contracts', () => {
   it('keeps desktop table rows semantic with one native overlay link', () => {

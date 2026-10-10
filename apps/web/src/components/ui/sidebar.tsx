@@ -11,6 +11,14 @@ import { Skeleton } from '$ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
+import {
+  MOBILE_MEDIA_QUERY,
+  SidebarContext,
+  type SidebarContextProps,
+  useMobileViewport,
+  useSidebar,
+} from './sidebar-context';
+
 const SIDEBAR_ID = 'app-sidebar';
 const SIDEBAR_WIDTH = '16.5rem';
 const SIDEBAR_WIDTH_ICON = '3.5rem';
@@ -18,64 +26,8 @@ const SIDEBAR_WIDTH_MOBILE = '18rem';
 const SIDEBAR_DESKTOP_OPEN_STORAGE_KEY = 'team-control:sidebar:desktop-open';
 const SIDEBAR_SCROLL_STORAGE_PREFIX = 'sidebar_scroll:';
 const SIDEBAR_SCROLL_SAVE_DELAY_MS = 120;
-const MOBILE_BREAKPOINT = 1024;
-const MOBILE_MEDIA_QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`;
-
-type SidebarContextProps = {
-  desktopStateReady: boolean;
-  isMobile: boolean;
-  isMobileResolved: boolean;
-  open: boolean;
-  openMobile: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setOpenMobile: React.Dispatch<React.SetStateAction<boolean>>;
-  state: 'collapsed' | 'expanded';
-  toggleSidebar: () => void;
-};
-
-const SidebarContext = React.createContext<SidebarContextProps | null>(null);
 
 let cachedDesktopOpen: boolean | null = null;
-
-type MobileViewport = {
-  isMobile: boolean;
-  isResolved: boolean;
-};
-
-function useMobileViewport(): MobileViewport {
-  const [viewport, setViewport] = React.useState<MobileViewport>({
-    isMobile: false,
-    isResolved: false,
-  });
-
-  React.useEffect((): (() => void) => {
-    const mediaQuery = window.matchMedia(MOBILE_MEDIA_QUERY);
-
-    const updateIsMobile = (): void => {
-      setViewport({
-        isMobile: mediaQuery.matches,
-        isResolved: true,
-      });
-    };
-
-    mediaQuery.addEventListener('change', updateIsMobile);
-    updateIsMobile();
-
-    return () => mediaQuery.removeEventListener('change', updateIsMobile);
-  }, []);
-
-  return viewport;
-}
-
-function useSidebar(): SidebarContextProps {
-  const context = React.useContext(SidebarContext);
-
-  if (!context) {
-    throw new Error('useSidebar must be used within a SidebarProvider.');
-  }
-
-  return context;
-}
 
 type SidebarProviderProps = React.ComponentProps<'div'> & {
   defaultOpen?: boolean;

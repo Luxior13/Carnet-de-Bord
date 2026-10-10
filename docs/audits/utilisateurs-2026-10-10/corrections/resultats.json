@@ -1,0 +1,193 @@
+{
+  "environment": {
+    "server": "Next 15.5.23 production",
+    "database": "PostgreSQL 17, disposable local database, 51 migrations",
+    "accounts": 61,
+    "session": "seeded test sessions; login/MFA flow not exercised",
+    "failures": "HTTP 500/403 and latency selectively injected",
+    "browser": "149.0.7827.55"
+  },
+  "widths": [
+    {
+      "width": 1920,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 363,
+      "searchTop": 205.390625,
+      "tableVisible": true,
+      "identityWidth": 390,
+      "identityTextWidth": 128.8125,
+      "nextTarget": {
+        "width": 36,
+        "height": 30
+      }
+    },
+    {
+      "width": 1440,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 179.53125,
+      "searchTop": 402.921875,
+      "tableVisible": true,
+      "identityWidth": 326.40625,
+      "identityTextWidth": 128.8125,
+      "nextTarget": {
+        "width": 36,
+        "height": 30
+      }
+    },
+    {
+      "width": 1280,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 179.53125,
+      "searchTop": 402.921875,
+      "tableVisible": false,
+      "identityWidth": 0,
+      "identityTextWidth": 0,
+      "nextTarget": {
+        "width": 36,
+        "height": 30
+      }
+    },
+    {
+      "width": 1120,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 179.53125,
+      "searchTop": 402.921875,
+      "tableVisible": false,
+      "identityWidth": 0,
+      "identityTextWidth": 0,
+      "nextTarget": {
+        "width": 36,
+        "height": 30
+      }
+    },
+    {
+      "width": 1100,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 179.53125,
+      "searchTop": 402.921875,
+      "tableVisible": false,
+      "identityWidth": 0,
+      "identityTextWidth": 0,
+      "nextTarget": {
+        "width": 36,
+        "height": 30
+      }
+    },
+    {
+      "width": 1024,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 179.53125,
+      "searchTop": 402.921875,
+      "tableVisible": false,
+      "identityWidth": 0,
+      "identityTextWidth": 0,
+      "nextTarget": {
+        "width": 36,
+        "height": 30
+      }
+    },
+    {
+      "width": 768,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 182.859375,
+      "searchTop": 406.25,
+      "tableVisible": false,
+      "identityWidth": 0,
+      "identityTextWidth": 0,
+      "nextTarget": {
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "width": 390,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 235.125,
+      "searchTop": 510.515625,
+      "tableVisible": false,
+      "identityWidth": 0,
+      "identityTextWidth": 0,
+      "nextTarget": {
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "width": 320,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 250.828125,
+      "searchTop": 526.21875,
+      "tableVisible": false,
+      "identityWidth": 0,
+      "identityTextWidth": 0,
+      "nextTarget": {
+        "width": 44,
+        "height": 44
+      }
+    }
+  ],
+  "scenarios": {
+    "fullNameSearch": true,
+    "adminCounter": 20,
+    "protectedPublicIdentity": true,
+    "escapeFocus": true,
+    "pagination": {
+      "scroll": 474,
+      "resultsTop": 56.421875,
+      "mainTop": 56
+    },
+    "detailReturn": {
+      "scrollBefore": 474,
+      "scrollAfter": 474,
+      "focusRestored": true,
+      "url": "/systeme/utilisateurs?page=2"
+    },
+    "reloadPage2": true,
+    "noStaleRowsOnFailure": true,
+    "forbiddenClears": true,
+    "selfReturn": true,
+    "outOfBounds": true,
+    "empty": true,
+    "restrictedApi": true,
+    "columnProfiles": [
+      {
+        "contact": false,
+        "security": false,
+        "viewport": 1120,
+        "identityWidth": 369.21875
+      },
+      {
+        "contact": false,
+        "security": true,
+        "viewport": 1200,
+        "identityWidth": 316
+      },
+      {
+        "contact": true,
+        "security": false,
+        "viewport": 1280,
+        "identityWidth": 302.8125
+      },
+      {
+        "contact": true,
+        "security": true,
+        "viewport": 1440,
+        "identityWidth": 326.40625
+      }
+    ],
+    "lateResponseIgnored": true,
+    "noViewPermission": true,
+    "anonymousDenied": true,
+    "creationRadioKeyboard": true
+  },
+  "errors": []
+}

@@ -8,7 +8,7 @@ const readSourceFile = (relativePath: string): string => {
   return readFileSync(new URL(relativePath, import.meta.url), 'utf8');
 };
 
-const usersSource = readSourceFile('../features/users/UsersListPage.tsx');
+const usersSource = readSourceFile('../features/users/useUsersList.ts');
 const userDetailSource = readSourceFile(
   '../components/users/UserDetailPage.tsx',
 );

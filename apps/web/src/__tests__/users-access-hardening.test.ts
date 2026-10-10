@@ -3954,7 +3954,7 @@ describe('users access hardening', () => {
       1,
       expect.objectContaining({
         where: expect.objectContaining({
-          isProtected: false,
+          AND: [{ isProtected: false }],
           mustChangePassword: true,
         }),
       }),
@@ -4110,6 +4110,28 @@ describe('users access hardening', () => {
       const query = mockPrisma.user.findMany.mock.calls[0]?.[0];
       expect(query.orderBy.at(-1)).toEqual({ id: 'asc' });
       expect(query).toMatchObject({ skip: 1, take: 1 });
+    },
+  );
+
+  it.each([
+    ['SUPERADMIN', { isProtected: true }],
+    ['ADMIN', { isProtected: false, role: 'ADMIN' }],
+    ['USER', { isProtected: false, role: 'USER' }],
+  ])(
+    'matches the exclusive access counter for %s',
+    async (role, expectedWhere) => {
+      mockPrisma.user.count.mockResolvedValue(0);
+      mockPrisma.user.findMany.mockResolvedValueOnce([]);
+      const route = await import('$app/api/users/route');
+      const response = await route.GET(
+        new Request(`http://localhost/api/users?role=${role}`) as never,
+      );
+      expect(response.status).toBe(200);
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining(expectedWhere),
+        }),
+      );
     },
   );
 

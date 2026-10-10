@@ -17,6 +17,7 @@ import { PageAsideLayout } from '$components/layout/PageAsideLayout';
 import { PageSectionNavigation } from '$components/layout/PageSectionNavigation';
 import { UserOverviewCard } from '$components/users/UserOverviewCard';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
+import { PAGE_PATHS } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
 import {
   ACCOUNT_SECTIONS,
@@ -47,6 +48,7 @@ import {
   getGuardedNavigationRequest,
   GUARDED_NAVIGATION_REQUEST_EVENT,
 } from '$utils/guarded-navigation.utils';
+import { getSafeCollectionReturnHref } from '$utils/navigation.utils';
 
 const ProfileSection = dynamic(() =>
   import('$features/account/components/ProfileSection').then(
@@ -564,7 +566,20 @@ export const AccountPageContent: FC = () => {
   return (
     <>
       <PageAsideLayout
-        header={<AccountHeader userData={userData} />}
+        header={
+          <AccountHeader
+            userData={userData}
+            returnHref={
+              searchParams.has('returnTo') &&
+              canUseAccountPermission(PERMISSIONS.USERS.VIEW)
+                ? getSafeCollectionReturnHref(
+                    searchParams.get('returnTo'),
+                    PAGE_PATHS.users,
+                  )
+                : undefined
+            }
+          />
+        }
         aside={
           <div className={cn(directoryStyles.directory, 'min-w-0')}>
             <UserOverviewCard user={userData} />

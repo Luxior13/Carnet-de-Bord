@@ -1,0 +1,218 @@
+{
+  "environment": {
+    "auth": "simulated",
+    "api": "simulated",
+    "routing": "simulated",
+    "components": "current source",
+    "css": "current Tailwind compiled",
+    "font": "local build Geist",
+    "browser": "149.0.7827.55"
+  },
+  "widths": [
+    {
+      "width": 1920,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 423.5625,
+      "searchTop": 205.390625,
+      "tableVisible": true,
+      "tableWidth": 1150,
+      "identityWidth": 390,
+      "identityTextWidth": 103.390625,
+      "nextButton": {
+        "width": 36,
+        "height": 30
+      }
+    },
+    {
+      "width": 1440,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 423.5625,
+      "searchTop": 646.953125,
+      "tableVisible": true,
+      "tableWidth": 1086.40625,
+      "identityWidth": 326.40625,
+      "identityTextWidth": 103.390625,
+      "nextButton": {
+        "width": 36,
+        "height": 30
+      }
+    },
+    {
+      "width": 1280,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 423.5625,
+      "searchTop": 646.953125,
+      "tableVisible": true,
+      "tableWidth": 932.8125,
+      "identityWidth": 172.8125,
+      "identityTextWidth": 98.8125,
+      "nextButton": {
+        "width": 36,
+        "height": 30
+      }
+    },
+    {
+      "width": 1120,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 423.5625,
+      "searchTop": 646.953125,
+      "tableVisible": true,
+      "tableWidth": 779.21875,
+      "identityWidth": 19.21875,
+      "identityTextWidth": 0,
+      "nextButton": {
+        "width": 36,
+        "height": 30
+      }
+    },
+    {
+      "width": 1100,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 423.5625,
+      "searchTop": 646.953125,
+      "tableVisible": false,
+      "tableWidth": 0,
+      "identityWidth": null,
+      "identityTextWidth": null,
+      "nextButton": {
+        "width": 36,
+        "height": 30
+      }
+    },
+    {
+      "width": 1024,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 423.5625,
+      "searchTop": 646.953125,
+      "tableVisible": false,
+      "tableWidth": 0,
+      "identityWidth": null,
+      "identityTextWidth": null,
+      "nextButton": {
+        "width": 36,
+        "height": 30
+      }
+    },
+    {
+      "width": 768,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 423.5625,
+      "searchTop": 646.953125,
+      "tableVisible": false,
+      "tableWidth": 0,
+      "identityWidth": null,
+      "identityTextWidth": null,
+      "nextButton": {
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "width": 390,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 423.5625,
+      "searchTop": 698.953125,
+      "tableVisible": false,
+      "tableWidth": 0,
+      "identityWidth": null,
+      "identityTextWidth": null,
+      "nextButton": {
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "width": 320,
+      "documentOverflow": 0,
+      "mainOverflow": 0,
+      "overviewHeight": 423.5625,
+      "searchTop": 698.953125,
+      "tableVisible": false,
+      "tableWidth": 0,
+      "identityWidth": null,
+      "identityTextWidth": null,
+      "nextButton": {
+        "width": 44,
+        "height": 44
+      }
+    }
+  ],
+  "interactions": {
+    "filterEscapeFocus": true,
+    "roleFilter": {
+      "url": "http://127.0.0.1:4388/systeme/utilisateurs?role=ADMIN",
+      "count": "20 comptes trouvés",
+      "overview": "Vue d’ensemble\nTotal des comptes\n60\nACCÈS\nSuperadmin\n0\nAdministrateur\n20\nUtilisateur\n40\nÉTAT\nActif\n45\nDésactivé\n15\nSTATISTIQUES\nMot de passe à changer\n20"
+    },
+    "nextPage": {
+      "url": "http://127.0.0.1:4388/systeme/utilisateurs?page=2",
+      "mainScroll": 1469,
+      "firstRow": "Élodie Martin 26\naudit.compte.26\n\t\nUtilisateur\t\nActif\t\naudit.compte.26@example.test\n\t—\tIl y a 8 h"
+    },
+    "reload": {
+      "url": "http://127.0.0.1:4388/systeme/utilisateurs?page=2",
+      "firstRow": "Élodie Martin 26\naudit.compte.26\n\t\nUtilisateur\t\nActif\t\naudit.compte.26@example.test\n\t—\tIl y a 8 h"
+    },
+    "outOfRangePage": {
+      "url": "http://127.0.0.1:4388/systeme/utilisateurs?page=3",
+      "count": 10
+    },
+    "deepLink": {
+      "url": "http://127.0.0.1:4388/systeme/utilisateurs?page=2&search=Martin",
+      "query": "Martin",
+      "detailHref": "/systeme/utilisateurs/user-26?returnTo=%2Fsysteme%2Futilisateurs%3Fpage%3D2%26search%3DMartin"
+    },
+    "emptyAndLateResponse": {
+      "url": "http://127.0.0.1:4388/systeme/utilisateurs?search=introuvable",
+      "count": 0,
+      "state": "Les comptes utilisateurs, leur accès, leur état et leur dernière connexion\nCompte\tAccès\tÉtat\tEmail\tMot de passe\tDernière connexion\n\nAucun utilisateur trouvé\nRéinitialiser"
+    },
+    "staleAfterError": {
+      "url": "http://127.0.0.1:4388/systeme/utilisateurs?role=ADMIN",
+      "alert": "Erreur de test\nLes dernières données fiables, actualisées à 18:57, restent affichées.\nRéessayer",
+      "pagination": "Page 1 sur 3",
+      "firstRow": "Élodie Martin 26\naudit.compte.26\n\t\nUtilisateur\t\nActif\t\naudit.compte.26@example.test\n\t—\tIl y a 8 h"
+    },
+    "forbiddenClears": {
+      "rows": 0,
+      "overview": 0
+    },
+    "selfHref": "/mon-compte",
+    "detailHref": "/systeme/utilisateurs/user-2?returnTo=%2Fsysteme%2Futilisateurs",
+    "permissionChangeClears": true,
+    "accessRevoked": true
+  },
+  "errors": [],
+  "requests": [
+    "?page=1",
+    "?page=1",
+    "?page=1&role=ADMIN",
+    "?page=1",
+    "?page=2&limit=25",
+    "?page=2",
+    "?page=2",
+    "?page=999",
+    "?page=999",
+    "?page=3&limit=25",
+    "?page=2&search=Martin",
+    "?page=2&search=Martin",
+    "?page=1&search=lent",
+    "?page=1&search=introuvable",
+    "?page=1",
+    "?page=2&limit=25",
+    "?page=1&role=ADMIN",
+    "?page=1&role=ADMIN",
+    "?page=1&role=ADMIN",
+    "?page=1",
+    "?page=1",
+    "?page=1"
+  ]
+}

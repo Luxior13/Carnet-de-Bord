@@ -122,18 +122,25 @@ const DetailSkeleton: FC = () => (
 );
 
 export const UserDetailPageSkeleton: FC<{ returnHref?: string }> = ({
-  returnHref = PAGE_PATHS.users,
-}) => (
-  <AuthenticatedLayout
-    breadcrumbs={[
-      { label: FEATURES.users.audit.poleLabel },
-      { href: returnHref, label: FEATURES.users.label },
-      { label: 'Fiche' },
-    ]}
-  >
-    <DetailSkeleton />
-  </AuthenticatedLayout>
-);
+  returnHref,
+}) => {
+  const searchParams = useSearchParams();
+  const resolvedReturnHref =
+    returnHref ??
+    getSafeCollectionReturnHref(searchParams.get('returnTo'), PAGE_PATHS.users);
+
+  return (
+    <AuthenticatedLayout
+      breadcrumbs={[
+        { label: FEATURES.users.audit.poleLabel },
+        { href: resolvedReturnHref, label: FEATURES.users.label },
+        { label: 'Fiche' },
+      ]}
+    >
+      <DetailSkeleton />
+    </AuthenticatedLayout>
+  );
+};
 
 export const UserDetailPage: FC<UserDetailPageProps> = ({
   initialUser,

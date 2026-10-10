@@ -1,4 +1,5 @@
 import { ShieldCheck, User } from 'lucide-react';
+import Link from 'next/link';
 import type { FC } from 'react';
 
 import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
@@ -7,6 +8,7 @@ import type { UserDetailSection } from '$components/users/user-detail/UserDetail
 import { UserAvatar } from '$components/users/UserAvatar';
 import { UserAccessBadge } from '$features/users/user-badges';
 import type { UserType } from '$types/auth.types';
+import { Button } from '$ui/button';
 import type { GuardedNavigationAction } from '$utils/guarded-navigation.utils';
 
 export type AccountSectionId = 'activity' | 'profile' | 'security';
@@ -99,14 +101,26 @@ export const isInternalNavigationLink = (
 const getAccountDisplayName = (userData: UserType): string =>
   `${userData.firstName} ${userData.lastName}`.trim() || userData.loginName;
 
-export const AccountHeader: FC<{ userData: UserType }> = ({ userData }) => (
+export const AccountHeader: FC<{ returnHref?: string; userData: UserType }> = ({
+  returnHref,
+  userData,
+}) => (
   <PageIdentityHero
     compact
     eyebrow="Mon compte"
     title={getAccountDisplayName(userData)}
     description={`Identifiant : ${userData.loginName}`}
     icon={<UserAvatar user={userData} className="size-full rounded-[7px]" />}
-    actions={<UserAccessBadge user={userData} />}
+    actions={
+      <div className="flex flex-wrap items-center gap-3">
+        <UserAccessBadge user={userData} />
+        {returnHref && (
+          <Button asChild variant="outline" size="sm">
+            <Link href={returnHref}>Retour aux utilisateurs</Link>
+          </Button>
+        )}
+      </div>
+    }
   />
 );
 
