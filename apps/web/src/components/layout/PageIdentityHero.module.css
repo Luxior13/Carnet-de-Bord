@@ -60,10 +60,35 @@
   margin-top: 10px;
 }
 
+.metaInline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
 .titleLine {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
+}
+
+.compact {
+  padding: 14px 16px;
+  gap: 10px;
+}
+
+.compact .heroIdentity {
+  gap: 10px;
+}
+
+.compact h1 {
+  font-size: 18px;
+}
+
+.compact p {
+  margin-top: 2px;
 }
 
 @media (max-width: 639px) {

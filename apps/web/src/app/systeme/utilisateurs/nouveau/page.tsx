@@ -21,14 +21,15 @@ import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { AccessDeniedState } from '$components/layout/PageState';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
+import { UserAvatar } from '$components/users/UserAvatar';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
+import { UserAccessBadge } from '$features/users/user-badges';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
 import { ErrorCode } from '$types/api.types';
 import type { UserType } from '$types/auth.types';
-import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import {
   Card,
@@ -289,34 +290,42 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
   }
 
   const headerTitle = createdUser
-    ? `${createdUser.firstName} ${createdUser.lastName}`
+    ? [createdUser.firstName, createdUser.lastName].filter(Boolean).join(' ') ||
+      createdUser.loginName
     : 'Nouvel utilisateur';
   const headerSubtitle = createdUser
     ? createdUser.loginName
     : 'Créez un accès, puis transmettez les identifiants de connexion.';
-  const headerRole = createdUser?.role ?? form.role;
 
   return (
     <PageShell className="py-0" width="form">
       <PageCanvas contentClassName="space-y-5">
         <div className="relative w-full space-y-5">
           <PageIdentityHero
+            compact
             title={headerTitle}
             description={headerSubtitle}
-            icon={createdUser ? <CheckCircle2 /> : <UserPlus />}
+            icon={
+              createdUser ? (
+                <UserAvatar
+                  user={createdUser}
+                  className="size-full rounded-[7px]"
+                />
+              ) : (
+                <UserPlus />
+              )
+            }
             meta={
               createdUser ? (
                 <>
-                  <Badge
-                    variant={
-                      headerRole === UserRole.ADMIN ? 'default' : 'secondary'
-                    }
-                  >
-                    {headerRole === UserRole.ADMIN
-                      ? 'Administrateur'
-                      : 'Utilisateur'}
-                  </Badge>
-                  <Badge variant="secondary">Créé</Badge>
+                  <UserAccessBadge user={createdUser} />
+                  <span className="border-success/40 bg-success/15 text-success inline-flex w-fit items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap">
+                    <span
+                      aria-hidden="true"
+                      className="size-1.5 shrink-0 rounded-full bg-current"
+                    />
+                    Créé
+                  </span>
                 </>
               ) : undefined
             }
@@ -377,9 +386,11 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
                   <FormSectionTitle id="created-access-title">
                     Accès
                   </FormSectionTitle>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2">
                     <div className="flex items-start justify-between gap-3">
-                      <span className="text-muted-foreground">Identifiant</span>
+                      <span className="text-muted-foreground text-xs">
+                        Identifiant
+                      </span>
                       <code className="text-foreground min-w-0 text-right text-xs break-all">
                         {createdUser.loginName}
                       </code>
@@ -388,7 +399,9 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
                       <>
                         <Separator className="bg-border/60" />
                         <div className="flex items-start justify-between gap-3">
-                          <span className="text-muted-foreground">Contact</span>
+                          <span className="text-muted-foreground text-xs">
+                            Contact
+                          </span>
                           <span className="text-foreground min-w-0 text-right text-xs break-all">
                             {createdUser.contactEmail}
                           </span>
@@ -397,44 +410,37 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
                     )}
                     <Separator className="bg-border/60" />
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-muted-foreground">Rôle</span>
-                      <Badge
-                        variant={
-                          createdUser.role === UserRole.ADMIN
-                            ? 'default'
-                            : 'secondary'
-                        }
-                      >
-                        {createdUser.role === UserRole.ADMIN
-                          ? 'Administrateur'
-                          : 'Utilisateur'}
-                      </Badge>
+                      <span className="text-muted-foreground text-xs">
+                        Rôle
+                      </span>
+                      <UserAccessBadge user={createdUser} />
                     </div>
                     <Separator className="bg-border/60" />
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-muted-foreground">
+                      <span className="text-muted-foreground text-xs">
                         Mot de passe
                       </span>
-                      <Badge
-                        variant="outline"
-                        className="border-warning/40 text-warning"
-                      >
+                      <span className="border-warning/40 bg-warning/15 text-warning inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap">
+                        <span
+                          aria-hidden="true"
+                          className="size-1.5 shrink-0 rounded-full bg-current"
+                        />
                         À changer
-                      </Badge>
+                      </span>
                     </div>
                   </div>
                 </section>
               </CardContent>
-              <CardFooter className="flex flex-wrap gap-2">
+              <CardFooter className="flex flex-wrap justify-end gap-2">
+                <Button type="button" variant="outline" onClick={resetForm}>
+                  Créer un autre
+                </Button>
                 <Button asChild>
                   <Link
                     href={`${userDetailPath(createdUser.id)}?${new URLSearchParams({ returnTo: returnHref })}`}
                   >
                     Ouvrir la fiche
                   </Link>
-                </Button>
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Créer un autre
                 </Button>
               </CardFooter>
             </Card>

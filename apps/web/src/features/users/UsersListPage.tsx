@@ -28,13 +28,10 @@ import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { UserAvatar } from '$components/users/UserAvatar';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGINATION } from '$constants/pagination.constants';
-import {
-  getAccessLabel,
-  hasPermission,
-  PERMISSIONS,
-} from '$constants/permissions.constants';
+import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
+import { UserAccessBadge, UserStatusBadge } from '$features/users/user-badges';
 import {
   canSearchUserContact,
   formatUserLastLogin,
@@ -95,22 +92,6 @@ const FILTER_ROLE_OPTIONS: readonly FilterRole[] = [
 ];
 const SORT_OPTIONS: readonly SortOption[] = ['name', 'recent', 'created'];
 const USER_SEARCH_MAX_LENGTH = 100;
-
-/** Couleur d'accès par niveau d'importance, du plus élevé au plus courant. */
-const ACCESS_LEVEL_TONES = {
-  admin: 'border-warning/40 bg-warning/15 text-warning',
-  protected: 'border-destructive/40 bg-destructive/15 text-destructive',
-  user: 'border-info/40 bg-info/15 text-info',
-} as const;
-
-const getAccessToneClass = (
-  user: Pick<UserType, 'isProtected' | 'role'>,
-): string =>
-  user.isProtected
-    ? ACCESS_LEVEL_TONES.protected
-    : user.role === UserRole.ADMIN
-      ? ACCESS_LEVEL_TONES.admin
-      : ACCESS_LEVEL_TONES.user;
 
 const getSortLabel = (sort: SortOption): string => {
   switch (sort) {
@@ -197,44 +178,6 @@ const buildUsersPageUrlParams = ({
   if (sort !== 'name') params.set('sort', sort);
 
   return params;
-};
-
-const UserAccessLabel: FC<{
-  user: Pick<UserType, 'isProtected' | 'role'>;
-}> = ({ user }) => {
-  return (
-    <span
-      className={cn(
-        'inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap',
-        getAccessToneClass(user),
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className="size-1.5 shrink-0 rounded-full bg-current"
-      />
-      {getAccessLabel(user)}
-    </span>
-  );
-};
-
-const UserStatusLabel: FC<{ isActive: boolean }> = ({ isActive }) => {
-  return (
-    <span
-      className={cn(
-        'inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap',
-        isActive
-          ? 'border-success/40 bg-success/15 text-success'
-          : 'border-warning/40 bg-warning/15 text-warning',
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className={cn('size-1.5 shrink-0 rounded-full', 'bg-current')}
-      />
-      {isActive ? 'Actif' : 'Désactivé'}
-    </span>
-  );
 };
 
 const ProtectedIdentityIcon: FC = () => (
@@ -940,10 +883,10 @@ export const UsersListPage: FC = () => {
                               </Link>
                             </TableCell>
                             <TableCell className="pointer-events-none">
-                              <UserAccessLabel user={user} />
+                              <UserAccessBadge user={user} />
                             </TableCell>
                             <TableCell className="pointer-events-none">
-                              <UserStatusLabel isActive={user.isActive} />
+                              <UserStatusBadge isActive={user.isActive} />
                             </TableCell>
                             {canViewContact && (
                               <TableCell className="pointer-events-none">
@@ -1047,8 +990,8 @@ export const UsersListPage: FC = () => {
                               )}
                             </div>
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                              <UserAccessLabel user={user} />
-                              <UserStatusLabel isActive={user.isActive} />
+                              <UserAccessBadge user={user} />
+                              <UserStatusBadge isActive={user.isActive} />
                             </div>
                             {securityDetailsVisible &&
                               user.mustChangePassword && (

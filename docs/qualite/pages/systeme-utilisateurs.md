@@ -234,12 +234,13 @@ Vérifications : TypeScript, lint, build réussis ; 133 tests ciblés réussis
   relations se renseignent sur la fiche. Le schéma reflète ce choix :
   `User.lastName` est nullable (migration `20261010150000`), et la lecture
   normalise `null` en chaîne vide pour l'affichage.
-- Interface recentrée sur la tâche : hero `PageIdentityHero` (dégradé des pages
-  de référence), formulaire en une seule carte alignée sur le formulaire de
-  création du répertoire (en-tête avec `ServiceIcon`, sections « Identité »,
-  « Connexion » et « Accès » en libellés majuscules discrets). Le rôle est
-  choisi par cartes radio (Utilisateur / Administrateur) avec description, au
-  lieu d'un menu déroulant.
+- Interface recentrée sur la tâche : hero `PageIdentityHero` compact (dégradé
+  des pages de référence, avatar DiceBear du compte créé, badges d'accès
+  partagés `UserAccessBadge`), formulaire en une seule carte alignée sur le
+  formulaire de création du répertoire (en-tête avec `ServiceIcon`, sections
+  « Identité », « Connexion » et « Accès » en libellés majuscules discrets).
+  Le rôle est choisi par cartes radio (Utilisateur / Administrateur) avec
+  description, au lieu d'un menu déroulant.
 - Écran de succès aplati sur le même gabarit : remise du mot de passe
   temporaire puis synthèse des accès, sans cartes imbriquées.
 - Aligné sur le répertoire : champs en style `Input` partagé, dernier fil
