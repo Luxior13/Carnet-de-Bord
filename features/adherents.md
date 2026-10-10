@@ -1,5 +1,8 @@
 # Adherents
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Creer une partie pour gerer les adherents de la structure, leurs informations, leur statut et leurs cotisations.

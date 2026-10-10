@@ -4,6 +4,9 @@
 
 ## Questions
 
+- Une édition partielle renvoie-t-elle uniquement les champs possédés par ce formulaire, sans écraser un champ masqué ou modifié dans un autre onglet ?
+- Une normalisation (espaces, casse, coordonnées) reste-t-elle cohérente entre saisie, validation, comparaison des changements et valeur enregistrée ?
+
 - Quels champs sont indispensables ? Valeur absente, zéro, chaîne vide et valeur par défaut ont-ils le même sens ?
 - Pour chaque champ, quel contrôle facilite réellement la tâche : texte, nombre,
   liste, choix multiples, calendrier, interrupteur ou lecture seule ? Le choix

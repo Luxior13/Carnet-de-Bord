@@ -189,6 +189,11 @@ Ne pas multiplier les signaux pour le même destinataire sans raison.
 
 ## 8. Terminer avec des conclusions vérifiables
 
+Pour un audit ciblé ou complet, suivre [la méthode d’audit](AUDITS.md) : déclarer
+le périmètre, l’état examiné, les scénarios et le type de preuve. Choisir les
+[contrôles disponibles](CONTROLES.md) selon le risque. Une liste de questions
+cochées sans observation n’est pas une validation.
+
 Pour chaque sujet examiné, utiliser l’un des résultats suivants :
 
 - **Validé** : contrôle réellement exécuté, environnement et portée indiqués.
@@ -224,3 +229,12 @@ Pour une décision transverse difficile à inverser : le
 Ne pas accumuler un audit complet à chaque changement. Maintenir une synthèse
 courante, un bref historique utile et un tableau des points ouverts avec déclencheur
 de réexamen. Une fiche est un outil de décision, pas un certificat de perfection.
+
+Une conclusion sépare le périmètre livré, les contrôles réellement réussis et les
+défauts encore ouverts. Pour un défaut suivi : identifiant, attendu/observé, preuve,
+impact, action, responsable désigné ou à attribuer et déclencheur de reprise.
+Un correctif reste « corrigé à vérifier » tant que sa preuve manque.
+
+Quand un rapport distinct est utile, utiliser le [modèle d’audit](modeles/audit.md)
+et l’ajouter à [l’index](../audits/README.md). Ne pas recopier tout le rapport dans
+le suivi de page : y maintenir la synthèse actuelle et le lien vers la preuve.

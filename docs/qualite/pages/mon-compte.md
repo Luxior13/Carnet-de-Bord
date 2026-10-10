@@ -4,6 +4,8 @@
 
 - Route : `/mon-compte`. Page personnelle du compte connecté.
 - Statut : alignée le 2026-10-10 sur la fiche `/systeme/utilisateurs/[id]`.
+- Vérification : alignement décrit dans le code ; parcours profil/sécurité réels
+  non rejoués pendant la réconciliation documentaire du 10 octobre.
 
 ## Décisions courantes
 
@@ -20,4 +22,7 @@
 
 ## Points ouverts
 
-- Parcours réel (profil, sécurité, conflits) à valider en base réelle.
+- COMPTE-01 — Parcours réel (profil, sécurité, conflits) à valider avec session et
+  base isolées avant conclusion fonctionnelle complète ; responsable à attribuer,
+  état « à vérifier ». Appliquer les [contrôles](../CONTROLES.md) proportionnés au
+  prochain changement et consigner sa preuve dans ce suivi.

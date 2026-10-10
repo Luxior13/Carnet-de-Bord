@@ -4,6 +4,8 @@
 
 ## Questions
 
+- La mesure porte-t-elle sur un build comparable et sépare-t-elle attente réseau, serveur, base et rendu ? Le cache ou la compilation de développement fausse-t-il la comparaison ?
+
 - Quelle expérience attend-on : premier affichage, recherche, sauvegarde, export ou travail en arrière-plan ?
 - Quel volume actuel et plausible : lignes, fichiers, historique, utilisateurs simultanés et équipes/saisons ?
 - Quel budget de latence, mémoire, taille de réponse et bundle convient au parcours ?

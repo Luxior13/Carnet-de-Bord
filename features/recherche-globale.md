@@ -1,5 +1,8 @@
 # Recherche globale
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Permettre de retrouver rapidement les informations importantes du site prive sans devoir savoir exactement dans quelle page chercher.

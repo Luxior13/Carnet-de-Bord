@@ -1,4 +1,7 @@
 > **Module retire le 21 septembre 2026.** Les cases cochees ci-dessous
+
+> Document de conception. Son statut et sa source courante sont précisés dans
+> [l’index des plans](README.md). Confronter ces propositions aux décisions actuelles.
 > decrivent ce qui existait avant le retrait : la page, les routes API, les
 > permissions actives et les dix tables ont ete supprimes. Le module reste
 > annonce sur `/feuille-de-route`. Pour le remettre en service, suivre la

@@ -1,5 +1,8 @@
 # Inventaire et acces
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Suivre le materiel, les comptes, les licences, les maillots, les assets et les acces confies aux membres ou staff.

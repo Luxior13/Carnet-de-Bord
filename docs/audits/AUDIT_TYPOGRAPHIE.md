@@ -1,5 +1,9 @@
 # Audit typographique — 22 septembre 2026
 
+> Rapport historique : résultats valables pour la passe décrite, non rejoués par
+> la correction documentaire. Voir [l’index](README.md) et les [suivis courants](../qualite/pages/README.md).
+> Les chemins indiqués comme historiques peuvent désigner des fichiers retirés.
+
 ## Périmètre et méthode
 
 Revue des 129 fichiers TSX, de la feuille CSS globale, des constantes TS et des

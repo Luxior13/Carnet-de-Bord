@@ -1,6 +1,10 @@
 # Audit des URL des pages — 24 septembre 2026
 
-> **Suivi : migration appliquée après validation.** Ce document conserve le diagnostic avant intervention. Les quatre familles recommandées ont été déplacées, leurs alias conservés et les retours filtrés / filtres partageables implémentés. L’état courant est décrit dans [NAVIGATION.md](NAVIGATION.md#routes-et-maintenance).
+> Rapport historique : résultats valables pour la passe décrite, non rejoués par
+> la correction documentaire. Voir [l’index](README.md) et les [suivis courants](../qualite/pages/README.md).
+> Les chemins indiqués comme historiques peuvent désigner des fichiers retirés.
+
+> **Suivi : migration appliquée après validation.** Ce document conserve le diagnostic avant intervention. Les quatre familles recommandées ont été déplacées, leurs alias conservés et les retours filtrés / filtres partageables implémentés. L’état courant est décrit dans [NAVIGATION.md](../references/NAVIGATION.md#routes-et-maintenance).
 
 ## Conclusion
 

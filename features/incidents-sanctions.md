@@ -1,5 +1,8 @@
 # Incidents et sanctions
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Centraliser les incidents, avertissements, sanctions, bans et decisions sensibles lies aux membres, personnes externes ou contacts connus.

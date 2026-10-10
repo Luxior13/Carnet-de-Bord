@@ -1,5 +1,8 @@
 # Debriefs
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Garder les retours internes apres les moments importants de la structure esport : reunions, matchs, scrims, entrainements, tryouts ou periodes de test.

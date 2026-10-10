@@ -9,7 +9,23 @@ absent est ignoré.
 
 - [qualite/](qualite/README.md) : méthode de revue, fiches par sujet, suivis par
   page, modèles et décisions.
-- [references/](references/) : références vivantes (navigation, permissions,
+- [Références](qualite/REFERENCES.md) : règles et sources propriétaires (navigation, permissions,
   structure, design system, feuille de route, exploitation…).
-- [plans/](plans/) : plans et intentions, passés ou à venir.
-- [audits/](audits/) : rapports datés et pièces d'audit.
+- [Plans](plans/README.md) : propositions avec leur statut, passées ou à venir.
+- [Audits](audits/README.md) : rapports datés, portée et limites des vérifications.
+- [Intentions métier](../features/README.md) : anciens cadrages, reliés à la matrice actuelle.
+
+## Pour le prochain changement
+
+Sélectionner les sujets avec la revue générale, lire le
+[suivi courant](qualite/pages/README.md), puis mettre à jour la décision dans son
+document propriétaire. Pour une revue approfondie :
+[méthode d’audit](qualite/AUDITS.md), [modèle](qualite/modeles/audit.md) et
+[contrôles](qualite/CONTROLES.md). Terminer par `bun run docs:check`.
+
+## Compréhension du projet
+
+La [cartographie du 10 octobre 2026](audits/COMPREHENSION_PROJET_2026-10-10.md)
+relie les pages actives, les modules, les données et les protections. Elle
+consigne aussi les contrôles exécutés et leurs limites ; les références vivantes
+restent propriétaires des règles courantes.

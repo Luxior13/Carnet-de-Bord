@@ -1,5 +1,8 @@
 # Tresorerie
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Creer une partie finance pour gerer toute la tresorerie de l'equipe esport, suivre l'argent qui rentre, l'argent qui sort et garder des bilans clairs.

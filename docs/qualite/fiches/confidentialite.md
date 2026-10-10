@@ -4,6 +4,8 @@
 
 ## Questions
 
+- Une preuve d’audit, capture, URL de test ou copie de base conserve-t-elle des données personnelles inutiles ? Qui peut la lire et quand devient-elle supprimable ?
+
 - Quelle finalité justifie chaque donnée ? Peut-on ne pas la collecter ou réduire sa précision ?
 - Qui porte le traitement et quelle entité est responsable du dossier ?
 - La base juridique, l’information de la personne et ses droits ont-ils été qualifiés pour l’usage réel ?

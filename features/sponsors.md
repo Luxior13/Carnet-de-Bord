@@ -1,4 +1,7 @@
 > **Module retire le 21 septembre 2026.** La page, ses routes API, ses
+
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
 > permissions actives et ses donnees ont ete supprimees pour reconstruire la
 > base du site. Le module reste annonce sur `/feuille-de-route` et sera
 > reconstruit plus tard. La specification complete a conserver est

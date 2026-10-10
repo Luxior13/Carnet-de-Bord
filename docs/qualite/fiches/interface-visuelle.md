@@ -4,6 +4,9 @@
 
 ## Questions
 
+- L’état de chargement garde-t-il une structure compréhensible sans afficher une valeur fictive comme donnée réelle ? Une transition cause-t-elle un déplacement gênant ?
+- Pour un composant partagé, a-t-on identifié les autres usages et leurs variantes avant de modifier son espacement, son comportement ou un jeton commun ?
+
 - La composition correspond-elle à une liste, fiche, saisie, lecture ou synthèse ?
 - Pour chaque élément examiné, est-ce le bon composant et la bonne variante pour
   le besoin, ou seulement le composant déjà présent ? Faut-il le conserver,
@@ -30,7 +33,7 @@ et succès si pertinents. Vérifier contours visibles, absence de saut, focus no
 coupé, texte lisible et fermeture des menus. Contrôler le CSS calculé et le rendu,
 pas seulement la présence d’une classe.
 
-Examiner petit écran, largeur intermédiaire, grand écran, sidebar ouverte/réduite,
+Examiner petit écran, largeur intermédiaire, grand écran, sidebar desktop et volet mobile,
 zoom et défilement. Une capture statique n’est qu’un des contrôles.
 
 ## Trace attendue

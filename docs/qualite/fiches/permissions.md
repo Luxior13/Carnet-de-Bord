@@ -4,6 +4,9 @@
 
 ## Questions
 
+- Une donnée masquée visuellement reste-t-elle présente dans le HTML, les propriétés sérialisées envoyées au navigateur ou une réponse réseau ? Le filtrage intervient-il avant cet envoi ?
+- Un total, une suggestion ou une différence de message permet-il de déduire l’existence d’un dossier interdit même sans afficher son contenu ?
+
 - Quelles lectures et commandes doivent être permises, à qui, sur quelles ressources ?
 - Une capacité existante suffit-elle ? Faut-il distinguer consulter, créer, modifier, valider, exporter ou supprimer ?
 - La portée est-elle personnelle, attribuée à une équipe, à une entité, à une période ou à un dossier ?

@@ -4,6 +4,9 @@
 
 ## Questions
 
+- Un test échoué signale-t-il un défaut produit ou un montage devenu invalide (navigation, session, attente asynchrone, mock) ? La conclusion distingue-t-elle ces cas avec une preuve ?
+- Peut-on rattacher chaque verdict au scénario, à l’état du code et à une preuve réellement produite ? Une correction a-t-elle été revérifiée avant clôture ?
+
 - Quelle erreur plausible le contrôle doit-il détecter ?
 - Quelle couche porte la règle : fonction, service, route, base, navigateur ou intégration externe ?
 - Les tests existants couvrent-ils déjà le comportement, et restent-ils pertinents après le changement ?
@@ -40,6 +43,8 @@ La question de validation se pose toujours ; une suite supplémentaire peut êtr
 inutile. Une preuve brute n’a pas à rester dans le dépôt après la revue.
 
 ## Références
+
+[Méthode d’audit](../AUDITS.md) · [Contrôles disponibles](../CONTROLES.md).
 
 [Scripts racine](../../../package.json) · [Scripts web](../../../apps/web/package.json) ·
 [Configuration E2E](../../../apps/web/playwright.config.ts).

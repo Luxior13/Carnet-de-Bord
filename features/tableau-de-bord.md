@@ -1,5 +1,8 @@
 # Tableau de bord
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Creer la page d'accueil privee du site pour voir rapidement ce qui demande de l'attention dans la structure esport.

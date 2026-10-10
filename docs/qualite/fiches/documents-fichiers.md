@@ -4,6 +4,8 @@
 
 ## Questions
 
+- Une pièce remplacée reste-t-elle référencée par un engagement ou une version historique ? Son nettoyage respecte-t-il ces références au lieu de ne regarder que la version courante ?
+
 - Le fichier est-il une pièce reçue, un modèle, une version émise, une preuve acceptée/signée ou un média esport ?
 - Quel module, quelle entité et quel dossier le possèdent ?
 - Qui peut déposer, consulter, remplacer, télécharger, partager et supprimer chaque version ?

@@ -1,5 +1,9 @@
 # Audit du design — 22 septembre 2026
 
+> Rapport historique : résultats valables pour la passe décrite, non rejoués par
+> la correction documentaire. Voir [l’index](README.md) et les [suivis courants](../qualite/pages/README.md).
+> Les chemins indiqués comme historiques peuvent désigner des fichiers retirés.
+
 ## Ajustement d'après la référence utilisateur
 
 La capture du tableau « Comptes utilisateurs » a été retenue comme direction
@@ -157,4 +161,4 @@ promesse de perfection. Les fiches utilisateur et journaux restent volumineux en
 code : leur découpage progressif pourra faciliter la maintenance sans changer le
 design ni mélanger cette intervention avec une réécriture métier.
 
-La référence à suivre pour les prochaines pages est [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
+La référence à suivre pour les prochaines pages est [DESIGN_SYSTEM.md](../references/DESIGN_SYSTEM.md).

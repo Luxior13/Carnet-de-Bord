@@ -1,5 +1,9 @@
 # Audit UX/UI du 24 septembre 2026 — page par page
 
+> Rapport historique : résultats valables pour la passe décrite, non rejoués par
+> la correction documentaire. Voir [l’index](README.md) et les [suivis courants](../qualite/pages/README.md).
+> Les chemins indiqués comme historiques peuvent désigner des fichiers retirés.
+
 ## Suivi des corrections — 24 septembre 2026
 
 Les huit corrections D01–D08 sont implémentées et vérifiées. Les constats page par page ci-dessous décrivent l’état observé **avant** ce passage de correction ; les propositions d’allègement visuel restent distinctes de ces huit défauts.
@@ -50,7 +54,7 @@ Documents de contrôle :
 
 - [Inventaire de chaque occurrence JSX](ux-ui-audit-2026-09-24/inventaire-elements.csv).
 - [Mesures des 63 vues initiales](ux-ui-audit-2026-09-24/mesures-pages.json).
-- [Proposition et décisions du passage précédent](UX_UI_PROPOSITION_2026-09-23.md).
+- [Proposition et décisions du passage précédent](../plans/UX_UI_PROPOSITION_2026-09-23.md).
 
 Dans les tableaux : **V** = vérifié dans le navigateur ; **C** = examiné dans le code ; **P** = proposition UX/UI. Un contrôle visuel ne prouve pas toutes les variantes métier du composant.
 
@@ -69,14 +73,14 @@ Dans les tableaux : **V** = vérifié dans le navigateur ; **C** = examiné dans
 
 Localisation des causes :
 
-- D01 : [route système](../apps/web/src/app/systeme/[[...slug]]/page.tsx), [journal](../apps/web/src/features/audit/SystemActivityJournalPage.tsx), [paramètres](../apps/web/src/features/settings/SystemSettingsPage.tsx).
-- D02 : [création utilisateur](../apps/web/src/app/administration/utilisateurs/nouveau/page.tsx).
-- D03 : [publication d’actualité](../apps/web/src/features/internal-news/components/PublishAnnouncementDialog.tsx), fermeture via `handleOpenChange` et `reset`.
-- D04 : [sidebar](../apps/web/src/components/ui/sidebar.tsx), panneau mobile et déclencheur indépendants.
-- D05 : [fiche utilisateur](../apps/web/src/components/users/UserDetailPage.tsx), groupe « Catégorie d’autorisations ».
-- D06 : [sécurité utilisateur](../apps/web/src/components/users/user-detail/UserSecurityTab.tsx), bouton `onResetMfa`.
-- D07 : [disponibilité des fonctionnalités](../apps/web/src/shared/context/FeatureAvailabilityContext.tsx) et [limiteur du middleware](../apps/web/src/middleware.ts).
-- D08 : [fil d’actualité](../apps/web/src/features/internal-news/components/InternalNewsFeed.tsx), condition `groupedItems.length === 0`.
+- D01 : [route système](../../apps/web/src/app/systeme/[[...slug]]/page.tsx), journal — chemin historique : `apps/web/src/features/audit/SystemActivityJournalPage.tsx`, [paramètres](../../apps/web/src/features/settings/SystemSettingsPage.tsx).
+- D02 : création utilisateur — chemin historique : `apps/web/src/app/administration/utilisateurs/nouveau/page.tsx`.
+- D03 : [publication d’actualité](../../apps/web/src/features/internal-news/components/PublishAnnouncementDialog.tsx), fermeture via `handleOpenChange` et `reset`.
+- D04 : [sidebar](../../apps/web/src/components/ui/sidebar.tsx), panneau mobile et déclencheur indépendants.
+- D05 : [fiche utilisateur](../../apps/web/src/components/users/UserDetailPage.tsx), groupe « Catégorie d’autorisations ».
+- D06 : [sécurité utilisateur](../../apps/web/src/components/users/user-detail/UserSecurityTab.tsx), bouton `onResetMfa`.
+- D07 : [disponibilité des fonctionnalités](../../apps/web/src/shared/context/FeatureAvailabilityContext.tsx) et [limiteur du middleware](../../apps/web/src/middleware.ts).
+- D08 : [fil d’actualité](../../apps/web/src/features/internal-news/components/InternalNewsFeed.tsx), condition `groupedItems.length === 0`.
 
 Captures : [404 Système](ux-ui-audit-2026-09-24/systeme-404.png), [autorisations mobile](ux-ui-audit-2026-09-24/autorisations-mobile.png), [bouton MFA coupé](ux-ui-audit-2026-09-24/mfa-bouton-coupe.png), [annonce et état vide](ux-ui-audit-2026-09-24/actualite-et-etat-vide.png). Cette dernière capture a été prise pendant le désépinglage ; le message contradictoire est aussi expliqué par la condition de rendu du fil.
 

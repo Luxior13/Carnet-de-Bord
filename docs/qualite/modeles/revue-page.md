@@ -8,6 +8,7 @@ Pour une retouche mineure, actualiser le suivi existant ou le compte rendu suffi
 
 - Route(s), module propriétaire et public :
 - Statut : prévu / en développement / livré / retiré :
+- Niveau de vérification : code examiné / contrôles ciblés / parcours réel ; limites et défauts ouverts :
 - Responsable métier / technique, si nécessaire :
 - Dernière revue, version/commit et raison :
 - Références canoniques et éventuelles décisions transverses :
@@ -79,9 +80,12 @@ Une raison commune peut regrouper des sujets hors impact pour une petite retouch
 
 ## Points ouverts
 
-| Point | Impact / priorité | Action | Responsable si nécessaire | Échéance ou déclencheur |
+| ID / point | Attendu / observé et preuve | Impact / priorité | Action / responsable | État / déclencheur |
 | --- | --- | --- | --- | --- |
-| <question ou défaut> | <conséquence> | <prochaine étape concrète> | <nom/rôle ou à attribuer> | <événement/date> |
+| <ID stable et défaut/question> | <scénario ou lien vers le rapport> | <conséquence> | <étape concrète ; nom/rôle ou à attribuer> | <ouvert, corrigé à vérifier, clos ; événement/date> |
+
+La [méthode d’audit](../AUDITS.md) définit les preuves et la clôture. Conserver les
+points actifs ici et lier le rapport détaillé, sans dupliquer plusieurs registres.
 
 ## Livraison et vie suivante
 

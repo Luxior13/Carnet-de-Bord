@@ -4,6 +4,9 @@
 
 ## Questions
 
+- Si une commande touche plusieurs objets, quelles versions doivent être vérifiées ensemble ? Une version de page unique protège-t-elle réellement les objets enfants ?
+- Après une écriture réussie, l’échec d’un rafraîchissement ou d’un effet secondaire fait-il annoncer à tort que l’enregistrement a échoué, encourageant une répétition ?
+
 - Quels entrées, sorties, statuts et erreurs composent le contrat public ?
 - Le serveur valide-t-il types, bornes, valeurs autorisées et champs inconnus ?
 - Les champs retournés sont-ils limités au besoin et au droit du demandeur ?

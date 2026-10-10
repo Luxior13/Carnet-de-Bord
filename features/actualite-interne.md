@@ -1,5 +1,8 @@
 # Actualite interne
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Creer une page privee qui liste les evenements importants de la structure pour garder une trace claire de ce qui change en interne.

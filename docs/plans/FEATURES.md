@@ -1,56 +1,59 @@
 # Features a ajouter
 
+> Document de conception. Son statut et sa source courante sont précisés dans
+> [l’index des plans](README.md). Confronter ces propositions aux décisions actuelles.
+
 Liste simple des features prevues pour le site prive de gestion esport.
 Chaque ligne pourra ensuite avoir son propre fichier detaille.
 
 ## Organisation globale
 
-- [Navigation du site](docs/NAVIGATION.md) — conception de référence : pôles, lieux, règles d'admission d'une entrée de menu, garanties de ressenti.
-- [Structure et forme juridique](docs/STRUCTURE.md) — profil de structure, vocabulaire dérivé, finance en natures, saison et exercice.
-- [Feuille de route](docs/FEUILLE_DE_ROUTE.md) — décisions de tri, entités et ordre de construction.
-- [Rôles et portée des permissions](docs/ROLES_ET_PERMISSIONS.md) — patrons de rôle et périmètres de visibilité.
-- [Feedback utilisateur](docs/FEEDBACK.md) — toasts, notifications, alertes et rappels, avec leur checklist de modification.
-- [Design system](docs/DESIGN_SYSTEM.md) — hiérarchie de couleurs, typographie, états, onglets et règles de construction.
-- [Organisation UX et relations](features/organisation-ux.md) - Regle generale pour lier les donnees entre modules sans les dupliquer.
-- [Documentation des pages](features/pages/README.md) - Detail page par page avec contenu attendu, actions, donnees et liaisons entre modules.
-- [Raisons des autres features](features/tri-autres-features.md) - Aide pour decider quelles features garder, fusionner ou repousser.
+- [Navigation du site](../references/NAVIGATION.md) — conception de référence : pôles, lieux, règles d'admission d'une entrée de menu, garanties de ressenti.
+- [Structure et forme juridique](../references/STRUCTURE.md) — profil de structure, vocabulaire dérivé, finance en natures, saison et exercice.
+- [Feuille de route](../references/FEUILLE_DE_ROUTE.md) — décisions de tri, entités et ordre de construction.
+- [Rôles et portée des permissions](../references/ROLES_ET_PERMISSIONS.md) — patrons de rôle et périmètres de visibilité.
+- [Feedback utilisateur](../references/FEEDBACK.md) — toasts, notifications, alertes et rappels, avec leur checklist de modification.
+- [Design system](../references/DESIGN_SYSTEM.md) — hiérarchie de couleurs, typographie, états, onglets et règles de construction.
+- [Organisation UX et relations](../../features/organisation-ux.md) - Regle generale pour lier les donnees entre modules sans les dupliquer.
+- [Documentation des pages](../../features/pages/README.md) - Detail page par page avec contenu attendu, actions, donnees et liaisons entre modules.
+- [Raisons des autres features](../../features/tri-autres-features.md) - Aide pour decider quelles features garder, fusionner ou repousser.
 
 ## Deja existant
 
 - Utilisateurs et permissions - Partie deja presente pour gerer les comptes, roles et acces au site.
-- [Répertoire](features/personnes-contacts.md) - Répertoire central des personnes internes ou externes avec identité, coordonnées et statut dans la structure.
+- [Répertoire](../../features/personnes-contacts.md) - Répertoire central des personnes internes ou externes avec identité, coordonnées et statut dans la structure.
 
 ## Retire volontairement
 
-- [Sponsors & partenaires](features/pages/bureau-juridique/sponsors-partenaires.md) - Module retire le 21 septembre 2026 avec ses donnees, pour reconstruire proprement la base du site. Il reste annonce sur `/feuille-de-route`. Le fichier detaille conserve le systeme de suivi, les contacts et les champs exacts a remettre plus tard.
+- [Sponsors & partenaires](../../features/pages/bureau-juridique/sponsors-partenaires.md) - Module retire le 21 septembre 2026 avec ses donnees, pour reconstruire proprement la base du site. Il reste annonce sur `/feuille-de-route`. Le fichier detaille conserve le systeme de suivi, les contacts et les champs exacts a remettre plus tard.
 
 ## Fonctionnalites transversales
 
-- [Recherche globale](features/recherche-globale.md) - Retrouver rapidement membres, sponsors, documents, finances et notes selon les permissions.
+- [Recherche globale](../../features/recherche-globale.md) - Retrouver rapidement membres, sponsors, documents, finances et notes selon les permissions.
 
 ## Sidebar
 
-- [Tableau de bord](features/tableau-de-bord.md) - Vue d'accueil privee avec les alertes, echeances, actions importantes et raccourcis.
-- [Gestion des reunions](features/gestion-reunions.md) - Page complete pour organiser les reunions, ajouter les participants et faire le debrief.
-- [Actualite interne](features/actualite-interne.md) - Page qui liste les evenements importants de la structure comme un joueur retire ou un sponsor ajoute.
-- [Membres](features/membres.md) - Liste des membres avec une fiche detaillee pour garder mail, telephone, notes internes, bans ou informations importantes.
-- [Tresorerie](features/tresorerie.md) - Partie finance pour gerer la tresorerie, paiements, depenses, recettes et bilans de l'equipe esport.
-- [Adherents](features/adherents.md) - Suivre les adherents, cotisations, informations personnelles et statut dans la structure.
-- [Chartes et documents officiels](features/chartes-documents.md) - Creer, mettre a jour et exporter en PDF les chartes, reglements et documents importants.
-- [Contrats](features/contrats.md) - Centraliser les contrats lies aux sponsors, membres, documents et operations de tresorerie.
-- [Debriefs](features/debriefs.md) - Garder les retours internes apres reunions, matchs, scrims, entrainements ou tryouts.
-- [Calendrier interne](features/calendrier-interne.md) - Regrouper les reunions, echeances, rappels, deadlines et evenements prives de la structure.
-- [Recrutement et tryouts](features/recrutement-tryouts.md) - Suivre les candidats, tests, evaluations et decisions de recrutement.
-- [Onboarding et depart](features/onboarding-depart.md) - Gerer les checklists d'arrivee et de depart des membres, staff ou joueurs.
-- [Incidents et sanctions](features/incidents-sanctions.md) - Centraliser les incidents, sanctions, avertissements et decisions sensibles.
-- [Inventaire et acces](features/inventaire-acces.md) - Suivre le materiel, comptes, licences, maillots et acces confies aux membres.
-- [Notifications et rappels](features/notifications-rappels.md) - Envoyer des rappels internes pour reunions, paiements, documents, sponsors et actions importantes.
-- [Acceptation des chartes](features/acceptation-chartes.md) - Suivre qui a lu et accepte les chartes ou documents officiels.
-- [Journal d'activite](features/journal-activite.md) - Garder une trace des actions importantes faites sur les donnees sensibles.
-- [Validations](features/validations.md) - Faire approuver les actions sensibles avant confirmation.
-- [Exports et sauvegardes](features/exports-sauvegardes.md) - Exporter les donnees importantes et prevoir les sauvegardes.
-- [Parametres](features/parametres.md) - Configurer les statuts, categories, jeux, saisons et options globales.
-- [Archives](features/archives.md) - Conserver les anciennes donnees sans les supprimer.
+- [Tableau de bord](../../features/tableau-de-bord.md) - Vue d'accueil privee avec les alertes, echeances, actions importantes et raccourcis.
+- [Gestion des reunions](../../features/gestion-reunions.md) - Page complete pour organiser les reunions, ajouter les participants et faire le debrief.
+- [Actualite interne](../../features/actualite-interne.md) - Page qui liste les evenements importants de la structure comme un joueur retire ou un sponsor ajoute.
+- [Membres](../../features/membres.md) - Liste des membres avec une fiche detaillee pour garder mail, telephone, notes internes, bans ou informations importantes.
+- [Tresorerie](../../features/tresorerie.md) - Partie finance pour gerer la tresorerie, paiements, depenses, recettes et bilans de l'equipe esport.
+- [Adherents](../../features/adherents.md) - Suivre les adherents, cotisations, informations personnelles et statut dans la structure.
+- [Chartes et documents officiels](../../features/chartes-documents.md) - Creer, mettre a jour et exporter en PDF les chartes, reglements et documents importants.
+- [Contrats](../../features/contrats.md) - Centraliser les contrats lies aux sponsors, membres, documents et operations de tresorerie.
+- [Debriefs](../../features/debriefs.md) - Garder les retours internes apres reunions, matchs, scrims, entrainements ou tryouts.
+- [Calendrier interne](../../features/calendrier-interne.md) - Regrouper les reunions, echeances, rappels, deadlines et evenements prives de la structure.
+- [Recrutement et tryouts](../../features/recrutement-tryouts.md) - Suivre les candidats, tests, evaluations et decisions de recrutement.
+- [Onboarding et depart](../../features/onboarding-depart.md) - Gerer les checklists d'arrivee et de depart des membres, staff ou joueurs.
+- [Incidents et sanctions](../../features/incidents-sanctions.md) - Centraliser les incidents, sanctions, avertissements et decisions sensibles.
+- [Inventaire et acces](../../features/inventaire-acces.md) - Suivre le materiel, comptes, licences, maillots et acces confies aux membres.
+- [Notifications et rappels](../../features/notifications-rappels.md) - Envoyer des rappels internes pour reunions, paiements, documents, sponsors et actions importantes.
+- [Acceptation des chartes](../../features/acceptation-chartes.md) - Suivre qui a lu et accepte les chartes ou documents officiels.
+- [Journal d'activite](../../features/journal-activite.md) - Garder une trace des actions importantes faites sur les donnees sensibles.
+- [Validations](../../features/validations.md) - Faire approuver les actions sensibles avant confirmation.
+- [Exports et sauvegardes](../../features/exports-sauvegardes.md) - Exporter les donnees importantes et prevoir les sauvegardes.
+- [Parametres](../../features/parametres.md) - Configurer les statuts, categories, jeux, saisons et options globales.
+- [Archives](../../features/archives.md) - Conserver les anciennes donnees sans les supprimer.
 
 ## Autres features a trier
 

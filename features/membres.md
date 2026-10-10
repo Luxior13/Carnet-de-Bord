@@ -1,5 +1,8 @@
 # Membres
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Creer une page privee avec la liste de tous les membres, puis une fiche detaillee pour garder toutes les informations utiles sur chaque personne.

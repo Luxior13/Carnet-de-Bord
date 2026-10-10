@@ -4,8 +4,8 @@ Ce document décrit l'identité visuelle du site, de la couleur jusqu'à la
 hiérarchie des pages. C'est la référence à suivre pour toute nouvelle page,
 nouveau composant ou retouche de style.
 
-La [revue générale](qualite/REVUE_GENERALE.md) et la
-[fiche Interface visuelle](qualite/fiches/interface-visuelle.md) organisent les
+La [revue générale](../qualite/REVUE_GENERALE.md) et la
+[fiche Interface visuelle](../qualite/fiches/interface-visuelle.md) organisent les
 contrôles. Les valeurs de cette référence décrivent le socle partagé ; les
 adaptations locales justifiées restent dans le suivi de la page. Elles ne deviennent
 pas automatiquement une nouvelle règle pour tous les écrans.
@@ -178,7 +178,7 @@ explicitement Geist et un texte de 14px ; leur style natif ne doit pas réintrod
 une police système différente. Le grand « 404 » est un repère décoratif, tandis
 que « Page introuvable » est le titre `h1`.
 
-Voir [AUDIT_TYPOGRAPHIE.md](AUDIT_TYPOGRAPHIE.md) pour les constats et mesures.
+Voir [AUDIT_TYPOGRAPHIE.md](../audits/AUDIT_TYPOGRAPHIE.md) pour les constats et mesures.
 
 ---
 
@@ -309,7 +309,7 @@ La recherche rapide délègue ses interactions clavier à `Command`. Le classeme
 et les permissions restent dans le catalogue applicatif, avec
 `shouldFilter={false}` pour éviter un second filtrage divergent.
 Les boutons inclus dans cette palette isolent leurs touches de celles de la
-liste : Entrée sur Effacer, Fermer ou l’accès à la recherche complète ne doit pas
+liste : Entrée sur Effacer ou Fermer ne doit pas
 ouvrir aussi le résultat sélectionné. Le style sobre de la recherche reste local ;
 `DialogContent.overlayClassName` permet d’adapter son voile sans modifier les
 autres fenêtres.
@@ -366,7 +366,7 @@ Les en-têtes de dialogue réservent la place du bouton de fermeture.
 
 - [NAVIGATION.md](NAVIGATION.md) — les lieux et leur hiérarchie.
 - [FEEDBACK.md](FEEDBACK.md) — toasts, notifications, alertes et rappels.
-- [AUDIT_DESIGN.md](AUDIT_DESIGN.md) — périmètre examiné, corrections et validation.
+- [AUDIT_DESIGN.md](../audits/AUDIT_DESIGN.md) — périmètre examiné, corrections et validation.
 
 ## 14. Où ranger un style
 

@@ -1,5 +1,8 @@
 # Notifications et rappels
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Envoyer des notifications et rappels internes pour eviter les oublis sur les reunions, paiements, documents, sponsors et actions importantes.

@@ -1,5 +1,8 @@
 # Validations
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Prevoir une file de validation pour les actions sensibles du site prive.

@@ -1,10 +1,14 @@
 # Audit UI de la page Utilisateurs et grille réutilisable
 
+> Rapport historique : résultats valables pour la passe décrite, non rejoués par
+> la correction documentaire. Voir [l’index](README.md) et les [suivis courants](../qualite/pages/README.md).
+> Les chemins indiqués comme historiques peuvent désigner des fichiers retirés.
+
 Date : 26 septembre 2026. Page de référence : `/systeme/utilisateurs`.
 
 Référence historique de cette page. Pour tout nouveau changement, utiliser la
-[revue générale](qualite/REVUE_GENERALE.md), ses fiches conditionnelles et le
-[suivi courant Utilisateurs](qualite/pages/systeme-utilisateurs.md). Les grilles
+[revue générale](../qualite/REVUE_GENERALE.md), ses fiches conditionnelles et le
+[suivi courant Utilisateurs](../qualite/pages/systeme-utilisateurs.md). Les grilles
 réutilisables ci-dessous témoignent du passage initial ; le nouveau référentiel
 porte désormais la méthode commune.
 
@@ -595,12 +599,12 @@ statistiques — ne doivent pas être imposées à une page de lecture ou à un 
 
 Fichiers principaux de la page :
 
-- [`page.tsx`](../apps/web/src/app/systeme/utilisateurs/page.tsx) : en-tête compact, palette locale et largeur.
-- [`UsersListPage.tsx`](../apps/web/src/features/users/UsersListPage.tsx) : recherche, filtres, tableau, cartes et pagination.
-- [`UsersOverview.tsx`](../apps/web/src/features/users/UsersOverview.tsx) : statistiques et résumé mobile.
-- [`UsersListLayout.module.css`](../apps/web/src/features/users/UsersListLayout.module.css) : grille locale, largeur de confort de 64 rem dans les limites de la zone utile, plafond de 80 rem, centrage écran et placement indépendant du rail. Calcul CSS à partir du viewport privé, de la zone utile et de l'écran, tenant compte des marges et gouttières de scrollbar ; aucun déplacement de la sidebar ni mesure JavaScript.
-- [`page-shell.tsx`](../apps/web/src/components/ui/page-shell.tsx) et [`globals.css`](../apps/web/src/app/globals.css) : géométrie et jetons.
-- [`button.tsx`](../apps/web/src/components/ui/button.tsx), [`input.tsx`](../apps/web/src/components/ui/input.tsx), [`select.tsx`](../apps/web/src/components/ui/select.tsx) : correction du focus commun.
+- [`page.tsx`](../../apps/web/src/app/systeme/utilisateurs/page.tsx) : en-tête compact, palette locale et largeur.
+- [`UsersListPage.tsx`](../../apps/web/src/features/users/UsersListPage.tsx) : recherche, filtres, tableau, cartes et pagination.
+- [`UsersOverview.tsx`](../../apps/web/src/features/users/UsersOverview.tsx) : statistiques et résumé mobile.
+- `UsersListLayout.module.css` — chemin historique : `apps/web/src/features/users/UsersListLayout.module.css` : grille locale, largeur de confort de 64 rem dans les limites de la zone utile, plafond de 80 rem, centrage écran et placement indépendant du rail. Calcul CSS à partir du viewport privé, de la zone utile et de l'écran, tenant compte des marges et gouttières de scrollbar ; aucun déplacement de la sidebar ni mesure JavaScript.
+- [`page-shell.tsx`](../../apps/web/src/components/ui/page-shell.tsx) et [`globals.css`](../../apps/web/src/app/globals.css) : géométrie et jetons.
+- [`button.tsx`](../../apps/web/src/components/ui/button.tsx), [`input.tsx`](../../apps/web/src/components/ui/input.tsx), [`select.tsx`](../../apps/web/src/components/ui/select.tsx) : correction du focus commun.
 
 TypeScript et lint de la page validés après l'ajout de la description courte.
 Lors du passage de validation de la disposition : **177 tests existants réussis** dans les suites

@@ -22,6 +22,9 @@ une API, une tâche, un schéma ou un composant partagé, même sans page.
 - Un sujet sans effet sur ce changement peut être « hors impact » ; un sujet
   absent de la fonctionnalité peut être « non applicable ». Justifier brièvement.
 - Ne pas confondre contrôle non effectué et validation réussie.
+- Pour un audit ciblé, complet ou transverse, utiliser la
+  [méthode d’audit](docs/qualite/AUDITS.md) : périmètre, preuves, limites et suivi
+  des défauts. Une petite correction conserve une trace proportionnée.
 - Consulter les décisions courantes de la page et les références canoniques.
   Ne pas recopier un audit daté comme règle générale.
 - Chaque page travaillée a un suivi dans `docs/qualite/pages/` : créer un
@@ -30,6 +33,9 @@ une API, une tâche, un schéma ou un composant partagé, même sans page.
   retouche met à jour le suivi existant, sans nouveau dossier.
 - Ces documents n’ajoutent aucune demande de permission pour le travail déjà
   autorisé. Les autorisations explicites de la session restent applicables.
+- Après une modification documentaire, exécuter `bun run docs:check` et mettre
+  à jour les index concernés. Les anciennes preuves restent datées ; un correctif
+  non revérifié reste « corrigé à vérifier ».
 
 ## Contexte et références
 

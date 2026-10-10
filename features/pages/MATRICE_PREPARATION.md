@@ -30,7 +30,7 @@ Les anciennes routes prévues ne sont pas des « squelettes disponibles ». Cert
 - Une carte livrée devra être retirée ou recentrée sur son reste à faire, avec une mise à jour de cette matrice.
 - Chaque carte de l’interface précise public, première version, prérequis, critère de livraison et suite éventuelle. Les étapes ne sont pas des échéances.
 
-## Les 37 chantiers
+## Les 39 chantiers
 
 | Identifiant stable | Chantier | Pôle cible | Étape | État | Prérequis |
 | --- | --- | --- | --- | --- | --- |
@@ -41,6 +41,8 @@ Les anciennes routes prévues ne sont pas des « squelettes disponibles ». Cert
 | `sport-teams` | Équipes & saisons | Esport | 2 | À cadrer | Adhésions et rôles |
 | `sport-planning` | Planning & disponibilités | Esport | 2 | À cadrer | Équipes & saisons |
 | `personal-work` | Mon travail & espace personnel | Aujourd’hui | 3 | À compléter | Accès & responsabilités métier ; Planning & disponibilités ; Documents & acceptations ; Projets & tâches |
+| `notifications` | Notifications personnelles | Aujourd’hui | 3 | À cadrer | Accès & responsabilités métier |
+| `activity-journal` | Journal d’activité | Système | 3 | À compléter | Accès & responsabilités métier |
 | `recruitment` | Recrutement | Membres | 3 | À cadrer | Adhésions et rôles ; Équipes & saisons |
 | `onboarding` | Arrivées et départs | Membres | 3 | À cadrer | Adhésions et rôles ; Documents & acceptations ; Projets & tâches |
 | `competitions` | Compétitions & inscriptions | Esport | 3 | À cadrer | Équipes & saisons ; Planning & disponibilités |
@@ -52,7 +54,7 @@ Les anciennes routes prévues ne sont pas des « squelettes disponibles ». Cert
 | `calendar` | Calendrier commun | Activité | 3 | À cadrer | Planning & disponibilités |
 | `meetings` | Réunions & décisions de séance | Activité | 3 | À cadrer | Adhésions et rôles ; Projets & tâches |
 | `debriefs` | Débriefs | Activité | 3 | À cadrer | Projets & tâches ; Planning & disponibilités |
-| `internal-news` | Actualité interne & audiences | Activité | 3 | À compléter | Accès & responsabilités métier |
+| `internal-news` | Actualité interne & audiences | Activité | 3 | À cadrer | Accès & responsabilités métier |
 | `contracts` | Contrats & obligations | Structure | 4 | À cadrer | Documents & acceptations ; Adhésions et rôles |
 | `logistics` | Ressources & logistique | Activité | 4 | À cadrer | Adhésions et rôles ; Projets & tâches |
 | `organizations` | Organisations & contacts | Relations | 4 | À cadrer | Adhésions et rôles |

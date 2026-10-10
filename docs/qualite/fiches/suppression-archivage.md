@@ -4,6 +4,8 @@
 
 ## Questions
 
+- Les index, suivis et commandes de test présentent-ils encore le module retiré comme disponible ? Conserver l’historique sans annoncer ses anciennes vérifications comme actuelles.
+
 - Retire-t-on une visibilité, un accès, un état actif, une donnée ou tout un module ?
 - Archiver, désactiver, anonymiser, purger et supprimer ont-ils des effets clairement distincts ?
 - Quelles références entrantes existent : liens, relations, fichiers, jobs, exports, caches et notifications ?

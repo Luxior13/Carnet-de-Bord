@@ -9,15 +9,15 @@
   `app/membres/repertoire/page.tsx` (serveur) →
   `features/persons/components/PersonsPageClient.tsx` →
   `PersonsList.tsx`, styles partagés `components/ui/directory.module.css`.
-- Statut : terminé (liste) au 2026-10-10, considéré comme la référence de
+- Statut : alignement visuel de la liste terminé au 2026-10-10, référence de
   liste avec `/systeme/utilisateurs`.
 - Dernière revue : 2026-10-10 — ajout de la Vue d'ensemble alignée sur
   `/systeme/utilisateurs`, en plus de l'analyse A à Z et de la refactorisation
   du 2026-10-09 (voir « Refactorisation appliquée » ci-dessous).
 - Références : intentions historiques `features/pages/vie-interne/membres*.md`,
   `features/pages/bureau-juridique/personnes-contacts.md` ; règles courantes
-  `docs/NAVIGATION.md`, `docs/STRUCTURE.md`, `docs/ROLES_ET_PERMISSIONS.md`,
-  `docs/PERMISSIONS.md` ; tokens `apps/web/src/app/globals.css`.
+  `docs/references/NAVIGATION.md`, `docs/references/STRUCTURE.md`, `docs/references/ROLES_ET_PERMISSIONS.md`,
+  `docs/references/PERMISSIONS.md` ; tokens `apps/web/src/app/globals.css`.
 
 ## Rôle de référence (décision du 2026-10-09)
 
@@ -367,11 +367,17 @@ restent des observations de code, pas des mesures.
 
 ## Points ouverts
 
+L’alignement visuel terminé ne clôt pas les points fonctionnels ci-dessous. Les
+contrôles de la cartographie du 10 octobre restent des preuves datées ; cette
+réconciliation documentaire ne les a pas rejoués. Responsables encore à attribuer.
+
 | Point | Impact | Prochaine étape |
 | --- | --- | --- |
-| Confirmation à l'œil de la refactorisation | Cohérence de tout le produit | Relire les captures desktop/mobile (contrôle DOM/styles déjà passé) |
-| Évolution du statut de structure | Modèle et parcours long terme | Cadrage avec STRUCTURE.md avant tout nouveau statut |
-| Index de recherche | Coût à volume | Benchmark quand la base grossit |
+| REP-01 — Confirmation à l'œil de la refactorisation | Cohérence de tout le produit | Relire les captures desktop/mobile (contrôle DOM/styles déjà passé) |
+| REP-02 — Évolution du statut de structure | Modèle et parcours long terme | Cadrage avec STRUCTURE.md avant tout nouveau statut |
+| REP-03 — Index de recherche | Coût à volume | Benchmark quand la base grossit |
+| REP-04 — Total après curseur, constat du 2026-10-10 | `COUNT(*) OVER()` compte les résultats après `cursorClause`, mais l'interface utilise ce nombre comme total général et nombre de pages | Corriger le contrat de total et vérifier plusieurs pages d'un jeu fixe ; défaut déduit du code, parcours réel non rejoué |
+| REP-05 — Contrôles de la passe globale du 2026-10-10 | `PersonsList.tsx` dépasse le budget de 800 lignes (894 selon le script) ; deux tests de permissions de création restent sur le squelette | Revoir le découpage et le contexte de navigation du test ; voir la [cartographie](../../audits/COMPREHENSION_PROJET_2026-10-10.md) |
 
 ## Historique utile
 

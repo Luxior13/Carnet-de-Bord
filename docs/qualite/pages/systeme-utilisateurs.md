@@ -15,7 +15,7 @@
   fiches applicables, revue du code et corrections ciblées. Le niveau est
   **sensible** pour la conservation des données après révocation de droits.
   Les vérifications exécutées pendant cette passe sont distinguées ci-dessous.
-- Passe du 10 octobre 2026 : liste considérée **terminée**, alignée sur la page
+- Passe du 10 octobre 2026 : **alignement visuel de la liste terminé**, alignée sur la page
   de référence `/membres/repertoire` (voir la section dédiée plus bas).
 
 ## Décisions courantes
@@ -276,19 +276,25 @@ Vérifications : TypeScript, lint, build réussis ; 133 tests ciblés réussis
 
 ## Points ouverts et déclencheurs
 
+L’alignement visuel terminé ne vaut pas validation fonctionnelle complète. Les
+points ci-dessous restent ouverts ou à vérifier selon leur nature ; responsables
+à attribuer, sauf décision ultérieure consignée dans ce suivi.
+
 | Point | Suite concrète | Déclencheur |
 | --- | --- | --- |
-| Parcours réels avec permissions/session/base | Préparer une base E2E isolée et les profils nécessaires | Avant conclusion fonctionnelle globale |
-| Volumes et coûts serveur | Mesurer requêtes, agrégations et pages éloignées sur données représentatives | Hausse de volume ou travail de performance |
-| Agrégations du GET | Mesurer les neuf opérations de liste/statistiques au maximum, hors auth/réglage ; plusieurs statistiques retournées ne sont pas utilisées par ce rail. Évaluer ensuite une projection plus petite sans casser les consommateurs | Benchmark serveur ; aucun cache ajouté sans mesure |
-| Plafond de pagination | Réexaminer curseur, stratégie de recherche ou taille de page si 1 000 pages deviennent nécessaires ; l’interface borne et explique désormais la limite | Volume réellement proche du plafond, selon la taille configurée |
-| Lecteur d’écran, appareils réels, zoom natif | Exécuter les parcours importants dans ces environnements | Revue d’accessibilité complète |
-| Graisses visuelles dans WebKit Windows | Comparer dans Safari réel avant toute correction globale de police | Revue de compatibilité |
-| Finalité, responsable et conservation du traitement des comptes | Faire qualifier et consigner la politique applicable ; aucune validation organisationnelle ou juridique déduite de la revue du code | Cadrage de l’exploitation avec données réelles ou nouvelle entité |
-| Responsables et fréquence de suivi | Désigner selon l’exploitation réelle | Mise en place du suivi opérationnel |
-| Chips de filtres actifs | Ajouter les chips retirables (recherche, statut, rôle) comme sur le répertoire, en plus du bouton de réinitialisation | Cohérence avec la page de référence |
+| USR-01 — Parcours réels avec permissions/session/base | Préparer une base E2E isolée et les profils nécessaires | Avant conclusion fonctionnelle globale |
+| USR-02 — Volumes et coûts serveur | Mesurer requêtes, agrégations et pages éloignées sur données représentatives | Hausse de volume ou travail de performance |
+| USR-03 — Agrégations du GET | Mesurer les neuf opérations de liste/statistiques au maximum, hors auth/réglage ; plusieurs statistiques retournées ne sont pas utilisées par ce rail. Évaluer ensuite une projection plus petite sans casser les consommateurs | Benchmark serveur ; aucun cache ajouté sans mesure |
+| USR-04 — Plafond de pagination | Réexaminer curseur, stratégie de recherche ou taille de page si 1 000 pages deviennent nécessaires ; l’interface borne et explique désormais la limite | Volume réellement proche du plafond, selon la taille configurée |
+| USR-05 — Lecteur d’écran, appareils réels, zoom natif | Exécuter les parcours importants dans ces environnements | Revue d’accessibilité complète |
+| USR-06 — Graisses visuelles dans WebKit Windows | Comparer dans Safari réel avant toute correction globale de police | Revue de compatibilité |
+| USR-07 — Finalité, responsable et conservation du traitement des comptes | Faire qualifier et consigner la politique applicable ; aucune validation organisationnelle ou juridique déduite de la revue du code | Cadrage de l’exploitation avec données réelles ou nouvelle entité |
+| USR-08 — Responsables et fréquence de suivi | Désigner selon l’exploitation réelle | Mise en place du suivi opérationnel |
+| USR-09 — Chips de filtres actifs | Ajouter les chips retirables (recherche, statut, rôle) comme sur le répertoire, en plus du bouton de réinitialisation | Cohérence avec la page de référence |
+| USR-10 — Primitives des cartes radio de création | Le 2026-10-10, `shadcn-boundaries.test.ts` échoue sur les `<label>` et `<input>` natifs de `RoleOption` ; conserver le choix des cartes radio en le réconciliant avec le contrat des primitives | Prochaine correction du formulaire ; voir la [cartographie](../../audits/COMPREHENSION_PROJET_2026-10-10.md) |
 
-Ne pas présenter ces points comme nouveaux défauts prouvés ni comme déjà résolus.
+Ces points distinguent défauts observés, mesures manquantes et améliorations
+proposées. Aucun n’est clos par la seule mise à jour documentaire.
 Les trois variables `E2E_DATABASE_URL`, `E2E_SUPERADMIN_LOGIN_NAME` et
 `E2E_SUPERADMIN_PASSWORD` sont absentes de l’environnement de cette passe.
 La base applicative n’a pas été utilisée comme base de test.

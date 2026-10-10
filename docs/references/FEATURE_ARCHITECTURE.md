@@ -5,7 +5,7 @@ ajouter des dizaines de modules sans dupliquer les décisions de sécurité, de
 pagination, d'audit ou d'UX.
 
 Pour choisir les sujets à examiner selon le changement, commencer par la
-[revue générale](qualite/REVUE_GENERALE.md). Ce contrat décrit les responsabilités
+[revue générale](../qualite/REVUE_GENERALE.md). Ce contrat décrit les responsabilités
 des fonctionnalités ; il ne demande pas d'ajouter une capacité inutile à chaque page.
 
 ## 1. Manifeste

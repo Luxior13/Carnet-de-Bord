@@ -17,6 +17,8 @@ contraire dans une fiche secondaire.
 | Sujet | Source principale | Comment l’utiliser |
 | --- | --- | --- |
 | Méthode de revue | [Revue générale](REVUE_GENERALE.md) | Entrée conditionnelle ; aucune obligation d’ajouter les capacités listées |
+| Méthode d’audit | [AUDITS](AUDITS.md) | Portée, preuves, gravité, verdict et clôture ; ne remplace pas les décisions produit |
+| Contrôles | [CONTROLES](CONTROLES.md) | Commandes du dépôt, prérequis, effets et limites |
 | Périmètre produit | [Feuille de route](../references/FEUILLE_DE_ROUTE.md) | Priorités et distinctions entre actuel et futur |
 | Préparation des pages | [Matrice](../../features/pages/MATRICE_PREPARATION.md) | Les anciennes fiches ne prouvent pas l’existence d’une route |
 | Navigation | [NAVIGATION](../references/NAVIGATION.md) | Emplacements, parcours et compatibilité des routes |
@@ -33,7 +35,8 @@ contraire dans une fiche secondaire.
 | Routes | [Constantes de routes](../../apps/web/src/shared/constants/routes.constants.ts) | Source pour destinations, constructeurs et compatibilité |
 | Vérifications disponibles | [package.json](../../package.json) et [web](../../apps/web/package.json) | Commandes réellement disponibles |
 | Décisions locales | [Suivis de pages](pages/README.md) | Choix actuels et limites, sans copier une politique commune |
-| Audits datés | Par exemple [Utilisateurs](../audits/AUDIT_UI_UTILISATEURS_2026-09-26.md) | Constat historique ; ne pas prétendre que les tests y sont rejoués |
+| Audits datés | [Index des audits](../audits/README.md) | Constats historiques ; ne pas prétendre que les tests y sont rejoués |
+| Plans et intentions | [Plans](../plans/README.md) et [intentions](../../features/README.md) | Cadrages à qualifier avant reprise ; aucun statut livré déduit de leur existence |
 
 ## Références externes
 

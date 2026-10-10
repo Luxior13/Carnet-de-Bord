@@ -12,6 +12,10 @@ les données, les versions et les règles applicables évoluent.
 3. Les fiches sélectionnées : questions détaillées et contrôles concrets.
 4. Le [suivi de la page](pages/README.md) et les références métier utiles.
 
+Pour un audit demandé : [méthode d’audit](AUDITS.md) et
+[contrôles disponibles](CONTROLES.md). Pour une petite correction, conserver une
+trace courte ; ces guides ne rendent pas tous les contrôles obligatoires.
+
 Une question de sélection se pose systématiquement ; la lecture détaillée est
 conditionnelle. Exemple : sans événement à communiquer durablement, marquer
 Q08 non applicable et ne pas lire la fiche Notifications.
@@ -27,13 +31,21 @@ Q08 non applicable et ne pas lire la fiche Notifications.
 | `REFERENCES.md` | Où trouver les règles canoniques et les sources | Quand leur emplacement ou leur autorité change |
 | `modeles/revue-page.md` | Trame de suivi d’une page ou d’un module | Quand le suivi doit évoluer |
 | `modeles/decision.md` | Trame de décision structurante | Seulement pour les choix durables et contestables |
+| [Modèle d’audit](modeles/audit.md) | Périmètre, preuves, constats et verdict datés | Pour une passe qui justifie un rapport |
+| `AUDITS.md` et `CONTROLES.md` | Profondeur d’audit, preuve et commandes utiles | Quand la méthode ou les contrôles disponibles changent |
 | `pages/*.md` | Périmètre courant, choix et points ouverts d’une page | Avec un changement qui affecte ces choix |
 | `decisions/*.md` | Raisons des décisions transverses importantes | Par nouvelle décision, sans effacer l’ancienne raison |
-| Autres `docs/*.md` | Politiques et guides du projet déjà existants | Dans le même changement que la règle concernée |
+| `docs/references/*.md` | Politiques et guides du projet | Dans le même changement que la règle concernée |
+| `docs/audits/*.md` | Preuves et constats datés, indexés | Par nouvelle passe ; ne pas transformer une preuve ancienne en résultat actuel |
 | `features/pages/*` et plans | Intentions métier et préparation | Selon leur statut actuel, souvent historique |
 
 Ne pas créer une seconde copie de PERMISSIONS, DESIGN_SYSTEM ou OPERATIONS :
 les fiches expliquent quoi examiner et renvoient à ces références.
+
+Trames : [suivi de page](modeles/revue-page.md), [décision](modeles/decision.md),
+[audit](modeles/audit.md). Une décision courante reste en tête du suivi ; les anciennes
+passes sont identifiées comme historiques. Séparer « livré », « vérifié » et
+« reste à faire » : un alignement visuel terminé ne clôt pas un défaut fonctionnel.
 
 ## Cycle de vie
 
@@ -74,6 +86,11 @@ Avant d’ajouter une fiche : le sujet a-t-il un déclencheur distinct et des qu
 qui ne sont pas déjà couvertes ? Sinon, améliorer la fiche propriétaire.
 Lors d’une suppression ou d’un renommage : corriger le guide, les modèles, les
 liens et les suivis affectés. Les identifiants Q restent stables.
+
+Exécuter `bun run docs:check` après une modification documentaire. Le contrôle
+porte aussi sur références, plans, audits et intentions ; relire le fond, car un
+lien valide peut encore pointer vers une règle obsolète. Tout nouveau rapport,
+plan ou suivi rejoint son index avec son statut et sa portée.
 
 Création : 26 septembre 2026. Responsable : mainteneur de la structure, à nommer
 dans chaque suivi lorsqu’un engagement ou une échéance doit être porté.

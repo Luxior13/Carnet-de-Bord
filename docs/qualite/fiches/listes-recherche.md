@@ -4,6 +4,9 @@
 
 ## Questions
 
+- Avec un curseur, le total représente-t-il tout le filtre autorisé ou seulement les lignes restantes après le curseur ? Tester aussi une page suivante et un résultat vide.
+- Une position de ligne, un rang métier et un identifiant sont-ils distingués ? Leur sens reste-t-il correct après tri, filtrage et passage en cartes ?
+
 - Quelles colonnes aident à identifier, comparer ou décider ? Les autres appartiennent-elles à la fiche ?
 - Le tableau garde-t-il une largeur suffisante avant de basculer en cartes ?
 - La taille de page, la recherche et les filtres sont-ils bornés côté serveur ?

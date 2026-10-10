@@ -1,6 +1,6 @@
 # Navigation — état actuel et cible
 
-Référence révisée le 26 septembre 2026. Le catalogue des projets est séparé de la navigation active. Voir la [feuille de route](FEUILLE_DE_ROUTE.md) pour les étapes et la [matrice](../features/pages/MATRICE_PREPARATION.md) pour les correspondances historiques.
+Référence réconciliée le 10 octobre 2026. Le catalogue des projets est séparé de la navigation active. Voir la [feuille de route](FEUILLE_DE_ROUTE.md) pour les étapes et la [matrice](../../features/pages/MATRICE_PREPARATION.md) pour les correspondances historiques.
 
 ## Navigation actuelle
 
@@ -63,7 +63,7 @@ offre une cible de 44 px de haut et un focus intérieur. Sur mobile, le bouton d
 est centré dans cette hauteur, à l’écart du nom.
 
 Les pôles accessibles sont regroupés sous le logo, en haut de la sidebar :
-quatre icônes par ligne, donc une ligne avec les quatre pôles actuels et deux
+quatre icônes par ligne, donc une ligne avec les trois pôles actuels et deux
 avec les huit pôles cibles. Les pages apparaissent en dessous sur toute la
 largeur, précédées du nom du pôle et des intitulés de groupe. L’ordre reste
 stable, sans pagination ni rubrique future affichée avant sa livraison.
@@ -105,7 +105,7 @@ en retrait et des icônes sans pastille. Le survol ou la sélection colore
 uniquement l’action concernée. Sa largeur de 18rem reste limitée au viewport.
 
 Les décisions et vérifications de cette apparence sont consignées dans le
-[suivi de la navigation générale](qualite/pages/navigation-generale.md).
+[suivi de la navigation générale](../qualite/pages/navigation-generale.md).
 
 Une nouvelle entrée répond à un usage récurrent, porte un nom clair et possède un état vide utile. Un filtre, une action isolée et un accueil qui répète le menu ne justifient pas automatiquement une page.
 
@@ -115,7 +115,7 @@ Le placement dépend du gabarit et du contenu : la sidebar reste ancrée à gauc
 la colonne principale garde une largeur de travail adaptée et aucun rail ne la
 recouvre. Le centrage écran peut être retenu tant qu'il préserve cette largeur ;
 sur les tailles intermédiaires, la zone utile peut devenir prioritaire. Consigner
-ce choix dans le [suivi de la page](qualite/pages/README.md), sans imposer le même
+ce choix dans le [suivi de la page](../qualite/pages/README.md), sans imposer le même
 centrage à une liste et à une page de lecture.
 
 Le header conserve le fil d’Ariane et les outils globaux. Les fiches Personne, Utilisateur et Mon compte placent leur navigation horizontale sous le titre, à toutes les largeurs : liens soulignés, libellés complets, défilement horizontal sur petit écran et barre collante dans le contenu. Le retour vers la liste reste avant le titre. La navigation locale n’occupe plus de rail dans la marge. Les filtres de listes utilisent des contrôles distincts de cette navigation.
@@ -147,15 +147,14 @@ La recherche rapide conserve une fenêtre centrale de 672 px maximum et le plein
 ni animation ; focus intérieur et sélection explicite, également en couleurs
 forcées. Les noms peuvent revenir à la ligne. Le contexte distingue « Page
 actuelle » et « Section actuelle » sans pastille de fond. Effacement et fermeture
-mesurent 44 px ; le lien vers la recherche complète, 40 px sur ordinateur et
-44 px sous 1024 px. L’infobulle du déclencheur est masquée pendant l’ouverture.
+mesurent 44 px. La page de recherche complète et son lien ont été retirés.
+L’infobulle du déclencheur est masquée pendant l’ouverture.
 
-Le catalogue commun aux deux recherches indexe le nom, la description propre et
+Le catalogue de navigation rapide indexe le nom, la description propre et
 la rubrique, sans hériter du résumé générique de celle-ci. Saisie limitée à
-160 caractères, huit suggestions et dix résultats dans la fenêtre. Après une
-saisie donnant des résultats, « Voir tous les résultats » transmet la requête ;
-sans résultat, « Parcourir les pages » ouvre le catalogue sans filtre. Sans saisie,
-l’action s’appelle « Ouvrir la recherche ». Aucun groupe vide n’est affiché.
+160 caractères, huit suggestions et dix résultats dans la fenêtre. Le nombre de
+résultats est annoncé ; une recherche vide explique comment reprendre la saisie.
+Aucune action ne renvoie vers une page de recherche complète.
 Un changement effectif de chemin ferme le panneau. Entrée sur ses boutons
 exécute seulement leur action, et l’effacement rend le focus au champ.
 
@@ -164,7 +163,7 @@ Le panneau de notifications et la boîte « Mes notifications » ont été retir
 dans le header ; les anciennes adresses redirigent vers la feuille de route, où
 le module est replanifié avec ses futurs canaux.
 
-Les gabarits partagés limitent la largeur extérieure à 76rem par défaut, 52rem pour les créations et 56rem pour la lecture (actualité, recherche). Une variante de 92rem reste disponible pour les données denses. Les listes basculent entre tableau et présentation mobile selon la largeur de leur conteneur. Voir la [proposition UX/UI et son suivi](UX_UI_PROPOSITION_2026-09-23.md).
+Les gabarits partagés limitent la largeur extérieure à 76rem par défaut, 52rem pour les créations et 56rem pour la lecture (actualité, recherche). Une variante de 92rem reste disponible pour les données denses. Les listes basculent entre tableau et présentation mobile selon la largeur de leur conteneur. Voir la [proposition UX/UI et son suivi](../plans/UX_UI_PROPOSITION_2026-09-23.md).
 
 Chaque module traite les états de chargement, absence de données, erreur réessayable, accès refusé et conflit de modification lorsqu’il s’applique. L’interface explique une action indisponible sans révéler l’existence d’un dossier confidentiel.
 

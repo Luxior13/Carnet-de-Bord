@@ -1,5 +1,8 @@
 # Parametres
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Centraliser la configuration du site prive.

@@ -1,5 +1,8 @@
 # Contrats
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Centraliser les contrats importants de la structure sans creer une page isolee de tout le reste.

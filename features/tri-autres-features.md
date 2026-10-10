@@ -1,5 +1,8 @@
 > Proposition historique : la [feuille de route courante](../docs/references/FEUILLE_DE_ROUTE.md) et la [navigation cible](../docs/references/NAVIGATION.md) remplacent les décisions de découpage et de priorité de ce document.
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 # Raisons des autres features a trier
 
 ## Objectif

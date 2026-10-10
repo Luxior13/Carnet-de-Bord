@@ -1,5 +1,8 @@
 # Calendrier interne
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Creer un calendrier prive pour regrouper les reunions, echeances, deadlines, rappels et evenements internes de la structure.

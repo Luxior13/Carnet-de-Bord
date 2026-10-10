@@ -4,6 +4,9 @@
 
 ## Questions
 
+- Le nouveau document est-il dans son index, avec statut courant/futur/historique, source propriétaire et portée explicite ? Les ancres et liens ont-ils été contrôlés sur tout le corpus ?
+- Une commande citée existe-t-elle encore et ses prérequis, effets sur les données et limites sont-ils indiqués ? Les instructions d’un ancien audit restent-elles identifiées comme historiques ?
+
 - Le besoin justifie-t-il une bibliothèque, ou l’existant suffit-il ?
 - Quelle version est installée et quelle documentation correspond réellement à cette version ?
 - Maintenance, licence, vulnérabilités, compatibilité, taille et dépendances indirectes ont-elles été examinées ?

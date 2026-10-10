@@ -4,6 +4,9 @@
 
 ## Questions
 
+- Le parcours reste-t-il cohérent après révocation d’accès, suppression de la ressource ou changement de compte pendant son ouverture ?
+- Une fonction prévue, retirée ou indisponible est-elle clairement distinguée d’un état vide de fonction livrée ?
+
 - D’où arrive-t-on, pourquoi, et où doit-on aller après l’action ?
 - Faut-il une page, une rubrique, un onglet, une fenêtre ou simplement un filtre ?
 - Le titre, la courte description et l’action principale expliquent-ils des choses différentes ?

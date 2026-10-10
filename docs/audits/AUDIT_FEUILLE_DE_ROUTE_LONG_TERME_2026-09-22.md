@@ -1,6 +1,10 @@
 **Audit de la feuille de route et de l'organisation du site — 22 septembre 2026**
 
-> Photographie avant refonte. La nouvelle organisation adoptée après cet audit est décrite dans la [feuille de route courante](FEUILLE_DE_ROUTE.md) et la [matrice de préparation](../features/pages/MATRICE_PREPARATION.md). Les constats ci-dessous sur les anciens nombres d’entrées et documents restent historiques.
+> Rapport historique : résultats valables pour la passe décrite, non rejoués par
+> la correction documentaire. Voir [l’index](README.md) et les [suivis courants](../qualite/pages/README.md).
+> Les chemins indiqués comme historiques peuvent désigner des fichiers retirés.
+
+> Photographie avant refonte. La nouvelle organisation adoptée après cet audit est décrite dans la [feuille de route courante](../references/FEUILLE_DE_ROUTE.md) et la [matrice de préparation](../../features/pages/MATRICE_PREPARATION.md). Les constats ci-dessous sur les anciens nombres d’entrées et documents restent historiques.
 
 **Avis général**
 

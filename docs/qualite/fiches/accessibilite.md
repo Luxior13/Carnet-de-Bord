@@ -4,6 +4,9 @@
 
 ## Questions
 
+- Un redimensionnement, une rotation, le clavier virtuel ou le passage tableau/cartes fait-il perdre saisie, sélection, focus ou accès aux actions ?
+- Un élément essentiel masqué faute de place reste-t-il accessible au tactile et au clavier, sans dépendre d’une infobulle ?
+
 - La structure HTML exprime-t-elle titres, sections, tableau, formulaire et liste ?
 - Chaque contrôle a-t-il un nom accessible compréhensible hors contexte visuel ?
 - Tout est-il utilisable au clavier dans un ordre cohérent, avec focus visible ?

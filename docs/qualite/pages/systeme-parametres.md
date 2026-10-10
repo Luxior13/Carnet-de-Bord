@@ -4,10 +4,10 @@
 
 - Route : `/systeme/parametres`, module `features/settings`.
 - Public : administrateurs autorisés à consulter et modifier la configuration globale.
-- Dernière passe : 27 septembre 2026, édition à la demande des durées et examen
-  de la portée du journal, après retrait du réglage global de pagination.
-- État : présentation et corrections implémentées, contrôles ciblés réussis.
-  Les limites d'exploitation et de validation complète figurent ci-dessous.
+- État documentaire réconcilié le 10 octobre 2026 : seul `audit.retentionDays` reste actif.
+- Dernière revue détaillée du parcours : 27 septembre 2026 ; ses essais décrivent
+  cette version. Aucune nouvelle validation de purge ou session réelle dans la
+  présente réconciliation. Les limites et points ouverts figurent ci-dessous.
 - Références : [revue générale](../REVUE_GENERALE.md),
   [design system](../../references/DESIGN_SYSTEM.md), [navigation](../../references/NAVIGATION.md),
   [permissions](../../references/PERMISSIONS.md), [exploitation](../../references/OPERATIONS.md).
@@ -50,7 +50,7 @@ restent relues en base avant utilisation.
 ### Composition retenue
 
 - Titre simple, description courte « Réglages globaux de Noctambule. » et Actualiser secondaire.
-- Un panneau compact : Conservation des données, avec ses deux réglages.
+- Un panneau compact : Conservation des données, avec le réglage du journal.
 - Fond `surface-panel-raised`, bleu de la famille de la sidebar ; rayons locaux
   de 8 px, pas d'ombre sur les panneaux ni de hero décoratif.
 - Explication à gauche, champ/unité/action à droite quand la largeur le permet ;
@@ -80,7 +80,7 @@ restent relues en base avant utilisation.
 - La molette est neutralisée au-dessus du champ actif pour éviter de modifier
   une durée par accident, sans retirer le focus. Le défilement doit alors se faire
   hors de cette cible ; le geste de zoom avec Ctrl/Cmd n'est pas intercepté.
-  Le comportement reste local à ces deux réglages, sans modifier la primitive Input.
+  Le comportement reste local au réglage de durée, sans modifier la primitive Input.
 - État « Non enregistré » discret, sans fond coloré ; valeur appliquée affichée
   lorsqu'elle diffère. « Valeur par défaut » remplace « Recommandé ».
   Aucun « Jamais modifié » au repos : seule une modification réelle affiche sa date.
@@ -101,26 +101,27 @@ restent relues en base avant utilisation.
   et au champ après restauration du défaut ou résolution du conflit. Une
   actualisation réussie referme les éditions ; le bouton Actualiser garde le focus
   pendant la lecture, reste annoncé occupé et ignore les activations répétées.
-- La modification de conservation des notifications et sa purge partagent un
-  verrou PostgreSQL transactionnel, même avant la première ligne de configuration.
-  La durée est lue après acquisition, dans la transaction `ReadCommitted`.
+- La purge du journal contrôle sa durée sous verrou dans sa procédure SQL ;
+  l’enregistrement ne lance pas la purge. Les règles d’exploitation sont dans
+  [OPERATIONS](../../references/OPERATIONS.md). Le verrou de purge des notifications
+  décrit dans les essais de septembre appartient au module retiré.
 - La commande reste atomique, avec un délai maximal de 60 secondes. La fonction
   SQL de purge du journal et son contrôle de durée sont conservés.
-- Les requêtes de verrou exposées à Prisma convertissent le résultat `void` en
-  `text` ; le test PostgreSQL a révélé l'incompatibilité de la forme précédente.
+- Le problème historique de résultat SQL `void` et sa correction concernent la
+  passe de septembre ; ils ne constituent pas un essai de la purge actuelle.
 - Pas de migration, de changement de bornes, de nouvelle permission ou de table métier.
 
 ### Portée du journal : constat et séparation à préparer
 
 Examen du code le 27 septembre 2026, sans changement de durée ni exécution de purge.
 Le défaut logiciel reste **1 095 jours** ; ce maintien ne valide pas sa pertinence
-pour chaque finalité. Les notifications restent à **180 jours** par défaut.
-Archiver une notification ne prolonge pas sa conservation.
+pour chaque finalité. L’ancien défaut de **180 jours** des notifications ne
+s’applique plus au site : le module et son réglage ont été retirés le 9 octobre.
 
 | Ensemble constaté | Données et usages actuels | Point à trancher avant de séparer les durées |
 | --- | --- | --- |
 | Connexions et sécurité | Connexions réussies/échouées, verrouillages, sessions, mot de passe, MFA, preuves d'action sensible ; acteur, IP et navigateur selon événement | Finalité de sécurité, durée utile à l'analyse et métadonnées minimales |
-| Administration | Comptes, autorisations, paramètres, exports, envois de notifications et publications internes | Séparer la preuve de l'action administrative du contenu métier qu'elle concerne |
+| Administration | Comptes, autorisations, paramètres et exports ; anciens envois de notifications et publications dans les traces historiques | Séparer la preuve de l'action administrative du contenu métier qu'elle concerne |
 | Historique des personnes | `PERSON_*` et anciennes/nouvelles valeurs dans `AuditFieldChange`, dont certaines chiffrées ; lecture depuis la fiche personne | Justifier les champs nécessaires et leur horizon d'utilisation ; cet historique ne constitue pas à lui seul un parcours sportif daté |
 | Événements historiques | Anciennes actions `PARTNER_*` et traitements retirés toujours lisibles | Préserver leur interprétation ; définir le sort de chaque type ancien avant une classification rétroactive |
 
@@ -167,6 +168,10 @@ Références d'implémentation examinées :
 [lecture de cet historique](../../../apps/web/src/features/persons/server/person-history.service.ts).
 
 ## Sélection des sujets
+
+Cette sélection, la résolution des constats et les contrôles qui suivent décrivent
+la passe du 27 septembre. Leurs mentions de deux durées et de notifications restent
+des preuves historiques ; elles ne décrivent pas le catalogue actuel à une durée.
 
 Profondeur fonctionnelle pour l'interface, sensible pour les effets de conservation.
 « À examiner » indique la sélection ; les résultats et limites figurent plus bas.
@@ -370,15 +375,19 @@ Q20–Q21 et Q24–Q26 non applicables : aucun document, échange ou parcours m�
 
 ## Points restant à qualifier
 
+Les points ci-dessous restent ouverts ou à vérifier selon leur nature ; les
+responsables sont à attribuer. Leur déclencheur définit la reprise, sans date
+de livraison inventée. Les résultats historiques ne les clôturent pas.
+
 | Sujet | Limite | Déclencheur / prochaine étape |
 | --- | --- | --- |
-| Exploitation | Planificateur quotidien et alerte de maintenance non vérifiés sur le déploiement | Vérifier la configuration et un compte rendu de passage dans l'environnement exploité |
-| Volumes | Pas de mesure de purge à fort volume ; transaction bornée à 60 s | Mesurer avant de changer index, lots ou architecture de traitement |
-| Conservation | Défauts logiciels, sans qualification universelle des obligations et exceptions | Faire qualifier les durées pour les données réellement détenues et les entités concernées |
-| Portée du journal | Une seule durée purge aussi les détails de l'historique personne ; catégories insuffisantes pour séparer les finalités | Suivre le classement et les étapes documentés ci-dessus avant d'ajouter plusieurs durées ou de réduire le défaut global |
-| Donnée stockée invalide | Repli existant vers le défaut ; avertissement serveur, sans diagnostic dédié dans la page | Qualifier un besoin d'observation avant d'ajouter une interface d'incident |
-| Historique | Date affichée ; auteur et lien direct vers l'audit non ajoutés | Si nécessaire, réutiliser le journal et ses droits, sans nouvelle collection d'historique |
-| Validation complète | Pas de lecteur d'écran, mobile physique, restauration, test de charge ni parcours complet avec session réelle | Contrôler selon le risque du prochain déploiement ; ne pas assimiler simulation API et test d'accès réel |
+| PAR-S-01 — Exploitation | Planificateur quotidien et alerte de maintenance non vérifiés sur le déploiement | Vérifier la configuration et un compte rendu de passage dans l'environnement exploité |
+| PAR-S-02 — Volumes | Pas de mesure de purge à fort volume ; transaction bornée à 60 s | Mesurer avant de changer index, lots ou architecture de traitement |
+| PAR-S-03 — Conservation | Défauts logiciels, sans qualification universelle des obligations et exceptions | Faire qualifier les durées pour les données réellement détenues et les entités concernées |
+| PAR-S-04 — Portée du journal | Une seule durée purge aussi les détails de l'historique personne ; catégories insuffisantes pour séparer les finalités | Suivre le classement et les étapes documentés ci-dessus avant d'ajouter plusieurs durées ou de réduire le défaut global |
+| PAR-S-05 — Donnée stockée invalide | Repli existant vers le défaut ; avertissement serveur, sans diagnostic dédié dans la page | Qualifier un besoin d'observation avant d'ajouter une interface d'incident |
+| PAR-S-06 — Historique | Date affichée ; auteur et lien direct vers l'audit non ajoutés | Si nécessaire, réutiliser le journal et ses droits, sans nouvelle collection d'historique |
+| PAR-S-07 — Validation complète | Pas de lecteur d'écran, mobile physique, restauration, test de charge ni parcours complet avec session réelle | Contrôler selon le risque du prochain déploiement ; ne pas assimiler simulation API et test d'accès réel |
 
 Les protections de permission, CSRF, preuve de mot de passe, version et audit
 transactionnel ont été examinées dans le code et les tests ciblés. La sauvegarde
@@ -395,9 +404,9 @@ de conservation n'utilisent aucun cache local.
   distingue-t-elle valeur appliquée, défaut et saisie non enregistrée ?
 - Un conflit, une panne ou une perte de session préserve-t-il les autres saisies ?
 - Une purge peut-elle utiliser une durée obsolète ? Quelles données et relations
-  supprime-t-elle, y compris notifications non lues et historique des personnes ?
+  supprime-t-elle, y compris les détails de l’historique des personnes ?
 - Qui assume les durées et exceptions ? L'évolution association/société ne doit
-  pas appliquer ces deux durées à tous les contrats et documents par défaut.
+  pas appliquer la durée du journal à tous les contrats et documents par défaut.
 - Comment constate-t-on l'exécution de la maintenance et ses échecs ? L'écran
   promet-il uniquement ce que le système peut effectivement connaître ?
 - Comment restaurer configuration et données de manière cohérente ? Augmenter
@@ -406,14 +415,17 @@ de conservation n'utilisent aucun cache local.
   délais de verrouillage, index et cache ? Mesurer avant d'ajouter une architecture.
 - Chaque nouveau réglage appartient-il à cette page ou à son module métier ?
 
-## Rejouer la régression de concurrence
+## Contrôles à reprendre sur le périmètre courant
 
-Depuis `apps/web`, fournir `RETENTION_TEST_DATABASE_URL` dans l'environnement,
-puis exécuter `bunx vitest run src/__tests__/notification-retention.integration.test.ts`.
-Sans cette variable, ces trois tests sont ignorés. Le compte doit pouvoir créer
-et supprimer le schéma temporaire propre au test. Préférer une base de test.
-La commande s'exécute directement, hors cache Turbo, et n'appelle jamais la
-commande globale de maintenance.
+Sélectionner les scénarios des [tests de routes](../../../apps/web/src/__tests__/system-settings-routes.test.ts)
+et des [contrats de page](../../../apps/web/src/__tests__/system-settings-page-ux-contracts.test.ts),
+avec le [guide des contrôles](../CONTROLES.md). Pour une évolution de purge, prévoir
+un essai sur base isolée et vérifier l’état final ; aucun test de purge réelle n’a
+été rejoué lors de cette réconciliation.
+
+Le chemin historique `src/__tests__/notification-retention.integration.test.ts`
+a été supprimé avec le module. Son ancien protocole et ses résultats de septembre
+ne sont plus une instruction exécutable ni une preuve de la purge du journal.
 
 ## Historique utile
 

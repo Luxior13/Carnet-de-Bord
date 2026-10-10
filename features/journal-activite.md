@@ -1,5 +1,8 @@
 # Journal d'activite
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Garder une trace des actions importantes faites sur la plateforme privee, surtout sur les donnees sensibles comme la tresorerie, les contrats, les membres, les sanctions et les documents.

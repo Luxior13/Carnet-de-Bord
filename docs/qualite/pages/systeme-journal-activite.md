@@ -1,8 +1,9 @@
 # Suivi de page — Journal d’activité
 
 > Page retirée le 9 octobre 2026 et replanifiée sur `/systeme/feuille-de-route`.
-> Ce suivi est conservé comme historique ; l’audit serveur et les historiques
-> embarqués (fiche utilisateur, provenance des champs) restent actifs.
+> Ce suivi est conservé comme historique ; l’audit serveur et l’historique des
+> personnes persistent. L’onglet Activité utilisateur a depuis été retiré ;
+> l’existence d’une API historique ne signifie pas qu’une vue est disponible.
 
 ## Identité et état
 
@@ -12,7 +13,7 @@
   présentation du journal. API, permissions, schéma et conservation inchangés.
 - État initial examiné : commit `bbf8c58` ; composant client de 1 864 lignes
   et route de 1 041 lignes au moment de la revue.
-- État courant : corrections fonctionnelles et visuelles vérifiées avec API simulée.
+- État à la revue de septembre : corrections fonctionnelles et visuelles vérifiées avec API simulée.
   Les contrôles sur session/base réelles et les volumes de production restent ouverts.
 - Références : [revue générale](../REVUE_GENERALE.md),
   [design system](../../references/DESIGN_SYSTEM.md), [permissions](../../references/PERMISSIONS.md),

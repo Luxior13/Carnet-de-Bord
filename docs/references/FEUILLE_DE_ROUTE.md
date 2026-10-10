@@ -2,7 +2,7 @@
 
 Référence produit révisée le 9 octobre 2026. La page `/systeme/feuille-de-route` présente **39 chantiers, 8 pôles cibles et 6 étapes**. Un chantier peut être un module, une extension, une vue partagée ou une intégration ; ce nombre ne représente pas 39 nouvelles pages.
 
-Le catalogue exécutable se trouve dans [features/roadmap](../apps/web/src/features/roadmap/roadmap.constants.ts). Ce document fixe les décisions ; la [matrice](../features/pages/MATRICE_PREPARATION.md) conserve la correspondance avec les anciens projets de pages. Lors d’une modification de priorité ou de périmètre, mettre ces trois références à jour ensemble.
+Le catalogue exécutable se trouve dans [features/roadmap](../../apps/web/src/features/roadmap/roadmap.constants.ts). Ce document fixe les décisions ; la [matrice](../../features/pages/MATRICE_PREPARATION.md) conserve la correspondance avec les anciens projets de pages. Lors d’une modification de priorité ou de périmètre, mettre ces trois références à jour ensemble.
 
 ## État réel et lecture du plan
 
@@ -129,4 +129,4 @@ Les automatisations, statistiques et connexions externes restent conditionnées 
 - [Structure et entités juridiques](STRUCTURE.md)
 - [Rôles et périmètres](ROLES_ET_PERMISSIONS.md)
 - [Permissions actives](PERMISSIONS.md)
-- [Audit du 22 septembre](AUDIT_FEUILLE_DE_ROUTE_LONG_TERME_2026-09-22.md), photographie avant cette refonte
+- [Audit du 22 septembre](../audits/AUDIT_FEUILLE_DE_ROUTE_LONG_TERME_2026-09-22.md), photographie avant cette refonte

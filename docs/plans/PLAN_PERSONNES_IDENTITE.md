@@ -1,5 +1,8 @@
 # Plan — Répertoire et identité
 
+> Document de conception. Son statut et sa source courante sont précisés dans
+> [l’index des plans](README.md). Confronter ces propositions aux décisions actuelles.
+
 Statut : implémenté, validation finale en cours.
 
 ## Périmètre fonctionnel

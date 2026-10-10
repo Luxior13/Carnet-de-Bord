@@ -1,5 +1,8 @@
 # Gestion des reunions
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Creer une page privee pour organiser les reunions de la structure et garder un debrief clair apres chaque reunion.

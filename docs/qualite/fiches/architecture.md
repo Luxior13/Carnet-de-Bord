@@ -4,6 +4,8 @@
 
 ## Questions
 
+- Lors d’un déplacement de source, quelles références de code, tests, scripts et documents doivent suivre ? Les exemples historiques sont-ils distingués des chemins exécutables actuels ?
+
 - Quelle responsabilité appartient à la page, au composant, au service métier et au stockage ?
 - Une donnée a-t-elle un propriétaire unique malgré ses projections dans plusieurs pages ?
 - La règle métier est-elle testable sans rendre l’interface ?

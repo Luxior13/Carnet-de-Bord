@@ -2,7 +2,8 @@
 
 ## Décisions courantes
 
-Décisions actualisées le 27 septembre 2026. Composants partagés par les pages privées. Besoin :
+Synthèse actualisée le 10 octobre 2026 ; les vérifications de septembre restent
+datées dans l’historique ci-dessous. Composants partagés par les pages privées. Besoin :
 changer souvent de rubrique, prévoir huit rubriques et conserver des pages lisibles.
 Le rail latéral a été abandonné à la demande de l’utilisateur au profit d’une
 **grille en haut de la sidebar**. Les décisions ci-dessous remplacent ce rail.
@@ -22,8 +23,8 @@ Sources : [Sidebar](../../../apps/web/src/components/Sidebar.tsx),
   espacement de 12 px après cet emplacement. Lien vers l’accueil de 44 px de haut, survol sémantique
   et focus intérieur ; nom accessible « Noctambule — Accueil ».
   Fermeture mobile contenue dans la hauteur de l’identité.
-- Rubriques sous le logo : quatre icônes par ligne, une ligne avec les quatre
-  rubriques livrées, deux lignes avec huit. Aucun bouton de pagination. Catalogue
+- Rubriques sous le logo : quatre icônes par ligne, une ligne avec les trois
+  rubriques actives, deux lignes avec huit. Aucun bouton de pagination. Catalogue
   filtré par les droits et la disponibilité ; aucun module futur activé pour le décor.
 - Pages en dessous sur toute la largeur, avec le nom de la rubrique puis les
   groupes. La deuxième ligne d’icônes consomme de la hauteur, en contrepartie de
@@ -47,7 +48,7 @@ Sources : [Sidebar](../../../apps/web/src/components/Sidebar.tsx),
 - Profil : fond transparent au repos, hauteur 56 px.
   Nom complet dans le menu, bleu à l’ouverture ou sur Mon compte, déconnexion
   protégée en cas de saisie non enregistrée.
-- Header de 56 px sur fond `surface-panel` : contexte à gauche, recherche et notifications à droite.
+- Header de 56 px sur fond `surface-panel` : contexte à gauche, navigation rapide à droite.
   Zone centrale souple pour les chemins longs ; outils supplémentaires à justifier
   par un usage global et à regrouper sur petit écran si nécessaire.
 - Contrôles principaux du header de 40 px de haut sur ordinateur et 44 px sous
@@ -55,33 +56,32 @@ Sources : [Sidebar](../../../apps/web/src/components/Sidebar.tsx),
   menu « … » pour les ancêtres et page courante à côté. Fermeture du menu lors
   du changement de présentation. Page courante semi-grasse, focus intérieur.
 - Menu de sidebar réservé au mobile ; séparateur visible de 640 à 1023 px.
-  Infobulles de recherche, notifications et menu après 300 ms. Recherche ouverte
+  Infobulles de recherche et menu après 300 ms. Recherche ouverte
   depuis son bouton, sans raccourci global ni indication de raccourci dans la barre.
   Échap ferme la recherche et rend le focus au bouton.
 - Recherche rapide : fenêtre centrale de 672 px maximum, plein écran sous 640 px,
   fond bleu ardoise, rayons de 8 px desktop, sans ombre ni animation. Focus intérieur,
   noms pouvant revenir à la ligne, contexte textuel « Page actuelle » ou « Section
-  actuelle ». Effacement et fermeture de 44 px, action de pied de 40/44 px.
-- Catalogue commun aux deux recherches : titre, description propre et rubrique,
+  actuelle ». Effacement et fermeture de 44 px ; aucune page de recherche complète.
+- Catalogue de navigation rapide : titre, description propre et rubrique,
   sans résumé générique de rubrique. Saisie bornée à 160 caractères ; huit suggestions
-  et dix résultats rapides. Pied explicite selon saisie et résultats ; aucun groupe
-  vide. Fermeture sur changement de chemin, infobulle masquée pendant l’ouverture.
+  et dix résultats rapides. Nombre de résultats annoncé et état vide explicite. Fermeture sur changement de chemin, infobulle masquée pendant l’ouverture.
   Les boutons n’activent pas le résultat sélectionné par propagation d’Entrée.
-- Notifications : panneau de 400 px maximum sur fond ardoise, rayon de 8 px,
-  sans ombre ni animation d’ouverture. Liste compacte, focus intérieur de 3 px,
-  fermeture 40/44 px. Point non lu aligné ; gravité indiquée par icône et texte
-  colorés sans badge de fond. Temps relatif récent et date/heure complètes accessibles.
-- Compteur partagé avec la boîte personnelle, isolé par compte et révision
-  d’autorisation. Rafraîchissement toutes les 30 secondes quand l’onglet est
-  visible et connecté, sans chevauchement périodique ; aucun transport temps réel.
-  Échec de lecture signalé par un toast avec reprise. La lecture n’est confirmée
-  qu’après succès serveur ; pas de toast de succès à chaque ouverture.
+- Notifications et boîte personnelle retirées le 9 octobre 2026 ; aucune cloche
+  ni aucun compteur de notifications dans le header. Reconstruction planifiée.
 
 Le défilement des pages par rubrique reste mémorisé. Le shell contrôle la sidebar
 ouverte ; l’ancienne préférence `team-control:sidebar:desktop-open` et la clé
 `team-control:sidebar:poles-open:<compte>` sont ignorées. Aucun effacement de stockage nécessaire. Routes, permissions, API,
 schéma et dépendances inchangés. Les couleurs de pôles des autres composants
 restent celles du thème existant.
+
+## Lecture de l’historique
+
+Les sections de septembre ci-dessous décrivent les versions examinées alors. Les
+notifications et la recherche complète qui y figurent ont été retirées le 9 octobre.
+Leurs contrôles ne valident pas le périmètre actuel. La synthèse ci-dessus et
+[NAVIGATION](../../references/NAVIGATION.md) portent les règles courantes.
 
 ## Sélection des sujets pour la grille
 
@@ -498,6 +498,14 @@ Contrôles à 320, 390, 768, 1024, 1280, 1440 et 1920 px, chemins courts/longs/v
 accueil unique, menu au clavier, redimensionnement, recherche et notifications
 simulées : réussis. 62 tests ciblés, TypeScript et lint réussis lors de cette passe.
 Ces interactions du header n’ont pas été rejouées pour le déplacement de la grille.
+
+## Points ouverts courants
+
+| ID | Constat / preuve | Suite et déclencheur | Responsable / état |
+| --- | --- | --- | --- |
+| NAV-01 | `Sidebar.tsx` dépasse le budget structurel : 925 lignes pour 900, contrôle du 10 octobre dans la [cartographie](../../audits/COMPREHENSION_PROJET_2026-10-10.md) | Examiner un découpage utile puis rejouer le budget, lors de la correction structurelle | À attribuer / ouvert |
+| NAV-02 | Parcours privés réels, sortie avec brouillon et changement de droits non rejoués pendant la cartographie | Exécuter avec des profils isolés avant validation complète de navigation | À attribuer / à vérifier |
+| NAV-03 | La référence décrit des contrôles de header de 40 px sur ordinateur ; le déclencheur de `GlobalSearch.tsx` utilise `lg:h-9`. Écart de code relevé pendant la réconciliation, sans mesure CSS calculée | Vérifier la taille effective et la décision applicable lors de la prochaine retouche du header ; ne pas effacer une décision pour l’aligner silencieusement sur le code | À attribuer / à qualifier |
 
 ## Limites et réexamen
 

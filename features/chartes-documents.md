@@ -1,5 +1,8 @@
 # Chartes et documents officiels
 
+> Intention historique. Consulter [l’index et les sources courantes](README.md)
+> avant de reprendre ce contenu ; sa présence ne signifie pas que la fonction est livrée.
+
 ## Objectif
 
 Creer une partie centrale pour rediger, mettre a jour et exporter les chartes, reglements et documents importants de la structure.
