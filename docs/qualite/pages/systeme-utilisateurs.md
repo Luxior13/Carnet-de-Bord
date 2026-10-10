@@ -221,6 +221,28 @@ comme un petit chantier de schéma, pas comme une retouche visuelle.
 Vérifications : TypeScript, lint, build réussis ; 133 tests ciblés réussis
 (contrats d'accessibilité, taille de page, présentation, durcissement des accès).
 
+## Formulaire de création — revue du 10 octobre 2026
+
+- URL vérifiée : `/systeme/utilisateurs/nouveau` (canonique ; l'ancien
+  `/administration/utilisateurs/nouveau` est redirigé). `returnTo` reste borné
+  à la collection utilisateurs.
+- Champs conservés : prénom, nom, identifiant de connexion, email de contact
+  (facultatif), rôle (`USER`, `ADMIN` seulement pour un compte protégé). Aucun
+  champ ajouté : le compte est distinct de la fiche Personne ; l'identité
+  complète et les relations se renseignent sur la fiche.
+- Interface recentrée sur la tâche : hero compact sans badges de brouillon,
+  formulaire en une seule carte avec sections « Identité », « Connexion » et
+  « Accès ». Le rôle est choisi par cartes radio (Utilisateur / Administrateur)
+  avec description, au lieu d'un menu déroulant.
+- Aligné sur le répertoire : champs en style `Input` partagé, dernier fil
+  d'Ariane sans lien vers lui-même, focus placé sur le premier champ invalide
+  après validation. Autocomplétion désactivée (règle globale du 2026-10-10) :
+  `autoComplete="off"` sur le formulaire, champs sans `name` ni `autoComplete`
+  explicite, et champ email en `type="text"` avec `inputMode="email"`.
+- Vérifié : TypeScript et lint au vert. Le parcours réel (création, mot de
+  passe temporaire, relance d'authentification pour ADMIN) reste à valider en
+  base réelle.
+
 ## Points ouverts et déclencheurs
 
 | Point | Suite concrète | Déclencheur |

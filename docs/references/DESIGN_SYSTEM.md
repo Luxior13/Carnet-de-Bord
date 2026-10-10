@@ -28,6 +28,12 @@ fines et badges de statut lisibles. Cette hiérarchie se décline selon l'usage 
   entrées répétées ; même alternance dans la version mobile des tableaux.
 - Formulaires : champs en retrait, espacement plus généreux que les lignes de
   tableau. Aucun zébrage ajouté à une grille de champs éditables.
+- Autocomplétion : **désactivée partout** (règle utilisateur du 2026-10-10).
+  La primitive `Input` l'applique par défaut (`autoComplete="off"` + drapeaux
+  d'ignorance Bitwarden/1Password/LastPass). Aucun `allowPasswordManager` ni
+  `autoComplete` explicite sans justification ; les champs invisibles
+  `autoComplete="username"` de l'association compte/mot de passe et les champs
+  d'authentification personnelle restent les seules exceptions à réexaminer.
 - Interaction : `surface-tile-hover` pour le survol des lignes et menus,
   `surface-selected` pour la sélection ou un contenu à remarquer. Une ligne
   sélectionnée conserve sa couleur quelle que soit sa parité.

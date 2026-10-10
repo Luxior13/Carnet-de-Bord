@@ -45,15 +45,9 @@ import {
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '$ui/select';
 import { Separator } from '$ui/separator';
 import { apiFetch } from '$utils/api.utils';
+import { cn } from '$utils/css.utils';
 import { getSafeCollectionReturnHref } from '$utils/navigation.utils';
 
 type NewUserForm = {
@@ -76,9 +70,54 @@ const EMPTY_USER_FORM: NewUserForm = {
   role: UserRole.USER,
 };
 
-const inputClassName = 'border-border/80 bg-input';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
 const LOGIN_NAME_PATTERN = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/;
+
+const focusFirstError = (): void => {
+  requestAnimationFrame(() => {
+    document
+      .querySelector<HTMLElement>('[aria-invalid="true"]')
+      ?.focus({ preventScroll: false });
+  });
+};
+
+type RoleOptionProps = {
+  checked: boolean;
+  description: string;
+  label: string;
+  onSelect: (value: UserRole) => void;
+  value: UserRole;
+};
+
+const RoleOption: FC<RoleOptionProps> = ({
+  checked,
+  description,
+  label,
+  onSelect,
+  value,
+}) => (
+  <label
+    className={cn(
+      'cursor-pointer rounded-lg border p-3 transition-colors',
+      checked
+        ? 'border-primary bg-primary/10'
+        : 'border-border-control bg-input hover:bg-surface-control-hover',
+    )}
+  >
+    <input
+      checked={checked}
+      className="sr-only"
+      name="newRole"
+      onChange={() => onSelect(value)}
+      type="radio"
+      value={value}
+    />
+    <span className="text-foreground block text-sm font-medium">{label}</span>
+    <span className="text-muted-foreground mt-0.5 block text-xs leading-5">
+      {description}
+    </span>
+  </label>
+);
 
 const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
   const { userData } = useUser();
@@ -94,6 +133,7 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
 
   const [form, setForm] = useState(EMPTY_USER_FORM);
   const [isCreating, setIsCreating] = useState(false);
+  const [isContactEmailEditable, setIsContactEmailEditable] = useState(false);
   const [showAdminCreationStepUp, setShowAdminCreationStepUp] = useState(false);
   const [errors, setErrors] = useState<NewUserFormErrors>({});
   const [createdUser, setCreatedUser] = useState<UserType | null>(null);
@@ -185,6 +225,7 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
 
     if (!validateForm()) {
       toast.error('Corrigez les champs signalés');
+      focusFirstError();
 
       return;
     }
@@ -210,7 +251,7 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
       if (data.success) {
         setCreatedUser(data.data.user);
         setTemporaryPassword(data.data.temporaryPassword);
-        toast.success('Utilisateur créé avec succès');
+        toast.success('Compte créé avec succès');
       } else {
         if (
           form.role === UserRole.ADMIN &&
@@ -245,7 +286,7 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
     : 'Nouvel utilisateur';
   const headerSubtitle = createdUser
     ? createdUser.loginName
-    : form.loginName.trim() || 'Compte en préparation';
+    : 'Créez un accès, puis transmettez les identifiants de connexion.';
   const headerRole = createdUser?.role ?? form.role;
 
   return (
@@ -263,44 +304,32 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
               )
             }
             meta={
-              <>
-                <Badge
-                  variant={
-                    headerRole === UserRole.ADMIN ? 'default' : 'secondary'
-                  }
-                >
-                  {headerRole === UserRole.ADMIN
-                    ? 'Administrateur'
-                    : 'Utilisateur'}
-                </Badge>
-                {createdUser ? (
-                  <Badge variant="secondary">Créé</Badge>
-                ) : (
+              createdUser ? (
+                <>
                   <Badge
-                    variant="outline"
-                    className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
+                    variant={
+                      headerRole === UserRole.ADMIN ? 'default' : 'secondary'
+                    }
                   >
-                    Brouillon
+                    {headerRole === UserRole.ADMIN
+                      ? 'Administrateur'
+                      : 'Utilisateur'}
                   </Badge>
-                )}
-                <Badge
-                  variant="outline"
-                  className="border-warning/40 text-warning"
-                >
-                  Mot de passe temporaire
-                </Badge>
-              </>
+                  <Badge variant="secondary">Créé</Badge>
+                </>
+              ) : undefined
             }
           />
+
           {createdUser && temporaryPassword ? (
-            <Card className="border-border/70 overflow-hidden rounded-lg py-0">
-              <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
+            <Card className="border-border-content overflow-hidden rounded-lg py-0">
+              <CardHeader className="bg-surface-muted border-border-divider border-b p-3 sm:p-4">
                 <CardTitle aria-live="polite" className="text-sm" role="status">
                   Compte créé
                 </CardTitle>
                 <CardDescription>
-                  Le compte est prêt. Transmettez son identifiant et le mot de
-                  passe temporaire, puis complétez sa fiche si nécessaire.
+                  Transmettez l&apos;identifiant et le mot de passe temporaire,
+                  puis complétez la fiche si nécessaire.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 p-3 sm:p-4">
@@ -389,7 +418,7 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
                   </SectionPanel>
                 </div>
               </CardContent>
-              <CardFooter className="border-border/65 bg-surface-muted flex flex-wrap gap-2 border-t p-4">
+              <CardFooter className="bg-surface-muted border-border-divider flex flex-wrap gap-2 border-t p-4">
                 <Button asChild>
                   <Link
                     href={`${userDetailPath(createdUser.id)}?${new URLSearchParams({ returnTo: returnHref })}`}
@@ -404,250 +433,265 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
             </Card>
           ) : (
             <form
+              autoComplete="off"
               noValidate
               onSubmit={(event) => {
                 event.preventDefault();
                 void handleCreateUser();
               }}
             >
-              <Card className="border-border/70 overflow-hidden rounded-lg py-0">
-                <CardHeader className="border-border/65 bg-surface-muted border-b p-3 sm:p-4">
+              <Card className="border-border-content overflow-hidden rounded-lg py-0">
+                <CardHeader className="bg-surface-muted border-border-divider border-b p-3 sm:p-4">
                   <CardTitle className="text-sm">Création du compte</CardTitle>
                   <CardDescription>
-                    Renseignez l&apos;identité, la connexion et le contact, puis
-                    choisissez le niveau d&apos;accès initial.
+                    Renseignez l&apos;identité, la connexion et le niveau
+                    d&apos;accès, puis transmettez les identifiants générés.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3 p-3 sm:p-4">
-                  <div className="grid gap-3 lg:grid-cols-[1fr_320px]">
-                    <SectionPanel
-                      titleAs="h3"
-                      icon={<User className="size-3.5" />}
-                      title="Identité"
+                <CardContent className="space-y-5 p-3 sm:p-4">
+                  <section
+                    aria-labelledby="new-identity-title"
+                    className="space-y-3"
+                  >
+                    <h3
+                      id="new-identity-title"
+                      className="text-foreground flex items-center gap-2 text-sm font-semibold"
                     >
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <div className="space-y-1.5">
-                          <Label
-                            htmlFor="newFirstName"
-                            className="text-muted-foreground text-xs"
-                            required
-                          >
-                            Prénom
-                          </Label>
-                          <Input
-                            aria-describedby={
-                              errors.firstName
-                                ? 'newFirstName-error'
-                                : undefined
-                            }
-                            aria-invalid={!!errors.firstName}
-                            autoComplete="given-name"
-                            id="newFirstName"
-                            maxLength={50}
-                            name="firstName"
-                            required
-                            value={form.firstName}
-                            placeholder="Jean"
-                            onChange={(event) =>
-                              updateField('firstName', event.target.value)
-                            }
-                            className={inputClassName}
-                          />
-                          {errors.firstName && (
-                            <p
-                              className="text-destructive text-xs"
-                              id="newFirstName-error"
-                              role="alert"
-                            >
-                              {errors.firstName}
-                            </p>
-                          )}
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label
-                            htmlFor="newLastName"
-                            className="text-muted-foreground text-xs"
-                            required
-                          >
-                            Nom
-                          </Label>
-                          <Input
-                            aria-describedby={
-                              errors.lastName ? 'newLastName-error' : undefined
-                            }
-                            aria-invalid={!!errors.lastName}
-                            autoComplete="family-name"
-                            id="newLastName"
-                            maxLength={50}
-                            name="lastName"
-                            required
-                            value={form.lastName}
-                            placeholder="Dupont"
-                            onChange={(event) =>
-                              updateField('lastName', event.target.value)
-                            }
-                            className={inputClassName}
-                          />
-                          {errors.lastName && (
-                            <p
-                              className="text-destructive text-xs"
-                              id="newLastName-error"
-                              role="alert"
-                            >
-                              {errors.lastName}
-                            </p>
-                          )}
-                        </div>
-                      </div>
+                      <User className="text-muted-foreground size-4" />
+                      Identité
+                    </h3>
+                    <div className="grid gap-3 sm:grid-cols-2">
                       <div className="space-y-1.5">
                         <Label
-                          htmlFor="newLoginName"
+                          htmlFor="newFirstName"
                           className="text-muted-foreground text-xs"
                           required
                         >
-                          Identifiant de connexion
+                          Prénom
                         </Label>
-                        <div className="relative">
-                          <AtSign className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
-                          <Input
-                            aria-describedby={
-                              errors.loginName
-                                ? 'newLoginName-error'
-                                : 'newLoginName-hint'
-                            }
-                            aria-invalid={!!errors.loginName}
-                            autoCapitalize="none"
-                            autoComplete="username"
-                            autoCorrect="off"
-                            id="newLoginName"
-                            maxLength={32}
-                            name="loginName"
-                            required
-                            spellCheck={false}
-                            type="text"
-                            value={form.loginName}
-                            placeholder="jean.dupont"
-                            onChange={(event) =>
-                              updateField(
-                                'loginName',
-                                event.target.value.toLowerCase(),
-                              )
-                            }
-                            className={`${inputClassName} pl-9`}
-                          />
-                        </div>
-                        {errors.loginName ? (
-                          <p
-                            className="text-destructive text-xs"
-                            id="newLoginName-error"
-                            role="alert"
-                          >
-                            {errors.loginName}
-                          </p>
-                        ) : (
-                          <p
-                            className="text-muted-foreground text-xs"
-                            id="newLoginName-hint"
-                          >
-                            3 à 32 caractères : lettres, chiffres, point, tiret
-                            ou underscore.
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label
-                          htmlFor="newContactEmail"
-                          className="text-muted-foreground text-xs"
-                        >
-                          Email de contact{' '}
-                          <span className="font-normal">(facultatif)</span>
-                        </Label>
-                        <div className="relative">
-                          <Mail className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
-                          <Input
-                            aria-describedby={
-                              errors.contactEmail
-                                ? 'newContactEmail-error'
-                                : 'newContactEmail-hint'
-                            }
-                            aria-invalid={!!errors.contactEmail}
-                            autoComplete="email"
-                            id="newContactEmail"
-                            maxLength={254}
-                            name="contactEmail"
-                            type="email"
-                            value={form.contactEmail}
-                            placeholder="jean.dupont@example.com"
-                            onChange={(event) =>
-                              updateField('contactEmail', event.target.value)
-                            }
-                            className={`${inputClassName} pl-9`}
-                          />
-                        </div>
-                        {errors.contactEmail ? (
-                          <p
-                            className="text-destructive text-xs"
-                            id="newContactEmail-error"
-                            role="alert"
-                          >
-                            {errors.contactEmail}
-                          </p>
-                        ) : (
-                          <p
-                            className="text-muted-foreground text-xs"
-                            id="newContactEmail-hint"
-                          >
-                            Distinct de l&apos;identifiant ; prévu pour les
-                            futurs messages et la récupération du compte.
-                          </p>
-                        )}
-                      </div>
-                    </SectionPanel>
-                    <SectionPanel
-                      titleAs="h3"
-                      icon={<Shield className="size-3.5" />}
-                      title="Accès initial"
-                    >
-                      <div className="space-y-1.5">
-                        <Label
-                          htmlFor="newRole"
-                          className="text-muted-foreground text-xs"
-                          required
-                        >
-                          Rôle
-                        </Label>
-                        <Select
-                          value={form.role}
-                          onValueChange={(value) =>
-                            updateField('role', value as UserRole)
+                        <Input
+                          aria-describedby={
+                            errors.firstName ? 'newFirstName-error' : undefined
                           }
-                        >
-                          <SelectTrigger
-                            id="newRole"
-                            className={inputClassName}
+                          aria-invalid={!!errors.firstName}
+                          id="newFirstName"
+                          maxLength={50}
+                          placeholder="Jean"
+                          required
+                          value={form.firstName}
+                          onChange={(event) =>
+                            updateField('firstName', event.target.value)
+                          }
+                        />
+                        {errors.firstName && (
+                          <p
+                            className="text-destructive text-xs"
+                            id="newFirstName-error"
+                            role="alert"
                           >
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="USER">Utilisateur</SelectItem>
-                            {canCreateAdminUsers && (
-                              <SelectItem value="ADMIN">
-                                Administrateur
-                              </SelectItem>
-                            )}
-                          </SelectContent>
-                        </Select>
+                            {errors.firstName}
+                          </p>
+                        )}
                       </div>
-                      <div className="text-muted-foreground border-warning/25 bg-warning/10 rounded-md border px-2.5 py-2 text-xs">
-                        Le compte sera créé avec un mot de passe temporaire à
-                        changer à la première connexion.
+                      <div className="space-y-1.5">
+                        <Label
+                          htmlFor="newLastName"
+                          className="text-muted-foreground text-xs"
+                          required
+                        >
+                          Nom
+                        </Label>
+                        <Input
+                          aria-describedby={
+                            errors.lastName ? 'newLastName-error' : undefined
+                          }
+                          aria-invalid={!!errors.lastName}
+                          id="newLastName"
+                          maxLength={50}
+                          placeholder="Dupont"
+                          required
+                          value={form.lastName}
+                          onChange={(event) =>
+                            updateField('lastName', event.target.value)
+                          }
+                        />
+                        {errors.lastName && (
+                          <p
+                            className="text-destructive text-xs"
+                            id="newLastName-error"
+                            role="alert"
+                          >
+                            {errors.lastName}
+                          </p>
+                        )}
                       </div>
-                    </SectionPanel>
-                  </div>
+                    </div>
+                  </section>
+
+                  <Separator />
+
+                  <section
+                    aria-labelledby="new-connection-title"
+                    className="space-y-3"
+                  >
+                    <h3
+                      id="new-connection-title"
+                      className="text-foreground flex items-center gap-2 text-sm font-semibold"
+                    >
+                      <AtSign className="text-muted-foreground size-4" />
+                      Connexion
+                    </h3>
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="newLoginName"
+                        className="text-muted-foreground text-xs"
+                        required
+                      >
+                        Identifiant de connexion
+                      </Label>
+                      <div className="relative">
+                        <AtSign className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+                        <Input
+                          aria-describedby={
+                            errors.loginName
+                              ? 'newLoginName-error'
+                              : 'newLoginName-hint'
+                          }
+                          aria-invalid={!!errors.loginName}
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          className="pl-9"
+                          id="newLoginName"
+                          maxLength={32}
+                          placeholder="jean.dupont"
+                          required
+                          spellCheck={false}
+                          type="text"
+                          value={form.loginName}
+                          onChange={(event) =>
+                            updateField(
+                              'loginName',
+                              event.target.value.toLowerCase(),
+                            )
+                          }
+                        />
+                      </div>
+                      {errors.loginName ? (
+                        <p
+                          className="text-destructive text-xs"
+                          id="newLoginName-error"
+                          role="alert"
+                        >
+                          {errors.loginName}
+                        </p>
+                      ) : (
+                        <p
+                          className="text-muted-foreground text-xs"
+                          id="newLoginName-hint"
+                        >
+                          3 à 32 caractères : lettres, chiffres, point, tiret ou
+                          underscore.
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="newContactAddress"
+                        className="text-muted-foreground text-xs"
+                      >
+                        Adresse de contact{' '}
+                        <span className="font-normal">(facultatif)</span>
+                      </Label>
+                      <div className="relative">
+                        <Mail className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+                        <Input
+                          aria-describedby={
+                            errors.contactEmail
+                              ? 'newContactAddress-error'
+                              : 'newContactAddress-hint'
+                          }
+                          aria-invalid={!!errors.contactEmail}
+                          autoComplete="off"
+                          className="pl-9"
+                          data-bwignore="true"
+                          data-lpignore="true"
+                          id="newContactAddress"
+                          inputMode="email"
+                          maxLength={254}
+                          placeholder="Contact"
+                          readOnly={!isContactEmailEditable}
+                          type="text"
+                          value={form.contactEmail}
+                          onChange={(event) =>
+                            updateField('contactEmail', event.target.value)
+                          }
+                          onFocus={() => setIsContactEmailEditable(true)}
+                        />
+                      </div>
+                      {errors.contactEmail ? (
+                        <p
+                          className="text-destructive text-xs"
+                          id="newContactAddress-error"
+                          role="alert"
+                        >
+                          {errors.contactEmail}
+                        </p>
+                      ) : (
+                        <p
+                          className="text-muted-foreground text-xs"
+                          id="newContactAddress-hint"
+                        >
+                          Distinct de l&apos;identifiant ; prévu pour la
+                          récupération du compte et les futurs messages.
+                        </p>
+                      )}
+                    </div>
+                  </section>
+
+                  <Separator />
+
+                  <section
+                    aria-labelledby="new-access-title"
+                    className="space-y-3"
+                  >
+                    <h3
+                      id="new-access-title"
+                      className="text-foreground flex items-center gap-2 text-sm font-semibold"
+                    >
+                      <Shield className="text-muted-foreground size-4" />
+                      Accès
+                    </h3>
+                    <div
+                      aria-labelledby="new-access-title"
+                      className="grid gap-2 sm:grid-cols-2"
+                      role="radiogroup"
+                    >
+                      <RoleOption
+                        checked={form.role === UserRole.USER}
+                        description="Accès standard, sans droits d'administration."
+                        label="Utilisateur"
+                        onSelect={() => updateField('role', UserRole.USER)}
+                        value={UserRole.USER}
+                      />
+                      {canCreateAdminUsers && (
+                        <RoleOption
+                          checked={form.role === UserRole.ADMIN}
+                          description="Peut gérer les comptes et la configuration."
+                          label="Administrateur"
+                          onSelect={() => updateField('role', UserRole.ADMIN)}
+                          value={UserRole.ADMIN}
+                        />
+                      )}
+                    </div>
+                    <div className="border-warning/25 bg-warning/10 text-muted-foreground rounded-md border px-2.5 py-2 text-xs">
+                      Le mot de passe temporaire sera généré à la création et à
+                      changer à la première connexion.
+                    </div>
+                  </section>
                 </CardContent>
-                <CardFooter className="border-border/65 bg-surface-muted flex justify-between gap-3 border-t p-4">
-                  <p className="text-muted-foreground hidden text-xs sm:block">
-                    Le profil pourra être complété après création.
+                <CardFooter className="bg-surface-muted border-border-divider flex flex-wrap items-center justify-between gap-3 border-t p-4">
+                  <p className="text-muted-foreground text-xs">
+                    Le compte pourra être complété après création.
                   </p>
                   <div className="ml-auto flex gap-2">
                     <Button asChild variant="outline">
@@ -670,7 +714,7 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
                       ) : (
                         <>
                           <Plus className="size-4" />
-                          Créer
+                          Créer le compte
                         </>
                       )}
                     </Button>
@@ -716,7 +760,7 @@ const NewUserPageContent: FC = () => {
       breadcrumbs={[
         { label: FEATURES.users.audit.poleLabel },
         { href: returnHref, label: FEATURES.users.label },
-        { href: PAGE_PATHS.newUser, label: 'Nouvel utilisateur' },
+        { label: 'Nouvel utilisateur' },
       ]}
     >
       <NewUserContent returnHref={returnHref} />
