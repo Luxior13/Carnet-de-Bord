@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-10T18:58:58.720Z",
+  "environment": "Chromium, Next production, PostgreSQL 17 isolated, fictional accounts",
+  "results": [
+    {
+      "name": "responsive and keyboard radios",
+      "sizes": [
+        {
+          "width": 320,
+          "main": 0,
+          "document": 0,
+          "radio": 1
+        },
+        {
+          "width": 390,
+          "main": 0,
+          "document": 0,
+          "radio": 1
+        },
+        {
+          "width": 768,
+          "main": 0,
+          "document": 0,
+          "radio": 1
+        },
+        {
+          "width": 1024,
+          "main": 0,
+          "document": 0,
+          "radio": 1
+        },
+        {
+          "width": 1120,
+          "main": 0,
+          "document": 0,
+          "radio": 1
+        },
+        {
+          "width": 1440,
+          "main": 0,
+          "document": 0,
+          "radio": 1
+        },
+        {
+          "width": 1920,
+          "main": 0,
+          "document": 0,
+          "radio": 1
+        }
+      ],
+      "lastNameOptional": true
+    },
+    {
+      "name": "shared validation, persistent duplicate, focused field"
+    },
+    {
+      "name": "real USER creation, single submission, truthful navigation warning, secret copy/guards/reset focus",
+      "atomicAuditAndReservation": true,
+      "secretNotInStorageOrAudit": true
+    }
+  ]
+}

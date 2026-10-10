@@ -443,7 +443,10 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(personAvatarSource).toContain('borderRadius: 0');
     expect(personAvatarSource).toContain('getPersonInitials(person)');
     expect(personAvatarSource).toContain('bg-nav-internal');
-    expect(userAvatarSource).toContain('bg-nav-system');
+    expect(userAvatarSource).toContain('bg-destructive');
+    expect(userAvatarSource).toContain('bg-warning');
+    expect(userAvatarSource).toContain('bg-info');
+    expect(userAvatarSource).toContain("backgroundColor: ['00000000']");
     expect(personAvatarSource).not.toContain('ACCOUNT_BACKGROUND_COLORS');
     expect(userAvatarSource).not.toContain('DIRECTORY_BACKGROUND_COLORS');
     expect(personsListSource).toContain('<PersonAvatar');

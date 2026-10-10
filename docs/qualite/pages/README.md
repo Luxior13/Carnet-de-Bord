@@ -8,7 +8,7 @@ Utiliser un nom stable compréhensible, sans multiplier les copies datées.
 | --- | --- | --- |
 | Accueil / Mon travail | [accueil.md](accueil.md) | Salutation livrée ; vues métier futures ; parcours privé à vérifier |
 | Connexion | [connexion.md](connexion.md) | Affichage anonyme vérifié le 10 octobre ; parcours authentification/MFA complet à vérifier |
-| Utilisateurs — liste, création et fiche | [systeme-utilisateurs.md](systeme-utilisateurs.md) | Liste corrigée et vérifiée sur Next/PostgreSQL isolés ; audit suivant de création : 185 tests ciblés et sept largeurs simulées, USR-N01 à USR-N07 ouverts ; mutations réelles et MFA à valider |
+| Utilisateurs — liste, création et fiche | [systeme-utilisateurs.md](systeme-utilisateurs.md) | Liste et création corrigées sur Next/PostgreSQL isolés ; USR-N01 à USR-N07 clos, création USER/ADMIN, MFA et reprise réelle vérifiées ; 1 028 tests réussis, limites détaillées dans le suivi |
 | Paramètres système | [systeme-parametres.md](systeme-parametres.md) | Un réglage : conservation du journal ; documentation réconciliée le 10 octobre, essais de septembre historiques |
 | Feuille de route | [systeme-feuille-de-route.md](systeme-feuille-de-route.md) | Catalogue de 39 chantiers ; matrice réconciliée avec le code, parcours privé à vérifier |
 | Journal d’activité | [systeme-journal-activite.md](systeme-journal-activite.md) | Page retirée le 9 octobre 2026, replanifiée ; suivi conservé comme historique |

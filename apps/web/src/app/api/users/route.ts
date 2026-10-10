@@ -1,11 +1,11 @@
 import { Prisma } from '@prisma/client';
 import { UserRole } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 
 import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGINATION } from '$constants/pagination.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
+import { createUserSchema } from '$features/users/create-user.schema';
 import { buildUserSearchQuery } from '$features/users/server/users-list-search';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import {
@@ -28,11 +28,7 @@ import {
   ErrorCode,
 } from '$types/api.types';
 import type { UsersListResponse, UserType } from '$types/auth.types';
-import {
-  loginNameSchema,
-  optionalEmailSchema,
-  trimmedStringMinMax,
-} from '$utils/zod.utils';
+import { loginNameSchema } from '$utils/zod.utils';
 
 const USER_SORT_OPTIONS = ['name', 'recent', 'created'] as const;
 type UserSortOption = (typeof USER_SORT_OPTIONS)[number];
@@ -182,6 +178,27 @@ export async function GET(
 
     const where: Prisma.UserWhereInput = { deletedAt: null };
 
+    if (searchParams.has('loginName')) {
+      const exactLogin = loginNameSchema.safeParse(
+        searchParams.get('loginName'),
+      );
+      if (!exactLogin.success) {
+        return NextResponse.json(
+          {
+            error: {
+              code: ErrorCode.VALIDATION_ERROR,
+              message: 'Identifiant invalide',
+            },
+            success: false,
+          },
+          { status: 400 },
+        );
+      }
+      where.loginName = exactLogin.data;
+      // Exact lookup must not reveal the protected account's private identity.
+      if (!auth.user.isProtected) where.NOT = { isProtected: true };
+    }
+
     if (search) {
       const searchRows = await prisma.$queryRaw<Array<{ id: string }>>(
         buildUserSearchQuery(search, {
@@ -325,16 +342,6 @@ export async function GET(
   }
 }
 
-const createUserSchema = z
-  .object({
-    contactEmail: optionalEmailSchema,
-    firstName: trimmedStringMinMax(1, 50, 'Prénom requis', 'Prénom trop long'),
-    lastName: trimmedStringMinMax(0, 50, undefined, 'Nom trop long'),
-    loginName: loginNameSchema,
-    role: z.enum(['ADMIN', 'USER']),
-  })
-  .strict();
-
 export async function POST(
   request: NextRequest,
 ): Promise<
@@ -394,6 +401,7 @@ export async function POST(
         {
           error: {
             code: ErrorCode.VALIDATION_ERROR,
+            details: { loginName: ['Cet identifiant est déjà utilisé'] },
             message: 'Cet identifiant est déjà utilisé',
           },
           success: false,
@@ -447,6 +455,7 @@ export async function POST(
         {
           error: {
             code: ErrorCode.VALIDATION_ERROR,
+            details: { loginName: ['Cet identifiant est déjà utilisé'] },
             message: 'Cet identifiant est déjà utilisé',
           },
           success: false,

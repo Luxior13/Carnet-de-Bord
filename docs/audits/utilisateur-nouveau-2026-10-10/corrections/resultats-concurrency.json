@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-10T18:53:28.084Z",
+  "environment": "Chromium, Next production, PostgreSQL 17 isolated, fictional accounts",
+  "results": [
+    {
+      "name": "real concurrent POSTs produce one account, reservation and audit",
+      "statuses": [
+        200,
+        409
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-10T18:56:25.448Z",
+  "environment": "Chromium, Next production, PostgreSQL 17 isolated, fictional accounts",
+  "results": [
+    {
+      "name": "real rollback when audit insertion fails, zero partial account/reservation, successful explicit retry"
+    }
+  ]
+}

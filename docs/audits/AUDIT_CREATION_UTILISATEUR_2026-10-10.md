@@ -2,6 +2,11 @@
 
 ## Périmètre et verdict
 
+**État courant après le « go » : USR-N01 à USR-N07 corrigés et vérifiés.**
+La [validation des corrections](#validation-des-corrections) utilise Next et
+PostgreSQL isolés, avec créations réelles et confirmation MFA. Les paragraphes
+de l'analyse initiale ci-dessous conservent leurs preuves et limites d'origine.
+
 Demande : passer à `/systeme/utilisateurs/nouveau`, après les corrections de
 liste et la couleur des avatars. **Analyse de la page et de son POST ; aucun
 code produit corrigé pendant cette passe. Corrections nécessaires.** Le gabarit
@@ -64,7 +69,7 @@ validation de l'ensemble de l'authentification.
 
 ## Constats
 
-Tous les points ci-dessous sont ouverts, responsable à attribuer. Les reproductions
+À l'issue de l'analyse initiale, tous ces points étaient ouverts. Les reproductions
 et mesures brutes figurent dans les [résultats](utilisateur-nouveau-2026-10-10/resultats.json).
 
 ### USR-N01 — P2, défaut : radios masquées provoquant un débordement
@@ -183,3 +188,75 @@ Captures supplémentaires : [ordinateur](utilisateur-nouveau-2026-10-10/formulai
 [mobile](utilisateur-nouveau-2026-10-10/formulaire-390.png),
 [320 px](utilisateur-nouveau-2026-10-10/formulaire-320.png),
 [confirmation ordinateur](utilisateur-nouveau-2026-10-10/succes-1440.png).
+
+## Validation des corrections
+
+Passe autorisée par le « go », le 10 octobre 2026. Q05 est réactivé pour la
+recherche exacte de reprise ; le reste du classement initial demeure applicable.
+Aucune migration produit ni nouvelle permission. Les règles courantes et le
+tableau de clôture sont dans le [suivi de page](../qualite/pages/systeme-utilisateurs.md#corrections-du-formulaire--10-octobre-2026).
+
+### Changements
+
+- Validation commune [client/serveur](../../apps/web/src/features/users/create-user.schema.ts),
+  nom facultatif cohérent, erreurs persistantes par champ et erreur de commande.
+- Radios masquées de 1 × 1 px, focus après succès, remise à zéro et vérification.
+- [Contrôleur dédié](../../apps/web/src/features/users/useCreateUser.ts) avec verrou
+  synchrone, champs indisponibles pendant l'envoi, arrêt d'attente après 30 secondes
+  et avertissement de départ : l'abandon client ne garantit aucun rollback.
+- Résultat incertain : vérifier via l'identifiant exact et les droits de lecture
+  existants avant de réessayer. Le GET exclut l'identité protégée pour les autres
+  comptes, même combiné aux filtres de rôle ou de sécurité. Une vérification échouée
+  garde la création bloquée ; délai de lecture limité à 15 secondes.
+- Compte trouvé : accès à sa fiche et aux actions autorisées de réinitialisation,
+  sans relecture du secret initial ni affirmation que ce compte vient de notre POST.
+  Compte absent : relance explicite avec le même identifiant et contrainte unique.
+- Remise du secret : message de copie, case de conservation volontaire, confirmation
+  ciblée avant effacement ou départ tant qu'elle n'est pas cochée. La case ne prouve
+  pas la remise effective. Secret seulement en mémoire, aucun email ajouté.
+- État réinitialisé sur changement de compte ou de capacité de création ; requête
+  interrompue au démontage et réponse tardive ignorée.
+
+### Essais exécutés
+
+Banc : build Next 15 de production, Chromium, PostgreSQL 17 sur port local dédié,
+51 migrations appliquées à une base jetable. Trois acteurs fictifs (protégé,
+administrateur délégué, lecteur), sessions de test, clés et identifiants générés
+pour cette base. Aucune base applicative utilisée. Les preuves persistantes ne
+contiennent ni cookie de session ni secret de test ; les mots de passe sont masqués
+dans les nouvelles captures.
+
+| Contrôle | Résultat et preuve |
+| --- | --- |
+| Responsive et clavier | Sept largeurs 320/390/768/1 024/1 120/1 440/1 920 px, hauteur 1 000 px ; débordement principal et document de 0 px, radio de 1 px, sélection par flèches. [Mesures](utilisateur-nouveau-2026-10-10/corrections/resultats-form.json), [mobile](utilisateur-nouveau-2026-10-10/corrections/formulaire-390.png), [ordinateur](utilisateur-nouveau-2026-10-10/corrections/formulaire-1440.png) |
+| Validation et erreurs | Nom sans attribut obligatoire et création avec nom vide ; email mal formé refusé avant tout POST ; doublon réel rattaché au champ, focalisé et toujours visible après 5,5 secondes. [Capture](utilisateur-nouveau-2026-10-10/corrections/erreur-persistante.png) |
+| Création USER et attente | Deux événements submit synchrones donnent un seul POST ; champs désactivés, départ expliqué sans promesse d'annulation, « Rester » puis succès réel. Hash vérifié avec le secret reçu ; une réservation et un audit, changement obligatoire. [Résultats](utilisateur-nouveau-2026-10-10/corrections/resultats-form.json) |
+| Mot de passe et focus | Focus sur « Compte créé », copie via presse-papiers Chromium, dialogues avant départ/remise à zéro, case volontaire puis prénom focalisé ; aucun secret dans localStorage/sessionStorage ou l'audit inspectés. [Succès ordinateur](utilisateur-nouveau-2026-10-10/corrections/succes-1440.png), [mobile](utilisateur-nouveau-2026-10-10/corrections/succes-390.png) |
+| ADMIN et preuve sensible | Premier POST refusé sans preuve récente ; annulation préservant la saisie ; vrai mot de passe + TOTP, puis création ADMIN. [Résultat](utilisateur-nouveau-2026-10-10/corrections/resultats-mfa.json) |
+| Réponse perdue après commit | POST exécuté par Next, réponse coupée après écriture confirmée ; compte unique retrouvé par GET exact, fiche ouverte, nouveau mot de passe émis par l'action autorisée et vérifié contre le nouveau hash. [Résultat](utilisateur-nouveau-2026-10-10/corrections/resultats-recovery.json), [compte retrouvé](utilisateur-nouveau-2026-10-10/corrections/reponse-perdue-compte-retrouve.png) |
+| Compte absent / vérification indisponible | Coupure avant POST et 503 de lecture injectés ; aucune relance disponible avant vérification. Lecture réelle d'absence puis création explicite réussie. [Résultat](utilisateur-nouveau-2026-10-10/corrections/resultats-absent.json) |
+| Droits et confidentialité | ADMIN non protégé ne peut créer ADMIN ; lecteur ne peut créer USER ; GET exact ne révèle pas le compte protégé, même avec rôle/pending ; CSRF absent refusé. [Résultat](utilisateur-nouveau-2026-10-10/corrections/resultats-permissions.json) |
+| Concurrence | Deux POST réels simultanés, un succès et un conflit de champ ; un compte, une réservation et un audit. [Résultat](utilisateur-nouveau-2026-10-10/corrections/resultats-concurrency.json) |
+| Atomicité | Échec d'insertion de l'audit forcé par un trigger réservé au banc, supprimé ensuite : aucun compte ni réservation partiels ; vérification d'absence puis relance réussie. [Résultat](utilisateur-nouveau-2026-10-10/corrections/resultats-rollback.json) |
+| Régression durable | Nouveau [scénario Playwright](../../apps/web/e2e/user-creation.checks.ts) intégré au smoke et exécuté seul sur le banc réel : validation, conflit, garde du secret, focus, réponse perdue et recherche exacte. [Résultat](utilisateur-nouveau-2026-10-10/corrections/resultats-regression.json) |
+
+### Contrôles du dépôt et limites
+
+- Suite web complète : **1 028 réussis, 25 ignorés**, 84 fichiers réussis et deux
+  ignorés. Les deux suites SQL Vitest (personnes/utilisateurs) n'ont pas leurs
+  variables dédiées ; les scénarios PostgreSQL décrits ci-dessus sont distincts.
+- Ajout de 11 tests de validation/erreurs et neuf tests de route/recherche exacte ;
+  assertion de conflit enrichie. Un ancien contrat de couleur d'avatar attendait
+  encore le fond uniforme : actualisé selon la décision par accès déjà livrée.
+- TypeScript, lint, build de production, budgets d'architecture et de performance
+  réussis. Aucun seuil relevé. Documentation et liens contrôlés par `docs:check`.
+- Le smoke complet (connexion, comptes, personnes, paramètres) n'est pas rejoué ;
+  seule sa nouvelle séquence de création est exécutée. Les acteurs du banc entrent
+  avec une session préparée ; la confirmation sensible mot de passe/TOTP est réelle.
+- Première connexion du nouveau compte, activation de sa MFA, lecteur d'écran,
+  Safari réel, appareils physiques, zoom natif et charge non testés dans cette passe.
+  Délais 30/15 secondes et changement d'acteur/droits pendant un POST examinés dans
+  le code ; aucun scénario navigateur dédié revendiqué.
+- Serveur, navigateur et PostgreSQL du banc arrêtés après validation ; base,
+  sessions, clés et scripts temporaires supprimés. Captures fictives et mesures
+  conservées ici ; régression Playwright conservée dans le code.

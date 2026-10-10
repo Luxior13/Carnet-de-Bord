@@ -9,6 +9,7 @@ import type {
   PersonsListResponse,
 } from '../src/features/persons/types/person.types';
 import { expectSystemSettingsDraftSafety } from './system-settings.checks';
+import { expectUserCreationRecovery } from './user-creation.checks';
 
 function requireEnvironmentVariable(
   name: string,
@@ -917,7 +918,9 @@ test('authenticates and reaches the admin surfaces', async ({ page }) => {
   await expect(
     page.getByRole('heading', { name: 'Utilisateurs' }),
   ).toBeVisible();
-  await expect(page.getByText('Annuaire utilisateurs')).toBeVisible();
+  await expect(
+    page.locator('table[aria-label="Comptes utilisateurs"]'),
+  ).toBeAttached();
   await expectAccessiblePageStructure(page);
 
   // Enter on a palette button must not also open the selected destination.
@@ -949,11 +952,7 @@ test('authenticates and reaches the admin surfaces', async ({ page }) => {
   await expect(page).toHaveURL(/\/systeme\/utilisateurs$/);
 
   await expectSystemSettingsDraftSafety(page);
-  await page.goto('/systeme/utilisateurs/nouveau');
-  await expect(
-    page.getByRole('heading', { name: /Nouvel utilisateur|Compte créé/ }),
-  ).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Créer' })).toBeVisible();
+  await expectUserCreationRecovery(page);
 
   await expectSelfProfileSyncWithoutReload(page);
   await expectPersonIdentityLifecycle(page);

@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-10T18:53:25.897Z",
+  "environment": "Chromium, Next production, PostgreSQL 17 isolated, fictional accounts",
+  "results": [
+    {
+      "name": "real delegated permissions, protected identity hidden from exact lookup, denied creation and CSRF"
+    }
+  ]
+}

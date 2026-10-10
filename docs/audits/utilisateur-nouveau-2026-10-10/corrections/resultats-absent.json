@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-10T18:53:23.332Z",
+  "environment": "Chromium, Next production, PostgreSQL 17 isolated, fictional accounts",
+  "results": [
+    {
+      "name": "simulated send failure and unavailable lookup; real absent lookup and successful explicit retry"
+    }
+  ]
+}

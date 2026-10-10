@@ -187,6 +187,93 @@ const getLastUserSearchSql = (): {
 };
 
 describe('users access hardening', () => {
+  it.each(['', 'ab', 'name%25', 'x'.repeat(33)])(
+    'rejects invalid exact login lookup %s before querying users',
+    async (loginName) => {
+      const route = await import('$app/api/users/route');
+      const response = await route.GET(
+        new Request(
+          'http://localhost/api/users?' + new URLSearchParams({ loginName }),
+        ) as never,
+      );
+      expect(response.status).toBe(400);
+      expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
+      expect(mockPrisma.user.count).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['', '&role=SUPERADMIN', '&status=pending'])(
+    'keeps protected identities out of exact login lookup %s',
+    async (filter) => {
+      mockRequireAuth.mockResolvedValueOnce({
+        session: buildRecentSensitiveSession(),
+        success: true,
+        user: buildUser({
+          permissions: { [PERMISSIONS.USERS.VIEW_SECURITY]: true },
+          role: 'ADMIN',
+        }),
+      });
+      mockPrisma.user.count.mockResolvedValue(0);
+      mockPrisma.user.findMany.mockResolvedValue([]);
+      const route = await import('$app/api/users/route');
+      const response = await route.GET(
+        new Request(
+          'http://localhost/api/users?loginName=%20Jean.Dupont%20&limit=1' +
+            filter,
+        ) as never,
+      );
+      expect(response.status).toBe(200);
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          take: 1,
+          where: expect.objectContaining({
+            deletedAt: null,
+            loginName: 'jean.dupont',
+            NOT: { isProtected: true },
+          }),
+        }),
+      );
+      expect(mockPrisma.user.count).toHaveBeenCalledWith({
+        where: expect.objectContaining({
+          loginName: 'jean.dupont',
+          NOT: { isProtected: true },
+        }),
+      });
+      expect(mockPrisma.$queryRaw).not.toHaveBeenCalled();
+    },
+  );
+
+  it('requires users:view for exact login lookup', async () => {
+    denyPermission(PERMISSIONS.USERS.VIEW);
+    const route = await import('$app/api/users/route');
+    const response = await route.GET(
+      new Request('http://localhost/api/users?loginName=test.user') as never,
+    );
+    expect(response.status).toBe(403);
+    expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
+  });
+
+  it('associates an already used login with the creation field', async () => {
+    mockPrisma.user.findUnique.mockResolvedValueOnce(buildUser());
+    const route = await import('$app/api/users/route');
+    const response = await route.POST(
+      new Request('http://localhost/api/users', {
+        body: JSON.stringify({
+          firstName: 'Jean',
+          lastName: '',
+          loginName: 'user.test',
+          role: 'USER',
+        }),
+        method: 'POST',
+      }) as never,
+    );
+    expect(response.status).toBe(400);
+    expect((await response.json()).error.details).toEqual({
+      loginName: ['Cet identifiant est déjà utilisé'],
+    });
+    expect(mockCreateUser).not.toHaveBeenCalled();
+  });
+
   beforeEach(() => {
     vi.resetAllMocks();
 
@@ -3131,6 +3218,7 @@ describe('users access hardening', () => {
     expect(response.status).toBe(409);
     expect(body.error).toEqual({
       code: ErrorCode.VALIDATION_ERROR,
+      details: { loginName: ['Cet identifiant est déjà utilisé'] },
       message: 'Cet identifiant est déjà utilisé',
     });
   });

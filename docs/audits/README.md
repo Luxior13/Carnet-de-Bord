@@ -10,7 +10,7 @@ Ne pas créer un rapport complet pour chaque correction de texte.
 
 | Rapport | Périmètre et portée |
 | --- | --- |
-| [Création d'utilisateur — 10 octobre 2026](AUDIT_CREATION_UTILISATEUR_2026-10-10.md) | Analyse du formulaire et du POST ; 185 tests ciblés, sept largeurs Chromium simulées ; débordement des radios, erreurs serveur et transitions à corriger ; création réelle/MFA non exécutées |
+| [Création d'utilisateur — 10 octobre 2026](AUDIT_CREATION_UTILISATEUR_2026-10-10.md) | Analyse puis corrections USR-N01 à USR-N07 ; sept largeurs dans Next réel, créations USER/ADMIN, TOTP, réponse perdue et reprise sur PostgreSQL isolé ; 1 028 tests réussis, preuves et limites datées |
 | [Utilisateurs — 10 octobre 2026](AUDIT_UTILISATEURS_2026-10-10.md) | Analyse puis corrections USR-09 à USR-17 ; 1 018 tests web réussis, build et budgets réussis ; Chromium à neuf largeurs sur Next/PostgreSQL isolés et sessions préparées ; connexion/MFA, charge et accessibilité complète non validés |
 | [Répertoire — 10 octobre 2026](AUDIT_REPERTOIRE_2026-10-10.md) | Audit, corrections et quatre améliorations UX ; 112 tests du périmètre, PostgreSQL isolé et navigateur ; session réelle complète non exécutée |
 | [Organisation documentaire — 10 octobre 2026](ORGANISATION_DOCUMENTAIRE_2026-10-10.md) | Corrections, méthode enrichie et validation du corpus ; aucun verdict de fonctionnement global du site |

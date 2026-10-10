@@ -22,8 +22,8 @@
   vérifiés**, avec serveur Next et PostgreSQL isolés. Les limites de validation
   restantes sont distinguées dans les points ouverts.
   [Rapport et preuves avant/après](../../audits/AUDIT_UTILISATEURS_2026-10-10.md).
-- Audit suivant du formulaire `/systeme/utilisateurs/nouveau` : **corrections
-  nécessaires**, distinctes des correctifs de liste. Voir USR-N01 à USR-N07 et
+- Audit puis corrections du formulaire `/systeme/utilisateurs/nouveau` :
+  **USR-N01 à USR-N07 corrigés et vérifiés**, sur Next/PostgreSQL isolés. Voir
   [le rapport de création](../../audits/AUDIT_CREATION_UTILISATEUR_2026-10-10.md).
 
 ## Décisions courantes
@@ -309,19 +309,70 @@ USR-10 reste clos pour la réutilisation des primitives et le clavier contrôlé
 précédemment. Sa vérification ne couvrait pas le débordement des radios, désormais
 isolé en USR-N01. Les preuves de liste sur base réelle ne valident pas la création.
 
-| Point | État, preuve et prochaine action | Déclencheur / responsable |
-| --- | --- | --- |
-| USR-N01 — P2, radios et débordement | **Ouvert** : le radio masqué hérite de la largeur de `Input` ; 363 px de débordement à 1 120 px, supprimés par une neutralisation des dimensions dans le DOM du banc. Adapter le contrôle puis rejouer les tailles | Correction du formulaire / à attribuer |
-| USR-N02 — P2, nom facultatif | **Ouvert** : `required` contredit le label et la validation ; supprimer l'attribut, préserver le nom facultatif | Correction du formulaire / à attribuer |
-| USR-N03 — P2, erreurs serveur | **Ouvert** : détails d'email ignorés, doublon et panne seulement en toast ; rattacher les erreurs aux champs et conserver une erreur générale locale | Correction de la validation et des retours / à attribuer |
-| USR-N04 — P2, focus des transitions | **Ouvert** : focus sur `BODY` après succès et « Créer un autre » ; viser confirmation puis premier champ | Correction du parcours clavier / à attribuer |
-| USR-N05 — P2, départ pendant le POST | **Ouvert** : « Quitter sans enregistrer » proposé alors que la demande est en cours ; distinguer brouillon et opération déjà lancée | Correction des états d'attente / à attribuer |
-| USR-N06 — P2, réponse perdue après commit | **Risque à vérifier** : relance refusée par unicité, secret perdu pour le créateur ; définir reprise et nouvelle émission autorisée, sans stockage du secret en clair | Essai de coupure après écriture sur base isolée / à attribuer |
-| USR-N07 — remise du mot de passe | **Suggestion ouverte** : repère de copie/remise ou confirmation ciblée avant effacement du succès ; le comportement actuel est observé, l'obligation n'est pas décidée | Prochain travail sur la remise des identifiants / à attribuer |
+### Corrections du formulaire — 10 octobre 2026
 
-Validation encore nécessaire : création USER/ADMIN, défi d'identité, réservation
-d'identifiant, audit atomique et première connexion dans Next/PostgreSQL isolés.
-Lecteur d'écran, Safari et appareils physiques non vérifiés pendant cette passe.
+Le « go » suivant l'audit autorise les corrections et le repère de conservation
+du secret. Composition visuelle conservée ; contrôleur, validation, retours de
+reprise et confirmation séparés dans `features/users` pour garder une page
+lisible. Q05 devient pertinent pour la recherche exacte de reprise ; les autres
+sujets gardent le périmètre de l'audit. Aucune migration, dépendance ou permission
+supplémentaire.
+
+Décisions courantes :
+
+- Un même schéma valide la saisie et le POST. Erreurs de champ persistantes,
+  erreur générale locale et focus adapté ; nom toujours facultatif.
+- Radios masquées limitées à 1 × 1 px ; cartes et sélection au clavier conservées.
+- Champs verrouillés pendant l'envoi et la vérification ; verrou synchrone contre
+  le double envoi. Quitter pendant le POST n'annule pas la mutation serveur.
+- Une panne réseau, une réponse inexploitable, une erreur 5xx ou un délai de
+  30 secondes dépassé signifie « résultat à vérifier », jamais « écriture annulée ».
+  La vérification attend au maximum 15 secondes ; une indisponibilité conserve
+  ce parcours, sans nouvelle création automatique.
+- Reprise via `GET /api/users?loginName=…&limit=1` : identifiant exact normalisé,
+  droit existant `users:view`, projections existantes et exclusion de l'identité
+  protégée pour un acteur non protégé, y compris avec d'autres filtres. Aucun
+  secret relisible dans ce GET. Un compte trouvé peut préexister à la tentative :
+  le message ne prétend pas prouver qui l'a créé.
+- Aucun compte trouvé : relance explicite avec le même identifiant, toujours
+  soumis à l'unicité. Compte trouvé : fiche puis réinitialisation avec les droits
+  et preuves existants ; aucune réinitialisation automatique. Sans droit de
+  vérification ou de réinitialisation, recours indiqué à un administrateur habilité.
+- Mot de passe temporaire conservé uniquement dans l'état de la page. Message de
+  copie et case « J’ai conservé ce mot de passe pour le transmettre » ; copier
+  ne coche pas la case. Avant conservation déclarée, quitter ou créer un autre
+  demande une confirmation ciblée. Ce repère ne prouve pas la remise effective.
+  Aucun email, stockage persistant ou journal contenant ce secret ajouté.
+- L'état de création est remonté à neuf si le compte, le rôle, la protection ou
+  le droit de création change ; les réponses d'une instance démontée sont ignorées.
+
+| Point | État et preuve du correctif | Déclencheur de réexamen |
+| --- | --- | --- |
+| USR-N01 — P2, radios et débordement | **Corrigé et vérifié** : 0 px de débordement principal/document de 320 à 1 920 px, sept largeurs ; radio 1 px et flèches clavier | Changement de primitive ou composition |
+| USR-N02 — P2, nom facultatif | **Corrigé et vérifié** : attribut retiré, création réelle avec nom vide | Changement du contrat d'identité |
+| USR-N03 — P2, erreurs serveur | **Corrigé et vérifié** : email refusé avant POST, doublon persistant et focus du champ ; pannes expliquées dans la page | Changement de validation ou retour API |
+| USR-N04 — P2, focus des transitions | **Corrigé et vérifié** : titre de succès puis prénom après remise à zéro ; panneau de reprise focalisé | Changement des transitions |
+| USR-N05 — P2, départ pendant le POST | **Corrigé et vérifié** : double soumission dans le même événement produit un seul POST, champs désactivés et avertissement exact | Changement du contrôleur ou de la navigation |
+| USR-N06 — P2, réponse perdue après commit | **Corrigé et vérifié** : écriture réelle puis réponse coupée, recherche exacte, fiche et nouveau secret émis avec droit existant ; un seul compte et audit | Changement du contrat de reprise, d'unicité ou de réinitialisation |
+| USR-N07 — remise du mot de passe | **Implémenté et vérifié** : copie réelle, repère de conservation, confirmation avant départ/remise à zéro ; pas de secret dans les stockages navigateur ni l'audit contrôlés | Changement de transmission des accès |
+
+**Preuves actuelles :** Next production + Chromium + PostgreSQL 17 jetable,
+51 migrations appliquées. Créations USER/ADMIN, mot de passe et TOTP réels pour
+ADMIN, annulation du défi, droits délégués, CSRF, collision de deux POST et
+rollback d'un échec d'audit contrôlés. Le mot de passe affiché correspond au hash
+persisté ; changement obligatoire conservé. Pannes réseau/503 injectées ; les
+lectures, créations, réservations et audits correspondants utilisent la vraie base.
+
+Suite web : **1 028 tests réussis, 25 ignorés** (deux suites PostgreSQL dont les
+variables dédiées ne sont pas fournies à Vitest). TypeScript, lint, build,
+architecture et budget de performance réussis. Une régression Playwright durable
+est intégrée au smoke et exécutée seule sur ce banc ; le smoke complet n'est pas
+rejoué. [Rapport et preuves détaillées](../../audits/AUDIT_CREATION_UTILISATEUR_2026-10-10.md#validation-des-corrections).
+
+Limites : première connexion du nouveau compte et activation MFA, lecteur d'écran,
+Safari et appareils physiques non rejoués. Le changement de compte/droits pendant
+un POST et les délais de 30/15 secondes sont examinés dans le code, sans scénario
+navigateur dédié. Les anciennes preuves ci-dessus restent historiques.
 
 ## Fiche utilisateur (`/systeme/utilisateurs/[id]`) — 10 octobre 2026
 
