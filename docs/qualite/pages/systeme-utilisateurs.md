@@ -15,6 +15,8 @@
   fiches applicables, revue du code et corrections ciblées. Le niveau est
   **sensible** pour la conservation des données après révocation de droits.
   Les vérifications exécutées pendant cette passe sont distinguées ci-dessous.
+- Passe du 10 octobre 2026 : liste considérée **terminée**, alignée sur la page
+  de référence `/membres/repertoire` (voir la section dédiée plus bas).
 
 ## Décisions courantes
 

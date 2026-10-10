@@ -9,7 +9,8 @@
   `app/membres/repertoire/page.tsx` (serveur) →
   `features/persons/components/PersonsPageClient.tsx` →
   `PersonsList.tsx`, styles partagés `components/ui/directory.module.css`.
-- Statut : livré, en développement actif.
+- Statut : terminé (liste) au 2026-10-10, considéré comme la référence de
+  liste avec `/systeme/utilisateurs`.
 - Dernière revue : 2026-10-10 — ajout de la Vue d'ensemble alignée sur
   `/systeme/utilisateurs`, en plus de l'analyse A à Z et de la refactorisation
   du 2026-10-09 (voir « Refactorisation appliquée » ci-dessous).
