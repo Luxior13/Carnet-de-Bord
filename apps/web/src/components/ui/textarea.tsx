@@ -9,7 +9,7 @@ const Textarea: FC<TextareaProps> = ({ className, ...props }) => {
     <textarea
       data-slot="textarea"
       className={cn(
-        'border-border-control bg-input placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex min-h-20 w-full rounded-lg border px-3 py-2 text-base shadow-none transition-[background-color,border-color,color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:text-sm',
+        'border-border-control bg-input placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex min-h-20 w-full rounded-[6px] border px-3 py-2 text-base shadow-none transition-[background-color,border-color,color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 lg:text-sm',
         'hover:border-ring/70 hover:bg-surface-control-hover focus-visible:border-ring focus-visible:bg-surface-control-focus focus-visible:ring-ring/25 focus-visible:ring-[var(--ring-width)]',
         'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
         className,

@@ -445,6 +445,23 @@ réactive pas Activité et n'étend pas les capacités de gestion du compte.
   vérifier le compte puis demander une nouvelle émission explicite. Aucun
   rejeu automatique ni récupération d'un ancien secret depuis son hash.
 
+### Champs moins arrondis — 10 octobre 2026
+
+À la demande d'angles plus carrés mais légèrement arrondis, le rayon par défaut
+de `Input`, `Textarea` et `SelectTrigger` passe à 6 px (8 px auparavant dans
+la portée indigo de cette fiche, 10 px hors de cette portée). Règle portée par
+les primitives et le [design system](../../references/DESIGN_SYSTEM.md#4-espacements-et-arrondis),
+applicable aussi aux formulaires de création, aux dialogues et aux autres
+consommateurs sans surcharge locale. Les contrôles du Répertoire sont déjà à
+6 px dans leur module. Pas de changement des hauteurs, états ou comportements.
+
+Revue légère : Q01/Q03/Q04/Q19/Q27/Q30 examinés ; autres sujets hors impact
+pour cette retouche d'arrondi. Chromium avec le vrai profil rendu en HTML,
+les primitives partagées et le CSS recompilé : huit contrôles à 320, 390 et
+1 440 px, avec et sans portée indigo. Rayon calculé de 6 px partout, hauteurs
+des saisies conservées, aucun débordement global et focus visible contrôlé.
+Ce banc isolé ne rejoue pas les interactions serveur ni les parcours complets.
+
 ## Analyse de la liste après alignement — 10 octobre 2026
 
 Voir le [rapport daté](../../audits/AUDIT_UTILISATEURS_2026-10-10.md) pour la

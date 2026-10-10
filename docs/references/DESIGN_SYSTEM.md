@@ -218,10 +218,15 @@ historiques ; cette ancienne échelle ne remplace pas les règles courantes.
 ## 4. Espacements et arrondis
 
 - Espacement : échelle Tailwind par défaut, ancrée sur 0.25rem.
-- Arrondis : `--radius` vaut actuellement 0,625rem ; `sm`, `md`, `lg`, `xl`,
-  `2xl` en dérivent par `calc()` (6, 8, 10, 14 et 18 px avec une racine de 16 px).
-- `Button`, `Input` et `Card` utilisent `rounded-lg` par défaut. Les variantes
-  de menus et de fenêtres restent définies dans leurs primitives respectives.
+- Arrondis : `--radius` vaut 0,625rem par défaut et 0,5rem dans la portée
+  `data-surface-tone="indigo"` ; `sm`, `md`, `lg`, `xl`, `2xl` en dérivent
+  par `calc()` (6, 8, 10, 14 et 18 px hors indigo avec une racine de 16 px).
+- Les champs `Input`, `Textarea` et `SelectTrigger` ont un rayon de **6 px**
+  par défaut, identique dans les différentes portées : angles plus nets avec
+  un léger arrondi, conformément au choix du 10 octobre 2026 sur la fiche
+  Utilisateurs. Les compositions peuvent adapter explicitement ce rayon.
+- `Button` et `Card` utilisent `rounded-lg` par défaut. Les variantes de
+  menus et de fenêtres restent définies dans leurs primitives respectives.
 - Les compositions de référence définissent aussi des dimensions ciblées :
   bandeau et carte de liste à 10 px, contrôles du module `directory` à 6 px,
   infobulle à 7 px, case à cocher à 4 px et flèche d'infobulle à 2 px.
