@@ -226,14 +226,22 @@ Vérifications : TypeScript, lint, build réussis ; 133 tests ciblés réussis
 - URL vérifiée : `/systeme/utilisateurs/nouveau` (canonique ; l'ancien
   `/administration/utilisateurs/nouveau` est redirigé). `returnTo` reste borné
   à la collection utilisateurs.
-- Champs conservés : prénom, nom, identifiant de connexion, email de contact
-  (facultatif), rôle (`USER`, `ADMIN` seulement pour un compte protégé). Aucun
-  champ ajouté : le compte est distinct de la fiche Personne ; l'identité
-  complète et les relations se renseignent sur la fiche.
-- Interface recentrée sur la tâche : hero compact sans badges de brouillon,
-  formulaire en une seule carte avec sections « Identité », « Connexion » et
-  « Accès ». Le rôle est choisi par cartes radio (Utilisateur / Administrateur)
-  avec description, au lieu d'un menu déroulant.
+- Champs conservés : prénom (obligatoire), nom (facultatif, décision du
+  2026-10-10 pour le contexte esport où le nom complet n'est pas toujours connu),
+  identifiant de connexion (obligatoire), email de contact (facultatif), rôle
+  (`USER`, `ADMIN` seulement pour un compte protégé). Aucun champ ajouté : le
+  compte est distinct de la fiche Personne ; l'identité complète et les
+  relations se renseignent sur la fiche. Le schéma reflète ce choix :
+  `User.lastName` est nullable (migration `20261010150000`), et la lecture
+  normalise `null` en chaîne vide pour l'affichage.
+- Interface recentrée sur la tâche : hero `PageIdentityHero` (dégradé des pages
+  de référence), formulaire en une seule carte alignée sur le formulaire de
+  création du répertoire (en-tête avec `ServiceIcon`, sections « Identité »,
+  « Connexion » et « Accès » en libellés majuscules discrets). Le rôle est
+  choisi par cartes radio (Utilisateur / Administrateur) avec description, au
+  lieu d'un menu déroulant.
+- Écran de succès aplati sur le même gabarit : remise du mot de passe
+  temporaire puis synthèse des accès, sans cartes imbriquées.
 - Aligné sur le répertoire : champs en style `Input` partagé, dernier fil
   d'Ariane sans lien vers lui-même, focus placé sur le premier champ invalide
   après validation. Autocomplétion désactivée (règle globale du 2026-10-10) :

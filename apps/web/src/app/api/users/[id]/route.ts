@@ -223,12 +223,7 @@ const updateUserSchema = z
       'Prénom trop long',
     ).optional(),
     isActive: z.boolean().optional(),
-    lastName: trimmedStringMinMax(
-      1,
-      50,
-      'Nom requis',
-      'Nom trop long',
-    ).optional(),
+    lastName: trimmedStringMinMax(0, 50, undefined, 'Nom trop long').optional(),
     loginName: loginNameSchema.optional(),
     permissions: permissionsSchema,
     permissionScope: z.enum(['access', 'account']).optional(),

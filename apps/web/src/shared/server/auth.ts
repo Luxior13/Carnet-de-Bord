@@ -1181,7 +1181,7 @@ export const mapUserToUserType = (user: ClientSafeUser): UserType => ({
   isActive: user.isActive,
   isProtected: user.isProtected,
   lastLoginAt: user.lastLoginAt,
-  lastName: user.lastName,
+  lastName: user.lastName ?? '',
   lockedUntil: user.lockedUntil,
   loginName: user.loginName,
   mfaEnabledAt: user.mfaEnabledAt,
@@ -1296,7 +1296,10 @@ const getAuditIdentitySnapshots = async (
     where: { id: { in: userIds } },
   });
   const snapshotsById = new Map(
-    users.map((user) => [user.id, toAuditIdentitySnapshot(user)]),
+    users.map((user) => [
+      user.id,
+      toAuditIdentitySnapshot({ ...user, lastName: user.lastName ?? '' }),
+    ]),
   );
 
   return {

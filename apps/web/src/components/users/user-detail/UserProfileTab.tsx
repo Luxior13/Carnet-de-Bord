@@ -306,9 +306,8 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                   <Label
                     htmlFor="user-last-name"
                     className="text-muted-foreground text-xs"
-                    required
                   >
-                    Nom
+                    Nom <span className="font-normal">(facultatif)</span>
                   </Label>
                   <Input
                     id="user-last-name"

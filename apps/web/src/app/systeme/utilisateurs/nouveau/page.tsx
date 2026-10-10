@@ -5,26 +5,22 @@ import {
   AtSign,
   CheckCircle2,
   Copy,
-  KeyRound,
   Loader2,
   Mail,
   Plus,
-  Shield,
-  User,
   UserPlus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import React, { type FC, Suspense, useState } from 'react';
+import React, { type FC, type ReactNode, Suspense, useState } from 'react';
 import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
+import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { AccessDeniedState } from '$components/layout/PageState';
-import { SectionPanel } from '$components/layout/SectionPanel';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
-import { UsersAdminHero } from '$components/users/UsersAdminHero';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
@@ -46,6 +42,7 @@ import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Separator } from '$ui/separator';
+import { ServiceIcon } from '$ui/service-icon';
 import { apiFetch } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 import { getSafeCollectionReturnHref } from '$utils/navigation.utils';
@@ -119,6 +116,18 @@ const RoleOption: FC<RoleOptionProps> = ({
   </label>
 );
 
+const FormSectionTitle: FC<{ children: ReactNode; id: string }> = ({
+  children,
+  id,
+}) => (
+  <h3
+    id={id}
+    className="text-muted-foreground text-[11px] font-medium tracking-[0.08em] uppercase"
+  >
+    {children}
+  </h3>
+);
+
 const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
   const { userData } = useUser();
   const canCreateUsers = userData
@@ -180,9 +189,7 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
     } else if (form.firstName.trim().length > 50) {
       nextErrors.firstName = 'Prénom trop long';
     }
-    if (!form.lastName.trim()) {
-      nextErrors.lastName = 'Nom obligatoire';
-    } else if (form.lastName.trim().length > 50) {
+    if (form.lastName.trim().length > 50) {
       nextErrors.lastName = 'Nom trop long';
     }
     if (!normalizedLoginName) {
@@ -293,16 +300,10 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
     <PageShell className="py-0" width="form">
       <PageCanvas contentClassName="space-y-5">
         <div className="relative w-full space-y-5">
-          <UsersAdminHero
+          <PageIdentityHero
             title={headerTitle}
             description={headerSubtitle}
-            icon={
-              createdUser ? (
-                <CheckCircle2 className="size-5" />
-              ) : (
-                <UserPlus className="size-5" />
-              )
-            }
+            icon={createdUser ? <CheckCircle2 /> : <UserPlus />}
             meta={
               createdUser ? (
                 <>
@@ -322,103 +323,109 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
           />
 
           {createdUser && temporaryPassword ? (
-            <Card className="border-border-content overflow-hidden rounded-lg py-0">
-              <CardHeader className="bg-surface-muted border-border-divider border-b p-3 sm:p-4">
-                <CardTitle aria-live="polite" className="text-sm" role="status">
-                  Compte créé
-                </CardTitle>
-                <CardDescription>
-                  Transmettez l&apos;identifiant et le mot de passe temporaire,
-                  puis complétez la fiche si nécessaire.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 p-3 sm:p-4">
-                <div className="grid gap-3 lg:grid-cols-[1fr_280px]">
-                  <SectionPanel
-                    titleAs="h3"
-                    icon={<KeyRound className="size-3.5" />}
-                    title="Mot de passe temporaire"
-                  >
-                    <div className="border-warning/25 bg-warning/10 rounded-md border p-3">
-                      <p className="text-muted-foreground mb-3 text-xs">
-                        À communiquer une seule fois. L&apos;utilisateur devra
-                        le changer à sa première connexion.
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <code className="border-border bg-surface-inset text-foreground min-w-0 flex-1 overflow-x-auto rounded-md border px-3 py-2 font-mono text-sm">
-                          {temporaryPassword}
-                        </code>
-                        <Button
-                          aria-label="Copier le mot de passe temporaire"
-                          onClick={() => void copyTemporaryPassword()}
-                          size="icon"
-                          type="button"
-                          variant="outline"
-                        >
-                          <Copy className="size-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </SectionPanel>
-                  <SectionPanel
-                    titleAs="h3"
-                    icon={<Shield className="size-3.5" />}
-                    title="Accès"
-                  >
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-start justify-between gap-3">
-                        <span className="text-muted-foreground">
-                          Identifiant
-                        </span>
-                        <code className="text-foreground min-w-0 text-right text-xs break-all">
-                          {createdUser.loginName}
-                        </code>
-                      </div>
-                      {createdUser.contactEmail && (
-                        <>
-                          <Separator className="bg-border/60" />
-                          <div className="flex items-start justify-between gap-3">
-                            <span className="text-muted-foreground">
-                              Contact
-                            </span>
-                            <span className="text-foreground min-w-0 text-right text-xs break-all">
-                              {createdUser.contactEmail}
-                            </span>
-                          </div>
-                        </>
-                      )}
-                      <Separator className="bg-border/60" />
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-muted-foreground">Rôle</span>
-                        <Badge
-                          variant={
-                            createdUser.role === UserRole.ADMIN
-                              ? 'default'
-                              : 'secondary'
-                          }
-                        >
-                          {createdUser.role === UserRole.ADMIN
-                            ? 'Administrateur'
-                            : 'Utilisateur'}
-                        </Badge>
-                      </div>
-                      <Separator className="bg-border/60" />
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-muted-foreground">
-                          Mot de passe
-                        </span>
-                        <Badge
-                          variant="outline"
-                          className="border-warning/40 text-warning"
-                        >
-                          À changer
-                        </Badge>
-                      </div>
-                    </div>
-                  </SectionPanel>
+            <Card>
+              <CardHeader className="p-3.5 sm:p-4">
+                <div className="flex items-start gap-3">
+                  <ServiceIcon className="border-success/30 bg-success/10 text-success size-8">
+                    <CheckCircle2 className="size-4" />
+                  </ServiceIcon>
+                  <div className="min-w-0">
+                    <CardTitle aria-live="polite" role="status">
+                      Compte créé
+                    </CardTitle>
+                    <CardDescription className="mt-1 text-xs leading-5">
+                      Transmettez l&apos;identifiant et le mot de passe
+                      temporaire, puis complétez la fiche si nécessaire.
+                    </CardDescription>
+                  </div>
                 </div>
+              </CardHeader>
+              <CardContent className="space-y-5 p-4 sm:p-5">
+                <section
+                  aria-labelledby="created-password-title"
+                  className="space-y-2"
+                >
+                  <FormSectionTitle id="created-password-title">
+                    Mot de passe temporaire
+                  </FormSectionTitle>
+                  <div className="border-warning/25 bg-warning/10 rounded-md border p-3">
+                    <p className="text-muted-foreground mb-3 text-xs">
+                      À communiquer une seule fois. L&apos;utilisateur devra le
+                      changer à sa première connexion.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <code className="border-border bg-surface-inset text-foreground min-w-0 flex-1 overflow-x-auto rounded-md border px-3 py-2 font-mono text-sm">
+                        {temporaryPassword}
+                      </code>
+                      <Button
+                        aria-label="Copier le mot de passe temporaire"
+                        onClick={() => void copyTemporaryPassword()}
+                        size="icon"
+                        type="button"
+                        variant="outline"
+                      >
+                        <Copy className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </section>
+                <Separator />
+                <section
+                  aria-labelledby="created-access-title"
+                  className="space-y-2"
+                >
+                  <FormSectionTitle id="created-access-title">
+                    Accès
+                  </FormSectionTitle>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-muted-foreground">Identifiant</span>
+                      <code className="text-foreground min-w-0 text-right text-xs break-all">
+                        {createdUser.loginName}
+                      </code>
+                    </div>
+                    {createdUser.contactEmail && (
+                      <>
+                        <Separator className="bg-border/60" />
+                        <div className="flex items-start justify-between gap-3">
+                          <span className="text-muted-foreground">Contact</span>
+                          <span className="text-foreground min-w-0 text-right text-xs break-all">
+                            {createdUser.contactEmail}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                    <Separator className="bg-border/60" />
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">Rôle</span>
+                      <Badge
+                        variant={
+                          createdUser.role === UserRole.ADMIN
+                            ? 'default'
+                            : 'secondary'
+                        }
+                      >
+                        {createdUser.role === UserRole.ADMIN
+                          ? 'Administrateur'
+                          : 'Utilisateur'}
+                      </Badge>
+                    </div>
+                    <Separator className="bg-border/60" />
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">
+                        Mot de passe
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className="border-warning/40 text-warning"
+                      >
+                        À changer
+                      </Badge>
+                    </div>
+                  </div>
+                </section>
               </CardContent>
-              <CardFooter className="bg-surface-muted border-border-divider flex flex-wrap gap-2 border-t p-4">
+              <CardFooter className="flex flex-wrap gap-2">
                 <Button asChild>
                   <Link
                     href={`${userDetailPath(createdUser.id)}?${new URLSearchParams({ returnTo: returnHref })}`}
@@ -440,26 +447,29 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
                 void handleCreateUser();
               }}
             >
-              <Card className="border-border-content overflow-hidden rounded-lg py-0">
-                <CardHeader className="bg-surface-muted border-border-divider border-b p-3 sm:p-4">
-                  <CardTitle className="text-sm">Création du compte</CardTitle>
-                  <CardDescription>
-                    Renseignez l&apos;identité, la connexion et le niveau
-                    d&apos;accès, puis transmettez les identifiants générés.
-                  </CardDescription>
+              <Card>
+                <CardHeader className="p-3.5 sm:p-4">
+                  <div className="flex items-start gap-3">
+                    <ServiceIcon className="border-primary/30 bg-primary/10 text-primary-emphasis size-8">
+                      <UserPlus className="size-4" />
+                    </ServiceIcon>
+                    <div className="min-w-0">
+                      <CardTitle>Création du compte</CardTitle>
+                      <CardDescription className="mt-1 text-xs leading-5">
+                        Renseignez l&apos;identité, la connexion et le niveau
+                        d&apos;accès, puis transmettez les identifiants générés.
+                      </CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-5 p-3 sm:p-4">
+                <CardContent className="space-y-5 p-4 sm:p-5">
                   <section
                     aria-labelledby="new-identity-title"
                     className="space-y-3"
                   >
-                    <h3
-                      id="new-identity-title"
-                      className="text-foreground flex items-center gap-2 text-sm font-semibold"
-                    >
-                      <User className="text-muted-foreground size-4" />
+                    <FormSectionTitle id="new-identity-title">
                       Identité
-                    </h3>
+                    </FormSectionTitle>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="space-y-1.5">
                         <Label
@@ -497,9 +507,8 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
                         <Label
                           htmlFor="newLastName"
                           className="text-muted-foreground text-xs"
-                          required
                         >
-                          Nom
+                          Nom <span className="font-normal">(facultatif)</span>
                         </Label>
                         <Input
                           aria-describedby={
@@ -534,13 +543,9 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
                     aria-labelledby="new-connection-title"
                     className="space-y-3"
                   >
-                    <h3
-                      id="new-connection-title"
-                      className="text-foreground flex items-center gap-2 text-sm font-semibold"
-                    >
-                      <AtSign className="text-muted-foreground size-4" />
+                    <FormSectionTitle id="new-connection-title">
                       Connexion
-                    </h3>
+                    </FormSectionTitle>
                     <div className="space-y-1.5">
                       <Label
                         htmlFor="newLoginName"
@@ -654,13 +659,9 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
                     aria-labelledby="new-access-title"
                     className="space-y-3"
                   >
-                    <h3
-                      id="new-access-title"
-                      className="text-foreground flex items-center gap-2 text-sm font-semibold"
-                    >
-                      <Shield className="text-muted-foreground size-4" />
+                    <FormSectionTitle id="new-access-title">
                       Accès
-                    </h3>
+                    </FormSectionTitle>
                     <div
                       aria-labelledby="new-access-title"
                       className="grid gap-2 sm:grid-cols-2"
@@ -689,7 +690,7 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
                     </div>
                   </section>
                 </CardContent>
-                <CardFooter className="bg-surface-muted border-border-divider flex flex-wrap items-center justify-between gap-3 border-t p-4">
+                <CardFooter className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-muted-foreground text-xs">
                     Le compte pourra être complété après création.
                   </p>
@@ -700,10 +701,7 @@ const NewUserContent: FC<{ returnHref: string }> = ({ returnHref }) => {
                     <Button
                       type="submit"
                       disabled={
-                        isCreating ||
-                        !form.firstName ||
-                        !form.lastName ||
-                        !form.loginName
+                        isCreating || !form.firstName || !form.loginName
                       }
                     >
                       {isCreating ? (

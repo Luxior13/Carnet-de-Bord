@@ -43,7 +43,7 @@ const getTargetUserForSessionManagement = async (
   role: UserRole;
   securityVersion: number;
 } | null> => {
-  return prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     select: {
       firstName: true,
       id: true,
@@ -55,6 +55,8 @@ const getTargetUserForSessionManagement = async (
     },
     where: { deletedAt: null, id },
   });
+
+  return user ? { ...user, lastName: user.lastName ?? '' } : null;
 };
 
 const getStableTargetRelationFilter = (

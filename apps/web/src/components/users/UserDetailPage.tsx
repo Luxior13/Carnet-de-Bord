@@ -541,11 +541,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         : editForm.firstName.trim().length > 50
           ? 'Prénom trop long'
           : null,
-      lastName: !editForm.lastName.trim()
-        ? 'Nom obligatoire'
-        : editForm.lastName.trim().length > 50
-          ? 'Nom trop long'
-          : null,
+      lastName: editForm.lastName.trim().length > 50 ? 'Nom trop long' : null,
       loginName: LOGIN_NAME_PATTERN.test(
         editForm.loginName.trim().toLowerCase(),
       )

@@ -19,8 +19,9 @@ Le tableau « Comptes utilisateurs » est la référence approuvée : surfaces g
 bleuté, bandeau de colonnes plus clair, alternance de lignes sombres, bordures
 fines et badges de statut lisibles. Cette hiérarchie se décline selon l'usage :
 
-- En-têtes de page : titre directement sur le fond de page, description et
-  actions, puis séparateur fin. Aucun grand panneau, bandeau coloré ou ombre.
+- En-têtes de page : `PageIdentityHero` (dégradé `--surface-hero-start →
+  --surface-hero-end`, bordure `--border-hero`, rayon 10 px), identique sur
+  les pages de référence. Ne plus introduire de variante de bandeau locale.
 - En-têtes de section : fond uni `surface-panel-header`, comme les colonnes du
   tableau de référence. Ils restent distincts du titre de page.
 - Corps de cartes et fenêtres : `surface-panel`, sans grande ombre décorative.
@@ -41,6 +42,21 @@ fines et badges de statut lisibles. Cette hiérarchie se décline selon l'usage 
   bleu ardoise, partagés entre sidebar, rail de fiche, onglets et pagination.
 - Icônes génériques et badges descriptifs : neutres. Les couleurs restent utiles
   pour les statuts, les pôles, les actions principales, l'épinglage et le non-lu.
+
+### Règle de réutilisation (2026-10-10)
+
+Toute page nouvelle ou modifiée réutilise les composants de référence au lieu
+de variantes anciennes ou locales : `PageIdentityHero`, `DataTableSection` +
+`directory.module.css`, `PageAsideLayout`, `TooltipContent` partagé, et les
+primitives `Input`, `Select`, `Button`, `Badge`, `Card`. `globals.css` reste la
+source unique des tokens ; aucune couleur en dur dans les composants.
+
+À migrer quand les pages concernées sont retouchées : `UsersAdminHero` (fiche
+utilisateur), `PageHero` avec `tone` (dashboard, actualités, compte,
+`EntityDetailLayout`, création de fiche) et les modules CSS de page locaux.
+Les routes canoniques sont `/membres/repertoire` et `/systeme/utilisateurs` ;
+ne plus créer de lien vers les anciens alias (`/personnes`,
+`/vie-interne/*`, `/administration/*`).
 
 Les mêmes jetons produisent une famille visuelle commune ; la densité et la
 structure restent adaptées au contenu de chaque écran.

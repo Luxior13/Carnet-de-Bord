@@ -353,7 +353,7 @@ const createUserSchema = z
   .object({
     contactEmail: optionalEmailSchema,
     firstName: trimmedStringMinMax(1, 50, 'Prénom requis', 'Prénom trop long'),
-    lastName: trimmedStringMinMax(1, 50, 'Nom requis', 'Nom trop long'),
+    lastName: trimmedStringMinMax(0, 50, undefined, 'Nom trop long'),
     loginName: loginNameSchema,
     role: z.enum(['ADMIN', 'USER']),
   })

@@ -31,7 +31,7 @@ type RootRow = {
   firstName: string;
   id: string;
   isActive: boolean;
-  lastName: string;
+  lastName: string | null;
   lockedUntil: Date | null;
   loginName: string;
   mfaEnabledAt: Date | null;
@@ -278,7 +278,7 @@ try {
             severity: AuditSeverity.CRITICAL,
             stream: AuditStream.SECURITY,
             targetDisplayNameSnapshot:
-              `${root.firstName.trim()} ${root.lastName.trim()}`.trim() ||
+              `${root.firstName.trim()} ${root.lastName?.trim() ?? ''}`.trim() ||
               root.loginName,
             targetLoginNameSnapshot: root.loginName,
             targetRoleSnapshot: root.role,
