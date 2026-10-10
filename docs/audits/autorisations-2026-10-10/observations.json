@@ -1,0 +1,187 @@
+{
+  "date": "2026-10-10",
+  "environment": "Composants React réels, Chromium isolé, CSS projet ; acteur et brouillon simulés ; aucune API/base ; police de repli",
+  "scenarios": [
+    {
+      "width": 320,
+      "scenario": "normal",
+      "passed": true
+    },
+    {
+      "width": 320,
+      "scenario": "admin",
+      "passed": true
+    },
+    {
+      "width": 320,
+      "scenario": "blocked",
+      "passed": true
+    },
+    {
+      "width": 320,
+      "scenario": "readonly",
+      "passed": true
+    },
+    {
+      "width": 320,
+      "scenario": "grant-only",
+      "passed": true
+    },
+    {
+      "width": 320,
+      "scenario": "no-mfa",
+      "passed": true
+    },
+    {
+      "width": 320,
+      "scenario": "protected",
+      "passed": true
+    },
+    {
+      "width": 320,
+      "scenario": "transverse",
+      "passed": true
+    },
+    {
+      "width": 320,
+      "scenario": "account",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "scenario": "normal",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "scenario": "admin",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "scenario": "blocked",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "scenario": "readonly",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "scenario": "grant-only",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "scenario": "no-mfa",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "scenario": "protected",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "scenario": "transverse",
+      "passed": true
+    },
+    {
+      "width": 390,
+      "scenario": "account",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "scenario": "normal",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "scenario": "admin",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "scenario": "blocked",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "scenario": "readonly",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "scenario": "grant-only",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "scenario": "no-mfa",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "scenario": "protected",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "scenario": "transverse",
+      "passed": true
+    },
+    {
+      "width": 768,
+      "scenario": "account",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "scenario": "normal",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "scenario": "admin",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "scenario": "blocked",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "scenario": "readonly",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "scenario": "grant-only",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "scenario": "no-mfa",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "scenario": "protected",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "scenario": "transverse",
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "scenario": "account",
+      "passed": true
+    }
+  ],
+  "errors": []
+}

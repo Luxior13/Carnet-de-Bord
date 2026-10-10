@@ -1,0 +1,167 @@
+{
+  "date": "2026-10-10",
+  "completedDate": "2026-10-11",
+  "environment": "Chromium isolé, composants et CSS réels, React StrictMode, shell/session et API simulés, police Arial de substitution",
+  "results": [
+    {
+      "width": 320,
+      "scenario": "drafts-validation-conflicts-focus",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "layout-keyboard-navigation",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "password-cancel-and-resume",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "revoked-confirmation",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "switched-account-pending-write",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "refresh-failure-and-recovery",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "double-submit-and-waiting",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "initial-error-and-protected-access",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "drafts-validation-conflicts-focus",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "layout-keyboard-navigation",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "password-cancel-and-resume",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "revoked-confirmation",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "switched-account-pending-write",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "refresh-failure-and-recovery",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "double-submit-and-waiting",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "initial-error-and-protected-access",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "drafts-validation-conflicts-focus",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "layout-keyboard-navigation",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "password-cancel-and-resume",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "revoked-confirmation",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "switched-account-pending-write",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "refresh-failure-and-recovery",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "double-submit-and-waiting",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "initial-error-and-protected-access",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "drafts-validation-conflicts-focus",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "layout-keyboard-navigation",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "password-cancel-and-resume",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "revoked-confirmation",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "switched-account-pending-write",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "refresh-failure-and-recovery",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "double-submit-and-waiting",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "initial-error-and-protected-access",
+      "result": "passed"
+    }
+  ]
+}

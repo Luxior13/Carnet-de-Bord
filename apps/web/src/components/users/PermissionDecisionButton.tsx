@@ -47,6 +47,7 @@ export const PermissionDecisionButton: FC<PermissionDecisionButtonProps> = ({
           <Button
             className={className}
             disabled={!decision.allowed}
+            aria-hidden={exposeDisabledReason || undefined}
             onClick={onClick}
             size={size}
             tabIndex={concealed ? -1 : undefined}

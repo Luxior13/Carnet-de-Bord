@@ -1728,6 +1728,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
             canManagePermissions={canManageTargetAccessPermissions}
             canRevokePermissions={canRevokeTargetAccessPermissions}
             mutationSummary={accessMutationAnalysis?.summary ?? null}
+            saveDisabledReason={accessMutationAnalysis?.decision.reason}
             isSaving={isSavingPermissions || mutation.isRefreshing}
             permissionPageKey={permissionPageKey}
             onPermissionPageChange={handlePermissionPageChange}

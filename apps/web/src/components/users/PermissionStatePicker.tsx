@@ -60,7 +60,7 @@ export const PermissionStatePicker: FC<PermissionStatePickerProps> = memo(
     return (
       <div className="flex min-w-0 items-center gap-1.5">
         <div
-          className="border-border/70 bg-surface-control grid min-w-0 flex-1 grid-cols-2 gap-1 rounded-lg border p-1 sm:min-w-[12.5rem] sm:flex-none"
+          className="border-border-control bg-surface-inset grid min-w-0 flex-1 grid-cols-2 gap-1 rounded-[6px] border p-1 sm:min-w-[12.5rem] sm:flex-none"
           role="group"
           aria-label={`Choix de l’autorisation ${permissionLabel}`}
         >
@@ -81,6 +81,9 @@ export const PermissionStatePicker: FC<PermissionStatePickerProps> = memo(
                       decision.allowed ? undefined : descriptionId
                     }
                     aria-disabled={!decision.allowed}
+                    aria-pressed={
+                      decision.allowed ? undefined : state === option.value
+                    }
                     aria-label={
                       decision.allowed
                         ? undefined
@@ -95,18 +98,17 @@ export const PermissionStatePicker: FC<PermissionStatePickerProps> = memo(
                       variant="ghost"
                       size="sm"
                       disabled={!decision.allowed}
+                      aria-hidden={!decision.allowed || undefined}
                       onClick={() => onChange(option.value)}
                       className={cn(
-                        'h-8 w-full rounded-md border px-2 text-xs font-medium',
+                        'h-8 w-full rounded-[4px] border px-2 text-xs font-medium',
                         getStateButtonClassName(option.value, state),
                       )}
                       aria-pressed={state === option.value}
                       aria-label={`${option.label} ${permissionLabel}`}
                     >
                       <OptionIcon className="size-3.5" />
-                      <span className="ml-1 hidden sm:inline">
-                        {option.label}
-                      </span>
+                      <span className="ml-1">{option.label}</span>
                     </Button>
                   </span>
                 </TooltipTrigger>
@@ -141,6 +143,7 @@ export const PermissionStatePicker: FC<PermissionStatePickerProps> = memo(
                 variant="ghost"
                 size="icon"
                 disabled={!resetDecision.allowed}
+                aria-hidden={!resetDecision.allowed || undefined}
                 onClick={onReset}
                 className="text-muted-foreground hover:text-foreground size-9"
                 aria-label={`Revenir au rôle pour ${permissionLabel}`}

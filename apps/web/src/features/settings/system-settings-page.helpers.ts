@@ -20,7 +20,7 @@ export type NormalizedSystemSettingItem = Omit<SystemSettingItem, 'value'> & {
 const SETTING_PRESENTATION = {
   'audit.retentionDays': {
     impact:
-      'Tous les événements du journal sont concernés : connexions, sécurité, administration et modifications des personnes, avec leurs détails.',
+      'Cette durée couvre les connexions, la sécurité, l’administration et l’historique des personnes. Supprimer un événement supprime aussi les détails des changements associés.',
   },
 } as const satisfies Record<SystemSettingKey, SettingPresentation>;
 
@@ -31,7 +31,7 @@ export const SECTION_DEFINITIONS: ReadonlyArray<{
 }> = [
   {
     description:
-      'Durées globales appliquées lors des prochaines exécutions de maintenance.',
+      'La durée enregistrée s’applique au prochain nettoyage de maintenance. Enregistrer ne déclenche aucune suppression immédiate.',
     id: 'retention',
     title: 'Conservation des données',
   },

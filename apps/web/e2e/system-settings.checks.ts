@@ -163,7 +163,7 @@ export async function expectSystemSettingsDraftSafety(
     await expect(
       page.getByRole('button', { name: /^Enregistrer/ }),
     ).toHaveCount(0);
-    await expect(auditRow.getByText(/1\s095 jours/)).toBeVisible();
+    await expect(auditRow.getByText(/^1\s095 jours$/)).toBeVisible();
     await edit.focus();
     await edit.press('Enter');
     await expect(input).toHaveValue('1095');
@@ -240,7 +240,16 @@ export async function expectSystemSettingsDraftSafety(
       .getByRole('button', { name: 'Conserver la durée actuelle' })
       .click();
     await expect(input).toHaveValue('730');
+    await expect(input).toBeFocused();
     expect(writes).toHaveLength(writeCount);
+    await page.getByRole('button', { exact: true, name: 'Actualiser' }).click();
+    await page
+      .getByRole('button', { name: 'Continuer la modification' })
+      .click();
+    await expect(
+      page.getByRole('button', { exact: true, name: 'Actualiser' }),
+    ).toBeFocused();
+    await expect(input).toHaveValue('730');
     await auditRow
       .getByRole('button', { exact: true, name: 'Annuler' })
       .click();
@@ -273,6 +282,29 @@ export async function expectSystemSettingsDraftSafety(
     await expect(
       auditRow.getByText('730 jours', { exact: true }),
     ).toBeVisible();
+
+    // Two submit events in the same task must start only one mutation, before
+    // React has had time to render the disabled controls.
+    const countBeforeDoubleSubmit = writes.length;
+    writeGate = new Promise<void>((resolve) => {
+      finishWrite = resolve;
+    });
+    await edit.click();
+    await input.fill('731');
+    await auditRow.evaluate((form) => {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        form.dispatchEvent(
+          new Event('submit', { bubbles: true, cancelable: true }),
+        );
+      }
+    });
+    await expect.poll(() => writes.length).toBe(countBeforeDoubleSubmit + 1);
+    await expect(input).toBeDisabled();
+    await expect(auditRow).toHaveAttribute('aria-busy', 'true');
+    finishWrite();
+    writeGate = undefined;
+    await expect(edit).toBeVisible();
+    expect(writes).toHaveLength(countBeforeDoubleSubmit + 1);
   } finally {
     finishWrite();
     await page.unroute(endpoint);

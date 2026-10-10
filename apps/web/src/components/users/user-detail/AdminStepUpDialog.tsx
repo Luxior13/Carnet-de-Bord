@@ -22,6 +22,9 @@ type AdminStepUpDialogProps = {
   actorLoginName: string;
   description: string;
   onCancel: () => void;
+  onCloseAutoFocus?: React.ComponentProps<
+    typeof DialogContent
+  >['onCloseAutoFocus'];
   onComplete: (result: AdminStepUpResult) => Promise<void> | void;
   onProofKindRequired?: (proofKind: AdminStepUpKind) => void;
   open: boolean;
@@ -42,6 +45,7 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
   actorLoginName,
   description,
   onCancel,
+  onCloseAutoFocus,
   onComplete,
   onProofKindRequired,
   open,
@@ -163,7 +167,10 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
         if (!isOpen && !submissionInFlightRef.current) onCancel();
       }}
     >
-      <DialogContent className="p-0 sm:max-w-lg">
+      <DialogContent
+        className="p-0 sm:max-w-lg"
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
         <div className="bg-primary h-1" />
         <div className="p-6">
           <DialogHeader>

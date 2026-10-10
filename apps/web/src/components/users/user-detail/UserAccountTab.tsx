@@ -2,7 +2,6 @@
 
 import { UserRole } from '@repo/shared';
 import {
-  ChevronDown,
   Crown,
   Loader2,
   LockKeyhole,
@@ -12,6 +11,7 @@ import {
 } from 'lucide-react';
 import React, { type FC, useMemo } from 'react';
 
+import { Disclosure } from '$components/layout/Disclosure';
 import {
   ACCOUNT_PERMISSION_CATEGORIES,
   getAccessLabel,
@@ -25,11 +25,6 @@ import type { UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '$ui/collapsible';
 import { Switch } from '$ui/switch';
 
 type UserAccountTabProps = {
@@ -155,9 +150,9 @@ const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
   onChange,
   permission,
 }) => (
-  <div className="bg-surface-control/60 ring-border/50 rounded-lg p-3 ring-1 ring-inset sm:p-4">
+  <div className="border-border-divider bg-surface-content rounded-[6px] border p-3">
     <div className="max-w-3xl min-w-0 space-y-1">
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 items-center justify-between gap-3">
         <h3 className="text-foreground text-sm font-semibold">
           {permission.label}
         </h3>
@@ -181,7 +176,7 @@ const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
         className="flex min-h-5 items-center"
       >
         {hasCustomChoice ? (
-          <Badge variant="secondary" className="h-5 rounded-full px-2 text-xs">
+          <Badge variant="secondary" className="h-5 px-2 text-xs">
             Exception personnalisée
           </Badge>
         ) : (
@@ -232,6 +227,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
     permissionKey: string,
     enabled: boolean,
   ): void => {
+    if (!canManagePermissions || isSaving) return;
     if (ACCOUNT_PERMISSION_ITEM_MAP.get(permissionKey)?.alwaysEnabled) return;
 
     const nextPermissionsMap = new Map(permissionsMap);
@@ -269,6 +265,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
   };
 
   const handleResetPersonalPermissions = (): void => {
+    if (!canManagePermissions || isSaving) return;
     const nextPermissionsMap = new Map(permissionsMap);
 
     for (const permissionKey of accountPermissionKeys) {
@@ -298,7 +295,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
                   {getAccessLabel(user)}
                 </Badge>
               </div>
-              <p className="text-muted-foreground mt-1 max-w-3xl text-sm leading-6">
+              <p className="text-muted-foreground mt-1 max-w-3xl text-xs leading-5">
                 Le super-administrateur dispose automatiquement de toutes les
                 actions personnelles. Son autonomie ne peut pas être restreinte.
               </p>
@@ -314,12 +311,12 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
       <CardHeader className="p-3.5 sm:p-4">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
-            <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-10 shrink-0 items-center justify-center rounded-lg border">
+            <span className="text-muted-foreground flex size-8 shrink-0 items-center justify-center">
               <UserCheck className="size-5" />
             </span>
             <div className="min-w-0">
               <h2
-                className="text-foreground text-base font-semibold"
+                className="text-foreground text-sm font-semibold"
                 id="account-autonomy-title"
               >
                 Autonomie du compte
@@ -331,13 +328,13 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
             </div>
           </div>
           {!canManagePermissions && (
-            <Badge className="w-fit shrink-0 rounded-full" variant="secondary">
+            <Badge className="w-fit shrink-0" variant="secondary">
               Lecture seule
             </Badge>
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 p-4 sm:p-5">
+      <CardContent className="space-y-3 p-3 sm:p-4">
         <section aria-label="Options configurables">
           <div className="space-y-2">
             {CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.map((permission) => (
@@ -366,41 +363,28 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
           </div>
         </section>
 
-        <Collapsible className="group">
-          <CollapsibleTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="inline"
-              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/40 -mx-1 flex min-h-10 w-full items-center gap-2 rounded-md px-1 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
-            >
-              <LockKeyhole className="size-3.5 shrink-0" />
-              <span className="min-w-0 flex-1 text-sm font-medium">
-                Voir les droits essentiels
-              </span>
-              <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="border-border/55 bg-surface-muted/50 mt-2 rounded-lg border p-3">
-              <p className="text-muted-foreground text-xs leading-5">
-                Ces actions restent disponibles et ne peuvent pas être retirées.
-              </p>
-              <ul className="mt-3 grid gap-x-6 gap-y-3 sm:grid-cols-2">
-                {ESSENTIAL_ACCOUNT_PERMISSION_ITEMS.map((permission) => (
-                  <li key={permission.key} className="min-w-0">
-                    <p className="text-foreground text-sm font-medium">
-                      {permission.label}
-                    </p>
-                    <p className="text-muted-foreground mt-0.5 text-xs leading-5">
-                      {permission.description}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        <Disclosure
+          label="Voir les droits essentiels"
+          icon={<LockKeyhole className="size-3.5" />}
+        >
+          <div className="border-border/55 bg-surface-muted/50 mt-2 rounded-lg border p-3">
+            <p className="text-muted-foreground text-xs leading-5">
+              Ces actions restent disponibles et ne peuvent pas être retirées.
+            </p>
+            <ul className="mt-3 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+              {ESSENTIAL_ACCOUNT_PERMISSION_ITEMS.map((permission) => (
+                <li key={permission.key} className="min-w-0">
+                  <p className="text-foreground text-sm font-medium">
+                    {permission.label}
+                  </p>
+                  <p className="text-muted-foreground mt-0.5 text-xs leading-5">
+                    {permission.description}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Disclosure>
       </CardContent>
       {canManagePermissions && (hasChanges || hasConfigurableOverrides) && (
         <CardFooter className="flex-col items-stretch justify-between gap-3 p-3 sm:flex-row sm:items-center">

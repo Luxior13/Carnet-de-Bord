@@ -115,6 +115,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
 
   return (
     <form
+      aria-busy={isSaving || undefined}
       aria-labelledby={`${id}-title`}
       className="p-4 @min-[40rem]/page:p-5"
       data-setting-key={setting.key}
@@ -152,6 +153,13 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
           >
             {presentation.impact}
           </p>
+          {!editing && (
+            <p className="text-muted-foreground text-xs leading-5">
+              Entre {formatSettingValue(definition.min, definition.unit)} et{' '}
+              {formatSettingValue(definition.max, definition.unit)}. Défaut :{' '}
+              {formatSettingValue(definition.defaultValue, definition.unit)}.
+            </p>
+          )}
           {(dirty || setting.version > 0) && (
             <p className="text-muted-foreground text-xs leading-5">
               {dirty
@@ -174,7 +182,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
                 <Button
                   aria-controls={id}
                   aria-label={`Diminuer d’un jour — ${definition.label}`}
-                  className={`${stepButtonClass} rounded-l-[8px] rounded-r-none`}
+                  className={`${stepButtonClass} rounded-l-[6px] rounded-r-none`}
                   disabled={!canStep || parsed === definition.min}
                   onClick={() => stepDuration(-1)}
                   size="icon"
@@ -184,7 +192,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
                   <Minus aria-hidden="true" className="size-4" />
                 </Button>
                 <Input
-                  aria-describedby={`${id}-help ${id}-impact${validation ? ` ${id}-validation` : ''}`}
+                  aria-describedby={`${id}-help ${id}-impact${validation ? ` ${id}-validation` : ''}${error ? ` ${id}-error` : ''}${conflict !== 'none' ? ` ${id}-conflict` : ''}`}
                   aria-invalid={validation ? true : undefined}
                   className="h-11 min-w-0 flex-1 [appearance:textfield] rounded-none border-x-0 px-2 text-center tabular-nums focus-visible:relative focus-visible:z-10 lg:h-10 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   disabled={disabled}
@@ -202,7 +210,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
                 <Button
                   aria-controls={id}
                   aria-label={`Augmenter d’un jour — ${definition.label}`}
-                  className={`${stepButtonClass} rounded-l-none rounded-r-[8px]`}
+                  className={`${stepButtonClass} rounded-l-none rounded-r-[6px]`}
                   disabled={!canStep || parsed === definition.max}
                   onClick={() => stepDuration(1)}
                   size="icon"
@@ -278,7 +286,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
                       className="size-4 animate-spin"
                     />
                   )}
-                  Enregistrer
+                  {isSaving ? 'Enregistrement…' : 'Enregistrer'}
                 </Button>
               </div>
             </div>
@@ -297,6 +305,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
               <Button
                 aria-label={`Modifier — ${definition.label}`}
                 className={actionClass}
+                data-setting-edit
                 disabled={disabled}
                 onClick={onEdit}
                 ref={editButtonRef}
@@ -319,6 +328,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
       {conflict !== 'none' && (
         <div
           className="border-warning/40 mt-4 space-y-2 rounded-[8px] border p-3"
+          id={`${id}-conflict`}
           role="alert"
         >
           <p className="text-warning text-sm font-medium">
@@ -370,7 +380,11 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
         </div>
       )}
       {error && (
-        <p className="text-destructive mt-3 text-sm leading-6" role="alert">
+        <p
+          className="text-destructive mt-3 text-sm leading-6"
+          id={`${id}-error`}
+          role="alert"
+        >
           {error}
         </p>
       )}

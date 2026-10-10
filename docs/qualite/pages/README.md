@@ -12,8 +12,8 @@ les parcours authentifiés restent suivis page par page.
 | --- | --- | --- |
 | Accueil / Mon travail | [accueil.md](accueil.md) | Salutation livrée ; vues métier futures ; parcours privé à vérifier |
 | Connexion | [connexion.md](connexion.md) | Affichage anonyme vérifié le 10 octobre ; parcours authentification/MFA complet à vérifier |
-| Utilisateurs — liste, création et fiche | [systeme-utilisateurs.md](systeme-utilisateurs.md) | Liste, création et fiche corrigées sur Next/PostgreSQL isolés ; USR-D01 à USR-D08 vérifiés, synthèse USR-D09 compactée ; 1 036 tests réussis, 25 ignorés ; retouche suivante des champs à 6 px vérifiée séparément ; limites détaillées dans le suivi |
-| Paramètres système | [systeme-parametres.md](systeme-parametres.md) | Un réglage : conservation du journal ; documentation réconciliée le 10 octobre, essais de septembre historiques |
+| Utilisateurs — liste, création et fiche | [systeme-utilisateurs.md](systeme-utilisateurs.md) | Liste, création et fiche corrigées sur Next/PostgreSQL isolés ; USR-D01 à USR-D08 vérifiés, synthèse USR-D09 compactée ; 1 036 tests réussis, 25 ignorés ; champs à 6 px, puis onglet Autorisations refondu et contrôlé sur 36 combinaisons navigateur isolé ; limites détaillées dans le suivi |
+| Paramètres système | [systeme-parametres.md](systeme-parametres.md) | Un réglage : conservation du journal ; parcours et présentation corrigés les 10–11 octobre, 32 scénarios navigateur isolé réussis ; session et purge réelles non rejouées |
 | Feuille de route | [systeme-feuille-de-route.md](systeme-feuille-de-route.md) | Catalogue de 39 chantiers ; matrice réconciliée avec le code, parcours privé à vérifier |
 | Journal d’activité | [systeme-journal-activite.md](systeme-journal-activite.md) | Page retirée le 9 octobre 2026, replanifiée ; suivi conservé comme historique |
 | Navigation générale — sidebar et header | [navigation-generale.md](navigation-generale.md) | Trois pôles actifs, sidebar fixe et navigation rapide ; notifications retirées ; synthèse du 10 octobre et limites explicites |

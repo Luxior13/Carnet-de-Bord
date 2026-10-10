@@ -240,6 +240,12 @@ historiques ; cette ancienne échelle ne remplace pas les règles courantes.
   et texte de 12 px, espacées de 4 px. Ne pas leur appliquer `quietField` ni
   recopier ces règles dans un formulaire. La largeur reste adaptée à la composition
   (220 px dans les filtres desktop, largeur du champ dans la fiche).
+- L'onglet Autorisations des Utilisateurs réutilise aussi cette variante pour
+  rôle, pôle et page/fonction. Ses rubriques présentent des lignes alternées,
+  avec actions alignées lorsque la largeur du composant le permet, puis empilées.
+  Les libellés Autoriser/Refuser restent visibles sur mobile. Une autorisation
+  refusée n'impose pas un fond rouge à toute sa ligne ; la couleur signale le
+  choix, le risque ou un prérequis manquant.
 - Les compositions de référence définissent aussi des dimensions ciblées :
   bandeau et carte de liste à 10 px, contrôles du module `directory` à 6 px,
   infobulle à 7 px, case à cocher à 4 px et flèche d'infobulle à 2 px.

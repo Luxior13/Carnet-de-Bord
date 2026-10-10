@@ -5,9 +5,11 @@
 - Route : `/systeme/parametres`, module `features/settings`.
 - Public : administrateurs autorisés à consulter et modifier la configuration globale.
 - État documentaire réconcilié le 10 octobre 2026 : seul `audit.retentionDays` reste actif.
-- Dernière revue détaillée du parcours : 27 septembre 2026 ; ses essais décrivent
-  cette version. Aucune nouvelle validation de purge ou session réelle dans la
-  présente réconciliation. Les limites et points ouverts figurent ci-dessous.
+- Dernière revue : 10–11 octobre 2026 — parcours et présentation corrigés,
+  32 scénarios Chromium isolé et 1 043 tests web réussis (25 ignorés).
+  Voir le [rapport et les limites](../../audits/AUDIT_PARAMETRES_2026-10-11.md).
+  Les essais de septembre restent historiques ; aucune purge réelle ni session
+  authentifiée de bout en bout n'a été rejouée pendant cette nouvelle passe.
 - Références : [revue générale](../REVUE_GENERALE.md),
   [design system](../../references/DESIGN_SYSTEM.md), [navigation](../../references/NAVIGATION.md),
   [permissions](../../references/PERMISSIONS.md), [exploitation](../../references/OPERATIONS.md).
@@ -49,14 +51,20 @@ restent relues en base avant utilisation.
 
 ### Composition retenue
 
-- Titre simple, description courte « Réglages globaux de Noctambule. » et Actualiser secondaire.
+- Bandeau partagé `PageIdentityHero`, description courte « Réglages globaux de
+  Noctambule. » et Actualiser secondaire, suivant le Répertoire.
 - Un panneau compact : Conservation des données, avec le réglage du journal.
-- Fond `surface-panel-raised`, bleu de la famille de la sidebar ; rayons locaux
-  de 8 px, pas d'ombre sur les panneaux ni de hero décoratif.
+- Corps `surface-panel`, en-tête `surface-panel-header`, bordures communes,
+  panneau et confirmations à 10 px. Boutons partagés à 8 px ; extrémités du
+  contrôle numérique à 6 px, centre jointif à 0 px avec le focus commun de l'Input.
+  Pas d'ombre sur les panneaux ni de nouvelle palette locale.
 - Explication à gauche, champ/unité/action à droite quand la largeur le permet ;
   empilement sur petit écran. Sidebar et géométrie globale inchangées.
 - Au repos : durée appliquée lisible et bouton Modifier par réglage pour les
   administrateurs autorisés. Aucun champ ou bouton Enregistrer permanent.
+- Bornes et défaut sont aussi visibles au repos. Le texte précise que la durée
+  concerne l'historique des personnes et les détails associés ; l'enregistrement
+  ne déclenche pas de suppression immédiate.
 - Modifier ouvre la saisie et place le focus dans le champ. Annuler reste disponible
   même sans changement ; il abandonne ce seul brouillon et referme son édition.
   Un succès confirmé referme le réglage ; erreur, conflit et confirmation annulée
@@ -89,18 +97,31 @@ restent relues en base avant utilisation.
 
 ### Intégrité et erreurs
 
+- Les états, brouillons et confirmations appartiennent au compte autorisé courant.
+  Un changement de compte ou de capacité d'édition les réinitialise ; la perte
+  d'accès démonte le contenu et ses dialogues. Les lectures et écritures en cours
+  sont interrompues côté navigateur et leurs réponses tardives ignorées. Cela
+  n'annule pas une mutation que le serveur aurait déjà exécutée.
+- Un verrou synchrone empêche deux opérations concurrentes du même écran, y compris
+  deux soumissions avant le prochain rendu. La lecture d'un conflit fait partie
+  de l'opération de sauvegarde, sans remplacer les brouillons.
 - Un conflit ne remplace aucun brouillon. Seule la valeur/version appliquée du
   réglage concerné est relue. Choix explicite : utiliser la valeur actuelle ou
   conserver la saisie, puis enregistrer. Si la relecture échoue, seule une
   nouvelle lecture permet de débloquer cette sauvegarde.
 - Les erreurs de sauvegarde restent dans le réglage et les saisies sont conservées.
   Les succès gardent leur toast ; aucun nouvel événement de notification.
+- Erreur et conflit sont reliés au champ par `aria-describedby`. Le formulaire
+  annonce l'attente et le bouton affiche « Enregistrement… ».
 - Une même comparaison numérique pilote le garde de navigation et la sauvegarde :
   `025` et `25` ne créent plus un faux changement ; une saisie invalide reste protégée.
 - Entrée soumet le réglage. Le focus revient à Modifier après annulation ou succès,
   et au champ après restauration du défaut ou résolution du conflit. Une
   actualisation réussie referme les éditions ; le bouton Actualiser garde le focus
   pendant la lecture, reste annoncé occupé et ignore les activations répétées.
+- Après fermeture d'une confirmation de réduction ou de mot de passe, le focus
+  revient au champ disponible, ou à Modifier après sauvegarde. La confirmation
+  d'actualisation revient à Actualiser ; Rester rend le focus au lien de départ.
 - La purge du journal contrôle sa durée sous verrou dans sa procédure SQL ;
   l’enregistrement ne lance pas la purge. Les règles d’exploitation sont dans
   [OPERATIONS](../../references/OPERATIONS.md). Le verrou de purge des notifications
@@ -167,7 +188,17 @@ Références d'implémentation examinées :
 [écriture de l'historique personne](../../../apps/web/src/features/persons/server/person-audit.ts),
 [lecture de cet historique](../../../apps/web/src/features/persons/server/person-history.service.ts).
 
-## Sélection des sujets
+## Vérification du 11 octobre 2026
+
+La passe courante et sa sélection Q01–Q30 sont dans le rapport lié en tête.
+32 scénarios Chromium isolé réussis, 1 043 tests web réussis et 25 ignorés ;
+types, lint et budget d'architecture réussis. `bun run docs:check` valide
+180 fichiers et 1 002 liens locaux/index ; `git diff --check` ne relève pas
+d'erreur d'espacement. Les cinq constats SET-01 à SET-05 du rapport sont clos
+sur leur périmètre vérifié. Session réelle, purge, restauration et qualification
+des finalités restent les limites explicites de la revue.
+
+## Sélection des sujets — historique du 27 septembre
 
 Cette sélection, la résolution des constats et les contrôles qui suivent décrivent
 la passe du 27 septembre. Leurs mentions de deux durées et de notifications restent

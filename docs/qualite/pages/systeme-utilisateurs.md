@@ -480,6 +480,34 @@ est extrait de `directory.module.css` pour être partagé avec les fiches du
 Répertoire. Rendu calculé et ouverture/fermeture vérifiés à 320, 390, 768 et
 1 440 px dans le banc du [complément Répertoire](../../audits/AUDIT_MENUS_2026-10-10.md#complément--présentation-des-sélecteurs-du-répertoire).
 
+### Autorisations — revue dédiée du 10 octobre 2026
+
+L'onglet administratif et Compte personnel ont été analysés et harmonisés avec
+la référence Répertoire. Éditeur en lignes alternées par rubrique, rôle et
+sélecteurs partagés, largeur adaptée au composant, descriptions complètes,
+libellés de choix visibles sur mobile. La lecture seule est descriptive.
+
+Décisions courantes :
+
+- Distinguer réglage configuré et accès réellement utilisable ; expliquer les
+  dépendances qui bloquent un réglage autorisé et les exclure du compteur utilisable.
+- Afficher uniquement les trois pages livrées et les pôles Membres/Système.
+  Conserver les droits transverses dans « Historique et provenance », sans
+  prétendre qu'ils donnent accès à une page Journal actuellement prévue.
+- Présenter les cascades et changements de rôle dans un détail avant sauvegarde,
+  avec la conséquence sur les sessions et la raison d'un lot interdit.
+- Pendant l'enregistrement, verrouiller les réglages concernés. Annulation,
+  scopes administratif/personnel, preuves récentes, version et contrôles serveur
+  existants sont conservés. Aucun droit réel de compte n'a été modifié par l'audit.
+- Compte personnel reprend le dépliage partagé des droits essentiels ; sa
+  réinitialisation laisse les autorisations administratives intactes.
+
+USR-A01 à USR-A05 corrigés et vérifiés sur les composants : **36 combinaisons
+Chromium**, neuf situations à quatre largeurs. Mutation serveur réelle, lecteur
+d'écran et appareils physiques non rejoués. Les constats, commandes, captures,
+limites et la dette du catalogue historique sont dans le
+[rapport dédié](../../audits/AUDIT_AUTORISATIONS_UTILISATEUR_2026-10-10.md).
+
 ### Analyse initiale
 
 Voir le [rapport daté](../../audits/AUDIT_UTILISATEURS_2026-10-10.md) pour la

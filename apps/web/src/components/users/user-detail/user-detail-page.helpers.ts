@@ -1,3 +1,4 @@
+import { PERMISSION_EDITOR_CATEGORIES } from '$components/users/permission-editor-view';
 import {
   DEFAULT_USER_HISTORY_FILTERS,
   type UserHistoryFilters,
@@ -6,7 +7,6 @@ import { FEATURES } from '$constants/feature-registry.constants';
 import {
   getAccessPermissionKeys,
   getAccountPermissionKeys,
-  PERMISSION_CATEGORIES,
   type PermissionsData,
 } from '$constants/permissions.constants';
 import type { GuardedNavigationAction } from '$utils/guarded-navigation.utils';
@@ -27,7 +27,7 @@ export type UserDetailPendingNavigation =
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
 export const LOGIN_NAME_PATTERN = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/;
 
-const DEFAULT_PERMISSION_PAGE_KEY = PERMISSION_CATEGORIES[0]?.key ?? '';
+const DEFAULT_PERMISSION_PAGE_KEY = PERMISSION_EDITOR_CATEGORIES[0]?.key ?? '';
 export const ACCESS_PERMISSION_KEYS = getAccessPermissionKeys();
 export const ACCOUNT_PERMISSION_KEYS = getAccountPermissionKeys();
 
@@ -116,7 +116,7 @@ export const normalizePermissionPageKey = (pageKey: string | null): string => {
   const canonicalPageKey =
     pageKey === 'audit' ? FEATURES.systemActivity.audit.pageKey : pageKey;
 
-  return PERMISSION_CATEGORIES.some(
+  return PERMISSION_EDITOR_CATEGORIES.some(
     (category) => category.key === canonicalPageKey,
   )
     ? canonicalPageKey

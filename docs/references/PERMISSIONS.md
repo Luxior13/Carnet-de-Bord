@@ -22,19 +22,23 @@ politiques serveur et les tests concernés.
 - Une page future ne justifie pas un droit actif. Les capacités futures restent
   dans `ROADMAP_PERMISSIONS` jusqu'à la mise en ligne complète du module.
 
-Le catalogue actif possède deux pôles dans l'éditeur des autorisations :
-**Vie interne** (`internal`) et **Système** (`system`). `Administration` reste
-le nom d'une section de navigation à l'intérieur du pôle Système. Les pôles
-futurs ne doivent être ajoutés à `PERMISSION_POLES` qu'au moment où leurs pages
-deviennent réellement actives.
+L'éditeur affiche deux pôles : **Membres** (`internal`) et **Système** (`system`).
+Sa projection [permission-editor-view](../../apps/web/src/components/users/permission-editor-view.ts)
+croise le catalogue technique avec la disponibilité du registre des fonctionnalités.
+Les pôles vides et l'Actualité interne prévue ne sont pas proposés. Le catalogue
+technique conserve des clés historiques de cette dernière ; leur présence ne
+signifie pas qu'une page est livrée et n'autorise pas à activer un module futur.
 
 ## Vocabulaire canonique de l'interface
 
-La hiérarchie visible est toujours : **Pôle → Page → Rubrique →
+La hiérarchie visible est : **Pôle → Page ou fonction → Rubrique →
 Autorisation**.
 
-- pôles `Vie interne` et `Système` ;
+- pôles `Membres` et `Système` ;
 - pages `Répertoire`, `Utilisateurs` et `Paramètres système` ;
+- fonction transverse `Historique et provenance`, sans accès de page commun :
+  `audit:view` et `audit:view_field_history` conservent leurs usages indépendants.
+  Le Journal global prévu n'est pas compté comme une page accessible ;
 - rubriques telles que `Annuaire`, `Profil et contact`, `Sécurité` ou
   `Autorisations` ;
 - autorisations formulées avec un verbe d'action : `Consulter`, `Créer`,
@@ -49,8 +53,10 @@ désigne son résultat effectif (page accessible ou inaccessible).
 
 1. `PERMISSIONS` contient toutes les clés actives reconnues par
    `hasPermission` : socle, autonomie personnelle, administration et API.
-2. `PERMISSION_CATEGORIES` décrit toutes les pages administratives actives
-   visibles dans l'éditeur. `DELEGABLE_PERMISSION_CATEGORIES` isole celles dont
+2. `PERMISSION_CATEGORIES` regroupe les autorisations administratives du catalogue
+   technique, dont des entrées historiques de pages prévues. La projection
+   `PERMISSION_EDITOR_CATEGORIES` distingue pages livrées et droits transverses
+   réellement affichés. `DELEGABLE_PERMISSION_CATEGORIES` isole les catégories dont
    les droits sont configurables individuellement ; les droits liés au rôle
    restent affichés en lecture seule.
 3. `ROADMAP_PERMISSIONS` contient des noms réservés pour la préparation produit.
@@ -63,6 +69,14 @@ des actions de sécurité personnelles sont garanties par le socle. Seule
 pouvoir retirer à un compte la modification de son prénom et de son nom.
 
 ## Presets USER, ADMIN et compte racine
+
+Dans l'éditeur, le réglage choisi (hérité ou personnalisé) est distinct du droit
+effectivement utilisable après résolution des prérequis. Un réglage autorisé
+mais bloqué reste affiché comme autorisé dans le choix ; l'état explique le
+prérequis manquant et le compteur l'exclut des droits utilisables. Les aperçus
+reflètent le brouillon jusqu'à l'enregistrement. Autoriser ajoute les prérequis,
+refuser retire les dépendants, sous réserve de l'autorisation atomique de tout
+le lot. Le détail des changements peut être relu avant la sauvegarde.
 
 Les colonnes USER et ADMIN ci-dessous décrivent le preset sans surcharge
 individuelle. Une permission configurable peut être ajoutée à un USER ou

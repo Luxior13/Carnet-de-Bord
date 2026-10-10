@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { toast } from 'sonner';
@@ -84,20 +85,34 @@ const SettingsSkeleton: FC = () => (
   </div>
 );
 
-export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
-  item,
-  space,
-}) => {
-  const { userData } = useUser();
-  const canView = canShowNavigationItem(userData, item);
-  const canUpdate =
-    !!userData &&
-    (userData.isProtected ||
-      hasPermission(
-        userData.role,
-        PERMISSIONS.SETTINGS.UPDATE,
-        userData.permissions,
-      ));
+const SystemSettingsContent: FC<{
+  actorLoginName: string;
+  canUpdate: boolean;
+  item: NavItem;
+}> = ({ actorLoginName, canUpdate, item }) => {
+  const mountedRef = useRef(false);
+  const requestRef = useRef<AbortController | null>(null);
+  const refreshButtonRef = useRef<HTMLButtonElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const beginRequest = useCallback((): AbortController | null => {
+    if (!mountedRef.current || requestRef.current) return null;
+    const controller = new AbortController();
+    requestRef.current = controller;
+
+    return controller;
+  }, []);
+  const finishRequest = useCallback((controller: AbortController): void => {
+    if (requestRef.current === controller) requestRef.current = null;
+  }, []);
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+      requestRef.current?.abort();
+      requestRef.current = null;
+    };
+  }, []);
   const [settings, setSettings] = useState<Map<
     SystemSettingKey,
     NormalizedSystemSettingItem
@@ -142,51 +157,54 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
     cancelPendingNavigation,
     confirmPendingNavigation,
     pendingNavigationHref,
+    restoreFocus,
   } = useUnsavedNavigationGuard(hasUnsavedChanges);
 
-  const loadSettings = useCallback(
-    async (signal?: AbortSignal): Promise<boolean> => {
-      setIsLoading(true);
-      setLoadError(null);
-      try {
-        const items = await apiFetchJson<SystemSettingItem[]>(
-          '/api/systeme/parametres',
-          { signal },
-        );
-        const normalizedSettings = normalizeSettings(items);
-        setSettings(normalizedSettings);
-        setSaveErrors(new Map());
-        setConflicts(new Map());
-        setEditingKeys(new Set());
-        setDrafts(
-          new Map(
-            SYSTEM_SETTING_KEYS.map((key) => {
-              const setting = normalizedSettings.get(key);
-              if (!setting) {
-                throw new Error('Catalogue de paramètres incomplet');
-              }
+  const loadSettings = useCallback(async (): Promise<boolean> => {
+    const controller = beginRequest();
+    if (!controller) return false;
+    const { signal } = controller;
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const items = await apiFetchJson<SystemSettingItem[]>(
+        '/api/systeme/parametres',
+        { signal },
+      );
+      if (signal.aborted) return false;
+      const normalizedSettings = normalizeSettings(items);
+      setSettings(normalizedSettings);
+      setSaveErrors(new Map());
+      setConflicts(new Map());
+      setEditingKeys(new Set());
+      setDrafts(
+        new Map(
+          SYSTEM_SETTING_KEYS.map((key) => {
+            const setting = normalizedSettings.get(key);
+            if (!setting) {
+              throw new Error('Catalogue de paramètres incomplet');
+            }
 
-              return [key, String(setting.value)] as const;
-            }),
-          ),
-        );
+            return [key, String(setting.value)] as const;
+          }),
+        ),
+      );
 
-        return true;
-      } catch (error) {
-        if ((error as { name?: string }).name === 'AbortError') return false;
-        setLoadError(
-          error instanceof Error
-            ? error.message
-            : 'Impossible de charger les paramètres système',
-        );
+      return true;
+    } catch (error) {
+      if (signal.aborted) return false;
+      setLoadError(
+        error instanceof Error
+          ? error.message
+          : 'Impossible de charger les paramètres système',
+      );
 
-        return false;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [],
-  );
+      return false;
+    } finally {
+      finishRequest(controller);
+      if (!signal.aborted) setIsLoading(false);
+    }
+  }, [beginRequest, finishRequest]);
 
   const requestRefresh = useCallback((): void => {
     if ((!settings && !loadError) || isLoading || savingKey) return;
@@ -206,12 +224,8 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
   ]);
 
   useEffect(() => {
-    if (!canView) return;
-    const controller = new AbortController();
-    void loadSettings(controller.signal);
-
-    return (): void => controller.abort();
-  }, [canView, loadSettings]);
+    void loadSettings();
+  }, [loadSettings]);
 
   const clearSettingFeedback = (key: SystemSettingKey): void => {
     setSaveErrors((current) => {
@@ -228,14 +242,15 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
     });
   };
 
-  const reloadConflict = useCallback(
-    async (key: SystemSettingKey): Promise<void> => {
-      setIsLoading(true);
+  const readConflict = useCallback(
+    async (key: SystemSettingKey, signal: AbortSignal): Promise<void> => {
       setConflicts((current) => new Map(current).set(key, 'unavailable'));
       try {
         const items = await apiFetchJson<SystemSettingItem[]>(
           '/api/systeme/parametres',
+          { signal },
         );
+        if (signal.aborted) return;
         const latest = normalizeSetting(
           items.find((item) => item.key === key),
           key,
@@ -247,17 +262,33 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
         // Keep every draft and every unrelated setting version untouched.
       } catch {
         // The unresolved conflict stays visible and blocks saving until a fresh value is available.
-      } finally {
-        setIsLoading(false);
       }
     },
     [],
   );
 
+  const reloadConflict = useCallback(
+    async (key: SystemSettingKey): Promise<void> => {
+      const controller = beginRequest();
+      if (!controller) return;
+      setIsLoading(true);
+      try {
+        await readConflict(key, controller.signal);
+      } finally {
+        finishRequest(controller);
+        if (!controller.signal.aborted) setIsLoading(false);
+      }
+    },
+    [beginRequest, finishRequest, readConflict],
+  );
+
   const updateSetting = useCallback(
     async (key: SystemSettingKey, value: number): Promise<void> => {
       const currentSetting = settings?.get(key);
-      if (!currentSetting || savingKey) return;
+      if (!canUpdate || !currentSetting) return;
+      const controller = beginRequest();
+      if (!controller) return;
+      const { signal } = controller;
 
       setSavingKey(key);
       setSaveErrors((current) => {
@@ -269,13 +300,18 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
       try {
         const response = await apiFetch(
           `/api/systeme/parametres/${encodeURIComponent(key)}`,
-          jsonRequest('PUT', {
-            expectedVersion: currentSetting.version,
-            value,
-          }),
+          jsonRequest(
+            'PUT',
+            {
+              expectedVersion: currentSetting.version,
+              value,
+            },
+            { signal },
+          ),
         );
         const payload =
           (await response.json()) as ApiResponse<SystemSettingItem>;
+        if (signal.aborted) return;
 
         if (!response.ok || !payload.success) {
           const errorCode = payload.success ? null : payload.error.code;
@@ -285,7 +321,7 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
             return;
           }
           if (errorCode === ErrorCode.CONFLICT) {
-            await reloadConflict(key);
+            await readConflict(key, signal);
 
             return;
           }
@@ -325,6 +361,7 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
           `Paramètre « ${getSystemSettingDefinition(key).label} » mis à jour avec succès`,
         );
       } catch {
+        if (signal.aborted) return;
         setSaveErrors((current) =>
           new Map(current).set(
             key,
@@ -332,10 +369,11 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
           ),
         );
       } finally {
-        setSavingKey(null);
+        finishRequest(controller);
+        if (!signal.aborted) setSavingKey(null);
       }
     },
-    [reloadConflict, savingKey, settings],
+    [beginRequest, canUpdate, finishRequest, readConflict, settings],
   );
 
   const handleSaveRequest = (key: SystemSettingKey): void => {
@@ -367,6 +405,16 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
     void updateSetting(key, value);
   };
 
+  const restoreSettingFocus = (event: Event): void => {
+    const target = contentRef.current?.querySelector<HTMLElement>(
+      'input[type="number"]:not(:disabled), button[data-setting-edit]:not(:disabled)',
+    );
+    if (target) {
+      event.preventDefault();
+      target.focus({ preventScroll: true });
+    }
+  };
+
   const renderedSections = useMemo(
     () =>
       SECTION_DEFINITIONS.map((section) => ({
@@ -387,171 +435,153 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
     : null;
 
   return (
-    <AuthenticatedLayout
-      breadcrumbs={[
-        { href: space.href, label: space.label },
-        { href: item.href, label: item.label },
-      ]}
-    >
-      {!canView ? (
-        <AccessDeniedState
-          actionHref={space.href}
-          actionLabel="Retour au pôle Système"
-          description="Cette page est réservée aux administrateurs autorisés."
-        />
-      ) : (
-        <PageShell className="py-0">
-          <PageCanvas contentClassName="space-y-5">
-            <PageIdentityHero
-              actions={
-                <Button
-                  aria-busy={isLoading || undefined}
-                  aria-disabled={isLoading || undefined}
-                  className="h-11 rounded-[8px] aria-disabled:pointer-events-none aria-disabled:opacity-50 lg:h-10"
-                  disabled={(!settings && !loadError) || savingKey !== null}
-                  onClick={requestRefresh}
-                  type="button"
-                  variant="outline"
-                >
-                  <RefreshCw
-                    aria-hidden="true"
-                    className={isLoading ? 'size-4 animate-spin' : 'size-4'}
-                  />
-                  Actualiser
+    <div ref={contentRef}>
+      <PageShell className="py-0">
+        <PageCanvas contentClassName="space-y-5">
+          <PageIdentityHero
+            actions={
+              <Button
+                aria-busy={isLoading || undefined}
+                aria-disabled={isLoading || undefined}
+                className="h-11 rounded-[8px] aria-disabled:pointer-events-none aria-disabled:opacity-50 lg:h-10"
+                disabled={(!settings && !loadError) || savingKey !== null}
+                ref={refreshButtonRef}
+                onClick={requestRefresh}
+                type="button"
+                variant="outline"
+              >
+                <RefreshCw
+                  aria-hidden="true"
+                  className={isLoading ? 'size-4 animate-spin' : 'size-4'}
+                />
+                Actualiser
+              </Button>
+            }
+            description="Réglages globaux de Noctambule."
+            icon={<Settings aria-hidden="true" />}
+            title={item.label}
+          />
+
+          {!settings && !loadError ? (
+            <SettingsSkeleton />
+          ) : loadError && !settings ? (
+            <ContentState
+              action={
+                <Button onClick={() => void loadSettings()} type="button">
+                  Réessayer
                 </Button>
               }
-              description="Réglages globaux de Noctambule."
-              icon={<Settings aria-hidden="true" />}
-              title={item.label}
+              description={loadError}
+              kind="error"
+              layout="panel"
+              title="Paramètres indisponibles"
             />
+          ) : settings ? (
+            <>
+              {loadError && (
+                <ContentState
+                  action={
+                    <Button
+                      disabled={isLoading || savingKey !== null}
+                      onClick={requestRefresh}
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      Réessayer
+                    </Button>
+                  }
+                  description={`${loadError} Les valeurs déjà affichées n'ont pas été remplacées.`}
+                  kind="error"
+                  title="Actualisation impossible"
+                />
+              )}
+              {renderedSections.map((section) => (
+                <section
+                  aria-labelledby={`settings-${section.id}-title`}
+                  className="border-border-content bg-surface-panel overflow-hidden rounded-[10px] border"
+                  key={section.id}
+                >
+                  <div className="border-border-divider bg-surface-panel-header border-b px-4 py-4 @min-[40rem]/page:px-5">
+                    <h2
+                      className="text-foreground text-base font-semibold"
+                      id={`settings-${section.id}-title`}
+                    >
+                      {section.title}
+                    </h2>
+                    <p className="text-muted-foreground mt-1 text-sm leading-6">
+                      {section.description}
+                    </p>
+                  </div>
+                  <div className="divide-border-divider divide-y">
+                    {section.keys.map((key) => {
+                      const setting = settings.get(key);
+                      if (!setting) return null;
 
-            {!settings && !loadError ? (
-              <SettingsSkeleton />
-            ) : loadError && !settings ? (
-              <ContentState
-                action={
-                  <Button onClick={() => void loadSettings()} type="button">
-                    Réessayer
-                  </Button>
-                }
-                description={loadError}
-                kind="error"
-                layout="panel"
-                title="Paramètres indisponibles"
-              />
-            ) : settings ? (
-              <>
-                {loadError && (
-                  <ContentState
-                    action={
-                      <Button
-                        disabled={isLoading || savingKey !== null}
-                        onClick={requestRefresh}
-                        size="sm"
-                        type="button"
-                        variant="outline"
-                      >
-                        Réessayer
-                      </Button>
-                    }
-                    description={`${loadError} Les valeurs déjà affichées n'ont pas été remplacées.`}
-                    kind="error"
-                    title="Actualisation impossible"
-                  />
-                )}
-                {renderedSections.map((section) => (
-                  <section
-                    aria-labelledby={`settings-${section.id}-title`}
-                    className="border-border-content bg-surface-content overflow-hidden rounded-[10px] border"
-                    key={section.id}
-                  >
-                    <div className="border-border-divider bg-surface-content-header border-b px-4 py-4 @min-[40rem]/page:px-5">
-                      <h2
-                        className="text-foreground text-base font-semibold"
-                        id={`settings-${section.id}-title`}
-                      >
-                        {section.title}
-                      </h2>
-                      <p className="text-muted-foreground mt-1 text-sm leading-6">
-                        {section.description}
-                      </p>
-                    </div>
-                    <div className="divide-border-divider divide-y">
-                      {section.keys.map((key) => {
-                        const setting = settings.get(key);
-                        if (!setting) return null;
+                      return (
+                        <SystemSettingRow
+                          canUpdate={canUpdate}
+                          conflict={conflicts.get(key) ?? 'none'}
+                          disabled={isLoading || savingKey !== null}
+                          draft={drafts.get(key) ?? String(setting.value)}
+                          error={saveErrors.get(key)}
+                          isEditing={editingKeys.has(key)}
+                          isSaving={savingKey === key}
+                          key={key}
+                          onCancel={() => {
+                            setDrafts((current) =>
+                              new Map(current).set(key, String(setting.value)),
+                            );
+                            clearSettingFeedback(key);
+                            setEditingKeys((current) => {
+                              const next = new Set(current);
+                              next.delete(key);
 
-                        return (
-                          <SystemSettingRow
-                            canUpdate={canUpdate}
-                            conflict={conflicts.get(key) ?? 'none'}
-                            disabled={isLoading || savingKey !== null}
-                            draft={drafts.get(key) ?? String(setting.value)}
-                            error={saveErrors.get(key)}
-                            isEditing={editingKeys.has(key)}
-                            isSaving={savingKey === key}
-                            key={key}
-                            onCancel={() => {
-                              setDrafts((current) =>
-                                new Map(current).set(
-                                  key,
-                                  String(setting.value),
-                                ),
-                              );
-                              clearSettingFeedback(key);
-                              setEditingKeys((current) => {
-                                const next = new Set(current);
-                                next.delete(key);
+                              return next;
+                            });
+                          }}
+                          onChange={(value) => {
+                            setDrafts((current) =>
+                              new Map(current).set(key, value),
+                            );
+                            setSaveErrors((current) => {
+                              const next = new Map(current);
+                              next.delete(key);
 
-                                return next;
-                              });
-                            }}
-                            onChange={(value) => {
-                              setDrafts((current) =>
-                                new Map(current).set(key, value),
-                              );
-                              setSaveErrors((current) => {
-                                const next = new Map(current);
-                                next.delete(key);
-
-                                return next;
-                              });
-                            }}
-                            onEdit={() =>
-                              setEditingKeys((current) =>
-                                new Set(current).add(key),
-                              )
-                            }
-                            onKeepDraft={() => clearSettingFeedback(key)}
-                            onReloadConflict={() => void reloadConflict(key)}
-                            onReset={() => {
-                              setDrafts((current) =>
-                                new Map(current).set(
-                                  key,
-                                  String(setting.value),
-                                ),
-                              );
-                              clearSettingFeedback(key);
-                            }}
-                            onSave={() => handleSaveRequest(key)}
-                            setting={setting}
-                          />
-                        );
-                      })}
-                    </div>
-                    {section.id === 'retention' && (
-                      <p className="text-muted-foreground border-border-divider border-t px-4 py-3 text-xs leading-5 @min-[40rem]/page:px-5">
-                        Une augmentation de durée ne restaure pas les données
-                        déjà supprimées.
-                      </p>
-                    )}
-                  </section>
-                ))}
-              </>
-            ) : null}
-          </PageCanvas>
-        </PageShell>
-      )}
+                              return next;
+                            });
+                          }}
+                          onEdit={() =>
+                            setEditingKeys((current) =>
+                              new Set(current).add(key),
+                            )
+                          }
+                          onKeepDraft={() => clearSettingFeedback(key)}
+                          onReloadConflict={() => void reloadConflict(key)}
+                          onReset={() => {
+                            setDrafts((current) =>
+                              new Map(current).set(key, String(setting.value)),
+                            );
+                            clearSettingFeedback(key);
+                          }}
+                          onSave={() => handleSaveRequest(key)}
+                          setting={setting}
+                        />
+                      );
+                    })}
+                  </div>
+                  {section.id === 'retention' && (
+                    <p className="text-muted-foreground border-border-divider border-t px-4 py-3 text-xs leading-5 @min-[40rem]/page:px-5">
+                      Une augmentation de durée ne restaure pas les données déjà
+                      supprimées.
+                    </p>
+                  )}
+                </section>
+              ))}
+            </>
+          ) : null}
+        </PageCanvas>
+      </PageShell>
 
       <AlertDialog
         open={pendingReduction !== null}
@@ -559,7 +589,10 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
           if (!open) setPendingReduction(null);
         }}
       >
-        <AlertDialogContent className="animate-none! rounded-[8px] shadow-none [&_button]:min-h-11 [&_button]:rounded-[8px] lg:[&_button]:min-h-10">
+        <AlertDialogContent
+          onCloseAutoFocus={restoreSettingFocus}
+          className="rounded-[10px] [&_button]:min-h-11 lg:[&_button]:min-h-10"
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>
               Réduire la durée de conservation ?
@@ -598,7 +631,13 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
         open={showRefreshConfirmation}
         onOpenChange={setShowRefreshConfirmation}
       >
-        <AlertDialogContent className="animate-none! rounded-[8px] shadow-none [&_button]:min-h-11 [&_button]:rounded-[8px] lg:[&_button]:min-h-10">
+        <AlertDialogContent
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            refreshButtonRef.current?.focus();
+          }}
+          className="rounded-[10px] [&_button]:min-h-11 lg:[&_button]:min-h-10"
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>Abandonner les modifications ?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -627,7 +666,10 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
           if (!open) cancelPendingNavigation();
         }}
       >
-        <AlertDialogContent className="animate-none! rounded-[8px] shadow-none [&_button]:min-h-11 [&_button]:rounded-[8px] lg:[&_button]:min-h-10">
+        <AlertDialogContent
+          onCloseAutoFocus={restoreFocus}
+          className="rounded-[10px] [&_button]:min-h-11 lg:[&_button]:min-h-10"
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>Quitter sans enregistrer ?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -650,12 +692,13 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
       </AlertDialog>
 
       <AdminStepUpDialog
-        actorLoginName={userData?.loginName ?? ''}
+        actorLoginName={actorLoginName}
         description={
           pendingPasswordDefinition
             ? `Confirmez votre mot de passe pour réduire la conservation de « ${pendingPasswordDefinition.label} ». La confirmation restera valable pendant trente minutes.`
             : 'Confirmez votre mot de passe pour continuer.'
         }
+        onCloseAutoFocus={restoreSettingFocus}
         onCancel={() => setPendingPasswordAction(null)}
         onComplete={async () => {
           const action = pendingPasswordAction;
@@ -666,6 +709,46 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
         proofKind="password"
         title="Confirmer cette réduction"
       />
+    </div>
+  );
+};
+
+export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
+  item,
+  space,
+}) => {
+  const { userData } = useUser();
+  const canView = canShowNavigationItem(userData, item);
+  const canUpdate =
+    !!userData &&
+    (userData.isProtected ||
+      hasPermission(
+        userData.role,
+        PERMISSIONS.SETTINGS.UPDATE,
+        userData.permissions,
+      ));
+
+  return (
+    <AuthenticatedLayout
+      breadcrumbs={[
+        { href: space.href, label: space.label },
+        { href: item.href, label: item.label },
+      ]}
+    >
+      {canView && userData ? (
+        <SystemSettingsContent
+          actorLoginName={userData.loginName}
+          canUpdate={canUpdate}
+          item={item}
+          key={userData.id + ':' + canUpdate}
+        />
+      ) : (
+        <AccessDeniedState
+          actionHref={space.href}
+          actionLabel="Retour au pôle Système"
+          description="Cette page est réservée aux administrateurs autorisés."
+        />
+      )}
     </AuthenticatedLayout>
   );
 };

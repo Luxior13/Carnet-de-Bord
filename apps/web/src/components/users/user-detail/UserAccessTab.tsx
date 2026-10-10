@@ -1,33 +1,27 @@
 'use client';
 
 import { UserRole } from '@repo/shared';
-import {
-  Crown,
-  Loader2,
-  LockKeyhole,
-  LogOut,
-  Save,
-  Shield,
-  ShieldAlert,
-  ShieldCheck,
-} from 'lucide-react';
+import { Crown, Loader2, LogOut, Save, ShieldAlert } from 'lucide-react';
 import React, { type FC } from 'react';
 
+import { Disclosure } from '$components/layout/Disclosure';
 import {
   type PermissionMutationPolicy,
   type PermissionMutationSummary,
 } from '$components/users/permission-editor-policy';
+import { PERMISSION_EDITOR_CATEGORIES } from '$components/users/permission-editor-view';
 import { PermissionsEditor } from '$components/users/PermissionsEditor';
+import styles from '$components/users/PermissionsEditor.module.css';
 import {
-  getAllPermissionKeys,
-  PERMISSION_CATEGORIES,
+  getPermissionDisplayLabel,
+  hasPermission,
   type PermissionsData,
 } from '$constants/permissions.constants';
 import { UserAccessBadge } from '$features/users/user-badges';
 import type { UserType } from '$types/auth.types';
+import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import { Card, CardContent, CardFooter } from '$ui/card';
-import { Input } from '$ui/input';
+import { Card, CardContent } from '$ui/card';
 import { Label } from '$ui/label';
 import {
   Select,
@@ -36,7 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '$ui/select';
-import { cn } from '$utils/css.utils';
 
 type UserAccessTabProps = {
   canChangePermission: PermissionMutationPolicy;
@@ -55,50 +48,14 @@ type UserAccessTabProps = {
   permissionPageKey: string;
   permissions: PermissionsData | null;
   role: UserRole;
+  saveDisabledReason?: string;
   setPermissions: (permissions: PermissionsData | null) => void;
   setRole: (role: UserRole) => void;
   user: UserType;
 };
 
-const formatMutationSummary = (
-  summary: PermissionMutationSummary | null,
-): string | null => {
-  if (!summary) return null;
-
-  const changes = [
-    summary.grantedCount > 0
-      ? `${summary.grantedCount} attribution${summary.grantedCount > 1 ? 's' : ''}`
-      : null,
-    summary.revokedCount > 0
-      ? `${summary.revokedCount} retrait${summary.revokedCount > 1 ? 's' : ''}`
-      : null,
-    summary.delegationChangeCount > 0
-      ? `${summary.delegationChangeCount} changement${summary.delegationChangeCount > 1 ? 's' : ''} de délégation`
-      : null,
-  ].filter((change): change is string => change !== null);
-
-  return changes.length > 0 ? changes.join(' · ') : null;
-};
-
-const CapabilityChip: FC<{
-  children: React.ReactNode;
-  enabled: boolean;
-}> = ({ children, enabled }) => (
-  <span
-    className={cn(
-      'inline-flex w-fit items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap',
-      enabled
-        ? 'border-success/40 bg-success/15 text-success'
-        : 'border-muted-foreground/35 bg-muted/30 text-muted-foreground',
-    )}
-  >
-    <span
-      aria-hidden="true"
-      className="size-1.5 shrink-0 rounded-full bg-current"
-    />
-    {children}
-  </span>
-);
+const roleLabel = (role: UserRole): string =>
+  role === UserRole.ADMIN ? 'Administrateur' : 'Utilisateur';
 
 export const UserAccessTab: FC<UserAccessTabProps> = ({
   canChangePermission,
@@ -117,81 +74,59 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   permissionPageKey,
   permissions,
   role,
+  saveDisabledReason,
   setPermissions,
   setRole,
   user,
 }) => {
-  const mutationSummaryLabel = formatMutationSummary(mutationSummary);
+  const mutationSummaryLabel = mutationSummary
+    ? [
+        mutationSummary.grantedCount > 0
+          ? `${mutationSummary.grantedCount} attribution${mutationSummary.grantedCount > 1 ? 's' : ''}`
+          : null,
+        mutationSummary.revokedCount > 0
+          ? `${mutationSummary.revokedCount} retrait${mutationSummary.revokedCount > 1 ? 's' : ''}`
+          : null,
+        mutationSummary.delegationChangeCount > 0
+          ? `${mutationSummary.delegationChangeCount} changement${mutationSummary.delegationChangeCount > 1 ? 's' : ''} de délégation`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : '';
+  const changedKeys = mutationSummary
+    ? [
+        ...mutationSummary.grantedPermissionKeys,
+        ...mutationSummary.revokedPermissionKeys,
+        ...mutationSummary.delegationPermissionKeys,
+      ]
+    : [];
 
   if (user.isProtected) {
-    const totalPermissions = getAllPermissionKeys().length;
-
     return (
       <Card>
-        <CardContent className="space-y-4 p-4">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex min-w-0 items-start gap-3">
-              <span className="border-warning/35 bg-warning/10 text-warning flex size-11 shrink-0 items-center justify-center rounded-lg border">
-                <Crown className="size-5" />
-              </span>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-foreground text-base leading-6 font-semibold">
-                    Autorisations du super-administrateur
-                  </h3>
-                  <UserAccessBadge user={user} />
-                </div>
-                <p className="text-muted-foreground mt-1 max-w-3xl text-sm leading-6">
-                  Ce compte est protégé par le système. Il dispose déjà de
-                  toutes les autorisations et elles ne se gèrent pas
-                  manuellement.
-                </p>
+        <CardContent className="space-y-3 p-4">
+          <div className="flex items-start gap-3">
+            <Crown className="text-muted-foreground mt-0.5 size-5 shrink-0" />
+            <div className="min-w-0 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-sm font-semibold">
+                  Autorisations du super-administrateur
+                </h3>
+                <UserAccessBadge user={user} />
               </div>
-            </div>
-            <div className="border-border/60 bg-surface-control flex items-center gap-2 rounded-lg border px-2 py-1">
-              <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-7 shrink-0 items-center justify-center rounded-md border">
-                <Shield className="size-3.5" />
-              </span>
-              <Input
-                value="Super-administrateur"
-                disabled
-                className="border-border bg-surface-control h-8 min-w-0"
-              />
-            </div>
-          </div>
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className="border-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
-              <ShieldCheck className="text-success size-5 shrink-0" />
-              <div className="min-w-0">
-                <p className="text-foreground text-sm font-semibold">
-                  Toutes les pages
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  {PERMISSION_CATEGORIES.length} pages administratives
-                </p>
-              </div>
-            </div>
-            <div className="border-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
-              <Crown className="text-warning size-5 shrink-0" />
-              <div className="min-w-0">
-                <p className="text-foreground text-sm font-semibold">
-                  {totalPermissions} autorisations actives
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  Accordées automatiquement
-                </p>
-              </div>
-            </div>
-            <div className="border-border/60 bg-surface-muted flex min-w-0 items-center gap-3 rounded-lg border p-3">
-              <LockKeyhole className="text-primary-emphasis size-5 shrink-0" />
-              <div className="min-w-0">
-                <p className="text-foreground text-sm font-semibold">
-                  Non modifiable
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  Protégé contre les restrictions
-                </p>
-              </div>
+              <p className="text-muted-foreground text-xs leading-5">
+                Ce compte dispose automatiquement de toutes les autorisations.
+                Ses accès sont protégés et ne peuvent pas être restreints.
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {
+                  PERMISSION_EDITOR_CATEGORIES.filter(
+                    (category) => category.scope === 'page',
+                  ).length
+                }{' '}
+                pages administratives accessibles · Aucun réglage manuel
+              </p>
             </div>
           </div>
         </CardContent>
@@ -200,124 +135,162 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   }
 
   return (
-    <div>
-      <Card className="overflow-visible">
-        <CardContent className="space-y-3 p-2.5 sm:p-3">
-          <div
-            aria-label="Capacités de gestion des autorisations"
-            className="flex flex-wrap gap-1.5"
-          >
-            <CapabilityChip enabled>Consultation</CapabilityChip>
-            <CapabilityChip enabled={canGrantPermissions}>
-              Attribution {canGrantPermissions ? 'autorisée' : 'interdite'}
-            </CapabilityChip>
-            <CapabilityChip enabled={canRevokePermissions}>
-              Retrait {canRevokePermissions ? 'autorisé' : 'interdit'}
-            </CapabilityChip>
-            <CapabilityChip enabled={canDelegatePermissions}>
-              Déléguer attribution/retrait :{' '}
-              {canDelegatePermissions ? 'oui' : 'non'}
-            </CapabilityChip>
+    <Card className="overflow-visible" aria-busy={isSaving}>
+      <div className="border-border-divider space-y-2 border-b px-4 py-3">
+        <p className="text-muted-foreground text-xs font-medium">
+          Vos droits de gestion sur ce compte
+        </p>
+        <dl className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
+          <div>
+            <dt className="text-muted-foreground inline">Attribution : </dt>
+            <dd className="inline">
+              {canGrantPermissions ? 'autorisée' : 'interdite'}
+            </dd>
           </div>
-          {canGrantPermissions && user.criticalAccessReady !== true && (
-            <div
-              className="border-warning/30 bg-warning/10 text-muted-foreground flex items-start gap-2.5 rounded-lg border p-3 text-sm leading-5"
+          <div>
+            <dt className="text-muted-foreground inline">Retrait : </dt>
+            <dd className="inline">
+              {canRevokePermissions ? 'autorisé' : 'interdit'}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground inline">
+              Déléguer attribution/retrait :{' '}
+            </dt>
+            <dd className="inline">{canDelegatePermissions ? 'oui' : 'non'}</dd>
+          </div>
+        </dl>
+        {(canGrantPermissions || canEditRole) &&
+          user.criticalAccessReady !== true && (
+            <p
+              className="text-warning flex items-start gap-2 text-xs leading-5"
               role="note"
             >
-              <ShieldAlert className="text-warning mt-0.5 size-4 shrink-0" />
-              <p>
+              <ShieldAlert className="mt-0.5 size-4 shrink-0" />
+              <span>
                 La double authentification doit être activée par ce membre avant
                 de lui accorder un rôle administrateur ou une autorisation
                 critique.
-              </p>
-            </div>
+              </span>
+            </p>
           )}
-          <PermissionsEditor
-            canChangePermission={canChangePermission}
-            role={role}
-            permissions={permissions}
-            onChange={setPermissions}
-            selectedPageKey={permissionPageKey}
-            onSelectedPageChange={onPermissionPageChange}
-            disabled={!canManagePermissions}
-            headerControls={
-              <div className="border-border/60 bg-surface-control flex items-center gap-2 rounded-lg border px-2 py-1">
-                <span className="border-primary/35 bg-primary/15 text-primary-emphasis flex size-7 shrink-0 items-center justify-center rounded-md border">
-                  <Shield className="size-3.5" />
-                </span>
-                <Label
-                  htmlFor="user-role"
-                  className="text-muted-foreground text-xs whitespace-nowrap"
+      </div>
+      <PermissionsEditor
+        canChangePermission={canChangePermission}
+        role={role}
+        permissions={permissions}
+        onChange={setPermissions}
+        selectedPageKey={permissionPageKey}
+        onSelectedPageChange={onPermissionPageChange}
+        disabled={!canManagePermissions || isSaving}
+        headerControls={
+          <div className="w-full space-y-1.5 sm:w-52">
+            <Label htmlFor="user-role">Rôle de base</Label>
+            {canEditRole ? (
+              <>
+                <Select
+                  value={role}
+                  onValueChange={(value) => setRole(value as UserRole)}
+                  disabled={isSaving}
                 >
-                  Rôle de base
-                </Label>
-                {user.isProtected ? (
-                  <Input
+                  <SelectTrigger
                     id="user-role"
-                    value="Super-administrateur"
-                    disabled
-                    className="border-border bg-surface-control h-8 min-w-0"
-                  />
-                ) : (
-                  <div className="space-y-1">
-                    <Select
-                      value={role}
-                      onValueChange={(value) => setRole(value as UserRole)}
-                      disabled={!canEditRole}
+                    variant="compact"
+                    className="w-full"
+                    aria-describedby={
+                      user.criticalAccessReady !== true
+                        ? 'user-role-mfa-requirement'
+                        : undefined
+                    }
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent variant="compact">
+                    <SelectItem value="USER">Utilisateur</SelectItem>
+                    <SelectItem
+                      disabled={user.criticalAccessReady !== true}
+                      value="ADMIN"
                     >
-                      <SelectTrigger
-                        id="user-role"
-                        aria-describedby={
-                          canEditRole && user.criticalAccessReady !== true
-                            ? 'user-role-mfa-requirement'
-                            : undefined
-                        }
-                        className="border-border bg-surface-control h-8 min-w-36"
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USER">Utilisateur</SelectItem>
-                        <SelectItem
-                          disabled={user.criticalAccessReady !== true}
-                          value="ADMIN"
-                        >
-                          Administrateur
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {canEditRole && user.criticalAccessReady !== true && (
-                      <p
-                        className="text-warning max-w-56 text-xs leading-4"
-                        id="user-role-mfa-requirement"
-                      >
-                        Double authentification requise avant promotion.
-                      </p>
-                    )}
-                  </div>
+                      Administrateur
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {user.criticalAccessReady !== true && (
+                  <p
+                    id="user-role-mfa-requirement"
+                    className="text-muted-foreground text-xs leading-5"
+                  >
+                    Double authentification requise avant promotion.
+                  </p>
                 )}
+              </>
+            ) : (
+              <div className="space-y-1">
+                <Badge id="user-role" variant="outline">
+                  {roleLabel(role)}
+                </Badge>
+                <p className="text-muted-foreground text-xs leading-5">
+                  Seul le super-administrateur peut changer le rôle.
+                </p>
               </div>
-            }
-          />
-        </CardContent>
-        <CardFooter className="bg-surface-inset/95 sticky bottom-3 z-20 flex-col items-stretch justify-between gap-3 rounded-b-xl p-3 shadow-[var(--shadow-panel)] backdrop-blur sm:flex-row sm:items-center">
-          <div className="space-y-1">
+            )}
+          </div>
+        }
+      />
+      {hasChanges && (
+        <div className="border-border-divider space-y-2 border-t px-4 py-3">
+          <Disclosure label="Voir les modifications avant enregistrement">
+            <ul className="space-y-1 py-2 text-xs leading-5">
+              {role !== user.role && (
+                <li>
+                  Rôle : {roleLabel(user.role)} → {roleLabel(role)}
+                </li>
+              )}
+              {changedKeys.map((key) => (
+                <li key={key}>
+                  {getPermissionDisplayLabel(key)} :{' '}
+                  {hasPermission(role, key, permissions)
+                    ? 'autorisé'
+                    : 'refusé'}
+                </li>
+              ))}
+            </ul>
+          </Disclosure>
+          {saveDisabledReason && !canSave && (
+            <p className="text-warning text-xs leading-5" role="alert">
+              {saveDisabledReason}
+            </p>
+          )}
+        </div>
+      )}
+      {(canManagePermissions || canEditRole) && (
+        <div className={styles.footer} data-dirty={hasChanges}>
+          <div
+            className="min-w-0 flex-1 space-y-1"
+            role="status"
+            aria-live="polite"
+          >
             <p className="text-muted-foreground text-xs">
-              {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
+              {isSaving
+                ? 'Enregistrement en cours…'
+                : hasChanges
+                  ? 'Modifications non enregistrées'
+                  : 'Aucune modification en attente'}
             </p>
             {hasChanges && mutationSummaryLabel && (
-              <p className="text-foreground text-xs font-medium">
-                {mutationSummaryLabel}
-              </p>
+              <p className="text-foreground text-xs">{mutationSummaryLabel}</p>
             )}
             {hasChanges && (
-              <p className="text-warning flex items-center gap-1.5 text-xs">
-                <LogOut className="size-3.5 shrink-0" />
-                Enregistrer déconnectera cet utilisateur de toutes ses sessions.
+              <p className="text-warning flex items-start gap-1.5 text-xs leading-5">
+                <LogOut className="mt-0.5 size-3.5 shrink-0" />
+                <span>
+                  Enregistrer déconnectera cet utilisateur de toutes ses
+                  sessions.
+                </span>
               </p>
             )}
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button
               type="button"
               variant="outline"
@@ -329,21 +302,20 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             </Button>
             <Button
               type="button"
+              size="sm"
               onClick={onSave}
               disabled={isSaving || !canSave}
-              size="sm"
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {isSaving ? (
-                <Loader2 size={16} className="mr-2 animate-spin" />
+                <Loader2 className="size-4 animate-spin" />
               ) : (
-                <Save size={16} className="mr-2" />
+                <Save className="size-4" />
               )}
-              Enregistrer
+              {isSaving ? 'Enregistrement…' : 'Enregistrer'}
             </Button>
           </div>
-        </CardFooter>
-      </Card>
-    </div>
+        </div>
+      )}
+    </Card>
   );
 };

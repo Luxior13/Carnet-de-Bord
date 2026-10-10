@@ -75,14 +75,13 @@ describe('administrative user detail subcomponent UX contracts', () => {
   });
 
   it('keeps account autonomy compact, direct and progressively disclosed', () => {
-    expect(accountSource).toContain('<Collapsible');
+    expect(accountSource).toContain('<Disclosure');
     expect(accountSource).toContain('Autonomie du compte');
     expect(accountSource).toContain('Voir les droits essentiels');
     expect(accountSource).toContain('aria-label="Options configurables"');
     expect(accountSource).not.toContain('account-autonomy-options-title');
     expect(accountSource).toContain('Valeur héritée du rôle');
     expect(accountSource).toContain('Exception personnalisée');
-    expect(accountSource).toContain('bg-surface-control/60');
     expect(accountSource).not.toContain('configurablePermissionCount');
     expect(accountSource).not.toContain(
       'CONFIGURABLE_ACCOUNT_PERMISSION_CATEGORIES',
@@ -107,7 +106,7 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(accountSource).not.toContain('sticky bottom-3');
     expect(
       accountSource.indexOf('CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.map'),
-    ).toBeLessThan(accountSource.indexOf('<Collapsible'));
+    ).toBeLessThan(accountSource.indexOf('<Disclosure'));
   });
 
   it('focuses security on modules and confirms individual session revocation', () => {
@@ -179,10 +178,11 @@ describe('administrative user detail subcomponent UX contracts', () => {
 
   it('uses progressive disclosure for permission details without hiding dependencies', () => {
     expect(permissionsSource).toContain('Autorisations administratives');
-    expect(permissionsSource).toContain('Détails et héritage');
-    expect(permissionsSource).toContain('view.missingDependencyLabels');
-    expect(permissionsSource).toContain('view.dependencyLabels');
-    expect(permissionsSource).toContain('Exception personnalisée');
+    const rowSource = readSourceFile('../components/users/PermissionRow.tsx');
+    expect(rowSource).toContain('Détails et héritage');
+    expect(rowSource).toContain('getMissingPermissionDependencies');
+    expect(rowSource).toContain('permission.dependencies');
+    expect(rowSource).toContain('Exception personnalisée');
     expect(permissionsSource).toContain(
       "selectedCategory.assignment === 'role-bound'",
     );
@@ -195,7 +195,7 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(roleBoundPermissionStatusSource).toContain(
       'Réservé aux administrateurs',
     );
-    expect(userAccessSource).toContain('{PERMISSION_CATEGORIES.length}');
+    expect(userAccessSource).toContain('PERMISSION_EDITOR_CATEGORIES');
   });
 
   it('keeps denied permission controls keyboard-explainable', () => {
@@ -226,7 +226,9 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(userAccessSource).not.toContain('Mode administration actif');
     expect(userAccessSource).not.toContain('Modifications verrouillées');
     expect(userAccessSource).not.toContain('adminModeRemainingLabel');
-    expect(userAccessSource).toContain('disabled={!canManagePermissions}');
+    expect(userAccessSource).toContain(
+      'disabled={!canManagePermissions || isSaving}',
+    );
     expect(userAccessSource).toContain('disabled={isSaving || !canSave}');
     expect(userAccessSource).not.toContain(
       'un code MFA sera demandé une seule fois',

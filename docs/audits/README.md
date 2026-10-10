@@ -10,6 +10,8 @@ Ne pas créer un rapport complet pour chaque correction de texte.
 
 | Rapport | Périmètre et portée |
 | --- | --- |
+| [Paramètres système — 10–11 octobre 2026](AUDIT_PARAMETRES_2026-10-11.md) | Présentation, confirmations, focus et réponses tardives corrigés ; 32 scénarios Chromium isolé ; aucune purge ni mutation réelle |
+| [Autorisations de la fiche utilisateur — 10 octobre 2026](AUDIT_AUTORISATIONS_UTILISATEUR_2026-10-10.md) | Éditeur et autonomie harmonisés ; dépendances, catalogue affiché et aperçu corrigés ; 36 combinaisons Chromium isolé ; mutations authentifiées non rejouées |
 | [Menus déroulants — 10 octobre 2026](AUDIT_MENUS_2026-10-10.md) | Audit transverse des onze consommateurs actifs ; focus, ouverture et arrondis harmonisés ; 60 combinaisons navigateur isolé, puis présentation filtre/fiche alignée et comparée à quatre largeurs ; 1 036 tests réussis, 25 ignorés ; parcours authentifiés non rejoués |
 | [Fiche utilisateur — 10 octobre 2026](AUDIT_FICHE_UTILISATEUR_2026-10-10.md) | Audit puis correction : USR-D01 à USR-D08 corrigés et vérifiés, synthèse compactée ; 1 036 tests réussis, 25 ignorés, build/budgets réussis ; onze scénarios Chromium sur PostgreSQL isolé, step-up réel ; preuves et limites explicites |
 | [Création d'utilisateur — 10 octobre 2026](AUDIT_CREATION_UTILISATEUR_2026-10-10.md) | Analyse puis corrections USR-N01 à USR-N07 ; sept largeurs dans Next réel, créations USER/ADMIN, TOTP, réponse perdue et reprise sur PostgreSQL isolé ; 1 028 tests réussis, preuves et limites datées |
