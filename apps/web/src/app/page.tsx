@@ -1,10 +1,12 @@
 import { Home } from 'lucide-react';
+import Link from 'next/link';
 import React from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { getPageAuthSession } from '$server/auth';
+import { Button } from '$ui/button';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 
 export default async function HomePage(): Promise<React.ReactNode> {
@@ -21,6 +23,11 @@ export default async function HomePage(): Promise<React.ReactNode> {
       <PageShell className="py-0">
         <PageCanvas>
           <PageIdentityHero
+            actions={
+              <Button asChild variant="outline">
+                <Link href="/mon-compte">Mon compte</Link>
+              </Button>
+            }
             description="Les éléments importants apparaîtront ici lorsqu’ils seront utiles."
             icon={<Home aria-hidden="true" />}
             title={firstName ? `Bonjour ${firstName}` : "Vue d'ensemble"}

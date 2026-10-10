@@ -79,10 +79,11 @@ permissions du répertoire restent des règles de son module. Les comportements
 de recherche, de compteur et de retour de fiche se qualifient pour chaque besoin.
 
 À migrer quand les pages concernées sont retouchées : `PageHero` avec `tone`
-(dashboard, actualités, `EntityDetailLayout`, création de fiche personne) et les
+(dashboard, actualités, `EntityDetailLayout`) et les
 styles locaux qui dupliquent les composants partagés. Un module CSS de
 composition métier, utilisant les tokens communs, reste légitime. Mon compte,
-la fiche utilisateur et la création de compte utilisent déjà `PageIdentityHero` ;
+la fiche utilisateur, la création de compte et la création de fiche personne
+utilisent déjà `PageIdentityHero` ;
 `UsersAdminHero` a été retiré.
 Les routes canoniques sont `/membres/repertoire` et `/systeme/utilisateurs` ;
 ne plus créer de lien vers les anciens alias (`/personnes`,

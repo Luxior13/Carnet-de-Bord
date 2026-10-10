@@ -1,0 +1,296 @@
+{
+  "date": "2026-10-11",
+  "environment": "Chromium isolé, React StrictMode, composants et CSS réels, shell/session/API simulés, police Arial",
+  "results": [
+    {
+      "width": 320,
+      "scenario": "layout-accueil",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "layout-connexion",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "layout-compte",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "layout-creation",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "layout-feuille-de-route",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "layout-erreur",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "layout-introuvable",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "layout-chargement",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "roadmap-filters",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "creation-dirty-storage-double-submit",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "scenario": "creation-errors",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "layout-accueil",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "layout-connexion",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "layout-compte",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "layout-creation",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "layout-feuille-de-route",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "layout-erreur",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "layout-introuvable",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "layout-chargement",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "roadmap-filters",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "creation-dirty-storage-double-submit",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "creation-errors",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "layout-accueil",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "layout-connexion",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "layout-compte",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "layout-creation",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "layout-feuille-de-route",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "layout-erreur",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "layout-introuvable",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "layout-chargement",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "roadmap-filters",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "creation-dirty-storage-double-submit",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "scenario": "creation-errors",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "layout-accueil",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "layout-connexion",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "layout-compte",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "layout-creation",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "layout-feuille-de-route",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "layout-erreur",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "layout-introuvable",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "layout-chargement",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "roadmap-filters",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "creation-dirty-storage-double-submit",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "creation-errors",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "login-storage-mfa-recovery",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "account-drafts-navigation",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "account-conflict-and-optional-name",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "account-session-switch",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "account-sensitive-forms",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "mfa-setup-locks",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "scenario": "account-security-sessions",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "login-storage-mfa-recovery",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "account-drafts-navigation",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "account-conflict-and-optional-name",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "account-session-switch",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "account-sensitive-forms",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "mfa-setup-locks",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "scenario": "account-security-sessions",
+      "result": "passed"
+    }
+  ]
+}

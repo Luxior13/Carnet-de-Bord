@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors, parseJsonBody } from '$server/api-response';
+import { apiError, apiErrors, parseJsonBody } from '$server/api-response';
 import { createAuditLogWithHeaders, mapUserToUserType } from '$server/auth';
 import { prisma } from '$server/prisma';
 import {
@@ -26,15 +26,21 @@ type MeResponseData = {
 
 const updateProfileSchema = z
   .object({
+    expectedUpdatedAt: z
+      .string()
+      .datetime({ offset: true })
+      .transform((value) => new Date(value)),
     firstName: trimmedStringMinMax(
       1,
       50,
       'Le prénom est requis',
       'Prénom trop long',
     ),
-    lastName: trimmedStringMinMax(1, 50, 'Le nom est requis', 'Nom trop long'),
+    lastName: trimmedStringMinMax(0, 50, undefined, 'Nom trop long'),
   })
   .strict();
+
+class ProfileConflictError extends Error {}
 
 export async function GET(): Promise<
   NextResponse<ApiSuccessResponse<MeResponseData> | ApiErrorResponse>
@@ -93,8 +99,23 @@ export async function PATCH(
       );
     }
 
-    const { firstName: nextFirstName, lastName: nextLastName } =
-      validation.data;
+    const {
+      expectedUpdatedAt,
+      firstName: nextFirstName,
+      lastName: nextLastName,
+    } = validation.data;
+
+    const profilePermission = requirePermission(
+      user,
+      PERMISSIONS.ACCOUNT.UPDATE_PROFILE,
+    );
+    if (!profilePermission.success) return profilePermission.response;
+    if (
+      !user.updatedAt ||
+      new Date(user.updatedAt).getTime() !== expectedUpdatedAt.getTime()
+    ) {
+      throw new ProfileConflictError();
+    }
 
     if (nextFirstName === user.firstName && nextLastName === user.lastName) {
       return NextResponse.json({
@@ -102,12 +123,6 @@ export async function PATCH(
         success: true,
       });
     }
-
-    const profilePermission = requirePermission(
-      user,
-      PERMISSIONS.ACCOUNT.UPDATE_PROFILE,
-    );
-    if (!profilePermission.success) return profilePermission.response;
 
     const beforeValues: Record<string, unknown> = {};
     const afterValues: Record<string, unknown> = {};
@@ -126,13 +141,18 @@ export async function PATCH(
     }
 
     const updatedUser = await prisma.$transaction(async (transaction) => {
-      const updatedProfile = await transaction.user.update({
+      const result = await transaction.user.updateMany({
         data: {
           firstName: nextFirstName,
           lastName: nextLastName,
         },
+        where: { id: user.id, updatedAt: expectedUpdatedAt },
+      });
+      if (result.count !== 1) throw new ProfileConflictError();
+      const updatedProfile = await transaction.user.findUnique({
         where: { id: user.id },
       });
+      if (!updatedProfile) throw new ProfileConflictError();
 
       await createAuditLogWithHeaders(
         {
@@ -164,6 +184,14 @@ export async function PATCH(
       success: true,
     });
   } catch (error) {
+    if (error instanceof ProfileConflictError) {
+      return apiError(
+        ErrorCode.CONFLICT,
+        'Votre profil a changé. Actualisez sa version avant de réessayer.',
+        409,
+      );
+    }
+
     return apiErrors.internal('ME_UPDATE', error);
   }
 }

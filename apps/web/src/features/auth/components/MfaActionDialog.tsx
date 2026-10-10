@@ -43,6 +43,15 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
   onComplete,
   open,
 }) => {
+  const submissionRef = useRef(false);
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+    };
+  }, []);
   const [currentPassword, setCurrentPassword] = useState('');
   const [currentCode, setCurrentCode] = useState('');
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
@@ -68,9 +77,10 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
-    if (!canSubmit) return;
+    if (submissionRef.current || !mountedRef.current || !canSubmit) return;
 
     try {
+      submissionRef.current = true;
       setIsSubmitting(true);
       setError(null);
       const requestBody: MfaRecoveryCodesRegenerationRequest = {
@@ -84,6 +94,7 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
       });
       const data = (await response.json()) as ApiResponse<MfaActionResponse>;
 
+      if (!mountedRef.current) return;
       if (!response.ok || !data.success) {
         setError(
           data.success
@@ -105,20 +116,24 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
       setResponseUser(data.data.user);
       setRecoveryCodes(data.data.recoveryCodes);
     } catch {
+      if (!mountedRef.current) return;
       setError('Impossible de confirmer cette action');
     } finally {
-      setIsSubmitting(false);
+      submissionRef.current = false;
+      if (mountedRef.current) setIsSubmitting(false);
     }
   };
 
   const handleRecoveryCodesSaved = async (): Promise<void> => {
     try {
+      submissionRef.current = true;
       setIsSubmitting(true);
       await onComplete(responseUser);
       toast.success('Nouveaux codes de secours générés');
       onCancel();
     } finally {
-      setIsSubmitting(false);
+      submissionRef.current = false;
+      if (mountedRef.current) setIsSubmitting(false);
     }
   };
 

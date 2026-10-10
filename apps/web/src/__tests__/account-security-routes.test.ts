@@ -152,6 +152,27 @@ describe('account security routes', () => {
   });
 
   describe('PATCH /api/auth/me', () => {
+    const version = '2026-10-11T00:00:00.000Z';
+    beforeEach(() => {
+      mockRequireAuth.mockResolvedValue({
+        session: null,
+        success: true,
+        user: {
+          firstName: 'Jean',
+          id: 'user-1',
+          lastName: 'Dupont',
+          updatedAt: version,
+        },
+      });
+      mockPrisma.user.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        firstName: 'Jeanne',
+        id: 'user-1',
+        lastName: 'Dupont',
+        updatedAt: version,
+      });
+    });
+
     it('returns 400 for an invalid JSON body', async () => {
       const route = await import('$app/api/auth/me/route');
       const response = await route.PATCH(
@@ -165,7 +186,7 @@ describe('account security routes', () => {
 
       expect(response.status).toBe(400);
       expect(body.error.code).toBe(ErrorCode.VALIDATION_ERROR);
-      expect(mockPrisma.user.update).not.toHaveBeenCalled();
+      expect(mockPrisma.user.updateMany).not.toHaveBeenCalled();
     });
 
     it('rejects whitespace-only profile names after trimming', async () => {
@@ -173,6 +194,7 @@ describe('account security routes', () => {
       const response = await route.PATCH(
         new Request('http://localhost/api/auth/me', {
           body: JSON.stringify({
+            expectedUpdatedAt: version,
             firstName: '   ',
             lastName: 'Dupont',
           }),
@@ -184,7 +206,7 @@ describe('account security routes', () => {
       expect(response.status).toBe(400);
       expect(body.success).toBe(false);
       expect(body.error.code).toBe(ErrorCode.VALIDATION_ERROR);
-      expect(mockPrisma.user.update).not.toHaveBeenCalled();
+      expect(mockPrisma.user.updateMany).not.toHaveBeenCalled();
     });
 
     it('audits profile changes from my account with before and after values', async () => {
@@ -195,9 +217,10 @@ describe('account security routes', () => {
           firstName: 'Jean',
           id: 'user-1',
           lastName: 'Dupont',
+          updatedAt: version,
         },
       });
-      mockPrisma.user.update.mockResolvedValueOnce({
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
         firstName: 'Jeanne',
         id: 'user-1',
         lastName: 'Dupont',
@@ -207,6 +230,7 @@ describe('account security routes', () => {
       const response = await route.PATCH(
         new Request('http://localhost/api/auth/me', {
           body: JSON.stringify({
+            expectedUpdatedAt: version,
             firstName: 'Jeanne',
             lastName: 'Dupont',
           }),
@@ -250,6 +274,7 @@ describe('account security routes', () => {
           firstName: 'Jean',
           id: 'user-1',
           lastName: 'Dupont',
+          updatedAt: version,
         },
       });
       mockRequirePermission.mockReturnValueOnce({
@@ -270,6 +295,7 @@ describe('account security routes', () => {
       const response = await route.PATCH(
         new Request('http://localhost/api/auth/me', {
           body: JSON.stringify({
+            expectedUpdatedAt: version,
             firstName: 'Jeanne',
             lastName: 'Dupont',
           }),
@@ -280,8 +306,71 @@ describe('account security routes', () => {
 
       expect(response.status).toBe(403);
       expect(body.success).toBe(false);
-      expect(mockPrisma.user.update).not.toHaveBeenCalled();
+      expect(mockPrisma.user.updateMany).not.toHaveBeenCalled();
       expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
+    });
+
+    it('accepts an empty optional family name', async () => {
+      const { PATCH } = await import('$app/api/auth/me/route');
+      const response = await PATCH(
+        new Request('http://localhost/api/auth/me', {
+          body: JSON.stringify({
+            expectedUpdatedAt: version,
+            firstName: 'Jean',
+            lastName: '   ',
+          }),
+          method: 'PATCH',
+        }),
+      );
+      expect(response.status).toBe(200);
+      expect(mockPrisma.user.updateMany).toHaveBeenCalledWith({
+        data: { firstName: 'Jean', lastName: '' },
+        where: { id: 'user-1', updatedAt: new Date(version) },
+      });
+    });
+    it('rejects a stale profile before any write or audit', async () => {
+      const { PATCH } = await import('$app/api/auth/me/route');
+      const response = await PATCH(
+        new Request('http://localhost/api/auth/me', {
+          body: JSON.stringify({
+            expectedUpdatedAt: '2026-10-10T00:00:00.000Z',
+            firstName: 'Jeanne',
+            lastName: '',
+          }),
+          method: 'PATCH',
+        }),
+      );
+      expect(response.status).toBe(409);
+      expect(mockPrisma.user.updateMany).not.toHaveBeenCalled();
+      expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
+    });
+    it('rejects a concurrent update without creating a false audit', async () => {
+      mockPrisma.user.updateMany.mockResolvedValueOnce({ count: 0 });
+      const { PATCH } = await import('$app/api/auth/me/route');
+      const response = await PATCH(
+        new Request('http://localhost/api/auth/me', {
+          body: JSON.stringify({
+            expectedUpdatedAt: version,
+            firstName: 'Jeanne',
+            lastName: '',
+          }),
+          method: 'PATCH',
+        }),
+      );
+      expect(response.status).toBe(409);
+      expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+      expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
+    });
+    it('requires the edited profile version', async () => {
+      const { PATCH } = await import('$app/api/auth/me/route');
+      const response = await PATCH(
+        new Request('http://localhost/api/auth/me', {
+          body: JSON.stringify({ firstName: 'Jeanne', lastName: '' }),
+          method: 'PATCH',
+        }),
+      );
+      expect(response.status).toBe(400);
+      expect(mockPrisma.user.updateMany).not.toHaveBeenCalled();
     });
   });
 

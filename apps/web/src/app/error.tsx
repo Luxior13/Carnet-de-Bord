@@ -18,7 +18,7 @@ const ErrorPage: FC<ErrorPageProps> = ({ error, reset }) => {
       role="alert"
     >
       <div aria-hidden="true" className="site-background-column" />
-      <Card className="relative z-10 w-full max-w-md text-center">
+      <Card className="border-border-content bg-surface-panel relative z-10 w-full max-w-md rounded-[10px] text-center">
         <CardContent className="space-y-5 p-6">
           <div className="bg-destructive/10 mx-auto flex h-14 w-14 items-center justify-center rounded-lg">
             <AlertTriangle className="text-destructive h-7 w-7" />
@@ -33,8 +33,8 @@ const ErrorPage: FC<ErrorPageProps> = ({ error, reset }) => {
             </p>
           </div>
           {error.digest && (
-            <p className="text-muted-foreground font-mono text-xs">
-              Code: {error.digest}
+            <p className="text-muted-foreground font-mono text-xs break-all">
+              Référence : {error.digest}
             </p>
           )}
           <Button onClick={reset} className="gap-2">

@@ -1,6 +1,6 @@
 # Suivi — Feuille de route
 
-## État courant — 10 octobre 2026
+## État courant — 11 octobre 2026
 
 Route `/systeme/feuille-de-route`, catalogue informatif pour les comptes connectés.
 Le catalogue comprend 39 chantiers, huit pôles cibles et six étapes ; ces nombres
@@ -25,6 +25,12 @@ Sources : [décisions produit](../../references/FEUILLE_DE_ROUTE.md),
   statut ne modifie pas automatiquement le registre des fonctionnalités.
 - Sélectionner Q01–Q05, Q09, Q19, Q27 et Q30 selon le changement. Un tri du
   catalogue n’autorise aucune permission supplémentaire.
+- Barre de filtres sur `surface-content-header`, sélecteurs et menus `compact`
+  comme le Répertoire ; corps de section `surface-panel`, en-tête
+  `surface-panel-header`. La composition par pôles reste adaptée à la lecture.
+- La recherche inclut le critère de livraison `doneWhen`, déjà visible dans les
+  cartes. Les paramètres inconnus reviennent aux filtres neutres ; la remise à
+  zéro rend les 39 chantiers. Aucun module futur n’est activé par cet écran.
 
 ## Preuves et point ouvert
 
@@ -39,6 +45,12 @@ catalogue dans le code. La matrice est corrigée pour inclure notifications et
 journal ; l’actualité reprend le statut « À cadrer » du catalogue. Les essais
 applicatifs de la cartographie restent datés, non rejoués par cette modification.
 
+Le [contrôle du 11 octobre](../../audits/AUDIT_PAGES_RESTANTES_2026-10-11.md)
+exécute rendu, URL invalide, recherche sans résultat, filtres pôle/étape et remise
+à zéro à 320, 390, 768 et 1 440 px, sans erreur JavaScript ni débordement global.
+Le composant et le catalogue sont réels ; session et navigation sont simulées.
+FDR-01 reste ouvert uniquement pour leur intégration authentifiée.
+
 | ID | Point | Suite / déclencheur | Responsable / état |
 | --- | --- | --- | --- |
-| FDR-01 | Parcours authentifié de lecture, filtres et petit écran non rejoué pendant la réconciliation | Vérifier lors de la prochaine évolution visible du catalogue, avec session dédiée | À attribuer / à vérifier |
+| FDR-01 | Lecture et filtres vérifiés dans le navigateur isolé le 11 octobre ; intégration authentifiée non rejouée | Vérifier le cadre et la session dédiés avant conclusion de parcours complet | À attribuer / à vérifier |

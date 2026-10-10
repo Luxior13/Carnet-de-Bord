@@ -2,7 +2,7 @@
 
 import { Copy, Loader2, QrCode, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
-import React, { type FC, useRef, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { type ApiResponse, RoutesApi } from '$types/api.types';
@@ -42,6 +42,15 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
   onComplete,
 }) => {
   const [step, setStep] = useState<SetupStep>('authorize');
+  const submissionRef = useRef(false);
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+    };
+  }, []);
   const [currentPassword, setCurrentPassword] = useState('');
   const [currentCode, setCurrentCode] = useState('');
   const [currentCodeKind, setCurrentCodeKind] = useState<MfaCodeKind>('totp');
@@ -61,9 +70,10 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
       (!isReplacing || isCompleteMfaCode(currentCode, currentCodeKind)));
 
   const handleStart = async (): Promise<void> => {
-    if (!canAuthorize) return;
+    if (submissionRef.current || !mountedRef.current || !canAuthorize) return;
 
     try {
+      submissionRef.current = true;
       setIsSubmitting(true);
       setError(null);
       const response = await apiFetch(RoutesApi.mfaSetup, {
@@ -80,6 +90,7 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
       });
       const data = (await response.json()) as ApiResponse<MfaSetupStartData>;
 
+      if (!mountedRef.current) return;
       if (!response.ok || !data.success) {
         setError(
           data.success
@@ -95,9 +106,11 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
       setNewCode('');
       setStep('scan');
     } catch {
+      if (!mountedRef.current) return;
       setError('Impossible de préparer la double authentification');
     } finally {
-      setIsSubmitting(false);
+      submissionRef.current = false;
+      if (mountedRef.current) setIsSubmitting(false);
     }
   };
 
@@ -105,9 +118,15 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
-    if (!isCompleteMfaCode(newCode, 'totp')) return;
+    if (
+      submissionRef.current ||
+      !mountedRef.current ||
+      !isCompleteMfaCode(newCode, 'totp')
+    )
+      return;
 
     try {
+      submissionRef.current = true;
       setIsSubmitting(true);
       setError(null);
       const response = await apiFetch(RoutesApi.mfaSetup, {
@@ -118,6 +137,7 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
       const data =
         (await response.json()) as ApiResponse<MfaSetupConfirmationData>;
 
+      if (!mountedRef.current) return;
       if (!response.ok || !data.success) {
         setError(
           data.success
@@ -133,9 +153,11 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
       setCompletion(data.data);
       setStep('recovery');
     } catch {
+      if (!mountedRef.current) return;
       setError('Impossible d’activer la double authentification');
     } finally {
-      setIsSubmitting(false);
+      submissionRef.current = false;
+      if (mountedRef.current) setIsSubmitting(false);
     }
   };
 
@@ -146,6 +168,7 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
       await navigator.clipboard.writeText(setup.manualKey);
       toast.success('Clé de configuration copiée');
     } catch {
+      if (!mountedRef.current) return;
       toast.error('Impossible de copier la clé');
     }
   };
@@ -154,13 +177,16 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
     if (!completion) return;
 
     try {
+      submissionRef.current = true;
       setIsSubmitting(true);
       setError(null);
       await onComplete(completion);
     } catch {
+      if (!mountedRef.current) return;
       setError('Impossible de terminer la configuration');
     } finally {
-      setIsSubmitting(false);
+      submissionRef.current = false;
+      if (mountedRef.current) setIsSubmitting(false);
     }
   };
 

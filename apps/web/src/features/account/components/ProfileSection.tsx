@@ -31,6 +31,15 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
   const [firstName, setFirstName] = useState(userData.firstName);
   const [lastName, setLastName] = useState(userData.lastName ?? '');
   const [isSaving, setIsSaving] = useState(false);
+  const [baseProfile, setBaseProfile] = useState(userData);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
+  const [latestProfileLabel, setLatestProfileLabel] = useState<string | null>(
+    null,
+  );
+  const dirtyRef = useRef(false);
+  const savingRef = useRef(false);
+  const mountedRef = useRef(false);
   const [showContactEmailDialog, setShowContactEmailDialog] = useState(false);
   const onDirtyChangeRef = useRef(onDirtyChange);
 
@@ -39,9 +48,18 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
   }, [onDirtyChange]);
 
   useEffect(() => {
+    if (dirtyRef.current) return;
     setFirstName(userData.firstName);
     setLastName(userData.lastName ?? '');
+    setBaseProfile(userData);
   }, [userData]);
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const trimmedFirstName = firstName.trim();
   const trimmedLastName = lastName.trim();
@@ -53,9 +71,10 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
   const lastNameError =
     trimmedLastName.length > PROFILE_FIELD_MAX_LENGTH ? 'Nom trop long' : null;
   const hasProfileChanges =
-    trimmedFirstName !== userData.firstName ||
-    trimmedLastName !== (userData.lastName ?? '');
+    trimmedFirstName !== baseProfile.firstName ||
+    trimmedLastName !== (baseProfile.lastName ?? '');
   const isProfileDirty = hasProfileChanges;
+  dirtyRef.current = isProfileDirty;
   const canEditProfile =
     userData.isProtected ||
     hasPermission(
@@ -83,6 +102,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
   );
 
   const handleSaveProfile = async (): Promise<void> => {
+    if (savingRef.current || !mountedRef.current || conflict) return;
     if (!canEditProfile) {
       toast.error('Modification du profil non autorisée');
 
@@ -100,9 +120,18 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
     }
 
     try {
+      savingRef.current = true;
       setIsSaving(true);
+      setSaveError(null);
+      if (!baseProfile.updatedAt) {
+        setConflict(true);
+        setSaveError('Actualisez la version du profil avant de l’enregistrer.');
+
+        return;
+      }
       const response = await apiFetch('/api/auth/me', {
         body: JSON.stringify({
+          expectedUpdatedAt: new Date(baseProfile.updatedAt).toISOString(),
           firstName: trimmedFirstName,
           lastName: trimmedLastName,
         }),
@@ -110,23 +139,64 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
         method: 'PATCH',
       });
       const data = await response.json();
+      if (!mountedRef.current) return;
 
       if (response.ok && data.success) {
+        setBaseProfile(data.data.user);
+        setFirstName(data.data.user.firstName);
+        setLastName(data.data.user.lastName ?? '');
+        setLatestProfileLabel(null);
         toast.success('Profil mis à jour avec succès');
         await onUpdate(data.data.user as UserType);
       } else {
-        toast.error(data.error?.message || 'Erreur lors de la mise à jour');
+        setConflict(response.status === 409);
+        setSaveError(data.error?.message || 'Erreur lors de la mise à jour');
       }
     } catch {
-      toast.error('Erreur lors de la mise à jour');
+      if (mountedRef.current)
+        setSaveError('Enregistrement impossible. Votre saisie est conservée.');
     } finally {
-      setIsSaving(false);
+      savingRef.current = false;
+      if (mountedRef.current) setIsSaving(false);
+    }
+  };
+
+  const reloadProfileVersion = async (): Promise<void> => {
+    if (savingRef.current || !mountedRef.current) return;
+    savingRef.current = true;
+    setIsSaving(true);
+    try {
+      const response = await apiFetch('/api/auth/me', { cache: 'no-store' });
+      const payload = await response.json();
+      if (!mountedRef.current) return;
+      if (!response.ok || !payload.success)
+        throw new Error('Lecture impossible');
+      const latest = payload.data.user as UserType;
+      setBaseProfile(latest);
+      setLatestProfileLabel(
+        `Profil actuellement enregistré : ${latest.firstName} ${latest.lastName}. Votre saisie est conservée ; vérifiez-la avant d’enregistrer.`,
+      );
+      setConflict(false);
+      setSaveError(null);
+      await onUpdate(latest);
+    } catch {
+      if (mountedRef.current)
+        setSaveError(
+          'Impossible de relire le profil. Réessayez ; votre saisie est conservée.',
+        );
+    } finally {
+      savingRef.current = false;
+      if (mountedRef.current) setIsSaving(false);
     }
   };
 
   const handleCancel = (): void => {
     setFirstName(userData.firstName);
     setLastName(userData.lastName ?? '');
+    setBaseProfile(userData);
+    setSaveError(null);
+    setConflict(false);
+    setLatestProfileLabel(null);
   };
 
   return (
@@ -137,12 +207,23 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
         description="Votre identité et votre adresse de contact"
       >
         <form
+          aria-busy={isSaving || undefined}
           noValidate
           onSubmit={(event) => {
             event.preventDefault();
             void handleSaveProfile();
           }}
         >
+          {saveError && (
+            <p className="text-destructive mb-3 text-sm" role="alert">
+              {saveError}
+            </p>
+          )}
+          {latestProfileLabel && (
+            <p className="text-muted-foreground mb-3 text-sm" role="status">
+              {latestProfileLabel}
+            </p>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label
@@ -253,18 +334,22 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
       </AccountPanel>
       {isProfileDirty && (
         <SectionActionBar
+          conflict={conflict}
+          onResolveConflict={() => void reloadProfileVersion()}
           isSaving={isSaving}
           onCancel={handleCancel}
           onSave={() => void handleSaveProfile()}
         />
       )}
-      <ContactEmailDialog
-        contactEmail={userData.contactEmail}
-        loginName={userData.loginName}
-        onCancel={() => setShowContactEmailDialog(false)}
-        onSuccess={onUpdate}
-        open={showContactEmailDialog}
-      />
+      {canEditContact && (
+        <ContactEmailDialog
+          contactEmail={userData.contactEmail}
+          loginName={userData.loginName}
+          onCancel={() => setShowContactEmailDialog(false)}
+          onSuccess={onUpdate}
+          open={showContactEmailDialog}
+        />
+      )}
     </>
   );
 };

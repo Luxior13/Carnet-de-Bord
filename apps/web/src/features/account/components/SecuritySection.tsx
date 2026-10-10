@@ -10,13 +10,17 @@ import {
   RefreshCw,
   Shield,
   ShieldCheck,
-  Smartphone,
 } from 'lucide-react';
-import React, { type FC, useCallback, useEffect, useState } from 'react';
+import React, {
+  type FC,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 
 import { ChangePasswordDialog } from '$components/ChangePasswordDialog';
-import { Disclosure } from '$components/layout/Disclosure';
 import { MfaActionDialog } from '$features/auth/components/MfaActionDialog';
 import { MfaSetupDialog } from '$features/auth/components/MfaSetupDialog';
 import { type ApiResponse, RoutesApi } from '$types/api.types';
@@ -35,7 +39,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '$ui/alert-dialog';
-import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
 import { Separator } from '$ui/separator';
@@ -44,19 +47,13 @@ import { Skeleton } from '$ui/skeleton';
 import { apiFetch } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 
-import { formatRelativeAccountTime, parseUserAgent } from '../account.utils';
-
-type SessionInfo = {
-  createdAt: string;
-  expiresAt: string;
-  id: string;
-  idleExpiresAt: string;
-  ipAddress: string | null;
-  isCurrent: boolean;
-  lastSeenAt: string;
-  rememberMe: boolean;
-  userAgent: string | null;
-};
+import { formatRelativeAccountTime } from '../account.utils';
+import {
+  formatSessionDateTime,
+  getSessionTitle,
+  type SessionInfo,
+  SessionRow,
+} from './AccountSessionRow';
 
 type SecuritySectionProps = {
   canChangePassword: boolean;
@@ -108,131 +105,6 @@ const StatusBadge: FC<{
   );
 };
 
-const formatSessionDateTime = (date: string | null): string => {
-  if (!date) return 'Date inconnue';
-
-  const parsedDate = new Date(date);
-
-  if (Number.isNaN(parsedDate.getTime())) return 'Date inconnue';
-
-  return parsedDate.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-};
-
-const getSessionDeviceIcon = (device: string): typeof Monitor => {
-  return device === 'iPhone/iPad' || device === 'Android'
-    ? Smartphone
-    : Monitor;
-};
-
-const getSessionTitle = (session: SessionInfo): string => {
-  const { browser, device } = parseUserAgent(session.userAgent);
-
-  return `${device} - ${browser}`;
-};
-
-type SessionRowProps = {
-  isRevoking?: boolean;
-  onRevoke?: (session: SessionInfo) => void;
-  session: SessionInfo;
-};
-
-const SessionRow: FC<SessionRowProps> = ({ isRevoking, onRevoke, session }) => {
-  const { browser, device } = parseUserAgent(session.userAgent);
-  const DeviceIcon = getSessionDeviceIcon(device);
-  const canRevoke = !!onRevoke && !session.isCurrent;
-
-  return (
-    <div
-      className={cn(
-        'border-border/60 bg-surface-inset flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-start',
-        session.isCurrent && 'border-primary/35 bg-accent/[0.1]',
-      )}
-    >
-      <div className="flex min-w-0 flex-1 items-start gap-3">
-        <ServiceIcon className="size-9">
-          <DeviceIcon className="size-4" />
-        </ServiceIcon>
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <p className="text-foreground truncate text-sm font-medium">
-              {device} · {browser}
-            </p>
-            {session.isCurrent && (
-              <Badge variant="secondary" className="rounded-full">
-                Session actuelle
-              </Badge>
-            )}
-            {session.rememberMe && (
-              <Badge variant="outline" className="rounded-full">
-                Appareil de confiance
-              </Badge>
-            )}
-          </div>
-          <p className="text-muted-foreground mt-1 text-xs">
-            Dernière activité {formatRelativeAccountTime(session.lastSeenAt)}
-          </p>
-          <Disclosure
-            label="Détails techniques"
-            className="border-border/60 mt-2 border-t pt-2 text-xs"
-          >
-            <dl className="mt-2 grid gap-x-4 gap-y-2 sm:grid-cols-2">
-              <div>
-                <dt className="text-muted-foreground">Adresse IP</dt>
-                <dd className="text-foreground mt-0.5 break-all">
-                  {session.ipAddress ?? 'Inconnue'}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Créée le</dt>
-                <dd className="text-foreground mt-0.5">
-                  {formatSessionDateTime(session.createdAt)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">
-                  Expiration après inactivité
-                </dt>
-                <dd className="text-foreground mt-0.5">
-                  {formatSessionDateTime(session.idleExpiresAt)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Expiration maximale</dt>
-                <dd className="text-foreground mt-0.5">
-                  {formatSessionDateTime(session.expiresAt)}
-                </dd>
-              </div>
-            </dl>
-          </Disclosure>
-        </div>
-      </div>
-      {canRevoke && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="text-destructive hover:text-destructive w-full shrink-0 gap-2 sm:w-auto"
-          onClick={() => onRevoke(session)}
-          disabled={isRevoking}
-        >
-          {isRevoking ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <LogOut className="size-4" />
-          )}
-          Déconnecter
-        </Button>
-      )}
-    </div>
-  );
-};
-
 export const SecuritySection: FC<SecuritySectionProps> = ({
   canChangePassword,
   canManageMfa,
@@ -241,6 +113,14 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   onUpdate,
   userData,
 }) => {
+  const lifetimeRef = useRef<AbortController | null>(null);
+  const revokingRef = useRef(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    lifetimeRef.current = controller;
+
+    return (): void => controller.abort();
+  }, []);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [mfaStatus, setMfaStatus] = useState<MfaStatus | null>(null);
   const [loadingMfaStatus, setLoadingMfaStatus] = useState(true);
@@ -260,7 +140,8 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
 
   const fetchMfaStatus = useCallback(
-    async (signal?: AbortSignal): Promise<void> => {
+    async (signal = lifetimeRef.current?.signal): Promise<void> => {
+      if (!signal || signal.aborted) return;
       if (!canViewSecurity && !canManageMfa) {
         setMfaStatus(null);
         setMfaStatusError(null);
@@ -303,7 +184,8 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   );
 
   const fetchSessions = useCallback(
-    async (signal?: AbortSignal): Promise<void> => {
+    async (signal = lifetimeRef.current?.signal): Promise<void> => {
+      if (!signal || signal.aborted) return;
       if (!canManageSessions) {
         setSessions([]);
         setSessionsError(null);
@@ -362,13 +244,19 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   }, [fetchMfaStatus, userData.mfaEnabledAt]);
 
   const handleRevokeAllSessions = async (): Promise<void> => {
+    const signal = lifetimeRef.current?.signal;
+    if (!canManageSessions || !signal || signal.aborted || revokingRef.current)
+      return;
+    revokingRef.current = true;
     try {
       setRevokingAll(true);
       const response = await apiFetch('/api/auth/sessions', {
         method: 'DELETE',
+        signal,
       });
       const data = await response.json();
 
+      if (signal.aborted) return;
       if (response.ok && data.success) {
         toast.success('Toutes les autres sessions ont été déconnectées');
         void fetchSessions();
@@ -376,21 +264,29 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         toast.error(data.error?.message || 'Erreur');
       }
     } catch {
-      toast.error('Erreur lors de la déconnexion');
+      if (!signal.aborted) toast.error('Erreur lors de la déconnexion');
     } finally {
+      revokingRef.current = false;
+      if (signal.aborted) return;
       setRevokingAll(false);
       setShowRevokeDialog(false);
     }
   };
 
   const handleRevokeSession = async (sessionId: string): Promise<void> => {
+    const signal = lifetimeRef.current?.signal;
+    if (!canManageSessions || !signal || signal.aborted || revokingRef.current)
+      return;
+    revokingRef.current = true;
     try {
       setRevokingId(sessionId);
       const response = await apiFetch(`/api/auth/sessions?id=${sessionId}`, {
         method: 'DELETE',
+        signal,
       });
       const data = await response.json();
 
+      if (signal.aborted) return;
       if (response.ok && data.success) {
         toast.success('Session déconnectée');
         void fetchSessions();
@@ -398,8 +294,10 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         toast.error(data.error?.message || 'Erreur');
       }
     } catch {
-      toast.error('Erreur lors de la déconnexion');
+      if (!signal.aborted) toast.error('Erreur lors de la déconnexion');
     } finally {
+      revokingRef.current = false;
+      if (signal.aborted) return;
       setRevokingId(null);
       setSessionToRevoke(null);
     }
@@ -408,6 +306,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   const handleMfaSetupComplete = async (
     data: MfaSetupConfirmationData,
   ): Promise<void> => {
+    if (lifetimeRef.current?.signal.aborted) return;
     await onUpdate(data.user);
     await Promise.all([
       fetchMfaStatus(),
@@ -424,6 +323,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   const handleMfaActionComplete = async (
     updatedUser?: UserType,
   ): Promise<void> => {
+    if (lifetimeRef.current?.signal.aborted) return;
     await onUpdate(updatedUser);
     await Promise.all([
       fetchMfaStatus(),
@@ -768,6 +668,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         open={showPasswordDialog}
         onCancel={() => setShowPasswordDialog(false)}
         onSuccess={() => {
+          if (lifetimeRef.current?.signal.aborted) return;
           setShowPasswordDialog(false);
           void onUpdate();
           toast.success('Mot de passe modifié avec succès');

@@ -3,7 +3,7 @@
 import { ArrowRight, Loader2, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { type FC, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
@@ -53,25 +53,43 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({ returnHref }) => {
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<PersonIdentityFormValue>(INITIAL_FORM);
-  const [isDirty, setIsDirty] = useState(false);
+  const isDirty = Object.entries(form).some(
+    ([key, value]) =>
+      value !==
+      Object.entries(INITIAL_FORM).find(
+        ([initialKey]) => initialKey === key,
+      )?.[1],
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const submittedRef = useRef(false);
+  const mountedRef = useRef(false);
+  const [created, setCreated] = useState(false);
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+    };
+  }, []);
   const {
     cancelPendingNavigation,
     confirmPendingNavigation,
     pendingNavigationHref,
-  } = useUnsavedNavigationGuard(isDirty);
+    restoreFocus,
+  } = useUnsavedNavigationGuard(isDirty && !created);
 
   const handleChange = <TKey extends keyof PersonIdentityFormValue>(
     key: TKey,
     value: PersonIdentityFormValue[TKey],
   ): void => {
     setForm((current) => ({ ...current, [key]: value }));
-    setIsDirty(true);
+    setSubmitError(null);
   };
 
   const handleSubmit = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
-    if (isSubmitting) return;
+    if (submittedRef.current || !mountedRef.current) return;
     const validation = createPersonSchema.safeParse({
       birthDate: null,
       emails: [],
@@ -91,16 +109,26 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({ returnHref }) => {
     }
 
     setErrors({});
+    setSubmitError(null);
+    submittedRef.current = true;
     setIsSubmitting(true);
     try {
       const result = await createPerson(validation.data);
+      if (!mountedRef.current) return;
       if (result.duplicateWarning?.duplicateFound) {
-        sessionStorage.setItem(
-          `person-duplicate-warning:${result.person.id}`,
-          JSON.stringify(result.duplicateWarning),
-        );
+        try {
+          sessionStorage.setItem(
+            `person-duplicate-warning:${result.person.id}`,
+            JSON.stringify(result.duplicateWarning),
+          );
+        } catch {
+          // Storage is optional; the person has already been created.
+          toast.warning(
+            'Fiche créée ; un doublon possible a été détecté. Vérifiez le répertoire.',
+          );
+        }
       }
-      setIsDirty(false);
+      setCreated(true);
       toast.success('Fiche créée');
       const params = new URLSearchParams({
         returnTo: returnHref,
@@ -108,6 +136,8 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({ returnHref }) => {
       });
       router.push(`${personDetailPath(result.person.id)}?${params}`);
     } catch (caught) {
+      if (!mountedRef.current) return;
+      submittedRef.current = false;
       if (caught instanceof ApiClientError && caught.details) {
         setErrors(
           Object.fromEntries(
@@ -119,19 +149,23 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({ returnHref }) => {
         );
         focusFirstError();
       }
-      toast.error(
+      setSubmitError(
         caught instanceof Error
           ? caught.message
           : 'Impossible de créer la fiche',
       );
     } finally {
-      setIsSubmitting(false);
+      if (mountedRef.current) setIsSubmitting(false);
     }
   };
 
   return (
     <>
-      <form noValidate onSubmit={(event) => void handleSubmit(event)}>
+      <form
+        aria-busy={isSubmitting || undefined}
+        noValidate
+        onSubmit={(event) => void handleSubmit(event)}
+      >
         <Card>
           <CardHeader className="p-3.5 sm:p-4">
             <div className="flex items-start gap-3">
@@ -148,6 +182,11 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({ returnHref }) => {
             </div>
           </CardHeader>
           <CardContent className="p-4 sm:p-5">
+            {submitError && (
+              <p className="text-destructive mb-4 text-sm" role="alert">
+                {submitError}
+              </p>
+            )}
             <PersonIdentityFields
               disabled={isSubmitting}
               errors={errors}
@@ -161,7 +200,7 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({ returnHref }) => {
             <Button asChild variant="outline">
               <Link href={returnHref}>Annuler</Link>
             </Button>
-            <Button disabled={isSubmitting} type="submit">
+            <Button disabled={isSubmitting || created} type="submit">
               {isSubmitting ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
@@ -176,6 +215,7 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({ returnHref }) => {
         contentClassName="sm:max-w-md"
         description="Les informations saisies pour cette nouvelle fiche seront perdues."
         onCancel={cancelPendingNavigation}
+        onCloseAutoFocus={restoreFocus}
         onConfirm={confirmPendingNavigation}
         open={pendingNavigationHref !== null}
       />

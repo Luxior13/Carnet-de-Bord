@@ -56,6 +56,7 @@ export function RoadmapPage(): React.ReactNode {
         item.later,
         item.baseline,
         item.audience,
+        item.doneWhen,
         area?.label,
       ].join(' '),
     );
@@ -190,7 +191,7 @@ export function RoadmapPage(): React.ReactNode {
               </Disclosure>
             </div>
           </Disclosure>
-          <div className="grid gap-3 @min-[44rem]/page:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] @min-[44rem]/page:items-end">
+          <div className="border-border-content bg-surface-content-header grid gap-3 rounded-[10px] border p-4 @min-[44rem]/page:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] @min-[44rem]/page:items-end">
             <div className="space-y-1.5 @min-[44rem]/page:col-span-3">
               <Label htmlFor="roadmap-search">Rechercher un chantier</Label>
               <Input
@@ -212,10 +213,14 @@ export function RoadmapPage(): React.ReactNode {
                   updateQuery({ pole: value === 'all' ? null : value })
                 }
               >
-                <SelectTrigger id="roadmap-area" className="w-full">
+                <SelectTrigger
+                  id="roadmap-area"
+                  className="w-full"
+                  variant="compact"
+                >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent variant="compact">
                   <SelectItem value="all">Tous les pôles</SelectItem>
                   {ROADMAP_AREAS.map((area) => (
                     <SelectItem key={area.id} value={area.id}>
@@ -233,10 +238,14 @@ export function RoadmapPage(): React.ReactNode {
                   updateQuery({ phase: value === 'all' ? null : value })
                 }
               >
-                <SelectTrigger id="roadmap-phase" className="w-full">
+                <SelectTrigger
+                  id="roadmap-phase"
+                  className="w-full"
+                  variant="compact"
+                >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent variant="compact">
                   <SelectItem value="all">Toutes les étapes</SelectItem>
                   {ROADMAP_PHASES.map((step) => (
                     <SelectItem key={step.id} value={String(step.id)}>
@@ -276,9 +285,9 @@ export function RoadmapPage(): React.ReactNode {
               <section
                 key={area.id}
                 aria-labelledby={`roadmap-area-${area.id}`}
-                className="border-border-content bg-surface-content overflow-hidden rounded-[10px] border"
+                className="border-border-content bg-surface-panel overflow-hidden rounded-[10px] border"
               >
-                <div className="border-border-divider bg-surface-content-header flex items-start gap-3 border-b px-4 py-4 @min-[40rem]/page:px-5">
+                <div className="border-border-divider bg-surface-panel-header flex items-start gap-3 border-b px-4 py-4 @min-[40rem]/page:px-5">
                   <ServiceIcon className={cn('size-9', tone.icon)}>
                     <Icon className="size-4" />
                   </ServiceIcon>

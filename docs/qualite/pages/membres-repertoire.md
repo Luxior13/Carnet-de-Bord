@@ -12,10 +12,13 @@
 - Statut : composants et alignement visuel livrés, référence de liste avec
   `/systeme/utilisateurs` ; six défauts d'audit corrigés, ainsi qu'un défaut de
   fuseau découvert sur PostgreSQL. Parcours authentifié complet encore à vérifier.
-- Dernière revue : 2026-10-10 — corrections puis quatre améliorations UX
+- Revue de la liste : 2026-10-10 — corrections puis quatre améliorations UX
   autorisées ; 112 tests du périmètre réussis dans la suite globale, PostgreSQL
   17 isolé, navigateur isolé, types/lint et build réussis.
   Voir le [rapport et ses preuves](../../audits/AUDIT_REPERTOIRE_2026-10-10.md).
+- Dernier complément : création revue le 2026-10-11 ; garde des brouillons,
+  doubles soumissions et stockage facultatif corrigés, avec parcours simulés
+  vérifiés à quatre largeurs (section « Création de fiche » ci-dessous).
 - Références : intentions historiques `features/pages/vie-interne/membres*.md`,
   `features/pages/bureau-juridique/personnes-contacts.md` ; règles courantes
   `docs/references/NAVIGATION.md`, `docs/references/STRUCTURE.md`, `docs/references/ROLES_ET_PERMISSIONS.md`,
@@ -74,6 +77,30 @@ Contrôles réussis : relecture ciblée des règles et de leurs sources,
 `git diff --check`. Les anciens rapports conservent leur portée historique.
 
 ## Fonction et décisions courantes
+
+### Création de fiche — 11 octobre 2026
+
+`/membres/repertoire/nouveau` utilise maintenant `PageIdentityHero` compact,
+avec les champs et le sélecteur de statut partagés. Le formulaire conserve sa
+composition propre ; pseudo seul ou prénom et nom restent les règles métier.
+
+- Le brouillon est comparé aux valeurs initiales : saisir puis effacer ne demande
+  plus une confirmation inutile. Une navigation annulée restitue le focus.
+- Un verrou synchrone empêche deux créations simultanées. Après succès, il reste
+  actif jusqu’au départ vers la fiche ; la confirmation de perte de saisie est
+  désactivée. Les réponses après démontage sont ignorées, et un changement de
+  compte remonte le formulaire.
+- Un refus de `sessionStorage` pour transmettre l’alerte de doublon ne transforme
+  plus une création réussie en erreur : avertissement visible puis ouverture de
+  la fiche. Le stockage de cette alerte reste facultatif.
+- Un échec de création conserve les champs avec un message persistant ; les
+  erreurs de validation ciblent le premier champ invalide.
+
+[Preuve du 11 octobre](../../audits/AUDIT_PAGES_RESTANTES_2026-10-11.md) : quatre
+largeurs, création simulée avec double soumission et stockage bloqué, saisie
+effacée, navigation annulée/focus, validation et réponse 500. La suite web passe.
+La création et sa trace en base avec session réelle restent dans REP-01 ; la
+liste et la fiche n’ont pas été réauditées par cette passe de création.
 
 ### Contour des champs de fiche — 10 octobre 2026
 

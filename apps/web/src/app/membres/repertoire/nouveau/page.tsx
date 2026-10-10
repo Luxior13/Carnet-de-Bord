@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import React, { type FC, Suspense } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
-import { PageHero } from '$components/layout/PageHero';
+import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
@@ -67,14 +67,13 @@ const NewPersonContent: FC<{ returnHref: string }> = ({ returnHref }) => {
   return (
     <PageShell className="py-0" width="form">
       <PageCanvas contentClassName="relative space-y-5">
-        <PageHero
+        <PageIdentityHero
           compact
           description="Créez l'identité essentielle, puis complétez la fiche si nécessaire."
           icon={<UserPlus className="size-5" />}
           title="Nouvelle fiche"
-          tone="internal"
         />
-        <PersonCreateForm returnHref={returnHref} />
+        <PersonCreateForm key={userData?.id} returnHref={returnHref} />
       </PageCanvas>
     </PageShell>
   );

@@ -34,40 +34,16 @@ describe('/mon-compte UX contracts', () => {
   it('protects an edited profile from accidental tab and page navigation', () => {
     expect(profileSource).toContain('onDirtyChange(isProfileDirty)');
     expect(accountPageSource).toContain(
-      "window.addEventListener('beforeunload'",
+      'useUnsavedNavigationGuard(isProfileDirty, resetDraft)',
     );
-    expect(accountPageSource).toContain(
-      "document.addEventListener('click', handleDocumentClick, true)",
-    );
-    expect(accountPageSource).toContain('requestPendingNavigation');
-    expect(accountPageSource).toContain('Quitter sans enregistrer ?');
+    expect(accountPageSource).toContain('<UnsavedNavigationDialog');
+    expect(accountPageSource).toContain('onCloseAutoFocus={restoreFocus}');
   });
 
-  it('loads personal activity with the server page size and explicit pagination', () => {
-    expect(accountPageSource).not.toContain('ACCOUNT_AUDIT_PAGE_SIZE');
-    expect(accountPageSource).toContain('fetchMoreAccountAuditLogs');
-    expect(accountPageSource).toContain('cursor: auditNextCursor');
-    expect(accountPageSource).toContain("includeStats: 'false'");
-    expect(accountPageSource).not.toContain('page: String(nextPage)');
-    expect(accountPageSource).toContain('hasMoreAuditLogs={hasMoreAuditLogs}');
-    expect(accountPageSource).toContain(
-      'onLoadMore={() => void fetchMoreAccountAuditLogs()}',
-    );
-    expect(accountPageSource).not.toContain('ACCOUNT_AUDIT_MAX_PREFETCH_PAGES');
-    expect(activitySource).toContain(
-      "const usesServerPagination = typeof onLoadMore === 'function'",
-    );
-    expect(activitySource).toContain(
-      'isServerFiltering || usesServerPagination ? filteredLogs : displayedLogs',
-    );
-  });
-
-  it('mounts Security and Activity only after their first visit', () => {
+  it('keeps the retired activity section out of the live account page', () => {
+    expect(accountPageSource).not.toContain('fetchMoreAccountAuditLogs');
+    expect(accountPageSource).not.toContain('<UserHistoryTab');
     expect(accountPageSource).toContain("visitedSections.has('security')");
-    expect(accountPageSource).toContain("visitedSections.has('activity')");
-    expect(accountPageSource).toContain(
-      "if (activeSection !== 'activity') return",
-    );
   });
 
   it('limits identity editing to first and last name', () => {

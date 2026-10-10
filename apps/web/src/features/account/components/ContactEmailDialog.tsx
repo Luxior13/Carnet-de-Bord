@@ -7,7 +7,7 @@ import {
   ShieldCheck,
   Trash2,
 } from 'lucide-react';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { type ApiResponse, RoutesApi } from '$types/api.types';
@@ -59,6 +59,15 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
   onSuccess,
   open,
 }) => {
+  const submissionRef = useRef(false);
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+    };
+  }, []);
   const [nextContactEmail, setNextContactEmail] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -115,6 +124,7 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
+    if (submissionRef.current || !mountedRef.current) return;
     setError(null);
 
     if (!isConfirmingRemoval && emailError) {
@@ -146,6 +156,7 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
       : normalizedContactEmail;
 
     try {
+      submissionRef.current = true;
       setIsSaving(true);
       const response = await apiFetch(RoutesApi.contactEmail, {
         body: JSON.stringify({
@@ -157,6 +168,7 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
       });
       const data = (await response.json()) as ApiResponse<{ user: UserType }>;
 
+      if (!mountedRef.current) return;
       if (!response.ok || !data.success) {
         const responseError = data.success ? null : data.error.message;
 
@@ -175,9 +187,11 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
       );
       onCancel();
     } catch {
+      if (!mountedRef.current) return;
       setError("Impossible de modifier l'adresse de contact");
     } finally {
-      setIsSaving(false);
+      submissionRef.current = false;
+      if (mountedRef.current) setIsSaving(false);
     }
   };
 

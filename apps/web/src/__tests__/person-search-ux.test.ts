@@ -655,7 +655,9 @@ describe('person short-lived sensitive UX contracts', () => {
 
   it('guards sidebar and breadcrumb links for both dirty person forms', () => {
     for (const source of [createFormSource, identitySectionSource]) {
-      expect(source).toContain('useUnsavedNavigationGuard(isDirty)');
+      expect(source).toMatch(
+        /useUnsavedNavigationGuard\(isDirty(?: && !created)?\)/,
+      );
       expect(source).toContain('pendingNavigationHref !== null');
       expect(source).toContain('<UnsavedNavigationDialog');
     }

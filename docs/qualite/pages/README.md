@@ -10,15 +10,16 @@ les parcours authentifiés restent suivis page par page.
 
 | Page | Suivi | État du document |
 | --- | --- | --- |
-| Accueil / Mon travail | [accueil.md](accueil.md) | Salutation livrée ; vues métier futures ; parcours privé à vérifier |
-| Connexion | [connexion.md](connexion.md) | Affichage anonyme vérifié le 10 octobre ; parcours authentification/MFA complet à vérifier |
+| Accueil / Mon travail | [accueil.md](accueil.md) | Salutation et lien Mon compte ; rendu vérifié le 11 octobre, E2E authentifié à rejouer ; vues métier futures |
+| Connexion | [connexion.md](connexion.md) | Stockage facultatif, soumissions et parcours MFA vérifiés dans le navigateur isolé le 11 octobre ; authentification réelle à vérifier |
 | Utilisateurs — liste, création et fiche | [systeme-utilisateurs.md](systeme-utilisateurs.md) | Liste, création et fiche corrigées sur Next/PostgreSQL isolés ; USR-D01 à USR-D08 vérifiés, synthèse USR-D09 compactée ; 1 036 tests réussis, 25 ignorés ; champs à 6 px, puis onglet Autorisations refondu et contrôlé sur 36 combinaisons navigateur isolé ; limites détaillées dans le suivi |
 | Paramètres système | [systeme-parametres.md](systeme-parametres.md) | Un réglage : conservation du journal ; parcours et présentation corrigés les 10–11 octobre, 32 scénarios navigateur isolé réussis ; session et purge réelles non rejouées |
-| Feuille de route | [systeme-feuille-de-route.md](systeme-feuille-de-route.md) | Catalogue de 39 chantiers ; matrice réconciliée avec le code, parcours privé à vérifier |
+| Feuille de route | [systeme-feuille-de-route.md](systeme-feuille-de-route.md) | Catalogue de 39 chantiers ; filtres harmonisés et parcours simulé à quatre largeurs vérifié le 11 octobre ; intégration privée à vérifier |
 | Journal d’activité | [systeme-journal-activite.md](systeme-journal-activite.md) | Page retirée le 9 octobre 2026, replanifiée ; suivi conservé comme historique |
 | Navigation générale — sidebar et header | [navigation-generale.md](navigation-generale.md) | Trois pôles actifs, sidebar fixe et navigation rapide ; notifications retirées ; synthèse du 10 octobre et limites explicites |
-| Mon compte | [mon-compte.md](mon-compte.md) | Alignée sur la fiche utilisateur ; retour aux Utilisateurs avec contexte vérifié le 10 octobre sur Next/PostgreSQL isolés ; mutations profil/sécurité à vérifier |
-| Membres — liste, création et fiche | [membres-repertoire.md](membres-repertoire.md) | **Référence visuelle et UX** avec Utilisateurs ; corrections et quatre améliorations livrées, 112 tests du périmètre et build réussis ; focus de fiche harmonisé ; présentation des sélecteurs alignée sur les filtres et comparée à quatre largeurs ; session complète et charge à compléter |
+| Mon compte | [mon-compte.md](mon-compte.md) | Profil versionné, brouillons conservés, navigation et dialogues fiabilisés le 11 octobre ; parcours simulés et tests API réussis ; mutations réelles à vérifier |
+| Membres — liste, création et fiche | [membres-repertoire.md](membres-repertoire.md) | **Référence visuelle et UX** avec Utilisateurs ; liste et fiche harmonisées ; création corrigée et vérifiée dans Chromium isolé à quatre largeurs le 11 octobre ; session complète et charge à compléter |
+| Erreur, page introuvable et chargement | [etats-techniques.md](etats-techniques.md) | Présentation harmonisée et rendus vérifiés à quatre largeurs le 11 octobre ; déclenchement réel du routeur à vérifier |
 
 Pour commencer un nouveau suivi : [modèle de revue](../modeles/revue-page.md).
 L’état livré et le niveau de vérification sont distincts. « Alignée » ou « référence

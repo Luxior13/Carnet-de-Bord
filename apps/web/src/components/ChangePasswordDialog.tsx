@@ -1,7 +1,7 @@
 'use client';
 
 import { KeyRound, Loader2 } from 'lucide-react';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Button } from '$ui/button';
 import {
@@ -33,6 +33,15 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
   onSuccess,
   open,
 }) => {
+  const submissionRef = useRef(false);
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+    };
+  }, []);
   const canCancel = !!onCancel;
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -67,6 +76,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    if (submissionRef.current || !mountedRef.current) return;
     setError(null);
 
     if (canCancel && !currentPassword) {
@@ -87,6 +97,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
       return;
     }
 
+    submissionRef.current = true;
     setIsLoading(true);
 
     try {
@@ -101,8 +112,9 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
       });
 
       const data = await response.json();
+      if (!mountedRef.current) return;
 
-      if (!response.ok) {
+      if (!response.ok || !data.success) {
         setError(data.error?.message || 'Une erreur est survenue');
 
         return;
@@ -110,16 +122,20 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
 
       onSuccess();
     } catch {
+      if (!mountedRef.current) return;
       setError('Une erreur est survenue');
     } finally {
-      setIsLoading(false);
+      submissionRef.current = false;
+      if (mountedRef.current) setIsLoading(false);
     }
   };
 
   return (
     <Dialog
       open={open}
-      onOpenChange={(isOpen) => !isOpen && canCancel && onCancel()}
+      onOpenChange={(isOpen) =>
+        !isOpen && canCancel && !submissionRef.current && onCancel()
+      }
     >
       <DialogContent
         className="overflow-y-auto p-0 sm:max-w-md"

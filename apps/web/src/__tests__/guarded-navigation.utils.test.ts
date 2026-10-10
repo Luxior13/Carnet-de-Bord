@@ -67,7 +67,8 @@ describe('guarded programmatic navigation', () => {
       "requestGuardedNavigation('/login', logout)",
     );
     expect(userDetailSource).toContain('useUnsavedNavigationGuard(');
-    for (const guardSource of [sharedGuardSource, accountSource]) {
+    expect(accountSource).toContain('useUnsavedNavigationGuard(');
+    for (const guardSource of [sharedGuardSource]) {
       expect(guardSource).toContain('GUARDED_NAVIGATION_REQUEST_EVENT');
       expect(guardSource).toContain('event.defaultPrevented');
     }

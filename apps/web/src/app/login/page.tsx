@@ -70,6 +70,8 @@ function LoginPage(): React.ReactNode {
   const [error, setError] = useState<string | null>(null);
   const [returnPath, setReturnPath] = useState('/');
   const [isReturnPathReady, setIsReturnPathReady] = useState(false);
+  const submissionRef = useRef(false);
+  const loginInputRef = useRef<HTMLInputElement>(null);
   const mfaInputRef = useRef<HTMLInputElement>(null);
   const displayedError = error ?? authError;
 
@@ -87,31 +89,29 @@ function LoginPage(): React.ReactNode {
     );
     setIsReturnPathReady(true);
 
-    const lastSavedLoginName = window.localStorage.getItem(
-      LAST_LOGIN_NAME_STORAGE_KEY,
-    );
-    window.localStorage.removeItem(LEGACY_LAST_LOGIN_EMAIL_STORAGE_KEY);
-    window.localStorage.removeItem(LEGACY_LOGIN_EMAILS_STORAGE_KEY);
-
-    if (lastSavedLoginName) {
-      setLoginName(lastSavedLoginName.trim().toLowerCase());
+    // Old local identity hints must not autofill a shared device.
+    try {
+      for (const key of [
+        LAST_LOGIN_NAME_STORAGE_KEY,
+        LEGACY_LAST_LOGIN_EMAIL_STORAGE_KEY,
+        LEGACY_LOGIN_EMAILS_STORAGE_KEY,
+      ])
+        window.localStorage.removeItem(key);
+    } catch {
+      /* Authentication does not require browser storage. */
     }
   }, []);
 
-  const saveLoginName = (loginNameToSave: string): void => {
-    const normalizedLoginName = loginNameToSave.trim().toLowerCase();
-    if (!normalizedLoginName) return;
-
-    window.localStorage.setItem(
-      LAST_LOGIN_NAME_STORAGE_KEY,
-      normalizedLoginName,
-    );
-  };
+  useEffect(() => {
+    if (!authLoading && step === 'credentials') loginInputRef.current?.focus();
+  }, [authLoading, step]);
 
   const handleCredentialsSubmit = async (
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
+    if (submissionRef.current || !loginName.trim() || !password) return;
+    submissionRef.current = true;
     setError(null);
     setIsSubmitting(true);
 
@@ -126,7 +126,7 @@ function LoginPage(): React.ReactNode {
       if (!result) return;
 
       setPassword('');
-      saveLoginName(normalizedLoginName);
+      setShowPassword(false);
 
       setChallengeExpiresAt(result.challengeExpiresAt);
       setMfaCode('');
@@ -136,6 +136,7 @@ function LoginPage(): React.ReactNode {
     } catch {
       setError('Une erreur est survenue');
     } finally {
+      submissionRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -144,7 +145,9 @@ function LoginPage(): React.ReactNode {
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
-    if (!isCompleteMfaCode(mfaCode, mfaCodeKind)) return;
+    if (submissionRef.current || !isCompleteMfaCode(mfaCode, mfaCodeKind))
+      return;
+    submissionRef.current = true;
 
     setError(null);
     setIsSubmitting(true);
@@ -160,11 +163,14 @@ function LoginPage(): React.ReactNode {
       setError('Impossible de vérifier le code');
       setMfaCode('');
     } finally {
+      submissionRef.current = false;
       setIsSubmitting(false);
     }
   };
 
   const handleBackToCredentials = async (): Promise<void> => {
+    if (submissionRef.current) return;
+    submissionRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -176,6 +182,7 @@ function LoginPage(): React.ReactNode {
       setMfaCode('');
       setChallengeExpiresAt(null);
       setStep('credentials');
+      submissionRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -232,8 +239,8 @@ function LoginPage(): React.ReactNode {
     <main className="relative isolate flex min-h-svh items-center justify-center overflow-hidden p-4">
       <div aria-hidden="true" className="site-background-column" />
       <Card
-        aria-busy={!!userData}
-        className="relative z-10 w-full max-w-md overflow-hidden py-0"
+        aria-busy={isSubmitting || !!userData}
+        className="border-border-content bg-surface-panel relative z-10 w-full max-w-md overflow-hidden rounded-[10px] py-0"
       >
         {userData && (
           <div
@@ -245,7 +252,7 @@ function LoginPage(): React.ReactNode {
             <p className="text-sm font-medium">Ouverture de votre espace...</p>
           </div>
         )}
-        <CardHeader className="space-y-4">
+        <CardHeader className="bg-surface-panel-header border-border-divider space-y-4 border-b pb-5">
           <div className="flex items-center gap-3">
             <span className="bg-primary flex size-10 items-center justify-center rounded-lg shadow-none">
               <Image
@@ -315,6 +322,7 @@ function LoginPage(): React.ReactNode {
                     className="h-10 pl-10"
                     disabled={isSubmitting}
                     id="loginName"
+                    ref={loginInputRef}
                     maxLength={32}
                     name="username"
                     onChange={(event) => setLoginName(event.target.value)}
@@ -391,7 +399,7 @@ function LoginPage(): React.ReactNode {
               </p>
               <Button
                 className="h-10 w-full"
-                disabled={isSubmitting || !loginName || !password}
+                disabled={isSubmitting || !loginName.trim() || !password}
                 type="submit"
               >
                 {isSubmitting ? (
