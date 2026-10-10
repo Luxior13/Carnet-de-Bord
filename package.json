@@ -3,7 +3,7 @@
   "private": true,
   "devDependencies": {
     "eslint": "^9.39.5",
-    "npm-check-updates": "^18.3.1",
+    "npm-check-updates": "^22.2.9",
     "prettier": "^3.9.5",
     "turbo": "^2.10.4"
   },
