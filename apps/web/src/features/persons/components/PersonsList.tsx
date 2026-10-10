@@ -732,7 +732,7 @@ export const PersonsList: FC<PersonsListProps> = ({
 
                   return (
                     <TableRow
-                      className="relative focus-within:ring-2 focus-within:ring-inset"
+                      className="focus-within:ring-ring relative focus-within:ring-2 focus-within:ring-inset"
                       key={person.id}
                     >
                       <TableCell>

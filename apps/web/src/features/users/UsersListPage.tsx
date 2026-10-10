@@ -2,12 +2,12 @@
 
 import { UserRole } from '@repo/shared';
 import {
-  ArrowRight,
   ChevronLeft,
   ChevronRight,
   Plus,
   RotateCcw,
   Search,
+  ShieldCheck,
   UserMinus,
   Users,
   X,
@@ -70,6 +70,7 @@ import {
   TableHeader,
   TableRow,
 } from '$ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 import {
   getUserDisplayName,
@@ -236,6 +237,20 @@ const UserStatusLabel: FC<{ isActive: boolean }> = ({ isActive }) => {
   );
 };
 
+const ProtectedIdentityIcon: FC = () => (
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <span
+        aria-label="Identité protégée"
+        className="text-muted-foreground relative z-20 inline-flex size-4 shrink-0 items-center justify-center"
+      >
+        <ShieldCheck aria-hidden="true" className="size-4" />
+      </span>
+    </TooltipTrigger>
+    <TooltipContent>Identité protégée</TooltipContent>
+  </Tooltip>
+);
+
 export const UsersListPage: FC = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -255,6 +270,19 @@ export const UsersListPage: FC = () => {
       hasPermission(
         currentUser.role,
         PERMISSIONS.USERS.VIEW_SECURITY,
+        currentUser.permissions,
+      ));
+  const canViewContact =
+    !!currentUser &&
+    (currentUser.isProtected ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.VIEW_CONTACT,
+        currentUser.permissions,
+      ) ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.UPDATE_CONTACT,
         currentUser.permissions,
       ));
 
@@ -822,6 +850,9 @@ export const UsersListPage: FC = () => {
                         <TableHead>Compte</TableHead>
                         <TableHead className="w-[130px]">Accès</TableHead>
                         <TableHead className="w-[130px]">État</TableHead>
+                        {canViewContact && (
+                          <TableHead className="w-[220px]">Email</TableHead>
+                        )}
                         {securityDetailsVisible && (
                           <TableHead className="w-[130px]">
                             Mot de passe
@@ -830,16 +861,17 @@ export const UsersListPage: FC = () => {
                         <TableHead className="w-[150px]">
                           Dernière connexion
                         </TableHead>
-                        <TableHead className="w-12">
-                          <span className="sr-only">Action</span>
-                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {displayedUsers.length === 0 ? (
                         <TableRow>
                           <TableCell
-                            colSpan={securityDetailsVisible ? 6 : 5}
+                            colSpan={
+                              4 +
+                              (canViewContact ? 1 : 0) +
+                              (securityDetailsVisible ? 1 : 0)
+                            }
                             className="h-44 text-center"
                           >
                             <ContentState
@@ -889,37 +921,45 @@ export const UsersListPage: FC = () => {
                                   className="border-border-default size-9 shrink-0 rounded-[7px] border"
                                 />
                                 <div className="min-w-0">
-                                  <p className="flex min-w-0 items-center gap-1.5">
-                                    <span className="text-foreground group-hover/link:text-primary-emphasis truncate text-[13px] leading-[1.6] font-semibold group-hover/link:underline group-hover/link:underline-offset-[3px]">
-                                      {getUserDisplayName(user)}
-                                    </span>
-                                    <span className="text-muted-foreground flex min-w-0 items-center gap-1.5 truncate text-xs leading-5">
-                                      <span className="min-w-0 truncate">
-                                        · {getUserLoginDisplay(user)}
+                                  <div className="flex min-w-0 flex-col justify-center gap-0.5">
+                                    <span className="flex min-w-0 items-center gap-1.5">
+                                      <span className="text-foreground group-hover/link:text-primary-emphasis truncate text-[13px] leading-4 font-semibold group-hover/link:underline group-hover/link:underline-offset-[3px]">
+                                        {getUserDisplayName(user)}
                                       </span>
-                                      {user.contactEmail && (
-                                        <span className="truncate">
-                                          · {user.contactEmail}
-                                        </span>
+                                      {isUserIdentityMasked(user) && (
+                                        <ProtectedIdentityIcon />
                                       )}
                                     </span>
-                                  </p>
-                                  {isUserIdentityMasked(user) && (
-                                    <p className="text-muted-foreground text-[10px] leading-5">
-                                      Identité protégée
-                                    </p>
-                                  )}
+                                    {!isUserIdentityMasked(user) && (
+                                      <span className="text-muted-foreground truncate text-[11px] leading-4">
+                                        {getUserLoginDisplay(user)}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </Link>
                             </TableCell>
-                            <TableCell className="pointer-events-none py-3">
+                            <TableCell className="pointer-events-none">
                               <UserAccessLabel user={user} />
                             </TableCell>
-                            <TableCell className="pointer-events-none py-3">
+                            <TableCell className="pointer-events-none">
                               <UserStatusLabel isActive={user.isActive} />
                             </TableCell>
+                            {canViewContact && (
+                              <TableCell className="pointer-events-none">
+                                {user.contactEmail ? (
+                                  <span className="text-muted-foreground block truncate text-xs leading-5">
+                                    {user.contactEmail}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs leading-5">
+                                    —
+                                  </span>
+                                )}
+                              </TableCell>
+                            )}
                             {securityDetailsVisible && (
-                              <TableCell className="pointer-events-none py-3">
+                              <TableCell className="pointer-events-none">
                                 {user.mustChangePassword ? (
                                   <span className="border-warning/40 bg-warning/15 text-warning inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap">
                                     <span
@@ -929,20 +969,14 @@ export const UsersListPage: FC = () => {
                                     À changer
                                   </span>
                                 ) : (
-                                  <span className="text-muted-foreground text-xs">
+                                  <span className="text-muted-foreground text-[11px]">
                                     —
                                   </span>
                                 )}
                               </TableCell>
                             )}
-                            <TableCell className="text-muted-foreground pointer-events-none py-3 text-sm leading-5 tabular-nums">
+                            <TableCell className="text-muted-foreground pointer-events-none text-[11px]">
                               {formatUserLastLogin(user)}
-                            </TableCell>
-                            <TableCell className="pointer-events-none py-3">
-                              <ArrowRight
-                                aria-hidden="true"
-                                className="text-muted-foreground size-4"
-                              />
                             </TableCell>
                           </TableRow>
                         ))
@@ -995,22 +1029,20 @@ export const UsersListPage: FC = () => {
                           />
                           <div className="min-w-0 flex-1 space-y-2">
                             <div className="min-w-0">
-                              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                <h3 className="text-foreground group-hover:text-primary-emphasis min-w-0 text-sm font-semibold [overflow-wrap:anywhere] group-hover:underline group-hover:underline-offset-[3px]">
+                              <div className="flex min-w-0 items-center gap-1.5">
+                                <h3 className="text-foreground group-hover:text-primary-emphasis min-w-0 text-[13px] leading-4 font-semibold [overflow-wrap:anywhere] group-hover:underline group-hover:underline-offset-[3px]">
                                   {getUserDisplayName(user)}
                                 </h3>
                                 {isUserIdentityMasked(user) && (
-                                  <span className="text-muted-foreground text-xs leading-5">
-                                    Identité protégée
-                                  </span>
+                                  <ProtectedIdentityIcon />
                                 )}
                               </div>
-                              <p className="text-muted-foreground mt-0.5 truncate text-sm leading-5">
-                                {getUserLoginDisplay(user)}
-                              </p>
-                              {user.contactEmail && (
-                                <p className="text-muted-foreground mt-0.5 text-sm leading-5 [overflow-wrap:anywhere]">
-                                  {user.contactEmail}
+                              {!isUserIdentityMasked(user) && (
+                                <p className="text-muted-foreground truncate text-[11px] leading-4">
+                                  {getUserLoginDisplay(user)}
+                                  {user.contactEmail && (
+                                    <> · {user.contactEmail}</>
+                                  )}
                                 </p>
                               )}
                             </div>
@@ -1030,7 +1062,7 @@ export const UsersListPage: FC = () => {
                                   </span>
                                 </div>
                               )}
-                            <p className="text-muted-foreground text-sm leading-5 tabular-nums">
+                            <p className="text-muted-foreground text-[11px] leading-5 tabular-nums">
                               Dernière connexion :{' '}
                               {formatUserLastLogin(user).toLowerCase()}
                             </p>

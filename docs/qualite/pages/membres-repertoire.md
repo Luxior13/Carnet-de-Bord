@@ -21,9 +21,11 @@
 ## Rôle de référence (décision du 2026-10-09)
 
 Décision utilisateur : `/membres/repertoire` est la **page de référence
-visuelle et UX** de l'application. Les autres pages s'appuient sur les mêmes
-composants, tokens et rythmes, même si leur contenu diffère ; on adapte
-l'existant au lieu d'inventer un style local.
+visuelle et UX** de l'application, complétée par `/systeme/utilisateurs`
+(2026-10-10) : les deux pages de liste définissent ensemble le standard des
+composants partagés. Toute nouvelle page ou variante réutilise ces styles,
+tokens, rythmes et primitives (tooltip, badge, tableau, contrôles, états
+vides) au lieu d'inventer un style local ou de repartir du style générique.
 
 Référence à réutiliser :
 
@@ -36,6 +38,9 @@ Référence à réutiliser :
   zébrées `--surface-row-alternate`, survol `--surface-row-hover`).
 - Badges : pastille + teinte sémantique (voir `PersonStatusBadge`) ; sinon la
   primitive `Badge`.
+- Infobulle : primitive `TooltipContent` partagée, style flottant aligné sur
+  les deux pages (fond `--surface-floating`, bordure `--border-control`, rayon
+  7 px, texte 12 px, ombre portée forte).
 - Contrôles : `Input`, `Select`, `Button` ; champs 38 px, sélecteurs 170 px,
   rayons 6 px.
 - Retours : `ContentState` / `Empty` pour vide et erreur.
@@ -366,3 +371,4 @@ restent des observations de code, pas des mesures.
 | 2026-10-09 | Améliorations UX : total de résultats, pagination « sur N », suppression du lien dupliqué, recherche sans bouton redondant, cible mobile 44 px, libellé de correspondance explicite. |
 | 2026-10-10 | Ajout de la Vue d'ensemble du répertoire, alignée sur `/systeme/utilisateurs` (composant `PersonOverview`, stats globales dans `listPersons`, rail `PageAsideLayout`). |
 | 2026-10-10 | Alignement des comportements de liste : bouton Réinitialiser affiché aussi pour le tri, légende « N membre(s) trouvé(s) » avec séparateur de milliers. |
+| 2026-10-10 | Focus clavier des lignes aligné sur les utilisateurs : couleur de l'anneau via le token `--ring` (`focus-within:ring-ring`). |

@@ -198,9 +198,18 @@ passe aligne la liste des comptes sans changer le métier :
   SQL, avec normalisation du terme côté serveur.
 - Survol d'une ligne : le nom du compte se souligne (et passe en teinte
   primaire) comme sur le répertoire, pour renforcer le lien cliquable.
-- Lignes du tableau compactées comme sur le répertoire : identifiant et email
-  repliés sur la ligne du nom (12 px), avatar 36 px, suppression de la hauteur
-  minimale forcée de 64 px.
+- Lignes du tableau et cartes mobiles compactées comme sur le répertoire :
+  identifiant sous le nom en deux lignes serrées (16 px chacune) tenant dans la
+  hauteur de l'avatar 36 px, suppression de la hauteur minimale forcée de
+  64 px. L'indicateur « Identité protégée » est une icône (bouclier) avec
+  infobulle au survol. L'identifiant masqué n'est plus affiché : un compte
+  protégé montre uniquement son nom public et l'icône.
+- Colonne « Email » dédiée (220 px, texte 12 px tronqué), affichée seulement
+  aux acteurs autorisés à consulter le contact ; l'email n'est plus collé au
+  nom dans le tableau. En cartes mobiles, il reste sur la ligne du nom.
+- Colonne « Dernière connexion » en 11 px atténué, comme « Dernière
+  modification » du répertoire ; flèche de fin de ligne retirée (le nom et la
+  ligne restent cliquables, sans colonne d'action redondante).
 
 Non appliqué : la recherche reste insensible à la casse mais pas aux accents.
 Une recherche insensible aux accents demande soit des colonnes normalisées sur
