@@ -4,7 +4,7 @@ import React, { type FC } from 'react';
 
 import { Skeleton } from '$ui/skeleton';
 
-import { PersonsListSkeleton } from './PersonsList';
+import { PersonsListSkeleton } from './PersonsListSkeleton';
 
 /**
  * Squelette de la page Répertoire : bandeau dégradé et liste, dans les mêmes

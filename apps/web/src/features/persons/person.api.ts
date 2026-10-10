@@ -15,6 +15,7 @@ import type {
 } from './types/person.types';
 
 type ListPersonsOptions = {
+  contacts?: 'missing';
   cursor?: string;
   limit?: number;
   q?: string;
@@ -60,6 +61,7 @@ const getErrorPayload = async (
 };
 
 export const listPersons = async ({
+  contacts,
   cursor,
   limit = 25,
   q,
@@ -68,6 +70,7 @@ export const listPersons = async ({
   structureStatus,
 }: ListPersonsOptions): Promise<PersonsListResponse> => {
   const params = new URLSearchParams({ limit: String(limit) });
+  if (contacts) params.set('contacts', contacts);
   if (cursor) params.set('cursor', cursor);
   if (q) params.set('q', q);
   if (sort !== 'name') params.set('sort', sort);

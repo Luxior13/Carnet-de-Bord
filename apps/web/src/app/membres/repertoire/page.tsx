@@ -1,3 +1,6 @@
+import type { Metadata } from 'next';
+
+import { SITE_CONFIG } from '$constants/app.constants';
 import { PersonsPageClient } from '$features/persons/components/PersonsPageClient';
 import { getPersonCapabilities } from '$features/persons/person.permissions';
 import type { PersonsListRequest } from '$features/persons/person-list-state';
@@ -6,7 +9,10 @@ import { listPersons } from '$features/persons/server/person.service';
 import { assertPersonFeatureReady } from '$features/persons/server/person-deletion';
 import { getPageAuthSession } from '$server/auth';
 
+export const metadata: Metadata = { title: `Répertoire · ${SITE_CONFIG.name}` };
+
 type PersonsPageQuery = {
+  contacts?: string | string[];
   cursor?: string | string[];
   q?: string | string[];
   sort?: string | string[];
@@ -29,6 +35,7 @@ export default async function PersonsPage({
     getPageAuthSession(),
   ]);
   const parsed = personsListQuerySchema.safeParse({
+    contacts: firstValue(params.contacts),
     cursor: firstValue(params.cursor),
     q: firstValue(params.q),
     sort: firstValue(params.sort),
@@ -54,6 +61,7 @@ export default async function PersonsPage({
       initialState = {
         data,
         request: {
+          ...(parsed.data.contacts ? { contacts: parsed.data.contacts } : {}),
           cursor: parsed.data.cursor,
           q: parsed.data.q,
           sort: parsed.data.sort,

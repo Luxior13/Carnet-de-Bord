@@ -93,6 +93,33 @@ export const buildPersonSearchFragments = (
         )
         ${profileUrlSearchClause}
   `;
+  // Every identity word must match this person; contact queries stay intact.
+  const words = [...new Set(normalizedQuery.split(/\s+/u).filter(Boolean))];
+  const multiwordIdentityClause =
+    words.length > 1
+      ? Prisma.sql`OR (${Prisma.join(
+          words.map((word) => {
+            const prefix = `${escapeLikePattern(word)}%`;
+            const contains = `%${escapeLikePattern(word)}%`;
+
+            return Prisma.sql`(
+          p."normalizedNickname" LIKE ${prefix} ESCAPE '\\'
+          OR p."normalizedFirstName" LIKE ${prefix} ESCAPE '\\'
+          OR p."normalizedLastName" LIKE ${prefix} ESCAPE '\\'
+          ${
+            word.length >= 3
+              ? Prisma.sql`
+            OR p."normalizedNickname" LIKE ${contains} ESCAPE '\\'
+            OR p."normalizedFirstName" LIKE ${contains} ESCAPE '\\'
+            OR p."normalizedLastName" LIKE ${contains} ESCAPE '\\'
+          `
+              : Prisma.empty
+          }
+        )`;
+          }),
+          ' AND ',
+        )})`
+      : Prisma.empty;
   const searchClause = normalizedQuery
     ? Prisma.sql`AND (
         p."normalizedNickname" = ${normalizedQuery}
@@ -102,6 +129,7 @@ export const buildPersonSearchFragments = (
         OR p."normalizedFirstName" LIKE ${identityPrefixPattern} ESCAPE '\\'
         OR p."normalizedLastName" LIKE ${identityPrefixPattern} ESCAPE '\\'
         ${identityTrigramClause}
+        ${multiwordIdentityClause}
         OR ${contactSearchClause}
       )`
     : Prisma.empty;

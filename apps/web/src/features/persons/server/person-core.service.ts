@@ -255,6 +255,7 @@ const normalizeInitialSocialPrimaries = <
 };
 
 export const listPersons = async (input: {
+  contacts?: 'missing';
   cursor?: string;
   limit: number;
   q: string;
@@ -265,6 +266,7 @@ export const listPersons = async (input: {
   const { contactSearchClause, normalizedQuery, searchClause } =
     buildPersonSearchFragments(input.q);
   const filterHash = hashCursorFilters({
+    ...(input.contacts ? { contacts: input.contacts } : {}),
     q: normalizedQuery,
     sort,
     structureStatus: input.structureStatus ?? null,
@@ -284,10 +286,18 @@ export const listPersons = async (input: {
   const statusClause = input.structureStatus
     ? Prisma.sql`AND p."structureStatus" = ${input.structureStatus}::"PersonStructureStatus"`
     : Prisma.empty;
+  const contactsClause =
+    input.contacts === 'missing'
+      ? Prisma.sql`AND NOT EXISTS (SELECT 1 FROM "PersonEmail" e WHERE e."personId" = p."id")
+        AND NOT EXISTS (SELECT 1 FROM "PersonPhone" ph WHERE ph."personId" = p."id")
+        AND NOT EXISTS (SELECT 1 FROM "PersonSocialProfile" sp WHERE sp."personId" = p."id")`
+      : Prisma.empty;
+  // Person stores UTC timestamps without a zone; Prisma binds Date parameters
+  // as timestamptz. Convert the parameters, not the indexed columns.
   const snapshotClause =
     sort === 'created'
-      ? Prisma.sql`p."createdAt" <= ${snapshotAt}`
-      : Prisma.sql`p."updatedAt" <= ${snapshotAt}`;
+      ? Prisma.sql`p."createdAt" <= (${snapshotAt} AT TIME ZONE 'UTC')`
+      : Prisma.sql`p."updatedAt" <= (${snapshotAt} AT TIME ZONE 'UTC')`;
   const cursorClause = !cursor
     ? Prisma.empty
     : sort === 'name'
@@ -297,13 +307,13 @@ export const listPersons = async (input: {
         )`
       : sort === 'updated' && cursorDate
         ? Prisma.sql`AND (
-            p."updatedAt" < ${cursorDate}
-            OR (p."updatedAt" = ${cursorDate} AND p."id" < ${cursor.id})
+            p."updatedAt" < (${cursorDate} AT TIME ZONE 'UTC')
+            OR (p."updatedAt" = (${cursorDate} AT TIME ZONE 'UTC') AND p."id" < ${cursor.id})
           )`
         : cursorDate
           ? Prisma.sql`AND (
-              p."createdAt" < ${cursorDate}
-              OR (p."createdAt" = ${cursorDate} AND p."id" < ${cursor.id})
+              p."createdAt" < (${cursorDate} AT TIME ZONE 'UTC')
+              OR (p."createdAt" = (${cursorDate} AT TIME ZONE 'UTC') AND p."id" < ${cursor.id})
             )`
           : Prisma.empty;
   const orderClause =
@@ -313,9 +323,24 @@ export const listPersons = async (input: {
         ? Prisma.sql`p."updatedAt" DESC, p."id" DESC`
         : Prisma.sql`p."createdAt" DESC, p."id" DESC`;
 
-  const rows = await prisma.$queryRaw<PersonListRow[]>(Prisma.sql`
+  // Count the filtered snapshot before applying the cursor. The LEFT JOIN
+  // also returns the total when a cursor points beyond the last remaining row.
+  const queryRows = await prisma.$queryRaw<
+    { [Key in keyof PersonListRow]: PersonListRow[Key] | null }[]
+  >(Prisma.sql`
+    WITH filtered AS NOT MATERIALIZED (
+      SELECT p.* FROM "Person" p
+      WHERE ${snapshotClause}
+        ${statusClause}
+        ${contactsClause}
+        ${searchClause}
+    ), totals AS (
+      SELECT COUNT(*) AS "totalCount" FROM filtered
+    )
+    SELECT p.*, totals."totalCount"
+    FROM totals
+    LEFT JOIN LATERAL (
     SELECT
-      COUNT(*) OVER() AS "totalCount",
       p."id",
       p."nickname",
       p."firstName",
@@ -336,7 +361,7 @@ export const listPersons = async (input: {
       CASE WHEN ${normalizedQuery} <> '' THEN (
         ${contactSearchClause}
       ) ELSE FALSE END AS "matchedByContact"
-    FROM "Person" p
+    FROM filtered p
     LEFT JOIN LATERAL (
       SELECT
         audit."actorDisplayNameSnapshot",
@@ -347,14 +372,14 @@ export const listPersons = async (input: {
       ORDER BY audit."createdAt" DESC, audit."id" DESC
       LIMIT 1
     ) last_change ON TRUE
-    WHERE ${snapshotClause}
-      ${statusClause}
-      ${searchClause}
-      ${cursorClause}
+    WHERE TRUE ${cursorClause}
     ORDER BY ${orderClause}
     LIMIT ${input.limit + 1}
+    ) p ON TRUE
+    ORDER BY ${orderClause}
   `);
-  const total = rows[0]?.totalCount != null ? Number(rows[0].totalCount) : 0;
+  const total = Number(queryRows[0]?.totalCount ?? 0);
+  const rows = queryRows.filter((row): row is PersonListRow => row.id !== null);
   const paginated = buildCursorPaginationMeta(
     rows,
     input.limit,

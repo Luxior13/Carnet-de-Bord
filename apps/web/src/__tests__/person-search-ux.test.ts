@@ -162,11 +162,21 @@ const personsPageSource = [
     'utf8',
   ),
 ].join('\n');
-// eslint-disable-next-line security/detect-non-literal-fs-filename
-const personsListSource = readFileSync(
-  new URL('../features/persons/components/PersonsList.tsx', import.meta.url),
-  'utf8',
-);
+
+const personsListSource =
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  readFileSync(
+    new URL('../features/persons/components/PersonsList.tsx', import.meta.url),
+    'utf8',
+  ) +
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  readFileSync(
+    new URL(
+      '../features/persons/components/PersonsListToolbar.tsx',
+      import.meta.url,
+    ),
+    'utf8',
+  );
 // eslint-disable-next-line security/detect-non-literal-fs-filename
 const newPersonPageSource = readFileSync(
   new URL('../app/membres/repertoire/nouveau/page.tsx', import.meta.url),

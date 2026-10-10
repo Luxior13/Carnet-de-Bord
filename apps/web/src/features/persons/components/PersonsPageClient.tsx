@@ -96,6 +96,7 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
             aside={
               <PersonOverview
                 isLoading={overview.isLoading}
+                query={searchParamsString}
                 stats={overview.stats}
               />
             }
@@ -121,6 +122,7 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
               canCreate={canCreate}
               createHref={createHref}
               initialState={initialState}
+              navigationScope={userData?.id ?? ''}
               onOverviewChange={handleOverviewChange}
               returnHref={returnHref}
             />

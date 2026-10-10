@@ -14,6 +14,10 @@ const mocks = vi.hoisted(() => ({
   useUser: vi.fn(),
 }));
 
+vi.mock('next/navigation', () => ({
+  useSearchParams: (): URLSearchParams => new URLSearchParams(),
+}));
+
 vi.mock('$components/AuthenticatedLayout', () => ({
   default: ({ children }: { children: ReactNode }): ReactNode => children,
 }));
@@ -129,6 +133,7 @@ describe('direct Person page permission boundaries', () => {
         createHref:
           '/membres/repertoire/nouveau?returnTo=%2Fmembres%2Frepertoire',
         initialState: undefined,
+        navigationScope: 'user-1',
         onOverviewChange: expect.any(Function),
         returnHref: '/membres/repertoire',
       },

@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-10T16:30:21.056Z",
+  "scope": "Real directory components, compiled CSS, mocked auth/API/router/detail. SQL tested separately on PostgreSQL.",
+  "widths": [
+    {
+      "width": 1920,
+      "overflow": false,
+      "mainOverflow": false,
+      "overviewHeight": 219,
+      "searchTop": 205.390625,
+      "fontFamily": "Geist, Arial, sans-serif",
+      "counterHeights": [
+        44,
+        44,
+        44,
+        44
+      ]
+    },
+    {
+      "width": 1440,
+      "overflow": false,
+      "mainOverflow": false,
+      "overviewHeight": 127.265625,
+      "searchTop": 350.65625,
+      "fontFamily": "Geist, Arial, sans-serif",
+      "counterHeights": [
+        44,
+        48.265625,
+        48.265625,
+        48.265625
+      ]
+    },
+    {
+      "width": 1024,
+      "overflow": false,
+      "mainOverflow": false,
+      "overviewHeight": 127.265625,
+      "searchTop": 350.65625,
+      "fontFamily": "Geist, Arial, sans-serif",
+      "counterHeights": [
+        44,
+        48.265625,
+        48.265625,
+        48.265625
+      ]
+    },
+    {
+      "width": 768,
+      "overflow": false,
+      "mainOverflow": false,
+      "overviewHeight": 130.59375,
+      "searchTop": 407.984375,
+      "fontFamily": "Geist, Arial, sans-serif",
+      "counterHeights": [
+        47.328125,
+        48.265625,
+        48.265625,
+        48.265625
+      ]
+    },
+    {
+      "width": 390,
+      "overflow": false,
+      "mainOverflow": false,
+      "overviewHeight": 146.296875,
+      "searchTop": 438.1875,
+      "fontFamily": "Geist, Arial, sans-serif",
+      "counterHeights": [
+        47.328125,
+        63.96875,
+        63.96875,
+        63.96875
+      ]
+    },
+    {
+      "width": 320,
+      "overflow": false,
+      "mainOverflow": false,
+      "overviewHeight": 146.296875,
+      "searchTop": 438.1875,
+      "fontFamily": "Geist, Arial, sans-serif",
+      "counterHeights": [
+        47.328125,
+        63.96875,
+        63.96875,
+        63.96875
+      ]
+    }
+  ],
+  "checks": [
+    "Counter subsets, active filter removal, keyboard activation, global count clears previous query, multiword search input",
+    {
+      "test": "Explicit detail return: page 3, scroll, focus and previous cursor restored",
+      "before": 442,
+      "after": 442
+    },
+    "Browser back and page reload retain scroll and cursor history",
+    "Shared deep link without matching history offers first-page recovery"
+  ],
+  "errors": []
+}

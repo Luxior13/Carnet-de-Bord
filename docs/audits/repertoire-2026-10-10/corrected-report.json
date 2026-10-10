@@ -1,0 +1,96 @@
+{
+  "evidence": "Composants réels, API/auth/navigation simulées, CSS locaux, cadre simplifié",
+  "checks": [
+    {
+      "test": "layout",
+      "width": 1920,
+      "scrollWidth": 1920,
+      "searchTop": 205.390625,
+      "overviewHeight": 266.5625,
+      "nextHeight": 30
+    },
+    {
+      "test": "layout",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "searchTop": 489.953125,
+      "overviewHeight": 266.5625,
+      "nextHeight": 30
+    },
+    {
+      "test": "layout",
+      "width": 1024,
+      "scrollWidth": 1024,
+      "searchTop": 489.953125,
+      "overviewHeight": 266.5625,
+      "nextHeight": 30
+    },
+    {
+      "test": "layout",
+      "width": 768,
+      "scrollWidth": 768,
+      "searchTop": 489.953125,
+      "overviewHeight": 266.5625,
+      "nextHeight": 30
+    },
+    {
+      "test": "layout",
+      "width": 390,
+      "scrollWidth": 390,
+      "searchTop": 409.015625,
+      "overviewHeight": 117.125,
+      "nextHeight": 44
+    },
+    {
+      "test": "layout",
+      "width": 320,
+      "scrollWidth": 320,
+      "searchTop": 425.515625,
+      "overviewHeight": 133.625,
+      "nextHeight": 44
+    },
+    {
+      "test": "long-identity",
+      "right": 883.203125,
+      "statusLeft": 895.203125
+    },
+    {
+      "test": "author-tooltip",
+      "pointer": true,
+      "keyboard": true,
+      "escape": true
+    },
+    {
+      "test": "next-previous",
+      "pass": true
+    },
+    {
+      "test": "direct-page3-recovery",
+      "criteriaPreserved": true
+    },
+    {
+      "test": "invalid-cursor-recovery",
+      "pass": true
+    },
+    {
+      "test": "invalid-page-recovery",
+      "pass": true
+    },
+    {
+      "test": "stale-search",
+      "pass": true
+    },
+    {
+      "test": "refresh-error-recovery",
+      "pass": true
+    },
+    {
+      "test": "mobile-author-and-pagination",
+      "pass": true
+    },
+    {
+      "test": "browser-errors",
+      "errors": []
+    }
+  ]
+}

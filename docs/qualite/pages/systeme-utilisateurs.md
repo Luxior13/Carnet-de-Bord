@@ -20,6 +20,10 @@
 
 ## Décisions courantes
 
+- Effet partagé du correctif Répertoire du 10 octobre : les flèches utilisant
+  `directory.module.css` ont une cible de 44 px sous 640 px. Le style a été
+  contrôlé dans le navigateur du répertoire ; la liste Utilisateurs n'a pas
+  fait l'objet d'une nouvelle session navigateur dans cette passe.
 - Titre compact, description « Gérez les comptes et leurs accès. » en texte secondaire.
 - Création dans la barre d’outils de la liste, adaptée aux droits.
 - Sidebar ancrée à gauche ; rail indépendant à droite lorsque la place le permet.

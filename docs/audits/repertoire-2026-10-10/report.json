@@ -1,0 +1,289 @@
+{
+  "evidence": "Real page components, simulated auth/navigation/API, live local global CSS, simplified shell",
+  "checks": [
+    {
+      "test": "layout",
+      "width": 1920,
+      "scrollWidth": 1920,
+      "search": {
+        "width": 320,
+        "height": 38,
+        "top": 205.390625,
+        "left": 405
+      },
+      "main": {
+        "width": 1656,
+        "height": 944,
+        "top": 56,
+        "left": 264
+      },
+      "overview": {
+        "width": 256,
+        "height": 266.5625,
+        "top": 188.390625,
+        "left": 1556
+      },
+      "name": {
+        "width": 867.203125,
+        "height": 20.796875,
+        "top": 344.484375,
+        "left": 447
+      },
+      "next": {
+        "width": 36,
+        "height": 30,
+        "top": 1812.890625,
+        "left": 1483
+      },
+      "fontSize": "12px"
+    },
+    {
+      "test": "layout",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "search": {
+        "width": 320,
+        "height": 38,
+        "top": 489.953125,
+        "left": 328.796875
+      },
+      "main": {
+        "width": 1176,
+        "height": 944,
+        "top": 56,
+        "left": 264
+      },
+      "overview": {
+        "width": 1088.40625,
+        "height": 266.5625,
+        "top": 188.390625,
+        "left": 307.796875
+      },
+      "name": {
+        "width": 867.203125,
+        "height": 20.796875,
+        "top": 629.046875,
+        "left": 370.796875
+      },
+      "next": {
+        "width": 36,
+        "height": 30,
+        "top": 2097.453125,
+        "left": 1343.203125
+      },
+      "fontSize": "12px"
+    },
+    {
+      "test": "layout",
+      "width": 1024,
+      "scrollWidth": 1024,
+      "search": {
+        "width": 320,
+        "height": 38,
+        "top": 489.953125,
+        "left": 320.46875
+      },
+      "main": {
+        "width": 760,
+        "height": 944,
+        "top": 56,
+        "left": 264
+      },
+      "overview": {
+        "width": 689.0625,
+        "height": 266.5625,
+        "top": 188.390625,
+        "left": 299.46875
+      },
+      "name": {
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "left": 0
+      },
+      "next": {
+        "width": 36,
+        "height": 30,
+        "top": 3311.453125,
+        "left": 935.53125
+      },
+      "fontSize": "12px"
+    },
+    {
+      "test": "layout",
+      "width": 768,
+      "scrollWidth": 768,
+      "search": {
+        "width": 320,
+        "height": 38,
+        "top": 489.953125,
+        "left": 52
+      },
+      "main": {
+        "width": 768,
+        "height": 944,
+        "top": 56,
+        "left": 0
+      },
+      "overview": {
+        "width": 706,
+        "height": 266.5625,
+        "top": 188.390625,
+        "left": 31
+      },
+      "name": {
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "left": 0
+      },
+      "next": {
+        "width": 40,
+        "height": 30,
+        "top": 3311.453125,
+        "left": 680
+      },
+      "fontSize": "12px"
+    },
+    {
+      "test": "layout",
+      "width": 390,
+      "scrollWidth": 390,
+      "search": {
+        "width": 294,
+        "height": 38,
+        "top": 558.453125,
+        "left": 48
+      },
+      "main": {
+        "width": 390,
+        "height": 944,
+        "top": 56,
+        "left": 0
+      },
+      "overview": {
+        "width": 328,
+        "height": 266.5625,
+        "top": 256.890625,
+        "left": 31
+      },
+      "name": {
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "left": 0
+      },
+      "next": {
+        "width": 40,
+        "height": 30,
+        "top": 4166.953125,
+        "left": 302
+      },
+      "fontSize": "12px"
+    },
+    {
+      "test": "layout",
+      "width": 320,
+      "scrollWidth": 320,
+      "search": {
+        "width": 224,
+        "height": 38,
+        "top": 558.453125,
+        "left": 48
+      },
+      "main": {
+        "width": 320,
+        "height": 944,
+        "top": 56,
+        "left": 0
+      },
+      "overview": {
+        "width": 258,
+        "height": 266.5625,
+        "top": 256.890625,
+        "left": 31
+      },
+      "name": {
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "left": 0
+      },
+      "next": {
+        "width": 40,
+        "height": 30,
+        "top": 4757.953125,
+        "left": 232
+      },
+      "fontSize": "12px"
+    },
+    {
+      "test": "long-identity",
+      "identityRight": 1238,
+      "statusLeft": 895.203125,
+      "nicknameLength": 80
+    },
+    {
+      "test": "modification-tooltip",
+      "visibleTooltips": 0,
+      "hitTag": "A",
+      "hitHref": "/membres/repertoire/audit-person-002?returnTo=%2Fmembres%2Frepertoire",
+      "tabIndex": -1,
+      "label": "Modifiée par Gestionnaire fictif (audit-gestionnaire), le 10 oct. 2026, 12:30"
+    },
+    {
+      "test": "keyboard-select",
+      "activeRole": "option",
+      "query": "?sort=created"
+    },
+    {
+      "test": "search-empty",
+      "text": "0 membres trouvés",
+      "query": "?q=zzzz-no-match"
+    },
+    {
+      "test": "status-filter",
+      "query": "?structureStatus=OUTSIDE_STRUCTURE",
+      "text": "20 membres trouvés"
+    },
+    {
+      "test": "pagination",
+      "label": "Page 2 sur 3",
+      "query": "?cursor=fixture-25&page=2"
+    },
+    {
+      "test": "direct-page3",
+      "previousDisabled": true,
+      "nextDisabled": true,
+      "resetVisible": 0,
+      "label": "Page 3 sur 3"
+    },
+    {
+      "test": "remaining-total-page2",
+      "label": "Page 2 sur 2",
+      "count": "35 membres trouvés"
+    },
+    {
+      "test": "remaining-total-page3",
+      "label": "Page 3",
+      "count": "10 membres trouvés"
+    },
+    {
+      "test": "invalid-cursor",
+      "text": "Répertoire\n\nProfils, coordonnées et rattachement à la structure.\n\nAjouter une fiche\nChargement impossible\nCurseur de pagination invalide\nRéessayer",
+      "searchAvailable": 0,
+      "requests": 1
+    },
+    {
+      "test": "invalid-cursor-retry",
+      "cursors": [
+        "invalid",
+        "invalid"
+      ]
+    },
+    {
+      "test": "unbounded-page",
+      "message": "Invalid array length"
+    }
+  ]
+}

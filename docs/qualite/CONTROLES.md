@@ -25,6 +25,14 @@ des données. Consulter [OPERATIONS](../references/OPERATIONS.md) et le
 [guide de la base](../../packages/database/prisma/README.md) selon le besoin.
 Utiliser une cible isolée pour les essais qui modifient des données.
 
+Régression SQL du répertoire : depuis `apps/web`, lancer
+`bun run test src/__tests__/persons-list-postgres.test.ts` avec
+`PERSONS_LIST_TEST_DATABASE_URL` pointant vers une base locale jetable nommée
+`repertoire_pagination_test`. Ce groupe est ignoré sans cette variable ; il crée
+et supprime un schéma unique et n'utilise pas `DATABASE_URL`. Le schéma minimal
+teste la liste et ses comptages, pas les migrations ni les mutations métier.
+Lancer directement la commande pour une preuve nouvelle, sans cache Turbo.
+
 ## Couverture de la documentation
 
 Le [contrôleur](../../scripts/check-docs.mjs) découvre les fichiers Markdown de

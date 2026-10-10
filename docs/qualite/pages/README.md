@@ -14,7 +14,7 @@ Utiliser un nom stable compréhensible, sans multiplier les copies datées.
 | Journal d’activité | [systeme-journal-activite.md](systeme-journal-activite.md) | Page retirée le 9 octobre 2026, replanifiée ; suivi conservé comme historique |
 | Navigation générale — sidebar et header | [navigation-generale.md](navigation-generale.md) | Trois pôles actifs, sidebar fixe et navigation rapide ; notifications retirées ; synthèse du 10 octobre et limites explicites |
 | Mon compte | [mon-compte.md](mon-compte.md) | Alignée le 10 octobre 2026 sur la fiche `/systeme/utilisateurs/[id]` (hero, rail Vue d'ensemble, navigation, onglets Profil/Sécurité) |
-| Membres — liste, création et fiche | [membres-repertoire.md](membres-repertoire.md) | **Référence visuelle et UX** avec Utilisateurs ; défaut de total après curseur et vérifications encore ouverts |
+| Membres — liste, création et fiche | [membres-repertoire.md](membres-repertoire.md) | **Référence visuelle et UX** avec Utilisateurs ; corrections et quatre améliorations livrées, 112 tests du périmètre et build réussis ; session complète et charge à compléter |
 
 Pour commencer un nouveau suivi : [modèle de revue](../modeles/revue-page.md).
 L’état livré et le niveau de vérification sont distincts. « Alignée » ou « référence

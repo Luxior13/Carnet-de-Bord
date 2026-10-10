@@ -1,60 +1,64 @@
+import Link from 'next/link';
 import React, { type FC, type ReactNode } from 'react';
 
+import { PAGE_PATHS } from '$constants/routes.constants';
+import { Button } from '$ui/button';
 import directoryStyles from '$ui/directory.module.css';
 import { Skeleton } from '$ui/skeleton';
 import { cn } from '$utils/css.utils';
 
 import type { PersonOverview as PersonOverviewStats } from '../types/person.types';
+import styles from './PersonOverview.module.css';
 
 type PersonOverviewProps = {
   isLoading?: boolean;
+  query?: string;
   stats: PersonOverviewStats | null;
 };
 
-const OverviewGroupHeader: FC<{ label: string }> = ({ label }) => (
-  <div className="border-border-divider border-t px-4 pt-2.5 pb-1">
-    <span className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">
-      {label}
-    </span>
-  </div>
-);
-
-const OverviewRow: FC<{
-  dotClassName: string;
-  label: string;
-  lastInGroup?: boolean;
-  value: ReactNode;
-}> = ({ dotClassName, label, lastInGroup = false, value }) => (
-  <div
-    className={cn(
-      'flex items-center justify-between gap-3 px-4 py-1.5',
-      lastInGroup && 'pb-2.5',
-    )}
-  >
-    <span className="text-muted-foreground flex min-w-0 items-center gap-2 text-xs leading-5">
-      <span
-        aria-hidden="true"
-        className={cn('size-1.5 shrink-0 rounded-full', dotClassName)}
-      />
-      {label}
-    </span>
-    <span className="text-foreground shrink-0 text-sm leading-5 font-semibold tabular-nums">
-      {value}
-    </span>
-  </div>
-);
-
 export const PersonOverview: FC<PersonOverviewProps> = ({
   isLoading = false,
+  query = '',
   stats,
 }) => {
   if (!stats && !isLoading) return null;
+  const params = new URLSearchParams(query);
+  const sort = params.get('sort');
+  const href = (filter?: [string, string]): string => {
+    const next = new URLSearchParams();
+    if (sort === 'created' || sort === 'updated') next.set('sort', sort);
+    if (filter) next.set(...filter);
 
-  const displayValue = (rawValue: number | null | undefined): ReactNode =>
+    return PAGE_PATHS.persons + (next.size ? '?' + next : '');
+  };
+  const status = params.get('structureStatus');
+  const missing = params.get('contacts') === 'missing';
+  const hasQuery = Boolean(params.get('q')?.trim());
+  const counters = [
+    {
+      active: !hasQuery && !missing && status === 'IN_STRUCTURE',
+      href: href(['structureStatus', 'IN_STRUCTURE']),
+      label: 'Dans la structure',
+      value: stats?.inStructure,
+    },
+    {
+      active: !hasQuery && !missing && status === 'OUTSIDE_STRUCTURE',
+      href: href(['structureStatus', 'OUTSIDE_STRUCTURE']),
+      label: 'Hors structure',
+      value: stats?.outsideStructure,
+    },
+    {
+      active: !hasQuery && !status && missing,
+      href: href(['contacts', 'missing']),
+      label: 'Sans coordonnées',
+      value: stats?.noContacts,
+    },
+  ];
+  const value = (count?: number): ReactNode =>
     isLoading ? (
       <Skeleton className="h-4 w-6" />
     ) : (
-      (rawValue ?? 0).toLocaleString('fr-FR')
+      (count ?? 0).toLocaleString('fr-FR')
     );
 
   return (
@@ -63,45 +67,57 @@ export const PersonOverview: FC<PersonOverviewProps> = ({
       aria-label="Vue d’ensemble"
       className={cn(directoryStyles.overviewCard, 'min-w-0')}
     >
-      <h2
+      <div
         className={cn(
           directoryStyles.overviewHeader,
-          'border-border-divider border-b px-4 py-3 text-sm font-semibold',
+          'flex items-center justify-between gap-3 border-b px-4 py-2',
         )}
       >
-        Vue d’ensemble
-      </h2>
-      <div className="border-border-divider border-b px-4 py-3">
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="text-muted-foreground text-xs leading-5">
-            Total des fiches
-          </span>
-          <span className="text-foreground text-2xl leading-8 font-semibold tabular-nums">
-            {displayValue(stats?.total)}
-          </span>
+        <div>
+          <h2 className="text-sm font-semibold">Vue d’ensemble</h2>
+          <p className="text-muted-foreground text-[11px] font-normal">
+            Tout le répertoire
+          </p>
         </div>
+        <Button
+          asChild
+          variant="ghost"
+          className="h-auto min-h-11 px-2 text-2xl font-semibold tabular-nums"
+        >
+          <Link
+            href={href()}
+            scroll={false}
+            aria-label="Afficher toutes les fiches"
+            aria-current={!hasQuery && !status && !missing ? 'page' : undefined}
+          >
+            {value(stats?.total)}
+          </Link>
+        </Button>
       </div>
-
-      <OverviewGroupHeader label="Statut" />
-      <OverviewRow
-        dotClassName="bg-success"
-        label="Dans la structure"
-        value={displayValue(stats?.inStructure)}
-      />
-      <OverviewRow
-        dotClassName="bg-warning"
-        lastInGroup
-        label="Hors structure"
-        value={displayValue(stats?.outsideStructure)}
-      />
-
-      <OverviewGroupHeader label="Statistiques" />
-      <OverviewRow
-        dotClassName="bg-info"
-        lastInGroup
-        label="Sans coordonnées"
-        value={displayValue(stats?.noContacts)}
-      />
+      <div className={styles.counters}>
+        {counters.map((counter) => (
+          <Button
+            asChild
+            variant="ghost"
+            key={counter.label}
+            className={styles.counter}
+          >
+            <Link
+              href={counter.href}
+              scroll={false}
+              aria-label={'Afficher les fiches : ' + counter.label}
+              aria-current={counter.active ? 'page' : undefined}
+            >
+              <span className="text-muted-foreground text-[11px] font-normal">
+                {counter.label}
+              </span>
+              <span className="text-sm font-semibold tabular-nums">
+                {value(counter.value)}
+              </span>
+            </Link>
+          </Button>
+        ))}
+      </div>
     </aside>
   );
 };

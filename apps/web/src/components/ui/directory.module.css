@@ -285,10 +285,7 @@
   background: var(--m-row-hover);
 }
 
-.directory
-  .table
-  tbody
-  tr:nth-child(even):not([data-state='selected']):hover {
+.directory .table tbody tr:nth-child(even):not([data-state='selected']):hover {
   background: var(--m-row-hover);
 }
 
@@ -432,6 +429,11 @@
 }
 
 @media (max-width: 639px) {
+  .directory .pageButton {
+    min-width: 44px;
+    height: 44px;
+  }
+
   .directory .addButton {
     min-height: 44px;
   }

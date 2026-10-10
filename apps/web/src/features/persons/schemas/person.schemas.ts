@@ -451,6 +451,7 @@ export const deletePersonSchema = z
 
 export const personsListQuerySchema = z
   .object({
+    contacts: z.enum(['missing']).optional(),
     cursor: z.string().max(2_048).optional(),
     limit: z.coerce
       .number()

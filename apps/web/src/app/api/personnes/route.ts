@@ -28,6 +28,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const searchParams = request.nextUrl.searchParams;
   const parsed = personsListQuerySchema.safeParse({
+    contacts: searchParams.get('contacts') ?? undefined,
     cursor: searchParams.get('cursor') ?? undefined,
     limit: searchParams.get('limit') ?? undefined,
     q: searchParams.get('q') ?? undefined,

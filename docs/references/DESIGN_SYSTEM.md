@@ -251,9 +251,13 @@ Règles : une page n'a qu'un héro ; une action globale vit dans le héro, une
 action locale dans sa section ; un retour contextuel ramène à la liste avec ses
 filtres.
 
-`PageHero` est l'unique composant d'en-tête de page ; l'ancien `PageHeader`,
-inutilisé, a été supprimé. Les bordures des cartes appartiennent à `CardHeader`
-et `CardFooter` : ne pas les redoubler sur le contenu adjacent.
+`PageIdentityHero` est la référence d'en-tête pour les listes Répertoire et
+Utilisateurs, conformément à la règle du début de ce document et au
+[suivi du répertoire](../qualite/pages/membres-repertoire.md). `PageHero` reste
+utilisé par des pages anciennes ; il n'est pas l'unique composant autorisé.
+L'ancien `PageHeader`, inutilisé, a été supprimé. Les bordures des cartes
+appartiennent à `CardHeader` et `CardFooter` : ne pas les redoubler sur le contenu
+adjacent.
 
 Le nom `PageHero` est conservé pour les consommateurs, mais son rendu est un
 en-tête compact (`data-slot="page-heading"`). Les icônes de titre sont neutres ;
