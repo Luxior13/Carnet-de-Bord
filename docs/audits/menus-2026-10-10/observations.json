@@ -1,0 +1,460 @@
+{
+  "date": "2026-10-10",
+  "environment": "Chromium, composants React réels hydratés, CSS recompilé ; compte et navigation simulés ; aucune API métier ni base",
+  "inventory": [
+    {
+      "file": "apps/web/src/components/layout/PoleNavigation.tsx",
+      "counts": {
+        "DropdownMenuTrigger": 1
+      }
+    },
+    {
+      "file": "apps/web/src/components/Sidebar.tsx",
+      "counts": {
+        "DropdownMenuTrigger": 1
+      }
+    },
+    {
+      "file": "apps/web/src/components/ui/breadcrumb.tsx",
+      "counts": {
+        "DropdownMenuTrigger": 1
+      }
+    },
+    {
+      "file": "apps/web/src/components/users/PermissionsEditor.tsx",
+      "counts": {
+        "SelectTrigger": 2
+      }
+    },
+    {
+      "file": "apps/web/src/components/users/user-detail/UserAccessTab.tsx",
+      "counts": {
+        "SelectTrigger": 1
+      }
+    },
+    {
+      "file": "apps/web/src/components/users/user-detail/UserHistoryTab.tsx",
+      "counts": {
+        "SelectTrigger": 6
+      }
+    },
+    {
+      "file": "apps/web/src/features/persons/components/PersonCollectionFields.tsx",
+      "counts": {
+        "datalist": 1,
+        "SelectTrigger": 2
+      }
+    },
+    {
+      "file": "apps/web/src/features/persons/components/PersonCollectionsSection.tsx",
+      "counts": {
+        "SelectTrigger": 1
+      }
+    },
+    {
+      "file": "apps/web/src/features/persons/components/PersonIdentityFields.tsx",
+      "counts": {
+        "SelectTrigger": 1
+      }
+    },
+    {
+      "file": "apps/web/src/features/persons/components/PersonsListToolbar.tsx",
+      "counts": {
+        "SelectTrigger": 1
+      }
+    },
+    {
+      "file": "apps/web/src/features/roadmap/RoadmapPage.tsx",
+      "counts": {
+        "SelectTrigger": 2
+      }
+    },
+    {
+      "file": "apps/web/src/features/users/UsersListToolbar.tsx",
+      "counts": {
+        "SelectTrigger": 3
+      }
+    }
+  ],
+  "results": [
+    {
+      "width": 320,
+      "kind": "standard",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 320,
+      "kind": "invalid",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 320,
+      "kind": "long",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 320,
+      "kind": "identity",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 320,
+      "kind": "creation",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 320,
+      "kind": "phone",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 320,
+      "kind": "social",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 320,
+      "kind": "persons-list",
+      "count": 2,
+      "passed": true
+    },
+    {
+      "width": 320,
+      "kind": "users-list",
+      "count": 3,
+      "passed": true
+    },
+    {
+      "width": 320,
+      "kind": "permissions",
+      "count": 3,
+      "passed": true
+    },
+    {
+      "width": 320,
+      "kind": "roadmap",
+      "count": 2,
+      "passed": true
+    },
+    {
+      "width": 320,
+      "kind": "breadcrumb",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 320,
+      "kind": "navigation",
+      "count": 2,
+      "passed": true
+    },
+    {
+      "width": 320,
+      "kind": "dropdown",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "standard",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "invalid",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "long",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "identity",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "creation",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "phone",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "social",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "persons-list",
+      "count": 2,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "users-list",
+      "count": 3,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "permissions",
+      "count": 3,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "roadmap",
+      "count": 2,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "breadcrumb",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "navigation",
+      "count": 2,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "dropdown",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "standard",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "invalid",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "long",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "identity",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "creation",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "phone",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "social",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "persons-list",
+      "count": 2,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "users-list",
+      "count": 3,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "permissions",
+      "count": 3,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "roadmap",
+      "count": 2,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "breadcrumb",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "navigation",
+      "count": 2,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "dropdown",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "standard",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "invalid",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "long",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "identity",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "creation",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "phone",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "social",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "persons-list",
+      "count": 2,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "users-list",
+      "count": 3,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "permissions",
+      "count": 3,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "roadmap",
+      "count": 2,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "breadcrumb",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "navigation",
+      "count": 2,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "dropdown",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 320,
+      "kind": "replacement",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 390,
+      "kind": "replacement",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 768,
+      "kind": "replacement",
+      "count": 1,
+      "passed": true
+    },
+    {
+      "width": 1440,
+      "kind": "replacement",
+      "count": 1,
+      "passed": true
+    }
+  ],
+  "extra": {
+    "radioSelection": true,
+    "outsideClickCloses": true,
+    "forcedColorsKeyboardOutline": true,
+    "touchEmulatedSelection": true,
+    "physicalDevice": false
+  },
+  "checks": {
+    "webTestsPassed": 1036,
+    "webTestsSkipped": 25,
+    "typecheck": "passed",
+    "lint": "passed",
+    "architecture": "passed",
+    "productionBuildExecuted": false
+  },
+  "harnessNotes": [
+    "Première passe : attente clavier insuffisante et seuil mobile du banc à 768 au lieu de 1024 ; corrigés avant répétition complète.",
+    "Écart réel restant sur le contour du sélecteur quiet ouvert : corrigé et vérifié après recompilation."
+  ]
+}

@@ -289,10 +289,11 @@ export const PhoneFields: FC<PhoneFieldsProps> = ({
             }
             aria-invalid={Boolean(countryError)}
             id={`${idPrefix}-country`}
+            variant="compact"
           >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent variant="compact">
             {PHONE_COUNTRY_OPTIONS.map(([code, label]) => (
               <SelectItem key={code} value={code}>
                 {label}
@@ -410,10 +411,11 @@ export const SocialFields: FC<SocialFieldsProps> = ({
             }
             aria-invalid={Boolean(networkError)}
             id={`${idPrefix}-network`}
+            variant="compact"
           >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent variant="compact">
             {PERSON_SOCIAL_NETWORKS.filter(
               (network) =>
                 network.status === 'active' || network.key === value.networkKey,

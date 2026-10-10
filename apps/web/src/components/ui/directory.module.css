@@ -143,39 +143,7 @@
 }
 
 .directory .selectTrigger {
-  display: flex;
-  align-items: center;
   width: 220px;
-  height: 38px;
-  gap: 7px;
-  padding: 8px 10px;
-  border: 1px solid var(--m-border-control);
-  border-radius: 6px;
-  background: var(--m-control);
-  color: var(--m-text-secondary);
-  font-size: 11px;
-  font-weight: 500;
-  box-shadow: none;
-}
-
-.directory .selectTrigger:hover {
-  border-color: var(--m-border-hover);
-  background: var(--surface-control-hover);
-}
-
-.directory .selectTrigger[data-state='open'],
-.directory .selectTrigger:focus {
-  border-color: var(--m-accent);
-  background: var(--surface-control-focus);
-  box-shadow: 0 0 0 2px var(--m-accent-ring);
-}
-
-.directory .selectTrigger svg {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-  color: var(--m-accent-text);
-  opacity: 1;
 }
 
 .directory .addButton {
@@ -387,45 +355,6 @@
 
 .directory .overviewMetric {
   border-color: var(--m-divider);
-}
-
-/*
- * Panneau déroulant des sélecteurs : rendu dans un portail Radix, donc hors du
- * conteneur `.directory`. On reprend le style du Répertoire à l'identique.
- */
-.selectContent {
-  padding: 4px;
-  border: 1px solid var(--border-control);
-  border-radius: 7px;
-  background: var(--surface-floating);
-  color: var(--text-primary);
-  box-shadow: 0 16px 36px #0006;
-}
-
-.selectContent > div {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  height: auto;
-  padding: 0;
-}
-
-.selectOption {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: 38px;
-  padding: 0 1.75rem 0 8px;
-  border-radius: 4px;
-  color: var(--text-primary);
-  font-size: 12px;
-  text-align: left;
-}
-
-.selectOption:hover,
-.selectOption[data-state='checked'] {
-  background: var(--surface-navigation-hover);
-  color: var(--text-primary);
 }
 
 @media (max-width: 639px) {

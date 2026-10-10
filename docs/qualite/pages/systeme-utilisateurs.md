@@ -464,6 +464,24 @@ Ce banc isolé ne rejoue pas les interactions serveur ni les parcours complets.
 
 ## Analyse de la liste après alignement — 10 octobre 2026
 
+### Complément : menus partagés
+
+Le [contrôle transverse du 10 octobre](../../audits/AUDIT_MENUS_2026-10-10.md)
+vérifie les filtres de liste, le rôle et les sélecteurs pôle/page de permissions
+dans les vrais composants avec contexte simulé. Les surcharges de focus et
+d'arrondi sont retirées : déclencheur 6 px, panneau 7 px, option 4 px, anneau
+partagé au focus et pendant l'ouverture. Les classes des sélecteurs d'Activité
+dormants sont alignées, sans réactiver ni valider cet onglet. Les 1 036 tests web
+réussissent (25 ignorés) ; les anciennes preuves de mutations restent distinctes.
+
+Complément du même jour : les trois filtres de liste utilisent désormais
+`variant="compact"` sur le déclencheur et le contenu du sélecteur. Leur style
+est extrait de `directory.module.css` pour être partagé avec les fiches du
+Répertoire. Rendu calculé et ouverture/fermeture vérifiés à 320, 390, 768 et
+1 440 px dans le banc du [complément Répertoire](../../audits/AUDIT_MENUS_2026-10-10.md#complément--présentation-des-sélecteurs-du-répertoire).
+
+### Analyse initiale
+
 Voir le [rapport daté](../../audits/AUDIT_UTILISATEURS_2026-10-10.md) pour la
 sélection des 30 sujets, les reproductions et les captures. Passe d'analyse :
 **aucun code produit modifié**.

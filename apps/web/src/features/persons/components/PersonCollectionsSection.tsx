@@ -618,10 +618,10 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
                 Choisissez le nouveau principal avant de continuer.
               </p>
               <Select onValueChange={setReplacementId} value={replacementId}>
-                <SelectTrigger aria-label="Nouveau principal">
+                <SelectTrigger aria-label="Nouveau principal" variant="compact">
                   <SelectValue placeholder="Sélectionner…" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent variant="compact">
                   {alternatives.map((item) => (
                     <SelectItem key={item.id} value={item.id}>
                       {'email' in item

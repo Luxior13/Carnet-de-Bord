@@ -59,10 +59,10 @@ type SidebarProps = {
 };
 
 const SIDEBAR_POPOVER_PANEL_CLASS =
-  'border-border-default bg-surface-panel text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto overscroll-contain rounded-sm border p-1.5';
+  'border-border-default bg-surface-panel text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto overscroll-contain border p-1.5';
 const SIDEBAR_POPOVER_SECTION_CLASS = 'space-y-0.5';
 const SIDEBAR_POPOVER_ACTION_BASE_CLASS =
-  'group/menu-action text-foreground flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-sm px-2.5 py-2 text-left text-sm font-medium transition-colors duration-150';
+  'group/menu-action text-foreground flex min-h-10 w-full cursor-pointer items-center gap-2.5 px-2.5 py-2 text-left text-sm font-medium transition-colors duration-150';
 const SIDEBAR_POPOVER_ACTION_CLASS =
   'hover:bg-surface-navigation-hover hover:text-foreground focus:bg-surface-navigation-hover focus:text-foreground';
 const SIDEBAR_POPOVER_DANGER_ACTION_CLASS =

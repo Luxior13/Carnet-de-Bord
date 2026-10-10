@@ -75,6 +75,61 @@ Contrôles réussis : relecture ciblée des règles et de leurs sources,
 
 ## Fonction et décisions courantes
 
+### Contour des champs de fiche — 10 octobre 2026
+
+Écart signalé entre `/membres/repertoire/[id]` et la fiche Utilisateurs :
+`PersonIdentityFields` utilise bien les primitives communes, mais sa variante
+`quiet` remplaçait le focus par un halo de 3 px à 22 % d'opacité et un autre
+fond. `SectionForm.module.css` limite désormais cette variante au repos et au
+survol, en laissant les champs focalisés ou invalides aux primitives `Input` et
+`SelectTrigger`. Les erreurs gardent ainsi leur contour rouge ; rayon de 6 px
+conservé. Lors de cette passe, coordonnées et création utilisaient la variante
+standard ; leur présentation évolue dans le complément ci-dessous.
+
+Revue légère : Q01/Q03/Q04/Q19/Q27/Q30 examinés ; autres sujets hors impact
+pour cette correction CSS sans changement des données ni du comportement métier.
+Chromium isolé, composants réels des deux fiches rendus en HTML et CSS recompilé :
+écart reproduit avant correction, puis égalité des bordures, anneaux, fonds et
+rayons au clic et à Tab, avec et sans erreur, à 390 et 1 440 px. Sélecteurs
+comparés au clavier ; contour système en couleurs forcées et absence de
+débordement global vérifiés. Les mutations et les parcours authentifiés ne sont
+pas rejoués par ce contrôle visuel. Les preuves fonctionnelles précédentes
+restent datées.
+
+### Présentation des sélecteurs alignée sur les filtres — 10 octobre 2026
+
+Après le contrôle des contours, l'utilisateur a signalé l'écart encore visible
+entre le statut de `/membres/repertoire/[id]` et les filtres de la liste : hauteur,
+typographie, flèche, fond au repos et espacement des options différaient.
+**Corrigé et vérifié** : variante `compact` commune de `SelectTrigger` et
+`SelectContent`, extraite du style des filtres. Le statut de fiche ne reçoit plus
+`quietField` ; les champs texte discrets conservent leur présentation.
+
+Statut de création, pays, réseau social et remplacement du contact principal
+reprennent cette variante. La largeur reste propre au contexte ; aucun changement
+de valeur, validation, permission ou mutation. Les filtres Utilisateurs consomment
+aussi la présentation extraite. Revue légère : Q01/Q03/Q04/Q19/Q27/Q30 examinés ;
+autres sujets hors impact sur ce changement de CSS et de composition.
+
+Comparaison Chromium avec vrais composants/CSS à 320, 390, 768 et 1 440 px :
+styles calculés identiques entre déclencheurs, puis entre panneaux/options du
+statut de liste et de fiche ; survol, ouverture, sélection clavier, retour du
+focus, erreur, désactivation et absence de débordement horizontal contrôlés.
+Les contrôles TypeScript, lint, architecture et les 1 036 tests web passent
+(25 ignorés). [Preuves et limites du complément](../../audits/AUDIT_MENUS_2026-10-10.md#complément--présentation-des-sélecteurs-du-répertoire).
+Contexte compte simulé, police de repli ; aucune session authentifiée, mutation
+réelle ni compilation Next de production rejouée. Le remplacement du principal
+est examiné dans le code, son dialogue n'est pas réexécuté dans ce complément.
+
+### Règles métier
+
+Le [contrôle transverse des menus du 10 octobre](../../audits/AUDIT_MENUS_2026-10-10.md)
+complète la correction du focus : filtres de liste, statut de fiche/création,
+pays, réseau social et remplacement du contact principal exécutés dans leurs
+composants réels, avec contexte simulé. Contour partagé conservé pendant
+l'ouverture ; panneau 7 px et options 4 px. Les parcours métier authentifiés
+ne sont pas validés par ce banc visuel ; les limites ci-dessous restent datées.
+
 - Tâche principale : retrouver une fiche personne, qu'elle soit **dans** ou
   **hors** de la structure (`IN_STRUCTURE` / `OUTSIDE_STRUCTURE`), comprendre
   son rattachement, accéder à sa fiche, en créer une.

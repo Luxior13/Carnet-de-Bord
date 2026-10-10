@@ -24,9 +24,9 @@ type PoleNavigationProps = {
 };
 
 const RUBRIQUES_PANEL_CLASS =
-  'border-border-default bg-surface-panel text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(15rem,calc(100vw-2rem))] space-y-1 overflow-y-auto overscroll-contain rounded-sm border p-1.5 shadow-[var(--shadow-panel-strong)]';
+  'border-border-default bg-surface-panel text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(15rem,calc(100vw-2rem))] space-y-1 overflow-y-auto overscroll-contain border p-1.5 shadow-[var(--shadow-panel-strong)]';
 const RUBRIQUES_ITEM_CLASS =
-  'text-foreground flex min-h-10 w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-sm px-2.5 py-1 text-sm font-medium outline-none';
+  'text-foreground flex min-h-10 w-full min-w-0 cursor-pointer items-center gap-2.5 px-2.5 py-1 text-sm font-medium outline-none';
 
 export const PoleNavigation: FC<PoleNavigationProps> = ({
   activeSpace,

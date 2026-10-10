@@ -1,27 +1,22 @@
 /*
  * Brique « édition directe » des sections de fiche.
  *
- * Au repos, un champ doit se lire comme du texte : pas de bordure, pas de
- * fond. L'affordance de contrôle n'apparaît qu'au survol et au focus. C'est ce
- * qui permet de garder la lecture dense de la fiche tout en rendant chaque
- * valeur modifiable directement.
+ * Au repos, les champs ont une bordure et un fond discrets. Le focus et les
+ * erreurs restent entièrement portés par les primitives Input et SelectTrigger
+ * pour conserver le même contour dans les différentes fiches.
  */
-.quietField {
+.quietField:not(:focus):not(:focus-visible):not([data-state='open']):not(
+    [aria-invalid='true']
+  ) {
   border-color: var(--border-subtle);
   background: color-mix(in srgb, var(--surface-inset) 55%, transparent);
-  box-shadow: none;
 }
 
-.quietField:hover {
+.quietField:hover:not(:focus):not(:focus-visible):not([data-state='open']):not(
+    :disabled
+  ):not([aria-invalid='true']) {
   border-color: var(--border-control);
   background: var(--surface-inset);
-}
-
-.quietField:focus,
-.quietField:focus-visible {
-  border-color: var(--ring);
-  background: var(--surface-inset);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 22%, transparent);
 }
 
 .quietField::placeholder {

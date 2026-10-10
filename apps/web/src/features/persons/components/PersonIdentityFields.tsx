@@ -211,12 +211,13 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
           <SelectTrigger
             aria-describedby={structureStatus.describedBy}
             aria-invalid={Boolean(structureStatus.error)}
-            className={cn('w-full min-w-0', quiet && styles.quietField)}
+            className="w-full min-w-0"
             id={structureStatus.id}
+            variant="compact"
           >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent variant="compact">
             {PERSON_STRUCTURE_STATUSES.map((status) => (
               <SelectItem key={status} value={status}>
                 {status === 'IN_STRUCTURE'

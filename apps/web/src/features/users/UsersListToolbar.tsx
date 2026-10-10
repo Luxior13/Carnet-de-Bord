@@ -102,32 +102,16 @@ export const UsersListToolbar: FC<{ list: UsersListController }> = ({
             <SelectTrigger
               aria-label="Filtrer par état du compte"
               className={directoryStyles.selectTrigger}
+              variant="compact"
             >
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className={directoryStyles.selectContent}>
-              <SelectItem className={directoryStyles.selectOption} value="all">
-                Tous les états
-              </SelectItem>
-              <SelectItem
-                className={directoryStyles.selectOption}
-                value="active"
-              >
-                Actifs
-              </SelectItem>
-              <SelectItem
-                className={directoryStyles.selectOption}
-                value="inactive"
-              >
-                Désactivés
-              </SelectItem>
+            <SelectContent variant="compact">
+              <SelectItem value="all">Tous les états</SelectItem>
+              <SelectItem value="active">Actifs</SelectItem>
+              <SelectItem value="inactive">Désactivés</SelectItem>
               {canRequestSecurityDetails && (
-                <SelectItem
-                  className={directoryStyles.selectOption}
-                  value="pending"
-                >
-                  Mot de passe à changer
-                </SelectItem>
+                <SelectItem value="pending">Mot de passe à changer</SelectItem>
               )}
             </SelectContent>
           </Select>
@@ -138,28 +122,15 @@ export const UsersListToolbar: FC<{ list: UsersListController }> = ({
             <SelectTrigger
               aria-label="Filtrer par rôle"
               className={directoryStyles.selectTrigger}
+              variant="compact"
             >
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className={directoryStyles.selectContent}>
-              <SelectItem className={directoryStyles.selectOption} value="all">
-                Tous les rôles
-              </SelectItem>
-              <SelectItem
-                className={directoryStyles.selectOption}
-                value="SUPERADMIN"
-              >
-                Superadmin
-              </SelectItem>
-              <SelectItem
-                className={directoryStyles.selectOption}
-                value="ADMIN"
-              >
-                Administrateurs
-              </SelectItem>
-              <SelectItem className={directoryStyles.selectOption} value="USER">
-                Utilisateurs
-              </SelectItem>
+            <SelectContent variant="compact">
+              <SelectItem value="all">Tous les rôles</SelectItem>
+              <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
+              <SelectItem value="ADMIN">Administrateurs</SelectItem>
+              <SelectItem value="USER">Utilisateurs</SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -169,25 +140,14 @@ export const UsersListToolbar: FC<{ list: UsersListController }> = ({
             <SelectTrigger
               aria-label="Trier les comptes utilisateurs"
               className={directoryStyles.selectTrigger}
+              variant="compact"
             >
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className={directoryStyles.selectContent}>
-              <SelectItem className={directoryStyles.selectOption} value="name">
-                {getSortLabel('name')}
-              </SelectItem>
-              <SelectItem
-                className={directoryStyles.selectOption}
-                value="recent"
-              >
-                {getSortLabel('recent')}
-              </SelectItem>
-              <SelectItem
-                className={directoryStyles.selectOption}
-                value="created"
-              >
-                {getSortLabel('created')}
-              </SelectItem>
+            <SelectContent variant="compact">
+              <SelectItem value="name">{getSortLabel('name')}</SelectItem>
+              <SelectItem value="recent">{getSortLabel('recent')}</SelectItem>
+              <SelectItem value="created">{getSortLabel('created')}</SelectItem>
             </SelectContent>
           </Select>
           {hasActiveFilters ? (

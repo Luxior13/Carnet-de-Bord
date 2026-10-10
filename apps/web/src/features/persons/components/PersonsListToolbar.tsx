@@ -56,16 +56,13 @@ const DirectorySelect: FC<{
     <SelectTrigger
       aria-label={ariaLabel}
       className={directoryStyles.selectTrigger}
+      variant="compact"
     >
       <SelectValue />
     </SelectTrigger>
-    <SelectContent className={directoryStyles.selectContent}>
+    <SelectContent variant="compact">
       {options.map((option) => (
-        <SelectItem
-          className={directoryStyles.selectOption}
-          key={option.value}
-          value={option.value}
-        >
+        <SelectItem key={option.value} value={option.value}>
           {option.label}
         </SelectItem>
       ))}

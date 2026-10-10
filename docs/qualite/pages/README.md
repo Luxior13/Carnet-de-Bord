@@ -4,6 +4,10 @@ Un fichier par page, groupe cohérent de routes ou composant partagé suivi ; un
 mériter son propre suivi si ses règles diffèrent fortement de celles de la liste.
 Utiliser un nom stable compréhensible, sans multiplier les copies datées.
 
+Complément transverse : [menus déroulants du 10 octobre](../../audits/AUDIT_MENUS_2026-10-10.md),
+onze consommateurs actifs inventoriés et contrôlés dans un navigateur isolé ;
+les parcours authentifiés restent suivis page par page.
+
 | Page | Suivi | État du document |
 | --- | --- | --- |
 | Accueil / Mon travail | [accueil.md](accueil.md) | Salutation livrée ; vues métier futures ; parcours privé à vérifier |
@@ -14,7 +18,7 @@ Utiliser un nom stable compréhensible, sans multiplier les copies datées.
 | Journal d’activité | [systeme-journal-activite.md](systeme-journal-activite.md) | Page retirée le 9 octobre 2026, replanifiée ; suivi conservé comme historique |
 | Navigation générale — sidebar et header | [navigation-generale.md](navigation-generale.md) | Trois pôles actifs, sidebar fixe et navigation rapide ; notifications retirées ; synthèse du 10 octobre et limites explicites |
 | Mon compte | [mon-compte.md](mon-compte.md) | Alignée sur la fiche utilisateur ; retour aux Utilisateurs avec contexte vérifié le 10 octobre sur Next/PostgreSQL isolés ; mutations profil/sécurité à vérifier |
-| Membres — liste, création et fiche | [membres-repertoire.md](membres-repertoire.md) | **Référence visuelle et UX** avec Utilisateurs ; corrections et quatre améliorations livrées, 112 tests du périmètre et build réussis ; session complète et charge à compléter |
+| Membres — liste, création et fiche | [membres-repertoire.md](membres-repertoire.md) | **Référence visuelle et UX** avec Utilisateurs ; corrections et quatre améliorations livrées, 112 tests du périmètre et build réussis ; focus de fiche harmonisé ; présentation des sélecteurs alignée sur les filtres et comparée à quatre largeurs ; session complète et charge à compléter |
 
 Pour commencer un nouveau suivi : [modèle de revue](../modeles/revue-page.md).
 L’état livré et le niveau de vérification sont distincts. « Alignée » ou « référence

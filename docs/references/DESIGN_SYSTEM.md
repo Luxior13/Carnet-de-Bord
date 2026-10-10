@@ -135,7 +135,8 @@ Les surfaces flottantes de navigation utilisent le jeton `popover`, relié à
 `surface-panel-raised`, avec leurs variantes dans les primitives partagées.
 Les infobulles utilisent `surface-floating`, `border-control`, un rayon de 7 px
 et `--shadow-panel-strong` via `TooltipContent`. Les filtres de liste utilisent
-les classes du module `directory`. Les séparateurs restent en retrait ; les
+la variante `compact` des sélecteurs partagés ; `directory` porte leur largeur.
+Les séparateurs restent en retrait ; les
 sélections utilisent `surface-navigation-active`.
 
 Le focus clavier utilise un bleu acier `#92acd0` via `--ring`.
@@ -227,6 +228,18 @@ historiques ; cette ancienne échelle ne remplace pas les règles courantes.
   Utilisateurs. Les compositions peuvent adapter explicitement ce rayon.
 - `Button` et `Card` utilisent `rounded-lg` par défaut. Les variantes de
   menus et de fenêtres restent définies dans leurs primitives respectives.
+- Les panneaux `SelectContent`, `DropdownMenuContent` et sous-menus ont un rayon
+  commun de **7 px**, leurs options de **4 px**. Les variantes de listes et de
+  navigation reprennent ces primitives ; elles adaptent seulement leur densité,
+  largeur et, pour les menus de sidebar, leur surface de navigation.
+- Les filtres des listes Répertoire/Utilisateurs et les sélecteurs des fiches,
+  créations et dialogues de coordonnées du Répertoire utilisent la **même
+  variante `compact`** sur `SelectTrigger` et `SelectContent`. Son style vit dans
+  [select.module.css](../../apps/web/src/components/ui/select.module.css) :
+  déclencheur de 38 px, texte de 11 px, flèche de 15 px ; options de 38 px minimum
+  et texte de 12 px, espacées de 4 px. Ne pas leur appliquer `quietField` ni
+  recopier ces règles dans un formulaire. La largeur reste adaptée à la composition
+  (220 px dans les filtres desktop, largeur du champ dans la fiche).
 - Les compositions de référence définissent aussi des dimensions ciblées :
   bandeau et carte de liste à 10 px, contrôles du module `directory` à 6 px,
   infobulle à 7 px, case à cocher à 4 px et flèche d'infobulle à 2 px.
@@ -259,6 +272,13 @@ Les ombres montent avec l'élévation et restent très douces :
   permet, sans jamais être supprimé.
 - Un contour global de secours couvre les liens natifs. Les primitives peuvent
   le remplacer par leur anneau ; `forced-colors` rétablit un contour système.
+- Les variantes de champs discrets peuvent adapter le repos et le survol, mais
+  laissent le focus et l'état invalide aux primitives partagées. En particulier,
+  `SectionForm.quietField` ne remplace pas leur bordure ou leur anneau au focus.
+- `SelectTrigger` conserve l'anneau partagé pendant l'ouverture du menu, même
+  quand le focus passe aux options. L'état invalide garde sa teinte d'erreur.
+  Les variantes discrètes et les filtres de listes ne doivent pas masquer cet
+  état ouvert. Les options utilisent le survol/focus et la sélection des primitives.
 
 ---
 

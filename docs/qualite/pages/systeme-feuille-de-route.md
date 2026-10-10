@@ -28,6 +28,12 @@ Sources : [décisions produit](../../references/FEUILLE_DE_ROUTE.md),
 
 ## Preuves et point ouvert
 
+Le [contrôle transverse des menus du 10 octobre](../../audits/AUDIT_MENUS_2026-10-10.md)
+exécute les sélecteurs pôle et phase du composant réel, avec contexte de navigation
+simulé, à quatre largeurs. Ils héritent des contours et arrondis partagés ; clavier,
+fermeture et restitution du focus vérifiés. Cela ne clôt pas FDR-01 : le parcours
+authentifié complet reste distinct de cette validation des menus.
+
 La cartographie et la réconciliation documentaire du 10 octobre examinent le
 catalogue dans le code. La matrice est corrigée pour inclure notifications et
 journal ; l’actualité reprend le statut « À cadrer » du catalogue. Les essais

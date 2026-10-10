@@ -1,5 +1,16 @@
 ﻿# Suivi — Navigation générale, sidebar et header
 
+## Menus partagés — 10 octobre 2026
+
+[Audit transverse des menus](../../audits/AUDIT_MENUS_2026-10-10.md) : menus
+compte, Rubriques et ancêtres du fil d'Ariane exécutés dans les composants réels,
+avec compte/navigation simulés. Panneaux et options reprennent les rayons communs
+de 7 et 4 px ; les boutons conservent le focus adapté à la navigation. Ouverture
+au clic/clavier, Échap et retour du focus vérifiés à 320, 390, 768 et 1 440 px,
+y compris dans le volet mobile. Ce contrôle ne valide pas les destinations,
+la déconnexion ou les droits serveur ; la composition des rubriques n'est pas
+modifiée par cette passe.
+
 ## Décisions courantes
 
 Synthèse actualisée le 10 octobre 2026 ; les vérifications de septembre restent

@@ -154,7 +154,6 @@ describe('sidebar UX contracts', () => {
   });
 
   it('keeps compact proportions without decorative texture or nested cards', () => {
-    expect(sidebarSource).toContain('rounded-sm border p-1.5');
     expect(sidebarSource).toContain('size-9');
     expect(sidebarSource).toContain('size-8');
     expect(sidebarSource).toContain('min-h-10');

@@ -64,13 +64,11 @@ type PermissionModuleGroup = {
   permissions: PermissionItem[];
 };
 
-const permissionSelectTriggerClassName =
-  'border-border-control bg-surface-control text-foreground hover:border-border-strong hover:bg-surface-control-hover focus-visible:border-primary/45 focus-visible:bg-surface-control-focus focus-visible:ring-ring/35 h-11 w-full rounded-lg shadow-none';
+const permissionSelectTriggerClassName = 'h-11 w-full';
 
 const permissionSelectContentClassName = 'text-foreground';
 
-const permissionSelectItemClassName =
-  'focus:bg-surface-tile-hover focus:text-accent-foreground rounded-lg py-2';
+const permissionSelectItemClassName = 'py-2';
 
 type SelectVisualOptionProps = {
   icon: Parameters<typeof getNavigationIcon>[0];
