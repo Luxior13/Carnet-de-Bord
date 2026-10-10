@@ -20,6 +20,7 @@ import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
 import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { PageSectionNavigation } from '$components/layout/PageSectionNavigation';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
+import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { useAdminStepUpController } from '$components/users/user-detail/useAdminStepUpController';
 import {
   analyzeUserAccessMutationBatch,
@@ -27,22 +28,20 @@ import {
   getUserAccessMutationCapabilities as getAccessCapabilities,
 } from '$components/users/user-detail/user-access-editor-policy';
 import {
+  getProfileFieldErrors,
+  userProfileSchema,
+} from '$components/users/user-detail/user-detail-draft';
+import {
   ACCESS_PERMISSION_KEYS,
   ACCOUNT_PERMISSION_KEYS,
   appendUserAuditFilters,
   buildUserDetailSectionHref,
-  EMAIL_PATTERN,
-  findAnchorElement,
   getUserAuditFiltersFromParams,
   getUserAuditFiltersKey,
   havePermissionOverridesChangedForKeys,
-  isInternalNavigationLink,
-  isPlainLeftClick,
-  LOGIN_NAME_PATTERN,
   normalizePermissionPageKey,
   resetPermissionOverridesForKeys,
   selectPermissionOverridesForKeys,
-  type UserDetailPendingNavigation,
 } from '$components/users/user-detail/user-detail-page.helpers';
 import {
   AdminMfaResetDialog,
@@ -63,7 +62,14 @@ import {
   type UserHistoryFacets,
   type UserHistoryFilters,
 } from '$components/users/user-detail/UserHistoryTab';
+import {
+  UserMutationFeedback,
+  useUserMutationFeedback,
+} from '$components/users/user-detail/UserMutationFeedback';
+import { UserPasswordResetFeedback } from '$components/users/user-detail/UserPasswordResetFeedback';
 import type { ProfileForm } from '$components/users/user-detail/UserProfileTab';
+import { useUserDetailDraft } from '$components/users/user-detail/useUserDetailDraft';
+import { useUserPasswordReset } from '$components/users/user-detail/useUserPasswordReset';
 import { UserAvatar } from '$components/users/UserAvatar';
 import { UserOverviewCard } from '$components/users/UserOverviewCard';
 import { FEATURES } from '$constants/feature-registry.constants';
@@ -75,6 +81,7 @@ import {
 import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
 import { UserAccessBadge } from '$features/users/user-badges';
+import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
 import type {
   AuditLogEntry,
   UserSessionInfo,
@@ -97,10 +104,6 @@ import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { apiFetch } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
-import {
-  getGuardedNavigationRequest,
-  GUARDED_NAVIGATION_REQUEST_EVENT,
-} from '$utils/guarded-navigation.utils';
 import { getSafeCollectionReturnHref } from '$utils/navigation.utils';
 import {
   getUserDisplayName,
@@ -170,37 +173,30 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     isLoading: isCurrentUserLoading,
     userData: currentUser,
   } = useUser();
-  const [user, setUser] = useState<UserType | null>(initialUser ?? null);
+  const {
+    editForm,
+    permissions,
+    setEditForm,
+    setPermissions,
+    syncUserState,
+    user,
+  } = useUserDetailDraft(initialUser);
+  const mutation = useUserMutationFeedback();
   const [isLoading, setIsLoading] = useState(!initialUser);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [activeSection, setActiveSection] =
     useState<UserDetailSectionId>(requestedSection);
-  const [pendingNavigation, setPendingNavigation] =
-    useState<UserDetailPendingNavigation | null>(null);
-  const [showUnsavedNavigationConfirm, setShowUnsavedNavigationConfirm] =
-    useState(false);
   const [showLoginChangeConfirm, setShowLoginChangeConfirm] = useState(false);
-  const skipSectionNavigationGuardRef = useRef(false);
   const userAbortControllerRef = useRef<AbortController | null>(null);
   const auditAbortControllerRef = useRef<AbortController | null>(null);
   const sessionsAbortControllerRef = useRef<AbortController | null>(null);
   const hasLoadedAuditLogsRef = useRef(false);
 
-  const [editForm, setEditForm] = useState({
-    contactEmail: initialUser?.contactEmail ?? '',
-    firstName: initialUser?.firstName ?? '',
-    isActive: initialUser?.isActive ?? true,
-    lastName: initialUser?.lastName ?? '',
-    loginName: initialUser?.loginName ?? '',
-    role: initialUser?.role ?? ('USER' as UserRole),
-  });
   const [isSaving, setIsSaving] = useState(false);
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showResetMfa, setShowResetMfa] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const [tempPassword, setTempPassword] = useState<string | null>(null);
   const [showRevokeSessionsConfirm, setShowRevokeSessionsConfirm] =
     useState(false);
 
@@ -237,9 +233,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     string | null
   >(null);
 
-  const [permissions, setPermissions] = useState<PermissionsData | null>(
-    initialUser?.permissions ?? null,
-  );
   const [isSavingPermissions, setIsSavingPermissions] = useState(false);
   const adminStepUp = useAdminStepUpController();
   const {
@@ -538,26 +531,63 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       canViewTargetSecurity,
     ],
   );
+  const passwordReset = useUserPasswordReset({
+    canReset: canResetTargetPassword,
+    onClose: () => setShowResetConfirm(false),
+    onSuccess: () => {
+      void fetchUser({ background: true });
+      refreshAuditAfterMutation();
+      void fetchSecuritySessions();
+    },
+    requestStepUp: requestStepUpForResponse,
+    userId,
+  });
+  const isResetting = passwordReset.isResetting;
   const profileErrors = useMemo(() => {
+    const validation = userProfileSchema.safeParse({
+      contactEmail: editForm.contactEmail,
+      firstName: editForm.firstName,
+      lastName: editForm.lastName,
+      loginName: editForm.loginName,
+    });
+    const local = getProfileFieldErrors(
+      validation.success ? undefined : validation.error.flatten().fieldErrors,
+    );
+    const server = mutation.serverValidation;
+
     return {
-      contactEmail:
-        !editForm.contactEmail.trim() ||
-        EMAIL_PATTERN.test(editForm.contactEmail.trim())
-          ? null
-          : 'Email de contact invalide',
-      firstName: !editForm.firstName.trim()
-        ? 'Prénom obligatoire'
-        : editForm.firstName.trim().length > 50
-          ? 'Prénom trop long'
-          : null,
-      lastName: editForm.lastName.trim().length > 50 ? 'Nom trop long' : null,
-      loginName: LOGIN_NAME_PATTERN.test(
-        editForm.loginName.trim().toLowerCase(),
-      )
-        ? null
-        : 'Identifiant invalide : 3 à 32 caractères, lettres, chiffres, points, tirets ou underscores',
+      contactEmail: canEditTargetContact
+        ? (local.contactEmail ??
+          (server?.form.contactEmail === editForm.contactEmail
+            ? server.errors.contactEmail
+            : null))
+        : null,
+      firstName: canEditTargetProfile
+        ? (local.firstName ??
+          (server?.form.firstName === editForm.firstName
+            ? server.errors.firstName
+            : null))
+        : null,
+      lastName: canEditTargetProfile
+        ? (local.lastName ??
+          (server?.form.lastName === editForm.lastName
+            ? server.errors.lastName
+            : null))
+        : null,
+      loginName: canEditTargetLogin
+        ? (local.loginName ??
+          (server?.form.loginName === editForm.loginName
+            ? server.errors.loginName
+            : null))
+        : null,
     };
-  }, [editForm]);
+  }, [
+    canEditTargetContact,
+    canEditTargetLogin,
+    canEditTargetProfile,
+    editForm,
+    mutation.serverValidation,
+  ]);
   const hasProfileErrors =
     (canEditTargetContact && !!profileErrors.contactEmail) ||
     (canEditTargetLogin && !!profileErrors.loginName) ||
@@ -609,11 +639,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     : null;
   const hasAccountChanges = hasAccountPermissionChanges;
   const hasSecurityChanges = !!user && editForm.isActive !== user.isActive;
-  const hasCurrentSectionChanges =
-    (activeSection === 'profile' && hasProfileChanges) ||
-    (activeSection === 'access' && hasAccessChanges) ||
-    (activeSection === 'account' && hasAccountChanges) ||
-    (activeSection === 'security' && hasSecurityChanges);
   const hasUnsavedChanges =
     hasProfileChanges ||
     hasAccessChanges ||
@@ -621,10 +646,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     hasSecurityChanges;
   const canSaveAccess =
     hasAccessChanges &&
+    !mutation.feedback?.conflict &&
     (!hasRoleChanges || canEditTargetRole) &&
     accessMutationAnalysis?.decision.allowed === true;
   const canSaveAccount =
-    hasAccountPermissionChanges && canManageTargetAccountPolicy;
+    hasAccountPermissionChanges &&
+    canManageTargetAccountPolicy &&
+    !mutation.feedback?.conflict;
   const canSaveSecurity = canEditTargetStatus && !isSelf && hasSecurityChanges;
   const dirtySections = useMemo<UserDetailSectionId[]>(() => {
     const sections: UserDetailSectionId[] = [];
@@ -662,77 +690,15 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     [canViewTargetAccess, canViewTargetPersonalAccount],
   );
 
-  const requestPendingNavigation = useCallback(
-    (navigation: UserDetailPendingNavigation): void => {
-      setPendingNavigation(navigation);
-      setShowUnsavedNavigationConfirm(true);
-    },
-    [],
-  );
-
-  const discardSectionChanges = useCallback(
-    (sectionId: UserDetailSectionId): void => {
-      if (!user) return;
-
-      if (sectionId === 'profile') {
-        setEditForm((currentForm) => ({
-          ...currentForm,
-          contactEmail: user.contactEmail ?? '',
-          firstName: user.firstName,
-          lastName: user.lastName,
-          loginName: user.loginName,
-        }));
-
-        return;
-      }
-
-      if (sectionId === 'access') {
-        setEditForm((currentForm) => ({
-          ...currentForm,
-          role: user.role,
-        }));
-        setPermissions((currentPermissions) =>
-          resetPermissionOverridesForKeys(
-            currentPermissions,
-            user.permissions,
-            ACCESS_PERMISSION_KEYS,
-          ),
-        );
-
-        return;
-      }
-
-      if (sectionId === 'account') {
-        setPermissions((currentPermissions) =>
-          resetPermissionOverridesForKeys(
-            currentPermissions,
-            user.permissions,
-            ACCOUNT_PERMISSION_KEYS,
-          ),
-        );
-
-        return;
-      }
-
-      if (sectionId === 'security') {
-        setEditForm((currentForm) => ({
-          ...currentForm,
-          isActive: user.isActive,
-        }));
-      }
-    },
-    [user],
-  );
-
   const fetchUser = useCallback(
-    async (options: { background?: boolean } = {}): Promise<void> => {
+    async (options: { background?: boolean } = {}): Promise<boolean> => {
       userAbortControllerRef.current?.abort();
       userAbortControllerRef.current = null;
 
       if (!canViewUsers) {
         setIsLoading(false);
 
-        return;
+        return false;
       }
 
       const controller = new AbortController();
@@ -751,44 +717,43 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         });
         const data = await response.json();
 
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) return false;
 
         if (response.ok && data.success) {
           const loadedUser = data.data.user as UserType;
           setErrorStatus(null);
-          setUser(loadedUser);
-          setEditForm({
-            contactEmail: loadedUser.contactEmail ?? '',
-            firstName: loadedUser.firstName,
-            isActive: loadedUser.isActive,
-            lastName: loadedUser.lastName,
-            loginName: loadedUser.loginName,
-            role: loadedUser.role,
-          });
-          setPermissions(loadedUser.permissions);
-        } else if (!isBackgroundFetch) {
+          setErrorMessage(null);
+          syncUserState(loadedUser);
+
+          return true;
+        } else if (
+          !isBackgroundFetch ||
+          response.status === 401 ||
+          response.status === 403 ||
+          response.status === 404
+        ) {
           setErrorStatus(response.status);
           setErrorMessage(
             data.error?.message || "Impossible de charger l'utilisateur",
           );
         }
       } catch {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) return false;
 
         if (!isBackgroundFetch) {
           setErrorStatus(0);
           setErrorMessage("Impossible de charger l'utilisateur");
         }
       } finally {
-        if (userAbortControllerRef.current !== controller) return;
-
-        userAbortControllerRef.current = null;
-        if (!isBackgroundFetch) {
-          setIsLoading(false);
+        if (userAbortControllerRef.current === controller) {
+          userAbortControllerRef.current = null;
+          if (!isBackgroundFetch) setIsLoading(false);
         }
       }
+
+      return false;
     },
-    [canViewUsers, userId],
+    [canViewUsers, syncUserState, userId],
   );
 
   const fetchAuditData = useCallback(async (): Promise<void> => {
@@ -1030,7 +995,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     setSecuritySessionsError(null);
     setHasLoadedSecuritySessions(false);
     setRevokingSecuritySessionId(null);
-    setTempPassword(null);
   }, [userId]);
 
   useEffect(() => {
@@ -1065,183 +1029,58 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     }
   }, [activeSection, fetchSecuritySessions, hasLoadedSecuritySessions]);
 
-  useEffect(() => {
-    if (activeSection !== 'security') {
-      setTempPassword(null);
-    }
-  }, [activeSection]);
-
-  useEffect(() => {
-    if (!tempPassword) return;
-
-    const timeoutId = window.setTimeout(
-      () => {
-        setTempPassword(null);
-      },
-      2 * 60 * 1000,
-    );
-
-    return (): void => window.clearTimeout(timeoutId);
-  }, [tempPassword]);
-
-  useEffect(() => {
-    if (!hasUnsavedChanges) return;
-
-    const handleBeforeUnload = (event: BeforeUnloadEvent): void => {
-      event.preventDefault();
-      event.returnValue = '';
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return (): void => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [hasUnsavedChanges]);
-
-  useEffect(() => {
-    if (!hasUnsavedChanges) return;
-
-    const handleDocumentClick = (event: MouseEvent): void => {
-      if (event.defaultPrevented || !isPlainLeftClick(event)) return;
-
-      const anchor = findAnchorElement(event.target);
-      if (!anchor || !isInternalNavigationLink(anchor)) return;
-
-      const nextUrl = new URL(anchor.href);
-      const currentUrl = new URL(window.location.href);
-
-      if (nextUrl.pathname === currentUrl.pathname) return;
-
-      event.preventDefault();
-      requestPendingNavigation({
-        href: `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
-        kind: 'href',
-      });
-    };
-
-    document.addEventListener('click', handleDocumentClick, true);
-
-    return (): void => {
-      document.removeEventListener('click', handleDocumentClick, true);
-    };
-  }, [hasUnsavedChanges, requestPendingNavigation]);
-
-  useEffect(() => {
-    if (!hasUnsavedChanges) return;
-
-    const handleGuardedNavigationRequest = (event: Event): void => {
-      if (event.defaultPrevented) return;
-      const request = getGuardedNavigationRequest(event);
-      if (!request) return;
-
-      let nextUrl: URL;
-      try {
-        nextUrl = new URL(request.href, window.location.origin);
-      } catch {
-        return;
+  const isMutationPending =
+    isSaving ||
+    isSavingPermissions ||
+    isResetting ||
+    isDeleting ||
+    isRevokingSecuritySessions ||
+    revokingSecuritySessionId !== null;
+  const navigation = useUnsavedNavigationGuard(
+    hasUnsavedChanges ||
+      passwordReset.hasUnacknowledgedPassword ||
+      isMutationPending,
+    () => {
+      if (user) {
+        setEditForm({
+          contactEmail: user.contactEmail ?? '',
+          firstName: user.firstName,
+          isActive: user.isActive,
+          lastName: user.lastName,
+          loginName: user.loginName,
+          role: user.role,
+        });
+        setPermissions(user.permissions);
       }
-      if (nextUrl.origin !== window.location.origin) return;
-
-      const currentUrl = new URL(window.location.href);
-      const nextHref = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
-      if (
-        nextUrl.pathname === currentUrl.pathname &&
-        nextUrl.search === currentUrl.search &&
-        nextUrl.hash === currentUrl.hash
-      ) {
-        return;
-      }
-
-      event.preventDefault();
-      requestPendingNavigation({
-        ...(request.action ? { action: request.action } : {}),
-        href: nextHref,
-        kind: 'href',
-      });
-    };
-
-    window.addEventListener(
-      GUARDED_NAVIGATION_REQUEST_EVENT,
-      handleGuardedNavigationRequest,
-    );
-
-    return (): void => {
-      window.removeEventListener(
-        GUARDED_NAVIGATION_REQUEST_EVENT,
-        handleGuardedNavigationRequest,
-      );
-    };
-  }, [hasUnsavedChanges, requestPendingNavigation]);
-
+      mutation.clear();
+      passwordReset.clearPassword();
+    },
+  );
+  const { requestNavigation } = navigation;
+  const { clear: clearMutationFeedback } = mutation;
+  const { clearPassword } = passwordReset;
   useEffect(() => {
-    if (requestedSection === activeSection) return;
-
-    if (skipSectionNavigationGuardRef.current) {
-      skipSectionNavigationGuardRef.current = false;
-      setActiveSection(requestedSection);
-
-      return;
-    }
-
-    if (hasCurrentSectionChanges) {
-      requestPendingNavigation({
-        href: buildUserDetailSectionHref(
-          pathname,
-          currentQueryString,
-          requestedSection,
-        ),
-        kind: 'section',
-      });
-      window.history.replaceState(
-        null,
-        '',
-        buildUserDetailSectionHref(pathname, currentQueryString, activeSection),
-      );
-
-      return;
-    }
-
+    clearMutationFeedback();
+  }, [activeSection, clearMutationFeedback]);
+  useEffect(() => {
     setActiveSection(requestedSection);
-  }, [
-    activeSection,
-    currentQueryString,
-    hasCurrentSectionChanges,
-    pathname,
-    requestPendingNavigation,
-    requestedSection,
-  ]);
-
+  }, [requestedSection]);
+  useEffect(() => {
+    if (activeSection !== 'security') clearPassword();
+  }, [activeSection, clearPassword]);
   const handleSectionChange = useCallback(
     (sectionId: UserDetailSectionId): void => {
       if (sectionId === activeSection) return;
-
-      if (hasCurrentSectionChanges) {
-        requestPendingNavigation({
-          href: buildUserDetailSectionHref(
-            pathname,
-            currentQueryString,
-            sectionId,
-          ),
-          kind: 'section',
-        });
-
-        return;
-      }
-
-      window.history.replaceState(
-        null,
-        '',
-        buildUserDetailSectionHref(pathname, currentQueryString, sectionId),
+      const href = buildUserDetailSectionHref(
+        pathname,
+        currentQueryString,
+        sectionId,
+      );
+      requestNavigation(href, () =>
+        window.history.replaceState(null, '', href),
       );
     },
-    [
-      activeSection,
-      currentQueryString,
-      hasCurrentSectionChanges,
-      pathname,
-      requestPendingNavigation,
-    ],
+    [activeSection, currentQueryString, pathname, requestNavigation],
   );
 
   const handlePermissionPageChange = useCallback(
@@ -1260,48 +1099,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     },
     [currentQueryString, pathname],
   );
-
-  const handleCancelPendingNavigation = useCallback((): void => {
-    setShowUnsavedNavigationConfirm(false);
-    setPendingNavigation(null);
-  }, []);
-
-  const handleConfirmPendingNavigation = useCallback((): void => {
-    if (!pendingNavigation) return;
-
-    const navigation = pendingNavigation;
-
-    setShowUnsavedNavigationConfirm(false);
-    setPendingNavigation(null);
-
-    if (navigation.kind === 'section') {
-      discardSectionChanges(activeSection);
-      skipSectionNavigationGuardRef.current = true;
-      window.history.replaceState(null, '', navigation.href);
-
-      return;
-    }
-    if (navigation.action) {
-      void navigation.action();
-
-      return;
-    }
-
-    router.push(navigation.href);
-  }, [activeSection, discardSectionChanges, pendingNavigation, router]);
-
-  const syncUserState = (updatedUser: UserType): void => {
-    setUser(updatedUser);
-    setEditForm({
-      contactEmail: updatedUser.contactEmail ?? '',
-      firstName: updatedUser.firstName,
-      isActive: updatedUser.isActive,
-      lastName: updatedUser.lastName,
-      loginName: updatedUser.loginName,
-      role: updatedUser.role,
-    });
-    setPermissions(updatedUser.permissions);
-  };
 
   const handleCancelProfile = (): void => {
     if (!user) return;
@@ -1362,7 +1159,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     }
 
     if (hasProfileErrors) {
-      toast.error('Corrigez les champs du profil avant de sauvegarder');
+      mutation.report(
+        'profile',
+        'Corrigez les champs signalés avant d’enregistrer.',
+        400,
+      );
 
       return;
     }
@@ -1379,6 +1180,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       return;
     }
 
+    if (!mutation.start()) return;
+    const submitted = {
+      form: editForm,
+      permissions,
+      section: 'profile' as const,
+    };
     setIsSaving(true);
     try {
       const response = await apiFetch(`/api/users/${userId}`, {
@@ -1388,13 +1195,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
                 expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
               }
             : {}),
-          ...(canEditTargetContact
+          ...(hasProfileContactChanges
             ? {
                 contactEmail:
                   editForm.contactEmail.trim().toLowerCase() || null,
               }
             : {}),
-          ...(canEditTargetLogin
+          ...(hasProfileLoginChanges
             ? { loginName: editForm.loginName.trim().toLowerCase() }
             : {}),
           ...(canEditTargetProfile
@@ -1410,7 +1217,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       const data = await response.json();
 
       if (response.ok && data.success) {
-        syncUserState(data.data.user);
+        syncUserState(data.data.user, submitted);
         if (currentUser && data.data.user.id === currentUser.id) {
           // Preserve hidden administrative overrides while syncing self-profile fields.
           applyUserUpdate({
@@ -1433,11 +1240,21 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         ) {
           return;
         }
-        toast.error(data.error?.message || 'Erreur lors de la mise à jour');
+        mutation.report(
+          'profile',
+          data.error?.message || 'Erreur lors de la mise à jour',
+          response.status,
+          data.error?.details,
+          editForm,
+        );
       }
     } catch {
-      toast.error('Erreur lors de la mise à jour');
+      mutation.report(
+        'profile',
+        'La réponse du serveur n’a pas pu être confirmée. Actualisez la fiche avant de réessayer ; votre saisie sera conservée.',
+      );
     } finally {
+      mutation.finish();
       setIsSaving(false);
     }
   };
@@ -1484,6 +1301,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       );
     }
 
+    if (!mutation.start()) return;
+    const submitted = {
+      form: editForm,
+      permissions,
+      section: 'access' as const,
+    };
     setIsSavingPermissions(true);
     try {
       const response = await apiFetch(`/api/users/${userId}`, {
@@ -1494,7 +1317,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       const data = await response.json();
 
       if (response.ok && data.success) {
-        syncUserState(data.data.user);
+        syncUserState(data.data.user, submitted);
         refreshAuditAfterMutation();
         toast.success('Autorisations mises à jour');
       } else {
@@ -1508,11 +1331,21 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         ) {
           return;
         }
-        toast.error(data.error?.message || 'Erreur lors de la mise à jour');
+        mutation.report(
+          'access',
+          data.error?.message || 'Erreur lors de la mise à jour',
+          response.status,
+          data.error?.details,
+          editForm,
+        );
       }
     } catch {
-      toast.error('Erreur lors de la mise à jour');
+      mutation.report(
+        'access',
+        'La réponse du serveur n’a pas pu être confirmée. Actualisez la fiche avant de réessayer ; votre saisie sera conservée.',
+      );
     } finally {
+      mutation.finish();
       setIsSavingPermissions(false);
     }
   };
@@ -1538,6 +1371,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       return;
     }
 
+    if (!mutation.start()) return;
+    const submitted = {
+      form: editForm,
+      permissions,
+      section: 'account' as const,
+    };
     setIsSavingPermissions(true);
     try {
       const response = await apiFetch(`/api/users/${userId}`, {
@@ -1555,7 +1394,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       const data = await response.json();
 
       if (response.ok && data.success) {
-        syncUserState(data.data.user);
+        syncUserState(data.data.user, submitted);
         refreshAuditAfterMutation();
         toast.success('Autonomie du compte mise à jour');
       } else {
@@ -1569,11 +1408,21 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         ) {
           return;
         }
-        toast.error(data.error?.message || 'Erreur lors de la mise à jour');
+        mutation.report(
+          'account',
+          data.error?.message || 'Erreur lors de la mise à jour',
+          response.status,
+          data.error?.details,
+          editForm,
+        );
       }
     } catch {
-      toast.error('Erreur lors de la mise à jour');
+      mutation.report(
+        'account',
+        'La réponse du serveur n’a pas pu être confirmée. Actualisez la fiche avant de réessayer ; votre saisie sera conservée.',
+      );
     } finally {
+      mutation.finish();
       setIsSavingPermissions(false);
     }
   };
@@ -1591,6 +1440,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       return;
     }
 
+    if (!mutation.start()) return;
+    const submitted = {
+      form: editForm,
+      permissions,
+      section: 'security' as const,
+    };
     setIsSaving(true);
     try {
       const response = await apiFetch(`/api/users/${userId}`, {
@@ -1608,7 +1463,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       const data = await response.json();
 
       if (response.ok && data.success) {
-        syncUserState(data.data.user);
+        syncUserState(data.data.user, submitted);
         refreshAuditAfterMutation();
         void fetchSecuritySessions();
         toast.success(
@@ -1625,58 +1480,28 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         ) {
           return;
         }
-        toast.error(data.error?.message || 'Erreur lors de la mise à jour');
+        mutation.report(
+          'security',
+          data.error?.message || 'Erreur lors de la mise à jour',
+          response.status,
+          data.error?.details,
+          editForm,
+        );
       }
     } catch {
-      toast.error('Erreur lors de la mise à jour');
+      mutation.report(
+        'security',
+        'La réponse du serveur n’a pas pu être confirmée. Actualisez la fiche avant de réessayer ; votre saisie sera conservée.',
+      );
     } finally {
+      mutation.finish();
       setIsSaving(false);
     }
   };
 
   const handleResetPassword = async (): Promise<void> => {
-    if (!canResetTargetPassword) {
-      toast.error('Permission insuffisante pour réinitialiser ce mot de passe');
-      setShowResetConfirm(false);
-
-      return;
-    }
-
-    setIsResetting(true);
-    try {
-      const response = await apiFetch(`/api/users/${userId}/reset-password`, {
-        method: 'POST',
-      });
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setTempPassword(data.data.temporaryPassword);
-        handleSectionChange('security');
-        toast.success('Mot de passe réinitialisé');
-        void fetchUser({ background: true });
-        refreshAuditAfterMutation();
-        void fetchSecuritySessions();
-      } else {
-        if (
-          requestStepUpForResponse(data, {
-            description:
-              'Un nouveau secret temporaire sera créé et toutes les sessions du membre seront fermées.',
-            execute: handleResetPassword,
-            title: 'Confirmer la réinitialisation du mot de passe',
-          })
-        ) {
-          return;
-        }
-        toast.error(
-          data.error?.message || 'Erreur lors de la réinitialisation',
-        );
-      }
-    } catch {
-      toast.error('Erreur lors de la réinitialisation');
-    } finally {
-      setIsResetting(false);
-      setShowResetConfirm(false);
-    }
+    if (mutation.inFlight.current || mutation.isRefreshing) return;
+    await passwordReset.reset();
   };
 
   const handleResetMfaComplete = (updatedUser: UserType): void => {
@@ -1903,7 +1728,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
             canManagePermissions={canManageTargetAccessPermissions}
             canRevokePermissions={canRevokeTargetAccessPermissions}
             mutationSummary={accessMutationAnalysis?.summary ?? null}
-            isSaving={isSavingPermissions}
+            isSaving={isSavingPermissions || mutation.isRefreshing}
             permissionPageKey={permissionPageKey}
             onPermissionPageChange={handlePermissionPageChange}
             onSave={handleSaveAccess}
@@ -1918,7 +1743,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
             permissions={permissions}
             setPermissions={setPermissions}
             canManagePermissions={canManageTargetAccountPolicy}
-            isSaving={isSavingPermissions}
+            isSaving={isSavingPermissions || mutation.isRefreshing}
             onSave={handleSaveAccount}
             onCancel={handleCancelAccount}
             hasChanges={hasAccountChanges}
@@ -2024,7 +1849,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
             loginReadOnlyHint={loginReadOnlyHint}
             canViewContact={canViewTargetContact}
             isSelf={isSelf}
-            isSaving={isSaving}
+            isSaving={isMutationPending || mutation.isRefreshing}
+            canSave={!mutation.feedback?.conflict}
             onSave={handleSaveProfile}
             onCancel={handleCancelProfile}
             hasChanges={hasProfileChanges}
@@ -2043,39 +1869,53 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         }
 
         return (
-          <UserSecurityTab
-            user={user}
-            isActive={editForm.isActive}
-            setIsActive={(isActive) => setEditForm({ ...editForm, isActive })}
-            canEditStatus={canEditTargetStatus}
-            canResetMfa={canResetTargetMfa}
-            canResetPassword={canResetTargetPassword}
-            canRevokeSessions={canRevokeTargetSessions}
-            canViewSessions={canViewTargetSessions}
-            isSaving={isSaving}
-            isLoadingSessions={
-              isLoadingSecuritySessions ||
-              (canViewTargetSessions && !hasLoadedSecuritySessions)
-            }
-            isRevokingSessionId={revokingSecuritySessionId}
-            isRevokingSessions={isRevokingSecuritySessions}
-            onSaveStatus={handleSaveSecurity}
-            onClearTempPassword={() => setTempPassword(null)}
-            onResetMfa={() => setShowResetMfa(true)}
-            onResetPassword={() => setShowResetConfirm(true)}
-            onRevokeSession={handleRevokeSecuritySession}
-            onRevokeSessions={() => setShowRevokeSessionsConfirm(true)}
-            onRetrySessions={() => void fetchSecuritySessions()}
-            tempPassword={tempPassword}
-            currentUserId={currentUser?.id}
-            canSaveStatus={canSaveSecurity}
-            hasStatusChanges={hasSecurityChanges}
-            onCancelStatus={handleCancelSecurity}
-            canRequestDeleteUser={canRequestDeleteTargetUser}
-            onDeleteUser={() => setShowDeleteConfirm(true)}
-            sessions={securitySessions}
-            sessionsError={securitySessionsError}
-          />
+          <>
+            <UserPasswordResetFeedback
+              controller={passwordReset}
+              onCheck={async () => {
+                const loaded = await fetchUser({ background: true });
+                if (loaded) await fetchSecuritySessions();
+
+                return loaded;
+              }}
+              onRequestReset={() => setShowResetConfirm(true)}
+            />
+            <UserSecurityTab
+              user={user}
+              isActive={editForm.isActive}
+              setIsActive={(isActive) => setEditForm({ ...editForm, isActive })}
+              canEditStatus={canEditTargetStatus}
+              canResetMfa={canResetTargetMfa}
+              canResetPassword={
+                canResetTargetPassword &&
+                !passwordReset.password &&
+                (!passwordReset.outcomeUnknown || passwordReset.verified)
+              }
+              canRevokeSessions={canRevokeTargetSessions}
+              canViewSessions={canViewTargetSessions}
+              isSaving={isMutationPending || mutation.isRefreshing}
+              isLoadingSessions={
+                isLoadingSecuritySessions ||
+                (canViewTargetSessions && !hasLoadedSecuritySessions)
+              }
+              isRevokingSessionId={revokingSecuritySessionId}
+              isRevokingSessions={isRevokingSecuritySessions}
+              onSaveStatus={handleSaveSecurity}
+              onResetMfa={() => setShowResetMfa(true)}
+              onResetPassword={() => setShowResetConfirm(true)}
+              onRevokeSession={handleRevokeSecuritySession}
+              onRevokeSessions={() => setShowRevokeSessionsConfirm(true)}
+              onRetrySessions={() => void fetchSecuritySessions()}
+              currentUserId={currentUser?.id}
+              canSaveStatus={canSaveSecurity && !mutation.feedback?.conflict}
+              hasStatusChanges={hasSecurityChanges}
+              onCancelStatus={handleCancelSecurity}
+              canRequestDeleteUser={canRequestDeleteTargetUser}
+              onDeleteUser={() => setShowDeleteConfirm(true)}
+              sessions={securitySessions}
+              sessionsError={securitySessionsError}
+            />
+          </>
         );
       case 'history':
         if (!canViewTargetActivity) {
@@ -2291,56 +2131,43 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
                 <p aria-live="polite" className="sr-only">
                   Section {getUserDetailSectionLabel(activeSection)} affichée
                 </p>
+                <UserMutationFeedback
+                  controller={mutation}
+                  onRefresh={() => fetchUser({ background: true })}
+                  section={activeSection}
+                />
                 <div className="min-w-0">{renderContent()}</div>
               </div>
             </PageAsideLayout>
           </div>
         </PageCanvas>
       </PageShell>
-      <AlertDialog
-        open={showUnsavedNavigationConfirm}
-        onOpenChange={(open) => {
-          if (open) {
-            setShowUnsavedNavigationConfirm(true);
-
-            return;
-          }
-
-          handleCancelPendingNavigation();
-        }}
-      >
-        <AlertDialogContent className="border-border overflow-y-auto rounded-xl p-0">
-          <div className="p-6">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-foreground flex items-center gap-2">
-                <div className="bg-warning/10 flex h-8 w-8 items-center justify-center rounded-lg">
-                  <AlertTriangle size={16} className="text-warning" />
-                </div>
-                Quitter sans enregistrer ?
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-muted-foreground">
-                Les modifications de cette section seront perdues. Vous pouvez
-                rester sur la page pour les enregistrer ou les annuler
-                manuellement.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="mt-4">
-              <AlertDialogCancel
-                className="border-border"
-                onClick={handleCancelPendingNavigation}
-              >
-                Rester
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleConfirmPendingNavigation}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Quitter sans enregistrer
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
+      <UnsavedNavigationDialog
+        open={navigation.pendingNavigationHref !== null}
+        onCancel={navigation.cancelPendingNavigation}
+        onConfirm={navigation.confirmPendingNavigation}
+        onCloseAutoFocus={navigation.restoreFocus}
+        confirmDisabled={isMutationPending}
+        title={
+          isMutationPending
+            ? 'Opération en cours'
+            : passwordReset.hasUnacknowledgedPassword
+              ? 'Quitter avant la remise du mot de passe ?'
+              : undefined
+        }
+        confirmLabel={
+          passwordReset.hasUnacknowledgedPassword
+            ? 'Quitter et masquer le mot de passe'
+            : undefined
+        }
+        description={
+          isMutationPending
+            ? 'Attendez la réponse avant de quitter cette fiche.'
+            : passwordReset.hasUnacknowledgedPassword
+              ? 'Ce mot de passe ne pourra plus être affiché après votre départ. Conservez-le pour le transmettre. Les éventuelles modifications non enregistrées seront également perdues.'
+              : 'Les modifications non enregistrées seront perdues. Vous pouvez rester pour les enregistrer ou les annuler.'
+        }
+      />
       <AlertDialog
         open={showLoginChangeConfirm}
         onOpenChange={setShowLoginChangeConfirm}

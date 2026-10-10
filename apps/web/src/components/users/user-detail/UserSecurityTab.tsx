@@ -2,7 +2,6 @@
 
 import {
   AlertTriangle,
-  Clipboard,
   KeyRound,
   Laptop,
   Loader2,
@@ -16,10 +15,8 @@ import {
   ShieldAlert,
   ShieldCheck,
   Smartphone,
-  X,
 } from 'lucide-react';
-import React, { type FC, useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import React, { type FC, useState } from 'react';
 
 import { Disclosure } from '$components/layout/Disclosure';
 import type { UserSessionInfo, UserType } from '$types/auth.types';
@@ -40,7 +37,6 @@ import { Label } from '$ui/label';
 import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
 import { Switch } from '$ui/switch';
-import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
 import { UserDeletionCard } from './UserDeletionCard';
@@ -61,7 +57,6 @@ type UserSecurityTabProps = {
   isRevokingSessions: boolean;
   isSaving: boolean;
   onCancelStatus: () => void;
-  onClearTempPassword: () => void;
   onDeleteUser: () => void;
   onResetMfa: () => void;
   onResetPassword: () => void;
@@ -72,7 +67,6 @@ type UserSecurityTabProps = {
   sessions: UserSessionInfo[];
   sessionsError: string | null;
   setIsActive: (isActive: boolean) => void;
-  tempPassword: string | null;
   user: UserType;
 };
 
@@ -351,7 +345,6 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   isRevokingSessions,
   isSaving,
   onCancelStatus,
-  onClearTempPassword,
   onDeleteUser,
   onResetMfa,
   onResetPassword,
@@ -362,7 +355,6 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   sessions,
   sessionsError,
   setIsActive,
-  tempPassword,
   user,
 }) => {
   const isSelf = currentUserId === user.id;
@@ -376,25 +368,9 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   const isMfaEnabled = user.mfaEnabledAt !== null;
   const [sessionPendingRevocation, setSessionPendingRevocation] =
     useState<UserSessionInfo | null>(null);
-  const tempPasswordAnnouncementRef = useRef<HTMLDivElement>(null);
   const pendingSessionAgent = sessionPendingRevocation
     ? parseUserAgent(sessionPendingRevocation.userAgent)
     : null;
-
-  useEffect(() => {
-    if (tempPassword) tempPasswordAnnouncementRef.current?.focus();
-  }, [tempPassword]);
-
-  const handleCopyTempPassword = async (): Promise<void> => {
-    if (!tempPassword) return;
-
-    try {
-      await navigator.clipboard.writeText(tempPassword);
-      toast.success('Mot de passe copié');
-    } catch {
-      toast.error('Copie impossible');
-    }
-  };
 
   return (
     <section
@@ -405,67 +381,6 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       <h2 id="user-security-heading" className="sr-only">
         Sécurité du compte
       </h2>
-      {tempPassword && (
-        <Card
-          aria-live="assertive"
-          className="border-warning/25 bg-warning/10 rounded-lg outline-none focus-visible:ring-2"
-          ref={tempPasswordAnnouncementRef}
-          role="status"
-          tabIndex={-1}
-        >
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0 flex-1 space-y-2">
-                <div className="flex items-center gap-2">
-                  <KeyRound className="text-warning size-4" />
-                  <p className="text-warning text-sm font-semibold">
-                    Nouveau mot de passe temporaire
-                  </p>
-                </div>
-                <code className="text-foreground bg-surface-inset block rounded-md border px-3 py-2 font-mono text-sm">
-                  {tempPassword}
-                </code>
-                <p className="text-muted-foreground text-xs">
-                  À transmettre une seule fois. Les sessions actives ont été
-                  invalidées.
-                </p>
-              </div>
-              <div className="flex shrink-0 gap-2">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="rounded-lg"
-                      onClick={handleCopyTempPassword}
-                      aria-label="Copier le mot de passe temporaire"
-                    >
-                      <Clipboard className="size-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Copier</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-lg"
-                      onClick={onClearTempPassword}
-                      aria-label="Masquer le mot de passe temporaire"
-                    >
-                      <X className="size-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Masquer</TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
       <Card aria-labelledby="user-security-status-heading">
         <CardHeader className="p-3.5 sm:p-4">
           <SectionTitle
@@ -559,145 +474,162 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </CardFooter>
         )}
       </Card>
-      <Card aria-labelledby="user-security-password-heading">
-        <CardHeader className="p-3.5 sm:p-4">
-          <SectionTitle
-            id="user-security-password-heading"
-            icon={<KeyRound className="size-3.5" />}
-          >
-            Mot de passe & verrouillage
-          </SectionTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4">
-          <SecurityInfoBlock
-            icon={<KeyRound className="size-4" />}
-            label="État du mot de passe"
-            value={
-              user.mustChangePassword ? (
-                <StatusBadge label="À changer" tone="warning" />
-              ) : (
-                <StatusBadge label="À jour" tone="success" />
-              )
-            }
-            tone={user.mustChangePassword ? 'warning' : 'primary'}
-          >
-            Dernier changement : {passwordChangedLabel}
-          </SecurityInfoBlock>
-          <SecurityInfoBlock
-            icon={
-              isLocked ? (
-                <ShieldAlert className="size-4" />
-              ) : (
-                <ShieldCheck className="size-4" />
-              )
-            }
-            label="Verrouillage"
-            value={
-              isLocked ? (
-                <StatusBadge label="Verrouillé" tone="danger" />
-              ) : (
-                <StatusBadge label="Aucun" tone="muted" />
-              )
-            }
-            tone={isLocked ? 'danger' : 'primary'}
-          >
-            {isLocked
-              ? `Jusqu'au ${formatDate(lockedUntil)}`
-              : user.failedLoginAttempts > 0
-                ? `${user.failedLoginAttempts} tentative(s) échouée(s)`
-                : 'Aucun verrouillage en cours'}
-          </SecurityInfoBlock>
-          {user.failedLoginAttempts > 0 && (
-            <SecurityInfoBlock
-              icon={<AlertTriangle className="size-4" />}
-              label="Tentatives échouées"
-              value={String(user.failedLoginAttempts)}
-              tone="warning"
-            >
-              Compteur utilisé pour détecter les blocages de connexion.
-            </SecurityInfoBlock>
-          )}
-          <SecurityInfoBlock
-            icon={<Laptop className="size-4" />}
-            label="Impact d'une réinitialisation"
-            value="Mot de passe temporaire"
-            tone="neutral"
-          >
-            La réinitialisation invalide les sessions existantes.
-          </SecurityInfoBlock>
-        </CardContent>
-        {canResetPassword && (
-          <CardFooter className="justify-end p-3 sm:p-4">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onResetPassword}
-              className="gap-2"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Réinitialiser le mot de passe
-            </Button>
-          </CardFooter>
-        )}
-      </Card>
-      <Card aria-labelledby="user-security-mfa-heading">
-        <CardHeader className="p-3.5 sm:p-4">
-          <SectionTitle
-            id="user-security-mfa-heading"
-            icon={<QrCode className="size-3.5" />}
-          >
-            Double authentification
-          </SectionTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4">
-          <SecurityInfoBlock
-            icon={<QrCode className="size-4" />}
-            label="État MFA"
-            value={
-              isMfaEnabled ? (
-                <StatusBadge label="Active" tone="success" />
-              ) : (
-                <StatusBadge label="Configuration obligatoire" tone="warning" />
-              )
-            }
-            tone={isMfaEnabled ? 'primary' : 'warning'}
-          >
-            {isMfaEnabled
-              ? `Activée le ${formatDate(user.mfaEnabledAt)}`
-              : 'L’accès au site reste bloqué jusqu’à la configuration d’une application d’authentification.'}
-          </SecurityInfoBlock>
-          <SecurityInfoBlock
-            icon={<ShieldAlert className="size-4" />}
-            label="Récupération superadmin"
-            value={
-              canResetMfa
-                ? 'Disponible'
-                : isMfaEnabled
-                  ? 'Réservée au compte racine'
-                  : 'En attente de configuration'
-            }
-            tone={canResetMfa ? 'warning' : 'neutral'}
-          >
-            Réservée au compte racine lorsque l&apos;appareil
-            d&apos;authentification et tous les codes de secours sont perdus.
-          </SecurityInfoBlock>
-        </CardContent>
-        {canResetMfa && (
-          <CardFooter className="justify-end p-3 sm:p-4">
-            <Button
-              className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning h-auto min-h-10 w-full min-w-0 gap-2 whitespace-normal sm:w-auto"
-              onClick={onResetMfa}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              <RotateCcw className="size-4" />
-              Réinitialiser la double authentification
-            </Button>
-          </CardFooter>
-        )}
-      </Card>
+      {user.securityDetailsVisible === false ? (
+        <Card>
+          <CardContent className="text-muted-foreground p-4 text-sm">
+            Informations de sécurité masquées — permission requise.
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <Card aria-labelledby="user-security-password-heading">
+            <CardHeader className="p-3.5 sm:p-4">
+              <SectionTitle
+                id="user-security-password-heading"
+                icon={<KeyRound className="size-3.5" />}
+              >
+                Mot de passe & verrouillage
+              </SectionTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4">
+              <SecurityInfoBlock
+                icon={<KeyRound className="size-4" />}
+                label="État du mot de passe"
+                value={
+                  user.mustChangePassword ? (
+                    <StatusBadge label="À changer" tone="warning" />
+                  ) : (
+                    <StatusBadge label="À jour" tone="success" />
+                  )
+                }
+                tone={user.mustChangePassword ? 'warning' : 'primary'}
+              >
+                Dernier changement : {passwordChangedLabel}
+              </SecurityInfoBlock>
+              <SecurityInfoBlock
+                icon={
+                  isLocked ? (
+                    <ShieldAlert className="size-4" />
+                  ) : (
+                    <ShieldCheck className="size-4" />
+                  )
+                }
+                label="Verrouillage"
+                value={
+                  isLocked ? (
+                    <StatusBadge label="Verrouillé" tone="danger" />
+                  ) : (
+                    <StatusBadge label="Aucun" tone="muted" />
+                  )
+                }
+                tone={isLocked ? 'danger' : 'primary'}
+              >
+                {isLocked
+                  ? `Jusqu'au ${formatDate(lockedUntil)}`
+                  : user.failedLoginAttempts > 0
+                    ? `${user.failedLoginAttempts} tentative(s) échouée(s)`
+                    : 'Aucun verrouillage en cours'}
+              </SecurityInfoBlock>
+              {user.failedLoginAttempts > 0 && (
+                <SecurityInfoBlock
+                  icon={<AlertTriangle className="size-4" />}
+                  label="Tentatives échouées"
+                  value={String(user.failedLoginAttempts)}
+                  tone="warning"
+                >
+                  Compteur utilisé pour détecter les blocages de connexion.
+                </SecurityInfoBlock>
+              )}
+              <SecurityInfoBlock
+                icon={<Laptop className="size-4" />}
+                label="Impact d'une réinitialisation"
+                value="Mot de passe temporaire"
+                tone="neutral"
+              >
+                La réinitialisation invalide les sessions existantes.
+              </SecurityInfoBlock>
+            </CardContent>
+            {canResetPassword && (
+              <CardFooter className="justify-end p-3 sm:p-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onResetPassword}
+                  id="user-reset-password"
+                  disabled={isSaving}
+                  className="gap-2"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Réinitialiser le mot de passe
+                </Button>
+              </CardFooter>
+            )}
+          </Card>
+          <Card aria-labelledby="user-security-mfa-heading">
+            <CardHeader className="p-3.5 sm:p-4">
+              <SectionTitle
+                id="user-security-mfa-heading"
+                icon={<QrCode className="size-3.5" />}
+              >
+                Double authentification
+              </SectionTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4">
+              <SecurityInfoBlock
+                icon={<QrCode className="size-4" />}
+                label="État MFA"
+                value={
+                  isMfaEnabled ? (
+                    <StatusBadge label="Active" tone="success" />
+                  ) : (
+                    <StatusBadge
+                      label="Configuration obligatoire"
+                      tone="warning"
+                    />
+                  )
+                }
+                tone={isMfaEnabled ? 'primary' : 'warning'}
+              >
+                {isMfaEnabled
+                  ? `Activée le ${formatDate(user.mfaEnabledAt)}`
+                  : 'L’accès au site reste bloqué jusqu’à la configuration d’une application d’authentification.'}
+              </SecurityInfoBlock>
+              <SecurityInfoBlock
+                icon={<ShieldAlert className="size-4" />}
+                label="Récupération superadmin"
+                value={
+                  canResetMfa
+                    ? 'Disponible'
+                    : isMfaEnabled
+                      ? 'Réservée au compte racine'
+                      : 'En attente de configuration'
+                }
+                tone={canResetMfa ? 'warning' : 'neutral'}
+              >
+                Réservée au compte racine lorsque l&apos;appareil
+                d&apos;authentification et tous les codes de secours sont
+                perdus.
+              </SecurityInfoBlock>
+            </CardContent>
+            {canResetMfa && (
+              <CardFooter className="justify-end p-3 sm:p-4">
+                <Button
+                  className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning h-auto min-h-10 w-full min-w-0 gap-2 whitespace-normal sm:w-auto"
+                  onClick={onResetMfa}
+                  disabled={isSaving}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <RotateCcw className="size-4" />
+                  Réinitialiser la double authentification
+                </Button>
+              </CardFooter>
+            )}
+          </Card>
+        </>
+      )}
       <Card aria-labelledby="user-security-sessions-heading">
         <CardHeader className="p-3.5 sm:p-4">
           <SectionTitle

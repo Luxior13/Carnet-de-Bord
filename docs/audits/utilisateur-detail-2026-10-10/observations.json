@@ -1,0 +1,406 @@
+{
+  "date": "2026-10-10",
+  "environment": "Next production / Chromium / PostgreSQL isolé, sessions MFA et preuves récentes préparées",
+  "results": [
+    {
+      "name": "hidden-security",
+      "actual": {
+        "mustChangePassword": true
+      },
+      "api": {
+        "mustChangePassword": false,
+        "securityDetailsVisible": false,
+        "contactEmail": null
+      },
+      "overview": "Vue d'ensemble\nÉtat\nActif\nMot de passe\nÀ jour\nCréé le\n10 oct. 2026\nDernière modification\n10 oct. 2026",
+      "securityLink": 0
+    },
+    {
+      "name": "profile-success",
+      "status": 200,
+      "persisted": {
+        "firstName": "Profil enregistré"
+      },
+      "audit": 1
+    },
+    {
+      "name": "email-validation",
+      "clientInvalid": "false",
+      "status": 400,
+      "error": {
+        "code": "VALIDATION_ERROR",
+        "details": {
+          "contactEmail": [
+            "Email invalide"
+          ]
+        },
+        "message": "Données invalides"
+      },
+      "afterInvalid": "false",
+      "fieldError": []
+    },
+    {
+      "name": "save-in-flight",
+      "status": 200,
+      "inputEnabledWhileSaving": true,
+      "typedAfterRequest": "Seconde saisie",
+      "valueAfterResponse": "Première saisie",
+      "persisted": {
+        "firstName": "Première saisie"
+      }
+    },
+    {
+      "name": "browser-back",
+      "returnedToList": true,
+      "nativeDialogs": 0,
+      "guards": 0,
+      "valueAfterReturn": "Camille"
+    },
+    {
+      "name": "conflict",
+      "statusA": 200,
+      "statusB": 409,
+      "error": {
+        "code": "CONFLICT",
+        "message": "Cette fiche a été modifiée entre-temps. Rechargez-la avant de réessayer."
+      },
+      "retry": 409,
+      "draft": "Admin B"
+    },
+    {
+      "name": "security-reset-draft",
+      "status": 200,
+      "statusDraftBefore": "false",
+      "statusDraftAfter": "true",
+      "hasSecret": 1,
+      "secretAfterNavigation": 0,
+      "guards": 0,
+      "persisted": {
+        "isActive": true,
+        "mustChangePassword": true
+      }
+    },
+    {
+      "name": "lost-reset-response",
+      "serverCommittedStatus": 200,
+      "persisted": {
+        "mustChangePassword": true,
+        "securityVersion": 1
+      },
+      "audit": 1,
+      "hasSecret": 0
+    },
+    {
+      "name": "responsive",
+      "sizes": [
+        {
+          "section": "profile",
+          "width": 320,
+          "scrollWidth": 320,
+          "clientWidth": 320,
+          "h1": 1
+        },
+        {
+          "section": "profile",
+          "width": 390,
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "h1": 1
+        },
+        {
+          "section": "profile",
+          "width": 768,
+          "scrollWidth": 768,
+          "clientWidth": 768,
+          "h1": 1
+        },
+        {
+          "section": "profile",
+          "width": 1024,
+          "scrollWidth": 1024,
+          "clientWidth": 1024,
+          "h1": 1
+        },
+        {
+          "section": "profile",
+          "width": 1120,
+          "scrollWidth": 1120,
+          "clientWidth": 1120,
+          "h1": 1
+        },
+        {
+          "section": "profile",
+          "width": 1440,
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "h1": 1
+        },
+        {
+          "section": "profile",
+          "width": 1920,
+          "scrollWidth": 1920,
+          "clientWidth": 1920,
+          "h1": 1
+        },
+        {
+          "section": "access",
+          "width": 320,
+          "scrollWidth": 320,
+          "clientWidth": 320,
+          "h1": 1
+        },
+        {
+          "section": "access",
+          "width": 390,
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "h1": 1
+        },
+        {
+          "section": "access",
+          "width": 768,
+          "scrollWidth": 768,
+          "clientWidth": 768,
+          "h1": 1
+        },
+        {
+          "section": "access",
+          "width": 1024,
+          "scrollWidth": 1024,
+          "clientWidth": 1024,
+          "h1": 1
+        },
+        {
+          "section": "access",
+          "width": 1120,
+          "scrollWidth": 1120,
+          "clientWidth": 1120,
+          "h1": 1
+        },
+        {
+          "section": "access",
+          "width": 1440,
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "h1": 1
+        },
+        {
+          "section": "access",
+          "width": 1920,
+          "scrollWidth": 1920,
+          "clientWidth": 1920,
+          "h1": 1
+        },
+        {
+          "section": "security",
+          "width": 320,
+          "scrollWidth": 320,
+          "clientWidth": 320,
+          "h1": 1
+        },
+        {
+          "section": "security",
+          "width": 390,
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "h1": 1
+        },
+        {
+          "section": "security",
+          "width": 768,
+          "scrollWidth": 768,
+          "clientWidth": 768,
+          "h1": 1
+        },
+        {
+          "section": "security",
+          "width": 1024,
+          "scrollWidth": 1024,
+          "clientWidth": 1024,
+          "h1": 1
+        },
+        {
+          "section": "security",
+          "width": 1120,
+          "scrollWidth": 1120,
+          "clientWidth": 1120,
+          "h1": 1
+        },
+        {
+          "section": "security",
+          "width": 1440,
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "h1": 1
+        },
+        {
+          "section": "security",
+          "width": 1920,
+          "scrollWidth": 1920,
+          "clientWidth": 1920,
+          "h1": 1
+        }
+      ]
+    },
+    {
+      "name": "access-guards",
+      "roles": [
+        {
+          "actor": "reader",
+          "status": 200,
+          "visibleLinks": [
+            "Profil"
+          ],
+          "editableInputs": 0,
+          "returnedIdentity": {
+            "firstName": "Profil enregistré",
+            "lastName": "Exemple",
+            "loginName": "fiche.profil"
+          }
+        },
+        {
+          "actor": "admin",
+          "status": 200,
+          "visibleLinks": [
+            "Profil"
+          ],
+          "editableInputs": 0,
+          "returnedIdentity": {
+            "firstName": "Compte",
+            "lastName": "racine",
+            "loginName": "••••••••"
+          }
+        },
+        {
+          "actor": "denied",
+          "status": 403,
+          "visibleLinks": [
+            "Retour aux utilisateurs"
+          ],
+          "editableInputs": 0,
+          "returnedIdentity": null
+        }
+      ]
+    },
+    {
+      "name": "deletion",
+      "status": 200,
+      "disabledUntilTyped": true,
+      "target": {
+        "deletedAt": "2026-10-10T19:10:23.797Z",
+        "contactEmail": null,
+        "firstName": "Compte",
+        "lastName": "supprimé",
+        "isActive": false
+      },
+      "reserved": 1,
+      "audit": 1
+    },
+    {
+      "name": "keyboard-and-unknown",
+      "retained": "Brouillon gardé",
+      "focus": {
+        "tag": "BODY",
+        "id": "",
+        "href": null
+      },
+      "unknownText": "Utilisateur introuvable\n\nCe compte n'existe pas ou a été supprimé.\n\nRetour aux utilisateurs"
+    },
+    {
+      "name": "sessions-revoke",
+      "status": 200,
+      "remaining": 0
+    },
+    {
+      "name": "account-policy",
+      "status": 200,
+      "before": "false",
+      "permissions": null,
+      "audit": 2
+    },
+    {
+      "name": "mutation-guards",
+      "checks": [
+        {
+          "scenario": "lecteur-modifie-profil",
+          "status": 403,
+          "error": "FORBIDDEN"
+        },
+        {
+          "scenario": "admin-reinitialise-racine",
+          "status": 403,
+          "error": "FORBIDDEN"
+        },
+        {
+          "scenario": "promotion-sans-mfa-cible",
+          "status": 409,
+          "error": {
+            "code": "CONFLICT",
+            "message": "L'utilisateur doit activer complètement sa double authentification avant de recevoir des accès critiques"
+          }
+        },
+        {
+          "scenario": "reset-sans-preuve-recente",
+          "status": 403,
+          "error": "REAUTHENTICATION_REQUIRED"
+        }
+      ]
+    },
+    {
+      "name": "layout",
+      "metrics": [
+        {
+          "width": 390,
+          "overview": {
+            "x": 31,
+            "y": 165.890625,
+            "width": 328,
+            "height": 209.875
+          },
+          "firstInput": {
+            "x": 48,
+            "y": 572.484375,
+            "width": 294,
+            "height": 40
+          }
+        },
+        {
+          "width": 1440,
+          "overview": {
+            "x": 307.796875,
+            "y": 169.890625,
+            "width": 1088.40625,
+            "height": 209.875
+          },
+          "firstInput": {
+            "x": 328.796875,
+            "y": 584.484375,
+            "width": 517.203125,
+            "height": 36
+          }
+        },
+        {
+          "width": 1920,
+          "overview": {
+            "x": 1556,
+            "y": 169.890625,
+            "width": 256,
+            "height": 209.875
+          },
+          "firstInput": {
+            "x": 405,
+            "y": 356.609375,
+            "width": 549,
+            "height": 36
+          }
+        }
+      ]
+    }
+  ],
+  "commit": "dbf07768ac91000b039d95ab8fdcb20ad2ad9fe7",
+  "harnessNotes": [
+    "Mesure responsive initiale remplacée : attente explicite des sections chargées avant mesure.",
+    "Lecture immédiate après réinitialisation remplacée : attendre le rafraîchissement de la fiche pour constater la perte du brouillon.",
+    "Sélecteurs de titre et nom de l’action audit corrigés dans le banc ; ces erreurs du banc ne sont pas des défauts produit."
+  ]
+}

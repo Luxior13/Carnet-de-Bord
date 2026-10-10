@@ -63,7 +63,7 @@ describe('administrative user detail subcomponent UX contracts', () => {
   it('opens directly on Profile without keeping a duplicate summary tab', () => {
     expect(userDetailSource).not.toContain('UserResumeTab');
     expect(userDetailSource).not.toContain("case 'resume'");
-    expect(userDetailSource).toContain("if (sectionId === 'profile')");
+    expect(userDetailSource).toContain("case 'profile':");
   });
 
   it('makes contact removal explicit and keeps the self profile compact', () => {

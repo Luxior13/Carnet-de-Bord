@@ -25,6 +25,11 @@
 - Audit puis corrections du formulaire `/systeme/utilisateurs/nouveau` :
   **USR-N01 à USR-N07 corrigés et vérifiés**, sur Next/PostgreSQL isolés. Voir
   [le rapport de création](../../audits/AUDIT_CREATION_UTILISATEUR_2026-10-10.md).
+- Audit puis corrections de `/systeme/utilisateurs/[id]` du 10 octobre 2026 :
+  **USR-D01 à USR-D08 corrigés et vérifiés**, synthèse USR-D09 compactée.
+  Essais sur Next/PostgreSQL isolés, dont défi mot de passe/TOTP réel ;
+  1 036 tests web réussis et 25 ignorés.
+  [Rapport, preuves et limites](../../audits/AUDIT_FICHE_UTILISATEUR_2026-10-10.md).
 
 ## Décisions courantes
 
@@ -376,6 +381,31 @@ navigateur dédié. Les anciennes preuves ci-dessus restent historiques.
 
 ## Fiche utilisateur (`/systeme/utilisateurs/[id]`) — 10 octobre 2026
 
+État après correction autorisée par « ok go corriger » : **USR-D01 à USR-D08
+corrigés et vérifiés ; USR-D09 livré**. Le
+[rapport de fiche](../../audits/AUDIT_FICHE_UTILISATEUR_2026-10-10.md#validation-des-corrections)
+porte les reproductions, la clôture, les preuves et les limites ; ne pas dupliquer
+ce registre. Les observations initiales restent historiques.
+
+Validation actuelle : **1 036 tests web réussis, 25 ignorés**, types, lint, build
+et budgets réussis. Onze scénarios Chromium sur Next/PostgreSQL isolés ; trois
+sections à sept largeurs sans débordement global. Sauvegarde lente, conflit,
+navigation clavier/Précédent, remise, réponse perdue, expiration accélérée,
+politique personnelle et suppression fictive exercés. Défi administrateur avec
+mot de passe/TOTP réels ; parcours de création rejoué après adaptation de la
+garde partagée. Les helpers sont intégrés au smoke, exécutés séparément ici ;
+le smoke complet n'est pas rejoué.
+
+Limites : connexion complète, reset MFA, révocation individuelle, changement
+d'identifiant/contact et combinaisons exhaustives de droits non rejoués ;
+révocation de droits pendant une fiche ouverte et erreurs de relecture des sessions
+à éprouver. Lecteur d'écran, Safari, appareils physiques et charge SQL non validés.
+La révocation globale était exécutée à l'analyse initiale. Les succès de création
+et de liste ne valent pas validation de ces autres parcours.
+
+Les décisions de composition ci-dessous restent applicables ; l'audit ne
+réactive pas Activité et n'étend pas les capacités de gestion du compte.
+
 - Onglet « Activité » retiré de la navigation (`USER_DETAIL_SECTIONS`) ; le
   code de l'historique est conservé dormant pour une restauration ultérieure.
   Les anciens liens `?section=history` retombent sur « Profil ».
@@ -385,8 +415,10 @@ navigateur dédié. Les anciennes preuves ci-dessus restent historiques.
   `UsersAdminHero` a été supprimé.
 - Une carte « Vue d'ensemble » (même gabarit que `/systeme/utilisateurs`)
   est placée dans le rail droit (`PageAsideLayout`) comme sur la liste, et
-  regroupe : état, protection, mot de passe, date de création et dernière
-  modification.
+  regroupe état, protection, mot de passe et dates. Empilée, elle utilise deux
+  colonnes puis quatre dès 48 rem ; le rail vertical commence à 118 rem.
+  À 390 px avec un nom court, elle mesure environ 149 px au lieu de 210 px.
+  Un état de sécurité non visible s'affiche « Masqué », sans conclure « À jour ».
 - Contrat de source `admin-user-detail-subcomponents-ux-contracts.test.ts`
   actualisé.
 - Onglets harmonisés : Profil aplati (plus de cartes imbriquées, sections
@@ -395,6 +427,23 @@ navigateur dédié. Les anciennes preuves ci-dessus restent historiques.
 - L'onglet Profil est désormais modifiable directement (plus de bouton
   « Modifier » ni de vue en lecture) avec la barre d'enregistrement partagée
   `SectionActionBar` (récupérée de `/membres/repertoire/[id]`).
+- L'état enregistré et le brouillon sont distincts. Une réponse fusionne les
+  champs inchangés et conserve les saisies d'autres sections ; une soumission
+  utilise son instantané. Les champs concernés sont verrouillés pendant l'envoi,
+  avec verrou synchrone empêchant la double soumission.
+- Validation du profil partagée avec la création ; erreurs de champs serveur
+  persistantes et focus utile. Un conflit impose une actualisation explicite
+  conservant le brouillon avant une nouvelle soumission ; aucun écrasement forcé.
+- Garde partagée pour liens, sections et historique navigateur ; l'annulation
+  rend le focus au déclencheur. Le départ confirmé abandonne les brouillons et
+  masque le secret ; la confirmation attend la fin d'une mutation en cours.
+- Le secret de reset reste en mémoire, affiché deux minutes avec délai annoncé.
+  Son masquage volontaire demande de confirmer sa conservation pour transmission.
+  Le départ avant ce repère demande confirmation ; l'expiration indique comment
+  réémettre un secret. Ce délai concerne l'affichage, pas sa validité serveur.
+- Après réponse de reset perdue ou invalide, expliquer l'issue incertaine,
+  vérifier le compte puis demander une nouvelle émission explicite. Aucun
+  rejeu automatique ni récupération d'un ancien secret depuis son hash.
 
 ## Analyse de la liste après alignement — 10 octobre 2026
 

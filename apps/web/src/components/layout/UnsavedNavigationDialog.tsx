@@ -15,10 +15,12 @@ import {
 
 type UnsavedNavigationDialogProps = {
   cancelLabel?: string;
+  confirmDisabled?: boolean;
   confirmLabel?: string;
   contentClassName?: string;
   description: string;
   onCancel: () => void;
+  onCloseAutoFocus?: (event: Event) => void;
   onConfirm: () => void;
   open: boolean;
   title?: string;
@@ -26,10 +28,12 @@ type UnsavedNavigationDialogProps = {
 
 export const UnsavedNavigationDialog: FC<UnsavedNavigationDialogProps> = ({
   cancelLabel = 'Rester',
+  confirmDisabled = false,
   confirmLabel = 'Quitter sans enregistrer',
   contentClassName,
   description,
   onCancel,
+  onCloseAutoFocus,
   onConfirm,
   open,
   title = 'Quitter sans enregistrer ?',
@@ -40,7 +44,10 @@ export const UnsavedNavigationDialog: FC<UnsavedNavigationDialogProps> = ({
       if (!nextOpen) onCancel();
     }}
   >
-    <AlertDialogContent className={contentClassName}>
+    <AlertDialogContent
+      className={contentClassName}
+      onCloseAutoFocus={onCloseAutoFocus}
+    >
       <AlertDialogHeader>
         <AlertDialogTitle>{title}</AlertDialogTitle>
         <AlertDialogDescription>{description}</AlertDialogDescription>
@@ -48,6 +55,7 @@ export const UnsavedNavigationDialog: FC<UnsavedNavigationDialogProps> = ({
       <AlertDialogFooter>
         <AlertDialogCancel onClick={onCancel}>{cancelLabel}</AlertDialogCancel>
         <AlertDialogAction
+          disabled={confirmDisabled}
           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           onClick={onConfirm}
         >

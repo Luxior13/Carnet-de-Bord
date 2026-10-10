@@ -19,6 +19,8 @@ type UnsavedNavigationGuard = {
   cancelPendingNavigation: () => void;
   confirmPendingNavigation: () => void;
   pendingNavigationHref: string | null;
+  requestNavigation: (href: string, action?: GuardedNavigationAction) => void;
+  restoreFocus: (event: Event) => void;
 };
 
 const isPlainLeftClick = (event: MouseEvent): boolean =>
@@ -55,8 +57,12 @@ const getCurrentRelativeHref = (): string =>
 /** Protects dirty forms from unloads, internal links and history traversal. */
 export const useUnsavedNavigationGuard = (
   hasUnsavedChanges: boolean,
+  onBeforeConfirmedNavigation?: () => void,
 ): UnsavedNavigationGuard => {
   const router = useRouter();
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const beforeNavigateRef = useRef(onBeforeConfirmedNavigation);
+  beforeNavigateRef.current = onBeforeConfirmedNavigation;
   const [pendingNavigationHref, setPendingNavigationHref] = useState<
     string | null
   >(null);
@@ -104,6 +110,10 @@ export const useUnsavedNavigationGuard = (
         },
       },
       (href) => {
+        triggerRef.current =
+          document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
         pendingNavigationKindRef.current = 'history';
         pendingNavigationActionRef.current = null;
         setPendingNavigationHref(href);
@@ -134,6 +144,7 @@ export const useUnsavedNavigationGuard = (
         return;
       }
       event.preventDefault();
+      triggerRef.current = anchor;
       historyTraversalGuardRef.current?.cancel();
       pendingNavigationKindRef.current = 'router';
       pendingNavigationActionRef.current = null;
@@ -169,6 +180,10 @@ export const useUnsavedNavigationGuard = (
       if (nextHref === currentHref) return;
 
       event.preventDefault();
+      triggerRef.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
       historyTraversalGuardRef.current?.cancel();
       pendingNavigationKindRef.current = request.action ? 'action' : 'router';
       pendingNavigationActionRef.current = request.action ?? null;
@@ -203,6 +218,7 @@ export const useUnsavedNavigationGuard = (
     pendingNavigationKindRef.current = null;
     pendingNavigationActionRef.current = null;
     setPendingNavigationHref(null);
+    beforeNavigateRef.current?.();
     if (
       navigationKind === 'history' &&
       historyTraversalGuardRef.current?.confirm()
@@ -217,9 +233,38 @@ export const useUnsavedNavigationGuard = (
     router.push(href);
   }, [pendingNavigationHref, router]);
 
+  const requestNavigation = useCallback(
+    (href: string, action?: GuardedNavigationAction): void => {
+      if (!hasUnsavedChanges) {
+        if (action) void action();
+        else router.push(href);
+
+        return;
+      }
+      triggerRef.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+      historyTraversalGuardRef.current?.cancel();
+      pendingNavigationKindRef.current = action ? 'action' : 'router';
+      pendingNavigationActionRef.current = action ?? null;
+      setPendingNavigationHref(href);
+    },
+    [hasUnsavedChanges, router],
+  );
+  const restoreFocus = useCallback((event: Event): void => {
+    const trigger = triggerRef.current;
+    if (trigger?.isConnected) {
+      event.preventDefault();
+      trigger.focus({ preventScroll: true });
+    }
+  }, []);
+
   return {
     cancelPendingNavigation,
     confirmPendingNavigation,
     pendingNavigationHref,
+    requestNavigation,
+    restoreFocus,
   };
 };

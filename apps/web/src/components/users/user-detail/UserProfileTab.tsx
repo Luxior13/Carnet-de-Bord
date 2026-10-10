@@ -40,6 +40,7 @@ type UserProfileTabProps = {
   canEdit: boolean;
   canEditContact: boolean;
   canEditLogin: boolean;
+  canSave?: boolean;
   canViewContact: boolean;
   errors: ProfileErrors;
   form: ProfileForm;
@@ -77,6 +78,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   canEdit,
   canEditContact,
   canEditLogin,
+  canSave = true,
   canViewContact,
   errors,
   form,
@@ -117,6 +119,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
     : "L'email de contact est en lecture seule depuis cette fiche.";
 
   const submitProfile = (): void => {
+    if (isSaving || !canSave) return;
     const removesExistingContact =
       canEditContact &&
       committedContactEmail.length > 0 &&
@@ -188,7 +191,13 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   }
 
   return (
-    <form {...passwordManagerIgnoreAttributes} onSubmit={handleSubmit}>
+    <form
+      {...passwordManagerIgnoreAttributes}
+      data-user-profile-form
+      noValidate
+      aria-busy={isSaving}
+      onSubmit={handleSubmit}
+    >
       <Card>
         <CardHeader className="flex-row items-center justify-between p-3.5 sm:p-4">
           <h2 className="text-sm font-semibold">Profil utilisateur</h2>
@@ -227,7 +236,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                   onChange={(event) =>
                     setForm({ ...form, firstName: event.target.value })
                   }
-                  disabled={!canEdit}
+                  disabled={!canEdit || isSaving}
                   aria-invalid={!!errors.firstName}
                   aria-describedby={
                     errors.firstName ? 'user-first-name-error' : undefined
@@ -255,7 +264,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                   onChange={(event) =>
                     setForm({ ...form, lastName: event.target.value })
                   }
-                  disabled={!canEdit}
+                  disabled={!canEdit || isSaving}
                   aria-invalid={!!errors.lastName}
                   aria-describedby={
                     errors.lastName ? 'user-last-name-error' : undefined
@@ -297,7 +306,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                   aria-invalid={!!errors.loginName}
                   autoCapitalize="none"
                   autoCorrect="off"
-                  disabled={!canEditLogin}
+                  disabled={!canEditLogin || isSaving}
                   id="user-login-name"
                   maxLength={32}
                   {...passwordManagerIgnoreAttributes}
@@ -345,7 +354,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                           : 'user-contact-email-hint'
                       }
                       aria-invalid={!!errors.contactEmail}
-                      disabled={!canEditContact}
+                      disabled={!canEditContact || isSaving}
                       id="user-contact-email"
                       maxLength={254}
                       {...passwordManagerIgnoreAttributes}
@@ -399,6 +408,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
       </Card>
       {hasChanges && (
         <SectionActionBar
+          conflict={!canSave}
           isSaving={isSaving}
           onCancel={onCancel}
           onSave={submitProfile}

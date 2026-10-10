@@ -10,6 +10,10 @@ import type {
 } from '../src/features/persons/types/person.types';
 import { expectSystemSettingsDraftSafety } from './system-settings.checks';
 import { expectUserCreationRecovery } from './user-creation.checks';
+import {
+  expectUserDetailConflictRecovery,
+  expectUserDetailDraftSafety,
+} from './user-detail.checks';
 
 function requireEnvironmentVariable(
   name: string,
@@ -953,6 +957,10 @@ test('authenticates and reaches the admin surfaces', async ({ page }) => {
 
   await expectSystemSettingsDraftSafety(page);
   await expectUserCreationRecovery(page);
+  const createdUserId = new URL(page.url()).pathname.split('/').at(-1);
+  expect(createdUserId).toBeTruthy();
+  await expectUserDetailDraftSafety(page, createdUserId!);
+  await expectUserDetailConflictRecovery(page, createdUserId!);
 
   await expectSelfProfileSyncWithoutReload(page);
   await expectPersonIdentityLifecycle(page);
