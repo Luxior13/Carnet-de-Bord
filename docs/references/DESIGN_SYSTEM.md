@@ -15,15 +15,24 @@ l'information passe avant la décoration.
 
 ### Référence visuelle choisie
 
-Le tableau « Comptes utilisateurs » est la référence approuvée : surfaces gris
-bleuté, bandeau de colonnes plus clair, alternance de lignes sombres, bordures
-fines et badges de statut lisibles. Cette hiérarchie se décline selon l'usage :
+Le [Répertoire](../qualite/pages/membres-repertoire.md), route
+`/membres/repertoire`, est la référence visuelle et UX de l'application.
+La [liste Utilisateurs](../qualite/pages/systeme-utilisateurs.md), route
+`/systeme/utilisateurs`, la complète pour les composants partagés de gestion.
+Leurs décisions courantes précisent les variantes et les limites vérifiées ;
+les anciennes captures et les audits restent des preuves datées.
+
+Le socle commun comprend les surfaces gris bleuté, la typographie dense, les
+bordures fines, les contrôles et leurs états. Les listes reprennent aussi le
+bandeau de colonnes, l'alternance des lignes et les badges. Cette hiérarchie se
+décline selon l'usage :
 
 - En-têtes de page : `PageIdentityHero` (dégradé `--surface-hero-start →
   --surface-hero-end`, bordure `--border-hero`, rayon 10 px), identique sur
   les pages de référence. Ne plus introduire de variante de bandeau locale.
-- En-têtes de section : fond uni `surface-panel-header`, comme les colonnes du
-  tableau de référence. Ils restent distincts du titre de page.
+- En-têtes de section : `surface-panel-header` ; barre de filtres des listes :
+  `surface-content-header` ; colonnes : `surface-table-head`. Ces niveaux
+  distinguent titre, commandes et résultats.
 - Corps de cartes et fenêtres : `surface-panel`, sans grande ombre décorative.
 - Listes et fiches en lecture : `surface-row-alternate` pour distinguer les
   entrées répétées ; même alternance dans la version mobile des tableaux.
@@ -45,16 +54,36 @@ fines et badges de statut lisibles. Cette hiérarchie se décline selon l'usage 
 
 ### Règle de réutilisation (2026-10-10)
 
-Toute page nouvelle ou modifiée réutilise les composants de référence au lieu
-de variantes anciennes ou locales : `PageIdentityHero`, `DataTableSection` +
-`directory.module.css`, `PageAsideLayout`, `TooltipContent` partagé, et les
-primitives `Input`, `Select`, `Button`, `Badge`, `Card`. `globals.css` reste la
-source unique des tokens ; aucune couleur en dur dans les composants.
+Toute page nouvelle ou modifiée choisit les composants de référence utiles à
+sa tâche : `PageIdentityHero`, `DataTableSection` + `directory.module.css` pour
+les listes, `PageAsideLayout` si une synthèse secondaire est utile,
+`TooltipContent` et les primitives `Input`, `Select`, `Button`, `Badge`, `Card`.
+[globals.css](../../apps/web/src/app/globals.css) reste la source unique des
+tokens ; aucune palette copiée dans un composant.
+
+| Besoin | Source à réutiliser |
+| --- | --- |
+| Cadre, largeur et marges | [PageShell et PageCanvas](../../apps/web/src/components/ui/page-shell.tsx) |
+| Bandeau d'identité, variante compacte | [PageIdentityHero](../../apps/web/src/components/layout/PageIdentityHero.tsx) et [son module](../../apps/web/src/components/layout/PageIdentityHero.module.css) |
+| Tableau, cartes mobiles, outils et pagination | [DataTableSection](../../apps/web/src/components/ui/data-table-section.tsx) et [directory.module.css](../../apps/web/src/components/ui/directory.module.css) |
+| Synthèse latérale ou empilée | [PageAsideLayout](../../apps/web/src/components/layout/PageAsideLayout.tsx) et [ses seuils](../../apps/web/src/components/layout/PageAsideLayout.module.css) |
+| Navigation entre les sections d'une fiche | [PageSectionNavigation](../../apps/web/src/components/layout/PageSectionNavigation.tsx) |
+| Infobulle, survol et focus | [TooltipContent](../../apps/web/src/components/ui/tooltip.tsx) |
+| Vide, erreur et accès refusé | [ContentState](../../apps/web/src/components/layout/ContentState.tsx) et [PageState](../../apps/web/src/components/layout/PageState.tsx) |
+
+Une fiche conserve une identité compacte et des sections de lecture ; un
+formulaire groupe ses champs et ses validations ; un tableau de bord organise
+ses synthèses selon les décisions à prendre. Tous partagent ce langage visuel.
+Les filtres « statut de structure » et « sans coordonnées », les requêtes et les
+permissions du répertoire restent des règles de son module. Les comportements
+de recherche, de compteur et de retour de fiche se qualifient pour chaque besoin.
 
 À migrer quand les pages concernées sont retouchées : `PageHero` avec `tone`
-(dashboard, actualités, compte, `EntityDetailLayout`, création de fiche) et les
-modules CSS de page locaux. `UsersAdminHero` a été retiré (fiche utilisateur
-passée sur `PageIdentityHero`).
+(dashboard, actualités, `EntityDetailLayout`, création de fiche personne) et les
+styles locaux qui dupliquent les composants partagés. Un module CSS de
+composition métier, utilisant les tokens communs, reste légitime. Mon compte,
+la fiche utilisateur et la création de compte utilisent déjà `PageIdentityHero` ;
+`UsersAdminHero` a été retiré.
 Les routes canoniques sont `/membres/repertoire` et `/systeme/utilisateurs` ;
 ne plus créer de lien vers les anciens alias (`/personnes`,
 `/vie-interne/*`, `/administration/*`).
@@ -83,35 +112,31 @@ structure restent adaptées au contenu de chaque écran.
 
 ## 2. La hiérarchie de couleurs
 
-La palette retenue le 23 septembre 2026 reprend les surfaces de la capture de
-résultats esport fournie par l’utilisateur : fond charbon bleuté `#0d111c`,
-panneaux `#182434`, en-têtes de tableaux `#202c3e`, lignes alternées `#1e2c3e`
-et sélection `#2c425e`. Les contrôles en retrait utilisent `#111925`.
+La palette courante est portée par les tokens de `globals.css`. Les valeurs
+des captures de septembre sont historiques ; elles ne doivent pas être
+recopiées pour créer une nouvelle page.
 
-La sidebar reprend `#202c3e`, avec une bordure `#455b78`, pour se détacher du
-fond général sans devenir un grand aplat bleu clair. Le header général utilise
-`surface-page` (`#111925`). La teinte `surface-floating` (`#2a3c58`) reste
-disponible pour les surfaces accentuées ; les menus utilisent le jeton
-`popover` décrit ci-dessous. Le bleu le plus marqué reste localisé aux
-sélections et aux états actifs.
+Le fond utilise `surface-canvas`, les panneaux `surface-panel`, les listes
+`surface-content`. Leurs commandes utilisent `surface-content-header`, leurs
+colonnes `surface-table-head`, leurs lignes alternées `surface-row-alternate`
+et leur survol `surface-row-hover`. Les champs utilisent `surface-inset`.
+Le bandeau d'identité compose `surface-hero-start` et `surface-hero-end` avec
+`border-hero`. La sidebar réutilise `surface-content` et `border-content`.
 
 Les éléments de navigation sélectionnés utilisent un bleu ardoise proche des
 panneaux, avec une bordure fine `border-strong/60` pour délimiter le pôle et la
-page actifs. Le texte clair garde un contraste supérieur à 5:1 sur cette sélection.
+page actifs. Contrôler le contraste sur les fonds réellement rendus.
 
-Le rose décoratif de la capture n’est pas repris. Les actions principales
-utilisent un bleu lumineux `#70b5fa`, avec un texte sombre `#0c1a2b` ; les liens
-et accents textuels utilisent `#b9dafe`. Les statuts et les icônes des pôles
-gardent leurs repères fonctionnels. Les valeurs sont centralisées dans
-`globals.css` pour les futurs modules.
+Les actions principales utilisent `primary` avec `primary-foreground` ; les
+liens et accents textuels utilisent `primary-emphasis`. Les statuts et les
+icônes des pôles gardent leurs repères fonctionnels.
 
 Les surfaces flottantes de navigation utilisent le jeton `popover`, relié à
-`surface-panel-raised` (`#202c3e`) : menus, filtres, recherche rapide,
-infobulles et toasts. Elles partagent une bordure `border-default`,
-des angles `rounded-xl` et une ombre discrète. Les séparateurs restent en
-retrait ; les icônes de navigation n’ont pas de fond décoratif. Le champ, les
-résultats et le pied de la recherche conservent le même fond. Les sélections
-utilisent `surface-navigation-active`.
+`surface-panel-raised`, avec leurs variantes dans les primitives partagées.
+Les infobulles utilisent `surface-floating`, `border-control`, un rayon de 7 px
+et `--shadow-panel-strong` via `TooltipContent`. Les filtres de liste utilisent
+les classes du module `directory`. Les séparateurs restent en retrait ; les
+sélections utilisent `surface-navigation-active`.
 
 Le focus clavier utilise un bleu acier `#92acd0` via `--ring`.
 Les boutons partagent cet indicateur quelle que soit leur variante ;
@@ -137,8 +162,9 @@ vivent jamais en dur dans un composant.
 
 Les classes de texte courantes sont `text-foreground` et `text-muted-foreground`.
 `text-primary-emphasis` désigne l'accent de marque, pas le texte courant.
-Ne pas diminuer l'opacité d'un texte secondaire informatif : son contraste est
-testé sur les sept surfaces, y compris `surface-floating` (plus de 5:1).
+Ne pas diminuer l'opacité d'un texte secondaire informatif. Vérifier son
+contraste sur les surfaces et états utilisés, y compris `surface-floating` ;
+un résultat d'audit ancien ne valide pas une combinaison nouvellement créée.
 La racine HTML porte `dark`, en complément de `color-scheme: dark`, afin que
 les variantes `dark:` des primitives soient effectivement actives.
 
@@ -147,51 +173,63 @@ les variantes `dark:` des primitives soient effectivement actives.
 ## 3. Typographie
 
 Police : Geist pour le texte, Geist Mono pour les identifiants techniques.
+Échelle courante de `globals.css`, en pixels équivalents avec une racine de
+16 px ; les tokens sont exprimés en `rem` :
 
 | Échelle                  | Valeur          | Usage                                           |
 | ------------------------ | --------------- | ----------------------------------------------- |
 | `text-caption`           | 12px            | métadonnées, compteurs et groupes de navigation |
-| `text-label`             | 14px            | étiquettes de navigation secondaire             |
-| `text-xs`                | 12px            | aide, badges                                    |
-| `text-sm`                | 14px            | corps de table et de liste                      |
-| `text-base`              | 16px            | contenu de fiche                                |
-| `text-lg`                | 18px            | titre de dialogue ou de grand groupe            |
-| `text-xl`, `sm:text-2xl` | 20px, puis 24px | titre de page                                   |
+| `text-label`             | 13px            | étiquettes de navigation secondaire             |
+| `text-xs`                | 11px            | aide courte, badges, infobulles                  |
+| `text-sm`                | 13px            | corps de table et de liste, titres de panneaux   |
+| `text-base`              | 14px            | contenu de fiche                                |
+| `text-lg`                | 16px            | titre de dialogue ou de groupe                   |
+| `text-xl`, `text-2xl`    | 18px, 22px      | titres et valeurs selon le composant             |
 
-Les titres des panneaux de gestion utilisent 14px, ceux des cartes éditoriales
-16px. La hiérarchie HTML reste indépendante de la taille : un `h1` par
+`PageIdentityHero` définit son titre à 23 px (18 px en variante compacte), sa
+description à 11 px. Le module `directory` définit les en-têtes de tableau à
+11 px, les identités à 13 px et la recherche à 12 px. Réutiliser ces compositions
+pour retrouver leur densité, sans remplacer les tokens globaux d'une page à l'autre.
+
+La hiérarchie HTML reste indépendante de la taille : un `h1` par
 page, puis `h2` et `h3`. `CardTitle` rend un `h2` par défaut et accepte `as`.
 `SectionPanel` accepte `titleAs="h3"` lorsqu'il est imbriqué dans une section.
 Les titres de page restent neutres ; une zone dangereuse peut porter un statut.
 Les titres et descriptions essentiels reviennent à la ligne. Un libellé tronqué
 reste complet dans le DOM et dispose, si utile, d'un attribut `title`.
 
-Interlignages : titre de page 20/28px puis 24/32px ; titre de groupe 16/24px ;
-titre de panneau et label 14/20px ; titre de fenêtre 18/24px ; description longue
-14/24px ; métadonnées 12/16px. Graisses : 400 pour le texte, 500 pour les labels
-et badges, 600 pour les titres et actions. Les tailles sont définies en `rem`.
+Les interlignages sont portés par les composants : titre de `PageIdentityHero`
+à 1,3, description à 1,5 ; `CardTitle` utilise `leading-5`. Graisses : 400 pour
+le texte, 500 pour les labels et badges, 600 pour les titres et actions ; le
+bandeau d'identité utilise 650. Les compositions partagées possèdent quelques
+dimensions explicites en pixels : les réutiliser plutôt que les recopier.
 
-Les champs de saisie restent à 16px sur mobile et passent à 14px sur grand écran.
-Les codes MFA restent à 16px partout ; l'espacement renforcé est réservé aux six
-chiffres TOTP, pas aux longs codes de secours. Les notifications Sonner utilisent
-explicitement Geist et un texte de 14px ; leur style natif ne doit pas réintroduire
-une police système différente. Le grand « 404 » est un repère décoratif, tandis
-que « Page introuvable » est le titre `h1`.
+La primitive `Input` utilise `text-base` puis `lg:text-sm` ; la recherche de
+liste a la taille spécifique ci-dessus. Vérifier lisibilité, zoom et confort
+de saisie sur les appareils visés ; ces valeurs décrivent le socle actuel et
+ne prouvent pas à elles seules l'accessibilité. Les notifications conservent
+Geist. Le grand « 404 » est un repère décoratif ; « Page introuvable » est le `h1`.
 
-Voir [AUDIT_TYPOGRAPHIE.md](../audits/AUDIT_TYPOGRAPHIE.md) pour les constats et mesures.
+Voir [AUDIT_TYPOGRAPHIE.md](../audits/AUDIT_TYPOGRAPHIE.md) pour les constats
+historiques ; cette ancienne échelle ne remplace pas les règles courantes.
 
 ---
 
 ## 4. Espacements et arrondis
 
 - Espacement : échelle Tailwind par défaut, ancrée sur 0.25rem.
-- Arrondis : un seul curseur `--radius`, et `sm`, `md`, `lg`, `xl`, `2xl` en
-  dérivent par `calc()`.
-- Les composants primitifs gardent deux exceptions volontaires : `rounded-[4px]`
-  pour la case à cocher et `rounded-[2px]` pour la flèche de tooltip.
-- Primitives : contrôles `rounded-lg` (12px), fenêtres et menus `rounded-xl`
-  (16px), cartes `rounded-2xl` (20px). L'en-tête de page n'est pas une carte.
+- Arrondis : `--radius` vaut actuellement 0,625rem ; `sm`, `md`, `lg`, `xl`,
+  `2xl` en dérivent par `calc()` (6, 8, 10, 14 et 18 px avec une racine de 16 px).
+- `Button`, `Input` et `Card` utilisent `rounded-lg` par défaut. Les variantes
+  de menus et de fenêtres restent définies dans leurs primitives respectives.
+- Les compositions de référence définissent aussi des dimensions ciblées :
+  bandeau et carte de liste à 10 px, contrôles du module `directory` à 6 px,
+  infobulle à 7 px, case à cocher à 4 px et flèche d'infobulle à 2 px.
   Les pastilles restent circulaires.
+- Dans les listes, reprendre les contrôles de 38 px et leurs adaptations
+  mobiles du module partagé. Les flèches de pagination passent à 44 px sous
+  640 px. Les nouveaux contrôles gardent une cible utilisable au clavier et au
+  tactile, à vérifier dans leur contexte.
 - Les variantes de taille d'un bouton gardent le même arrondi.
 
 ---
@@ -224,7 +262,7 @@ Les ombres montent avec l'élévation et restent très douces :
 De haut en bas :
 
 1. **En-tête** : fil d'Ariane, recherche ; bouton de menu sur mobile.
-   Hauteur de 56 px, fond `surface-panel`, page courante semi-grasse et focus intérieur.
+   Reprendre le header partagé, sa hauteur, ses surfaces et son focus intérieur.
    La sidebar reste ouverte à 264 px sur ordinateur.
 2. **Héro de page** : titre, description, éventuellement une action principale.
 3. **Toile de page** : `PageShell` puis `PageCanvas`, largeur bornée.
@@ -232,7 +270,8 @@ De haut en bas :
    Il compose `Card`, `CardHeader` et `CardContent`. `AccountPanel` est uniquement
    un adaptateur qui lui fournit un identifiant accessible.
 5. **Listes** : `DataTableSection` avec recherche, filtres, tri et pagination.
-6. **Fiche** : héro compact, puis rail d'onglets, puis sections de l'onglet.
+6. **Fiche** : identité compacte, navigation par sections, contenu de la section
+   active et synthèse secondaire si utile.
 
 Pagination : partir de **25 éléments**, via `PAGINATION.DEFAULT_LIMIT` partagé
 entre client et serveur. Une page peut définir une exception justifiée par sa
@@ -254,7 +293,8 @@ filtres.
 `PageIdentityHero` est la référence d'en-tête pour les listes Répertoire et
 Utilisateurs, conformément à la règle du début de ce document et au
 [suivi du répertoire](../qualite/pages/membres-repertoire.md). `PageHero` reste
-utilisé par des pages anciennes ; il n'est pas l'unique composant autorisé.
+utilisé par des pages anciennes ; pour une nouvelle composition, choisir
+`PageIdentityHero` ou sa variante compacte selon l'usage.
 L'ancien `PageHeader`, inutilisé, a été supprimé. Les bordures des cartes
 appartiennent à `CardHeader` et `CardFooter` : ne pas les redoubler sur le contenu
 adjacent.
@@ -267,23 +307,27 @@ le sélecteur de pôle conserve ses repères de couleur.
 
 ## 8. Onglets et rails
 
-- **Rail de fiche** : navigation par onglets sur le côté, jamais plus de six
-  onglets. Chaque onglet est une URL propre.
+- **Navigation de fiche** : `PageSectionNavigation` regroupe de vrais liens,
+  chacun avec son URL. La barre horizontale reste accessible quand elle
+  déborde ; la section active est rendue visible sans déplacer le formulaire.
 - **Onglets de contenu** : `Tabs`, pour des vues d'un même objet (filtres,
   sous-sections).
 - Les onglets ne remplacent pas les filtres : un onglet est un lieu, un filtre
   est une requête.
-- Le rail extérieur apparaît quand le conteneur `private-viewport` mesure au
-  moins 104rem : 76rem de contenu, deux gouttières de 13,5rem et une réserve.
-  Il dépend de l'espace restant après la sidebar, pas du viewport global.
-  `private-rail-fallback` assure le retour et les onglets horizontaux en dessous
-  de ce seuil, y compris sur un ordinateur avec la sidebar ouverte.
+- **Rail de synthèse** : `PageAsideLayout` apparaît à partir de 118rem de viewport, avec
+  une largeur de 16rem. En dessous, il se place entre le bandeau et la liste.
+  La synthèse du Répertoire devient alors compacte. Reprendre le seuil du layout
+  consommé, adapter le contenu à sa position et vérifier aussi une largeur
+  intermédiaire.
+
+L'ancien seuil de 104rem et les classes `private-rail-*` ont été retirés du
+code. Les indications correspondantes des anciens audits restent historiques.
 
 ---
 
 ## 9. Les états d'interface
 
-Chaque écran couvre les mêmes états, avec les composants dédiés :
+Chaque écran couvre les états pertinents pour ses capacités, avec les composants dédiés :
 
 - chargement initial : `Skeleton` ;
 - actualisation : non bloquante ;
@@ -318,15 +362,16 @@ ouvrir aussi le résultat sélectionné. Le style sobre de la recherche reste lo
 `DialogContent.overlayClassName` permet d’adapter son voile sans modifier les
 autres fenêtres.
 
-Un lien de navigation de fiche utilise `Button asChild` et reste un vrai lien.
-Il n'est pas transformé en onglet ARIA : chaque section possède une URL.
+La navigation entre sections utilise `PageSectionNavigation`. Une action de
+navigation présentée comme un bouton utilise `Button asChild` avec un lien.
+Ces liens ne sont pas transformés en onglets ARIA : chaque section possède une URL.
 
 `components/layout` : en-tête, héro, état de contenu, état de page, panneau de
 section, retour contextuel, mise en page de fiche, zone de danger, recherche
 globale.
 
-`components/users` : fiche utilisateur et son rail d'onglets, éditeur
-d'autorisations, listes.
+`components/users` : fiche utilisateur et éditeur d'autorisations ;
+`features/users` : liste des comptes et ses composants métier.
 
 Tout nouveau composant part dans `components/ui` s'il est générique, sinon dans
 le module qui l'utilise.
@@ -357,12 +402,19 @@ Les en-têtes de dialogue réservent la place du bouton de fermeture.
 
 ## 12. Règles pour ajouter une page ou un composant
 
-1. Réutiliser l'existant avant d'en créer un nouveau.
-2. Aucune valeur en dur : passer par un jeton.
-3. Couvrir les états avant de livrer.
-4. Respecter la hiérarchie de page ci-dessus.
-5. Suivre [NAVIGATION.md](NAVIGATION.md) pour l'emplacement.
-6. Suivre [FEEDBACK.md](FEEDBACK.md) pour les retours à l'utilisateur.
+1. Partir de la revue générale : définir la tâche, le type de page et les sujets
+   utiles, puis lire les décisions courantes du Répertoire et du suivi travaillé.
+2. Reprendre les tokens et les compositions utiles de la table de réutilisation.
+   Une disposition métier peut compléter ce socle ; consigner la raison d'un écart.
+3. Suivre [NAVIGATION.md](NAVIGATION.md) pour l'emplacement et
+   [FEEDBACK.md](FEEDBACK.md) pour les retours à l'utilisateur.
+4. Vérifier les éléments modifiés au repos, au survol, au clavier, en attente,
+   vide ou erreur selon leur usage, avec textes longs et valeurs absentes.
+5. Comparer le rendu aux composants de référence sur petit, intermédiaire et
+   grand écran. Vérifier les consommateurs si un composant partagé change.
+6. Mettre à jour le suivi avec composants réutilisés, adaptations, contrôles
+   réellement exécutés et limites ; terminer les changements documentaires
+   par `bun run docs:check`.
 
 ---
 
@@ -381,6 +433,7 @@ Les en-têtes de dialogue réservent la place du bouton de fermeture.
 | Colonne, rail, scrollbar partagés                        | `globals.css`, section 4               |
 | Contraste, mouvement réduit, couleurs forcées            | `globals.css`, section 5               |
 | Aspect et états d'un bouton, champ, menu ou dialogue     | Primitive dans `components/ui`         |
+| Composition commune des listes de gestion                | `components/ui/directory.module.css` et `DataTableSection` |
 | Composition réutilisable d'une page ou section           | `components/layout`                    |
 | Disposition spécifique au métier                         | Composant dans `features/<module>`     |
 

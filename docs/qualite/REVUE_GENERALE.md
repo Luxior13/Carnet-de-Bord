@@ -28,6 +28,11 @@ Lire le suivi existant et les références canoniques utiles. Une amélioration 
 ne doit pas déclencher une refonte générale sans besoin. Un composant partagé
 impose en revanche d’identifier les autres consommateurs réellement affectés.
 
+Pour une interface, le [design system](../references/DESIGN_SYSTEM.md) définit
+le socle visuel du [Répertoire](pages/membres-repertoire.md), avec Utilisateurs
+en complément. Choisir les compositions adaptées au type de page et noter les
+écarts justifiés ; la référence de liste n'impose ni ses colonnes ni ses règles métier.
+
 ## 2. Choisir la profondeur
 
 | Niveau | Exemples | Travail attendu |

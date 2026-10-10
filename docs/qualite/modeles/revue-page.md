@@ -19,6 +19,8 @@ Pour une retouche mineure, actualiser le suivi existant ou le compte rendu suffi
 - Type de page, volume, fréquence et actions :
 - Données et modules propriétaires :
 - Règles métier et adaptations de composition :
+- Référence visuelle et composants partagés réutilisés (si interface) :
+- Écarts au design system justifiés par l'usage, et source propriétaire :
 - Accès, confidentialité et rôle de l’entité/saison :
 - Retours immédiats et événements durables nécessaires :
 - Hypothèses et décisions à confirmer :
@@ -32,6 +34,8 @@ Décrire l’état courant ; ne pas recopier toutes les fiches de contrôle.
 - Périmètre et consommateurs touchés :
 - Risque : léger / fonctionnel / sensible :
 - Validation attendue :
+- Si rendu modifié : comparaison à la référence sur les largeurs et états
+  concernés ; consommateurs à vérifier si un composant partagé évolue :
 
 ## Sélection des sujets
 

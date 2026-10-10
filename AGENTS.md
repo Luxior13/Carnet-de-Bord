@@ -27,6 +27,10 @@ une API, une tâche, un schéma ou un composant partagé, même sans page.
   des défauts. Une petite correction conserve une trace proportionnée.
 - Consulter les décisions courantes de la page et les références canoniques.
   Ne pas recopier un audit daté comme règle générale.
+- Pour un travail d'interface, suivre le [design system](docs/references/DESIGN_SYSTEM.md)
+  et les décisions courantes du [Répertoire](docs/qualite/pages/membres-repertoire.md),
+  référence visuelle complétée par Utilisateurs. Réutiliser les composants partagés
+  utiles au besoin et consigner les adaptations de composition dans le suivi.
 - Chaque page travaillée a un suivi dans `docs/qualite/pages/` : créer un
   document pour chaque nouvelle page, ou mettre à jour celui de la page sur
   laquelle on travaille si nécessaire. Ne pas créer de suivi vide ; une simple

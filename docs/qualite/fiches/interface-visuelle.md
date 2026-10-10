@@ -4,6 +4,11 @@
 
 ## Questions
 
+- La page reprend-elle le socle courant du Répertoire et les composants du
+  design system ? Les références consultées sont-elles actuelles ou historiques ?
+- Quelles compositions sont réutilisées et quelles adaptations le type de page
+  demande-t-il ? L'écart est-il expliqué dans le suivi, sans dupliquer une palette ?
+
 - L’état de chargement garde-t-il une structure compréhensible sans afficher une valeur fictive comme donnée réelle ? Une transition cause-t-elle un déplacement gênant ?
 - Pour un composant partagé, a-t-on identifié les autres usages et leurs variantes avant de modifier son espacement, son comportement ou un jeton commun ?
 
@@ -19,6 +24,8 @@
 - L’axe de centrage sert-il le travail ? La largeur reste-t-elle confortable avec sidebar, rail et scrollbar ?
 - Quels espacements, hauteurs, alignements et densités restent cohérents quand il y a beaucoup de données ?
 - Un rail mérite-t-il d’être latéral et collant ? Où passe-t-il lorsqu’il ne tient plus ?
+- Une synthèse empilée reste-t-elle assez compacte pour laisser la tâche
+  principale accessible, notamment aux largeurs intermédiaires ?
 - La police réellement chargée, les graisses et les tailles distinguent-elles titre, identité, valeur et métadonnée ?
 - Les couleurs ont-elles un sens stable ? Un badge d’information ressemble-t-il à une urgence ou à un bouton ?
 - Fonds, contours, alternance et séparateurs distinguent-ils les groupes sans concurrencer les données ?
@@ -39,14 +46,16 @@ zoom et défilement. Une capture statique n’est qu’un des contrôles.
 ## Trace attendue
 
 Hiérarchie, densité, sens des couleurs, disposition et raisons des écarts au design
-system. Utiliser les jetons existants ou formaliser leur évolution.
+system. Nommer les composants partagés réutilisés et les consommateurs contrôlés
+si l'un d'eux évolue. Utiliser les jetons existants ou formaliser leur évolution.
 
 ## Non-applicabilité et réexamen
 
-Hors impact si aucun rendu ni état visuel ne change. Ne pas imposer le tableau
-Utilisateurs à un formulaire, un calendrier ou une page de lecture.
+Hors impact si aucun rendu ni état visuel ne change. Un formulaire, un calendrier
+ou une page de lecture conserve sa composition utile avec le socle visuel commun.
 
 ## Références
 
 [Design system](../../references/DESIGN_SYSTEM.md) · [Accessibilité](accessibilite.md) ·
-[Audit historique Utilisateurs](../../audits/AUDIT_UI_UTILISATEURS_2026-09-26.md).
+[Répertoire — décisions courantes](../pages/membres-repertoire.md) ·
+[Utilisateurs — décisions courantes](../pages/systeme-utilisateurs.md).

@@ -28,7 +28,11 @@ visuelle et UX** de l'application, complétée par `/systeme/utilisateurs`
 (2026-10-10) : les deux pages de liste définissent ensemble le standard des
 composants partagés. Toute nouvelle page ou variante réutilise ces styles,
 tokens, rythmes et primitives (tooltip, badge, tableau, contrôles, états
-vides) au lieu d'inventer un style local ou de repartir du style générique.
+vides). Le [design system](../../references/DESIGN_SYSTEM.md) porte les règles
+transverses et les sources à réutiliser ; les fiches, formulaires et tableaux
+de bord adaptent leur composition à leur tâche. Les règles métier et filtres
+du répertoire restent propres à ce module. Une disposition locale justifiée
+compose les tokens et primitives communs.
 
 Référence à réutiliser :
 
@@ -43,7 +47,7 @@ Référence à réutiliser :
   primitive `Badge`.
 - Infobulle : primitive `TooltipContent` partagée, style flottant aligné sur
   les deux pages (fond `--surface-floating`, bordure `--border-control`, rayon
-  7 px, texte 12 px, ombre portée forte).
+  7 px, texte `text-xs` (11 px dans l'échelle actuelle), ombre portée forte).
 - Contrôles : `Input`, `Select`, `Button` ; champs 38 px, sélecteurs 220 px sur
   grand écran dans l'état actuel, rayons 6 px. Flèches de pagination hautes de
   30 px sur grand écran, cibles de 44 px sous 640 px via le module partagé.
@@ -54,6 +58,20 @@ Référence à réutiliser :
   18 px, paddings 16/20 px, rayons 10 px.
 - Tokens : toutes les couleurs passent par `globals.css` ; aucun hex en dur
   dans les composants.
+
+### Revue documentaire du 10 octobre 2026
+
+Rôle de référence relié depuis AGENTS, l'index, la revue générale, les fiches
+Q03/Q05 et le modèle de suivi.
+Palette, typographie, rayons et distinction des rails ont été confrontés aux
+composants actuels ; les consignes anciennes du design system ont été corrigées.
+Portée légère : Q01, Q03, Q05, Q27 et Q30 examinés pour cette mise à jour documentaire ;
+les autres sujets Q02, Q04, Q06–Q26 et Q28–Q29 sont hors impact sur le produit, dont
+le code, les données et les permissions restent inchangés. Aucun nouveau test
+fonctionnel ou visuel n'est revendiqué par cette revue des documents.
+Contrôles réussis : relecture ciblée des règles et de leurs sources,
+`bun run docs:check` (174 fichiers, 854 liens locaux et index) et
+`git diff --check`. Les anciens rapports conservent leur portée historique.
 
 ## Fonction et décisions courantes
 

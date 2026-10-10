@@ -13,9 +13,16 @@
 - Quelle pagination correspond au volume et au besoin : numérotée bornée ou curseur pour un flux croissant ?
 - L’ordre est-il stable, avec critère de départage ? Que se passe-t-il si une ligne change entre deux pages ?
 - Recherche, tri, valeurs nulles, accents, casse et dates ont-ils une sémantique explicite ?
+- Pour une recherche d'identité, l'ordre des mots et les noms composés donnent-ils
+  le résultat attendu ? Les caractères spéciaux restent-ils littéraux ?
 - Les paramètres d’URL sont-ils validés et restaurés ? Un filtre réinitialise-t-il la page au bon moment ?
 - Une réponse de recherche lente peut-elle écraser une réponse plus récente ?
 - Les totaux sont-ils globaux ou filtrés, exacts ou estimés, et visibles uniquement dans le périmètre autorisé ?
+- Si un compteur est cliquable, ouvre-t-il le sous-ensemble annoncé ? Les critères
+  conservés ou remplacés sont-ils explicites, et le filtre appliqué est-il retirable ?
+- Au retour d'une fiche, faut-il retrouver filtres, page, défilement et focus ?
+  Avec un curseur, le précédent est-il encore connu ? Prévoir une reprise pour
+  un lien partagé ; borner toute mémorisation et l'isoler par compte et critères.
 - Les compteurs et agrégations imposent-ils un coût disproportionné à chaque frappe ?
 - La sélection multiple couvre-t-elle la page, le filtre entier ou une liste figée d’identifiants ?
 - Une suppression laisse-t-elle une page vide invalide ? Que signifie « tout sélectionner » après un changement de filtre ?
@@ -40,4 +47,5 @@ des statistiques ou une action collective change.
 ## Références
 
 [Architecture](../../references/FEATURE_ARCHITECTURE.md) · [Performance](performance.md) ·
-[Permissions](permissions.md).
+[Permissions](permissions.md) · [Design system](../../references/DESIGN_SYSTEM.md) ·
+[Répertoire — décisions courantes](../pages/membres-repertoire.md).
