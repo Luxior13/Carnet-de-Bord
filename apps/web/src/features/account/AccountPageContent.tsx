@@ -13,7 +13,9 @@ import React, {
 } from 'react';
 
 import { ContentState } from '$components/layout/ContentState';
+import { PageAsideLayout } from '$components/layout/PageAsideLayout';
 import { PageSectionNavigation } from '$components/layout/PageSectionNavigation';
+import { UserOverviewCard } from '$components/users/UserOverviewCard';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { useUser } from '$context/UserContext';
 import {
@@ -39,6 +41,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '$ui/alert-dialog';
+import directoryStyles from '$ui/directory.module.css';
+import { cn } from '$utils/css.utils';
 import {
   getGuardedNavigationRequest,
   GUARDED_NAVIGATION_REQUEST_EVENT,
@@ -559,76 +563,84 @@ export const AccountPageContent: FC = () => {
 
   return (
     <>
-      <div className="relative space-y-5">
-        <AccountHeader userData={userData} />
-        <PageSectionNavigation
-          activeSection={activeSection}
-          ariaLabel="Navigation du compte"
-          dirtySections={dirtySections}
-          getSectionHref={(sectionId) =>
-            buildAccountSectionHref(pathname, currentQueryString, sectionId)
-          }
-          onSectionChange={handleSectionChange}
-          sections={visibleAccountSections}
-        />
-        <p className="sr-only" aria-live="polite">
-          Section active : {activeSectionLabel}
-        </p>
-        <div className="min-w-0">
-          {visibleAccountSections.length === 0 && (
-            <ContentState
-              description="Les droits de compte personnel sont désactivés pour ce compte."
-              layout="panel"
-              title="Aucun onglet personnel disponible"
-            />
-          )}
-          {canViewProfile && visitedSections.has('profile') && (
-            <div hidden={activeSection !== 'profile'}>
-              <ProfileSection
-                key={`${userData.id}-${profileResetKey}`}
-                onDirtyChange={setIsProfileDirty}
-                onUpdate={handleAccountUpdate}
-                userData={userData}
+      <PageAsideLayout
+        header={<AccountHeader userData={userData} />}
+        aside={
+          <div className={cn(directoryStyles.directory, 'min-w-0')}>
+            <UserOverviewCard user={userData} />
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <PageSectionNavigation
+            activeSection={activeSection}
+            ariaLabel="Navigation du compte"
+            dirtySections={dirtySections}
+            getSectionHref={(sectionId) =>
+              buildAccountSectionHref(pathname, currentQueryString, sectionId)
+            }
+            onSectionChange={handleSectionChange}
+            sections={visibleAccountSections}
+          />
+          <p className="sr-only" aria-live="polite">
+            Section active : {activeSectionLabel}
+          </p>
+          <div className="min-w-0">
+            {visibleAccountSections.length === 0 && (
+              <ContentState
+                description="Les droits de compte personnel sont désactivés pour ce compte."
+                layout="panel"
+                title="Aucun onglet personnel disponible"
               />
-            </div>
-          )}
-          {(canViewSecurity ||
-            canChangePassword ||
-            canManageMfa ||
-            canManageSessions) &&
-            visitedSections.has('security') && (
-              <div hidden={activeSection !== 'security'}>
-                <SecuritySection
-                  key={userData.id}
-                  canChangePassword={canChangePassword}
-                  canManageMfa={canManageMfa}
-                  canManageSessions={canManageSessions}
-                  canViewSecurity={canViewSecurity}
+            )}
+            {canViewProfile && visitedSections.has('profile') && (
+              <div hidden={activeSection !== 'profile'}>
+                <ProfileSection
+                  key={`${userData.id}-${profileResetKey}`}
+                  onDirtyChange={setIsProfileDirty}
                   onUpdate={handleAccountUpdate}
                   userData={userData}
                 />
               </div>
             )}
-          {canViewActivity && visitedSections.has('activity') && (
-            <div hidden={activeSection !== 'activity'}>
-              <UserHistoryTab
-                key={userData.id}
-                auditLogs={auditLogs}
-                canExport={canExportUserActivity}
-                error={auditError}
-                hasMoreAuditLogs={hasMoreAuditLogs}
-                isLoading={shouldShowAuditLoading}
-                isLoadingMore={isLoadingMoreAudit}
-                onLoadMore={() => void fetchMoreAccountAuditLogs()}
-                onRetry={() => void fetchAccountAuditLogs()}
-                perspective="personal"
-                totalAuditLogs={auditLogs.length}
-                userId={userData.id}
-              />
-            </div>
-          )}
+            {(canViewSecurity ||
+              canChangePassword ||
+              canManageMfa ||
+              canManageSessions) &&
+              visitedSections.has('security') && (
+                <div hidden={activeSection !== 'security'}>
+                  <SecuritySection
+                    key={userData.id}
+                    canChangePassword={canChangePassword}
+                    canManageMfa={canManageMfa}
+                    canManageSessions={canManageSessions}
+                    canViewSecurity={canViewSecurity}
+                    onUpdate={handleAccountUpdate}
+                    userData={userData}
+                  />
+                </div>
+              )}
+            {canViewActivity && visitedSections.has('activity') && (
+              <div hidden={activeSection !== 'activity'}>
+                <UserHistoryTab
+                  key={userData.id}
+                  auditLogs={auditLogs}
+                  canExport={canExportUserActivity}
+                  error={auditError}
+                  hasMoreAuditLogs={hasMoreAuditLogs}
+                  isLoading={shouldShowAuditLoading}
+                  isLoadingMore={isLoadingMoreAudit}
+                  onLoadMore={() => void fetchMoreAccountAuditLogs()}
+                  onRetry={() => void fetchAccountAuditLogs()}
+                  perspective="personal"
+                  totalAuditLogs={auditLogs.length}
+                  userId={userData.id}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </PageAsideLayout>
       <AlertDialog
         open={showUnsavedNavigationConfirm}
         onOpenChange={(open) => {

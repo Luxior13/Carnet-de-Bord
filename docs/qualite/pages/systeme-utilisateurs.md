@@ -252,6 +252,28 @@ Vérifications : TypeScript, lint, build réussis ; 133 tests ciblés réussis
   passe temporaire, relance d'authentification pour ADMIN) reste à valider en
   base réelle.
 
+## Fiche utilisateur (`/systeme/utilisateurs/[id]`) — 10 octobre 2026
+
+- Onglet « Activité » retiré de la navigation (`USER_DETAIL_SECTIONS`) ; le
+  code de l'historique est conservé dormant pour une restauration ultérieure.
+  Les anciens liens `?section=history` retombent sur « Profil ».
+- Hero passé de l'ancien `UsersAdminHero` à `PageIdentityHero` compact (dégradé
+  de référence), avec l'avatar DiceBear du compte et l'identifiant en
+  description. Le rôle est affiché à droite du hero, centré verticalement.
+  `UsersAdminHero` a été supprimé.
+- Une carte « Vue d'ensemble » (même gabarit que `/systeme/utilisateurs`)
+  est placée dans le rail droit (`PageAsideLayout`) comme sur la liste, et
+  regroupe : état, protection, mot de passe, date de création et dernière
+  modification.
+- Contrat de source `admin-user-detail-subcomponents-ux-contracts.test.ts`
+  actualisé.
+- Onglets harmonisés : Profil aplati (plus de cartes imbriquées, sections
+  « Identité » / « Connexion et contact »), statuts de sécurité en pastilles
+  partagées, chips de capacité des Autorisations en pastilles (`CapabilityChip`).
+- L'onglet Profil est désormais modifiable directement (plus de bouton
+  « Modifier » ni de vue en lecture) avec la barre d'enregistrement partagée
+  `SectionActionBar` (récupérée de `/membres/repertoire/[id]`).
+
 ## Points ouverts et déclencheurs
 
 | Point | Suite concrète | Déclencheur |

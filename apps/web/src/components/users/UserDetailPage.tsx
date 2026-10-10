@@ -15,7 +15,9 @@ import React, {
 import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
+import { PageAsideLayout } from '$components/layout/PageAsideLayout';
 import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
+import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { PageSectionNavigation } from '$components/layout/PageSectionNavigation';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { useAdminStepUpController } from '$components/users/user-detail/useAdminStepUpController';
@@ -63,17 +65,16 @@ import {
 } from '$components/users/user-detail/UserHistoryTab';
 import type { ProfileForm } from '$components/users/user-detail/UserProfileTab';
 import { UserAvatar } from '$components/users/UserAvatar';
-import { UsersAdminHero } from '$components/users/UsersAdminHero';
+import { UserOverviewCard } from '$components/users/UserOverviewCard';
 import { FEATURES } from '$constants/feature-registry.constants';
 import {
-  getAccessLabel,
-  getRoleColor,
   hasPermission,
   PERMISSIONS,
   type PermissionsData,
 } from '$constants/permissions.constants';
 import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
+import { UserAccessBadge } from '$features/users/user-badges';
 import type {
   AuditLogEntry,
   UserSessionInfo,
@@ -89,12 +90,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '$ui/alert-dialog';
-import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
+import directoryStyles from '$ui/directory.module.css';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { apiFetch } from '$utils/api.utils';
+import { cn } from '$utils/css.utils';
 import {
   getGuardedNavigationRequest,
   GUARDED_NAVIGATION_REQUEST_EVENT,
@@ -610,11 +612,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     hasAccessChanges ||
     hasAccountChanges ||
     hasSecurityChanges;
-  const canSaveProfile =
-    ((hasProfileIdentityChanges && canEditTargetProfile) ||
-      (hasProfileLoginChanges && canEditTargetLogin) ||
-      (hasProfileContactChanges && canEditTargetContact)) &&
-    !hasProfileErrors;
   const canSaveAccess =
     hasAccessChanges &&
     (!hasRoleChanges || canEditTargetRole) &&
@@ -2024,7 +2021,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
             onSave={handleSaveProfile}
             onCancel={handleCancelProfile}
             hasChanges={hasProfileChanges}
-            canSave={canSaveProfile}
             errors={profileErrors}
           />
         );
@@ -2206,105 +2202,91 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     >
       <PageShell className="py-0">
         <PageCanvas contentClassName="relative space-y-3">
-          <div className="min-w-0 space-y-4">
-            <UsersAdminHero
-              compact
-              hasNavigation
-              title={getUserDisplayName(user)}
-              icon={
-                <UserAvatar user={user} className="size-full rounded-full" />
+          <div className="min-w-0">
+            <PageAsideLayout
+              header={
+                <PageIdentityHero
+                  compact
+                  title={getUserDisplayName(user)}
+                  description={`Identifiant : ${getUserLoginDisplay(user)}`}
+                  icon={
+                    <UserAvatar
+                      user={user}
+                      className="size-full rounded-[7px]"
+                    />
+                  }
+                  actions={<UserAccessBadge user={user} />}
+                />
               }
-              iconClassName="overflow-hidden rounded-full p-0"
-              showSpaceBadge={false}
-              meta={
-                <>
-                  <span className="text-muted-foreground text-xs">
-                    Identifiant : {getUserLoginDisplay(user)}
-                  </span>
-                  <Badge variant={getRoleColor(user.role)}>
-                    {getAccessLabel(user)}
-                  </Badge>
-                  {user.isProtected && (
-                    <Badge
-                      variant="outline"
-                      className="border-warning/40 text-warning"
-                    >
-                      Compte racine
-                    </Badge>
-                  )}
-                  {!user.isActive && (
-                    <Badge
-                      variant="outline"
-                      className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
-                    >
-                      Inactif
-                    </Badge>
-                  )}
-                  {user.mustChangePassword && (
-                    <Badge
-                      variant="outline"
-                      className="border-warning/40 text-warning"
-                    >
-                      Mot de passe à changer
-                    </Badge>
-                  )}
-                </>
+              aside={
+                <div className={cn(directoryStyles.directory, 'min-w-0')}>
+                  <UserOverviewCard user={user} />
+                </div>
               }
-            />
-            <PageSectionNavigation
-              activeSection={activeRailSection}
-              ariaLabel="Navigation de la fiche utilisateur"
-              dirtySections={railDirtySections}
-              getSectionHref={(sectionId) =>
-                buildUserDetailSectionHref(
-                  pathname,
-                  currentQueryString,
-                  resolveRailSection(sectionId),
-                )
-              }
-              onSectionChange={(sectionId) => {
-                if (sectionId === 'access' && activeRailSection === 'access') {
-                  return;
-                }
+            >
+              <div className="space-y-4">
+                <PageSectionNavigation
+                  activeSection={activeRailSection}
+                  ariaLabel="Navigation de la fiche utilisateur"
+                  dirtySections={railDirtySections}
+                  getSectionHref={(sectionId) =>
+                    buildUserDetailSectionHref(
+                      pathname,
+                      currentQueryString,
+                      resolveRailSection(sectionId),
+                    )
+                  }
+                  onSectionChange={(sectionId) => {
+                    if (
+                      sectionId === 'access' &&
+                      activeRailSection === 'access'
+                    ) {
+                      return;
+                    }
 
-                handleSectionChange(resolveRailSection(sectionId));
-              }}
-              sections={visibleUserDetailSections}
-            />
-            {isTargetIdentityMasked && (
-              <div className="border-warning/30 bg-warning/10 text-foreground flex gap-3 rounded-lg border p-3 sm:p-4">
-                <AlertTriangle className="text-warning mt-0.5 size-4 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium">Compte système protégé</p>
-                  <p className="text-muted-foreground mt-1 text-xs leading-5">
-                    Ce compte reste visible pour la cohérence administrative,
-                    mais son identité technique, ses accès, sa sécurité et son
-                    activité sont réservés à son propriétaire.
-                  </p>
-                </div>
+                    handleSectionChange(resolveRailSection(sectionId));
+                  }}
+                  sections={visibleUserDetailSections}
+                />
+                {isTargetIdentityMasked && (
+                  <div className="border-warning/30 bg-warning/10 text-foreground flex gap-3 rounded-lg border p-3 sm:p-4">
+                    <AlertTriangle className="text-warning mt-0.5 size-4 shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">
+                        Compte système protégé
+                      </p>
+                      <p className="text-muted-foreground mt-1 text-xs leading-5">
+                        Ce compte reste visible pour la cohérence
+                        administrative, mais son identité technique, ses accès,
+                        sa sécurité et son activité sont réservés à son
+                        propriétaire.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {isSelf && (
+                  <div className="border-primary/25 bg-primary/[0.08] flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+                    <div className="min-w-0">
+                      <p className="text-foreground text-sm font-medium">
+                        Votre fiche administrative est en lecture seule
+                      </p>
+                      <p className="text-muted-foreground mt-1 text-xs leading-5">
+                        Consultez ici les informations de gestion. Utilisez Mon
+                        compte pour modifier vos informations personnelles et
+                        votre sécurité.
+                      </p>
+                    </div>
+                    <Button asChild className="shrink-0" size="sm">
+                      <Link href="/mon-compte">Gérer mon compte</Link>
+                    </Button>
+                  </div>
+                )}
+                <p aria-live="polite" className="sr-only">
+                  Section {getUserDetailSectionLabel(activeSection)} affichée
+                </p>
+                <div className="min-w-0">{renderContent()}</div>
               </div>
-            )}
-            {isSelf && (
-              <div className="border-primary/25 bg-primary/[0.08] flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
-                <div className="min-w-0">
-                  <p className="text-foreground text-sm font-medium">
-                    Votre fiche administrative est en lecture seule
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-xs leading-5">
-                    Consultez ici les informations de gestion. Utilisez Mon
-                    compte pour modifier vos informations personnelles et votre
-                    sécurité.
-                  </p>
-                </div>
-                <Button asChild className="shrink-0" size="sm">
-                  <Link href="/mon-compte">Gérer mon compte</Link>
-                </Button>
-              </div>
-            )}
-            <p aria-live="polite" className="sr-only">
-              Section {getUserDetailSectionLabel(activeSection)} affichée
-            </p>
-            <div className="min-w-0">{renderContent()}</div>
+            </PageAsideLayout>
           </div>
         </PageCanvas>
       </PageShell>

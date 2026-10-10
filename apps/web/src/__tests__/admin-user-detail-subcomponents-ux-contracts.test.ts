@@ -50,13 +50,13 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(userDetailSource).toContain(
       '<PageCanvas contentClassName="relative space-y-3">',
     );
-    expect(userDetailSource).toMatch(/<UsersAdminHero\s+compact/);
-    expect(userDetailSource).toContain(
-      'iconClassName="overflow-hidden rounded-full p-0"',
+    expect(userDetailSource).toContain('<PageIdentityHero');
+    expect(userDetailSource).toContain('size-full rounded-[7px]');
+    expect(userDetailSource).toMatch(
+      /description=\{`Identifiant : \$\{getUserLoginDisplay\(user\)\}`\}/,
     );
-    expect(userDetailSource).toContain('showSpaceBadge={false}');
     expect(profileSource).toContain(
-      '<CardHeader className="flex-row items-center justify-between gap-3 p-3.5 sm:p-4">',
+      '<CardHeader className="flex-row items-center justify-between p-3.5 sm:p-4">',
     );
   });
 
@@ -71,7 +71,7 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(profileSource).toContain('Supprimer l&apos;adresse de contact');
     expect(profileSource).toContain('isSelf = false');
     expect(profileSource).toContain('Profil administratif');
-    expect(profileSource).toContain('sm:flex-row sm:items-center');
+    expect(profileSource).toContain('<SectionActionBar');
   });
 
   it('keeps account autonomy compact, direct and progressively disclosed', () => {

@@ -10,6 +10,7 @@ Utiliser un nom stable compréhensible, sans multiplier les copies datées.
 | Paramètres système | [systeme-parametres.md](systeme-parametres.md) | Durées en lecture avec Modifier ; portée du journal et séparation future documentées ; pagination retirée, défaut commun de 25 |
 | Journal d’activité | [systeme-journal-activite.md](systeme-journal-activite.md) | Page retirée le 9 octobre 2026, replanifiée ; suivi conservé comme historique |
 | Navigation générale — sidebar et header | [navigation-generale.md](navigation-generale.md) | Sidebar fixe, recherche affinée et clavier corrigé, notifications compactes avec compteur partagé ; suivi du 27 septembre 2026 |
+| Mon compte | [mon-compte.md](mon-compte.md) | Alignée le 10 octobre 2026 sur la fiche `/systeme/utilisateurs/[id]` (hero, rail Vue d'ensemble, navigation, onglets Profil/Sécurité) |
 | Membres — répertoire | [membres-repertoire.md](membres-repertoire.md) | Terminée le 10 octobre 2026 : **page de référence visuelle et UX**, avec `/systeme/utilisateurs` comme standard des composants partagés (tableau, filtres, badges, Vue d'ensemble, infobulles) |
 
 Pour commencer un nouveau suivi : [modèle de revue](../modeles/revue-page.md).

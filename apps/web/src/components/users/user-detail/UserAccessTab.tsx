@@ -19,13 +19,12 @@ import {
 } from '$components/users/permission-editor-policy';
 import { PermissionsEditor } from '$components/users/PermissionsEditor';
 import {
-  getAccessLabel,
   getAllPermissionKeys,
   PERMISSION_CATEGORIES,
   type PermissionsData,
 } from '$constants/permissions.constants';
+import { UserAccessBadge } from '$features/users/user-badges';
 import type { UserType } from '$types/auth.types';
-import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardFooter } from '$ui/card';
 import { Input } from '$ui/input';
@@ -37,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '$ui/select';
+import { cn } from '$utils/css.utils';
 
 type UserAccessTabProps = {
   canChangePermission: PermissionMutationPolicy;
@@ -80,6 +80,26 @@ const formatMutationSummary = (
   return changes.length > 0 ? changes.join(' · ') : null;
 };
 
+const CapabilityChip: FC<{
+  children: React.ReactNode;
+  enabled: boolean;
+}> = ({ children, enabled }) => (
+  <span
+    className={cn(
+      'inline-flex w-fit items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap',
+      enabled
+        ? 'border-success/40 bg-success/15 text-success'
+        : 'border-muted-foreground/35 bg-muted/30 text-muted-foreground',
+    )}
+  >
+    <span
+      aria-hidden="true"
+      className="size-1.5 shrink-0 rounded-full bg-current"
+    />
+    {children}
+  </span>
+);
+
 export const UserAccessTab: FC<UserAccessTabProps> = ({
   canChangePermission,
   canDelegatePermissions,
@@ -119,12 +139,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                   <h3 className="text-foreground text-base leading-6 font-semibold">
                     Autorisations du super-administrateur
                   </h3>
-                  <Badge
-                    variant="outline"
-                    className="border-warning/40 text-warning"
-                  >
-                    {getAccessLabel(user)}
-                  </Badge>
+                  <UserAccessBadge user={user} />
                 </div>
                 <p className="text-muted-foreground mt-1 max-w-3xl text-sm leading-6">
                   Ce compte est protégé par le système. Il dispose déjà de
@@ -192,17 +207,17 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             aria-label="Capacités de gestion des autorisations"
             className="flex flex-wrap gap-1.5"
           >
-            <Badge variant="secondary">Consultation</Badge>
-            <Badge variant={canGrantPermissions ? 'secondary' : 'outline'}>
+            <CapabilityChip enabled>Consultation</CapabilityChip>
+            <CapabilityChip enabled={canGrantPermissions}>
               Attribution {canGrantPermissions ? 'autorisée' : 'interdite'}
-            </Badge>
-            <Badge variant={canRevokePermissions ? 'secondary' : 'outline'}>
+            </CapabilityChip>
+            <CapabilityChip enabled={canRevokePermissions}>
               Retrait {canRevokePermissions ? 'autorisé' : 'interdit'}
-            </Badge>
-            <Badge variant={canDelegatePermissions ? 'secondary' : 'outline'}>
+            </CapabilityChip>
+            <CapabilityChip enabled={canDelegatePermissions}>
               Déléguer attribution/retrait :{' '}
               {canDelegatePermissions ? 'oui' : 'non'}
-            </Badge>
+            </CapabilityChip>
           </div>
           {canGrantPermissions && user.criticalAccessReady !== true && (
             <div

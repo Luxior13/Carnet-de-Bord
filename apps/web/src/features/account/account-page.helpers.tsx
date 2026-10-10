@@ -1,13 +1,12 @@
-import { Activity, ShieldCheck, User } from 'lucide-react';
+import { ShieldCheck, User } from 'lucide-react';
 import type { FC } from 'react';
 
 import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
-import { PageHero } from '$components/layout/PageHero';
+import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import type { UserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
 import { UserAvatar } from '$components/users/UserAvatar';
-import { getAccessLabel } from '$constants/permissions.constants';
+import { UserAccessBadge } from '$features/users/user-badges';
 import type { UserType } from '$types/auth.types';
-import { Badge } from '$ui/badge';
 import type { GuardedNavigationAction } from '$utils/guarded-navigation.utils';
 
 export type AccountSectionId = 'activity' | 'profile' | 'security';
@@ -34,18 +33,13 @@ export const ACCOUNT_SECTIONS: Array<UserDetailSection<AccountSectionId>> = [
     id: 'security',
     label: 'Sécurité',
   },
-  {
-    icon: <Activity className="h-4 w-4" />,
-    id: 'activity',
-    label: 'Activité',
-  },
 ];
 
 export const normalizeAccountSection = (
   value: string | null,
 ): AccountSectionId => {
   if (value === 'security') return 'security';
-  if (value === 'activity' || value === 'history') return 'activity';
+  if (value === 'activity' || value === 'history') return 'profile';
 
   return 'profile';
 };
@@ -106,25 +100,13 @@ const getAccountDisplayName = (userData: UserType): string =>
   `${userData.firstName} ${userData.lastName}`.trim() || userData.loginName;
 
 export const AccountHeader: FC<{ userData: UserType }> = ({ userData }) => (
-  <PageHero
+  <PageIdentityHero
     compact
-    hasNavigation
+    eyebrow="Mon compte"
     title={getAccountDisplayName(userData)}
-    description={`Identifiant de connexion : ${userData.loginName}`}
-    eyebrow={
-      <span className="text-muted-foreground text-xs font-medium">
-        Mon compte
-      </span>
-    }
-    meta={
-      <>
-        <Badge variant="secondary">{getAccessLabel(userData)}</Badge>
-        {userData.isProtected && <Badge variant="warning">Compte racine</Badge>}
-      </>
-    }
-    icon={<UserAvatar user={userData} className="size-full rounded-md" />}
-    iconClassName="overflow-hidden p-0"
-    tone="dashboard"
+    description={`Identifiant : ${userData.loginName}`}
+    icon={<UserAvatar user={userData} className="size-full rounded-[7px]" />}
+    actions={<UserAccessBadge user={userData} />}
   />
 );
 

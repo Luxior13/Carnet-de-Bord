@@ -81,6 +81,33 @@ const SectionTitle: FC<{
   </h3>
 );
 
+const StatusBadge: FC<{
+  label: string;
+  tone: 'muted' | 'success' | 'warning';
+}> = ({ label, tone }) => {
+  const toneClassName =
+    tone === 'warning'
+      ? 'border-warning/40 bg-warning/15 text-warning'
+      : tone === 'success'
+        ? 'border-success/40 bg-success/15 text-success'
+        : 'border-muted-foreground/35 bg-muted/30 text-muted-foreground';
+
+  return (
+    <span
+      className={cn(
+        'inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap',
+        toneClassName,
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className="size-1.5 shrink-0 rounded-full bg-current"
+      />
+      {label}
+    </span>
+  );
+};
+
 const formatSessionDateTime = (date: string | null): string => {
   if (!date) return 'Date inconnue';
 
@@ -449,14 +476,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground text-sm">État</span>
                   {userData.mustChangePassword ? (
-                    <Badge
-                      variant="outline"
-                      className="border-warning/40 text-warning"
-                    >
-                      À changer
-                    </Badge>
+                    <StatusBadge label="À changer" tone="warning" />
                   ) : (
-                    <Badge variant="secondary">À jour</Badge>
+                    <StatusBadge label="À jour" tone="success" />
                   )}
                 </div>
                 <Separator className="bg-border/60" />
@@ -546,16 +568,11 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                       <span className="text-muted-foreground text-sm">
                         État
                       </span>
-                      <Badge
-                        className={
-                          isMfaEnabled
-                            ? undefined
-                            : 'border-warning/40 text-warning'
-                        }
-                        variant={isMfaEnabled ? 'secondary' : 'outline'}
-                      >
-                        {isMfaEnabled ? 'Active' : 'À activer'}
-                      </Badge>
+                      {isMfaEnabled ? (
+                        <StatusBadge label="Active" tone="success" />
+                      ) : (
+                        <StatusBadge label="À activer" tone="warning" />
+                      )}
                     </div>
                     {mfaEnabledAt && (
                       <>

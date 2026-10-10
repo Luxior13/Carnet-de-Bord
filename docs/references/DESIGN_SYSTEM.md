@@ -51,9 +51,10 @@ de variantes anciennes ou locales : `PageIdentityHero`, `DataTableSection` +
 primitives `Input`, `Select`, `Button`, `Badge`, `Card`. `globals.css` reste la
 source unique des tokens ; aucune couleur en dur dans les composants.
 
-À migrer quand les pages concernées sont retouchées : `UsersAdminHero` (fiche
-utilisateur), `PageHero` avec `tone` (dashboard, actualités, compte,
-`EntityDetailLayout`, création de fiche) et les modules CSS de page locaux.
+À migrer quand les pages concernées sont retouchées : `PageHero` avec `tone`
+(dashboard, actualités, compte, `EntityDetailLayout`, création de fiche) et les
+modules CSS de page locaux. `UsersAdminHero` a été retiré (fiche utilisateur
+passée sur `PageIdentityHero`).
 Les routes canoniques sont `/membres/repertoire` et `/systeme/utilisateurs` ;
 ne plus créer de lien vers les anciens alias (`/personnes`,
 `/vie-interne/*`, `/administration/*`).

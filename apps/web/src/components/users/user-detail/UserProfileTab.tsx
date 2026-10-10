@@ -1,17 +1,9 @@
 'use client';
 
-import {
-  AlertTriangle,
-  AtSign,
-  Edit,
-  Loader2,
-  Mail,
-  Save,
-  User,
-} from 'lucide-react';
-import React, { type FC, useEffect, useRef, useState } from 'react';
+import { AlertTriangle, Mail } from 'lucide-react';
+import React, { type FC, useEffect, useState } from 'react';
 
-import { SectionPanel } from '$components/layout/SectionPanel';
+import { SectionActionBar } from '$components/layout/SectionActionBar';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,9 +16,10 @@ import {
 } from '$ui/alert-dialog';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
+import { Card, CardContent, CardHeader } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
+import { Separator } from '$ui/separator';
 import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 
 export type ProfileForm = {
@@ -47,7 +40,6 @@ type UserProfileTabProps = {
   canEdit: boolean;
   canEditContact: boolean;
   canEditLogin: boolean;
-  canSave: boolean;
   canViewContact: boolean;
   errors: ProfileErrors;
   form: ProfileForm;
@@ -60,8 +52,6 @@ type UserProfileTabProps = {
   setForm: (form: ProfileForm) => void;
 };
 
-const inputClassName = 'border-border/80 bg-input';
-
 const FieldError: FC<{ children: React.ReactNode; id: string }> = ({
   children,
   id,
@@ -71,11 +61,22 @@ const FieldError: FC<{ children: React.ReactNode; id: string }> = ({
   </p>
 );
 
+const FormSectionTitle: FC<{ children: React.ReactNode; id: string }> = ({
+  children,
+  id,
+}) => (
+  <h3
+    id={id}
+    className="text-muted-foreground text-[11px] font-medium tracking-[0.08em] uppercase"
+  >
+    {children}
+  </h3>
+);
+
 export const UserProfileTab: FC<UserProfileTabProps> = ({
   canEdit,
   canEditContact,
   canEditLogin,
-  canSave,
   canViewContact,
   errors,
   form,
@@ -95,10 +96,6 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   const [committedContactEmail, setCommittedContactEmail] = useState(
     form.contactEmail.trim(),
   );
-  const [isEditing, setIsEditing] = useState(false);
-  const wasSavingRef = useRef(false);
-  const canEditAnything = canEdit || canEditContact || canEditLogin;
-
   useEffect(() => {
     if (!hasChanges) {
       setCommittedContactEmail(form.contactEmail.trim());
@@ -112,13 +109,6 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
     }
   }, [form.contactEmail]);
 
-  useEffect(() => {
-    if (wasSavingRef.current && !isSaving && !hasChanges) {
-      setIsEditing(false);
-    }
-    wasSavingRef.current = isSaving;
-  }, [hasChanges, isSaving]);
-
   const loginHint = canEditLogin
     ? "Modifier l'identifiant déconnectera l'utilisateur de ses sessions actives."
     : loginReadOnlyHint;
@@ -126,9 +116,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
     ? "Adresse facultative, distincte de l'identifiant de connexion."
     : "L'email de contact est en lecture seule depuis cette fiche.";
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
-    event.preventDefault();
-
+  const submitProfile = (): void => {
     const removesExistingContact =
       canEditContact &&
       committedContactEmail.length > 0 &&
@@ -141,6 +129,11 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
     }
 
     onSave();
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    submitProfile();
   };
 
   const handleConfirmContactRemoval = (): void => {
@@ -194,62 +187,6 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
     );
   }
 
-  if (!isEditing) {
-    return (
-      <Card>
-        <CardHeader className="flex-row items-center justify-between gap-3 p-3.5 sm:p-4">
-          <h2 className="text-sm font-semibold">Profil utilisateur</h2>
-          {canEditAnything ? (
-            <Button
-              onClick={() => setIsEditing(true)}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              <Edit className="size-4" />
-              Modifier
-            </Button>
-          ) : (
-            <Badge
-              variant="outline"
-              className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
-            >
-              Lecture seule
-            </Badge>
-          )}
-        </CardHeader>
-        <CardContent className="p-3 sm:p-4">
-          <dl className="divide-border-divider border-border-divider [&>div:nth-child(even)]:bg-surface-row-alternate divide-y overflow-hidden rounded-lg border [&>div]:px-4">
-            <div className="grid gap-1 py-3 sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-4">
-              <dt className="text-muted-foreground text-sm">Identité</dt>
-              <dd className="text-foreground text-sm font-medium sm:text-right">
-                {form.firstName} {form.lastName}
-              </dd>
-            </div>
-            <div className="grid gap-1 py-3 sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-4">
-              <dt className="text-muted-foreground text-sm">
-                Identifiant de connexion
-              </dt>
-              <dd className="text-foreground font-mono text-sm break-all sm:text-right">
-                {form.loginName}
-              </dd>
-            </div>
-            <div className="grid gap-1 py-3 sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-4">
-              <dt className="text-muted-foreground text-sm">
-                Email de contact
-              </dt>
-              <dd className="text-foreground text-sm break-all sm:text-right">
-                {canViewContact
-                  ? form.contactEmail || 'Non renseigné'
-                  : 'Masqué — permission requise'}
-              </dd>
-            </div>
-          </dl>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <form {...passwordManagerIgnoreAttributes} onSubmit={handleSubmit}>
       <Card>
@@ -264,232 +201,209 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
             </Badge>
           )}
         </CardHeader>
-        <CardContent className="space-y-3 p-3 sm:p-4">
-          <div className="grid gap-3 xl:grid-cols-2">
-            <SectionPanel
-              titleAs="h3"
-              icon={<User className="size-3.5" />}
-              title="Identité"
-            >
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="user-first-name"
-                    className="text-muted-foreground text-xs"
-                    required
-                  >
-                    Prénom
-                  </Label>
-                  <Input
-                    id="user-first-name"
-                    value={form.firstName}
-                    maxLength={50}
-                    {...passwordManagerIgnoreAttributes}
-                    placeholder="Jean"
-                    onChange={(event) =>
-                      setForm({ ...form, firstName: event.target.value })
-                    }
-                    disabled={!canEdit}
-                    aria-invalid={!!errors.firstName}
-                    aria-describedby={
-                      errors.firstName ? 'user-first-name-error' : undefined
-                    }
-                    className={inputClassName}
-                  />
-                  {errors.firstName && (
-                    <FieldError id="user-first-name-error">
-                      {errors.firstName}
-                    </FieldError>
-                  )}
-                </div>
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="user-last-name"
-                    className="text-muted-foreground text-xs"
-                  >
-                    Nom <span className="font-normal">(facultatif)</span>
-                  </Label>
-                  <Input
-                    id="user-last-name"
-                    value={form.lastName}
-                    maxLength={50}
-                    {...passwordManagerIgnoreAttributes}
-                    placeholder="Dupont"
-                    onChange={(event) =>
-                      setForm({ ...form, lastName: event.target.value })
-                    }
-                    disabled={!canEdit}
-                    aria-invalid={!!errors.lastName}
-                    aria-describedby={
-                      errors.lastName ? 'user-last-name-error' : undefined
-                    }
-                    className={inputClassName}
-                  />
-                  {errors.lastName && (
-                    <FieldError id="user-last-name-error">
-                      {errors.lastName}
-                    </FieldError>
-                  )}
-                </div>
+        <CardContent className="space-y-5 p-4 sm:p-5">
+          <section
+            aria-labelledby="profile-identity-title"
+            className="space-y-3"
+          >
+            <FormSectionTitle id="profile-identity-title">
+              Identité
+            </FormSectionTitle>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="user-first-name"
+                  className="text-muted-foreground text-xs"
+                  required
+                >
+                  Prénom
+                </Label>
+                <Input
+                  id="user-first-name"
+                  value={form.firstName}
+                  maxLength={50}
+                  {...passwordManagerIgnoreAttributes}
+                  placeholder="Jean"
+                  onChange={(event) =>
+                    setForm({ ...form, firstName: event.target.value })
+                  }
+                  disabled={!canEdit}
+                  aria-invalid={!!errors.firstName}
+                  aria-describedby={
+                    errors.firstName ? 'user-first-name-error' : undefined
+                  }
+                />
+                {errors.firstName && (
+                  <FieldError id="user-first-name-error">
+                    {errors.firstName}
+                  </FieldError>
+                )}
               </div>
-            </SectionPanel>
-            <SectionPanel
-              titleAs="h3"
-              icon={<AtSign className="size-3.5" />}
-              title="Connexion et contact"
-            >
-              <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="user-last-name"
+                  className="text-muted-foreground text-xs"
+                >
+                  Nom <span className="font-normal">(facultatif)</span>
+                </Label>
+                <Input
+                  id="user-last-name"
+                  value={form.lastName}
+                  maxLength={50}
+                  {...passwordManagerIgnoreAttributes}
+                  placeholder="Dupont"
+                  onChange={(event) =>
+                    setForm({ ...form, lastName: event.target.value })
+                  }
+                  disabled={!canEdit}
+                  aria-invalid={!!errors.lastName}
+                  aria-describedby={
+                    errors.lastName ? 'user-last-name-error' : undefined
+                  }
+                />
+                {errors.lastName && (
+                  <FieldError id="user-last-name-error">
+                    {errors.lastName}
+                  </FieldError>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <Separator />
+
+          <section
+            aria-labelledby="profile-connection-title"
+            className="space-y-3"
+          >
+            <FormSectionTitle id="profile-connection-title">
+              Connexion et contact
+            </FormSectionTitle>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="user-login-name"
+                  className="text-muted-foreground text-xs"
+                  required
+                >
+                  Identifiant de connexion
+                </Label>
+                <Input
+                  aria-describedby={
+                    errors.loginName
+                      ? 'user-login-name-error'
+                      : 'user-login-name-hint'
+                  }
+                  aria-invalid={!!errors.loginName}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  disabled={!canEditLogin}
+                  id="user-login-name"
+                  maxLength={32}
+                  {...passwordManagerIgnoreAttributes}
+                  placeholder="jean.dupont"
+                  spellCheck={false}
+                  type="text"
+                  value={form.loginName}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      loginName: event.target.value.toLowerCase(),
+                    })
+                  }
+                  className="font-mono"
+                />
+                {errors.loginName ? (
+                  <FieldError id="user-login-name-error">
+                    {errors.loginName}
+                  </FieldError>
+                ) : (
+                  <div
+                    id="user-login-name-hint"
+                    className="text-muted-foreground border-warning/25 bg-warning/10 flex items-start gap-2 rounded-md border px-2.5 py-2 text-xs"
+                  >
+                    <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
+                    <span>{loginHint}</span>
+                  </div>
+                )}
+              </div>
+              {canViewContact ? (
                 <div className="space-y-1.5">
                   <Label
-                    htmlFor="user-login-name"
+                    htmlFor="user-contact-email"
                     className="text-muted-foreground text-xs"
-                    required
                   >
-                    Identifiant de connexion
+                    Email de contact{' '}
+                    <span className="font-normal">(facultatif)</span>
                   </Label>
-                  <Input
-                    aria-describedby={
-                      errors.loginName
-                        ? 'user-login-name-error'
-                        : 'user-login-name-hint'
-                    }
-                    aria-invalid={!!errors.loginName}
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    disabled={!canEditLogin}
-                    id="user-login-name"
-                    maxLength={32}
-                    {...passwordManagerIgnoreAttributes}
-                    placeholder="jean.dupont"
-                    spellCheck={false}
-                    type="text"
-                    value={form.loginName}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        loginName: event.target.value.toLowerCase(),
-                      })
-                    }
-                    className={`${inputClassName} font-mono`}
-                  />
-                  {errors.loginName ? (
-                    <FieldError id="user-login-name-error">
-                      {errors.loginName}
+                  <div className="relative">
+                    <Mail className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+                    <Input
+                      aria-describedby={
+                        errors.contactEmail
+                          ? 'user-contact-email-error'
+                          : 'user-contact-email-hint'
+                      }
+                      aria-invalid={!!errors.contactEmail}
+                      disabled={!canEditContact}
+                      id="user-contact-email"
+                      maxLength={254}
+                      {...passwordManagerIgnoreAttributes}
+                      placeholder="Non renseigné"
+                      inputMode="email"
+                      type="text"
+                      value={form.contactEmail}
+                      onChange={(event) =>
+                        setForm({ ...form, contactEmail: event.target.value })
+                      }
+                      className="pl-9"
+                    />
+                  </div>
+                  {errors.contactEmail ? (
+                    <FieldError id="user-contact-email-error">
+                      {errors.contactEmail}
                     </FieldError>
                   ) : (
-                    <div
-                      id="user-login-name-hint"
-                      className="text-muted-foreground border-warning/25 bg-warning/10 flex items-start gap-2 rounded-md border px-2.5 py-2 text-xs"
-                    >
-                      <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
-                      <span>{loginHint}</span>
-                    </div>
-                  )}
-                </div>
-                {canViewContact ? (
-                  <div className="space-y-1.5">
-                    <Label
-                      htmlFor="user-contact-email"
+                    <p
+                      id="user-contact-email-hint"
                       className="text-muted-foreground text-xs"
                     >
-                      Email de contact{' '}
-                      <span className="font-normal">(facultatif)</span>
-                    </Label>
-                    <div className="relative">
-                      <Mail className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
-                      <Input
-                        aria-describedby={
-                          errors.contactEmail
-                            ? 'user-contact-email-error'
-                            : 'user-contact-email-hint'
-                        }
-                        aria-invalid={!!errors.contactEmail}
-                        disabled={!canEditContact}
-                        id="user-contact-email"
-                        maxLength={254}
-                        {...passwordManagerIgnoreAttributes}
-                        placeholder="Non renseigné"
-                        type="email"
-                        value={form.contactEmail}
-                        onChange={(event) =>
-                          setForm({ ...form, contactEmail: event.target.value })
-                        }
-                        className={`${inputClassName} pl-9`}
-                      />
-                    </div>
-                    {errors.contactEmail ? (
-                      <FieldError id="user-contact-email-error">
-                        {errors.contactEmail}
-                      </FieldError>
-                    ) : (
-                      <p
-                        id="user-contact-email-hint"
-                        className="text-muted-foreground text-xs"
-                      >
-                        {contactHint}
-                      </p>
-                    )}
-                    {canEditContact && committedContactEmail.length > 0 && (
-                      <Button
-                        className="h-auto px-0 text-xs"
-                        disabled={isSaving}
-                        onClick={() => setContactRemovalIntent('stage')}
-                        type="button"
-                        variant="link"
-                      >
-                        Supprimer l&apos;adresse de contact
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-1.5">
-                    <p className="text-muted-foreground text-xs font-medium">
-                      Email de contact
+                      {contactHint}
                     </p>
-                    <div className="bg-muted/30 text-muted-foreground rounded-md border px-3 py-2 text-sm">
-                      Masqué — permission requise
-                    </div>
+                  )}
+                  {canEditContact && committedContactEmail.length > 0 && (
+                    <Button
+                      className="h-auto px-0 text-xs"
+                      disabled={isSaving}
+                      onClick={() => setContactRemovalIntent('stage')}
+                      type="button"
+                      variant="link"
+                    >
+                      Supprimer l&apos;adresse de contact
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <p className="text-muted-foreground text-xs font-medium">
+                    Email de contact
+                  </p>
+                  <div className="bg-muted/30 text-muted-foreground rounded-md border px-3 py-2 text-sm">
+                    Masqué — permission requise
                   </div>
-                )}
-              </div>
-            </SectionPanel>
-          </div>
-        </CardContent>
-        {(canEdit || canEditContact || canEditLogin) && (
-          <CardFooter className="flex-col items-stretch justify-between gap-3 p-3 sm:flex-row sm:items-center sm:p-4">
-            <p className="text-muted-foreground text-xs">
-              {hasChanges ? 'Modifications non enregistrées' : 'À jour'}
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  onCancel();
-                  setIsEditing(false);
-                }}
-                disabled={!hasChanges || isSaving}
-              >
-                Annuler
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={isSaving || !canSave}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                {isSaving ? (
-                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="mr-1.5 h-4 w-4" />
-                )}
-                Enregistrer
-              </Button>
+                </div>
+              )}
             </div>
-          </CardFooter>
-        )}
+          </section>
+        </CardContent>
       </Card>
+      {hasChanges && (
+        <SectionActionBar
+          isSaving={isSaving}
+          onCancel={onCancel}
+          onSave={submitProfile}
+        />
+      )}
       <AlertDialog
         open={contactRemovalIntent !== null}
         onOpenChange={(open) => {

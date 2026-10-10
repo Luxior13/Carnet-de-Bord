@@ -10,6 +10,8 @@ type PageIdentityHeroProps = {
   /** Densité réduite pour les pages de formulaire ou de confirmation. */
   compact?: boolean;
   description?: ReactNode;
+  /** Petit libellé au-dessus du titre, par exemple « Mon compte ». */
+  eyebrow?: ReactNode;
   icon: ReactNode;
   /** Optional complementary content, displayed under the description. */
   meta?: ReactNode;
@@ -24,6 +26,7 @@ export const PageIdentityHero: FC<PageIdentityHeroProps> = ({
   actions,
   compact = false,
   description,
+  eyebrow,
   icon,
   meta,
   title,
@@ -37,6 +40,7 @@ export const PageIdentityHero: FC<PageIdentityHeroProps> = ({
         {icon}
       </span>
       <div>
+        {eyebrow ? <div className={styles.eyebrow}>{eyebrow}</div> : null}
         <div className={styles.titleLine}>
           <h1>{title}</h1>
           {compact && meta ? (
