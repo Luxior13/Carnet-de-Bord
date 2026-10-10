@@ -165,3 +165,22 @@ Principes à reprendre :
 - Migration avec simulation (sans écriture) puis application transactionnelle ;
   les anciens mandats ne sont retirés qu'après création de leur destination.
 - Distinguer statut métier et statut technique (administrateur).
+
+## Sanctions, bans et éligibilité
+
+Déclencheur : ban d'un jeu ou d'un tournoi, éligibilité à un événement, contrôle
+à l'inscription, sanction structurelle.
+
+Principes à reprendre :
+
+- Une sanction ou un ban est une **relation datée** entre une personne, un
+  périmètre (jeu, tournoi, structure, saison) et une décision : période, motif,
+  auteur, décision de levée. Ne pas écrire « banni » comme booléen sur `Person`.
+- L'éligibilité se calcule depuis ces relations datées au moment de l'inscription,
+  sans dupliquer l'état sur la fiche.
+- Conserver l'historique (qui, quand, pourquoi) ; une levée de sanction ne
+  supprime pas l'ancienne décision.
+- Séparer la consultation (liste/fiche) de la décision (permission dédiée) ;
+  le motif et l'auteur peuvent être sensibles.
+- Prévoir des périmètres futurs : tournoi, jeu, équipe, saison, exercice, sans
+  figer aujourd'hui le modèle définitif.

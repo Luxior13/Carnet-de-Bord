@@ -53,8 +53,15 @@ Référence à réutiliser :
 
 ## Fonction et décisions courantes
 
-- Tâche principale : retrouver une fiche membre, comprendre son statut dans la
-  structure, accéder à sa fiche, en créer une.
+- Tâche principale : retrouver une fiche personne, qu'elle soit **dans** ou
+  **hors** de la structure (`IN_STRUCTURE` / `OUTSIDE_STRUCTURE`), comprendre
+  son rattachement, accéder à sa fiche, en créer une.
+- Périmètre long terme : la liste reste l'entrée ; la fiche détail devient le
+  point central de toutes les informations liées à la personne, de près ou de
+  loin (identité, coordonnées, rattachement, puis sanctions, bans, éligibilité
+  aux tournois, rôles, adhésions…). Ces futures capacités sont des **relations
+  datées** rattachées à la personne, pas des champs empilés sur `Person` — voir
+  `SUJETS_FUTURS.md`.
 - Type de page : liste de gestion (retrouver, comparer, agir). Volume attendu :
   petit aujourd'hui, potentiellement plusieurs centaines/milliers en société.
 - Recherche par pseudo, prénom, nom, email, téléphone, identifiant ou URL de
@@ -106,7 +113,8 @@ un contrôle navigateur, lecteur d'écran ou base réelle.
 - Composant partagé `features/persons/components/PersonOverview.tsx`, construit
   sur `directory.module.css` (`overviewCard`, `overviewHeader`), comme
   `UsersOverview` de la page des utilisateurs. Rendu dans le rail droit de
-  `PageAsideLayout` ; sous ~118 rem, il se place entre le hero et la liste.
+  `PageAsideLayout` (largeur 16 rem, soit 256 px) ; sous ~118 rem, il se place
+  entre le hero et la liste.
 - Carte `aside` : en-tête « Vue d'ensemble », total « Total des fiches » en
   24 px, puis deux groupes à petites capitales — « Statut » et « Statistiques ».
 - Lignes du groupe Statut : « Dans la structure » (pastille `success`, badge
@@ -133,7 +141,9 @@ un contrôle navigateur, lecteur d'écran ou base réelle.
   170 × 38 px, 11 px.
 - Bouton « Réinitialiser les filtres » (icône seule, 38 × 38 px) visible dès
   qu'une recherche, un statut ou un tri non défaut est actif — même condition
-  que la liste des utilisateurs. Il réinitialise aussi le tri.
+  que la liste des utilisateurs. Il réinitialise aussi le tri. Recherche à
+  gauche, filtres et bouton Réinitialiser regroupés à droite (l'espace vide
+  reste entre la barre de recherche et les filtres).
 - Légende : « N membre(s) trouvé(s) · Actualisation… » + « 25 par page », avec
   séparateur de milliers, alignée sur la liste des utilisateurs. Le « N » est
   le total filtré côté serveur.

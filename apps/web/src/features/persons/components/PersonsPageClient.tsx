@@ -111,7 +111,7 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
                     </Button>
                   ) : undefined
                 }
-                description="Profils, coordonnées et statut dans la structure."
+                description="Profils, coordonnées et rattachement à la structure."
                 icon={<Users aria-hidden="true" />}
                 title={FEATURES.persons.label}
               />
