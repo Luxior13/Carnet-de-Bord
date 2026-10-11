@@ -90,3 +90,9 @@ La capture utilisateur reçue ensuite confirme le menu Bitwarden sur le champ
 HTML et documente le blocage par domaine proposé par Bitwarden. Disparition du
 menu après réglage non vérifiée ; aucune nouvelle correction du code ni nouveau
 succès navigateur déduit de la capture.
+
+Confirmation ultérieure le 11 octobre : l'utilisateur indique que le problème
+est résolu après les indications Bitwarden. COMPTE-AUTO-01 est clos sur cette
+confirmation dans le suivi Mon compte ; le réglage exact n'est pas précisé.
+AUTO-EXT conserve sa limite générale : les tests sans extension ne garantissent
+pas le comportement de toutes les configurations.

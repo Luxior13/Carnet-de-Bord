@@ -142,8 +142,10 @@ API fictive, aucune mutation réelle. Les
 [observations](../../audits/autocompletion-2026-10-11/contact-observations.json)
 complètent la première passe sans en remplacer les résultats.
 
-COMPTE-AUTO-01 / AUTO-EXT — **menu Bitwarden confirmé par capture utilisateur,
-résolution à vérifier**, responsable à attribuer. La documentation officielle
+COMPTE-AUTO-01 — **résolu, confirmé par l'utilisateur le 11 octobre 2026**
+après les indications de réglage Bitwarden. Cette confirmation clôt le
+signalement de la modale ; elle ne valide pas toutes les extensions ni tous les
+navigateurs. Le réglage exact appliqué n'a pas été précisé. La documentation officielle
 propose [Paramètres → Remplissage automatique → Domaines bloqués](https://bitwarden.com/help/blocking-uris/)
 pour désactiver l'intervention sur le domaine concerné. Cette portée comprend
 également les propositions de passkeys et d'enregistrement/modification des
@@ -151,7 +153,7 @@ identifiants ; elle ne correspond pas à une désactivation limitée à ce modal
 L'autre réglage, global, est l'affichage des
 [suggestions dans les champs](https://bitwarden.com/help/auto-fill-browser/#inline-menu).
 Réglages documentés le 11 octobre ; aucune modification du navigateur personnel
-effectuée. Contrôler le résultat après réglage et rechargement ; si le menu
-persiste, relever la version et inspecter les attributs réellement servis.
-Aucun succès du banc sans extension ne clôt ce point. La capture et ses
+effectuée. Si le menu réapparaît, relever la version et inspecter les attributs
+réellement servis. La clôture repose sur la confirmation utilisateur, pas sur
+les succès du banc sans extension. La capture et ses
 identifiants personnels ne sont pas recopiés dans le dépôt.
