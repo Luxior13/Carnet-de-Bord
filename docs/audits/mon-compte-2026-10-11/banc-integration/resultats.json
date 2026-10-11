@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-11",
+  "runtime": "Next production + PostgreSQL 17 + Chromium",
+  "browserVersion": "149.0.7827.55",
+  "scenarios": [
+    {
+      "name": "Connexion réelle et configuration MFA initiale",
+      "result": "passed"
+    },
+    {
+      "name": "Profil : sauvegarde, nom facultatif, identité de connexion inchangée",
+      "result": "passed"
+    },
+    {
+      "name": "Deux onglets : conflit profil, fusion du seul champ modifié et reprise",
+      "result": "passed"
+    },
+    {
+      "name": "Contact normalisé sans effacer le brouillon du profil",
+      "result": "passed"
+    },
+    {
+      "name": "Contact : formulaire périmé refusé, saisie préservée après relecture",
+      "result": "passed"
+    },
+    {
+      "name": "Contact : écriture réelle puis réponse perdue, relecture sans rejeu",
+      "result": "passed"
+    },
+    {
+      "name": "Suppression du contact confirmée avec mot de passe",
+      "result": "passed"
+    },
+    {
+      "name": "Profil et Sécurité de 320 à 1920 px sans débordement",
+      "result": "passed"
+    },
+    {
+      "name": "Sessions : appareil réel supplémentaire et révocation individuelle",
+      "result": "passed"
+    },
+    {
+      "name": "Mot de passe : validation réelle, rotation et fermeture des autres sessions",
+      "result": "passed"
+    },
+    {
+      "name": "Codes de secours : preuve TOTP, remplacement réel et acquittement",
+      "result": "passed"
+    },
+    {
+      "name": "Autonomie du profil retirée à chaud, contact personnel toujours accessible",
+      "result": "passed"
+    }
+  ]
+}

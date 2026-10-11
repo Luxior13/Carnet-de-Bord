@@ -4,7 +4,7 @@ import { KeyRound, Loader2 } from 'lucide-react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import { type ApiResponse, RoutesApi } from '$types/api.types';
+import { RoutesApi } from '$types/api.types';
 import type {
   MfaRecoveryCodesRegenerationRequest,
   UserType,
@@ -20,7 +20,7 @@ import {
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { ServiceIcon } from '$ui/service-icon';
-import { apiFetch } from '$utils/api.utils';
+import { ApiClientError, apiFetchJson } from '$utils/api.utils';
 
 import { isCompleteMfaCode, MfaCodeInput } from './MfaCodeInput';
 import { MfaRecoveryCodesPanel } from './MfaRecoveryCodesPanel';
@@ -32,22 +32,29 @@ type MfaActionResponse = {
 
 type MfaActionDialogProps = {
   onCancel: () => void;
+  onCloseAutoFocus?: React.ComponentProps<
+    typeof DialogContent
+  >['onCloseAutoFocus'];
   onComplete: (user?: UserType) => Promise<void> | void;
   open: boolean;
 };
 
 export const MfaActionDialog: FC<MfaActionDialogProps> = ({
   onCancel,
+  onCloseAutoFocus,
   onComplete,
   open,
 }) => {
   const submissionRef = useRef(false);
   const mountedRef = useRef(false);
+  const requestRef = useRef<AbortController | null>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     mountedRef.current = true;
 
     return (): void => {
       mountedRef.current = false;
+      requestRef.current?.abort();
     };
   }, []);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -77,6 +84,9 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
     event.preventDefault();
     if (submissionRef.current || !mountedRef.current || !canSubmit) return;
 
+    const request = new AbortController();
+    requestRef.current = request;
+    const timeout = setTimeout(() => request.abort(), 30_000);
     try {
       submissionRef.current = true;
       setIsSubmitting(true);
@@ -85,38 +95,44 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
         currentPassword,
         currentTotpCode: currentCode,
       };
-      const response = await apiFetch(RoutesApi.mfaRecoveryCodes, {
-        body: JSON.stringify(requestBody),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-      });
-      const data = (await response.json()) as ApiResponse<MfaActionResponse>;
+      const data = await apiFetchJson<MfaActionResponse>(
+        RoutesApi.mfaRecoveryCodes,
+        {
+          body: JSON.stringify(requestBody),
+          headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+          signal: request.signal,
+        },
+      );
 
       if (!mountedRef.current) return;
-      if (!response.ok || !data.success) {
-        setError(
-          data.success
-            ? 'Impossible de confirmer cette action'
-            : data.error.message || 'Impossible de confirmer cette action',
-        );
-        setCurrentCode('');
-        currentCodeInputRef.current?.focus();
-
-        return;
-      }
-
-      if (!data.data.recoveryCodes?.length) {
-        setError('Aucun code de secours n’a été généré');
-
-        return;
-      }
-
-      setResponseUser(data.data.user);
-      setRecoveryCodes(data.data.recoveryCodes);
-    } catch {
+      if (!data.recoveryCodes?.length)
+        throw new Error('Recovery codes missing');
+      setCurrentPassword('');
+      setCurrentCode('');
+      setResponseUser(data.user);
+      setRecoveryCodes(data.recoveryCodes);
+    } catch (failure) {
       if (!mountedRef.current) return;
-      setError('Impossible de confirmer cette action');
+      const uncertain =
+        !(failure instanceof ApiClientError) ||
+        failure.status >= 500 ||
+        failure.code === 'INVALID_RESPONSE';
+      setCurrentCode('');
+      if (uncertain) setCurrentPassword('');
+      setError(
+        uncertain
+          ? 'La réponse du serveur n’a pas pu être confirmée. Les anciens codes de secours peuvent déjà être invalides. Conservez votre application d’authentification ; vous pouvez confirmer explicitement la génération de nouveaux codes avec un nouveau code de l’application.'
+          : failure.message,
+      );
+      requestAnimationFrame(() =>
+        (uncertain
+          ? feedbackRef.current
+          : currentCodeInputRef.current
+        )?.focus(),
+      );
     } finally {
+      clearTimeout(timeout);
       submissionRef.current = false;
       if (mountedRef.current) setIsSubmitting(false);
     }
@@ -151,6 +167,8 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
       }}
     >
       <DialogContent
+        onCloseAutoFocus={onCloseAutoFocus}
+        aria-busy={isSubmitting || undefined}
         className="p-0 sm:max-w-lg"
         hideCloseButton={!!recoveryCodes}
       >
@@ -173,6 +191,8 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
           <div className="mt-4">
             {error && (
               <div
+                ref={feedbackRef}
+                tabIndex={-1}
                 aria-live="assertive"
                 className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
                 role="alert"

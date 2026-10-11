@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors } from '$server/api-response';
+import { apiError, apiErrors } from '$server/api-response';
 import { createAuditLogWithHeaders } from '$server/auth';
 import { prisma } from '$server/prisma';
 import {
@@ -23,6 +23,8 @@ type SessionInfo = {
   userAgent: string | null;
 };
 
+class SessionNotFoundError extends Error {}
+
 export async function GET(): Promise<
   NextResponse<
     ApiSuccessResponse<{ sessions: SessionInfo[] }> | ApiErrorResponse
@@ -39,10 +41,33 @@ export async function GET(): Promise<
     );
     if (!permission.success) return permission.response;
 
+    if (!currentSession) {
+      return apiError(
+        ErrorCode.UNAUTHORIZED,
+        'Session actuelle introuvable',
+        401,
+      );
+    }
+
     const now = new Date();
+    // Bind cleanup and disclosure to the authenticated security state. If it
+    // advances meanwhile, an older request must not delete a new valid session.
+    const userScope = {
+      is: {
+        deletedAt: null,
+        id: user.id,
+        isActive: true,
+        securityVersion: currentSession.securityVersion,
+      },
+    };
     await prisma.session.deleteMany({
       where: {
-        OR: [{ expiresAt: { lte: now } }, { idleExpiresAt: { lte: now } }],
+        OR: [
+          { expiresAt: { lte: now } },
+          { idleExpiresAt: { lte: now } },
+          { securityVersion: { not: currentSession.securityVersion } },
+        ],
+        user: userScope,
         userId: user.id,
       },
     });
@@ -64,6 +89,8 @@ export async function GET(): Promise<
       where: {
         expiresAt: { gt: now },
         idleExpiresAt: { gt: now },
+        securityVersion: currentSession.securityVersion,
+        user: userScope,
         userId: user.id,
       },
     });
@@ -74,7 +101,7 @@ export async function GET(): Promise<
       id: session.id,
       idleExpiresAt: session.idleExpiresAt,
       ipAddress: session.ipAddress,
-      isCurrent: session.token === currentSession?.token,
+      isCurrent: session.token === currentSession.token,
       lastSeenAt: session.lastSeenAt,
       rememberMe: session.rememberMe,
       userAgent: session.userAgent,
@@ -161,9 +188,14 @@ export async function DELETE(
       }
 
       await prisma.$transaction(async (transaction) => {
-        await transaction.session.delete({
-          where: { id: sessionId },
+        const deleted = await transaction.session.deleteMany({
+          where: {
+            id: sessionId,
+            NOT: { token: currentSession.token },
+            userId: user.id,
+          },
         });
+        if (deleted.count !== 1) throw new SessionNotFoundError();
 
         await createAuditLogWithHeaders(
           {
@@ -222,6 +254,10 @@ export async function DELETE(
       success: true,
     });
   } catch (error) {
+    if (error instanceof SessionNotFoundError) {
+      return apiError(ErrorCode.NOT_FOUND, 'Session non trouvée', 404);
+    }
+
     return apiErrors.internal('SESSIONS', error);
   }
 }

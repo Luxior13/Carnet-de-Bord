@@ -21,6 +21,9 @@ type MfaSetupDialogProps = {
   allowCancel?: boolean;
   mode: Exclude<MfaSetupMode, 'bootstrap'>;
   onCancel?: () => void;
+  onCloseAutoFocus?: React.ComponentProps<
+    typeof DialogContent
+  >['onCloseAutoFocus'];
   onComplete: (data: MfaSetupConfirmationData) => Promise<void> | void;
   open: boolean;
 };
@@ -29,6 +32,7 @@ export const MfaSetupDialog: FC<MfaSetupDialogProps> = ({
   allowCancel = true,
   mode,
   onCancel,
+  onCloseAutoFocus,
   onComplete,
   open,
 }) => {
@@ -46,6 +50,7 @@ export const MfaSetupDialog: FC<MfaSetupDialogProps> = ({
       <DialogContent
         className="p-0 sm:max-w-lg"
         hideCloseButton
+        onCloseAutoFocus={onCloseAutoFocus}
         onEscapeKeyDown={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => event.preventDefault()}
       >

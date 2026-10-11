@@ -126,20 +126,64 @@ export const UserProvider: FC<UserProviderProps> = ({
   const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const logoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const resetSessionTimersRef = useRef<() => void>(() => {});
+  const currentUserRef = useRef(initialUser);
+  const sessionOperationRef = useRef(0);
+  const logoutInProgressRef = useRef(false);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
 
-  const applyUserUpdate = useCallback((nextUser: UserType): void => {
+    return (): void => {
+      mountedRef.current = false;
+      sessionOperationRef.current += 1;
+    };
+  }, []);
+
+  const acceptUserSnapshot = useCallback((nextUser: UserType): boolean => {
+    if (!mountedRef.current || logoutInProgressRef.current) return false;
+    const currentUser = currentUserRef.current;
+    if (
+      currentUser?.id === nextUser.id &&
+      currentUser.updatedAt &&
+      nextUser.updatedAt &&
+      new Date(nextUser.updatedAt).getTime() <
+        new Date(currentUser.updatedAt).getTime()
+    )
+      return false;
+    sessionOperationRef.current += 1;
+    currentUserRef.current = nextUser;
     setUserData(nextUser);
     // A fresh server snapshot may represent a new session, role or permission
     // revision. Consumers holding decrypted data must invalidate it even when
     // the visible user fields happen to be unchanged.
     setAuthorizationRevision((revision) => revision + 1);
     setMustChangePassword(nextUser.mustChangePassword);
+    setIsLoading(false);
     setError(null);
+
+    return true;
   }, []);
 
+  const applyUserUpdate = useCallback(
+    (nextUser: UserType): void => {
+      // A mutation updates the mounted account; only authentication/session
+      // reads may establish another identity.
+      if (currentUserRef.current?.id !== nextUser.id) return;
+      acceptUserSnapshot(nextUser);
+    },
+    [acceptUserSnapshot],
+  );
+
   const clearAuthenticatedUser = useCallback((): void => {
+    sessionOperationRef.current += 1;
+    currentUserRef.current = null;
     setUserData(null);
     setAuthorizationRevision((revision) => revision + 1);
+    setMustChangePassword(false);
+    setSessionRememberMe(false);
+    setIsLoading(false);
+    showSessionWarningRef.current = false;
+    setShowSessionWarning(false);
   }, []);
 
   const clearError = useCallback((): void => {
@@ -150,7 +194,7 @@ export const UserProvider: FC<UserProviderProps> = ({
     (data: AuthenticatedLoginData): void => {
       const activityAt = Date.now();
 
-      applyUserUpdate(data.user);
+      if (!acceptUserSnapshot(data.user)) return;
       setMustChangePassword(data.mustChangePassword);
       setSessionRememberMe(data.session.rememberMe);
       lastActivityRef.current = activityAt;
@@ -158,20 +202,32 @@ export const UserProvider: FC<UserProviderProps> = ({
       publishSessionActivity(activityAt);
       toast.success('Connexion réussie');
     },
-    [applyUserUpdate],
+    [acceptUserSnapshot],
   );
 
   const fetchUser = useCallback(
     async (silent = false): Promise<void> => {
+      // A refresh cannot supersede a logout while its cookie is still valid.
+      if (!mountedRef.current || logoutInProgressRef.current) return;
+      const operation = ++sessionOperationRef.current;
+      const isCurrent = (): boolean =>
+        mountedRef.current && operation === sessionOperationRef.current;
       try {
         if (!silent) setIsLoading(true);
         setError(null);
 
         const response = await fetch(RoutesApi.me, { cache: 'no-store' });
+        if (!isCurrent()) return;
+        if (response.status === 401 || response.status === 403) {
+          clearAuthenticatedUser();
+
+          return;
+        }
         const data: ApiSuccessResponse<{
           session: AuthSessionResponse | null;
           user: UserType;
         }> = await response.json();
+        if (!isCurrent()) return;
 
         if (
           !response.ok &&
@@ -183,7 +239,7 @@ export const UserProvider: FC<UserProviderProps> = ({
 
         if (data.success && data.data.user) {
           const activityAt = Date.now();
-          applyUserUpdate(data.data.user);
+          if (!acceptUserSnapshot(data.data.user)) return;
           setSessionRememberMe(data.data.session?.rememberMe ?? false);
           lastActivityRef.current = activityAt;
           lastServerActivitySyncRef.current = activityAt;
@@ -194,6 +250,7 @@ export const UserProvider: FC<UserProviderProps> = ({
           setSessionRememberMe(false);
         }
       } catch {
+        if (!isCurrent()) return;
         if (!silent) {
           clearAuthenticatedUser();
           setMustChangePassword(false);
@@ -201,10 +258,10 @@ export const UserProvider: FC<UserProviderProps> = ({
         }
         setError('Impossible de vérifier votre session');
       } finally {
-        if (!silent) setIsLoading(false);
+        if (isCurrent()) setIsLoading(false);
       }
     },
-    [applyUserUpdate, clearAuthenticatedUser],
+    [acceptUserSnapshot, clearAuthenticatedUser],
   );
 
   const refreshUser = useCallback(async (): Promise<void> => {
@@ -215,30 +272,50 @@ export const UserProvider: FC<UserProviderProps> = ({
   }, [fetchUser, userData]);
 
   const logout = useCallback(async (): Promise<void> => {
-    setIsLoading(true);
+    if (logoutInProgressRef.current) return;
+    logoutInProgressRef.current = true;
     clearAuthenticatedUser();
+    const operation = sessionOperationRef.current;
+    const isCurrent = (): boolean =>
+      mountedRef.current && operation === sessionOperationRef.current;
+    setIsLoading(true);
     setMustChangePassword(false);
     setSessionRememberMe(false);
     setError(null);
 
     try {
       await apiFetch(RoutesApi.logout, { method: 'POST' });
+      if (!isCurrent()) return;
       toast.success('Déconnexion réussie');
     } catch {
+      if (!isCurrent()) return;
       toast.error('Erreur lors de la déconnexion');
     } finally {
-      router.push('/login');
-      setIsLoading(false);
+      if (isCurrent()) {
+        router.push('/login');
+        setIsLoading(false);
+      }
+      logoutInProgressRef.current = false;
     }
   }, [clearAuthenticatedUser, router]);
 
   const syncSessionActivity = useCallback(async (): Promise<boolean> => {
+    if (
+      !mountedRef.current ||
+      logoutInProgressRef.current ||
+      !currentUserRef.current
+    )
+      return false;
+    const operation = ++sessionOperationRef.current;
+    const isCurrent = (): boolean =>
+      mountedRef.current && operation === sessionOperationRef.current;
     lastServerActivitySyncRef.current = Date.now();
 
     try {
       const response = await fetch(RoutesApi.me, { cache: 'no-store' });
+      if (!isCurrent()) return false;
 
-      if (response.status === 401) {
+      if (response.status === 401 || response.status === 403) {
         clearAuthenticatedUser();
         setMustChangePassword(false);
         setSessionRememberMe(false);
@@ -253,10 +330,11 @@ export const UserProvider: FC<UserProviderProps> = ({
         session: AuthSessionResponse | null;
         user: UserType;
       }>;
+      if (!isCurrent()) return false;
       if (!data.success || !data.data.user) return false;
 
       const activityAt = Date.now();
-      applyUserUpdate(data.data.user);
+      if (!acceptUserSnapshot(data.data.user)) return false;
       setSessionRememberMe(data.data.session?.rememberMe ?? false);
       lastActivityRef.current = activityAt;
       lastServerActivitySyncRef.current = activityAt;
@@ -266,7 +344,7 @@ export const UserProvider: FC<UserProviderProps> = ({
     } catch {
       return false;
     }
-  }, [applyUserUpdate, clearAuthenticatedUser, router]);
+  }, [acceptUserSnapshot, clearAuthenticatedUser, router]);
 
   const login = useCallback(
     async (credentials: LoginCredentials): Promise<LoginResult | null> => {

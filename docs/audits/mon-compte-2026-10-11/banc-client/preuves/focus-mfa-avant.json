@@ -1,0 +1,59 @@
+[
+  {
+    "name": "mfa-setup-scan-recovery-small-height",
+    "width": 390,
+    "pass": false,
+    "error": "expect(locator).toBeFocused() failed\n\nLocator:  getByRole('button', { name: 'Changer d’application', exact: true })\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for getByRole('button', { name: 'Changer d’application', exact: true })\n    14 × locator resolved to <button type=\"button\" data-slot=\"button\" class=\"inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap border text-sm font-semibold transition-[background-color,border-color,color,box-shadow] outline-none disabled:pointer-events-none disabled:opacity-50 focus-visible:border-ring focus-visible:ring-[length:var(--ring-width)] focus-visible:ring-ring aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&.bg-destructive]:border-…>…</button>\n       - unexpected value \"inactive\"\n",
+    "errors": [],
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/mfa/setup",
+        "query": "",
+        "body": {}
+      },
+      {
+        "method": "PUT",
+        "path": "/api/auth/mfa/setup",
+        "query": "",
+        "body": {}
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      }
+    ]
+  }
+]

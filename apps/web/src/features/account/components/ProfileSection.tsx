@@ -6,6 +6,12 @@ import { toast } from 'sonner';
 
 import { SectionActionBar } from '$components/layout/SectionActionBar';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
+import {
+  createAccountProfileDraft,
+  isAccountFormSnapshot,
+  isOlderAccountSnapshot,
+  mergeAccountProfileDraft,
+} from '$features/account/account.utils';
 import { AccountPanel } from '$features/account/components/AccountPanel';
 import { ContactEmailDialog } from '$features/account/components/ContactEmailDialog';
 import type { UserType } from '$types/auth.types';
@@ -13,7 +19,7 @@ import { Button } from '$ui/button';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { Separator } from '$ui/separator';
-import { apiFetch } from '$utils/api.utils';
+import { ApiClientError, apiFetchJson } from '$utils/api.utils';
 
 type ProfileSectionProps = {
   onDirtyChange: (isDirty: boolean) => void;
@@ -28,20 +34,23 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
   onUpdate,
   userData,
 }) => {
-  const [firstName, setFirstName] = useState(userData.firstName);
-  const [lastName, setLastName] = useState(userData.lastName ?? '');
+  const [draft, setDraft] = useState(() => createAccountProfileDraft(userData));
+  const { base: baseProfile, firstName, lastName } = draft;
   const [isSaving, setIsSaving] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [baseProfile, setBaseProfile] = useState(userData);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
   const [latestProfileLabel, setLatestProfileLabel] = useState<string | null>(
     null,
   );
-  const dirtyRef = useRef(false);
   const savingRef = useRef(false);
   const mountedRef = useRef(false);
+  const requestRef = useRef<AbortController | null>(null);
+  const latestUserRef = useRef(userData);
+  latestUserRef.current = userData;
   const formRef = useRef<HTMLFormElement>(null);
+  const contactTriggerRef = useRef<HTMLButtonElement>(null);
+  const [isContactDirty, setIsContactDirty] = useState(false);
   const [showContactEmailDialog, setShowContactEmailDialog] = useState(false);
   const onDirtyChangeRef = useRef(onDirtyChange);
 
@@ -50,16 +59,14 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
   }, [onDirtyChange]);
 
   useEffect(() => {
-    if (dirtyRef.current) return;
-    setFirstName(userData.firstName);
-    setLastName(userData.lastName ?? '');
-    setBaseProfile(userData);
+    setDraft((current) => mergeAccountProfileDraft(current, userData));
   }, [userData]);
   useEffect(() => {
     mountedRef.current = true;
 
     return (): void => {
       mountedRef.current = false;
+      requestRef.current?.abort();
     };
   }, []);
 
@@ -75,8 +82,8 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
   const hasProfileChanges =
     trimmedFirstName !== baseProfile.firstName ||
     trimmedLastName !== (baseProfile.lastName ?? '');
-  const isProfileDirty = hasProfileChanges;
-  dirtyRef.current = isProfileDirty;
+  const isProfileDirty =
+    hasProfileChanges || isContactDirty || isSaving || isRefreshing || conflict;
   const canEditProfile =
     userData.isProtected ||
     hasPermission(
@@ -103,6 +110,25 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
     [],
   );
 
+  const focusProfile = (): void => {
+    requestAnimationFrame(() => {
+      if (!mountedRef.current) return;
+      const form = formRef.current;
+      const field =
+        form?.querySelector<HTMLInputElement>(
+          'input[aria-invalid="true"]:not(:disabled)',
+        ) ?? form?.querySelector<HTMLInputElement>('input:not(:disabled)');
+      const heading = form
+        ?.closest('section')
+        ?.querySelector<HTMLElement>('h2');
+      if (field) field.focus();
+      else if (heading) {
+        heading.tabIndex = -1;
+        heading.focus();
+      }
+    });
+  };
+
   const handleSaveProfile = async (): Promise<void> => {
     if (savingRef.current || !mountedRef.current || conflict) return;
     if (!canEditProfile) {
@@ -121,6 +147,9 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
       return;
     }
 
+    const controller = new AbortController();
+    requestRef.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 30_000);
     try {
       savingRef.current = true;
       setIsSaving(true);
@@ -131,7 +160,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
 
         return;
       }
-      const response = await apiFetch('/api/auth/me', {
+      const data = await apiFetchJson<{ user: UserType }>('/api/auth/me', {
         body: JSON.stringify({
           expectedUpdatedAt: new Date(baseProfile.updatedAt).toISOString(),
           firstName: trimmedFirstName,
@@ -139,25 +168,52 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'PATCH',
+        signal: controller.signal,
       });
-      const data = await response.json();
       if (!mountedRef.current) return;
-
-      if (response.ok && data.success) {
-        setBaseProfile(data.data.user);
-        setFirstName(data.data.user.firstName);
-        setLastName(data.data.user.lastName ?? '');
-        setLatestProfileLabel(null);
-        toast.success('Profil mis à jour avec succès');
-        await onUpdate(data.data.user as UserType);
-      } else {
-        setConflict(response.status === 409);
-        setSaveError(data.error?.message || 'Erreur lors de la mise à jour');
-      }
-    } catch {
-      if (mountedRef.current)
-        setSaveError('Enregistrement impossible. Votre saisie est conservée.');
+      if (
+        controller.signal.aborted ||
+        !isAccountFormSnapshot(data.user, userData.id)
+      )
+        throw new Error('Invalid profile response');
+      const saved = isOlderAccountSnapshot(data.user, latestUserRef.current)
+        ? latestUserRef.current
+        : data.user;
+      setDraft(createAccountProfileDraft(saved));
+      setLatestProfileLabel(null);
+      setConflict(false);
+      toast.success('Profil mis à jour avec succès');
+      void onUpdate(saved).catch(() => {
+        if (mountedRef.current)
+          toast.error(
+            'Profil enregistré. La vue du compte n’a pas pu être actualisée.',
+          );
+      });
+      focusProfile();
+    } catch (failure) {
+      if (!mountedRef.current) return;
+      const uncertain =
+        !(failure instanceof ApiClientError) ||
+        failure.status >= 500 ||
+        failure.code === 'INVALID_RESPONSE';
+      setConflict(
+        uncertain ||
+          (failure instanceof ApiClientError && failure.status === 409),
+      );
+      setSaveError(
+        uncertain
+          ? 'La réponse n’a pas pu être confirmée. Actualisez la version avant de réessayer ; votre saisie est conservée.'
+          : failure.message,
+      );
+      if (
+        failure instanceof ApiClientError &&
+        (failure.status === 401 || failure.status === 403)
+      )
+        void onUpdate().catch(() => {});
+      focusProfile();
     } finally {
+      clearTimeout(timeout);
+      if (requestRef.current === controller) requestRef.current = null;
       savingRef.current = false;
       if (mountedRef.current) setIsSaving(false);
     }
@@ -167,51 +223,66 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
     if (savingRef.current || !mountedRef.current) return;
     savingRef.current = true;
     setIsRefreshing(true);
+    const controller = new AbortController();
+    requestRef.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 15_000);
     try {
-      const response = await apiFetch('/api/auth/me', { cache: 'no-store' });
-      const payload = await response.json();
+      const payload = await apiFetchJson<{ user: UserType }>('/api/auth/me', {
+        cache: 'no-store',
+        signal: controller.signal,
+      });
       if (!mountedRef.current) return;
-      if (!response.ok || !payload.success)
+      if (
+        controller.signal.aborted ||
+        !isAccountFormSnapshot(payload.user, userData.id)
+      )
         throw new Error('Lecture impossible');
-      const latest = payload.data.user as UserType;
-      setBaseProfile(latest);
+      const latest = isOlderAccountSnapshot(payload.user, latestUserRef.current)
+        ? latestUserRef.current
+        : payload.user;
+      setDraft((current) => mergeAccountProfileDraft(current, latest));
       setLatestProfileLabel(
-        `Profil actuellement enregistré : ${latest.firstName} ${latest.lastName}. Votre saisie est conservée ; vérifiez-la avant d’enregistrer.`,
+        `Profil actuellement enregistré : ${[latest.firstName, latest.lastName].filter(Boolean).join(' ')}. Votre saisie est conservée ; vérifiez-la avant d’enregistrer.`,
       );
       setConflict(false);
       setSaveError(null);
-      await onUpdate(latest);
-    } catch {
-      if (mountedRef.current)
+      void onUpdate(latest).catch(() => {
+        if (mountedRef.current)
+          toast.error(
+            'Version relue. La vue du compte n’a pas pu être actualisée.',
+          );
+      });
+      focusProfile();
+    } catch (failure) {
+      if (mountedRef.current) {
         setSaveError(
           'Impossible de relire le profil. Réessayez ; votre saisie est conservée.',
         );
+        if (
+          failure instanceof ApiClientError &&
+          (failure.status === 401 || failure.status === 403)
+        )
+          void onUpdate().catch(() => {});
+      }
     } finally {
+      clearTimeout(timeout);
+      if (requestRef.current === controller) requestRef.current = null;
       savingRef.current = false;
       if (mountedRef.current) setIsRefreshing(false);
     }
   };
 
   const handleCancel = (): void => {
-    setFirstName(userData.firstName);
-    setLastName(userData.lastName ?? '');
-    setBaseProfile(userData);
+    if (savingRef.current) return;
+    setDraft(
+      createAccountProfileDraft(
+        isOlderAccountSnapshot(userData, baseProfile) ? baseProfile : userData,
+      ),
+    );
     setSaveError(null);
     setConflict(false);
     setLatestProfileLabel(null);
-    requestAnimationFrame(() => {
-      const field = formRef.current?.querySelector<HTMLInputElement>(
-        'input:not(:disabled)',
-      );
-      const heading = formRef.current
-        ?.closest('section')
-        ?.querySelector<HTMLElement>('h2');
-      if (field) field.focus();
-      else if (heading) {
-        heading.tabIndex = -1;
-        heading.focus();
-      }
-    });
+    focusProfile();
   };
 
   return (
@@ -254,7 +325,12 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
               <Input
                 id="edit-firstName"
                 value={firstName}
-                onChange={(event) => setFirstName(event.target.value)}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    firstName: event.target.value,
+                  }))
+                }
                 disabled={!canEditProfile || isSaving || isRefreshing}
                 placeholder="Votre prénom"
                 maxLength={PROFILE_FIELD_MAX_LENGTH}
@@ -283,7 +359,12 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
               <Input
                 id="edit-lastName"
                 value={lastName}
-                onChange={(event) => setLastName(event.target.value)}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    lastName: event.target.value,
+                  }))
+                }
                 disabled={!canEditProfile || isSaving || isRefreshing}
                 placeholder="Votre nom"
                 maxLength={PROFILE_FIELD_MAX_LENGTH}
@@ -336,6 +417,8 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
               </p>
               {canEditContact && (
                 <Button
+                  ref={contactTriggerRef}
+                  disabled={isSaving || isRefreshing}
                   className="mt-2"
                   onClick={() => setShowContactEmailDialog(true)}
                   size="sm"
@@ -350,8 +433,10 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
           </div>
         </form>
       </AccountPanel>
-      {isProfileDirty && (
+      {(hasProfileChanges || conflict) && canEditProfile && (
         <SectionActionBar
+          hasChanges={hasProfileChanges}
+          saveDisabled={!!firstNameError || !!lastNameError}
           conflict={conflict}
           onResolveConflict={() => void reloadProfileVersion()}
           isSaving={isSaving}
@@ -364,7 +449,15 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
       {canEditContact && (
         <ContactEmailDialog
           contactEmail={userData.contactEmail}
+          expectedUpdatedAt={userData.updatedAt}
+          userId={userData.id}
           loginName={userData.loginName}
+          onDirtyChange={setIsContactDirty}
+          onAccessDenied={() => onUpdate()}
+          restoreFocus={(event) => {
+            event.preventDefault();
+            contactTriggerRef.current?.focus();
+          }}
           onCancel={() => setShowContactEmailDialog(false)}
           onSuccess={onUpdate}
           open={showContactEmailDialog}

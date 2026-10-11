@@ -99,7 +99,8 @@ export const isInternalNavigationLink = (
 };
 
 const getAccountDisplayName = (userData: UserType): string =>
-  `${userData.firstName} ${userData.lastName}`.trim() || userData.loginName;
+  [userData.firstName, userData.lastName].filter(Boolean).join(' ').trim() ||
+  userData.loginName;
 
 export const AccountHeader: FC<{ returnHref?: string; userData: UserType }> = ({
   returnHref,

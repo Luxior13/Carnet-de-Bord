@@ -1,0 +1,656 @@
+[
+  {
+    "name": "security-responsive",
+    "width": 320,
+    "pass": true,
+    "result": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "password-modal-cancel-focus",
+    "width": 320,
+    "pass": true,
+    "result": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "security-responsive",
+    "width": 390,
+    "pass": true,
+    "result": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "password-modal-cancel-focus",
+    "width": 390,
+    "pass": true,
+    "result": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "security-responsive",
+    "width": 768,
+    "pass": true,
+    "result": {
+      "viewport": 768,
+      "document": 768,
+      "main": 768,
+      "mainWidth": 768
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "password-modal-cancel-focus",
+    "width": 768,
+    "pass": true,
+    "result": {
+      "viewport": 768,
+      "document": 768,
+      "main": 768,
+      "mainWidth": 768
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "security-responsive",
+    "width": 1440,
+    "pass": true,
+    "result": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1200,
+      "mainWidth": 1200
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "password-modal-cancel-focus",
+    "width": 1440,
+    "pass": true,
+    "result": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1200,
+      "mainWidth": 1200
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "sessions-revoke-all-pending-focus",
+    "width": 390,
+    "pass": true,
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "sessions-revoke-one-focus",
+    "width": 1440,
+    "pass": true,
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/auth/sessions",
+        "query": "?id=audit-session-b",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "sessions-revoke-refused-reread",
+    "width": 390,
+    "pass": true,
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "password-success-double-submit",
+    "width": 390,
+    "pass": true,
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/change-password",
+        "query": "",
+        "body": {}
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/me",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "password-lost-response",
+    "width": 390,
+    "pass": true,
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/change-password",
+        "query": "",
+        "body": {}
+      }
+    ]
+  },
+  {
+    "name": "mfa-recovery-codes-focus-copy-departure",
+    "width": 320,
+    "pass": true,
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/mfa/recovery-codes",
+        "query": "",
+        "body": {}
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "mfa-recovery-lost-response",
+    "width": 390,
+    "pass": true,
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/mfa/recovery-codes",
+        "query": "",
+        "body": {}
+      }
+    ]
+  },
+  {
+    "name": "mfa-setup-scan-recovery-small-height",
+    "width": 390,
+    "pass": true,
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/mfa/setup",
+        "query": "",
+        "body": {}
+      },
+      {
+        "method": "PUT",
+        "path": "/api/auth/mfa/setup",
+        "query": "",
+        "body": {}
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "profile-conflict-merge-server-field",
+    "width": 390,
+    "pass": true,
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/api/auth/me",
+        "query": "",
+        "body": {
+          "expectedUpdatedAt": "2026-10-11T12:00:00.000Z",
+          "firstName": "Camille modifié",
+          "lastName": "Exemple"
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/me",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/auth/me",
+        "query": "",
+        "body": {
+          "expectedUpdatedAt": "2026-10-11T13:00:00.000Z",
+          "firstName": "Camille modifié",
+          "lastName": "Nom serveur"
+        }
+      }
+    ]
+  },
+  {
+    "name": "contact-snapshot-conflict-explicit-retry",
+    "width": 390,
+    "pass": true,
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/api/auth/contact-email",
+        "query": "",
+        "body": {
+          "contactEmail": "nouveau@example.test",
+          "expectedUpdatedAt": "2026-10-11T12:00:00.000Z"
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/me",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/auth/contact-email",
+        "query": "",
+        "body": {
+          "contactEmail": "nouveau@example.test",
+          "expectedUpdatedAt": "2026-10-11T13:00:00.000Z"
+        }
+      }
+    ]
+  },
+  {
+    "name": "profile-readonly-contact-preserved",
+    "width": 320,
+    "pass": true,
+    "result": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    },
+    "requests": []
+  },
+  {
+    "name": "mfa-setup-lost-response-blocks-replay",
+    "width": 390,
+    "pass": true,
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/mfa/setup",
+        "query": "",
+        "body": {}
+      },
+      {
+        "method": "PUT",
+        "path": "/api/auth/mfa/setup",
+        "query": "",
+        "body": {}
+      }
+    ]
+  },
+  {
+    "name": "forced-password-success-without-current-proof",
+    "width": 390,
+    "pass": false,
+    "error": "expect(locator).toBeVisible() failed\n\nLocator: getByRole('navigation', { name: 'Navigation du compte' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByRole('navigation', { name: 'Navigation du compte' })\n",
+    "errors": [],
+    "requests": []
+  },
+  {
+    "name": "mfa-codes-leave-warning-and-finish-focus",
+    "width": 390,
+    "pass": true,
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/mfa/recovery-codes",
+        "query": "",
+        "body": {}
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      }
+    ]
+  }
+]

@@ -1,5 +1,5 @@
 'use client';
-import { Loader2, LogOut, Monitor, Smartphone } from 'lucide-react';
+import { LogOut, Monitor, Smartphone } from 'lucide-react';
 import React, { type FC } from 'react';
 
 import { Disclosure } from '$components/layout/Disclosure';
@@ -51,12 +51,14 @@ export const getSessionTitle = (session: SessionInfo): string => {
 };
 
 type SessionRowProps = {
+  disabled?: boolean;
   isRevoking?: boolean;
   onRevoke?: (session: SessionInfo) => void;
   session: SessionInfo;
 };
 
 export const SessionRow: FC<SessionRowProps> = ({
+  disabled = false,
   isRevoking,
   onRevoke,
   session,
@@ -137,13 +139,11 @@ export const SessionRow: FC<SessionRowProps> = ({
           size="sm"
           className="text-destructive hover:text-destructive w-full shrink-0 gap-2 sm:w-auto"
           onClick={() => onRevoke(session)}
-          disabled={isRevoking}
+          aria-label={`Déconnecter ${getSessionTitle(session)}`}
+          disabled={disabled}
+          loading={isRevoking}
         >
-          {isRevoking ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <LogOut className="size-4" />
-          )}
+          {!isRevoking && <LogOut className="size-4" />}
           Déconnecter
         </Button>
       )}

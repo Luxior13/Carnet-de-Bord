@@ -630,6 +630,98 @@ describe('UserContext session activity', () => {
     );
   });
 
+  it('does not restore an account from a refresh that finishes after logout', async () => {
+    await mountAuthenticatedProvider();
+    let resolveRefresh!: (response: Response) => void;
+    vi.mocked(fetch).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRefresh = resolve;
+      }),
+    );
+    const pending = getContext(runtime).refreshUser();
+    mocks.apiFetch.mockResolvedValueOnce(apiJsonResponse({ success: true }));
+    await getContext(runtime).logout();
+    resolveRefresh(jsonResponse(false));
+    await pending;
+    runtime.render();
+    expect(getContext(runtime).userData).toBeNull();
+  });
+
+  it('keeps a confirmed mutation when an earlier refresh finishes later', async () => {
+    await mountAuthenticatedProvider();
+    let resolveRefresh!: (response: Response) => void;
+    vi.mocked(fetch).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRefresh = resolve;
+      }),
+    );
+    const pending = getContext(runtime).refreshUser();
+    getContext(runtime).applyUserUpdate({
+      ...user,
+      firstName: 'Saved',
+      updatedAt: new Date('2026-07-13T11:00:00Z'),
+    });
+    resolveRefresh(jsonResponse(false, { ...user, updatedAt: NOW }));
+    await pending;
+    runtime.render();
+    expect(getContext(runtime).userData?.firstName).toBe('Saved');
+  });
+
+  it('rejects a mutation for another account and a lower saved version', async () => {
+    await mountAuthenticatedProvider();
+    getContext(runtime).applyUserUpdate({
+      ...user,
+      firstName: 'Saved',
+      updatedAt: new Date('2026-07-13T11:00:00Z'),
+    });
+    getContext(runtime).applyUserUpdate({
+      ...user,
+      firstName: 'Foreign',
+      id: 'another-account',
+    });
+    getContext(runtime).applyUserUpdate({
+      ...user,
+      firstName: 'Old',
+      updatedAt: NOW,
+    });
+    runtime.render();
+    expect(getContext(runtime).userData?.id).toBe(user.id);
+    expect(getContext(runtime).userData?.firstName).toBe('Saved');
+  });
+
+  it('clears a mounted account on a non JSON refusal during silent refresh', async () => {
+    await mountAuthenticatedProvider();
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => {
+        throw new Error('Not JSON');
+      },
+      ok: false,
+      status: 403,
+    } as unknown as Response);
+    await getContext(runtime).refreshUser();
+    runtime.render();
+    expect(getContext(runtime).userData).toBeNull();
+  });
+
+  it('ignores an older session read after a newer refresh has completed', async () => {
+    await mountAuthenticatedProvider();
+    let resolveRefresh!: (response: Response) => void;
+    vi.mocked(fetch).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRefresh = resolve;
+      }),
+    );
+    const pending = getContext(runtime).refreshUser();
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(false, { ...user, firstName: 'Latest' }),
+    );
+    await getContext(runtime).refreshUser();
+    resolveRefresh(jsonResponse(false, { ...user, firstName: 'Old' }));
+    await pending;
+    runtime.render();
+    expect(getContext(runtime).userData?.firstName).toBe('Latest');
+  });
+
   it('unmounts the authenticated account while logout is pending', async () => {
     await mountAuthenticatedProvider();
     let resolveLogout!: (response: { ok: boolean }) => void;

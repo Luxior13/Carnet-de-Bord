@@ -1,0 +1,27 @@
+[
+  {
+    "name": "password-lost-response",
+    "width": 390,
+    "pass": true,
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/change-password",
+        "query": "",
+        "body": {}
+      }
+    ]
+  }
+]

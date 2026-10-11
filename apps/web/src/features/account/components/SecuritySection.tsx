@@ -71,6 +71,7 @@ const SectionTitle: FC<{
 }> = ({ children, icon, id }) => (
   <h3
     id={id}
+    tabIndex={-1}
     className="text-foreground flex items-center gap-2 text-sm font-semibold"
   >
     <ServiceIcon className="size-7">{icon}</ServiceIcon>
@@ -115,6 +116,11 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
 }) => {
   const lifetimeRef = useRef<AbortController | null>(null);
   const revokingRef = useRef(false);
+  const sessionsRequestRef = useRef(0);
+  const mfaRequestRef = useRef(0);
+  const sessionsFocusRef = useRef(false);
+  const mfaFocusRef = useRef(false);
+  const sessionMutationRef = useRef(false);
   useEffect(() => {
     const controller = new AbortController();
     lifetimeRef.current = controller;
@@ -142,6 +148,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   const fetchMfaStatus = useCallback(
     async (signal = lifetimeRef.current?.signal): Promise<void> => {
       if (!signal || signal.aborted) return;
+      const requestId = ++mfaRequestRef.current;
+      const isCurrent = (): boolean =>
+        !signal.aborted && requestId === mfaRequestRef.current;
       if (!canViewSecurity && !canManageMfa) {
         setMfaStatus(null);
         setMfaStatusError(null);
@@ -160,11 +169,13 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           cache: 'no-store',
           signal,
         });
+        if (isCurrent() && (response.status === 401 || response.status === 403))
+          setMfaStatus(null);
         const data = (await response.json()) as ApiResponse<MfaStatus>;
 
-        if (!signal?.aborted && response.ok && data.success) {
+        if (isCurrent() && response.ok && data.success) {
           setMfaStatus(data.data);
-        } else if (!signal?.aborted) {
+        } else if (isCurrent()) {
           setMfaStatusError(
             data.success
               ? 'Impossible de charger la double authentification'
@@ -173,11 +184,11 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           );
         }
       } catch {
-        if (!signal?.aborted) {
+        if (isCurrent()) {
           setMfaStatusError('Impossible de charger la double authentification');
         }
       } finally {
-        if (!signal?.aborted) setLoadingMfaStatus(false);
+        if (isCurrent()) setLoadingMfaStatus(false);
       }
     },
     [canManageMfa, canViewSecurity],
@@ -186,6 +197,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   const fetchSessions = useCallback(
     async (signal = lifetimeRef.current?.signal): Promise<void> => {
       if (!signal || signal.aborted) return;
+      const requestId = ++sessionsRequestRef.current;
+      const isCurrent = (): boolean =>
+        !signal.aborted && requestId === sessionsRequestRef.current;
       if (!canManageSessions) {
         setSessions([]);
         setSessionsError(null);
@@ -200,22 +214,27 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       }
 
       try {
-        const response = await fetch('/api/auth/sessions', { signal });
+        const response = await fetch('/api/auth/sessions', {
+          cache: 'no-store',
+          signal,
+        });
+        if (isCurrent() && (response.status === 401 || response.status === 403))
+          setSessions([]);
         const data = await response.json();
 
-        if (!signal?.aborted && response.ok && data.success) {
+        if (isCurrent() && response.ok && data.success) {
           setSessions(data.data.sessions);
-        } else if (!signal?.aborted) {
+        } else if (isCurrent()) {
           setSessionsError(
             data.error?.message || 'Impossible de charger les sessions',
           );
         }
       } catch {
-        if (!signal?.aborted) {
+        if (isCurrent()) {
           setSessionsError('Impossible de charger les sessions');
         }
       } finally {
-        if (!signal?.aborted) {
+        if (isCurrent()) {
           setLoadingSessions(false);
         }
       }
@@ -243,11 +262,25 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
     };
   }, [fetchMfaStatus, userData.mfaEnabledAt]);
 
+  useEffect(() => {
+    if (!loadingSessions && sessionsFocusRef.current) {
+      sessionsFocusRef.current = false;
+      document.getElementById('account-sessions-heading')?.focus();
+    }
+  }, [loadingSessions, sessionsError]);
+  useEffect(() => {
+    if (!loadingMfaStatus && mfaFocusRef.current) {
+      mfaFocusRef.current = false;
+      document.getElementById('account-mfa-heading')?.focus();
+    }
+  }, [loadingMfaStatus, mfaStatusError]);
+
   const handleRevokeAllSessions = async (): Promise<void> => {
     const signal = lifetimeRef.current?.signal;
     if (!canManageSessions || !signal || signal.aborted || revokingRef.current)
       return;
     revokingRef.current = true;
+    sessionMutationRef.current = true;
     try {
       setRevokingAll(true);
       const response = await apiFetch('/api/auth/sessions', {
@@ -259,12 +292,19 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       if (signal.aborted) return;
       if (response.ok && data.success) {
         toast.success('Toutes les autres sessions ont été déconnectées');
-        void fetchSessions();
+        sessionsFocusRef.current = true;
+        await fetchSessions();
       } else {
         toast.error(data.error?.message || 'Erreur');
       }
     } catch {
-      if (!signal.aborted) toast.error('Erreur lors de la déconnexion');
+      if (!signal.aborted) {
+        toast.error(
+          'La réponse n’a pas pu être confirmée. Vérifiez les sessions restantes avant de recommencer.',
+        );
+        sessionsFocusRef.current = true;
+        await fetchSessions();
+      }
     } finally {
       revokingRef.current = false;
       if (signal.aborted) return;
@@ -278,23 +318,34 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
     if (!canManageSessions || !signal || signal.aborted || revokingRef.current)
       return;
     revokingRef.current = true;
+    sessionMutationRef.current = true;
     try {
       setRevokingId(sessionId);
-      const response = await apiFetch(`/api/auth/sessions?id=${sessionId}`, {
-        method: 'DELETE',
-        signal,
-      });
+      const response = await apiFetch(
+        `/api/auth/sessions?id=${encodeURIComponent(sessionId)}`,
+        {
+          method: 'DELETE',
+          signal,
+        },
+      );
       const data = await response.json();
 
       if (signal.aborted) return;
       if (response.ok && data.success) {
         toast.success('Session déconnectée');
-        void fetchSessions();
+        sessionsFocusRef.current = true;
+        await fetchSessions();
       } else {
         toast.error(data.error?.message || 'Erreur');
       }
     } catch {
-      if (!signal.aborted) toast.error('Erreur lors de la déconnexion');
+      if (!signal.aborted) {
+        toast.error(
+          'La réponse n’a pas pu être confirmée. Vérifiez les sessions restantes avant de recommencer.',
+        );
+        sessionsFocusRef.current = true;
+        await fetchSessions();
+      }
     } finally {
       revokingRef.current = false;
       if (signal.aborted) return;
@@ -308,10 +359,12 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   ): Promise<void> => {
     if (lifetimeRef.current?.signal.aborted) return;
     await onUpdate(data.user);
+    if (lifetimeRef.current?.signal.aborted) return;
     await Promise.all([
       fetchMfaStatus(),
       ...(canManageSessions ? [fetchSessions()] : []),
     ]);
+    if (lifetimeRef.current?.signal.aborted) return;
     setMfaSetupMode(null);
     toast.success(
       mfaSetupMode === 'replace'
@@ -325,10 +378,12 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   ): Promise<void> => {
     if (lifetimeRef.current?.signal.aborted) return;
     await onUpdate(updatedUser);
+    if (lifetimeRef.current?.signal.aborted) return;
     await Promise.all([
       fetchMfaStatus(),
       ...(canManageSessions ? [fetchSessions()] : []),
     ]);
+    if (lifetimeRef.current?.signal.aborted) return;
     setShowRecoveryCodesDialog(false);
   };
 
@@ -339,11 +394,11 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
     : 'Jamais';
   const canViewPasswordSecurity = canViewSecurity || canChangePassword;
   const canViewMfaSecurity = canViewSecurity || canManageMfa;
-  const mfaEnabledAt =
-    mfaStatus?.enabledAt ??
-    (userData.mfaEnabledAt
+  const mfaEnabledAt = mfaStatus
+    ? mfaStatus.enabledAt
+    : userData.mfaEnabledAt
       ? new Date(userData.mfaEnabledAt).toISOString()
-      : null);
+      : null;
   const isMfaEnabled = !!mfaEnabledAt;
   const isMfaRequired = mfaStatus?.required ?? true;
 
@@ -453,7 +508,10 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 >
                   <span>{mfaStatusError}</span>
                   <Button
-                    onClick={() => void fetchMfaStatus()}
+                    onClick={() => {
+                      mfaFocusRef.current = true;
+                      void fetchMfaStatus();
+                    }}
                     size="sm"
                     type="button"
                     variant="outline"
@@ -528,6 +586,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                   <>
                     <Button
                       className="gap-2"
+                      id="account-mfa-recovery"
                       onClick={() => setShowRecoveryCodesDialog(true)}
                       size="sm"
                       type="button"
@@ -538,6 +597,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                     </Button>
                     <Button
                       className="gap-2"
+                      id="account-mfa-configure"
                       onClick={() => setMfaSetupMode('replace')}
                       size="sm"
                       type="button"
@@ -550,6 +610,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 ) : (
                   <Button
                     className="gap-2"
+                    id="account-mfa-configure"
                     onClick={() => setMfaSetupMode('activate')}
                     size="sm"
                     type="button"
@@ -592,7 +653,10 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 >
                   <span>{sessionsError}</span>
                   <Button
-                    onClick={() => void fetchSessions()}
+                    onClick={() => {
+                      sessionsFocusRef.current = true;
+                      void fetchSessions();
+                    }}
                     size="sm"
                     type="button"
                     variant="outline"
@@ -627,6 +691,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                             key={session.id}
                             session={session}
                             isRevoking={revokingId === session.id}
+                            disabled={revokingAll || revokingId !== null}
                             onRevoke={setSessionToRevoke}
                           />
                         ))}
@@ -642,7 +707,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 </>
               )}
             </CardContent>
-            {otherSessions.length > 0 && (
+            {!loadingSessions && !sessionsError && otherSessions.length > 0 && (
               <CardFooter className="justify-end p-4 sm:p-5">
                 <Button
                   type="button"
@@ -650,7 +715,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                   size="sm"
                   className="gap-2"
                   onClick={() => setShowRevokeDialog(true)}
-                  disabled={revokingAll}
+                  disabled={revokingAll || revokingId !== null}
                 >
                   {revokingAll ? (
                     <Loader2 className="size-4 animate-spin" />
@@ -667,10 +732,13 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       <ChangePasswordDialog
         open={showPasswordDialog}
         onCancel={() => setShowPasswordDialog(false)}
-        onSuccess={() => {
+        onSuccess={async () => {
+          if (lifetimeRef.current?.signal.aborted) return;
+          await onUpdate();
+          if (lifetimeRef.current?.signal.aborted) return;
+          if (canManageSessions) await fetchSessions();
           if (lifetimeRef.current?.signal.aborted) return;
           setShowPasswordDialog(false);
-          void onUpdate();
           toast.success('Mot de passe modifié avec succès');
         }}
       />
@@ -678,6 +746,16 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         <MfaSetupDialog
           mode={mfaSetupMode}
           onCancel={() => setMfaSetupMode(null)}
+          onCloseAutoFocus={(event) => {
+            if (lifetimeRef.current?.signal.aborted) return;
+            const target =
+              document.getElementById('account-mfa-configure') ??
+              document.getElementById('account-mfa-heading');
+            if (target) {
+              event.preventDefault();
+              target.focus();
+            }
+          }}
           onComplete={handleMfaSetupComplete}
           open
         />
@@ -685,6 +763,16 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       {showRecoveryCodesDialog && (
         <MfaActionDialog
           onCancel={() => setShowRecoveryCodesDialog(false)}
+          onCloseAutoFocus={(event) => {
+            if (lifetimeRef.current?.signal.aborted) return;
+            const target =
+              document.getElementById('account-mfa-recovery') ??
+              document.getElementById('account-mfa-heading');
+            if (target) {
+              event.preventDefault();
+              target.focus();
+            }
+          }}
           onComplete={handleMfaActionComplete}
           open
         />
@@ -695,7 +783,16 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           if (!open && !revokingId) setSessionToRevoke(null);
         }}
       >
-        <AlertDialogContent className="overflow-y-auto p-0">
+        <AlertDialogContent
+          className="overflow-y-auto p-0"
+          onCloseAutoFocus={(event) => {
+            if (sessionMutationRef.current) {
+              event.preventDefault();
+              sessionMutationRef.current = false;
+              document.getElementById('account-sessions-heading')?.focus();
+            }
+          }}
+        >
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">
@@ -731,8 +828,22 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           </div>
         </AlertDialogContent>
       </AlertDialog>
-      <AlertDialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
-        <AlertDialogContent className="overflow-y-auto p-0">
+      <AlertDialog
+        open={showRevokeDialog}
+        onOpenChange={(open) => {
+          if (!revokingRef.current) setShowRevokeDialog(open);
+        }}
+      >
+        <AlertDialogContent
+          className="overflow-y-auto p-0"
+          onCloseAutoFocus={(event) => {
+            if (sessionMutationRef.current) {
+              event.preventDefault();
+              sessionMutationRef.current = false;
+              document.getElementById('account-sessions-heading')?.focus();
+            }
+          }}
+        >
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">
@@ -749,9 +860,14 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="mt-4">
-              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogCancel disabled={revokingAll}>
+                Annuler
+              </AlertDialogCancel>
               <AlertDialogAction
-                onClick={handleRevokeAllSessions}
+                onClick={(event) => {
+                  event.preventDefault();
+                  void handleRevokeAllSessions();
+                }}
                 disabled={revokingAll}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >

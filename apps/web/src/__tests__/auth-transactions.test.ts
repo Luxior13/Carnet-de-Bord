@@ -662,6 +662,41 @@ describe('auth security transactions', () => {
     expect(mocks.cookieStore.set).not.toHaveBeenCalled();
   });
 
+  it.each(['request', 'page'] as const)(
+    'loads the account revision through the actual %s session projection',
+    async (source) => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-07-13T12:00:20.000Z'));
+      const updatedAt = new Date('2026-07-13T10:00:00.000Z');
+      mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
+      mocks.prisma.session.findUnique.mockImplementationOnce(
+        ({
+          select,
+        }: {
+          select: { user: { select: Record<string, unknown> } };
+        }) => {
+          // Respect the requested projection: a full-row fixture would hide
+          // an omitted revision and make profile/contact conflicts untestable.
+          const user = Object.fromEntries(
+            Object.entries({ ...SESSION_USER, updatedAt }).filter(([key]) =>
+              Reflect.get(select.user.select, key),
+            ),
+          );
+
+          return { ...buildStoredSession(), user };
+        },
+      );
+
+      const result = await (source === 'page'
+        ? getPageAuthSession()
+        : getAuthSession(false));
+
+      expect(result.user?.updatedAt).toEqual(updatedAt);
+      expect(result.user).not.toHaveProperty('passwordHash');
+      expect(result.user).not.toHaveProperty('securityVersion');
+    },
+  );
+
   it('rejects every password-only session for the protected root', async () => {
     mocks.cookieStore.get.mockReturnValue({ value: 'raw-session-token' });
     mocks.prisma.session.findUnique.mockResolvedValueOnce(

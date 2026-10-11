@@ -116,6 +116,7 @@ const SESSION_USER_SELECT = {
   totpCredential: {
     select: { userId: true },
   },
+  updatedAt: true,
 } satisfies Prisma.UserSelect;
 
 const SESSION_WITH_USER_SELECT = {

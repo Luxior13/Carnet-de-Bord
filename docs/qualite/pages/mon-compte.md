@@ -13,20 +13,20 @@ les champs sur petit écran. Le dialogue de contact garde son pied contextuel.
 
 ## Identité et état
 
-**Point à vérifier lors de la prochaine passe — 11 octobre 2026 :**
-`GET /api/auth/sessions` filtre les dates mais pas `Session.securityVersion`.
-Une ligne d'ancienne version pourrait donc être présentée comme active malgré
-son refus par l'authentification. Le cas a été reproduit et corrigé sur la route
-administrative `/api/users/[id]/sessions` seulement ; aucune reproduction sur
-Mon compte ni modification de sa route dans cette passe. Reprendre avec une
-fixture SQL de session obsolète, puis aligner lecture et nettoyage si confirmé.
-Voir [l'audit de fiche](../../audits/AUDIT_FICHE_UTILISATEUR_2026-10-11.md).
+**Sessions obsolètes — corrigé et vérifié le 11 octobre 2026 :** le défaut
+signalé par la revue de fiche a été reproduit sur `GET /api/auth/sessions` avec
+une fixture PostgreSQL. La lecture et le nettoyage filtrent maintenant la
+version de sécurité, en plus des dates. Le nettoyage reste lié à la version
+du compte authentifié pour ne pas supprimer une session plus récente si le
+compte change entre-temps. Voir [l'audit de cette page](../../audits/AUDIT_MON_COMPTE_2026-10-11.md).
 
 - Route : `/mon-compte`. Page personnelle du compte connecté.
 - Statut : alignée sur la fiche `/systeme/utilisateurs/[id]` ; formulaires,
   conflits et navigation corrigés le 2026-10-11.
-- Vérification : composants exercés dans Chromium avec session/API simulées le
-  11 octobre ; parcours profil/sécurité sur base réelle toujours à vérifier.
+- Vérification finale du 11 octobre : 23 parcours Chromium sur composants/API
+  simulées, douze parcours Next avec connexion/MFA et PostgreSQL réels, 23
+  scénarios SQL et suite web réussis. Voir les
+  [preuves et limites](../../audits/AUDIT_MON_COMPTE_2026-10-11.md).
 
 ## Décisions courantes
 
@@ -95,12 +95,55 @@ réussis. [Preuves et limites](../../audits/AUDIT_UTILISATEURS_2026-10-10.md#val
 La navigation avec brouillon, les sauvegardes et le défi MFA n'ont pas été joués
 pendant cette passe ; COMPTE-01 reste ouvert sur ces parcours.
 
-## Points ouverts
+## Concurrence et reprise — complément du 11 octobre 2026
 
-- COMPTE-01 — Parcours réel (profil, sécurité, conflits) à valider avec session et
-  base isolées avant conclusion fonctionnelle complète ; responsable à attribuer,
-  état « à vérifier ». Appliquer les [contrôles](../CONTROLES.md) proportionnés au
-  prochain changement et consigner sa preuve dans ce suivi.
+- Le profil fusionne chaque champ à la relecture : conserver seulement les
+  champs modifiés localement, reprendre les nouvelles valeurs des autres.
+  Les snapshots plus anciens ne remplacent pas la version déjà connue.
+- Le dialogue de contact fige sa version à l'ouverture. Un rafraîchissement du
+  contexte ne réinitialise ni la saisie ni une requête en cours.
+  `PATCH /api/auth/contact-email` exige aussi `expectedUpdatedAt`, y compris
+  pour une adresse identique ; client et API doivent être déployés ensemble.
+  Après 409 ou réponse incertaine, la relecture est explicite et garde la saisie.
+- La barre du profil reste absente sans brouillon. Un conflit conserve toutefois
+  « Actualiser la version », même si les valeurs visibles deviennent identiques.
+- Les dialogues et relectures appartiennent au compte et à ses droits courants.
+  Le contexte partagé ignore les réponses devenues obsolètes et les mutations
+  d'un autre acteur. Une actualisation ne peut pas supplanter une déconnexion.
+- Un refus de lecture 401/403 efface les informations de sécurité déjà affichées,
+  même si le corps de réponse n'est pas du JSON. Les confirmations de révocation
+  restent verrouillées pendant l'opération ; si la ligne disparaît, le focus
+  revient au titre de la section.
+- Une réponse perdue après changement de mot de passe ou validation MFA ne
+  prouve pas un échec : l'interface explique l'incertitude et propose de recharger
+  le compte. Les codes de secours non reçus ne peuvent pas être récupérés depuis
+  leur hash ; après vérification de l'accès MFA, générer un nouveau lot.
+- La remise des codes conserve son acquittement explicite et protège le départ
+  avant sauvegarde. Un résultat de copie tardif ne produit pas de retour après
+  fermeture ou remplacement des codes.
+- La projection SQL de session inclut `updatedAt` : le snapshot SSR et
+  `/api/auth/me` doivent fournir la version requise par les formulaires. Un
+  test avec DTO simulé n'est pas une preuve de présence dans la vraie projection.
+  Le manque de ce champ a été reproduit puis corrigé dans le parcours Next réel.
+
+Questions à conserver : un champ non modifié peut-il écraser une correction
+distante ? Une lecture retardée restaure-t-elle le compte après déconnexion ?
+Le serveur a-t-il pu valider malgré la perte de réponse ? Le retour de focus
+cible-t-il encore un élément présent après rafraîchissement ?
+
+## Validation courante et limites
+
+- COMPTE-01 — **clos le 11 octobre 2026 pour les parcours décrits** : profil,
+  contact, conflit et réponse perdue après commit, connexion/MFA, révocation
+  individuelle, mot de passe, codes de secours et droits à chaud ont été exercés
+  dans Next/PostgreSQL isolés. Les anciens paragraphes ci-dessous décrivent
+  uniquement les limites de leurs passes historiques.
+- La révocation globale et le remplacement MFA sont couverts côté SQL et client
+  simulé ; leurs combinaisons complètes avec perte de réponse dans Next réel ne
+  sont pas revendiquées. Safari/iOS, lecteurs d'écran, extensions et charge
+  restent hors validation de cette passe. Aucun défaut connu laissé ouvert dans
+  le périmètre testé ; appliquer les [contrôles](../CONTROLES.md) proportionnés
+  lors du prochain changement.
 
 Avant de modifier un champ ou une action : le brouillon reste-t-il conservé
 après un rafraîchissement de contexte ? Quelle version protège l’écriture et

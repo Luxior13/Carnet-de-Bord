@@ -1,0 +1,19 @@
+[
+  {
+    "name": "profile-native-enter-submit",
+    "width": 390,
+    "pass": true,
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/api/auth/me",
+        "query": "",
+        "body": {
+          "expectedUpdatedAt": "2026-10-11T12:00:00.000Z",
+          "firstName": "Camille Entrée",
+          "lastName": "Exemple"
+        }
+      }
+    ]
+  }
+]

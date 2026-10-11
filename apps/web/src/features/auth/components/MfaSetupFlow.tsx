@@ -5,7 +5,7 @@ import Image from 'next/image';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import { type ApiResponse, RoutesApi } from '$types/api.types';
+import { RoutesApi } from '$types/api.types';
 import type {
   MfaSetupConfirmationData,
   MfaSetupStartData,
@@ -13,7 +13,7 @@ import type {
 import { Button } from '$ui/button';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
-import { apiFetch } from '$utils/api.utils';
+import { ApiClientError, apiFetchJson } from '$utils/api.utils';
 
 import {
   isCompleteMfaCode,
@@ -42,11 +42,18 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
   const [step, setStep] = useState<SetupStep>('authorize');
   const submissionRef = useRef(false);
   const mountedRef = useRef(false);
+  const copyOperationRef = useRef(0);
+  const requestRef = useRef<AbortController | null>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     mountedRef.current = true;
 
     return (): void => {
       mountedRef.current = false;
+      requestRef.current?.abort();
+      // This counter invalidates promises; it is not a DOM ref.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      copyOperationRef.current++;
     };
   }, []);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -59,6 +66,7 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
   );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmationUnknown, setConfirmationUnknown] = useState(false);
   const newCodeInputRef = useRef<HTMLInputElement>(null);
   const isBootstrap = mode === 'bootstrap';
   const isReplacing = mode === 'replace';
@@ -69,12 +77,15 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
 
   const handleStart = async (): Promise<void> => {
     if (submissionRef.current || !mountedRef.current || !canAuthorize) return;
+    const request = new AbortController();
+    requestRef.current = request;
+    const timeout = setTimeout(() => request.abort(), 30_000);
 
     try {
       submissionRef.current = true;
       setIsSubmitting(true);
       setError(null);
-      const response = await apiFetch(RoutesApi.mfaSetup, {
+      const data = await apiFetchJson<MfaSetupStartData>(RoutesApi.mfaSetup, {
         body: JSON.stringify(
           isBootstrap
             ? {}
@@ -85,28 +96,26 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
         ),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
+        signal: request.signal,
       });
-      const data = (await response.json()) as ApiResponse<MfaSetupStartData>;
 
       if (!mountedRef.current) return;
-      if (!response.ok || !data.success) {
-        setError(
-          data.success
-            ? 'Impossible de préparer la double authentification'
-            : data.error.message ||
-                'Impossible de préparer la double authentification',
-        );
-
-        return;
-      }
-
-      setSetup(data.data);
+      if (!data?.manualKey || !data.qrCodeDataUrl)
+        throw new Error('Setup data missing');
+      setSetup(data);
+      setCurrentPassword('');
+      setCurrentCode('');
       setNewCode('');
       setStep('scan');
-    } catch {
+    } catch (failure) {
       if (!mountedRef.current) return;
-      setError('Impossible de préparer la double authentification');
+      setError(
+        failure instanceof ApiClientError
+          ? failure.message
+          : 'Impossible de préparer la double authentification. Vous pouvez recommencer la préparation.',
+      );
     } finally {
+      clearTimeout(timeout);
       submissionRef.current = false;
       if (mountedRef.current) setIsSubmitting(false);
     }
@@ -118,42 +127,52 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
     event.preventDefault();
     if (
       submissionRef.current ||
+      confirmationUnknown ||
       !mountedRef.current ||
       !isCompleteMfaCode(newCode, 'totp')
     )
       return;
+    const request = new AbortController();
+    requestRef.current = request;
+    const timeout = setTimeout(() => request.abort(), 30_000);
 
     try {
       submissionRef.current = true;
       setIsSubmitting(true);
       setError(null);
-      const response = await apiFetch(RoutesApi.mfaSetup, {
-        body: JSON.stringify({ code: newCode }),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'PUT',
-      });
-      const data =
-        (await response.json()) as ApiResponse<MfaSetupConfirmationData>;
+      const data = await apiFetchJson<MfaSetupConfirmationData>(
+        RoutesApi.mfaSetup,
+        {
+          body: JSON.stringify({ code: newCode }),
+          headers: { 'Content-Type': 'application/json' },
+          method: 'PUT',
+          signal: request.signal,
+        },
+      );
 
       if (!mountedRef.current) return;
-      if (!response.ok || !data.success) {
-        setError(
-          data.success
-            ? 'Code incorrect ou expiré'
-            : data.error.message || 'Code incorrect ou expiré',
-        );
-        setNewCode('');
-        newCodeInputRef.current?.focus();
-
-        return;
-      }
-
-      setCompletion(data.data);
+      if (!data?.user || !data.recoveryCodes?.length)
+        throw new Error('Setup confirmation incomplete');
+      setCompletion(data);
+      copyOperationRef.current++;
+      setSetup(null);
+      setNewCode('');
       setStep('recovery');
-    } catch {
+    } catch (failure) {
       if (!mountedRef.current) return;
-      setError('Impossible d’activer la double authentification');
+      setNewCode('');
+      const uncertain =
+        !(failure instanceof ApiClientError) ||
+        failure.status >= 500 ||
+        failure.code === 'INVALID_RESPONSE';
+      setConfirmationUnknown(uncertain);
+      setError(
+        uncertain
+          ? 'La réponse du serveur n’a pas pu être confirmée. La nouvelle application a peut-être été activée et les codes de secours n’ont pas été reçus. Vérifiez votre accès avec la nouvelle application avant de recommencer.'
+          : failure.message,
+      );
     } finally {
+      clearTimeout(timeout);
       submissionRef.current = false;
       if (mountedRef.current) setIsSubmitting(false);
     }
@@ -161,15 +180,21 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
 
   const handleCopyManualKey = async (): Promise<void> => {
     if (!setup) return;
+    const operation = ++copyOperationRef.current;
 
     try {
       await navigator.clipboard.writeText(setup.manualKey);
+      if (!mountedRef.current || operation !== copyOperationRef.current) return;
       toast.success('Clé de configuration copiée');
     } catch {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || operation !== copyOperationRef.current) return;
       toast.error('Impossible de copier la clé');
     }
   };
+
+  useEffect(() => {
+    if (error && !isSubmitting) errorRef.current?.focus();
+  }, [error, isSubmitting]);
 
   const handleFinish = async (): Promise<void> => {
     if (!completion || submissionRef.current || !mountedRef.current) return;
@@ -204,6 +229,33 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
     }
   };
 
+  if (confirmationUnknown) {
+    return (
+      <div className="space-y-4">
+        <div
+          className="border-warning/35 bg-warning/10 rounded-md border p-3 text-sm leading-6"
+          ref={errorRef}
+          role="alert"
+          tabIndex={-1}
+        >
+          {error}
+        </div>
+        <p className="text-muted-foreground text-sm">
+          Rechargez le compte pour relire son état. Si la nouvelle application
+          est active, utilisez-la puis générez de nouveaux codes de secours
+          depuis la section Sécurité.
+        </p>
+        <Button
+          className="w-full"
+          onClick={() => window.location.reload()}
+          type="button"
+        >
+          Recharger le compte
+        </Button>
+      </div>
+    );
+  }
+
   if (step === 'recovery' && completion) {
     return (
       <div className="space-y-4">
@@ -216,6 +268,8 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
         </div>
         {error && (
           <div
+            ref={errorRef}
+            tabIndex={-1}
             aria-live="assertive"
             className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
             role="alert"
@@ -237,6 +291,8 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
       <form autoComplete="off" className="space-y-4" onSubmit={handleConfirm}>
         {error && (
           <div
+            ref={errorRef}
+            tabIndex={-1}
             aria-live="assertive"
             className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
             role="alert"
@@ -339,6 +395,8 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
     >
       {error && (
         <div
+          ref={errorRef}
+          tabIndex={-1}
           aria-live="assertive"
           className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
           role="alert"
@@ -394,6 +452,7 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
           />
           <Button
             className="h-auto p-0 text-xs"
+            disabled={isSubmitting}
             onClick={() => {
               setCurrentCode('');
               setCurrentCodeKind((kind) =>

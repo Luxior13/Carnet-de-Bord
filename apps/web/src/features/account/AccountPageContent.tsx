@@ -19,6 +19,10 @@ import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { PAGE_PATHS } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
 import {
+  getAccountScope,
+  isOlderAccountSnapshot,
+} from '$features/account/account.utils';
+import {
   ACCOUNT_SECTIONS,
   AccountHeader,
   AccountPageContentSkeleton,
@@ -49,6 +53,8 @@ const AccountContent: FC<{ userData: UserType }> = ({ userData }) => {
   const [isProfileDirty, setIsProfileDirty] = useState(false);
   const [profileResetKey, setProfileResetKey] = useState(0);
   const mountedRef = useRef(false);
+  const currentUserRef = useRef(userData);
+  currentUserRef.current = userData;
   useEffect(() => {
     mountedRef.current = true;
 
@@ -105,8 +111,14 @@ const AccountContent: FC<{ userData: UserType }> = ({ userData }) => {
   const handleAccountUpdate = useCallback(
     async (updatedUser?: UserType): Promise<void> => {
       if (!mountedRef.current) return;
-      if (updatedUser) applyUserUpdate(updatedUser);
-      else await refreshUser();
+      if (updatedUser) {
+        if (
+          updatedUser.id !== currentUserRef.current.id ||
+          isOlderAccountSnapshot(updatedUser, currentUserRef.current)
+        )
+          return;
+        applyUserUpdate(updatedUser);
+      } else await refreshUser();
     },
     [applyUserUpdate, refreshUser],
   );
@@ -185,7 +197,7 @@ const AccountContent: FC<{ userData: UserType }> = ({ userData }) => {
         </div>
       </PageAsideLayout>
       <UnsavedNavigationDialog
-        description="Les modifications du profil seront perdues. Vous pouvez rester sur la page pour les enregistrer ou les annuler."
+        description="Les saisies du profil et de l’adresse de contact seront perdues. Une opération déjà envoyée peut avoir été enregistrée. Vous pouvez rester sur la page pour vérifier son résultat."
         open={pendingNavigationHref !== null}
         onCancel={cancelPendingNavigation}
         onConfirm={confirmPendingNavigation}
@@ -199,13 +211,7 @@ export const AccountPageContent: FC = () => {
   const { userData } = useUser();
   if (!userData) return <AccountPageContentSkeleton />;
   // Profile refreshes preserve drafts; identity/authority changes reset dialogs and requests.
-  const scope = JSON.stringify([
-    userData.id,
-    userData.role,
-    userData.isProtected,
-    userData.permissions,
-    userData.mustChangePassword,
-  ]);
+  const scope = getAccountScope(userData);
 
   return <AccountContent key={scope} userData={userData} />;
 };

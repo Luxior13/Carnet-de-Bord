@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors, parseJsonBody } from '$server/api-response';
+import { apiError, apiErrors, parseJsonBody } from '$server/api-response';
 import {
   createAuditLogWithHeaders,
   mapUserToUserType,
@@ -49,6 +49,10 @@ const updateContactEmailSchema = z
       .refine(isPasswordWithinBcryptLimit, {
         message: 'Mot de passe trop long',
       }),
+    expectedUpdatedAt: z
+      .string()
+      .datetime({ offset: true })
+      .transform((value) => new Date(value)),
   })
   .strict();
 
@@ -63,6 +67,8 @@ const isOptimisticConflict = (error: unknown): boolean =>
   error !== null &&
   'code' in error &&
   error.code === 'P2025';
+
+class ContactConflictError extends Error {}
 
 export async function PATCH(
   request: Request,
@@ -138,6 +144,16 @@ export async function PATCH(
       );
     }
 
+    // The version belongs to the open dialog, not to this freshly read row.
+    // Check it before a no-op too: recovery after an ambiguous response must
+    // explicitly reload the current account instead of silently accepting it.
+    if (
+      storedUser.updatedAt.getTime() !==
+      validation.data.expectedUpdatedAt.getTime()
+    ) {
+      throw new ContactConflictError();
+    }
+
     const isCurrentPasswordValid = await verifyPassword(
       validation.data.currentPassword,
       storedUser.passwordHash,
@@ -179,7 +195,7 @@ export async function PATCH(
         },
         where: {
           id: auth.user.id,
-          updatedAt: storedUser.updatedAt,
+          updatedAt: validation.data.expectedUpdatedAt,
         },
       });
 
@@ -220,17 +236,11 @@ export async function PATCH(
       success: true,
     });
   } catch (error) {
-    if (isOptimisticConflict(error)) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.CONFLICT,
-            message:
-              'Votre compte a été modifié entre-temps. Rechargez la page avant de réessayer.',
-          },
-          success: false,
-        },
-        { status: 409 },
+    if (error instanceof ContactConflictError || isOptimisticConflict(error)) {
+      return apiError(
+        ErrorCode.CONFLICT,
+        'Votre compte a changé. Actualisez sa version avant de réessayer.',
+        409,
       );
     }
 

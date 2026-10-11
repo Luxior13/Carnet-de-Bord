@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, Copy, Download } from 'lucide-react';
-import React, { type FC, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { SITE_CONFIG } from '$constants/app.constants';
@@ -30,12 +30,40 @@ export const MfaRecoveryCodesPanel: FC<MfaRecoveryCodesPanelProps> = ({
   onFinish,
 }) => {
   const [hasSavedCodes, setHasSavedCodes] = useState(false);
+  const copyOperationRef = useRef(0);
+  const savedCodesRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    setHasSavedCodes(false);
+    savedCodesRef.current?.focus();
+    copyOperationRef.current++;
+
+    return (): void => {
+      // This counter invalidates promises; it is not a DOM ref.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      copyOperationRef.current++;
+    };
+  }, [codes]);
+  useEffect(() => {
+    const preventLostCodes = (event: BeforeUnloadEvent): void => {
+      if (!hasSavedCodes) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', preventLostCodes);
+
+    return (): void =>
+      window.removeEventListener('beforeunload', preventLostCodes);
+  }, [hasSavedCodes]);
 
   const handleCopy = async (): Promise<void> => {
+    const operation = ++copyOperationRef.current;
     try {
       await navigator.clipboard.writeText(codes.join('\n'));
+      if (operation !== copyOperationRef.current) return;
       toast.success('Codes de secours copiés');
     } catch {
+      if (operation !== copyOperationRef.current) return;
       toast.error('Impossible de copier les codes');
     }
   };
@@ -71,7 +99,7 @@ export const MfaRecoveryCodesPanel: FC<MfaRecoveryCodesPanelProps> = ({
       >
         {codes.map((code) => (
           <li
-            className="bg-surface-inset rounded border px-3 py-2 text-center font-mono text-sm tracking-wider"
+            className="bg-surface-inset min-w-0 rounded border px-3 py-2 text-center font-mono text-sm tracking-wider break-all"
             key={code}
           >
             {code}
@@ -97,6 +125,7 @@ export const MfaRecoveryCodesPanel: FC<MfaRecoveryCodesPanelProps> = ({
       <div className="flex items-start gap-2 rounded-md border p-3">
         <Checkbox
           checked={hasSavedCodes}
+          ref={savedCodesRef}
           disabled={isFinishing}
           id="mfa-recovery-codes-saved"
           onCheckedChange={(checked) => setHasSavedCodes(checked === true)}
@@ -112,11 +141,12 @@ export const MfaRecoveryCodesPanel: FC<MfaRecoveryCodesPanelProps> = ({
       <Button
         className="w-full"
         disabled={!hasSavedCodes || isFinishing}
+        loading={isFinishing}
         onClick={onFinish}
         type="button"
       >
-        <Check className="size-4" />
-        Terminer
+        {!isFinishing && <Check className="size-4" />}
+        {isFinishing ? 'Finalisation…' : 'Terminer'}
       </Button>
     </div>
   );

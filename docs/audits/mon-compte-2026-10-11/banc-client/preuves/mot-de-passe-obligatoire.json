@@ -1,0 +1,15 @@
+[
+  {
+    "name": "forced-password-success-without-current-proof",
+    "width": 390,
+    "pass": true,
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/api/auth/change-password",
+        "query": "",
+        "body": {}
+      }
+    ]
+  }
+]

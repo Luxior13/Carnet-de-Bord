@@ -58,9 +58,12 @@ const storedUser = {
   updatedAt,
 };
 
-const request = (body: unknown): Request =>
+const request = (body: Record<string, unknown>): Request =>
   new Request('http://localhost/api/auth/contact-email', {
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      expectedUpdatedAt: updatedAt.toISOString(),
+      ...body,
+    }),
     headers: { 'content-type': 'application/json' },
     method: 'PATCH',
   });
@@ -169,6 +172,22 @@ describe('PATCH /api/auth/contact-email', () => {
   });
 
   it.each([
+    [
+      'missing version',
+      {
+        contactEmail: 'owner@example.com',
+        currentPassword: 'CurrentPassword1!',
+        expectedUpdatedAt: undefined,
+      },
+    ],
+    [
+      'invalid version',
+      {
+        contactEmail: 'owner@example.com',
+        currentPassword: 'CurrentPassword1!',
+        expectedUpdatedAt: 'yesterday',
+      },
+    ],
     ['missing current password', { contactEmail: 'owner@example.com' }],
     [
       'invalid contact address',
@@ -377,4 +396,24 @@ describe('PATCH /api/auth/contact-email', () => {
     expect(body.error.code).toBe(ErrorCode.CONFLICT);
     expect(mocks.audit).not.toHaveBeenCalled();
   });
+
+  it.each(['owner@example.com', storedUser.contactEmail])(
+    'rejects an obsolete dialog before password verification even for %s',
+    async (contactEmail) => {
+      const route = await import('$app/api/auth/contact-email/route');
+      const response = await route.PATCH(
+        request({
+          contactEmail,
+          currentPassword: 'CurrentPassword1!',
+          expectedUpdatedAt: '2026-07-13T10:00:00.000Z',
+        }),
+      );
+
+      expect(response.status).toBe(409);
+      expect((await response.json()).error.code).toBe(ErrorCode.CONFLICT);
+      expect(mocks.verifyPassword).not.toHaveBeenCalled();
+      expect(mocks.transaction).not.toHaveBeenCalled();
+      expect(mocks.audit).not.toHaveBeenCalled();
+    },
+  );
 });

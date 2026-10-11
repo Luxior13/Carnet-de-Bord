@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-11",
+  "scope": "Mon compte : profil, contact, sessions, mot de passe et gestion MFA",
+  "environment": {
+    "database": "account_service_test",
+    "host": "127.0.0.1",
+    "port": 54596,
+    "postgresql": 17,
+    "appliedMigrations": 52,
+    "remoteDatabaseUsed": false,
+    "schemaChanges": false
+  },
+  "reproductionsBeforeFix": [
+    {
+      "case": "account-revision-missing-from-session-projection",
+      "proof": "Observed in real Next integration; reproduced by two tests calling actual request/page session readers with a Prisma mock respecting the requested select",
+      "observed": "Both API and SSR session DTOs omitted updatedAt because SESSION_USER_SELECT omitted it. Both regression tests failed with undefined before the correction.",
+      "afterFix": "updatedAt selected; all 36 auth-transactions tests passed, including the two new projection regressions. Real Next verification is recorded separately."
+    },
+    {
+      "case": "obsolete-session-listed",
+      "proof": "Real PostgreSQL, direct handler invocation",
+      "observed": "The active current session and an obsolete securityVersion session were both returned; expected only the current-version session."
+    },
+    {
+      "case": "contact-overwritten-by-stale-dialog",
+      "proof": "Real PostgreSQL, requests following the former versionless contract",
+      "observed": "First change returned 200; second stale dialog also returned 200 instead of rejecting its overwrite."
+    },
+    {
+      "case": "concurrent-session-revocation",
+      "proof": "Deterministic route test, mocked database disappearance after lookup",
+      "observed": "P2025 from delete was returned as 500 instead of 404."
+    }
+  ],
+  "verifiedWithoutProductChange": [
+    "verifyPassword rejects more than 72 UTF-8 bytes even when raw bcrypt accepts the prefix",
+    "Required audit failure rolls back profile, contact, password and session mutations",
+    "MFA cancellation keeps the active credential, recovery codes and sessions",
+    "MFA replacement and recovery-code regeneration roll back all mutations when audit insertion fails",
+    "MFA challenge and TOTP replay are refused after successful mutation",
+    "MFA session replacement preserves source absolute and idle deadlines"
+  ],
+  "checks": {
+    "accountPostgres": {
+      "file": "apps/web/src/__tests__/account-postgres.test.ts",
+      "passed": 23,
+      "failed": 0,
+      "skipped": 0
+    },
+    "routeTests": {
+      "files": [
+        "apps/web/src/__tests__/account-security-routes.test.ts",
+        "apps/web/src/__tests__/contact-email-route.test.ts"
+      ],
+      "passed": 58,
+      "failed": 0
+    },
+    "existingAuthMfaTests": {
+      "files": [
+        "apps/web/src/__tests__/auth-transactions.test.ts",
+        "apps/web/src/__tests__/mfa-management-route.test.ts",
+        "apps/web/src/__tests__/mfa-setup-route.test.ts",
+        "apps/web/src/__tests__/mfa-verify-route.test.ts",
+        "apps/web/src/__tests__/mfa-server.test.ts",
+        "apps/web/src/__tests__/mfa-code.test.ts",
+        "apps/web/src/__tests__/mfa-policy-ux-contracts.test.ts"
+      ],
+      "passed": 65,
+      "failed": 0
+    },
+    "typescript": "passed",
+    "targetedLint": "passed"
+  },
+  "limits": [
+    "Direct route invocation; authentication source, request headers and cookie store simulated",
+    "The initial SQL tests used a complete simulated authentication DTO and therefore did not detect the missing updatedAt projection; dedicated projection-aware API/SSR regressions were added after real Next integration found it",
+    "Rate limiting always allowed in PostgreSQL scenarios",
+    "Initial password fixtures use bcrypt cost 4; actual password replacement uses service cost 12",
+    "Test-only MFA encryption key; no real secret loaded or saved in this evidence directory",
+    "Temporary audit failure triggers prove transaction rollback, not response-loss recovery after commit",
+    "Build, CSRF middleware, browser session cookies and user interactions are validated separately by the integration bench"
+  ]
+}

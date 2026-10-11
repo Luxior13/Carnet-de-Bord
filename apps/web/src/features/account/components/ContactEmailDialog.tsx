@@ -9,8 +9,10 @@ import {
 } from 'lucide-react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
-import { type ApiResponse, RoutesApi } from '$types/api.types';
+import { isAccountFormSnapshot } from '$features/account/account.utils';
+import { RoutesApi } from '$types/api.types';
 import type { UserType } from '$types/auth.types';
 import {
   AlertDialog,
@@ -33,19 +35,24 @@ import {
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { ServiceIcon } from '$ui/service-icon';
-import { apiFetch } from '$utils/api.utils';
+import { ApiClientError, apiFetchJson } from '$utils/api.utils';
 import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 
 type ContactEmailDialogProps = {
   contactEmail: string | null;
+  expectedUpdatedAt: UserType['updatedAt'];
   loginName: string;
+  onAccessDenied: () => Promise<void>;
   onCancel: () => void;
+  onDirtyChange: (dirty: boolean) => void;
   onSuccess: (updatedUser: UserType) => Promise<void>;
   open: boolean;
+  restoreFocus: (event: Event) => void;
+  userId: string;
 };
 
 const CONTACT_EMAIL_MAX_LENGTH = 254;
-const CONTACT_EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
+const contactEmailSchema = z.string().email();
 
 const normalizeContactEmail = (value: string): string | null => {
   const normalized = value.trim().toLowerCase();
@@ -55,59 +62,162 @@ const normalizeContactEmail = (value: string): string | null => {
 
 export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
   contactEmail,
+  expectedUpdatedAt,
   loginName,
+  onAccessDenied,
   onCancel,
+  onDirtyChange,
   onSuccess,
   open,
+  restoreFocus,
+  userId,
 }) => {
   const submissionRef = useRef(false);
   const mountedRef = useRef(false);
+  const requestRef = useRef<AbortController | null>(null);
+  const snapshotRef = useRef({ contactEmail, expectedUpdatedAt });
+  snapshotRef.current = { contactEmail, expectedUpdatedAt };
+  const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
     mountedRef.current = true;
 
     return (): void => {
       mountedRef.current = false;
+      requestRef.current?.abort();
     };
   }, []);
   const [nextContactEmail, setNextContactEmail] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [conflict, setConflict] = useState(false);
+  const [baseContactEmail, setBaseContactEmail] = useState(contactEmail);
+  const [baseVersion, setBaseVersion] = useState(expectedUpdatedAt);
+  const [notice, setNotice] = useState<string | null>(null);
   const [isConfirmingRemoval, setIsConfirmingRemoval] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const normalizedContactEmail = useMemo(
     () => normalizeContactEmail(nextContactEmail),
     [nextContactEmail],
   );
-  const currentNormalizedContactEmail = contactEmail?.toLowerCase() ?? null;
+  const currentNormalizedContactEmail = baseContactEmail?.toLowerCase() ?? null;
+  const busy = isSaving || isRefreshing;
   const emailError = isConfirmingRemoval
     ? null
     : nextContactEmail.trim().length > CONTACT_EMAIL_MAX_LENGTH
       ? 'Adresse email trop longue'
       : normalizedContactEmail &&
-          !CONTACT_EMAIL_PATTERN.test(normalizedContactEmail)
+          !contactEmailSchema.safeParse(normalizedContactEmail).success
         ? 'Adresse email invalide'
         : null;
   const hasChanges = normalizedContactEmail !== currentNormalizedContactEmail;
   const hasDraftChanges =
     hasChanges || currentPassword.length > 0 || isConfirmingRemoval;
   const canSubmit =
-    !isSaving &&
+    !busy &&
+    !conflict &&
     currentPassword.length > 0 &&
     (isConfirmingRemoval
       ? currentNormalizedContactEmail !== null
       : normalizedContactEmail !== null && !emailError && hasChanges);
 
   useEffect(() => {
-    if (!open) return;
-
-    setNextContactEmail(contactEmail ?? '');
+    requestRef.current?.abort();
+    requestRef.current = null;
+    submissionRef.current = false;
+    const snapshot = snapshotRef.current;
+    setNextContactEmail(open ? (snapshot.contactEmail ?? '') : '');
+    setBaseContactEmail(snapshot.contactEmail);
+    setBaseVersion(snapshot.expectedUpdatedAt);
     setCurrentPassword('');
     setError(null);
     setIsSaving(false);
+    setIsRefreshing(false);
+    setConflict(false);
+    setNotice(null);
     setIsConfirmingRemoval(false);
     setShowDiscardConfirm(false);
-  }, [contactEmail, open]);
+  }, [open]);
+
+  useEffect(() => {
+    onDirtyChange(open && (hasDraftChanges || busy));
+
+    return (): void => onDirtyChange(false);
+  }, [busy, hasDraftChanges, onDirtyChange, open]);
+
+  const focusField = (password = false): void => {
+    requestAnimationFrame(() => {
+      if (!mountedRef.current) return;
+      formRef.current
+        ?.querySelector<HTMLInputElement>(
+          password
+            ? '#account-contact-current-password'
+            : 'input:not(:disabled)',
+        )
+        ?.focus();
+    });
+  };
+
+  const reloadVersion = async (): Promise<void> => {
+    if (submissionRef.current || !mountedRef.current || !open) return;
+    submissionRef.current = true;
+    setIsRefreshing(true);
+    const controller = new AbortController();
+    requestRef.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 15_000);
+    try {
+      const data = await apiFetchJson<{ user: UserType }>(RoutesApi.me, {
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      if (!mountedRef.current || requestRef.current !== controller) return;
+      if (
+        controller.signal.aborted ||
+        !isAccountFormSnapshot(data.user, userId)
+      )
+        throw new Error('Invalid account response');
+      const receivedVersion = new Date(data.user.updatedAt).getTime();
+      if (
+        [baseVersion, snapshotRef.current.expectedUpdatedAt].some(
+          (version) => version && new Date(version).getTime() > receivedVersion,
+        )
+      )
+        throw new Error('Stale account response');
+      setBaseContactEmail(data.user.contactEmail);
+      setBaseVersion(data.user.updatedAt);
+      setConflict(false);
+      setCurrentPassword('');
+      setError(null);
+      setNotice(
+        `Adresse actuellement enregistrée : ${data.user.contactEmail ?? 'Non renseignée'}. Votre saisie est conservée ; vérifiez-la avant de confirmer.`,
+      );
+      void onSuccess(data.user).catch(() => {
+        if (mountedRef.current)
+          setError(
+            'Version relue. La vue du compte n’a pas pu être actualisée.',
+          );
+      });
+      focusField();
+    } catch (failure) {
+      if (!mountedRef.current || requestRef.current !== controller) return;
+      setError(
+        'Impossible de relire le compte. Réessayez ; votre saisie est conservée.',
+      );
+      if (
+        failure instanceof ApiClientError &&
+        (failure.status === 401 || failure.status === 403)
+      )
+        void onAccessDenied().catch(() => {});
+    } finally {
+      clearTimeout(timeout);
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+        submissionRef.current = false;
+        if (mountedRef.current) setIsRefreshing(false);
+      }
+    }
+  };
 
   const requestClose = (): void => {
     if (submissionRef.current) return;
@@ -125,7 +235,8 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
-    if (submissionRef.current || !mountedRef.current) return;
+    if (submissionRef.current || !mountedRef.current || !open || conflict)
+      return;
     setError(null);
 
     if (!isConfirmingRemoval && emailError) {
@@ -151,48 +262,85 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
 
       return;
     }
+    if (!baseVersion || !Number.isFinite(new Date(baseVersion).getTime())) {
+      setConflict(true);
+      setError('Actualisez la version du compte avant de confirmer.');
+
+      return;
+    }
+    if (isConfirmingRemoval && !currentNormalizedContactEmail) return;
 
     const contactEmailToSave = isConfirmingRemoval
       ? null
       : normalizedContactEmail;
 
+    const controller = new AbortController();
+    requestRef.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 30_000);
     try {
       submissionRef.current = true;
       setIsSaving(true);
-      const response = await apiFetch(RoutesApi.contactEmail, {
-        body: JSON.stringify({
-          contactEmail: contactEmailToSave,
-          currentPassword,
-        }),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'PATCH',
-      });
-      const data = (await response.json()) as ApiResponse<{ user: UserType }>;
-
-      if (!mountedRef.current) return;
-      if (!response.ok || !data.success) {
-        const responseError = data.success ? null : data.error.message;
-
-        setError(
-          responseError || "Impossible de modifier l'adresse de contact",
-        );
-
-        return;
-      }
-
-      await onSuccess(data.data.user);
+      const data = await apiFetchJson<{ user: UserType }>(
+        RoutesApi.contactEmail,
+        {
+          body: JSON.stringify({
+            contactEmail: contactEmailToSave,
+            currentPassword,
+            expectedUpdatedAt: new Date(baseVersion).toISOString(),
+          }),
+          headers: { 'Content-Type': 'application/json' },
+          method: 'PATCH',
+          signal: controller.signal,
+        },
+      );
+      if (!mountedRef.current || requestRef.current !== controller) return;
+      if (
+        controller.signal.aborted ||
+        !isAccountFormSnapshot(data.user, userId)
+      )
+        throw new Error('Invalid contact response');
+      setCurrentPassword('');
       toast.success(
         isConfirmingRemoval
           ? 'Adresse de contact supprimée'
           : 'Adresse de contact mise à jour',
       );
+      void onSuccess(data.user).catch(() => {
+        if (mountedRef.current)
+          toast.error(
+            'Adresse enregistrée. La vue du compte n’a pas pu être actualisée.',
+          );
+      });
       onCancel();
-    } catch {
-      if (!mountedRef.current) return;
-      setError("Impossible de modifier l'adresse de contact");
+    } catch (failure) {
+      if (!mountedRef.current || requestRef.current !== controller) return;
+      const uncertain =
+        !(failure instanceof ApiClientError) ||
+        failure.status >= 500 ||
+        failure.code === 'INVALID_RESPONSE';
+      setConflict(
+        uncertain ||
+          (failure instanceof ApiClientError && failure.status === 409),
+      );
+      setCurrentPassword('');
+      setError(
+        uncertain
+          ? 'La réponse n’a pas pu être confirmée. L’adresse a peut-être été modifiée. Actualisez la version avant de réessayer.'
+          : failure.message,
+      );
+      if (
+        failure instanceof ApiClientError &&
+        (failure.status === 401 || failure.status === 403)
+      )
+        void onAccessDenied().catch(() => {});
+      focusField(true);
     } finally {
-      submissionRef.current = false;
-      if (mountedRef.current) setIsSaving(false);
+      clearTimeout(timeout);
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+        submissionRef.current = false;
+        if (mountedRef.current) setIsSaving(false);
+      }
     }
   };
 
@@ -204,7 +352,10 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
           if (!isOpen) requestClose();
         }}
       >
-        <DialogContent className="overflow-y-auto p-0 sm:max-w-md">
+        <DialogContent
+          className="overflow-y-auto p-0 sm:max-w-md"
+          onCloseAutoFocus={restoreFocus}
+        >
           <div className="p-6">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -227,6 +378,8 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
             </DialogHeader>
 
             <form
+              ref={formRef}
+              aria-busy={busy || undefined}
               className="mt-4 space-y-4"
               onSubmit={handleSubmit}
               {...passwordManagerIgnoreAttributes}
@@ -240,6 +393,21 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
                   {error}
                 </div>
               )}
+              {notice && (
+                <p className="text-muted-foreground text-xs" role="status">
+                  {notice}
+                </p>
+              )}
+              {conflict && (
+                <Button
+                  disabled={busy}
+                  onClick={() => void reloadVersion()}
+                  type="button"
+                  variant="outline"
+                >
+                  {isRefreshing ? 'Actualisation…' : 'Actualiser la version'}
+                </Button>
+              )}
 
               {isConfirmingRemoval ? (
                 <div className="border-destructive/30 bg-destructive/10 rounded-md border p-3">
@@ -247,7 +415,7 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
                     Confirmer la suppression de cette adresse ?
                   </p>
                   <p className="text-muted-foreground mt-1 text-sm break-all">
-                    {contactEmail}
+                    {baseContactEmail}
                   </p>
                   <p className="text-muted-foreground mt-2 text-xs leading-5">
                     Votre identifiant, votre mot de passe et vos sessions ne
@@ -265,7 +433,7 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
                     autoCapitalize="none"
                     autoCorrect="off"
                     autoFocus
-                    disabled={isSaving}
+                    disabled={busy}
                     id="account-contact-email"
                     inputMode="email"
                     maxLength={CONTACT_EMAIL_MAX_LENGTH}
@@ -289,13 +457,14 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
                     {emailError ??
                       'Utilisée uniquement comme adresse de contact, jamais pour vous connecter.'}
                   </p>
-                  {contactEmail && (
+                  {baseContactEmail && (
                     <Button
                       className="text-destructive hover:bg-destructive/10 hover:text-destructive px-0"
-                      disabled={isSaving}
+                      disabled={busy}
                       onClick={() => {
                         setError(null);
                         setIsConfirmingRemoval(true);
+                        focusField(true);
                       }}
                       size="sm"
                       type="button"
@@ -314,7 +483,7 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
                 </Label>
                 <Input
                   autoFocus={isConfirmingRemoval}
-                  disabled={isSaving}
+                  disabled={busy}
                   id="account-contact-current-password"
                   onChange={(event) => setCurrentPassword(event.target.value)}
                   placeholder="Confirmez votre identité"
@@ -337,11 +506,12 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
               <div className="flex flex-col-reverse gap-2 sm:flex-row">
                 <Button
                   className="flex-1"
-                  disabled={isSaving}
+                  disabled={busy}
                   onClick={() => {
                     if (isConfirmingRemoval) {
                       setError(null);
                       setIsConfirmingRemoval(false);
+                      focusField();
 
                       return;
                     }

@@ -1,0 +1,57 @@
+[
+  {
+    "name": "mfa-setup-scan-recovery-small-height",
+    "width": 390,
+    "pass": true,
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/mfa/setup",
+        "query": "",
+        "body": {}
+      },
+      {
+        "method": "PUT",
+        "path": "/api/auth/mfa/setup",
+        "query": "",
+        "body": {}
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/mfa",
+        "query": "",
+        "body": null
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/sessions",
+        "query": "",
+        "body": null
+      }
+    ]
+  }
+]

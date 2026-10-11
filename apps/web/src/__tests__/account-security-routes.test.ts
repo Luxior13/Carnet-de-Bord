@@ -689,7 +689,16 @@ describe('account security routes', () => {
           OR: [
             { expiresAt: { lte: expect.any(Date) } },
             { idleExpiresAt: { lte: expect.any(Date) } },
+            { securityVersion: { not: 3 } },
           ],
+          user: {
+            is: {
+              deletedAt: null,
+              id: 'user-1',
+              isActive: true,
+              securityVersion: 3,
+            },
+          },
           userId: 'user-1',
         },
       });
@@ -1305,6 +1314,24 @@ describe('account security routes', () => {
   });
 
   describe('DELETE /api/auth/sessions', () => {
+    it('returns 404 without an audit when another request already revoked the selected session', async () => {
+      mockPrisma.session.findFirst.mockResolvedValueOnce({
+        id: 'other-session',
+        token: 'other-token',
+      });
+      mockPrisma.session.deleteMany.mockResolvedValueOnce({ count: 0 });
+      const route = await import('$app/api/auth/sessions/route');
+      const response = await route.DELETE(
+        new Request('http://localhost/api/auth/sessions?id=other-session', {
+          method: 'DELETE',
+        }),
+      );
+
+      expect(response.status).toBe(404);
+      expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
+      expect(mockPrisma.session.delete).not.toHaveBeenCalled();
+    });
+
     it('prevents revoking the current session through the revoke endpoint', async () => {
       mockPrisma.session.findFirst.mockResolvedValue({
         id: 'session-1',

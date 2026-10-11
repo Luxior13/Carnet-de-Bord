@@ -1,6 +1,6 @@
 'use client';
 
-import { KeyRound, Loader2 } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Button } from '$ui/button';
@@ -14,7 +14,7 @@ import {
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { ServiceIcon } from '$ui/service-icon';
-import { apiFetch } from '$utils/api.utils';
+import { ApiClientError, apiFetchJson } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 import {
   getPasswordStrengthColor,
@@ -24,22 +24,25 @@ import {
 
 type ChangePasswordDialogProps = {
   onCancel?: () => void;
-  onSuccess: () => void;
+  onSuccess: () => Promise<void> | void;
   open: boolean;
 };
 
-export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
+const ChangePasswordDialogContent: FC<ChangePasswordDialogProps> = ({
   onCancel,
   onSuccess,
   open,
 }) => {
   const submissionRef = useRef(false);
   const mountedRef = useRef(false);
+  const requestRef = useRef<AbortController | null>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     mountedRef.current = true;
 
     return (): void => {
       mountedRef.current = false;
+      requestRef.current?.abort();
     };
   }, []);
   const canCancel = !!onCancel;
@@ -48,6 +51,8 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordSaved, setPasswordSaved] = useState(false);
+  const [outcomeUnknown, setOutcomeUnknown] = useState(false);
 
   const passwordValidation = useMemo(
     () => validatePassword(newPassword),
@@ -76,7 +81,13 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    if (submissionRef.current || !mountedRef.current) return;
+    if (
+      submissionRef.current ||
+      !mountedRef.current ||
+      outcomeUnknown ||
+      passwordSaved
+    )
+      return;
     setError(null);
 
     if (canCancel && !currentPassword) {
@@ -99,9 +110,12 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
 
     submissionRef.current = true;
     setIsLoading(true);
+    const request = new AbortController();
+    requestRef.current = request;
+    const timeout = setTimeout(() => request.abort(), 30_000);
 
     try {
-      const response = await apiFetch('/api/auth/change-password', {
+      await apiFetchJson('/api/auth/change-password', {
         body: JSON.stringify({
           confirmPassword,
           currentPassword: canCancel ? currentPassword : undefined,
@@ -109,24 +123,41 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
+        signal: request.signal,
       });
-
-      const data = await response.json();
       if (!mountedRef.current) return;
-
-      if (!response.ok || !data.success) {
-        setError(data.error?.message || 'Une erreur est survenue');
-
-        return;
+      setPasswordSaved(true);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      try {
+        await onSuccess();
+      } catch {
+        if (mountedRef.current)
+          setError(
+            'Le mot de passe est enregistré. Actualisez le compte pour terminer.',
+          );
       }
-
-      onSuccess();
-    } catch {
+    } catch (failure) {
       if (!mountedRef.current) return;
-      setError('Une erreur est survenue');
+      const uncertain =
+        !(failure instanceof ApiClientError) ||
+        failure.status >= 500 ||
+        failure.code === 'INVALID_RESPONSE';
+      setOutcomeUnknown(uncertain);
+      setCurrentPassword('');
+      setError(
+        uncertain
+          ? 'La réponse du serveur n’a pas pu être confirmée. Le mot de passe a peut-être été modifié. Vérifiez votre accès avec le nouveau mot de passe avant de recommencer.'
+          : failure.message,
+      );
     } finally {
+      clearTimeout(timeout);
       submissionRef.current = false;
-      if (mountedRef.current) setIsLoading(false);
+      if (mountedRef.current) {
+        setIsLoading(false);
+        requestAnimationFrame(() => feedbackRef.current?.focus());
+      }
     }
   };
 
@@ -138,6 +169,7 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
       }
     >
       <DialogContent
+        aria-busy={isLoading || undefined}
         className="overflow-y-auto p-0 sm:max-w-md"
         hideCloseButton={!canCancel}
       >
@@ -164,132 +196,139 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
           >
             {error && (
               <div
+                ref={feedbackRef}
+                tabIndex={-1}
                 className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
                 role="alert"
               >
                 {error}
               </div>
             )}
-            {canCancel && (
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword" required>
-                  Mot de passe actuel
-                </Label>
-                <Input
-                  id="currentPassword"
-                  name="current-password"
-                  required
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Votre mot de passe actuel"
-                  disabled={isLoading}
-                  autoFocus
-                  aria-invalid={canCancel && !currentPassword && !!error}
-                />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="newPassword" required>
-                Nouveau mot de passe
-              </Label>
-              <Input
-                id="newPassword"
-                name="new-password"
-                required
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Minimum 8 caractères"
-                disabled={isLoading}
-                autoFocus={!canCancel}
-                aria-describedby={
-                  newPassword.length > 0 ? 'password-strength' : undefined
-                }
-                aria-invalid={
-                  newPassword.length > 0 && !passwordValidation.isValid
-                }
-              />
-              {newPassword.length > 0 && (
-                <div
-                  className="space-y-1.5"
-                  id="password-strength"
-                  role="status"
-                  aria-live="polite"
-                >
-                  <div
-                    className="flex gap-1"
-                    role="progressbar"
-                    aria-valuenow={passwordValidation.score}
-                    aria-valuemin={0}
-                    aria-valuemax={4}
-                    aria-label={`Force du mot de passe: ${strengthLabel}`}
-                  >
-                    {[1, 2, 3, 4].map((bar) => (
-                      <div
-                        key={bar}
-                        className={cn(
-                          'h-1.5 flex-1 rounded-full transition-colors duration-200',
-                          bar <= passwordValidation.score
-                            ? strengthColor
-                            : 'bg-secondary',
-                        )}
-                      />
-                    ))}
+            {!passwordSaved && !outcomeUnknown && (
+              <>
+                {canCancel && (
+                  <div className="space-y-2">
+                    <Label htmlFor="currentPassword" required>
+                      Mot de passe actuel
+                    </Label>
+                    <Input
+                      id="currentPassword"
+                      name="current-password"
+                      required
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Votre mot de passe actuel"
+                      disabled={isLoading}
+                      autoFocus
+                      aria-invalid={canCancel && !currentPassword && !!error}
+                    />
                   </div>
-                  <p
-                    className={cn(
-                      'text-xs font-medium',
-                      passwordValidation.score <= 1 && 'text-destructive',
-                      passwordValidation.score === 2 && 'text-warning',
-                      passwordValidation.score === 3 && 'text-warning',
-                      passwordValidation.score === 4 && 'text-success',
-                    )}
-                  >
-                    Force du mot de passe : {strengthLabel}
-                  </p>
-                  {passwordValidation.errors.length > 0 && (
-                    <ul className="text-destructive list-inside list-disc space-y-0.5 text-xs">
-                      {passwordValidation.errors.map((err, idx) => (
-                        <li key={idx}>{err}</li>
-                      ))}
-                    </ul>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" required>
+                    Nouveau mot de passe
+                  </Label>
+                  <Input
+                    id="newPassword"
+                    name="new-password"
+                    required
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Minimum 8 caractères"
+                    disabled={isLoading}
+                    autoFocus={!canCancel}
+                    aria-describedby={
+                      newPassword.length > 0 ? 'password-strength' : undefined
+                    }
+                    aria-invalid={
+                      newPassword.length > 0 && !passwordValidation.isValid
+                    }
+                  />
+                  {newPassword.length > 0 && (
+                    <div
+                      className="space-y-1.5"
+                      id="password-strength"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <div
+                        className="flex gap-1"
+                        role="progressbar"
+                        aria-valuenow={passwordValidation.score}
+                        aria-valuemin={0}
+                        aria-valuemax={4}
+                        aria-label={`Force du mot de passe: ${strengthLabel}`}
+                      >
+                        {[1, 2, 3, 4].map((bar) => (
+                          <div
+                            key={bar}
+                            className={cn(
+                              'h-1.5 flex-1 rounded-full transition-colors duration-200',
+                              bar <= passwordValidation.score
+                                ? strengthColor
+                                : 'bg-secondary',
+                            )}
+                          />
+                        ))}
+                      </div>
+                      <p
+                        className={cn(
+                          'text-xs font-medium',
+                          passwordValidation.score <= 1 && 'text-destructive',
+                          passwordValidation.score === 2 && 'text-warning',
+                          passwordValidation.score === 3 && 'text-warning',
+                          passwordValidation.score === 4 && 'text-success',
+                        )}
+                      >
+                        Force du mot de passe : {strengthLabel}
+                      </p>
+                      {passwordValidation.errors.length > 0 && (
+                        <ul className="text-destructive list-inside list-disc space-y-0.5 text-xs">
+                          {passwordValidation.errors.map((err, idx) => (
+                            <li key={idx}>{err}</li>
+                          ))}
+                        </ul>
+                      )}
+                      <p className="text-muted-foreground text-xs">
+                        Utilisez au moins 8 caractères avec majuscules,
+                        minuscules, chiffres. Les caractères spéciaux améliorent
+                        la sécurité.
+                      </p>
+                    </div>
                   )}
-                  <p className="text-muted-foreground text-xs">
-                    Utilisez au moins 8 caractères avec majuscules, minuscules,
-                    chiffres. Les caractères spéciaux améliorent la sécurité.
-                  </p>
                 </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" required>
-                Confirmer le mot de passe
-              </Label>
-              <Input
-                id="confirmPassword"
-                name="confirm-password"
-                required
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirmez votre mot de passe"
-                disabled={isLoading}
-                aria-invalid={isConfirmMismatch}
-                aria-describedby={
-                  isConfirmMismatch ? 'confirmPassword-error' : undefined
-                }
-              />
-              {isConfirmMismatch && (
-                <p
-                  id="confirmPassword-error"
-                  className="text-destructive text-xs"
-                  role="alert"
-                >
-                  Les mots de passe ne correspondent pas
-                </p>
-              )}
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" required>
+                    Confirmer le mot de passe
+                  </Label>
+                  <Input
+                    id="confirmPassword"
+                    name="confirm-password"
+                    required
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirmez votre mot de passe"
+                    disabled={isLoading}
+                    aria-invalid={isConfirmMismatch}
+                    aria-describedby={
+                      isConfirmMismatch ? 'confirmPassword-error' : undefined
+                    }
+                  />
+                  {isConfirmMismatch && (
+                    <p
+                      id="confirmPassword-error"
+                      className="text-destructive text-xs"
+                      role="alert"
+                    >
+                      Les mots de passe ne correspondent pas
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
             <div
               className={
                 canCancel ? 'flex flex-col-reverse gap-2 sm:flex-row' : ''
@@ -306,20 +345,50 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                   Annuler
                 </Button>
               )}
-              <Button
-                type="submit"
-                className={cn(canCancel ? 'flex-1' : 'w-full')}
-                disabled={isLoading || !canSubmit}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Changement en cours...
-                  </>
-                ) : (
-                  'Changer le mot de passe'
-                )}
-              </Button>
+              {outcomeUnknown ? (
+                <Button
+                  className="flex-1"
+                  onClick={() => window.location.reload()}
+                  type="button"
+                >
+                  Recharger le compte
+                </Button>
+              ) : passwordSaved ? (
+                <Button
+                  className="flex-1"
+                  loading={isLoading}
+                  onClick={async () => {
+                    if (submissionRef.current) return;
+                    submissionRef.current = true;
+                    setIsLoading(true);
+                    try {
+                      await onSuccess();
+                    } catch {
+                      if (mountedRef.current)
+                        setError(
+                          'Le mot de passe est enregistré. L’actualisation a échoué ; réessayez.',
+                        );
+                    } finally {
+                      submissionRef.current = false;
+                      if (mountedRef.current) setIsLoading(false);
+                    }
+                  }}
+                  type="button"
+                >
+                  Actualiser le compte
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  className={cn(canCancel ? 'flex-1' : 'w-full')}
+                  disabled={isLoading || !canSubmit}
+                  loading={isLoading}
+                >
+                  {isLoading
+                    ? 'Changement en cours…'
+                    : 'Changer le mot de passe'}
+                </Button>
+              )}
             </div>
           </form>
         </div>
@@ -327,3 +396,6 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
     </Dialog>
   );
 };
+
+export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = (props) =>
+  props.open ? <ChangePasswordDialogContent {...props} /> : null;
