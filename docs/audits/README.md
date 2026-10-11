@@ -10,6 +10,7 @@ Ne pas créer un rapport complet pour chaque correction de texte.
 
 | Rapport | Périmètre et portée |
 | --- | --- |
+| [Création d'utilisateur — 11 octobre 2026](AUDIT_CREATION_UTILISATEUR_2026-10-11.md) | Copie tardive, focus ADMIN et texte contact corrigés ; service extrait, générateur partagé testé directement ; 28 scénarios simulés, neuf parcours réels dont première connexion/MFA/changement de mot de passe, cinq transactions SQL ; 1 161 tests web réussis |
 | [Utilisateurs — 11 octobre 2026](AUDIT_UTILISATEURS_2026-10-11.md) | Liste corrigée : recherche SQL bornée, pagination, retours et accessibilité ; 42 scénarios simulés puis reprise ciblée, dix parcours Next/MFA/PostgreSQL, 19 contrôles d'invariants SQL et mesures jusqu'à 10k comptes ; 1 145 tests web réussis |
 | [Répertoire — 11 octobre 2026](AUDIT_REPERTOIRE_2026-10-11.md) | Liste corrigée, 41 scénarios Chromium simulés et neuf parcours réels, mesures jusqu’à 10k fiches ; complément schéma/refactorisation, concurrence et propriété des coordonnées corrigées, 29 contrôles SQL et migration additive vérifiée |
 | [Composants partagés — 11 octobre 2026](AUDIT_COMPOSANTS_2026-10-11.md) | Revue des primitives et de leurs consommateurs ; actions, recherche et pagination mutualisées, conservation des brouillons et comportements clavier corrigés ; preuves Chromium avec API simulées et limites d'intégration |

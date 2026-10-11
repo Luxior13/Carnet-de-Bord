@@ -34,6 +34,9 @@ import {
 import { logger } from './logger';
 import { prisma } from './prisma';
 import { getClientIp, getRequestId, getUserAgent } from './request-context';
+import { generateTemporaryPassword } from './temporary-password';
+
+export { generateTemporaryPassword } from './temporary-password';
 
 export const SESSION_COOKIE_NAME = 'session';
 const SESSION_SHORT_DURATION_DAYS = 1;
@@ -164,64 +167,6 @@ export const generateSessionToken = (): string => {
 
   return encodeBase32LowerCaseNoPadding(bytes);
 };
-
-/**
- * Generates a random temporary password that meets complexity requirements:
- * - At least 8 characters (we use 14)
- * - At least one uppercase letter
- * - At least one lowercase letter
- * - At least one digit
- * - At least one special character (for extra security)
- */
-/* eslint-disable security/detect-object-injection -- Numeric indexes are bounded by internal strings and arrays during crypto-random character selection and shuffle. */
-export const generateTemporaryPassword = (): string => {
-  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const digits = '0123456789';
-  const special = '!@#$%&*';
-  const allChars = lowercase + uppercase + digits + special;
-
-  // Ensure at least one character from each required category
-  const getRandomChar = (charset: string): string => {
-    const bytes = new Uint8Array(1);
-    crypto.getRandomValues(bytes);
-    const index = (bytes[0] ?? 0) % charset.length;
-
-    return charset[index] ?? charset[0] ?? 'a';
-  };
-
-  const requiredChars = [
-    getRandomChar(lowercase),
-    getRandomChar(uppercase),
-    getRandomChar(digits),
-    getRandomChar(special),
-  ];
-
-  // Fill the rest with random characters from all categories
-  const remainingLength = 10; // Total 14 characters
-  const bytes = new Uint8Array(remainingLength);
-  crypto.getRandomValues(bytes);
-  const randomChars = Array.from(
-    bytes,
-    (b) => allChars[b % allChars.length] ?? 'a',
-  );
-
-  // Combine and shuffle
-  const combined = [...requiredChars, ...randomChars];
-  const shuffleBytes = new Uint8Array(combined.length);
-  crypto.getRandomValues(shuffleBytes);
-
-  // Fisher-Yates shuffle using crypto random
-  for (let i = combined.length - 1; i > 0; i--) {
-    const j = (shuffleBytes[i] ?? 0) % (i + 1);
-    const temp = combined[i];
-    combined[i] = combined[j] ?? '';
-    combined[j] = temp ?? '';
-  }
-
-  return combined.join('');
-};
-/* eslint-enable security/detect-object-injection */
 
 /**
  * Hashes a password using bcrypt
@@ -930,58 +875,6 @@ export const authenticateUser = async (
 // ============================================
 // USER CRUD
 // ============================================
-
-/**
- * Creates a new user (admin only)
- */
-export const createUser = async (
-  data: {
-    contactEmail?: string | null;
-    firstName: string;
-    lastName: string;
-    loginName: string;
-    password: string;
-    role: UserRole;
-  },
-  auditFactory?: (user: User) => RequiredAuditLogInput,
-): Promise<User> => {
-  const passwordHash = await hashPassword(data.password);
-  const requestContext = auditFactory ? await getAuditRequestContext() : null;
-  const normalizedLoginName = data.loginName.toLowerCase().trim();
-
-  return prisma.$transaction(async (transaction) => {
-    const user = await transaction.user.create({
-      data: {
-        contactEmail: data.contactEmail?.toLowerCase().trim() || null,
-        firstName: data.firstName.trim(),
-        lastName: data.lastName.trim(),
-        loginName: normalizedLoginName,
-        mustChangePassword: true,
-        passwordHash,
-        role: data.role,
-      },
-    });
-
-    // The reservation is in the same transaction as the user. If this login
-    // name belonged to an older identity, its primary-key conflict rolls the
-    // user creation back instead of silently recycling the identifier.
-    await transaction.loginNameReservation.create({
-      data: {
-        loginName: normalizedLoginName,
-        userId: user.id,
-      },
-    });
-
-    if (auditFactory && requestContext) {
-      await createAuditLog(
-        { ...auditFactory(user), ...requestContext },
-        transaction,
-      );
-    }
-
-    return user;
-  });
-};
 
 type UpdateUserPasswordOptions = {
   audit?: RequiredAuditLogInput;

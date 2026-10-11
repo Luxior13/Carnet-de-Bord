@@ -1,4 +1,4 @@
-# Suivi — Utilisateurs, liste
+# Suivi — Utilisateurs : liste, création et fiche
 
 ## Revue approfondie — 11 octobre 2026
 
@@ -434,7 +434,55 @@ Safari et appareils physiques non rejoués. Le changement de compte/droits penda
 un POST et les délais de 30/15 secondes sont examinés dans le code, sans scénario
 navigateur dédié. Les anciennes preuves ci-dessus restent historiques.
 
+### Revue approfondie de la création — 11 octobre 2026
+
+Passe suivante après la liste, demandée en contexte développement. Le
+[rapport du 11 octobre](../../audits/AUDIT_CREATION_UTILISATEUR_2026-10-11.md)
+sépare les nouveaux contrôles des preuves du 10 octobre ci-dessus.
+
+Décisions courantes complémentaires :
+
+- Une copie de mot de passe ne peut annoncer son résultat que pour la dernière
+  opération encore pertinente. Reset, nouveau succès et changement d'instance
+  invalident les anciens résultats de copie.
+- Annuler la confirmation administrateur rend le focus au bouton « Créer le
+  compte » ; une confirmation réussie conserve le focus sur le titre du succès.
+  La garde de navigation utilise son contrat partagé de restitution du focus.
+- Le contact est facultatif et ne sert jamais d'identifiant de connexion.
+  L'aide ne promet plus de récupération de compte par email.
+- La création atomique appartient au service de la feature Utilisateurs. Son
+  audit est obligatoire et le contrôle préalable du doublon ne lit que `id`.
+- Le générateur partagé création/réinitialisation est testé directement et
+  utilise les tirages `crypto.randomInt`. Longueur 14, catégories de caractères,
+  hash bcrypt coût 12 et changement obligatoire restent inchangés.
+- Schéma et réservations existants suffisants : aucune migration, dépendance,
+  permission, notification ou nouvelle capacité de stockage ajoutée.
+
+**Création conforme sur le périmètre vérifié ; USR-N08 à USR-N12 clos.**
+28 scénarios Chromium simulés, neuf parcours réels Next/PostgreSQL/MFA et cinq
+tests SQL transactionnels réussis. La première connexion du compte créé,
+l'inscription MFA, le changement obligatoire puis une nouvelle connexion sont
+désormais exécutés, avec une vraie copie dans le presse-papiers. Les délais
+30/15 s et changements d'acteur/droits en vol sont vérifiés au banc simulé.
+
+Suite web : 1 161 tests réussis, 41 tests SQL Personnes/liste Utilisateurs
+ignorés faute de leurs variables dédiées ; les cinq SQL de création sont
+exécutés. Build, lint via build, types et budgets réussis. Aucune donnée habituelle
+touchée. Lecteur d'écran, Safari, appareils physiques, extensions et charge
+massive restent hors des preuves, comme détaillé dans le rapport.
+Documentation et index vérifiés (`docs:check` : 210 fichiers, 1 340 liens ;
+six tests du contrôleur documentaire réussis). Les environnements temporaires
+de cette passe ont été arrêtés et supprimés après les vérifications.
+
 ## Fiche utilisateur (`/systeme/utilisateurs/[id]`) — 10 octobre 2026
+
+**Point ouvert repéré le 11 octobre — USR-D10, P2 :** le PATCH valide un nom
+facultatif mais construit sa mise à jour avec `if (lastName)`, ignorant donc
+`''`. Attendu : pouvoir effacer un nom existant sans toucher au prénom.
+Preuve actuelle : lecture de la route, aucun scénario navigateur/SQL de ce
+défaut exécuté pendant l'audit de création. Responsable : à attribuer.
+Prochaine action : reproduire, corriger et vérifier lors de la prochaine passe
+de cette fiche. Cela ne concerne pas la création avec nom vide déjà acceptée.
 
 État après correction autorisée par « ok go corriger » : **USR-D01 à USR-D08
 corrigés et vérifiés ; USR-D09 livré**. Le

@@ -18,7 +18,6 @@ vi.mock('$features/users/server/users-list.service', () => ({
 }));
 vi.mock('$server/prisma', () => ({ prisma: {} }));
 vi.mock('$server/auth', () => ({
-  createUser: vi.fn(),
   generateTemporaryPassword: vi.fn(),
   mapUserToUserType: (user: unknown): unknown => user,
 }));

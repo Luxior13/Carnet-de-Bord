@@ -1,0 +1,12 @@
+[
+  {
+    "name": "admin-stepup-cancel-focus",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "admin-stepup-success-focus",
+    "width": 390,
+    "pass": true
+  }
+]

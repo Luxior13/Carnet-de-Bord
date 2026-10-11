@@ -75,11 +75,14 @@ vi.mock('$server/api-auth', () => ({
 vi.mock('$server/auth', () => ({
   createAuditLog: mockCreateAuditLog,
   createAuditLogWithHeaders: mockCreateAuditLogWithHeaders,
-  createUser: mockCreateUser,
   generateTemporaryPassword: mockGenerateTemporaryPassword,
   getAuditRequestContext: mockGetAuditRequestContext,
   invalidateAllUserSessions: mockInvalidateAllUserSessions,
   mapUserToUserType: (user: unknown): unknown => user,
+}));
+
+vi.mock('$features/users/server/user-create.service', () => ({
+  createUser: mockCreateUser,
 }));
 
 vi.mock('$server/prisma', () => ({

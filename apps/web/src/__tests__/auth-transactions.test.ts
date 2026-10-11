@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createUser } from '$features/users/server/user-create.service';
+
 const mocks = vi.hoisted(() => {
   const transaction = {
     auditLog: { create: vi.fn() },
@@ -83,7 +85,6 @@ import {
   authenticateUser,
   createAuditLog,
   createSession,
-  createUser,
   getAuthSession,
   getPageAuthSession,
   ProtectedAccountMutationError,
@@ -1041,13 +1042,16 @@ describe('auth security transactions', () => {
     );
 
     await expect(
-      createUser({
-        firstName: 'New',
-        lastName: 'User',
-        loginName: 'retired.login',
-        password: 'TempPassword1!',
-        role: 'USER',
-      }),
+      createUser(
+        {
+          firstName: 'New',
+          lastName: 'User',
+          loginName: 'retired.login',
+          password: 'TempPassword1!',
+          role: 'USER',
+        },
+        (user) => ({ ...audit, action: 'USER_CREATE', targetUserId: user.id }),
+      ),
     ).rejects.toMatchObject({ code: 'P2002' });
 
     expect(mocks.transaction.loginNameReservation.create).toHaveBeenCalledWith({

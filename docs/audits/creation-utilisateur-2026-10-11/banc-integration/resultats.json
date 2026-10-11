@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-11",
+  "runtime": "Next production + PostgreSQL 17 + Chromium",
+  "browserVersion": "149.0.7827.55",
+  "scenarios": [
+    {
+      "name": "real login + MFA, returnTo and responsive form at seven widths",
+      "result": "passed"
+    },
+    {
+      "name": "invalid email prevents POST; real USER creation, optional surname, contact normalization, bcrypt and audit",
+      "result": "passed"
+    },
+    {
+      "name": "clipboard, explicit acknowledgement, reset cancellation focus and no persistent secret",
+      "result": "passed"
+    },
+    {
+      "name": "new account authenticates, enrolls MFA, changes temporary password and signs in again",
+      "result": "passed"
+    },
+    {
+      "name": "duplicate identifier retained and focused; strict input and CSRF rejection",
+      "result": "passed"
+    },
+    {
+      "name": "ADMIN proof cancellation retains form; real password and fresh TOTP create ADMIN",
+      "result": "passed"
+    },
+    {
+      "name": "lost real commit response recovers by exact login with one account and one audit",
+      "result": "passed"
+    },
+    {
+      "name": "delegated creator USER allowed, ADMIN denied, live permission revocation denied",
+      "result": "passed"
+    },
+    {
+      "name": "unsafe returnTo sanitized and clean final form screenshot",
+      "result": "passed"
+    }
+  ]
+}

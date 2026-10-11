@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-11",
+  "baseCommit": "d1d61ee",
+  "scope": "POST /api/users, createUser transaction and shared temporary password generator",
+  "environment": {
+    "database": "creation_service_test",
+    "host": "127.0.0.1",
+    "port": 54594,
+    "prismaVersion": "6.19.3",
+    "appliedMigrations": 52,
+    "isolatedDisposableDatabase": true,
+    "applicationDatabaseUsed": false,
+    "productMigrationAdded": false
+  },
+  "results": {
+    "targetedRegression": {
+      "files": 7,
+      "passed": 246,
+      "failed": 0,
+      "skipped": 0
+    },
+    "postgres": {
+      "files": 1,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "finalApiAndPostgresRerun": {
+      "localStartTime": "21:07:29",
+      "timezone": "Europe/Paris",
+      "files": 2,
+      "passed": 28,
+      "failed": 0,
+      "skipped": 0,
+      "vitestDurationSeconds": 2.7
+    },
+    "targetedLint": "passed without warnings",
+    "typescript": "passed"
+  },
+  "postgresScenarios": [
+    {
+      "scenario": "Create USER account",
+      "passed": true,
+      "assertions": ["normalized identity and contact", "real bcrypt hash at cost 12 verifies", "mustChangePassword true", "one login reservation", "one audit without password or hash", "no session"]
+    },
+    {
+      "scenario": "Create ADMIN account",
+      "passed": true,
+      "assertions": ["not protected", "real bcrypt hash at cost 12 verifies", "one login reservation", "one audit without password or hash", "no session"]
+    },
+    {
+      "scenario": "Concurrent attempts for one login",
+      "passed": true,
+      "assertions": ["one success", "one P2002 rejection", "one account", "one reservation", "one audit"]
+    },
+    {
+      "scenario": "Login retained by a renamed identity",
+      "passed": true,
+      "assertions": ["P2002 rejection", "account and audit counts unchanged", "historical reservation still belongs to original identity"]
+    },
+    {
+      "scenario": "Real audit insertion failure followed by retry",
+      "passed": true,
+      "assertions": ["temporary SQL trigger forces error", "account and reservation rolled back", "no audit committed", "trigger removed", "same attempt succeeds after removal"]
+    }
+  ],
+  "limits": [
+    "API unit tests simulate session source and storage; authorization and response projection functions remain real.",
+    "SQL tests run the actual createUser and audit code against the fully migrated isolated database; request headers and logger adapters are simulated.",
+    "This evidence does not certify browser behavior, a production deployment, throughput or all shared authentication functions.",
+    "Fictive fixtures remain only in the disposable database; no temporary secret or hash is included in this evidence."
+  ]
+}

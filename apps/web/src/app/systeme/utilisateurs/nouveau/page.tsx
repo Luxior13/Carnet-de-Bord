@@ -77,6 +77,7 @@ const NewUserContent: FC<{ returnHref: string; userData: UserType | null }> = ({
     cancelPendingNavigation,
     confirmPendingNavigation,
     pendingNavigationHref,
+    restoreFocus,
   } = useUnsavedNavigationGuard(
     hasUnsavedChanges || isCreating || hasUnacknowledgedPassword,
   );
@@ -365,8 +366,9 @@ const NewUserContent: FC<{ returnHref: string; userData: UserType | null }> = ({
                             className="text-muted-foreground text-xs"
                             id="newContactAddress-hint"
                           >
-                            Distinct de l&apos;identifiant ; prévu pour la
-                            récupération du compte et les futurs messages.
+                            Adresse de contact facultative, distincte de
+                            l&apos;identifiant et jamais utilisée pour vous
+                            connecter.
                           </p>
                         )}
                       </div>
@@ -468,6 +470,7 @@ const NewUserContent: FC<{ returnHref: string; userData: UserType | null }> = ({
                 : 'Les informations saisies pour ce nouveau compte seront perdues.'
         }
         onCancel={cancelPendingNavigation}
+        onCloseAutoFocus={restoreFocus}
         onConfirm={confirmPendingNavigation}
         open={pendingNavigationHref !== null}
       />
@@ -488,6 +491,13 @@ const NewUserContent: FC<{ returnHref: string; userData: UserType | null }> = ({
           actorLoginName={userData.loginName}
           description="Confirmez votre identité avant de créer un compte administrateur."
           onCancel={() => setShowAdminCreationStepUp(false)}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            const submit = formRef.current?.querySelector<HTMLButtonElement>(
+              'button[type="submit"]',
+            );
+            if (submit && !submit.disabled) submit.focus();
+          }}
           onComplete={async () => {
             setShowAdminCreationStepUp(false);
             await handleCreateUser();

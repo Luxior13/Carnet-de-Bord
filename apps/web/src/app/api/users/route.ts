@@ -5,6 +5,7 @@ import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGINATION } from '$constants/pagination.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { createUserSchema } from '$features/users/create-user.schema';
+import { createUser } from '$features/users/server/user-create.service';
 import { listUsers } from '$features/users/server/users-list.service';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import {
@@ -13,11 +14,7 @@ import {
   parseJsonBody,
   parsePagination,
 } from '$server/api-response';
-import {
-  createUser,
-  generateTemporaryPassword,
-  mapUserToUserType,
-} from '$server/auth';
+import { generateTemporaryPassword, mapUserToUserType } from '$server/auth';
 import { prisma } from '$server/prisma';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
 import { protectUserIdentityForActor } from '$server/user-visibility';
@@ -237,6 +234,7 @@ export async function POST(
     }
 
     const existingUser = await prisma.user.findUnique({
+      select: { id: true },
       where: { loginName },
     });
 

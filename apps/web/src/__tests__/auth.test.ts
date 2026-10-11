@@ -1,11 +1,16 @@
 import bcrypt from 'bcryptjs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+import { generateTemporaryPassword } from '$server/temporary-password';
+
+vi.mock('server-only', () => ({}));
 
 /* eslint-disable security/detect-object-injection -- These tests mirror bounded array/string indexing from the password generator and compare fixed test arrays. */
 
 // ============================================
 // Test implementations that mirror auth.ts logic
-// We can't import server-only modules in tests
+// Legacy session/hash checks below retain their local helpers.
+// Temporary password checks import the actual shared server generator.
 // ============================================
 
 const generateSessionTokenForTest = (): string => {
@@ -14,50 +19,6 @@ const generateSessionTokenForTest = (): string => {
 
   // Simplified base32 encoding for test
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-};
-
-const generateTemporaryPasswordForTest = (): string => {
-  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const digits = '0123456789';
-  const special = '!@#$%&*';
-  const allChars = lowercase + uppercase + digits + special;
-
-  const getRandomChar = (charset: string): string => {
-    const bytes = new Uint8Array(1);
-    crypto.getRandomValues(bytes);
-    const index = (bytes[0] ?? 0) % charset.length;
-
-    return charset[index] ?? charset[0] ?? 'a';
-  };
-
-  const requiredChars = [
-    getRandomChar(lowercase),
-    getRandomChar(uppercase),
-    getRandomChar(digits),
-    getRandomChar(special),
-  ];
-
-  const remainingLength = 10;
-  const bytes = new Uint8Array(remainingLength);
-  crypto.getRandomValues(bytes);
-  const randomChars = Array.from(
-    bytes,
-    (b) => allChars[b % allChars.length] ?? 'a',
-  );
-
-  const combined = [...requiredChars, ...randomChars];
-  const shuffleBytes = new Uint8Array(combined.length);
-  crypto.getRandomValues(shuffleBytes);
-
-  for (let i = combined.length - 1; i > 0; i--) {
-    const j = (shuffleBytes[i] ?? 0) % (i + 1);
-    const temp = combined[i];
-    combined[i] = combined[j] ?? '';
-    combined[j] = temp ?? '';
-  }
-
-  return combined.join('');
 };
 
 const hashPasswordForTest = async (password: string): Promise<string> => {
@@ -106,34 +67,34 @@ describe('generateSessionToken', () => {
 
 describe('generateTemporaryPassword', () => {
   it('generates a password of 14 characters', () => {
-    const password = generateTemporaryPasswordForTest();
+    const password = generateTemporaryPassword();
     expect(password.length).toBe(14);
   });
 
   it('contains at least one lowercase letter', () => {
-    const password = generateTemporaryPasswordForTest();
+    const password = generateTemporaryPassword();
     expect(password).toMatch(/[a-z]/);
   });
 
   it('contains at least one uppercase letter', () => {
-    const password = generateTemporaryPasswordForTest();
+    const password = generateTemporaryPassword();
     expect(password).toMatch(/[A-Z]/);
   });
 
   it('contains at least one digit', () => {
-    const password = generateTemporaryPasswordForTest();
+    const password = generateTemporaryPassword();
     expect(password).toMatch(/\d/);
   });
 
   it('contains at least one special character', () => {
-    const password = generateTemporaryPasswordForTest();
+    const password = generateTemporaryPassword();
     expect(password).toMatch(/[!@#$%&*]/);
   });
 
   it('generates unique passwords', () => {
     const passwords = new Set<string>();
     for (let i = 0; i < 50; i++) {
-      passwords.add(generateTemporaryPasswordForTest());
+      passwords.add(generateTemporaryPassword());
     }
     // All 50 passwords should be unique
     expect(passwords.size).toBe(50);
@@ -142,7 +103,7 @@ describe('generateTemporaryPassword', () => {
   it('always meets password requirements', () => {
     // Test multiple times to ensure consistency
     for (let i = 0; i < 20; i++) {
-      const password = generateTemporaryPasswordForTest();
+      const password = generateTemporaryPassword();
       expect(password.length).toBeGreaterThanOrEqual(8);
       expect(password).toMatch(/[a-z]/);
       expect(password).toMatch(/[A-Z]/);
