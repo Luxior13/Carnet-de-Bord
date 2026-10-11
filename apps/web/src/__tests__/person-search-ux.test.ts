@@ -29,7 +29,7 @@ vi.mock('$features/persons/server/person-audit', () => ({
   createPersonAudit: vi.fn(),
 }));
 
-import { listPersons } from '$features/persons/server/person-core.service';
+import { listPersons } from '$features/persons/server/person-list.service';
 
 type SqlQuery = {
   strings: readonly string[];

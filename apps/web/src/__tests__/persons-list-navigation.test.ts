@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   capturePersonsNavigation,
   readPersonsNavigation,
+  retainPersonsCursors,
 } from '$features/persons/person-list-navigation';
 import { haveSamePersonsListRequest } from '$features/persons/person-list-state';
 import { personsListQuerySchema } from '$features/persons/schemas/person.schemas';
@@ -69,6 +70,18 @@ describe('directory return navigation', () => {
     expect(restored.get(0)).toBeNull();
     expect(restored.get(149)).toBe('cursor-149');
     expect(restored.get(150)).toBe('cursor-150');
+  });
+
+  it('keeps long in-memory journeys bounded without losing the immediate way back', () => {
+    let cursors = new Map<number, string | undefined>([[0, undefined]]);
+    for (let page = 1; page <= 500; page++) {
+      cursors = retainPersonsCursors(cursors.set(page, `cursor-${page}`), page);
+      expect(cursors.size).toBeLessThanOrEqual(64);
+      expect(cursors.has(0)).toBe(true);
+      expect(cursors.get(page)).toBe(`cursor-${page}`);
+      if (page > 1) expect(cursors.get(page - 1)).toBe(`cursor-${page - 1}`);
+    }
+    expect(cursors.has(1)).toBe(false);
   });
 
   it.each([null, '{bad-json', 'null', '[]', '{"cursors":[999999999999]}'])(

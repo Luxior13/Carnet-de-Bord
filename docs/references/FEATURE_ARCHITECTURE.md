@@ -4,6 +4,11 @@ Toute nouvelle page fonctionnelle suit ce contrat. L'objectif est de pouvoir
 ajouter des dizaines de modules sans dupliquer les décisions de sécurité, de
 pagination, d'audit ou d'UX.
 
+Le projet est encore en développement. Simplifier le code et corriger le modèle
+quand un besoin concret le justifie ; ne pas multiplier les couches de
+compatibilité pour une production supposée. Les données locales existantes ne
+sont pas présumées supprimables et les contrôles d’intégrité restent nécessaires.
+
 Pour choisir les sujets à examiner selon le changement, commencer par la
 [revue générale](../qualite/REVUE_GENERALE.md). Ce contrat décrit les responsabilités
 des fonctionnalités ; il ne demande pas d'ajouter une capacité inutile à chaque page.
@@ -41,7 +46,12 @@ dans les composants React.
 ## 3. Listes et volumes
 
 - Utiliser une pagination par curseur signée pour les flux susceptibles de
-  grandir. Charger `limit + 1`, ne jamais compter toute la table à chaque page.
+  grandir. Charger `limit + 1` pour déterminer la suite ; ne pas calculer un
+  total complet sans besoin d’interface explicite.
+- Si un total exact ou une synthèse globale est demandé, en préciser le sens,
+  mesurer le coût et garder le total filtré cohérent avec les résultats. Le
+  Répertoire utilise un total avant curseur et une synthèse globale séparée ;
+  ce choix mesuré ne rend pas le comptage obligatoire pour toutes les listes.
 - Lier le curseur au module, aux filtres et à un instantané.
 - Borner recherche, filtres, taille de page et exports.
 - Ajouter les index correspondant exactement aux filtres et à l'ordre SQL.

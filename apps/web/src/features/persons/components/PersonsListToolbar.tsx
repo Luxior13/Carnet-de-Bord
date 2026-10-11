@@ -1,7 +1,7 @@
 'use client';
 
 import { RotateCcw, X } from 'lucide-react';
-import React, { type FC } from 'react';
+import React, { type FC, useRef } from 'react';
 
 import { PAGINATION } from '$constants/pagination.constants';
 import { Button } from '$ui/button';
@@ -98,6 +98,12 @@ export const PersonsListToolbar: FC<Props> = ({
   status,
   total,
 }) => {
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const focusSearch = (): void => {
+    toolbarRef.current
+      ?.querySelector<HTMLInputElement>('input[type="search"]')
+      ?.focus({ preventScroll: true });
+  };
   const hasActiveToolbarFilters = Boolean(
     draftQuery || status !== 'ALL' || sort !== 'name' || missingContacts,
   );
@@ -114,7 +120,7 @@ export const PersonsListToolbar: FC<Props> = ({
   }));
 
   return (
-    <div className="w-full">
+    <div className="w-full" ref={toolbarRef}>
       <form
         autoComplete="off"
         aria-label="Rechercher et filtrer les fiches"
@@ -154,7 +160,10 @@ export const PersonsListToolbar: FC<Props> = ({
             <Button
               aria-label="Réinitialiser les filtres"
               className={directoryStyles.iconButton}
-              onClick={() => applyFilters('', 'ALL', 'name', false)}
+              onClick={() => {
+                applyFilters('', 'ALL', 'name', false);
+                focusSearch();
+              }}
               size="icon"
               type="button"
               variant="ghost"
@@ -175,7 +184,10 @@ export const PersonsListToolbar: FC<Props> = ({
           size="sm"
           variant="outline"
           type="button"
-          onClick={() => applyFilters(draftQuery, status, sort, false)}
+          onClick={() => {
+            applyFilters(draftQuery, status, sort, false);
+            focusSearch();
+          }}
           aria-label="Retirer le filtre Sans coordonnées"
         >
           Sans coordonnées <X aria-hidden="true" className="size-3" />

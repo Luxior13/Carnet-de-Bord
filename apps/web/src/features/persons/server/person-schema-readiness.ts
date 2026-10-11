@@ -354,6 +354,9 @@ export const getPersonSchemaCatalogRows = async (
     ),
     target_triggers(name) AS (
       VALUES
+        ('PersonEmail_prevent_person_reassignment'),
+        ('PersonPhone_prevent_person_reassignment'),
+        ('PersonSocialProfile_prevent_person_reassignment'),
         ('AuditLog_guard_mutation'), ('AuditFieldChange_validate_parent'),
         ('AuditFieldChange_guard_mutation'),
         ('AuditEncryptionKeyVersion_prevent_mutation'),

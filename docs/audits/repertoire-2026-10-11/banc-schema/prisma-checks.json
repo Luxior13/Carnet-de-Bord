@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-11",
+  "prisma": "6.19.3",
+  "validation": "passed",
+  "format": "passed",
+  "source": "Fully migrated isolated PostgreSQL 17 database",
+  "diffExitCode": 2,
+  "diff": "-- DropIndex\nDROP INDEX \"Person_normalizedFirstName_prefix_idx\";\n\n-- DropIndex\nDROP INDEX \"Person_normalizedLastName_prefix_idx\";\n\n-- DropIndex\nDROP INDEX \"Person_normalizedNickname_prefix_idx\";\n\n-- CreateIndex\nCREATE INDEX \"Person_normalizedNickname_prefix_idx\" ON \"Person\"(\"normalizedNickname\" varchar_pattern_ops);\n\n-- CreateIndex\nCREATE INDEX \"Person_normalizedFirstName_prefix_idx\" ON \"Person\"(\"normalizedFirstName\" varchar_pattern_ops);\n\n-- CreateIndex\nCREATE INDEX \"Person_normalizedLastName_prefix_idx\" ON \"Person\"(\"normalizedLastName\" varchar_pattern_ops);\n\n-- CreateIndex\nCREATE INDEX \"PersonEmail_normalizedEmail_prefix_idx\" ON \"PersonEmail\"(\"normalizedEmail\" varchar_pattern_ops);\n\n-- CreateIndex\nCREATE INDEX \"PersonPhone_normalizedPhone_prefix_idx\" ON \"PersonPhone\"(\"normalizedPhone\" varchar_pattern_ops);\n\n-- CreateIndex\nCREATE INDEX \"PersonSocialProfile_normalizedIdentifier_prefix_idx\" ON \"PersonSocialProfile\"(\"normalizedIdentifier\" varchar_pattern_ops);",
+  "classification": "Prisma 6 introspection loses varchar_pattern_ops on B-tree indexes; no other supported-schema difference reported. Do not execute this diff.",
+  "physicalIndexes": [
+    {
+      "tablename": "PersonEmail",
+      "indexname": "PersonEmail_normalizedEmail_prefix_idx",
+      "indexdef": "CREATE INDEX \"PersonEmail_normalizedEmail_prefix_idx\" ON public.\"PersonEmail\" USING btree (\"normalizedEmail\" varchar_pattern_ops)"
+    },
+    {
+      "tablename": "PersonPhone",
+      "indexname": "PersonPhone_normalizedPhone_prefix_idx",
+      "indexdef": "CREATE INDEX \"PersonPhone_normalizedPhone_prefix_idx\" ON public.\"PersonPhone\" USING btree (\"normalizedPhone\" varchar_pattern_ops)"
+    },
+    {
+      "tablename": "PersonSocialProfile",
+      "indexname": "PersonSocialProfile_normalizedIdentifier_prefix_idx",
+      "indexdef": "CREATE INDEX \"PersonSocialProfile_normalizedIdentifier_prefix_idx\" ON public.\"PersonSocialProfile\" USING btree (\"normalizedIdentifier\" varchar_pattern_ops)"
+    },
+    {
+      "tablename": "Person",
+      "indexname": "Person_normalizedFirstName_prefix_idx",
+      "indexdef": "CREATE INDEX \"Person_normalizedFirstName_prefix_idx\" ON public.\"Person\" USING btree (\"normalizedFirstName\" varchar_pattern_ops)"
+    },
+    {
+      "tablename": "Person",
+      "indexname": "Person_normalizedLastName_prefix_idx",
+      "indexdef": "CREATE INDEX \"Person_normalizedLastName_prefix_idx\" ON public.\"Person\" USING btree (\"normalizedLastName\" varchar_pattern_ops)"
+    },
+    {
+      "tablename": "Person",
+      "indexname": "Person_normalizedNickname_prefix_idx",
+      "indexdef": "CREATE INDEX \"Person_normalizedNickname_prefix_idx\" ON public.\"Person\" USING btree (\"normalizedNickname\" varchar_pattern_ops)"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-11",
+  "browser": "149.0.7827.55",
+  "environment": "Next production, real password+TOTP/session/API/PostgreSQL; isolated loopback database and fictional identities",
+  "observations": [
+    {
+      "name": "anonymous-page-and-api",
+      "result": "passed",
+      "durationMs": 612
+    },
+    {
+      "name": "real-login-and-mfa",
+      "result": "passed",
+      "durationMs": 35,
+      "session": "Real password login, TOTP enrollment and application session on isolated database"
+    },
+    {
+      "name": "three-pages-real-sql-stable-total",
+      "result": "passed",
+      "durationMs": 84,
+      "rows": 60,
+      "pageLengths": [
+        25,
+        25,
+        10
+      ]
+    },
+    {
+      "name": "real-list-navigation-and-return",
+      "result": "passed",
+      "durationMs": 1265,
+      "returnFocus": true,
+      "reloadPage": 2
+    },
+    {
+      "name": "search-filter-sort-overview-real-data",
+      "result": "passed",
+      "durationMs": 2599
+    },
+    {
+      "name": "invalid-cursor-recovery-and-boundaries",
+      "result": "passed",
+      "durationMs": 427
+    },
+    {
+      "name": "responsive-production-shell",
+      "result": "passed",
+      "durationMs": 1481
+    },
+    {
+      "name": "real-create-detail-return-and-fresh-search",
+      "result": "passed",
+      "durationMs": 3490,
+      "createdThroughUi": true,
+      "auditPersisted": true,
+      "returnedFilterSnapshotFresh": true
+    },
+    {
+      "name": "read-only-permission-and-revocation",
+      "result": "passed",
+      "durationMs": 721
+    }
+  ]
+}

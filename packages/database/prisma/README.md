@@ -15,6 +15,12 @@ Déployer les migrations :
 bun run db:migrate:deploy
 ```
 
+Le projet est actuellement en développement. Cela ne justifie ni un reset
+implicite ni la réécriture des migrations déjà appliquées : vérifier la cible
+et la liste des migrations en attente avant d'utiliser le wrapper ci-dessus.
+Il applique les migrations existantes ; il ne certifie pas l'absence de dérive
+du schéma. Voir le [comportement de Prisma Migrate v6](https://www.prisma.io/docs/orm/v6/prisma-migrate/workflows/development-and-production).
+
 Le schéma courant ne contient aucun worker ni aucune file de tâches. La
 migration `20260722120000_remove_background_worker` retire la table historique
 `BackgroundJob` et son enum. Ne modifiez pas la migration de fondation déjà
@@ -27,6 +33,36 @@ La migration `20260721120000_person_identity_foundation` crée les tables
 d’identité, les contacts, les profils sociaux, l’historique de champs chiffré et
 `PersonDeletionTombstone`.
 
+`Person` représente une personne physique, indépendamment d'un compte `User` :
+pas de clé étrangère entre eux, ni de rapprochement automatique par email.
+`birthDate` est une date civile PostgreSQL `DATE`. Les trois collections de
+coordonnées appartiennent à une personne et sont supprimées en cascade avec
+elle ; leurs doublons sont interdits dans cette fiche, pas entre deux personnes.
+
+Le contrat complet comprend le schéma Prisma, les migrations SQL et le
+[contrôle de disponibilité du Répertoire](../../../apps/web/src/features/persons/server/person-schema-readiness.ts).
+Les `CHECK`, fonctions, triggers et index uniques partiels ne sont pas tous
+représentés par le langage de schéma de Prisma 6. Ne pas les supprimer parce
+qu'ils n'apparaissent pas dans `schema.prisma` ; consulter la
+[documentation officielle v6 des fonctionnalités SQL complémentaires](https://www.prisma.io/docs/orm/v6/prisma-migrate/workflows/unsupported-database-features).
+
+| Garantie                                                                                                                          | Responsable                                                      |
+| --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Identité minimale, paires de valeurs renseignées, versions positives, clés étrangères                                             | Contraintes SQL et validation du service                         |
+| Au plus une coordonnée principale par personne, ou par réseau social                                                              | Index uniques partiels SQL                                       |
+| Une principale lorsque la collection n'est pas vide, limites de 10 emails / 10 téléphones / 20 profils, normalisation des valeurs | Services de mutation, avec comparaison de version et transaction |
+| Interdiction de déplacer une coordonnée vers une autre personne                                                                   | Triggers des trois collections                                   |
+
+Pour les mutations, la version annoncée doit d'abord correspondre à celle de la
+fiche lue. La mise à jour conditionnelle de cette même version protège ensuite
+contre une écriture concurrente. Conserver ces deux contrôles lorsqu'une règle
+dépend des collections déjà lues, notamment leur taille ou leur principale.
+
+La migration additive `20261011180000_person_coordinate_ownership` étend aux
+profils sociaux la protection déjà présente sur les emails et téléphones. Elle
+réutilise `prevent_person_coordinate_reassignment`, sans réécrire les données.
+Le contrôle de disponibilité attend les trois triggers actifs.
+
 Une suppression est synchrone et transactionnelle. Le tombstone contient
 uniquement l’identifiant de la fiche, l’identifiant idempotent de l’opération et
 la date. Il est immuable et garantit l’idempotence des nouvelles tentatives de
@@ -36,6 +72,21 @@ Une sauvegarde créée avant la suppression ne contient nécessairement ni le
 tombstone ni la suppression. Sa restauration peut donc réintroduire la fiche :
 ce cas doit être traité lors de la procédure de restauration et par une durée
 de conservation des sauvegardes adaptée.
+
+### Comparer le schéma et la base
+
+Le 11 octobre 2026, Prisma 6.19.3 a omis l'opérateur `varchar_pattern_ops` dans
+son introspection de six index B-tree de préfixe pourtant présents avec la bonne
+définition SQL : les trois index d'identité de `Person`, puis ceux de l'email,
+du téléphone et de l'identifiant social. `migrate diff` proposait donc de les
+recréer. Ce résultat ne démontrait pas une absence d'index.
+
+Avant d'appliquer un diff, comparer ses opérations aux migrations et aux
+catalogues PostgreSQL (`pg_indexes`, opérateurs, contraintes et triggers).
+Ne jamais exécuter automatiquement le SQL généré pour faire disparaître ce
+signal d'introspection. Les
+[preuves du schéma entièrement migré](../../../docs/audits/repertoire-2026-10-11/banc-schema/README.md)
+distinguent validation Prisma, différence signalée et état SQL réel.
 
 ## Module partenaires retiré
 
@@ -50,9 +101,11 @@ Le journal d'audit n'est pas modifié : les valeurs `PARTNER_*` des enums
 de ne pas casser l'affichage d'anciens journaux, exactement comme
 `BACKGROUND_JOB_UPDATE` avant elles. Aucun code ne produit plus ces événements.
 
-Le trigger `prevent_person_coordinate_reassignment` et ses déclencheurs sur
+La fonction `prevent_person_coordinate_reassignment` et ses déclencheurs sur
 `PersonEmail` / `PersonPhone` sont conservés : ils protègent l'intégrité des
-coordonnées du Répertoire et n'appartiennent pas au domaine partenaire.
+coordonnées du Répertoire et n'appartiennent pas au domaine partenaire. La
+protection de `PersonSocialProfile` a ensuite été ajoutée séparément, comme
+décrit ci-dessus.
 
 ## Sauvegardes
 
@@ -88,11 +141,18 @@ compte racine valide avant de considérer l’opération terminée.
 
 ## Performance Personnes
 
-Le contrôle de plans s’exécute uniquement sur une base isolée explicitement
-confirmée :
+Le contrôle de plans exige `PERSONS_PERFORMANCE_DATABASE_URL` vers une base ou
+un schéma isolé dont le nom identifie un usage `test`, `e2e` ou `perf`. Il ne
+reprend jamais `DATABASE_URL` comme cible et refuse la base applicative
+courante. La confirmation doit correspondre exactement à la cible normalisée
+affichée par le script ; exemple à adapter, avec la variable dédiée définie :
 
 ```bash
-bun run persons:performance
+bun run persons:performance -- --confirm-target='localhost:5432/noctambule_perf?schema=public'
 ```
 
-Ne pointez jamais ce contrôle de charge vers la base applicative courante.
+Le jeu attendu contient au moins 100 000 personnes, 1 million d'audits et
+3 millions de changements de champs. Ce contrôle ne remplace pas les mesures
+plus petites du banc de la liste et ne doit pas être déclaré réussi sans
+exécution sur ce volume. Ne pointez jamais ce contrôle de charge vers la base
+applicative courante.

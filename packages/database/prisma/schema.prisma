@@ -66,17 +66,17 @@ model User {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  sessions                    Session[]
-  auditLogs                   AuditLog[]              @relation("AuditActor")
-  targetedAuditLogs           AuditLog[]              @relation("AuditTarget")
-  archivedStaffProfile        ArchivedStaffProfile?
-  loginNameReservations       LoginNameReservation[]
-  totpCredential              TotpCredential?
-  totpEnrollment              TotpEnrollment?
-  mfaRecoveryCodes            MfaRecoveryCode[]
-  mfaLoginChallenge           MfaLoginChallenge?
-  internalAnnouncements       InternalAnnouncement[]  @relation("InternalAnnouncementAuthor")
-  updatedSystemSettings       SystemSetting[]         @relation("SystemSettingUpdater")
+  sessions              Session[]
+  auditLogs             AuditLog[]             @relation("AuditActor")
+  targetedAuditLogs     AuditLog[]             @relation("AuditTarget")
+  archivedStaffProfile  ArchivedStaffProfile?
+  loginNameReservations LoginNameReservation[]
+  totpCredential        TotpCredential?
+  totpEnrollment        TotpEnrollment?
+  mfaRecoveryCodes      MfaRecoveryCode[]
+  mfaLoginChallenge     MfaLoginChallenge?
+  internalAnnouncements InternalAnnouncement[] @relation("InternalAnnouncementAuthor")
+  updatedSystemSettings SystemSetting[]        @relation("SystemSettingUpdater")
 
   @@index([contactEmail])
   @@index([role])
@@ -380,6 +380,9 @@ model AuditFieldChange {
   @@index([valueKeyVersion])
 }
 
+/// Durable identity, independent from a login account. structureStatus is the
+/// current directory marker, not a dated membership, contract or team relation.
+/// SQL migrations additionally enforce identity pairs and positive versions.
 model Person {
   id                  String                @id @default(cuid())
   nickname            String?               @db.VarChar(80)
@@ -395,9 +398,9 @@ model Person {
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 
-  emails          PersonEmail[]
-  phones          PersonPhone[]
-  socialProfiles  PersonSocialProfile[]
+  emails         PersonEmail[]
+  phones         PersonPhone[]
+  socialProfiles PersonSocialProfile[]
 
   @@index([createdAt, id])
   @@index([structureStatus, createdAt, id])
@@ -413,6 +416,7 @@ model Person {
   @@index([normalizedLastName(ops: raw("varchar_pattern_ops"))], map: "Person_normalizedLastName_prefix_idx")
 }
 
+/// Owned contact. SQL adds one-primary-per-person and immutable ownership rules.
 model PersonEmail {
   id              String   @id @default(cuid())
   personId        String
@@ -424,13 +428,14 @@ model PersonEmail {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  person                   Person           @relation(fields: [personId], references: [id], onDelete: Cascade)
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
 
   @@unique([personId, normalizedEmail])
   @@index([normalizedEmail])
   @@index([normalizedEmail(ops: raw("varchar_pattern_ops"))], map: "PersonEmail_normalizedEmail_prefix_idx")
 }
 
+/// Owned contact. SQL adds one-primary-per-person and immutable ownership rules.
 model PersonPhone {
   id              String   @id @default(cuid())
   personId        String
@@ -442,13 +447,15 @@ model PersonPhone {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  person                   Person           @relation(fields: [personId], references: [id], onDelete: Cascade)
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
 
   @@unique([personId, normalizedPhone])
   @@index([normalizedPhone])
   @@index([normalizedPhone(ops: raw("varchar_pattern_ops"))], map: "PersonPhone_normalizedPhone_prefix_idx")
 }
 
+/// Owned profile, unique within a person/network. SQL also enforces a usable
+/// identifier or URL and at most one primary profile per person/network.
 model PersonSocialProfile {
   id                       String   @id @default(cuid())
   personId                 String

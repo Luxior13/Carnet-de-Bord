@@ -17,7 +17,6 @@ const ContactCount: FC<{
   label: string;
 }> = ({ count, icon, label }) => (
   <span
-    aria-label={`${count} ${label}`}
     className={cn(
       'inline-flex items-center gap-1 text-[10px] tabular-nums',
       count === 0 && 'opacity-50',
@@ -26,6 +25,7 @@ const ContactCount: FC<{
   >
     {icon}
     {count}
+    <span className="sr-only"> {label}</span>
   </span>
 );
 
@@ -35,11 +35,9 @@ export const PersonContacts: FC<{ person: PersonSummary }> = ({ person }) => {
 
   if (total === 0) {
     return (
-      <span
-        aria-label="Aucune coordonnée"
-        className="text-muted-foreground text-[11px]"
-      >
-        —
+      <span className="text-muted-foreground text-[11px]">
+        <span aria-hidden="true">—</span>
+        <span className="sr-only">Aucune coordonnée</span>
       </span>
     );
   }
@@ -54,17 +52,17 @@ export const PersonContacts: FC<{ person: PersonSummary }> = ({ person }) => {
         <ContactCount
           count={emails}
           icon={<Mail aria-hidden="true" className="size-3" />}
-          label="email(s)"
+          label={emails > 1 ? 'emails' : 'email'}
         />
         <ContactCount
           count={phones}
           icon={<Phone aria-hidden="true" className="size-3" />}
-          label="téléphone(s)"
+          label={phones > 1 ? 'téléphones' : 'téléphone'}
         />
         <ContactCount
           count={socialProfiles}
           icon={<Share2 aria-hidden="true" className="size-3" />}
-          label="profil(s) social(aux)"
+          label={socialProfiles > 1 ? 'profils sociaux' : 'profil social'}
         />
       </span>
     </div>

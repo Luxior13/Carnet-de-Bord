@@ -3,11 +3,25 @@ import { PAGE_PATHS } from '$constants/routes.constants';
 import {
   MAX_PERSONS_PAGE,
   normalizePersonsPageIndex,
+  personsListHref,
+  readPersonsListLocation,
 } from './person-list-state';
 
 export const PERSONS_NAVIGATION_STORAGE_KEY = 'persons.navigation.v1';
 const MAX_AGE_MS = 30 * 60 * 1_000;
 const MAX_CURSORS = 64;
+
+export const retainPersonsCursors = (
+  cursors: Map<number, string | undefined>,
+  page: number,
+): Map<number, string | undefined> =>
+  new Map([
+    [0, undefined],
+    ...[...cursors]
+      .filter(([index]) => index !== 0)
+      .sort(([a], [b]) => Math.abs(a - page) - Math.abs(b - page))
+      .slice(0, MAX_CURSORS - 1),
+  ]);
 
 export type PersonsNavigation = {
   at: number;
@@ -18,8 +32,13 @@ export type PersonsNavigation = {
   scrollTop: number;
 };
 
-const canonicalHref = (href: string): string => {
-  const params = new URLSearchParams(href.split('?')[1]);
+export const personsNavigationHref = (href: string): string => {
+  const { pageIndex, request } = readPersonsListLocation(
+    new URLSearchParams(href.split('?')[1]),
+  );
+  const params = new URLSearchParams(
+    personsListHref(request, pageIndex).split('?')[1],
+  );
   params.sort();
 
   return `${PAGE_PATHS.persons}${params.size ? `?${params}` : ''}`;
@@ -35,10 +54,9 @@ export const capturePersonsNavigation = (
   const page = normalizePersonsPageIndex(
     new URLSearchParams(href.split('?')[1]).get('page'),
   );
-  const nearby = [...cursors]
-    .filter(([index]) => index !== 0)
-    .sort(([a], [b]) => Math.abs(a - page) - Math.abs(b - page))
-    .slice(0, MAX_CURSORS - 1);
+  const nearby = [...retainPersonsCursors(cursors, page)].filter(
+    ([index]) => index !== 0,
+  );
 
   return {
     at: Date.now(),
@@ -50,7 +68,7 @@ export const capturePersonsNavigation = (
       ]),
     ],
     focusHref,
-    href: canonicalHref(href),
+    href: personsNavigationHref(href),
     scope,
     scrollTop,
   };
@@ -69,7 +87,7 @@ export const readPersonsNavigation = (
     const state = value as Record<string, unknown>;
     if (
       state.scope !== scope ||
-      state.href !== canonicalHref(href) ||
+      state.href !== personsNavigationHref(href) ||
       typeof state.at !== 'number' ||
       !Number.isFinite(state.at) ||
       now < state.at ||

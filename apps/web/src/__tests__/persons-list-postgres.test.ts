@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 
 import { Prisma, PrismaClient } from '@prisma/client';
 import {
@@ -25,7 +25,7 @@ vi.mock('$features/persons/server/person-audit', () => ({
   createPersonAudit: vi.fn(),
 }));
 
-import { listPersons } from '$features/persons/server/person-core.service';
+import { listPersons } from '$features/persons/server/person-list.service';
 
 // Optional real-PostgreSQL regression suite. It never reads DATABASE_URL and
 // owns only a unique schema inside this explicitly named local test database.
@@ -91,6 +91,7 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
     await db.$executeRaw`DELETE FROM "PersonEmail"`;
     await db.$executeRaw`DELETE FROM "PersonPhone"`;
     await db.$executeRaw`DELETE FROM "PersonSocialProfile"`;
+    await db.$executeRaw`DELETE FROM "AuditLog"`;
     await db.$executeRaw`DELETE FROM "Person"`;
     await db.$executeRaw`INSERT INTO "Person" ("id", "nickname", "normalizedNickname",
       "sortName", "structureStatus", "createdAt", "updatedAt")
@@ -126,6 +127,37 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
       expect((await listPersons({ limit: 25, q })).items).toEqual([]);
     }
   });
+
+  it.each([
+    ['https://example.test/Case', 'https://example.test/case'],
+    ['élan', 'elan'],
+  ])(
+    'rejects a cursor when contact search changes from %s to %s',
+    async (q, changedQuery) => {
+      const profileUrl = q.startsWith('https:') ? q : null;
+      const hash = profileUrl
+        ? createHash('sha256').update(profileUrl).digest('hex')
+        : null;
+      await db.$executeRaw`INSERT INTO "PersonSocialProfile"
+      ("id", "personId", "normalizedIdentifier", "normalizedProfileUrl", "normalizedProfileUrlHash")
+      SELECT 'social-' || "id", "id", ${profileUrl ? null : q}, ${profileUrl}, ${hash}
+      FROM "Person"`;
+      const first = await listPersons({ limit: 25, q });
+      expect(first.pagination.total).toBe(60);
+      expect(first.pagination.nextCursor).not.toBeNull();
+      expect(
+        (await listPersons({ limit: 25, q: changedQuery })).pagination.total,
+      ).toBe(0);
+
+      await expect(
+        listPersons({
+          cursor: first.pagination.nextCursor ?? undefined,
+          limit: 25,
+          q: changedQuery,
+        }),
+      ).rejects.toThrow('INVALID_CURSOR');
+    },
+  );
 
   it('excludes all three contact kinds, combines filters and keeps totals before cursors', async () => {
     await db.$executeRaw`INSERT INTO "PersonEmail" VALUES ('e1', 'person-001', 'member@example.test')`;
@@ -250,6 +282,39 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
       nextCursor: null,
       total: 0,
     });
+  });
+
+  it('finds contact matches without returning contact values and resolves the latest author stably', async () => {
+    const email = 'private-contact@example.test';
+    await db.$executeRaw`INSERT INTO "PersonEmail" VALUES ('e1', 'person-001', ${email})`;
+    await db.$executeRaw`INSERT INTO "AuditLog" VALUES
+      ('audit-a', 'PERSON', 'person-001', timestamp '2026-01-02', 'Premier auteur', 'first.test'),
+      ('audit-z', 'PERSON', 'person-001', timestamp '2026-01-02', 'Dernier auteur', 'last.test'),
+      ('audit-other', 'USER', 'person-001', timestamp '2026-02-01', 'Autre ressource', 'other.test')`;
+
+    const page = await listPersons({ limit: 25, q: email });
+    expect(page.items).toHaveLength(1);
+    expect(page.items[0]).toMatchObject({
+      contactCounts: { emails: 1, phones: 0, socialProfiles: 0 },
+      id: 'person-001',
+      lastModifiedBy: { displayName: 'Dernier auteur', loginName: 'last.test' },
+      matchedByContact: true,
+    });
+    expect(JSON.stringify(page)).not.toContain(email);
+    for (const key of [
+      'emails',
+      'phones',
+      'socialProfiles',
+      'birthDate',
+      'normalizedNickname',
+      'sortName',
+    ]) {
+      expect(page.items[0]).not.toHaveProperty(key);
+    }
+    expect(
+      (await listPersons({ limit: 25, q: 'Membre 002' })).items[0]
+        ?.lastModifiedBy,
+    ).toBeNull();
   });
 
   it('preserves the remaining filtered total even if the cursor page becomes empty', async () => {

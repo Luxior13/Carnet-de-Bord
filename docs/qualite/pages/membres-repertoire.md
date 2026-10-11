@@ -9,16 +9,17 @@
   `app/membres/repertoire/page.tsx` (serveur) →
   `features/persons/components/PersonsPageClient.tsx` →
   `PersonsList.tsx`, styles partagés `components/ui/directory.module.css`.
-- Statut : composants et alignement visuel livrés, référence de liste avec
-  `/systeme/utilisateurs` ; six défauts d'audit corrigés, ainsi qu'un défaut de
-  fuseau découvert sur PostgreSQL. Parcours authentifié complet encore à vérifier.
-- Revue de la liste : 2026-10-10 — corrections puis quatre améliorations UX
-  autorisées ; 112 tests du périmètre réussis dans la suite globale, PostgreSQL
-  17 isolé, navigateur isolé, types/lint et build réussis.
-  Voir le [rapport et ses preuves](../../audits/AUDIT_REPERTOIRE_2026-10-10.md).
-- Dernier complément : création revue le 2026-10-11 ; garde des brouillons,
-  doubles soumissions et stockage facultatif corrigés, avec parcours simulés
-  vérifiés à quatre largeurs (section « Création de fiche » ci-dessous).
+- Statut : liste conforme sur le périmètre vérifié le 11 octobre, référence
+  visuelle avec `/systeme/utilisateurs`. Fraîcheur, retrait d’accès, curseurs,
+  courses de recherche, mémoire et focus corrigés ; aucun défaut confirmé
+  restant ouvert sur la liste actuelle. Les évolutions métier restent distinctes.
+- Revue de la liste : 2026-10-11 — 41 scénarios Chromium avec API simulées,
+  neuf parcours sur Next de production/session/MFA/PostgreSQL réels, six largeurs
+  dans le cadre complet, mesures jusqu’à 10 000 fiches et 100 000 audits.
+  Voir le [rapport courant et ses limites](../../audits/AUDIT_REPERTOIRE_2026-10-11.md).
+- Création et ouverture de fiche puis retour exercés avec persistance et audit
+  réels le 11 octobre. Cette preuve ne réaudite pas tous les dialogues ni la
+  suppression de la fiche. [Passe précédente](../../audits/AUDIT_REPERTOIRE_2026-10-10.md).
 - Références : intentions historiques `features/pages/vie-interne/membres*.md`,
   `features/pages/bureau-juridique/personnes-contacts.md` ; règles courantes
   `docs/references/NAVIGATION.md`, `docs/references/STRUCTURE.md`, `docs/references/ROLES_ET_PERMISSIONS.md`,
@@ -99,6 +100,60 @@ Contrôles réussis : relecture ciblée des règles et de leurs sources,
 
 ## Fonction et décisions courantes
 
+### Schéma et architecture en développement — 11 octobre 2026
+
+Le contexte développement est explicite dans AGENTS : simplifier les
+responsabilités utiles maintenant, sans compatibilité hypothétique. Le service
+de lecture `person-list.service.ts` possède recherche, pagination, SQL et
+compteurs ; le service principal conserve création, détail et modification.
+La façade publique reste la même, sans nouvelle abstraction de liste générique.
+
+Le modèle Prisma conserve Person indépendante de User, coordonnées rattachées à
+leur fiche, naissance civile et versions optimistes. Le schéma a été mis en
+forme et ses règles SQL documentées ; pas de nouvelle table/colonne. La migration
+additive `20261011180000_person_coordinate_ownership`, appliquée à la base de
+développement, interdit aussi le déplacement SQL d’un profil social vers une
+autre personne. Les trois protections sont requises par le contrôle de schéma.
+
+Ajout et suppression de coordonnées vérifient la version de la fiche lue avant
+leurs calculs, puis à l’écriture. Les plafonds et la désignation automatique du
+principal restent des règles transactionnelles du service, pas des CHECK SQL.
+
+Preuves : 29 contrôles sur le schéma complet, catalogue réel prêt, 18 scénarios
+SQL de liste après extraction, 1 135 tests web et 21 tests database réussis,
+build/types/lint et budgets réussis. Le faux écart d’introspection des index
+Prisma 6 est documenté, sans recréation inutile.
+[Complément du rapport](../../audits/AUDIT_REPERTOIRE_2026-10-11.md#complément--schéma-et-refactorisation-pendant-le-développement) ·
+[Contrat Prisma/SQL](../../../packages/database/prisma/README.md).
+
+### Fiabilité de la liste — 11 octobre 2026
+
+- Le préchargement serveur appartient au compte et aux critères courants ; un
+  snapshot n’est pas réinjecté quand on revient à une ancienne recherche.
+  Un changement de compte ou de révision des droits reconstruit le contenu.
+- Les réponses 401/403 retirent les lignes et la synthèse. Une panne ordinaire
+  peut conserver les résultats précédents, signalés comme tels, avec reprise.
+- Le numéro de page et ses actions correspondent aux dernières lignes reçues.
+  Les réponses obsolètes et les anciennes URL ne remplacent pas une saisie plus
+  récente ; une pagination invalide propose Première page sans perdre les filtres.
+- URL nettoyée et critères bornés ; mémoire de 64 curseurs maximum, restauration
+  valable 30 minutes pour le même compte et consommée après exécution. Le stockage
+  reste facultatif. Changer les filtres annule un ancien focus de pagination.
+- Réinitialiser, retirer Sans coordonnées et effacer rendent le focus à la
+  recherche. Réessayer vise les résultats en cas de succès, son bouton en cas
+  de nouvel échec. La barre de recherche reste utilisable après erreur initiale.
+- Le curseur est lié au texte recherché trimé : les normalisations d’identité
+  ne décrivent pas toutes les recherches de coordonnées. Après modification de
+  ce contrat, certains anciens curseurs nécessitent Première page.
+- Les liens de synthèse annoncent le nombre ; les types de coordonnées et leur
+  absence sont explicités pour les technologies d’assistance. Le style, les
+  avatars, badges, skeletons et primitives restent ceux de la référence.
+- Mesures locales bonnes jusqu’à 10 000 fiches : aucun cache/index supplémentaire
+  ajouté. La synthèse est globale et lue séparément ; elle ne promet pas un
+  instantané transactionnel commun avec la liste lors d’une écriture simultanée.
+
+[Audit, scénarios et limites](../../audits/AUDIT_REPERTOIRE_2026-10-11.md).
+
 ### Création de fiche — 11 octobre 2026
 
 `/membres/repertoire/nouveau` utilise maintenant `PageIdentityHero` compact,
@@ -120,8 +175,9 @@ composition propre ; pseudo seul ou prénom et nom restent les règles métier.
 [Preuve du 11 octobre](../../audits/AUDIT_PAGES_RESTANTES_2026-10-11.md) : quatre
 largeurs, création simulée avec double soumission et stockage bloqué, saisie
 effacée, navigation annulée/focus, validation et réponse 500. La suite web passe.
-La création et sa trace en base avec session réelle restent dans REP-01 ; la
-liste et la fiche n’ont pas été réauditées par cette passe de création.
+Cette passe simulée ne réauditait pas la liste et la fiche. Complément ultérieur
+du même jour : création et trace en base avec session réelle vérifiées dans
+l’[intégration Répertoire](../../audits/repertoire-2026-10-11/banc-integration/README.md).
 
 ### Contour des champs de fiche — 10 octobre 2026
 
@@ -580,29 +636,41 @@ confidentialité, même sans mutation. Couverture et limites dans le rapport.
 
 ## Points ouverts
 
-État courant après correction du 10 octobre. REP-01 et REP-03 restent ouverts,
-REP-02 est différé au cadrage métier ; responsables à attribuer. Les lignes closes
-restent identifiables pour rouvrir leur scénario en cas de changement. Le rapport
-conserve les preuves et limites, cette table porte les états courants.
+État courant après l’audit du 11 octobre. REP-01 et REP-03 sont clos dans la portée
+désormais mesurée ; leurs limites et déclencheurs restent ci-dessous. REP-02 est
+différé au cadrage métier, responsable à attribuer. Les lignes closes restent
+identifiables pour rouvrir leur scénario en cas de changement. Les rapports
+conservent les preuves datées, cette table porte les états courants.
 
 | Point | Nature / priorité et impact | Prochaine étape / déclencheur |
 | --- | --- | --- |
-| REP-01 — Validation visuelle réelle | Vérification partielle ; captures fictives relues, composants testés dans un cadre simplifié | Lors de la prochaine passe authentifiée, vérifier le cadre complet, clavier, mobile, retour de fiche et corrections REP-07/REP-10 |
+| REP-01 — Validation visuelle réelle | Clos pour la liste après neuf parcours Next/session/MFA/PostgreSQL réels, six largeurs et captures relues ; clavier et cas limites complétés par 41 scénarios simulés | Rouvrir si cadre/navigation/composants changent ; appareils physiques, autres navigateurs et tous les dialogues restent hors de cette preuve |
 | REP-02 — Évolution du statut de structure | Cadrage différé ; modèle et parcours long terme | Lire STRUCTURE.md avant tout nouveau statut ; conserver personnes et relations datées séparées |
-| REP-03 — Recherche à volume | Dette P2 ; index présents dans le code, coût et déploiement réel non vérifiés | Benchmark sur base accessible et volume représentatif avant optimisation ; mesurer aussi comptages et jointure d'audit |
+| REP-03 — Recherche à volume | Clos à 10 000 fiches / 100 000 audits : 38 scénarios du service réel, quatre requêtes par appel, p95 maximal 22,47 ms ; migrations déployées sur la base d’intégration séparée | Rouvrir au dépassement de ce volume ou en cas de latence mesurée ; charge concurrente, budget 100k et coût de migration sur base de production non validés |
 | REP-04 — Total après curseur | Clos après vérification SQL ; total stable sur trois pages, filtres et page devenue vide | Rouvrir si comptage, recherche, ordre ou périmètre de lecture change |
 | REP-05 — Maintenabilité et tests | Clos sur le module ; liste sous 800 lignes, contrôles et reprise séparés, 112 tests du périmètre réussis | Conserver les régressions et le budget ; les échecs globaux hors module sont décrits dans le rapport |
 | REP-06 — Numéro de page excessif | Clos après tests unitaires et navigateur ; normalisation bornée, Map, URL nettoyée | Rejouer les URL invalides et profondes lors d'un changement de navigation |
 | REP-07 — Identité longue | Clos après contrôle navigateur ; pseudo de 80 caractères contenu dans sa cellule | Rejouer au changement de largeur, typo ou lien de ligne |
 | REP-08 — Curseur invalide | Clos après contrôle navigateur ; Première page conserve les critères, Réessayer reste disponible | Rejouer les deux issues lors d'un changement d'erreur API |
-| REP-09 — Ouverture directe profonde | Clos pour la reprise ; Première page sur lien partagé, historique/position/focus restaurés après fiche et rechargement dans le banc isolé | Le précédent inconnu reste indisponible ; retour complet de fiche avec session réelle à rejouer dans REP-01 |
+| REP-09 — Ouverture directe profonde | Clos ; Première page sur curseur invalide, retour de fiche avec mêmes lignes/focus et rechargement en page 2 vérifiés sur Next/session réels le 11 octobre | Le précédent inconnu reste indisponible ; rouvrir lors d’un changement de routeur ou de stockage de navigation |
 | REP-10 — Auteur de modification | Clos après contrôle navigateur ; survol, focus, Échap et auteur mobile vérifiés | Rouvrir si lien étendu, infobulle ou politique de visibilité évolue |
 | REP-11 — Fuseau SQL et curseurs de date | Clos après reproduction puis correction sur PostgreSQL en Europe/Paris ; comparaisons explicites en UTC | Rejouer tris par date, égalités et exclusion d'une date future si schéma temporel ou requête change |
+| REP-12 — Fraîcheur du préchargement | Clos ; snapshot consommé une fois et associé au compte/critères ; retour à la recherche après modification vérifié | Rouvrir si préchargement, rafraîchissement ou périmètre de session change |
+| REP-13 — Données après retrait d’accès | Clos ; purge lignes/synthèse après 401/403, isolation du compte et de la révision des droits ; révocation réelle vérifiée | Rouvrir si gardes, UserContext ou cache évoluent ; pas de révocation instantanée par push revendiquée |
+| REP-14 — Curseur et recherche de contact | Clos ; recherche trimée intégrée à la signature, deux reproductions SQL casse/accents corrigées | Rouvrir si normalisation/recherche change ; Première page reprend les anciens curseurs incompatibles |
+| REP-15 — Courses et reprise de navigation | Clos ; saisie récente conservée, réponse obsolète ignorée, restauration consommée et focus annulé si filtre change | Rejouer réponses et URL retardées, retour fiche et rechargement après modification de navigation |
+| REP-16 — Requêtes et mémoire évitables | Clos ; chargement lié au curseur actif, URL canonique, mémoire ≤ 64 même après 500 pages | Rejouer le budget mémoire et le nombre d’appels si pagination ou critères changent |
+| REP-17 — Focus des actions disparues | Clos ; recherche après reset/retrait, résultats après retry réussi, bouton après nouvel échec ; Chromium vérifié | Rejouer au changement d’état vide, de chargement ou de commandes |
+| REP-18 — Annonce des compteurs | Clos dans l’arbre Chromium ; types, absence et nombres annoncés | Rouvrir si cellules ou synthèse changent ; lecteur d’écran humain non exercé |
+| REP-19 — Version lue des coordonnées | Clos ; refus d’une version périmée/future avant calcul métier et comparaison atomique conservée à l’écriture ; régressions des trois collections | Rejouer si plafonds, choix du principal ou protocole de version évoluent |
+| REP-20 — Propriétaire du profil social | Clos ; migration additive appliquée et trois protections vérifiées, tests SQL et catalogue réel prêts | Rouvrir si un transfert de coordonnées devient un besoin métier ; ne pas contourner implicitement les triggers |
 
 ## Historique utile
 
 | Date | Événement |
 | --- | --- |
+| 2026-10-11 | Complément développement : service de liste extrait, schéma et règles SQL vérifiés, REP-19/REP-20 corrigés ; migration additive appliquée sans réécriture métier, 29 contrôles SQL et 1 135 tests web réussis. |
+| 2026-10-11 | Audit complet de la liste : REP-12 à REP-18 corrigés et vérifiés ; 41 scénarios client simulés, neuf parcours réels, 38 mesures serveur jusqu’à 10k personnes ; REP-01/REP-03 clos dans cette portée, preuves liées au rapport du jour. |
 | 2026-10-09 | Analyse complète A à Z de `/membres/repertoire`, création de ce suivi. |
 | 2026-10-09 | Refactorisation : module CSS partagé unique, hero partagé, primitives de liste réutilisées, tokens globaux. |
 | 2026-10-09 | Améliorations UX : total de résultats, pagination « sur N », suppression du lien dupliqué, recherche sans bouton redondant, cible mobile 44 px, libellé de correspondance explicite. |
@@ -641,4 +709,6 @@ ses vrais liens et gère le débordement dans le composant commun. Contrôle de
 la fiche à 320, 390, 768 et 1 440 px dans Chromium isolé, avec données et
 routeur simulés. [Règles communes](navigation-generale.md#barres-de-sections--décision-du-11-octobre-2026) ;
 [preuves et limites](../../audits/AUDIT_NAVIGATION_SECTIONS_2026-10-11.md).
-Les contrôles REP-01 d'intégration complète restent ouverts.
+Cette preuve de barre de fiche demeure simulée. REP-01 est depuis clos pour le
+périmètre de liste et les parcours intégrés déclarés dans l’audit du 11 octobre ;
+il ne certifie pas tous les comportements de la fiche.

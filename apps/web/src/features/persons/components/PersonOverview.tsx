@@ -60,6 +60,10 @@ export const PersonOverview: FC<PersonOverviewProps> = ({
     ) : (
       (count ?? 0).toLocaleString('fr-FR')
     );
+  const countLabel = (count?: number): string =>
+    isLoading
+      ? 'nombre en cours de chargement'
+      : `${(count ?? 0).toLocaleString('fr-FR')} fiche${(count ?? 0) > 1 ? 's' : ''}`;
 
   return (
     <aside
@@ -87,7 +91,7 @@ export const PersonOverview: FC<PersonOverviewProps> = ({
           <Link
             href={href()}
             scroll={false}
-            aria-label="Afficher toutes les fiches"
+            aria-label={`Afficher toutes les fiches : ${countLabel(stats?.total)}`}
             aria-current={!hasQuery && !status && !missing ? 'page' : undefined}
           >
             {value(stats?.total)}
@@ -105,7 +109,7 @@ export const PersonOverview: FC<PersonOverviewProps> = ({
             <Link
               href={counter.href}
               scroll={false}
-              aria-label={'Afficher les fiches : ' + counter.label}
+              aria-label={`Afficher les fiches : ${counter.label}, ${countLabel(counter.value)}`}
               aria-current={counter.active ? 'page' : undefined}
             >
               <span className="text-muted-foreground text-[11px] font-normal">

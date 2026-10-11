@@ -514,6 +514,24 @@ export const PERSON_SCHEMA_FUNCTIONS = [
 ] as const satisfies readonly FunctionSpec[];
 
 export const PERSON_SCHEMA_TRIGGERS = [
+  [
+    'PersonEmail_prevent_person_reassignment',
+    'PersonEmail',
+    'prevent_person_coordinate_reassignment',
+    19,
+  ],
+  [
+    'PersonPhone_prevent_person_reassignment',
+    'PersonPhone',
+    'prevent_person_coordinate_reassignment',
+    19,
+  ],
+  [
+    'PersonSocialProfile_prevent_person_reassignment',
+    'PersonSocialProfile',
+    'prevent_person_coordinate_reassignment',
+    19,
+  ],
   ['AuditLog_guard_mutation', 'AuditLog', 'guard_audit_log_mutation', 27],
   [
     'AuditFieldChange_validate_parent',

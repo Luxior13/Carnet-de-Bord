@@ -46,6 +46,7 @@ export default async function PersonsPage({
     | {
         data: Awaited<ReturnType<typeof listPersons>>;
         request: PersonsListRequest;
+        scope: string;
       }
     | undefined;
 
@@ -67,6 +68,7 @@ export default async function PersonsPage({
           sort: parsed.data.sort,
           structureStatus: parsed.data.structureStatus,
         },
+        scope: user.id,
       };
     } catch {
       // The client preserves the existing unavailable/retry states when the

@@ -10,6 +10,7 @@ Ne pas créer un rapport complet pour chaque correction de texte.
 
 | Rapport | Périmètre et portée |
 | --- | --- |
+| [Répertoire — 11 octobre 2026](AUDIT_REPERTOIRE_2026-10-11.md) | Liste corrigée, 41 scénarios Chromium simulés et neuf parcours réels, mesures jusqu’à 10k fiches ; complément schéma/refactorisation, concurrence et propriété des coordonnées corrigées, 29 contrôles SQL et migration additive vérifiée |
 | [Composants partagés — 11 octobre 2026](AUDIT_COMPOSANTS_2026-10-11.md) | Revue des primitives et de leurs consommateurs ; actions, recherche et pagination mutualisées, conservation des brouillons et comportements clavier corrigés ; preuves Chromium avec API simulées et limites d'intégration |
 | [Barres de sections — 11 octobre 2026](AUDIT_NAVIGATION_SECTIONS_2026-10-11.md) | Sélection, arrondis, flèches conditionnelles et infobulle partagés ; trois pages et 20 scénarios Chromium isolé, puis 10 scénarios dédiés à l'ombre en position collée ; intégration Next/session et lecteur d'écran non rejoués |
 | [Autocomplétion — 11 octobre 2026](AUDIT_AUTOCOMPLETION_2026-10-11.md) | Exceptions d'authentification et champs invisibles supprimés ; règle commune aux champs, zones de texte, recherche et formulaires ; tests du contrat et limites des extensions |

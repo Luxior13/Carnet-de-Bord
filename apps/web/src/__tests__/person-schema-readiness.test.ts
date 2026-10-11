@@ -52,6 +52,11 @@ describe('strict Person PostgreSQL catalog readiness', () => {
         expect(sql).toContain('has_function_privilege');
         expect(sql).toContain('aclexplode');
         expect(sql).toContain('target_indexes');
+        expect(sql).toContain('PersonEmail_prevent_person_reassignment');
+        expect(sql).toContain('PersonPhone_prevent_person_reassignment');
+        expect(sql).toContain(
+          'PersonSocialProfile_prevent_person_reassignment',
+        );
         expect(sql).not.toContain('FROM "Person"');
 
         return rows as unknown as T;
@@ -67,7 +72,7 @@ describe('strict Person PostgreSQL catalog readiness', () => {
       foreignKeys: 7,
       functions: 2,
       indexes: 32,
-      triggers: 5,
+      triggers: 8,
     });
   });
 
@@ -175,6 +180,25 @@ describe('strict Person PostgreSQL catalog readiness', () => {
       [property]: value,
     });
 
+    expect(validatePersonSchemaCatalogRows(rows)).toBe(false);
+  });
+
+  it.each([
+    'PersonEmail_prevent_person_reassignment',
+    'PersonPhone_prevent_person_reassignment',
+    'PersonSocialProfile_prevent_person_reassignment',
+  ])('rejects a missing or disabled coordinate ownership guard %s', (name) => {
+    expect(
+      validatePersonSchemaCatalogRows(
+        fixture().filter((row) => row.objectName !== name),
+      ),
+    ).toBe(false);
+    const rows = fixture();
+    const row = findRow(rows, 'trigger', name);
+    replaceDetails(row, {
+      ...(row.details as Record<string, unknown>),
+      enabled: 'D',
+    });
     expect(validatePersonSchemaCatalogRows(rows)).toBe(false);
   });
 

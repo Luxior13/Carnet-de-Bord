@@ -1,0 +1,137 @@
+{
+  "date": "2026-10-11T18:01:21.317Z",
+  "postgres": "PostgreSQL 17.10 on x86_64-windows, compiled by msvc-19.44.35226, 64-bit",
+  "appliedMigrations": 52,
+  "schemaReadiness": {
+    "ready": true,
+    "expectedCounts": {
+      "checks": 23,
+      "columns": 70,
+      "enums": 12,
+      "foreignKeys": 7,
+      "functions": 2,
+      "indexes": 32,
+      "triggers": 8
+    },
+    "implementation": "Real application catalog reader and validator; only server-only marker omitted."
+  },
+  "fixtures": "Every scenario uses a transaction rolled back after assertions.",
+  "results": [
+    {
+      "name": "minimal nickname and native civil date are accepted",
+      "status": "passed"
+    },
+    {
+      "name": "minimum identity is enforced by SQL",
+      "status": "passed"
+    },
+    {
+      "name": "identity normalized pair is enforced by SQL",
+      "status": "passed"
+    },
+    {
+      "name": "person version cannot be zero",
+      "status": "passed"
+    },
+    {
+      "name": "PersonEmail: foreign key rejects orphan",
+      "status": "passed"
+    },
+    {
+      "name": "PersonEmail: version cannot be zero",
+      "status": "passed"
+    },
+    {
+      "name": "PersonEmail: duplicate within person rejected",
+      "status": "passed"
+    },
+    {
+      "name": "PersonEmail: same coordinate across two people accepted",
+      "status": "passed"
+    },
+    {
+      "name": "PersonEmail: two primaries rejected in the same scope",
+      "status": "passed"
+    },
+    {
+      "name": "PersonEmail: reassignment blocked",
+      "status": "passed"
+    },
+    {
+      "name": "PersonPhone: foreign key rejects orphan",
+      "status": "passed"
+    },
+    {
+      "name": "PersonPhone: version cannot be zero",
+      "status": "passed"
+    },
+    {
+      "name": "PersonPhone: duplicate within person rejected",
+      "status": "passed"
+    },
+    {
+      "name": "PersonPhone: same coordinate across two people accepted",
+      "status": "passed"
+    },
+    {
+      "name": "PersonPhone: two primaries rejected in the same scope",
+      "status": "passed"
+    },
+    {
+      "name": "PersonPhone: reassignment blocked",
+      "status": "passed"
+    },
+    {
+      "name": "PersonSocialProfile: foreign key rejects orphan",
+      "status": "passed"
+    },
+    {
+      "name": "PersonSocialProfile: version cannot be zero",
+      "status": "passed"
+    },
+    {
+      "name": "PersonSocialProfile: duplicate within person rejected",
+      "status": "passed"
+    },
+    {
+      "name": "PersonSocialProfile: same coordinate across two people accepted",
+      "status": "passed"
+    },
+    {
+      "name": "PersonSocialProfile: two primaries rejected in the same scope",
+      "status": "passed"
+    },
+    {
+      "name": "PersonSocialProfile: reassignment blocked",
+      "status": "passed"
+    },
+    {
+      "name": "phone must be normalized in international form",
+      "status": "passed"
+    },
+    {
+      "name": "social profile requires identifier or URL",
+      "status": "passed"
+    },
+    {
+      "name": "social profile requires complete URL normalization set",
+      "status": "passed"
+    },
+    {
+      "name": "social primaries are scoped by network",
+      "status": "passed"
+    },
+    {
+      "name": "deleting a person cascades only its three coordinate collections",
+      "status": "passed"
+    },
+    {
+      "name": "no database foreign key connects people and authentication users",
+      "status": "passed"
+    },
+    {
+      "name": "database prevents two claims of the same person version",
+      "status": "passed"
+    }
+  ]
+}

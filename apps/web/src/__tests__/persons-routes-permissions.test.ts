@@ -377,6 +377,28 @@ describe('person API permission boundaries', () => {
     });
   });
 
+  it.each([
+    'limit=0',
+    'limit=101',
+    'limit=1.5',
+    'sort=unknown',
+    'structureStatus=unknown',
+    'contacts=unknown',
+    `q=${'x'.repeat(101)}`,
+    `cursor=${'x'.repeat(2049)}`,
+  ])(
+    'rejects an invalid list query before checking schema or loading data',
+    async (query) => {
+      mocks.requirePermission.mockReturnValueOnce({ success: true });
+      const { GET } = await import('$app/api/personnes/route');
+      const response = await GET(request(`/api/personnes?${query}`));
+
+      expect(response.status).toBe(400);
+      expect(mocks.assertPersonFeatureReady).not.toHaveBeenCalled();
+      expect(mocks.listPersons).not.toHaveBeenCalled();
+    },
+  );
+
   it('loads a direct detail without preloading contextual field history', async () => {
     mocks.requirePermission.mockReturnValueOnce({ success: true });
     mocks.getPerson.mockResolvedValueOnce({ id: 'person-1' });

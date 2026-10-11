@@ -1,3 +1,9 @@
+import { PAGE_PATHS } from '$constants/routes.constants';
+
+import {
+  PERSON_LIST_SORTS,
+  PERSON_STRUCTURE_STATUSES,
+} from './person.constants';
 import type {
   PersonListSort,
   PersonStructureStatus,
@@ -19,6 +25,53 @@ export const normalizePersonsPageIndex = (value: string | null): number => {
   const page = Number(value);
 
   return page <= MAX_PERSONS_PAGE ? page - 1 : 0;
+};
+
+export const normalizePersonsQuery = (value: string | null): string =>
+  value?.trim().slice(0, 100) ?? '';
+
+export const readPersonsListLocation = (
+  params: URLSearchParams,
+): { pageIndex: number; request: PersonsListRequest } => {
+  const requestedPage = normalizePersonsPageIndex(params.get('page'));
+  const rawCursor = params.get('cursor');
+  const cursor =
+    requestedPage > 0 && rawCursor && rawCursor.length <= 2_048
+      ? rawCursor
+      : undefined;
+  const status = params.get('structureStatus') as PersonStructureStatus;
+  const sort = params.get('sort') as PersonListSort;
+
+  return {
+    pageIndex: cursor ? requestedPage : 0,
+    request: {
+      ...(params.get('contacts') === 'missing' ? { contacts: 'missing' } : {}),
+      cursor,
+      q: normalizePersonsQuery(params.get('q')),
+      sort: PERSON_LIST_SORTS.includes(sort) ? sort : 'name',
+      ...(PERSON_STRUCTURE_STATUSES.includes(status)
+        ? { structureStatus: status }
+        : {}),
+    },
+  };
+};
+
+export const personsListHref = (
+  request: PersonsListRequest,
+  pageIndex: number,
+): string => {
+  const params = new URLSearchParams();
+  if (request.contacts) params.set('contacts', request.contacts);
+  if (request.q) params.set('q', request.q);
+  if (request.structureStatus)
+    params.set('structureStatus', request.structureStatus);
+  if (request.sort !== 'name') params.set('sort', request.sort);
+  if (request.cursor && pageIndex > 0) {
+    params.set('cursor', request.cursor);
+    params.set('page', String(pageIndex + 1));
+  }
+
+  return `${PAGE_PATHS.persons}${params.size ? `?${params}` : ''}`;
 };
 
 export const haveSamePersonsListRequest = (

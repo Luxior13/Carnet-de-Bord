@@ -14,6 +14,7 @@ import {
   capturePersonsNavigation,
   PERSONS_NAVIGATION_STORAGE_KEY,
   type PersonsNavigation,
+  personsNavigationHref,
   readPersonsNavigation,
 } from '../person-list-navigation';
 
@@ -32,6 +33,7 @@ export const usePersonsListNavigation = ({
   restoreCursors,
   scope,
 }: Options): {
+  cancelPageChange: () => void;
   containerRef: RefObject<HTMLDivElement | null>;
   onClickCapture: MouseEventHandler<HTMLDivElement>;
   preparePageChange: () => void;
@@ -41,6 +43,7 @@ export const usePersonsListNavigation = ({
   const resultsRef = useRef<HTMLDivElement>(null);
   const pending = useRef<PersonsNavigation | null>(null);
   const pageChanged = useRef(false);
+  const navigationHref = personsNavigationHref(href);
 
   useEffect(() => {
     pending.current = null;
@@ -48,7 +51,7 @@ export const usePersonsListNavigation = ({
       const saved = readPersonsNavigation(
         sessionStorage.getItem(PERSONS_NAVIGATION_STORAGE_KEY),
         scope,
-        href,
+        navigationHref,
       );
       if (!saved) return;
       pending.current = saved;
@@ -60,7 +63,7 @@ export const usePersonsListNavigation = ({
     } catch {
       // Storage may be disabled; URL navigation and first-page recovery still work.
     }
-  }, [href, restoreCursors, scope]);
+  }, [navigationHref, restoreCursors, scope]);
 
   const save = useCallback(
     (focusHref: string | null): void => {
@@ -103,6 +106,19 @@ export const usePersonsListNavigation = ({
         const container = containerRef.current;
         if (!container) return;
         pending.current = null;
+        if (saved) {
+          try {
+            const stored = readPersonsNavigation(
+              sessionStorage.getItem(PERSONS_NAVIGATION_STORAGE_KEY),
+              scope,
+              navigationHref,
+            );
+            if (stored?.at === saved.at)
+              sessionStorage.removeItem(PERSONS_NAVIGATION_STORAGE_KEY);
+          } catch {
+            // Restoring position must also work when storage becomes unavailable.
+          }
+        }
         const scroller = container.closest('main');
         if (pageChanged.current) {
           pageChanged.current = false;
@@ -132,7 +148,7 @@ export const usePersonsListNavigation = ({
     });
 
     return (): void => cancelAnimationFrame(frame);
-  }, [href, ready]);
+  }, [navigationHref, ready, scope]);
 
   const onClickCapture: MouseEventHandler<HTMLDivElement> = (event) => {
     if (
@@ -154,7 +170,13 @@ export const usePersonsListNavigation = ({
     save(anchor.getAttribute('href'));
   };
 
+  const cancelPageChange = useCallback((): void => {
+    pageChanged.current = false;
+    pending.current = null;
+  }, []);
+
   return {
+    cancelPageChange,
     containerRef,
     onClickCapture,
     preparePageChange: (): void => {

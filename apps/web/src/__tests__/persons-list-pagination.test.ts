@@ -3,7 +3,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PersonsList } from '$features/persons/components/PersonsList';
-import { normalizePersonsPageIndex } from '$features/persons/person-list-state';
+import {
+  normalizePersonsPageIndex,
+  personsListHref,
+  readPersonsListLocation,
+} from '$features/persons/person-list-state';
 import type { PersonsListResponse } from '$features/persons/types/person.types';
 
 const mocks = vi.hoisted(() => ({ params: new URLSearchParams() }));
@@ -89,4 +93,47 @@ describe('directory URL pagination', () => {
     expect(html).toContain('Première page');
     expect(html).not.toContain('Ajouter une fiche');
   });
+
+  it('does not render a server snapshot belonging to different URL filters', () => {
+    mocks.params = new URLSearchParams({ contacts: 'missing' });
+    const html = renderToStaticMarkup(
+      createElement(PersonsList, {
+        canCreate: false,
+        createHref: '/membres/repertoire/nouveau',
+        initialState: { data: emptyData, request: { q: '', sort: 'name' } },
+        returnHref: '/membres/repertoire?contacts=missing',
+      }),
+    );
+    expect(html).toContain('Chargement du répertoire');
+    expect(html).not.toContain('Répertoire vide');
+  });
+
+  it.each([
+    [
+      '?page=2&cursor=third&sort=invalid&structureStatus=invalid&contacts=false',
+      '/membres/repertoire?cursor=third&page=2',
+    ],
+    ['?page=4&q=%20Ada%20&sort=name', '/membres/repertoire?q=Ada'],
+    ['?page=1&cursor=orphan&unknown=value', '/membres/repertoire'],
+    [
+      '?q=one&q=two&contacts=missing',
+      '/membres/repertoire?contacts=missing&q=one',
+    ],
+    [
+      `?q=${'x'.repeat(120)}&page=3&cursor=${'y'.repeat(2049)}`,
+      `/membres/repertoire?q=${'x'.repeat(100)}`,
+    ],
+  ])(
+    'normalizes malformed locations without inventing a page cursor: %s',
+    (query, expected) => {
+      const { pageIndex, request } = readPersonsListLocation(
+        new URLSearchParams(query),
+      );
+      expect(personsListHref(request, pageIndex)).toBe(expected);
+      const roundTrip = readPersonsListLocation(
+        new URLSearchParams(expected.split('?')[1]),
+      );
+      expect(roundTrip).toEqual({ pageIndex, request });
+    },
+  );
 });

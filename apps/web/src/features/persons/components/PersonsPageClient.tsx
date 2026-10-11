@@ -31,6 +31,7 @@ type PersonsPageClientProps = {
   initialState?: {
     data: PersonsListResponse;
     request: PersonsListRequest;
+    scope: string;
   };
 };
 
@@ -143,15 +144,29 @@ const ListPageSkeleton: FC = () => (
 
 export const PersonsPageClient: FC<PersonsPageClientProps> = ({
   initialState,
-}) => (
-  <AuthenticatedLayout
-    breadcrumbs={[
-      { label: FEATURES.persons.audit.poleLabel },
-      { label: FEATURES.persons.label },
-    ]}
-  >
-    <Suspense fallback={<ListPageSkeleton />}>
-      <PersonsPageContent initialState={initialState} />
-    </Suspense>
-  </AuthenticatedLayout>
-);
+}) => {
+  const { authorizationRevision, userData } = useUser();
+  const [initialAuthorizationRevision] = useState(authorizationRevision);
+  const { canView } = getPersonCapabilities(userData);
+
+  return (
+    <AuthenticatedLayout
+      breadcrumbs={[
+        { label: FEATURES.persons.audit.poleLabel },
+        { label: FEATURES.persons.label },
+      ]}
+    >
+      <Suspense fallback={<ListPageSkeleton />}>
+        <PersonsPageContent
+          key={`${userData?.id ?? ''}:${authorizationRevision}:${canView}`}
+          initialState={
+            initialState?.scope === userData?.id &&
+            authorizationRevision === initialAuthorizationRevision
+              ? initialState
+              : undefined
+          }
+        />
+      </Suspense>
+    </AuthenticatedLayout>
+  );
+};

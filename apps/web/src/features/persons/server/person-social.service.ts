@@ -68,6 +68,8 @@ export const addPersonSocialProfile = async (
 }> =>
   prisma.$transaction(async (transaction) => {
     const current = await requirePersonDetailRecord(transaction, personId);
+    if (current.version !== input.personVersion)
+      throw personErrors.versionConflict();
     if (current.socialProfiles.length >= PERSON_LIMITS.socialProfiles) {
       throw new RangeError('PERSON_SOCIAL_PROFILE_LIMIT');
     }
@@ -311,6 +313,8 @@ export const deletePersonSocialProfile = async (
 ): Promise<PersonDetail> =>
   prisma.$transaction(async (transaction) => {
     const person = await requirePersonDetailRecord(transaction, personId);
+    if (person.version !== input.personVersion)
+      throw personErrors.versionConflict();
     const current = person.socialProfiles.find(
       (profile) => profile.id === profileId,
     );

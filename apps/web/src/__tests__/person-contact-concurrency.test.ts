@@ -169,6 +169,7 @@ const personRecord = (
 describe('person contact optimistic concurrency and primary invariants', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.transaction.person.findUnique.mockReset();
     mocks.prisma.$transaction.mockImplementation(
       (callback: (client: typeof mocks.transaction) => Promise<unknown>) =>
         callback(mocks.transaction),
@@ -205,6 +206,114 @@ describe('person contact optimistic concurrency and primary invariants', () => {
       where: { id: 'person-1', version: 5 },
     });
   });
+
+  it.each([
+    {
+      action: (personVersion: number) =>
+        addPersonEmail(
+          'person-1',
+          {
+            email: 'new@example.test',
+            isPrimary: false,
+            label: 'Personnel',
+            personVersion,
+          },
+          actor as never,
+        ),
+      name: 'add email',
+    },
+    {
+      action: (personVersion: number) =>
+        addPersonPhone(
+          'person-1',
+          {
+            countryCode: 'FR',
+            isPrimary: false,
+            label: 'Mobile',
+            normalizedPhone: '+33612345679',
+            personVersion,
+            phone: '06 12 34 56 79',
+          },
+          actor as never,
+        ),
+      name: 'add phone',
+    },
+    {
+      action: (personVersion: number) =>
+        addPersonSocialProfile(
+          'person-1',
+          {
+            identifier: '@new',
+            isPrimary: false,
+            label: 'Personnel',
+            networkKey: 'discord',
+            personVersion,
+            profileUrl: null,
+          },
+          actor as never,
+        ),
+      name: 'add social profile',
+    },
+    {
+      action: (personVersion: number) =>
+        deletePersonEmail(
+          'person-1',
+          'email-1',
+          { personVersion, version: 1 },
+          actor as never,
+        ),
+      name: 'delete email',
+    },
+    {
+      action: (personVersion: number) =>
+        deletePersonPhone(
+          'person-1',
+          'phone-1',
+          { personVersion, version: 1 },
+          actor as never,
+        ),
+      name: 'delete phone',
+    },
+    {
+      action: (personVersion: number) =>
+        deletePersonSocialProfile(
+          'person-1',
+          'social-1',
+          { personVersion, version: 1 },
+          actor as never,
+        ),
+      name: 'delete social profile',
+    },
+  ])(
+    'rejects a stale or future parent version before $name derives collection state',
+    async ({ action }) => {
+      mocks.transaction.person.findUnique.mockResolvedValue(
+        personRecord([emailRecord('email-1', true)], 5, {
+          phones: [phoneRecord('phone-1', true)],
+          socialProfiles: [socialRecord('social-1', true)],
+        }),
+      );
+      // A future version could become current between this read and the CAS.
+      // The read must already match; the CAS alone cannot validate its snapshot.
+      for (const version of [4, 6]) {
+        await expect(action(version)).rejects.toMatchObject({
+          code: 'PERSON_VERSION_CONFLICT',
+        });
+      }
+      expect(mocks.transaction.person.updateMany).not.toHaveBeenCalled();
+      expect(mocks.transaction.personEmail.create).not.toHaveBeenCalled();
+      expect(mocks.transaction.personPhone.create).not.toHaveBeenCalled();
+      expect(
+        mocks.transaction.personSocialProfile.create,
+      ).not.toHaveBeenCalled();
+      expect(mocks.transaction.personEmail.deleteMany).not.toHaveBeenCalled();
+      expect(mocks.transaction.personPhone.deleteMany).not.toHaveBeenCalled();
+      expect(
+        mocks.transaction.personSocialProfile.deleteMany,
+      ).not.toHaveBeenCalled();
+      expect(mocks.createPersonAudit).not.toHaveBeenCalled();
+    },
+  );
 
   it('lets exactly one of two aggregate writers claim the same person version', async () => {
     let storedVersion = 5;

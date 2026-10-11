@@ -38,6 +38,8 @@ export const addPersonEmail = async (
 }> =>
   prisma.$transaction(async (transaction) => {
     const current = await requirePersonDetailRecord(transaction, personId);
+    if (current.version !== input.personVersion)
+      throw personErrors.versionConflict();
     if (current.emails.length >= PERSON_LIMITS.emails) {
       throw new RangeError('PERSON_EMAIL_LIMIT');
     }
@@ -236,6 +238,8 @@ export const deletePersonEmail = async (
 ): Promise<PersonDetail> =>
   prisma.$transaction(async (transaction) => {
     const person = await requirePersonDetailRecord(transaction, personId);
+    if (person.version !== input.personVersion)
+      throw personErrors.versionConflict();
     const current = person.emails.find((email) => email.id === emailId);
     if (!current) throw personErrors.notFound();
     if (current.version !== input.version) throw personErrors.versionConflict();
@@ -311,6 +315,8 @@ export const addPersonPhone = async (
 }> =>
   prisma.$transaction(async (transaction) => {
     const current = await requirePersonDetailRecord(transaction, personId);
+    if (current.version !== input.personVersion)
+      throw personErrors.versionConflict();
     if (current.phones.length >= PERSON_LIMITS.phones) {
       throw new RangeError('PERSON_PHONE_LIMIT');
     }
@@ -509,6 +515,8 @@ export const deletePersonPhone = async (
 ): Promise<PersonDetail> =>
   prisma.$transaction(async (transaction) => {
     const person = await requirePersonDetailRecord(transaction, personId);
+    if (person.version !== input.personVersion)
+      throw personErrors.versionConflict();
     const current = person.phones.find((phone) => phone.id === phoneId);
     if (!current) throw personErrors.notFound();
     if (current.version !== input.version) throw personErrors.versionConflict();

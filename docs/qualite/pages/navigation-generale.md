@@ -617,6 +617,23 @@ consommateurs), TypeScript, lint du composant et budget d'architecture réussis.
 Le shell authentifié complet, Safari/iOS et le lecteur d'écran ne sont pas
 rejoués. Les anciens 20 scénarios ci-dessous conservent leur portée.
 
+### Pistes après la finition collante — à qualifier
+
+Question utilisateur du 11 octobre : autres améliorations utiles. Lecture du
+code : Mon compte et Utilisateurs changent de section par `history.replaceState`
+sans repositionnement vertical explicite ; la fiche Personne passe par le routeur.
+Suggestion prioritaire : après un changement de section accepté, rendre visible
+le début du nouveau contenu sous la barre, en conservant le focus sur le lien
+activé. Ne pas remonter systématiquement au bandeau d'identité, ni déplacer la
+page si une garde de brouillon annule la navigation. Le scénario après long
+défilement reste à reproduire ; aucun défaut navigateur supplémentaire déclaré.
+
+Autre point à contrôler : visibilité d'un champ recevant le focus après une erreur
+ou une annulation lorsque la barre est collée. Les essais précédents vérifient
+les liens de la barre ; ils ne prouvent pas tous les placements des champs.
+Le fil d'Ariane conserve déjà le nom de la fiche : aucune identité dupliquée dans
+la barre n'est proposée. Ces pistes ne sont pas implémentées.
+
 ### Contrat courant
 
 Améliorations approuvées par l'utilisateur puis appliquées à

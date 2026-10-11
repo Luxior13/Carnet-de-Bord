@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-11",
+  "target": "Configured development database; connection details intentionally omitted",
+  "appliedBefore": 51,
+  "appliedAfter": 52,
+  "onlyPendingMigration": "20261011180000_person_coordinate_ownership",
+  "wrapper": "db:migrate:deploy",
+  "result": "passed",
+  "dataRewrite": false,
+  "ownershipTriggers": [
+    {
+      "tgname": "PersonEmail_prevent_person_reassignment",
+      "tgenabled": "O",
+      "proname": "prevent_person_coordinate_reassignment"
+    },
+    {
+      "tgname": "PersonPhone_prevent_person_reassignment",
+      "tgenabled": "O",
+      "proname": "prevent_person_coordinate_reassignment"
+    },
+    {
+      "tgname": "PersonSocialProfile_prevent_person_reassignment",
+      "tgenabled": "O",
+      "proname": "prevent_person_coordinate_reassignment"
+    }
+  ],
+  "realSchemaReadiness": true
+}

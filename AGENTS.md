@@ -43,6 +43,12 @@ une API, une tâche, un schéma ou un composant partagé, même sans page.
 
 ## Contexte et références
 
+Le projet est en développement (rappel utilisateur du 11 octobre 2026).
+Privilégier les simplifications et refactorisations utiles au besoin actuel ;
+ne pas conserver une compatibilité hypothétique avec une production inexistante.
+Ce contexte ne rend pas les données locales jetables par défaut. Les garanties
+d’intégrité, les contrôles d’accès et les migrations reproductibles restent utiles.
+
 Outil de gestion de Noctambule : structure esport actuellement associative,
 préparée à évoluer vers une société. Séparer personnes, comptes, relations datées,
 équipes, entités juridiques, saisons et exercices. Ne pas réécrire les anciens
