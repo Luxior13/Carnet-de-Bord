@@ -26,6 +26,27 @@
 
 ## Rôle de référence (décision du 2026-10-09)
 
+### Complément courant — composants du 11 octobre 2026
+
+- Recherche via `ListSearchField` : effacement avec retour du focus au champ.
+  Les filtres utilisent les primitives partagées ; leur logique reste locale.
+- `ListPagination` affiche la page des dernières lignes reçues, avec le total de
+  pages disponible côté serveur. Attente ou erreur ne font pas avancer ce numéro.
+  Le focus revient au début des résultats après une pagination réussie.
+- Création et identité utilisent `SectionActionBar` avec soumission native.
+  L'identité distingue brouillon et version serveur : relecture d'un conflit sans
+  perdre les champs modifiés, erreur persistante, annulation vers la dernière
+  version connue. Les réponses après changement de cible/compte sont ignorées.
+- Preuves et limites : [audit transverse](../../audits/AUDIT_COMPOSANTS_2026-10-11.md).
+  API simulées ; ces corrections n'ont pas rejoué la session/base des anciens audits.
+
+La description technique de la passe du 10 octobre ci-dessous est historique :
+son champ de recherche local et sa mention « Page N sans total » ne définissent
+plus le contrat courant. Le [catalogue](../../references/COMPOSANTS.md) porte
+les composants à réutiliser.
+
+### Référence visuelle
+
 Décision utilisateur : `/membres/repertoire` est la **page de référence
 visuelle et UX** de l'application, complétée par `/systeme/utilisateurs`
 (2026-10-10) : les deux pages de liste définissent ensemble le standard des

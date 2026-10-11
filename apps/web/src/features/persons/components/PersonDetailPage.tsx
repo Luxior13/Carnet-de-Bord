@@ -10,7 +10,13 @@ import {
   UserRound,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import React, { type FC, useCallback, useEffect, useState } from 'react';
+import React, {
+  type FC,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
@@ -251,14 +257,37 @@ export const PersonDetailPage: FC<PersonDetailPageProps> = ({
   const { canDelete, canUpdate, canView, canViewProvenance } =
     getPersonCapabilities(userData);
   const featureOperational = operationalFeatureIds.has(FEATURES.persons.id);
+  const mountedRef = useRef(false);
+  const loadSequenceRef = useRef(0);
+  const scopeRef = useRef({ canView, personId, userId: userData?.id });
+  scopeRef.current = { canView, personId, userId: userData?.id };
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+      loadSequenceRef.current += 1;
+    };
+  }, [personId, userData?.id]);
 
   const load = useCallback(async (): Promise<PersonDetail> => {
+    const sequence = ++loadSequenceRef.current;
     const response = await getPerson(personId);
-    setPerson(response);
-    setError(null);
+    if (
+      mountedRef.current &&
+      sequence === loadSequenceRef.current &&
+      scopeRef.current.canView &&
+      scopeRef.current.personId === personId &&
+      scopeRef.current.userId === userData?.id &&
+      response.id === personId
+    ) {
+      setPerson(response);
+      setError(null);
+    }
 
     return response;
-  }, [personId]);
+  }, [personId, userData?.id]);
 
   useEffect((): (() => void) | undefined => {
     if (initialPerson?.id === personId) {
@@ -418,6 +447,7 @@ export const PersonDetailPage: FC<PersonDetailPageProps> = ({
           <section aria-label="Identité" className="space-y-5">
             <Card>
               <PersonIdentitySection
+                key={person.id}
                 canUpdate={canUpdate}
                 canViewProvenance={canViewProvenance}
                 onChange={setPerson}
@@ -445,7 +475,7 @@ export const PersonDetailPage: FC<PersonDetailPageProps> = ({
         )}
 
         {/* Barre d'action de la fiche : au niveau de la page, hors des sections. */}
-        <div id="person-record-action-bar" />
+        <div className="contents" id="person-record-action-bar" />
       </EntityDetailLayout>
     );
   };

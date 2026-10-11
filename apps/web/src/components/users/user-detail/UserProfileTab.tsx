@@ -1,7 +1,7 @@
 'use client';
 
 import { AlertTriangle, Mail } from 'lucide-react';
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { SectionActionBar } from '$components/layout/SectionActionBar';
 import {
@@ -45,6 +45,7 @@ type UserProfileTabProps = {
   errors: ProfileErrors;
   form: ProfileForm;
   hasChanges: boolean;
+  isRefreshing?: boolean;
   isSaving: boolean;
   isSelf?: boolean;
   loginReadOnlyHint: string;
@@ -83,6 +84,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   errors,
   form,
   hasChanges,
+  isRefreshing = false,
   isSaving,
   isSelf = false,
   loginReadOnlyHint,
@@ -90,6 +92,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   onSave,
   setForm,
 }) => {
+  const formRef = useRef<HTMLFormElement>(null);
   const [contactRemovalIntent, setContactRemovalIntent] = useState<
     'save' | 'stage' | null
   >(null);
@@ -137,6 +140,17 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
     submitProfile();
+  };
+
+  const handleCancel = (): void => {
+    onCancel();
+    requestAnimationFrame(() => {
+      const field = formRef.current?.querySelector<HTMLInputElement>(
+        'input:not(:disabled)',
+      );
+      const heading = formRef.current?.querySelector<HTMLElement>('h2');
+      (field ?? heading)?.focus();
+    });
   };
 
   const handleConfirmContactRemoval = (): void => {
@@ -192,6 +206,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
 
   return (
     <form
+      ref={formRef}
       {...passwordManagerIgnoreAttributes}
       data-user-profile-form
       noValidate
@@ -200,7 +215,9 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
     >
       <Card>
         <CardHeader className="flex-row items-center justify-between p-3.5 sm:p-4">
-          <h2 className="text-sm font-semibold">Profil utilisateur</h2>
+          <h2 className="text-sm font-semibold" tabIndex={-1}>
+            Profil utilisateur
+          </h2>
           {!canEdit && !canEditContact && !canEditLogin && (
             <Badge
               variant="outline"
@@ -409,9 +426,10 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
       {hasChanges && (
         <SectionActionBar
           conflict={!canSave}
-          isSaving={isSaving}
-          onCancel={onCancel}
-          onSave={submitProfile}
+          isResolvingConflict={isRefreshing}
+          isSaving={isSaving && !isRefreshing}
+          onCancel={handleCancel}
+          saveType="submit"
         />
       )}
       <AlertDialog

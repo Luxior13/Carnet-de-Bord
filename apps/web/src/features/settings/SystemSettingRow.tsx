@@ -1,8 +1,9 @@
 'use client';
 
-import { Loader2, Minus, Plus } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import React, { type FC, useEffect, useRef } from 'react';
 
+import { SectionActionBar } from '$components/layout/SectionActionBar';
 import { getSystemSettingDefinition } from '$constants/system-setting-catalog.constants';
 import { Button } from '$ui/button';
 import { Input } from '$ui/input';
@@ -245,52 +246,41 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
                 {validation}
               </p>
             )}
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {conflict === 'none' && parsed !== definition.defaultValue && (
-                <Button
-                  aria-label={`Rétablir la valeur par défaut — ${definition.label}`}
-                  className={actionClass}
-                  disabled={disabled}
-                  onClick={() => {
-                    onChange(String(definition.defaultValue));
-                    inputRef.current?.focus();
-                  }}
-                  type="button"
-                  variant="ghost"
-                >
-                  Rétablir le défaut
-                </Button>
-              )}
-              <div className="ml-auto flex shrink-0 items-center gap-2">
-                {conflict === 'none' && (
+            <SectionActionBar
+              cancelDisabled={false}
+              disabled={disabled}
+              hasChanges={dirty}
+              isSaving={isSaving}
+              label={`Enregistrement — ${definition.label}`}
+              onCancel={conflict === 'none' ? onCancel : undefined}
+              placement="inline"
+              saveAriaLabel={`Enregistrer — ${definition.label}`}
+              saveDisabled={!!validation || conflict !== 'none'}
+              saveDisabledReason={
+                conflict !== 'none'
+                  ? 'Résolvez le conflit ci-dessous avant d’enregistrer.'
+                  : undefined
+              }
+              saveType="submit"
+              extraActions={
+                conflict === 'none' &&
+                parsed !== definition.defaultValue && (
                   <Button
+                    aria-label={`Rétablir la valeur par défaut — ${definition.label}`}
                     className={actionClass}
                     disabled={disabled}
-                    onClick={onCancel}
+                    onClick={() => {
+                      onChange(String(definition.defaultValue));
+                      inputRef.current?.focus();
+                    }}
                     type="button"
                     variant="ghost"
                   >
-                    Annuler
+                    Rétablir le défaut
                   </Button>
-                )}
-                <Button
-                  aria-label={`Enregistrer — ${definition.label}`}
-                  className={actionClass}
-                  disabled={
-                    disabled || !dirty || !!validation || conflict !== 'none'
-                  }
-                  type="submit"
-                >
-                  {isSaving && (
-                    <Loader2
-                      aria-hidden="true"
-                      className="size-4 animate-spin"
-                    />
-                  )}
-                  {isSaving ? 'Enregistrement…' : 'Enregistrer'}
-                </Button>
-              </div>
-            </div>
+                )
+              }
+            />
           </div>
         ) : (
           <div className="flex w-full max-w-64 min-w-0 flex-wrap items-center justify-between gap-3 self-start">

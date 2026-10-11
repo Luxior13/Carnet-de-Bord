@@ -1,17 +1,17 @@
 'use client';
 
 import { UserRole } from '@repo/shared';
-import { Crown, Loader2, LogOut, Save, ShieldAlert } from 'lucide-react';
-import React, { type FC } from 'react';
+import { Crown, LogOut, ShieldAlert } from 'lucide-react';
+import React, { type FC, useRef } from 'react';
 
 import { Disclosure } from '$components/layout/Disclosure';
+import { SectionActionBar } from '$components/layout/SectionActionBar';
 import {
   type PermissionMutationPolicy,
   type PermissionMutationSummary,
 } from '$components/users/permission-editor-policy';
 import { PERMISSION_EDITOR_CATEGORIES } from '$components/users/permission-editor-view';
 import { PermissionsEditor } from '$components/users/PermissionsEditor';
-import styles from '$components/users/PermissionsEditor.module.css';
 import {
   getPermissionDisplayLabel,
   hasPermission,
@@ -20,7 +20,6 @@ import {
 import { UserAccessBadge } from '$features/users/user-badges';
 import type { UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
-import { Button } from '$ui/button';
 import { Card, CardContent } from '$ui/card';
 import { Label } from '$ui/label';
 import {
@@ -40,6 +39,7 @@ type UserAccessTabProps = {
   canRevokePermissions: boolean;
   canSave: boolean;
   hasChanges: boolean;
+  isRefreshing?: boolean;
   isSaving: boolean;
   mutationSummary: PermissionMutationSummary | null;
   onCancel: () => void;
@@ -66,6 +66,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   canRevokePermissions,
   canSave,
   hasChanges,
+  isRefreshing = false,
   isSaving,
   mutationSummary,
   onCancel,
@@ -79,6 +80,21 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   setRole,
   user,
 }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const handleCancel = (): void => {
+    onCancel();
+    requestAnimationFrame(() => {
+      const field = cardRef.current?.querySelector<HTMLElement>(
+        '#user-role:not(:disabled), button[aria-pressed]:not(:disabled):not([aria-hidden="true"])',
+      );
+      const heading = cardRef.current?.querySelector<HTMLElement>('h3');
+      if (field) field.focus();
+      else if (heading) {
+        heading.tabIndex = -1;
+        heading.focus();
+      }
+    });
+  };
   const mutationSummaryLabel = mutationSummary
     ? [
         mutationSummary.grantedCount > 0
@@ -135,7 +151,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   }
 
   return (
-    <Card className="overflow-visible" aria-busy={isSaving}>
+    <Card className="overflow-visible" aria-busy={isSaving} ref={cardRef}>
       <div className="border-border-divider space-y-2 border-b px-4 py-3">
         <p className="text-muted-foreground text-xs font-medium">
           Vos droits de gestion sur ce compte
@@ -256,65 +272,40 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
               ))}
             </ul>
           </Disclosure>
-          {saveDisabledReason && !canSave && (
-            <p className="text-warning text-xs leading-5" role="alert">
-              {saveDisabledReason}
-            </p>
-          )}
         </div>
       )}
       {(canManagePermissions || canEditRole) && (
-        <div className={styles.footer} data-dirty={hasChanges}>
-          <div
-            className="min-w-0 flex-1 space-y-1"
-            role="status"
-            aria-live="polite"
-          >
-            <p className="text-muted-foreground text-xs">
-              {isSaving
-                ? 'Enregistrement en cours…'
-                : hasChanges
-                  ? 'Modifications non enregistrées'
-                  : 'Aucune modification en attente'}
-            </p>
-            {hasChanges && mutationSummaryLabel && (
-              <p className="text-foreground text-xs">{mutationSummaryLabel}</p>
-            )}
-            {hasChanges && (
-              <p className="text-warning flex items-start gap-1.5 text-xs leading-5">
-                <LogOut className="mt-0.5 size-3.5 shrink-0" />
-                <span>
-                  Enregistrer déconnectera cet utilisateur de toutes ses
-                  sessions.
-                </span>
-              </p>
-            )}
-          </div>
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onCancel}
-              disabled={!hasChanges || isSaving}
-            >
-              Annuler
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={onSave}
-              disabled={isSaving || !canSave}
-            >
-              {isSaving ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Save className="size-4" />
+        <SectionActionBar
+          hasChanges={hasChanges}
+          isResolvingConflict={isRefreshing}
+          isSaving={isSaving && !isRefreshing}
+          label="Enregistrement des autorisations"
+          onCancel={handleCancel}
+          onSave={onSave}
+          saveDisabled={!canSave}
+          saveDisabledReason={!canSave ? saveDisabledReason : undefined}
+          details={
+            <>
+              {hasChanges && mutationSummaryLabel && (
+                <p className="text-foreground text-xs">
+                  {mutationSummaryLabel}
+                </p>
               )}
-              {isSaving ? 'Enregistrement…' : 'Enregistrer'}
-            </Button>
-          </div>
-        </div>
+              {hasChanges && (
+                <p className="text-warning flex items-start gap-1.5 text-xs leading-5">
+                  <LogOut
+                    aria-hidden="true"
+                    className="mt-0.5 size-3.5 shrink-0"
+                  />
+                  <span>
+                    Enregistrer déconnectera cet utilisateur de toutes ses
+                    sessions.
+                  </span>
+                </p>
+              )}
+            </>
+          }
+        />
       )}
     </Card>
   );

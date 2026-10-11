@@ -1,5 +1,6 @@
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { Loader2 } from 'lucide-react';
 import React, { type ComponentProps, type FC } from 'react';
 
 import { cn } from '$utils/css.utils';
@@ -44,15 +45,21 @@ const buttonVariants = cva(
   },
 );
 
-type ButtonProps = ComponentProps<'button'> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
-  };
+type ButtonProps = Omit<ComponentProps<'button'>, 'disabled'> &
+  VariantProps<typeof buttonVariants> &
+  (
+    | { asChild?: false; disabled?: boolean; loading?: boolean }
+    | { asChild: true; disabled?: never; loading?: never }
+  );
 
 const Button: FC<ButtonProps> = ({
   asChild = false,
+  children,
   className,
+  disabled,
+  loading = false,
   size,
+  type,
   variant,
   ...props
 }) => {
@@ -67,9 +74,28 @@ const Button: FC<ButtonProps> = ({
           size,
           variant,
         }),
+        loading && '[&>svg:not([data-slot=button-spinner])]:hidden',
       )}
       {...props}
-    />
+      type={asChild ? type : (type ?? 'button')}
+      disabled={asChild ? undefined : disabled || loading}
+      aria-busy={loading || props['aria-busy']}
+    >
+      {asChild ? (
+        children
+      ) : (
+        <>
+          {loading ? (
+            <Loader2
+              aria-hidden="true"
+              data-slot="button-spinner"
+              className="size-4 animate-spin"
+            />
+          ) : null}
+          {children}
+        </>
+      )}
+    </Comp>
   );
 };
 

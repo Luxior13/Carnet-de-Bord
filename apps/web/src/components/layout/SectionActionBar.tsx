@@ -1,73 +1,184 @@
 'use client';
 
-import { Check, Loader2, Undo2 } from 'lucide-react';
-import React, { type FC } from 'react';
+import { Check, RefreshCw, Undo2 } from 'lucide-react';
+import Link from 'next/link';
+import React, { type FC, type ReactNode, useId } from 'react';
 
 import { Button } from '$ui/button';
+import { cn } from '$utils/css.utils';
+
+import styles from './SectionActionBar.module.css';
 
 type SectionActionBarProps = {
+  cancelDisabled?: boolean;
+  cancelHref?: string;
+  className?: string;
   conflict?: boolean;
+  details?: ReactNode;
+  disabled?: boolean;
+  extraActions?: ReactNode;
+  hasChanges?: boolean;
+  isResolvingConflict?: boolean;
   isSaving?: boolean;
-  onCancel: () => void;
+  label?: string;
+  onCancel?: () => void;
   onResolveConflict?: () => void;
-  onSave: () => void;
+  placement?: 'sticky' | 'inline';
+  saveAriaLabel?: string;
+  saveDisabled?: boolean;
+  saveDisabledReason?: string;
   saveLabel?: string;
-};
+  savingLabel?: string;
+  status?: ReactNode;
+} & (
+  | { onSave: () => void; saveForm?: never; saveType?: 'button' }
+  | { onSave?: never; saveForm?: string; saveType: 'submit' }
+);
 
-/**
- * Barre d'action d'une section en édition directe.
- *
- * Elle est `sticky` dans la carte de la section : elle suit le scroll, reste
- * visible tant qu'il y a des modifications, et surtout elle prend
- * automatiquement la largeur de la colonne de contenu — aucun calcul d'offset
- * ni de largeur n'est nécessaire.
- */
+/** Shared presentation; validation, permissions and draft ownership stay in the form. */
 export const SectionActionBar: FC<SectionActionBarProps> = ({
+  cancelDisabled,
+  cancelHref,
+  className,
   conflict = false,
+  details,
+  disabled = false,
+  extraActions,
+  hasChanges = true,
+  isResolvingConflict = false,
   isSaving = false,
+  label = 'Actions du formulaire',
   onCancel,
   onResolveConflict,
   onSave,
+  placement = 'sticky',
+  saveAriaLabel,
+  saveDisabled = false,
+  saveDisabledReason,
+  saveForm,
   saveLabel = 'Enregistrer',
-}) => (
-  <div
-    aria-live="polite"
-    className="border-border-default bg-surface-panel sticky bottom-4 z-20 m-3 flex flex-col-reverse items-start justify-between gap-2 rounded-lg border px-4 py-3 shadow-[var(--shadow-panel-strong)] sm:flex-row sm:items-center"
-  >
-    <p className="text-muted-foreground min-w-0 text-xs">
-      {conflict
-        ? 'La fiche a changé depuis son ouverture. Actualisez la version avant d’enregistrer.'
-        : 'Modifications non enregistrées'}
-    </p>
-    <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
-      {conflict && onResolveConflict ? (
-        <Button onClick={onResolveConflict} size="sm" variant="outline">
-          Actualiser la version
-        </Button>
-      ) : null}
-      <Button
-        disabled={isSaving}
-        onClick={onCancel}
-        size="sm"
-        type="button"
-        variant="outline"
-      >
-        <Undo2 className="size-4" />
-        Annuler
-      </Button>
-      <Button
-        disabled={isSaving || conflict}
-        onClick={onSave}
-        size="sm"
-        type="button"
-      >
-        {isSaving ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : (
-          <Check className="size-4" />
-        )}
-        {isSaving ? 'Enregistrement…' : saveLabel}
-      </Button>
+  saveType = 'button',
+  savingLabel = 'Enregistrement…',
+  status,
+}) => {
+  const statusId = useId();
+  const busy = isSaving || isResolvingConflict;
+  const controlsDisabled = disabled || busy;
+  const cannotSave =
+    controlsDisabled || conflict || saveDisabled || !hasChanges;
+  const cannotCancel = controlsDisabled || (cancelDisabled ?? !hasChanges);
+  const cannotNavigate = controlsDisabled || cancelDisabled === true;
+  const message = isResolvingConflict
+    ? 'Actualisation de la version…'
+    : isSaving
+      ? savingLabel
+      : conflict
+        ? 'Vérifiez la version enregistrée avant de poursuivre. Votre saisie est conservée.'
+        : (status ??
+          (hasChanges
+            ? 'Modifications non enregistrées'
+            : 'Aucune modification en attente'));
+
+  return (
+    <div
+      aria-label={label}
+      className={cn(styles.bar, className)}
+      data-dirty={hasChanges}
+      data-placement={placement}
+      data-slot="section-action-bar"
+      role="group"
+    >
+      <div className={styles.body}>
+        <div className={styles.summary}>
+          <p
+            className="text-muted-foreground text-xs leading-5"
+            id={statusId}
+            role="status"
+          >
+            {message}
+          </p>
+          {details}
+          {saveDisabledReason && !busy && (
+            <p
+              className="text-warning text-xs leading-5"
+              id={`${statusId}-reason`}
+            >
+              {saveDisabledReason}
+            </p>
+          )}
+        </div>
+        <div className={styles.actions}>
+          {extraActions}
+          {conflict && onResolveConflict && (
+            <Button
+              disabled={controlsDisabled}
+              loading={isResolvingConflict}
+              onClick={() => {
+                if (!controlsDisabled) onResolveConflict();
+              }}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <RefreshCw aria-hidden="true" className="size-4" />
+              {isResolvingConflict ? 'Actualisation…' : 'Actualiser la version'}
+            </Button>
+          )}
+          {cancelHref ? (
+            <Button asChild size="sm" variant="outline">
+              <Link
+                aria-disabled={cannotNavigate || undefined}
+                className={
+                  cannotNavigate ? 'pointer-events-none opacity-50' : undefined
+                }
+                href={cancelHref}
+                onClick={(event) => {
+                  if (cannotNavigate) event.preventDefault();
+                }}
+              >
+                <Undo2 aria-hidden="true" className="size-4" />
+                Annuler
+              </Link>
+            </Button>
+          ) : onCancel ? (
+            <Button
+              disabled={cannotCancel}
+              onClick={() => {
+                if (!cannotCancel) onCancel();
+              }}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <Undo2 aria-hidden="true" className="size-4" />
+              Annuler
+            </Button>
+          ) : null}
+          <Button
+            aria-label={saveAriaLabel}
+            aria-describedby={
+              saveDisabledReason && !busy
+                ? `${statusId} ${statusId}-reason`
+                : statusId
+            }
+            disabled={cannotSave}
+            form={saveForm}
+            loading={isSaving}
+            onClick={
+              onSave
+                ? (): void => {
+                    if (!cannotSave) onSave();
+                  }
+                : undefined
+            }
+            size="sm"
+            type={saveType}
+          >
+            <Check aria-hidden="true" className="size-4" />
+            {isSaving ? savingLabel : saveLabel}
+          </Button>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};

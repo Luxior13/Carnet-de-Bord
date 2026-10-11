@@ -14,6 +14,7 @@ inclut aussi connexion et MFA depuis la correction du 11 octobre ;
 
 | Page | Suivi | État du document |
 | --- | --- | --- |
+| Composants partagés — transverse | [composants-partages.md](composants-partages.md) | Catalogue et contrats communs ; actions d'enregistrement, recherche, pagination, focus et reprises harmonisés le 11 octobre ; preuves et limites dans l'audit lié |
 | Fenêtres modales — transverse | [modales.md](modales.md) | Modales actives inventoriées ; présentation, focus, conservation des brouillons et reprises corrigés le 11 octobre ; validations simulées et limites documentées |
 | Accueil / Mon travail | [accueil.md](accueil.md) | Salutation et lien Mon compte ; rendu vérifié le 11 octobre, E2E authentifié à rejouer ; vues métier futures |
 | Connexion | [connexion.md](connexion.md) | Stockage facultatif, soumissions et parcours MFA vérifiés dans le navigateur isolé le 11 octobre ; authentification réelle à vérifier |

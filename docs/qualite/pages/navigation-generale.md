@@ -1,5 +1,17 @@
 ﻿# Suivi — Navigation générale, sidebar et header
 
+## Actions et navigation pendant une requête — 11 octobre 2026
+
+La garde de brouillon ignore les liens portant `aria-disabled="true"` : leur
+composant propriétaire bloque déjà l'activation. Annuler une création pendant
+sa requête n'ouvre donc pas une confirmation de navigation parasite. Après
+disparition d'une barre d'édition, le consommateur rend le focus à sa section.
+Le contrat de `PageSectionNavigation` reste la référence des sections de page ;
+les actions d'enregistrement relèvent de `SectionActionBar`.
+
+[Catalogue](../../references/COMPOSANTS.md) et
+[audit transverse](../../audits/AUDIT_COMPOSANTS_2026-10-11.md).
+
 ## Menus partagés — 10 octobre 2026
 
 [Audit transverse des menus](../../audits/AUDIT_MENUS_2026-10-10.md) : menus

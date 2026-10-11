@@ -27,7 +27,7 @@ function EmptyHeader({
     <div
       data-slot="empty-header"
       className={cn(
-        'flex max-w-sm flex-col items-center gap-2 text-center',
+        'flex w-full max-w-sm min-w-0 flex-col items-center gap-2 text-center',
         className,
       )}
       {...props}
@@ -73,7 +73,10 @@ function EmptyTitle({
   return (
     <div
       data-slot="empty-title"
-      className={cn('text-sm font-semibold', className)}
+      className={cn(
+        'max-w-full text-sm font-semibold [overflow-wrap:anywhere]',
+        className,
+      )}
       {...props}
     />
   );
@@ -82,7 +85,7 @@ function EmptyTitle({
 function EmptyDescription({
   className,
   ...props
-}: React.ComponentProps<'p'>): React.JSX.Element {
+}: React.ComponentProps<'div'>): React.JSX.Element {
   return (
     <div
       data-slot="empty-description"

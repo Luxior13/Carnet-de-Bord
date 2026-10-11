@@ -1,5 +1,19 @@
 # Suivi transverse — Fenêtres modales
 
+## Primitives et reprise — 11 octobre 2026
+
+Les pieds de modales restent adaptés à leur dialogue ; `SectionActionBar` sert
+aux formulaires de page et aux réglages inline. Les primitives partagées gèrent
+désormais les textes très longs sans débordement. Les boutons de commande ne
+soumettent pas implicitement un formulaire ; une soumission porte son type.
+
+La zone dangereuse distingue Actualisation et Suppression pendant la reprise
+d'un conflit, et exige une nouvelle confirmation avec la version actualisée.
+Focus, fermeture, menus et reprise ont été exercés dans le
+[banc de composition](../../audits/composants-2026-10-11/banc-composition/README.md).
+[Portée de l'audit](../../audits/AUDIT_COMPOSANTS_2026-10-11.md) : API simulées,
+sans nouvelle validation des opérations sensibles réelles.
+
 ## État courant — 11 octobre 2026
 
 Complément demandé après la revue des pages : toutes les modales des parcours

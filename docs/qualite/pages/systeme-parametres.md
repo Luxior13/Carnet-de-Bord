@@ -1,5 +1,16 @@
 # Suivi de page — Paramètres système
 
+## Actions du réglage — 11 octobre 2026
+
+L'édition locale utilise `SectionActionBar` en placement inline. Annuler reste
+disponible même avant toute modification pour fermer l'éditeur. L'action de
+retour au défaut reste contextuelle ; le bouton Enregistrer garde un nom
+accessible indiquant le réglage. Validation, conflit et confirmation restent
+propriétés du réglage, sans ajouter une seconde gestion dans la barre.
+
+[Catalogue](../../references/COMPOSANTS.md) et
+[preuves simulées de cette passe](../../audits/AUDIT_COMPOSANTS_2026-10-11.md).
+
 ## Identité et état
 
 - Route : `/systeme/parametres`, module `features/settings`.

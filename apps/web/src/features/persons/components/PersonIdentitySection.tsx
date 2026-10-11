@@ -1,7 +1,7 @@
 'use client';
 
 import { UserRound } from 'lucide-react';
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 
@@ -55,22 +55,57 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
   const [form, setForm] = useState<PersonIdentityFormValue>(() =>
     toForm(person),
   );
+  const [basePerson, setBasePerson] = useState(person);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [refreshNotice, setRefreshNotice] = useState<string | null>(null);
   const [pendingLocalDiscard, setPendingLocalDiscard] = useState(false);
   const [actionBarSlot, setActionBarSlot] = useState<HTMLElement | null>(null);
-  const [version, setVersion] = useState(person.version);
-  const isDirty = canUpdate && !isPersonIdentityEqual(person, form);
+  const mountedRef = useRef(false);
+  const operationRef = useRef(false);
+  const dirtyRef = useRef(false);
+  const basePersonRef = useRef(basePerson);
+  const latestPersonRef = useRef(person);
+  const formRef = useRef<HTMLFormElement>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  const localDiscardRef = useRef(false);
+  const discardedRef = useRef(false);
+  const version = basePerson.version;
+  const isDirty = !isPersonIdentityEqual(basePerson, form);
+  const isBusy = isSaving || isRefreshing;
+  dirtyRef.current = isDirty;
+  basePersonRef.current = basePerson;
+  if (person.version >= latestPersonRef.current.version) {
+    latestPersonRef.current = person;
+  }
   const {
     cancelPendingNavigation,
     confirmPendingNavigation,
     pendingNavigationHref,
+    restoreFocus,
   } = useUnsavedNavigationGuard(isDirty);
 
-  // La saisie se resynchronise quand la fiche change cote serveur ; pendant la
-  // frappe la prop ne bouge pas, donc rien n'ecrase une saisie en cours.
   useEffect(() => {
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Une réponse du parent ne doit pas remplacer un brouillon en cours. La
+  // nouvelle version n'est adoptée qu'après une actualisation explicite.
+  useEffect(() => {
+    if (operationRef.current || person.version < basePersonRef.current.version)
+      return;
+    if (dirtyRef.current) {
+      if (person.version !== basePersonRef.current.version) setConflict(true);
+
+      return;
+    }
+    setBasePerson(person);
     setForm(toForm(person));
-    setVersion(person.version);
   }, [person]);
 
   // La barre est rendue hors de la section, dans l'emplacement de la page.
@@ -78,16 +113,30 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
     setActionBarSlot(document.getElementById('person-record-action-bar'));
   }, []);
 
-  const focusFirstError = (): void => {
+  const focusForm = (target: 'error' | 'field' | 'invalid'): void => {
     requestAnimationFrame(() => {
-      document
-        .querySelector<HTMLElement>('#person-identity [aria-invalid="true"]')
-        ?.focus();
+      if (!mountedRef.current) return;
+      const field = formRef.current?.querySelector<HTMLElement>(
+        target === 'invalid'
+          ? '[aria-invalid="true"]:not(:disabled)'
+          : 'input:not(:disabled)',
+      );
+      const destination = target === 'error' ? errorRef.current : field;
+      (
+        destination ?? formRef.current?.closest('section')?.querySelector('h2')
+      )?.focus();
     });
   };
 
   const handleSave = async (): Promise<void> => {
-    if (!canUpdate) return;
+    if (
+      operationRef.current ||
+      !mountedRef.current ||
+      !canUpdate ||
+      conflict ||
+      !isDirty
+    )
+      return;
     const payload = {
       birthDate: form.birthDate || null,
       firstName: form.firstName || null,
@@ -97,23 +146,31 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
       version,
     };
     const validation = updatePersonSchema.safeParse(payload);
+    setSubmitError(null);
+    setRefreshNotice(null);
     if (!validation.success) {
       setErrors(zodErrorMap(validation.error));
-      focusFirstError();
+      focusForm('invalid');
 
       return;
     }
 
     setErrors({});
+    operationRef.current = true;
     setIsSaving(true);
-    setConflict(false);
     try {
       const result = await updatePerson(person.id, payload);
+      if (!mountedRef.current || result.person.id !== person.id) return;
+      basePersonRef.current = result.person;
+      latestPersonRef.current = result.person;
+      dirtyRef.current = false;
+      setBasePerson(result.person);
       onChange(result.person);
       setForm(toForm(result.person));
-      setVersion(result.person.version);
       toast.success('Identité mise à jour');
+      focusForm('field');
     } catch (caught) {
+      if (!mountedRef.current) return;
       if (caught instanceof ApiClientError && caught.status === 409) {
         setConflict(true);
 
@@ -128,31 +185,90 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
             ]),
           ),
         );
-        focusFirstError();
+        focusForm('invalid');
+      } else {
+        focusForm('error');
       }
-      toast.error(
+      setSubmitError(
         caught instanceof Error
           ? caught.message
           : "Impossible de modifier l'identité",
       );
     } finally {
-      setIsSaving(false);
+      operationRef.current = false;
+      if (mountedRef.current) setIsSaving(false);
     }
   };
 
   const discardLocalChanges = (): void => {
-    setForm(toForm(person));
+    if (operationRef.current) return;
+    const latest = latestPersonRef.current;
+    basePersonRef.current = latest;
+    dirtyRef.current = false;
+    discardedRef.current = true;
+    setBasePerson(latest);
+    setForm(toForm(latest));
     setErrors({});
+    setSubmitError(null);
+    setRefreshNotice(null);
     setConflict(false);
     setPendingLocalDiscard(false);
   };
 
-  const refreshVersion = (): void => {
-    void onReload().then((fresh) => {
-      setVersion(fresh.version);
+  const refreshVersion = async (): Promise<void> => {
+    if (operationRef.current || !mountedRef.current) return;
+    operationRef.current = true;
+    setIsRefreshing(true);
+    setSubmitError(null);
+    setRefreshNotice(null);
+    const previous = toForm(basePerson);
+    try {
+      const fresh = await onReload();
+      if (!mountedRef.current || fresh.id !== person.id) return;
+      const latest = toForm(fresh);
+      // Conserver les modifications locales, mais récupérer les changements
+      // serveur des champs que l'utilisateur n'a pas touchés.
+      setForm({
+        birthDate:
+          form.birthDate !== previous.birthDate
+            ? form.birthDate
+            : latest.birthDate,
+        firstName:
+          form.firstName.trim() !== previous.firstName
+            ? form.firstName
+            : latest.firstName,
+        lastName:
+          form.lastName.trim() !== previous.lastName
+            ? form.lastName
+            : latest.lastName,
+        nickname:
+          form.nickname.trim() !== previous.nickname
+            ? form.nickname
+            : latest.nickname,
+        structureStatus:
+          form.structureStatus !== previous.structureStatus
+            ? form.structureStatus
+            : latest.structureStatus,
+      });
+      basePersonRef.current = fresh;
+      latestPersonRef.current = fresh;
+      setBasePerson(fresh);
+      setErrors({});
       setConflict(false);
-      toast.info('Version actualisée, votre saisie est conservée');
-    });
+      setRefreshNotice(
+        'Version actualisée. Vos modifications sont conservées ; les autres champs sont à jour. Vérifiez avant d’enregistrer.',
+      );
+      focusForm('field');
+    } catch {
+      if (!mountedRef.current) return;
+      setSubmitError(
+        'Actualisation impossible. Votre saisie est conservée ; réessayez avant d’enregistrer.',
+      );
+      focusForm('error');
+    } finally {
+      operationRef.current = false;
+      if (mountedRef.current) setIsRefreshing(false);
+    }
   };
 
   const provenanceTarget = (
@@ -212,7 +328,11 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
               <UserRound className="size-4" />
             </ServiceIcon>
             <div className="min-w-0">
-              <h2 className="text-sm font-semibold">
+              <h2
+                className="text-sm font-semibold"
+                id="person-identity-title"
+                tabIndex={-1}
+              >
                 Informations personnelles
               </h2>
               <p className="text-muted-foreground mt-1 text-xs">
@@ -223,17 +343,46 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
         </CardHeader>
 
         <CardContent className="p-4 sm:p-5">
-          <PersonIdentityFields
-            disabled={!canUpdate || isSaving}
-            errors={errors}
-            idPrefix="person-detail"
-            onChange={(key, nextValue) =>
-              setForm((current) => ({ ...current, [key]: nextValue }))
-            }
-            provenances={provenances}
-            value={form}
-            variant="quiet"
-          />
+          <form
+            aria-busy={isBusy || undefined}
+            aria-labelledby="person-identity-title"
+            autoComplete="off"
+            className="space-y-4"
+            id="person-identity-form"
+            noValidate
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleSave();
+            }}
+            ref={formRef}
+          >
+            {submitError && (
+              <p
+                className="text-destructive text-sm"
+                ref={errorRef}
+                role="alert"
+                tabIndex={-1}
+              >
+                {submitError}
+              </p>
+            )}
+            {refreshNotice && (
+              <p className="text-muted-foreground text-sm" role="status">
+                {refreshNotice}
+              </p>
+            )}
+            <PersonIdentityFields
+              disabled={!canUpdate || isBusy}
+              errors={errors}
+              idPrefix="person-detail"
+              onChange={(key, nextValue) =>
+                setForm((current) => ({ ...current, [key]: nextValue }))
+              }
+              provenances={provenances}
+              value={form}
+              variant="quiet"
+            />
+          </form>
         </CardContent>
       </section>
 
@@ -242,10 +391,22 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
         createPortal(
           <SectionActionBar
             conflict={conflict}
+            isResolvingConflict={isRefreshing}
             isSaving={isSaving}
-            onCancel={() => setPendingLocalDiscard(true)}
-            onResolveConflict={refreshVersion}
-            onSave={() => void handleSave()}
+            onCancel={() => {
+              if (operationRef.current) return;
+              localDiscardRef.current = true;
+              setPendingLocalDiscard(true);
+            }}
+            onResolveConflict={() => void refreshVersion()}
+            saveDisabled={!canUpdate}
+            saveDisabledReason={
+              !canUpdate
+                ? 'La modification de cette fiche n’est plus autorisée.'
+                : undefined
+            }
+            saveForm="person-identity-form"
+            saveType="submit"
           />,
           actionBarSlot,
         )}
@@ -268,6 +429,16 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
         onCancel={() => {
           setPendingLocalDiscard(false);
           cancelPendingNavigation();
+        }}
+        onCloseAutoFocus={(event) => {
+          if (discardedRef.current) {
+            event.preventDefault();
+            discardedRef.current = false;
+            focusForm('field');
+          } else if (!localDiscardRef.current) {
+            restoreFocus(event);
+          }
+          localDiscardRef.current = false;
         }}
         onConfirm={() => {
           if (pendingLocalDiscard) discardLocalChanges();

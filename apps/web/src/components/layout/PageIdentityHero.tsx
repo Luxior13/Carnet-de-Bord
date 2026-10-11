@@ -39,7 +39,7 @@ export const PageIdentityHero: FC<PageIdentityHeroProps> = ({
       <span aria-hidden="true" className={styles.heroLogo}>
         {icon}
       </span>
-      <div>
+      <div className={styles.heroText}>
         {eyebrow ? <div className={styles.eyebrow}>{eyebrow}</div> : null}
         <div className={styles.titleLine}>
           <h1>{title}</h1>
@@ -51,6 +51,6 @@ export const PageIdentityHero: FC<PageIdentityHeroProps> = ({
         {!compact && meta ? <div className={styles.meta}>{meta}</div> : null}
       </div>
     </div>
-    {actions}
+    {actions ? <div className={styles.heroActions}>{actions}</div> : null}
   </header>
 );

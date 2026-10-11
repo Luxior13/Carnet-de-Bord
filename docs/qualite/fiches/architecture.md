@@ -10,6 +10,9 @@
 - Une donnée a-t-elle un propriétaire unique malgré ses projections dans plusieurs pages ?
 - La règle métier est-elle testable sans rendre l’interface ?
 - Une nouvelle abstraction répond-elle à plusieurs besoins réels, ou masque-t-elle un cas unique simple ?
+- Le [catalogue des composants](../../references/COMPOSANTS.md) couvre-t-il déjà
+  ce besoin ? Quels consommateurs réels démontrent qu'une variante est utile,
+  et lesquels faut-il rejouer si le contrat partagé change ?
 - Les dépendances entre modules sont-elles explicites, sans cycle ni accès caché à leurs tables ?
 - Les composants partagés laissent-ils adapter densité, contenu et état au type de page ?
 - Les contrats destinés au navigateur excluent-ils dépendances serveur et données privées ?

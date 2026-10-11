@@ -66,11 +66,17 @@ les listes, `PageAsideLayout` si une synthèse secondaire est utile,
 [globals.css](../../apps/web/src/app/globals.css) reste la source unique des
 tokens ; aucune palette copiée dans un composant.
 
+Le [catalogue des composants](COMPOSANTS.md) précise les choix par usage,
+les comportements partagés et les responsabilités qui restent aux pages.
+
 | Besoin | Source à réutiliser |
 | --- | --- |
 | Cadre, largeur et marges | [PageShell et PageCanvas](../../apps/web/src/components/ui/page-shell.tsx) |
 | Bandeau d'identité, variante compacte | [PageIdentityHero](../../apps/web/src/components/layout/PageIdentityHero.tsx) et [son module](../../apps/web/src/components/layout/PageIdentityHero.module.css) |
 | Tableau, cartes mobiles, outils et pagination | [DataTableSection](../../apps/web/src/components/ui/data-table-section.tsx) et [directory.module.css](../../apps/web/src/components/ui/directory.module.css) |
+| Recherche de liste et effacement avec retour du focus | [ListSearchField](../../apps/web/src/components/ui/list-search-field.tsx) |
+| Précédent/suivant d’une liste, avec total lorsqu’il est connu | [ListPagination](../../apps/web/src/components/ui/pagination.tsx) |
+| Actions d’enregistrement et d’annulation | [SectionActionBar](../../apps/web/src/components/layout/SectionActionBar.tsx) et [son module](../../apps/web/src/components/layout/SectionActionBar.module.css) |
 | Synthèse latérale ou empilée | [PageAsideLayout](../../apps/web/src/components/layout/PageAsideLayout.tsx) et [ses seuils](../../apps/web/src/components/layout/PageAsideLayout.module.css) |
 | Navigation entre les sections d'une fiche | [PageSectionNavigation](../../apps/web/src/components/layout/PageSectionNavigation.tsx) |
 | Infobulle, survol et focus | [TooltipContent](../../apps/web/src/components/ui/tooltip.tsx) |
@@ -277,7 +283,9 @@ Les ombres montent avec l'élévation et restent très douces :
 ## 6. Focus et états
 
 - L'épaisseur du focus est un jeton : `--ring-width`, appliqué avec
-  `ring-[var(--ring-width)]`.
+  `ring-[length:var(--ring-width)]`. Préciser `length:` pour que Tailwind
+  interprète la variable comme une épaisseur et non comme une couleur ;
+  la couleur reste fournie par `ring-ring` ou le token sémantique adapté.
 - Un élément interactif a toujours : `hover`, `focus-visible`, `disabled` et,
   si pertinent, `aria-invalid`.
 - Le focus est visible au clavier et masqué à la souris quand le navigateur le
@@ -395,9 +403,45 @@ Chaque écran couvre les états pertinents pour ses capacités, avec les composa
 - conflit de version : message et rechargement ;
 - changement non enregistré : `UnsavedNavigationDialog`.
 
+### Barre d’enregistrement commune
+
+`SectionActionBar` est la référence partagée, issue de la fiche
+`/systeme/utilisateurs/[id]`, pour les pages actuelles et futures demandant
+Enregistrer/Annuler. Les créations, profils, autorisations et réglages composent
+cette barre ; les pieds de modale conservent leur composition adaptée.
+
+- États distincts : formulaire inchangé, brouillon, enregistrement, conflit et
+  actualisation de version. Une raison d’indisponibilité reste visible et liée
+  au bouton ; actualiser ne signifie pas enregistrer.
+- Choisir `onSave` pour un callback ou `saveType="submit"` pour une soumission
+  native. `saveForm` associe un formulaire extérieur, par exemple avec un portail.
+  L’API exclut le cumul des deux déclenchements.
+- Le formulaire garde validation, brouillon, version, permissions et verrou
+  synchrone des opérations. Une erreur conserve la saisie ; une actualisation
+  de conflit demande une nouvelle confirmation avant écriture. Les réponses
+  d’une ancienne cible ne doivent pas remplacer la fiche courante.
+- La barre est collante uniquement avec un brouillon et une place suffisante :
+  au moins 768 px de largeur et plus de 600 px de hauteur. Sur écran plus étroit
+  ou moins haut, elle reste dans le flux pour ne pas masquer les champs.
+  `placement="inline"` sert aux réglages locaux ; un formulaire inchangé reste
+  également dans le flux. `cancelDisabled={false}` permet de refermer un éditeur
+  de réglage ouvert sans modification.
+- Les actions supplémentaires restent contrôlées par leur propriétaire, y
+  compris leurs permissions et leur indisponibilité pendant une requête.
+
+`Button loading` fournit l’indicateur d’attente, `aria-busy` et la désactivation
+du bouton ordinaire tout en conservant son libellé. Le formulaire fournit le
+texte d’attente et protège la requête des doubles appels. Pour une navigation,
+`Button asChild` conserve un vrai lien ; `loading` et `disabled` ne sont pas des
+props disponibles dans ce mode.
+
 ---
 
 ## 10. L'inventaire des composants
+
+Le [catalogue des composants partagés](COMPOSANTS.md) est la référence de choix
+et de comportement, reliée aux sources et au suivi transverse. Cet inventaire
+résume leur organisation.
 
 `components/ui` : bouton, badge, carte, champ, étiquette, case à cocher,
 sélecteur, interrupteur, onglets, table, pagination, boîte de dialogue, popover,

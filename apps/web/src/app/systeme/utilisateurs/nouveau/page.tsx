@@ -1,8 +1,7 @@
 'use client';
 
 import { UserRole } from '@repo/shared';
-import { AtSign, Loader2, Mail, Plus, UserPlus } from 'lucide-react';
-import Link from 'next/link';
+import { AtSign, Mail, UserPlus } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import React, { type FC, Suspense, useState } from 'react';
 
@@ -10,6 +9,7 @@ import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
 import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { AccessDeniedState } from '$components/layout/PageState';
+import { SectionActionBar } from '$components/layout/SectionActionBar';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { AdminStepUpDialog } from '$components/users/user-detail/AdminStepUpDialog';
 import { UserAvatar } from '$components/users/UserAvatar';
@@ -24,12 +24,10 @@ import { useCreateUser } from '$features/users/useCreateUser';
 import { UserAccessBadge } from '$features/users/user-badges';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
 import type { UserType } from '$types/auth.types';
-import { Button } from '$ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '$ui/card';
@@ -425,34 +423,16 @@ const NewUserContent: FC<{ returnHref: string; userData: UserType | null }> = ({
                       </div>
                     </section>
                   </CardContent>
-                  <CardFooter className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-muted-foreground text-xs">
-                      Le compte pourra être complété après création.
-                    </p>
-                    <div className="ml-auto flex gap-2">
-                      <Button asChild variant="outline">
-                        <Link href={returnHref}>Annuler</Link>
-                      </Button>
-                      <Button
-                        type="submit"
-                        disabled={
-                          isCreating || !form.firstName || !form.loginName
-                        }
-                      >
-                        {isCreating ? (
-                          <>
-                            <Loader2 className="size-4 animate-spin" />
-                            Création...
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="size-4" />
-                            Créer le compte
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardFooter>
+                  <SectionActionBar
+                    cancelHref={returnHref}
+                    isSaving={isCreating}
+                    label="Création du compte"
+                    saveDisabled={!form.firstName || !form.loginName}
+                    saveLabel="Créer le compte"
+                    saveType="submit"
+                    savingLabel="Création…"
+                    status="Le compte pourra être complété après création."
+                  />
                 </Card>
               </fieldset>
             </form>

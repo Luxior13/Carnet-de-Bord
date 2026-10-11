@@ -1,0 +1,114 @@
+{
+  "date": "2026-10-11",
+  "environment": "Chromium isolated; real toolbar/search/pagination and directory components; controlled state; simulated router and API; no database; fallback font",
+  "observations": [
+    {
+      "name": "toolbar-search",
+      "width": 320,
+      "mode": "users",
+      "result": "passed"
+    },
+    {
+      "name": "toolbar-search",
+      "width": 320,
+      "mode": "persons",
+      "result": "passed"
+    },
+    {
+      "name": "pagination-state",
+      "width": 320,
+      "mode": "persons",
+      "result": "passed"
+    },
+    {
+      "name": "directory-pagination-focus-and-error",
+      "width": 320,
+      "mode": "directory",
+      "result": "passed"
+    },
+    {
+      "name": "toolbar-search",
+      "width": 390,
+      "mode": "users",
+      "result": "passed"
+    },
+    {
+      "name": "toolbar-search",
+      "width": 390,
+      "mode": "persons",
+      "result": "passed"
+    },
+    {
+      "name": "pagination-state",
+      "width": 390,
+      "mode": "persons",
+      "result": "passed"
+    },
+    {
+      "name": "directory-pagination-focus-and-error",
+      "width": 390,
+      "mode": "directory",
+      "result": "passed"
+    },
+    {
+      "name": "toolbar-search",
+      "width": 768,
+      "mode": "users",
+      "result": "passed"
+    },
+    {
+      "name": "toolbar-search",
+      "width": 768,
+      "mode": "persons",
+      "result": "passed"
+    },
+    {
+      "name": "pagination-state",
+      "width": 768,
+      "mode": "persons",
+      "result": "passed"
+    },
+    {
+      "name": "directory-pagination-focus-and-error",
+      "width": 768,
+      "mode": "directory",
+      "result": "passed"
+    },
+    {
+      "name": "toolbar-search",
+      "width": 1440,
+      "mode": "users",
+      "result": "passed"
+    },
+    {
+      "name": "toolbar-search",
+      "width": 1440,
+      "mode": "persons",
+      "result": "passed"
+    },
+    {
+      "name": "pagination-state",
+      "width": 1440,
+      "mode": "persons",
+      "result": "passed"
+    },
+    {
+      "name": "directory-pagination-focus-and-error",
+      "width": 1440,
+      "mode": "directory",
+      "result": "passed"
+    },
+    {
+      "name": "touch-clear",
+      "width": 390,
+      "mode": "users",
+      "result": "passed"
+    },
+    {
+      "name": "forced-colors",
+      "width": 390,
+      "mode": "persons",
+      "result": "passed"
+    }
+  ]
+}

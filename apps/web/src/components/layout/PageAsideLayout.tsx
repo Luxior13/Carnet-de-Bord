@@ -5,7 +5,7 @@ import { cn } from '$utils/css.utils';
 import styles from './PageAsideLayout.module.css';
 
 type PageAsideLayoutProps = {
-  /** Secondary content: right rail on wide screens, stacked below otherwise. */
+  /** Secondary content: right rail on wide screens, before the main content otherwise. */
   aside: ReactNode;
   children: ReactNode;
   className?: string;

@@ -229,7 +229,8 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(userAccessSource).toContain(
       'disabled={!canManagePermissions || isSaving}',
     );
-    expect(userAccessSource).toContain('disabled={isSaving || !canSave}');
+    expect(userAccessSource).toContain('<SectionActionBar');
+    expect(userAccessSource).toContain('saveDisabled={!canSave}');
     expect(userAccessSource).not.toContain(
       'un code MFA sera demandé une seule fois',
     );

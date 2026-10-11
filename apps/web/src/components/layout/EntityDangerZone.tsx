@@ -57,7 +57,12 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
       mountedRef.current = false;
     };
   }, []);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [pendingOperation, setPendingOperation] = useState<
+    'delete' | 'reload' | null
+  >(null);
+  const isBusy = pendingOperation !== null;
+  const isDeleting = pendingOperation === 'delete';
+  const isReloading = pendingOperation === 'reload';
   const [open, setOpen] = useState(false);
   const [version, setVersion] = useState(initialVersion);
   const idempotencyKeyRef = useRef(crypto.randomUUID());
@@ -66,7 +71,7 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
     if (operationRef.current || !mountedRef.current || conflict) return;
     operationRef.current = true;
     setError(null);
-    setIsDeleting(true);
+    setPendingOperation('delete');
     setConflict(false);
     try {
       await onDelete(version, idempotencyKeyRef.current);
@@ -85,14 +90,14 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
       }
     } finally {
       operationRef.current = false;
-      if (mountedRef.current) setIsDeleting(false);
+      if (mountedRef.current) setPendingOperation(null);
     }
   };
 
   const refreshVersion = async (): Promise<void> => {
     if (operationRef.current || !mountedRef.current) return;
     operationRef.current = true;
-    setIsDeleting(true);
+    setPendingOperation('reload');
     setError(null);
     try {
       const freshVersion = await onReloadVersion();
@@ -105,7 +110,7 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
         setError('Actualisation impossible. Réessayez avant de supprimer.');
     } finally {
       operationRef.current = false;
-      if (mountedRef.current) setIsDeleting(false);
+      if (mountedRef.current) setPendingOperation(null);
     }
   };
 
@@ -145,7 +150,7 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent
-            aria-busy={isDeleting || undefined}
+            aria-busy={isBusy || undefined}
             className="sm:max-w-lg"
           >
             <AlertDialogHeader>
@@ -168,14 +173,21 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
               <ContentState
                 action={
                   <Button
-                    disabled={isDeleting}
+                    disabled={isBusy}
                     onClick={() => void refreshVersion()}
                     size="sm"
                     type="button"
                     variant="outline"
                   >
-                    <RotateCcw className="size-4" />
-                    Actualiser
+                    {isReloading ? (
+                      <Loader2
+                        aria-hidden="true"
+                        className="size-4 animate-spin"
+                      />
+                    ) : (
+                      <RotateCcw aria-hidden="true" className="size-4" />
+                    )}
+                    {isReloading ? 'Actualisation…' : 'Actualiser'}
                   </Button>
                 }
                 description="La fiche a changé depuis son ouverture. Actualisez-la puis confirmez à nouveau."
@@ -184,11 +196,9 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
               />
             )}
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeleting}>
-                Annuler
-              </AlertDialogCancel>
+              <AlertDialogCancel disabled={isBusy}>Annuler</AlertDialogCancel>
               <Button
-                disabled={isDeleting || conflict}
+                disabled={isBusy || conflict}
                 onClick={() => void handleDelete()}
                 type="button"
                 variant="destructive"

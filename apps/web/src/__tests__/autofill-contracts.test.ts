@@ -68,7 +68,10 @@ describe('site-wide autofill policy', () => {
       createElement(
         Command,
         null,
-        createElement(CommandInput, conflictingProps),
+        createElement(
+          CommandInput,
+          conflictingProps as unknown as ComponentProps<typeof CommandInput>,
+        ),
       ),
     );
     expectAutofillDisabled(markup);

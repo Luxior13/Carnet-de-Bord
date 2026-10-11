@@ -1,13 +1,16 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import React, { type FC } from 'react';
+import React, { type FC, type ReactNode } from 'react';
 
 import { Button } from '$ui/button';
+import directoryStyles from '$ui/directory.module.css';
 import { cn } from '$utils/css.utils';
 
 type PaginationProps = {
+  ariaLabel?: string;
   className?: string;
+  disabled?: boolean;
   limit: number;
   onPageChange: (page: number) => void;
   page: number;
@@ -16,7 +19,9 @@ type PaginationProps = {
 };
 
 const Pagination: FC<PaginationProps> = ({
+  ariaLabel = 'Pagination',
   className,
+  disabled = false,
   limit,
   onPageChange,
   page,
@@ -48,7 +53,7 @@ const Pagination: FC<PaginationProps> = ({
 
   return (
     <div
-      aria-label="Pagination"
+      aria-label={ariaLabel}
       className={cn(
         'flex items-center justify-between border-t px-3 py-2 sm:px-4 sm:py-3',
         className,
@@ -63,11 +68,12 @@ const Pagination: FC<PaginationProps> = ({
           variant="ghost"
           size="icon"
           className="size-10 lg:size-8"
-          disabled={page <= 1}
+          disabled={disabled || page <= 1}
           onClick={() => onPageChange(page - 1)}
           aria-label="Page précédente"
+          type="button"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft aria-hidden="true" className="h-4 w-4" />
         </Button>
         {/* Page numbers hidden on mobile, show current/total instead */}
         <span
@@ -82,6 +88,7 @@ const Pagination: FC<PaginationProps> = ({
             p === 'ellipsis' ? (
               <span
                 key={`e-${i}`}
+                aria-hidden="true"
                 className="text-muted-foreground px-1 text-xs"
               >
                 ...
@@ -94,7 +101,9 @@ const Pagination: FC<PaginationProps> = ({
                 variant="navigation"
                 size="icon"
                 className="size-8 text-xs"
+                disabled={disabled}
                 onClick={() => onPageChange(p)}
+                type="button"
               >
                 {p}
               </Button>
@@ -105,16 +114,87 @@ const Pagination: FC<PaginationProps> = ({
           variant="ghost"
           size="icon"
           className="size-10 lg:size-8"
-          disabled={page >= totalPages}
+          disabled={disabled || page >= totalPages}
           onClick={() => onPageChange(page + 1)}
           aria-label="Page suivante"
+          type="button"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight aria-hidden="true" className="h-4 w-4" />
         </Button>
       </div>
     </div>
   );
 };
 
-export { Pagination };
+type ListPaginationProps = {
+  ariaLabel: string;
+  canNext: boolean;
+  canPrevious: boolean;
+  className?: string;
+  disabled?: boolean;
+  isLoading?: boolean;
+  leadingAction?: ReactNode;
+  onNext: () => void;
+  onPrevious: () => void;
+  page: number;
+  totalPages?: number;
+};
+
+/** Cursor and offset lists share controls, never assumptions about known pages. */
+const ListPagination: FC<ListPaginationProps> = ({
+  ariaLabel,
+  canNext,
+  canPrevious,
+  className,
+  disabled = false,
+  isLoading = false,
+  leadingAction,
+  onNext,
+  onPrevious,
+  page,
+  totalPages,
+}) => (
+  <nav
+    aria-busy={isLoading || undefined}
+    aria-label={ariaLabel}
+    className={cn(directoryStyles.pagination, className)}
+  >
+    <p>
+      Page <strong>{page.toLocaleString('fr-FR')}</strong>
+      {totalPages !== undefined && totalPages > 1 && totalPages >= page && (
+        <>
+          {' '}
+          sur <strong>{totalPages.toLocaleString('fr-FR')}</strong>
+        </>
+      )}
+    </p>
+    <div className={directoryStyles.paginationActions}>
+      {leadingAction}
+      <Button
+        aria-label="Page précédente"
+        className={directoryStyles.pageButton}
+        disabled={disabled || isLoading || !canPrevious}
+        onClick={onPrevious}
+        size="icon"
+        type="button"
+        variant="ghost"
+      >
+        <ChevronLeft aria-hidden="true" />
+      </Button>
+      <Button
+        aria-label="Page suivante"
+        className={directoryStyles.pageButton}
+        disabled={disabled || isLoading || !canNext}
+        onClick={onNext}
+        size="icon"
+        type="button"
+        variant="ghost"
+      >
+        <ChevronRight aria-hidden="true" />
+      </Button>
+    </div>
+  </nav>
+);
+
+export { ListPagination, Pagination };
 export type { PaginationProps };

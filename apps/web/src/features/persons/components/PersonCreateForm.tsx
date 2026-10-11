@@ -1,20 +1,18 @@
 'use client';
 
-import { ArrowRight, Loader2, UserPlus } from 'lucide-react';
-import Link from 'next/link';
+import { UserPlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+import { SectionActionBar } from '$components/layout/SectionActionBar';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { personDetailPath } from '$constants/routes.constants';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
-import { Button } from '$ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '$ui/card';
@@ -197,19 +195,16 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({ returnHref }) => {
               value={form}
             />
           </CardContent>
-          <CardFooter className="border-border-divider flex flex-col-reverse justify-end gap-2 border-t p-4 sm:flex-row">
-            <Button asChild variant="outline">
-              <Link href={returnHref}>Annuler</Link>
-            </Button>
-            <Button disabled={isSubmitting || created} type="submit">
-              {isSubmitting ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <ArrowRight className="size-4" />
-              )}
-              {isSubmitting ? 'Création…' : 'Créer et ouvrir la fiche'}
-            </Button>
-          </CardFooter>
+          <SectionActionBar
+            cancelHref={returnHref}
+            disabled={created}
+            isSaving={isSubmitting}
+            label="Création de la fiche"
+            saveLabel="Créer et ouvrir la fiche"
+            saveType="submit"
+            savingLabel="Création…"
+            status="Un pseudo suffit ; la fiche pourra être complétée ensuite."
+          />
         </Card>
       </form>
       <UnsavedNavigationDialog

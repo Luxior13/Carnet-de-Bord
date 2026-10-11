@@ -27,7 +27,8 @@ function CommandInput({
   className,
   trailing,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Input> & {
+}: Omit<React.ComponentProps<typeof CommandPrimitive.Input>, 'autoComplete'> & {
+  autoComplete?: 'off';
   trailing?: React.ReactNode;
 }): React.JSX.Element {
   return (

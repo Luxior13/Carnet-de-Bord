@@ -1,0 +1,72 @@
+.bar {
+  container: section-actions / inline-size;
+  position: sticky;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 20;
+  min-width: 0;
+  margin: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: var(--surface-panel);
+  box-shadow: var(--shadow-panel-strong);
+}
+
+.bar[data-placement='inline'],
+.bar[data-dirty='false'] {
+  position: static;
+  box-shadow: none;
+}
+
+.bar[data-placement='inline'] {
+  margin: 0;
+}
+
+/* Keep fields visible when the actions occupy much of the viewport. */
+@media (max-width: 767px), (max-height: 600px) {
+  .bar {
+    position: static;
+    box-shadow: none;
+  }
+}
+
+.body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+.summary {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+
+.actions > [data-slot='button'] {
+  height: auto;
+  min-height: 40px;
+  white-space: normal;
+}
+
+@container section-actions (max-width: 36rem) {
+  .body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions > [data-slot='button'] {
+    flex: 1 1 auto;
+    min-height: 44px;
+  }
+}

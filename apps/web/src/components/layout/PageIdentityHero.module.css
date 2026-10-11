@@ -25,6 +25,34 @@
   align-items: center;
   gap: 13px;
   min-width: 0;
+  max-width: 100%;
+}
+
+.heroText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.heroActions > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.heroActions [data-slot='button'] {
+  height: auto;
+  min-height: 40px;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .eyebrow {

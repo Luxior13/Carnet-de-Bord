@@ -1,0 +1,199 @@
+{
+  "date": "2026-10-11",
+  "browser": "149.0.7827.55",
+  "environment": "Chromium isolated; real components; navigation/context/API simulated; no database; fallback font",
+  "observations": [
+    {
+      "name": "account-profile-cancel",
+      "width": 320,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-profile-cancel",
+      "width": 320,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-role-summary",
+      "width": 320,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-personal-permissions",
+      "width": 320,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "person-create-inflight",
+      "width": 320,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-create-inflight",
+      "width": 320,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "setting-inline-state",
+      "width": 320,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "account-profile-cancel",
+      "width": 390,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-profile-cancel",
+      "width": 390,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-role-summary",
+      "width": 390,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-personal-permissions",
+      "width": 390,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "person-create-inflight",
+      "width": 390,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-create-inflight",
+      "width": 390,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "setting-inline-state",
+      "width": 390,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "account-profile-cancel",
+      "width": 768,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-profile-cancel",
+      "width": 768,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-role-summary",
+      "width": 768,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-personal-permissions",
+      "width": 768,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "person-create-inflight",
+      "width": 768,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-create-inflight",
+      "width": 768,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "setting-inline-state",
+      "width": 768,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "account-profile-cancel",
+      "width": 1440,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-profile-cancel",
+      "width": 1440,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-role-summary",
+      "width": 1440,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-personal-permissions",
+      "width": 1440,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "person-create-inflight",
+      "width": 1440,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-create-inflight",
+      "width": 1440,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "setting-inline-state",
+      "width": 1440,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "account-conflict-reload",
+      "width": 390,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "user-profile-enter-once",
+      "width": 390,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "long-conflict-sticky",
+      "width": 320,
+      "height": 900,
+      "result": "passed"
+    },
+    {
+      "name": "landscape-role-focus",
+      "width": 900,
+      "height": 480,
+      "result": "passed"
+    }
+  ]
+}

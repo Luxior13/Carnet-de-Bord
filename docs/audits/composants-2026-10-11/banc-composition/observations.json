@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-11",
+  "browser": "149.0.7827.55",
+  "results": [
+    {
+      "name": "long-identities",
+      "width": 320,
+      "status": "passed"
+    },
+    {
+      "name": "long-content-states",
+      "width": 320,
+      "status": "passed"
+    },
+    {
+      "name": "long-identities",
+      "width": 390,
+      "status": "passed"
+    },
+    {
+      "name": "long-content-states",
+      "width": 390,
+      "status": "passed"
+    },
+    {
+      "name": "long-identities",
+      "width": 768,
+      "status": "passed"
+    },
+    {
+      "name": "long-content-states",
+      "width": 768,
+      "status": "passed"
+    },
+    {
+      "name": "long-identities",
+      "width": 1440,
+      "status": "passed"
+    },
+    {
+      "name": "long-content-states",
+      "width": 1440,
+      "status": "passed"
+    },
+    {
+      "name": "overlay-keyboard-focus",
+      "width": 320,
+      "status": "passed"
+    },
+    {
+      "name": "popover-menu-disclosure",
+      "width": 320,
+      "status": "passed"
+    },
+    {
+      "name": "overlay-keyboard-focus",
+      "width": 1440,
+      "status": "passed"
+    },
+    {
+      "name": "popover-menu-disclosure",
+      "width": 1440,
+      "status": "passed"
+    },
+    {
+      "name": "danger-reload-confirmation",
+      "width": 390,
+      "status": "passed"
+    },
+    {
+      "name": "person-conflict-retry-draft",
+      "width": 320,
+      "status": "passed"
+    },
+    {
+      "name": "person-conflict-retry-draft",
+      "width": 1440,
+      "status": "passed"
+    },
+    {
+      "name": "person-cancel-latest-version",
+      "width": 390,
+      "status": "passed"
+    },
+    {
+      "name": "person-validation-and-save-error",
+      "width": 390,
+      "status": "passed"
+    },
+    {
+      "name": "person-late-save-target-switch",
+      "width": 390,
+      "status": "passed"
+    },
+    {
+      "name": "person-parent-late-refresh",
+      "width": 390,
+      "status": "passed"
+    },
+    {
+      "name": "person-external-update-and-revocation",
+      "width": 390,
+      "status": "passed"
+    }
+  ]
+}

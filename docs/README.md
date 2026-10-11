@@ -23,6 +23,9 @@ Pour l'interface, partir du [design system](references/DESIGN_SYSTEM.md) et du
 composants à réutiliser, les tokens courants et les adaptations selon le type
 de page. Les anciens audits et maquettes ne remplacent pas ces règles.
 
+Le [catalogue des composants](references/COMPOSANTS.md) précise lequel choisir,
+ses comportements attendus et les responsabilités à garder dans la page.
+
 Sélectionner les sujets avec la revue générale, lire le
 [suivi courant](qualite/pages/README.md), puis mettre à jour la décision dans son
 document propriétaire. Pour une revue approfondie :

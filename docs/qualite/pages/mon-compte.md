@@ -1,5 +1,16 @@
 # Suivi — Mon compte (`/mon-compte`)
 
+## Barre du profil — 11 octobre 2026
+
+Le profil utilise `SectionActionBar` et un vrai formulaire soumis par Entrée.
+La relecture après conflit affiche Actualisation, avec les mêmes verrous que la
+sauvegarde ; le brouillon reste disponible. Annuler restaure les valeurs et rend
+le focus à la saisie ou à son titre si le droit a changé. La barre ne masque plus
+les champs sur petit écran. Le dialogue de contact garde son pied contextuel.
+
+[Composants communs](../../references/COMPOSANTS.md) et
+[audit daté avec limites](../../audits/AUDIT_COMPOSANTS_2026-10-11.md).
+
 ## Identité et état
 
 - Route : `/mon-compte`. Page personnelle du compte connecté.

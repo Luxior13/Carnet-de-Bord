@@ -31,6 +31,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
   const [firstName, setFirstName] = useState(userData.firstName);
   const [lastName, setLastName] = useState(userData.lastName ?? '');
   const [isSaving, setIsSaving] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [baseProfile, setBaseProfile] = useState(userData);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
@@ -40,6 +41,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
   const dirtyRef = useRef(false);
   const savingRef = useRef(false);
   const mountedRef = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const [showContactEmailDialog, setShowContactEmailDialog] = useState(false);
   const onDirtyChangeRef = useRef(onDirtyChange);
 
@@ -164,7 +166,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
   const reloadProfileVersion = async (): Promise<void> => {
     if (savingRef.current || !mountedRef.current) return;
     savingRef.current = true;
-    setIsSaving(true);
+    setIsRefreshing(true);
     try {
       const response = await apiFetch('/api/auth/me', { cache: 'no-store' });
       const payload = await response.json();
@@ -186,7 +188,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
         );
     } finally {
       savingRef.current = false;
-      if (mountedRef.current) setIsSaving(false);
+      if (mountedRef.current) setIsRefreshing(false);
     }
   };
 
@@ -197,6 +199,19 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
     setSaveError(null);
     setConflict(false);
     setLatestProfileLabel(null);
+    requestAnimationFrame(() => {
+      const field = formRef.current?.querySelector<HTMLInputElement>(
+        'input:not(:disabled)',
+      );
+      const heading = formRef.current
+        ?.closest('section')
+        ?.querySelector<HTMLElement>('h2');
+      if (field) field.focus();
+      else if (heading) {
+        heading.tabIndex = -1;
+        heading.focus();
+      }
+    });
   };
 
   return (
@@ -207,8 +222,10 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
         description="Votre identité et votre adresse de contact"
       >
         <form
+          ref={formRef}
+          id="account-profile-form"
           autoComplete="off"
-          aria-busy={isSaving || undefined}
+          aria-busy={isSaving || isRefreshing || undefined}
           noValidate
           onSubmit={(event) => {
             event.preventDefault();
@@ -238,7 +255,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                 id="edit-firstName"
                 value={firstName}
                 onChange={(event) => setFirstName(event.target.value)}
-                disabled={!canEditProfile || isSaving}
+                disabled={!canEditProfile || isSaving || isRefreshing}
                 placeholder="Votre prénom"
                 maxLength={PROFILE_FIELD_MAX_LENGTH}
                 aria-invalid={!!firstNameError}
@@ -267,7 +284,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
                 id="edit-lastName"
                 value={lastName}
                 onChange={(event) => setLastName(event.target.value)}
-                disabled={!canEditProfile || isSaving}
+                disabled={!canEditProfile || isSaving || isRefreshing}
                 placeholder="Votre nom"
                 maxLength={PROFILE_FIELD_MAX_LENGTH}
                 aria-invalid={!!lastNameError}
@@ -338,8 +355,10 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
           conflict={conflict}
           onResolveConflict={() => void reloadProfileVersion()}
           isSaving={isSaving}
+          isResolvingConflict={isRefreshing}
           onCancel={handleCancel}
-          onSave={() => void handleSaveProfile()}
+          saveForm="account-profile-form"
+          saveType="submit"
         />
       )}
       {canEditContact && (

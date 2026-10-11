@@ -36,6 +36,9 @@ const getInternalAnchor = (
   if (!(target instanceof Element)) return null;
   const anchor = target.closest<HTMLAnchorElement>('a[href]');
   if (!anchor || anchor.origin !== window.location.origin) return null;
+  // A temporarily unavailable link does not request navigation. Its owner
+  // prevents native activation; do not open a draft dialog during capture.
+  if (anchor.getAttribute('aria-disabled') === 'true') return null;
   if (anchor.hasAttribute('download')) return null;
   const href = anchor.getAttribute('href');
   const anchorTarget = anchor.getAttribute('target');

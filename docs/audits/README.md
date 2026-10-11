@@ -10,6 +10,7 @@ Ne pas créer un rapport complet pour chaque correction de texte.
 
 | Rapport | Périmètre et portée |
 | --- | --- |
+| [Composants partagés — 11 octobre 2026](AUDIT_COMPOSANTS_2026-10-11.md) | Revue des primitives et de leurs consommateurs ; actions, recherche et pagination mutualisées, conservation des brouillons et comportements clavier corrigés ; preuves Chromium avec API simulées et limites d'intégration |
 | [Barres de sections — 11 octobre 2026](AUDIT_NAVIGATION_SECTIONS_2026-10-11.md) | Sélection, arrondis, flèches conditionnelles et infobulle de brouillon partagés ; trois pages et 20 scénarios Chromium isolé vérifiés ; intégration Next/session et lecteur d'écran non rejoués |
 | [Autocomplétion — 11 octobre 2026](AUDIT_AUTOCOMPLETION_2026-10-11.md) | Exceptions d'authentification et champs invisibles supprimés ; règle commune aux champs, zones de texte, recherche et formulaires ; tests du contrat et limites des extensions |
 | [Fenêtres modales — 11 octobre 2026](AUDIT_MODALES_2026-10-11.md) | Inventaire des parcours actifs ; surfaces, focus, brouillons, conflits et erreurs corrigés ; navigateur à quatre largeurs avec API simulées ; intégration sensible à compléter |

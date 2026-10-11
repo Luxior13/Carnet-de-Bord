@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-11",
+  "environment": "Chromium isolated real primitives and CSS, no API or authentication",
+  "scenarios": [
+    {
+      "name": "focus-and-fields",
+      "width": 320,
+      "result": "passed"
+    },
+    {
+      "name": "actions-and-state",
+      "width": 320,
+      "result": "passed"
+    },
+    {
+      "name": "select-and-command",
+      "width": 320,
+      "result": "passed"
+    },
+    {
+      "name": "focus-and-fields",
+      "width": 390,
+      "result": "passed"
+    },
+    {
+      "name": "actions-and-state",
+      "width": 390,
+      "result": "passed"
+    },
+    {
+      "name": "select-and-command",
+      "width": 390,
+      "result": "passed"
+    },
+    {
+      "name": "focus-and-fields",
+      "width": 768,
+      "result": "passed"
+    },
+    {
+      "name": "actions-and-state",
+      "width": 768,
+      "result": "passed"
+    },
+    {
+      "name": "select-and-command",
+      "width": 768,
+      "result": "passed"
+    },
+    {
+      "name": "focus-and-fields",
+      "width": 1440,
+      "result": "passed"
+    },
+    {
+      "name": "actions-and-state",
+      "width": 1440,
+      "result": "passed"
+    },
+    {
+      "name": "select-and-command",
+      "width": 1440,
+      "result": "passed"
+    },
+    {
+      "name": "forced-colors-and-reduced-motion",
+      "width": 390,
+      "result": "passed"
+    },
+    {
+      "name": "touch-controls",
+      "width": 390,
+      "result": "passed"
+    }
+  ]
+}

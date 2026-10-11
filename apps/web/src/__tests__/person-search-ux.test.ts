@@ -601,8 +601,8 @@ describe('person short-lived sensitive UX contracts', () => {
     );
     expect(personsListSource).toContain('directoryStyles.table');
     expect(personsListSource).toContain('<PersonStatusBadge');
-    expect(personsListSource).toContain('directoryStyles.search');
-    expect(personsListSource).toContain('directoryStyles.pagination');
+    expect(personsListSource).toContain('<ListSearchField');
+    expect(personsListSource).toContain('<ListPagination');
     expect(personsListSource).toContain('directoryStyles.iconButton');
     expect(dataTableSectionSource).toContain(
       "headerLayout?: 'inline' | 'stacked'",

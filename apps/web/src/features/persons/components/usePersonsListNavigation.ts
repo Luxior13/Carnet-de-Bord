@@ -34,9 +34,13 @@ export const usePersonsListNavigation = ({
 }: Options): {
   containerRef: RefObject<HTMLDivElement | null>;
   onClickCapture: MouseEventHandler<HTMLDivElement>;
+  preparePageChange: () => void;
+  resultsRef: RefObject<HTMLDivElement | null>;
 } => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
   const pending = useRef<PersonsNavigation | null>(null);
+  const pageChanged = useRef(false);
 
   useEffect(() => {
     pending.current = null;
@@ -89,7 +93,7 @@ export const usePersonsListNavigation = ({
   }, [save]);
 
   useEffect(() => {
-    if (!ready || !pending.current) return;
+    if (!ready || (!pending.current && !pageChanged.current)) return;
     let frame = 0;
     // Restore only after the actual rows replace the loading placeholder and
     // after the router's own navigation scroll handling has completed.
@@ -97,9 +101,23 @@ export const usePersonsListNavigation = ({
       frame = requestAnimationFrame(() => {
         const saved = pending.current;
         const container = containerRef.current;
-        if (!saved || !container) return;
+        if (!container) return;
         pending.current = null;
         const scroller = container.closest('main');
+        if (pageChanged.current) {
+          pageChanged.current = false;
+          const results = resultsRef.current;
+          if (!results) return;
+          results.focus({ preventScroll: true });
+          if (scroller)
+            scroller.scrollTop +=
+              results.getBoundingClientRect().top -
+              scroller.getBoundingClientRect().top;
+          else results.scrollIntoView({ behavior: 'instant', block: 'start' });
+
+          return;
+        }
+        if (!saved) return;
         if (scroller) scroller.scrollTop = saved.scrollTop;
         else window.scrollTo({ behavior: 'instant', top: saved.scrollTop });
         const origin = Array.from(
@@ -136,5 +154,12 @@ export const usePersonsListNavigation = ({
     save(anchor.getAttribute('href'));
   };
 
-  return { containerRef, onClickCapture };
+  return {
+    containerRef,
+    onClickCapture,
+    preparePageChange: (): void => {
+      pageChanged.current = true;
+    },
+    resultsRef,
+  };
 };

@@ -1,17 +1,11 @@
 'use client';
 
 import { UserRole } from '@repo/shared';
-import {
-  Crown,
-  Loader2,
-  LockKeyhole,
-  RotateCcw,
-  Save,
-  UserCheck,
-} from 'lucide-react';
-import React, { type FC, useMemo } from 'react';
+import { Crown, LockKeyhole, RotateCcw, UserCheck } from 'lucide-react';
+import React, { type FC, useMemo, useRef } from 'react';
 
 import { Disclosure } from '$components/layout/Disclosure';
+import { SectionActionBar } from '$components/layout/SectionActionBar';
 import {
   ACCOUNT_PERMISSION_CATEGORIES,
   getAccessLabel,
@@ -24,13 +18,14 @@ import {
 import type { UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
+import { Card, CardContent, CardHeader } from '$ui/card';
 import { Switch } from '$ui/switch';
 
 type UserAccountTabProps = {
   canManagePermissions: boolean;
   canSave: boolean;
   hasChanges: boolean;
+  isRefreshing?: boolean;
   isSaving: boolean;
   onCancel: () => void;
   onSave: () => void;
@@ -198,6 +193,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
   canManagePermissions,
   canSave,
   hasChanges,
+  isRefreshing = false,
   isSaving,
   onCancel,
   onSave,
@@ -206,6 +202,17 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
   setPermissions,
   user,
 }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const handleCancel = (): void => {
+    onCancel();
+    requestAnimationFrame(() => {
+      const field = cardRef.current?.querySelector<HTMLElement>(
+        '[role="switch"]:not(:disabled)',
+      );
+      const heading = cardRef.current?.querySelector<HTMLElement>('h2');
+      (field ?? heading)?.focus();
+    });
+  };
   const permissionsMap = useMemo(
     () => new Map(Object.entries(permissions ?? {})),
     [permissions],
@@ -307,7 +314,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
   }
 
   return (
-    <Card role="region" aria-labelledby="account-autonomy-title">
+    <Card ref={cardRef} role="region" aria-labelledby="account-autonomy-title">
       <CardHeader className="p-3.5 sm:p-4">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
@@ -318,6 +325,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
               <h2
                 className="text-foreground text-sm font-semibold"
                 id="account-autonomy-title"
+                tabIndex={-1}
               >
                 Autonomie du compte
               </h2>
@@ -387,14 +395,17 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
         </Disclosure>
       </CardContent>
       {canManagePermissions && (hasChanges || hasConfigurableOverrides) && (
-        <CardFooter className="flex-col items-stretch justify-between gap-3 p-3 sm:flex-row sm:items-center">
-          <p className="text-muted-foreground text-xs">
-            {hasChanges
-              ? 'Modifications non enregistrées'
-              : 'Exception personnalisée active'}
-          </p>
-          <div className="flex flex-wrap justify-end gap-2">
-            {hasConfigurableOverrides && (
+        <SectionActionBar
+          hasChanges={hasChanges}
+          isResolvingConflict={isRefreshing}
+          isSaving={isSaving && !isRefreshing}
+          label="Enregistrement des accès personnels"
+          onCancel={handleCancel}
+          onSave={onSave}
+          saveDisabled={!canSave}
+          status={hasChanges ? undefined : 'Exception personnalisée active'}
+          extraActions={
+            hasConfigurableOverrides && (
               <Button
                 type="button"
                 variant="outline"
@@ -402,39 +413,12 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
                 onClick={handleResetPersonalPermissions}
                 disabled={isSaving}
               >
-                <RotateCcw className="size-4" />
+                <RotateCcw aria-hidden="true" className="size-4" />
                 Réinitialiser au rôle
               </Button>
-            )}
-            {hasChanges && (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={onCancel}
-                  disabled={isSaving}
-                >
-                  Annuler
-                </Button>
-                <Button
-                  type="button"
-                  onClick={onSave}
-                  disabled={isSaving || !canSave}
-                  size="sm"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  {isSaving ? (
-                    <Loader2 size={16} className="mr-2 animate-spin" />
-                  ) : (
-                    <Save size={16} className="mr-2" />
-                  )}
-                  Enregistrer
-                </Button>
-              </>
-            )}
-          </div>
-        </CardFooter>
+            )
+          }
+        />
       )}
     </Card>
   );

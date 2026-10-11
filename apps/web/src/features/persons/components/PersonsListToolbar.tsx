@@ -1,12 +1,12 @@
 'use client';
 
-import { RotateCcw, Search, X } from 'lucide-react';
-import React, { type FC, useId } from 'react';
+import { RotateCcw, X } from 'lucide-react';
+import React, { type FC } from 'react';
 
 import { PAGINATION } from '$constants/pagination.constants';
 import { Button } from '$ui/button';
 import directoryStyles from '$ui/directory.module.css';
-import { Input } from '$ui/input';
+import { ListSearchField } from '$ui/list-search-field';
 import {
   Select,
   SelectContent,
@@ -98,7 +98,6 @@ export const PersonsListToolbar: FC<Props> = ({
   status,
   total,
 }) => {
-  const searchInputId = useId();
   const hasActiveToolbarFilters = Boolean(
     draftQuery || status !== 'ALL' || sort !== 'name' || missingContacts,
   );
@@ -126,34 +125,14 @@ export const PersonsListToolbar: FC<Props> = ({
         }}
         role="search"
       >
-        <div className={directoryStyles.search}>
-          <Search aria-hidden="true" />
-          <Input
-            aria-label="Rechercher par pseudo, nom ou coordonnée"
-            autoComplete="off"
-            className={directoryStyles.searchInput}
-            enterKeyHint="search"
-            id={searchInputId}
-            maxLength={100}
-            onChange={(event) => setDraftQuery(event.target.value)}
-            placeholder="Pseudo, nom ou coordonnée…"
-            spellCheck={false}
-            type="search"
-            value={draftQuery}
-          />
-          {draftQuery ? (
-            <Button
-              aria-label="Effacer la recherche"
-              className={directoryStyles.searchClear}
-              onClick={() => applyFilters('', status, sort)}
-              size="icon"
-              type="button"
-              variant="ghost"
-            >
-              <X aria-hidden="true" />
-            </Button>
-          ) : null}
-        </div>
+        <ListSearchField
+          ariaLabel="Rechercher par pseudo, nom ou coordonnée"
+          maxLength={100}
+          onClear={() => applyFilters('', status, sort)}
+          onValueChange={setDraftQuery}
+          placeholder="Pseudo, nom ou coordonnée…"
+          value={draftQuery}
+        />
         <div className={directoryStyles.filterSelects}>
           <DirectorySelect
             ariaLabel="Filtrer par statut"

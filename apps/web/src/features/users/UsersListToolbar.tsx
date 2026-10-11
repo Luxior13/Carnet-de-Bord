@@ -1,13 +1,13 @@
 'use client';
 
-import { RotateCcw, Search, X } from 'lucide-react';
+import { RotateCcw, X } from 'lucide-react';
 import React, { type FC } from 'react';
 
 import { PAGINATION } from '$constants/pagination.constants';
 import { canSearchUserContact } from '$features/users/users-list.utils';
 import { Button } from '$ui/button';
 import directoryStyles from '$ui/directory.module.css';
-import { Input } from '$ui/input';
+import { ListSearchField } from '$ui/list-search-field';
 import {
   Select,
   SelectContent,
@@ -61,40 +61,23 @@ export const UsersListToolbar: FC<{ list: UsersListController }> = ({
         }}
         role="search"
       >
-        <div className={directoryStyles.search}>
-          <Search aria-hidden="true" />
-          <Input
-            aria-label="Rechercher un compte utilisateur"
-            autoCapitalize="none"
-            autoComplete="off"
-            className={directoryStyles.searchInput}
-            enterKeyHint="search"
-            maxLength={USER_SEARCH_MAX_LENGTH}
-            name="directory-search"
-            placeholder="Rechercher…"
-            spellCheck={false}
-            title={
-              currentUser && canSearchUserContact(currentUser)
-                ? 'Nom, identifiant ou email'
-                : 'Nom ou identifiant'
-            }
-            type="search"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-          />
-          {searchQuery ? (
-            <Button
-              aria-label="Effacer la recherche"
-              className={directoryStyles.searchClear}
-              onClick={() => setSearchQuery('')}
-              size="icon"
-              type="button"
-              variant="ghost"
-            >
-              <X aria-hidden="true" />
-            </Button>
-          ) : null}
-        </div>
+        <ListSearchField
+          ariaLabel="Rechercher un compte utilisateur"
+          maxLength={USER_SEARCH_MAX_LENGTH}
+          onClear={() => {
+            setSearchQuery('');
+            setDebouncedSearch('');
+            setCurrentPage(1);
+          }}
+          onValueChange={setSearchQuery}
+          placeholder="Rechercher…"
+          title={
+            currentUser && canSearchUserContact(currentUser)
+              ? 'Nom, identifiant ou email'
+              : 'Nom ou identifiant'
+          }
+          value={searchQuery}
+        />
         <div className={directoryStyles.filterSelects}>
           <Select
             value={filterStatus}

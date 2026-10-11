@@ -41,7 +41,7 @@ export const SectionPanel: FC<SectionPanelProps> = ({
                 {title}
               </Heading>
               {description && (
-                <p className="text-muted-foreground mt-1 text-sm leading-6">
+                <p className="text-muted-foreground mt-1 text-sm leading-6 [overflow-wrap:anywhere]">
                   {description}
                 </p>
               )}

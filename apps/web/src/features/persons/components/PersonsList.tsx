@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Plus, Search, Users } from 'lucide-react';
+import { Plus, Search, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, {
@@ -21,6 +21,7 @@ import {
   DataTableSection,
 } from '$ui/data-table-section';
 import directoryStyles from '$ui/directory.module.css';
+import { ListPagination } from '$ui/pagination';
 import {
   Table,
   TableBody,
@@ -30,7 +31,6 @@ import {
   TableHeader,
   TableRow,
 } from '$ui/table';
-import { cn } from '$utils/css.utils';
 
 import { listPersons } from '../person.api';
 import {
@@ -135,6 +135,7 @@ export const PersonsList: FC<PersonsListProps> = ({
   const [data, setData] = useState<PersonsListResponse | null>(
     initialState?.data ?? null,
   );
+  const [dataPageIndex, setDataPageIndex] = useState(effectiveInitialPageIndex);
   const [draftQuery, setDraftQuery] = useState(appliedQuery);
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState(!initialState);
@@ -163,13 +164,15 @@ export const PersonsList: FC<PersonsListProps> = ({
     }),
   );
 
-  const { containerRef, onClickCapture } = usePersonsListNavigation({
-    cursors: cursorStack,
-    href: returnHref,
-    ready: !isLoading && !error && data !== null,
-    restoreCursors: setCursorStack,
-    scope: navigationScope,
-  });
+  const { containerRef, onClickCapture, preparePageChange, resultsRef } =
+    usePersonsListNavigation({
+      cursors: cursorStack,
+      href: returnHref,
+      ready:
+        !isLoading && !error && data !== null && dataPageIndex === pageIndex,
+      restoreCursors: setCursorStack,
+      scope: navigationScope,
+    });
 
   useEffect(() => {
     onOverviewChange?.({
@@ -321,7 +324,10 @@ export const PersonsList: FC<PersonsListProps> = ({
         ...(status === 'ALL' ? {} : { structureStatus: status }),
         ...(missingContacts ? { contacts: 'missing' as const } : {}),
       });
-      if (!controller.signal.aborted) setData(response);
+      if (!controller.signal.aborted) {
+        setData(response);
+        setDataPageIndex(pageIndex);
+      }
     } catch (caught) {
       if (!controller.signal.aborted) {
         setError(
@@ -337,6 +343,7 @@ export const PersonsList: FC<PersonsListProps> = ({
     if (initialState && initialStateMatchesRequest) {
       abortControllerRef.current?.abort();
       setData(initialState.data);
+      setDataPageIndex(pageIndex);
       setError(null);
       setIsLoading(false);
 
@@ -346,7 +353,7 @@ export const PersonsList: FC<PersonsListProps> = ({
     void load();
 
     return (): void => abortControllerRef.current?.abort();
-  }, [initialState, initialStateMatchesRequest, load]);
+  }, [initialState, initialStateMatchesRequest, load, pageIndex]);
 
   const personHref = useCallback(
     (personId: string) => buildPersonHref(personId, returnHref),
@@ -365,7 +372,10 @@ export const PersonsList: FC<PersonsListProps> = ({
     pageIndex > 0 ? (
       <Button
         className="min-h-11 sm:min-h-8"
-        onClick={() => applyFilters(appliedQuery, status, sort)}
+        onClick={() => {
+          preparePageChange();
+          applyFilters(appliedQuery, status, sort);
+        }}
         size="sm"
         type="button"
         variant="outline"
@@ -451,215 +461,199 @@ export const PersonsList: FC<PersonsListProps> = ({
           />
         }
       >
-        <DataTableDesktop>
-          <Table
-            aria-busy={isRefreshing}
-            aria-label="Liste des fiches"
-            className={directoryStyles.table}
-          >
-            <TableCaption className="sr-only">
-              Les fiches du répertoire, leur statut et leurs coordonnées
-            </TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Personne</TableHead>
-                <TableHead className="w-[130px]">Statut</TableHead>
-                <TableHead className="w-[220px]">Coordonnées</TableHead>
-                <TableHead className="w-[150px]">
-                  Dernière modification
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data?.items.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="h-44 text-center">
-                    <ContentState
-                      action={emptyAction}
-                      className="min-h-0 border-0 bg-transparent p-0"
-                      icon={<Users aria-hidden="true" className="size-5" />}
-                      layout="panel"
-                      title={
-                        isFiltered ? 'Aucune fiche trouvée' : 'Répertoire vide'
-                      }
-                    />
-                  </TableCell>
-                </TableRow>
-              ) : (
-                data?.items.map((person) => {
-                  const href = personHref(person.id);
-
-                  return (
-                    <TableRow
-                      className="focus-within:ring-ring relative focus-within:ring-2 focus-within:ring-inset"
-                      key={person.id}
-                    >
-                      <TableCell>
-                        <PersonIdentity href={href} person={person} />
-                      </TableCell>
-                      <TableCell className="pointer-events-none">
-                        <PersonStatusBadge status={person.structureStatus} />
-                      </TableCell>
-                      <TableCell className="pointer-events-none">
-                        <PersonContacts person={person} />
-                      </TableCell>
-                      <TableCell>
-                        <PersonLastModified person={person} />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </DataTableDesktop>
-        <DataTableMobileList className={directoryStyles.mobileList}>
-          {data?.items.length === 0 ? (
-            <ContentState
-              action={emptyAction}
-              className="min-h-48 border-0 bg-transparent"
-              icon={<Users aria-hidden="true" className="size-5" />}
-              layout="panel"
-              title={isFiltered ? 'Aucune fiche trouvée' : 'Répertoire vide'}
-            />
-          ) : (
-            data?.items.map((person) => {
-              const href = personHref(person.id);
-
-              return (
-                <Link
-                  aria-label={`Ouvrir la fiche de ${getPersonDisplayName(person)}`}
-                  className="group focus-visible:bg-primary/10 focus-visible:ring-primary/70 block px-4 py-3 hover:bg-[var(--surface-row-hover)] focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
-                  href={href}
-                  key={person.id}
-                >
-                  <div className="flex items-start gap-3">
-                    <span
-                      aria-hidden="true"
-                      className="border-border-default bg-surface-inset relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-[7px] border"
-                    >
-                      <PersonAvatar
-                        className="size-full rounded-[inherit]"
-                        person={person}
-                      />
-                    </span>
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <div className="min-w-0">
-                        <h3 className="text-foreground group-hover:text-primary-emphasis min-w-0 text-[13px] font-semibold [overflow-wrap:anywhere] group-hover:underline group-hover:underline-offset-[3px]">
-                          {getPersonDisplayName(person)}
-                        </h3>
-                        {person.matchedByContact && (
-                          <p className="text-success mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px] leading-5">
-                            <Search
-                              aria-hidden="true"
-                              className="size-3 shrink-0"
-                            />
-                            <span>Trouvée par email, téléphone ou réseau</span>
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <PersonStatusBadge status={person.structureStatus} />
-                        <PersonContacts person={person} />
-                      </div>
-                      <p className="text-muted-foreground text-[11px] leading-5 tabular-nums">
-                        Modifiée le {formatPersonDateTime(person.updatedAt)}
-                        {person.lastModifiedBy && (
-                          <span className="block [overflow-wrap:anywhere]">
-                            Par {person.lastModifiedBy.displayName}
-                            {person.lastModifiedBy.loginName &&
-                            person.lastModifiedBy.loginName !==
-                              person.lastModifiedBy.displayName
-                              ? ` (${person.lastModifiedBy.loginName})`
-                              : ''}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })
-          )}
-        </DataTableMobileList>
-        <nav
-          aria-label="Pagination des membres"
-          className={cn(directoryStyles.pagination, 'flex-wrap gap-2')}
+        <div
+          aria-busy={isRefreshing}
+          aria-label="Résultats du répertoire"
+          ref={resultsRef}
+          tabIndex={-1}
         >
-          <p>
-            Page <strong>{pageIndex + 1}</strong>
-            {totalPages > 1 ? (
-              <>
-                {' '}
-                sur <strong>{totalPages}</strong>
-              </>
-            ) : null}
-          </p>
-          <div className={directoryStyles.paginationActions}>
-            {firstPageAction}
-            <Button
-              aria-label="Page précédente"
-              className={directoryStyles.pageButton}
-              disabled={!canGoPrevious || isLoading || Boolean(error)}
-              onClick={() => {
-                if (!canGoPrevious) return;
-                const nextPage = pageIndex - 1;
-                const cursor = cursorStack.get(nextPage);
-                setPageIndex(nextPage);
-                updateUrl({
-                  contacts: missingContacts,
-                  cursor,
-                  mode: 'push',
-                  page: nextPage,
-                  query: appliedQuery,
-                  sort,
-                  status,
-                });
-              }}
-              size="icon"
-              type="button"
-              variant="ghost"
+          <DataTableDesktop>
+            <Table
+              aria-busy={isRefreshing}
+              aria-label="Liste des fiches"
+              className={directoryStyles.table}
             >
-              <ChevronLeft aria-hidden="true" />
-            </Button>
-            <Button
-              aria-label="Page suivante"
-              className={directoryStyles.pageButton}
-              disabled={
-                !data?.pagination.hasMore ||
-                !data.pagination.nextCursor ||
-                isLoading ||
-                Boolean(error) ||
-                pageIndex + 1 >= MAX_PERSONS_PAGE
-              }
-              onClick={() => {
-                const cursor = data?.pagination.nextCursor;
-                if (!cursor) return;
-                const nextPage = pageIndex + 1;
-                setCursorStack((current) => {
-                  return new Map(
-                    [...current].filter(([index]) => index <= pageIndex),
-                  ).set(nextPage, cursor);
-                });
-                setPageIndex(nextPage);
-                updateUrl({
-                  contacts: missingContacts,
-                  cursor,
-                  mode: 'push',
-                  page: nextPage,
-                  query: appliedQuery,
-                  sort,
-                  status,
-                });
-              }}
-              size="icon"
-              type="button"
-              variant="ghost"
-            >
-              <ChevronRight aria-hidden="true" />
-            </Button>
-          </div>
-        </nav>
+              <TableCaption className="sr-only">
+                Les fiches du répertoire, leur statut et leurs coordonnées
+              </TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Personne</TableHead>
+                  <TableHead className="w-[130px]">Statut</TableHead>
+                  <TableHead className="w-[220px]">Coordonnées</TableHead>
+                  <TableHead className="w-[150px]">
+                    Dernière modification
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data?.items.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-44 text-center">
+                      <ContentState
+                        action={emptyAction}
+                        className="min-h-0 border-0 bg-transparent p-0"
+                        icon={<Users aria-hidden="true" className="size-5" />}
+                        layout="panel"
+                        title={
+                          isFiltered
+                            ? 'Aucune fiche trouvée'
+                            : 'Répertoire vide'
+                        }
+                      />
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  data?.items.map((person) => {
+                    const href = personHref(person.id);
+
+                    return (
+                      <TableRow
+                        className="focus-within:ring-ring relative focus-within:ring-2 focus-within:ring-inset"
+                        key={person.id}
+                      >
+                        <TableCell>
+                          <PersonIdentity href={href} person={person} />
+                        </TableCell>
+                        <TableCell className="pointer-events-none">
+                          <PersonStatusBadge status={person.structureStatus} />
+                        </TableCell>
+                        <TableCell className="pointer-events-none">
+                          <PersonContacts person={person} />
+                        </TableCell>
+                        <TableCell>
+                          <PersonLastModified person={person} />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </DataTableDesktop>
+          <DataTableMobileList className={directoryStyles.mobileList}>
+            {data?.items.length === 0 ? (
+              <ContentState
+                action={emptyAction}
+                className="min-h-48 border-0 bg-transparent"
+                icon={<Users aria-hidden="true" className="size-5" />}
+                layout="panel"
+                title={isFiltered ? 'Aucune fiche trouvée' : 'Répertoire vide'}
+              />
+            ) : (
+              data?.items.map((person) => {
+                const href = personHref(person.id);
+
+                return (
+                  <Link
+                    aria-label={`Ouvrir la fiche de ${getPersonDisplayName(person)}`}
+                    className="group focus-visible:bg-primary/10 focus-visible:ring-primary/70 block px-4 py-3 hover:bg-[var(--surface-row-hover)] focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+                    href={href}
+                    key={person.id}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span
+                        aria-hidden="true"
+                        className="border-border-default bg-surface-inset relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-[7px] border"
+                      >
+                        <PersonAvatar
+                          className="size-full rounded-[inherit]"
+                          person={person}
+                        />
+                      </span>
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="min-w-0">
+                          <h3 className="text-foreground group-hover:text-primary-emphasis min-w-0 text-[13px] font-semibold [overflow-wrap:anywhere] group-hover:underline group-hover:underline-offset-[3px]">
+                            {getPersonDisplayName(person)}
+                          </h3>
+                          {person.matchedByContact && (
+                            <p className="text-success mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px] leading-5">
+                              <Search
+                                aria-hidden="true"
+                                className="size-3 shrink-0"
+                              />
+                              <span>
+                                Trouvée par email, téléphone ou réseau
+                              </span>
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <PersonStatusBadge status={person.structureStatus} />
+                          <PersonContacts person={person} />
+                        </div>
+                        <p className="text-muted-foreground text-[11px] leading-5 tabular-nums">
+                          Modifiée le {formatPersonDateTime(person.updatedAt)}
+                          {person.lastModifiedBy && (
+                            <span className="block [overflow-wrap:anywhere]">
+                              Par {person.lastModifiedBy.displayName}
+                              {person.lastModifiedBy.loginName &&
+                              person.lastModifiedBy.loginName !==
+                                person.lastModifiedBy.displayName
+                                ? ` (${person.lastModifiedBy.loginName})`
+                                : ''}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })
+            )}
+          </DataTableMobileList>
+        </div>
+        <ListPagination
+          ariaLabel="Pagination des membres"
+          canNext={Boolean(
+            data?.pagination.hasMore &&
+            data.pagination.nextCursor &&
+            pageIndex + 1 < MAX_PERSONS_PAGE,
+          )}
+          canPrevious={canGoPrevious}
+          disabled={Boolean(error)}
+          isLoading={isLoading}
+          leadingAction={firstPageAction}
+          onNext={() => {
+            const cursor = data?.pagination.nextCursor;
+            if (!cursor) return;
+            preparePageChange();
+            const nextPage = pageIndex + 1;
+            setCursorStack((current) => {
+              return new Map(
+                [...current].filter(([index]) => index <= pageIndex),
+              ).set(nextPage, cursor);
+            });
+            setPageIndex(nextPage);
+            updateUrl({
+              contacts: missingContacts,
+              cursor,
+              mode: 'push',
+              page: nextPage,
+              query: appliedQuery,
+              sort,
+              status,
+            });
+          }}
+          onPrevious={() => {
+            if (!canGoPrevious) return;
+            preparePageChange();
+            const nextPage = pageIndex - 1;
+            const cursor = cursorStack.get(nextPage);
+            setPageIndex(nextPage);
+            updateUrl({
+              contacts: missingContacts,
+              cursor,
+              mode: 'push',
+              page: nextPage,
+              query: appliedQuery,
+              sort,
+              status,
+            });
+          }}
+          page={dataPageIndex + 1}
+          totalPages={totalPages}
+        />
       </DataTableSection>
     </div>
   );

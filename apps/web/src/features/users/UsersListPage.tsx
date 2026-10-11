@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Plus, Users } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import Link from 'next/link';
 import React, { type FC } from 'react';
 
@@ -13,6 +13,7 @@ import { UsersOverview } from '$features/users/UsersOverview';
 import { Button } from '$ui/button';
 import { DataTableSection } from '$ui/data-table-section';
 import directoryStyles from '$ui/directory.module.css';
+import { ListPagination } from '$ui/pagination';
 import { Skeleton } from '$ui/skeleton';
 
 import { getUsersListVisibilityKey } from './users-list.utils';
@@ -159,60 +160,23 @@ export const UsersListPage: FC = () => {
                   />
                 </>
               )}
-              <nav
-                aria-label="Pagination des utilisateurs"
-                className={directoryStyles.pagination}
-              >
-                <p>
-                  Page <strong>{currentPage}</strong>
-                  {totalPages > 1 ? (
-                    <>
-                      {' '}
-                      sur <strong>{totalPages}</strong>
-                    </>
-                  ) : null}
-                </p>
-                <div className={directoryStyles.paginationActions}>
-                  <Button
-                    aria-label="Page précédente"
-                    className={directoryStyles.pageButton}
-                    disabled={
-                      isLoading ||
-                      isRefreshing ||
-                      !!loadError ||
-                      currentPage <= 1
-                    }
-                    onClick={() => {
-                      navigation.preparePageChange();
-                      setCurrentPage((page) => Math.max(1, page - 1));
-                    }}
-                    size="icon"
-                    type="button"
-                    variant="ghost"
-                  >
-                    <ChevronLeft aria-hidden="true" />
-                  </Button>
-                  <Button
-                    aria-label="Page suivante"
-                    className={directoryStyles.pageButton}
-                    disabled={
-                      isLoading ||
-                      isRefreshing ||
-                      !!loadError ||
-                      currentPage >= totalPages
-                    }
-                    onClick={() => {
-                      navigation.preparePageChange();
-                      setCurrentPage((page) => Math.min(totalPages, page + 1));
-                    }}
-                    size="icon"
-                    type="button"
-                    variant="ghost"
-                  >
-                    <ChevronRight aria-hidden="true" />
-                  </Button>
-                </div>
-              </nav>
+              <ListPagination
+                ariaLabel="Pagination des utilisateurs"
+                canNext={currentPage < totalPages}
+                canPrevious={currentPage > 1}
+                disabled={Boolean(loadError)}
+                isLoading={isLoading || isRefreshing}
+                onNext={() => {
+                  navigation.preparePageChange();
+                  setCurrentPage((page) => Math.min(totalPages, page + 1));
+                }}
+                onPrevious={() => {
+                  navigation.preparePageChange();
+                  setCurrentPage((page) => Math.max(1, page - 1));
+                }}
+                page={currentPage}
+                totalPages={totalPages}
+              />
             </div>
           </DataTableSection>
         </div>

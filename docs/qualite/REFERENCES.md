@@ -24,6 +24,7 @@ contraire dans une fiche secondaire.
 | Navigation | [NAVIGATION](../references/NAVIGATION.md) | Emplacements, parcours et compatibilité des routes |
 | Architecture | [FEATURE_ARCHITECTURE](../references/FEATURE_ARCHITECTURE.md) | Responsabilités et contrats de fonctionnalité |
 | Apparence commune | [DESIGN_SYSTEM](../references/DESIGN_SYSTEM.md) | Répertoire comme référence visuelle, Utilisateurs en complément ; tokens, composants à réutiliser et adaptations par type de page |
+| Choix des composants | [COMPOSANTS](../references/COMPOSANTS.md) | Catalogue courant, responsabilités et questions avant ajout ou modification ; styles définis par le design system |
 | Permissions effectives | [PERMISSIONS](../references/PERMISSIONS.md) | Règles actives et source exécutable associée |
 | Responsabilités métier futures | [ROLES_ET_PERMISSIONS](../references/ROLES_ET_PERMISSIONS.md) | Cible ; ne pas l’interpréter comme protection déjà livrée |
 | Retours et messages | [FEEDBACK](../references/FEEDBACK.md) | Choix entre retour local, toast, notification, alerte et rappel |

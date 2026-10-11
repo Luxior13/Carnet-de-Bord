@@ -4,6 +4,14 @@
 
 ## Questions
 
+- La [barre d'actions commune](../../references/COMPOSANTS.md) convient-elle à
+  cette édition ou création ? Le dialogue garde-t-il son pied contextuel ?
+- L'action soumet-elle un vrai formulaire avec Entrée, ou appelle-t-elle un
+  callback, sans déclencher les deux ? Qui verrouille réellement la requête ?
+- Actualiser une version conserve-t-il les champs modifiés et récupère-t-il les
+  autres sans perte de saisie ? Où va le focus si Annuler fait disparaître la barre ?
+- La barre masque-t-elle un champ focalisé sur petit écran ou en paysage ?
+
 - Une édition partielle renvoie-t-elle uniquement les champs possédés par ce formulaire, sans écraser un champ masqué ou modifié dans un autre onglet ?
 - Une normalisation (espaces, casse, coordonnées) reste-t-elle cohérente entre saisie, validation, comparaison des changements et valeur enregistrée ?
 

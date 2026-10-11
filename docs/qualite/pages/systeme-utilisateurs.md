@@ -1,5 +1,18 @@
 # Suivi — Utilisateurs, liste
 
+## Composants communs — 11 octobre 2026
+
+Recherche et pagination utilisent `ListSearchField` et `ListPagination`.
+Les onglets Profil, Accès et Mon compte de la fiche, ainsi que la création,
+composent la même `SectionActionBar` : résumé métier conservé, état propre/saisie,
+attente, annulation et explication d'un blocage. L'actualisation est distinguée
+de l'enregistrement. Le profil et la création utilisent la soumission native.
+
+La barre reste dans le flux sur petit écran ; l'annulation doit rendre le focus
+au champ ou à la section. [Catalogue](../../references/COMPOSANTS.md) et
+[preuves de cette passe](../../audits/AUDIT_COMPOSANTS_2026-10-11.md).
+Les API simulées du banc ne rejouent pas l'intégration PostgreSQL des audits précédents.
+
 ## Identité et périmètre
 
 - Route : `/systeme/utilisateurs`.

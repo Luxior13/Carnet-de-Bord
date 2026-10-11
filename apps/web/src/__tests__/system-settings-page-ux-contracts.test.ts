@@ -111,7 +111,7 @@ describe('system settings page contracts', () => {
     expect(pageSource).toContain('onClick={requestRefresh}');
     expect(rowSource).toContain('<form');
     expect(rowSource).toContain('required');
-    expect(rowSource).toContain('aria-label={`Enregistrer — ');
+    expect(rowSource).toContain('saveAriaLabel={`Enregistrer — ');
     expect(navigationGuardSource).toContain("'beforeunload'");
     expect(navigationGuardSource).toContain(
       "document.addEventListener('click'",
