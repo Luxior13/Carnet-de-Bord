@@ -14,7 +14,7 @@ try {
       const auditRows = await transaction.$queryRaw<
         Array<{ deletedCount: bigint }>
       >`
-      SELECT "public"."purge_expired_audit_logs"(${auditRetentionDays}) AS "deletedCount"
+      SELECT "public"."purge_expired_audit_logs"(${auditRetentionDays}::integer) AS "deletedCount"
     `;
       const loginChallenges = await transaction.mfaLoginChallenge.deleteMany({
         where: { expiresAt: { lt: now } },

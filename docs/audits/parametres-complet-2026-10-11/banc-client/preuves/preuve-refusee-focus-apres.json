@@ -1,0 +1,30 @@
+[
+  {
+    "name": "step-up-refusal-focus",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 900
+        }
+      },
+      {
+        "path": "/api/auth/step-up",
+        "method": "POST",
+        "body": {
+          "kind": "password"
+        }
+      }
+    ]
+  }
+]

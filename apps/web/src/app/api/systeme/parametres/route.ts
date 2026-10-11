@@ -46,6 +46,7 @@ export async function GET(
 
       return {
         description: definition.description,
+        isStoredValueInvalid: storedValue?.success === false,
         key,
         updatedAt: stored?.updatedAt.toISOString() ?? new Date(0).toISOString(),
         value:

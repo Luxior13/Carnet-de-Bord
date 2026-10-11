@@ -1,5 +1,42 @@
 # Suivi de page — Paramètres système
 
+## Revue complète du 11 octobre — validations du 12 octobre 2026
+
+La nouvelle passe conserve un seul réglage, ses bornes et son défaut. Elle
+corrige la reprise après réponse perdue, les refus d'accès, les attentes et le
+focus. La valeur stockée invalide est désormais signalée comme bloquant le
+nettoyage du journal ; le défaut proposé peut être réparé explicitement, avec
+preuve récente et audit. Le contrôleur local `useSystemSettings` possède les
+requêtes, versions et brouillons ; les composants gardent leur présentation.
+Aucun moteur générique, réglage ou seuil d'architecture supplémentaire.
+
+Preuves de cette passe, distinctes des contrôles historiques ci-dessous :
+
+- [Banc client](../../audits/parametres-complet-2026-10-11/banc-client/README.md) :
+  **30/30 parcours Chromium** avec composants/styles réels et API/session
+  simulées, de 320 à 1 920 px. Lecture, édition, clavier, focus, conflits,
+  réponse perdue, refus, changements de portée et réparation contrôlés.
+- [Banc serveur](../../audits/parametres-complet-2026-10-11/banc-serveur/README.md) :
+  **44 contrôles réussis**, dont **16 scénarios PostgreSQL**, 21 tests de routes
+  et 7 contrats. Versions, preuve de réparation, audit/rollback, frontières de
+  purge, cascade des détails et attentes de verrous testés sur base isolée.
+  Les sources de session et les en-têtes restent simulés dans ce banc.
+- Contrôleur client : **8 tests** de verrou, refus, reprise, réparation,
+  timeouts et réponse après démontage ; 6 contrats de page. Types, lint,
+  construction et budgets validés ; suite globale : **1 235 tests réussis,
+  84 ignorés**.
+- [Intégration Next/PostgreSQL](../../audits/parametres-complet-2026-10-11/banc-integration/resultats.json) :
+  **11/11 parcours réussis**, avec connexion/MFA, cookies, CSRF, conflit entre
+  deux onglets, preuve refusée puis valide, réponse perdue après écriture,
+  réparation et retrait du rôle administrateur. La vraie commande Bun de
+  maintenance passe après correction de son appel SQL `bigint/integer` :
+  ancien audit purgé, audit récent et session active préservés sur base isolée.
+
+Le [rapport complet](../../audits/AUDIT_PARAMETRES_COMPLET_2026-10-11.md) porte
+les résultats finaux d'intégration et les limites. La revue a commencé le
+11 octobre ; ces exécutions ont lieu le 12 octobre, heure de Paris. Les anciennes
+preuves datées restent inchangées.
+
 ## Actions du réglage — 11 octobre 2026
 
 L'édition locale utilise `SectionActionBar` en placement inline. Annuler reste
@@ -15,12 +52,12 @@ propriétés du réglage, sans ajouter une seconde gestion dans la barre.
 
 - Route : `/systeme/parametres`, module `features/settings`.
 - Public : administrateurs autorisés à consulter et modifier la configuration globale.
-- État documentaire réconcilié le 10 octobre 2026 : seul `audit.retentionDays` reste actif.
-- Dernière revue : 10–11 octobre 2026 — parcours et présentation corrigés,
-  32 scénarios Chromium isolé et 1 043 tests web réussis (25 ignorés).
-  Voir le [rapport et les limites](../../audits/AUDIT_PARAMETRES_2026-10-11.md).
-  Les essais de septembre restent historiques ; aucune purge réelle ni session
-  authentifiée de bout en bout n'a été rejouée pendant cette nouvelle passe.
+- Catalogue courant : seul `audit.retentionDays` reste actif.
+- Dernière revue complète commencée le 11 octobre, validations exécutées le
+  12 octobre 2026 : contrôles client, serveur et onze parcours d'intégration
+  réussis dans les environnements isolés décrits ci-dessus. La
+  [passe précédente](../../audits/AUDIT_PARAMETRES_2026-10-11.md) et les essais
+  de septembre restent des preuves historiques distinctes.
 - Références : [revue générale](../REVUE_GENERALE.md),
   [design system](../../references/DESIGN_SYSTEM.md), [navigation](../../references/NAVIGATION.md),
   [permissions](../../references/PERMISSIONS.md), [exploitation](../../references/OPERATIONS.md).
@@ -73,6 +110,9 @@ restent relues en base avant utilisation.
   empilement sur petit écran. Sidebar et géométrie globale inchangées.
 - Au repos : durée appliquée lisible et bouton Modifier par réglage pour les
   administrateurs autorisés. Aucun champ ou bouton Enregistrer permanent.
+  En cas de valeur stockée invalide, « Durée proposée » remplace « Durée
+  appliquée » et un avertissement explique le blocage du nettoyage. Un résultat
+  d'écriture encore incertain est présenté comme « Dernière valeur connue ».
 - Bornes et défaut sont aussi visibles au repos. Le texte précise que la durée
   concerne l'historique des personnes et les détails associés ; l'enregistrement
   ne déclenche pas de suppression immédiate.
@@ -113,6 +153,8 @@ restent relues en base avant utilisation.
   d'accès démonte le contenu et ses dialogues. Les lectures et écritures en cours
   sont interrompues côté navigateur et leurs réponses tardives ignorées. Cela
   n'annule pas une mutation que le serveur aurait déjà exécutée.
+  Un refus 401/403, y compris sans corps JSON, retire les valeurs, brouillons et
+  confirmations déjà affichés. Le focus rejoint la région d'accès refusé.
 - Un verrou synchrone empêche deux opérations concurrentes du même écran, y compris
   deux soumissions avant le prochain rendu. La lecture d'un conflit fait partie
   de l'opération de sauvegarde, sans remplacer les brouillons.
@@ -120,10 +162,20 @@ restent relues en base avant utilisation.
   réglage concerné est relue. Choix explicite : utiliser la valeur actuelle ou
   conserver la saisie, puis enregistrer. Si la relecture échoue, seule une
   nouvelle lecture permet de débloquer cette sauvegarde.
+- Une réponse perdue, invalide ou en erreur serveur ne permet pas de rejouer
+  directement l'écriture. « Vérifier la valeur actuelle » relit la version,
+  puis demande de conserver la saisie ou d'utiliser la valeur relue. Aucun PUT
+  automatique : toute nouvelle écriture est explicitement déclenchée.
+- Les lectures du client sont limitées à 15 secondes et le PUT à 30 secondes.
+  Une expiration libère l'interface ; pour une écriture, elle conserve l'état
+  incertain et l'exigence de vérification. Ces délais n'annulent pas le serveur.
+- Annuler referme aussi une édition en conflit. Une vérification encore
+  indisponible reste exigée à sa prochaine ouverture ; fermer l'éditeur ne
+  transforme pas une ancienne valeur en résultat confirmé.
 - Les erreurs de sauvegarde restent dans le réglage et les saisies sont conservées.
   Les succès gardent leur toast ; aucun nouvel événement de notification.
 - Erreur et conflit sont reliés au champ par `aria-describedby`. Le formulaire
-  annonce l'attente et le bouton affiche « Enregistrement… ».
+  annonce l'attente ; Enregistrement et Vérification/Actualisation sont distincts.
 - Une même comparaison numérique pilote le garde de navigation et la sauvegarde :
   `025` et `25` ne créent plus un faux changement ; une saisie invalide reste protégée.
 - Entrée soumet le réglage. Le focus revient à Modifier après annulation ou succès,
@@ -133,6 +185,10 @@ restent relues en base avant utilisation.
 - Après fermeture d'une confirmation de réduction ou de mot de passe, le focus
   revient au champ disponible, ou à Modifier après sauvegarde. La confirmation
   d'actualisation revient à Actualiser ; Rester rend le focus au lien de départ.
+  Le passage vers une nouvelle confirmation conserve son focus, sans le rendre
+  au champ derrière la modale. Une preuve refusée est refocalisée après
+  réactivation du champ. Réessayer après erreur initiale garde une destination
+  de focus lorsque son bouton disparaît.
 - La purge du journal contrôle sa durée sous verrou dans sa procédure SQL ;
   l’enregistrement ne lance pas la purge. Les règles d’exploitation sont dans
   [OPERATIONS](../../references/OPERATIONS.md). Le verrou de purge des notifications
@@ -142,6 +198,22 @@ restent relues en base avant utilisation.
 - Le problème historique de résultat SQL `void` et sa correction concernent la
   passe de septembre ; ils ne constituent pas un essai de la purge actuelle.
 - Pas de migration, de changement de bornes, de nouvelle permission ou de table métier.
+
+### Valeur stockée invalide et réparation
+
+Le contrat GET/PUT comprend `isStoredValueInvalid`. Si une ligne contient une
+valeur invalide, le GET conserve sa version mais renvoie le défaut logiciel
+comme **proposition** ; la purge SQL reste bloquée. Le contenu JSON invalide
+brut n'est ni exposé au navigateur ni recopié dans l'audit.
+
+Modifier ouvre alors une réparation enregistrable même si la saisie reste
+`1095`. Elle exige une confirmation explicite et une preuve récente de mot de
+passe, quelle que soit la comparaison avec ce nombre proposé. La réparation
+réussie écrit une valeur valide, augmente la version et produit l'audit dans la
+même transaction. L'état antérieur de cet audit est borné à l'indicateur
+d'invalidité, `value: null` et la version ; le marqueur retourné devient `false`.
+La maintenance suivante peut reprendre la purge. La réparation n'exécute pas
+elle-même le nettoyage et ne change pas la politique de conservation.
 
 ### Portée du journal : constat et séparation à préparer
 
@@ -427,14 +499,16 @@ de livraison inventée. Les résultats historiques ne les clôturent pas.
 | PAR-S-02 — Volumes | Pas de mesure de purge à fort volume ; transaction bornée à 60 s | Mesurer avant de changer index, lots ou architecture de traitement |
 | PAR-S-03 — Conservation | Défauts logiciels, sans qualification universelle des obligations et exceptions | Faire qualifier les durées pour les données réellement détenues et les entités concernées |
 | PAR-S-04 — Portée du journal | Une seule durée purge aussi les détails de l'historique personne ; catégories insuffisantes pour séparer les finalités | Suivre le classement et les étapes documentés ci-dessus avant d'ajouter plusieurs durées ou de réduire le défaut global |
-| PAR-S-05 — Donnée stockée invalide | Repli existant vers le défaut ; avertissement serveur, sans diagnostic dédié dans la page | Qualifier un besoin d'observation avant d'ajouter une interface d'incident |
+| PAR-S-05 — Donnée stockée invalide | **Clos au périmètre testé le 12 octobre** : blocage explicite, durée proposée, réparation protégée même à valeur identique et audit transactionnel | Reproductions avant correction puis contrôles SQL et navigateur réussis ; maintien du diagnostic dans cette page, sans écran d'incident supplémentaire |
 | PAR-S-06 — Historique | Date affichée ; auteur et lien direct vers l'audit non ajoutés | Si nécessaire, réutiliser le journal et ses droits, sans nouvelle collection d'historique |
-| PAR-S-07 — Validation complète | Pas de lecteur d'écran, mobile physique, restauration, test de charge ni parcours complet avec session réelle | Contrôler selon le risque du prochain déploiement ; ne pas assimiler simulation API et test d'accès réel |
+| PAR-S-07 — Validation complète | Client simulé, serveur PostgreSQL et onze parcours Next/session réels réussis, dont authentification/MFA, CSRF et commande de maintenance. Lecteur d'écran, mobile physique, restauration et charge non testés | Reprendre les contrôles restants selon le risque et l'environnement cible ; conserver les limites des fixtures et du navigateur, sans assimiler ces preuves à une validation de déploiement |
 
-Les protections de permission, CSRF, preuve de mot de passe, version et audit
-transactionnel ont été examinées dans le code et les tests ciblés. La sauvegarde
-inclut `SystemSetting` ; aucune restauration n'a été exécutée ici. Les réglages
-de conservation n'utilisent aucun cache local.
+Les permissions, preuves, versions et audits sont contrôlés par les tests de
+routes et les transactions réelles du banc serveur. Le CSRF, les cookies et le
+parcours authentifié ont aussi été vérifiés dans l'intégration distincte avec
+Next en production et PostgreSQL isolé. La sauvegarde inclut `SystemSetting` ;
+aucune restauration n'a été exécutée ici. Les réglages de conservation
+n'utilisent aucun cache local.
 
 ## Questions à reprendre lors de chaque évolution
 
@@ -462,8 +536,9 @@ de conservation n'utilisent aucun cache local.
 Sélectionner les scénarios des [tests de routes](../../../apps/web/src/__tests__/system-settings-routes.test.ts)
 et des [contrats de page](../../../apps/web/src/__tests__/system-settings-page-ux-contracts.test.ts),
 avec le [guide des contrôles](../CONTROLES.md). Pour une évolution de purge, prévoir
-un essai sur base isolée et vérifier l’état final ; aucun test de purge réelle n’a
-été rejoué lors de cette réconciliation.
+un essai sur base isolée et vérifier l’état final. La passe complète du
+12 octobre a exécuté la purge SQL et la commande de maintenance ; ses fixtures
+et résultats ne remplacent pas une mesure des volumes de l'environnement cible.
 
 Le chemin historique `src/__tests__/notification-retention.integration.test.ts`
 a été supprimé avec le module. Son ancien protocole et ses résultats de septembre

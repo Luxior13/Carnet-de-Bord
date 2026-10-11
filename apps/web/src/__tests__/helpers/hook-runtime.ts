@@ -30,9 +30,13 @@ export class HookRuntime<Result> {
     for (const effect of this.effects.values()) effect.cleanup?.();
   }
 
-  useState<T>(initial: T): [T, (value: SetStateAction<T>) => void] {
+  useState<T>(initial: T | (() => T)): [T, (value: SetStateAction<T>) => void] {
     const index = this.index++;
-    if (!this.values.has(index)) this.values.set(index, initial);
+    if (!this.values.has(index))
+      this.values.set(
+        index,
+        typeof initial === 'function' ? (initial as () => T)() : initial,
+      );
 
     return [
       this.values.get(index) as T,
@@ -64,6 +68,17 @@ export class HookRuntime<Result> {
     this.callbacks.set(index, { callback, dependencies });
 
     return callback;
+  }
+
+  useMemo<T>(factory: () => T, dependencies: DependencyList): T {
+    const index = this.index++;
+    const previous = this.callbacks.get(index);
+    if (previous && sameDependencies(previous.dependencies, dependencies))
+      return previous.callback as T;
+    const value = factory();
+    this.callbacks.set(index, { callback: value, dependencies });
+
+    return value;
   }
 
   useEffect(effect: EffectCallback, dependencies?: DependencyList): void {

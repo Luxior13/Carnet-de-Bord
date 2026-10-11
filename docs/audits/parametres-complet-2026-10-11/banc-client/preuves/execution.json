@@ -1,0 +1,15 @@
+{
+    "startingCommit":  "c67e055",
+    "sourceIncludesUncommittedCorrections":  true,
+    "scope":  "Composants et CSS réels, API/session/navigation simulées",
+    "browser":  "Chromium",
+    "finalPass":  {
+                      "evidence":  "parcours-30-apres.json",
+                      "completedAt":  "2026-10-12T00:03:47.0240557+02:00",
+                      "completedAtUtc":  "2026-10-11T22:03:47.0240557Z",
+                      "localDate":  "2026-10-12",
+                      "timezone":  "Europe/Paris",
+                      "passed":  30,
+                      "total":  30
+                  }
+}

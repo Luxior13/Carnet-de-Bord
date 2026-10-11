@@ -1,0 +1,36 @@
+[
+  {
+    "name": "step-up-refusal-focus",
+    "width": 390,
+    "pass": false,
+    "error": "expect(locator).toBeFocused() failed\n\nLocator:  getByRole('dialog').locator('input[type=password]')\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for getByRole('dialog').locator('input[type=password]')\n    14 × locator resolved to <input required=\"\" type=\"password\" data-slot=\"input\" autocomplete=\"off\" data-bwignore=\"true\" data-lpignore=\"true\" data-1p-ignore=\"true\" data-form-type=\"other\" name=\"current-password\" value=\"FICTIF-erreur!2026\" id=\"admin-step-up-password\" class=\"border-border-control bg-input text-foreground selection:bg-primary selection:text-primary-foreground file:text-foreground placeholder:text-muted-foreground flex h-10 w-full min-w-0 rounded-[6px] border px-3 py-1 text-base shadow-none transition-[background-co…/>\n       - unexpected value \"inactive\"\n",
+    "errors": [],
+    "focus": {
+      "tag": "DIV",
+      "id": "radix-«ra»",
+      "text": "Confirmer cette réductionConfirmez votre mot de passe pour réduire la conservation de « Journal d'activité ». La confirm"
+    },
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 900
+        }
+      },
+      {
+        "path": "/api/auth/step-up",
+        "method": "POST",
+        "body": {
+          "kind": "password"
+        }
+      }
+    ]
+  }
+]

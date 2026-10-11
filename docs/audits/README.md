@@ -10,6 +10,7 @@ Ne pas créer un rapport complet pour chaque correction de texte.
 
 | Rapport | Périmètre et portée |
 | --- | --- |
+| [Paramètres système — revue complète des 11–12 octobre 2026](AUDIT_PARAMETRES_COMPLET_2026-10-11.md) | Valeur invalide, reprise, focus et vraie commande de maintenance corrigés ; 30 parcours client et 11 intégrations Next/PostgreSQL réussis, purge et concurrence isolées vérifiées |
 | [Mon compte — 11 octobre 2026](AUDIT_MON_COMPTE_2026-10-11.md) | Version de session manquante, contact, brouillons, déconnexion et dialogues corrigés ; 23 parcours simulés, douze Next/MFA/PostgreSQL, 23 SQL ; 1 232 tests web réussis |
 | [Fiche utilisateur — 11 octobre 2026](AUDIT_FICHE_UTILISATEUR_2026-10-11.md) | USR-D10 à USR-D19 clos : nom vide, versions, portée, sessions, reprise MFA et refactorisation ; 43 parcours simulés, treize Next/MFA/PostgreSQL, quinze SQL ; 1 199 tests web réussis |
 | [Création d'utilisateur — 11 octobre 2026](AUDIT_CREATION_UTILISATEUR_2026-10-11.md) | Copie tardive, focus ADMIN et texte contact corrigés ; service extrait, générateur partagé testé directement ; 28 scénarios simulés, neuf parcours réels dont première connexion/MFA/changement de mot de passe, cinq transactions SQL ; 1 161 tests web réussis |

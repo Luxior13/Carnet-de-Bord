@@ -1,15 +1,7 @@
 'use client';
 
 import { RefreshCw, Settings } from 'lucide-react';
-import React, {
-  type FC,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { toast } from 'sonner';
+import React, { type FC, useEffect, useMemo } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
@@ -22,14 +14,8 @@ import {
   type NavItem,
 } from '$constants/app.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
-import {
-  getSystemSettingDefinition,
-  type SystemSettingKey,
-} from '$constants/system-setting-catalog.constants';
+import { getSystemSettingDefinition } from '$constants/system-setting-catalog.constants';
 import { useUser } from '$context/UserContext';
-import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
-import { type ApiResponse, ErrorCode } from '$types/api.types';
-import type { SystemSettingItem } from '$types/platform.types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,20 +29,14 @@ import {
 import { Button } from '$ui/button';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Skeleton } from '$ui/skeleton';
-import { apiFetch, apiFetchJson, jsonRequest } from '$utils/api.utils';
 
 import {
   formatSettingValue,
-  getDraftNumber,
-  getValidationMessage,
-  isSettingDraftChanged,
-  type NormalizedSystemSettingItem,
-  normalizeSetting,
-  normalizeSettings,
   SECTION_DEFINITIONS,
   SYSTEM_SETTING_KEYS,
 } from './system-settings-page.helpers';
 import { SystemSettingRow } from './SystemSettingRow';
+import { useSystemSettings } from './useSystemSettings';
 
 type SystemSettingsPageProps = {
   item: NavItem;
@@ -90,322 +70,55 @@ const SystemSettingsContent: FC<{
   canUpdate: boolean;
   item: NavItem;
 }> = ({ actorLoginName, canUpdate, item }) => {
-  const mountedRef = useRef(false);
-  const requestRef = useRef<AbortController | null>(null);
-  const refreshButtonRef = useRef<HTMLButtonElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const beginRequest = useCallback((): AbortController | null => {
-    if (!mountedRef.current || requestRef.current) return null;
-    const controller = new AbortController();
-    requestRef.current = controller;
-
-    return controller;
-  }, []);
-  const finishRequest = useCallback((controller: AbortController): void => {
-    if (requestRef.current === controller) requestRef.current = null;
-  }, []);
-  useEffect(() => {
-    mountedRef.current = true;
-
-    return (): void => {
-      mountedRef.current = false;
-      requestRef.current?.abort();
-      requestRef.current = null;
-    };
-  }, []);
-  const [settings, setSettings] = useState<Map<
-    SystemSettingKey,
-    NormalizedSystemSettingItem
-  > | null>(null);
-  const [drafts, setDrafts] = useState<Map<SystemSettingKey, string>>(
-    () => new Map(),
-  );
-  const [editingKeys, setEditingKeys] = useState<Set<SystemSettingKey>>(
-    () => new Set(),
-  );
-  const [saveErrors, setSaveErrors] = useState<Map<SystemSettingKey, string>>(
-    () => new Map(),
-  );
-  const [conflicts, setConflicts] = useState<
-    Map<SystemSettingKey, 'ready' | 'unavailable'>
-  >(() => new Map());
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [savingKey, setSavingKey] = useState<SystemSettingKey | null>(null);
-  const [pendingReduction, setPendingReduction] = useState<{
-    key: SystemSettingKey;
-    value: number;
-  } | null>(null);
-  const [pendingPasswordAction, setPendingPasswordAction] = useState<{
-    key: SystemSettingKey;
-    value: number;
-  } | null>(null);
-  const [showRefreshConfirmation, setShowRefreshConfirmation] = useState(false);
-  const hasUnsavedChanges = useMemo(
-    () =>
-      !!settings &&
-      SYSTEM_SETTING_KEYS.some((key) => {
-        const setting = settings.get(key);
-
-        return setting
-          ? isSettingDraftChanged(drafts.get(key) ?? '', setting.value)
-          : false;
-      }),
-    [drafts, settings],
-  );
   const {
+    accessDenied,
     cancelPendingNavigation,
+    checkingKey,
+    clearSettingFeedback,
     confirmPendingNavigation,
-    pendingNavigationHref,
-    restoreFocus,
-  } = useUnsavedNavigationGuard(hasUnsavedChanges);
-
-  const loadSettings = useCallback(async (): Promise<boolean> => {
-    const controller = beginRequest();
-    if (!controller) return false;
-    const { signal } = controller;
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      const items = await apiFetchJson<SystemSettingItem[]>(
-        '/api/systeme/parametres',
-        { signal },
-      );
-      if (signal.aborted) return false;
-      const normalizedSettings = normalizeSettings(items);
-      setSettings(normalizedSettings);
-      setSaveErrors(new Map());
-      setConflicts(new Map());
-      setEditingKeys(new Set());
-      setDrafts(
-        new Map(
-          SYSTEM_SETTING_KEYS.map((key) => {
-            const setting = normalizedSettings.get(key);
-            if (!setting) {
-              throw new Error('Catalogue de paramètres incomplet');
-            }
-
-            return [key, String(setting.value)] as const;
-          }),
-        ),
-      );
-
-      return true;
-    } catch (error) {
-      if (signal.aborted) return false;
-      setLoadError(
-        error instanceof Error
-          ? error.message
-          : 'Impossible de charger les paramètres système',
-      );
-
-      return false;
-    } finally {
-      finishRequest(controller);
-      if (!signal.aborted) setIsLoading(false);
-    }
-  }, [beginRequest, finishRequest]);
-
-  const requestRefresh = useCallback((): void => {
-    if ((!settings && !loadError) || isLoading || savingKey) return;
-    if (hasUnsavedChanges) {
-      setShowRefreshConfirmation(true);
-
-      return;
-    }
-    void loadSettings();
-  }, [
-    hasUnsavedChanges,
+    conflicts,
+    contentRef,
+    drafts,
+    editingKeys,
+    handleSaveRequest,
     isLoading,
     loadError,
     loadSettings,
+    pendingNavigationHref,
+    pendingPasswordAction,
+    pendingReduction,
+    refreshButtonRef,
+    reloadConflict,
+    requestRef,
+    requestRefresh,
+    restoreFocus,
+    saveErrors,
     savingKey,
+    setDrafts,
+    setEditingKeys,
+    setPendingPasswordAction,
+    setPendingReduction,
+    setSaveErrors,
+    setShowRefreshConfirmation,
     settings,
-  ]);
+    showRefreshConfirmation,
+    updateSetting,
+  } = useSystemSettings(canUpdate);
 
   useEffect(() => {
-    void loadSettings();
-  }, [loadSettings]);
+    if (accessDenied) contentRef.current?.focus();
+  }, [accessDenied, contentRef]);
 
-  const clearSettingFeedback = (key: SystemSettingKey): void => {
-    setSaveErrors((current) => {
-      const next = new Map(current);
-      next.delete(key);
-
-      return next;
-    });
-    setConflicts((current) => {
-      const next = new Map(current);
-      next.delete(key);
-
-      return next;
-    });
-  };
-
-  const readConflict = useCallback(
-    async (key: SystemSettingKey, signal: AbortSignal): Promise<void> => {
-      setConflicts((current) => new Map(current).set(key, 'unavailable'));
-      try {
-        const items = await apiFetchJson<SystemSettingItem[]>(
-          '/api/systeme/parametres',
-          { signal },
-        );
-        if (signal.aborted) return;
-        const latest = normalizeSetting(
-          items.find((item) => item.key === key),
-          key,
-        );
-        setSettings((current) =>
-          current ? new Map(current).set(key, latest) : current,
-        );
-        setConflicts((current) => new Map(current).set(key, 'ready'));
-        // Keep every draft and every unrelated setting version untouched.
-      } catch {
-        // The unresolved conflict stays visible and blocks saving until a fresh value is available.
-      }
-    },
-    [],
-  );
-
-  const reloadConflict = useCallback(
-    async (key: SystemSettingKey): Promise<void> => {
-      const controller = beginRequest();
-      if (!controller) return;
-      setIsLoading(true);
-      try {
-        await readConflict(key, controller.signal);
-      } finally {
-        finishRequest(controller);
-        if (!controller.signal.aborted) setIsLoading(false);
-      }
-    },
-    [beginRequest, finishRequest, readConflict],
-  );
-
-  const updateSetting = useCallback(
-    async (key: SystemSettingKey, value: number): Promise<void> => {
-      const currentSetting = settings?.get(key);
-      if (!canUpdate || !currentSetting) return;
-      const controller = beginRequest();
-      if (!controller) return;
-      const { signal } = controller;
-
-      setSavingKey(key);
-      setSaveErrors((current) => {
-        const next = new Map(current);
-        next.delete(key);
-
-        return next;
-      });
-      try {
-        const response = await apiFetch(
-          `/api/systeme/parametres/${encodeURIComponent(key)}`,
-          jsonRequest(
-            'PUT',
-            {
-              expectedVersion: currentSetting.version,
-              value,
-            },
-            { signal },
-          ),
-        );
-        const payload =
-          (await response.json()) as ApiResponse<SystemSettingItem>;
-        if (signal.aborted) return;
-
-        if (!response.ok || !payload.success) {
-          const errorCode = payload.success ? null : payload.error.code;
-          if (errorCode === ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED) {
-            setPendingPasswordAction({ key, value });
-
-            return;
-          }
-          if (errorCode === ErrorCode.CONFLICT) {
-            await readConflict(key, signal);
-
-            return;
-          }
-          setSaveErrors((current) =>
-            new Map(current).set(
-              key,
-              payload.success
-                ? 'Impossible de modifier ce paramètre. Réessayez.'
-                : payload.error.message,
-            ),
-          );
-
-          return;
-        }
-
-        const updatedSetting = normalizeSetting(payload.data, key);
-        setSettings((currentSettings) => {
-          if (!currentSettings) return currentSettings;
-          const nextSettings = new Map(currentSettings);
-          nextSettings.set(key, updatedSetting);
-
-          return nextSettings;
-        });
-        setDrafts((currentDrafts) => {
-          const nextDrafts = new Map(currentDrafts);
-          nextDrafts.set(key, String(updatedSetting.value));
-
-          return nextDrafts;
-        });
-        setEditingKeys((current) => {
-          const next = new Set(current);
-          next.delete(key);
-
-          return next;
-        });
-        toast.success(
-          `Paramètre « ${getSystemSettingDefinition(key).label} » mis à jour avec succès`,
-        );
-      } catch {
-        if (signal.aborted) return;
-        setSaveErrors((current) =>
-          new Map(current).set(
-            key,
-            'Enregistrement impossible. Votre saisie est conservée ; réessayez.',
-          ),
-        );
-      } finally {
-        finishRequest(controller);
-        if (!signal.aborted) setSavingKey(null);
-      }
-    },
-    [beginRequest, canUpdate, finishRequest, readConflict, settings],
-  );
-
-  const handleSaveRequest = (key: SystemSettingKey): void => {
+  const restoreSettingFocus = (event: Event): void => {
     if (
-      !canUpdate ||
-      !editingKeys.has(key) ||
-      !settings ||
-      isLoading ||
-      savingKey ||
-      conflicts.has(key)
-    )
-      return;
-    const setting = settings.get(key);
-    if (!setting) return;
-    const draftValue = drafts.get(key) ?? '';
-    if (getValidationMessage(key, draftValue)) return;
-    const value = getDraftNumber(draftValue);
-    if (value === null || value === setting.value) return;
-
-    if (
-      getSystemSettingDefinition(key).passwordWhenDecreasing &&
-      value < setting.value
+      document.querySelector(
+        '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]',
+      )
     ) {
-      setPendingReduction({ key, value });
+      event.preventDefault();
 
       return;
     }
-
-    void updateSetting(key, value);
-  };
-
-  const restoreSettingFocus = (event: Event): void => {
     const target = contentRef.current?.querySelector<HTMLElement>(
       'input[type="number"]:not(:disabled), button[data-setting-edit]:not(:disabled)',
     );
@@ -434,6 +147,18 @@ const SystemSettingsContent: FC<{
     ? getSystemSettingDefinition(pendingPasswordAction.key)
     : null;
 
+  if (accessDenied)
+    return (
+      <div
+        aria-label="Accès aux paramètres refusé"
+        ref={contentRef}
+        role="region"
+        tabIndex={-1}
+      >
+        <AccessDeniedState description="Votre session ou vos droits ne permettent plus d’accéder aux paramètres système. Rechargez la page après avoir vérifié votre accès." />
+      </div>
+    );
+
   return (
     <div ref={contentRef}>
       <PageShell className="py-0">
@@ -444,7 +169,11 @@ const SystemSettingsContent: FC<{
                 aria-busy={isLoading || undefined}
                 aria-disabled={isLoading || undefined}
                 className="h-11 rounded-[8px] aria-disabled:pointer-events-none aria-disabled:opacity-50 lg:h-10"
-                disabled={(!settings && !loadError) || savingKey !== null}
+                disabled={
+                  (!settings && !loadError) ||
+                  savingKey !== null ||
+                  checkingKey !== null
+                }
                 ref={refreshButtonRef}
                 onClick={requestRefresh}
                 type="button"
@@ -467,7 +196,11 @@ const SystemSettingsContent: FC<{
           ) : loadError && !settings ? (
             <ContentState
               action={
-                <Button onClick={() => void loadSettings()} type="button">
+                <Button
+                  data-settings-retry
+                  onClick={requestRefresh}
+                  type="button"
+                >
                   Réessayer
                 </Button>
               }
@@ -521,18 +254,26 @@ const SystemSettingsContent: FC<{
                       return (
                         <SystemSettingRow
                           canUpdate={canUpdate}
-                          conflict={conflicts.get(key) ?? 'none'}
-                          disabled={isLoading || savingKey !== null}
+                          conflict={conflicts.get(key)?.status ?? 'none'}
+                          conflictReason={conflicts.get(key)?.reason}
+                          disabled={
+                            isLoading ||
+                            savingKey !== null ||
+                            checkingKey !== null
+                          }
                           draft={drafts.get(key) ?? String(setting.value)}
                           error={saveErrors.get(key)}
                           isEditing={editingKeys.has(key)}
-                          isSaving={savingKey === key}
+                          isSaving={savingKey === key && checkingKey !== key}
+                          isRefreshing={checkingKey === key}
                           key={key}
                           onCancel={() => {
+                            if (requestRef.current) return;
                             setDrafts((current) =>
                               new Map(current).set(key, String(setting.value)),
                             );
-                            clearSettingFeedback(key);
+                            if (conflicts.get(key)?.status !== 'unavailable')
+                              clearSettingFeedback(key);
                             setEditingKeys((current) => {
                               const next = new Set(current);
                               next.delete(key);
@@ -541,6 +282,7 @@ const SystemSettingsContent: FC<{
                             });
                           }}
                           onChange={(value) => {
+                            if (requestRef.current) return;
                             setDrafts((current) =>
                               new Map(current).set(key, value),
                             );
@@ -595,19 +337,23 @@ const SystemSettingsContent: FC<{
         >
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Réduire la durée de conservation ?
+              {pendingReductionSetting?.isStoredValueInvalid
+                ? 'Réparer la durée de conservation ?'
+                : 'Réduire la durée de conservation ?'}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {pendingReduction &&
               pendingReductionDefinition &&
               pendingReductionSetting
-                ? `La conservation « ${pendingReductionDefinition.label} » passera de ${formatSettingValue(
-                    pendingReductionSetting.value,
-                    pendingReductionDefinition.unit,
-                  )} à ${formatSettingValue(
-                    pendingReduction.value,
-                    pendingReductionDefinition.unit,
-                  )}. Les données plus anciennes pourront être supprimées au prochain nettoyage et ne pourront pas être restaurées en augmentant ensuite cette durée.`
+                ? pendingReductionSetting.isStoredValueInvalid
+                  ? `La valeur enregistrée est invalide. La conservation « ${pendingReductionDefinition.label} » sera fixée à ${formatSettingValue(pendingReduction.value, pendingReductionDefinition.unit)}. Le nettoyage du journal pourra reprendre lors de la prochaine maintenance ; les données plus anciennes pourront alors être supprimées.`
+                  : `La conservation « ${pendingReductionDefinition.label} » passera de ${formatSettingValue(
+                      pendingReductionSetting.value,
+                      pendingReductionDefinition.unit,
+                    )} à ${formatSettingValue(
+                      pendingReduction.value,
+                      pendingReductionDefinition.unit,
+                    )}. Les données plus anciennes pourront être supprimées au prochain nettoyage et ne pourront pas être restaurées en augmentant ensuite cette durée.`
                 : 'Les données plus anciennes pourront être supprimées au prochain nettoyage.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -621,7 +367,9 @@ const SystemSettingsContent: FC<{
                 if (action) void updateSetting(action.key, action.value);
               }}
             >
-              Réduire la durée
+              {pendingReductionSetting?.isStoredValueInvalid
+                ? 'Réparer la durée'
+                : 'Réduire la durée'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -674,7 +422,9 @@ const SystemSettingsContent: FC<{
             <AlertDialogTitle>Quitter sans enregistrer ?</AlertDialogTitle>
             <AlertDialogDescription>
               Les modifications des paramètres seront perdues. Vous pouvez
-              rester sur la page pour les enregistrer ou les annuler.
+              rester sur la page pour les enregistrer ou les annuler. Une
+              opération déjà envoyée peut avoir été appliquée ; quitter la page
+              ne l’annule pas.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -695,7 +445,7 @@ const SystemSettingsContent: FC<{
         actorLoginName={actorLoginName}
         description={
           pendingPasswordDefinition
-            ? `Confirmez votre mot de passe pour réduire la conservation de « ${pendingPasswordDefinition.label} ». La confirmation restera valable pendant trente minutes.`
+            ? `Confirmez votre mot de passe pour ${pendingPasswordAction && settings?.get(pendingPasswordAction.key)?.isStoredValueInvalid ? 'réparer' : 'réduire'} la conservation de « ${pendingPasswordDefinition.label} ». La confirmation restera valable pendant trente minutes.`
             : 'Confirmez votre mot de passe pour continuer.'
         }
         onCloseAutoFocus={restoreSettingFocus}
@@ -707,7 +457,12 @@ const SystemSettingsContent: FC<{
         }}
         open={pendingPasswordAction !== null}
         proofKind="password"
-        title="Confirmer cette réduction"
+        title={
+          pendingPasswordAction &&
+          settings?.get(pendingPasswordAction.key)?.isStoredValueInvalid
+            ? 'Confirmer cette réparation'
+            : 'Confirmer cette réduction'
+        }
       />
     </div>
   );
@@ -740,7 +495,9 @@ export const SystemSettingsPage: FC<SystemSettingsPageProps> = ({
           actorLoginName={userData.loginName}
           canUpdate={canUpdate}
           item={item}
-          key={userData.id + ':' + canUpdate}
+          key={
+            userData.id + ':' + canUpdate + ':' + userData.mustChangePassword
+          }
         />
       ) : (
         <AccessDeniedState

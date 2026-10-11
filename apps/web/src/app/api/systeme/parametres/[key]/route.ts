@@ -86,6 +86,7 @@ export async function PUT(
     const parsedPreviousValue = previous
       ? definition.schema.safeParse(previous.value)
       : null;
+    const isStoredValueInvalid = parsedPreviousValue?.success === false;
     const currentValue =
       parsedPreviousValue?.success === true
         ? parsedPreviousValue.data
@@ -100,6 +101,7 @@ export async function PUT(
       return NextResponse.json({
         data: {
           description: definition.description,
+          isStoredValueInvalid: false,
           key,
           updatedAt:
             previous?.updatedAt.toISOString() ?? new Date(0).toISOString(),
@@ -110,6 +112,7 @@ export async function PUT(
       });
     }
     if (
+      isStoredValueInvalid ||
       requiresPasswordForSystemSettingChange(key, currentValue, numericValue)
     ) {
       const proof = requireRecentPasswordReauthentication(auth.session);
@@ -163,7 +166,13 @@ export async function PUT(
           metadata: {
             after: { value: updated.value, version: updated.version },
             before: previous
-              ? { value: previous.value, version: previous.version }
+              ? {
+                  ...(isStoredValueInvalid
+                    ? { isStoredValueInvalid: true }
+                    : {}),
+                  value: isStoredValueInvalid ? null : previous.value,
+                  version: previous.version,
+                }
               : null,
             changes: ['value', 'version'],
             ...FEATURES.systemSettings.audit,
@@ -181,6 +190,7 @@ export async function PUT(
     return NextResponse.json({
       data: {
         ...setting,
+        isStoredValueInvalid: false,
         key,
         updatedAt: setting.updatedAt.toISOString(),
       },

@@ -1,0 +1,79 @@
+{
+  "startedDate": "2026-10-11",
+  "validatedDate": "2026-10-12",
+  "timezone": "Europe/Paris",
+  "initialHead": "c67e055",
+  "initialWorktree": "clean",
+  "environment": {
+    "postgresql": 17,
+    "host": "127.0.0.1",
+    "port": 54597,
+    "database": "settings_service_test",
+    "appliedMigrations": 52,
+    "remoteDatabaseUsed": false,
+    "schemaChanged": false
+  },
+  "reproductionsBeforeFix": [
+    {
+      "case": "invalid-storage-reported-as-effective-default",
+      "proof": "Real PostgreSQL with fully migrated schema and direct GET handler",
+      "observed": "GET returned value 1095/version 1 without an invalid-state flag while the SQL purge rejected the stored value and retained the old event."
+    },
+    {
+      "case": "repair-reactivates-retention-without-recent-password",
+      "proof": "Real PostgreSQL, actual permission/proof helpers and direct PUT handler",
+      "observed": "Restoring the proposed default from an invalid stored value returned 200 without a recent password proof."
+    },
+    {
+      "case": "maintenance-bound-parameter-function-resolution",
+      "proof": "Actual Bun maintenance process in the separate root integration bench",
+      "observed": "PostgreSQL 42883: public.purge_expired_audit_logs(bigint) does not exist; the procedure expects integer."
+    }
+  ],
+  "correction": {
+    "dto": "Required isStoredValueInvalid boolean in SystemSettingItem, GET and PUT",
+    "invalidValue": "Reviewed default remains a repair proposal, not an effective purge duration",
+    "repair": "Always requires a recent password and a matching version, including numerical no-op against the proposed default",
+    "audit": "Invalid previous state recorded with a flag, null effective value and version; no raw invalid JSON copied into response or audit",
+    "maintenance": "Explicit ::integer cast at the actual script call; regression executes the shipped module and every cleanup stage against the isolated database",
+    "unchanged": [
+      "365-3650 day bounds",
+      "1095 day reviewed default",
+      "Global retention scope",
+      "Fail-closed SQL purge",
+      "Saving a setting never triggers a purge"
+    ]
+  },
+  "checks": {
+    "postgres": {
+      "file": "apps/web/src/__tests__/system-settings-postgres.test.ts",
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "observedAdvisoryWaitScenarios": 3
+    },
+    "routes": {
+      "file": "apps/web/src/__tests__/system-settings-routes.test.ts",
+      "passed": 21,
+      "failed": 0
+    },
+    "catalogAndDeletionContracts": {
+      "files": [
+        "apps/web/src/__tests__/platform-foundation.test.ts",
+        "apps/web/src/__tests__/person-audit-deletion-guards.test.ts"
+      ],
+      "passed": 7,
+      "failed": 0
+    },
+    "typescript": "passed",
+    "targetedLint": "passed"
+  },
+  "limits": [
+    "Authentication source and headers simulated; authenticated API quota always allowed",
+    "No HTTP middleware, real cookie distribution or browser interactions in this server bench",
+    "Encrypted detail fixtures use arbitrary SQL-valid bytes: cascade verified, encryption not tested here",
+    "Cutoff boundaries bracketed by one second, not exact equality across timestamp precisions",
+    "Actual maintenance module runs under Vitest with isolated Prisma, including expired fixture deletion and current fixture preservation; no subprocess or deployed scheduler in this server bench",
+    "No load benchmark, backup restoration or legal qualification of retention periods"
+  ]
+}

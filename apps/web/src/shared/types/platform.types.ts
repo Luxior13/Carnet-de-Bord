@@ -2,6 +2,7 @@ import type { SystemSettingKey } from '$constants/system-setting-catalog.constan
 
 export type SystemSettingItem = {
   description: string | null;
+  isStoredValueInvalid: boolean;
   key: SystemSettingKey;
   updatedAt: string;
   value: unknown;

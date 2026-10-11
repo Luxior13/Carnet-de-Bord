@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-12",
+  "runtime": "Next production + PostgreSQL 17 + Chromium",
+  "browserVersion": "149.0.7827.55",
+  "scenarios": [
+    {
+      "name": "Connexion MFA réelle, défaut logiciel et absence de faux changement",
+      "result": "passed"
+    },
+    {
+      "name": "Lecture et édition à sept largeurs, bornes et clavier",
+      "result": "passed"
+    },
+    {
+      "name": "Augmentation par Entrée : version et audit réels, aucune purge immédiate",
+      "result": "passed"
+    },
+    {
+      "name": "Conflit entre deux onglets, saisie conservée et reprise explicite",
+      "result": "passed"
+    },
+    {
+      "name": "Actualisation avec brouillon : confirmation annulée puis abandon choisi",
+      "result": "passed"
+    },
+    {
+      "name": "Réduction : annulation, refus sans preuve, mot de passe erroné puis correct",
+      "result": "passed"
+    },
+    {
+      "name": "Écriture validée puis réponse perdue : vérification sans renvoi automatique",
+      "result": "passed"
+    },
+    {
+      "name": "Stockage invalide : état explicite et réparation protégée du défaut proposé",
+      "result": "passed"
+    },
+    {
+      "name": "Commande de maintenance réelle : valeur enregistrée consommée, anciens audits purgés",
+      "result": "passed"
+    },
+    {
+      "name": "Accès administrateur retiré pendant la consultation : valeurs et éditeur retirés",
+      "result": "passed"
+    },
+    {
+      "name": "Requêtes anonymes, catalogue fermé et refus CSRF",
+      "result": "passed"
+    }
+  ]
+}

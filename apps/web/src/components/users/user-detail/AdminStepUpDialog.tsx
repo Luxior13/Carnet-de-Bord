@@ -71,6 +71,15 @@ const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
   const canSubmit =
     (!requiresPassword || currentPassword.length > 0) &&
     (!requiresTotp || /^\d{6}$/.test(currentTotpCode));
+  const focusProofAfterSubmit = (kind: 'password' | 'totp'): void => {
+    requestAnimationFrame(() => {
+      if (!mountedRef.current) return;
+      const input =
+        kind === 'password' ? passwordInputRef.current : totpInputRef.current;
+      input?.focus();
+      if (kind === 'password') input?.select();
+    });
+  };
 
   useEffect(() => {
     if (!open) {
@@ -136,6 +145,7 @@ const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
             'La confirmation du mot de passe a expiré. Confirmez à nouveau votre mot de passe et votre code MFA.',
           );
           onProofKindRequired?.('full');
+          focusProofAfterSubmit('password');
 
           return;
         }
@@ -147,14 +157,12 @@ const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
             errorMessage.toLowerCase().includes('mot de passe'));
 
         if (passwordFailed) {
-          passwordInputRef.current?.focus();
-          passwordInputRef.current?.select();
+          focusProofAfterSubmit('password');
         } else if (requiresTotp) {
           setCurrentTotpCode('');
-          totpInputRef.current?.focus();
+          focusProofAfterSubmit('totp');
         } else {
-          passwordInputRef.current?.focus();
-          passwordInputRef.current?.select();
+          focusProofAfterSubmit('password');
         }
 
         return;
@@ -164,6 +172,7 @@ const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
     } catch {
       if (!mountedRef.current) return;
       setError('Impossible de confirmer votre identité');
+      focusProofAfterSubmit(requiresPassword ? 'password' : 'totp');
     } finally {
       submissionInFlightRef.current = false;
       if (mountedRef.current) setIsSubmitting(false);

@@ -161,6 +161,7 @@ describe('system settings routes', () => {
     expect(body.data).toContainEqual(
       expect.objectContaining({
         description: "Durée de conservation du journal d'activité en jours",
+        isStoredValueInvalid: false,
         key: 'audit.retentionDays',
         value: 1_460,
         version: 2,
@@ -195,6 +196,101 @@ describe('system settings routes', () => {
 
     expect(response.status).toBe(403);
     expect(mocks.prisma.systemSetting.findMany).not.toHaveBeenCalled();
+  });
+
+  it('distinguishes invalid storage from a configured retention without returning the raw value', async () => {
+    mocks.prisma.systemSetting.findMany.mockResolvedValueOnce([
+      {
+        key: 'audit.retentionDays',
+        updatedAt: UPDATED_AT,
+        value: { unexpected: 'invalid-fixture' },
+        version: 2,
+      },
+    ]);
+    const { GET } = await import('$app/api/systeme/parametres/route');
+    const response = await GET(
+      new NextRequest('http://localhost/api/systeme/parametres'),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data[0]).toMatchObject({
+      isStoredValueInvalid: true,
+      value: 1095,
+      version: 2,
+    });
+    expect(JSON.stringify(body)).not.toContain('invalid-fixture');
+  });
+
+  it('requires a recent password to reactivate retention from invalid storage', async () => {
+    mocks.prisma.systemSetting.findUnique.mockResolvedValueOnce({
+      updatedAt: UPDATED_AT,
+      value: 'invalid',
+      version: 2,
+    });
+    mocks.requireRecentPasswordReauthentication.mockReturnValueOnce({
+      response: NextResponse.json(
+        {
+          error: { code: ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED },
+          success: false,
+        },
+        { status: 403 },
+      ),
+      success: false,
+    });
+    const { PUT } = await import('$app/api/systeme/parametres/[key]/route');
+    const response = await PUT(
+      createPutRequest('audit.retentionDays', {
+        expectedVersion: 2,
+        value: 1095,
+      }),
+      routeParams('audit.retentionDays'),
+    );
+
+    expect(response.status).toBe(403);
+    expect(mocks.requireRecentPasswordReauthentication).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('repairs an invalid row even when the value equals the proposed default and audits a bounded invalid state', async () => {
+    mocks.prisma.systemSetting.findUnique.mockResolvedValueOnce({
+      updatedAt: UPDATED_AT,
+      value: { unexpected: 'invalid-fixture' },
+      version: 2,
+    });
+    const { PUT } = await import('$app/api/systeme/parametres/[key]/route');
+    const response = await PUT(
+      createPutRequest('audit.retentionDays', {
+        expectedVersion: 2,
+        value: 1095,
+      }),
+      routeParams('audit.retentionDays'),
+    );
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).data).toMatchObject({
+      isStoredValueInvalid: false,
+      value: 1095,
+      version: 3,
+    });
+    expect(mocks.requireRecentPasswordReauthentication).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(mocks.transaction.systemSetting.updateMany).toHaveBeenCalled();
+    expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          after: { value: 1095, version: 3 },
+          before: { isStoredValueInvalid: true, value: null, version: 2 },
+        }),
+      }),
+      { client: mocks.transaction, required: true },
+    );
+    expect(
+      JSON.stringify(mocks.createAuditLogWithHeaders.mock.calls),
+    ).not.toContain('invalid-fixture');
   });
 
   it('rejects the retired page-size setting before reading or writing it', async () => {

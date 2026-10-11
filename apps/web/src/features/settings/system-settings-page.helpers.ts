@@ -102,13 +102,14 @@ export const normalizeSetting = (
   const definition = getSystemSettingDefinition(key);
   if (
     !item ||
+    typeof item.isStoredValueInvalid !== 'boolean' ||
     !isSystemSettingKey(item.key) ||
     item.key !== key ||
     typeof item.value !== 'number' ||
     !Number.isInteger(item.value) ||
     item.value < definition.min ||
     item.value > definition.max ||
-    !Number.isInteger(item.version) ||
+    !Number.isSafeInteger(item.version) ||
     item.version < 0 ||
     typeof item.updatedAt !== 'string' ||
     (item.version > 0 && Number.isNaN(new Date(item.updatedAt).getTime()))
@@ -122,10 +123,15 @@ export const normalizeSetting = (
 export const normalizeSettings = (
   items: SystemSettingItem[],
 ): Map<SystemSettingKey, NormalizedSystemSettingItem> => {
+  if (!Array.isArray(items))
+    throw new Error('Catalogue de paramètres incomplet');
   const settings = new Map<SystemSettingKey, NormalizedSystemSettingItem>();
 
   for (const key of SYSTEM_SETTING_KEYS) {
-    const item = items.find((candidate) => candidate.key === key);
+    const matches = items.filter((candidate) => candidate?.key === key);
+    if (matches.length !== 1)
+      throw new Error('Catalogue de paramètres incomplet');
+    const item = matches[0];
     settings.set(key, normalizeSetting(item, key));
   }
 

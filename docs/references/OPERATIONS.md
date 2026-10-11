@@ -125,6 +125,16 @@ Le paramètre `audit.retentionDays` n'est pas mis en cache. La procédure SQL du
 journal contrôle sa propre durée sous verrou. Une réduction reste protégée par
 mot de passe à la modification du réglage.
 
+Une valeur stockée invalide bloque la purge du journal : le défaut de 1 095 jours
+affiché dans Paramètres est alors une proposition de réparation, pas une durée
+appliquée. Réparer depuis `/systeme/parametres` exige une confirmation et une
+preuve récente de mot de passe, même en conservant ce défaut proposé. La valeur,
+sa version et l'audit sont écrits atomiquement ; la maintenance peut reprendre
+lors d'une prochaine exécution. La réparation ne déclenche aucune purge à elle
+seule. Voir le [suivi de réparation](../qualite/pages/systeme-parametres.md#valeur-stockée-invalide-et-réparation)
+et ses preuves isolées ; ne pas en déduire que le planificateur du déploiement a
+été vérifié.
+
 Le passage de maintenance reste atomique, avec une limite transactionnelle de
 60 secondes : une erreur ou un dépassement annule les suppressions du passage.
 Mesurer et revoir le découpage si les volumes rendent cette limite insuffisante.

@@ -26,12 +26,16 @@ const pageSource = readSourceFile(
   '../features/settings/SystemSettingsPage.tsx',
 );
 const rowSource = readSourceFile('../features/settings/SystemSettingRow.tsx');
+const controllerSource = readSourceFile(
+  '../features/settings/useSystemSettings.ts',
+);
 const navigationGuardSource = readSourceFile(
   '../shared/hooks/useUnsavedNavigationGuard.ts',
 );
 
 const buildSetting = (key: SystemSettingKey): SystemSettingItem => ({
   description: getSystemSettingDefinition(key).description,
+  isStoredValueInvalid: false,
   key,
   updatedAt: new Date(0).toISOString(),
   value: getSystemSettingDefinition(key).defaultValue,
@@ -55,6 +59,21 @@ describe('system settings page contracts', () => {
         {
           ...buildSetting('audit.retentionDays'),
           key: 'ui.defaultPageSize' as SystemSettingKey,
+        },
+        'audit.retentionDays',
+      ),
+    ).toThrow('Catalogue de paramètres incomplet');
+    expect(() =>
+      normalizeSettings([
+        buildSetting('audit.retentionDays'),
+        buildSetting('audit.retentionDays'),
+      ]),
+    ).toThrow('Catalogue de paramètres incomplet');
+    expect(() =>
+      normalizeSetting(
+        {
+          ...buildSetting('audit.retentionDays'),
+          version: Number.MAX_SAFE_INTEGER + 1,
         },
         'audit.retentionDays',
       ),
@@ -95,7 +114,7 @@ describe('system settings page contracts', () => {
   it('keeps destructive reductions explicit and password-only', () => {
     expect(pageSource).toContain('Réduire la durée de conservation ?');
     expect(pageSource).toContain('proofKind="password"');
-    expect(pageSource).toContain(
+    expect(controllerSource).toContain(
       'ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED',
     );
     expect(pageSource).not.toContain('proofKind="mfa"');
@@ -105,7 +124,7 @@ describe('system settings page contracts', () => {
   });
 
   it('protects drafts and exposes loading, refresh and accessible action states', () => {
-    expect(pageSource).toContain('hasUnsavedChanges');
+    expect(controllerSource).toContain('hasUnsavedChanges');
     expect(pageSource).toContain('Abandonner les modifications ?');
     expect(pageSource).toContain('Actualisation impossible');
     expect(pageSource).toContain('onClick={requestRefresh}');

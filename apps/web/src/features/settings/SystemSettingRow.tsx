@@ -22,10 +22,12 @@ import {
 type SystemSettingRowProps = {
   canUpdate: boolean;
   conflict: 'none' | 'ready' | 'unavailable';
+  conflictReason?: 'concurrent' | 'unknown';
   disabled: boolean;
   draft: string;
   error?: string;
   isEditing: boolean;
+  isRefreshing?: boolean;
   isSaving: boolean;
   onCancel: () => void;
   onChange: (value: string) => void;
@@ -44,10 +46,12 @@ const stepButtonClass =
 export const SystemSettingRow: FC<SystemSettingRowProps> = ({
   canUpdate,
   conflict,
+  conflictReason = 'concurrent',
   disabled,
   draft,
   error,
   isEditing,
+  isRefreshing = false,
   isSaving,
   onCancel,
   onChange,
@@ -62,7 +66,10 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const editButtonRef = useRef<HTMLButtonElement>(null);
   const wasEditing = useRef(false);
+  const wasRefreshing = useRef(false);
   const editing = canUpdate && isEditing;
+  const unconfirmed =
+    conflict === 'unavailable' && conflictReason === 'unknown';
   useEffect(() => {
     if (editing) {
       inputRef.current?.focus();
@@ -88,12 +95,25 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
 
     return (): void => input?.removeEventListener('wheel', preventWheelStep);
   }, [editing]);
+  useEffect(() => {
+    if (
+      wasRefreshing.current &&
+      !isRefreshing &&
+      editing &&
+      document.activeElement === document.body
+    ) {
+      inputRef.current?.focus();
+    }
+    wasRefreshing.current = isRefreshing;
+  }, [editing, isRefreshing]);
   const resetDraft = (): void => {
     onReset();
     inputRef.current?.focus();
   };
   const presentation = getSettingPresentation(setting.key);
-  const dirty = isSettingDraftChanged(draft, setting.value);
+  const dirty =
+    isSettingDraftChanged(draft, setting.value) ||
+    (editing && setting.isStoredValueInvalid);
   const validation = getValidationMessage(setting.key, draft);
   const parsed = getDraftNumber(draft);
   const canStep = !disabled && parsed !== null && !validation;
@@ -111,13 +131,13 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
     parsed !== null &&
     !validation &&
     definition.passwordWhenDecreasing &&
-    parsed < setting.value;
+    (setting.isStoredValueInvalid || parsed < setting.value);
   const id = `system-setting-${setting.key.replaceAll('.', '-')}`;
 
   return (
     <form
       autoComplete="off"
-      aria-busy={isSaving || undefined}
+      aria-busy={isSaving || isRefreshing || undefined}
       aria-labelledby={`${id}-title`}
       className="p-4 @min-[40rem]/page:p-5"
       data-setting-key={setting.key}
@@ -137,7 +157,9 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
             >
               {definition.label}
             </h3>
-            {dirty ? (
+            {setting.isStoredValueInvalid ? (
+              <span className="text-warning text-xs">Valeur à réparer</span>
+            ) : dirty ? (
               <span className="text-warning border-warning/40 rounded-[4px] border px-1.5 text-xs leading-5">
                 Non enregistré
               </span>
@@ -155,6 +177,19 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
           >
             {presentation.impact}
           </p>
+          {setting.isStoredValueInvalid && (
+            <p className="text-warning text-sm leading-6" role="alert">
+              La valeur enregistrée est invalide. Le nettoyage du journal est
+              bloqué tant que ce réglage n’est pas réparé. La durée affichée est
+              le défaut logiciel proposé, pas une durée appliquée.
+            </p>
+          )}
+          {!editing && unconfirmed && (
+            <p className="text-warning text-sm leading-6" role="status">
+              Le dernier enregistrement reste à vérifier. Ouvrez le réglage pour
+              relire sa valeur avant une nouvelle modification.
+            </p>
+          )}
           {!editing && (
             <p className="text-muted-foreground text-xs leading-5">
               Entre {formatSettingValue(definition.min, definition.unit)} et{' '}
@@ -164,7 +199,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
           )}
           {(dirty || setting.version > 0) && (
             <p className="text-muted-foreground text-xs leading-5">
-              {dirty
+              {dirty && !setting.isStoredValueInvalid
                 ? `Valeur appliquée : ${formatSettingValue(setting.value, definition.unit)}.`
                 : `Modifié le ${formatUpdatedAt(setting.updatedAt)}.`}
             </p>
@@ -251,8 +286,9 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
               disabled={disabled}
               hasChanges={dirty}
               isSaving={isSaving}
+              isResolvingConflict={isRefreshing}
               label={`Enregistrement — ${definition.label}`}
-              onCancel={conflict === 'none' ? onCancel : undefined}
+              onCancel={onCancel}
               placement="inline"
               saveAriaLabel={`Enregistrer — ${definition.label}`}
               saveDisabled={!!validation || conflict !== 'none'}
@@ -286,7 +322,11 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
           <div className="flex w-full max-w-64 min-w-0 flex-wrap items-center justify-between gap-3 self-start">
             <div>
               <p className="text-muted-foreground text-xs leading-5">
-                Durée appliquée
+                {unconfirmed
+                  ? 'Dernière valeur connue'
+                  : setting.isStoredValueInvalid
+                    ? 'Durée proposée'
+                    : 'Durée appliquée'}
               </p>
               <p className="text-foreground text-xl font-semibold tabular-nums">
                 {formatSettingValue(setting.value, definition.unit)}
@@ -311,24 +351,29 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
       </div>
       {reducing && parsed !== null && conflict === 'none' && (
         <p className="text-warning mt-3 text-sm leading-6" role="status">
-          Les données dépassant {formatSettingValue(parsed, definition.unit)}{' '}
+          {setting.isStoredValueInvalid ? 'Après réparation, les' : 'Les'}{' '}
+          données dépassant {formatSettingValue(parsed, definition.unit)}{' '}
           pourront être supprimées à la prochaine maintenance. Une confirmation
           sera demandée.
         </p>
       )}
-      {conflict !== 'none' && (
+      {editing && conflict !== 'none' && (
         <div
           className="border-warning/40 mt-4 space-y-2 rounded-[8px] border p-3"
           id={`${id}-conflict`}
           role="alert"
         >
           <p className="text-warning text-sm font-medium">
-            Ce réglage a été modifié par un autre administrateur.
+            {conflictReason === 'unknown'
+              ? 'Le résultat de l’enregistrement doit être vérifié.'
+              : 'Ce réglage a été modifié par un autre administrateur.'}
           </p>
           <p className="text-muted-foreground text-sm leading-6">
-            {conflict === 'ready'
-              ? `Valeur actuelle : ${formatSettingValue(setting.value, definition.unit)}. Vérifiez votre saisie avant de l’enregistrer.`
-              : 'Impossible de récupérer la valeur actuelle. Réessayez pour résoudre le conflit.'}{' '}
+            {isRefreshing
+              ? 'Vérification de la valeur actuelle…'
+              : conflict === 'ready'
+                ? `Valeur actuelle : ${formatSettingValue(setting.value, definition.unit)}. Vérifiez votre saisie avant de l’enregistrer.`
+                : 'Impossible de récupérer la valeur actuelle. Réessayez pour résoudre le conflit.'}{' '}
             Vos saisies ont été conservées.
           </p>
           <div className="flex flex-wrap gap-2">
@@ -364,13 +409,13 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
                 type="button"
                 variant="outline"
               >
-                Vérifier la valeur actuelle
+                {isRefreshing ? 'Vérification…' : 'Vérifier la valeur actuelle'}
               </Button>
             )}
           </div>
         </div>
       )}
-      {error && (
+      {editing && error && (
         <p
           className="text-destructive mt-3 text-sm leading-6"
           id={`${id}-error`}

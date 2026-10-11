@@ -1,0 +1,29 @@
+[
+  {
+    "name": "reduction-stepup-invalid-then-valid",
+    "width": 390,
+    "pass": false,
+    "error": "expect(locator).toBeFocused() failed\n\nLocator:  getByRole('dialog').locator('input[type=password]')\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for getByRole('dialog').locator('input[type=password]')\n    13 × locator resolved to <input value=\"\" required=\"\" type=\"password\" data-slot=\"input\" autocomplete=\"off\" data-bwignore=\"true\" data-lpignore=\"true\" data-1p-ignore=\"true\" data-form-type=\"other\" name=\"current-password\" id=\"admin-step-up-password\" class=\"border-border-control bg-input text-foreground selection:bg-primary selection:text-primary-foreground file:text-foreground placeholder:text-muted-foreground flex h-10 w-full min-w-0 rounded-[6px] border px-3 py-1 text-base shadow-none transition-[background-color,border-color,c…/>\n       - unexpected value \"inactive\"\n",
+    "errors": [],
+    "focus": {
+      "tag": "INPUT",
+      "id": "system-setting-audit-retentionDays",
+      "text": ""
+    },
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 900
+        }
+      }
+    ]
+  }
+]
