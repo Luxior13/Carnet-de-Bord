@@ -580,6 +580,45 @@ extension installée chez l’utilisateur.
 
 ## Barres de sections — décision du 11 octobre 2026
 
+### Avis sur l'état collant — 11 octobre 2026
+
+Question utilisateur : qualité visuelle de la barre lorsqu'elle reste en haut
+pendant le défilement. Lecture de `PageSectionNavigation` et du shell : fond
+opaque `surface-canvas`, bordure inférieure, hauteur minimale de 48 px ; aucun
+style distinct selon l'accrochage. Le header précède le conteneur défilant et
+la barre utilise `top-0` à l'intérieur de celui-ci.
+
+Avis initial fondé sur le code et les captures au repos : conserver la sélection
+et la hauteur, avec une ombre inférieure discrète seulement en position accrochée.
+L'utilisateur a approuvé cette finition le même jour.
+
+Implémentation : `PageSectionNavigation` observe sa position dans le conteneur
+défilant et applique `--shadow-navigation-stuck` uniquement lorsqu'elle est
+collée. Un repère absolu n'ajoute ni hauteur ni espacement. La barre est aussi
+observée pour gérer un saut direct depuis une position sous l'écran. Le fond
+reste opaque, la hauteur stable et aucune bordure haute n'est ajoutée contre
+le header. Mouvement réduit respecté ; observateur déconnecté au démontage.
+
+Périmètre de revue : Q01–Q04, Q17, Q19, Q27, Q30 pour la présentation partagée,
+le défilement, la géométrie, le coût et la documentation. Autres sujets hors
+impact : aucune action, donnée, permission, requête ou règle métier modifiée.
+Vérifications de cette finition : 10 scénarios Chromium réussis sur les trois
+pages à 390 et 1 440 px, avec stress à 320 px, paysage à 900 × 480 px, saut
+depuis le dessous de l'écran et apparition après une liste de sections vide.
+Le Header réel est monté dans un cadre à défilement interne reproduisant le
+shell ; comptes, API et navigation sont simulés. Barre mesurée à 49 px bordure
+comprise, contrôles de 48 px, position collée exactement sous le Header de
+56 px. Hauteur du contenu et position de référence stables, ombre retirée au
+retour en haut ; captures relues.
+[Banc, résultats et limites](../../audits/navigation-sections-2026-10-11/banc-collant/README.md).
+
+82 tests ciblés réussis (navigation, design system et contrats des trois
+consommateurs), TypeScript, lint du composant et budget d'architecture réussis.
+Le shell authentifié complet, Safari/iOS et le lecteur d'écran ne sont pas
+rejoués. Les anciens 20 scénarios ci-dessous conservent leur portée.
+
+### Contrat courant
+
 Améliorations approuvées par l'utilisateur puis appliquées à
 `PageSectionNavigation`, consommé par Mon compte, la fiche Utilisateur et la
 fiche du Répertoire (via `EntityDetailLayout`). Fond de sélection, icône

@@ -275,6 +275,8 @@ historiques ; cette ancienne échelle ne remplace pas les règles courantes.
 Les ombres montent avec l'élévation et restent très douces :
 
 - `--shadow-panel` : carte posée.
+- `--shadow-navigation-stuck` : séparation inférieure discrète de la barre de
+  sections, uniquement lorsqu'elle est accrochée en haut du conteneur défilant.
 - `--shadow-panel-strong` : panneau survolé ou ouvert.
 - `--shadow-account-popover` : menu de compte.
 
@@ -365,6 +367,10 @@ le sélecteur de pôle conserve ses repères de couleur.
   La section active associe fond `surface-navigation-active`, soulignement
   `primary` et icône `primary-emphasis`. Les liens gardent une hauteur minimale
   de 48 px et des angles supérieurs de 6 px, y compris au survol.
+  Quand la barre s'accroche en haut du conteneur défilant, son fond reste opaque
+  et une ombre inférieure discrète la sépare du contenu. Hauteur et espacement
+  restent stables ; aucune bordure haute n'est ajoutée sous le header. L'ombre
+  disparaît au retour à sa position normale ; sa transition respecte le mouvement réduit.
   Les deux flèches apparaissent seulement si les libellés dépassent la largeur
   de la barre ; elles deviennent inactives à leur extrémité sans perdre le focus.
   Le défilement horizontal natif reste disponible. Le focus révèle le lien visé,

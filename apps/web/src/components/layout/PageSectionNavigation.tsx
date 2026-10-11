@@ -70,15 +70,65 @@ export const PageSectionNavigation = <SectionId extends string>({
   sections,
 }: PageSectionNavigationProps<SectionId>): React.JSX.Element | null => {
   const navigationRef = useRef<HTMLElement>(null);
+  const stickyMarkerRef = useRef<HTMLSpanElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const activeLinkRef = useRef<HTMLAnchorElement>(null);
   const viewportId = useId();
+  const hasSections = sections.length > 0;
+  const [isStuck, setIsStuck] = useState(false);
   const [scrollState, setScrollState] = useState({
     canScrollLeft: false,
     canScrollRight: false,
     hasOverflow: false,
   });
+
+  useEffect(() => {
+    const navigation = navigationRef.current;
+    const marker = stickyMarkerRef.current;
+    if (!navigation || !marker || !('IntersectionObserver' in window)) {
+      setIsStuck(false);
+
+      return;
+    }
+
+    // Sticky follows the nearest scrolling ancestor, which is the private
+    // shell's main element today. Standalone pages can use the viewport.
+    let root = navigation.parentElement;
+    while (
+      root &&
+      root !== document.body &&
+      root !== document.documentElement
+    ) {
+      if (
+        /^(?:auto|scroll|hidden|overlay)$/.test(
+          getComputedStyle(root).overflowY,
+        )
+      )
+        break;
+      root = root.parentElement;
+    }
+    if (root === document.body || root === document.documentElement)
+      root = null;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const bounds = entries[0]?.rootBounds;
+        if (!bounds) return;
+        setIsStuck(
+          marker.getBoundingClientRect().top < bounds.top &&
+            navigation.getBoundingClientRect().bottom > bounds.top,
+        );
+      },
+      { root, threshold: [0, 1] },
+    );
+    observer.observe(marker);
+    // A jump can move the marker from below to above the scrollport without
+    // changing its visibility. The bar itself becomes visible in that case.
+    observer.observe(navigation);
+
+    return (): void => observer.disconnect();
+  }, [hasSections]);
 
   useEffect(() => {
     const navigation = navigationRef.current;
@@ -154,12 +204,20 @@ export const PageSectionNavigation = <SectionId extends string>({
     <nav
       aria-label={ariaLabel}
       className={cn(
-        'border-border-divider bg-surface-canvas sticky top-0 z-20 flex min-w-0 items-start gap-1 border-b',
+        'border-border-divider bg-surface-canvas sticky top-0 z-20 flex min-w-0 items-start gap-1 border-b transition-shadow motion-reduce:transition-none',
+        isStuck && '[box-shadow:var(--shadow-navigation-stuck)]',
         className,
       )}
       data-slot="page-section-navigation"
+      data-stuck={isStuck}
       ref={navigationRef}
     >
+      {/* Outside the top edge, without changing the layout or the hit area. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-px left-0 h-px w-px"
+        ref={stickyMarkerRef}
+      />
       {scrollState.hasOverflow && (
         <Button
           aria-controls={viewportId}

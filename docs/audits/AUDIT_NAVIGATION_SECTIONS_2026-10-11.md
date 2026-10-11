@@ -69,6 +69,15 @@ Toutes les identités et coordonnées des captures sont fictives.
 
 ## Portée de la conclusion
 
+Complément ultérieur du 11 octobre : finition de l'état collant approuvée par
+l'utilisateur. Ombre conditionnelle, fond et hauteur conservés, sans bordure
+haute supplémentaire. [Banc dédié](navigation-sections-2026-10-11/banc-collant/README.md) :
+10 scénarios réussis avec les trois consommateurs et le Header réel dans un
+cadre simulant le défilement du shell, sans session/base réelles. Les 82 tests
+ciblés, types, lint du composant et budget d'architecture réussissent. Cette
+passe s'ajoute aux preuves précédentes sans prétendre les avoir toutes rejouées.
+Décision courante dans le [suivi de navigation](../qualite/pages/navigation-generale.md).
+
 Conforme sur le périmètre vérifié. Session/API réelles, routeur et préchargement
 Next, ouverture native d'un nouvel onglet, Safari/iOS, appareil physique,
 lecteur d'écran et zoom natif non exécutés. Animation sans préférence de
