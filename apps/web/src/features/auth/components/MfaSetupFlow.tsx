@@ -26,9 +26,8 @@ export type MfaSetupMode = 'activate' | 'bootstrap' | 'replace';
 
 type MfaSetupFlowProps = {
   allowCancel?: boolean;
-  loginName?: string;
   mode: MfaSetupMode;
-  onCancel?: () => void;
+  onCancel?: () => Promise<void> | void;
   onComplete: (data: MfaSetupConfirmationData) => Promise<void> | void;
 };
 
@@ -36,7 +35,6 @@ type SetupStep = 'authorize' | 'recovery' | 'scan';
 
 export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
   allowCancel = true,
-  loginName,
   mode,
   onCancel,
   onComplete,
@@ -174,7 +172,7 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
   };
 
   const handleFinish = async (): Promise<void> => {
-    if (!completion) return;
+    if (!completion || submissionRef.current || !mountedRef.current) return;
 
     try {
       submissionRef.current = true;
@@ -184,6 +182,22 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
     } catch {
       if (!mountedRef.current) return;
       setError('Impossible de terminer la configuration');
+    } finally {
+      submissionRef.current = false;
+      if (mountedRef.current) setIsSubmitting(false);
+    }
+  };
+
+  const handleCancel = async (): Promise<void> => {
+    if (!onCancel || submissionRef.current || !mountedRef.current) return;
+    submissionRef.current = true;
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await onCancel();
+    } catch {
+      if (mountedRef.current)
+        setError('Impossible d’annuler la configuration. Réessayez.');
     } finally {
       submissionRef.current = false;
       if (mountedRef.current) setIsSubmitting(false);
@@ -220,7 +234,7 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
 
   if (step === 'scan' && setup) {
     return (
-      <form className="space-y-4" onSubmit={handleConfirm}>
+      <form autoComplete="off" className="space-y-4" onSubmit={handleConfirm}>
         {error && (
           <div
             aria-live="assertive"
@@ -283,12 +297,12 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
           value={newCode}
         />
 
-        <div className="flex gap-2">
+        <div className="flex flex-col-reverse gap-2 sm:flex-row">
           {allowCancel && onCancel && (
             <Button
               className="flex-1"
               disabled={isSubmitting}
-              onClick={onCancel}
+              onClick={() => void handleCancel()}
               type="button"
               variant="outline"
             >
@@ -316,6 +330,7 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
 
   return (
     <form
+      autoComplete="off"
       className="space-y-4"
       onSubmit={(event) => {
         event.preventDefault();
@@ -349,24 +364,11 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
 
       {!isBootstrap && (
         <>
-          {loginName && (
-            <input
-              aria-hidden="true"
-              autoComplete="username"
-              className="sr-only"
-              name="username"
-              readOnly
-              tabIndex={-1}
-              value={loginName}
-            />
-          )}
           <div className="space-y-2">
             <Label htmlFor="mfa-current-password" required>
               Mot de passe actuel
             </Label>
             <Input
-              allowPasswordManager
-              autoComplete="current-password"
               autoFocus
               disabled={isSubmitting}
               id="mfa-current-password"
@@ -408,12 +410,12 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
         </>
       )}
 
-      <div className="flex gap-2">
+      <div className="flex flex-col-reverse gap-2 sm:flex-row">
         {allowCancel && onCancel && (
           <Button
             className="flex-1"
             disabled={isSubmitting}
-            onClick={onCancel}
+            onClick={() => void handleCancel()}
             type="button"
             variant="outline"
           >

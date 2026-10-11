@@ -1,8 +1,11 @@
 import React, { type ComponentProps, type FC } from 'react';
 
+import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 import { cn } from '$utils/css.utils';
 
-type TextareaProps = ComponentProps<'textarea'>;
+type TextareaProps = Omit<ComponentProps<'textarea'>, 'autoComplete'> & {
+  autoComplete?: 'off';
+};
 
 const Textarea: FC<TextareaProps> = ({ className, ...props }) => {
   return (
@@ -15,6 +18,7 @@ const Textarea: FC<TextareaProps> = ({ className, ...props }) => {
         className,
       )}
       {...props}
+      {...passwordManagerIgnoreAttributes}
     />
   );
 };

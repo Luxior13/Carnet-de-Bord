@@ -117,6 +117,7 @@ export const PersonsListToolbar: FC<Props> = ({
   return (
     <div className="w-full">
       <form
+        autoComplete="off"
         aria-label="Rechercher et filtrer les fiches"
         className={directoryStyles.filterForm}
         onSubmit={(event) => {

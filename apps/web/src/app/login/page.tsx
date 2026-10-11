@@ -295,7 +295,7 @@ function LoginPage(): React.ReactNode {
         <CardContent className="space-y-5">
           {step === 'credentials' && (
             <form
-              autoComplete="on"
+              autoComplete="off"
               className="space-y-5"
               onSubmit={handleCredentialsSubmit}
             >
@@ -315,9 +315,7 @@ function LoginPage(): React.ReactNode {
                 <div className="relative">
                   <UserRound className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                   <Input
-                    allowPasswordManager
                     autoCapitalize="none"
-                    autoComplete="username"
                     autoCorrect="off"
                     className="h-10 pl-10"
                     disabled={isSubmitting}
@@ -341,8 +339,6 @@ function LoginPage(): React.ReactNode {
                 <div className="relative">
                   <Lock className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                   <Input
-                    allowPasswordManager
-                    autoComplete="current-password"
                     className="h-10 px-10"
                     disabled={isSubmitting}
                     id="password"
@@ -415,7 +411,11 @@ function LoginPage(): React.ReactNode {
           )}
 
           {step === 'mfa' && (
-            <form className="space-y-4" onSubmit={handleMfaSubmit}>
+            <form
+              autoComplete="off"
+              className="space-y-4"
+              onSubmit={handleMfaSubmit}
+            >
               {displayedError && (
                 <div
                   aria-live="assertive"
@@ -495,7 +495,7 @@ function LoginPage(): React.ReactNode {
           {step === 'setup' && (
             <MfaSetupFlow
               mode="bootstrap"
-              onCancel={() => void handleBackToCredentials()}
+              onCancel={handleBackToCredentials}
               onComplete={handleBootstrapComplete}
             />
           )}

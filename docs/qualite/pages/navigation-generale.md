@@ -544,3 +544,24 @@ Cette extraction ne revalide pas les autres parcours de navigation ci-dessous.
   disponible ; ne pas élargir implicitement la sidebar.
 - Toute capacité conserve ses contrôles serveur ; masquer une entrée ne donne
   ni ne retire une permission.
+
+## Modales — revue transverse du 11 octobre 2026
+
+Recherche rapide vérifiée à quatre largeurs et volet mobile à 390 px :
+ouverture, clavier, Échap et retour du focus. Les adaptations visuelles propres
+à la recherche et à la sidebar restent conservées. Les confirmations sans
+Trigger utilisent maintenant la restitution commune du focus ; les parcours
+impliquant une seconde modale sont couverts par le banc isolé.
+
+[Décisions et questions communes](modales.md) ·
+[Preuves et limites de l’audit](../../audits/AUDIT_MODALES_2026-10-11.md).
+Cette passe ne clôt pas les contrôles d’intégration encore ouverts de la page.
+
+## Autocomplétion — correction du 11 octobre 2026
+
+CommandInput applique directement la protection sans autocomplétion à toute recherche, indépendamment des props de son appelant. Les suggestions métier de navigation restent disponibles.
+
+[Règle propriétaire](../../references/DESIGN_SYSTEM.md) ·
+[Contrôles et limites des extensions](../../audits/AUDIT_AUTOCOMPLETION_2026-10-11.md).
+La présence des attributs d’exclusion ne garantit pas le comportement d’une
+extension installée chez l’utilisateur.

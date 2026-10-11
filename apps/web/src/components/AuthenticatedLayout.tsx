@@ -215,7 +215,6 @@ export const PersistentAuthenticatedShell: FC<AuthenticatedShellProps> = ({
         />
         <MfaSetupDialog
           allowCancel={false}
-          loginName={userData.loginName}
           mode="activate"
           onComplete={(data) => applyUserUpdate(data.user)}
           open={requiresMfaSetup}

@@ -157,7 +157,11 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 : 'Pour des raisons de sécurité, vous devez changer votre mot de passe temporaire avant de continuer.'}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <form
+            autoComplete="off"
+            onSubmit={handleSubmit}
+            className="mt-4 space-y-4"
+          >
             {error && (
               <div
                 className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
@@ -172,8 +176,6 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                   Mot de passe actuel
                 </Label>
                 <Input
-                  allowPasswordManager
-                  autoComplete="current-password"
                   id="currentPassword"
                   name="current-password"
                   required
@@ -192,8 +194,6 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 Nouveau mot de passe
               </Label>
               <Input
-                allowPasswordManager
-                autoComplete="new-password"
                 id="newPassword"
                 name="new-password"
                 required
@@ -267,8 +267,6 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 Confirmer le mot de passe
               </Label>
               <Input
-                allowPasswordManager
-                autoComplete="new-password"
                 id="confirmPassword"
                 name="confirm-password"
                 required
@@ -292,7 +290,11 @@ export const ChangePasswordDialog: FC<ChangePasswordDialogProps> = ({
                 </p>
               )}
             </div>
-            <div className={canCancel ? 'flex gap-2' : ''}>
+            <div
+              className={
+                canCancel ? 'flex flex-col-reverse gap-2 sm:flex-row' : ''
+              }
+            >
               {canCancel && (
                 <Button
                   type="button"

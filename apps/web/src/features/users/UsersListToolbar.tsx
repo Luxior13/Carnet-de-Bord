@@ -51,6 +51,7 @@ export const UsersListToolbar: FC<{ list: UsersListController }> = ({
   return (
     <div className="w-full">
       <form
+        autoComplete="off"
         aria-label="Rechercher et filtrer les utilisateurs"
         className={directoryStyles.filterForm}
         onSubmit={(event) => {

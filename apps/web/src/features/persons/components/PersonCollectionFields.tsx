@@ -202,7 +202,6 @@ export const EmailFields: FC<EmailFieldsProps> = ({
                 : undefined
           }
           aria-invalid={Boolean(emailError)}
-          autoComplete="email"
           disabled={disabled}
           id={`${idPrefix}-email`}
           maxLength={320}
@@ -319,7 +318,6 @@ export const PhoneFields: FC<PhoneFieldsProps> = ({
                 : undefined
           }
           aria-invalid={Boolean(phoneError)}
-          autoComplete="tel"
           disabled={disabled}
           id={`${idPrefix}-phone`}
           maxLength={40}

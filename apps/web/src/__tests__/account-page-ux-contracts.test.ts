@@ -58,7 +58,7 @@ describe('/mon-compte UX contracts', () => {
     expect(profileEditForm).toContain('id="edit-firstName"');
     expect(profileEditForm).toContain('id="edit-lastName"');
     expect(profileEditForm).not.toContain('name=');
-    expect(profileEditForm).not.toContain('autoComplete=');
+    expect(profileEditForm).toContain('autoComplete="off"');
   });
 
   it('uses a dedicated, confirmed action to remove the contact email', () => {

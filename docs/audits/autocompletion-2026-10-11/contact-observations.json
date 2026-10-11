@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-11T12:00:03.957Z",
+  "fixtureDate": "2026-10-11",
+  "environment": "Chromium isolé ; composants/CSS réels ; session, navigation, API et données simulées",
+  "results": [
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-contact",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-contact",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-contact",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-contact",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-user-contact",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-user-contact",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "contact-autofill-submit",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "contact-discard-focus",
+      "result": "passed"
+    }
+  ]
+}

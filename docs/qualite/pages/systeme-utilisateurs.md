@@ -616,3 +616,24 @@ Les preuves avant/après figurent dans le
 [rapport du 10 octobre](../../audits/AUDIT_UTILISATEURS_2026-10-10.md).
 La correction a utilisé sa propre base locale jetable et des sessions fictives,
 sans utiliser la base applicative ni les identifiants E2E de l'exploitant.
+
+## Modales — revue transverse du 11 octobre 2026
+
+Confirmations d’identifiant, contact, mot de passe, sessions et suppression,
+ainsi que les preuves d’identité/MFA : surfaces et arrondis partagés, retour du
+focus et actions mobiles vérifiés. La réinitialisation MFA bloque immédiatement
+les doubles soumissions et ignore une réponse visant une ancienne cible. Les
+preuves navigateur de cette passe utilisent des comptes et API fictifs.
+
+[Décisions et questions communes](modales.md) ·
+[Preuves et limites de l’audit](../../audits/AUDIT_MODALES_2026-10-11.md).
+Cette passe ne clôt pas les contrôles d’intégration encore ouverts de la page.
+
+## Autocomplétion — correction du 11 octobre 2026
+
+Création, fiche et confirmations administrateur suivent la règle sans autocomplétion, y compris mot de passe et MFA. Les champs invisibles username des confirmations ont été retirés ; les clés de remontage par acteur et cible sont conservées.
+
+[Règle propriétaire](../../references/DESIGN_SYSTEM.md) ·
+[Contrôles et limites des extensions](../../audits/AUDIT_AUTOCOMPLETION_2026-10-11.md).
+La présence des attributs d’exclusion ne garantit pas le comportement d’une
+extension installée chez l’utilisateur.

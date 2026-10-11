@@ -16,7 +16,7 @@ const nativeControls = new Set([
 ]);
 
 describe('shared UI boundaries', () => {
-  it('uses UI primitives for visible controls throughout the application', () => {
+  it('uses UI primitives for controls throughout the application', () => {
     const violations: string[] = [];
     for (const file of globSync('**/*.tsx', { cwd: sourceRoot })) {
       const path = file.replaceAll('\\', '/');
@@ -36,27 +36,9 @@ describe('shared UI boundaries', () => {
         if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
           const tag = node.tagName.getText(ast);
           if (nativeControls.has(tag)) {
-            const attributes = new Map(
-              node.attributes.properties
-                .filter(ts.isJsxAttribute)
-                .map((attribute) => [
-                  attribute.name.getText(ast),
-                  attribute.initializer?.getText(ast) ?? 'true',
-                ]),
+            violations.push(
+              `${path}:${ast.getLineAndCharacterOfPosition(node.getStart()).line + 1} <${tag}>`,
             );
-            // Invisible username hints associate the password with its account.
-            // They deliberately bypass Input's visible-field/password-manager behavior.
-            const isAutofillHint =
-              tag === 'input' &&
-              attributes.get('autoComplete') === '"username"' &&
-              attributes.get('aria-hidden') === '"true"' &&
-              attributes.get('className') === '"sr-only"' &&
-              attributes.get('readOnly') === 'true' &&
-              attributes.get('tabIndex') === '{-1}';
-            if (!isAutofillHint)
-              violations.push(
-                `${path}:${ast.getLineAndCharacterOfPosition(node.getStart()).line + 1} <${tag}>`,
-              );
           }
         }
         ts.forEachChild(node, visit);

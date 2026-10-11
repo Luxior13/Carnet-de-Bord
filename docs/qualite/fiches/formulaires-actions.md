@@ -21,6 +21,10 @@
   l'enregistrement ? Une valeur est-elle corrigée silencieusement ? Le contrôle
   reste-t-il compréhensible au tactile, au zoom et avec une valeur longue ?
 - Les labels, aides, formats et règles de validation expliquent-ils la saisie avant l’erreur ?
+- Tous les champs et formulaires respectent-ils la règle sans autocomplétion du
+  [design system](../../references/DESIGN_SYSTEM.md), y compris dans les modales
+  et l'authentification ? Éviter les opt-ins et les champs invisibles destinés
+  aux gestionnaires de mots de passe ; conserver saisie, collage et labels.
 - Les règles sont-elles validées côté serveur, indépendamment du navigateur ?
 - Une donnée calculée est-elle présentée comme telle plutôt que rendue artificiellement éditable ?
 - Que devient la saisie après erreur réseau, expiration de session, retour navigateur ou fermeture ?

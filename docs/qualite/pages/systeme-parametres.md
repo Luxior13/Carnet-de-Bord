@@ -466,3 +466,23 @@ ne sont plus une instruction exécutable ni une preuve de la purge du journal.
 | 27 septembre 2026 | Mise en œuvre approuvée | Présentation reprise, conflits préservant la saisie, concurrence PostgreSQL testée ; incompatibilité `void`/Prisma révélée puis corrigée |
 | 27 septembre 2026 | Retrait du nombre de lignes global | Base commune de 25 dans le code ; deux réglages de conservation, ancienne clé ignorée et cache retiré |
 | 27 septembre 2026 | Édition à la demande et portée du journal | Durées en lecture, action Modifier, focus et brouillons préservés ; distinction sécurité/historique documentée, durées et purge inchangées |
+
+## Modales — revue transverse du 11 octobre 2026
+
+Les trois confirmations (réduction, actualisation et navigation) héritent du
+nouveau socle des modales. Fermeture à Échap, confinement et restitution du focus
+vérifiés à 320 et 1 440 px avec les composants réels et API simulées ; les
+restitutions spécifiques aux champs restent prioritaires.
+
+[Décisions et questions communes](modales.md) ·
+[Preuves et limites de l’audit](../../audits/AUDIT_MODALES_2026-10-11.md).
+Cette passe ne clôt pas les contrôles d’intégration encore ouverts de la page.
+
+## Autocomplétion — correction du 11 octobre 2026
+
+Le formulaire de réglage désactive explicitement l’autocomplétion ; les champs héritent du socle commun. Valeurs, validation, confirmation et portée serveur inchangées.
+
+[Règle propriétaire](../../references/DESIGN_SYSTEM.md) ·
+[Contrôles et limites des extensions](../../audits/AUDIT_AUTOCOMPLETION_2026-10-11.md).
+La présence des attributs d’exclusion ne garantit pas le comportement d’une
+extension installée chez l’utilisateur.

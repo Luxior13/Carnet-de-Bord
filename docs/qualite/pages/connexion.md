@@ -16,8 +16,9 @@
   sa composition centrée. Focus placé sur l’identifiant à l’entrée de cette étape.
 - Aucun identifiant précédent n’est mémorisé ou réinjecté par l’application dans
   `localStorage`. Le nettoyage des anciennes clés est facultatif : un stockage
-  bloqué ne doit pas empêcher la connexion. L’exception existante permettant le
-  gestionnaire de mots de passe sur les champs d’authentification est conservée.
+  bloqué ne doit pas empêcher la connexion. L'autocomplétion et les propositions
+  des gestionnaires de mots de passe sont désactivées côté site, y compris sur
+  l'identifiant, le mot de passe et le MFA ; aucune exception d'authentification.
 - Verrou immédiat contre les doubles soumissions des identifiants et du défi MFA.
   Les dialogues partagés de configuration et de vérification MFA appliquent le
   même verrou et ignorent leurs réponses après démontage.
@@ -56,3 +57,23 @@ API simulées : AUTH-01 reste ouvert pour l’authentification réelle.
 | --- | --- | --- | --- |
 | AUTH-01 | Parcours complet avec compte, MFA et session non exercé lors de la cartographie | Rejouer succès, refus, expiration et reprise avec comptes dédiés avant conclusion d’authentification complète | À attribuer / à vérifier |
 | AUTH-02 | Lecteur d’écran et appareil mobile physique non vérifiés | Contrôler lors d’une revue d’accessibilité du parcours | À attribuer / à vérifier |
+
+## Modales — revue transverse du 11 octobre 2026
+
+Le flux MFA partagé attend désormais son annulation asynchrone, y compris le
+retour aux identifiants. Les variantes obligatoires conservent leur fermeture
+protégée. Le contrôle des composants modaux reste distinct du parcours réel de
+connexion suivi dans AUTH-01.
+
+[Décisions et questions communes](modales.md) ·
+[Preuves et limites de l’audit](../../audits/AUDIT_MODALES_2026-10-11.md).
+Cette passe ne clôt pas les contrôles d’intégration encore ouverts de la page.
+
+## Autocomplétion — correction du 11 octobre 2026
+
+Connexion, mots de passe et MFA suivent désormais la règle commune sans exception. Les anciens opt-ins ont été supprimés.
+
+[Règle propriétaire](../../references/DESIGN_SYSTEM.md) ·
+[Contrôles et limites des extensions](../../audits/AUDIT_AUTOCOMPLETION_2026-10-11.md).
+La présence des attributs d’exclusion ne garantit pas le comportement d’une
+extension installée chez l’utilisateur.

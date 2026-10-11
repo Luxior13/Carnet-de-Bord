@@ -20,7 +20,6 @@ const authenticatedLayoutSource = readSourceFile(
 );
 const rootLayoutSource = readSourceFile('../app/layout.tsx');
 const globalStylesSource = readSourceFile('../app/globals.css');
-const inputSource = readSourceFile('../components/ui/input.tsx');
 const pageHeroSource = readSourceFile('../components/layout/PageHero.tsx');
 const tabsSource = readSourceFile('../components/ui/tabs.tsx');
 const userDetailSectionRailSource = readSourceFile(
@@ -41,11 +40,6 @@ const themeIndependentSourcePaths = globSync('**/*.{ts,tsx}', {
   .filter(
     (path) => !path.startsWith('__tests__/') && !sidebarTokenOwners.has(path),
   );
-const passwordManagerOptInPaths = themeIndependentSourcePaths
-  .filter((path) =>
-    readSourceFile(`../${path}`).includes('allowPasswordManager'),
-  )
-  .sort();
 
 const getRawGlobalColorToken = (token: string): string | undefined => {
   const declaration = globalStylesSource
@@ -129,26 +123,6 @@ const compositeHexColors = (
 };
 
 describe('design system contracts', () => {
-  it('disables password managers on business inputs by default', () => {
-    expect(inputSource).toContain('allowPasswordManager = false');
-    expect(inputSource).toContain('passwordManagerIgnoreAttributes');
-    expect(inputSource).toContain('{...autofillProtection}');
-    expect(inputSource.indexOf('{...props}')).toBeLessThan(
-      inputSource.indexOf('{...autofillProtection}'),
-    );
-    expect(passwordManagerOptInPaths).toEqual([
-      'app/login/page.tsx',
-      'components/ChangePasswordDialog.tsx',
-      'components/ui/input.tsx',
-      'components/users/user-detail/AdminMfaResetDialog.tsx',
-      'components/users/user-detail/AdminStepUpDialog.tsx',
-      'features/account/components/ContactEmailDialog.tsx',
-      'features/auth/components/MfaActionDialog.tsx',
-      'features/auth/components/MfaCodeInput.tsx',
-      'features/auth/components/MfaSetupFlow.tsx',
-    ]);
-  });
-
   it('keeps feature availability above page-level authenticated shells', () => {
     expect(rootLayoutSource).toContain('<FeatureAvailabilityProvider>');
     expect(authenticatedLayoutSource).not.toContain(

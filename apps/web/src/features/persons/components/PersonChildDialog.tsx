@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, Loader2, RotateCcw, Trash2 } from 'lucide-react';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { ZodError } from 'zod';
 
@@ -118,7 +118,7 @@ const getKindConfig = (kind: PersonChildKind): KindConfig => {
   }
 };
 
-export const PersonChildDialog: FC<PersonChildDialogProps> = ({
+const PersonChildDialogContent: FC<PersonChildDialogProps> = ({
   canEdit,
   canViewProvenance,
   defaultPrimary,
@@ -131,10 +131,10 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
   open,
   person,
 }) => {
-  const initialDraft = useMemo(
-    () => getDraft(kind, item, defaultPrimary),
-    [defaultPrimary, item, kind],
-  );
+  const [initialDraft] = useState(() => getDraft(kind, item, defaultPrimary));
+  const operationRef = useRef(false);
+  const mountedRef = useRef(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [childVersion, setChildVersion] = useState(item?.version ?? null);
   const [conflict, setConflict] = useState(false);
   const [draft, setDraft] = useState<ChildDraft>(initialDraft);
@@ -156,18 +156,15 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
   } = useUnsavedNavigationGuard(open && canEdit && !saved && isDirty);
 
   useEffect(() => {
-    if (!open) return;
-    setDraft(initialDraft);
-    setPersonVersion(person.version);
-    setChildVersion(item?.version ?? null);
-    setConflict(false);
-    setDuplicateWarnings({});
-    setErrors({});
-    setPendingClose(false);
-    setSaved(false);
-  }, [initialDraft, item?.version, open, person.version]);
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const close = (): void => {
+    if (operationRef.current) return;
     if (!saved && isDirty) {
       setPendingClose(true);
 
@@ -219,7 +216,8 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
   };
 
   const handleSave = async (): Promise<void> => {
-    if (!canEdit) return;
+    if (!canEdit || operationRef.current || !mountedRef.current || conflict)
+      return;
     if (saved) return close();
     const payload = getPayload();
     const validation = validate(payload);
@@ -234,6 +232,8 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
       return;
     }
 
+    operationRef.current = true;
+    setSaveError(null);
     setErrors({});
     setConflict(false);
     setIsSaving(true);
@@ -245,6 +245,7 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
         payload,
         personId: person.id,
       });
+      if (!mountedRef.current) return;
       onPersonChange(result.person);
       toast.success(item ? 'Information mise à jour' : 'Information ajoutée');
       if (result.duplicateWarning?.duplicateFound) {
@@ -273,6 +274,7 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
         onOpenChange(false);
       }
     } catch (caught) {
+      if (!mountedRef.current) return;
       if (caught instanceof ApiClientError && caught.status === 409) {
         setConflict(true);
 
@@ -288,39 +290,54 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
           ),
         );
       }
-      toast.error(
+      setSaveError(
         caught instanceof Error ? caught.message : 'Enregistrement impossible',
       );
     } finally {
-      setIsSaving(false);
+      operationRef.current = false;
+      if (mountedRef.current) setIsSaving(false);
     }
   };
 
   const refreshVersions = async (): Promise<void> => {
-    const fresh = await onReload();
-    setPersonVersion(fresh.version);
-    if (item) {
-      const collection =
-        kind === 'email'
-          ? fresh.emails
-          : kind === 'phone'
-            ? fresh.phones
-            : fresh.socialProfiles;
-      const freshItem = collection.find(
-        (candidate) => candidate.id === item.id,
-      );
-      if (!freshItem) {
-        toast.error(
-          'Cette information a été supprimée par un autre utilisateur',
+    if (operationRef.current || !mountedRef.current) return;
+    operationRef.current = true;
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      const fresh = await onReload();
+      if (!mountedRef.current) return;
+      if (item) {
+        const collection =
+          kind === 'email'
+            ? fresh.emails
+            : kind === 'phone'
+              ? fresh.phones
+              : fresh.socialProfiles;
+        const freshItem = collection.find(
+          (candidate) => candidate.id === item.id,
         );
-        close();
+        if (!freshItem) {
+          setSaveError(
+            'Cette information a été supprimée par un autre utilisateur',
+          );
 
-        return;
+          return;
+        }
+        setChildVersion(freshItem.version);
       }
-      setChildVersion(freshItem.version);
+      setPersonVersion(fresh.version);
+      setConflict(false);
+      toast.info('Version actualisée, votre saisie est conservée');
+    } catch {
+      if (mountedRef.current)
+        setSaveError(
+          'Actualisation impossible. Votre saisie est conservée ; réessayez.',
+        );
+    } finally {
+      operationRef.current = false;
+      if (mountedRef.current) setIsSaving(false);
     }
-    setConflict(false);
-    toast.info('Version actualisée, votre saisie est conservée');
   };
 
   const showPrimarySwitch = !item?.isPrimary;
@@ -430,10 +447,11 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
         }}
       >
         <DialogContent
+          aria-busy={isSaving || undefined}
           className="grid h-[100svh] max-h-[100svh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 sm:h-auto sm:max-h-[85svh] sm:max-w-2xl"
           fullscreenOnMobile
         >
-          <DialogHeader className="border-border-divider border-b px-4 py-4 pr-14 text-left sm:px-5">
+          <DialogHeader className="bg-surface-panel-header border-border-divider border-b px-4 py-4 pr-14 text-left sm:px-5">
             <DialogTitle>
               {item ? (canEdit ? 'Modifier' : 'Consulter') : 'Ajouter'} un{' '}
               {config.title}
@@ -447,10 +465,16 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
             </DialogDescription>
           </DialogHeader>
           <div className="min-h-0 space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
+            {saveError && (
+              <p role="alert" className="text-destructive text-sm">
+                {saveError}
+              </p>
+            )}
             {conflict && (
               <ContentState
                 action={
                   <Button
+                    disabled={isSaving}
                     onClick={() => void refreshVersions()}
                     size="sm"
                     type="button"
@@ -535,7 +559,7 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
                     </Button>
                   )}
                   <Button
-                    disabled={isSaving}
+                    disabled={isSaving || conflict}
                     onClick={() => void handleSave()}
                     type="button"
                   >
@@ -572,3 +596,11 @@ export const PersonChildDialog: FC<PersonChildDialogProps> = ({
     </>
   );
 };
+
+export const PersonChildDialog: FC<PersonChildDialogProps> = (props) =>
+  props.open ? (
+    <PersonChildDialogContent
+      key={`${props.person.id}:${props.kind}:${props.item?.id ?? 'new'}:${props.canEdit}`}
+      {...props}
+    />
+  ) : null;

@@ -88,3 +88,70 @@ comment l’utilisateur reprend-il un conflit ? Un changement de compte ou de
 droits ferme-t-il les anciens dialogues ? Une réponse perdue peut-elle conduire
 à rejouer une action sensible ? Vérifier aussi les consommateurs partagés du
 dialogue modifié, notamment le changement obligatoire de mot de passe.
+
+## Modales — revue transverse du 11 octobre 2026
+
+Fenêtres de contact, mot de passe, MFA et sessions : surface commune, actions
+empilées sur mobile et retour du focus. L’échec de finalisation des codes de
+secours laisse les codes visibles ; l’annulation de configuration MFA attend sa
+réponse, affiche son échec et permet de réessayer. Contrôles sur API simulées.
+
+[Décisions et questions communes](modales.md) ·
+[Preuves et limites de l’audit](../../audits/AUDIT_MODALES_2026-10-11.md).
+Cette passe ne clôt pas les contrôles d’intégration encore ouverts de la page.
+
+## Autocomplétion — correction du 11 octobre 2026
+
+Profil, changement de mot de passe, adresse de contact et MFA suivent la règle commune sans exception. Les champs invisibles d’association au compte ont été retirés.
+
+[Règle propriétaire](../../references/DESIGN_SYSTEM.md) ·
+[Contrôles et limites des extensions](../../audits/AUDIT_AUTOCOMPLETION_2026-10-11.md).
+La présence des attributs d’exclusion ne garantit pas le comportement d’une
+extension installée chez l’utilisateur.
+
+### Complément — proposition encore visible dans la modale de contact
+
+Signalement utilisateur du 11 octobre après la première correction : une
+proposition d'autocomplétion reste visible dans la modale d'adresse de contact.
+La capture fournie ensuite identifie le menu intégré Bitwarden sur **Mot de
+passe actuel**. Le navigateur, la version de l'extension et le DOM effectivement
+servi ne sont pas déductibles de cette capture. Ne pas considérer le contrôle
+des attributs comme une reproduction du défaut avec l'extension.
+
+Le code conservait `name="email"`, `type="email"` et un mot de passe nommé
+`current-password`. Le champ de contact est aligné sur la création de compte :
+`type="text"`, `inputMode="email"`, sans `name`, correction automatique désactivée.
+Le mot de passe reste masqué, sans `name` inutile : la requête utilise déjà les
+valeurs de l'état du formulaire. Les exclusions des gestionnaires sont aussi
+portées par le formulaire. Labels et identifiants accessibles restent stables.
+Cette adaptation réduit les indications d'autocomplétion ; son effet sur
+l'extension de l'utilisateur n'est pas démontré.
+
+Q01/Q04/Q06/Q27/Q30 examinés ; autres sujets hors impact : composition, droits,
+API, stockage et session inchangés. La validation applicative de l'adresse et
+la validation serveur restent actives malgré le changement du type HTML.
+
+Vérifications ciblées : **33 tests réussis**, TypeScript et lint réussis ;
+**8 scénarios Chromium isolé réussis** (`AUDIT_ONLY=contact` dans le
+[banc des modales](../../audits/modales-2026-10-11/banc/README.md)). Ouverture à
+quatre largeurs, confirmation de suppression depuis la fiche utilisateur,
+brouillon après annulation et nouveau scénario de saisie : attributs du champ
+et du formulaire, adresse invalide refusée sans requête, adresse vide bloquée,
+adresse valide avec espaces/majuscules normalisée puis soumise avec Entrée.
+API fictive, aucune mutation réelle. Les
+[observations](../../audits/autocompletion-2026-10-11/contact-observations.json)
+complètent la première passe sans en remplacer les résultats.
+
+COMPTE-AUTO-01 / AUTO-EXT — **menu Bitwarden confirmé par capture utilisateur,
+résolution à vérifier**, responsable à attribuer. La documentation officielle
+propose [Paramètres → Remplissage automatique → Domaines bloqués](https://bitwarden.com/help/blocking-uris/)
+pour désactiver l'intervention sur le domaine concerné. Cette portée comprend
+également les propositions de passkeys et d'enregistrement/modification des
+identifiants ; elle ne correspond pas à une désactivation limitée à ce modal.
+L'autre réglage, global, est l'affichage des
+[suggestions dans les champs](https://bitwarden.com/help/auto-fill-browser/#inline-menu).
+Réglages documentés le 11 octobre ; aucune modification du navigateur personnel
+effectuée. Contrôler le résultat après réglage et rechargement ; si le menu
+persiste, relever la version et inspecter les attributs réellement servis.
+Aucun succès du banc sans extension ne clôt ce point. La capture et ses
+identifiants personnels ne sont pas recopiés dans le dépôt.

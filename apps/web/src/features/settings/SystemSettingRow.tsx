@@ -115,6 +115,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
 
   return (
     <form
+      autoComplete="off"
       aria-busy={isSaving || undefined}
       aria-labelledby={`${id}-title`}
       className="p-4 @min-[40rem]/page:p-5"

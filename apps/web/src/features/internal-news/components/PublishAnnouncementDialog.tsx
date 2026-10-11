@@ -101,6 +101,7 @@ export const PublishAnnouncementDialog: FC<PublishAnnouncementDialogProps> = ({
         </DialogHeader>
 
         <form
+          autoComplete="off"
           className="mt-3 space-y-4"
           onSubmit={(event) => void submit(event)}
         >

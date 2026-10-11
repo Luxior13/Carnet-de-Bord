@@ -1,0 +1,690 @@
+{
+  "date": "2026-10-11",
+  "environment": "Chromium isolé ; composants/CSS réels ; session, navigation, API et données simulées",
+  "results": [
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-child-email-new",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-child-phone-new",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-child-social-new",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-child-email-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-child-phone-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-child-social-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-password",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-stepup",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-reset-mfa",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-contact",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-codes",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-unsaved",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "locked-setup",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "locked-setup-replace",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "locked-password-forced",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "nested-focus",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "person-draft-conflict",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "search",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-child-email-new",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-child-phone-new",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-child-social-new",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-child-email-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-child-phone-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-child-social-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-password",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-stepup",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-reset-mfa",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-contact",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-codes",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-unsaved",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "locked-setup",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "locked-setup-replace",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "locked-password-forced",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "nested-focus",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "person-draft-conflict",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "search",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-child-email-new",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-child-phone-new",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-child-social-new",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-child-email-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-child-phone-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-child-social-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-password",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-stepup",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-reset-mfa",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-contact",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-codes",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-unsaved",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "locked-setup",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "locked-setup-replace",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "locked-password-forced",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "nested-focus",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "person-draft-conflict",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "search",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-child-email-new",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-child-phone-new",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-child-social-new",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-child-email-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-child-phone-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-child-social-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-password",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-stepup",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-reset-mfa",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-contact",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-codes",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-unsaved",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "locked-setup",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "locked-setup-replace",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "locked-password-forced",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "nested-focus",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "person-draft-conflict",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "search",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-user-contact",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-user-login",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-user-password",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-user-mfa",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-user-sessions",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-user-session",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-user-delete",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-settings-reduction",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-settings-refresh",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-settings-navigation",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-security-one",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-security-all",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-delete-email",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-delete-téléphone",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-delete-profil",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "integrated-danger",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-user-contact",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-user-login",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-user-password",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-user-mfa",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-user-sessions",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-user-session",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-user-delete",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-settings-reduction",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-settings-refresh",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-settings-navigation",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-security-one",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-security-all",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-delete-email",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-delete-téléphone",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-delete-profil",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "integrated-danger",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "sidebar-mobile",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "person-duplicate-warning",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "delete-conflict-reload",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "danger-reload-error",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "admin-reset-single-and-stale",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "mfa-cancel-error-retry",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "codes-finish-error",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "contact-discard-focus",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 320,
+      "scenario": "short-viewport-stepup",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 320,
+      "scenario": "short-viewport-child-social-new",
+      "result": "passed"
+    }
+  ]
+}

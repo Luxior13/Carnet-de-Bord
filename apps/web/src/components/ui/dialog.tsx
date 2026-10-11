@@ -4,10 +4,30 @@ import * as React from 'react';
 
 import { cn } from '$utils/css.utils';
 
+import {
+  ModalFocusContext,
+  useModalCloseFocus,
+  useModalOpener,
+} from './modal-focus';
+
 function Dialog({
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>): React.ReactNode {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />;
+  const { capture, opener } = useModalOpener(props.open);
+
+  return (
+    <ModalFocusContext.Provider value={opener}>
+      <DialogPrimitive.Root
+        data-slot="dialog"
+        {...props}
+        onOpenChange={(open) => {
+          if (open) capture();
+          onOpenChange?.(open);
+        }}
+      />
+    </ModalFocusContext.Provider>
+  );
 }
 
 function DialogTrigger({
@@ -49,6 +69,7 @@ function DialogContent({
   className,
   fullscreenOnMobile = false,
   hideCloseButton = false,
+  onCloseAutoFocus,
   overlayClassName,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
@@ -57,6 +78,8 @@ function DialogContent({
   hideCloseButton?: boolean;
   overlayClassName?: string;
 }): React.ReactNode {
+  const restoreFocus = useModalCloseFocus(onCloseAutoFocus);
+
   return (
     <DialogPortal>
       <DialogOverlay className={overlayClassName} />
@@ -72,16 +95,17 @@ function DialogContent({
       >
         <DialogPrimitive.Content
           className={cn(
-            'border-border-strong bg-surface text-popover-foreground data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=open]:animate-in pointer-events-auto relative grid w-full max-w-lg overflow-y-auto overscroll-contain border p-5 shadow-[var(--shadow-panel-strong)] duration-200',
+            'border-border-content bg-surface-panel text-popover-foreground data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=open]:animate-in pointer-events-auto relative grid w-full max-w-lg overflow-y-auto overscroll-contain border p-5 shadow-[var(--shadow-panel-strong)] duration-200',
             centered
               ? 'max-h-[calc(100dvh-2rem)]'
               : 'max-h-[calc(92.5dvh-1rem)]',
             fullscreenOnMobile
-              ? 'max-h-dvh sm:max-h-[calc(92.5dvh-1rem)] sm:rounded-xl'
-              : 'rounded-xl',
+              ? 'max-h-dvh sm:max-h-[calc(92.5dvh-1rem)] sm:rounded-[10px]'
+              : 'rounded-[10px]',
             className,
           )}
           {...props}
+          onCloseAutoFocus={restoreFocus}
         >
           {children}
           {!hideCloseButton && (

@@ -591,3 +591,23 @@ conserve les preuves et limites, cette table porte les états courants.
 | 2026-10-10 | Audit ciblé : six défauts ouverts, 70/72 tests ciblés réussis, contrôle navigateur isolé à six largeurs ; preuves et limites conservées dans le rapport. Inventaire ancien explicitement marqué historique. |
 | 2026-10-10 | Correction des six défauts et du décalage de fuseau SQL découvert sur base isolée ; 96 tests ciblés réussis, build réussi, contrôle navigateur corrigé ; vue d'ensemble mobile compactée et légende clarifiée. |
 | 2026-10-10 | Quatre améliorations autorisées : synthèse compacte jusqu'au rail, recherche multi-mots, compteurs filtrants et reprise après fiche. Suite globale : 1 009 réussites, un échec préexistant hors module ; 15 scénarios PostgreSQL et navigateur isolé réussis, preuves ajoutées au rapport. |
+
+## Modales — revue transverse du 11 octobre 2026
+
+Coordonnées et suppression de fiche : brouillons et alertes de doublon conservés
+après actualisation, verrous immédiats, erreurs persistantes et reprise avec les
+versions de la personne et de sa coordonnée. Focus et confirmations imbriquées
+vérifiés dans les composants réels avec API simulées.
+
+[Décisions et questions communes](modales.md) ·
+[Preuves et limites de l’audit](../../audits/AUDIT_MODALES_2026-10-11.md).
+Cette passe ne clôt pas les contrôles d’intégration encore ouverts de la page.
+
+## Autocomplétion — correction du 11 octobre 2026
+
+Recherche, création et coordonnées suivent la règle commune sans autocomplétion. Les indications email/téléphone contradictoires ont été retirées des champs partagés ; les zones de texte héritent aussi de la protection.
+
+[Règle propriétaire](../../references/DESIGN_SYSTEM.md) ·
+[Contrôles et limites des extensions](../../audits/AUDIT_AUTOCOMPLETION_2026-10-11.md).
+La présence des attributs d’exclusion ne garantit pas le comportement d’une
+extension installée chez l’utilisateur.

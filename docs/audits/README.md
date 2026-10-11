@@ -10,6 +10,8 @@ Ne pas créer un rapport complet pour chaque correction de texte.
 
 | Rapport | Périmètre et portée |
 | --- | --- |
+| [Autocomplétion — 11 octobre 2026](AUDIT_AUTOCOMPLETION_2026-10-11.md) | Exceptions d'authentification et champs invisibles supprimés ; règle commune aux champs, zones de texte, recherche et formulaires ; tests du contrat et limites des extensions |
+| [Fenêtres modales — 11 octobre 2026](AUDIT_MODALES_2026-10-11.md) | Inventaire des parcours actifs ; surfaces, focus, brouillons, conflits et erreurs corrigés ; navigateur à quatre largeurs avec API simulées ; intégration sensible à compléter |
 | [Pages restantes — 11 octobre 2026](AUDIT_PAGES_RESTANTES_2026-10-11.md) | Accueil, connexion, Mon compte, création de personne, feuille de route et états techniques ; 58 scénarios navigateur isolé, 1 046 tests réussis ; intégration authentifiée à compléter |
 | [Paramètres système — 10–11 octobre 2026](AUDIT_PARAMETRES_2026-10-11.md) | Présentation, confirmations, focus et réponses tardives corrigés ; 32 scénarios Chromium isolé ; aucune purge ni mutation réelle |
 | [Autorisations de la fiche utilisateur — 10 octobre 2026](AUDIT_AUTORISATIONS_UTILISATEUR_2026-10-10.md) | Éditeur et autonomie harmonisés ; dépendances, catalogue affiché et aperçu corrigés ; 36 combinaisons Chromium isolé ; mutations authentifiées non rejouées |

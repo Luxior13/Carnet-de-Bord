@@ -22,6 +22,7 @@ export const PersonDangerZone: FC<PersonDangerZoneProps> = ({
 
   return (
     <EntityDangerZone
+      key={person.id}
       description="L’identité, les coordonnées et les profils sociaux seront supprimés sans possibilité de restauration."
       dialogDescription="Cette action est irréversible. Aucun mot de passe ni code de double authentification n’est demandé : vérifiez attentivement avant de confirmer."
       dialogNotice="La fiche et ses données personnelles seront effacées immédiatement et définitivement."

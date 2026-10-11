@@ -207,6 +207,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
         description="Votre identité et votre adresse de contact"
       >
         <form
+          autoComplete="off"
           aria-busy={isSaving || undefined}
           noValidate
           onSubmit={(event) => {

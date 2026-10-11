@@ -32,18 +32,26 @@ type AdminMfaResetResponse = {
   user: UserType;
 };
 
-export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = ({
-  actorLoginName,
+const AdminMfaResetDialogContent: FC<AdminMfaResetDialogProps> = ({
   onCancel,
   onComplete,
   open,
   targetLabel,
   targetUserId,
 }) => {
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+    };
+  }, []);
   const [currentPassword, setCurrentPassword] = useState('');
   const [currentTotpCode, setCurrentTotpCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submissionInFlightRef = useRef(false);
   const totpInputRef = useRef<HTMLInputElement>(null);
   const canSubmit =
     currentPassword.length > 0 && /^\d{6}$/.test(currentTotpCode);
@@ -61,7 +69,9 @@ export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = ({
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || submissionInFlightRef.current || !mountedRef.current)
+      return;
+    submissionInFlightRef.current = true;
 
     try {
       setIsSubmitting(true);
@@ -77,6 +87,7 @@ export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = ({
       const data =
         (await response.json()) as ApiResponse<AdminMfaResetResponse>;
 
+      if (!mountedRef.current) return;
       if (!response.ok || !data.success) {
         setError(
           data.success
@@ -92,9 +103,11 @@ export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = ({
 
       await onComplete(data.data.user);
     } catch {
+      if (!mountedRef.current) return;
       setError('Impossible de réinitialiser la double authentification');
     } finally {
-      setIsSubmitting(false);
+      submissionInFlightRef.current = false;
+      if (mountedRef.current) setIsSubmitting(false);
     }
   };
 
@@ -102,10 +115,13 @@ export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = ({
     <Dialog
       open={open}
       onOpenChange={(isOpen) => {
-        if (!isOpen && !isSubmitting) onCancel();
+        if (!isOpen && !submissionInFlightRef.current) onCancel();
       }}
     >
-      <DialogContent className="p-0 sm:max-w-lg">
+      <DialogContent
+        aria-busy={isSubmitting || undefined}
+        className="p-0 sm:max-w-lg"
+      >
         <div className="bg-warning h-1" />
         <div className="p-6">
           <DialogHeader>
@@ -122,7 +138,11 @@ export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = ({
             </DialogDescription>
           </DialogHeader>
 
-          <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
+          <form
+            autoComplete="off"
+            className="mt-4 space-y-4"
+            onSubmit={handleSubmit}
+          >
             {error && (
               <div
                 aria-live="assertive"
@@ -140,29 +160,17 @@ export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = ({
               accéder au site.
             </div>
 
-            <input
-              aria-hidden="true"
-              autoComplete="username"
-              className="sr-only"
-              name="username"
-              readOnly
-              tabIndex={-1}
-              value={actorLoginName}
-            />
-
             <div className="space-y-2">
               <Label htmlFor="admin-mfa-reset-password" required>
-                Ton mot de passe superadmin
+                Votre mot de passe superadmin
               </Label>
               <Input
-                allowPasswordManager
-                autoComplete="current-password"
                 autoFocus
                 disabled={isSubmitting}
                 id="admin-mfa-reset-password"
                 name="current-password"
                 onChange={(event) => setCurrentPassword(event.target.value)}
-                placeholder="Confirme ton identité"
+                placeholder="Confirmez votre identité"
                 required
                 type="password"
                 value={currentPassword}
@@ -178,7 +186,7 @@ export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = ({
               value={currentTotpCode}
             />
 
-            <div className="flex gap-2">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
               <Button
                 className="flex-1"
                 disabled={isSubmitting}
@@ -203,3 +211,11 @@ export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = ({
     </Dialog>
   );
 };
+
+export const AdminMfaResetDialog: FC<AdminMfaResetDialogProps> = (props) =>
+  props.open ? (
+    <AdminMfaResetDialogContent
+      key={`${props.actorLoginName}:${props.targetUserId}`}
+      {...props}
+    />
+  ) : null;

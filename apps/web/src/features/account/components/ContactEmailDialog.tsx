@@ -34,6 +34,7 @@ import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { ServiceIcon } from '$ui/service-icon';
 import { apiFetch } from '$utils/api.utils';
+import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 
 type ContactEmailDialogProps = {
   contactEmail: string | null;
@@ -109,7 +110,7 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
   }, [contactEmail, open]);
 
   const requestClose = (): void => {
-    if (isSaving) return;
+    if (submissionRef.current) return;
 
     if (hasDraftChanges) {
       setShowDiscardConfirm(true);
@@ -225,7 +226,11 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
               </DialogDescription>
             </DialogHeader>
 
-            <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
+            <form
+              className="mt-4 space-y-4"
+              onSubmit={handleSubmit}
+              {...passwordManagerIgnoreAttributes}
+            >
               {error && (
                 <div
                   className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
@@ -235,16 +240,6 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
                   {error}
                 </div>
               )}
-
-              <input
-                aria-hidden="true"
-                autoComplete="username"
-                className="sr-only"
-                name="username"
-                readOnly
-                tabIndex={-1}
-                value={loginName}
-              />
 
               {isConfirmingRemoval ? (
                 <div className="border-destructive/30 bg-destructive/10 rounded-md border p-3">
@@ -268,19 +263,19 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
                     aria-describedby="account-contact-email-help"
                     aria-invalid={!!emailError}
                     autoCapitalize="none"
-                    autoComplete="email"
+                    autoCorrect="off"
                     autoFocus
                     disabled={isSaving}
                     id="account-contact-email"
+                    inputMode="email"
                     maxLength={CONTACT_EMAIL_MAX_LENGTH}
-                    name="email"
                     onChange={(event) =>
                       setNextContactEmail(event.target.value)
                     }
                     placeholder="nom@exemple.fr"
                     required
                     spellCheck={false}
-                    type="email"
+                    type="text"
                     value={nextContactEmail}
                   />
                   <p
@@ -318,12 +313,9 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
                   Mot de passe actuel
                 </Label>
                 <Input
-                  allowPasswordManager
-                  autoComplete="current-password"
                   autoFocus={isConfirmingRemoval}
                   disabled={isSaving}
                   id="account-contact-current-password"
-                  name="current-password"
                   onChange={(event) => setCurrentPassword(event.target.value)}
                   placeholder="Confirmez votre identité"
                   required
@@ -342,7 +334,7 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
                 </div>
               )}
 
-              <div className="flex gap-2">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row">
                 <Button
                   className="flex-1"
                   disabled={isSaving}
@@ -387,7 +379,7 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
         open={showDiscardConfirm}
         onOpenChange={setShowDiscardConfirm}
       >
-        <AlertDialogContent className="border-border overflow-y-auto rounded-xl p-0">
+        <AlertDialogContent className="overflow-y-auto p-0">
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">

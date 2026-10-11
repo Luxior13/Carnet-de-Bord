@@ -12,7 +12,7 @@ import {
   Plus,
   RotateCcw,
 } from 'lucide-react';
-import React, { type FC, useRef, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { ContentState } from '$components/layout/ContentState';
@@ -286,7 +286,7 @@ const SocialRow: FC<{
   );
 };
 
-export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
+const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
   canUpdate,
   canViewProvenance,
   duplicateMatches,
@@ -295,6 +295,16 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
   person,
 }) => {
   const [conflict, setConflict] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const operationRef = useRef(false);
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+    };
+  }, []);
   const [deleteState, setDeleteState] = useState<DeleteState>(null);
   const [editor, setEditor] = useState<EditorState>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -323,6 +333,7 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
   );
 
   const openDelete = (kind: ChildKind, item: ChildItem): void => {
+    setDeleteError(null);
     setDeleteState({ item, kind });
     setReplacementId('');
     setConflict(false);
@@ -330,7 +341,11 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
   };
 
   const handleDelete = async (): Promise<void> => {
+    if (!canUpdate || operationRef.current || !mountedRef.current || conflict)
+      return;
     if (!deleteState || (requiresReplacement && !replacementId)) return;
+    operationRef.current = true;
+    setDeleteError(null);
     const deletedKind = deleteState.kind;
     setIsDeleting(true);
     setConflict(false);
@@ -352,6 +367,7 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
         },
         personId: person.id,
       });
+      if (!mountedRef.current) return;
       onChange(result.person);
       setEditor(null);
       setDeleteState(null);
@@ -366,23 +382,60 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
         target?.focus();
       });
     } catch (caught) {
+      if (!mountedRef.current) return;
       if (caught instanceof ApiClientError && caught.status === 409) {
         setConflict(true);
       } else {
-        toast.error(
+        setDeleteError(
           caught instanceof Error ? caught.message : 'Suppression impossible',
         );
       }
     } finally {
-      setIsDeleting(false);
+      operationRef.current = false;
+      if (mountedRef.current) setIsDeleting(false);
     }
   };
 
   const refreshDeleteVersion = async (): Promise<void> => {
-    const fresh = await onReload();
-    setVersion(fresh.version);
-    setConflict(false);
-    toast.info('Version actualisée');
+    if (!deleteState || operationRef.current || !mountedRef.current) return;
+    operationRef.current = true;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const fresh = await onReload();
+      if (!mountedRef.current) return;
+      const collection =
+        deleteState.kind === 'email'
+          ? fresh.emails
+          : deleteState.kind === 'phone'
+            ? fresh.phones
+            : fresh.socialProfiles;
+      const freshItem = collection.find(
+        (item) => item.id === deleteState.item.id,
+      );
+      if (!freshItem) {
+        setDeleteState(null);
+        setEditor(null);
+        toast.info('Cette information a déjà été supprimée');
+
+        return;
+      }
+      setDeleteState({ item: freshItem, kind: deleteState.kind });
+      setReplacementId('');
+      setVersion(fresh.version);
+      setConflict(false);
+      toast.info(
+        'Version actualisée ; vérifiez le remplacement avant de confirmer',
+      );
+    } catch {
+      if (mountedRef.current)
+        setDeleteError(
+          'Actualisation impossible. Réessayez avant de supprimer.',
+        );
+    } finally {
+      operationRef.current = false;
+      if (mountedRef.current) setIsDeleting(false);
+    }
   };
 
   return (
@@ -599,10 +652,11 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
       <AlertDialog
         open={Boolean(deleteState)}
         onOpenChange={(open) => {
-          if (!open && !isDeleting) setDeleteState(null);
+          if (!open && !operationRef.current) setDeleteState(null);
         }}
       >
         <AlertDialogContent
+          aria-busy={isDeleting || undefined}
           className={requiresReplacement ? 'sm:max-w-lg' : 'sm:max-w-md'}
         >
           <AlertDialogHeader>
@@ -612,12 +666,21 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
               journal d&apos;activité.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {deleteError && (
+            <p role="alert" className="text-destructive text-sm">
+              {deleteError}
+            </p>
+          )}
           {requiresReplacement && (
             <div className="space-y-2">
               <p className="text-sm font-medium">
                 Choisissez le nouveau principal avant de continuer.
               </p>
-              <Select onValueChange={setReplacementId} value={replacementId}>
+              <Select
+                disabled={isDeleting}
+                onValueChange={setReplacementId}
+                value={replacementId}
+              >
                 <SelectTrigger aria-label="Nouveau principal" variant="compact">
                   <SelectValue placeholder="Sélectionner…" />
                 </SelectTrigger>
@@ -640,6 +703,7 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
             <ContentState
               action={
                 <Button
+                  disabled={isDeleting}
                   onClick={() => void refreshDeleteVersion()}
                   size="sm"
                   type="button"
@@ -657,7 +721,11 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
             <Button
-              disabled={isDeleting || (requiresReplacement && !replacementId)}
+              disabled={
+                isDeleting ||
+                conflict ||
+                (requiresReplacement && !replacementId)
+              }
               onClick={() => void handleDelete()}
               type="button"
               variant="destructive"
@@ -670,3 +738,12 @@ export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = ({
     </>
   );
 };
+
+export const PersonCollectionsSection: FC<PersonCollectionsSectionProps> = (
+  props,
+) => (
+  <PersonCollectionsContent
+    key={`${props.person.id}:${props.canUpdate}`}
+    {...props}
+  />
+);

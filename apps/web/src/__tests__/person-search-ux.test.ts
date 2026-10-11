@@ -569,8 +569,8 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(collectionsSource).toContain(
       "requiresReplacement ? 'sm:max-w-lg' : 'sm:max-w-md'",
     );
-    expect(dangerZoneSource).toContain(
-      '<AlertDialogContent className="sm:max-w-lg">',
+    expect(dangerZoneSource).toMatch(
+      /<AlertDialogContent\s[\s\S]*?className="sm:max-w-lg"/,
     );
     for (const source of [
       childDialogSource,

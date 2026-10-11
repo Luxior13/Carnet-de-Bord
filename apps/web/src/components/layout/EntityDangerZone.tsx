@@ -1,7 +1,13 @@
 'use client';
 
 import { Loader2, RotateCcw, Trash2 } from 'lucide-react';
-import React, { type FC, type ReactNode, useRef, useState } from 'react';
+import React, {
+  type FC,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 
 import { ContentState } from '$components/layout/ContentState';
@@ -41,29 +47,65 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
   version: initialVersion,
 }) => {
   const [conflict, setConflict] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const operationRef = useRef(false);
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+    };
+  }, []);
   const [isDeleting, setIsDeleting] = useState(false);
   const [open, setOpen] = useState(false);
   const [version, setVersion] = useState(initialVersion);
   const idempotencyKeyRef = useRef(crypto.randomUUID());
 
   const handleDelete = async (): Promise<void> => {
+    if (operationRef.current || !mountedRef.current || conflict) return;
+    operationRef.current = true;
+    setError(null);
     setIsDeleting(true);
     setConflict(false);
     try {
       await onDelete(version, idempotencyKeyRef.current);
+      if (!mountedRef.current) return;
       setOpen(false);
       toast.success('Fiche supprimée');
       onDeleted();
     } catch (caught) {
+      if (!mountedRef.current) return;
       if (caught instanceof ApiClientError && caught.status === 409) {
         setConflict(true);
       } else {
-        toast.error(
+        setError(
           caught instanceof Error ? caught.message : 'Suppression impossible',
         );
       }
     } finally {
-      setIsDeleting(false);
+      operationRef.current = false;
+      if (mountedRef.current) setIsDeleting(false);
+    }
+  };
+
+  const refreshVersion = async (): Promise<void> => {
+    if (operationRef.current || !mountedRef.current) return;
+    operationRef.current = true;
+    setIsDeleting(true);
+    setError(null);
+    try {
+      const freshVersion = await onReloadVersion();
+      if (!mountedRef.current) return;
+      setVersion(freshVersion);
+      setConflict(false);
+      toast.info('Version actualisée');
+    } catch {
+      if (mountedRef.current)
+        setError('Actualisation impossible. Réessayez avant de supprimer.');
+    } finally {
+      operationRef.current = false;
+      if (mountedRef.current) setIsDeleting(false);
     }
   };
 
@@ -85,11 +127,12 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
         </div>
         <AlertDialog
           onOpenChange={(nextOpen) => {
-            if (isDeleting) return;
+            if (operationRef.current) return;
             setOpen(nextOpen);
             if (nextOpen) {
               setVersion(initialVersion);
               setConflict(false);
+              setError(null);
               idempotencyKeyRef.current = crypto.randomUUID();
             }
           }}
@@ -101,7 +144,10 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
               {triggerLabel}
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent className="sm:max-w-lg">
+          <AlertDialogContent
+            aria-busy={isDeleting || undefined}
+            className="sm:max-w-lg"
+          >
             <AlertDialogHeader>
               <AlertDialogTitle>
                 Supprimer définitivement cette fiche ?
@@ -110,6 +156,11 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
                 {dialogDescription}
               </AlertDialogDescription>
             </AlertDialogHeader>
+            {error && (
+              <p role="alert" className="text-destructive text-sm">
+                {error}
+              </p>
+            )}
             <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-lg border p-3 text-sm">
               {dialogNotice}
             </div>
@@ -117,13 +168,8 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
               <ContentState
                 action={
                   <Button
-                    onClick={() => {
-                      void onReloadVersion().then((freshVersion) => {
-                        setVersion(freshVersion);
-                        setConflict(false);
-                        toast.info('Version actualisée');
-                      });
-                    }}
+                    disabled={isDeleting}
+                    onClick={() => void refreshVersion()}
                     size="sm"
                     type="button"
                     variant="outline"
@@ -142,7 +188,7 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
                 Annuler
               </AlertDialogCancel>
               <Button
-                disabled={isDeleting}
+                disabled={isDeleting || conflict}
                 onClick={() => void handleDelete()}
                 type="button"
                 variant="destructive"

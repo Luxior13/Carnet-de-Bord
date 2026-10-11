@@ -4,10 +4,30 @@ import * as React from 'react';
 import { buttonVariants } from '$components/ui/button';
 import { cn } from '$utils/css.utils';
 
+import {
+  ModalFocusContext,
+  useModalCloseFocus,
+  useModalOpener,
+} from './modal-focus';
+
 function AlertDialog({
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Root>): React.ReactNode {
-  return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
+  const { capture, opener } = useModalOpener(props.open);
+
+  return (
+    <ModalFocusContext.Provider value={opener}>
+      <AlertDialogPrimitive.Root
+        data-slot="alert-dialog"
+        {...props}
+        onOpenChange={(open) => {
+          if (open) capture();
+          onOpenChange?.(open);
+        }}
+      />
+    </ModalFocusContext.Provider>
+  );
 }
 
 function AlertDialogTrigger({
@@ -44,18 +64,22 @@ function AlertDialogOverlay({
 
 function AlertDialogContent({
   className,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content>): React.ReactNode {
+  const restoreFocus = useModalCloseFocus(onCloseAutoFocus);
+
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
         className={cn(
-          'border-border-strong bg-surface text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto overscroll-contain rounded-xl border p-5 shadow-[var(--shadow-panel-strong)] duration-200 sm:max-w-lg',
+          'border-border-content bg-surface-panel text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto overscroll-contain rounded-[10px] border p-5 shadow-[var(--shadow-panel-strong)] duration-200 sm:max-w-lg',
           className,
         )}
         {...props}
+        onCloseAutoFocus={restoreFocus}
       />
     </AlertDialogPortal>
   );

@@ -4,6 +4,7 @@ import { Command as CommandPrimitive } from 'cmdk';
 import { SearchIcon } from 'lucide-react';
 import * as React from 'react';
 
+import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 import { cn } from '$utils/css.utils';
 
 function Command({
@@ -45,6 +46,7 @@ function CommandInput({
           className,
         )}
         {...props}
+        {...passwordManagerIgnoreAttributes}
       />
       {trailing}
     </div>

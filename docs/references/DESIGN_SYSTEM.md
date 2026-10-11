@@ -38,12 +38,17 @@ décline selon l'usage :
   entrées répétées ; même alternance dans la version mobile des tableaux.
 - Formulaires : champs en retrait, espacement plus généreux que les lignes de
   tableau. Aucun zébrage ajouté à une grille de champs éditables.
-- Autocomplétion : **désactivée partout** (règle utilisateur du 2026-10-10).
-  La primitive `Input` l'applique par défaut (`autoComplete="off"` + drapeaux
-  d'ignorance Bitwarden/1Password/LastPass). Aucun `allowPasswordManager` ni
-  `autoComplete` explicite sans justification ; les champs invisibles
-  `autoComplete="username"` de l'association compte/mot de passe et les champs
-  d'authentification personnelle restent les seules exceptions à réexaminer.
+- Autocomplétion du navigateur et des gestionnaires de mots de passe :
+  **désactivée partout, sans exception**, y compris connexion, mots de passe et
+  MFA (règle utilisateur du 2026-10-10, réaffirmée le 2026-10-11).
+  `Input`, `Textarea` et `CommandInput` imposent `autoComplete="off"` et les
+  attributs d'exclusion Bitwarden/1Password/LastPass après les props du parent.
+  Les formulaires portent également `autoComplete="off"`. Aucun opt-in
+  `allowPasswordManager`, jeton d'autocomplétion positif ou champ invisible
+  d'association compte/mot de passe. Les listes de choix métier restent utiles.
+  Ces attributs expriment la politique du site ; une extension peut les ignorer
+  selon sa version et ses réglages. Ne pas annoncer un blocage garanti sans
+  essai de l'extension concernée. [Contrôle et limites](../audits/AUDIT_AUTOCOMPLETION_2026-10-11.md).
 - Interaction : `surface-tile-hover` pour le survol des lignes et menus,
   `surface-selected` pour la sélection ou un contenu à remarquer. Une ligne
   sélectionnée conserve sa couleur quelle que soit sa parité.
@@ -430,6 +435,15 @@ défilent verticalement. Ne pas leur imposer `overflow-hidden`, sauf avec un
 corps interne explicitement défilable, comme les formulaires de personne.
 Les en-têtes de dialogue réservent la place du bouton de fermeture.
 
+Depuis la revue transverse du 11 octobre 2026, `DialogContent` et
+`AlertDialogContent` utilisent `surface-panel`, `border-content` et un rayon de
+10 px. Les actions longues s’empilent sur mobile. La restitution commune du
+focus couvre aussi les ouvertures sans `DialogTrigger`, tout en respectant une
+restitution spécifique et le passage vers une autre fenêtre. Les variantes plein
+écran du Répertoire et de recherche, ainsi que le volet de navigation, conservent
+leur composition dédiée. Décisions, contrôles et questions à reprendre :
+[suivi des modales](../qualite/pages/modales.md).
+
 ---
 
 ## 12. Règles pour ajouter une page ou un composant
@@ -476,7 +490,8 @@ La séparation en plusieurs feuilles deviendra utile avec plusieurs thèmes ou
 des styles globaux réellement indépendants, pas pour déplacer la duplication.
 
 Le test `shadcn-boundaries.test.ts` analyse les TSX et interdit les contrôles
-HTML visibles hors de `components/ui`. Les six champs natifs invisibles
-`autoComplete="username"` sont conservés pour l'association compte/mot de passe.
+HTML hors de `components/ui`, sans exception pour un champ invisible
+d'autocomplétion. `autofill-contracts.test.ts` contrôle les attributs rendus par
+les primitives, l'absence d'opt-in dans les pages et la protection des formulaires.
 Les éléments de structure (`main`, `nav`, `form`, listes, titres) restent du HTML
 sémantique : shadcn ne remplace pas la structure d'une page.

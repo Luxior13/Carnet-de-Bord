@@ -162,6 +162,7 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({ returnHref }) => {
   return (
     <>
       <form
+        autoComplete="off"
         aria-busy={isSubmitting || undefined}
         noValidate
         onSubmit={(event) => void handleSubmit(event)}

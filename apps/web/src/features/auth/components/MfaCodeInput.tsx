@@ -54,11 +54,9 @@ export const MfaCodeInput: FC<MfaCodeInputProps> = ({
         {isRecoveryCode ? 'Code de secours' : 'Code à 6 chiffres'}
       </Label>
       <Input
-        allowPasswordManager
         aria-describedby={error ? `${descriptionId} ${errorId}` : descriptionId}
         aria-invalid={!!error}
         autoCapitalize="none"
-        autoComplete={isRecoveryCode ? 'off' : 'one-time-code'}
         autoCorrect="off"
         autoFocus={autoFocus}
         className={`font-mono text-base lg:text-base ${isRecoveryCode ? 'tracking-normal' : 'tracking-[0.25em]'}`}

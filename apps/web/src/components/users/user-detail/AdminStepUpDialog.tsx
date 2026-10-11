@@ -41,8 +41,7 @@ export type AdminStepUpResult = {
   passwordExpiresAt: string | null;
 };
 
-export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
-  actorLoginName,
+const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
   description,
   onCancel,
   onCloseAutoFocus,
@@ -52,6 +51,14 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
   proofKind = 'full',
   title,
 }) => {
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+    };
+  }, []);
   const [currentPassword, setCurrentPassword] = useState('');
   const [currentTotpCode, setCurrentTotpCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +99,8 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
-    if (!canSubmit || submissionInFlightRef.current) return;
+    if (!canSubmit || submissionInFlightRef.current || !mountedRef.current)
+      return;
 
     submissionInFlightRef.current = true;
     try {
@@ -111,6 +119,7 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
       });
       const data = (await response.json()) as ApiResponse<AdminStepUpResult>;
 
+      if (!mountedRef.current) return;
       if (!response.ok || !data.success) {
         const errorCode = data.success ? null : data.error.code;
         const errorMessage = data.success
@@ -153,10 +162,11 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
 
       await onComplete(data.data);
     } catch {
+      if (!mountedRef.current) return;
       setError('Impossible de confirmer votre identité');
     } finally {
       submissionInFlightRef.current = false;
-      setIsSubmitting(false);
+      if (mountedRef.current) setIsSubmitting(false);
     }
   };
 
@@ -168,6 +178,7 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
       }}
     >
       <DialogContent
+        aria-busy={isSubmitting || undefined}
         className="p-0 sm:max-w-lg"
         onCloseAutoFocus={onCloseAutoFocus}
       >
@@ -183,7 +194,11 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
 
-          <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
+          <form
+            autoComplete="off"
+            className="mt-4 space-y-4"
+            onSubmit={handleSubmit}
+          >
             {error && (
               <div
                 aria-live="assertive"
@@ -202,24 +217,12 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
                   : 'Cette confirmation protège l’action sensible ; le mot de passe restera reconnu pendant trente minutes.'}
             </p>
 
-            <input
-              aria-hidden="true"
-              autoComplete="username"
-              className="sr-only"
-              name="username"
-              readOnly
-              tabIndex={-1}
-              value={actorLoginName}
-            />
-
             {requiresPassword && (
               <div className="space-y-2">
                 <Label htmlFor="admin-step-up-password" required>
                   Votre mot de passe
                 </Label>
                 <Input
-                  allowPasswordManager
-                  autoComplete="current-password"
                   autoFocus
                   disabled={isSubmitting}
                   id="admin-step-up-password"
@@ -245,7 +248,7 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
               />
             )}
 
-            <div className="flex gap-2">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
               <Button
                 className="flex-1"
                 disabled={isSubmitting}
@@ -272,3 +275,11 @@ export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = ({
     </Dialog>
   );
 };
+
+export const AdminStepUpDialog: FC<AdminStepUpDialogProps> = (props) =>
+  props.open ? (
+    <AdminStepUpDialogContent
+      key={`${props.actorLoginName}:${props.title}`}
+      {...props}
+    />
+  ) : null;

@@ -2173,7 +2173,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         open={showLoginChangeConfirm}
         onOpenChange={setShowLoginChangeConfirm}
       >
-        <AlertDialogContent className="border-border overflow-y-auto rounded-xl p-0">
+        <AlertDialogContent className="overflow-y-auto p-0">
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">
@@ -2229,7 +2229,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         title={pendingStepUpAction?.title ?? 'Confirmer votre identité'}
       />
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
-        <AlertDialogContent className="border-border overflow-y-auto rounded-xl p-0">
+        <AlertDialogContent className="overflow-y-auto p-0">
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">
@@ -2266,7 +2266,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         open={showRevokeSessionsConfirm}
         onOpenChange={setShowRevokeSessionsConfirm}
       >
-        <AlertDialogContent className="border-border overflow-y-auto rounded-xl p-0">
+        <AlertDialogContent className="overflow-y-auto p-0">
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">
@@ -2306,7 +2306,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
           if (!open) setDeleteConfirmation('');
         }}
       >
-        <AlertDialogContent className="border-border overflow-y-auto rounded-xl p-0">
+        <AlertDialogContent className="overflow-y-auto p-0">
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">

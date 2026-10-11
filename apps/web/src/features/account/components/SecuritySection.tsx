@@ -676,7 +676,6 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       />
       {mfaSetupMode && (
         <MfaSetupDialog
-          loginName={userData.loginName}
           mode={mfaSetupMode}
           onCancel={() => setMfaSetupMode(null)}
           onComplete={handleMfaSetupComplete}
@@ -685,7 +684,6 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       )}
       {showRecoveryCodesDialog && (
         <MfaActionDialog
-          loginName={userData.loginName}
           onCancel={() => setShowRecoveryCodesDialog(false)}
           onComplete={handleMfaActionComplete}
           open

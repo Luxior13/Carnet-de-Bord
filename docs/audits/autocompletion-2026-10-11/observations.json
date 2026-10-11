@@ -1,0 +1,295 @@
+{
+  "date": "2026-10-11T11:44:24.376Z",
+  "fixtureDate": "2026-10-11",
+  "environment": "Chromium isolé ; composants/CSS réels ; session, navigation, API et données simulées",
+  "results": [
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-child-email-new",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-child-phone-new",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-child-social-new",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-child-email-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-child-phone-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-child-social-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-password",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-stepup",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-reset-mfa",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-contact",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-codes",
+      "result": "passed"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "scenario": "layout-unsaved",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-child-email-new",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-child-phone-new",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-child-social-new",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-child-email-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-child-phone-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-child-social-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-password",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-stepup",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-reset-mfa",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-contact",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-codes",
+      "result": "passed"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scenario": "layout-unsaved",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-child-email-new",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-child-phone-new",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-child-social-new",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-child-email-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-child-phone-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-child-social-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-password",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-stepup",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-reset-mfa",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-contact",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-codes",
+      "result": "passed"
+    },
+    {
+      "width": 768,
+      "height": 844,
+      "scenario": "layout-unsaved",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-child-email-new",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-child-phone-new",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-child-social-new",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-child-email-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-child-phone-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-child-social-readonly",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-password",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-stepup",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-reset-mfa",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-contact",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-codes",
+      "result": "passed"
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "scenario": "layout-unsaved",
+      "result": "passed"
+    }
+  ]
+}

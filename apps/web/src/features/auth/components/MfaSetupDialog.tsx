@@ -19,7 +19,6 @@ import { MfaSetupFlow, type MfaSetupMode } from './MfaSetupFlow';
 
 type MfaSetupDialogProps = {
   allowCancel?: boolean;
-  loginName?: string;
   mode: Exclude<MfaSetupMode, 'bootstrap'>;
   onCancel?: () => void;
   onComplete: (data: MfaSetupConfirmationData) => Promise<void> | void;
@@ -28,7 +27,6 @@ type MfaSetupDialogProps = {
 
 export const MfaSetupDialog: FC<MfaSetupDialogProps> = ({
   allowCancel = true,
-  loginName,
   mode,
   onCancel,
   onComplete,
@@ -36,20 +34,15 @@ export const MfaSetupDialog: FC<MfaSetupDialogProps> = ({
 }) => {
   const isReplacing = mode === 'replace';
   const handleCancel = async (): Promise<void> => {
-    try {
-      await apiFetch(RoutesApi.mfaChallenge, { method: 'DELETE' });
-    } finally {
-      onCancel?.();
-    }
+    const response = await apiFetch(RoutesApi.mfaChallenge, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Annulation impossible');
+    onCancel?.();
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(isOpen) => {
-        if (!isOpen && allowCancel) void handleCancel();
-      }}
-    >
+    <Dialog open={open}>
       <DialogContent
         className="p-0 sm:max-w-lg"
         hideCloseButton
@@ -76,9 +69,8 @@ export const MfaSetupDialog: FC<MfaSetupDialogProps> = ({
             <div className="mt-4">
               <MfaSetupFlow
                 allowCancel={allowCancel}
-                loginName={loginName}
                 mode={mode}
-                onCancel={() => void handleCancel()}
+                onCancel={handleCancel}
                 onComplete={onComplete}
               />
             </div>

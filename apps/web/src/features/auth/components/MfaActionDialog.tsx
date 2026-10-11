@@ -31,14 +31,12 @@ type MfaActionResponse = {
 };
 
 type MfaActionDialogProps = {
-  loginName?: string;
   onCancel: () => void;
   onComplete: (user?: UserType) => Promise<void> | void;
   open: boolean;
 };
 
 export const MfaActionDialog: FC<MfaActionDialogProps> = ({
-  loginName,
   onCancel,
   onComplete,
   open,
@@ -125,12 +123,20 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
   };
 
   const handleRecoveryCodesSaved = async (): Promise<void> => {
+    if (submissionRef.current || !mountedRef.current) return;
     try {
       submissionRef.current = true;
       setIsSubmitting(true);
+      setError(null);
       await onComplete(responseUser);
+      if (!mountedRef.current) return;
       toast.success('Nouveaux codes de secours générés');
       onCancel();
+    } catch {
+      if (mountedRef.current)
+        setError(
+          'Impossible de terminer. Vos codes restent affichés ; réessayez.',
+        );
     } finally {
       submissionRef.current = false;
       if (mountedRef.current) setIsSubmitting(false);
@@ -141,7 +147,7 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
     <Dialog
       open={open}
       onOpenChange={(isOpen) => {
-        if (!isOpen && !isSubmitting && !recoveryCodes) onCancel();
+        if (!isOpen && !submissionRef.current && !recoveryCodes) onCancel();
       }}
     >
       <DialogContent
@@ -165,6 +171,15 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
           </DialogHeader>
 
           <div className="mt-4">
+            {error && (
+              <div
+                aria-live="assertive"
+                className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
             {recoveryCodes ? (
               <MfaRecoveryCodesPanel
                 codes={recoveryCodes}
@@ -172,36 +187,16 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
                 onFinish={() => void handleRecoveryCodesSaved()}
               />
             ) : (
-              <form className="space-y-4" onSubmit={handleSubmit}>
-                {error && (
-                  <div
-                    aria-live="assertive"
-                    className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
-                    role="alert"
-                  >
-                    {error}
-                  </div>
-                )}
-
-                {loginName && (
-                  <input
-                    aria-hidden="true"
-                    autoComplete="username"
-                    className="sr-only"
-                    name="username"
-                    readOnly
-                    tabIndex={-1}
-                    value={loginName}
-                  />
-                )}
-
+              <form
+                autoComplete="off"
+                className="space-y-4"
+                onSubmit={handleSubmit}
+              >
                 <div className="space-y-2">
                   <Label htmlFor="mfa-action-current-password" required>
                     Mot de passe actuel
                   </Label>
                   <Input
-                    allowPasswordManager
-                    autoComplete="current-password"
                     autoFocus
                     disabled={isSubmitting}
                     id="mfa-action-current-password"
@@ -222,7 +217,7 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
                   onChange={setCurrentCode}
                   value={currentCode}
                 />
-                <div className="flex gap-2">
+                <div className="flex flex-col-reverse gap-2 sm:flex-row">
                   <Button
                     className="flex-1"
                     disabled={isSubmitting}

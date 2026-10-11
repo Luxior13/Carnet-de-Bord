@@ -8,8 +8,13 @@ Complément transverse : [menus déroulants du 10 octobre](../../audits/AUDIT_ME
 onze consommateurs actifs inventoriés et contrôlés dans un navigateur isolé ;
 les parcours authentifiés restent suivis page par page.
 
+La [règle d'autocomplétion sans exception](../../references/DESIGN_SYSTEM.md)
+inclut aussi connexion et MFA depuis la correction du 11 octobre ;
+[preuves et limites des extensions](../../audits/AUDIT_AUTOCOMPLETION_2026-10-11.md).
+
 | Page | Suivi | État du document |
 | --- | --- | --- |
+| Fenêtres modales — transverse | [modales.md](modales.md) | Modales actives inventoriées ; présentation, focus, conservation des brouillons et reprises corrigés le 11 octobre ; validations simulées et limites documentées |
 | Accueil / Mon travail | [accueil.md](accueil.md) | Salutation et lien Mon compte ; rendu vérifié le 11 octobre, E2E authentifié à rejouer ; vues métier futures |
 | Connexion | [connexion.md](connexion.md) | Stockage facultatif, soumissions et parcours MFA vérifiés dans le navigateur isolé le 11 octobre ; authentification réelle à vérifier |
 | Utilisateurs — liste, création et fiche | [systeme-utilisateurs.md](systeme-utilisateurs.md) | Liste, création et fiche corrigées sur Next/PostgreSQL isolés ; USR-D01 à USR-D08 vérifiés, synthèse USR-D09 compactée ; 1 036 tests réussis, 25 ignorés ; champs à 6 px, puis onglet Autorisations refondu et contrôlé sur 36 combinaisons navigateur isolé ; limites détaillées dans le suivi |
