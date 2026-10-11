@@ -1,0 +1,171 @@
+{
+  "date": "2026-10-11",
+  "migrationCount": [
+    {
+      "count": 52
+    }
+  ],
+  "observations": [
+    {
+      "name": "A second root is impossible",
+      "result": "passed",
+      "postgresCode": "23505"
+    },
+    {
+      "name": "Cannot demote root",
+      "result": "passed",
+      "postgresCode": "P0001"
+    },
+    {
+      "name": "Cannot deactivate root",
+      "result": "passed",
+      "postgresCode": "P0001"
+    },
+    {
+      "name": "Cannot unprotect root",
+      "result": "passed",
+      "postgresCode": "P0001"
+    },
+    {
+      "name": "Cannot mark deleted root",
+      "result": "passed",
+      "postgresCode": "P0001"
+    },
+    {
+      "name": "Cannot delete root",
+      "result": "passed",
+      "postgresCode": "P0001"
+    },
+    {
+      "name": "Root profile remains editable",
+      "result": "passed"
+    },
+    {
+      "name": "Last name and contact email are optional",
+      "result": "passed"
+    },
+    {
+      "name": "Login names are canonical",
+      "result": "passed",
+      "postgresCode": "23514"
+    },
+    {
+      "name": "Login names are unique",
+      "result": "passed",
+      "postgresCode": "23505"
+    },
+    {
+      "name": "Contact emails are normalized",
+      "result": "passed",
+      "postgresCode": "23514"
+    },
+    {
+      "name": "Verification needs a contact email",
+      "result": "passed",
+      "postgresCode": "23514"
+    },
+    {
+      "name": "Login reservation has exactly one owner",
+      "result": "passed",
+      "postgresCode": "23505"
+    },
+    {
+      "name": "Reserved identity blocks physical deletion",
+      "result": "passed",
+      "postgresCode": "23503"
+    },
+    {
+      "name": "Incomplete anonymization cannot become a tombstone",
+      "result": "passed",
+      "postgresCode": "23514"
+    },
+    {
+      "name": "Anonymous technical tombstone is valid",
+      "result": "passed"
+    },
+    {
+      "name": "Tombstone cannot be reactivated",
+      "result": "passed",
+      "postgresCode": "P0001"
+    },
+    {
+      "name": "Tombstone cannot be deleted",
+      "result": "passed",
+      "postgresCode": "P0001"
+    },
+    {
+      "name": "Four declared trigram search indexes exist",
+      "result": "passed"
+    }
+  ],
+  "indexes": [
+    {
+      "indexname": "User_contactEmail_idx",
+      "indexdef": "CREATE INDEX \"User_contactEmail_idx\" ON public.\"User\" USING btree (\"contactEmail\")"
+    },
+    {
+      "indexname": "User_contactEmail_trgm_idx",
+      "indexdef": "CREATE INDEX \"User_contactEmail_trgm_idx\" ON public.\"User\" USING gin (\"contactEmail\" gin_trgm_ops)"
+    },
+    {
+      "indexname": "User_deletedAt_createdAt_idx",
+      "indexdef": "CREATE INDEX \"User_deletedAt_createdAt_idx\" ON public.\"User\" USING btree (\"deletedAt\", \"createdAt\")"
+    },
+    {
+      "indexname": "User_deletedAt_idx",
+      "indexdef": "CREATE INDEX \"User_deletedAt_idx\" ON public.\"User\" USING btree (\"deletedAt\")"
+    },
+    {
+      "indexname": "User_deletedAt_isActive_idx",
+      "indexdef": "CREATE INDEX \"User_deletedAt_isActive_idx\" ON public.\"User\" USING btree (\"deletedAt\", \"isActive\")"
+    },
+    {
+      "indexname": "User_deletedAt_lastLoginAt_idx",
+      "indexdef": "CREATE INDEX \"User_deletedAt_lastLoginAt_idx\" ON public.\"User\" USING btree (\"deletedAt\", \"lastLoginAt\")"
+    },
+    {
+      "indexname": "User_deletedAt_lockedUntil_idx",
+      "indexdef": "CREATE INDEX \"User_deletedAt_lockedUntil_idx\" ON public.\"User\" USING btree (\"deletedAt\", \"lockedUntil\")"
+    },
+    {
+      "indexname": "User_deletedAt_mustChangePassword_idx",
+      "indexdef": "CREATE INDEX \"User_deletedAt_mustChangePassword_idx\" ON public.\"User\" USING btree (\"deletedAt\", \"mustChangePassword\")"
+    },
+    {
+      "indexname": "User_deletedAt_role_idx",
+      "indexdef": "CREATE INDEX \"User_deletedAt_role_idx\" ON public.\"User\" USING btree (\"deletedAt\", role)"
+    },
+    {
+      "indexname": "User_firstName_trgm_idx",
+      "indexdef": "CREATE INDEX \"User_firstName_trgm_idx\" ON public.\"User\" USING gin (\"firstName\" gin_trgm_ops)"
+    },
+    {
+      "indexname": "User_lastName_trgm_idx",
+      "indexdef": "CREATE INDEX \"User_lastName_trgm_idx\" ON public.\"User\" USING gin (\"lastName\" gin_trgm_ops)"
+    },
+    {
+      "indexname": "User_loginName_key",
+      "indexdef": "CREATE UNIQUE INDEX \"User_loginName_key\" ON public.\"User\" USING btree (\"loginName\")"
+    },
+    {
+      "indexname": "User_loginName_trgm_idx",
+      "indexdef": "CREATE INDEX \"User_loginName_trgm_idx\" ON public.\"User\" USING gin (\"loginName\" gin_trgm_ops)"
+    },
+    {
+      "indexname": "User_mfaEnabledAt_idx",
+      "indexdef": "CREATE INDEX \"User_mfaEnabledAt_idx\" ON public.\"User\" USING btree (\"mfaEnabledAt\")"
+    },
+    {
+      "indexname": "User_pkey",
+      "indexdef": "CREATE UNIQUE INDEX \"User_pkey\" ON public.\"User\" USING btree (id)"
+    },
+    {
+      "indexname": "User_role_idx",
+      "indexdef": "CREATE INDEX \"User_role_idx\" ON public.\"User\" USING btree (role)"
+    },
+    {
+      "indexname": "User_single_protected_root_key",
+      "indexdef": "CREATE UNIQUE INDEX \"User_single_protected_root_key\" ON public.\"User\" USING btree (\"isProtected\") WHERE (\"isProtected\" = true)"
+    }
+  ]
+}

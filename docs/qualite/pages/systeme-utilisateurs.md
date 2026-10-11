@@ -1,5 +1,47 @@
 # Suivi — Utilisateurs, liste
 
+## Revue approfondie — 11 octobre 2026
+
+Nouvelle passe demandée après celle du Répertoire, en contexte développement.
+Périmètre : liste, GET, schéma utile à sa lecture, navigation, comportements,
+droits, coût serveur et refactorisation. Le [rapport du jour](../../audits/AUDIT_UTILISATEURS_2026-10-11.md)
+distingue les corrections, preuves et limites ; il ne remplace pas les audits
+propres aux mutations de création et de fiche.
+
+Décisions courantes complémentaires :
+
+- Recherche et pagination restent dans PostgreSQL : aucune collecte de tous
+  les identifiants correspondants dans l'application. Le service de lecture
+  réalise deux requêtes, une pour page/total filtré, une pour synthèse globale.
+  Les droits et projections HTTP restent contrôlés dans la route.
+  Les alias publics du compte protégé acceptent aussi mots inversés et espaces
+  multiples ; ils ne sont jamais mélangés à son identité privée pour un tiers.
+- Pendant une pagination, conserver les dernières lignes, leur numéro et leur
+  total tant que les critères sont identiques ; une réponse pour d'autres
+  critères n'est pas réaffichée sous le nouveau filtre. Une erreur est explicite.
+- La pagination ajoute une entrée d'historique. Les critères sont normalisés,
+  les filtres consomment la saisie courante et les paramètres inutiles disparaissent.
+- Reset et retrait d'un filtre rendent le focus à la recherche. Réessayer mène
+  aux résultats après réussite ; un nouvel échec permet de réessayer au clavier.
+  Une saisie différente annule une ancienne intention de repositionnement.
+- Retour de fiche et rechargement peuvent restaurer le lien actuellement
+  focalisé ; il doit appartenir à la liste, être visible et interne. L'instantané
+  reste unique, limité à 30 minutes et lié au compte, aux droits et aux critères.
+- Les noms accessibles des compteurs incluent leur valeur ; « Identité protégée »
+  reste lisible au clavier et au tactile. Une donnée masquée est distinguée
+  d'une donnée absente. Les cartes conditionnent explicitement l'email aux droits,
+  comme le tableau, et réutilisent le jeton de focus commun.
+- Aucun nouveau modèle, index, migration, cache ni dépendance n'est nécessaire.
+  Le schéma User est valide et ses 19 contrôles SQL ciblés passent dans la base
+  isolée migrée. Les données habituelles du projet n'ont pas été modifiées.
+
+**Liste conforme sur le périmètre vérifié ; USR-18 à USR-25 clos.**
+1 145 tests web réussis (18 tests SQL Personnes ignorés), 42 scénarios client
+simulés puis reprise ciblée du retour de fiche, dix parcours réels sur
+Next/MFA/PostgreSQL et 33 mesures de scénarios serveur jusqu'à 10 000 comptes.
+Build, types, lint, budgets et documentation vérifiés. Les limites d'appareils,
+de charge et de mutations hors périmètre restent explicites dans le rapport.
+
 ## Composants communs — 11 octobre 2026
 
 Recherche et pagination utilisent `ListSearchField` et `ListPagination`.
@@ -607,9 +649,9 @@ Les responsables opérationnels des points ouverts restent à attribuer.
 
 | Point | Suite concrète | Déclencheur |
 | --- | --- | --- |
-| USR-01 — Parcours réels avec permissions/session/base | **Validé partiellement le 10 octobre** : liste et retours dans Next/PostgreSQL réels, sessions de test et droits vérifiés. Connexion interactive, défi MFA et mutations hors de cette passe | Avant conclusion fonctionnelle globale sur ces autres parcours |
-| USR-02 — Volumes et coûts serveur | Mesurer requêtes, agrégations et pages éloignées sur données représentatives | Hausse de volume ou travail de performance |
-| USR-03 — Coût du GET et de la recherche | État relu le 10 octobre : au maximum huit opérations hors auth avec recherche et droit de sécurité ; toutes les statistiques retournées alimentent la synthèse. Mesurer aussi la collecte de tous les identifiants de recherche avant pagination | Benchmark serveur ; aucun cache ajouté sans mesure |
+| USR-01 — Parcours réels avec permissions/session/base | **Clos pour la liste le 11 octobre** : dix parcours Next/PostgreSQL avec connexion mot de passe/MFA, droits, révocation, fiche/retour/rechargement ; mutations de création et de fiche suivies dans leurs audits propres | Changement d'authentification, permissions ou navigation ; aucune certification globale des autres mutations |
+| USR-02 — Volumes et coûts serveur | **Mesuré et clos au périmètre actuel le 11 octobre** : 33 scénarios sur 25/1k/10k comptes, 20 échantillons chacun ; recherche large et page de 25 vérifiées à 33k en test SQL | Croissance significative, pages profondes fréquentes ou latence distante excessive ; aucune charge concurrente déduite |
+| USR-03 — Coût du GET et de la recherche | **Corrigé et mesuré le 11 octobre** : plus de collecte de tous les IDs ; deux requêtes pour page/total et synthèse, médiane de recherche large 91,69 → 17,37 ms à 10k dans le banc local | Maintenir les droits et l'égalité des résultats ; mesurer avant tout cache/index supplémentaire |
 | USR-04 — Plafond de pagination | Réexaminer curseur, stratégie de recherche ou taille de page si 1 000 pages deviennent nécessaires ; l’interface borne et explique désormais la limite | Volume réellement proche du plafond, selon la taille configurée |
 | USR-05 — Lecteur d’écran, appareils réels, zoom natif | Exécuter les parcours importants dans ces environnements | Revue d’accessibilité complète |
 | USR-06 — Graisses visuelles dans WebKit Windows | Comparer dans Safari réel avant toute correction globale de police | Revue de compatibilité |
@@ -624,9 +666,18 @@ Les responsables opérationnels des points ouverts restent à attribuer.
 | USR-15 — P2, pagination et reprise de position | **Corrigé et vérifié** : résultats remis à portée au changement de page ; retours fiche/Mon compte avec page, défilement et focus dans Next réel | Clos le 10 octobre ; conserver la portée compte/droits de l'instantané |
 | USR-16 — P2, compteurs globaux utilisables | **Corrigé et vérifié** : libellé global, liens natifs et catégories exclusives ; compteur Administrateurs et résultat tous deux à 20 dans le jeu de test | Clos le 10 octobre ; ne pas confondre rôle stocké et catégorie de liste |
 | USR-17 — P2, découpage de la liste | **Corrigé et vérifié** : responsabilités séparées, exception de budget retirée, suite web et build réussis | Clos le 10 octobre ; maintenir les responsabilités par module |
+| USR-18 — P2, plafond SQL caché de recherche | **Clos le 11 octobre** : erreur P2035 reproduite à 33k puis supprimée ; page bornée, deux requêtes, SQL réel et intégration vérifiés | Conserver la régression de recherche large |
+| USR-19 — P2, contexte de pagination | **Clos le 11 octobre** : lignes, numéro, total et retour de fiche correspondent à la réponse affichée pendant attente/erreur | Changement du contrôleur ou des liens de liste |
+| USR-20 — P2, historique et recherche en attente | **Clos le 11 octobre** : Back entre pages, filtre utilisant la saisie courante, normalisation immédiate des URL | Changement du routeur, de la recherche ou des filtres |
+| USR-21 — P2, reprise de navigation | **Clos le 11 octobre** : focus différé annulable, instantané consommé avec contrôle, retour de fiche puis rechargement avec focus vérifiés | Changement de critères, de portée ou de disposition |
+| USR-22 — P2, focus après action | **Clos le 11 octobre** : effacement/reset vers recherche ; reprise réussie vers résultats, nouvel échec vers Réessayer | Changement des commandes ou états d'erreur |
+| USR-23 — P2, sémantique et focus visuel | **Clos le 11 octobre** : valeurs des compteurs annoncées, identité protégée lisible, avatars décoratifs et jeton de focus commun | Nouvelle colonne, compteur ou variante de carte |
+| USR-24 — P2, garde locale du contact mobile | **Clos le 11 octobre** : même condition de permission sur tableau et cartes, serveur réel et donnée excessive simulée contrôlés | Changement des projections ou données de carte |
+| USR-25 — P2, alias publics recherchables | **Clos le 11 octobre** : mots inversés/espaces multiples acceptés, mots privés exclus, SQL réel | Changement des alias ou de la recherche |
 
-Les preuves avant/après figurent dans le
-[rapport du 10 octobre](../../audits/AUDIT_UTILISATEURS_2026-10-10.md).
+Les preuves avant/après figurent dans les
+[rapports du 10 octobre](../../audits/AUDIT_UTILISATEURS_2026-10-10.md) et
+[du 11 octobre](../../audits/AUDIT_UTILISATEURS_2026-10-11.md).
 La correction a utilisé sa propre base locale jetable et des sessions fictives,
 sans utiliser la base applicative ni les identifiants E2E de l'exploitant.
 

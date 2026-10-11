@@ -1,4 +1,3 @@
-import { Prisma } from '@prisma/client';
 import { UserRole } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -6,7 +5,7 @@ import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGINATION } from '$constants/pagination.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { createUserSchema } from '$features/users/create-user.schema';
-import { buildUserSearchQuery } from '$features/users/server/users-list-search';
+import { listUsers } from '$features/users/server/users-list.service';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import {
   apiErrors,
@@ -37,31 +36,6 @@ type UserStatusOption = (typeof USER_STATUS_OPTIONS)[number];
 const USER_SEARCH_MAX_LENGTH = 100;
 const USERS_PAGE_AUDIT_LOCATION = FEATURES.users.audit;
 
-const USER_LIST_SELECT = {
-  contactEmail: true,
-  contactEmailVerifiedAt: true,
-  createdAt: true,
-  failedLoginAttempts: true,
-  firstName: true,
-  id: true,
-  isActive: true,
-  isProtected: true,
-  lastLoginAt: true,
-  lastName: true,
-  lockedUntil: true,
-  loginName: true,
-  mfaEnabledAt: true,
-  mustChangePassword: true,
-  passwordChangedAt: true,
-  role: true,
-} satisfies Prisma.UserSelect;
-
-type CountGroup = {
-  _count: {
-    _all: number;
-  };
-};
-
 function normalizeUserSort(value: string | null): UserSortOption {
   return USER_SORT_OPTIONS.includes(value as UserSortOption)
     ? (value as UserSortOption)
@@ -82,35 +56,6 @@ function normalizeUserStatus(value: string | null): UserStatusOption | null {
   return USER_STATUS_OPTIONS.includes(value as UserStatusOption)
     ? (value as UserStatusOption)
     : null;
-}
-
-function getUserOrderBy(
-  sort: UserSortOption,
-  protectedAccountFirst = false,
-): Prisma.UserOrderByWithRelationInput[] {
-  const protectedOrder: Prisma.UserOrderByWithRelationInput[] =
-    protectedAccountFirst ? [{ isProtected: 'desc' }] : [];
-
-  if (sort === 'recent') {
-    return [
-      ...protectedOrder,
-      { lastLoginAt: { nulls: 'last', sort: 'desc' } },
-      { createdAt: 'desc' },
-      { id: 'asc' },
-    ];
-  }
-
-  if (sort === 'created') {
-    return [...protectedOrder, { createdAt: 'desc' }, { id: 'asc' }];
-  }
-
-  return [
-    ...protectedOrder,
-    { lastName: 'asc' },
-    { firstName: 'asc' },
-    { createdAt: 'desc' },
-    { id: 'asc' },
-  ];
 }
 
 export async function GET(
@@ -143,11 +88,6 @@ export async function GET(
         PERMISSIONS.USERS.VIEW_SECURITY,
         auth.user.permissions,
       );
-    const visibleSecurityUserWhere: Prisma.UserWhereInput = auth.user
-      .isProtected
-      ? {}
-      : { isProtected: false };
-
     const { searchParams } = new URL(request.url);
     const { limit, page, skip } = parsePagination(
       searchParams,
@@ -176,7 +116,7 @@ export async function GET(
       );
     }
 
-    const where: Prisma.UserWhereInput = { deletedAt: null };
+    let loginName: string | undefined;
 
     if (searchParams.has('loginName')) {
       const exactLogin = loginNameSchema.safeParse(
@@ -194,109 +134,13 @@ export async function GET(
           { status: 400 },
         );
       }
-      where.loginName = exactLogin.data;
-      // Exact lookup must not reveal the protected account's private identity.
-      if (!auth.user.isProtected) where.NOT = { isProtected: true };
+      loginName = exactLogin.data;
     }
 
-    if (search) {
-      const searchRows = await prisma.$queryRaw<Array<{ id: string }>>(
-        buildUserSearchQuery(search, {
-          canViewContact,
-          isProtected: auth.user.isProtected,
-        }),
-      );
-      where.id = { in: searchRows.map((row) => row.id) };
-    }
-
-    if (role === 'SUPERADMIN') {
-      where.isProtected = true;
-    } else if (role) {
-      where.role = role;
-      where.isProtected = false;
-    }
-
-    if (status === 'active') {
-      where.isActive = true;
-    } else if (status === 'inactive') {
-      where.isActive = false;
-    } else if (status === 'pending') {
-      where.mustChangePassword = true;
-      where.AND = [visibleSecurityUserWhere];
-    }
-
-    const baseUserWhere: Prisma.UserWhereInput = { deletedAt: null };
-    const countActiveUsers = (
-      extraWhere: Prisma.UserWhereInput = {},
-    ): Promise<number> =>
-      prisma.user.count({ where: { ...baseUserWhere, ...extraWhere } });
-
-    const [
-      total,
-      users,
-      statsTotal,
-      activeStatusCounts,
-      roleCounts,
-      pendingPasswordChange,
-      protectedCount,
-    ] = await Promise.all([
-      prisma.user.count({ where }),
-      prisma.user.findMany({
-        orderBy: getUserOrderBy(sort, !auth.user.isProtected),
-        select: USER_LIST_SELECT,
-        skip,
-        take: limit,
-        where,
-      }),
-      countActiveUsers(),
-      prisma.user.groupBy({
-        _count: { _all: true },
-        by: ['isActive'],
-        where: baseUserWhere,
-      }),
-      prisma.user.groupBy({
-        _count: { _all: true },
-        by: ['role'],
-        where: baseUserWhere,
-      }),
-      canViewSecurity
-        ? countActiveUsers({
-            ...visibleSecurityUserWhere,
-            mustChangePassword: true,
-          })
-        : Promise.resolve(null),
-      countActiveUsers({ isProtected: true }),
-    ]);
-
-    const active =
-      (activeStatusCounts as (CountGroup & { isActive: boolean })[]).find(
-        (group) => group.isActive,
-      )?._count._all ?? 0;
-    const inactive =
-      (activeStatusCounts as (CountGroup & { isActive: boolean })[]).find(
-        (group) => !group.isActive,
-      )?._count._all ?? 0;
-    const adminCount =
-      (roleCounts as (CountGroup & { role: UserRole })[]).find(
-        (group) => group.role === UserRole.ADMIN,
-      )?._count._all ?? 0;
-    const userCount =
-      (roleCounts as (CountGroup & { role: UserRole })[]).find(
-        (group) => group.role === UserRole.USER,
-      )?._count._all ?? 0;
-    const superadminCount = protectedCount;
-
-    const stats = {
-      active,
-      byRole: {
-        ADMIN: adminCount - superadminCount,
-        SUPERADMIN: superadminCount,
-        USER: userCount,
-      },
-      inactive,
-      pendingPasswordChange,
-      total: statsTotal,
-    };
+    const { stats, total, users } = await listUsers(
+      { limit, loginName, role, search, skip, sort, status },
+      { canViewContact, canViewSecurity, isProtected: auth.user.isProtected },
+    );
 
     return NextResponse.json({
       data: {

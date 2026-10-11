@@ -1,0 +1,239 @@
+{
+  "date": "2026-10-11",
+  "browser": "149.0.7827.55",
+  "environment": "Next production, PostgreSQL 17 isolated, real password/TOTP enrollment/session/API; fictional identities only",
+  "observations": [
+    {
+      "name": "Interactive password login and real TOTP proof",
+      "result": "passed"
+    },
+    {
+      "name": "Private API: real pagination, totals and no credential fields",
+      "result": "passed"
+    },
+    {
+      "name": "Real SQL search: full name, accents, contact and literal symbols",
+      "result": "passed"
+    },
+    {
+      "name": "Global overview opens exactly its role subset",
+      "result": "passed"
+    },
+    {
+      "name": "Pagination, browser history, detail return and focus restore",
+      "result": "passed"
+    },
+    {
+      "name": "Viewport 320",
+      "result": "passed",
+      "metrics": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "tableVisible": false,
+        "identityWidth": 0,
+        "mainWidth": 290,
+        "mainScrollWidth": 290
+      }
+    },
+    {
+      "name": "Viewport 390",
+      "result": "passed",
+      "metrics": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "tableVisible": false,
+        "identityWidth": 0,
+        "mainWidth": 360,
+        "mainScrollWidth": 360
+      }
+    },
+    {
+      "name": "Viewport 768",
+      "result": "passed",
+      "metrics": {
+        "viewport": 768,
+        "documentWidth": 768,
+        "tableVisible": false,
+        "identityWidth": 0,
+        "mainWidth": 738,
+        "mainScrollWidth": 738
+      }
+    },
+    {
+      "name": "Viewport 1120",
+      "result": "passed",
+      "metrics": {
+        "viewport": 1120,
+        "documentWidth": 1120,
+        "tableVisible": false,
+        "identityWidth": 0,
+        "mainWidth": 826,
+        "mainScrollWidth": 826
+      }
+    },
+    {
+      "name": "Viewport 1440",
+      "result": "passed",
+      "metrics": {
+        "viewport": 1440,
+        "documentWidth": 1440,
+        "tableVisible": true,
+        "identityWidth": 326.40625,
+        "mainWidth": 1146,
+        "mainScrollWidth": 1146
+      }
+    },
+    {
+      "name": "Viewport 1920",
+      "result": "passed",
+      "metrics": {
+        "viewport": 1920,
+        "documentWidth": 1920,
+        "tableVisible": true,
+        "identityWidth": 390,
+        "mainWidth": 1626,
+        "mainScrollWidth": 1626
+      }
+    },
+    {
+      "name": "Real shell responsive layouts from 320 to 1920 px",
+      "result": "passed"
+    },
+    {
+      "name": "Limited user authenticates with password and MFA; no contact/security leak",
+      "result": "passed"
+    },
+    {
+      "name": "Columns contact=false security=false width=1120",
+      "result": "passed",
+      "layout": {
+        "tableVisible": false,
+        "identityWidth": 0,
+        "contentWidth": 826,
+        "contentScrollWidth": 826
+      }
+    },
+    {
+      "name": "Columns contact=false security=false width=1280",
+      "result": "passed",
+      "layout": {
+        "tableVisible": true,
+        "identityWidth": 516.40625,
+        "contentWidth": 986,
+        "contentScrollWidth": 986
+      }
+    },
+    {
+      "name": "Columns contact=false security=false width=1440",
+      "result": "passed",
+      "layout": {
+        "tableVisible": true,
+        "identityWidth": 676.40625,
+        "contentWidth": 1146,
+        "contentScrollWidth": 1146
+      }
+    },
+    {
+      "name": "Columns contact=true security=false width=1120",
+      "result": "passed",
+      "layout": {
+        "tableVisible": false,
+        "identityWidth": 0,
+        "contentWidth": 826,
+        "contentScrollWidth": 826
+      }
+    },
+    {
+      "name": "Columns contact=true security=false width=1280",
+      "result": "passed",
+      "layout": {
+        "tableVisible": true,
+        "identityWidth": 296.40625,
+        "contentWidth": 986,
+        "contentScrollWidth": 986
+      }
+    },
+    {
+      "name": "Columns contact=true security=false width=1440",
+      "result": "passed",
+      "layout": {
+        "tableVisible": true,
+        "identityWidth": 456.40625,
+        "contentWidth": 1146,
+        "contentScrollWidth": 1146
+      }
+    },
+    {
+      "name": "Columns contact=false security=true width=1120",
+      "result": "passed",
+      "layout": {
+        "tableVisible": false,
+        "identityWidth": 0,
+        "contentWidth": 826,
+        "contentScrollWidth": 826
+      }
+    },
+    {
+      "name": "Columns contact=false security=true width=1280",
+      "result": "passed",
+      "layout": {
+        "tableVisible": true,
+        "identityWidth": 386.40625,
+        "contentWidth": 986,
+        "contentScrollWidth": 986
+      }
+    },
+    {
+      "name": "Columns contact=false security=true width=1440",
+      "result": "passed",
+      "layout": {
+        "tableVisible": true,
+        "identityWidth": 552.8125,
+        "contentWidth": 1146,
+        "contentScrollWidth": 1146
+      }
+    },
+    {
+      "name": "Columns contact=true security=true width=1120",
+      "result": "passed",
+      "layout": {
+        "tableVisible": false,
+        "identityWidth": 0,
+        "contentWidth": 826,
+        "contentScrollWidth": 826
+      }
+    },
+    {
+      "name": "Columns contact=true security=true width=1280",
+      "result": "passed",
+      "layout": {
+        "tableVisible": false,
+        "identityWidth": 0,
+        "contentWidth": 986,
+        "contentScrollWidth": 986
+      }
+    },
+    {
+      "name": "Columns contact=true security=true width=1440",
+      "result": "passed",
+      "layout": {
+        "tableVisible": true,
+        "identityWidth": 326.40625,
+        "contentWidth": 1146,
+        "contentScrollWidth": 1146
+      }
+    },
+    {
+      "name": "Four column combinations use effective server permissions",
+      "result": "passed"
+    },
+    {
+      "name": "Permission revoked during live session purges list and overview",
+      "result": "passed"
+    },
+    {
+      "name": "Unauthenticated list API denied",
+      "result": "passed"
+    }
+  ]
+}

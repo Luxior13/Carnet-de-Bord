@@ -21,7 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from '$ui/table';
-import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 import {
   getUserDisplayName,
@@ -31,17 +30,10 @@ import {
 
 import styles from './UsersList.module.css';
 const ProtectedIdentityIcon: FC = () => (
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <span
-        aria-label="Identité protégée"
-        className="text-muted-foreground relative z-20 inline-flex size-4 shrink-0 items-center justify-center"
-      >
-        <ShieldCheck aria-hidden="true" className="size-4" />
-      </span>
-    </TooltipTrigger>
-    <TooltipContent>Identité protégée</TooltipContent>
-  </Tooltip>
+  <ShieldCheck
+    aria-hidden="true"
+    className="text-muted-foreground size-4 shrink-0"
+  />
 );
 
 type Props = {
@@ -152,10 +144,12 @@ export const UsersListResults: FC<Props> = ({
                     href={getUserDetailHref(user.id)}
                     prefetch={false}
                   >
-                    <UserAvatar
-                      user={user}
-                      className="border-border-default size-9 shrink-0 rounded-[7px] border"
-                    />
+                    <span aria-hidden="true" className="shrink-0">
+                      <UserAvatar
+                        user={user}
+                        className="border-border-default size-9 rounded-[7px] border"
+                      />
+                    </span>
                     <div className="min-w-0">
                       <div className="flex min-w-0 flex-col justify-center gap-0.5">
                         <span className="flex min-w-0 items-center gap-1.5">
@@ -166,11 +160,11 @@ export const UsersListResults: FC<Props> = ({
                             <ProtectedIdentityIcon />
                           )}
                         </span>
-                        {!isUserIdentityMasked(user) && (
-                          <span className="text-muted-foreground truncate text-[11px] leading-4">
-                            {getUserLoginDisplay(user)}
-                          </span>
-                        )}
+                        <span className="text-muted-foreground truncate text-[11px] leading-4">
+                          {isUserIdentityMasked(user)
+                            ? 'Identité protégée'
+                            : getUserLoginDisplay(user)}
+                        </span>
                       </div>
                     </div>
                   </Link>
@@ -183,20 +177,29 @@ export const UsersListResults: FC<Props> = ({
                 </TableCell>
                 {canViewContact && (
                   <TableCell className="pointer-events-none">
-                    {user.contactEmail ? (
+                    {isUserIdentityMasked(user) ? (
+                      <span className="text-muted-foreground text-xs leading-5">
+                        Masqué
+                      </span>
+                    ) : user.contactEmail ? (
                       <span className="text-muted-foreground block truncate text-xs leading-5">
                         {user.contactEmail}
                       </span>
                     ) : (
                       <span className="text-muted-foreground text-xs leading-5">
-                        —
+                        <span aria-hidden="true">—</span>
+                        <span className="sr-only">Aucun email de contact</span>
                       </span>
                     )}
                   </TableCell>
                 )}
                 {securityDetailsVisible && (
                   <TableCell className="pointer-events-none">
-                    {user.mustChangePassword ? (
+                    {user.securityDetailsVisible === false ? (
+                      <span className="text-muted-foreground text-[11px]">
+                        Masqué
+                      </span>
+                    ) : user.mustChangePassword ? (
                       <span className="border-warning/40 bg-warning/15 text-warning inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap">
                         <span
                           aria-hidden="true"
@@ -206,7 +209,10 @@ export const UsersListResults: FC<Props> = ({
                       </span>
                     ) : (
                       <span className="text-muted-foreground text-[11px]">
-                        —
+                        <span aria-hidden="true">—</span>
+                        <span className="sr-only">
+                          Aucun changement demandé
+                        </span>
                       </span>
                     )}
                   </TableCell>
@@ -255,16 +261,18 @@ export const UsersListResults: FC<Props> = ({
                 ? 'Ouvrir mon compte'
                 : `Ouvrir le compte de ${getUserDisplayName(user)}`
             }
-            className="focus-visible:bg-primary/10 focus-visible:ring-primary/70 block px-4 py-3 hover:bg-[var(--surface-row-hover)] focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+            className="group focus-visible:bg-primary/10 focus-visible:ring-ring block px-4 py-3 hover:bg-[var(--surface-row-hover)] focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
             href={getUserDetailHref(user.id)}
             key={user.id}
             prefetch={false}
           >
             <div className="flex items-start gap-3">
-              <UserAvatar
-                user={user}
-                className="border-border-default size-9 shrink-0 rounded-[7px] border"
-              />
+              <span aria-hidden="true" className="shrink-0">
+                <UserAvatar
+                  user={user}
+                  className="border-border-default size-9 rounded-[7px] border"
+                />
+              </span>
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="min-w-0">
                   <div className="flex min-w-0 items-center gap-1.5">
@@ -273,12 +281,18 @@ export const UsersListResults: FC<Props> = ({
                     </h3>
                     {isUserIdentityMasked(user) && <ProtectedIdentityIcon />}
                   </div>
-                  {!isUserIdentityMasked(user) && (
-                    <p className="text-muted-foreground truncate text-[11px] leading-4">
-                      {getUserLoginDisplay(user)}
-                      {user.contactEmail && <> · {user.contactEmail}</>}
-                    </p>
-                  )}
+                  <p className="text-muted-foreground text-[11px] leading-4 [overflow-wrap:anywhere]">
+                    {isUserIdentityMasked(user) ? (
+                      'Identité protégée'
+                    ) : (
+                      <>
+                        {getUserLoginDisplay(user)}
+                        {canViewContact && user.contactEmail && (
+                          <> · {user.contactEmail}</>
+                        )}
+                      </>
+                    )}
+                  </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                   <UserAccessBadge user={user} />

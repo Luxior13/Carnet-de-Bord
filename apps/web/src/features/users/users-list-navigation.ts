@@ -1,5 +1,10 @@
 import { PAGE_PATHS } from '$constants/routes.constants';
 
+import {
+  buildUsersPageUrlParams,
+  readUsersListRequest,
+} from './users-list-state';
+
 export const USERS_NAVIGATION_STORAGE_KEY = 'users.navigation.v1';
 export type UsersNavigation = {
   at: number;
@@ -9,8 +14,10 @@ export type UsersNavigation = {
   scrollTop: number;
 };
 
-const canonicalHref = (href: string): string => {
-  const params = new URLSearchParams(href.split('?')[1]);
+export const usersNavigationHref = (href: string): string => {
+  const params = buildUsersPageUrlParams(
+    readUsersListRequest(new URLSearchParams(href.split('?')[1])),
+  );
   params.sort();
 
   return `${PAGE_PATHS.users}${params.size ? '?' + params : ''}`;
@@ -24,7 +31,7 @@ export const captureUsersNavigation = (
 ): UsersNavigation => ({
   at: Date.now(),
   focusHref,
-  href: canonicalHref(href),
+  href: usersNavigationHref(href),
   scope,
   scrollTop,
 });
@@ -42,7 +49,7 @@ export const readUsersNavigation = (
     const state = value as Record<string, unknown>;
     if (
       state.scope !== scope ||
-      state.href !== canonicalHref(href) ||
+      state.href !== usersNavigationHref(href) ||
       typeof state.at !== 'number' ||
       !Number.isFinite(state.at) ||
       now < state.at ||

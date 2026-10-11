@@ -6,6 +6,14 @@ export type FilterStatus = 'all' | 'active' | 'inactive' | 'pending';
 export type FilterRole = 'all' | 'SUPERADMIN' | UserRole;
 export type SortOption = 'name' | 'recent' | 'created';
 
+export type UsersListRequest = {
+  page: number;
+  role: FilterRole;
+  search: string;
+  sort: SortOption;
+  status: FilterStatus;
+};
+
 export const FILTER_STATUS_OPTIONS: readonly FilterStatus[] = [
   'all',
   'active',
@@ -60,6 +68,31 @@ export const normalizePage = (value: string | null): number => {
 
 export const normalizeSearchQuery = (value: string | null): string =>
   (value ?? '').trim().slice(0, USER_SEARCH_MAX_LENGTH);
+
+export const readUsersListRequest = (
+  params: URLSearchParams,
+  canRequestSecurityDetails = true,
+): UsersListRequest => {
+  const status = normalizeFilterStatus(params.get('status'));
+  const forbiddenStatus = status === 'pending' && !canRequestSecurityDetails;
+
+  return {
+    page: forbiddenStatus ? 1 : normalizePage(params.get('page')),
+    role: normalizeFilterRole(params.get('role')),
+    search: normalizeSearchQuery(params.get('search')),
+    sort: normalizeSortOption(params.get('sort')),
+    status: forbiddenStatus ? 'all' : status,
+  };
+};
+
+export const haveSameUsersListFilters = (
+  first: UsersListRequest,
+  second: UsersListRequest,
+): boolean =>
+  first.role === second.role &&
+  first.search === second.search &&
+  first.sort === second.sort &&
+  first.status === second.status;
 
 export const buildUsersQueryParams = ({
   limit,

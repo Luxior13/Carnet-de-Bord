@@ -15,7 +15,28 @@ import {
   readUsersNavigation,
   USERS_NAVIGATION_STORAGE_KEY,
   type UsersNavigation,
+  usersNavigationHref,
 } from './users-list-navigation';
+
+const getNavigationAnchor = (
+  target: Element | null,
+  container: HTMLDivElement | null,
+): HTMLAnchorElement | null => {
+  const anchor = target?.closest<HTMLAnchorElement>('a[href]');
+  if (
+    !anchor ||
+    !container?.contains(anchor) ||
+    !anchor.getClientRects().length ||
+    anchor.origin !== window.location.origin ||
+    !(
+      anchor.pathname.startsWith(`${PAGE_PATHS.users}/`) ||
+      anchor.pathname === '/mon-compte'
+    )
+  )
+    return null;
+
+  return anchor;
+};
 
 export const useUsersListNavigation = ({
   href,
@@ -26,6 +47,7 @@ export const useUsersListNavigation = ({
   ready: boolean;
   scope: string;
 }): {
+  cancelPageChange: () => void;
   containerRef: RefObject<HTMLDivElement | null>;
   onClickCapture: MouseEventHandler<HTMLDivElement>;
   preparePageChange: () => void;
@@ -36,18 +58,36 @@ export const useUsersListNavigation = ({
   const pending = useRef<UsersNavigation | null>(null);
   const pageChanged = useRef(false);
   const lastFocus = useRef<string | null>(null);
+  const navigationHref = usersNavigationHref(href);
+  const criteriaParams = new URLSearchParams(navigationHref.split('?')[1]);
+  criteriaParams.delete('page');
+  const criteriaKey = `${scope}:${criteriaParams.toString()}`;
+  const previousCriteria = useRef(criteriaKey);
+
+  const cancelPageChange = useCallback((): void => {
+    pageChanged.current = false;
+    pending.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (previousCriteria.current === criteriaKey) return;
+    previousCriteria.current = criteriaKey;
+    cancelPageChange();
+    lastFocus.current = null;
+  }, [cancelPageChange, criteriaKey]);
+
   useEffect(() => {
     pending.current = null;
     try {
       pending.current = readUsersNavigation(
         sessionStorage.getItem(USERS_NAVIGATION_STORAGE_KEY),
         scope,
-        href,
+        navigationHref,
       );
     } catch {
       /* Storage is optional. */
     }
-  }, [href, scope]);
+  }, [navigationHref, scope]);
 
   const save = useCallback(
     (focusHref: string | null): void => {
@@ -72,7 +112,16 @@ export const useUsersListNavigation = ({
     [scope, ready, href],
   );
   useEffect(() => {
-    const saveBeforeReload = (): void => save(lastFocus.current);
+    const saveBeforeReload = (): void => {
+      const container = containerRef.current;
+      const focused = getNavigationAnchor(document.activeElement, container);
+      const previous = Array.from(
+        container?.querySelectorAll<HTMLAnchorElement>('a[href]') ?? [],
+      ).find((link) => link.getAttribute('href') === lastFocus.current);
+      const anchor =
+        focused ?? getNavigationAnchor(previous ?? null, container);
+      save(anchor?.getAttribute('href') ?? null);
+    };
     window.addEventListener('pagehide', saveBeforeReload);
 
     return (): void => window.removeEventListener('pagehide', saveBeforeReload);
@@ -84,6 +133,7 @@ export const useUsersListNavigation = ({
       frame = requestAnimationFrame(() => {
         const container = containerRef.current;
         if (!container) return;
+        const saved = pending.current;
         const scroller = container.closest('main');
         if (pageChanged.current) {
           pending.current = null;
@@ -111,7 +161,15 @@ export const useUsersListNavigation = ({
           origin?.focus({ preventScroll: true });
         }
         try {
-          sessionStorage.removeItem(USERS_NAVIGATION_STORAGE_KEY);
+          if (saved) {
+            const stored = readUsersNavigation(
+              sessionStorage.getItem(USERS_NAVIGATION_STORAGE_KEY),
+              scope,
+              navigationHref,
+            );
+            if (stored?.at === saved.at)
+              sessionStorage.removeItem(USERS_NAVIGATION_STORAGE_KEY);
+          }
         } catch {
           /* Optional storage. */
         }
@@ -119,7 +177,7 @@ export const useUsersListNavigation = ({
     });
 
     return (): void => cancelAnimationFrame(frame);
-  }, [ready, href]);
+  }, [ready, navigationHref, scope]);
 
   const onClickCapture: MouseEventHandler<HTMLDivElement> = (event) => {
     if (
@@ -130,22 +188,17 @@ export const useUsersListNavigation = ({
       event.altKey
     )
       return;
-    const anchor =
-      event.target instanceof Element ? event.target.closest('a') : null;
-    if (
-      !anchor ||
-      anchor.origin !== window.location.origin ||
-      !(
-        anchor.pathname.startsWith(PAGE_PATHS.users + '/') ||
-        anchor.pathname === '/mon-compte'
-      )
-    )
-      return;
+    const anchor = getNavigationAnchor(
+      event.target instanceof Element ? event.target : null,
+      containerRef.current,
+    );
+    if (!anchor) return;
     lastFocus.current = anchor.getAttribute('href');
     save(lastFocus.current);
   };
 
   return {
+    cancelPageChange,
     containerRef,
     onClickCapture,
     preparePageChange: (): void => {

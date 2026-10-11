@@ -17,11 +17,13 @@ import {
   buildUsersQueryParams,
   type FilterRole,
   type FilterStatus,
+  haveSameUsersListFilters,
   normalizeFilterRole,
   normalizeFilterStatus,
   normalizePage,
   normalizeSearchQuery,
   normalizeSortOption,
+  readUsersListRequest,
   type SortOption,
 } from './users-list-state';
 
@@ -71,31 +73,26 @@ export const useUsersList = (): UsersListController => {
   const [lastSuccessfulLoadAt, setLastSuccessfulLoadAt] = useState<Date | null>(
     null,
   );
-  const [searchQuery, setSearchQuery] = useState(() =>
-    normalizeSearchQuery(searchParams.get('search')),
+  const initialRequest = readUsersListRequest(
+    new URLSearchParams(currentQueryString),
+    canRequestSecurityDetails,
   );
-  const [debouncedSearch, setDebouncedSearch] = useState(() =>
-    normalizeSearchQuery(searchParams.get('search')),
+  const [searchQuery, setSearchQuery] = useState(initialRequest.search);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialRequest.search);
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>(
+    initialRequest.status,
   );
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>(() =>
-    normalizeFilterStatus(searchParams.get('status')),
-  );
-  const [filterRole, setFilterRole] = useState<FilterRole>(() =>
-    normalizeFilterRole(searchParams.get('role')),
-  );
-  const [sortBy, setSortBy] = useState<SortOption>(() =>
-    normalizeSortOption(searchParams.get('sort')),
-  );
+  const [filterRole, setFilterRole] = useState<FilterRole>(initialRequest.role);
+  const [sortBy, setSortBy] = useState<SortOption>(initialRequest.sort);
   const hasLoadedUsersRef = useRef(false);
   const effectivePageSizeRef = useRef<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const isSyncingStateFromUrlRef = useRef(false);
   const lastSyncedQueryStringRef = useRef(currentQueryString);
+  const pendingPageNavigationRef = useRef<number | null>(null);
 
   // Pagination
-  const [currentPage, setCurrentPage] = useState(() =>
-    normalizePage(searchParams.get('page')),
-  );
+  const [currentPage, setCurrentPage] = useState(initialRequest.page);
   const effectiveFilterStatus: FilterStatus =
     currentUser && !canRequestSecurityDetails && filterStatus === 'pending'
       ? 'all'
@@ -132,6 +129,7 @@ export const useUsersList = (): UsersListController => {
         });
 
         const response = await fetch(`/api/users?${params.toString()}`, {
+          cache: 'no-store',
           signal: controller.signal,
         });
         if (controller.signal.aborted) return;
@@ -159,6 +157,7 @@ export const useUsersList = (): UsersListController => {
           );
 
           if (page > resolvedTotalPages) {
+            pendingPageNavigationRef.current = null;
             setCurrentPage(resolvedTotalPages);
 
             return;
@@ -188,7 +187,11 @@ export const useUsersList = (): UsersListController => {
         const message = 'Impossible de charger les utilisateurs';
         setLoadError(message);
       } finally {
-        if (abortControllerRef.current !== controller) return;
+        if (
+          abortControllerRef.current !== controller ||
+          controller.signal.aborted
+        )
+          return;
 
         abortControllerRef.current = null;
         hasLoadedUsersRef.current = true;
@@ -208,17 +211,33 @@ export const useUsersList = (): UsersListController => {
   useEffect((): void => {
     if (currentQueryString === lastSyncedQueryStringRef.current) return;
 
-    const nextSearch = normalizeSearchQuery(searchParams.get('search'));
+    const next = readUsersListRequest(
+      new URLSearchParams(currentQueryString),
+      canRequestSecurityDetails,
+    );
+    const normalizedQueryString = buildUsersPageUrlParams(next).toString();
 
     isSyncingStateFromUrlRef.current = true;
-    lastSyncedQueryStringRef.current = currentQueryString;
-    setSearchQuery(nextSearch);
-    setDebouncedSearch(nextSearch);
-    setFilterStatus(normalizeFilterStatus(searchParams.get('status')));
-    setFilterRole(normalizeFilterRole(searchParams.get('role')));
-    setSortBy(normalizeSortOption(searchParams.get('sort')));
-    setCurrentPage(normalizePage(searchParams.get('page')));
-  }, [currentQueryString, searchParams]);
+    lastSyncedQueryStringRef.current = normalizedQueryString;
+    // Normalization can produce the already-rendered state. In that case no
+    // state update would rerun the URL effect, so clean the location here.
+    if (normalizedQueryString !== currentQueryString) {
+      window.history.replaceState(
+        null,
+        '',
+        normalizedQueryString
+          ? `${pathname}?${normalizedQueryString}`
+          : pathname,
+      );
+    }
+    pendingPageNavigationRef.current = null;
+    setSearchQuery(next.search);
+    setDebouncedSearch(next.search);
+    setFilterStatus(next.status);
+    setFilterRole(next.role);
+    setSortBy(next.sort);
+    setCurrentPage(next.page);
+  }, [canRequestSecurityDetails, currentQueryString, pathname]);
 
   useEffect((): void => {
     if (isSyncingStateFromUrlRef.current) {
@@ -239,11 +258,11 @@ export const useUsersList = (): UsersListController => {
     if (currentQueryString === nextQueryString) return;
 
     lastSyncedQueryStringRef.current = nextQueryString;
-    window.history.replaceState(
-      null,
-      '',
-      nextQueryString ? `${pathname}?${nextQueryString}` : pathname,
-    );
+    const isPageNavigation = pendingPageNavigationRef.current === currentPage;
+    pendingPageNavigationRef.current = null;
+    const href = nextQueryString ? `${pathname}?${nextQueryString}` : pathname;
+    if (isPageNavigation) window.history.pushState(null, '', href);
+    else window.history.replaceState(null, '', href);
   }, [
     currentPage,
     currentQueryString,
@@ -294,6 +313,7 @@ export const useUsersList = (): UsersListController => {
     if (normalizedSearch === debouncedSearch) return () => undefined;
 
     const timer = setTimeout(() => {
+      pendingPageNavigationRef.current = null;
       setDebouncedSearch(normalizedSearch);
       setCurrentPage(1); // Reset to page 1 on search
     }, 400);
@@ -306,6 +326,10 @@ export const useUsersList = (): UsersListController => {
     type: 'status' | 'role' | 'sort',
     value: string,
   ): void => {
+    pendingPageNavigationRef.current = null;
+    const nextSearch = normalizeSearchQuery(searchQuery);
+    setSearchQuery(nextSearch);
+    setDebouncedSearch(nextSearch);
     setCurrentPage(1); // Reset to page 1 on filter change
     if (type === 'status') {
       const nextStatus = normalizeFilterStatus(value);
@@ -320,6 +344,7 @@ export const useUsersList = (): UsersListController => {
   };
 
   const clearFilters = (): void => {
+    pendingPageNavigationRef.current = null;
     setSearchQuery('');
     setDebouncedSearch('');
     setFilterStatus('all');
@@ -334,20 +359,27 @@ export const useUsersList = (): UsersListController => {
     filterRole !== 'all' ||
     sortBy !== 'name';
 
-  const query = buildUsersPageUrlParams({
+  const request = {
     page: currentPage,
     role: filterRole,
     search: debouncedSearch,
     sort: sortBy,
     status: effectiveFilterStatus,
-  }).toString();
+  };
+  const query = buildUsersPageUrlParams(request).toString();
   // A retained response is only meaningful for the criteria that produced it.
   // This also prevents stale rows flashing under a new filter during loading.
   const hasMatchingResponse = responseQuery === query;
-  const displayedUsers = hasMatchingResponse ? users : [];
+  const hasMatchingFilters =
+    responseQuery !== null &&
+    haveSameUsersListFilters(
+      readUsersListRequest(new URLSearchParams(responseQuery)),
+      request,
+    );
+  const displayedUsers = hasMatchingFilters ? users : [];
 
   // Total pages from server pagination
-  const visiblePagination = hasMatchingResponse ? pagination : null;
+  const visiblePagination = hasMatchingFilters ? pagination : null;
   const totalPages = Math.min(
     visiblePagination?.totalPages || 1,
     PAGINATION.MAX_PAGE,
@@ -356,16 +388,25 @@ export const useUsersList = (): UsersListController => {
     (visiblePagination?.totalPages ?? 0) > PAGINATION.MAX_PAGE;
   const totalFiltered = visiblePagination?.total ?? displayedUsers.length;
   const pageSize = visiblePagination?.limit ?? PAGINATION.DEFAULT_LIMIT;
+  const changePage = (page: number): void => {
+    if (isLoading || isRefreshing || loadError || !hasMatchingResponse) return;
+    const nextPage = Math.min(totalPages, normalizePage(String(page)));
+    if (nextPage === currentPage) return;
+    pendingPageNavigationRef.current = nextPage;
+    setCurrentPage(nextPage);
+  };
 
   return {
     canCreateUsers,
     canRequestSecurityDetails,
     canViewContact,
+    changePage,
     clearFilters,
     currentPage,
     currentQueryString: query,
     currentUser,
     debouncedSearch,
+    displayedPage: visiblePagination?.page ?? currentPage,
     displayedUsers,
     fetchUsers,
     filterRole,
@@ -373,9 +414,11 @@ export const useUsersList = (): UsersListController => {
     handleFilterChange,
     hasActiveFilters,
     hasTruncatedPagination,
-    isLoading: isLoading || (!hasMatchingResponse && !loadError),
-    isRefreshing,
-    lastSuccessfulLoadAt: hasMatchingResponse ? lastSuccessfulLoadAt : null,
+    isLoading: isLoading || (!hasMatchingFilters && !loadError),
+    isRefreshing:
+      isRefreshing ||
+      (hasMatchingFilters && !hasMatchingResponse && !loadError),
+    lastSuccessfulLoadAt: hasMatchingFilters ? lastSuccessfulLoadAt : null,
     loadError,
     pageSize,
     pagination: visiblePagination,
@@ -394,11 +437,13 @@ export type UsersListController = {
   canCreateUsers: boolean;
   canRequestSecurityDetails: boolean;
   canViewContact: boolean;
+  changePage: (page: number) => void;
   clearFilters: () => void;
   currentPage: number;
   currentQueryString: string;
   currentUser: UserType | null;
   debouncedSearch: string;
+  displayedPage: number;
   displayedUsers: UserType[];
   fetchUsers: (
     page?: number,

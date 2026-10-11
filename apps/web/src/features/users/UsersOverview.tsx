@@ -82,6 +82,10 @@ export const UsersOverview: FC<Props> = ({
     ) : (
       (count ?? 0).toLocaleString('fr-FR')
     );
+  const countLabel = (count: number | null | undefined): string =>
+    isLoading
+      ? 'nombre en cours de chargement'
+      : `${(count ?? 0).toLocaleString('fr-FR')} compte${(count ?? 0) > 1 ? 's' : ''}`;
 
   return (
     <aside
@@ -109,7 +113,7 @@ export const UsersOverview: FC<Props> = ({
           <Link
             href={href()}
             scroll={false}
-            aria-label="Afficher tous les comptes"
+            aria-label={`Afficher tous les comptes : ${countLabel(stats?.total)}`}
             aria-current={!hasQuery && !status && !role ? 'page' : undefined}
           >
             {value(stats?.total)}
@@ -135,7 +139,7 @@ export const UsersOverview: FC<Props> = ({
               <Link
                 href={href(filter)}
                 scroll={false}
-                aria-label={'Afficher les comptes : ' + counter.label}
+                aria-label={`Afficher les comptes : ${counter.label}, ${countLabel(counter.value)}`}
                 aria-current={active ? 'page' : undefined}
               >
                 <span className="text-muted-foreground text-[11px] font-normal">

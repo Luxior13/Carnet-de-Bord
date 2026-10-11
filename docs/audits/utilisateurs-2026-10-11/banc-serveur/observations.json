@@ -1,0 +1,608 @@
+{
+  "date": "2026-10-11T18:31:22.457Z",
+  "node": "v24.14.0",
+  "prisma": "6.19.3",
+  "postgres": "PostgreSQL 17.10 on x86_64-windows, compiled by msvc-19.44.35226, 64-bit",
+  "platform": "win32 x64",
+  "cpu": "13th Gen Intel(R) Core(TM) i7-13700K",
+  "connectionLimit": 1,
+  "warmup": 2,
+  "samples": 20,
+  "comparison": "Prior GET read reconstructed from audited code; new real listUsers service. Database and returned DTO serialization only, no auth, HTTP or browser.",
+  "results": [
+    {
+      "size": 25,
+      "scenario": "name",
+      "before": {
+        "medianMs": 2.965,
+        "p95Ms": 3.433,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 0.648,
+        "p95Ms": 0.958,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 25,
+      "scenario": "recent",
+      "before": {
+        "medianMs": 3.269,
+        "p95Ms": 3.808,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 0.712,
+        "p95Ms": 1.385,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 25,
+      "scenario": "created",
+      "before": {
+        "medianMs": 3.107,
+        "p95Ms": 3.694,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 0.621,
+        "p95Ms": 1.295,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 25,
+      "scenario": "broad-search",
+      "before": {
+        "medianMs": 3.914,
+        "p95Ms": 4.688,
+        "queryCounts": [
+          8
+        ]
+      },
+      "after": {
+        "medianMs": 0.799,
+        "p95Ms": 1.31,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 25,
+      "scenario": "multiword-name",
+      "before": {
+        "medianMs": 3.483,
+        "p95Ms": 4.481,
+        "queryCounts": [
+          8
+        ]
+      },
+      "after": {
+        "medianMs": 0.715,
+        "p95Ms": 1.473,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 25,
+      "scenario": "contact",
+      "before": {
+        "medianMs": 3.278,
+        "p95Ms": 3.762,
+        "queryCounts": [
+          8
+        ]
+      },
+      "after": {
+        "medianMs": 0.668,
+        "p95Ms": 1.065,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 25,
+      "scenario": "inactive",
+      "before": {
+        "medianMs": 2.814,
+        "p95Ms": 3.668,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 0.524,
+        "p95Ms": 0.901,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 25,
+      "scenario": "admin",
+      "before": {
+        "medianMs": 2.886,
+        "p95Ms": 3.743,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 0.542,
+        "p95Ms": 1.128,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 25,
+      "scenario": "pending",
+      "before": {
+        "medianMs": 2.795,
+        "p95Ms": 3.31,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 0.476,
+        "p95Ms": 0.686,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 25,
+      "scenario": "empty",
+      "before": {
+        "medianMs": 3.194,
+        "p95Ms": 3.752,
+        "queryCounts": [
+          8
+        ]
+      },
+      "after": {
+        "medianMs": 0.574,
+        "p95Ms": 0.804,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 25,
+      "scenario": "second-page",
+      "before": {
+        "medianMs": 2.729,
+        "p95Ms": 3.414,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 0.442,
+        "p95Ms": 0.69,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "scenario": "name",
+      "before": {
+        "medianMs": 4.763,
+        "p95Ms": 5.287,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 1.896,
+        "p95Ms": 2.394,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "scenario": "recent",
+      "before": {
+        "medianMs": 4.549,
+        "p95Ms": 5.342,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 1.632,
+        "p95Ms": 2.093,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "scenario": "created",
+      "before": {
+        "medianMs": 4.173,
+        "p95Ms": 4.718,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 1.482,
+        "p95Ms": 1.763,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "scenario": "broad-search",
+      "before": {
+        "medianMs": 11.809,
+        "p95Ms": 12.606,
+        "queryCounts": [
+          8
+        ]
+      },
+      "after": {
+        "medianMs": 2.751,
+        "p95Ms": 3.038,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "scenario": "multiword-name",
+      "before": {
+        "medianMs": 8.508,
+        "p95Ms": 9.763,
+        "queryCounts": [
+          8
+        ]
+      },
+      "after": {
+        "medianMs": 4.166,
+        "p95Ms": 4.56,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "scenario": "contact",
+      "before": {
+        "medianMs": 6.49,
+        "p95Ms": 7.071,
+        "queryCounts": [
+          8
+        ]
+      },
+      "after": {
+        "medianMs": 3.471,
+        "p95Ms": 3.838,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "scenario": "inactive",
+      "before": {
+        "medianMs": 3.417,
+        "p95Ms": 4.138,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 0.884,
+        "p95Ms": 1.176,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "scenario": "admin",
+      "before": {
+        "medianMs": 3.721,
+        "p95Ms": 4.168,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 0.95,
+        "p95Ms": 1.357,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "scenario": "pending",
+      "before": {
+        "medianMs": 3.964,
+        "p95Ms": 4.54,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 1.063,
+        "p95Ms": 1.462,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "scenario": "empty",
+      "before": {
+        "medianMs": 6.499,
+        "p95Ms": 7.217,
+        "queryCounts": [
+          8
+        ]
+      },
+      "after": {
+        "medianMs": 3.817,
+        "p95Ms": 4.282,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "scenario": "second-page",
+      "before": {
+        "medianMs": 5.491,
+        "p95Ms": 5.894,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 2.307,
+        "p95Ms": 2.656,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "scenario": "name",
+      "before": {
+        "medianMs": 14.419,
+        "p95Ms": 15.311,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 8.28,
+        "p95Ms": 9.303,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "scenario": "recent",
+      "before": {
+        "medianMs": 14.115,
+        "p95Ms": 15.937,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 6.759,
+        "p95Ms": 8.118,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "scenario": "created",
+      "before": {
+        "medianMs": 14.673,
+        "p95Ms": 17.166,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 7.582,
+        "p95Ms": 8.072,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "scenario": "broad-search",
+      "before": {
+        "medianMs": 91.693,
+        "p95Ms": 106.118,
+        "queryCounts": [
+          8
+        ]
+      },
+      "after": {
+        "medianMs": 17.371,
+        "p95Ms": 19.745,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "scenario": "multiword-name",
+      "before": {
+        "medianMs": 56.994,
+        "p95Ms": 63.216,
+        "queryCounts": [
+          8
+        ]
+      },
+      "after": {
+        "medianMs": 33.317,
+        "p95Ms": 36.249,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "scenario": "contact",
+      "before": {
+        "medianMs": 36.76,
+        "p95Ms": 39.23,
+        "queryCounts": [
+          8
+        ]
+      },
+      "after": {
+        "medianMs": 33.338,
+        "p95Ms": 37.021,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "scenario": "inactive",
+      "before": {
+        "medianMs": 10.805,
+        "p95Ms": 12.838,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 4.126,
+        "p95Ms": 4.906,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "scenario": "admin",
+      "before": {
+        "medianMs": 9.097,
+        "p95Ms": 10.802,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 4.465,
+        "p95Ms": 4.977,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "scenario": "pending",
+      "before": {
+        "medianMs": 9.336,
+        "p95Ms": 10.876,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 3.867,
+        "p95Ms": 4.402,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "scenario": "empty",
+      "before": {
+        "medianMs": 34.943,
+        "p95Ms": 39.857,
+        "queryCounts": [
+          8
+        ]
+      },
+      "after": {
+        "medianMs": 31.41,
+        "p95Ms": 35.086,
+        "queryCounts": [
+          2
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "scenario": "second-page",
+      "before": {
+        "medianMs": 14.821,
+        "p95Ms": 16.981,
+        "queryCounts": [
+          7
+        ]
+      },
+      "after": {
+        "medianMs": 8.408,
+        "p95Ms": 9.217,
+        "queryCounts": [
+          2
+        ]
+      }
+    }
+  ]
+}

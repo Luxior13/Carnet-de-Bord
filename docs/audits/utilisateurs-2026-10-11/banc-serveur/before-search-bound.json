@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-11T18:21:05.977Z",
+  "users": 33000,
+  "searchRowsTransferredToApplication": 33000,
+  "result": {
+    "success": false,
+    "code": "P2035",
+    "reason": "Assertion violation on the database: `too many bind variables in prepared statement, expected maximum of 32767, received 32768`"
+  }
+}

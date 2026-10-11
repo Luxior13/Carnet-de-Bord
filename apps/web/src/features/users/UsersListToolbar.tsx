@@ -1,7 +1,7 @@
 'use client';
 
 import { RotateCcw, X } from 'lucide-react';
-import React, { type FC } from 'react';
+import React, { type FC, useRef } from 'react';
 
 import { PAGINATION } from '$constants/pagination.constants';
 import { canSearchUserContact } from '$features/users/users-list.utils';
@@ -27,6 +27,12 @@ import type { UsersListController } from './useUsersList';
 export const UsersListToolbar: FC<{ list: UsersListController }> = ({
   list,
 }) => {
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const focusSearch = (): void => {
+    toolbarRef.current
+      ?.querySelector<HTMLInputElement>('input[type="search"]')
+      ?.focus({ preventScroll: true });
+  };
   const {
     canRequestSecurityDetails,
     clearFilters,
@@ -49,7 +55,7 @@ export const UsersListToolbar: FC<{ list: UsersListController }> = ({
   } = list;
 
   return (
-    <div className="w-full">
+    <div className="w-full" ref={toolbarRef}>
       <form
         autoComplete="off"
         aria-label="Rechercher et filtrer les utilisateurs"
@@ -138,7 +144,10 @@ export const UsersListToolbar: FC<{ list: UsersListController }> = ({
             <Button
               aria-label="Réinitialiser les filtres"
               className={directoryStyles.iconButton}
-              onClick={clearFilters}
+              onClick={() => {
+                clearFilters();
+                focusSearch();
+              }}
               size="icon"
               type="button"
               variant="ghost"
@@ -164,6 +173,7 @@ export const UsersListToolbar: FC<{ list: UsersListController }> = ({
                 setSearchQuery('');
                 setDebouncedSearch('');
                 setCurrentPage(1);
+                focusSearch();
               }}
               aria-label="Retirer le filtre de recherche"
             >
@@ -175,7 +185,10 @@ export const UsersListToolbar: FC<{ list: UsersListController }> = ({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => handleFilterChange('status', 'all')}
+              onClick={() => {
+                handleFilterChange('status', 'all');
+                focusSearch();
+              }}
               aria-label="Retirer le filtre d’état"
             >
               {filterStatus === 'active'
@@ -190,7 +203,10 @@ export const UsersListToolbar: FC<{ list: UsersListController }> = ({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => handleFilterChange('role', 'all')}
+              onClick={() => {
+                handleFilterChange('role', 'all');
+                focusSearch();
+              }}
               aria-label="Retirer le filtre de rôle"
             >
               {filterRole === 'SUPERADMIN'

@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-11",
+  "browser": "149.0.7827.55",
+  "environment": "Real Users page components and CSS; API, router, actor and 240 px shell simulated; Arial; Europe/Paris; reduced motion; fixed Date 2026-10-11 14:00Z",
+  "scenarios": [
+    {
+      "name": "pagination-delay-error-retry-back",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=2&limit=25",
+        "page=2&limit=25",
+        "page=1"
+      ]
+    }
+  ]
+}

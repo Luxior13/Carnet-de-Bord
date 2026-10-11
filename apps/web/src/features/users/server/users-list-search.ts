@@ -23,7 +23,7 @@ const normalizeUserSearchValue = (value: string): string => {
 const escapeUserSearchLikePattern = (value: string): string =>
   value.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_');
 
-export const buildUserSearchQuery = (
+export const buildUserSearchPredicate = (
   search: string,
   options: { canViewContact: boolean; isProtected: boolean },
 ): Prisma.Sql => {
@@ -51,5 +51,11 @@ export const buildUserSearchQuery = (
     ? fields
     : Prisma.sql`(("isProtected" = false AND ${fields})${includeProtected ? Prisma.sql` OR "isProtected" = true` : Prisma.empty})`;
 
-  return Prisma.sql`SELECT "id" FROM "User" WHERE "deletedAt" IS NULL AND ${visible}`;
+  return visible;
 };
+
+export const buildUserSearchQuery = (
+  search: string,
+  options: { canViewContact: boolean; isProtected: boolean },
+): Prisma.Sql =>
+  Prisma.sql`SELECT "id" FROM "User" WHERE "deletedAt" IS NULL AND ${buildUserSearchPredicate(search, options)}`;

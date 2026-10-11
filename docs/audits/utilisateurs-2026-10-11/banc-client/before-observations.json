@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-11",
+  "browser": "149.0.7827.55",
+  "environment": "Real Users page components and CSS; API, router, actor and 240 px shell simulated; Arial; Europe/Paris; reduced motion; fixed Date 2026-10-11 14:00Z",
+  "scenarios": [
+    {
+      "name": "presentation-and-a11y",
+      "width": 320,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ],
+      "details": {
+        "accessibility": "- link \"Ouvrir mon compte\":\n  - /url: /mon-compte?returnTo=%2Fsysteme%2Futilisateurs\n  - img \"Avatar de Camille Exemple\"\n  - heading \"Camille Exemple\" [level=3]\n  - paragraph: camille.exemple · camille@example.test\n  - text: Utilisateur Actif\n  - paragraph: \"Dernière connexion : il y a 2 h\"\n- link \"Ouvrir le compte de Zoé Martin\":\n  - /url: /systeme/utilisateurs/user-zoe?returnTo=%2Fsysteme%2Futilisateurs\n  - img \"Avatar de Zoé Martin\"\n  - heading \"Zoé Martin\" [level=3]\n  - paragraph: zoe.martin\n  - text: Administrateur Désactivé Mot de passe à changer\n  - paragraph: \"Dernière connexion : jamais\"\n- link \"Ouvrir le compte de Superadministrateur\":\n  - /url: /systeme/utilisateurs/user-protected?returnTo=%2Fsysteme%2Futilisateurs\n  - img \"Avatar de Compte racine\"\n  - heading \"Superadministrateur\" [level=3]\n  - text: Superadmin Actif\n  - paragraph: \"Dernière connexion : masquée\"\n- navigation \"Pagination des utilisateurs\":\n  - paragraph:\n    - text: Page\n    - strong: \"1\"\n  - button \"Page précédente\" [disabled]\n  - button \"Page suivante\" [disabled]",
+        "overviewAccessibility": "- complementary \"Vue d’ensemble\":\n  - heading \"Vue d’ensemble\" [level=2]\n  - paragraph: Tous les comptes\n  - link \"Afficher tous les comptes\":\n    - /url: /systeme/utilisateurs\n    - text: \"3\"\n  - 'link \"Afficher les comptes : Superadmin\"':\n    - /url: /systeme/utilisateurs?role=SUPERADMIN\n    - text: Superadmin 1\n  - 'link \"Afficher les comptes : Administrateurs\"':\n    - /url: /systeme/utilisateurs?role=ADMIN\n    - text: Administrateurs 1\n  - 'link \"Afficher les comptes : Utilisateurs\"':\n    - /url: /systeme/utilisateurs?role=USER\n    - text: Utilisateurs 1\n  - 'link \"Afficher les comptes : Actifs\"':\n    - /url: /systeme/utilisateurs?status=active\n    - text: Actifs 2\n  - 'link \"Afficher les comptes : Désactivés\"':\n    - /url: /systeme/utilisateurs?status=inactive\n    - text: Désactivés 1\n  - 'link \"Afficher les comptes : Mot de passe à changer\"':\n    - /url: /systeme/utilisateurs?status=pending\n    - text: Mot de passe à changer 1"
+      }
+    },
+    {
+      "name": "filters-and-reset-focus",
+      "width": 320,
+      "result": "failed",
+      "error": "expect(locator).toBeFocused() failed\n\nLocator:  getByRole('searchbox', { name: 'Rechercher un compte utilisateur' })\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for getByRole('searchbox', { name: 'Rechercher un compte utilisateur' })\n    14 × locator resolved to <input value=\"\" id=\"«r0»\" type=\"search\" maxlength=\"100\" data-slot=\"input\" autocomplete=\"off\" spellcheck=\"false\" data-bwignore=\"true\" data-lpignore=\"true\" autocapitalize=\"none\" enterkeyhint=\"search\" data-1p-ignore=\"true\" data-form-type=\"other\" name=\"directory-search\" placeholder=\"Rechercher…\" title=\"Nom, identifiant ou email\" aria-label=\"Rechercher un compte utilisateur\" class=\"border-border-control bg-input text-foreground selection:bg-primary selection:text-primary-foreground file:text-foreground pl…/>\n       - unexpected value \"inactive\"\n",
+      "requests": [
+        "page=1",
+        "page=1&search=Camille",
+        "page=1"
+      ]
+    }
+  ]
+}

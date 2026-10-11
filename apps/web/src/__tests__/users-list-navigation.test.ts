@@ -6,8 +6,10 @@ import {
 } from '$features/users/users-list-navigation';
 import {
   buildUsersPageUrlParams,
+  haveSameUsersListFilters,
   normalizeFilterRole,
   normalizePage,
+  readUsersListRequest,
 } from '$features/users/users-list-state';
 
 describe('users list navigation boundaries', () => {
@@ -89,5 +91,69 @@ describe('users list navigation boundaries', () => {
         status: 'all',
       }).toString(),
     ).toBe('role=SUPERADMIN&sort=recent');
+  });
+
+  it('normalizes a restricted pending deep link before any request is sent', () => {
+    const params = new URLSearchParams(
+      'page=8&status=pending&role=ADMIN&search=%20Ada%20&sort=recent',
+    );
+    expect(readUsersListRequest(params, false)).toEqual({
+      page: 1,
+      role: 'ADMIN',
+      search: 'Ada',
+      sort: 'recent',
+      status: 'all',
+    });
+    expect(readUsersListRequest(params, true)).toEqual({
+      page: 8,
+      role: 'ADMIN',
+      search: 'Ada',
+      sort: 'recent',
+      status: 'pending',
+    });
+  });
+
+  it('retains rows for pagination but never labels another filter with those rows', () => {
+    const first = readUsersListRequest(
+      new URLSearchParams('search=Ada&role=USER&status=active'),
+    );
+    expect(haveSameUsersListFilters(first, { ...first, page: 2 })).toBe(true);
+    for (const params of [
+      'search=Zoé&role=USER&status=active',
+      'search=Ada&role=ADMIN&status=active',
+      'search=Ada&role=USER&status=inactive',
+      'search=Ada&role=USER&status=active&sort=recent',
+    ]) {
+      expect(
+        haveSameUsersListFilters(
+          first,
+          readUsersListRequest(new URLSearchParams(params)),
+        ),
+      ).toBe(false);
+    }
+  });
+
+  it('restores across URL cleanup without retaining invalid or unrelated parameters', () => {
+    const saved = captureUsersNavigation(
+      'actor',
+      '/systeme/utilisateurs?page=1&search=%20Ada%20&role=all&sort=unknown&tracking=test',
+      220,
+      null,
+    );
+    expect(saved.href).toBe('/systeme/utilisateurs?search=Ada');
+    expect(
+      readUsersNavigation(
+        JSON.stringify(saved),
+        'actor',
+        '/systeme/utilisateurs?search=Ada',
+      ),
+    ).toEqual(saved);
+    expect(
+      readUsersNavigation(
+        JSON.stringify(saved),
+        'actor',
+        '/systeme/utilisateurs?search=Ada&status=inactive',
+      ),
+    ).toBeNull();
   });
 });

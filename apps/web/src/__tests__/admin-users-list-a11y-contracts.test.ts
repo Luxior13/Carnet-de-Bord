@@ -41,7 +41,7 @@ describe('administrative users list accessibility contracts', () => {
       /`Ouvrir le compte de \$\{getUserDisplayName\(user\)\}`/,
     );
     expect(usersListSource).toContain(
-      'className="focus-visible:bg-primary/10 focus-visible:ring-primary/70 block px-4 py-3 hover:bg-[var(--surface-row-hover)]',
+      'className="group focus-visible:bg-primary/10 focus-visible:ring-ring block px-4 py-3 hover:bg-[var(--surface-row-hover)]',
     );
     expect(usersListSource).not.toContain('tabIndex={0}');
     expect(usersListSource).not.toContain('router.push(');

@@ -2,7 +2,7 @@
 
 import { Plus, Users } from 'lucide-react';
 import Link from 'next/link';
-import React, { type FC } from 'react';
+import React, { type FC, useEffect, useRef } from 'react';
 
 import { ContentState } from '$components/layout/ContentState';
 import { PageAsideLayout } from '$components/layout/PageAsideLayout';
@@ -17,6 +17,7 @@ import { ListPagination } from '$ui/pagination';
 import { Skeleton } from '$ui/skeleton';
 
 import { getUsersListVisibilityKey } from './users-list.utils';
+import { buildUsersPageUrlParams } from './users-list-state';
 import { UsersListResults } from './UsersListResults';
 import { UsersListToolbar } from './UsersListToolbar';
 import { useUsersList } from './useUsersList';
@@ -28,11 +29,13 @@ export const UsersListPage: FC = () => {
     canCreateUsers,
     canRequestSecurityDetails,
     canViewContact,
+    changePage,
     clearFilters,
     currentPage,
     currentQueryString,
     currentUser,
     debouncedSearch,
+    displayedPage,
     displayedUsers,
     fetchUsers,
     filterRole,
@@ -43,7 +46,6 @@ export const UsersListPage: FC = () => {
     lastSuccessfulLoadAt,
     loadError,
     securityDetailsVisible,
-    setCurrentPage,
     sortBy,
     stats,
     totalPages,
@@ -54,8 +56,49 @@ export const UsersListPage: FC = () => {
     ready: !isLoading && !isRefreshing && !loadError,
     scope: currentUser ? getUsersListVisibilityKey(currentUser) : '',
   });
+  const retryActionRef = useRef<HTMLButtonElement>(null);
+  const retryRequestedRef = useRef(false);
+  const filterIntent = JSON.stringify([
+    list.searchQuery,
+    filterRole,
+    filterStatus,
+    sortBy,
+  ]);
+  const previousFilterIntent = useRef(filterIntent);
+  const { cancelPageChange } = navigation;
+
+  useEffect(() => {
+    if (previousFilterIntent.current === filterIntent) return;
+    previousFilterIntent.current = filterIntent;
+    retryRequestedRef.current = false;
+    cancelPageChange();
+  }, [cancelPageChange, filterIntent]);
+
+  useEffect(() => {
+    if (isLoading || isRefreshing || !retryRequestedRef.current) return;
+    retryRequestedRef.current = false;
+    if (loadError) {
+      cancelPageChange();
+      retryActionRef.current?.focus({ preventScroll: true });
+    }
+  }, [cancelPageChange, isLoading, isRefreshing, loadError]);
+
+  const clearFiltersAndFocus = (): void => {
+    clearFilters();
+    navigation.containerRef.current
+      ?.querySelector<HTMLInputElement>('input[type="search"]')
+      ?.focus({ preventScroll: true });
+  };
+  const displayedQuery = buildUsersPageUrlParams({
+    page: displayedPage,
+    role: filterRole,
+    search: debouncedSearch,
+    sort: sortBy,
+    status: filterStatus,
+  }).toString();
+  const displayedReturnHref = `${PAGE_PATHS.users}${displayedQuery ? `?${displayedQuery}` : ''}`;
   const getUserDetailHref = (userId: string): string =>
-    `${userId === currentUser?.id ? '/mon-compte' : userDetailPath(userId)}?${new URLSearchParams({ returnTo: returnHref })}`;
+    `${userId === currentUser?.id ? '/mon-compte' : userDetailPath(userId)}?${new URLSearchParams({ returnTo: displayedReturnHref })}`;
   const createUserHref = `${PAGE_PATHS.newUser}?${new URLSearchParams({ returnTo: `${PAGE_PATHS.users}${currentQueryString ? `?${currentQueryString}` : ''}` })}`;
 
   return (
@@ -97,15 +140,19 @@ export const UsersListPage: FC = () => {
             <ContentState
               action={
                 <Button
-                  onClick={() =>
+                  disabled={isLoading || isRefreshing}
+                  onClick={() => {
+                    navigation.preparePageChange();
+                    retryRequestedRef.current = true;
                     void fetchUsers(
                       currentPage,
                       debouncedSearch,
                       filterStatus,
                       filterRole,
                       sortBy,
-                    )
-                  }
+                    );
+                  }}
+                  ref={retryActionRef}
                   size="sm"
                   type="button"
                   variant="outline"
@@ -155,7 +202,7 @@ export const UsersListPage: FC = () => {
                     securityDetailsVisible={securityDetailsVisible}
                     loadError={loadError}
                     hasActiveFilters={hasActiveFilters}
-                    clearFilters={clearFilters}
+                    clearFilters={clearFiltersAndFocus}
                     getUserDetailHref={getUserDetailHref}
                   />
                 </>
@@ -168,13 +215,13 @@ export const UsersListPage: FC = () => {
                 isLoading={isLoading || isRefreshing}
                 onNext={() => {
                   navigation.preparePageChange();
-                  setCurrentPage((page) => Math.min(totalPages, page + 1));
+                  changePage(Math.min(totalPages, currentPage + 1));
                 }}
                 onPrevious={() => {
                   navigation.preparePageChange();
-                  setCurrentPage((page) => Math.max(1, page - 1));
+                  changePage(Math.max(1, currentPage - 1));
                 }}
-                page={currentPage}
+                page={displayedPage}
                 totalPages={totalPages}
               />
             </div>

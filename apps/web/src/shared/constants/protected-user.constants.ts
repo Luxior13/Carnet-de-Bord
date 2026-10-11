@@ -22,7 +22,11 @@ export const matchesProtectedUserPublicIdentity = (search: string): boolean => {
 
   if (!normalizedSearch) return false;
 
-  return PROTECTED_USER_PUBLIC_SEARCH_TERMS.some((term) =>
-    normalizePublicSearchTerm(term).includes(normalizedSearch),
-  );
+  const words = normalizedSearch.split(/\s+/u);
+
+  return PROTECTED_USER_PUBLIC_SEARCH_TERMS.some((term) => {
+    const identity = normalizePublicSearchTerm(term);
+
+    return words.every((word) => identity.includes(word));
+  });
 };

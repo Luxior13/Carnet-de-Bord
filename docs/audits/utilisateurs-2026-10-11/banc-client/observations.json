@@ -1,0 +1,427 @@
+{
+  "date": "2026-10-11",
+  "browser": "149.0.7827.55",
+  "environment": "Real Users page components and CSS; API, router, actor and 240 px shell simulated; Arial; Europe/Paris; reduced motion; fixed Date 2026-10-11 14:00Z",
+  "scenarios": [
+    {
+      "name": "presentation-and-a11y",
+      "width": 320,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ],
+      "details": {
+        "accessibility": "- link \"Ouvrir mon compte\":\n  - /url: /mon-compte?returnTo=%2Fsysteme%2Futilisateurs\n  - heading \"Camille Exemple\" [level=3]\n  - paragraph: camille.exemple · camille@example.test\n  - text: Utilisateur Actif\n  - paragraph: \"Dernière connexion : il y a 2 h\"\n- link \"Ouvrir le compte de Zoé Martin\":\n  - /url: /systeme/utilisateurs/user-zoe?returnTo=%2Fsysteme%2Futilisateurs\n  - heading \"Zoé Martin\" [level=3]\n  - paragraph: zoe.martin\n  - text: Administrateur Désactivé Mot de passe à changer\n  - paragraph: \"Dernière connexion : jamais\"\n- link \"Ouvrir le compte de Superadministrateur\":\n  - /url: /systeme/utilisateurs/user-protected?returnTo=%2Fsysteme%2Futilisateurs\n  - heading \"Superadministrateur\" [level=3]\n  - paragraph: Identité protégée\n  - text: Superadmin Actif\n  - paragraph: \"Dernière connexion : masquée\"\n- navigation \"Pagination des utilisateurs\":\n  - paragraph:\n    - text: Page\n    - strong: \"1\"\n  - button \"Page précédente\" [disabled]\n  - button \"Page suivante\" [disabled]",
+        "overviewAccessibility": "- complementary \"Vue d’ensemble\":\n  - heading \"Vue d’ensemble\" [level=2]\n  - paragraph: Tous les comptes\n  - 'link \"Afficher tous les comptes : 3 comptes\"':\n    - /url: /systeme/utilisateurs\n    - text: \"3\"\n  - 'link \"Afficher les comptes : Superadmin, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=SUPERADMIN\n    - text: Superadmin 1\n  - 'link \"Afficher les comptes : Administrateurs, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=ADMIN\n    - text: Administrateurs 1\n  - 'link \"Afficher les comptes : Utilisateurs, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=USER\n    - text: Utilisateurs 1\n  - 'link \"Afficher les comptes : Actifs, 2 comptes\"':\n    - /url: /systeme/utilisateurs?status=active\n    - text: Actifs 2\n  - 'link \"Afficher les comptes : Désactivés, 1 compte\"':\n    - /url: /systeme/utilisateurs?status=inactive\n    - text: Désactivés 1\n  - 'link \"Afficher les comptes : Mot de passe à changer, 1 compte\"':\n    - /url: /systeme/utilisateurs?status=pending\n    - text: Mot de passe à changer 1"
+      }
+    },
+    {
+      "name": "filters-and-reset-focus",
+      "width": 320,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&search=Camille",
+        "page=1",
+        "page=1&status=inactive",
+        "page=1",
+        "page=1&role=ADMIN",
+        "page=1",
+        "page=1&sort=recent",
+        "page=1"
+      ]
+    },
+    {
+      "name": "long-values-large-counts",
+      "width": 320,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    },
+    {
+      "name": "presentation-and-a11y",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ],
+      "details": {
+        "accessibility": "- link \"Ouvrir mon compte\":\n  - /url: /mon-compte?returnTo=%2Fsysteme%2Futilisateurs\n  - heading \"Camille Exemple\" [level=3]\n  - paragraph: camille.exemple · camille@example.test\n  - text: Utilisateur Actif\n  - paragraph: \"Dernière connexion : il y a 2 h\"\n- link \"Ouvrir le compte de Zoé Martin\":\n  - /url: /systeme/utilisateurs/user-zoe?returnTo=%2Fsysteme%2Futilisateurs\n  - heading \"Zoé Martin\" [level=3]\n  - paragraph: zoe.martin\n  - text: Administrateur Désactivé Mot de passe à changer\n  - paragraph: \"Dernière connexion : jamais\"\n- link \"Ouvrir le compte de Superadministrateur\":\n  - /url: /systeme/utilisateurs/user-protected?returnTo=%2Fsysteme%2Futilisateurs\n  - heading \"Superadministrateur\" [level=3]\n  - paragraph: Identité protégée\n  - text: Superadmin Actif\n  - paragraph: \"Dernière connexion : masquée\"\n- navigation \"Pagination des utilisateurs\":\n  - paragraph:\n    - text: Page\n    - strong: \"1\"\n  - button \"Page précédente\" [disabled]\n  - button \"Page suivante\" [disabled]",
+        "overviewAccessibility": "- complementary \"Vue d’ensemble\":\n  - heading \"Vue d’ensemble\" [level=2]\n  - paragraph: Tous les comptes\n  - 'link \"Afficher tous les comptes : 3 comptes\"':\n    - /url: /systeme/utilisateurs\n    - text: \"3\"\n  - 'link \"Afficher les comptes : Superadmin, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=SUPERADMIN\n    - text: Superadmin 1\n  - 'link \"Afficher les comptes : Administrateurs, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=ADMIN\n    - text: Administrateurs 1\n  - 'link \"Afficher les comptes : Utilisateurs, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=USER\n    - text: Utilisateurs 1\n  - 'link \"Afficher les comptes : Actifs, 2 comptes\"':\n    - /url: /systeme/utilisateurs?status=active\n    - text: Actifs 2\n  - 'link \"Afficher les comptes : Désactivés, 1 compte\"':\n    - /url: /systeme/utilisateurs?status=inactive\n    - text: Désactivés 1\n  - 'link \"Afficher les comptes : Mot de passe à changer, 1 compte\"':\n    - /url: /systeme/utilisateurs?status=pending\n    - text: Mot de passe à changer 1"
+      }
+    },
+    {
+      "name": "filters-and-reset-focus",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&search=Camille",
+        "page=1",
+        "page=1&status=inactive",
+        "page=1",
+        "page=1&role=ADMIN",
+        "page=1",
+        "page=1&sort=recent",
+        "page=1"
+      ]
+    },
+    {
+      "name": "long-values-large-counts",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    },
+    {
+      "name": "presentation-and-a11y",
+      "width": 768,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ],
+      "details": {
+        "accessibility": "- link \"Ouvrir mon compte\":\n  - /url: /mon-compte?returnTo=%2Fsysteme%2Futilisateurs\n  - heading \"Camille Exemple\" [level=3]\n  - paragraph: camille.exemple · camille@example.test\n  - text: Utilisateur Actif\n  - paragraph: \"Dernière connexion : il y a 2 h\"\n- link \"Ouvrir le compte de Zoé Martin\":\n  - /url: /systeme/utilisateurs/user-zoe?returnTo=%2Fsysteme%2Futilisateurs\n  - heading \"Zoé Martin\" [level=3]\n  - paragraph: zoe.martin\n  - text: Administrateur Désactivé Mot de passe à changer\n  - paragraph: \"Dernière connexion : jamais\"\n- link \"Ouvrir le compte de Superadministrateur\":\n  - /url: /systeme/utilisateurs/user-protected?returnTo=%2Fsysteme%2Futilisateurs\n  - heading \"Superadministrateur\" [level=3]\n  - paragraph: Identité protégée\n  - text: Superadmin Actif\n  - paragraph: \"Dernière connexion : masquée\"\n- navigation \"Pagination des utilisateurs\":\n  - paragraph:\n    - text: Page\n    - strong: \"1\"\n  - button \"Page précédente\" [disabled]\n  - button \"Page suivante\" [disabled]",
+        "overviewAccessibility": "- complementary \"Vue d’ensemble\":\n  - heading \"Vue d’ensemble\" [level=2]\n  - paragraph: Tous les comptes\n  - 'link \"Afficher tous les comptes : 3 comptes\"':\n    - /url: /systeme/utilisateurs\n    - text: \"3\"\n  - 'link \"Afficher les comptes : Superadmin, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=SUPERADMIN\n    - text: Superadmin 1\n  - 'link \"Afficher les comptes : Administrateurs, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=ADMIN\n    - text: Administrateurs 1\n  - 'link \"Afficher les comptes : Utilisateurs, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=USER\n    - text: Utilisateurs 1\n  - 'link \"Afficher les comptes : Actifs, 2 comptes\"':\n    - /url: /systeme/utilisateurs?status=active\n    - text: Actifs 2\n  - 'link \"Afficher les comptes : Désactivés, 1 compte\"':\n    - /url: /systeme/utilisateurs?status=inactive\n    - text: Désactivés 1\n  - 'link \"Afficher les comptes : Mot de passe à changer, 1 compte\"':\n    - /url: /systeme/utilisateurs?status=pending\n    - text: Mot de passe à changer 1"
+      }
+    },
+    {
+      "name": "filters-and-reset-focus",
+      "width": 768,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&search=Camille",
+        "page=1",
+        "page=1&status=inactive",
+        "page=1",
+        "page=1&role=ADMIN",
+        "page=1",
+        "page=1&sort=recent",
+        "page=1"
+      ]
+    },
+    {
+      "name": "long-values-large-counts",
+      "width": 768,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    },
+    {
+      "name": "presentation-and-a11y",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ],
+      "details": {
+        "accessibility": "- table \"Comptes utilisateurs\":\n  - caption: Les comptes utilisateurs, leur accès, leur état et leur dernière connexion\n  - rowgroup:\n    - row \"Compte Accès État Email Mot de passe Dernière connexion\":\n      - columnheader \"Compte\"\n      - columnheader \"Accès\"\n      - columnheader \"État\"\n      - columnheader \"Email\"\n      - columnheader \"Mot de passe\"\n      - columnheader \"Dernière connexion\"\n  - rowgroup:\n    - row \"Ouvrir mon compte Utilisateur Actif camille@example.test Aucun changement demandé Il y a 2 h\":\n      - cell \"Ouvrir mon compte\":\n        - link \"Ouvrir mon compte\":\n          - /url: /mon-compte?returnTo=%2Fsysteme%2Futilisateurs\n          - text: Camille Exemple camille.exemple\n      - cell \"Utilisateur\"\n      - cell \"Actif\"\n      - cell \"camille@example.test\"\n      - cell \"Aucun changement demandé\"\n      - cell \"Il y a 2 h\"\n    - row \"Ouvrir le compte de Zoé Martin Administrateur Désactivé Aucun email de contact À changer Jamais\":\n      - cell \"Ouvrir le compte de Zoé Martin\":\n        - link \"Ouvrir le compte de Zoé Martin\":\n          - /url: /systeme/utilisateurs/user-zoe?returnTo=%2Fsysteme%2Futilisateurs\n          - text: Zoé Martin zoe.martin\n      - cell \"Administrateur\"\n      - cell \"Désactivé\"\n      - cell \"Aucun email de contact\"\n      - cell \"À changer\"\n      - cell \"Jamais\"\n    - row \"Ouvrir le compte de Superadministrateur Superadmin Actif Masqué Masqué Masquée\":\n      - cell \"Ouvrir le compte de Superadministrateur\":\n        - link \"Ouvrir le compte de Superadministrateur\":\n          - /url: /systeme/utilisateurs/user-protected?returnTo=%2Fsysteme%2Futilisateurs\n          - text: Superadministrateur Identité protégée\n      - cell \"Superadmin\"\n      - cell \"Actif\"\n      - cell \"Masqué\"\n      - cell \"Masqué\"\n      - cell \"Masquée\"\n- navigation \"Pagination des utilisateurs\":\n  - paragraph:\n    - text: Page\n    - strong: \"1\"\n  - button \"Page précédente\" [disabled]\n  - button \"Page suivante\" [disabled]",
+        "overviewAccessibility": "- complementary \"Vue d’ensemble\":\n  - heading \"Vue d’ensemble\" [level=2]\n  - paragraph: Tous les comptes\n  - 'link \"Afficher tous les comptes : 3 comptes\"':\n    - /url: /systeme/utilisateurs\n    - text: \"3\"\n  - 'link \"Afficher les comptes : Superadmin, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=SUPERADMIN\n    - text: Superadmin 1\n  - 'link \"Afficher les comptes : Administrateurs, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=ADMIN\n    - text: Administrateurs 1\n  - 'link \"Afficher les comptes : Utilisateurs, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=USER\n    - text: Utilisateurs 1\n  - 'link \"Afficher les comptes : Actifs, 2 comptes\"':\n    - /url: /systeme/utilisateurs?status=active\n    - text: Actifs 2\n  - 'link \"Afficher les comptes : Désactivés, 1 compte\"':\n    - /url: /systeme/utilisateurs?status=inactive\n    - text: Désactivés 1\n  - 'link \"Afficher les comptes : Mot de passe à changer, 1 compte\"':\n    - /url: /systeme/utilisateurs?status=pending\n    - text: Mot de passe à changer 1"
+      }
+    },
+    {
+      "name": "filters-and-reset-focus",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&search=Camille",
+        "page=1",
+        "page=1&status=inactive",
+        "page=1",
+        "page=1&role=ADMIN",
+        "page=1",
+        "page=1&sort=recent",
+        "page=1"
+      ]
+    },
+    {
+      "name": "long-values-large-counts",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    },
+    {
+      "name": "presentation-and-a11y",
+      "width": 1920,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ],
+      "details": {
+        "accessibility": "- table \"Comptes utilisateurs\":\n  - caption: Les comptes utilisateurs, leur accès, leur état et leur dernière connexion\n  - rowgroup:\n    - row \"Compte Accès État Email Mot de passe Dernière connexion\":\n      - columnheader \"Compte\"\n      - columnheader \"Accès\"\n      - columnheader \"État\"\n      - columnheader \"Email\"\n      - columnheader \"Mot de passe\"\n      - columnheader \"Dernière connexion\"\n  - rowgroup:\n    - row \"Ouvrir mon compte Utilisateur Actif camille@example.test Aucun changement demandé Il y a 2 h\":\n      - cell \"Ouvrir mon compte\":\n        - link \"Ouvrir mon compte\":\n          - /url: /mon-compte?returnTo=%2Fsysteme%2Futilisateurs\n          - text: Camille Exemple camille.exemple\n      - cell \"Utilisateur\"\n      - cell \"Actif\"\n      - cell \"camille@example.test\"\n      - cell \"Aucun changement demandé\"\n      - cell \"Il y a 2 h\"\n    - row \"Ouvrir le compte de Zoé Martin Administrateur Désactivé Aucun email de contact À changer Jamais\":\n      - cell \"Ouvrir le compte de Zoé Martin\":\n        - link \"Ouvrir le compte de Zoé Martin\":\n          - /url: /systeme/utilisateurs/user-zoe?returnTo=%2Fsysteme%2Futilisateurs\n          - text: Zoé Martin zoe.martin\n      - cell \"Administrateur\"\n      - cell \"Désactivé\"\n      - cell \"Aucun email de contact\"\n      - cell \"À changer\"\n      - cell \"Jamais\"\n    - row \"Ouvrir le compte de Superadministrateur Superadmin Actif Masqué Masqué Masquée\":\n      - cell \"Ouvrir le compte de Superadministrateur\":\n        - link \"Ouvrir le compte de Superadministrateur\":\n          - /url: /systeme/utilisateurs/user-protected?returnTo=%2Fsysteme%2Futilisateurs\n          - text: Superadministrateur Identité protégée\n      - cell \"Superadmin\"\n      - cell \"Actif\"\n      - cell \"Masqué\"\n      - cell \"Masqué\"\n      - cell \"Masquée\"\n- navigation \"Pagination des utilisateurs\":\n  - paragraph:\n    - text: Page\n    - strong: \"1\"\n  - button \"Page précédente\" [disabled]\n  - button \"Page suivante\" [disabled]",
+        "overviewAccessibility": "- complementary \"Vue d’ensemble\":\n  - heading \"Vue d’ensemble\" [level=2]\n  - paragraph: Tous les comptes\n  - 'link \"Afficher tous les comptes : 3 comptes\"':\n    - /url: /systeme/utilisateurs\n    - text: \"3\"\n  - 'link \"Afficher les comptes : Superadmin, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=SUPERADMIN\n    - text: Superadmin 1\n  - 'link \"Afficher les comptes : Administrateurs, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=ADMIN\n    - text: Administrateurs 1\n  - 'link \"Afficher les comptes : Utilisateurs, 1 compte\"':\n    - /url: /systeme/utilisateurs?role=USER\n    - text: Utilisateurs 1\n  - 'link \"Afficher les comptes : Actifs, 2 comptes\"':\n    - /url: /systeme/utilisateurs?status=active\n    - text: Actifs 2\n  - 'link \"Afficher les comptes : Désactivés, 1 compte\"':\n    - /url: /systeme/utilisateurs?status=inactive\n    - text: Désactivés 1\n  - 'link \"Afficher les comptes : Mot de passe à changer, 1 compte\"':\n    - /url: /systeme/utilisateurs?status=pending\n    - text: Mot de passe à changer 1"
+      }
+    },
+    {
+      "name": "filters-and-reset-focus",
+      "width": 1920,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&search=Camille",
+        "page=1",
+        "page=1&status=inactive",
+        "page=1",
+        "page=1&role=ADMIN",
+        "page=1",
+        "page=1&sort=recent",
+        "page=1"
+      ]
+    },
+    {
+      "name": "long-values-large-counts",
+      "width": 1920,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    },
+    {
+      "name": "empty-reset-focus",
+      "width": 320,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&search=Introuvable",
+        "page=1"
+      ]
+    },
+    {
+      "name": "keyboard-select-and-escape",
+      "width": 320,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&status=pending"
+      ]
+    },
+    {
+      "name": "forced-colors-focus",
+      "width": 320,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    },
+    {
+      "name": "empty-reset-focus",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&search=Introuvable",
+        "page=1"
+      ]
+    },
+    {
+      "name": "keyboard-select-and-escape",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&status=pending"
+      ]
+    },
+    {
+      "name": "forced-colors-focus",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    },
+    {
+      "name": "overview-exact-subset",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1&search=Camille&status=active&role=USER&sort=recent",
+        "page=1&role=ADMIN&sort=recent"
+      ]
+    },
+    {
+      "name": "columns-base",
+      "width": 1100,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    },
+    {
+      "name": "columns-contact",
+      "width": 1100,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    },
+    {
+      "name": "columns-security",
+      "width": 1100,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    },
+    {
+      "name": "columns-all",
+      "width": 1100,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    },
+    {
+      "name": "initial-error-retry-focus",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1",
+        "page=1"
+      ]
+    },
+    {
+      "name": "pagination-delay-error-retry-back",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=2&limit=25",
+        "page=2&limit=25",
+        "page=1"
+      ]
+    },
+    {
+      "name": "pagination-error-filter-keeps-focus",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=2&limit=25",
+        "page=1&search=Compte+01"
+      ]
+    },
+    {
+      "name": "access-401-json-purges",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&search=Camille"
+      ]
+    },
+    {
+      "name": "access-401-text-purges",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&search=Camille"
+      ]
+    },
+    {
+      "name": "access-403-json-purges",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&search=Camille"
+      ]
+    },
+    {
+      "name": "access-403-text-purges",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&search=Camille"
+      ]
+    },
+    {
+      "name": "slow-response-keeps-newer-search",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&search=Camille",
+        "page=1&search=Zo%C3%A9"
+      ]
+    },
+    {
+      "name": "forbidden-pending-normalization",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    },
+    {
+      "name": "read-only-empty",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    },
+    {
+      "name": "access-denied",
+      "width": 390,
+      "result": "passed",
+      "requests": []
+    },
+    {
+      "name": "back-during-debounce",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1&search=Zo%C3%A9",
+        "page=1",
+        "page=1&search=Zo%C3%A9"
+      ]
+    },
+    {
+      "name": "filter-before-debounce-uses-draft",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=1&search=Camille&role=USER"
+      ]
+    },
+    {
+      "name": "typing-during-retry-keeps-focus",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "page=1",
+        "page=2&limit=25",
+        "page=2&limit=25",
+        "page=1&search=Compte+01"
+      ]
+    },
+    {
+      "name": "loading-announcements",
+      "width": 320,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    },
+    {
+      "name": "native-modified-links",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "page=1"
+      ]
+    }
+  ]
+}
