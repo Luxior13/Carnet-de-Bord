@@ -1,10 +1,9 @@
 'use client';
 
-import { Loader2, ShieldAlert } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { MfaCodeInput } from '$features/auth/components/MfaCodeInput';
-import { type ApiResponse } from '$types/api.types';
 import type { UserType } from '$types/auth.types';
 import { Button } from '$ui/button';
 import {
@@ -17,11 +16,12 @@ import {
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { ServiceIcon } from '$ui/service-icon';
-import { apiFetch } from '$utils/api.utils';
+import { ApiClientError, apiFetchJson } from '$utils/api.utils';
 
 type AdminMfaResetDialogProps = {
   actorLoginName: string;
   onCancel: () => void;
+  onCheck: () => Promise<UserType | null>;
   onComplete: (user: UserType) => Promise<void> | void;
   open: boolean;
   targetLabel: string;
@@ -34,24 +34,31 @@ type AdminMfaResetResponse = {
 
 const AdminMfaResetDialogContent: FC<AdminMfaResetDialogProps> = ({
   onCancel,
+  onCheck,
   onComplete,
   open,
   targetLabel,
   targetUserId,
 }) => {
   const mountedRef = useRef(false);
+  const activeRequestRef = useRef<AbortController | null>(null);
   useEffect(() => {
     mountedRef.current = true;
 
     return (): void => {
       mountedRef.current = false;
+      activeRequestRef.current?.abort();
     };
   }, []);
   const [currentPassword, setCurrentPassword] = useState('');
   const [currentTotpCode, setCurrentTotpCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+  const [outcomeUnknown, setOutcomeUnknown] = useState(false);
   const submissionInFlightRef = useRef(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
   const totpInputRef = useRef<HTMLInputElement>(null);
   const canSubmit =
     currentPassword.length > 0 && /^\d{6}$/.test(currentTotpCode);
@@ -63,53 +70,102 @@ const AdminMfaResetDialogContent: FC<AdminMfaResetDialogProps> = ({
     setCurrentTotpCode('');
     setError(null);
     setIsSubmitting(false);
+    setIsChecking(false);
+    setOutcomeUnknown(false);
   }, [open, targetUserId]);
 
   const handleSubmit = async (
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
-    if (!canSubmit || submissionInFlightRef.current || !mountedRef.current)
+    if (
+      !canSubmit ||
+      outcomeUnknown ||
+      submissionInFlightRef.current ||
+      !mountedRef.current
+    )
       return;
     submissionInFlightRef.current = true;
+    const request = new AbortController();
+    activeRequestRef.current = request;
+    const timeout = setTimeout(() => request.abort(), 30_000);
 
     try {
       setIsSubmitting(true);
       setError(null);
-      const response = await apiFetch(
+      const data = await apiFetchJson<AdminMfaResetResponse>(
         `/api/users/${encodeURIComponent(targetUserId)}/reset-mfa`,
         {
           body: JSON.stringify({ currentPassword, currentTotpCode }),
           headers: { 'Content-Type': 'application/json' },
           method: 'POST',
+          signal: request.signal,
         },
       );
-      const data =
-        (await response.json()) as ApiResponse<AdminMfaResetResponse>;
-
       if (!mountedRef.current) return;
-      if (!response.ok || !data.success) {
-        setError(
-          data.success
-            ? 'Impossible de réinitialiser la double authentification'
-            : data.error.message ||
-                'Impossible de réinitialiser la double authentification',
-        );
-        setCurrentTotpCode('');
-        totpInputRef.current?.focus();
-
-        return;
-      }
-
-      await onComplete(data.data.user);
-    } catch {
+      if (data.user?.id !== targetUserId || data.user.mfaEnabledAt !== null)
+        throw new Error('Incomplete MFA reset response');
+      await onComplete(data.user);
+    } catch (failure) {
       if (!mountedRef.current) return;
-      setError('Impossible de réinitialiser la double authentification');
+      const uncertain =
+        !(failure instanceof ApiClientError) ||
+        failure.status >= 500 ||
+        failure.code === 'INVALID_RESPONSE';
+      setOutcomeUnknown(uncertain);
+      setCurrentTotpCode('');
+      if (uncertain) setCurrentPassword('');
+      setError(
+        uncertain
+          ? 'La réponse du serveur n’a pas pu être confirmée. La double authentification a peut-être été réinitialisée et les sessions fermées. Vérifiez l’état du compte avant de recommencer.'
+          : failure.message,
+      );
+      requestAnimationFrame(() =>
+        (uncertain ? feedbackRef.current : totpInputRef.current)?.focus(),
+      );
     } finally {
+      clearTimeout(timeout);
+      activeRequestRef.current = null;
       submissionInFlightRef.current = false;
       if (mountedRef.current) setIsSubmitting(false);
     }
   };
+  const checkOutcome = async (): Promise<void> => {
+    if (submissionInFlightRef.current || !mountedRef.current) return;
+    submissionInFlightRef.current = true;
+    setIsChecking(true);
+    try {
+      const user = await onCheck();
+      if (!mountedRef.current) return;
+      if (
+        !user ||
+        user.id !== targetUserId ||
+        user.securityDetailsVisible === false ||
+        user.mfaEnabledAt === undefined
+      )
+        throw new Error('MFA state unavailable');
+      if (user.mfaEnabledAt === null) {
+        await onComplete(user);
+
+        return;
+      }
+      setOutcomeUnknown(false);
+      setError(
+        'La double authentification est encore active. Vous pouvez confirmer une nouvelle tentative avec votre mot de passe et un nouveau code.',
+      );
+      requestAnimationFrame(() => passwordInputRef.current?.focus());
+    } catch {
+      if (!mountedRef.current) return;
+      setError(
+        'Vérification impossible. Le résultat reste incertain : vérifiez l’état du compte avant toute nouvelle réinitialisation.',
+      );
+      requestAnimationFrame(() => feedbackRef.current?.focus());
+    } finally {
+      submissionInFlightRef.current = false;
+      if (mountedRef.current) setIsChecking(false);
+    }
+  };
+  const busy = isSubmitting || isChecking;
 
   return (
     <Dialog
@@ -119,8 +175,17 @@ const AdminMfaResetDialogContent: FC<AdminMfaResetDialogProps> = ({
       }}
     >
       <DialogContent
-        aria-busy={isSubmitting || undefined}
+        aria-busy={busy || undefined}
         className="p-0 sm:max-w-lg"
+        onCloseAutoFocus={(event) => {
+          const target =
+            document.getElementById('user-reset-mfa') ??
+            document.getElementById('user-security-mfa-heading');
+          if (target) {
+            event.preventDefault();
+            target.focus();
+          }
+        }}
       >
         <div className="bg-warning h-1" />
         <div className="p-6">
@@ -145,11 +210,24 @@ const AdminMfaResetDialogContent: FC<AdminMfaResetDialogProps> = ({
           >
             {error && (
               <div
+                ref={feedbackRef}
+                tabIndex={-1}
                 aria-live="assertive"
                 className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
                 role="alert"
               >
                 {error}
+                {outcomeUnknown && (
+                  <Button
+                    className="mt-3"
+                    loading={isChecking}
+                    onClick={() => void checkOutcome()}
+                    type="button"
+                    variant="outline"
+                  >
+                    {isChecking ? 'Vérification…' : 'Vérifier l’état du compte'}
+                  </Button>
+                )}
               </div>
             )}
 
@@ -166,19 +244,20 @@ const AdminMfaResetDialogContent: FC<AdminMfaResetDialogProps> = ({
               </Label>
               <Input
                 autoFocus
-                disabled={isSubmitting}
+                disabled={busy || outcomeUnknown}
                 id="admin-mfa-reset-password"
                 name="current-password"
                 onChange={(event) => setCurrentPassword(event.target.value)}
                 placeholder="Confirmez votre identité"
                 required
+                ref={passwordInputRef}
                 type="password"
                 value={currentPassword}
               />
             </div>
 
             <MfaCodeInput
-              disabled={isSubmitting}
+              disabled={busy || outcomeUnknown}
               id="admin-mfa-reset-code"
               inputRef={totpInputRef}
               kind="totp"
@@ -189,20 +268,20 @@ const AdminMfaResetDialogContent: FC<AdminMfaResetDialogProps> = ({
             <div className="flex flex-col-reverse gap-2 sm:flex-row">
               <Button
                 className="flex-1"
-                disabled={isSubmitting}
+                disabled={busy}
                 onClick={onCancel}
                 type="button"
                 variant="outline"
               >
-                Annuler
+                {outcomeUnknown ? 'Fermer' : 'Annuler'}
               </Button>
               <Button
                 className="bg-warning text-warning-foreground hover:bg-warning/90 flex-1"
-                disabled={isSubmitting || !canSubmit}
+                disabled={!canSubmit || outcomeUnknown || isChecking}
+                loading={isSubmitting}
                 type="submit"
               >
-                {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-                Réinitialiser
+                {isSubmitting ? 'Réinitialisation…' : 'Réinitialiser'}
               </Button>
             </div>
           </form>

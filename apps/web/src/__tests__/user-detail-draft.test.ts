@@ -6,6 +6,7 @@ import {
   receiveUserDetail,
   userProfileSchema,
 } from '$components/users/user-detail/user-detail-draft';
+import { getUserDetailScope } from '$features/users/user-detail-scope';
 import type { UserType } from '$types/auth.types';
 
 const user = {
@@ -20,6 +21,39 @@ const user = {
 } as UserType;
 
 describe('user detail drafts across server responses', () => {
+  it('never merges identity or permission drafts into a different target', () => {
+    const draft = createUserDetailDraft(user);
+    draft.form.firstName = 'Brouillon de la première personne';
+    draft.permissions = { 'users:create': true };
+    const different = {
+      ...user,
+      firstName: 'Autre personne',
+      id: 'another-target',
+      loginName: 'other',
+    };
+    expect(receiveUserDetail(draft, different)).toEqual(
+      createUserDetailDraft(different),
+    );
+  });
+  it('ignores a background snapshot older than the latest confirmed mutation', () => {
+    const latest = {
+      ...user,
+      firstName: 'Identité enregistrée',
+      mfaEnabledAt: null,
+      updatedAt: '2026-10-11T21:00:02Z',
+    };
+    const draft = createUserDetailDraft(latest);
+    draft.form.lastName = 'Nouvelle saisie';
+    const old = {
+      ...user,
+      mfaEnabledAt: new Date('2026-10-10T12:00:00Z'),
+      updatedAt: '2026-10-11T21:00:01Z',
+    };
+    expect(receiveUserDetail(draft, old)).toBe(draft);
+    expect(draft.form.firstName).toBe('Identité enregistrée');
+    expect(draft.form.lastName).toBe('Nouvelle saisie');
+    expect(draft.user?.mfaEnabledAt).toBeNull();
+  });
   it('keeps a pending status change when password reset refreshes the account', () => {
     const draft = createUserDetailDraft(user);
     draft.form.isActive = false;
@@ -98,6 +132,40 @@ describe('user detail drafts across server responses', () => {
       { form: draft.form, permissions: draft.permissions, section: 'account' },
     );
     expect(next.permissions).toEqual(draft.permissions);
+  });
+});
+
+describe('user detail authorization scope', () => {
+  it('keeps ordinary profile refreshes and equivalent override ordering in the same scope', () => {
+    const actor = {
+      ...user,
+      permissions: { 'users:view': true, 'users:view_contact': false },
+    };
+    expect(getUserDetailScope(actor)).toBe(
+      getUserDetailScope({
+        ...actor,
+        firstName: 'Nom actualisé',
+        permissions: { 'users:view': true, 'users:view_contact': false },
+        updatedAt: '2026-10-11T21:00:00Z',
+      } as UserType),
+    );
+    expect(getUserDetailScope({ ...user, permissions: null })).toBe(
+      getUserDetailScope({ ...user, permissions: {} }),
+    );
+  });
+
+  it('isolates another actor, role, protection level and each permission change', () => {
+    const scope = getUserDetailScope(user);
+    for (const actor of [
+      null,
+      { ...user, id: 'another-actor' },
+      { ...user, role: 'ADMIN' as const },
+      { ...user, isProtected: true },
+      { ...user, permissions: { 'users:view_contact': false } },
+      { ...user, permissions: { 'users:reset_password': true } },
+    ]) {
+      expect(getUserDetailScope(actor)).not.toBe(scope);
+    }
   });
 });
 

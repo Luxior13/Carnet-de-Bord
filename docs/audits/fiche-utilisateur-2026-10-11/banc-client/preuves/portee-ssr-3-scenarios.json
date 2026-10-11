@@ -1,0 +1,17 @@
+[
+  {
+    "name": "scope-ssr-actor-return-no-recycled-snapshot",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "scope-unchanged-retains-draft",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "scope-late-patch-after-actor-change",
+    "width": 390,
+    "pass": true
+  }
+]

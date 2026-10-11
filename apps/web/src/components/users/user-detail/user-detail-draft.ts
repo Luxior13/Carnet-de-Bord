@@ -68,7 +68,17 @@ export const receiveUserDetail = (
   user: UserType,
   submitted?: SubmittedUserDraft,
 ): UserDetailDraft => {
-  if (!current.user) return createUserDetailDraft(user);
+  if (!current.user || current.user.id !== user.id)
+    return createUserDetailDraft(user);
+  // A background read may finish after a newer mutation response. Never move
+  // the saved version backwards or replace its fields with that older read.
+  if (
+    user.updatedAt &&
+    current.user.updatedAt &&
+    new Date(user.updatedAt).getTime() <
+      new Date(current.user.updatedAt).getTime()
+  )
+    return current;
   const next = createUserDetailDraft(user);
   const baseline = createUserDetailDraft(current.user);
   const profileBase =

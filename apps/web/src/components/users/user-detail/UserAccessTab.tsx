@@ -120,7 +120,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
 
   if (user.isProtected) {
     return (
-      <Card>
+      <Card id="user-access-panel">
         <CardContent className="space-y-3 p-4">
           <div className="flex items-start gap-3">
             <Crown className="text-muted-foreground mt-0.5 size-5 shrink-0" />
@@ -151,7 +151,12 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   }
 
   return (
-    <Card className="overflow-visible" aria-busy={isSaving} ref={cardRef}>
+    <Card
+      className="overflow-visible"
+      aria-busy={isSaving}
+      id="user-access-panel"
+      ref={cardRef}
+    >
       <div className="border-border-divider space-y-2 border-b px-4 py-3">
         <p className="text-muted-foreground text-xs font-medium">
           Vos droits de gestion sur ce compte
@@ -274,7 +279,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
           </Disclosure>
         </div>
       )}
-      {(canManagePermissions || canEditRole) && (
+      {hasChanges && (canManagePermissions || canEditRole) && (
         <SectionActionBar
           hasChanges={hasChanges}
           isResolvingConflict={isRefreshing}

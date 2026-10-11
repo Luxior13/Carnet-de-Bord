@@ -1,33 +1,35 @@
-import { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 
-import { FEATURES } from '$constants/feature-registry.constants';
 import {
-  arePermissionOverridesEqual,
   enforcePermissionDependencies,
-  getAccessPermissionKeys,
-  getAccountPermissionKeys,
-  getNonAssignablePermissionKeys,
   getPermissionItem,
-  getUnknownPermissionKeys,
   hasPermission,
   normalizePermissionOverrides,
   PERMISSIONS,
-  preserveRetiringPermissionOverrides,
-  resolvePermissionKey,
 } from '$constants/permissions.constants';
 import {
   getUserForActor,
   mapUserForActor,
+  USER_DETAIL_SELECT,
 } from '$features/users/server/user-detail.service';
+import {
+  LoginNameReservationConflictError,
+  prepareUserUpdate,
+  updateUserWithAudit,
+} from '$features/users/server/user-update.service';
+import {
+  getChangedPermissionKeys,
+  getPermissionScopeKeySet,
+  mergePermissionOverridesForScope,
+  toPermissionMap,
+  updateUserSchema,
+} from '$features/users/user-update.schema';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import {
   apiErrors,
   isPrismaUniqueConstraintError,
   parseJsonBody,
 } from '$server/api-response';
-import { type AuditLogInput, createAuditLogWithHeaders } from '$server/auth';
 import { prisma } from '$server/prisma';
 import {
   requireRecentPasswordReauthentication,
@@ -47,62 +49,9 @@ import {
   ErrorCode,
 } from '$types/api.types';
 import type { UserType } from '$types/auth.types';
-import {
-  loginNameSchema,
-  optionalEmailSchema,
-  trimmedStringMinMax,
-} from '$utils/zod.utils';
 
 type RouteParams = {
   params: Promise<{ id: string }>;
-};
-
-class LoginNameReservationConflictError extends Error {
-  constructor() {
-    super('Login name is permanently reserved by another user');
-    this.name = 'LoginNameReservationConflictError';
-  }
-}
-
-const USERS_PAGE_AUDIT_LOCATION = FEATURES.users.audit;
-
-const ACCOUNT_PERMISSION_KEY_SET = new Set(getAccountPermissionKeys());
-const ACCESS_PERMISSION_KEY_SET = new Set(getAccessPermissionKeys());
-
-type PermissionScope = 'access' | 'account';
-
-const getPermissionScopeKeySet = (
-  permissionScope: PermissionScope,
-): ReadonlySet<string> =>
-  permissionScope === 'account'
-    ? ACCOUNT_PERMISSION_KEY_SET
-    : ACCESS_PERMISSION_KEY_SET;
-
-const mergePermissionOverridesForScope = (
-  existingPermissions: Record<string, boolean> | null,
-  requestedPermissions: Record<string, boolean> | null,
-  permissionScope: PermissionScope,
-): Record<string, boolean> | null => {
-  const scopePermissionKeys = getPermissionScopeKeySet(permissionScope);
-  const mergedPermissions = new Map(
-    Object.entries(normalizePermissionOverrides(existingPermissions) ?? {}),
-  );
-
-  for (const permissionKey of scopePermissionKeys) {
-    mergedPermissions.delete(permissionKey);
-  }
-
-  for (const [permissionKey, enabled] of Object.entries(
-    normalizePermissionOverrides(requestedPermissions) ?? {},
-  )) {
-    if (scopePermissionKeys.has(permissionKey)) {
-      mergedPermissions.set(permissionKey, enabled);
-    }
-  }
-
-  return normalizePermissionOverrides(
-    Object.fromEntries(mergedPermissions) as Record<string, boolean>,
-  );
 };
 
 const isPrismaOptimisticConflict = (error: unknown): boolean =>
@@ -110,32 +59,6 @@ const isPrismaOptimisticConflict = (error: unknown): boolean =>
   typeof error === 'object' &&
   'code' in error &&
   error.code === 'P2025';
-
-const toPermissionMap = (value: unknown): Map<string, boolean> => {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return new Map();
-  }
-
-  return new Map(
-    Object.entries(value).flatMap(([permissionKey, enabled]) =>
-      typeof enabled === 'boolean' ? [[permissionKey, enabled] as const] : [],
-    ),
-  );
-};
-
-const getChangedPermissionKeys = (
-  before: unknown,
-  after: unknown,
-): string[] => {
-  const beforeMap = toPermissionMap(before);
-  const afterMap = toPermissionMap(after);
-  const permissionKeys = new Set([...beforeMap.keys(), ...afterMap.keys()]);
-
-  return [...permissionKeys].filter(
-    (permissionKey) =>
-      beforeMap.get(permissionKey) !== afterMap.get(permissionKey),
-  );
-};
 
 // ============================================
 // GET /api/users/[id] - Get single user
@@ -186,116 +109,6 @@ export async function GET(
 // ============================================
 // PATCH /api/users/[id] - Update user
 // ============================================
-const permissionsSchema = z
-  .record(z.string(), z.boolean())
-  .nullable()
-  .optional()
-  .superRefine((value, context) => {
-    const unknownPermissionKeys = getUnknownPermissionKeys(value);
-    if (unknownPermissionKeys.length > 0) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Permission inconnue: ${unknownPermissionKeys.join(', ')}`,
-      });
-    }
-
-    const nonAssignablePermissionKeys = getNonAssignablePermissionKeys(value);
-    if (nonAssignablePermissionKeys.length > 0) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Permission non attribuable: ${nonAssignablePermissionKeys.join(', ')}`,
-      });
-    }
-  });
-
-const updateUserSchema = z
-  .object({
-    contactEmail: optionalEmailSchema,
-    expectedUpdatedAt: z
-      .string()
-      .datetime({ offset: true })
-      .transform((value) => new Date(value))
-      .optional(),
-    firstName: trimmedStringMinMax(
-      1,
-      50,
-      'Prénom requis',
-      'Prénom trop long',
-    ).optional(),
-    isActive: z.boolean().optional(),
-    lastName: trimmedStringMinMax(0, 50, undefined, 'Nom trop long').optional(),
-    loginName: loginNameSchema.optional(),
-    permissions: permissionsSchema,
-    permissionScope: z.enum(['access', 'account']).optional(),
-    role: z.enum(['ADMIN', 'USER']).optional(),
-  })
-  .strict()
-  .superRefine((value, context) => {
-    if (
-      (value.permissions !== undefined ||
-        value.role !== undefined ||
-        value.loginName !== undefined ||
-        value.contactEmail !== undefined) &&
-      value.expectedUpdatedAt === undefined
-    ) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          'La version de la fiche est requise pour modifier les informations sensibles',
-        path: ['expectedUpdatedAt'],
-      });
-    }
-
-    if (
-      value.permissionScope !== undefined &&
-      value.permissions === undefined
-    ) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Le scope exige un payload de permissions',
-        path: ['permissionScope'],
-      });
-    }
-
-    if (value.permissionScope === 'account' && value.role !== undefined) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Le rôle appartient au scope d'accès",
-        path: ['role'],
-      });
-    }
-
-    if (
-      value.permissions === undefined ||
-      value.permissionScope === undefined
-    ) {
-      return;
-    }
-
-    const scopePermissionKeys = getPermissionScopeKeySet(value.permissionScope);
-    const outOfScopePermissionKeys = Object.keys(
-      value.permissions ?? {},
-    ).filter((permissionKey) => {
-      const canonicalPermissionKeys = resolvePermissionKey(permissionKey);
-
-      return (
-        canonicalPermissionKeys.length > 0 &&
-        canonicalPermissionKeys.some(
-          (canonicalPermissionKey) =>
-            !scopePermissionKeys.has(canonicalPermissionKey),
-        )
-      );
-    });
-
-    if (outOfScopePermissionKeys.length > 0) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Permission hors scope: ${outOfScopePermissionKeys.join(', ')}`,
-        path: ['permissions'],
-      });
-    }
-  });
-
 export async function PATCH(
   request: NextRequest,
   { params }: RouteParams,
@@ -424,7 +237,7 @@ export async function PATCH(
 
     // Get existing user
     const existingUser = await prisma.user.findUnique({
-      include: { totpCredential: { select: { userId: true } } },
+      select: USER_DETAIL_SELECT,
       where: { deletedAt: null, id },
     });
 
@@ -584,36 +397,6 @@ export async function PATCH(
       requiredProofLevel,
     } = permissionMutationAuthorization;
 
-    // Authorization checks
-    // Non-protected users cannot modify protected accounts
-    if (existingUser.isProtected && !auth.user.isProtected) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.FORBIDDEN,
-            message: 'Ce compte est protégé et ne peut pas être modifié',
-          },
-          success: false,
-        },
-        { status: 403 },
-      );
-    }
-
-    // A protected account is the recovery invariant for administration. Even
-    // another protected actor cannot disable or demote it.
-    if (existingUser.isProtected && (isActive === false || role === 'USER')) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.FORBIDDEN,
-            message: 'Un compte protégé doit rester actif et administrateur',
-          },
-          success: false,
-        },
-        { status: 403 },
-      );
-    }
-
     const gainsTargetMfaPermission = effectivelyGrantedPermissionKeys.some(
       (permissionKey) =>
         getPermissionItem(permissionKey)?.requiresTargetMfa === true,
@@ -708,119 +491,11 @@ export async function PATCH(
       }
     }
 
-    // Cannot deactivate protected accounts (unless you're protected too)
-    if (
-      isActive === false &&
-      existingUser.isProtected &&
-      !auth.user.isProtected
-    ) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.FORBIDDEN,
-            message: 'Ce compte est protégé et ne peut pas être désactivé',
-          },
-          success: false,
-        },
-        { status: 403 },
-      );
-    }
-
-    // Cannot modify ADMIN role unless you're protected
-    if (role === 'ADMIN' && !auth.user.isProtected) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.FORBIDDEN,
-            message:
-              "Vous n'êtes pas autorisé à promouvoir des utilisateurs en administrateur",
-          },
-          success: false,
-        },
-        { status: 403 },
-      );
-    }
-
-    // Cannot demote ADMIN unless you're protected
-    if (
-      existingUser.role === 'ADMIN' &&
-      role === 'USER' &&
-      !auth.user.isProtected
-    ) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.FORBIDDEN,
-            message:
-              "Vous n'êtes pas autorisé à modifier le rôle d'un administrateur",
-          },
-          success: false,
-        },
-        { status: 403 },
-      );
-    }
-
-    // Build update data and track changes
-    const updateData: Record<string, unknown> = {};
-    const beforeValues: Record<string, unknown> = {};
-    const afterValues: Record<string, unknown> = {};
-
-    if (loginName && loginName !== existingUser.loginName) {
-      beforeValues.loginName = existingUser.loginName;
-      afterValues.loginName = loginName;
-      updateData.loginName = loginName;
-    }
-    if (contactEmail !== undefined) {
-      const newContactEmail = contactEmail ?? null;
-      if (newContactEmail !== existingUser.contactEmail) {
-        beforeValues.contactEmail = existingUser.contactEmail;
-        afterValues.contactEmail = newContactEmail;
-        updateData.contactEmail = newContactEmail;
-        // An administrator can record a contact address, but only a future
-        // proof-of-control flow may mark it as verified.
-        updateData.contactEmailVerifiedAt = null;
-      }
-    }
-    if (firstName) {
-      const newFirstName = firstName.trim();
-      if (newFirstName !== existingUser.firstName) {
-        beforeValues.firstName = existingUser.firstName;
-        afterValues.firstName = newFirstName;
-        updateData.firstName = newFirstName;
-      }
-    }
-    if (lastName) {
-      const newLastName = lastName.trim();
-      if (newLastName !== existingUser.lastName) {
-        beforeValues.lastName = existingUser.lastName;
-        afterValues.lastName = newLastName;
-        updateData.lastName = newLastName;
-      }
-    }
-    if (role && role !== existingUser.role) {
-      beforeValues.role = existingUser.role;
-      afterValues.role = role;
-      updateData.role = role;
-    }
-    if (typeof isActive === 'boolean' && isActive !== existingUser.isActive) {
-      beforeValues.isActive = existingUser.isActive;
-      afterValues.isActive = isActive;
-      updateData.isActive = isActive;
-    }
-    if (permissions !== undefined) {
-      // Only track if actually changed
-      if (
-        !arePermissionOverridesEqual(permissions, existingPermissionOverrides)
-      ) {
-        beforeValues.permissions = existingPermissionOverrides;
-        afterValues.permissions = permissions;
-        updateData.permissions =
-          preserveRetiringPermissionOverrides(
-            existingUser.permissions as Record<string, boolean> | null,
-            permissions,
-          ) ?? Prisma.DbNull;
-      }
-    }
+    const mutation = prepareUserUpdate(existingUser, {
+      ...validation.data,
+      permissions,
+    });
+    const { changedKeys, updateData } = mutation;
     // Only update if there are actual changes
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({
@@ -831,9 +506,6 @@ export async function PATCH(
       });
     }
 
-    const changedKeys = Object.keys(afterValues);
-    const hasAuthorizationChange =
-      changedKeys.includes('permissions') || changedKeys.includes('role');
     if (requiredProofLevel === 'password') {
       const passwordProofCheck = requireRecentPasswordReauthentication(
         auth.session,
@@ -845,161 +517,13 @@ export async function PATCH(
       if (!proofCheck.success) return proofCheck.response;
     }
 
-    // Build target name for audit log
-    const targetName =
-      existingUser.firstName && existingUser.lastName
-        ? `${existingUser.firstName} ${existingUser.lastName}`
-        : existingUser.loginName;
-    const changedPermissionKeys = changedKeys.includes('permissions')
-      ? getChangedPermissionKeys(
-          beforeValues.permissions,
-          afterValues.permissions,
-        )
-      : [];
-    const hasOnlyAccountPermissionChanges =
-      changedKeys.length === 1 &&
-      changedPermissionKeys.length > 0 &&
-      changedPermissionKeys.every((permissionKey) =>
-        ACCOUNT_PERMISSION_KEY_SET.has(permissionKey),
-      );
-    const permissionAuditTab = hasOnlyAccountPermissionChanges
-      ? { tabKey: 'account', tabLabel: 'Autonomie du compte' }
-      : { tabKey: 'access', tabLabel: 'Autorisations' };
-
-    const updatedLoginName =
-      typeof updateData.loginName === 'string'
-        ? updateData.loginName
-        : existingUser.loginName;
-    const auditEntries: AuditLogInput[] = [];
-
-    if (changedKeys.includes('isActive') && isActive === false) {
-      auditEntries.push({
-        action: 'USER_DEACTIVATE',
-        category: 'USER',
-        description: `Utilisateur désactivé: ${updatedLoginName}`,
-        metadata: {
-          after: afterValues,
-          before: beforeValues,
-          ...USERS_PAGE_AUDIT_LOCATION,
-          tabKey: 'security',
-          tabLabel: 'Sécurité',
-          targetName,
-        },
-        targetUserId: id,
-        userId: auth.user.id,
-      });
-    } else if (changedKeys.includes('isActive') && isActive === true) {
-      auditEntries.push({
-        action: 'USER_ACTIVATE',
-        category: 'USER',
-        description: `Utilisateur réactivé: ${updatedLoginName}`,
-        metadata: {
-          after: afterValues,
-          before: beforeValues,
-          ...USERS_PAGE_AUDIT_LOCATION,
-          tabKey: 'security',
-          tabLabel: 'Sécurité',
-          targetName,
-        },
-        targetUserId: id,
-        userId: auth.user.id,
-      });
-    }
-
-    if (hasAuthorizationChange) {
-      auditEntries.push({
-        action: 'PERMISSION_UPDATE',
-        category: 'PERMISSION',
-        description: `Autorisations modifiées : ${updatedLoginName}`,
-        metadata: {
-          after: afterValues,
-          before: beforeValues,
-          changes: changedKeys,
-          effectivelyGrantedPermissionKeys,
-          effectivelyRevokedPermissionKeys,
-          ...USERS_PAGE_AUDIT_LOCATION,
-          ...permissionAuditTab,
-          targetName,
-        },
-        targetUserId: id,
-        userId: auth.user.id,
-      });
-    }
-
-    if (auditEntries.length === 0) {
-      auditEntries.push({
-        action: 'USER_UPDATE',
-        category: 'USER',
-        description: `Utilisateur modifié: ${updatedLoginName}`,
-        metadata: {
-          after: afterValues,
-          before: beforeValues,
-          changes: changedKeys,
-          ...USERS_PAGE_AUDIT_LOCATION,
-          tabKey: 'profile',
-          tabLabel: 'Profil',
-          targetName,
-        },
-        targetUserId: id,
-        userId: auth.user.id,
-      });
-    }
-
-    const hasAccessPermissionChange = changedPermissionKeys.some(
-      (permissionKey) => ACCESS_PERMISSION_KEY_SET.has(permissionKey),
-    );
-    const shouldInvalidateSessions =
-      (changedKeys.includes('isActive') && isActive === false) ||
-      changedKeys.includes('loginName') ||
-      changedKeys.includes('role') ||
-      hasAccessPermissionChange;
-
-    if (shouldInvalidateSessions) {
-      updateData.securityVersion = { increment: 1 };
-    }
-
-    const updatedUser = await prisma.$transaction(async (transaction) => {
-      if (changedKeys.includes('loginName')) {
-        const reservation = await transaction.loginNameReservation.findUnique({
-          where: { loginName: updatedLoginName },
-        });
-
-        if (reservation && reservation.userId !== id) {
-          throw new LoginNameReservationConflictError();
-        }
-
-        // Returning to one of this user's former names is allowed. A brand-new
-        // name is reserved before the User update, and the whole reservation
-        // rolls back if optimistic concurrency or auditing later fails.
-        if (!reservation) {
-          await transaction.loginNameReservation.create({
-            data: { loginName: updatedLoginName, userId: id },
-          });
-        }
-      }
-
-      const nextUser = await transaction.user.update({
-        data: updateData,
-        include: { totpCredential: { select: { userId: true } } },
-        where: {
-          id,
-          securityVersion: existingUser.securityVersion,
-          updatedAt: expectedUpdatedAt ?? existingUser.updatedAt,
-        },
-      });
-
-      if (shouldInvalidateSessions) {
-        await transaction.session.deleteMany({ where: { userId: id } });
-      }
-
-      for (const auditEntry of auditEntries) {
-        await createAuditLogWithHeaders(auditEntry, {
-          client: transaction,
-          required: true,
-        });
-      }
-
-      return nextUser;
+    const updatedUser = await updateUserWithAudit({
+      actorId: auth.user.id,
+      effectivelyGrantedPermissionKeys,
+      effectivelyRevokedPermissionKeys,
+      existingUser,
+      expectedUpdatedAt,
+      mutation,
     });
 
     return NextResponse.json({

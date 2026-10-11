@@ -474,15 +474,70 @@ Documentation et index vérifiés (`docs:check` : 210 fichiers, 1 340 liens ;
 six tests du contrôleur documentaire réussis). Les environnements temporaires
 de cette passe ont été arrêtés et supprimés après les vérifications.
 
-## Fiche utilisateur (`/systeme/utilisateurs/[id]`) — 10 octobre 2026
+## Fiche utilisateur — revue complète du 11 octobre 2026
 
-**Point ouvert repéré le 11 octobre — USR-D10, P2 :** le PATCH valide un nom
-facultatif mais construit sa mise à jour avec `if (lastName)`, ignorant donc
-`''`. Attendu : pouvoir effacer un nom existant sans toucher au prénom.
-Preuve actuelle : lecture de la route, aucun scénario navigateur/SQL de ce
-défaut exécuté pendant l'audit de création. Responsable : à attribuer.
-Prochaine action : reproduire, corriger et vérifier lors de la prochaine passe
-de cette fiche. Cela ne concerne pas la création avec nom vide déjà acceptée.
+Le [rapport courant](../../audits/AUDIT_FICHE_UTILISATEUR_2026-10-11.md)
+distingue les preuves HTTP simulées, PostgreSQL, composants et Next authentifié.
+USR-D10, repéré lors de la création, est reproduit et corrigé : le nom facultatif
+vide est désormais écrit et audité sans modifier le prénom.
+
+Décisions complétant la composition ci-dessous :
+
+- Toute modification PATCH exige `expectedUpdatedAt`. La version enregistrée ne
+  recule pas à la réception d'une ancienne lecture ; le conflit conserve le
+  brouillon et demande une actualisation explicite avant une nouvelle sauvegarde.
+- Le snapshot SSR, les brouillons et les secrets appartiennent à la cible et à
+  l'acteur avec ses droits. Un changement de portée remonte la fiche et retire
+  définitivement l'ancien snapshot SSR, même si les droits initiaux reviennent.
+  Un refus 401/403/404 efface les données avant de parser son éventuel corps.
+- Le verrou synchrone est commun aux sauvegardes, révocations, suppression et
+  reset du mot de passe. Une réponse après départ ou changement de portée ne
+  met plus à jour la fiche ni le contexte d'utilisateur.
+- La section Sécurité utilise `SectionActionBar`, avec action explicite selon
+  l'état demandé et retour du focus au contrôle après Annuler. Une reprise de
+  conflit verrouille les champs et restaure un focus utile à sa section.
+  Après le retour utilisateur du 11 octobre, la barre d'état est placée après
+  toutes les cartes de Sécurité, hors de la carte « État du compte », sans
+  `placement="inline"`. Elle doit rester collante au bas de la zone de page
+  pendant le défilement avec un brouillon, selon les seuils du composant partagé.
+  Sans modification, sur mobile ou avec une faible hauteur, elle reste dans le
+  flux. La portée de sauvegarde demeure uniquement l'état du compte.
+- Une session d'ancienne `securityVersion` est exclue et nettoyée au même titre
+  qu'une session expirée. L'API administrative demeure bornée aux sessions de
+  la cible autorisée ; les dates affichées ne suffisent pas à prouver sa validité.
+- Une réponse MFA perdue ou invalide laisse un résultat incertain : vérifier
+  l'état avant toute nouvelle tentative manuelle. La fermeture n'annule pas une
+  opération déjà exécutée par le serveur. Aucun reset n'est rejoué automatiquement.
+- Une copie de mot de passe terminée après remplacement du secret ne peut pas
+  annoncer le succès sur le nouveau secret. Celui-ci reste en mémoire seulement.
+- Le schéma et la transaction de mise à jour sont séparés de la route ; les
+  contrôles d'acteur/cible, permissions et preuves restent dans cette dernière.
+  GET/PATCH chargent une projection explicite sans hash ni secret MFA. L'exception
+  de taille de la route est supprimée ; aucun seuil relevé, aucun schéma ajouté.
+- Le profil administratif en lecture seule accepte les noms longs sans couper
+  leur texte, y compris à 320 px.
+- Dans Autorisations administratives, la barre d'enregistrement apparaît
+  uniquement avec un brouillon modifié, comme dans Profil. Le message inactif
+  « Aucune modification en attente » n'apporte pas d'action utile à cet endroit.
+  Après succès, le focus revient au rôle ou à une permission modifiable, avec
+  repli sur le titre ; le bouton d'enregistrement disparu ne le laisse pas perdu.
+  Le sous-onglet Compte personnel conserve son action « Réinitialiser au rôle »
+  lorsqu'une exception enregistrée existe ; cette action a une utilité même
+  sans nouveau brouillon.
+  Retouche locale du 11 octobre : Q01–Q04, Q06 et Q27 examinés, autres sujets
+  hors impact car seules les conditions d'affichage changent. Types, lint
+  ciblé et documentation vérifiés ; parcours navigateur non rejoué pour ce point.
+
+**USR-D10 à USR-D19 clos sur le périmètre vérifié.** Suite web : 1 199 tests
+réussis et 46 SQL d'autres pages ignorés ; les quinze SQL de cette fiche passent.
+43 parcours client simulés distincts et treize scénarios Next/PostgreSQL réels
+réussis. Connexion/MFA, révocations individuelles/globales, changements de
+contact/login, secrets et réponses perdues, réenrôlement MFA, droits retirés
+pendant la consultation et suppression après désactivation sont désormais
+exercés. Build, lint, types et budgets passent. Les limites restantes, notamment
+lecteur d'écran, Safari, appareils physiques et charge, figurent au rapport.
+
+## Fiche utilisateur (`/systeme/utilisateurs/[id]`) — 10 octobre 2026
 
 État après correction autorisée par « ok go corriger » : **USR-D01 à USR-D08
 corrigés et vérifiés ; USR-D09 livré**. Le
@@ -490,7 +545,7 @@ corrigés et vérifiés ; USR-D09 livré**. Le
 porte les reproductions, la clôture, les preuves et les limites ; ne pas dupliquer
 ce registre. Les observations initiales restent historiques.
 
-Validation actuelle : **1 036 tests web réussis, 25 ignorés**, types, lint, build
+Validation du 10 octobre : **1 036 tests web réussis, 25 ignorés**, types, lint, build
 et budgets réussis. Onze scénarios Chromium sur Next/PostgreSQL isolés ; trois
 sections à sept largeurs sans débordement global. Sauvegarde lente, conflit,
 navigation clavier/Précédent, remise, réponse perdue, expiration accélérée,

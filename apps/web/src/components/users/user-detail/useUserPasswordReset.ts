@@ -32,13 +32,17 @@ type PasswordResetController = {
   verified: boolean;
 };
 export const useUserPasswordReset = ({
+  beginMutation,
   canReset,
+  finishMutation,
   onClose,
   onSuccess,
   requestStepUp,
   userId,
 }: {
+  beginMutation: () => boolean;
   canReset: boolean;
+  finishMutation: () => void;
   onClose: () => void;
   onSuccess: () => void;
   requestStepUp: ReturnType<
@@ -83,7 +87,10 @@ export const useUserPasswordReset = ({
     setVerification(null);
   }, [clearPassword, userId]);
   useEffect(() => {
-    if (!canReset) clearPassword();
+    if (!canReset) {
+      active.current?.abort();
+      clearPassword();
+    }
   }, [canReset, clearPassword]);
   useEffect(() => {
     if (!password) return;
@@ -100,7 +107,14 @@ export const useUserPasswordReset = ({
     );
   };
   const reset = async (): Promise<void> => {
-    if (!canReset || busy.current || (outcomeUnknown && !verified)) return;
+    if (
+      !mounted.current ||
+      !canResetRef.current ||
+      busy.current ||
+      (outcomeUnknown && !verified) ||
+      !beginMutation()
+    )
+      return;
     busy.current = true;
     setIsResetting(true);
     setError(null);
@@ -114,6 +128,7 @@ export const useUserPasswordReset = ({
         { method: 'POST', signal: controller.signal },
       );
       if (!mounted.current || !canResetRef.current) return;
+      if (controller.signal.aborted) throw new Error('Reset response expired');
       if (typeof data.temporaryPassword !== 'string' || !data.temporaryPassword)
         throw new Error('Missing temporary password');
       setPassword(data.temporaryPassword);
@@ -125,7 +140,7 @@ export const useUserPasswordReset = ({
       onSuccess();
       focus();
     } catch (failure) {
-      if (!mounted.current) return;
+      if (!mounted.current || !canResetRef.current) return;
       if (
         failure instanceof ApiClientError &&
         requestStepUp(
@@ -156,6 +171,7 @@ export const useUserPasswordReset = ({
       clearTimeout(timeout);
       active.current = null;
       busy.current = false;
+      finishMutation();
       if (mounted.current) {
         setIsResetting(false);
         onClose();

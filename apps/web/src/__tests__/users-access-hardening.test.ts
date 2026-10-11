@@ -147,7 +147,7 @@ const PROTECTED_ACCOUNT_AUDIT_EXCLUSION = {
 
 const stringifyRequestBody = (body: Record<string, unknown>): string =>
   JSON.stringify({
-    ...('permissions' in body ? { expectedUpdatedAt: USER_REVISION } : {}),
+    expectedUpdatedAt: USER_REVISION,
     ...body,
   });
 
@@ -1779,7 +1779,7 @@ describe('users access hardening', () => {
 
     expect(response.status).toBe(400);
     expect(body.error.details.expectedUpdatedAt).toEqual([
-      'La version de la fiche est requise pour modifier les informations sensibles',
+      'La version de la fiche est requise',
     ]);
     expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
   });
@@ -2545,6 +2545,47 @@ describe('users access hardening', () => {
     );
   });
 
+  it.each(['', '   '])(
+    'clears an optional last name submitted as %j',
+    async (lastName) => {
+      const existingUser = buildUser({ id: 'target-1' });
+      mockPrisma.user.findUnique.mockResolvedValueOnce(existingUser);
+      mockPrisma.user.update.mockResolvedValueOnce({
+        ...existingUser,
+        lastName: '',
+      });
+      const { PATCH } = await import('$app/api/users/[id]/route');
+      const response = await PATCH(
+        new Request('http://localhost/api/users/target-1', {
+          body: stringifyRequestBody({
+            expectedUpdatedAt: USER_REVISION,
+            lastName,
+          }),
+          method: 'PATCH',
+        }) as never,
+        { params: Promise.resolve({ id: 'target-1' }) },
+      );
+      expect(response.status).toBe(200);
+      expect((await response.json()).data.user.lastName).toBe('');
+      expect(mockPrisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { lastName: '' },
+        }),
+      );
+      expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'USER_UPDATE',
+          metadata: expect.objectContaining({
+            after: { lastName: '' },
+            before: { lastName: 'Dupont' },
+          }),
+        }),
+        { client: mockPrisma, required: true },
+      );
+      expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+    },
+  );
+
   it('returns a conflict instead of overwriting a concurrent update', async () => {
     const existingUser = buildUser({ id: 'target-1' });
     mockPrisma.user.findUnique.mockResolvedValue(existingUser);
@@ -2990,7 +3031,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/route');
     const response = await route.POST(
       new Request('http://localhost/api/users', {
-        body: stringifyRequestBody({
+        body: JSON.stringify({
           contactEmail: 'New.User@example.com',
           firstName: 'New',
           lastName: 'User',
@@ -3053,7 +3094,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/route');
     const response = await route.POST(
       new Request('http://localhost/api/users', {
-        body: stringifyRequestBody({
+        body: JSON.stringify({
           contactEmail: 'admin@example.com',
           firstName: 'Admin',
           lastName: 'Secondaire',
@@ -3099,7 +3140,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/route');
     const response = await route.POST(
       new Request('http://localhost/api/users', {
-        body: stringifyRequestBody({
+        body: JSON.stringify({
           contactEmail: 'admin@example.com',
           firstName: 'Admin',
           lastName: 'Secondaire',
@@ -3128,7 +3169,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/route');
     const response = await route.POST(
       new Request('http://localhost/api/users', {
-        body: stringifyRequestBody({
+        body: JSON.stringify({
           contactEmail: 'race@example.com',
           firstName: 'Race',
           lastName: 'Condition',
@@ -3156,7 +3197,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/route');
     const response = await route.POST(
       new Request('http://localhost/api/users', {
-        body: stringifyRequestBody({
+        body: JSON.stringify({
           contactEmail: 'failure@example.com',
           firstName: 'Failure',
           lastName: 'Case',
@@ -3174,7 +3215,7 @@ describe('users access hardening', () => {
     const route = await import('$app/api/users/route');
     const response = await route.POST(
       new Request('http://localhost/api/users', {
-        body: stringifyRequestBody({
+        body: JSON.stringify({
           contactEmail: 'new.user@example.com',
           firstName: 'A'.repeat(51),
           lastName: 'User',

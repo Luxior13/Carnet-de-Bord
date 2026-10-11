@@ -177,13 +177,13 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
           <h2 className="text-sm font-semibold">Profil administratif</h2>
         </CardHeader>
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2">
-          <div className="border-border/60 bg-surface-inset rounded-md border p-3">
+          <div className="border-border/60 bg-surface-inset min-w-0 rounded-md border p-3">
             <p className="text-muted-foreground text-xs">Identité</p>
-            <p className="text-foreground mt-1 text-sm font-medium">
+            <p className="text-foreground mt-1 text-sm font-medium break-words">
               {form.firstName} {form.lastName}
             </p>
           </div>
-          <div className="border-border/60 bg-surface-inset rounded-md border p-3">
+          <div className="border-border/60 bg-surface-inset min-w-0 rounded-md border p-3">
             <p className="text-muted-foreground text-xs">
               Identifiant de connexion
             </p>
@@ -192,7 +192,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
             </p>
           </div>
           {canViewContact && (
-            <div className="border-border/60 bg-surface-inset rounded-md border p-3 sm:col-span-2">
+            <div className="border-border/60 bg-surface-inset min-w-0 rounded-md border p-3 sm:col-span-2">
               <p className="text-muted-foreground text-xs">Email de contact</p>
               <p className="text-foreground mt-1 text-sm break-all">
                 {form.contactEmail || 'Non renseigné'}

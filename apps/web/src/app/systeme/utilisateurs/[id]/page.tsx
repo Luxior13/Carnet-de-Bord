@@ -6,6 +6,7 @@ import {
 } from '$components/users/UserDetailPage';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { getUserForActor } from '$features/users/server/user-detail.service';
+import { getUserDetailScope } from '$features/users/user-detail-scope';
 import { getPageAuthSession } from '$server/auth';
 import type { UserType } from '$types/auth.types';
 
@@ -36,7 +37,12 @@ export default async function AdministrationUserDetailPage({
 
   return (
     <Suspense fallback={<UserDetailPageSkeleton />}>
-      <UserDetailPage initialUser={initialUser} key={id} userId={id} />
+      <UserDetailPage
+        initialScope={getUserDetailScope(user)}
+        initialUser={initialUser}
+        key={id}
+        userId={id}
+      />
     </Suspense>
   );
 }

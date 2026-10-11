@@ -4,6 +4,7 @@ import React, {
   type FC,
   type RefObject,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -56,6 +57,15 @@ export const useUserMutationFeedback = (): UserMutationController => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const feedbackRef = useRef<HTMLDivElement>(null);
   const inFlight = useRef(false);
+  const refreshInFlight = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+
+    return (): void => {
+      mounted.current = false;
+    };
+  }, []);
   const clear = useCallback((): void => {
     setFeedback(null);
     setServerValidation(null);
@@ -87,7 +97,8 @@ export const useUserMutationFeedback = (): UserMutationController => {
     focus();
   };
   const start = (): boolean => {
-    if (inFlight.current || isRefreshing || feedback?.conflict) return false;
+    if (inFlight.current || refreshInFlight.current || feedback?.conflict)
+      return false;
     inFlight.current = true;
     setFeedback(null);
     setServerValidation(null);
@@ -95,32 +106,66 @@ export const useUserMutationFeedback = (): UserMutationController => {
     return true;
   };
   const refresh = async (load: () => Promise<boolean>): Promise<void> => {
-    if (inFlight.current || isRefreshing) return;
+    if (inFlight.current || refreshInFlight.current) return;
+    refreshInFlight.current = true;
+    const section = feedback?.section;
+    let refreshed = false;
     setIsRefreshing(true);
     try {
-      if (await load()) {
+      refreshed = await load();
+      if (!mounted.current) return;
+      if (refreshed) {
         setFeedback(null);
         setServerValidation(null);
-        requestAnimationFrame(() =>
-          document
-            .querySelector<HTMLElement>(
-              '[data-user-profile-form] input:not(:disabled)',
-            )
-            ?.focus(),
-        );
-      } else {
-        setFeedback((current) =>
-          current
-            ? {
-                ...current,
-                message:
-                  'Actualisation impossible. Votre saisie est conservée. Réessayez.',
-              }
-            : current,
-        );
       }
+    } catch {
+      refreshed = false;
     } finally {
-      setIsRefreshing(false);
+      refreshInFlight.current = false;
+      if (mounted.current) {
+        setIsRefreshing(false);
+        if (!refreshed) {
+          setFeedback((current) =>
+            current
+              ? {
+                  ...current,
+                  message:
+                    'Actualisation impossible. Votre saisie est conservée. Réessayez.',
+                }
+              : current,
+          );
+        }
+        requestAnimationFrame(() => {
+          if (!mounted.current) return;
+          if (!refreshed) {
+            (
+              feedbackRef.current?.querySelector<HTMLButtonElement>('button') ??
+              feedbackRef.current
+            )?.focus();
+
+            return;
+          }
+          const selector =
+            section === 'profile'
+              ? '[data-user-profile-form] input:not(:disabled), [data-user-profile-form] h2'
+              : section === 'access'
+                ? 'button#user-role:not(:disabled), [data-permission] button[aria-pressed]:not(:disabled), #user-access-panel h3'
+                : section === 'account'
+                  ? '[aria-labelledby="account-autonomy-title"] [role="switch"]:not(:disabled), #account-autonomy-title'
+                  : section === 'security'
+                    ? '#user-active-switch:not(:disabled), #user-security-status-heading'
+                    : null;
+          const targets = selector
+            ? Array.from(document.querySelectorAll<HTMLElement>(selector))
+            : [];
+          const control = targets.find((target) =>
+            target.matches('input, button'),
+          );
+          const target = control ?? targets[0];
+          if (target && !control) target.tabIndex = -1;
+          target?.focus();
+        });
+      }
     }
   };
 
@@ -164,7 +209,7 @@ export const UserMutationFeedback: FC<{
             sera conservée : vérifiez-la avant de l’enregistrer à nouveau.
           </p>
           <Button
-            disabled={isRefreshing}
+            loading={isRefreshing}
             onClick={() => void refresh(onRefresh)}
             size="sm"
             type="button"

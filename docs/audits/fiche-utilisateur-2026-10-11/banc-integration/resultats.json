@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-11",
+  "runtime": "Next production + PostgreSQL 17 + Chromium",
+  "browserVersion": "149.0.7827.55",
+  "scenarios": [
+    {
+      "name": "real root and target logins/MFA, four detail sections at seven widths",
+      "result": "passed"
+    },
+    {
+      "name": "clear optional surname, normalize contact and persist profile with audit",
+      "result": "passed"
+    },
+    {
+      "name": "concurrent editors get conflict, preserve draft and explicitly refresh before save",
+      "result": "passed"
+    },
+    {
+      "name": "dirty section navigation keeps draft and restores focus on cancellation",
+      "result": "passed"
+    },
+    {
+      "name": "revoke one then all real sessions with a real password/TOTP challenge",
+      "result": "passed"
+    },
+    {
+      "name": "administrative and personal permissions preserve the other scope",
+      "result": "passed"
+    },
+    {
+      "name": "login rename reserves both names and keeps the contact independent",
+      "result": "passed"
+    },
+    {
+      "name": "real password reset, copy, acknowledgement and hide without persistent secret",
+      "result": "passed"
+    },
+    {
+      "name": "password reset committed with lost response requires GET then explicit new emission",
+      "result": "passed"
+    },
+    {
+      "name": "root MFA recovery deletes old credentials and recovery codes, then allows fresh enrollment",
+      "result": "passed"
+    },
+    {
+      "name": "MFA reset committed with lost response is resolved by GET without duplicate POST",
+      "result": "passed"
+    },
+    {
+      "name": "read-only projection and live revocation remove private fields and prevent mutations",
+      "result": "passed"
+    },
+    {
+      "name": "deactivation required before irreversible deletion, tombstone and reservation retained",
+      "result": "passed"
+    }
+  ]
+}

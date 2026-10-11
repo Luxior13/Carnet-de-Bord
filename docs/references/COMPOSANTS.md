@@ -116,6 +116,11 @@ petit écran, faible hauteur, formulaire inchangé ou `placement="inline"`.
 Conserver les champs visibles prime sur le maintien permanent des actions à
 l’écran. Une modale conserve son pied de fenêtre adapté à son parcours.
 
+Pour une barre portée par la page, la placer après l'ensemble du contenu
+éditable, hors des cartes internes : son parent doit couvrir tout le parcours
+de défilement. Retirer `placement="inline"` ne suffit pas si une carte courte
+ou un ancêtre avec débordement masqué limite encore son déplacement.
+
 Le formulaire possède la base enregistrée, le brouillon et la version de
 concurrence. Il bloque les doubles requêtes, traite leurs erreurs, ignore les
 réponses tardives d’une ancienne cible et choisit le focus après succès,

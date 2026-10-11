@@ -1,0 +1,312 @@
+[
+  {
+    "name": "responsive-profile",
+    "width": 320,
+    "pass": true,
+    "detail": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 320,
+    "pass": true,
+    "detail": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 320,
+    "pass": true,
+    "detail": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 320,
+    "pass": true,
+    "detail": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    }
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 320,
+    "pass": true
+  },
+  {
+    "name": "responsive-profile",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    }
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "responsive-profile",
+    "width": 768,
+    "pass": true,
+    "detail": {
+      "viewport": 768,
+      "document": 768,
+      "main": 768,
+      "mainWidth": 768
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 768,
+    "pass": true,
+    "detail": {
+      "viewport": 768,
+      "document": 768,
+      "main": 768,
+      "mainWidth": 768
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 768,
+    "pass": true,
+    "detail": {
+      "viewport": 768,
+      "document": 768,
+      "main": 768,
+      "mainWidth": 768
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 768,
+    "pass": true,
+    "detail": {
+      "viewport": 768,
+      "document": 768,
+      "main": 768,
+      "mainWidth": 768
+    }
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 768,
+    "pass": true
+  },
+  {
+    "name": "responsive-profile",
+    "width": 1440,
+    "pass": true,
+    "detail": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1200,
+      "mainWidth": 1200
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 1440,
+    "pass": true,
+    "detail": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1200,
+      "mainWidth": 1200
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 1440,
+    "pass": true,
+    "detail": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1200,
+      "mainWidth": 1200
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 1440,
+    "pass": true,
+    "detail": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1200,
+      "mainWidth": 1200
+    }
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 1440,
+    "pass": true
+  },
+  {
+    "name": "responsive-profile",
+    "width": 1920,
+    "pass": true,
+    "detail": {
+      "viewport": 1920,
+      "document": 1920,
+      "main": 1680,
+      "mainWidth": 1680
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 1920,
+    "pass": true,
+    "detail": {
+      "viewport": 1920,
+      "document": 1920,
+      "main": 1680,
+      "mainWidth": 1680
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 1920,
+    "pass": true,
+    "detail": {
+      "viewport": 1920,
+      "document": 1920,
+      "main": 1680,
+      "mainWidth": 1680
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 1920,
+    "pass": true,
+    "detail": {
+      "viewport": 1920,
+      "document": 1920,
+      "main": 1680,
+      "mainWidth": 1680
+    }
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 1920,
+    "pass": true
+  },
+  {
+    "name": "profile-save-validation-and-contact",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "conflict-refresh-profile",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "conflict-refresh-access",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "conflict-refresh-account",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "conflict-refresh-security",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "session-retry-and-revocation-focus",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "secret-copy-stale-result",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "mfa-reset-error-focus",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "mfa-reset-lost-response-check",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "readonly-profile-and-hidden-fields",
+    "width": 320,
+    "pass": true
+  },
+  {
+    "name": "permissions-configured-blocked-and-scopes",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "role-requires-target-mfa",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "conflict-refresh-failure-retry-focus",
+    "width": 390,
+    "pass": true
+  }
+]

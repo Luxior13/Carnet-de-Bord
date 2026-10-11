@@ -136,7 +136,7 @@ attribuer : les limites d'attribution sont détaillées sous le tableau.
 | `users:revoke_sessions`       | révoquer une ou toutes les sessions             | `users:view_sessions`                       | critique  | Oui               |
 | `users:view_activity`         | voir l'activité d'un autre compte               | `users:view`                                | sensible  | Non               |
 | `users:export_activity`       | exporter l'activité d'un autre compte           | `users:view_activity`                       | critique  | Oui               |
-| `users:delete_account`        | supprimer irréversiblement un compte désactivé  | `users:view_security`                       | critique  | Non               |
+| `users:delete_account`        | supprimer irréversiblement un compte désactivé  | `users:view_security`                       | critique  | Mot de passe récent |
 
 La désactivation via `users:update_status` est la seule opération réversible.
 La suppression exige un compte déjà désactivé, anonymise sa ligne technique,
@@ -144,6 +144,9 @@ supprime ses secrets d'authentification et interdit toute restauration en base.
 Un détenteur de `users:delete_account` peut supprimer un compte standard ; seul
 le compte racine peut supprimer un administrateur. Le compte racine et son
 propre compte ne peuvent jamais être supprimés depuis l'application.
+La suppression exige une confirmation du mot de passe datant de 30 minutes
+maximum, sans preuve MFA critique supplémentaire ; une date de preuve future
+est refusée. L'authentification habituelle reste soumise à la MFA.
 
 La clé neuve `users:delete_account` évite de réutiliser `users:delete`, qui a
 historiquement désigné l'ancien archivage. Aucun ancien droit positif

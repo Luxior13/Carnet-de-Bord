@@ -11,14 +11,14 @@ import {
   Power,
   QrCode,
   RotateCcw,
-  Save,
   ShieldAlert,
   ShieldCheck,
   Smartphone,
 } from 'lucide-react';
-import React, { type FC, useState } from 'react';
+import React, { type FC, useRef, useState } from 'react';
 
 import { Disclosure } from '$components/layout/Disclosure';
+import { SectionActionBar } from '$components/layout/SectionActionBar';
 import type { UserSessionInfo, UserType } from '$types/auth.types';
 import {
   AlertDialog,
@@ -53,6 +53,7 @@ type UserSecurityTabProps = {
   hasStatusChanges: boolean;
   isActive: boolean;
   isLoadingSessions: boolean;
+  isRefreshing?: boolean;
   isRevokingSessionId: string | null;
   isRevokingSessions: boolean;
   isSaving: boolean;
@@ -60,8 +61,8 @@ type UserSecurityTabProps = {
   onDeleteUser: () => void;
   onResetMfa: () => void;
   onResetPassword: () => void;
-  onRetrySessions: () => void;
-  onRevokeSession: (sessionId: string) => void;
+  onRetrySessions: () => Promise<void> | void;
+  onRevokeSession: (sessionId: string) => Promise<void> | void;
   onRevokeSessions: () => void;
   onSaveStatus: () => void;
   sessions: UserSessionInfo[];
@@ -186,6 +187,7 @@ const SectionTitle: FC<{
 }> = ({ children, icon, id }) => (
   <h3
     id={id}
+    tabIndex={-1}
     className="text-foreground flex items-center gap-2 text-sm font-semibold"
   >
     <ServiceIcon className="size-7">{icon}</ServiceIcon>
@@ -316,6 +318,7 @@ const SessionRow: FC<{
           onClick={() => onRequestRevoke(session)}
           disabled={disabled}
           aria-label={`Révoquer la session ${device} ${browser}`}
+          data-session-id={session.id}
         >
           {isRevoking ? (
             <Loader2 className="size-4 animate-spin" />
@@ -341,6 +344,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   hasStatusChanges,
   isActive,
   isLoadingSessions,
+  isRefreshing = false,
   isRevokingSessionId,
   isRevokingSessions,
   isSaving,
@@ -357,6 +361,31 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   setIsActive,
   user,
 }) => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const activeSwitchRef = useRef<HTMLButtonElement>(null);
+  const handleCancelStatus = (): void => {
+    onCancelStatus();
+    requestAnimationFrame(() => activeSwitchRef.current?.focus());
+  };
+  const focusSessions = (sessionId?: string): void => {
+    requestAnimationFrame(() => {
+      const remainingButton = sessionId
+        ? sectionRef.current?.querySelector<HTMLButtonElement>(
+            `[data-session-id="${CSS.escape(sessionId)}"]:not(:disabled)`,
+          )
+        : sectionRef.current?.querySelector<HTMLButtonElement>(
+            '[data-retry-sessions]:not(:disabled)',
+          );
+      const heading = sectionRef.current?.querySelector<HTMLElement>(
+        '#user-security-sessions-heading',
+      );
+      (remainingButton ?? heading)?.focus();
+    });
+  };
+  const retrySessions = async (): Promise<void> => {
+    await onRetrySessions();
+    focusSessions();
+  };
   const isSelf = currentUserId === user.id;
   const lockedUntil = toValidDate(user.lockedUntil);
   const isLocked = !!lockedUntil && lockedUntil > new Date();
@@ -374,6 +403,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
 
   return (
     <section
+      ref={sectionRef}
       aria-busy={isLoadingSessions || isAnySessionRevoking}
       aria-labelledby="user-security-heading"
       className="space-y-3"
@@ -417,6 +447,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             </div>
             <Switch
               id="user-active-switch"
+              ref={activeSwitchRef}
               checked={isActive}
               onCheckedChange={setIsActive}
               disabled={!canEditStatus || isSelf || isSaving}
@@ -437,42 +468,6 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             </div>
           )}
         </CardContent>
-        {canEditStatus && !isSelf && (
-          <CardFooter className="flex-col items-stretch justify-between gap-3 p-3 sm:flex-row sm:items-center sm:p-4">
-            <p className="text-muted-foreground text-xs">
-              {hasStatusChanges ? 'Modification non enregistrée' : 'À jour'}
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onCancelStatus}
-                disabled={!hasStatusChanges || isSaving}
-              >
-                Annuler
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={onSaveStatus}
-                disabled={isSaving || !canSaveStatus}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                {isSaving ? (
-                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="mr-1.5 h-4 w-4" />
-                )}
-                {hasStatusChanges
-                  ? isActive
-                    ? 'Réactiver le compte'
-                    : 'Désactiver le compte'
-                  : 'Enregistrer'}
-              </Button>
-            </div>
-          </CardFooter>
-        )}
       </Card>
       {user.securityDetailsVisible === false ? (
         <Card>
@@ -617,6 +612,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                 <Button
                   className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning h-auto min-h-10 w-full min-w-0 gap-2 whitespace-normal sm:w-auto"
                   onClick={onResetMfa}
+                  id="user-reset-mfa"
                   disabled={isSaving}
                   size="sm"
                   type="button"
@@ -658,7 +654,13 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               role="alert"
             >
               <span>{sessionsError}</span>
-              <Button onClick={onRetrySessions} size="sm" variant="outline">
+              <Button
+                data-retry-sessions
+                loading={isLoadingSessions}
+                onClick={() => void retrySessions()}
+                size="sm"
+                variant="outline"
+              >
                 <RotateCcw className="size-4" />
                 Réessayer
               </Button>
@@ -677,7 +679,13 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                   role="alert"
                 >
                   <span>{sessionsError}</span>
-                  <Button onClick={onRetrySessions} size="sm" variant="outline">
+                  <Button
+                    data-retry-sessions
+                    loading={isLoadingSessions}
+                    onClick={() => void retrySessions()}
+                    size="sm"
+                    variant="outline"
+                  >
                     <RotateCcw className="size-4" />
                     Réessayer
                   </Button>
@@ -725,6 +733,24 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           userIsActive={user.isActive}
         />
       )}
+      {canEditStatus && !isSelf && (
+        <SectionActionBar
+          hasChanges={hasStatusChanges}
+          isResolvingConflict={isRefreshing}
+          isSaving={isSaving && !isRefreshing}
+          label="Enregistrement de l’état du compte"
+          onCancel={handleCancelStatus}
+          onSave={onSaveStatus}
+          saveDisabled={!canSaveStatus}
+          saveLabel={
+            hasStatusChanges
+              ? isActive
+                ? 'Réactiver le compte'
+                : 'Désactiver le compte'
+              : 'Enregistrer'
+          }
+        />
+      )}
       <AlertDialog
         open={sessionPendingRevocation !== null}
         onOpenChange={(open) => {
@@ -750,7 +776,10 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                 const sessionId = sessionPendingRevocation?.id;
 
                 setSessionPendingRevocation(null);
-                if (sessionId) onRevokeSession(sessionId);
+                if (sessionId)
+                  void Promise.resolve(onRevokeSession(sessionId)).then(() =>
+                    focusSessions(sessionId),
+                  );
               }}
             >
               Révoquer la session

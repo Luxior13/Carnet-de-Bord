@@ -1,7 +1,7 @@
 'use client';
 
 import { Clipboard, KeyRound } from 'lucide-react';
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { Button } from '$ui/button';
 import { Card, CardContent } from '$ui/card';
@@ -16,18 +16,28 @@ export const UserPasswordResetFeedback: FC<{
   onRequestReset: () => void;
 }> = ({ controller: reset, onCheck, onRequestReset }) => {
   const [copyMessage, setCopyMessage] = useState('');
+  const copyOperation = useRef(0);
   useEffect(() => {
+    copyOperation.current += 1;
     setCopyMessage('');
+
+    return (): void => {
+      copyOperation.current += 1;
+    };
   }, [reset.password]);
   if (!reset.password && !reset.error && !reset.expired) return null;
   const copy = async (): Promise<void> => {
     if (!reset.password) return;
+    const operation = ++copyOperation.current;
+    setCopyMessage('');
     try {
       await navigator.clipboard.writeText(reset.password);
+      if (operation !== copyOperation.current) return;
       setCopyMessage(
         'Mot de passe copié. Confirmez que vous l’avez conservé pour le transmettre.',
       );
     } catch {
+      if (operation !== copyOperation.current) return;
       setCopyMessage(
         'Copie impossible. Sélectionnez et copiez le mot de passe manuellement.',
       );

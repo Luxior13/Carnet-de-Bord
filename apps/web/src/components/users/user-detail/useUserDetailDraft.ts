@@ -13,6 +13,7 @@ import {
 } from './user-detail-draft';
 
 type UserDetailDraftController = {
+  clearUserState: () => void;
   editForm: UserDetailForm;
   permissions: PermissionsData | null;
   setEditForm: (update: SetStateAction<UserDetailForm>) => void;
@@ -25,6 +26,9 @@ export const useUserDetailDraft = (
   initialUser?: UserType,
 ): UserDetailDraftController => {
   const [state, setState] = useState(() => createUserDetailDraft(initialUser));
+  const clearUserState = useCallback((): void => {
+    setState(createUserDetailDraft());
+  }, []);
   const setEditForm = useCallback(
     (update: SetStateAction<UserDetailForm>): void => {
       setState((current) => ({
@@ -52,6 +56,7 @@ export const useUserDetailDraft = (
   );
 
   return {
+    clearUserState,
     editForm: state.form,
     permissions: state.permissions,
     setEditForm,

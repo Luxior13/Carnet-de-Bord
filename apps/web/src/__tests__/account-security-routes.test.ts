@@ -935,6 +935,7 @@ describe('account security routes', () => {
           OR: [
             { expiresAt: { lte: expect.any(Date) } },
             { idleExpiresAt: { lte: expect.any(Date) } },
+            { securityVersion: { not: 3 } },
           ],
           user: {
             is: {
@@ -957,6 +958,7 @@ describe('account security routes', () => {
           where: expect.objectContaining({
             expiresAt: { gt: expect.any(Date) },
             idleExpiresAt: { gt: expect.any(Date) },
+            securityVersion: 3,
             user: expect.objectContaining({
               is: expect.objectContaining({
                 role: 'USER',

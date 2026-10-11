@@ -164,7 +164,11 @@ export async function GET(
     const sessions = await prisma.$transaction(async (transaction) => {
       await transaction.session.deleteMany({
         where: {
-          OR: [{ expiresAt: { lte: now } }, { idleExpiresAt: { lte: now } }],
+          OR: [
+            { expiresAt: { lte: now } },
+            { idleExpiresAt: { lte: now } },
+            { securityVersion: { not: targetUser.securityVersion } },
+          ],
           user: stableTarget,
           userId: targetUser.id,
         },
@@ -185,6 +189,7 @@ export async function GET(
         where: {
           expiresAt: { gt: now },
           idleExpiresAt: { gt: now },
+          securityVersion: targetUser.securityVersion,
           user: stableTarget,
           userId: targetUser.id,
         },

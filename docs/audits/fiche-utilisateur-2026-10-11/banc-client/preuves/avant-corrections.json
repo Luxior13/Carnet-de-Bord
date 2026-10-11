@@ -1,0 +1,287 @@
+[
+  {
+    "name": "responsive-profile",
+    "width": 320,
+    "pass": true,
+    "detail": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 320,
+    "pass": true,
+    "detail": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 320,
+    "pass": true,
+    "detail": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 320,
+    "pass": false,
+    "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByText('Windows - Chrome', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByText('Windows - Chrome', { exact: true })\n",
+    "pageErrors": []
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 320,
+    "pass": false,
+    "error": "Error: expect(locator).toBeFocused() failed\n\nLocator:  getByRole('switch', { name: 'Compte actif' })\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for getByRole('switch', { name: 'Compte actif' })\n    14 × locator resolved to <button value=\"on\" type=\"button\" role=\"switch\" data-slot=\"switch\" aria-checked=\"true\" data-state=\"checked\" id=\"user-active-switch\" aria-describedby=\"user-active-switch-description\" class=\"peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring dark:data-[state=unchecked]:bg-input/80 border-border-control data-[state=checked]:border-primary hover:border-ring/70 relative inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border s…>…</button>\n       - unexpected value \"inactive\"\n",
+    "pageErrors": []
+  },
+  {
+    "name": "responsive-profile",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 390,
+    "pass": false,
+    "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByText('Windows - Chrome', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByText('Windows - Chrome', { exact: true })\n",
+    "pageErrors": []
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 390,
+    "pass": false,
+    "error": "Error: expect(locator).toBeFocused() failed\n\nLocator:  getByRole('switch', { name: 'Compte actif' })\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for getByRole('switch', { name: 'Compte actif' })\n    14 × locator resolved to <button value=\"on\" type=\"button\" role=\"switch\" data-slot=\"switch\" aria-checked=\"true\" data-state=\"checked\" id=\"user-active-switch\" aria-describedby=\"user-active-switch-description\" class=\"peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring dark:data-[state=unchecked]:bg-input/80 border-border-control data-[state=checked]:border-primary hover:border-ring/70 relative inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border s…>…</button>\n       - unexpected value \"inactive\"\n",
+    "pageErrors": []
+  },
+  {
+    "name": "responsive-profile",
+    "width": 768,
+    "pass": true,
+    "detail": {
+      "viewport": 768,
+      "document": 768,
+      "main": 768,
+      "mainWidth": 768
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 768,
+    "pass": true,
+    "detail": {
+      "viewport": 768,
+      "document": 768,
+      "main": 768,
+      "mainWidth": 768
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 768,
+    "pass": true,
+    "detail": {
+      "viewport": 768,
+      "document": 768,
+      "main": 768,
+      "mainWidth": 768
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 768,
+    "pass": false,
+    "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByText('Windows - Chrome', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByText('Windows - Chrome', { exact: true })\n",
+    "pageErrors": []
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 768,
+    "pass": false,
+    "error": "Error: expect(locator).toBeFocused() failed\n\nLocator:  getByRole('switch', { name: 'Compte actif' })\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for getByRole('switch', { name: 'Compte actif' })\n    14 × locator resolved to <button value=\"on\" type=\"button\" role=\"switch\" data-slot=\"switch\" aria-checked=\"true\" data-state=\"checked\" id=\"user-active-switch\" aria-describedby=\"user-active-switch-description\" class=\"peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring dark:data-[state=unchecked]:bg-input/80 border-border-control data-[state=checked]:border-primary hover:border-ring/70 relative inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border s…>…</button>\n       - unexpected value \"inactive\"\n",
+    "pageErrors": []
+  },
+  {
+    "name": "responsive-profile",
+    "width": 1440,
+    "pass": true,
+    "detail": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1200,
+      "mainWidth": 1200
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 1440,
+    "pass": true,
+    "detail": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1200,
+      "mainWidth": 1200
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 1440,
+    "pass": true,
+    "detail": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1200,
+      "mainWidth": 1200
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 1440,
+    "pass": false,
+    "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByText('Windows - Chrome', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByText('Windows - Chrome', { exact: true })\n",
+    "pageErrors": []
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 1440,
+    "pass": false,
+    "error": "Error: expect(locator).toBeFocused() failed\n\nLocator:  getByRole('switch', { name: 'Compte actif' })\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for getByRole('switch', { name: 'Compte actif' })\n    14 × locator resolved to <button value=\"on\" type=\"button\" role=\"switch\" data-slot=\"switch\" aria-checked=\"true\" data-state=\"checked\" id=\"user-active-switch\" aria-describedby=\"user-active-switch-description\" class=\"peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring dark:data-[state=unchecked]:bg-input/80 border-border-control data-[state=checked]:border-primary hover:border-ring/70 relative inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border s…>…</button>\n       - unexpected value \"inactive\"\n",
+    "pageErrors": []
+  },
+  {
+    "name": "responsive-profile",
+    "width": 1920,
+    "pass": true,
+    "detail": {
+      "viewport": 1920,
+      "document": 1920,
+      "main": 1680,
+      "mainWidth": 1680
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 1920,
+    "pass": true,
+    "detail": {
+      "viewport": 1920,
+      "document": 1920,
+      "main": 1680,
+      "mainWidth": 1680
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 1920,
+    "pass": true,
+    "detail": {
+      "viewport": 1920,
+      "document": 1920,
+      "main": 1680,
+      "mainWidth": 1680
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 1920,
+    "pass": false,
+    "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByText('Windows - Chrome', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByText('Windows - Chrome', { exact: true })\n",
+    "pageErrors": []
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 1920,
+    "pass": false,
+    "error": "Error: expect(locator).toBeFocused() failed\n\nLocator:  getByRole('switch', { name: 'Compte actif' })\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for getByRole('switch', { name: 'Compte actif' })\n    14 × locator resolved to <button value=\"on\" type=\"button\" role=\"switch\" data-slot=\"switch\" aria-checked=\"true\" data-state=\"checked\" id=\"user-active-switch\" aria-describedby=\"user-active-switch-description\" class=\"peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring dark:data-[state=unchecked]:bg-input/80 border-border-control data-[state=checked]:border-primary hover:border-ring/70 relative inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border s…>…</button>\n       - unexpected value \"inactive\"\n",
+    "pageErrors": []
+  },
+  {
+    "name": "profile-save-validation-and-contact",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "conflict-refresh-profile",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "conflict-refresh-access",
+    "width": 390,
+    "pass": false,
+    "error": "Error: expect(locator).toBeFocused() failed\n\nLocator:  locator('#user-role')\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for locator('#user-role')\n    14 × locator resolved to <button dir=\"ltr\" type=\"button\" id=\"user-role\" role=\"combobox\" data-state=\"closed\" aria-expanded=\"false\" aria-autocomplete=\"none\" data-slot=\"select-trigger\" class=\"border-border-control bg-input data-[placeholder]:text-muted-foreground focus-visible:border-ring ring-ring data-[state=open]:border-ring data-[state=open]:bg-surface-control-focus data-[state=open]:aria-invalid:border-destructive aria-invalid:border-destructive aria-invalid:ring-destructive/20 hover:border-ring/70 hover:bg-surface-control-…>…</button>\n       - unexpected value \"inactive\"\n",
+    "pageErrors": []
+  },
+  {
+    "name": "conflict-refresh-account",
+    "width": 390,
+    "pass": false,
+    "error": "Error: expect(locator).toBeFocused() failed\n\nLocator:  getByRole('switch').first()\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for getByRole('switch').first()\n    - locator resolved to <button disabled value=\"on\" type=\"button\" role=\"switch\" data-disabled=\"\" data-slot=\"switch\" aria-checked=\"false\" data-state=\"unchecked\" aria-label=\"Modifier son prénom et son nom\" aria-describedby=\"account-permission-account:update_profile-description account-permission-account:update_profile-state\" class=\"peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring dark:data-[state=unchecked]:bg-input/80 border-border-control data-[state=check…>…</button>\n    13 × unexpected value \"inactive\"\n       - locator resolved to <button value=\"on\" type=\"button\" role=\"switch\" data-slot=\"switch\" aria-checked=\"false\" data-state=\"unchecked\" aria-label=\"Modifier son prénom et son nom\" aria-describedby=\"account-permission-account:update_profile-description account-permission-account:update_profile-state\" class=\"peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring dark:data-[state=unchecked]:bg-input/80 border-border-control data-[state=checked]:border-primary hover:b…>…</button>\n    - unexpected value \"inactive\"\n",
+    "pageErrors": []
+  },
+  {
+    "name": "conflict-refresh-security",
+    "width": 390,
+    "pass": false,
+    "error": "Error: expect(locator).toBeFocused() failed\n\nLocator:  getByRole('switch', { name: 'Compte actif' })\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for getByRole('switch', { name: 'Compte actif' })\n    - locator resolved to <button disabled value=\"on\" type=\"button\" role=\"switch\" data-disabled=\"\" data-slot=\"switch\" aria-checked=\"false\" data-state=\"unchecked\" id=\"user-active-switch\" aria-describedby=\"user-active-switch-description\" class=\"peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring dark:data-[state=unchecked]:bg-input/80 border-border-control data-[state=checked]:border-primary hover:border-ring/70 relative inline-flex h-[1.15rem] w-8 shrink-0 items…>…</button>\n    13 × unexpected value \"inactive\"\n       - locator resolved to <button value=\"on\" type=\"button\" role=\"switch\" data-slot=\"switch\" aria-checked=\"false\" data-state=\"unchecked\" id=\"user-active-switch\" aria-describedby=\"user-active-switch-description\" class=\"peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring dark:data-[state=unchecked]:bg-input/80 border-border-control data-[state=checked]:border-primary hover:border-ring/70 relative inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full borde…>…</button>\n    - unexpected value \"inactive\"\n",
+    "pageErrors": []
+  },
+  {
+    "name": "session-retry-and-revocation-focus",
+    "width": 390,
+    "pass": false,
+    "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('button', { name: 'Réessayer', exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByRole('button', { name: 'Réessayer', exact: true })\n",
+    "pageErrors": []
+  },
+  {
+    "name": "secret-copy-stale-result",
+    "width": 390,
+    "pass": false,
+    "error": "Error: expect(locator).toHaveCount(expected) failed\n\nLocator:  getByText('Mot de passe copié. Confirmez que vous l’avez conservé pour le transmettre.', { exact: true })\nExpected: 0\nReceived: 1\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.have.count\" with timeout 5000ms\n  - waiting for getByText('Mot de passe copié. Confirmez que vous l’avez conservé pour le transmettre.', { exact: true })\n    14 × locator resolved to 1 element\n       - unexpected value \"1\"\n",
+    "pageErrors": []
+  },
+  {
+    "name": "mfa-reset-error-focus",
+    "width": 390,
+    "pass": true
+  }
+]

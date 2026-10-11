@@ -81,6 +81,7 @@ import {
 import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
 import { UserAccessBadge } from '$features/users/user-badges';
+import { getUserDetailScope } from '$features/users/user-detail-scope';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
 import type {
   AuditLogEntry,
@@ -112,6 +113,7 @@ import {
 } from '$utils/user-display.utils';
 
 type UserDetailPageProps = {
+  initialScope?: string;
   initialUser?: UserType;
   userId: string;
 };
@@ -145,7 +147,28 @@ export const UserDetailPageSkeleton: FC<{ returnHref?: string }> = ({
   );
 };
 
-export const UserDetailPage: FC<UserDetailPageProps> = ({
+export const UserDetailPage: FC<UserDetailPageProps> = (props) => {
+  const { userData } = useUser();
+  const scope = getUserDetailScope(userData);
+  const initialIdentity = useRef(`${props.userId}:${scope}`);
+  const snapshotRetired = useRef(false);
+  const identity = `${props.userId}:${scope}`;
+  if (initialIdentity.current !== identity) snapshotRetired.current = true;
+
+  return (
+    <UserDetailPageContent
+      {...props}
+      key={identity}
+      initialUser={
+        !snapshotRetired.current && props.initialScope === scope
+          ? props.initialUser
+          : undefined
+      }
+    />
+  );
+};
+
+const UserDetailPageContent: FC<UserDetailPageProps> = ({
   initialUser,
   userId,
 }) => {
@@ -174,6 +197,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     userData: currentUser,
   } = useUser();
   const {
+    clearUserState,
     editForm,
     permissions,
     setEditForm,
@@ -182,6 +206,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     user,
   } = useUserDetailDraft(initialUser);
   const mutation = useUserMutationFeedback();
+  const { clear: clearMutationFeedback, inFlight: mutationInFlight } = mutation;
   const [isLoading, setIsLoading] = useState(!initialUser);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
@@ -192,6 +217,8 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
   const auditAbortControllerRef = useRef<AbortController | null>(null);
   const sessionsAbortControllerRef = useRef<AbortController | null>(null);
   const hasLoadedAuditLogsRef = useRef(false);
+  const mountedRef = useRef(true);
+  const mutationAbortControllerRef = useRef(new AbortController());
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -236,6 +263,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
   const [isSavingPermissions, setIsSavingPermissions] = useState(false);
   const adminStepUp = useAdminStepUpController();
   const {
+    cancelPendingStepUpAction,
     pendingStepUpAction,
     requestPasswordReauthenticationForResponse,
     requestStepUpForResponse,
@@ -532,7 +560,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     ],
   );
   const passwordReset = useUserPasswordReset({
+    beginMutation: mutation.start,
     canReset: canResetTargetPassword,
+    finishMutation: mutation.finish,
     onClose: () => setShowResetConfirm(false),
     onSuccess: () => {
       void fetchUser({ background: true });
@@ -542,6 +572,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     requestStepUp: requestStepUpForResponse,
     userId,
   });
+  const { clearPassword } = passwordReset;
   const isResetting = passwordReset.isResetting;
   const profileErrors = useMemo(() => {
     const validation = userProfileSchema.safeParse({
@@ -690,20 +721,54 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     [canViewTargetAccess, canViewTargetPersonalAccount],
   );
 
+  const discardUserSnapshot = useCallback((): void => {
+    mutationAbortControllerRef.current.abort();
+    sessionsAbortControllerRef.current?.abort();
+    auditAbortControllerRef.current?.abort();
+    clearUserState();
+    clearPassword();
+    clearMutationFeedback();
+    cancelPendingStepUpAction();
+    setSecuritySessions([]);
+    setHasLoadedSecuritySessions(false);
+    setAuditLogs([]);
+    setAuditFacets(null);
+    setShowResetConfirm(false);
+    setShowResetMfa(false);
+    setShowRevokeSessionsConfirm(false);
+    setShowDeleteConfirm(false);
+    setShowLoginChangeConfirm(false);
+    mutationInFlight.current = false;
+    setIsSaving(false);
+    setIsSavingPermissions(false);
+    setIsDeleting(false);
+    setIsRevokingSecuritySessions(false);
+    setRevokingSecuritySessionId(null);
+  }, [
+    cancelPendingStepUpAction,
+    clearMutationFeedback,
+    clearPassword,
+    clearUserState,
+    mutationInFlight,
+  ]);
+
   const fetchUser = useCallback(
-    async (options: { background?: boolean } = {}): Promise<boolean> => {
+    async (
+      options: { background?: boolean } = {},
+    ): Promise<UserType | null> => {
       userAbortControllerRef.current?.abort();
       userAbortControllerRef.current = null;
 
       if (!canViewUsers) {
         setIsLoading(false);
 
-        return false;
+        return null;
       }
 
       const controller = new AbortController();
       userAbortControllerRef.current = controller;
       const isBackgroundFetch = options.background === true;
+      let unavailable = false;
 
       try {
         if (!isBackgroundFetch) {
@@ -713,19 +778,32 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         }
 
         const response = await fetch(`/api/users/${userId}`, {
+          cache: 'no-store',
           signal: controller.signal,
         });
+        if (controller.signal.aborted) return null;
+        unavailable = [401, 403, 404].includes(response.status);
+        if (unavailable) {
+          // Refusal bodies may be empty/HTML. Never retain a private snapshot
+          // while waiting for a JSON parser that can fail.
+          discardUserSnapshot();
+          setErrorStatus(response.status);
+          setErrorMessage("Impossible de charger l'utilisateur");
+        }
         const data = await response.json();
 
-        if (controller.signal.aborted) return false;
+        if (controller.signal.aborted) return null;
 
         if (response.ok && data.success) {
           const loadedUser = data.data.user as UserType;
+          if (loadedUser.id !== userId) throw new Error('Unexpected user');
+          if (mutationAbortControllerRef.current.signal.aborted)
+            mutationAbortControllerRef.current = new AbortController();
           setErrorStatus(null);
           setErrorMessage(null);
           syncUserState(loadedUser);
 
-          return true;
+          return loadedUser;
         } else if (
           !isBackgroundFetch ||
           response.status === 401 ||
@@ -738,22 +816,22 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
           );
         }
       } catch {
-        if (controller.signal.aborted) return false;
+        if (controller.signal.aborted) return null;
 
-        if (!isBackgroundFetch) {
+        if (!isBackgroundFetch && !unavailable) {
           setErrorStatus(0);
           setErrorMessage("Impossible de charger l'utilisateur");
         }
       } finally {
         if (userAbortControllerRef.current === controller) {
           userAbortControllerRef.current = null;
-          if (!isBackgroundFetch) setIsLoading(false);
+          setIsLoading(false);
         }
       }
 
-      return false;
+      return null;
     },
-    [canViewUsers, syncUserState, userId],
+    [canViewUsers, discardUserSnapshot, syncUserState, userId],
   );
 
   const fetchAuditData = useCallback(async (): Promise<void> => {
@@ -935,8 +1013,11 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       setIsLoadingSecuritySessions(true);
       setSecuritySessionsError(null);
       const response = await fetch(`/api/users/${userId}/sessions`, {
+        cache: 'no-store',
         signal: controller.signal,
       });
+      if (controller.signal.aborted) return;
+      if ([401, 403, 404].includes(response.status)) setSecuritySessions([]);
       const data = await response.json();
 
       if (controller.signal.aborted) return;
@@ -967,7 +1048,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
   }, [activeSection, fetchAuditData]);
 
   useEffect((): (() => void) => {
+    mountedRef.current = true;
+    if (mutationAbortControllerRef.current.signal.aborted)
+      mutationAbortControllerRef.current = new AbortController();
+
     return (): void => {
+      mountedRef.current = false;
+      mutationAbortControllerRef.current.abort();
       userAbortControllerRef.current?.abort();
       auditAbortControllerRef.current?.abort();
       sessionsAbortControllerRef.current?.abort();
@@ -1024,10 +1111,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
   }, [activeSection, fetchAuditData]);
 
   useEffect(() => {
-    if (activeSection === 'security' && !hasLoadedSecuritySessions) {
+    if (user && activeSection === 'security' && !hasLoadedSecuritySessions) {
       void fetchSecuritySessions();
     }
-  }, [activeSection, fetchSecuritySessions, hasLoadedSecuritySessions]);
+  }, [activeSection, fetchSecuritySessions, hasLoadedSecuritySessions, user]);
 
   const isMutationPending =
     isSaving ||
@@ -1057,8 +1144,6 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     },
   );
   const { requestNavigation } = navigation;
-  const { clear: clearMutationFeedback } = mutation;
-  const { clearPassword } = passwordReset;
   useEffect(() => {
     clearMutationFeedback();
   }, [activeSection, clearMutationFeedback]);
@@ -1152,6 +1237,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
   const handleSaveProfile = async (
     isLoginChangeConfirmed = false,
   ): Promise<void> => {
+    if (!mountedRef.current) return;
     if (!canEditTargetProfile && !canEditTargetContact && !canEditTargetLogin) {
       toast.error('Permission insuffisante pour modifier cet utilisateur');
 
@@ -1180,7 +1266,17 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       return;
     }
 
+    if (!user?.updatedAt) {
+      mutation.report(
+        'profile',
+        'Version de la fiche indisponible. Actualisez avant d’enregistrer.',
+      );
+
+      return;
+    }
+
     if (!mutation.start()) return;
+    const requestController = mutationAbortControllerRef.current;
     const submitted = {
       form: editForm,
       permissions,
@@ -1190,11 +1286,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     try {
       const response = await apiFetch(`/api/users/${userId}`, {
         body: JSON.stringify({
-          ...(user?.updatedAt
-            ? {
-                expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
-              }
-            : {}),
+          expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
           ...(hasProfileContactChanges
             ? {
                 contactEmail:
@@ -1213,8 +1305,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'PATCH',
+        signal: requestController.signal,
       });
       const data = await response.json();
+      if (!mountedRef.current || requestController.signal.aborted) return;
 
       if (response.ok && data.success) {
         syncUserState(data.data.user, submitted);
@@ -1249,17 +1343,21 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         );
       }
     } catch {
+      if (!mountedRef.current || requestController.signal.aborted) return;
       mutation.report(
         'profile',
         'La réponse du serveur n’a pas pu être confirmée. Actualisez la fiche avant de réessayer ; votre saisie sera conservée.',
       );
     } finally {
+      if (requestController !== mutationAbortControllerRef.current) return;
       mutation.finish();
+      if (!mountedRef.current) return;
       setIsSaving(false);
     }
   };
 
   const handleSaveAccess = async (): Promise<void> => {
+    if (!mountedRef.current) return;
     if (!canEditTargetRole && !canManageTargetAccessPermissions) {
       toast.error("Vous n'êtes pas autorisé à modifier ces autorisations");
 
@@ -1302,6 +1400,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     }
 
     if (!mutation.start()) return;
+    const requestController = mutationAbortControllerRef.current;
     const submitted = {
       form: editForm,
       permissions,
@@ -1313,13 +1412,25 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         body: JSON.stringify(payload),
         headers: { 'Content-Type': 'application/json' },
         method: 'PATCH',
+        signal: requestController.signal,
       });
       const data = await response.json();
+      if (!mountedRef.current || requestController.signal.aborted) return;
 
       if (response.ok && data.success) {
         syncUserState(data.data.user, submitted);
         refreshAuditAfterMutation();
         toast.success('Autorisations mises à jour');
+        requestAnimationFrame(() => {
+          if (!mountedRef.current || requestController.signal.aborted) return;
+          const panel = document.getElementById('user-access-panel');
+          const control = panel?.querySelector<HTMLElement>(
+            '#user-role:not(:disabled), button[aria-pressed]:not(:disabled):not([aria-hidden="true"])',
+          );
+          const target = control ?? panel?.querySelector<HTMLElement>('h3');
+          if (target && !control) target.tabIndex = -1;
+          target?.focus();
+        });
       } else {
         if (
           requestPasswordReauthenticationForResponse(data, {
@@ -1340,17 +1451,21 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         );
       }
     } catch {
+      if (!mountedRef.current || requestController.signal.aborted) return;
       mutation.report(
         'access',
         'La réponse du serveur n’a pas pu être confirmée. Actualisez la fiche avant de réessayer ; votre saisie sera conservée.',
       );
     } finally {
+      if (requestController !== mutationAbortControllerRef.current) return;
       mutation.finish();
+      if (!mountedRef.current) return;
       setIsSavingPermissions(false);
     }
   };
 
   const handleSaveAccount = async (): Promise<void> => {
+    if (!mountedRef.current) return;
     if (!canManageTargetAccountPolicy) {
       toast.error(
         "Permission insuffisante pour modifier l'autonomie du compte",
@@ -1372,6 +1487,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     }
 
     if (!mutation.start()) return;
+    const requestController = mutationAbortControllerRef.current;
     const submitted = {
       form: editForm,
       permissions,
@@ -1390,8 +1506,10 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'PATCH',
+        signal: requestController.signal,
       });
       const data = await response.json();
+      if (!mountedRef.current || requestController.signal.aborted) return;
 
       if (response.ok && data.success) {
         syncUserState(data.data.user, submitted);
@@ -1417,17 +1535,21 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         );
       }
     } catch {
+      if (!mountedRef.current || requestController.signal.aborted) return;
       mutation.report(
         'account',
         'La réponse du serveur n’a pas pu être confirmée. Actualisez la fiche avant de réessayer ; votre saisie sera conservée.',
       );
     } finally {
+      if (requestController !== mutationAbortControllerRef.current) return;
       mutation.finish();
+      if (!mountedRef.current) return;
       setIsSavingPermissions(false);
     }
   };
 
   const handleSaveSecurity = async (): Promise<void> => {
+    if (!mountedRef.current) return;
     if (!canEditTargetStatus || isSelf) {
       toast.error('Permission insuffisante pour modifier cet état');
 
@@ -1440,7 +1562,17 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       return;
     }
 
+    if (!user?.updatedAt) {
+      mutation.report(
+        'security',
+        'Version de la fiche indisponible. Actualisez avant d’enregistrer.',
+      );
+
+      return;
+    }
+
     if (!mutation.start()) return;
+    const requestController = mutationAbortControllerRef.current;
     const submitted = {
       form: editForm,
       permissions,
@@ -1450,17 +1582,15 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
     try {
       const response = await apiFetch(`/api/users/${userId}`, {
         body: JSON.stringify({
-          ...(user?.updatedAt
-            ? {
-                expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
-              }
-            : {}),
+          expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
           isActive: editForm.isActive,
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'PATCH',
+        signal: requestController.signal,
       });
       const data = await response.json();
+      if (!mountedRef.current || requestController.signal.aborted) return;
 
       if (response.ok && data.success) {
         syncUserState(data.data.user, submitted);
@@ -1489,12 +1619,15 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         );
       }
     } catch {
+      if (!mountedRef.current || requestController.signal.aborted) return;
       mutation.report(
         'security',
         'La réponse du serveur n’a pas pu être confirmée. Actualisez la fiche avant de réessayer ; votre saisie sera conservée.',
       );
     } finally {
+      if (requestController !== mutationAbortControllerRef.current) return;
       mutation.finish();
+      if (!mountedRef.current) return;
       setIsSaving(false);
     }
   };
@@ -1513,18 +1646,23 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
   };
 
   const handleRevokeSecuritySessions = async (): Promise<void> => {
+    if (!mountedRef.current) return;
     if (!canRevokeTargetSessions) {
       toast.error('Permission insuffisante pour révoquer les sessions');
 
       return;
     }
 
+    if (!mutation.start()) return;
+    const requestController = mutationAbortControllerRef.current;
     setIsRevokingSecuritySessions(true);
     try {
       const response = await apiFetch(`/api/users/${userId}/sessions`, {
         method: 'DELETE',
+        signal: requestController.signal,
       });
       const data = await response.json();
+      if (!mountedRef.current || requestController.signal.aborted) return;
 
       if (response.ok && data.success) {
         toast.success('Sessions révoquées');
@@ -1545,8 +1683,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         toast.error(data.error?.message || 'Erreur lors de la révocation');
       }
     } catch {
+      if (!mountedRef.current || requestController.signal.aborted) return;
       toast.error('Erreur lors de la révocation');
     } finally {
+      if (requestController !== mutationAbortControllerRef.current) return;
+      mutation.finish();
+      if (!mountedRef.current) return;
       setIsRevokingSecuritySessions(false);
       setShowRevokeSessionsConfirm(false);
     }
@@ -1555,21 +1697,26 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
   const handleRevokeSecuritySession = async (
     sessionId: string,
   ): Promise<void> => {
+    if (!mountedRef.current) return;
     if (!canRevokeTargetSessions) {
       toast.error('Permission insuffisante pour révoquer les sessions');
 
       return;
     }
 
+    if (!mutation.start()) return;
+    const requestController = mutationAbortControllerRef.current;
     setRevokingSecuritySessionId(sessionId);
     try {
       const response = await apiFetch(
         `/api/users/${userId}/sessions?id=${encodeURIComponent(sessionId)}`,
         {
           method: 'DELETE',
+          signal: requestController.signal,
         },
       );
       const data = await response.json();
+      if (!mountedRef.current || requestController.signal.aborted) return;
 
       if (response.ok && data.success) {
         setSecuritySessions((currentSessions) =>
@@ -1591,13 +1738,19 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         toast.error(data.error?.message || 'Erreur lors de la révocation');
       }
     } catch {
+      if (!mountedRef.current || requestController.signal.aborted) return;
       toast.error('Erreur lors de la révocation');
     } finally {
+      if (requestController !== mutationAbortControllerRef.current) return;
+      mutation.finish();
+      if (!mountedRef.current) return;
       setRevokingSecuritySessionId(null);
     }
   };
 
   const handleDelete = async (): Promise<void> => {
+    if (!mountedRef.current) return;
+    if (!user || deleteConfirmation.trim() !== user.loginName) return;
     if (!canRequestDeleteTargetUser) {
       toast.error(
         'Vous n’avez pas l’autorisation de supprimer cet utilisateur',
@@ -1613,12 +1766,16 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       return;
     }
 
+    if (!mutation.start()) return;
+    const requestController = mutationAbortControllerRef.current;
     setIsDeleting(true);
     try {
       const response = await apiFetch(`/api/users/${userId}`, {
         method: 'DELETE',
+        signal: requestController.signal,
       });
       const data = await response.json();
+      if (!mountedRef.current || requestController.signal.aborted) return;
 
       if (response.ok && data.success) {
         toast.success('Compte supprimé définitivement');
@@ -1637,8 +1794,12 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
         toast.error(data.error?.message || 'Impossible de supprimer ce compte');
       }
     } catch {
+      if (!mountedRef.current || requestController.signal.aborted) return;
       toast.error('Impossible de supprimer ce compte');
     } finally {
+      if (requestController !== mutationAbortControllerRef.current) return;
+      mutation.finish();
+      if (!mountedRef.current) return;
       setIsDeleting(false);
       setShowDeleteConfirm(false);
     }
@@ -1880,7 +2041,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
                 const loaded = await fetchUser({ background: true });
                 if (loaded) await fetchSecuritySessions();
 
-                return loaded;
+                return Boolean(loaded);
               }}
               onRequestReset={() => setShowResetConfirm(true)}
             />
@@ -1898,6 +2059,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
               canRevokeSessions={canRevokeTargetSessions}
               canViewSessions={canViewTargetSessions}
               isSaving={isMutationPending || mutation.isRefreshing}
+              isRefreshing={mutation.isRefreshing}
               isLoadingSessions={
                 isLoadingSecuritySessions ||
                 (canViewTargetSessions && !hasLoadedSecuritySessions)
@@ -1909,7 +2071,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
               onResetPassword={() => setShowResetConfirm(true)}
               onRevokeSession={handleRevokeSecuritySession}
               onRevokeSessions={() => setShowRevokeSessionsConfirm(true)}
-              onRetrySessions={() => void fetchSecuritySessions()}
+              onRetrySessions={fetchSecuritySessions}
               currentUserId={currentUser?.id}
               canSaveStatus={canSaveSecurity && !mutation.feedback?.conflict}
               hasStatusChanges={hasSecurityChanges}
@@ -2137,7 +2299,9 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
                 </p>
                 <UserMutationFeedback
                   controller={mutation}
-                  onRefresh={() => fetchUser({ background: true })}
+                  onRefresh={async () =>
+                    Boolean(await fetchUser({ background: true }))
+                  }
                   section={activeSection}
                 />
                 <div className="min-w-0">{renderContent()}</div>
@@ -2211,6 +2375,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = ({
       </AlertDialog>
       <AdminMfaResetDialog
         actorLoginName={currentUser?.loginName ?? ''}
+        onCheck={() => fetchUser({ background: true })}
         onCancel={() => setShowResetMfa(false)}
         onComplete={handleResetMfaComplete}
         open={showResetMfa}

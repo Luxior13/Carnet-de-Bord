@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-11",
+  "baseCommit": "96143d7",
+  "environment": {
+    "database": "user_detail_service_test",
+    "host": "127.0.0.1",
+    "port": 54595,
+    "prismaVersion": "6.19.3",
+    "appliedMigrations": 52,
+    "isolatedDisposableDatabase": true,
+    "applicationDatabaseUsed": false,
+    "productMigrationAdded": false
+  },
+  "reproductions": [
+    {
+      "case": "Optional last name empty or whitespace",
+      "before": "Both PATCH requests returned 200 with old lastName Dupont and no update",
+      "after": "Empty name persisted and audited while firstName and sessions remain unchanged",
+      "evidence": "users-access-hardening.test.ts and user-detail-postgres.test.ts"
+    },
+    {
+      "case": "Client revision omitted for profile or status",
+      "before": "Schema required the loaded revision only for sensitive fields; profile and status were optional",
+      "after": "All seven update categories reject a missing expectedUpdatedAt; concurrent edits produce one 200 and one 409",
+      "evidence": "user-detail-api.test.ts and user-detail-postgres.test.ts"
+    },
+    {
+      "case": "Session with stale security version",
+      "before": "SQL regression returned two nonexpired sessions, including the invalid older version",
+      "after": "Only the session matching current securityVersion remains and is returned",
+      "evidence": "user-detail-postgres.test.ts"
+    }
+  ],
+  "validation": {
+    "localStartTime": "23:07:34",
+    "timezone": "Europe/Paris",
+    "files": 7,
+    "passed": 230,
+    "failed": 0,
+    "skipped": 0,
+    "newHttpCases": 20,
+    "postgresCases": 15,
+    "targetedLint": "passed without warnings",
+    "typescript": "passed"
+  },
+  "atomicity": [
+    "Concurrent edits from the same expectedUpdatedAt: one success, one conflict, one audit",
+    "Failed rename audit: old login and version retained, new reservation rolled back, sessions retained; retry succeeds",
+    "Reserved historical login: conflicting mutation rejected without changes",
+    "Failed password reset audit: old hash, version and sessions retained; no secret returned",
+    "Failed global session revocation audit: sessions and securityVersion retained",
+    "Personal policy changes retain sessions; access changes revoke sessions",
+    "Account deletion requires deactivation and retains the permanent login reservation"
+  ],
+  "limits": [
+    "Source of session, request headers and authenticated API rate limit are simulated.",
+    "SQL tests use the actual routes, Prisma client, bcrypt and fully migrated PostgreSQL storage.",
+    "Existing reset MFA tests are included; real password and TOTP browser recovery belongs to the separate integration bench.",
+    "No throughput, browser, production or comprehensive authentication certification is inferred from these tests.",
+    "Fictive data remains only in the disposable database; temporary failure triggers are removed."
+  ]
+}

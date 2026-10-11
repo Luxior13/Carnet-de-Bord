@@ -6,79 +6,12 @@ import {
   useCreateUser as createUserController,
 } from '$features/users/useCreateUser';
 
-// This runtime exercises controller transitions only. React rendering, focus and
-// account-key remounts are verified separately by the browser creation bench.
-class HookRuntime {
-  private index = 0;
-  private values = new Map<number, unknown>();
-  private effects = new Map<
-    number,
-    { cleanup?: () => void; dependencies?: DependencyList }
-  >();
-  private pendingEffects: Array<() => void> = [];
-
-  render(): CreateUserController {
-    this.index = 0;
-    this.pendingEffects = [];
-    const result = createUserController(true);
-    for (const effect of this.pendingEffects) effect();
-
-    return result;
-  }
-
-  unmount(): void {
-    for (const effect of this.effects.values()) effect.cleanup?.();
-  }
-
-  useState<T>(initial: T): [T, (value: SetStateAction<T>) => void] {
-    const index = this.index++;
-    if (!this.values.has(index)) this.values.set(index, initial);
-
-    return [
-      this.values.get(index) as T,
-      (value): void => {
-        const next =
-          typeof value === 'function'
-            ? (value as (previous: T) => T)(this.values.get(index) as T)
-            : value;
-        this.values.set(index, next);
-      },
-    ];
-  }
-
-  useRef<T>(initial: T): { current: T } {
-    const index = this.index++;
-    if (!this.values.has(index)) this.values.set(index, { current: initial });
-
-    return this.values.get(index) as { current: T };
-  }
-
-  useEffect(effect: EffectCallback, dependencies?: DependencyList): void {
-    const index = this.index++;
-    const previous = this.effects.get(index);
-    if (
-      previous?.dependencies &&
-      dependencies &&
-      previous.dependencies.length === dependencies.length &&
-      dependencies.every((value, position) =>
-        Object.is(value, previous.dependencies?.at(position)),
-      )
-    )
-      return;
-    this.pendingEffects.push(() => {
-      previous?.cleanup?.();
-      this.effects.set(index, {
-        cleanup: effect() || undefined,
-        dependencies,
-      });
-    });
-  }
-}
+import { HookRuntime } from './helpers/hook-runtime';
 
 const mocks = vi.hoisted(() => ({
-  runtime: null as HookRuntime | null,
+  runtime: null as HookRuntime<CreateUserController> | null,
 }));
-const runtime = (): HookRuntime => {
+const runtime = (): HookRuntime<CreateUserController> => {
   if (!mocks.runtime) throw new Error('Missing hook runtime');
 
   return mocks.runtime;
@@ -144,7 +77,7 @@ const rejectWhenAborted = (
 
 beforeEach(() => {
   vi.useFakeTimers();
-  mocks.runtime = new HookRuntime();
+  mocks.runtime = new HookRuntime(() => createUserController(true));
   fetchMock.mockReset();
   clipboard.mockReset();
   vi.stubGlobal('fetch', fetchMock);

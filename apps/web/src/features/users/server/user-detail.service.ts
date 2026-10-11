@@ -1,5 +1,7 @@
 import 'server-only';
 
+import type { Prisma } from '@prisma/client';
+
 import {
   getAccessPermissionKeys,
   getAccountPermissionKeys,
@@ -14,6 +16,30 @@ import type { UserType } from '$types/auth.types';
 
 const ACCESS_PERMISSION_KEY_SET = new Set(getAccessPermissionKeys());
 const ACCOUNT_PERMISSION_KEY_SET = new Set(getAccountPermissionKeys());
+
+// Shared by detail reads and PATCH snapshots; never fetch password or MFA secrets.
+export const USER_DETAIL_SELECT = {
+  contactEmail: true,
+  contactEmailVerifiedAt: true,
+  createdAt: true,
+  failedLoginAttempts: true,
+  firstName: true,
+  id: true,
+  isActive: true,
+  isProtected: true,
+  lastLoginAt: true,
+  lastName: true,
+  lockedUntil: true,
+  loginName: true,
+  mfaEnabledAt: true,
+  mustChangePassword: true,
+  passwordChangedAt: true,
+  permissions: true,
+  role: true,
+  securityVersion: true,
+  totpCredential: { select: { userId: true } },
+  updatedAt: true,
+} as const satisfies Prisma.UserSelect;
 
 const getPermissionOverridesForActor = (
   permissions: Record<string, boolean> | null,
@@ -117,7 +143,7 @@ export const getUserForActor = async (
   actor: UserType,
 ): Promise<UserType | null> => {
   const user = await prisma.user.findUnique({
-    include: { totpCredential: { select: { userId: true } } },
+    select: USER_DETAIL_SELECT,
     where: { deletedAt: null, id: userId },
   });
 

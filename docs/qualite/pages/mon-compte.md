@@ -13,6 +13,15 @@ les champs sur petit écran. Le dialogue de contact garde son pied contextuel.
 
 ## Identité et état
 
+**Point à vérifier lors de la prochaine passe — 11 octobre 2026 :**
+`GET /api/auth/sessions` filtre les dates mais pas `Session.securityVersion`.
+Une ligne d'ancienne version pourrait donc être présentée comme active malgré
+son refus par l'authentification. Le cas a été reproduit et corrigé sur la route
+administrative `/api/users/[id]/sessions` seulement ; aucune reproduction sur
+Mon compte ni modification de sa route dans cette passe. Reprendre avec une
+fixture SQL de session obsolète, puis aligner lecture et nettoyage si confirmé.
+Voir [l'audit de fiche](../../audits/AUDIT_FICHE_UTILISATEUR_2026-10-11.md).
+
 - Route : `/mon-compte`. Page personnelle du compte connecté.
 - Statut : alignée sur la fiche `/systeme/utilisateurs/[id]` ; formulaires,
   conflits et navigation corrigés le 2026-10-11.

@@ -1,0 +1,13 @@
+[
+  {
+    "name": "self-profile-long-unbroken-name",
+    "width": 320,
+    "pass": true,
+    "detail": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    }
+  }
+]
