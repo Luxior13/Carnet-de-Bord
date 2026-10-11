@@ -637,3 +637,13 @@ Création, fiche et confirmations administrateur suivent la règle sans autocomp
 [Contrôles et limites des extensions](../../audits/AUDIT_AUTOCOMPLETION_2026-10-11.md).
 La présence des attributs d’exclusion ne garantit pas le comportement d’une
 extension installée chez l’utilisateur.
+
+## Barre de sections de la fiche — 11 octobre 2026
+
+Profil, Autorisations et Sécurité reprennent l'état actif et les angles de 6 px
+du composant partagé. Des flèches apparaissent seulement si les sections
+débordent ; le lien ciblé au clavier est rendu visible. Contrôle de la fiche
+à 320, 390, 768 et 1 440 px dans Chromium isolé, avec données et routeur simulés.
+[Règles communes](navigation-generale.md#barres-de-sections--décision-du-11-octobre-2026) ;
+[preuves et limites](../../audits/AUDIT_NAVIGATION_SECTIONS_2026-10-11.md).
+Cette passe ne rejoue pas les mutations ni les permissions serveur.

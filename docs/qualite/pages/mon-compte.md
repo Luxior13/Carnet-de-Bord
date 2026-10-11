@@ -157,3 +157,13 @@ effectuée. Si le menu réapparaît, relever la version et inspecter les attribu
 réellement servis. La clôture repose sur la confirmation utilisateur, pas sur
 les succès du banc sans extension. La capture et ses
 identifiants personnels ne sont pas recopiés dans le dépôt.
+
+## Barre de sections — 11 octobre 2026
+
+Profil et Sécurité héritent de la sélection, des angles de 6 px et du défilement
+conditionnel du composant partagé. Le point de brouillon affiche désormais
+« Modifications non enregistrées » au survol et au focus. Dans Chromium isolé,
+le changement de section et l'annulation de la confirmation de départ conservent
+le profil saisi. [Règles et questions communes](navigation-generale.md#barres-de-sections--décision-du-11-octobre-2026) ;
+[preuves et limites](../../audits/AUDIT_NAVIGATION_SECTIONS_2026-10-11.md).
+Les validations de mutations et de session réelle restent distinctes.

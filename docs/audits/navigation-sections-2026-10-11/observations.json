@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-11T12:40:05.765Z",
+  "environment": "Chromium isolé, composants et CSS réels, contexte et API fictifs, navigation Next simulée",
+  "results": [
+    {
+      "name": "page-account",
+      "width": 320,
+      "result": "passed"
+    },
+    {
+      "name": "page-user",
+      "width": 320,
+      "result": "passed"
+    },
+    {
+      "name": "page-person",
+      "width": 320,
+      "result": "passed"
+    },
+    {
+      "name": "overflow-and-resize",
+      "width": 320,
+      "result": "passed"
+    },
+    {
+      "name": "page-account",
+      "width": 390,
+      "result": "passed"
+    },
+    {
+      "name": "page-user",
+      "width": 390,
+      "result": "passed"
+    },
+    {
+      "name": "page-person",
+      "width": 390,
+      "result": "passed"
+    },
+    {
+      "name": "overflow-and-resize",
+      "width": 390,
+      "result": "passed"
+    },
+    {
+      "name": "page-account",
+      "width": 768,
+      "result": "passed"
+    },
+    {
+      "name": "page-user",
+      "width": 768,
+      "result": "passed"
+    },
+    {
+      "name": "page-person",
+      "width": 768,
+      "result": "passed"
+    },
+    {
+      "name": "overflow-and-resize",
+      "width": 768,
+      "result": "passed"
+    },
+    {
+      "name": "page-account",
+      "width": 1440,
+      "result": "passed"
+    },
+    {
+      "name": "page-user",
+      "width": 1440,
+      "result": "passed"
+    },
+    {
+      "name": "page-person",
+      "width": 1440,
+      "result": "passed"
+    },
+    {
+      "name": "overflow-and-resize",
+      "width": 1440,
+      "result": "passed"
+    },
+    {
+      "name": "tooltip-and-native-links",
+      "width": 390,
+      "result": "passed"
+    },
+    {
+      "name": "account-draft-guard",
+      "width": 390,
+      "result": "passed"
+    },
+    {
+      "name": "sticky-and-forced-colors",
+      "width": 390,
+      "result": "passed"
+    },
+    {
+      "name": "touch-scroll",
+      "width": 320,
+      "result": "passed"
+    }
+  ]
+}

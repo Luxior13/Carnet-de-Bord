@@ -344,11 +344,31 @@ le sélecteur de pôle conserve ses repères de couleur.
 
 ## 8. Onglets et rails
 
-- **Navigation de fiche** : `PageSectionNavigation` regroupe de vrais liens,
-  chacun avec son URL. La barre horizontale reste accessible quand elle
+- **Navigation entre sections** : toute barre horizontale de navigation entre
+  sections disposant de leur propre URL utilise `PageSectionNavigation`,
+  directement ou via `EntityDetailLayout`, sur les pages actuelles et futures
+  du site. Les pages fournissent leurs libellés, icônes, destinations, état actif
+  et gardes de navigation ; le style, le défilement et les interactions communs
+  restent dans ce composant. Ne pas recopier la barre ou ses styles dans une page.
+  Toute adaptation nécessaire se compose avec le composant partagé ; un besoin
+  incompatible est expliqué dans le suivi de la page.
+  La barre regroupe de vrais liens, chacun avec son URL, et reste accessible quand elle
   déborde ; la section active est rendue visible sans déplacer le formulaire.
-- **Onglets de contenu** : `Tabs`, pour des vues d'un même objet (filtres,
-  sous-sections).
+  La section active associe fond `surface-navigation-active`, soulignement
+  `primary` et icône `primary-emphasis`. Les liens gardent une hauteur minimale
+  de 48 px et des angles supérieurs de 6 px, y compris au survol.
+  Les deux flèches apparaissent seulement si les libellés dépassent la largeur
+  de la barre ; elles deviennent inactives à leur extrémité sans perdre le focus.
+  Le défilement horizontal natif reste disponible. Le focus révèle le lien visé,
+  le mouvement réduit désactive l'animation, et la disparition des flèches au
+  redimensionnement rend le focus à la section active si nécessaire.
+  Le point de brouillon conserve son texte accessible et affiche l'infobulle
+  « Modifications non enregistrées » au survol ou au focus, refermable par Échap.
+  Consommateurs actuels : Mon compte et les fiches Utilisateur/Répertoire.
+- **Onglets de contenu** : `Tabs`, pour des panneaux locaux alternatifs d'un
+  même objet, avec le comportement clavier et les rôles ARIA correspondants.
+  Les filtres, la pagination, le fil d'Ariane et les menus de navigation
+  conservent leurs composants adaptés à leur fonction.
 - Les onglets ne remplacent pas les filtres : un onglet est un lieu, un filtre
   est une requête.
 - **Rail de synthèse** : `PageAsideLayout` apparaît à partir de 118rem de viewport, avec

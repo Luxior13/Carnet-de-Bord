@@ -565,3 +565,43 @@ CommandInput applique directement la protection sans autocomplétion à toute re
 [Contrôles et limites des extensions](../../audits/AUDIT_AUTOCOMPLETION_2026-10-11.md).
 La présence des attributs d’exclusion ne garantit pas le comportement d’une
 extension installée chez l’utilisateur.
+
+## Barres de sections — décision du 11 octobre 2026
+
+Améliorations approuvées par l'utilisateur puis appliquées à
+`PageSectionNavigation`, consommé par Mon compte, la fiche Utilisateur et la
+fiche du Répertoire (via `EntityDetailLayout`). Fond de sélection, icône
+accentuée, soulignement et angles supérieurs de 6 px suivent le
+[design system](../../references/DESIGN_SYSTEM.md#8-onglets-et-rails).
+Les flèches n'apparaissent qu'en cas de débordement ; l'infobulle explique le
+point de brouillon au survol et au clavier. Les destinations restent des liens
+avec `aria-current="page"`, hauteur minimale de 48 px et barre collante.
+`Tabs` reste une primitive distincte sans consommateur direct trouvé dans les pages.
+
+Précision utilisateur du même jour : le composant commun s'applique à tout le
+site lorsque le besoin correspond à cette navigation, y compris aux futures
+pages. La règle est portée par le design system et la fiche Q03 de revue visuelle.
+Inventaire du code revérifié : les trois barres existantes passent déjà par
+`PageSectionNavigation` ; aucune autre barre équivalente à migrer trouvée.
+Les phases de la Feuille de route filtrent des cartes ; les compteurs du
+Répertoire et des Utilisateurs filtrent leurs listes. Ces contrôles, la
+pagination, le fil d'Ariane, la sidebar et le sélecteur de pôle gardent leur
+composition propre. Cette précision est documentaire, sans nouvelle modification
+du composant ni nouveau contrôle navigateur.
+
+20 scénarios Chromium isolé réussis, dont les trois consommateurs à 320, 390,
+768 et 1 440 px, défilement dans les deux sens, focus au redimensionnement,
+infobulle, clics modifiés et annulation du départ d'un profil modifié.
+[Preuves et limites](../../audits/AUDIT_NAVIGATION_SECTIONS_2026-10-11.md).
+Cette passe n'est pas une validation de session, du routeur Next réel ni de
+lecteur d'écran ; NAV-02 conserve sa portée d'intégration.
+
+Lors d'une évolution de la barre, vérifier :
+
+- La section possède-t-elle une URL ou s'agit-il d'un onglet de contenu ?
+- Les libellés longs et les largeurs réduites restent-ils accessibles, avec
+  disparition des flèches lorsque le défilement n'est plus nécessaire ?
+- Le focus reste-t-il visible après Tab, changement de section, réduction des
+  sections disponibles et redimensionnement, sans déplacer verticalement la page ?
+- Les clics modifiés, l'annonce du brouillon et les gardes de départ restent-ils
+  compatibles avec les consommateurs existants ?

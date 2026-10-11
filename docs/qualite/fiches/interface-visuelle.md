@@ -11,6 +11,9 @@
 
 - L’état de chargement garde-t-il une structure compréhensible sans afficher une valeur fictive comme donnée réelle ? Une transition cause-t-elle un déplacement gênant ?
 - Pour un composant partagé, a-t-on identifié les autres usages et leurs variantes avant de modifier son espacement, son comportement ou un jeton commun ?
+- Une barre de navigation entre sections réutilise-t-elle `PageSectionNavigation`
+  selon le [design system](../../references/DESIGN_SYSTEM.md#8-onglets-et-rails) ?
+  Si son fonctionnement demande un autre composant, la raison figure-t-elle dans le suivi ?
 
 - La composition correspond-elle à une liste, fiche, saisie, lecture ou synthèse ?
 - Pour chaque élément examiné, est-ce le bon composant et la bonne variante pour
