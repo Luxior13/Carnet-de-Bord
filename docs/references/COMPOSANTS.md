@@ -30,12 +30,19 @@ commune ; le formulaire conserve la validation, les autorisations et les requêt
 
 | Besoin | Source | Comportement à préserver |
 | --- | --- | --- |
-| Barre de sections avec destinations propres | [PageSectionNavigation](../../apps/web/src/components/layout/PageSectionNavigation.tsx) | Vrais liens, section active, indication du brouillon, défilement et flèches uniquement en cas de débordement. Ombre discrète uniquement en position collée, sans variation de hauteur. La page fournit la garde de navigation. |
+| Barre de sections avec destinations propres | [PageSectionNavigation](../../apps/web/src/components/layout/PageSectionNavigation.tsx) | Vrais liens, section active, brouillon et défilement horizontal conditionnel. Ombre uniquement en position collée, hauteur stable. Consulte une seule fois les gardes du brouillon avant la navigation ; révèle le début masqué du nouveau contenu après acceptation en conservant le focus au lien. |
 | Panneaux locaux alternatifs | [Tabs, TabsList, TabsTrigger, TabsContent](../../apps/web/src/components/ui/tabs.tsx) | Rôles d’onglets et navigation clavier adaptés à des panneaux locaux. Ne pas remplacer les liens de section par des onglets ARIA. Aucun consommateur de page actuel n’en impose l’ajout. |
 | Fil d’Ariane | [Breadcrumb](../../apps/web/src/components/ui/breadcrumb.tsx) | Hiérarchie et destinations réelles ; conserver le chemin complet accessible sur petit écran. |
 | Navigation principale | [Sidebar](../../apps/web/src/components/Sidebar.tsx), [primitives sidebar](../../apps/web/src/components/ui/sidebar.tsx), [Header](../../apps/web/src/components/layout/Header.tsx) | Réutiliser le cadre existant, sa version mobile, son focus et ses contrôles d’ouverture. La visibilité des liens ne remplace pas les permissions serveur. |
 | Changement de pôle | [PoleNavigation](../../apps/web/src/components/layout/PoleNavigation.tsx) | Consomme le catalogue de navigation et ses permissions ; ne pas recopier ses destinations dans les pages. |
 | Recherche globale et commandes | [GlobalSearch](../../apps/web/src/components/layout/GlobalSearch.tsx) et [Command](../../apps/web/src/components/ui/command.tsx) | Command fournit les interactions ; le catalogue décide des résultats autorisés et de leur classement. Un filtrage applicatif conserve `shouldFilter={false}` pour éviter un second filtrage. |
+
+`PageSectionNavigation` reçoit des destinations réelles via `getSectionHref`.
+Son callback facultatif `onSectionChange(section, href)` exécute une navigation
+déjà acceptée ; le consommateur n'y ouvre pas une deuxième garde. La confirmation
+conserve le mode `replace` lorsqu'il est demandé. Montage, historique,
+section déjà active et clics modifiés ne demandent aucun repositionnement vertical.
+La révélation horizontale au focus reste indépendante de cette remise en vue.
 
 Une recherche de liste utilise ListSearchField. Un menu d’actions utilise
 DropdownMenu. Le choix dépend de la tâche, même si plusieurs composants

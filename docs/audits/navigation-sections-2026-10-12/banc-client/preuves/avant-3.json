@@ -1,0 +1,141 @@
+{
+  "completedAt": "2026-10-12T19:55:43.054Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 3,
+  "total": 3,
+  "observations": [
+    {
+      "name": "avant-section-propre-locale",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "start": {
+        "scroll": 900,
+        "mainTop": 56,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "active": "Aller au contenu principalOuvrir la navigationAccueilMembresFiche fictiveRecherc",
+        "section": "identite",
+        "history": 2
+      },
+      "end": {
+        "scroll": 900,
+        "mainTop": 56,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "active": "Coordonnées",
+        "section": "coordonnees",
+        "history": 2
+      },
+      "note": "Callback local réel de la fixture, history.replaceState sans scroll",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/membres/repertoire/audit-person-sections"
+        }
+      ]
+    },
+    {
+      "name": "avant-section-propre-lien",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "start": {
+        "scroll": 900,
+        "mainTop": 56,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "active": "Aller au contenu principalOuvrir la navigationAccueilMembresFiche fictiveRecherc",
+        "section": "identite",
+        "history": 2
+      },
+      "end": {
+        "scroll": 900,
+        "mainTop": 56,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "active": "Coordonnées",
+        "section": "coordonnees",
+        "history": 2
+      },
+      "note": "Link et navigation simulés : aucune conclusion sur le routeur Next réel",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/membres/repertoire/audit-person-sections"
+        }
+      ]
+    },
+    {
+      "name": "avant-garde-refusee-confirmee",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "start": {
+        "scroll": 900,
+        "mainTop": 56,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "active": "",
+        "section": "identite",
+        "history": 2
+      },
+      "refused": {
+        "scroll": 900,
+        "mainTop": 56,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "active": "Coordonnées",
+        "section": "identite",
+        "history": 2
+      },
+      "accepted": {
+        "scroll": 900,
+        "mainTop": 56,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "active": "Quitter sans enregistrer",
+        "section": "coordonnees",
+        "history": 3
+      },
+      "routerCalls": [
+        "/membres/repertoire/audit-person-sections?section=coordonnees"
+      ],
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/membres/repertoire/audit-person-sections"
+        }
+      ]
+    }
+  ]
+}

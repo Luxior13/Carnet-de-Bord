@@ -239,3 +239,14 @@ le changement de section et l'annulation de la confirmation de départ conserven
 le profil saisi. [Règles et questions communes](navigation-generale.md#barres-de-sections--décision-du-11-octobre-2026) ;
 [preuves et limites](../../audits/AUDIT_NAVIGATION_SECTIONS_2026-10-11.md).
 Les validations de mutations et de session réelle restent distinctes.
+
+## Changement de section après défilement — 12 octobre 2026
+
+La [passe ciblée commune](navigation-generale.md#changement-de-section-après-long-défilement--revue-ciblée-du-12-octobre-2026)
+corrige le retour depuis le bas de Profil vers Sécurité déjà visitée : en Next
+réel à 390 × 600 px, le titre auparavant masqué à 37,58 px arrive à 120,58 px,
+sous la barre finissant à 105 px. Le focus du lien et le remplacement d'URL
+sont conservés après changement accepté ; « Rester » conserve le brouillon,
+l'URL et la position. NAV-08/NAV-09, les contrôles des autres consommateurs et
+les limites sont détaillés dans le suivi commun. Cette passe ne reprend pas
+l'audit des mutations de profil ou de sécurité.

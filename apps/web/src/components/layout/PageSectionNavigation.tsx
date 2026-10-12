@@ -3,7 +3,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import React, {
-  type MouseEvent,
   type ReactNode,
   useEffect,
   useId,
@@ -14,6 +13,11 @@ import React, {
 import { Button } from '$ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
+
+import {
+  getSectionScrollContainer,
+  useSectionNavigation,
+} from './useSectionNavigation';
 
 export type PageSection<SectionId extends string = string> = {
   icon?: ReactNode;
@@ -27,20 +31,11 @@ type PageSectionNavigationProps<SectionId extends string> = {
   className?: string;
   dirtySections?: readonly SectionId[];
   getSectionHref: (sectionId: SectionId) => string;
-  onSectionChange?: (sectionId: SectionId) => void;
+  /** Apply an accepted navigation; the shared component owns the draft guard. */
+  onSectionChange?: (sectionId: SectionId, href: string) => void;
   replace?: boolean;
   sections: readonly PageSection<SectionId>[];
 };
-
-const shouldLetBrowserHandleClick = (
-  event: MouseEvent<HTMLAnchorElement>,
-): boolean =>
-  event.defaultPrevented ||
-  event.button !== 0 ||
-  event.metaKey ||
-  event.altKey ||
-  event.ctrlKey ||
-  event.shiftKey;
 
 const revealLink = (
   viewport: HTMLDivElement,
@@ -74,6 +69,16 @@ export const PageSectionNavigation = <SectionId extends string>({
   const viewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const activeLinkRef = useRef<HTMLAnchorElement>(null);
+  const contentStartRef = useRef<HTMLSpanElement>(null);
+  const navigateToSection = useSectionNavigation({
+    activeLinkRef,
+    activeSection,
+    contentStartRef,
+    getSectionHref,
+    navigationRef,
+    onSectionChange,
+    replace,
+  });
   const viewportId = useId();
   const hasSections = sections.length > 0;
   const [isStuck, setIsStuck] = useState(false);
@@ -94,22 +99,7 @@ export const PageSectionNavigation = <SectionId extends string>({
 
     // Sticky follows the nearest scrolling ancestor, which is the private
     // shell's main element today. Standalone pages can use the viewport.
-    let root = navigation.parentElement;
-    while (
-      root &&
-      root !== document.body &&
-      root !== document.documentElement
-    ) {
-      if (
-        /^(?:auto|scroll|hidden|overlay)$/.test(
-          getComputedStyle(root).overflowY,
-        )
-      )
-        break;
-      root = root.parentElement;
-    }
-    if (root === document.body || root === document.documentElement)
-      root = null;
+    const root = getSectionScrollContainer(navigation);
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -201,124 +191,125 @@ export const PageSectionNavigation = <SectionId extends string>({
   if (sections.length === 0) return null;
 
   return (
-    <nav
-      aria-label={ariaLabel}
-      className={cn(
-        'border-border-divider bg-surface-canvas sticky top-0 z-20 flex min-w-0 items-start gap-1 border-b transition-shadow motion-reduce:transition-none',
-        isStuck && '[box-shadow:var(--shadow-navigation-stuck)]',
-        className,
-      )}
-      data-slot="page-section-navigation"
-      data-stuck={isStuck}
-      ref={navigationRef}
-    >
-      {/* Outside the top edge, without changing the layout or the hit area. */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-px left-0 h-px w-px"
-        ref={stickyMarkerRef}
-      />
-      {scrollState.hasOverflow && (
-        <Button
-          aria-controls={viewportId}
-          aria-disabled={!scrollState.canScrollLeft}
-          aria-label="Afficher les sections précédentes"
-          className="h-12 w-10 rounded-[6px] focus-visible:ring-inset aria-disabled:opacity-35 lg:h-12 lg:w-10"
-          onClick={() => scrollSections(-1)}
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          <ChevronLeft aria-hidden="true" />
-        </Button>
-      )}
-      <div
-        ref={viewportRef}
-        id={viewportId}
-        className="min-w-0 flex-1 overflow-x-auto"
+    <>
+      <nav
+        aria-label={ariaLabel}
+        className={cn(
+          'border-border-divider bg-surface-canvas sticky top-0 z-20 flex min-w-0 items-start gap-1 border-b transition-shadow motion-reduce:transition-none',
+          isStuck && '[box-shadow:var(--shadow-navigation-stuck)]',
+          className,
+        )}
+        data-slot="page-section-navigation"
+        data-stuck={isStuck}
+        ref={navigationRef}
       >
-        <div ref={contentRef} className="flex w-max min-w-full gap-1">
-          {sections.map((section) => {
-            const isActive = activeSection === section.id;
-            const isDirty = dirtySections.includes(section.id);
+        {/* Outside the top edge, without changing the layout or the hit area. */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-px left-0 h-px w-px"
+          ref={stickyMarkerRef}
+        />
+        {scrollState.hasOverflow && (
+          <Button
+            aria-controls={viewportId}
+            aria-disabled={!scrollState.canScrollLeft}
+            aria-label="Afficher les sections précédentes"
+            className="h-12 w-10 rounded-[6px] focus-visible:ring-inset aria-disabled:opacity-35 lg:h-12 lg:w-10"
+            onClick={() => scrollSections(-1)}
+            size="icon"
+            type="button"
+            variant="ghost"
+          >
+            <ChevronLeft aria-hidden="true" />
+          </Button>
+        )}
+        <div
+          ref={viewportRef}
+          id={viewportId}
+          className="min-w-0 flex-1 overflow-x-auto"
+        >
+          <div ref={contentRef} className="flex w-max min-w-full gap-1">
+            {sections.map((section) => {
+              const isActive = activeSection === section.id;
+              const isDirty = dirtySections.includes(section.id);
 
-            return (
-              <Tooltip key={section.id} delayDuration={350}>
-                <TooltipTrigger asChild>
-                  <Link
-                    aria-current={isActive ? 'page' : undefined}
-                    className={cn(
-                      'focus-visible:ring-ring relative inline-flex min-h-12 shrink-0 items-center gap-2 rounded-t-[6px] border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset',
-                      isActive
-                        ? 'border-primary bg-surface-navigation-active text-foreground'
-                        : 'text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground border-transparent',
-                    )}
-                    href={getSectionHref(section.id)}
-                    onClick={(event) => {
-                      if (
-                        !onSectionChange ||
-                        shouldLetBrowserHandleClick(event)
-                      )
-                        return;
-                      event.preventDefault();
-                      onSectionChange(section.id);
-                    }}
-                    onFocus={(event) => {
-                      if (viewportRef.current)
-                        revealLink(viewportRef.current, event.currentTarget);
-                    }}
-                    ref={isActive ? activeLinkRef : undefined}
-                    replace={replace}
-                  >
-                    {section.icon && (
-                      <span
-                        aria-hidden="true"
-                        className={cn(
-                          'shrink-0 [&_svg]:size-4',
-                          isActive && 'text-primary-emphasis',
-                        )}
-                      >
-                        {section.icon}
-                      </span>
-                    )}
-                    {section.label}
-                    {isDirty && (
-                      <>
+              return (
+                <Tooltip key={section.id} delayDuration={350}>
+                  <TooltipTrigger asChild>
+                    <Link
+                      aria-current={isActive ? 'page' : undefined}
+                      className={cn(
+                        'focus-visible:ring-ring relative inline-flex min-h-12 shrink-0 items-center gap-2 rounded-t-[6px] border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset',
+                        isActive
+                          ? 'border-primary bg-surface-navigation-active text-foreground'
+                          : 'text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground border-transparent',
+                      )}
+                      href={getSectionHref(section.id)}
+                      data-navigation-guard="explicit"
+                      onClick={(event) => navigateToSection(event, section.id)}
+                      onFocus={(event) => {
+                        if (viewportRef.current)
+                          revealLink(viewportRef.current, event.currentTarget);
+                      }}
+                      ref={isActive ? activeLinkRef : undefined}
+                      replace={replace}
+                    >
+                      {section.icon && (
                         <span
                           aria-hidden="true"
-                          className="bg-warning size-2 shrink-0 rounded-full"
-                        />
-                        <span className="sr-only">
-                          Modifications non enregistrées
+                          className={cn(
+                            'shrink-0 [&_svg]:size-4',
+                            isActive && 'text-primary-emphasis',
+                          )}
+                        >
+                          {section.icon}
                         </span>
-                      </>
-                    )}
-                  </Link>
-                </TooltipTrigger>
-                {isDirty && (
-                  <TooltipContent side="bottom">
-                    Modifications non enregistrées
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            );
-          })}
+                      )}
+                      {section.label}
+                      {isDirty && (
+                        <>
+                          <span
+                            aria-hidden="true"
+                            className="bg-warning size-2 shrink-0 rounded-full"
+                          />
+                          <span className="sr-only">
+                            Modifications non enregistrées
+                          </span>
+                        </>
+                      )}
+                    </Link>
+                  </TooltipTrigger>
+                  {isDirty && (
+                    <TooltipContent side="bottom">
+                      Modifications non enregistrées
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              );
+            })}
+          </div>
         </div>
-      </div>
-      {scrollState.hasOverflow && (
-        <Button
-          aria-controls={viewportId}
-          aria-disabled={!scrollState.canScrollRight}
-          aria-label="Afficher les sections suivantes"
-          className="h-12 w-10 rounded-[6px] focus-visible:ring-inset aria-disabled:opacity-35 lg:h-12 lg:w-10"
-          onClick={() => scrollSections(1)}
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          <ChevronRight aria-hidden="true" />
-        </Button>
-      )}
-    </nav>
+        {scrollState.hasOverflow && (
+          <Button
+            aria-controls={viewportId}
+            aria-disabled={!scrollState.canScrollRight}
+            aria-label="Afficher les sections suivantes"
+            className="h-12 w-10 rounded-[6px] focus-visible:ring-inset aria-disabled:opacity-35 lg:h-12 lg:w-10"
+            onClick={() => scrollSections(1)}
+            size="icon"
+            type="button"
+            variant="ghost"
+          >
+            <ChevronRight aria-hidden="true" />
+          </Button>
+        )}
+      </nav>
+      {/* Static position after the sticky bar, with no extra space in the flow. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute block size-px"
+        ref={contentStartRef}
+      />
+    </>
   );
 };

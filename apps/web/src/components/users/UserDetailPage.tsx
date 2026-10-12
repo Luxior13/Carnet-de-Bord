@@ -2249,16 +2249,9 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
                       resolveRailSection(sectionId),
                     )
                   }
-                  onSectionChange={(sectionId) => {
-                    if (
-                      sectionId === 'access' &&
-                      activeRailSection === 'access'
-                    ) {
-                      return;
-                    }
-
-                    handleSectionChange(resolveRailSection(sectionId));
-                  }}
+                  onSectionChange={(_section, href) =>
+                    window.history.replaceState(null, '', href)
+                  }
                   sections={visibleUserDetailSections}
                 />
                 {isTargetIdentityMasked && (

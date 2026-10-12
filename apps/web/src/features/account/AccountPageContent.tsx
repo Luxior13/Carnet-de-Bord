@@ -102,7 +102,6 @@ const AccountContent: FC<{ userData: UserType }> = ({ userData }) => {
     cancelPendingNavigation,
     confirmPendingNavigation,
     pendingNavigationHref,
-    requestNavigation,
     restoreFocus,
   } = useUnsavedNavigationGuard(isProfileDirty, resetDraft);
   const currentQueryString = searchParams.toString();
@@ -151,13 +150,9 @@ const AccountContent: FC<{ userData: UserType }> = ({ userData }) => {
             ariaLabel="Navigation du compte"
             dirtySections={isProfileDirty ? ['profile'] : []}
             getSectionHref={getSectionHref}
-            onSectionChange={(section) => {
-              if (section === activeSection) return;
-              const href = getSectionHref(section);
-              requestNavigation(href, () => {
-                window.history.replaceState(null, '', href);
-              });
-            }}
+            onSectionChange={(_section, href) =>
+              window.history.replaceState(null, '', href)
+            }
             sections={sections}
           />
           <p className="sr-only" aria-live="polite">

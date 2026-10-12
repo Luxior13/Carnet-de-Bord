@@ -1,8 +1,16 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { PageSectionNavigation } from '$components/layout/PageSectionNavigation';
+
+// These assertions cover markup; browser scenarios exercise guarded routing.
+vi.mock('next/navigation', () => ({
+  useRouter: (): { push: () => void; replace: () => void } => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+}));
 
 const sections = [
   { id: 'profile', label: 'Profil' },

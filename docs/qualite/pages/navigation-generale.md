@@ -47,9 +47,9 @@ Le compte ne réapparaît pas silencieusement pendant l'intention de sortie ;
 ce verrou reste local au contexte monté, sans promesse après rechargement.
 Un prénom sans nom était déjà correctement affiché.
 
-Le changement de section après long défilement reste une piste distincte,
-non revérifiée dans cette passe : le composant de sections n'a pas été modifié.
-La clôture des parcours privés NAV-02 ne vaut pas validation de cette piste.
+La passe de navigation générale ci-dessus n'avait pas rejoué le changement de
+section après long défilement. La clôture des parcours privés NAV-02 ne vaut
+pas validation de cette piste, reprise séparément dans la section suivante.
 
 La suite générale compte 1 248 tests réussis et 163 ignorés ; build, types,
 lint et budgets d'architecture/performance passent. Les plafonds existants
@@ -57,6 +57,110 @@ restent inchangés : le focus responsive est extrait dans
 [sidebar-focus.ts](../../../apps/web/src/components/ui/sidebar-focus.ts).
 Les limites de profils, propagation des droits après navigation complète,
 lecteurs d'écran et navigateurs non exercés sont précisées dans le rapport.
+
+## Changement de section après long défilement — revue ciblée du 12 octobre 2026
+
+Reprise de la piste laissée ouverte après la finition collante du 11 octobre,
+depuis le HEAD `34fccaa`. Périmètre : fiche du Répertoire via
+`EntityDetailLayout`, fiche Utilisateur et Mon compte. Cette passe ne reprend
+ni les mutations métier ni tout l'audit de ces pages. Rubriques et le menu du
+compte sont hors impact.
+
+Sélection proportionnée : Q01–Q04, Q06, Q19, Q27 et Q30 pour le parcours, la
+composition partagée, le focus, le brouillon et la preuve. Le coût du
+repositionnement relève de Q17 si le correctif en ajoute un. Les autres sujets
+sont hors impact ou non applicables : aucune donnée persistante, permission,
+mutation, notification, migration, intégration ou dépendance nouvelle prévue.
+
+Les références actuelles décrivent des liens de section avec leur URL, pas
+des onglets ARIA de panneaux locaux. La lecture du code confirme que les trois
+consommateurs remplacent l'entrée courante : `replace` de Link pour la fiche
+Personne, `history.replaceState` pour les deux autres. La correction du
+défilement ne demande pas d'ajouter un historique de section.
+
+Attendu à éprouver : après un changement accepté vers une section différente,
+son début doit être visible sous la barre et le focus rester sur le lien
+activé. « Rester » conserve URL, brouillon et position. Un clic modifié, le
+focus horizontal, le redimensionnement ou une simple actualisation ne doivent
+pas devenir une commande de remise à zéro verticale. Le clamp naturel d'un
+contenu court est distingué d'un retour volontaire au haut du bandeau.
+Liens directs, rechargement et Back/Forward gardent leurs contrats propres.
+
+Les [trois observations initiales du banc client](../../audits/navigation-sections-2026-10-12/banc-client/preuves/avant-3.json)
+reproduisent un titre de nouvelle section à −616 px dans
+le viewport après un défilement interne de 900 px, alors que la barre reste
+visible entre 56 et 105 px. Il reproduit aussi une entrée d'historique
+supplémentaire après confirmation de départ (longueur 2 → 3 au lieu de 2 → 2).
+« Rester » conserve déjà le brouillon et le défilement : c'est une
+non-régression à préserver. Ces constats sont simulés : Link et navigation
+sont remplacés dans le montage, donc ils ne prouvent pas le scroll de Next.
+Le focus mesuré immédiatement après confirmation dans cette baseline précède
+la fermeture complète du dialogue ; aucun défaut de focus n'en est déduit.
+Les [neuf observations Next initiales](../../audits/navigation-sections-2026-10-12/banc-integration/preuves/baseline-resultats.json)
+précisent l'effet sur les vrais consommateurs. À 390 × 600 px, Mon compte passe
+du bas de Profil à Sécurité déjà visitée en conservant un scroll de 478 px :
+le titre Sécurité se situe entre 37,58 et 61,58 px, derrière le header et la
+barre de 56 à 105 px. D'autres transitions de Mon compte et Utilisateur
+laissent le focus sur `body`. Sur la fiche Personne, le titre est déjà visible,
+mais le scroll revient à zéro et réaffiche le bandeau : c'est une amélioration
+de position, pas une preuve de contenu masqué.
+
+Les trois confirmations de départ ajoutent une entrée d'historique ; les
+trois annulations conservent exactement le scroll, l'URL et la saisie. Les
+mesures HTTP initiales ambiguës sont gardées séparément : la visibilité du
+contenu et le maintien de la barre collée sont désormais deux observations,
+sans qualifier de masqué un titre réellement visible.
+
+Correctif retenu : le composant consulte la garde une seule fois et conserve
+une action différée avec son mode de navigation. Les liens concernés déclarent
+qu'ils prennent en charge cette garde ; l'interception générique ne les
+transforme plus en `router.push`. Les callbacks de Mon compte et Utilisateur
+effectuent directement leur `replaceState` après accord. Le repositionnement
+et le focus communs sont isolés dans
+[useSectionNavigation](../../../apps/web/src/components/layout/useSectionNavigation.ts),
+sans changement de géométrie.
+
+Les [huit parcours client finaux](../../audits/navigation-sections-2026-10-12/banc-client/README.md)
+passent. À 390 px, le titre arrive à 120,78 px sous la barre finissant à 105 px ;
+à 1 440 px, à 121,39 px sous une barre finissant à 105,39 px. La géométrie au
+repos est strictement identique : barre de 49 px, écart de 16 px avec le contenu
+et même hauteur défilante dans la fixture. La confirmation conserve désormais
+deux entrées d'historique au lieu d'en ajouter une. Clic actif avec brouillon et
+URL non canonique, Ctrl-clic, contenu court, montage StrictMode, historique et
+deux activations rapides sont contrôlés. Le resize ne commande aucun scroll
+vertical ; l'ancrage natif peut cependant adapter la position quand le texte
+change de hauteur. Un oracle intermédiaire trop strict sur ce point a été
+corrigé, sans en faire un défaut produit.
+
+Les [neuf parcours Next finaux](../../audits/navigation-sections-2026-10-12/banc-integration/preuves/final-resultats.json)
+passent sur les trois consommateurs, avec session réelle et base PostgreSQL
+isolée. Dans Mon compte à 390 × 600 px, le scroll passe de 478 à 395 px et le
+titre Sécurité arrive à 120,58 px, sous la barre finissant à 105 px. Tous les
+changements contrôlés rendent le focus au lien activé. Les trois confirmations
+gardent la longueur d'historique ; les trois « Rester » gardent URL, brouillon
+et scroll exacts. Les captures mobile de Mon compte et Utilisateur ont été
+inspectées.
+
+La fiche Personne revient encore à un scroll de zéro pendant certaines
+transitions Next : le contenu est visible et le focus conservé, donc aucune
+correction de contenu masqué n'est revendiquée pour ce cas déjà visible. La
+passe ne garantit pas que toutes les fiches restent collées après chaque
+transition native ; elle corrige le début masqué, le focus et le remplacement
+de l'historique sans imposer de retour systématique au bandeau.
+
+Les 56 tests ciblés et la suite générale depuis `apps/web` (`bun run test` :
+1 248 réussis, 163 ignorés, 102 fichiers réussis et neuf ignorés) passent,
+ainsi que build Next 15.5.23, lint, types et budgets d'architecture/performance,
+sans augmentation des plafonds. NAV-08 et NAV-09 sont clos dans ces parcours.
+Back/Forward, StrictMode, clic modifié et activations rapides sont exercés dans
+le banc client simulé ; ils ne sont pas présentés comme une nouvelle campagne
+HTTP. Lecteur d'écran, Firefox, Safari/iOS et appareils physiques restent non
+vérifiés. Les quatre temporaires client sont supprimés. Le
+[protocole d'intégration](../../audits/navigation-sections-2026-10-12/banc-integration/README.md)
+confirme l'arrêt de Next 3128 et PostgreSQL 54650, les ports libres et la
+suppression du dossier temporaire avec configuration privée, secrets TOTP et
+marker. Le scan des sept fichiers texte du banc ne retrouve aucune valeur
+privée. Aucun accès à la base habituelle ni modification de son `.env`.
 
 ## Actions et navigation pendant une requête — 11 octobre 2026
 
@@ -609,6 +713,8 @@ décrit leur reprise distincte et ses limites.
 | NAV-05 | Après « Rester », contexte de navigation fermé et focus perdu depuis Sidebar/recherche | Menus maintenus jusqu'au départ accepté, focus rétabli ; bancs client et Next réussis | Clos le 12 octobre au périmètre exercé |
 | NAV-06 | Refus HTTP annoncé comme déconnexion réussie ; transport non borné | Identité masquée, résultat non confirmé, délai de 15 s et reprise explicite ; 37 tests ciblés et trois parcours HTTP réussis | Clos le 12 octobre au périmètre exercé |
 | NAV-07 | Contrôle focalisé masqué lors d'un changement de présentation du volet ou des ancêtres | Focus rétabli dans les deux sens des seuils, sans déplacer le focus du contenu | Clos le 12 octobre, banc client vérifié |
+| NAV-08 · P2 | Après long défilement, début de nouvelle section masqué dans Mon compte mobile et pertes de focus dans certains changements | Début visible et focus du lien vérifiés dans huit parcours client et neuf Next ; Rester inchangé. La remontée native de Personne avec contenu déjà visible n'est pas supprimée | Clos le 12 octobre au périmètre exercé |
+| NAV-09 · P2 | Confirmer une garde de brouillon ajoute une entrée d'historique alors que les trois barres remplacent l'URL courante | Garde unique et action différée conservant replace ; longueur d'historique inchangée après les trois confirmations réelles | Clos le 12 octobre au périmètre exercé |
 
 ## Limites de la passe historique et réexamen
 
@@ -686,7 +792,12 @@ consommateurs), TypeScript, lint du composant et budget d'architecture réussis.
 Le shell authentifié complet, Safari/iOS et le lecteur d'écran ne sont pas
 rejoués. Les anciens 20 scénarios ci-dessous conservent leur portée.
 
-### Pistes après la finition collante — à qualifier
+### Pistes formulées après la finition collante — 11 octobre 2026
+
+Cette note décrit l'état du 11 octobre. Le changement de section après long
+défilement est depuis traité dans la revue ciblée du 12 octobre ci-dessus.
+La visibilité de tous les champs recevant le focus après erreur ou annulation
+reste une piste distincte, non validée par ce seul correctif de navigation.
 
 Question utilisateur du 11 octobre : autres améliorations utiles. Lecture du
 code : Mon compte et Utilisateurs changent de section par `history.replaceState`
@@ -701,7 +812,7 @@ Autre point à contrôler : visibilité d'un champ recevant le focus après une 
 ou une annulation lorsque la barre est collée. Les essais précédents vérifient
 les liens de la barre ; ils ne prouvent pas tous les placements des champs.
 Le fil d'Ariane conserve déjà le nom de la fiche : aucune identité dupliquée dans
-la barre n'est proposée. Ces pistes ne sont pas implémentées.
+la barre n'est proposée. À cette date, ces pistes n'étaient pas implémentées.
 
 ### Contrat courant
 
@@ -738,7 +849,8 @@ Lors d'une évolution de la barre, vérifier :
 - La section possède-t-elle une URL ou s'agit-il d'un onglet de contenu ?
 - Les libellés longs et les largeurs réduites restent-ils accessibles, avec
   disparition des flèches lorsque le défilement n'est plus nécessaire ?
-- Le focus reste-t-il visible après Tab, changement de section, réduction des
-  sections disponibles et redimensionnement, sans déplacer verticalement la page ?
+- Tab, révélation horizontale et redimensionnement gardent-ils un focus visible
+  sans commande de défilement vertical ? Après changement accepté, le début du
+  nouveau contenu est-il visible sans perturber les navigations refusées ?
 - Les clics modifiés, l'annonce du brouillon et les gardes de départ restent-ils
   compatibles avec les consommateurs existants ?

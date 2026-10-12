@@ -379,6 +379,16 @@ le sélecteur de pôle conserve ses repères de couleur.
   redimensionnement rend le focus à la section active si nécessaire.
   Le point de brouillon conserve son texte accessible et affiche l'infobulle
   « Modifications non enregistrées » au survol ou au focus, refermable par Échap.
+  Lors d'un changement explicite vers une autre section, la garde est consultée
+  une seule fois. Après acceptation, le début du nouveau contenu est remis en
+  vue sous la barre s'il était masqué et le focus reste au lien activé. Cette
+  commande du composant ne remonte pas systématiquement au bandeau d'identité ;
+  elle ne promet pas d'annuler toute restauration de scroll native du routeur.
+  « Rester » conserve URL, saisie et défilement. Le montage, Back/Forward,
+  l'activation de la section courante, les clics modifiés et la simple révélation
+  horizontale d'un lien ne déclenchent pas cette commande verticale.
+  La confirmation conserve le mode de navigation choisi par la page, notamment
+  le remplacement d'URL des trois consommateurs actuels.
   Consommateurs actuels : Mon compte et les fiches Utilisateur/Répertoire.
 - **Onglets de contenu** : `Tabs`, pour des panneaux locaux alternatifs d'un
   même objet, avec le comportement clavier et les rôles ARIA correspondants.

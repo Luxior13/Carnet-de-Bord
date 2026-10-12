@@ -1,0 +1,424 @@
+{
+  "completedAt": "2026-10-12T20:04:08.554Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 8,
+  "total": 8,
+  "observations": [
+    {
+      "name": "section-acceptee-390",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "initialGeometry": {
+        "scroll": 0,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 218.78125,
+        "barBottom": 267.78125,
+        "titleTop": 283.78125,
+        "heroTop": 89,
+        "active": "Aller au contenu principalOuvrir la navigationAccueilMembresFiche fictiveRecherc",
+        "section": "identite",
+        "history": 2
+      },
+      "start": {
+        "scroll": 900,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "heroTop": -811,
+        "active": "Aller au contenu principalOuvrir la navigationAccueilMembresFiche fictiveRecherc",
+        "section": "identite",
+        "history": 2
+      },
+      "end": {
+        "scroll": 163,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": 120.78125,
+        "heroTop": -74,
+        "active": "Coordonnées",
+        "section": "coordonnees",
+        "history": 2
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/membres/repertoire/audit-person-sections"
+        }
+      ]
+    },
+    {
+      "name": "section-acceptee-1440",
+      "width": 1440,
+      "height": 900,
+      "status": "pass",
+      "initialGeometry": {
+        "scroll": 0,
+        "scrollHeight": 2825,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 186.390625,
+        "barBottom": 235.390625,
+        "titleTop": 251.390625,
+        "heroTop": 100,
+        "active": "Aller au contenu principalNoctambuleMembresIdentitéRépertoireCamille ExempleSupe",
+        "section": "identite",
+        "history": 2
+      },
+      "start": {
+        "scroll": 900,
+        "scrollHeight": 2825,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -648.609375,
+        "heroTop": -800,
+        "active": "Aller au contenu principalNoctambuleMembresIdentitéRépertoireCamille ExempleSupe",
+        "section": "identite",
+        "history": 2
+      },
+      "end": {
+        "scroll": 130,
+        "scrollHeight": 2825,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56.390625,
+        "barBottom": 105.390625,
+        "titleTop": 121.390625,
+        "heroTop": -30,
+        "active": "Coordonnées",
+        "section": "coordonnees",
+        "history": 2
+      },
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1146,
+        "mainWidth": 1146,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/membres/repertoire/audit-person-sections"
+        }
+      ]
+    },
+    {
+      "name": "lien-accepte",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "start": {
+        "scroll": 900,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "heroTop": -811,
+        "active": "Aller au contenu principalOuvrir la navigationAccueilMembresFiche fictiveRecherc",
+        "section": "identite",
+        "history": 2
+      },
+      "end": {
+        "scroll": 163,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": 120.78125,
+        "heroTop": -74,
+        "active": "Coordonnées",
+        "section": "coordonnees",
+        "history": 2
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/membres/repertoire/audit-person-sections"
+        }
+      ]
+    },
+    {
+      "name": "garde-refus-puis-confirmation",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "start": {
+        "scroll": 900,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "heroTop": -811,
+        "active": "",
+        "section": "identite",
+        "history": 2
+      },
+      "refused": {
+        "scroll": 900,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "heroTop": -811,
+        "active": "Coordonnées",
+        "section": "identite",
+        "history": 2
+      },
+      "accepted": {
+        "scroll": 163,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": 120.78125,
+        "heroTop": -74,
+        "active": "Coordonnées",
+        "section": "coordonnees",
+        "history": 2
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/membres/repertoire/audit-person-sections"
+        }
+      ]
+    },
+    {
+      "name": "section-courte-clamp",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "start": {
+        "scroll": 900,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "heroTop": -811,
+        "active": "Aller au contenu principalOuvrir la navigationAccueilMembresFiche fictiveRecherc",
+        "section": "identite",
+        "history": 2
+      },
+      "end": {
+        "scroll": 0,
+        "scrollHeight": 844,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 218.78125,
+        "barBottom": 267.78125,
+        "titleTop": 283.78125,
+        "heroTop": 89,
+        "active": "Coordonnées",
+        "section": "coordonnees",
+        "history": 2
+      },
+      "note": "Le clamp natif et un morceau de bandeau visible sont acceptés lorsque le contenu est court.",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/membres/repertoire/audit-person-sections"
+        }
+      ]
+    },
+    {
+      "name": "actions-sans-changement-vertical",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "start": {
+        "scroll": 900,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "heroTop": -811,
+        "active": "",
+        "section": "identite",
+        "history": 2
+      },
+      "afterResize": {
+        "scroll": 706,
+        "scrollHeight": 2803,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -468.609375,
+        "heroTop": -617,
+        "active": "IdentitéModifications non enregistrées",
+        "section": "identite",
+        "history": 2
+      },
+      "end": {
+        "scroll": 706,
+        "scrollHeight": 2825,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -454.609375,
+        "heroTop": -606,
+        "active": "Coordonnées",
+        "section": "identite",
+        "history": 2
+      },
+      "note": "Le resize replie différemment les paragraphes : scroll anchoring natif accepté, aucune commande verticale par le composant.",
+      "metrics": {
+        "viewport": 1920,
+        "document": 1920,
+        "main": 1626,
+        "mainWidth": 1626,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/membres/repertoire/audit-person-sections"
+        }
+      ]
+    },
+    {
+      "name": "montage-historique-actualisation-sans-saut",
+      "width": 1440,
+      "height": 900,
+      "status": "pass",
+      "start": {
+        "scroll": 900,
+        "scrollHeight": 2825,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -648.609375,
+        "heroTop": -800,
+        "active": "Aller au contenu principalNoctambuleMembresIdentitéRépertoireCamille ExempleSupe",
+        "section": "coordonnees",
+        "history": 2
+      },
+      "end": {
+        "scroll": 900,
+        "scrollHeight": 2825,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -648.609375,
+        "heroTop": -800,
+        "active": "Aller au contenu principalNoctambuleMembresIdentitéRépertoirePrénom actualisé Ex",
+        "section": "identite",
+        "history": 3
+      },
+      "note": "Histoire navigateur réelle, routeur simulé sans restauration automatique du scroll.",
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1146,
+        "mainWidth": 1146,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/membres/repertoire/audit-person-sections"
+        }
+      ]
+    },
+    {
+      "name": "activations-rapides-derniere-section",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "start": {
+        "scroll": 900,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "heroTop": -811,
+        "active": "Aller au contenu principalOuvrir la navigationAccueilMembresFiche fictiveRecherc",
+        "section": "identite",
+        "history": 2
+      },
+      "end": {
+        "scroll": 163,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": 120.78125,
+        "heroTop": -74,
+        "active": "Section fictive 1",
+        "section": "test-0",
+        "history": 2
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/membres/repertoire/audit-person-sections"
+        }
+      ]
+    }
+  ]
+}

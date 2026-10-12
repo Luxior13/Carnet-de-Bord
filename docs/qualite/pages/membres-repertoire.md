@@ -855,3 +855,14 @@ routeur simulés. [Règles communes](navigation-generale.md#barres-de-sections--
 Cette preuve de barre de fiche demeure simulée. REP-01 est depuis clos pour le
 périmètre de liste et les parcours intégrés déclarés dans l’audit du 11 octobre ;
 il ne certifie pas tous les comportements de la fiche.
+
+## Changement de section après défilement — 12 octobre 2026
+
+La [passe ciblée commune](navigation-generale.md#changement-de-section-après-long-défilement--revue-ciblée-du-12-octobre-2026)
+vérifie Identité et Coordonnées dans Next réel. La confirmation d'abandon
+conserve désormais le remplacement d'URL au lieu d'ajouter une entrée ;
+« Rester » conserve brouillon, URL, position et focus. Le contenu cible reste
+visible et le lien activé garde le focus. La fiche peut encore revenir au haut
+du défilement pendant la transition Next : aucune garantie de barre toujours
+collée n'est annoncée. NAV-08/NAV-09 et leurs preuves appartiennent au suivi
+commun ; cette passe ne rejoue pas les mutations ni l'audit complet de la fiche.

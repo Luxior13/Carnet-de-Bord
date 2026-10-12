@@ -1,0 +1,611 @@
+{
+  "date": "2026-10-12T20:05:49.646Z",
+  "phase": "final",
+  "environment": {
+    "nextPort": 3128,
+    "postgresPort": 54650,
+    "database": "sections_test",
+    "viewport": {
+      "width": 1024,
+      "height": 600
+    },
+    "chromium": "149.0.7827.55"
+  },
+  "scenarios": [
+    {
+      "name": "personne: long vers début de section (souris)",
+      "before": {
+        "url": "/membres/repertoire/e2e-sections-person?section=coordonnees",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 3,
+        "scrollTop": 791,
+        "scrollMax": 791,
+        "nav": {
+          "top": 56,
+          "bottom": 105
+        },
+        "title": {
+          "text": "Emails",
+          "top": -541.953125,
+          "bottom": -523.390625
+        },
+        "focus": {
+          "tag": "BODY",
+          "text": "Aller au contenu principalNoctambuleMembresIdentitéRépertoireE2E AdminSuperadminReplier la barre lat",
+          "href": null
+        },
+        "activeLink": "Coordonnées"
+      },
+      "after": {
+        "url": "/membres/repertoire/e2e-sections-person?returnTo=%2Fmembres%2Frepertoire&section=identite",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 3,
+        "scrollTop": 0,
+        "scrollMax": 242,
+        "nav": {
+          "top": 166,
+          "bottom": 215
+        },
+        "title": {
+          "text": "Informations personnelles",
+          "top": 248,
+          "bottom": 266.5625
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Identité",
+          "href": "/membres/repertoire/e2e-sections-person?returnTo=%2Fmembres%2Frepertoire&section=identite"
+        },
+        "activeLink": "Identité"
+      },
+      "newContentVisible": true,
+      "barRemainsAtTop": false,
+      "focusOnActivatedLink": true,
+      "executed": true
+    },
+    {
+      "name": "personne: retour vers section longue déjà chargée, mobile et clavier",
+      "before": {
+        "url": "/membres/repertoire/e2e-sections-person?returnTo=%2Fmembres%2Frepertoire&section=identite",
+        "viewport": {
+          "width": 390,
+          "height": 600
+        },
+        "historyLength": 3,
+        "scrollTop": 497,
+        "scrollMax": 497,
+        "nav": {
+          "top": 56,
+          "bottom": 105
+        },
+        "title": {
+          "text": "Informations personnelles",
+          "top": -210.953125,
+          "bottom": -192.390625
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Identité",
+          "href": "/membres/repertoire/e2e-sections-person?returnTo=%2Fmembres%2Frepertoire&section=identite"
+        },
+        "activeLink": "Identité"
+      },
+      "after": {
+        "url": "/membres/repertoire/e2e-sections-person?returnTo=%2Fmembres%2Frepertoire&section=coordonnees",
+        "viewport": {
+          "width": 390,
+          "height": 600
+        },
+        "historyLength": 3,
+        "scrollTop": 0,
+        "scrollMax": 894,
+        "nav": {
+          "top": 206.046875,
+          "bottom": 255.046875
+        },
+        "title": {
+          "text": "Emails",
+          "top": 287.09375,
+          "bottom": 305.65625
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Coordonnées",
+          "href": "/membres/repertoire/e2e-sections-person?returnTo=%2Fmembres%2Frepertoire&section=coordonnees"
+        },
+        "activeLink": "Coordonnées"
+      },
+      "newContentVisible": true,
+      "barRemainsAtTop": false,
+      "focusOnActivatedLink": true,
+      "executed": true
+    },
+    {
+      "name": "personne: brouillon, Rester puis confirmer",
+      "before": {
+        "url": "/membres/repertoire/e2e-sections-person?section=identite",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 4,
+        "scrollTop": 320,
+        "scrollMax": 320,
+        "nav": {
+          "top": 56,
+          "bottom": 105
+        },
+        "title": {
+          "text": "Informations personnelles",
+          "top": -72,
+          "bottom": -53.4375
+        },
+        "focus": {
+          "tag": "INPUT",
+          "text": "",
+          "href": null
+        },
+        "activeLink": "IdentitéModifications non enregistrées"
+      },
+      "cancelled": {
+        "url": "/membres/repertoire/e2e-sections-person?section=identite",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 4,
+        "scrollTop": 320,
+        "scrollMax": 320,
+        "nav": {
+          "top": 56,
+          "bottom": 105
+        },
+        "title": {
+          "text": "Informations personnelles",
+          "top": -72,
+          "bottom": -53.4375
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Coordonnées",
+          "href": "/membres/repertoire/e2e-sections-person?returnTo=%2Fmembres%2Frepertoire&section=coordonnees"
+        },
+        "activeLink": "IdentitéModifications non enregistrées"
+      },
+      "draftPreserved": true,
+      "cancelPreservesScroll": true,
+      "confirmed": {
+        "url": "/membres/repertoire/e2e-sections-person?returnTo=%2Fmembres%2Frepertoire&section=coordonnees",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 4,
+        "scrollTop": 0,
+        "scrollMax": 791,
+        "nav": {
+          "top": 166,
+          "bottom": 215
+        },
+        "title": {
+          "text": "Emails",
+          "top": 249.046875,
+          "bottom": 267.609375
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Coordonnées",
+          "href": "/membres/repertoire/e2e-sections-person?returnTo=%2Fmembres%2Frepertoire&section=coordonnees"
+        },
+        "activeLink": "Coordonnées"
+      },
+      "newContentVisible": true,
+      "barRemainsAtTop": false,
+      "focusOnActivatedLink": true,
+      "executed": true
+    },
+    {
+      "name": "compte: long vers début de section (clavier)",
+      "before": {
+        "url": "/mon-compte?section=security",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 6,
+        "scrollTop": 1289,
+        "scrollMax": 1289,
+        "nav": {
+          "top": 56,
+          "bottom": 105
+        },
+        "title": {
+          "text": "Sécurité",
+          "top": -867.078125,
+          "bottom": -843.078125
+        },
+        "focus": {
+          "tag": "BODY",
+          "text": "Aller au contenu principalNoctambuleAujourd’huiPilotageMon travailE2E AdminSuperadminReplier la barr",
+          "href": null
+        },
+        "activeLink": "Sécurité"
+      },
+      "after": {
+        "url": "/mon-compte",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 6,
+        "scrollTop": 0,
+        "scrollMax": 290,
+        "nav": {
+          "top": 356.921875,
+          "bottom": 405.921875
+        },
+        "title": {
+          "text": "Profil",
+          "top": 438.921875,
+          "bottom": 458.921875
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Profil",
+          "href": "/mon-compte"
+        },
+        "activeLink": "Profil"
+      },
+      "newContentVisible": true,
+      "barRemainsAtTop": false,
+      "focusOnActivatedLink": true,
+      "executed": true
+    },
+    {
+      "name": "compte: retour vers section longue déjà chargée, mobile et clavier",
+      "before": {
+        "url": "/mon-compte",
+        "viewport": {
+          "width": 390,
+          "height": 600
+        },
+        "historyLength": 6,
+        "scrollTop": 478,
+        "scrollMax": 478,
+        "nav": {
+          "top": 56,
+          "bottom": 105
+        },
+        "title": {
+          "text": "Profil",
+          "top": 52.578125,
+          "bottom": 72.578125
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Profil",
+          "href": "/mon-compte"
+        },
+        "activeLink": "Profil"
+      },
+      "after": {
+        "url": "/mon-compte?section=security",
+        "viewport": {
+          "width": 390,
+          "height": 600
+        },
+        "historyLength": 6,
+        "scrollTop": 395,
+        "scrollMax": 1598,
+        "nav": {
+          "top": 56,
+          "bottom": 105
+        },
+        "title": {
+          "text": "Sécurité",
+          "top": 120.578125,
+          "bottom": 144.578125
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Sécurité",
+          "href": "/mon-compte?section=security"
+        },
+        "activeLink": "Sécurité"
+      },
+      "newContentVisible": true,
+      "barRemainsAtTop": true,
+      "focusOnActivatedLink": true,
+      "executed": true
+    },
+    {
+      "name": "compte: brouillon, Rester puis confirmer",
+      "before": {
+        "url": "/mon-compte?section=profile",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 7,
+        "scrollTop": 364,
+        "scrollMax": 364,
+        "nav": {
+          "top": 56,
+          "bottom": 105
+        },
+        "title": {
+          "text": "Profil",
+          "top": 74.921875,
+          "bottom": 94.921875
+        },
+        "focus": {
+          "tag": "INPUT",
+          "text": "",
+          "href": null
+        },
+        "activeLink": "ProfilModifications non enregistrées"
+      },
+      "cancelled": {
+        "url": "/mon-compte?section=profile",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 7,
+        "scrollTop": 364,
+        "scrollMax": 364,
+        "nav": {
+          "top": 56,
+          "bottom": 105
+        },
+        "title": {
+          "text": "Profil",
+          "top": 74.921875,
+          "bottom": 94.921875
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Sécurité",
+          "href": "/mon-compte?section=security"
+        },
+        "activeLink": "ProfilModifications non enregistrées"
+      },
+      "draftPreserved": true,
+      "cancelPreservesScroll": true,
+      "confirmed": {
+        "url": "/mon-compte?section=security",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 7,
+        "scrollTop": 0,
+        "scrollMax": 1289,
+        "nav": {
+          "top": 356.921875,
+          "bottom": 405.921875
+        },
+        "title": {
+          "text": "Sécurité",
+          "top": 421.921875,
+          "bottom": 445.921875
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Sécurité",
+          "href": "/mon-compte?section=security"
+        },
+        "activeLink": "Sécurité"
+      },
+      "newContentVisible": true,
+      "barRemainsAtTop": false,
+      "focusOnActivatedLink": true,
+      "executed": true
+    },
+    {
+      "name": "utilisateur: long vers début de section (souris)",
+      "before": {
+        "url": "/systeme/utilisateurs/e2e-sections-user?section=access",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 9,
+        "scrollTop": 902,
+        "scrollMax": 902,
+        "nav": {
+          "top": 56,
+          "bottom": 105
+        },
+        "title": {
+          "text": "Autorisations administratives",
+          "top": -361.578125,
+          "bottom": -343.015625
+        },
+        "focus": {
+          "tag": "BODY",
+          "text": "Aller au contenu principalNoctambuleSystèmeAdministrationUtilisateursParamètres systèmeFeuille de ro",
+          "href": null
+        },
+        "activeLink": "Autorisations"
+      },
+      "after": {
+        "url": "/systeme/utilisateurs/e2e-sections-user",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 9,
+        "scrollTop": 160,
+        "scrollMax": 209,
+        "nav": {
+          "top": 126.109375,
+          "bottom": 175.109375
+        },
+        "title": {
+          "text": "Profil utilisateur",
+          "top": 208.109375,
+          "bottom": 226.671875
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Profil",
+          "href": "/systeme/utilisateurs/e2e-sections-user"
+        },
+        "activeLink": "Profil"
+      },
+      "newContentVisible": true,
+      "barRemainsAtTop": false,
+      "focusOnActivatedLink": true,
+      "executed": true
+    },
+    {
+      "name": "utilisateur: retour vers section longue déjà chargée, mobile et clavier",
+      "before": {
+        "url": "/systeme/utilisateurs/e2e-sections-user",
+        "viewport": {
+          "width": 390,
+          "height": 600
+        },
+        "historyLength": 9,
+        "scrollTop": 370,
+        "scrollMax": 370,
+        "nav": {
+          "top": 56,
+          "bottom": 105
+        },
+        "title": {
+          "text": "Profil utilisateur",
+          "top": 78.421875,
+          "bottom": 96.984375
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Profil",
+          "href": "/systeme/utilisateurs/e2e-sections-user"
+        },
+        "activeLink": "Profil"
+      },
+      "after": {
+        "url": "/systeme/utilisateurs/e2e-sections-user?section=access",
+        "viewport": {
+          "width": 390,
+          "height": 600
+        },
+        "historyLength": 9,
+        "scrollTop": 312,
+        "scrollMax": 1645,
+        "nav": {
+          "top": 56.421875,
+          "bottom": 105.421875
+        },
+        "title": {
+          "text": "Autorisations administratives",
+          "top": 397.390625,
+          "bottom": 415.953125
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Autorisations",
+          "href": "/systeme/utilisateurs/e2e-sections-user?section=access"
+        },
+        "activeLink": "Autorisations"
+      },
+      "newContentVisible": true,
+      "barRemainsAtTop": true,
+      "focusOnActivatedLink": true,
+      "executed": true
+    },
+    {
+      "name": "utilisateur: brouillon, Rester puis confirmer",
+      "before": {
+        "url": "/systeme/utilisateurs/e2e-sections-user?section=profile",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 10,
+        "scrollTop": 299,
+        "scrollMax": 299,
+        "nav": {
+          "top": 56,
+          "bottom": 105
+        },
+        "title": {
+          "text": "Profil utilisateur",
+          "top": 69.109375,
+          "bottom": 87.671875
+        },
+        "focus": {
+          "tag": "INPUT",
+          "text": "",
+          "href": null
+        },
+        "activeLink": "ProfilModifications non enregistrées"
+      },
+      "cancelled": {
+        "url": "/systeme/utilisateurs/e2e-sections-user?section=profile",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 10,
+        "scrollTop": 299,
+        "scrollMax": 299,
+        "nav": {
+          "top": 56,
+          "bottom": 105
+        },
+        "title": {
+          "text": "Profil utilisateur",
+          "top": 69.109375,
+          "bottom": 87.671875
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Autorisations",
+          "href": "/systeme/utilisateurs/e2e-sections-user?section=access"
+        },
+        "activeLink": "ProfilModifications non enregistrées"
+      },
+      "draftPreserved": true,
+      "cancelPreservesScroll": true,
+      "confirmed": {
+        "url": "/systeme/utilisateurs/e2e-sections-user?section=access",
+        "viewport": {
+          "width": 1024,
+          "height": 600
+        },
+        "historyLength": 10,
+        "scrollTop": 160,
+        "scrollMax": 902,
+        "nav": {
+          "top": 126.109375,
+          "bottom": 175.109375
+        },
+        "title": {
+          "text": "Autorisations administratives",
+          "top": 380.421875,
+          "bottom": 398.984375
+        },
+        "focus": {
+          "tag": "A",
+          "text": "Autorisations",
+          "href": "/systeme/utilisateurs/e2e-sections-user?section=access"
+        },
+        "activeLink": "Autorisations"
+      },
+      "newContentVisible": true,
+      "barRemainsAtTop": false,
+      "focusOnActivatedLink": true,
+      "executed": true
+    }
+  ],
+  "executed": 9
+}

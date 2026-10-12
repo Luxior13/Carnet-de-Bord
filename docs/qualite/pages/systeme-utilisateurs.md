@@ -814,3 +814,13 @@ débordent ; le lien ciblé au clavier est rendu visible. Contrôle de la fiche
 [Règles communes](navigation-generale.md#barres-de-sections--décision-du-11-octobre-2026) ;
 [preuves et limites](../../audits/AUDIT_NAVIGATION_SECTIONS_2026-10-11.md).
 Cette passe ne rejoue pas les mutations ni les permissions serveur.
+
+## Changement de section après défilement — 12 octobre 2026
+
+La [passe ciblée commune](navigation-generale.md#changement-de-section-après-long-défilement--revue-ciblée-du-12-octobre-2026)
+vérifie la fiche dans Next réel : le début du contenu reste visible, le focus
+revient au lien activé et la confirmation d'abandon conserve le remplacement
+d'URL. « Rester » garde URL, brouillon et scroll. Le callback de la page
+effectue une navigation déjà acceptée par le composant partagé, sans deuxième
+garde. NAV-08/NAV-09 et les limites sont suivis dans la note commune ; les
+mutations, secrets et autorisations de la fiche ne sont pas réaudités ici.

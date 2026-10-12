@@ -1,0 +1,68 @@
+{
+  "completedAt": "2026-10-12T19:59:27.488Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 1,
+  "total": 1,
+  "observations": [
+    {
+      "name": "avant-section-propre-locale",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "initialGeometry": {
+        "scroll": 0,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 218.78125,
+        "barBottom": 267.78125,
+        "titleTop": 283.78125,
+        "heroTop": 89,
+        "active": "Aller au contenu principalOuvrir la navigationAccueilMembresFiche fictiveRecherc",
+        "section": "identite",
+        "history": 2
+      },
+      "start": {
+        "scroll": 900,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "heroTop": -811,
+        "active": "Aller au contenu principalOuvrir la navigationAccueilMembresFiche fictiveRecherc",
+        "section": "identite",
+        "history": 2
+      },
+      "end": {
+        "scroll": 900,
+        "scrollHeight": 3693,
+        "mainTop": 56,
+        "mainBottom": 900,
+        "barTop": 56,
+        "barBottom": 105,
+        "titleTop": -616.21875,
+        "heroTop": -811,
+        "active": "Coordonnées",
+        "section": "coordonnees",
+        "history": 2
+      },
+      "note": "Callback local réel de la fixture, history.replaceState sans scroll",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/membres/repertoire/audit-person-sections"
+        }
+      ]
+    }
+  ]
+}
