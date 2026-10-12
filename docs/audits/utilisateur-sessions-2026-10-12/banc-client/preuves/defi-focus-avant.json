@@ -1,0 +1,127 @@
+{
+  "completedAt": "2026-10-12T20:55:43.736Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "simulation": "UserDetailPage, UserSecurityTab et cadre réels ; API, identité, routeur et horloge simulés. Reset mot de passe/MFA exclus ; défi administratif réel avec preuve fictive.",
+  "passed": 1,
+  "total": 3,
+  "observations": [
+    {
+      "name": "defi-administratif-suspendu31s",
+      "width": 390,
+      "status": "pass",
+      "elapsedClockMs": 31000,
+      "counts": {
+        "get": 1,
+        "del": 1,
+        "proof": 1,
+        "aborted": 1
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "stepup",
+          "aborted": false
+        },
+        {
+          "method": "POST",
+          "path": "/api/auth/step-up",
+          "query": "",
+          "mode": "hold",
+          "aborted": true
+        }
+      ]
+    },
+    {
+      "name": "defi-annuler-conserve-sessions",
+      "width": 390,
+      "status": "fail",
+      "error": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "focused": {
+        "tag": "BODY",
+        "id": ""
+      },
+      "errors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "stepup",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "defi-confirme-reprend-une-revocation",
+      "width": 1440,
+      "status": "fail",
+      "error": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "focused": {
+        "tag": "BODY",
+        "id": ""
+      },
+      "errors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "stepup",
+          "aborted": false
+        },
+        {
+          "method": "POST",
+          "path": "/api/auth/step-up",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-12T21:01:23.399Z",
+  "environment": {
+    "next": "15.5.23",
+    "postgres": "17",
+    "nextPort": 3130,
+    "postgresPort": 54661,
+    "database": "user_sessions_test",
+    "chromium": "149.0.7827.55"
+  },
+  "scenarios": [
+    {
+      "name": "Annuler la confirmation et la preuve sensible conserve les deux sessions",
+      "deleteRequests": 1,
+      "remainingSessions": 2,
+      "auditDelta": 0,
+      "passed": true
+    },
+    {
+      "name": "Révocation individuelle après mot de passe et TOTP réels",
+      "focus": {
+        "focusedId": "user-security-sessions-heading",
+        "headingTop": 508.046875,
+        "barBottom": 105,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        }
+      },
+      "deleteRequests": 2,
+      "targetBrowsers": [
+        200,
+        401
+      ],
+      "auditDelta": 1,
+      "passed": true
+    },
+    {
+      "name": "Révocation globale confirmée sans toucher la session administrateur",
+      "focus": {
+        "focusedId": "user-security-sessions-heading",
+        "headingTop": 656.046875,
+        "barBottom": 105,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        }
+      },
+      "deleteRequests": 1,
+      "targetBrowsers": [
+        401,
+        401
+      ],
+      "actor": 200,
+      "auditDelta": 1,
+      "passed": true
+    },
+    {
+      "name": "Réponse perdue après commit : notice persistante, relecture sans nouveau DELETE et focus mobile",
+      "focus": {
+        "focusedId": "user-security-sessions-heading",
+        "headingTop": 290.296875,
+        "barBottom": 105,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        }
+      },
+      "committedStatus": 200,
+      "deleteRequests": 1,
+      "readsAfterLoss": 1,
+      "remainingSessions": 0,
+      "auditDelta": 1,
+      "targetBrowser": 401,
+      "actor": 200,
+      "passed": true
+    }
+  ],
+  "passed": 4
+}

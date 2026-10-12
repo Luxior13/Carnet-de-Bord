@@ -103,9 +103,10 @@ import directoryStyles from '$ui/directory.module.css';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
-import { apiFetch } from '$utils/api.utils';
+import { ApiClientError, apiFetch } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 import { getSafeCollectionReturnHref } from '$utils/navigation.utils';
+import { securityRequest } from '$utils/security-request.utils';
 import {
   getUserDisplayName,
   getUserLoginDisplay,
@@ -116,6 +117,13 @@ type UserDetailPageProps = {
   initialScope?: string;
   initialUser?: UserType;
   userId: string;
+};
+
+const focusSecuritySessionsHeading = (): void => {
+  const heading = document.getElementById('user-security-sessions-heading');
+  if (!heading?.getClientRects().length) return;
+  heading.focus({ preventScroll: true });
+  heading.scrollIntoView({ behavior: 'instant', block: 'nearest' });
 };
 
 const DetailSkeleton: FC = () => (
@@ -254,6 +262,11 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
   const [securitySessionsError, setSecuritySessionsError] = useState<
     string | null
   >(null);
+  const [securitySessionsNotice, setSecuritySessionsNotice] = useState<
+    string | null
+  >(null);
+  const sessionsMutationFocusRef = useRef(false);
+  const sessionsStepUpFocusRef = useRef(false);
   const [isRevokingSecuritySessions, setIsRevokingSecuritySessions] =
     useState(false);
   const [revokingSecuritySessionId, setRevokingSecuritySessionId] = useState<
@@ -730,6 +743,7 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     clearMutationFeedback();
     cancelPendingStepUpAction();
     setSecuritySessions([]);
+    setSecuritySessionsNotice(null);
     setHasLoadedSecuritySessions(false);
     setAuditLogs([]);
     setAuditFacets(null);
@@ -1012,26 +1026,20 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     try {
       setIsLoadingSecuritySessions(true);
       setSecuritySessionsError(null);
-      const response = await fetch(`/api/users/${userId}/sessions`, {
-        cache: 'no-store',
-        signal: controller.signal,
-      });
+      const data = await securityRequest<{ sessions: UserSessionInfo[] }>(
+        `/api/users/${userId}/sessions`,
+        controller.signal,
+        { cache: 'no-store' },
+      );
       if (controller.signal.aborted) return;
-      if ([401, 403, 404].includes(response.status)) setSecuritySessions([]);
-      const data = await response.json();
-
+      setSecuritySessions(data.sessions);
+    } catch (failure) {
       if (controller.signal.aborted) return;
-
-      if (response.ok && data.success) {
-        setSecuritySessions(data.data.sessions);
-      } else {
-        setSecuritySessionsError(
-          data.error?.message || 'Impossible de charger les sessions',
-        );
-      }
-    } catch {
-      if (controller.signal.aborted) return;
-
+      if (
+        failure instanceof ApiClientError &&
+        [401, 403, 404].includes(failure.status)
+      )
+        setSecuritySessions([]);
       setSecuritySessionsError('Impossible de charger les sessions');
     } finally {
       if (sessionsAbortControllerRef.current !== controller) return;
@@ -1080,6 +1088,7 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     setIsLoadingMoreAudit(false);
     setSecuritySessions([]);
     setSecuritySessionsError(null);
+    setSecuritySessionsNotice(null);
     setHasLoadedSecuritySessions(false);
     setRevokingSecuritySessionId(null);
   }, [userId]);
@@ -1645,106 +1654,86 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     toast.success('Double authentification réinitialisée');
   };
 
-  const handleRevokeSecuritySessions = async (): Promise<void> => {
-    if (!mountedRef.current) return;
-    if (!canRevokeTargetSessions) {
-      toast.error('Permission insuffisante pour révoquer les sessions');
-
+  const handleRevokeSecuritySession = async (
+    sessionId?: string,
+  ): Promise<void> => {
+    if (!mountedRef.current || !canRevokeTargetSessions || !mutation.start())
       return;
-    }
-
-    if (!mutation.start()) return;
     const requestController = mutationAbortControllerRef.current;
-    setIsRevokingSecuritySessions(true);
+    sessionsMutationFocusRef.current = !sessionId && showRevokeSessionsConfirm;
+    setSecuritySessionsNotice(null);
+    if (sessionId) setRevokingSecuritySessionId(sessionId);
+    else setIsRevokingSecuritySessions(true);
     try {
-      const response = await apiFetch(`/api/users/${userId}/sessions`, {
-        method: 'DELETE',
-        signal: requestController.signal,
-      });
-      const data = await response.json();
+      await securityRequest<{ revokedSessions: number }>(
+        sessionId
+          ? `/api/users/${userId}/sessions?id=${encodeURIComponent(sessionId)}`
+          : `/api/users/${userId}/sessions`,
+        requestController.signal,
+        { method: 'DELETE' },
+      );
       if (!mountedRef.current || requestController.signal.aborted) return;
+      toast.success(sessionId ? 'Session révoquée' : 'Sessions révoquées');
+      refreshAuditAfterMutation();
+      void fetchSecuritySessions();
+      if (!sessionId) void fetchUser({ background: true });
+    } catch (failure) {
+      if (!mountedRef.current || requestController.signal.aborted) return;
+      if (
+        failure instanceof ApiClientError &&
+        requestStepUpForResponse(
+          { error: { code: failure.code } },
+          {
+            description: sessionId
+              ? 'Cette session du membre sera immédiatement fermée.'
+              : 'Toutes les sessions actives du membre seront immédiatement fermées.',
+            execute: () => handleRevokeSecuritySession(sessionId),
+            title: sessionId
+              ? 'Confirmer la révocation de la session'
+              : 'Confirmer la révocation des sessions',
+          },
+        )
+      ) {
+        sessionsStepUpFocusRef.current = true;
 
-      if (response.ok && data.success) {
-        toast.success('Sessions révoquées');
-        refreshAuditAfterMutation();
+        return;
+      }
+      if (
+        failure instanceof ApiClientError &&
+        [401, 403].includes(failure.status)
+      ) {
+        setSecuritySessions([]);
+        setSecuritySessionsError(
+          'Votre accès aux sessions doit être vérifié. Rechargez la liste avant de continuer.',
+        );
+      } else if (
+        !(failure instanceof ApiClientError) ||
+        failure.status >= 500 ||
+        failure.code === 'INVALID_RESPONSE'
+      ) {
+        setSecuritySessionsNotice(
+          'La réponse n’a pas pu être confirmée. Vérifiez les sessions restantes avant de recommencer.',
+        );
+        void fetchSecuritySessions();
+        void fetchUser({ background: true });
+      } else if ([404, 409].includes(failure.status)) {
+        setSecuritySessionsNotice(
+          'La session ou le compte a changé. Vérifiez les informations actualisées avant de continuer.',
+        );
         void fetchSecuritySessions();
         void fetchUser({ background: true });
       } else {
-        if (
-          requestStepUpForResponse(data, {
-            description:
-              'Toutes les sessions actives du membre seront immédiatement fermées.',
-            execute: handleRevokeSecuritySessions,
-            title: 'Confirmer la révocation des sessions',
-          })
-        ) {
-          return;
-        }
-        toast.error(data.error?.message || 'Erreur lors de la révocation');
+        setSecuritySessionsNotice(failure.message);
       }
-    } catch {
-      if (!mountedRef.current || requestController.signal.aborted) return;
-      toast.error('Erreur lors de la révocation');
     } finally {
-      if (requestController !== mutationAbortControllerRef.current) return;
-      mutation.finish();
-      if (!mountedRef.current) return;
-      setIsRevokingSecuritySessions(false);
-      setShowRevokeSessionsConfirm(false);
-    }
-  };
-
-  const handleRevokeSecuritySession = async (
-    sessionId: string,
-  ): Promise<void> => {
-    if (!mountedRef.current) return;
-    if (!canRevokeTargetSessions) {
-      toast.error('Permission insuffisante pour révoquer les sessions');
-
-      return;
-    }
-
-    if (!mutation.start()) return;
-    const requestController = mutationAbortControllerRef.current;
-    setRevokingSecuritySessionId(sessionId);
-    try {
-      const response = await apiFetch(
-        `/api/users/${userId}/sessions?id=${encodeURIComponent(sessionId)}`,
-        {
-          method: 'DELETE',
-          signal: requestController.signal,
-        },
-      );
-      const data = await response.json();
-      if (!mountedRef.current || requestController.signal.aborted) return;
-
-      if (response.ok && data.success) {
-        setSecuritySessions((currentSessions) =>
-          currentSessions.filter((session) => session.id !== sessionId),
-        );
-        toast.success('Session révoquée');
-        refreshAuditAfterMutation();
-        void fetchSecuritySessions();
-      } else {
-        if (
-          requestStepUpForResponse(data, {
-            description: 'Cette session du membre sera immédiatement fermée.',
-            execute: () => handleRevokeSecuritySession(sessionId),
-            title: 'Confirmer la révocation de la session',
-          })
-        ) {
-          return;
+      if (requestController === mutationAbortControllerRef.current) {
+        mutation.finish();
+        if (mountedRef.current) {
+          setIsRevokingSecuritySessions(false);
+          setRevokingSecuritySessionId(null);
+          setShowRevokeSessionsConfirm(false);
         }
-        toast.error(data.error?.message || 'Erreur lors de la révocation');
       }
-    } catch {
-      if (!mountedRef.current || requestController.signal.aborted) return;
-      toast.error('Erreur lors de la révocation');
-    } finally {
-      if (requestController !== mutationAbortControllerRef.current) return;
-      mutation.finish();
-      if (!mountedRef.current) return;
-      setRevokingSecuritySessionId(null);
     }
   };
 
@@ -2080,6 +2069,7 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
               onDeleteUser={() => setShowDeleteConfirm(true)}
               sessions={securitySessions}
               sessionsError={securitySessionsError}
+              sessionsNotice={securitySessionsNotice}
             />
           </>
         );
@@ -2384,6 +2374,12 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
         description={pendingStepUpAction?.description ?? ''}
         onCancel={adminStepUp.cancelPendingStepUpAction}
         onComplete={adminStepUp.handleStepUpComplete}
+        onCloseAutoFocus={(event) => {
+          if (!sessionsStepUpFocusRef.current) return;
+          sessionsStepUpFocusRef.current = false;
+          event.preventDefault();
+          if (mountedRef.current) focusSecuritySessionsHeading();
+        }}
         onProofKindRequired={adminStepUp.setPendingStepUpProofKind}
         open={pendingStepUpAction !== null}
         proofKind={pendingStepUpAction?.proofKind ?? 'full'}
@@ -2425,9 +2421,21 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
       </AlertDialog>
       <AlertDialog
         open={showRevokeSessionsConfirm}
-        onOpenChange={setShowRevokeSessionsConfirm}
+        onOpenChange={(open) => {
+          if (!isRevokingSecuritySessions) setShowRevokeSessionsConfirm(open);
+        }}
       >
-        <AlertDialogContent className="overflow-y-auto p-0">
+        <AlertDialogContent
+          className="overflow-y-auto p-0"
+          onCloseAutoFocus={(event) => {
+            if (!sessionsMutationFocusRef.current) return;
+            sessionsMutationFocusRef.current = false;
+            event.preventDefault();
+            if (document.querySelector('[role="dialog"][data-state="open"]'))
+              return;
+            focusSecuritySessionsHeading();
+          }}
+        >
           <div className="p-6">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground flex items-center gap-2">
@@ -2442,11 +2450,17 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="mt-4">
-              <AlertDialogCancel className="border-border">
+              <AlertDialogCancel
+                className="border-border"
+                disabled={isRevokingSecuritySessions}
+              >
                 Annuler
               </AlertDialogCancel>
               <AlertDialogAction
-                onClick={handleRevokeSecuritySessions}
+                onClick={(event) => {
+                  event.preventDefault();
+                  void handleRevokeSecuritySession();
+                }}
                 disabled={isRevokingSecuritySessions}
                 className="bg-warning text-warning-foreground hover:bg-warning/90"
               >

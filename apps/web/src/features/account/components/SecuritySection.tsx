@@ -46,9 +46,9 @@ import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
 import { ApiClientError } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
+import { securityRequest } from '$utils/security-request.utils';
 
 import { formatRelativeAccountTime } from '../account.utils';
-import { accountSecurityRequest } from '../account-security-request';
 import {
   formatSessionDateTime,
   getSessionTitle,
@@ -191,11 +191,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       }
 
       try {
-        const data = await accountSecurityRequest<MfaStatus>(
-          RoutesApi.mfa,
-          signal,
-          { cache: 'no-store' },
-        );
+        const data = await securityRequest<MfaStatus>(RoutesApi.mfa, signal, {
+          cache: 'no-store',
+        });
         if (isCurrent()) setMfaStatus(data);
       } catch (failure) {
         if (isCurrent()) {
@@ -233,7 +231,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       }
 
       try {
-        const data = await accountSecurityRequest<{ sessions: SessionInfo[] }>(
+        const data = await securityRequest<{ sessions: SessionInfo[] }>(
           '/api/auth/sessions',
           signal,
           { cache: 'no-store' },
@@ -301,7 +299,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       setSessionsNotice(null);
       if (sessionId) setRevokingId(sessionId);
       else setRevokingAll(true);
-      await accountSecurityRequest<null>(
+      await securityRequest<null>(
         sessionId
           ? `/api/auth/sessions?id=${encodeURIComponent(sessionId)}`
           : '/api/auth/sessions',

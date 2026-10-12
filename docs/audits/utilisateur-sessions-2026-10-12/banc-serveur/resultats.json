@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-12",
+  "baselineCommit": "2ecb215",
+  "environment": {
+    "postgres": "17",
+    "host": "127.0.0.1",
+    "port": 54661,
+    "database": "user_detail_service_test",
+    "appliedMigrations": 52,
+    "authenticationSource": "simulated captured snapshot; real database users and source sessions",
+    "headersAndRateLimits": "simulated"
+  },
+  "before": {
+    "command": "bun run test src/__tests__/user-detail-postgres.test.ts -t 'refuses managed sessions'",
+    "failed": 10,
+    "skipped": 15,
+    "observedStatus": 200,
+    "cases": [
+      {
+        "condition": "actor source session deleted",
+        "operations": ["GET", "DELETE single", "DELETE all"],
+        "expectedStatus": 401
+      },
+      {
+        "condition": "actor securityVersion advanced",
+        "operations": ["GET", "DELETE single", "DELETE all"],
+        "expectedStatus": 401
+      },
+      {
+        "condition": "effective permission removed without changing the captured snapshot",
+        "operations": ["GET", "DELETE single", "DELETE all"],
+        "expectedStatus": 403
+      },
+      {
+        "condition": "MFA proof expires while waiting for the target User lock",
+        "operations": ["DELETE all"],
+        "expectedStatus": 403,
+        "observedLockWait": true
+      }
+    ]
+  },
+  "after": {
+    "command": "bun run test src/__tests__/user-detail-postgres.test.ts -t 'managed sessions|only unexpired|owned session|global session revocation'",
+    "passed": 13,
+    "skipped": 12,
+    "newRegressions": 10,
+    "existingContracts": [
+      "GET excludes and cleans expired/old-version target sessions; projection omits token",
+      "single then global revocation; foreign session preserved; target version advances; one audit per success",
+      "global revocation and target version roll back when required audit fails"
+    ],
+    "refusedRequests": "target session preserved and no target audit inserted",
+    "proofFailureCode": "REAUTHENTICATION_REQUIRED"
+  },
+  "apiMocks": {
+    "command": "bun run test src/__tests__/account-security-routes.test.ts",
+    "passed": 39
+  },
+  "checks": {
+    "typecheck": "passed",
+    "targetedEslint": "passed"
+  },
+  "limits": [
+    "Captured authentication snapshot is injected; SQL tests do not exercise real login cookies, middleware or CSRF.",
+    "Permission removal fixture changes only the permission to isolate revalidation independently of security-version rotation.",
+    "The deadline case waits on a real PostgreSQL target row lock observed through pg_stat_activity; the TOTP proof timestamp is a fixture, not a real TOTP exchange.",
+    "Tests cover the listed interleavings and database effects, not every possible concurrent administrative operation or a load benchmark.",
+    "An intermediate rerun hit the single-protected-user fixture constraint; the fixture now reuses the existing protected account in this explicitly isolated test database. No product migration was needed."
+  ]
+}

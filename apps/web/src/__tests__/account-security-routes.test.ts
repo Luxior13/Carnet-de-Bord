@@ -906,6 +906,22 @@ describe('account security routes', () => {
   });
 
   describe('GET /api/users/[id]/sessions', () => {
+    beforeEach(() => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        deletedAt: null,
+        isActive: true,
+        isProtected: false,
+        mustChangePassword: false,
+        permissions: null,
+        role: 'USER',
+        securityVersion: 3,
+      });
+      mockPrisma.session.findFirst.mockResolvedValue({
+        securityVersion: 3,
+        token: 'session-hash',
+        userId: 'user-1',
+      });
+    });
     it('lists target user active sessions for session viewers', async () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({
         id: 'target-1',
@@ -1053,6 +1069,24 @@ describe('account security routes', () => {
   });
 
   describe('DELETE /api/users/[id]/sessions', () => {
+    beforeEach(() => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        deletedAt: null,
+        isActive: true,
+        isProtected: false,
+        mustChangePassword: false,
+        permissions: null,
+        role: 'USER',
+        securityVersion: 3,
+      });
+      mockPrisma.session.findFirst.mockResolvedValue({
+        criticalMfaVerifiedAt: new Date(),
+        passwordReauthenticatedAt: new Date(),
+        securityVersion: 3,
+        token: 'session-hash',
+        userId: 'user-1',
+      });
+    });
     it('requires a recent MFA proof before revoking managed sessions', async () => {
       mockRequireAuth.mockResolvedValueOnce({
         session: null,
@@ -1205,7 +1239,15 @@ describe('account security routes', () => {
           userId: 'target-1',
         },
       });
-      expect(mockPrisma.session.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.session.findFirst).toHaveBeenCalledWith({
+        where: {
+          expiresAt: { gt: expect.any(Date) },
+          idleExpiresAt: { gt: expect.any(Date) },
+          securityVersion: 3,
+          token: 'session-hash',
+          userId: 'user-1',
+        },
+      });
       expect(mockPrisma.session.delete).not.toHaveBeenCalled();
       expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledWith(
         expect.objectContaining({

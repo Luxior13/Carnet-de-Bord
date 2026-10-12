@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   Smartphone,
 } from 'lucide-react';
-import React, { type FC, useRef, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { Disclosure } from '$components/layout/Disclosure';
 import { SectionActionBar } from '$components/layout/SectionActionBar';
@@ -67,6 +67,7 @@ type UserSecurityTabProps = {
   onSaveStatus: () => void;
   sessions: UserSessionInfo[];
   sessionsError: string | null;
+  sessionsNotice?: string | null;
   setIsActive: (isActive: boolean) => void;
   user: UserType;
 };
@@ -188,7 +189,7 @@ const SectionTitle: FC<{
   <h3
     id={id}
     tabIndex={-1}
-    className="text-foreground flex items-center gap-2 text-sm font-semibold"
+    className="text-foreground flex scroll-mt-16 items-center gap-2 text-sm font-semibold"
   >
     <ServiceIcon className="size-7">{icon}</ServiceIcon>
     {children}
@@ -314,7 +315,7 @@ const SessionRow: FC<{
           type="button"
           variant="outline"
           size="sm"
-          className="self-end rounded-lg sm:self-auto"
+          className="scroll-mt-16 self-end rounded-lg sm:self-auto"
           onClick={() => onRequestRevoke(session)}
           disabled={disabled}
           aria-label={`Révoquer la session ${device} ${browser}`}
@@ -358,33 +359,63 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   onSaveStatus,
   sessions,
   sessionsError,
+  sessionsNotice,
   setIsActive,
   user,
 }) => {
   const sectionRef = useRef<HTMLElement>(null);
   const activeSwitchRef = useRef<HTMLButtonElement>(null);
+  const focusIntentRef = useRef(0);
+  const revocationRef = useRef(false);
+  const revocationFocusRef = useRef(false);
+  useEffect(() => {
+    const cancel = (): void => {
+      focusIntentRef.current += 1;
+    };
+    document.addEventListener('pointerdown', cancel, true);
+    document.addEventListener('keydown', cancel, true);
+    document.addEventListener('wheel', cancel, { passive: true });
+
+    return (): void => {
+      cancel();
+      document.removeEventListener('pointerdown', cancel, true);
+      document.removeEventListener('keydown', cancel, true);
+      document.removeEventListener('wheel', cancel);
+    };
+  }, []);
   const handleCancelStatus = (): void => {
     onCancelStatus();
     requestAnimationFrame(() => activeSwitchRef.current?.focus());
   };
-  const focusSessions = (sessionId?: string): void => {
+  const focusSessions = (): void => {
+    const intent = focusIntentRef.current;
     requestAnimationFrame(() => {
-      const remainingButton = sessionId
-        ? sectionRef.current?.querySelector<HTMLButtonElement>(
-            `[data-session-id="${CSS.escape(sessionId)}"]:not(:disabled)`,
-          )
-        : sectionRef.current?.querySelector<HTMLButtonElement>(
-            '[data-retry-sessions]:not(:disabled)',
-          );
+      if (
+        intent !== focusIntentRef.current ||
+        document.querySelector('[role="dialog"][data-state="open"]')
+      )
+        return;
+      const remainingButton =
+        sectionRef.current?.querySelector<HTMLButtonElement>(
+          '[data-retry-sessions]:not(:disabled)',
+        );
       const heading = sectionRef.current?.querySelector<HTMLElement>(
         '#user-security-sessions-heading',
       );
-      (remainingButton ?? heading)?.focus();
+      const target = remainingButton ?? heading;
+      if (!target?.getClientRects().length) return;
+      target.focus({ preventScroll: true });
+      target.scrollIntoView({
+        behavior: 'instant',
+        block: 'nearest',
+        inline: 'nearest',
+      });
     });
   };
   const retrySessions = async (): Promise<void> => {
+    const intent = ++focusIntentRef.current;
     await onRetrySessions();
-    focusSessions();
+    if (intent === focusIntentRef.current) focusSessions();
   };
   const isSelf = currentUserId === user.id;
   const lockedUntil = toValidDate(user.lockedUntil);
@@ -394,6 +425,8 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
     : 'Jamais';
   const isAnySessionRevoking =
     isRevokingSessions || isRevokingSessionId !== null;
+  const sessionsUnavailable =
+    isAnySessionRevoking || isLoadingSessions || !!sessionsError;
   const isMfaEnabled = user.mfaEnabledAt !== null;
   const [sessionPendingRevocation, setSessionPendingRevocation] =
     useState<UserSessionInfo | null>(null);
@@ -636,6 +669,14 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </SectionTitle>
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">
+          {sessionsNotice && (
+            <p
+              role="status"
+              className="border-warning/30 bg-warning/10 text-warning rounded-md border p-3 text-sm leading-6"
+            >
+              {sessionsNotice}
+            </p>
+          )}
           {!canViewSessions ? (
             <div className="border-border/60 bg-surface-inset rounded-md border p-3">
               <p className="text-muted-foreground text-sm">
@@ -644,7 +685,8 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               </p>
             </div>
           ) : isLoadingSessions && sessions.length === 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-2" role="status">
+              <span className="sr-only">Chargement des sessions actives</span>
               <Skeleton className="h-16 rounded-md" />
               <Skeleton className="h-16 rounded-md" />
             </div>
@@ -696,7 +738,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                   key={session.id}
                   session={session}
                   isRevoking={isRevokingSessionId === session.id}
-                  disabled={isAnySessionRevoking}
+                  disabled={sessionsUnavailable}
                   onRequestRevoke={setSessionPendingRevocation}
                   showRevokeAction={canRevokeSessions}
                 />
@@ -711,7 +753,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               variant="outline"
               size="sm"
               onClick={onRevokeSessions}
-              disabled={isAnySessionRevoking}
+              disabled={sessionsUnavailable}
               className="gap-2"
             >
               {isRevokingSessions ? (
@@ -754,10 +796,18 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       <AlertDialog
         open={sessionPendingRevocation !== null}
         onOpenChange={(open) => {
-          if (!open) setSessionPendingRevocation(null);
+          if (!open && !revocationRef.current)
+            setSessionPendingRevocation(null);
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent
+          onCloseAutoFocus={(event) => {
+            if (!revocationFocusRef.current) return;
+            revocationFocusRef.current = false;
+            event.preventDefault();
+            focusSessions();
+          }}
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>Révoquer cette session ?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -769,17 +819,22 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Conserver la session</AlertDialogCancel>
+            <AlertDialogCancel disabled={isAnySessionRevoking}>
+              Conserver la session
+            </AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
+              disabled={isAnySessionRevoking}
+              onClick={(event) => {
+                event.preventDefault();
                 const sessionId = sessionPendingRevocation?.id;
-
-                setSessionPendingRevocation(null);
-                if (sessionId)
-                  void Promise.resolve(onRevokeSession(sessionId)).then(() =>
-                    focusSessions(sessionId),
-                  );
+                if (!sessionId || revocationRef.current) return;
+                revocationRef.current = true;
+                revocationFocusRef.current = true;
+                void Promise.resolve(onRevokeSession(sessionId)).finally(() => {
+                  revocationRef.current = false;
+                  setSessionPendingRevocation(null);
+                });
               }}
             >
               Révoquer la session

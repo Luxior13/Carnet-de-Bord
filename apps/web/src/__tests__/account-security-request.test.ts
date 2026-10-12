@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { accountSecurityRequest } from '$features/account/account-security-request';
 import { ApiClientError } from '$utils/api.utils';
+import { securityRequest } from '$utils/security-request.utils';
 
 const fetchMock = vi.fn<typeof fetch>();
 const getSignal = (init?: RequestInit): AbortSignal => {
@@ -28,19 +28,15 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('personal security request lifetime', () => {
+describe('shared security request lifetime', () => {
   it('bounds a stalled mutation and permits a subsequent read with the same lifetime', async () => {
     const lifetime = new AbortController();
     fetchMock.mockImplementationOnce((_url, init) =>
       pendingUntilAbort(getSignal(init)),
     );
-    const failure = accountSecurityRequest(
-      '/api/auth/sessions',
-      lifetime.signal,
-      {
-        method: 'DELETE',
-      },
-    ).catch((error: unknown) => error);
+    const failure = securityRequest('/api/auth/sessions', lifetime.signal, {
+      method: 'DELETE',
+    }).catch((error: unknown) => error);
     await vi.advanceTimersByTimeAsync(30_000);
     expect(await failure).toMatchObject({ name: 'AbortError' });
     expect(lifetime.signal.aborted).toBe(false);
@@ -53,7 +49,7 @@ describe('personal security request lifetime', () => {
       Response.json({ data: { sessions: [] }, success: true }),
     );
     await expect(
-      accountSecurityRequest('/api/auth/sessions', lifetime.signal),
+      securityRequest('/api/auth/sessions', lifetime.signal),
     ).resolves.toEqual({ sessions: [] });
     expect(vi.getTimerCount()).toBe(0);
   });
@@ -74,7 +70,7 @@ describe('personal security request lifetime', () => {
           }),
         ),
     );
-    const failure = accountSecurityRequest(
+    const failure = securityRequest(
       '/api/auth/sessions',
       lifetime.signal,
     ).catch((error: unknown) => error);
@@ -89,14 +85,14 @@ describe('personal security request lifetime', () => {
     fetchMock.mockImplementationOnce((_url, init) =>
       pendingUntilAbort(getSignal(init)),
     );
-    const failure = accountSecurityRequest(
+    const failure = securityRequest(
       '/api/auth/sessions',
       lifetime.signal,
     ).catch((error: unknown) => error);
     lifetime.abort();
     expect(await failure).toMatchObject({ name: 'AbortError' });
     await expect(
-      accountSecurityRequest('/api/auth/sessions', lifetime.signal),
+      securityRequest('/api/auth/sessions', lifetime.signal),
     ).rejects.toMatchObject({ name: 'AbortError' });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(vi.getTimerCount()).toBe(0);
@@ -106,7 +102,7 @@ describe('personal security request lifetime', () => {
     fetchMock.mockResolvedValueOnce(
       new Response('Access denied', { status: 403 }),
     );
-    const failure = await accountSecurityRequest(
+    const failure = await securityRequest(
       '/api/auth/sessions',
       new AbortController().signal,
     ).catch((error: unknown) => error);

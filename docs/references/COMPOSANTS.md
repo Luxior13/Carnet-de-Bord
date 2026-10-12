@@ -138,7 +138,8 @@ erreur ou annulation. La barre ne devient pas un moteur de formulaires.
 | Besoin | Source | Contrat à préserver |
 | --- | --- | --- |
 | Édition ou tâche dans une fenêtre | [Dialog](../../apps/web/src/components/ui/dialog.tsx) | Titre, description utile, contenu défilable et fermeture compréhensible. La page décide si l’attente ou un brouillon demandent une garde. |
-| Confirmation explicite | [AlertDialog](../../apps/web/src/components/ui/alert-dialog.tsx) | Action et conséquence précises ; issue d’annulation. Pour une requête asynchrone, conserver la fenêtre ouverte après erreur au lieu de la fermer au clic. |
+| Confirmation explicite | [AlertDialog](../../apps/web/src/components/ui/alert-dialog.tsx) | Action et conséquence précises ; issue d’annulation et verrou pendant une mutation bornée. Garder la fenêtre si l'erreur s'y corrige. Une issue incertaine peut fermer la fenêtre lorsque la section porte l'explication persistante et la relecture, avec un retour de focus utile ; ne pas fermer simplement au clic. |
+| Preuve récente avant une action administrative | [AdminStepUpDialog](../../apps/web/src/components/users/user-detail/AdminStepUpDialog.tsx) | Mot de passe et/ou code MFA selon la preuve demandée par le serveur ; requête bornée à 30 secondes, verrou synchrone et reprise explicite. Le consommateur reste propriétaire de l'action autorisée après la preuve. |
 | Volet latéral ou navigation mobile | [Sheet](../../apps/web/src/components/ui/sheet.tsx) | Défilement, nom accessible, confinement et retour du focus. La sidebar conserve son retour conditionné au changement d’URL. |
 | Petit panneau contextuel interactif | [Popover](../../apps/web/src/components/ui/popover.tsx) | Contenu borné par l’écran et texte long contenu. Préférer Dialog si la tâche nécessite une vraie fenêtre. |
 | Actions ou navigation contextuelles | [DropdownMenu](../../apps/web/src/components/ui/dropdown-menu.tsx) | Navigation clavier, sélection, fermeture et éléments indisponibles ; ne pas s’en servir comme champ Select. |
@@ -151,6 +152,13 @@ est interne aux fenêtres et confirmations. Réutiliser leur restitution de
 focus, y compris pour une ouverture contrôlée sans Trigger. Un remplacement
 local doit servir un parcours concret : changement de page, déclencheur supprimé
 ou passage à une autre fenêtre. Aucun système global supplémentaire n’est requis.
+
+Le helper [securityRequest](../../apps/web/src/shared/utils/security-request.utils.ts)
+borne la réponse et son corps à 30 secondes, en conservant le signal de durée
+de vie du consommateur. Il est partagé par les sessions de Mon compte, les
+sessions administratives et AdminStepUpDialog ; il ne remplace pas toutes les
+requêtes du site. Son abandon ne prouve pas l'annulation serveur : le module
+explique l'incertitude et choisit la relecture, sans rejeu automatique de mutation.
 
 ## Retours et éléments de lecture
 

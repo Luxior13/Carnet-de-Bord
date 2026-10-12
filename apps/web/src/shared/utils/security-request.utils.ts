@@ -1,7 +1,7 @@
 import { apiFetchJson } from '$utils/api.utils';
 
 /** Bound both the response and its body without aborting the section lifetime. */
-export async function accountSecurityRequest<T>(
+export async function securityRequest<T>(
   url: string,
   lifetime: AbortSignal,
   init: RequestInit = {},

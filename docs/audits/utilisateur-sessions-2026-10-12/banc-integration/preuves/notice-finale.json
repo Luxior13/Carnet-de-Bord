@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-12T21:05:01.247Z",
+  "passed": true,
+  "scope": "Notice moved into the Sessions card; narrow final build verification",
+  "committedStatus": 200,
+  "deleteRequests": 1,
+  "readsAfterLoss": 1,
+  "auditDelta": 1,
+  "targetBrowser": 401,
+  "actor": 200,
+  "noticeInsideSessions": true,
+  "geometry": {
+    "focusedId": "user-security-sessions-heading",
+    "headingTop": 178.296875,
+    "barBottom": 105,
+    "noticeText": "La réponse n’a pas pu être confirmée. Vérifiez les sessions restantes avant de recommencer.",
+    "viewport": {
+      "width": 390,
+      "height": 700
+    }
+  }
+}

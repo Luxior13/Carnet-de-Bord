@@ -1,0 +1,26 @@
+﻿{
+    "date":  "2026-10-12T21:06:31.8995242Z",
+    "nextPort":  3130,
+    "postgresPort":  54661,
+    "nextStopped":  true,
+    "postgresStopped":  true,
+    "portsFree":  true,
+    "temporaryPrefix":  "noctambule-user-sessions-",
+    "absolutePathValidated":  true,
+    "reparsePoints":  0,
+    "databases":  [
+                      "user_sessions_test",
+                      "user_detail_service_test"
+                  ],
+    "temporaryDirectoryRemoved":  true,
+    "markerRemoved":  true,
+    "textArtifactsScanned":  19,
+    "privateValueMatches":  0,
+    "removed":  [
+                    "PostgreSQL cluster and both fixture databases",
+                    "private env.json, passwords and audit/MFA keys",
+                    "temporary TOTP secrets",
+                    "private server and SQL logs"
+                ],
+    "note":  "Cleanup itself succeeded on first execution; writing this report was retried after a PowerShell JSON serialization error."
+}

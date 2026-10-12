@@ -3,7 +3,15 @@ import { randomUUID } from 'node:crypto';
 import { type Prisma, PrismaClient, type User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { NextRequest } from 'next/server';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 
 import { POST as resetPassword } from '$app/api/users/[id]/reset-password/route';
 import { DELETE, PATCH } from '$app/api/users/[id]/route';
@@ -152,14 +160,19 @@ describe.skipIf(!target)(
         Array<{ count: number }>
       >`SELECT COUNT(*)::integer AS count FROM "_prisma_migrations" WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL`;
       expect(migrationCount[0]?.count).toBeGreaterThanOrEqual(52);
-      actor = await account({ role: 'ADMIN' });
+      actor =
+        (await db.user.findFirst({ where: { isProtected: true } })) ??
+        (await account({ isProtected: true, role: 'ADMIN' }));
+    });
+    beforeEach(async () => {
       // Session source is simulated; authorization/proof logic and all database writes are real.
+      const source = await session(actor, {
+        criticalMfaVerifiedAt: new Date(),
+        passwordReauthenticatedAt: new Date(),
+      });
       connection.session.mockResolvedValue({
-        session: {
-          criticalMfaVerifiedAt: new Date(),
-          passwordReauthenticatedAt: new Date(),
-        },
-        user: { ...actor, isProtected: true },
+        session: source,
+        user: actor,
       });
     });
     afterAll(async () => {
@@ -385,6 +398,161 @@ describe.skipIf(!target)(
       );
       expect(JSON.stringify(body)).not.toContain(current.token);
       expect(await db.session.count({ where: { userId: user.id } })).toBe(1);
+    });
+
+    it.each(['GET', 'single', 'all'] as const)(
+      'refuses managed sessions %s after the actor source was revoked',
+      async (operation) => {
+        const user = await account();
+        const selected = await session(user);
+        const snapshot = await connection.session();
+        await db.session.delete({ where: { id: snapshot.session.id } });
+        const response = await (
+          operation === 'GET' ? getSessions : revokeSessions
+        )(
+          new NextRequest(
+            `http://localhost/api/users/${user.id}/sessions${operation === 'single' ? '?id=' + selected.id : ''}`,
+            { method: operation === 'GET' ? 'GET' : 'DELETE' },
+          ),
+          params(user.id),
+        );
+        expect(response.status).toBe(401);
+        expect(await db.session.count({ where: { userId: user.id } })).toBe(1);
+        expect(await auditCount(user.id)).toBe(0);
+      },
+    );
+
+    it.each(['GET', 'single', 'all'] as const)(
+      'refuses managed sessions %s after actor security rotation',
+      async (operation) => {
+        const delegated = await account({ role: 'ADMIN' });
+        const source = await session(delegated, {
+          criticalMfaVerifiedAt: new Date(),
+          passwordReauthenticatedAt: new Date(),
+        });
+        connection.session.mockResolvedValue({
+          session: source,
+          user: delegated,
+        });
+        const user = await account();
+        const selected = await session(user);
+        await db.user.update({
+          data: { securityVersion: { increment: 1 } },
+          where: { id: delegated.id },
+        });
+        const response = await (
+          operation === 'GET' ? getSessions : revokeSessions
+        )(
+          new NextRequest(
+            `http://localhost/api/users/${user.id}/sessions${operation === 'single' ? '?id=' + selected.id : ''}`,
+            { method: operation === 'GET' ? 'GET' : 'DELETE' },
+          ),
+          params(user.id),
+        );
+        expect(response.status).toBe(401);
+        expect(await db.session.count({ where: { userId: user.id } })).toBe(1);
+        expect(await auditCount(user.id)).toBe(0);
+      },
+    );
+
+    it.each(['GET', 'single', 'all'] as const)(
+      'refuses managed sessions %s after the effective permission was removed',
+      async (operation) => {
+        const delegated = await account({ role: 'ADMIN' });
+        const source = await session(delegated, {
+          criticalMfaVerifiedAt: new Date(),
+          passwordReauthenticatedAt: new Date(),
+        });
+        connection.session.mockResolvedValue({
+          session: source,
+          user: delegated,
+        });
+        const user = await account();
+        const selected = await session(user);
+        await db.user.update({
+          data: {
+            permissions: {
+              [operation === 'GET'
+                ? PERMISSIONS.USERS.VIEW_SESSIONS
+                : PERMISSIONS.USERS.REVOKE_SESSIONS]: false,
+            },
+          },
+          where: { id: delegated.id },
+        });
+        const response = await (
+          operation === 'GET' ? getSessions : revokeSessions
+        )(
+          new NextRequest(
+            `http://localhost/api/users/${user.id}/sessions${operation === 'single' ? '?id=' + selected.id : ''}`,
+            { method: operation === 'GET' ? 'GET' : 'DELETE' },
+          ),
+          params(user.id),
+        );
+        expect(response.status).toBe(403);
+        expect(await db.session.count({ where: { userId: user.id } })).toBe(1);
+        expect(await auditCount(user.id)).toBe(0);
+      },
+    );
+
+    it('refuses managed sessions when the MFA proof expires while waiting for the target lock', async () => {
+      const user = await account();
+      await session(user);
+      const snapshot = await connection.session();
+      const proofDate = new Date(Date.now() - 5 * 60_000 + 1000);
+      await db.session.update({
+        data: { criticalMfaVerifiedAt: proofDate },
+        where: { id: snapshot.session.id },
+      });
+      connection.session.mockResolvedValue({
+        ...snapshot,
+        session: { ...snapshot.session, criticalMfaVerifiedAt: proofDate },
+      });
+      let unlock: () => void = () => undefined;
+      let acquired: () => void = () => undefined;
+      const unlocked = new Promise<void>((resolve) => {
+        unlock = resolve;
+      });
+      const locked = new Promise<void>((resolve) => {
+        acquired = resolve;
+      });
+      const holder = db.$transaction(async (transaction) => {
+        await transaction.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${user.id} FOR UPDATE`;
+        acquired();
+        await unlocked;
+      });
+      await locked;
+      const pending = revokeSessions(
+        new NextRequest(`http://localhost/api/users/${user.id}/sessions`, {
+          method: 'DELETE',
+        }),
+        params(user.id),
+      );
+      try {
+        let observedWait = false;
+        const until = Date.now() + 2000;
+        while (!observedWait && Date.now() < until) {
+          const rows = await db.$queryRaw<
+            Array<{ waiting: boolean }>
+          >`SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock' AND query LIKE '%User%') AS waiting`;
+          observedWait = rows[0]?.waiting ?? false;
+          if (!observedWait)
+            await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+        expect(observedWait).toBe(true);
+        const remaining = proofDate.getTime() + 5 * 60_000 - Date.now() + 20;
+        if (remaining > 0)
+          await new Promise((resolve) => setTimeout(resolve, remaining));
+      } finally {
+        unlock();
+        await holder;
+      }
+      const response = await pending;
+      expect(response.status).toBe(403);
+      expect((await response.json()).error.code).toBe(
+        'REAUTHENTICATION_REQUIRED',
+      );
+      expect(await db.session.count({ where: { userId: user.id } })).toBe(1);
+      expect(await auditCount(user.id)).toBe(0);
     });
 
     it('revokes a single owned session then all others, never a session belonging to another account', async () => {

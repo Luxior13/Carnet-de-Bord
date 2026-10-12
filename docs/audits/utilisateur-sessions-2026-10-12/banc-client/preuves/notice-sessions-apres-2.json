@@ -1,0 +1,98 @@
+{
+  "completedAt": "2026-10-12T21:02:14.259Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "simulation": "UserDetailPage, UserSecurityTab et cadre réels ; API, identité, routeur et horloge simulés. Reset mot de passe/MFA exclus ; défi administratif réel avec preuve fictive.",
+  "passed": 2,
+  "total": 2,
+  "observations": [
+    {
+      "name": "revocation-error-relecture",
+      "width": 1440,
+      "status": "pass",
+      "noticeOwner": "user-security-sessions-heading",
+      "counts": {
+        "get": 2,
+        "del": 1,
+        "proof": 0,
+        "aborted": 0
+      },
+      "remainingControls": 4,
+      "storedSessions": 4,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/users/audit-target/sessions",
+          "query": "?id=audit-session-a",
+          "mode": "error",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "revocation-lost-relecture",
+      "width": 1440,
+      "status": "pass",
+      "noticeOwner": "user-security-sessions-heading",
+      "counts": {
+        "get": 2,
+        "del": 1,
+        "proof": 0,
+        "aborted": 0
+      },
+      "remainingControls": 3,
+      "storedSessions": 3,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/users/audit-target/sessions",
+          "query": "?id=audit-session-a",
+          "mode": "lost",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        }
+      ]
+    }
+  ]
+}

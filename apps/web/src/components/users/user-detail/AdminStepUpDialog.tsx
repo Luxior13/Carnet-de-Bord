@@ -4,7 +4,7 @@ import { Loader2, ShieldCheck } from 'lucide-react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { MfaCodeInput } from '$features/auth/components/MfaCodeInput';
-import { type ApiResponse, ErrorCode } from '$types/api.types';
+import { ErrorCode } from '$types/api.types';
 import { Button } from '$ui/button';
 import {
   Dialog,
@@ -16,7 +16,8 @@ import {
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { ServiceIcon } from '$ui/service-icon';
-import { apiFetch } from '$utils/api.utils';
+import { ApiClientError } from '$utils/api.utils';
+import { securityRequest } from '$utils/security-request.utils';
 
 type AdminStepUpDialogProps = {
   actorLoginName: string;
@@ -52,11 +53,15 @@ const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
   title,
 }) => {
   const mountedRef = useRef(false);
+  const lifetimeRef = useRef<AbortController | null>(null);
   useEffect(() => {
     mountedRef.current = true;
+    const controller = new AbortController();
+    lifetimeRef.current = controller;
 
     return (): void => {
       mountedRef.current = false;
+      controller.abort();
     };
   }, []);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -115,25 +120,34 @@ const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
     try {
       setIsSubmitting(true);
       setError(null);
-      const response = await apiFetch('/api/auth/step-up', {
-        body: JSON.stringify(
-          proofKind === 'password'
-            ? { currentPassword, kind: proofKind }
-            : proofKind === 'critical-mfa'
-              ? { currentTotpCode, kind: proofKind }
-              : { currentPassword, currentTotpCode, kind: proofKind },
-        ),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-      });
-      const data = (await response.json()) as ApiResponse<AdminStepUpResult>;
-
+      const lifetime = lifetimeRef.current;
+      if (!lifetime || lifetime.signal.aborted) return;
+      const data = await securityRequest<AdminStepUpResult>(
+        '/api/auth/step-up',
+        lifetime.signal,
+        {
+          body: JSON.stringify(
+            proofKind === 'password'
+              ? { currentPassword, kind: proofKind }
+              : proofKind === 'critical-mfa'
+                ? { currentTotpCode, kind: proofKind }
+                : { currentPassword, currentTotpCode, kind: proofKind },
+          ),
+          headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+        },
+      );
       if (!mountedRef.current) return;
-      if (!response.ok || !data.success) {
-        const errorCode = data.success ? null : data.error.code;
-        const errorMessage = data.success
-          ? 'Impossible de confirmer votre identité'
-          : data.error.message || 'Impossible de confirmer votre identité';
+      await onComplete(data);
+    } catch (failure) {
+      if (!mountedRef.current) return;
+      if (
+        failure instanceof ApiClientError &&
+        failure.status < 500 &&
+        failure.code !== 'INVALID_RESPONSE'
+      ) {
+        const errorCode = failure.code;
+        const errorMessage = failure.message;
 
         if (
           proofKind === 'critical-mfa' &&
@@ -168,10 +182,11 @@ const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
         return;
       }
 
-      await onComplete(data.data);
-    } catch {
-      if (!mountedRef.current) return;
-      setError('Impossible de confirmer votre identité');
+      setCurrentPassword('');
+      setCurrentTotpCode('');
+      setError(
+        'La confirmation n’a pas pu être reçue. Saisissez une nouvelle preuve ou annulez.',
+      );
       focusProofAfterSubmit(requiresPassword ? 'password' : 'totp');
     } finally {
       submissionInFlightRef.current = false;

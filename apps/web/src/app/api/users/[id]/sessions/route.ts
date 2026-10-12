@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { FEATURES } from '$constants/feature-registry.constants';
 import { PERMISSIONS } from '$constants/permissions.constants';
+import { authorizeManagedSessions } from '$features/users/server/user-session-authorization';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
 import { createAuditLogWithHeaders } from '$server/auth';
@@ -156,12 +157,20 @@ export async function GET(
       );
     }
 
-    const now = new Date();
-    const stableTarget = getStableTargetRelationFilter(
-      targetUser,
-      auth.user.isProtected,
-    );
-    const sessions = await prisma.$transaction(async (transaction) => {
+    return await prisma.$transaction(async (transaction) => {
+      const authorized = await authorizeManagedSessions(
+        transaction,
+        auth.user,
+        auth.session,
+        targetUser.id,
+        PERMISSIONS.USERS.VIEW_SESSIONS,
+      );
+      if (!authorized.success) return authorized.response;
+      const now = authorized.checkedAt;
+      const stableTarget = getStableTargetRelationFilter(
+        targetUser,
+        authorized.user.isProtected,
+      );
       await transaction.session.deleteMany({
         where: {
           OR: [
@@ -174,7 +183,7 @@ export async function GET(
         },
       });
 
-      return transaction.session.findMany({
+      const sessions = await transaction.session.findMany({
         orderBy: { createdAt: 'desc' },
         select: {
           createdAt: true,
@@ -194,22 +203,22 @@ export async function GET(
           userId: targetUser.id,
         },
       });
-    });
 
-    return NextResponse.json({
-      data: {
-        sessions: sessions.map((session) => ({
-          createdAt: session.createdAt,
-          expiresAt: session.expiresAt,
-          id: session.id,
-          idleExpiresAt: session.idleExpiresAt,
-          ipAddress: session.ipAddress,
-          lastSeenAt: session.lastSeenAt,
-          rememberMe: session.rememberMe,
-          userAgent: session.userAgent,
-        })),
-      },
-      success: true,
+      return NextResponse.json({
+        data: {
+          sessions: sessions.map((session) => ({
+            createdAt: session.createdAt,
+            expiresAt: session.expiresAt,
+            id: session.id,
+            idleExpiresAt: session.idleExpiresAt,
+            ipAddress: session.ipAddress,
+            lastSeenAt: session.lastSeenAt,
+            rememberMe: session.rememberMe,
+            userAgent: session.userAgent,
+          })),
+        },
+        success: true,
+      });
     });
   } catch (error) {
     return apiErrors.internal('USER_SESSIONS_GET', error);
@@ -294,17 +303,30 @@ export async function DELETE(
     if (!proofCheck.success) return proofCheck.response;
 
     const sessionId = request.nextUrl.searchParams.get('id')?.trim() || null;
-    const stableTarget = getStableTargetRelationFilter(
-      targetUser,
-      auth.user.isProtected,
-    );
     const targetName =
       targetUser.firstName && targetUser.lastName
         ? `${targetUser.firstName} ${targetUser.lastName}`
         : targetUser.loginName;
 
-    if (sessionId) {
-      const revokedSession = await prisma.$transaction(async (transaction) => {
+    return await prisma.$transaction(async (transaction) => {
+      const authorized = await authorizeManagedSessions(
+        transaction,
+        auth.user,
+        auth.session,
+        targetUser.id,
+        PERMISSIONS.USERS.REVOKE_SESSIONS,
+      );
+      if (!authorized.success) return authorized.response;
+      const currentProof = requireRecentSensitiveActionProof(
+        authorized.session,
+      );
+      if (!currentProof.success) return currentProof.response;
+      const stableTarget = getStableTargetRelationFilter(
+        targetUser,
+        authorized.user.isProtected,
+      );
+
+      if (sessionId) {
         const deleteResult = await transaction.session.deleteMany({
           where: {
             id: sessionId,
@@ -312,7 +334,19 @@ export async function DELETE(
             userId: targetUser.id,
           },
         });
-        if (deleteResult.count !== 1) return false;
+        if (deleteResult.count !== 1) {
+          return NextResponse.json(
+            {
+              error: {
+                code: ErrorCode.NOT_FOUND,
+                message:
+                  'Session introuvable ou compte modifié depuis le chargement',
+              },
+              success: false,
+            },
+            { status: 404 },
+          );
+        }
 
         await createAuditLogWithHeaders(
           {
@@ -332,37 +366,19 @@ export async function DELETE(
           { client: transaction, required: true },
         );
 
-        return true;
-      });
-
-      if (!revokedSession) {
-        return NextResponse.json(
-          {
-            error: {
-              code: ErrorCode.NOT_FOUND,
-              message:
-                'Session introuvable ou compte modifié depuis le chargement',
-            },
-            success: false,
-          },
-          { status: 404 },
-        );
+        return NextResponse.json({
+          data: { revokedSessions: 1 },
+          success: true,
+        });
       }
 
-      return NextResponse.json({
-        data: { revokedSessions: 1 },
-        success: true,
-      });
-    }
-
-    const result = await prisma.$transaction(async (transaction) => {
       const targetVersionAdvance = await transaction.user.updateMany({
         data: { securityVersion: { increment: 1 } },
         where: {
           deletedAt: null,
           id: targetUser.id,
           isProtected: false,
-          role: auth.user.isProtected ? targetUser.role : 'USER',
+          role: authorized.user.isProtected ? targetUser.role : 'USER',
           securityVersion: targetUser.securityVersion,
         },
       });
@@ -391,12 +407,10 @@ export async function DELETE(
         { client: transaction, required: true },
       );
 
-      return deleteResult;
-    });
-
-    return NextResponse.json({
-      data: { revokedSessions: result.count },
-      success: true,
+      return NextResponse.json({
+        data: { revokedSessions: deleteResult.count },
+        success: true,
+      });
     });
   } catch (error) {
     if (error instanceof TargetSessionStateChangedError) {

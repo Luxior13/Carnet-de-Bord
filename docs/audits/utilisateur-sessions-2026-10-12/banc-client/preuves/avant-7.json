@@ -1,0 +1,319 @@
+{
+  "completedAt": "2026-10-12T20:52:35.919Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "simulation": "UserDetailPage, UserSecurityTab et cadre réels ; API, identité, routeur et horloge simulés. Reset mot de passe/MFA exclus ; défi administratif réel avec preuve fictive.",
+  "passed": 7,
+  "total": 7,
+  "observations": [
+    {
+      "name": "lecture-sessions-suspendue31s",
+      "width": 390,
+      "status": "pass",
+      "elapsedClockMs": 31000,
+      "counts": {
+        "get": 1,
+        "del": 0,
+        "proof": 0,
+        "aborted": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "hold",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "revocation-globale-suspendue31s",
+      "width": 390,
+      "status": "pass",
+      "elapsedClockMs": 31000,
+      "counts": {
+        "get": 1,
+        "del": 1,
+        "proof": 0,
+        "aborted": 0
+      },
+      "dialogOpen": 0,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "hold",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "revocation-error-relecture",
+      "width": 1440,
+      "status": "pass",
+      "counts": {
+        "get": 1,
+        "del": 1,
+        "proof": 0,
+        "aborted": 0
+      },
+      "remainingControls": 4,
+      "storedSessions": 4,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/users/audit-target/sessions",
+          "query": "?id=audit-session-a",
+          "mode": "error",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "revocation-lost-relecture",
+      "width": 1440,
+      "status": "pass",
+      "counts": {
+        "get": 1,
+        "del": 1,
+        "proof": 0,
+        "aborted": 0
+      },
+      "remainingControls": 4,
+      "storedSessions": 3,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/users/audit-target/sessions",
+          "query": "?id=audit-session-a",
+          "mode": "lost",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "focus-titre-apres-reprise",
+      "width": 390,
+      "status": "pass",
+      "initial": {
+        "title": {
+          "top": 79.953125,
+          "bottom": 107.953125,
+          "height": 28
+        },
+        "nav": {
+          "top": 56,
+          "bottom": 105,
+          "height": 49
+        },
+        "main": {
+          "top": 56,
+          "bottom": 900,
+          "height": 844
+        },
+        "scrollTop": 1323,
+        "focus": "user-security-sessions-heading",
+        "hiddenByNav": true,
+        "viewport": 390,
+        "documentWidth": 390,
+        "mainWidth": 360,
+        "mainScrollWidth": 360
+      },
+      "final": {
+        "title": {
+          "top": 79.953125,
+          "bottom": 107.953125,
+          "height": 28
+        },
+        "nav": {
+          "top": 56,
+          "bottom": 105,
+          "height": 49
+        },
+        "main": {
+          "top": 56,
+          "bottom": 900,
+          "height": 844
+        },
+        "scrollTop": 1323,
+        "focus": "user-security-sessions-heading",
+        "hiddenByNav": true,
+        "viewport": 390,
+        "documentWidth": 390,
+        "mainWidth": 360,
+        "mainScrollWidth": 360
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/users/audit-target/sessions",
+          "query": "?id=audit-session-a",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "error",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "focus-titre-apres-reprise",
+      "width": 1440,
+      "status": "pass",
+      "initial": {
+        "title": {
+          "top": 80.046875,
+          "bottom": 108.046875,
+          "height": 28
+        },
+        "nav": {
+          "top": 56,
+          "bottom": 105,
+          "height": 49
+        },
+        "main": {
+          "top": 56,
+          "bottom": 900,
+          "height": 844
+        },
+        "scrollTop": 1080,
+        "focus": "user-security-sessions-heading",
+        "hiddenByNav": true,
+        "viewport": 1440,
+        "documentWidth": 1440,
+        "mainWidth": 1146,
+        "mainScrollWidth": 1146
+      },
+      "final": {
+        "title": {
+          "top": 80.046875,
+          "bottom": 108.046875,
+          "height": 28
+        },
+        "nav": {
+          "top": 56,
+          "bottom": 105,
+          "height": 49
+        },
+        "main": {
+          "top": 56,
+          "bottom": 900,
+          "height": 844
+        },
+        "scrollTop": 1080,
+        "focus": "user-security-sessions-heading",
+        "hiddenByNav": true,
+        "viewport": 1440,
+        "documentWidth": 1440,
+        "mainWidth": 1146,
+        "mainScrollWidth": 1146
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/users/audit-target/sessions",
+          "query": "?id=audit-session-a",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "error",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "defi-administratif-suspendu31s",
+      "width": 390,
+      "status": "pass",
+      "elapsedClockMs": 31000,
+      "counts": {
+        "get": 1,
+        "del": 1,
+        "proof": 1,
+        "aborted": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/users/audit-target/sessions",
+          "query": "",
+          "mode": "stepup",
+          "aborted": false
+        },
+        {
+          "method": "POST",
+          "path": "/api/auth/step-up",
+          "query": "",
+          "mode": "hold",
+          "aborted": false
+        }
+      ]
+    }
+  ]
+}

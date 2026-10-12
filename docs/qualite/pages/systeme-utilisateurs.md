@@ -474,6 +474,105 @@ Documentation et index vérifiés (`docs:check` : 210 fichiers, 1 340 liens ;
 six tests du contrôleur documentaire réussis). Les environnements temporaires
 de cette passe ont été arrêtés et supprimés après les vérifications.
 
+## Sessions administratives — complément ciblé du 12 octobre 2026
+
+**Corrections vérifiées dans le périmètre décrit.** Départ `2ecb215`, arbre propre.
+Périmètre : lectures et révocations
+individuelle/globale dans Sécurité de `/systeme/utilisateurs/[id]`, autorisation
+à l'exécution, confirmation, résultat incertain et retour du focus. Le profil,
+les autorisations, l'état du compte, la suppression et les resets mot de passe/MFA
+ne sont pas réaudités. Les limites du 10 octobre déjà levées le 11 ne sont pas
+rouvertes sans nouveau constat.
+
+Sélection de la [revue générale](../REVUE_GENERALE.md) : Q01–Q07, Q09–Q11,
+Q14–Q17, Q19, Q22, Q27–Q28 et Q30 examinés pour les sessions, les actions
+sensibles et leurs reprises. Q12–Q13, Q18 et Q29 hors impact : schéma, migrations,
+cache et sauvegardes inchangés. Q08, Q20–Q21 et Q23–Q26 non applicables : aucun
+message différé, fichier, transfert de masse, automatisation, règle de structure,
+vie esport ou engagement financier ajouté.
+
+Décisions de cette reprise, en continuité avec les
+[sessions personnelles](mon-compte.md#sécurité--attente-et-reprise-des-sessions--complément-ciblé-du-12-octobre-2026) :
+
+- Borner lectures et révocations, corps de réponse compris. L'annulation côté
+  client ou un délai dépassé ne prouve pas l'annulation de l'opération serveur.
+- Distinguer refus, réussite et résultat incertain. Une réponse perdue demande
+  un avertissement local persistant et une relecture bornée, sans second DELETE
+  automatique. Un GET suivant ne doit pas faire annoncer l'échec d'un succès
+  déjà confirmé ni bloquer indéfiniment l'interface.
+- Garder les contrôles de portée et de preuve administrateur existants ;
+  vérifier l'autorisation au moment de la mutation, y compris après une attente.
+- Après reprise ou disparition de la ligne, rendre le focus à un élément encore
+  présent et visible sous les onglets. Une interaction plus récente conserve
+  la priorité sur une réponse retardée.
+
+Le helper de Mon compte est déplacé vers `shared/utils/security-request.utils.ts`
+(`securityRequest`), sans modifier sa borne de 30 secondes ni sa sémantique.
+Il sert maintenant les sessions administratives et `AdminStepUpDialog`, dont
+la requête de preuve est aussi bornée. Le dialogue est également consommé par
+la création d'utilisateur et les paramètres : ces parcours ne sont pas
+réaudités par la seule vérification de la révocation administrative. Les huit
+parcours du banc Mon compte ont été rejoués avec succès après ce déplacement.
+
+| Point | Constat reproduit avant correction | Correction et clôture du 12 octobre |
+| --- | --- | --- |
+| USR-D20 — P1 | GET sessions toujours en attente à 31 secondes, sans reprise ; DELETE global fermant immédiatement la confirmation mais laissant l'action désactivée indéfiniment. Un 500 JSON ou une réponse perdue ne relisait pas les sessions ; après commit simulé, quatre lignes restaient affichées pour trois sessions restantes. | **Clos au périmètre testé** : délais de 30 secondes, message persistant dans la carte Sessions, relecture sans nouveau DELETE et purge après 403 non JSON. Le POST du défi est borné ; Annuler redevient accessible après délai. Le parcours HTTP confirme la reprise après commit réel sans rejouer la révocation. |
+| USR-D21 — P1 | GET et DELETE individuel/global répondaient 200 après suppression de la session source, rotation de version de l'acteur ou retrait de permission ; un DELETE répondait aussi 200 après expiration de la preuve MFA pendant l'attente réelle du verrou cible. Dix reproductions SQL avant correction, avec snapshot d'authentification simulé. | **Clos au périmètre SQL testé** : comptes verrouillés dans l'ordre de leurs identifiants, présence de la source stabilisée par verrou partagé, droits et échéances relus après l'attente. Refus 401/403, session cible préservée et aucun audit ajouté ; treize SQL ciblés réussis, sans changement des permissions ou durées. |
+| USR-D22 — P2 | Le titre Sessions recevait le focus vers 80 px derrière la barre située entre 56 et 105 px, à 390 et 1 440 px. Le parcours du défi rendait aussi le focus à BODY après annulation ou succès, constat relevé pendant la correction des délais. | **Clos au périmètre testé** : titre visible vers 120 px et retour après défi vérifiés côté client ; une interaction plus récente conserve son focus malgré une réponse retardée. Focus visible aussi dans les parcours HTTP, dont la réponse perdue à 390 px. |
+
+Ces sept reproductions utilisent les composants réels avec API, acteur et
+horloge simulés ; elles ne prouvent pas un commit ou un refus serveur réel.
+Le [banc client final](../../audits/utilisateur-sessions-2026-10-12/banc-client/README.md)
+réussit onze parcours et archive aussi les huit contrôles Mon compte rejoués.
+Les deux cas 500/réponse perdue sont rejoués après placement du message dans
+la carte Sessions : deux succès inclus dans les onze parcours distincts.
+Polices Next absentes, police calculée non mesurée ; aucun commit réel ni règle
+de preuve validé par ces simulations. Les autres largeurs, changements d'acteur,
+lecteurs d'écran et resets ne sont pas rejoués.
+
+Le [banc serveur](../../audits/utilisateur-sessions-2026-10-12/banc-serveur/README.md)
+réussit treize SQL ciblés sur 25 tests, douze ignorés par le filtre, ainsi que
+39 tests API simulés distincts. PostgreSQL 17 et 52 migrations existantes ;
+comptes, sessions, droits, transactions et audits réels, mais snapshot
+d'authentification injecté. Dix régressions nouvelles couvrent l'autorisation
+périmée ; les trois autres vérifient projection, appartenance/révocation et
+rollback de la révocation globale si l'audit échoue. La preuve MFA est datée
+artificiellement, son expiration intervient pendant un vrai verrou observé.
+
+Le [banc HTTP](../../audits/utilisateur-sessions-2026-10-12/banc-integration/README.md)
+réussit quatre parcours sur Next 15.5.23 et PostgreSQL isolés : annulation de
+confirmation et de preuve, révocation individuelle après mot de passe/TOTP,
+révocation globale et réponse perdue après commit réel. Les demandes refusées
+avant la preuve sont distinctes de la reprise autorisée ; une seule mutation
+et un audit par révocation réussie. La session cible révoquée reçoit 401,
+l'acteur conserve sa session (200). Après perte de réponse : un DELETE, un GET,
+aucune session cible restante, message persistant et titre focalisé visible.
+
+La suite générale compte 1 252 tests réussis et 179 ignorés, dans 103 fichiers
+réussis et neuf ignorés ; les 23 tests ciblés helper/UX sont inclus dans ce
+total, les treize SQL sont une exécution distincte. Types, lint global,
+architecture et build final Next 15.5.23 réussis. Budget de la fiche :
+314 521 octets gzip, plafonds inchangés ; aucune mesure de charge déduite.
+Le complément HTTP sur ce dernier build confirme le message dans la carte
+Sessions et le titre focalisé à 178,30 px sous la barre finissant à 105 px
+(390 × 700). Il rejoue seulement la réponse perdue : un DELETE, un GET, un audit,
+cible refusée et acteur conservé ; il n'ajoute pas un cinquième parcours distinct.
+Nettoyage confirmé dans le banc HTTP : Next/PostgreSQL arrêtés, ports libres,
+dossier privé, cluster de deux bases, variables et secrets temporaires supprimés.
+Le contrôle des artefacts conservés ne retrouve aucune valeur secrète ; aucune
+base habituelle du projet n'a été utilisée.
+
+Limites : les courses SQL ne sont pas des retraits de droits joués dans un vrai
+parcours de connexion ; le banc HTTP ne rejoue pas tous les délais simulés ni
+tous les consommateurs du défi. Aucun nouveau contrôle de Safari/iOS, lecteur
+d'écran, appareil physique, charge ou reset mot de passe/MFA. Aucun changement
+de schéma, permission, durée de session ou contrat de réponse.
+
+Questions à conserver après un changement de ces actions : la session de
+l'administrateur et la cible sont-elles encore autorisées après l'attente ? La
+révocation a-t-elle pu réussir malgré l'absence de réponse ? Une relecture lente
+empêche-t-elle une reprise ou déplace-t-elle le focus après une nouvelle action ?
+
 ## Fiche utilisateur — revue complète du 11 octobre 2026
 
 Le [rapport courant](../../audits/AUDIT_FICHE_UTILISATEUR_2026-10-11.md)
