@@ -1,20 +1,20 @@
 'use client';
 
 import { ClipboardList } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
 import { Disclosure } from '$components/layout/Disclosure';
-import { normalizeSearchValue } from '$components/layout/global-search.utils';
 import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
 import { getNavigationSpaceToneClasses } from '$constants/navigation-theme.constants';
 import { usePageQuery } from '$hooks/usePageQuery';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import { Input } from '$ui/input';
+import directoryStyles from '$ui/directory.module.css';
 import { Label } from '$ui/label';
+import { ListSearchField } from '$ui/list-search-field';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import {
   Select,
@@ -32,43 +32,33 @@ import {
   ROADMAP_PHASES,
 } from './roadmap.constants';
 import type { RoadmapPhaseId } from './roadmap.types';
+import {
+  getRoadmapQueryCorrection,
+  getVisibleRoadmapItems,
+  readRoadmapFilters,
+  ROADMAP_SEARCH_MAX_LENGTH,
+} from './roadmap-search';
 import { RoadmapCard } from './RoadmapCard';
 
 export function RoadmapPage(): React.ReactNode {
   const { searchParams, updateQuery } = usePageQuery();
+  const filtersRef = useRef<HTMLDivElement>(null);
   const setPhase = (value: RoadmapPhaseId | null): void =>
     updateQuery({ phase: value === null ? null : String(value) });
-  const phase =
-    ROADMAP_PHASES.find((step) => String(step.id) === searchParams.get('phase'))
-      ?.id ?? null;
-  const areaId =
-    ROADMAP_AREAS.find((area) => area.id === searchParams.get('pole'))?.id ??
-    'all';
-  const query = (searchParams.get('q') ?? '').slice(0, 200);
-  const search = normalizeSearchValue(query);
-  const visibleItems = ROADMAP_ITEMS.filter((item) => {
-    const area = ROADMAP_AREAS.find((candidate) => candidate.id === item.area);
-    const text = normalizeSearchValue(
-      [
-        item.title,
-        item.description,
-        item.firstRelease,
-        item.later,
-        item.baseline,
-        item.audience,
-        item.doneWhen,
-        area?.label,
-      ].join(' '),
+  const { areaId, phase, query } = readRoadmapFilters(searchParams);
+  const visibleItems = getVisibleRoadmapItems({ areaId, phase, query });
+  useEffect(() => {
+    // History writes are synchronous; normalize the current URL, never an old render.
+    const correction = getRoadmapQueryCorrection(
+      new URLSearchParams(window.location.search),
     );
-
-    return (
-      (phase === null || item.phase === phase) &&
-      (areaId === 'all' || item.area === areaId) &&
-      (!search || search.split(' ').every((term) => text.includes(term)))
-    );
-  });
+    if (correction) updateQuery(correction, 'replace');
+  }, [searchParams, updateQuery]);
   const resetFilters = (): void => {
     updateQuery({ phase: null, pole: null, q: null });
+    filtersRef.current
+      ?.querySelector<HTMLInputElement>('input[type="search"]')
+      ?.focus();
   };
 
   return (
@@ -191,18 +181,30 @@ export function RoadmapPage(): React.ReactNode {
               </Disclosure>
             </div>
           </Disclosure>
-          <div className="border-border-content bg-surface-content-header grid gap-3 rounded-[10px] border p-4 @min-[44rem]/page:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] @min-[44rem]/page:items-end">
-            <div className="space-y-1.5 @min-[44rem]/page:col-span-3">
+          <div
+            ref={filtersRef}
+            className="border-border-content bg-surface-content-header grid gap-3 rounded-[10px] border p-4 @min-[44rem]/page:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] @min-[44rem]/page:items-end"
+          >
+            <div
+              className={cn(
+                directoryStyles.directory,
+                'space-y-1.5 @min-[44rem]/page:col-span-3',
+              )}
+            >
               <Label htmlFor="roadmap-search">Rechercher un chantier</Label>
-              <Input
+              <ListSearchField
+                ariaLabel="Rechercher un chantier"
                 id="roadmap-search"
                 value={query}
-                maxLength={200}
-                onChange={(event) =>
-                  updateQuery({ q: event.target.value }, 'replace')
+                maxLength={ROADMAP_SEARCH_MAX_LENGTH}
+                onValueChange={(value) =>
+                  updateQuery(
+                    { q: value.slice(0, ROADMAP_SEARCH_MAX_LENGTH) },
+                    'replace',
+                  )
                 }
+                onClear={() => updateQuery({ q: null }, 'replace')}
                 placeholder="Disponibilités, factures, documents…"
-                type="search"
               />
             </div>
             <div className="space-y-1.5">
@@ -267,6 +269,7 @@ export function RoadmapPage(): React.ReactNode {
             className="text-muted-foreground text-sm"
             role="status"
             aria-live="polite"
+            aria-atomic="true"
           >
             {visibleItems.length} chantier{visibleItems.length > 1 ? 's' : ''}{' '}
             affiché{visibleItems.length > 1 ? 's' : ''} sur{' '}

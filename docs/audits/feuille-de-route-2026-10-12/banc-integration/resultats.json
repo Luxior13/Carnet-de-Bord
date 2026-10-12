@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-12",
+  "runtime": "Next production + PostgreSQL 17 + Chromium",
+  "browserVersion": "149.0.7827.55",
+  "scenarios": [
+    {
+      "name": "Accès anonyme et cookie forgé refusés, destination filtrée conservée",
+      "result": "passed"
+    },
+    {
+      "name": "Connexion MFA réelle et catalogue de 39 chantiers dans le cadre authentifié",
+      "result": "passed"
+    },
+    {
+      "name": "Filtres cumulés, historique précédent/suivant et rechargement",
+      "result": "passed"
+    },
+    {
+      "name": "Recherche locale rapide, absence de requête de page et réinitialisation du vide",
+      "result": "passed"
+    },
+    {
+      "name": "Anciennes destinations et URL atypiques, aucun module futur activé",
+      "result": "passed"
+    },
+    {
+      "name": "Cadre réel et filtres utilisables à sept largeurs",
+      "result": "passed"
+    },
+    {
+      "name": "Compte USER sans permission administrative : catalogue et navigation autorisés",
+      "result": "passed"
+    },
+    {
+      "name": "Session réellement périmée : rechargement privé refusé",
+      "result": "passed"
+    }
+  ]
+}

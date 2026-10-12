@@ -1,6 +1,6 @@
 # Matrice de préparation — état réel et projets
 
-Référence révisée le 9 octobre 2026. Les chantiers proviennent du [catalogue de la feuille de route](../../apps/web/src/features/roadmap/roadmap.constants.ts). L’ordre et les décisions sont décrits dans [FEUILLE_DE_ROUTE.md](../../docs/references/FEUILLE_DE_ROUTE.md).
+Référence révisée le 12 octobre 2026. Les chantiers proviennent du [catalogue de la feuille de route](../../apps/web/src/features/roadmap/roadmap.constants.ts). L’ordre et les décisions sont décrits dans [FEUILLE_DE_ROUTE.md](../../docs/references/FEUILLE_DE_ROUTE.md).
 
 ## Pages actuellement disponibles
 
@@ -113,6 +113,7 @@ Les références suivantes préservent le périmètre des anciennes propositions
 | `/vie-interne/reunions-suivi` | Activité → Réunions & décisions de séance | 3 |
 | `/vie-interne/debriefs` | Activité → Débriefs | 3 |
 | `/sport-team-control/debriefs` | Activité → Débriefs | 3 |
+| `/activite/actualites` | Activité → Actualité interne & audiences | 3 |
 | `/bureau-juridique/inventaire-acces` | Activité → Ressources & logistique | 4 |
 | `/bureau-juridique/partenaires` | Relations → Organisations & contacts | 4 |
 | `/bureau-juridique/sponsors` | Relations → Organisations & contacts | 4 |

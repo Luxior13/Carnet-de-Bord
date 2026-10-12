@@ -10,6 +10,7 @@ import { Input } from '$ui/input';
 type ListSearchFieldProps = {
   ariaLabel: string;
   disabled?: boolean;
+  id?: string;
   maxLength: number;
   onClear: () => void;
   onValueChange: (value: string) => void;
@@ -22,6 +23,7 @@ type ListSearchFieldProps = {
 export const ListSearchField: FC<ListSearchFieldProps> = ({
   ariaLabel,
   disabled = false,
+  id,
   maxLength,
   onClear,
   onValueChange,
@@ -29,7 +31,8 @@ export const ListSearchField: FC<ListSearchFieldProps> = ({
   title,
   value,
 }) => {
-  const inputId = useId();
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (

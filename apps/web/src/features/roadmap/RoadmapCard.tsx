@@ -17,7 +17,12 @@ export function RoadmapCard({ item }: { item: RoadmapItem }): React.ReactNode {
     .filter(Boolean);
 
   return (
-    <Card className="min-w-0" id={`roadmap-${item.id}`}>
+    <Card
+      as="article"
+      aria-labelledby={`roadmap-title-${item.id}`}
+      className="min-w-0"
+      id={`roadmap-${item.id}`}
+    >
       <CardHeader className="space-y-2 p-4 pb-2">
         <div className="flex flex-wrap gap-1.5">
           <Badge variant="outline">Étape {item.phase}</Badge>
@@ -26,7 +31,7 @@ export function RoadmapCard({ item }: { item: RoadmapItem }): React.ReactNode {
           </Badge>
           <Badge variant="outline">{ROADMAP_KIND_LABELS[item.kind]}</Badge>
         </div>
-        <CardTitle as="h3" className="text-sm">
+        <CardTitle as="h3" className="text-sm" id={`roadmap-title-${item.id}`}>
           {item.title}
         </CardTitle>
       </CardHeader>
@@ -42,6 +47,7 @@ export function RoadmapCard({ item }: { item: RoadmapItem }): React.ReactNode {
           <p className="text-muted-foreground">{item.firstRelease}</p>
         </div>
         <Disclosure
+          aria-label={`Public, prérequis et suite — ${item.title}`}
           className="border-border border-t pt-3"
           label="Public, prérequis et suite"
         >

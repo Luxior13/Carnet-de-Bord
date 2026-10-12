@@ -15,6 +15,22 @@ const pagination = {
 };
 
 describe('shared list controls', () => {
+  it('uses the supplied search id for a visible label and its clear action', () => {
+    const html = renderToStaticMarkup(
+      createElement(ListSearchField, {
+        ariaLabel: 'Rechercher un chantier',
+        id: 'roadmap-search',
+        maxLength: 200,
+        onClear: vi.fn(),
+        onValueChange: vi.fn(),
+        placeholder: 'Chantier…',
+        value: 'Équipes',
+      }),
+    );
+    expect(html).toContain('id="roadmap-search"');
+    expect(html).toContain('aria-controls="roadmap-search"');
+  });
+
   it('does not invent totals or random page access for a cursor list', () => {
     const html = renderToStaticMarkup(
       createElement(ListPagination, pagination),

@@ -12,6 +12,7 @@ import {
 import { cn } from '$utils/css.utils';
 
 type DisclosureProps = {
+  'aria-label'?: string;
   children: ReactNode;
   className?: string;
   icon?: ReactNode;
@@ -19,6 +20,7 @@ type DisclosureProps = {
 };
 
 export const Disclosure: FC<DisclosureProps> = ({
+  'aria-label': ariaLabel,
   children,
   className,
   icon,
@@ -27,6 +29,7 @@ export const Disclosure: FC<DisclosureProps> = ({
   <Collapsible className={cn('group/disclosure', className)}>
     <CollapsibleTrigger asChild>
       <Button
+        aria-label={ariaLabel}
         type="button"
         variant="ghost"
         size="inline"
