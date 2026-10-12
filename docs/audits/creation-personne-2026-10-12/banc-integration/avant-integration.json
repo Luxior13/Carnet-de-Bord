@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-10-12T17:40:01.003Z",
+  "browser": "Chromium 149.0.7827.55",
+  "mode": "baseline",
+  "observations": [
+    {
+      "name": "Avant : réponse perdue après commit, seconde soumission crée deux fiches",
+      "result": "passed"
+    }
+  ],
+  "limitations": [
+    "HTTP loopback, base et comptes fictifs isolés.",
+    "Erreurs de transport injectées dans le navigateur ; commits PostgreSQL réels.",
+    "Pas de garantie d’idempotence : la reprise manuelle constitue une nouvelle création."
+  ]
+}

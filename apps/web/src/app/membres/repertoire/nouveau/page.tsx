@@ -6,7 +6,7 @@ import React, { type FC, Suspense } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { PageIdentityHero } from '$components/layout/PageIdentityHero';
-import { AccessDeniedState, PageState } from '$components/layout/PageState';
+import { AccessDeniedState } from '$components/layout/PageState';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
@@ -46,20 +46,6 @@ const NewPersonContent: FC<{ returnHref: string }> = ({ returnHref }) => {
     );
   }
 
-  if (
-    featureAvailabilityLoaded &&
-    !operationalFeatureIds.has(FEATURES.persons.id)
-  ) {
-    return (
-      <PageState
-        actionLabel="Revérifier"
-        description="Ce service ne peut pas être confirmé comme disponible pour le moment. Réessayez dans quelques instants."
-        onAction={() => void refreshFeatureAvailability()}
-        title="Répertoire temporairement indisponible"
-      />
-    );
-  }
-
   if (!featureAvailabilityLoaded) {
     return <NewPersonPageSkeleton />;
   }
@@ -73,7 +59,12 @@ const NewPersonContent: FC<{ returnHref: string }> = ({ returnHref }) => {
           icon={<UserPlus className="size-5" />}
           title="Nouvelle fiche"
         />
-        <PersonCreateForm key={userData?.id} returnHref={returnHref} />
+        <PersonCreateForm
+          available={operationalFeatureIds.has(FEATURES.persons.id)}
+          key={userData?.id}
+          onRetryAvailability={refreshFeatureAvailability}
+          returnHref={returnHref}
+        />
       </PageCanvas>
     </PageShell>
   );

@@ -1,0 +1,87 @@
+{
+  "completedAt": "2026-10-12T17:33:26.421Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 4,
+  "total": 4,
+  "observations": [
+    {
+      "name": "avant-reponse-perdue-rejeu",
+      "width": 390,
+      "status": "pass",
+      "defect": "second POST possible après réponse perdue",
+      "keys": [
+        null,
+        null
+      ],
+      "requestCounts": {
+        "posts": 2,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "avant-erreur-generale-focus",
+      "width": 390,
+      "status": "pass",
+      "activeElement": {
+        "tag": "BODY",
+        "text": "MembresRépertoireNouvelle ficheNouvelle ficheCréez l'identité essentielle, puis complétez la fiche si nécessaire.Informations essentiellesUn"
+      },
+      "requestCounts": {
+        "posts": 1,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390,
+        "hero": 356,
+        "heroWidth": 356
+      }
+    },
+    {
+      "name": "avant-barre-dans-carte",
+      "width": 1440,
+      "status": "pass",
+      "barInsideCard": true,
+      "dirtyBeforeInput": "true",
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1200,
+        "mainWidth": 1200,
+        "hero": 772,
+        "heroWidth": 772
+      }
+    },
+    {
+      "name": "avant-disponibilite-perte-brouillon",
+      "width": 390,
+      "status": "pass",
+      "defect": "disponibilité true/false/true perd le brouillon",
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390,
+        "hero": 356,
+        "heroWidth": 356
+      }
+    }
+  ]
+}

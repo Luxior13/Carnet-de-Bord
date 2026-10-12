@@ -189,14 +189,23 @@ const normalizeInitialSocialPrimaries = <
 >(
   items: readonly T[],
 ): T[] => {
-  const byNetwork = new Map<string, T[]>();
-  for (const item of items) {
-    const group = byNetwork.get(item.networkKey) ?? [];
-    group.push(item);
-    byNetwork.set(item.networkKey, group);
-  }
+  const primaryIndices = new Map<string, number>();
+  items.forEach((item, index) => {
+    const selected = primaryIndices.get(item.networkKey);
+    if (
+      selected === undefined ||
+      (item.isPrimary && !items.at(selected)?.isPrimary)
+    ) {
+      primaryIndices.set(item.networkKey, index);
+    }
+  });
 
-  return [...byNetwork.values()].flatMap(normalizeInitialPrimary);
+  // Duplicate warning paths refer to input indexes, so selecting a primary
+  // per network must preserve the original order of interleaved networks.
+  return items.map((item, index) => ({
+    ...item,
+    isPrimary: primaryIndices.get(item.networkKey) === index,
+  }));
 };
 
 export const getPerson = async (personId: string): Promise<PersonDetail> => {

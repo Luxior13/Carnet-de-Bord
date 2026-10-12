@@ -20,6 +20,14 @@
 - Création et ouverture de fiche puis retour exercés avec persistance et audit
   réels le 11 octobre. Cette preuve ne réaudite pas tous les dialogues ni la
   suppression de la fiche. [Passe précédente](../../audits/AUDIT_REPERTOIRE_2026-10-10.md).
+- Revue propre à la création du 12 octobre : reprises après résultat
+  incertain, succès et navigation, disponibilité et composition du formulaire.
+  **28 parcours client simulés, onze parcours Next/session/PostgreSQL et seize
+  contrôles SQL réussis** ; REP-N01 à REP-N06 clos dans leur portée.
+  Le retour filtré est aussi protégé pendant le chargement de la fiche,
+  vérifié par régression de rendu serveur et transition HTTP ralentie réelle.
+  [Rapport de création et limites](../../audits/AUDIT_CREATION_PERSONNE_2026-10-12.md).
+  Les validations de la liste restent distinctes de ces preuves.
 - Références : intentions historiques `features/pages/vie-interne/membres*.md`,
   `features/pages/bureau-juridique/personnes-contacts.md` ; règles courantes
   `docs/references/NAVIGATION.md`, `docs/references/STRUCTURE.md`, `docs/references/ROLES_ET_PERMISSIONS.md`,
@@ -154,7 +162,60 @@ Prisma 6 est documenté, sans recréation inutile.
 
 [Audit, scénarios et limites](../../audits/AUDIT_REPERTOIRE_2026-10-11.md).
 
-### Création de fiche — 11 octobre 2026
+### Création de fiche — décisions du 12 octobre 2026
+
+La page conserve quatre champs : pseudo principal, prénom, nom et statut dans
+la structure. Un pseudo suffit ; sans pseudo, prénom et nom sont nécessaires.
+Une fiche personne n'est ni un compte utilisateur, ni une adhésion, ni un rôle
+daté. La date de naissance et les coordonnées se complètent dans la fiche.
+Le statut proposé reste « Hors structure ». Aucun nouvel assistant ou champ
+métier n'est ajouté par la revue.
+
+- Après succès confirmé, la fiche reste créée même si son ouverture échoue :
+  conserver le résultat et son lien, empêcher un nouveau POST, remplacer
+  l'entrée de création dans l'historique lors de l'ouverture de la fiche.
+- Une réponse perdue ne signifie pas que la création a échoué. Délai de
+  30 secondes, conservation du brouillon, vérification du Répertoire dans un
+  autre onglet puis confirmation avant nouvelle création sont les reprises
+  retenues. Aucun rejeu automatique ni nouvelle table d'idempotence ; cette
+  reprise manuelle ne garantit pas l'absence de doublon si la première
+  commande a abouti.
+- Les homonymes restent autorisés. Les alertes de doublon du service concernent
+  seulement les coordonnées, absentes de ce formulaire minimal. Le traitement
+  local d'alerte et son stockage sont retirés ; l'API des coordonnées conserve
+  son contrat, sans nouvelle unicité du pseudo ou du nom.
+- La barre `SectionActionBar` appartient à la page, après la carte dans le
+  formulaire. Conserver la validation native, les erreurs liées aux champs,
+  le verrou immédiat et le retour du focus après annulation ou erreur. Une
+  création vierge reste soumettable pour faire apparaître sa validation ;
+  l'état initial de la barre n'est pas en soi une anomalie de brouillon.
+- Une indisponibilité technique pendant saisie ne doit pas effacer le
+  brouillon ; le retrait de droit ou le changement de compte doit en revanche
+  empêcher sa réutilisation dans une autre portée. La perte du pseudo après
+  indisponibilité puis retour du service est reproduite avec contexte simulé ;
+  le correctif conserve désormais le formulaire, sa saisie et son focus.
+
+Vérification finale : **28 parcours client simulés et onze parcours
+Next/session/PostgreSQL réels réussis**. La reproduction HTTP avant correction
+créait deux fiches après perte de réponse ; après correction, l'absence de
+répétition involontaire et la reprise après vérification sont contrôlées avec
+la personne et son audit en base. Le banc serveur compte **16 cas SQL réels
+et 53 tests existants réussis**, dont REP-N05 avant/après. La suite web compte
+**1 236 réussis, 133 ignorés**, après ajout de la régression du squelette
+REP-N06 ; sa transition ralentie est vérifiée en HTTP réel. Build, types,
+lint et budgets d'architecture/performance passent. Voir le
+[rapport du 12 octobre](../../audits/AUDIT_CREATION_PERSONNE_2026-10-12.md).
+
+| Point | État et prochaine vérification |
+| --- | --- |
+| REP-N01 — Résultat inconnu et répétition | Clos côté client et HTTP : attente bornée, réponse perdue après commit sans second POST involontaire, vérification du Répertoire et reprise confirmée après panne avant envoi ; une reprise volontaire reste susceptible de créer un homonyme |
+| REP-N02 — Succès et ouverture de fiche | Clos côté client : erreur de navigation, lien de reprise et absence de nouvelle création vérifiés |
+| REP-N03 — Barre et retours du formulaire | Clos côté client : barre hors carte, six largeurs/faible hauteur et retours d'erreur vérifiés ; soumission initiale volontairement conservée |
+| REP-N04 — Indisponibilité pendant saisie | Clos côté client : saisie et focus conservés après rétablissement, ancien formulaire retiré après changement de compte ou de droit |
+| REP-N05 — Indices des coordonnées initiales | Clos après échec puis réussite du même scénario SQL : choix du principal social sans réordonner les entrées ; impact API uniquement, formulaire minimal inchangé |
+| REP-N06 — Retour pendant chargement de la fiche | Clos après régression de rendu serveur et transition HTTP ralentie : aucun lien statique dans le squelette, retour filtré correct dès que la fiche est chargée |
+
+### Création de fiche — contrôle historique du 11 octobre 2026
 
 `/membres/repertoire/nouveau` utilise maintenant `PageIdentityHero` compact,
 avec les champs et le sélecteur de statut partagés. Le formulaire conserve sa
@@ -669,6 +730,7 @@ conservent les preuves datées, cette table porte les états courants.
 
 | Date | Événement |
 | --- | --- |
+| 2026-10-12 | Audit propre à la création : REP-N01 à REP-N06 clos au périmètre vérifié ; 28 parcours simulés, onze parcours Next/session/PostgreSQL et seize SQL, reprise manuelle après réponse perdue sans garantie d'idempotence. |
 | 2026-10-11 | Complément développement : service de liste extrait, schéma et règles SQL vérifiés, REP-19/REP-20 corrigés ; migration additive appliquée sans réécriture métier, 29 contrôles SQL et 1 135 tests web réussis. |
 | 2026-10-11 | Audit complet de la liste : REP-12 à REP-18 corrigés et vérifiés ; 41 scénarios client simulés, neuf parcours réels, 38 mesures serveur jusqu’à 10k personnes ; REP-01/REP-03 clos dans cette portée, preuves liées au rapport du jour. |
 | 2026-10-09 | Analyse complète A à Z de `/membres/repertoire`, création de ce suivi. |

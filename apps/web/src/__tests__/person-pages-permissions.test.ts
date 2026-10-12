@@ -164,7 +164,11 @@ describe('direct Person page permission boundaries', () => {
 
     expect(mocks.createForm).toHaveBeenCalledOnce();
     expect(mocks.createForm).toHaveBeenCalledWith(
-      { returnHref: '/membres/repertoire' },
+      {
+        available: true,
+        onRetryAvailability: expect.any(Function),
+        returnHref: '/membres/repertoire',
+      },
       undefined,
     );
   });

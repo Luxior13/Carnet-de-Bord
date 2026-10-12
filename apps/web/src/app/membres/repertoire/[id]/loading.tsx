@@ -10,7 +10,8 @@ export default function PersonLoading(): React.ReactNode {
     <AuthenticatedLayout
       breadcrumbs={[
         { label: FEATURES.persons.audit.poleLabel },
-        { href: FEATURES.persons.href, label: FEATURES.persons.label },
+        // The page restores its contextual link once returnTo is resolved.
+        { label: FEATURES.persons.label },
         { label: 'Fiche' },
       ]}
     >

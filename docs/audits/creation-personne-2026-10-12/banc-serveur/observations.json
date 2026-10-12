@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-12",
+  "timeZone": "Europe/Paris",
+  "finalRunLocalTime": "19:37",
+  "initialHead": "5706bba",
+  "initialWorktree": "clean",
+  "environment": {
+    "postgresql": 17,
+    "host": "127.0.0.1",
+    "port": 54610,
+    "database": "person_creation_service_test",
+    "appliedMigrations": 52,
+    "projectConfiguredDatabaseUsed": false,
+    "schemaChanged": false,
+    "fixtureSessionsValidatedAgainstSql": true,
+    "nextCookiesAndHeadersSimulated": true,
+    "loginPasswordAndTotpFlowReplayed": false
+  },
+  "beforeFix": {
+    "defect": "REP-N05",
+    "inputNetworks": ["discord", "instagram", "discord"],
+    "duplicateInputIndex": 1,
+    "expectedField": "socialProfiles.1.identifier",
+    "actualField": "socialProfiles.2.identifier",
+    "postgresRegression": "failed"
+  },
+  "correction": {
+    "file": "apps/web/src/features/persons/server/person-core.service.ts",
+    "function": "normalizeInitialSocialPrimaries",
+    "behavior": "Choose the primary per network while preserving input order",
+    "primaryRuleChanged": false,
+    "responseContractChanged": false,
+    "currentFourFieldFormDirectlyAffected": false
+  },
+  "afterFix": {
+    "postgresTests": { "passed": 16, "failed": 0 },
+    "existingTargetedTests": { "passed": 53, "failed": 0 },
+    "testFiles": 6,
+    "totalPassed": 69,
+    "typecheck": "passed",
+    "targetedLint": "passed",
+    "diffCheck": "passed",
+    "injectedFailureStages": ["AuditLog", "AuditFieldChange"],
+    "bothFailuresRolledBackPersonContactsAuditAndHistory": true,
+    "concurrentHomonymResponses": [201, 201],
+    "distinctHomonymIds": true,
+    "auditIdentityEncryptedAndDecryptedForAssertion": true
+  },
+  "loadingNavigationRegression": {
+    "defect": "REP-N06",
+    "before": "Detail loading breadcrumb linked to the unfiltered directory",
+    "after": "Loading retains the label without a link; ready detail page retains its safe contextual return",
+    "renderedTestFailedBeforeAndPassedAfter": true,
+    "realComponents": ["BreadcrumbTrail", "PageDetailSkeleton"],
+    "authenticatedLayoutSimulated": true,
+    "targetedTestsPassed": 26,
+    "testFiles": 3,
+    "typecheck": "passed",
+    "targetedLint": "passed",
+    "realNextTransitionProof": "separate integration bench"
+  },
+  "limits": [
+    "MFA sessions seeded as fixtures; no password or TOTP login replay",
+    "No real HTTP middleware, CSRF or cookie transport in this bench",
+    "No browser, lost-response or load benchmark claim",
+    "Homonyms allowed; no creation idempotency or identity merge",
+    "Existing SQL migrations applied, not an exhaustive rerun of all schema invariants"
+  ]
+}

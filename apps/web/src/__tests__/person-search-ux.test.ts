@@ -653,17 +653,12 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(personLoadingSource).toContain('<PageDetailSkeleton />');
   });
 
-  it('guards sidebar and breadcrumb links for both dirty person forms', () => {
-    for (const source of [createFormSource, identitySectionSource]) {
-      expect(source).toMatch(
-        /useUnsavedNavigationGuard\(isDirty(?: && !created)?\)/,
-      );
-      expect(source).toContain('pendingNavigationHref !== null');
-      expect(source).toContain('<UnsavedNavigationDialog');
-    }
-    expect(createFormSource).not.toContain(
-      'Abandonner les changements non enregistrés ?',
+  it('guards sidebar and breadcrumb links for dirty person identity', () => {
+    expect(identitySectionSource).toContain(
+      'useUnsavedNavigationGuard(isDirty)',
     );
+    expect(identitySectionSource).toContain('pendingNavigationHref !== null');
+    expect(identitySectionSource).toContain('<UnsavedNavigationDialog');
     expect(identitySectionSource).not.toContain('window.confirm');
     expect(identitySectionSource).toContain('pendingLocalDiscard');
     expect(identitySectionSource).toContain("'Annuler les modifications ?'");

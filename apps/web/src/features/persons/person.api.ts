@@ -87,11 +87,12 @@ export const getPerson = (personId: string): Promise<PersonDetail> =>
 
 export const createPerson = async (
   payload: PersonMutationPayload,
+  signal?: AbortSignal,
 ): Promise<PersonMutationResponse> =>
   toMutationResponse(
     await apiFetchJson<PersonMutationResponse | PersonDetail>(
       '/api/personnes',
-      jsonRequest('POST', payload),
+      jsonRequest('POST', payload, { signal }),
     ),
   );
 

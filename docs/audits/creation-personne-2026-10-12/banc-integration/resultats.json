@@ -1,0 +1,56 @@
+{
+  "checkedAt": "2026-10-12T17:48:47.801Z",
+  "browser": "Chromium 149.0.7827.55",
+  "mode": "final",
+  "observations": [
+    {
+      "name": "Pseudo seul, normalisation, audit chiffré et retour filtré",
+      "result": "passed"
+    },
+    {
+      "name": "Prénom et nom sans pseudo, statut Dans la structure et Entrée",
+      "result": "passed"
+    },
+    {
+      "name": "Validation vide, corrections d’identité et aucun POST invalide",
+      "result": "passed"
+    },
+    {
+      "name": "Cadre complet, clavier et sept largeurs sans débordement",
+      "result": "passed"
+    },
+    {
+      "name": "Réponse perdue après vrai commit : reprise bloquée, recherche conserve la saisie",
+      "result": "passed"
+    },
+    {
+      "name": "Échec avant envoi, confirmation de reprise et création unique",
+      "result": "passed"
+    },
+    {
+      "name": "Retour externe neutralisé, annulation vierge et espaces seuls",
+      "result": "passed"
+    },
+    {
+      "name": "Compte create/view seulement : création et lecture autorisées, administration refusée",
+      "result": "passed"
+    },
+    {
+      "name": "Anonyme et faux cookie ne peuvent créer ni lire le formulaire privé",
+      "result": "passed"
+    },
+    {
+      "name": "Double soumission pendant attente : une seule écriture et un seul audit",
+      "result": "passed"
+    },
+    {
+      "name": "Chargement réel ralenti : aucun retour sans filtres avant le lien contextuel",
+      "result": "passed"
+    }
+  ],
+  "limitations": [
+    "HTTP loopback, base et comptes fictifs isolés.",
+    "Erreurs de transport injectées dans le navigateur ; commits PostgreSQL réels.",
+    "Pas de garantie d’idempotence : la reprise manuelle constitue une nouvelle création."
+  ]
+}
