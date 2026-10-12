@@ -474,6 +474,82 @@ Documentation et index vérifiés (`docs:check` : 210 fichiers, 1 340 liens ;
 six tests du contrôleur documentaire réussis). Les environnements temporaires
 de cette passe ont été arrêtés et supprimés après les vérifications.
 
+### Création : autorisation à l'exécution et reprise — complément du 12 octobre 2026
+
+**Corrigé et vérifié dans le périmètre décrit.** Départ `31091b3`, arbre propre.
+Reprise ciblée du POST de création
+et de son défi administrateur partagé : vérifier l'autorisation après le calcul
+du hash et les attentes éventuelles, puis le retour et la reprise dans le
+formulaire. Les délais POST/GET de 30/15 secondes, l'unicité/réservation,
+la remise manuelle du secret et les règles USER/ADMIN restent inchangés.
+Les premières connexions, pertes de réponse et changements d'acteur déjà
+éprouvés le 11 octobre ne sont pas déclarés manquants dans cette nouvelle passe.
+
+Sélection de la [revue générale](../REVUE_GENERALE.md) : Q01–Q07, Q09–Q11,
+Q14–Q15, Q17, Q19, Q22, Q27–Q28 et Q30 examinés pour la preuve sensible,
+l'autorisation concurrente, la reprise exacte et le focus. Q12–Q13, Q16, Q18 et
+Q29 hors impact : modèle, migrations, retrait, cache et sauvegardes inchangés.
+Q08, Q20–Q21 et Q23–Q26 non applicables : aucune notification, pièce,
+import/export, automatisation, règle de structure, relation esport ou finance.
+
+| Point | Constat et portée | Correction et clôture du 12 octobre |
+| --- | --- | --- |
+| USR-N13 — P1, autorisation après attente | Six reproductions SQL renvoyaient 200 après capture de l'autorisation puis suppression de la source, rotation de version, retrait du droit, désactivation de l'acteur, expiration de source ou expiration de preuve ADMIN pendant une attente réelle de verrou. | **Clos au périmètre SQL testé** : acteur, source, droit et preuve relus à l'exécution ; les six refus 401/403 ne créent ni compte, ni réservation, ni audit et ne renvoient aucun secret. Snapshot d'authentification, en-têtes et quotas simulés ; POST, service, bcrypt et transactions SQL réels. |
+| USR-N14 — P2, focus de vérification tardive | Pendant le GET de vérification, Tab place le focus sur un lien de navigation ; la réponse « compte trouvé » le reprend sur le bloc de reprise. Reproduit dans le navigateur avec API simulée, un POST puis un GET. | **Clos au périmètre testé** : une interaction avant la réponse ou avant le rendu annule l'intention de focus. Sans nouveau geste, le panneau le reçoit ; succès et erreur respectent le focus choisi. Cinq nouvelles régressions parmi seize tests du contrôleur, parcours client et vérification HTTP retardée réussis. |
+
+Le défi partagé a reçu une borne de requête lors de la passe Sessions ; son
+annulation, son succès et son délai dans la création sont des contrôles de
+non-régression, pas de nouveaux défauts déclarés. Les preuves client simulées,
+SQL et HTTP sont distinguées ci-dessous, sans nouveau rapport complet.
+
+[Banc client : six parcours réussis](../../audits/creation-utilisateur-reprise-2026-10-12/banc-client/README.md) :
+trois vérifications du focus de reprise et trois non-régressions du défi ADMIN
+(annulation, succès, délai contrôlé à 31 secondes), réparties entre 390 et
+1 440 px. API, contexte, routeur et horloge simulés ; polices Next non chargées.
+Les anciens délais de création 30 s et de vérification 15 s ne sont pas
+revendiqués comme entièrement rejoués.
+
+[Banc serveur](../../audits/creation-utilisateur-reprise-2026-10-12/banc-serveur/README.md) :
+110 tests ciblés réussis, dont onze SQL de création (six nouvelles régressions,
+cinq contrats d'intégrité), puis treize SQL de sessions réussis et douze ignorés
+par filtre pour vérifier l'adaptateur partagé. PostgreSQL 17, 52 migrations ;
+snapshots d'authentification simulés. La preuve ADMIN est datée artificiellement,
+mais l'attente de verrou est observée dans PostgreSQL. Unicité, réservations,
+hash et rollback de l'audit restent contrôlés ; ce n'est pas une preuve de
+toutes les courses possibles ni un essai de charge.
+
+[Banc HTTP : trois parcours réussis](../../audits/creation-utilisateur-reprise-2026-10-12/banc-integration/README.md) :
+USER, ADMIN après annulation puis vraie preuve mot de passe/TOTP, réponse
+perdue après commit et recherche exacte réelle. Compte, réservation et audit
+uniques ; secret affiché vérifié contre le hash, changement obligatoire conservé.
+Le GET retardé conserve le focus déplacé dans la recherche rapide : un POST,
+un GET de vérification, aucun rejeu. Il ne récupère pas le secret et ne prouve
+pas à lui seul l'origine d'un compte trouvé. La première connexion du nouveau
+compte n'est pas rejouée ; sa preuve demeure celle du 11 octobre.
+
+Suite générale : 1 257 tests réussis, 185 ignorés, dans 103 fichiers réussis et
+dix ignorés. Les SQL exécutés séparément ne sont pas additionnés à ce total.
+Types, lint global, architecture, build Next 15.5.23 et budgets réussis ; création
+à 281 466 octets gzip, sans hausse du plafond ni mesure de charge. Safari/iOS,
+appareils physiques, lecteurs d'écran et autres mutations restent hors passe.
+Nettoyage confirmé : Next et PostgreSQL arrêtés, ports 3131 et 54662 libres,
+trois bases isolées et dossier temporaire supprimés avec le marker,
+l'environnement et les secrets de test. Le scan des treize fichiers texte
+archivés n'a trouvé aucune valeur privée.
+
+Le [garde transactionnel](../../../apps/web/src/features/users/server/user-action-authorization.ts)
+est partagé seulement par la création et les sessions administratives, deux
+consommateurs réels. Il relit acteur, source et permissions après les verrous ;
+la preuve ADMIN reste une règle du service de création, et l'adaptateur sessions
+conserve son contrat HTTP. Le calcul bcrypt reste hors de la transaction ;
+compte, réservation et audit restent atomiques. Cette extraction évite deux
+copies du contrôle sans généraliser toutes les actions administratives.
+
+Question durable : l'autorisation, la session et la preuve sensible sont-elles
+encore valides lorsque le compte va réellement être créé, après un calcul
+coûteux ou une attente de verrou ? Une ancienne réponse de vérification peut-elle
+reprendre le focus après une nouvelle action de l'utilisateur ?
+
 ## Sessions administratives — complément ciblé du 12 octobre 2026
 
 **Corrections vérifiées dans le périmètre décrit.** Départ `2ecb215`, arbre propre.

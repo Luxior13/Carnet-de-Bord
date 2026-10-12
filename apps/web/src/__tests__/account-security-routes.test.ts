@@ -913,7 +913,7 @@ describe('account security routes', () => {
         isProtected: false,
         mustChangePassword: false,
         permissions: null,
-        role: 'USER',
+        role: 'ADMIN',
         securityVersion: 3,
       });
       mockPrisma.session.findFirst.mockResolvedValue({
@@ -1076,7 +1076,7 @@ describe('account security routes', () => {
         isProtected: false,
         mustChangePassword: false,
         permissions: null,
-        role: 'USER',
+        role: 'ADMIN',
         securityVersion: 3,
       });
       mockPrisma.session.findFirst.mockResolvedValue({

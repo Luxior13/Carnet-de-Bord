@@ -127,6 +127,7 @@ describe('user creation HTTP and permission boundary', () => {
         password: 'FictifTemp1!abc',
         role: 'USER',
       },
+      { actorId: 'creator', session: null },
       expect.any(Function),
     );
     const body = await response.json();
@@ -134,7 +135,7 @@ describe('user creation HTTP and permission boundary', () => {
     expect(body.data.user.mustChangePassword).toBe(true);
     expect(body.data.user).not.toHaveProperty('passwordHash');
     expect(body.data.user).not.toHaveProperty('securityVersion');
-    const audit = mocks.create.mock.calls[0]?.[1](created);
+    const audit = mocks.create.mock.calls[0]?.[2](created);
     expect(audit).toMatchObject({
       action: 'USER_CREATE',
       targetUserId: 'new-account',
@@ -214,6 +215,7 @@ describe('user creation HTTP and permission boundary', () => {
     expect((await call({ ...form, role: 'ADMIN' })).status).toBe(200);
     expect(mocks.create).toHaveBeenCalledWith(
       expect.objectContaining({ role: 'ADMIN' }),
+      { actorId: 'creator', session: expect.any(Object) },
       expect.any(Function),
     );
   });

@@ -24,6 +24,7 @@ const target = process.env.USER_CREATION_TEST_DATABASE_URL;
 describe.skipIf(!target)('user creation transactions on PostgreSQL', () => {
   let db: PrismaClient;
   let actorId: string;
+  let authority: Parameters<typeof createUser>[1];
   const login = (): string =>
     'test.' + randomUUID().replaceAll('-', '').slice(0, 20);
   const data = (
@@ -39,8 +40,8 @@ describe.skipIf(!target)('user creation transactions on PostgreSQL', () => {
   const audit =
     (
       description = 'Création fictive de régression',
-    ): Parameters<typeof createUser>[1] =>
-    (user: { id: string }): ReturnType<Parameters<typeof createUser>[1]> => ({
+    ): Parameters<typeof createUser>[2] =>
+    (user: { id: string }): ReturnType<Parameters<typeof createUser>[2]> => ({
       action: 'USER_CREATE' as const,
       category: 'USER' as const,
       description,
@@ -64,19 +65,40 @@ describe.skipIf(!target)('user creation transactions on PostgreSQL', () => {
     database.$transaction.mockImplementation((callback) =>
       db.$transaction(callback),
     );
-    const actor = await db.user.create({
+    const actor =
+      (await db.user.findFirst({ where: { isProtected: true } })) ??
+      (await db.user.upsert({
+        create: {
+          firstName: 'Acteur fictif',
+          isProtected: true,
+          lastName: '',
+          loginName: 'test.creation.root',
+          passwordHash: '!test-only',
+          role: 'ADMIN',
+        },
+        update: {},
+        where: { loginName: 'test.creation.root' },
+      }));
+    actorId = actor.id;
+    await db.loginNameReservation.upsert({
+      create: { loginName: actor.loginName, userId: actor.id },
+      update: {},
+      where: { loginName: actor.loginName },
+    });
+    const session = await db.session.create({
       data: {
-        firstName: 'Acteur fictif',
-        lastName: '',
-        loginName: login(),
-        passwordHash: '!test-only',
-        role: 'ADMIN',
+        criticalMfaVerifiedAt: new Date(),
+        expiresAt: new Date(Date.now() + 3600_000),
+        idleExpiresAt: new Date(Date.now() + 1800_000),
+        mfaMethod: 'TOTP',
+        mfaVerifiedAt: new Date(),
+        passwordReauthenticatedAt: new Date(),
+        securityVersion: actor.securityVersion,
+        token: randomUUID(),
+        userId: actor.id,
       },
     });
-    actorId = actor.id;
-    await db.loginNameReservation.create({
-      data: { loginName: actor.loginName, userId: actor.id },
-    });
+    authority = { actorId, session };
   });
   afterAll(async () => {
     await db?.$disconnect();
@@ -89,7 +111,7 @@ describe.skipIf(!target)('user creation transactions on PostgreSQL', () => {
         ...data(login(), role),
         contactEmail: ' FICTIF@EXAMPLE.TEST ',
       };
-      const user = await createUser(input, audit());
+      const user = await createUser(input, authority, audit());
       expect(user).toMatchObject({
         contactEmail: 'fictif@example.test',
         contactEmailVerifiedAt: null,
@@ -128,8 +150,12 @@ describe.skipIf(!target)('user creation transactions on PostgreSQL', () => {
   it('commits one complete account for simultaneous attempts at the same login', async () => {
     const input = data();
     const attempts = await Promise.allSettled([
-      createUser(input, audit()),
-      createUser({ ...input, password: generateTemporaryPassword() }, audit()),
+      createUser(input, authority, audit()),
+      createUser(
+        { ...input, password: generateTemporaryPassword() },
+        authority,
+        audit(),
+      ),
     ]);
     expect(
       attempts.filter((result) => result.status === 'fulfilled'),
@@ -156,7 +182,7 @@ describe.skipIf(!target)('user creation transactions on PostgreSQL', () => {
   });
 
   it('rolls back a new account when a renamed identity still owns the login', async () => {
-    const original = await createUser(data(), audit());
+    const original = await createUser(data(), authority, audit());
     const newLogin = login();
     await db.$transaction(async (tx) => {
       await tx.loginNameReservation.create({
@@ -170,7 +196,7 @@ describe.skipIf(!target)('user creation transactions on PostgreSQL', () => {
     const countBefore = await db.user.count();
     const auditBefore = await db.auditLog.count();
     await expect(
-      createUser(data(original.loginName), audit()),
+      createUser(data(original.loginName), authority, audit()),
     ).rejects.toMatchObject({ code: 'P2002' });
     expect(await db.user.count()).toBe(countBefore);
     expect(await db.auditLog.count()).toBe(auditBefore);
@@ -196,9 +222,9 @@ describe.skipIf(!target)('user creation transactions on PostgreSQL', () => {
       await db.$executeRawUnsafe(
         `CREATE TRIGGER "${trigger}" BEFORE INSERT ON "AuditLog" FOR EACH ROW WHEN (NEW.description = '${description}') EXECUTE FUNCTION "${trigger}"()`,
       );
-      await expect(createUser(input, audit(description))).rejects.toThrow(
-        'Audit failure injected by creation test',
-      );
+      await expect(
+        createUser(input, authority, audit(description)),
+      ).rejects.toThrow('Audit failure injected by creation test');
       expect(
         await db.user.findUnique({ where: { loginName: input.loginName } }),
       ).toBeNull();
@@ -214,7 +240,7 @@ describe.skipIf(!target)('user creation transactions on PostgreSQL', () => {
       );
       await db.$executeRawUnsafe(`DROP FUNCTION "${trigger}"()`);
     }
-    const retried = await createUser(input, audit(description));
+    const retried = await createUser(input, authority, audit(description));
     expect(
       await db.auditLog.count({
         where: { description, targetUserId: retried.id },

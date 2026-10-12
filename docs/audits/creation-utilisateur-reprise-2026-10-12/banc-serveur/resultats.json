@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-12",
+  "baselineCommit": "31091b3",
+  "environment": {
+    "postgres": "17",
+    "host": "127.0.0.1",
+    "port": 54662,
+    "creationDatabase": "creation_service_test",
+    "sessionsDatabase": "user_detail_service_test",
+    "migrations": 52
+  },
+  "before": {
+    "command": "bun run test src/__tests__/user-create-authorization-postgres.test.ts",
+    "failed": 6,
+    "observedStatus": 200,
+    "cases": [
+      {
+        "condition": "source session revoked after real hashing",
+        "expectedStatus": 401
+      },
+      {
+        "condition": "actor security version advanced after real hashing",
+        "expectedStatus": 401
+      },
+      {
+        "condition": "effective create permission removed after real hashing",
+        "expectedStatus": 403
+      },
+      {
+        "condition": "actor disabled after real hashing",
+        "expectedStatus": 401
+      },
+      {
+        "condition": "source session expired after real hashing",
+        "expectedStatus": 401
+      },
+      {
+        "condition": "ADMIN MFA proof expires during a real actor User row-lock wait",
+        "expectedStatus": 403,
+        "observedLockWait": true
+      }
+    ]
+  },
+  "after": {
+    "command": "bun run test src/__tests__/user-create-api.test.ts src/__tests__/user-create-postgres.test.ts src/__tests__/user-create-authorization-postgres.test.ts src/__tests__/auth-transactions.test.ts src/__tests__/account-security-routes.test.ts",
+    "passed": 110,
+    "skipped": 0,
+    "creationSql": {
+      "newAuthorizationRegressions": 6,
+      "existingIntegrityContracts": 5
+    },
+    "simulatedTests": 99,
+    "refusalEffects": "401/403; no new account, login reservation, audit or response secret",
+    "sessionsSql": {
+      "command": "bun run test src/__tests__/user-detail-postgres.test.ts -t 'managed sessions|only unexpired|owned session|global session revocation'",
+      "passed": 13,
+      "skippedByFilter": 12
+    }
+  },
+  "checks": {
+    "typescript": "passed",
+    "targetedEslint": "passed without warnings"
+  },
+  "limits": [
+    "Authentication snapshot, headers and rate limiter are simulated; hashing, POST, service, transactions and database effects are real.",
+    "Five authority changes are injected immediately after actual bcrypt hashing, before the transaction; this is a controlled interleaving, not a real browser race.",
+    "MFA proof time is a fixture. PostgreSQL pg_stat_activity confirms waiting for a row lock before it is released after expiration.",
+    "Before correction the request could wait later on the actor foreign-key check during audit insertion; after correction the authority guard waits before the first write.",
+    "An intermediate test fixture omitted required MFA session fields; this fixture error was fixed before the final successful 110-test run.",
+    "These explicit SQL runs are separate from the root standard suite, where database tests without dedicated variables are skipped."
+  ]
+}

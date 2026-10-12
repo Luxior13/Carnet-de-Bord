@@ -81,7 +81,7 @@ beforeEach(() => {
   fetchMock.mockReset();
   clipboard.mockReset();
   vi.stubGlobal('fetch', fetchMock);
-  vi.stubGlobal('document', { cookie: '' });
+  vi.stubGlobal('document', Object.assign(new EventTarget(), { cookie: '' }));
   vi.stubGlobal('navigator', { clipboard: { writeText: clipboard } });
   vi.stubGlobal(
     'requestAnimationFrame',
@@ -96,6 +96,67 @@ afterEach(() => {
 });
 
 describe('user creation controller', () => {
+  it.each([
+    { gesture: null, rejected: false, shouldFocus: true },
+    { gesture: 'keydown', rejected: false, shouldFocus: false },
+    { gesture: 'pointerdown', rejected: true, shouldFocus: false },
+    { gesture: 'wheel', rejected: false, shouldFocus: false },
+  ])(
+    'keeps verification focus relevant after $gesture (rejected: $rejected)',
+    async ({ gesture, rejected, shouldFocus }) => {
+      const frames: FrameRequestCallback[] = [];
+      vi.stubGlobal(
+        'requestAnimationFrame',
+        (callback: FrameRequestCallback) => {
+          frames.push(callback);
+
+          return frames.length;
+        },
+      );
+      const flushFrames = (): void => {
+        while (frames.length) frames.shift()?.(0);
+      };
+      fetchMock.mockRejectedValueOnce(new TypeError('Network unavailable'));
+      await validForm().handleCreateUser();
+      flushFrames();
+      const controller = runtime().render();
+      const focus = vi.fn();
+      controller.feedbackRef.current = { focus } as unknown as HTMLDivElement;
+      const response = deferred<Response>();
+      fetchMock.mockReturnValueOnce(response.promise);
+      const checking = controller.checkCreation();
+      if (gesture) document.dispatchEvent(new Event(gesture));
+      if (rejected) response.reject(new TypeError('Network unavailable'));
+      else response.resolve(reply({ users: [] }));
+      await checking;
+      expect(runtime().render().recovery?.status).toBe(
+        rejected ? 'unchecked' : 'absent',
+      );
+      flushFrames();
+      expect(focus).toHaveBeenCalledTimes(shouldFocus ? 1 : 0);
+    },
+  );
+
+  it('does not restore verification focus after a newer gesture before painting', async () => {
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      frames.push(callback);
+
+      return frames.length;
+    });
+    fetchMock.mockRejectedValueOnce(new TypeError('Network unavailable'));
+    await validForm().handleCreateUser();
+    while (frames.length) frames.shift()?.(0);
+    const controller = runtime().render();
+    const focus = vi.fn();
+    controller.feedbackRef.current = { focus } as unknown as HTMLDivElement;
+    fetchMock.mockResolvedValueOnce(reply({ users: [] }));
+    await controller.checkCreation();
+    document.dispatchEvent(new Event('keydown'));
+    while (frames.length) frames.shift()?.(0);
+    expect(focus).not.toHaveBeenCalled();
+  });
+
   it('rejects invalid local fields before sending a request', async () => {
     await runtime().render().handleCreateUser();
     expect(fetchMock).not.toHaveBeenCalled();

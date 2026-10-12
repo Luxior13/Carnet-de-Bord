@@ -3062,9 +3062,10 @@ describe('users access hardening', () => {
         password: 'TempPassword1!',
         role: 'USER',
       },
+      { actorId: 'viewer-1', session: expect.any(Object) },
       expect.any(Function),
     );
-    const auditFactory = mockCreateUser.mock.calls[0]?.[1] as
+    const auditFactory = mockCreateUser.mock.calls[0]?.[2] as
       ((user: typeof newUser) => Record<string, unknown>) | undefined;
     expect(auditFactory?.(newUser)).toEqual(
       expect.objectContaining({
@@ -3157,6 +3158,7 @@ describe('users access hardening', () => {
         loginName: 'admin.secondaire',
         role: 'ADMIN',
       }),
+      { actorId: 'root-1', session: expect.any(Object) },
       expect.any(Function),
     );
   });

@@ -4,18 +4,21 @@ import { createUser } from '$features/users/server/user-create.service';
 
 const mocks = vi.hoisted(() => {
   const transaction = {
+    $queryRaw: vi.fn(),
     auditLog: { create: vi.fn() },
     loginNameReservation: { create: vi.fn() },
     rateLimit: { deleteMany: vi.fn() },
     session: {
       create: vi.fn(),
       deleteMany: vi.fn(),
+      findFirst: vi.fn(),
       findUnique: vi.fn(),
       updateMany: vi.fn(),
     },
     user: {
       create: vi.fn(),
       findMany: vi.fn(),
+      findUnique: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
     },
@@ -1071,6 +1074,16 @@ describe('auth security transactions', () => {
   });
 
   it('creates the user and its audit in one transaction', async () => {
+    mocks.transaction.user.findUnique.mockResolvedValue({
+      ...SESSION_USER,
+      deletedAt: null,
+      role: 'ADMIN',
+      securityVersion: 3,
+    });
+    mocks.transaction.session.findFirst.mockResolvedValue({
+      securityVersion: 3,
+      token: 'source',
+    });
     const createdUser = {
       contactEmail: 'new@example.com',
       contactEmailVerifiedAt: null,
@@ -1104,6 +1117,7 @@ describe('auth security transactions', () => {
         password: 'TempPassword1!',
         role: 'USER',
       },
+      { actorId: 'admin-1', session: { securityVersion: 3, token: 'source' } },
       (user) => ({
         action: 'USER_CREATE',
         category: 'USER',
@@ -1140,6 +1154,16 @@ describe('auth security transactions', () => {
   });
 
   it('aborts user creation when the login name has a permanent reservation', async () => {
+    mocks.transaction.user.findUnique.mockResolvedValue({
+      ...SESSION_USER,
+      deletedAt: null,
+      role: 'ADMIN',
+      securityVersion: 3,
+    });
+    mocks.transaction.session.findFirst.mockResolvedValue({
+      securityVersion: 3,
+      token: 'source',
+    });
     mocks.transaction.user.create.mockResolvedValueOnce({ id: 'new-user' });
     mocks.transaction.loginNameReservation.create.mockRejectedValueOnce(
       Object.assign(new Error('Unique constraint'), { code: 'P2002' }),
@@ -1153,6 +1177,10 @@ describe('auth security transactions', () => {
           loginName: 'retired.login',
           password: 'TempPassword1!',
           role: 'USER',
+        },
+        {
+          actorId: 'admin-1',
+          session: { securityVersion: 3, token: 'source' },
         },
         (user) => ({ ...audit, action: 'USER_CREATE', targetUserId: user.id }),
       ),

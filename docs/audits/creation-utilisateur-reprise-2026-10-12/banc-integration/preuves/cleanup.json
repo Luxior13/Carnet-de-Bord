@@ -1,0 +1,18 @@
+﻿{
+  "date": "2026-10-12T21:25:05.3112653Z",
+  "environment": "isolated loopback fixtures only",
+  "databasesRemovedWithCluster": [
+    "creation_reprise_test",
+    "creation_service_test",
+    "user_detail_service_test"
+  ],
+  "nextStopped": true,
+  "postgresStopped": true,
+  "portsFree": [3131, 54662],
+  "reparsePoints": 0,
+  "temporaryDirectoryRemoved": true,
+  "privateMarkerRemoved": true,
+  "privateEnvKeysAndTotpRemoved": true,
+  "textArtifactsScanned": 13,
+  "privateValueMatches": 0
+}

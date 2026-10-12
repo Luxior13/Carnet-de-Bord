@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-12T21:19:56.915Z",
+  "environment": {
+    "next": "15.5.23",
+    "postgres": "17",
+    "database": "creation_reprise_test",
+    "postgresPort": 54662,
+    "nextPort": 3131,
+    "chromium": "149.0.7827.55"
+  },
+  "scenarios": [
+    {
+      "name": "Création USER réelle après revalidation, réservation et audit uniques",
+      "role": "USER",
+      "accounts": 1,
+      "reservations": 1,
+      "audits": 1,
+      "bcryptVerified": true,
+      "passed": true
+    },
+    {
+      "name": "ADMIN : annuler conserve la saisie, puis vraie preuve mot de passe/TOTP et création",
+      "passed": false,
+      "error": "locator.check: Timeout 12000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('radio', { name: /Administrateur/ })\u001b[22m\n\u001b[2m    - locator resolved to <input type=\"radio\" value=\"ADMIN\" name=\"newRole\" data-slot=\"input\" id=\"newRole-ADMIN\" autocomplete=\"off\" data-bwignore=\"true\" data-lpignore=\"true\" data-1p-ignore=\"true\" data-form-type=\"other\" class=\"border-border-control bg-input text-foreground selection:bg-primary selection:text-primary-foreground file:text-foreground placeholder:text-muted-foreground flex min-w-0 rounded-[6px] text-base shadow-none transition-[background-color,border-color,color,box-shadow] outline-none file:inline-flex file:h-7 f…/>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <span class=\"text-foreground block text-sm font-medium\">Administrateur</span> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, e"
+    }
+  ]
+}

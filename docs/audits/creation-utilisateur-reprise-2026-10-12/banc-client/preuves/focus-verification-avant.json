@@ -1,0 +1,44 @@
+﻿{
+    "completedAt":  "2026-10-12T21:14:22.534Z",
+    "simulation":  "Page création, useCreateUser, défi administratif et cadre réels ; API, identité, routeur et horloge simulés. Preuves et secret fictifs non archivés.",
+    "source":  "Extrait du seul scénario de focus exécuté avant correction ; les trois essais de défi avaient été arrêtés par un clic du banc sur radio masquée",
+    "observations":  [
+                         {
+                             "name":  "verification-tardive-nouveau-geste-clavier",
+                             "width":  1440,
+                             "status":  "pass",
+                             "chosen":  {
+                                            "tag":  "A",
+                                            "text":  "Paramètres système",
+                                            "href":  "/systeme/parametres"
+                                        },
+                             "after":  {
+                                           "tag":  "DIV",
+                                           "text":  "Un compte utilise cet identifiantIdentifiant : camille.repriseLe mot de passe initial ne p",
+                                           "href":  null
+                                       },
+                             "counts":  {
+                                            "post":  1,
+                                            "get":  1,
+                                            "proof":  0,
+                                            "aborted":  0
+                                        },
+                             "requests":  [
+                                              {
+                                                  "method":  "POST",
+                                                  "path":  "/api/users",
+                                                  "query":  "",
+                                                  "mode":  "lost",
+                                                  "aborted":  false
+                                              },
+                                              {
+                                                  "method":  "GET",
+                                                  "path":  "/api/users",
+                                                  "query":  "?limit=1\u0026loginName=camille.reprise",
+                                                  "mode":  "hold",
+                                                  "aborted":  false
+                                              }
+                                          ]
+                         }
+                     ]
+}

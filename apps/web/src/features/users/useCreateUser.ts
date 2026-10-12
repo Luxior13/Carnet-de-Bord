@@ -20,9 +20,14 @@ type CreationRecovery = {
   user?: UserType;
 };
 
-const focusAfterRender = (ref: RefObject<HTMLElement | null>): void => {
+const focusAfterRender = (
+  ref: RefObject<HTMLElement | null>,
+  isRelevant: () => boolean = () => true,
+): void => {
   requestAnimationFrame(() =>
-    requestAnimationFrame(() => ref.current?.focus()),
+    requestAnimationFrame(() => {
+      if (isRelevant()) ref.current?.focus();
+    }),
   );
 };
 
@@ -79,14 +84,31 @@ export const useCreateUser = (
   const submissionInFlight = useRef(false);
   const verificationInFlight = useRef(false);
   const copyOperation = useRef(0);
+  const verificationFocusIntent = useRef(0);
   const mounted = useRef(true);
   const activeRequest = useRef<AbortController | null>(null);
 
   useEffect(() => {
     mounted.current = true;
+    const cancelVerificationFocus = (): void => {
+      verificationFocusIntent.current += 1;
+    };
+    document.addEventListener('pointerdown', cancelVerificationFocus, true);
+    document.addEventListener('keydown', cancelVerificationFocus, true);
+    document.addEventListener('wheel', cancelVerificationFocus, {
+      passive: true,
+    });
 
     return (): void => {
       mounted.current = false;
+      cancelVerificationFocus();
+      document.removeEventListener(
+        'pointerdown',
+        cancelVerificationFocus,
+        true,
+      );
+      document.removeEventListener('keydown', cancelVerificationFocus, true);
+      document.removeEventListener('wheel', cancelVerificationFocus);
       copyOperation.current += 1;
       activeRequest.current?.abort();
     };
@@ -238,6 +260,13 @@ export const useCreateUser = (
       return;
     verificationInFlight.current = true;
     setIsChecking(true);
+    const focusIntent = ++verificationFocusIntent.current;
+    const focusResult = (): void =>
+      focusAfterRender(
+        feedbackRef,
+        () =>
+          mounted.current && focusIntent === verificationFocusIntent.current,
+      );
     const controller = new AbortController();
     activeRequest.current = controller;
     const timeout = setTimeout(() => controller.abort(), 15_000);
@@ -256,7 +285,7 @@ export const useCreateUser = (
         user,
       });
       setSubmissionError(null);
-      focusAfterRender(feedbackRef);
+      focusResult();
     } catch (error) {
       if (mounted.current) {
         setSubmissionError(
@@ -266,7 +295,7 @@ export const useCreateUser = (
             : 'Vérification impossible pour le moment. Réessayez la vérification avant de créer à nouveau ce compte.',
         );
         setRecovery({ ...recovery, status: 'unchecked' });
-        focusAfterRender(feedbackRef);
+        focusResult();
       }
     } finally {
       clearTimeout(timeout);

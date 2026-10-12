@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-12T21:20:56.609Z",
+  "environment": {
+    "next": "15.5.23",
+    "postgres": "17",
+    "database": "creation_reprise_test",
+    "postgresPort": 54662,
+    "nextPort": 3131,
+    "chromium": "149.0.7827.55"
+  },
+  "scenarios": [
+    {
+      "name": "Création USER réelle après revalidation, réservation et audit uniques",
+      "role": "USER",
+      "accounts": 1,
+      "reservations": 1,
+      "audits": 1,
+      "bcryptVerified": true,
+      "passed": true
+    },
+    {
+      "name": "ADMIN : annuler conserve la saisie, puis vraie preuve mot de passe/TOTP et création",
+      "cancellationCreatedAccounts": 0,
+      "role": "ADMIN",
+      "accounts": 1,
+      "reservations": 1,
+      "audits": 1,
+      "bcryptVerified": true,
+      "passed": true
+    },
+    {
+      "name": "Réponse perdue après commit, vérification exacte réelle et focus plus récent conservé",
+      "committedStatus": 200,
+      "posts": 1,
+      "exactVerificationReads": 1,
+      "accounts": 1,
+      "audits": 1,
+      "laterSearchFocusPreserved": true,
+      "passed": true
+    }
+  ],
+  "passed": 3
+}

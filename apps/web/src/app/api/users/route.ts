@@ -5,10 +5,12 @@ import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGINATION } from '$constants/pagination.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { createUserSchema } from '$features/users/create-user.schema';
+import { UserActionAuthorizationError } from '$features/users/server/user-action-authorization';
 import { createUser } from '$features/users/server/user-create.service';
 import { listUsers } from '$features/users/server/users-list.service';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import {
+  apiError,
   apiErrors,
   isPrismaUniqueConstraintError,
   parseJsonBody,
@@ -267,6 +269,7 @@ export async function POST(
         password: temporaryPassword,
         role,
       },
+      { actorId: auth.user.id, session: auth.session },
       (createdUser) => ({
         action: 'USER_CREATE',
         category: 'USER',
@@ -292,6 +295,9 @@ export async function POST(
       success: true,
     });
   } catch (error) {
+    if (error instanceof UserActionAuthorizationError) {
+      return apiError(error.code, error.message, error.status);
+    }
     if (isPrismaUniqueConstraintError(error)) {
       return NextResponse.json(
         {
