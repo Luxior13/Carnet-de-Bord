@@ -90,9 +90,9 @@ permissions du répertoire restent des règles de son module. Les comportements
 de recherche, de compteur et de retour de fiche se qualifient pour chaque besoin.
 
 À migrer quand les pages concernées sont retouchées : `PageHero` avec `tone`
-(dashboard, actualités, `EntityDetailLayout`) et les
+(actualités, `EntityDetailLayout`) et les
 styles locaux qui dupliquent les composants partagés. Un module CSS de
-composition métier, utilisant les tokens communs, reste légitime. Mon compte,
+composition métier, utilisant les tokens communs, reste légitime. L'accueil, Mon compte,
 la fiche utilisateur, la création de compte et la création de fiche personne
 utilisent déjà `PageIdentityHero` ;
 `UsersAdminHero` a été retiré.

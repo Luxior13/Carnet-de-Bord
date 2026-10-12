@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-12",
+  "sourceCommit": "282066c",
+  "browserVersion": "149.0.7827.55",
+  "scenario": "Modification du prénom dans Mon compte puis retour navigateur vers l’accueil",
+  "staleBeforeReload": true,
+  "correctAfterReload": true,
+  "result": "defect-reproduced"
+}

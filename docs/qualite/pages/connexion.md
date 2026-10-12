@@ -53,6 +53,15 @@
   l'attente du verrou utilisateur. Audit, consommation de preuve et création
   de session restent transactionnels ; aucun schéma nouveau n'est nécessaire.
 
+Complément du 12 octobre, découvert pendant la
+[revue de l'accueil — ACC-06](../../audits/AUDIT_ACCUEIL_2026-10-12.md) :
+la réponse MFA doit porter la version du profil après la création de session,
+qui actualise aussi la dernière connexion. La projection sûre est obtenue
+dans cette transaction ; elle ne réutilise plus l'instantané du défi.
+Le premier enregistrement du profil réussit ainsi sans conflit artificiel.
+Régression de route/service et parcours Next/PostgreSQL vérifiés ; cette preuve
+complète l'audit Connexion précédent sans en réécrire les résultats datés.
+
 ## Questions pour une modification
 
 Examiner Q01–Q04, Q06–Q07, Q09–Q11, Q14, Q27 et Q28 selon les effets ; Q30 si

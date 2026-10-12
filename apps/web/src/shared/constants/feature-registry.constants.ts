@@ -33,7 +33,7 @@ export const FEATURES = {
       poleLabel: 'Aujourd’hui',
     },
     availability: 'live',
-    description: 'Vue globale du site privé selon les permissions.',
+    description: 'Accueil de votre espace personnel.',
     href: PAGE_PATHS.home,
     icon: 'LayoutDashboard',
     id: 'dashboard',

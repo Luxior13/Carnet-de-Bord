@@ -10,7 +10,6 @@ const mocks = vi.hoisted(() => ({
   generateSessionToken: vi.fn(),
   getMfaChallengeToken: vi.fn(),
   hashMfaChallengeToken: vi.fn(),
-  mapUserToUserType: vi.fn(),
   prisma: {
     mfaLoginChallenge: {
       findUnique: vi.fn(),
@@ -33,7 +32,6 @@ vi.mock('$server/auth', () => ({
   createSession: mocks.createSession,
   generateSessionToken: mocks.generateSessionToken,
   isSecurityVersionMismatchError: vi.fn(() => false),
-  mapUserToUserType: mocks.mapUserToUserType,
   setSessionTokenCookie: mocks.setSessionTokenCookie,
 }));
 
@@ -84,6 +82,7 @@ const CHALLENGE = {
       lastUsedTimeStep: null,
       updatedAt: CREDENTIAL_UPDATED_AT,
     },
+    updatedAt: new Date('2026-07-14T19:59:00.000Z'),
   },
   userId: 'user-1',
 };
@@ -135,14 +134,16 @@ describe('POST /api/auth/mfa/verify', () => {
           lastSeenAt: AUTHENTICATED_AT,
           rememberMe: false,
           token: 'new-session-token',
+          user: {
+            id: 'user-1',
+            lastLoginAt: AUTHENTICATED_AT,
+            loginName: 'user.name',
+            mustChangePassword: false,
+            updatedAt: AUTHENTICATED_AT,
+          },
         };
       },
     );
-    mocks.mapUserToUserType.mockReturnValue({
-      id: 'user-1',
-      loginName: 'user.name',
-      mustChangePassword: false,
-    });
   });
 
   it('consumes challenge and MFA proof in the session transaction', async () => {
@@ -201,6 +202,25 @@ describe('POST /api/auth/mfa/verify', () => {
       new Date('2026-07-15T20:00:00.000Z'),
     );
     expect(mocks.clearMfaChallengeCookie).toHaveBeenCalled();
+  });
+
+  it('returns the user revision committed with the session, not the challenge snapshot', async () => {
+    const { POST } = await import('$app/api/auth/mfa/verify/route');
+
+    const response = await POST(
+      new NextRequest('http://localhost/api/auth/mfa/verify', {
+        body: JSON.stringify({ code: '123456' }),
+        method: 'POST',
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.user.updatedAt).toBe(AUTHENTICATED_AT.toISOString());
+    expect(body.data.user.lastLoginAt).toBe(AUTHENTICATED_AT.toISOString());
+    expect(body.data.user).not.toHaveProperty('passwordHash');
+    expect(body.data.user).not.toHaveProperty('totpCredential');
+    expect(body.data.user).not.toHaveProperty('mfaRecoveryCodes');
   });
 
   it('never creates a session before a valid MFA proof exists', async () => {

@@ -7,7 +7,6 @@ import {
   createSession,
   generateSessionToken,
   isSecurityVersionMismatchError,
-  mapUserToUserType,
   setSessionTokenCookie,
 } from '$server/auth';
 import {
@@ -270,7 +269,7 @@ export async function POST(
     await setSessionTokenCookie(session.token, session.expiresAt);
     await clearMfaChallengeCookie();
 
-    const user = mapUserToUserType(challenge.user);
+    const user = session.user;
 
     return NextResponse.json({
       data: {

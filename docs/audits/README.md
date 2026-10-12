@@ -10,6 +10,7 @@ Ne pas créer un rapport complet pour chaque correction de texte.
 
 | Rapport | Périmètre et portée |
 | --- | --- |
+| [Accueil / Mon travail — 12 octobre 2026](AUDIT_ACCUEIL_2026-10-12.md) | Prénom au retour et version du profil après MFA corrigés, ancien tableau de bord inutilisé retiré ; huit parcours client simulés, huit Next/PostgreSQL réels et 1 235 tests web réussis, build et budgets validés ; fonctions métier futures inchangées |
 | [Connexion et MFA — 12 octobre 2026](AUDIT_CONNEXION_2026-10-12.md) | Attentes, réponses tardives, reprise après réponse perdue, collage et expiration corrigés ; 30 parcours client, 17 tests PostgreSQL et 12 parcours Next/MFA réels réussis ; suite web, build et budgets validés, limites précisées |
 | [Feuille de route — 12 octobre 2026](AUDIT_FEUILLE_DE_ROUTE_2026-10-12.md) | Catalogue et matrice vérifiés ; détails accessibles et reprise du focus corrigés, recherche harmonisée ; 18 parcours client, huit Next/MFA réels et 1 230 tests web réussis ; FDR-01 à FDR-04 clos |
 | [Paramètres système — revue complète des 11–12 octobre 2026](AUDIT_PARAMETRES_COMPLET_2026-10-11.md) | Valeur invalide, reprise, focus et vraie commande de maintenance corrigés ; 30 parcours client et 11 intégrations Next/PostgreSQL réussis, purge et concurrence isolées vérifiées |

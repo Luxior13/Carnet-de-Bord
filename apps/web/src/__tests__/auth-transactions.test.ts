@@ -113,6 +113,7 @@ const SESSION_USER = {
   role: 'USER' as const,
   securityVersion: 3,
   totpCredential: { userId: 'user-1' } as { userId: string } | null,
+  updatedAt: new Date('2026-07-01T00:00:00.000Z'),
 };
 
 type StoredSession = {
@@ -176,6 +177,7 @@ describe('auth security transactions', () => {
       idleExpiresAt: new Date('2026-07-13T00:00:00.000Z'),
       lastSeenAt: new Date('2026-07-13T00:00:00.000Z'),
       rememberMe: false,
+      user: SESSION_USER,
     });
     mocks.transaction.session.deleteMany.mockResolvedValue({ count: 2 });
     mocks.transaction.session.updateMany.mockResolvedValue({ count: 1 });
@@ -229,6 +231,7 @@ describe('auth security transactions', () => {
       idleExpiresAt,
       lastSeenAt: loginAt,
       rememberMe: false,
+      user: SESSION_USER,
     });
 
     const result = await createSession(
@@ -265,6 +268,7 @@ describe('auth security transactions', () => {
         userAgent: 'Regression Browser',
         userId: 'user-1',
       }),
+      select: expect.objectContaining({ user: expect.any(Object) }),
     });
     expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith({
       data: { lastLoginAt: expect.any(Date) },
@@ -301,7 +305,66 @@ describe('auth security transactions', () => {
       lastSeenAt: loginAt,
       rememberMe: false,
       token: 'raw-session-token',
+      user: expect.objectContaining({ id: 'user-1' }),
     });
+  });
+
+  it('returns the safe user revision after authentication writes and the MFA precondition', async () => {
+    const committedAt = new Date('2026-07-13T12:00:01.000Z');
+    let storedUser = { ...SESSION_USER, passwordHash: 'server-only-fixture' };
+    mocks.transaction.session.create.mockImplementationOnce(
+      async ({
+        select,
+      }: {
+        select: { user: { select: Record<string, unknown> } };
+      }) => ({
+        expiresAt: new Date('2026-07-14T12:00:00.000Z'),
+        idleExpiresAt: new Date('2026-07-13T12:30:00.000Z'),
+        lastSeenAt: committedAt,
+        rememberMe: false,
+        user: Object.fromEntries(
+          Object.entries(storedUser).filter(([key]) =>
+            new Map(Object.entries(select.user.select)).has(key),
+          ),
+        ),
+      }),
+    );
+
+    const result = await createSession(
+      'raw-session-token',
+      'user-1',
+      3,
+      false,
+      undefined,
+      {
+        mfaMethod: 'TOTP',
+        precondition: async () => {
+          storedUser = {
+            ...storedUser,
+            firstName: 'Prénom actualisé',
+            lastLoginAt: committedAt,
+            updatedAt: committedAt,
+          };
+        },
+        requireMfaEnabled: true,
+      },
+    );
+
+    expect(result.user).toMatchObject({
+      firstName: 'Prénom actualisé',
+      lastLoginAt: committedAt,
+      updatedAt: committedAt,
+    });
+    expect(result.user).not.toHaveProperty('totpCredential');
+    expect(result.user).not.toHaveProperty('passwordHash');
+    expect(mocks.transaction.session.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          user: { select: expect.not.objectContaining({ passwordHash: true }) },
+        }),
+      }),
+    );
+    expect(mocks.prisma.user.findUnique).not.toHaveBeenCalled();
   });
 
   it('bounds audit payloads before touching the database', async () => {
@@ -365,6 +428,7 @@ describe('auth security transactions', () => {
       idleExpiresAt,
       lastSeenAt: loginAt,
       rememberMe: true,
+      user: SESSION_USER,
     });
 
     const result = await createSession(
@@ -388,6 +452,7 @@ describe('auth security transactions', () => {
         rememberMe: true,
         securityVersion: 3,
       }),
+      select: expect.objectContaining({ user: expect.any(Object) }),
     });
     expect(result).toEqual({
       expiresAt,
@@ -395,6 +460,7 @@ describe('auth security transactions', () => {
       lastSeenAt: loginAt,
       rememberMe: true,
       token: 'remembered-session-token',
+      user: expect.objectContaining({ id: 'user-1' }),
     });
   });
 
@@ -472,6 +538,7 @@ describe('auth security transactions', () => {
         securityVersion: 3,
         userId: 'user-1',
       }),
+      select: expect.objectContaining({ user: expect.any(Object) }),
     });
   });
 
@@ -510,6 +577,7 @@ describe('auth security transactions', () => {
       idleExpiresAt: sourceIdleExpiresAt,
       lastSeenAt: rotatedAt,
       rememberMe: true,
+      user: SESSION_USER,
     });
 
     const result = await createSession(
@@ -556,6 +624,7 @@ describe('auth security transactions', () => {
         securityVersion: 4,
         userAgent: 'Original Browser',
       }),
+      select: expect.objectContaining({ user: expect.any(Object) }),
     });
     expect(result).toMatchObject({
       expiresAt: sourceExpiresAt,

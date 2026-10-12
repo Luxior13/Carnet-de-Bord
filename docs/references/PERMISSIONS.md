@@ -247,7 +247,7 @@ droits individuels.
 | Route active ou de support                           | Contrôle principal                                                                                                                                         |
 | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/login`                                             | publique ; le parcours d'authentification impose la MFA                                                                                                    |
-| `/`                                                  | `dashboard:view`, toujours actif ; chaque donnée administrative du tableau de bord conserve ensuite son propre contrôle                                    |
+| `/`                                                  | session authentifiée et `dashboard:view`, toujours actif ; salutation et accès au compte connecté, sans synthèse administrative ni API dédiée                 |
 | `/mes-notifications` et `/tableau-de-bord/mes-notifications` | redirection vers `/systeme/feuille-de-route` ; le module notifications est replanifié, sans permission active                                                       |
 | `/mon-compte`                                        | droits `account:*`, toujours limités au compte connecté                                                                                                    |
 | `/systeme/feuille-de-route`                                  | authentification ; catalogue informatif des pages planifiées, sans attribution de droits                                                                   |

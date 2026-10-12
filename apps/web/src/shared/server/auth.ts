@@ -254,6 +254,7 @@ export const createSession = async (
   lastSeenAt: Date;
   rememberMe: boolean;
   token: string;
+  user: UserType;
 }> => {
   const sessionId = hashSessionToken(token);
   const requestContext = await getAuditRequestContext();
@@ -384,6 +385,13 @@ export const createSession = async (
         userAgent: sessionUserAgent,
         userId,
       },
+      select: {
+        expiresAt: true,
+        idleExpiresAt: true,
+        lastSeenAt: true,
+        rememberMe: true,
+        user: { select: SESSION_USER_SELECT },
+      },
     });
 
     if (audit) {
@@ -406,6 +414,9 @@ export const createSession = async (
     lastSeenAt: session.lastSeenAt,
     rememberMe: session.rememberMe,
     token,
+    // lastLoginAt and updatedAt changed inside this transaction. Returning
+    // its safe snapshot prevents the caller from reusing the challenge user.
+    user: mapUserToUserType(session.user),
   };
 };
 

@@ -20,6 +20,15 @@ version de sécurité, en plus des dates. Le nettoyage reste lié à la version
 du compte authentifié pour ne pas supprimer une session plus récente si le
 compte change entre-temps. Voir [l'audit de cette page](../../audits/AUDIT_MON_COMPTE_2026-10-11.md).
 
+**Premier enregistrement après connexion — corrigé et vérifié le 12 octobre :**
+la réponse de vérification MFA contenait une version du profil antérieure à
+l'écriture de dernière connexion, provoquant un conflit 409 sans autre
+modification. La création de session retourne maintenant sa projection
+utilisateur à jour. Le parcours connexion TOTP → Mon compte → premier
+enregistrement → retour à l'accueil réussit sans rechargement ni relecture du
+contexte. [Preuves et limites — ACC-06](../../audits/AUDIT_ACCUEIL_2026-10-12.md).
+La protection contre les véritables conflits de profil reste inchangée.
+
 - Route : `/mon-compte`. Page personnelle du compte connecté.
 - Statut : alignée sur la fiche `/systeme/utilisateurs/[id]` ; formulaires,
   conflits et navigation corrigés le 2026-10-11.

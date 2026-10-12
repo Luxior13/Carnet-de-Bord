@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-12",
+  "runtime": "Next production + PostgreSQL17 + Chromium",
+  "browserVersion": "149.0.7827.55",
+  "scenarios": [
+    {
+      "name": "Prénom modifié dans Mon compte : retour navigateur et rechargement cohérents",
+      "result": "passed"
+    },
+    {
+      "name": "Structure, clavier et accueil complet à sept largeurs",
+      "result": "passed"
+    },
+    {
+      "name": "Prénom de 50 caractères sans espaces : retour immédiat lisible à320px",
+      "result": "passed"
+    },
+    {
+      "name": "Compte sans droits métier : accueil et Mon compte accessibles, utilisateurs refusés",
+      "result": "passed"
+    },
+    {
+      "name": "Ancienne API retirée et aucun chargement de synthèse depuis l’accueil",
+      "result": "passed"
+    },
+    {
+      "name": "Accès direct anonyme et cookie forgé redirigés sans salutation privée",
+      "result": "passed"
+    },
+    {
+      "name": "Ancienne entrée tableau-de-bord redirige vers l’accueil actuel",
+      "result": "passed"
+    },
+    {
+      "name": "Session révoquée : rechargement de l’accueil privé refusé",
+      "result": "passed"
+    }
+  ]
+}

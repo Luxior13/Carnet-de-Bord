@@ -1,3 +1,5 @@
+'use client';
+
 import { Home } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react';
@@ -5,13 +7,13 @@ import React from 'react';
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { FEATURES } from '$constants/feature-registry.constants';
-import { getPageAuthSession } from '$server/auth';
+import { useUser } from '$context/UserContext';
 import { Button } from '$ui/button';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 
-export default async function HomePage(): Promise<React.ReactNode> {
-  const { user } = await getPageAuthSession();
-  const firstName = user?.firstName?.trim();
+export default function HomePage(): React.ReactNode {
+  const { userData } = useUser();
+  const firstName = userData?.firstName?.trim();
 
   return (
     <AuthenticatedLayout
@@ -28,9 +30,10 @@ export default async function HomePage(): Promise<React.ReactNode> {
                 <Link href="/mon-compte">Mon compte</Link>
               </Button>
             }
-            description="Les éléments importants apparaîtront ici lorsqu’ils seront utiles."
+            description="Votre espace personnel est en préparation. Retrouvez vos informations et vos réglages dans Mon compte."
+            eyebrow={FEATURES.dashboard.label}
             icon={<Home aria-hidden="true" />}
-            title={firstName ? `Bonjour ${firstName}` : "Vue d'ensemble"}
+            title={firstName ? `Bonjour ${firstName}` : 'Bienvenue'}
           />
         </PageCanvas>
       </PageShell>

@@ -1,0 +1,7 @@
+{
+  "date": "2026-10-12",
+  "scenario": "Connexion MFA normale puis première modification du profil",
+  "loginVersionDiffersFromCurrent": true,
+  "observedProfileUpdateStatus": 409,
+  "result": "defect-reproduced"
+}
