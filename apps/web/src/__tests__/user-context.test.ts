@@ -145,6 +145,7 @@ class HookRuntime {
 const mocks = vi.hoisted(() => ({
   apiFetch: vi.fn(),
   routerPush: vi.fn(),
+  routerReplace: vi.fn(),
   runtime: null as HookRuntime | null,
   toastError: vi.fn(),
   toastSuccess: vi.fn(),
@@ -175,8 +176,12 @@ vi.mock('react', async (importOriginal) => {
 });
 
 vi.mock('next/navigation', () => ({
-  useRouter: (): { push: typeof mocks.routerPush } => ({
+  useRouter: (): {
+    push: typeof mocks.routerPush;
+    replace: typeof mocks.routerReplace;
+  } => ({
     push: mocks.routerPush,
+    replace: mocks.routerReplace,
   }),
 }));
 
@@ -250,6 +255,7 @@ type ContextValue = {
     options?: { signal?: AbortSignal },
   ) => Promise<LoginResult | null>;
   logout: () => Promise<void>;
+  logoutStatus: 'idle' | 'pending' | 'unconfirmed' | 'confirmed';
   refreshUser: () => Promise<void>;
   showSessionWarning: boolean;
   userData: UserType | null;
@@ -388,7 +394,12 @@ describe('UserContext session activity', () => {
     mocks.runtime = runtime;
     vi.stubGlobal('window', fakeWindow as unknown as Window);
     vi.stubGlobal('fetch', vi.fn());
-    mocks.apiFetch.mockResolvedValue({ ok: true });
+    mocks.apiFetch.mockResolvedValue(
+      apiJsonResponse({
+        data: { message: 'Déconnexion réussie' },
+        success: true,
+      }),
+    );
   });
 
   afterEach(() => {
@@ -896,8 +907,8 @@ describe('UserContext session activity', () => {
 
   it('unmounts the authenticated account while logout is pending', async () => {
     await mountAuthenticatedProvider();
-    let resolveLogout!: (response: { ok: boolean }) => void;
-    const pendingLogout = new Promise<{ ok: boolean }>((resolve) => {
+    let resolveLogout!: (response: Response) => void;
+    const pendingLogout = new Promise<Response>((resolve) => {
       resolveLogout = resolve;
     });
     mocks.apiFetch.mockReturnValueOnce(pendingLogout);
@@ -909,14 +920,160 @@ describe('UserContext session activity', () => {
     expect(getContext(runtime).userData).toBeNull();
     expect(mocks.apiFetch).toHaveBeenCalledWith('/api/auth/logout', {
       method: 'POST',
+      signal: expect.any(AbortSignal),
     });
 
-    resolveLogout({ ok: true });
+    resolveLogout(
+      apiJsonResponse({
+        data: { message: 'Déconnexion réussie' },
+        success: true,
+      }),
+    );
     await logoutPromise;
     runtime.render();
 
-    expect(mocks.routerPush).toHaveBeenCalledWith('/login');
+    expect(mocks.routerReplace).toHaveBeenCalledWith('/login');
     expect(getContext(runtime).isLoading).toBe(false);
+  });
+
+  it.each([403, 500])(
+    'keeps logout unconfirmed on HTTP %s and blocks account refresh',
+    async (status) => {
+      await mountAuthenticatedProvider();
+      vi.mocked(fetch).mockClear();
+      mocks.apiFetch.mockResolvedValueOnce(
+        apiJsonResponse({ success: false }, status),
+      );
+
+      await getContext(runtime).logout();
+      runtime.render();
+      expect(getContext(runtime).userData).toBeNull();
+      expect(mocks.toastSuccess).not.toHaveBeenCalled();
+      expect(mocks.routerPush).not.toHaveBeenCalled();
+      expect(mocks.routerReplace).not.toHaveBeenCalled();
+      expect(getContext(runtime).logoutStatus).toBe('unconfirmed');
+      await getContext(runtime).refreshUser();
+      expect(fetch).not.toHaveBeenCalled();
+    },
+  );
+
+  it('does not confirm logout from a malformed successful response', async () => {
+    await mountAuthenticatedProvider();
+    mocks.apiFetch.mockResolvedValueOnce(apiJsonResponse({ success: false }));
+    await getContext(runtime).logout();
+    runtime.render();
+    expect(mocks.toastSuccess).not.toHaveBeenCalled();
+    expect(mocks.routerReplace).not.toHaveBeenCalled();
+    expect(getContext(runtime).logoutStatus).toBe('unconfirmed');
+  });
+
+  it('explicitly retries a lost logout response and accepts an already absent session', async () => {
+    await mountAuthenticatedProvider();
+    mocks.apiFetch.mockRejectedValueOnce(new TypeError('Lost after commit'));
+    await getContext(runtime).logout();
+    runtime.render();
+    expect(mocks.apiFetch).toHaveBeenCalledTimes(1);
+    expect(mocks.routerPush).not.toHaveBeenCalled();
+    expect(mocks.routerReplace).not.toHaveBeenCalled();
+    expect(getContext(runtime).logoutStatus).toBe('unconfirmed');
+
+    mocks.apiFetch.mockResolvedValueOnce({ ok: false, status: 401 });
+    await getContext(runtime).logout();
+    runtime.render();
+    expect(mocks.apiFetch).toHaveBeenCalledTimes(2);
+    expect(getContext(runtime).logoutStatus).toBe('confirmed');
+    expect(mocks.routerReplace).toHaveBeenCalledWith('/login');
+  });
+
+  it('bounds a logout request and ignores a late successful response', async () => {
+    await mountAuthenticatedProvider();
+    let resolveLogout!: (response: Response) => void;
+    mocks.apiFetch.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveLogout = resolve;
+      }),
+    );
+    const logout = getContext(runtime).logout;
+    const pending = logout();
+    await logout();
+    expect(mocks.apiFetch).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(15_000);
+    runtime.render();
+    expect(getContext(runtime).isLoading).toBe(false);
+    expect(getContext(runtime).logoutStatus).toBe('unconfirmed');
+    const signal = mocks.apiFetch.mock.calls[0]?.[1]?.signal as AbortSignal;
+    expect(signal.aborted).toBe(true);
+    resolveLogout(
+      apiJsonResponse({
+        data: { message: 'Déconnexion réussie' },
+        success: true,
+      }),
+    );
+    await pending;
+    runtime.render();
+    expect(getContext(runtime).logoutStatus).toBe('unconfirmed');
+    expect(mocks.routerReplace).not.toHaveBeenCalled();
+  });
+
+  it('ignores a logout response after unmount', async () => {
+    await mountAuthenticatedProvider();
+    let resolveLogout!: (response: Response) => void;
+    mocks.apiFetch.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveLogout = resolve;
+      }),
+    );
+    const pending = getContext(runtime).logout();
+    runtime.unmount();
+    resolveLogout(
+      apiJsonResponse({
+        data: { message: 'Déconnexion réussie' },
+        success: true,
+      }),
+    );
+    await pending;
+    expect(mocks.routerReplace).not.toHaveBeenCalled();
+    expect(mocks.toastSuccess).not.toHaveBeenCalled();
+  });
+
+  it('keeps logout confirmed if routing fails after the server response', async () => {
+    await mountAuthenticatedProvider();
+    mocks.routerReplace.mockImplementationOnce(() => {
+      throw new Error('Navigation failed');
+    });
+    await getContext(runtime).logout();
+    runtime.render();
+    expect(getContext(runtime).logoutStatus).toBe('confirmed');
+    expect(getContext(runtime).userData).toBeNull();
+  });
+
+  it('allows an explicit new credentials flow to check an uncertain MFA session', async () => {
+    await mountAuthenticatedProvider();
+    mocks.apiFetch.mockRejectedValueOnce(new TypeError('Uncertain logout'));
+    await getContext(runtime).logout();
+    runtime.render();
+    mocks.apiFetch.mockResolvedValueOnce(
+      apiJsonResponse({
+        data: {
+          challengeExpiresAt: new Date(NOW.getTime() + 60_000).toISOString(),
+          status: 'mfa_required',
+        },
+        success: true,
+      }),
+    );
+    await getContext(runtime).login({
+      loginName: 'second',
+      password: 'fictitious-only',
+      rememberMe: false,
+    });
+    runtime.render();
+    expect(getContext(runtime).logoutStatus).toBe('idle');
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(false, { ...user, id: 'second-account' }),
+    );
+    await getContext(runtime).refreshUser();
+    runtime.render();
+    expect(getContext(runtime).userData?.id).toBe('second-account');
   });
 
   it('uses the server heartbeat when the user clicks Rester connecte', async () => {
@@ -988,7 +1145,8 @@ describe('UserContext session activity', () => {
 
     expect(mocks.apiFetch).toHaveBeenCalledWith('/api/auth/logout', {
       method: 'POST',
+      signal: expect.any(AbortSignal),
     });
-    expect(mocks.routerPush).toHaveBeenCalledWith('/login');
+    expect(mocks.routerReplace).toHaveBeenCalledWith('/login');
   });
 });

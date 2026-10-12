@@ -13,6 +13,7 @@ import { HookRuntime } from './helpers/hook-runtime';
 type Context = {
   isLoading: boolean;
   logout: () => Promise<void>;
+  logoutStatus: string;
   refreshUser: () => Promise<void>;
   userData: UserType | null;
 };
@@ -20,6 +21,7 @@ type Provider = ReactElement<{ value: Context }>;
 const mocks = vi.hoisted(() => ({
   apiFetch: vi.fn(),
   routerPush: vi.fn(),
+  routerReplace: vi.fn(),
   runtime: null as HookRuntime<Provider> | null,
 }));
 const runtime = (): HookRuntime<Provider> => {
@@ -40,8 +42,12 @@ vi.mock('react', async (importOriginal) => ({
     runtime().useState(initial),
 }));
 vi.mock('next/navigation', () => ({
-  useRouter: (): { push: typeof mocks.routerPush } => ({
+  useRouter: (): {
+    push: typeof mocks.routerPush;
+    replace: typeof mocks.routerReplace;
+  } => ({
     push: mocks.routerPush,
+    replace: mocks.routerReplace,
   }),
 }));
 vi.mock('sonner', () => ({
@@ -102,11 +108,19 @@ describe('logout priority over personal-account refreshes', () => {
     // A sibling operation can request a refresh while the logout request is
     // still reaching the server; /me may still see the session at that instant.
     await context.refreshUser();
-    finishLogout(Response.json({ success: true }));
+    expect(fetch).not.toHaveBeenCalled();
+    finishLogout(
+      Response.json({
+        data: { message: 'Déconnexion réussie' },
+        success: true,
+      }),
+    );
     await pending;
     const done = runtime().render().props.value;
     expect(done.userData).toBeNull();
     expect(done.isLoading).toBe(false);
-    expect(mocks.routerPush).toHaveBeenCalledWith('/login');
+    expect(done.logoutStatus).toBe('confirmed');
+    expect(mocks.routerPush).not.toHaveBeenCalled();
+    expect(mocks.routerReplace).toHaveBeenCalledWith('/login');
   });
 });

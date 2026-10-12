@@ -1,0 +1,24 @@
+const { authenticate, assert, chromium, config, expect, fs, path, prisma } = require('./auth.cjs');
+let browser;
+let context;
+(async () => {
+  browser = await chromium.launch({ headless: true });
+  const session = await authenticate(browser, config.E2E_SUPERADMIN_LOGIN_NAME);
+  context = session.context;
+  const page = session.page;
+  await expect(page.getByText('Connexion réussie', { exact: true })).toBeHidden({ timeout: 10000 });
+  await page.getByRole('button', { name: /^Menu utilisateur de/ }).click();
+  const accountAction = page.getByRole('menuitem', { name: /^Mon compte/ });
+  const accountText = await accountAction.innerText();
+  assert(!/activité/i.test(accountText));
+  await page.screenshot({ path: path.join(__dirname, 'final-account-menu-1440.png') });
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Rechercher une page', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Navigation rapide' });
+  await dialog.getByRole('combobox', { name: 'Rechercher une page' }).fill('Mon compte');
+  const searchText = await dialog.getByRole('option').filter({ has: page.getByText('Mon compte', { exact: true }) }).innerText();
+  assert(!/activité/i.test(searchText));
+  await page.screenshot({ path: path.join(__dirname, 'final-search-account-1440.png') });
+  fs.writeFileSync(path.join(__dirname, 'libelles-finaux.json'), JSON.stringify({ date: new Date().toISOString(), next: '15.5.23 production', scope: 'Final wording only; the 13 behavioral scenarios are not counted again', accountText, searchText, result: 'passed' }, null, 2) + '\n');
+  console.log('PASS final-account-copy');
+})().catch((error) => { console.error(String(error.stack || error)); process.exitCode = 1; }).finally(async () => { await context?.close(); await browser?.close(); await prisma.$disconnect(); });

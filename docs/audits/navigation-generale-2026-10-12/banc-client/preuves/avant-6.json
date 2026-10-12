@@ -1,0 +1,155 @@
+{
+  "completedAt": "2026-10-12T19:28:45.864Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 6,
+  "total": 6,
+  "observations": [
+    {
+      "name": "avant-mobile-vers-bureau-focus",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "defect": "Redimensionnement avec focus dans le volet : focus perdu sur body.",
+      "active": {
+        "tag": "BODY",
+        "label": null,
+        "text": "Aller au contenu principalNoctambuleSystèmeAdministrationUtilisateursParamètres ",
+        "visible": true
+      },
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1146,
+        "mainWidth": 1146,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "avant-fil-ariane-resize-focus",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "defect": "Menu ancêtres fermé au changement de présentation, focus perdu.",
+      "active": {
+        "tag": "BODY",
+        "label": null,
+        "text": "Aller au contenu principalOuvrir la navigationAccueilSystèmeUtilisateursRecherch",
+        "visible": true
+      },
+      "metrics": {
+        "viewport": 768,
+        "document": 768,
+        "main": 738,
+        "mainWidth": 738,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "avant-sidebar-garde-rester",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "active": {
+        "tag": "BODY",
+        "label": null,
+        "text": "Aller au contenu principalOuvrir la navigationAccueilSystèmeUtilisateursRecherch",
+        "visible": true
+      },
+      "sheetOpen": 0,
+      "href": "/systeme/utilisateurs",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "avant-menu-compte-nom-absent",
+      "width": 1440,
+      "height": 900,
+      "status": "pass",
+      "note": "Nom absent normalisé en chaîne vide par le DTO : prénom seul affiché correctement.",
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1146,
+        "mainWidth": 1146,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "avant-recherche-garde-rester",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "active": {
+        "tag": "BODY",
+        "label": null,
+        "text": "Aller au contenu principalOuvrir la navigationAccueilSystèmeUtilisateursRecherch",
+        "visible": true
+      },
+      "href": "/systeme/utilisateurs",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "avant-composition-mesures",
+      "width": 1440,
+      "height": 900,
+      "status": "pass",
+      "searchHeight": 36,
+      "spacePresentation": "Système",
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1146,
+        "mainWidth": 1146,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    }
+  ]
+}

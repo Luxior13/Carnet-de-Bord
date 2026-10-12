@@ -84,7 +84,7 @@ export const buildSearchCatalog = (
   results.push(
     createCatalogItem(
       {
-        description: 'Profil, sécurité, sessions et activité personnelle.',
+        description: 'Profil, sécurité et sessions de connexion.',
         href: '/mon-compte',
         icon: 'UserCheck',
         label: 'Mon compte',

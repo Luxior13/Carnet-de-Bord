@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-12T19:41:06.691Z",
+  "phase": "final",
+  "baseCommit": "84a1431",
+  "next": "15.5.23 production",
+  "browser": "149.0.7827.55",
+  "database": "PostgreSQL17/54640/navigation_test/52migrations",
+  "observations": [
+    {
+      "name": "real-authenticated-root-and-header",
+      "result": "passed",
+      "passwordTotpAndSession": true,
+      "searchTriggerHeight": 40
+    },
+    {
+      "name": "six-destinations-through-quick-search",
+      "result": "passed",
+      "destinations": [
+        "/",
+        "/membres/repertoire",
+        "/systeme/utilisateurs",
+        "/systeme/parametres",
+        "/systeme/feuille-de-route",
+        "/mon-compte"
+      ]
+    },
+    {
+      "name": "six-destinations-through-sidebar-and-account",
+      "result": "passed",
+      "destinations": [
+        "/",
+        "/membres/repertoire",
+        "/systeme/utilisateurs",
+        "/systeme/parametres",
+        "/systeme/feuille-de-route",
+        "/mon-compte"
+      ]
+    },
+    {
+      "name": "quick-search-keyboard-local-and-dismissal",
+      "result": "failed",
+      "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   '/api/health/ready'\n+ ]\n- []\n"
+    },
+    {
+      "name": "mobile-pole-keeps-drawer-page-closes-it",
+      "result": "passed",
+      "polePreservesDrawer": true,
+      "pageClosesDrawer": true
+    },
+    {
+      "name": "dirty-create-search-cancel-preserves-then-leaves",
+      "result": "passed",
+      "draftPreservedOnCancel": true,
+      "sourceContextAndFocusPreserved": true,
+      "confirmedDestination": "/mon-compte"
+    },
+    {
+      "name": "dirty-create-mobile-sidebar-cancel-preserves-then-leaves",
+      "result": "passed",
+      "draftPreservedOnCancel": true,
+      "sourceContextAndFocusPreserved": true,
+      "confirmedDestination": "/membres/repertoire"
+    },
+    {
+      "name": "dirty-create-logout-cancel-preserves-session-and-draft",
+      "result": "failed",
+      "error": "expect(locator).toBeVisible() failed\n\nLocator: getByRole('menu', { name: /^Compte de/ })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 5000ms\n  - waiting for getByRole('menu', { name: /^Compte de/ })\n"
+    },
+    {
+      "name": "breadcrumb-menu-and-native-history-context",
+      "result": "passed",
+      "breadcrumbPreservedFilter": true,
+      "backForwardPreservedContext": true,
+      "draftMenuAndFocusPreserved": true
+    },
+    {
+      "name": "limited-account-visibility-direct-denial-and-revocation",
+      "result": "passed",
+      "realLimitedMfa": true,
+      "usersAndSettingsHidden": true,
+      "directApiStatuses": [
+        403,
+        403,
+        403
+      ],
+      "fixturePermissionRevoked": true,
+      "refreshRemovesDestination": true,
+      "normalLogout200AndMe401": true
+    }
+  ],
+  "browserErrors": []
+}

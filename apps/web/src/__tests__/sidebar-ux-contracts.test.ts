@@ -69,7 +69,7 @@ describe('sidebar UX contracts', () => {
     expect(sidebarSource).toContain('Déconnexion');
     expect(sidebarSource).toContain('@{userData.loginName}');
     expect(sidebarSource).toContain('aria-label="Accès au compte"');
-    expect(sidebarSource).toContain('Profil, sécurité et activité');
+    expect(sidebarSource).toContain('Profil et sécurité');
     expect(navigationSource).not.toMatch(
       /href:\s*['"]\/mon-compte['"][\s\S]{0,160}label:\s*['"]Mon compte['"]/,
     );
@@ -161,9 +161,6 @@ describe('sidebar UX contracts', () => {
     expect(sidebarSource).not.toContain('tracking-[0.16em]');
     expect(sidebarSource).toContain('collisionPadding={8}');
     expect(sidebarSource).toContain('overflow-y-auto overscroll-contain');
-    expect(sidebarSource).toContain(
-      "requestGuardedNavigation('/login', logout)",
-    );
     expect(sidebarSource).not.toContain('#121c2b');
     expect(sidebarSource).not.toContain('#18243a');
     expect(sidebarSource).not.toContain('#0e1622');

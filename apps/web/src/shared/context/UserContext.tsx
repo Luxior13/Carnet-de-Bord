@@ -30,6 +30,12 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '$ui/alert';
 import { apiFetch } from '$utils/api.utils';
 
+import {
+  LOGOUT_TIMEOUT_MS,
+  type LogoutStatus,
+  requestSessionLogout,
+} from './session-logout';
+
 // Auto-logout after 30 minutes of inactivity
 const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
 // Show warning 5 minutes before timeout
@@ -77,6 +83,7 @@ type ContextType = {
     options?: AuthenticationRequestOptions,
   ) => Promise<LoginResult | null>;
   logout: () => Promise<void>;
+  logoutStatus: LogoutStatus;
   mustChangePassword: boolean;
   refreshUser: () => Promise<void>;
   showSessionWarning: boolean;
@@ -98,6 +105,7 @@ const UserContext = createContext<ContextType>({
   isLoading: true,
   login: async () => null,
   logout: async () => {},
+  logoutStatus: 'idle',
   mustChangePassword: false,
   refreshUser: async () => {},
   showSessionWarning: false,
@@ -121,6 +129,7 @@ export const UserProvider: FC<UserProviderProps> = ({
   const [authorizationRevision, setAuthorizationRevision] = useState(0);
   const [isLoading, setIsLoading] = useState<boolean>(initialUser === null);
   const [error, setError] = useState<string | null>(null);
+  const [logoutStatus, setLogoutStatus] = useState<LogoutStatus>('idle');
   const [mustChangePassword, setMustChangePassword] = useState<boolean>(
     initialUser?.mustChangePassword ?? false,
   );
@@ -137,6 +146,7 @@ export const UserProvider: FC<UserProviderProps> = ({
   const currentUserRef = useRef(initialUser);
   const sessionOperationRef = useRef(0);
   const logoutInProgressRef = useRef(false);
+  const logoutRequestedRef = useRef(false);
   const mountedRef = useRef(true);
   const sessionReadsRef = useRef(new Set<AbortController>());
   useEffect(() => {
@@ -152,7 +162,7 @@ export const UserProvider: FC<UserProviderProps> = ({
   }, []);
 
   const acceptUserSnapshot = useCallback((nextUser: UserType): boolean => {
-    if (!mountedRef.current || logoutInProgressRef.current) return false;
+    if (!mountedRef.current || logoutRequestedRef.current) return false;
     const currentUser = currentUserRef.current;
     if (
       currentUser?.id === nextUser.id &&
@@ -204,6 +214,9 @@ export const UserProvider: FC<UserProviderProps> = ({
 
   const completeAuthentication = useCallback(
     (data: AuthenticatedLoginData): void => {
+      if (!mountedRef.current || logoutInProgressRef.current) return;
+      logoutRequestedRef.current = false;
+      setLogoutStatus('idle');
       const activityAt = Date.now();
 
       if (!acceptUserSnapshot(data.user)) return;
@@ -220,7 +233,7 @@ export const UserProvider: FC<UserProviderProps> = ({
   const fetchUser = useCallback(
     async (silent = false): Promise<void> => {
       // A refresh cannot supersede a logout while its cookie is still valid.
-      if (!mountedRef.current || logoutInProgressRef.current) return;
+      if (!mountedRef.current || logoutRequestedRef.current) return;
       const operation = ++sessionOperationRef.current;
       const isCurrent = (): boolean =>
         mountedRef.current && operation === sessionOperationRef.current;
@@ -299,29 +312,37 @@ export const UserProvider: FC<UserProviderProps> = ({
   }, [fetchUser, userData]);
 
   const logout = useCallback(async (): Promise<void> => {
-    if (logoutInProgressRef.current) return;
+    if (!mountedRef.current || logoutInProgressRef.current) return;
     logoutInProgressRef.current = true;
+    logoutRequestedRef.current = true;
     clearAuthenticatedUser();
     const operation = sessionOperationRef.current;
     const isCurrent = (): boolean =>
       mountedRef.current && operation === sessionOperationRef.current;
+    const controller = new AbortController();
+    sessionReadsRef.current.add(controller);
+    const timeout = setTimeout(() => controller.abort(), LOGOUT_TIMEOUT_MS);
+    setLogoutStatus('pending');
     setIsLoading(true);
-    setMustChangePassword(false);
-    setSessionRememberMe(false);
     setError(null);
 
     try {
-      await apiFetch(RoutesApi.logout, { method: 'POST' });
+      await requestSessionLogout(controller.signal);
       if (!isCurrent()) return;
+      setLogoutStatus('confirmed');
       toast.success('Déconnexion réussie');
+      try {
+        router.replace('/login');
+      } catch {
+        // The confirmed state keeps a native login link if navigation fails.
+      }
     } catch {
       if (!isCurrent()) return;
-      toast.error('Erreur lors de la déconnexion');
+      setLogoutStatus('unconfirmed');
     } finally {
-      if (isCurrent()) {
-        router.push('/login');
-        setIsLoading(false);
-      }
+      clearTimeout(timeout);
+      sessionReadsRef.current.delete(controller);
+      if (isCurrent()) setIsLoading(false);
       logoutInProgressRef.current = false;
     }
   }, [clearAuthenticatedUser, router]);
@@ -420,6 +441,11 @@ export const UserProvider: FC<UserProviderProps> = ({
           )
             throw new Error('Invalid login response');
 
+          // An explicit new credentials flow replaces the previous logout
+          // intention, including a later session check after uncertain MFA.
+          logoutRequestedRef.current = false;
+          setLogoutStatus('idle');
+
           return data.data;
         }
 
@@ -501,7 +527,8 @@ export const UserProvider: FC<UserProviderProps> = ({
 
   const cancelMfaChallenge = useCallback(
     async ({ signal }: AuthenticationRequestOptions = {}): Promise<void> => {
-      if (!mountedRef.current || signal?.aborted) return;
+      if (!mountedRef.current || logoutRequestedRef.current || signal?.aborted)
+        return;
       sessionOperationRef.current += 1;
       setError(null);
 
@@ -695,6 +722,7 @@ export const UserProvider: FC<UserProviderProps> = ({
         isLoading,
         login,
         logout,
+        logoutStatus,
         mustChangePassword,
         refreshUser,
         showSessionWarning,

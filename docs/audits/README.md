@@ -10,6 +10,7 @@ Ne pas créer un rapport complet pour chaque correction de texte.
 
 | Rapport | Périmètre et portée |
 | --- | --- |
+| [Navigation générale — 12 octobre 2026](AUDIT_NAVIGATION_GENERALE_2026-10-12.md) | Menu Rubriques confirmé par l'utilisateur, focus et garde de départ corrigés, déconnexion non confirmée et reprise explicite ; 17 parcours client, dix parcours Next/MFA, trois reprises HTTP de déconnexion et 1 248 tests web réussis. Limites de profils et de sections précisées |
 | [Erreur, page introuvable et chargement — 12 octobre 2026](AUDIT_ETATS_TECHNIQUES_2026-10-12.md) | Erreur racine autonome, reprise par GET et focus corrigés ; treize scénarios client, cinq contrôles HTTP réels et quatre sondes Next en copie isolée réussis. ETAT-01 à ETAT-06 clos ou vérifiés selon leur portée |
 | [Fiche personne — 12 octobre 2026](AUDIT_FICHE_PERSONNE_2026-10-12.md) | Identité, coordonnées, provenance, portée et suppression fiabilisées ; 30 parcours client, treize HTTP avec connexion/MFA/PostgreSQL, trente SQL et 1 240 tests web réussis ; REP-D01 à REP-D10 clos ou amélioration vérifiée, limites et contrôles finaux dans le rapport |
 | [Création d'une personne — 12 octobre 2026](AUDIT_CREATION_PERSONNE_2026-10-12.md) | Reprises, navigation jusque dans le chargement, focus, brouillon et indice d'alerte API corrigés ; 28 parcours simulés, onze Next/session/PostgreSQL, 16 SQL et 1 236 tests web réussis ; REP-N01 à REP-N06 clos, reprise manuelle sans garantie d'idempotence |

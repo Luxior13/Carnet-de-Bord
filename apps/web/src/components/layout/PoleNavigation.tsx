@@ -2,7 +2,8 @@
 
 import { Check, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
-import React, { type FC } from 'react';
+import { useRouter } from 'next/navigation';
+import React, { type FC, useState } from 'react';
 
 import type { NavigationSpace } from '$constants/app.constants';
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
@@ -16,6 +17,7 @@ import {
 } from '$ui/dropdown-menu';
 import { useSidebar } from '$ui/sidebar';
 import { cn } from '$utils/css.utils';
+import { requestGuardedNavigation } from '$utils/guarded-navigation.utils';
 
 type PoleNavigationProps = {
   activeSpace: NavigationSpace;
@@ -33,6 +35,8 @@ export const PoleNavigation: FC<PoleNavigationProps> = ({
   onNavigate,
   spaces,
 }) => {
+  const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
   const { isMobile, setOpen, state } = useSidebar();
   const isCollapsed = !isMobile && state === 'collapsed';
   const activeTone = getNavigationSpaceToneClasses(activeSpace.tone);
@@ -44,7 +48,7 @@ export const PoleNavigation: FC<PoleNavigationProps> = ({
       data-sidebar="space-switcher"
       className="border-border-content w-full shrink-0 border-b px-2 py-2 group-data-[collapsible=icon]/sidebar:border-b-0 group-data-[collapsible=icon]/sidebar:px-1"
     >
-      <DropdownMenu>
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
           <Button
             aria-label={`Rubriques : ${activeSpace.label}`}
@@ -103,6 +107,17 @@ export const PoleNavigation: FC<PoleNavigationProps> = ({
                       event.altKey
                     )
                       return;
+                    if (event.defaultPrevented) {
+                      // The document guard intercepted this link. Keep the
+                      // menu mounted, including the selected space on confirm.
+                      requestGuardedNavigation(space.href, () => {
+                        onNavigate(space.href);
+                        setMenuOpen(false);
+                        router.push(space.href);
+                      });
+
+                      return;
+                    }
                     if (isCollapsed) {
                       setOpen(true);
                       // Reopening the current space must preserve its current
@@ -110,6 +125,7 @@ export const PoleNavigation: FC<PoleNavigationProps> = ({
                       if (isActive) event.preventDefault();
                     }
                     if (!event.defaultPrevented) onNavigate(space.href);
+                    setMenuOpen(false);
                   }}
                 >
                   <Icon

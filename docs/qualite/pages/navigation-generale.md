@@ -1,5 +1,63 @@
 ﻿# Suivi — Navigation générale, sidebar et header
 
+## État courant — revue du 12 octobre 2026
+
+Le [rapport courant](../../audits/AUDIT_NAVIGATION_GENERALE_2026-10-12.md)
+reprend les parcours du cadre partagé : destinations, droits, disponibilité,
+recherche rapide, garde de brouillon, focus et déconnexion. NAV-02 à NAV-07
+sont clos ou réconciliés dans la portée vérifiée ; les anciennes réussites
+visuelles ne sont pas assimilées à cette nouvelle intégration.
+
+L'utilisateur a confirmé le 12 octobre 2026 qu'il souhaite conserver le menu
+déroulant « Rubriques » actuel. Il avait été maintenu par continuité pendant
+la revue, puis ce choix est devenu explicite. L'ancienne grille décrite
+ci-dessous est historique ; elle ne doit plus être lue comme le rendu courant.
+
+- Sidebar fixe de 264 px sur ordinateur, seuil mobile de 1 024 px, volet de
+  288 px limité au viewport. Aucun mode réduit réintroduit.
+- Rubriques sous le logo dans un menu commun : libellés, icônes et sélection
+  courante, seulement pour les destinations autorisées et disponibles. Les
+  pages de la rubrique restent en dessous sur toute la largeur.
+- Changer de rubrique doit permettre de choisir ensuite une page dans le
+  volet mobile ; fermer un menu ne doit pas perdre le focus d'une confirmation
+  de départ refusée. Cette interaction est vérifiée dans NAV-05.
+- Header de 56 px ; recherche à 40 px sur ordinateur et 44 px sur mobile.
+  NAV-03 corrige l'ancien rendu de 36 px et vérifie la mesure finale.
+- Navigation rapide locale, borne de 160 caractères, huit suggestions et dix
+  résultats, sans raccourci global ni page de recherche complète. Ancêtres du
+  fil d'Ariane disponibles dans le menu compact.
+- Les descriptions de Mon compte présentent le profil, la sécurité et ses
+  sessions de connexion ; elles n'annoncent plus d'activité personnelle absente.
+- Les barres de sections partagent `PageSectionNavigation`. Leur style récent
+  reste conservé ; un effet réel de navigation doit justifier toute retouche.
+- Déconnexion : identité masquée dès demande, attente bornée à quinze secondes,
+  résultat non confirmé visible et nouvelle tentative explicite. Aucun faux
+  succès après refus HTTP, aucune restauration silencieuse du compte pendant
+  cette intention. Une nouvelle connexion explicite peut la remplacer.
+
+Les 17 parcours du banc client passent : six largeurs de 320 à 1 920 px,
+menus et palettes conservés après « Rester », focus lors des changements de
+présentation, clavier et états de déconnexion sans identité. Ce banc emploie
+les composants réels avec contexte et navigation simulés ; il ne prouve pas
+la révocation serveur. Les 37 tests ciblés du contexte et de la déconnexion
+passent aussi. Dix parcours Next/PostgreSQL avec connexion MFA réelle et trois
+parcours de déconnexion réussissent : destinations, garde de brouillon,
+historique, compte limité, refus CSRF, 500 injecté et réponse perdue après commit.
+Le compte ne réapparaît pas silencieusement pendant l'intention de sortie ;
+ce verrou reste local au contexte monté, sans promesse après rechargement.
+Un prénom sans nom était déjà correctement affiché.
+
+Le changement de section après long défilement reste une piste distincte,
+non revérifiée dans cette passe : le composant de sections n'a pas été modifié.
+La clôture des parcours privés NAV-02 ne vaut pas validation de cette piste.
+
+La suite générale compte 1 248 tests réussis et 163 ignorés ; build, types,
+lint et budgets d'architecture/performance passent. Les plafonds existants
+restent inchangés : le focus responsive est extrait dans
+[sidebar-focus.ts](../../../apps/web/src/components/ui/sidebar-focus.ts).
+Les limites de profils, propagation des droits après navigation complète,
+lecteurs d'écran et navigateurs non exercés sont précisées dans le rapport.
+
 ## Actions et navigation pendant une requête — 11 octobre 2026
 
 La garde de brouillon ignore les liens portant `aria-disabled="true"` : leur
@@ -23,7 +81,11 @@ y compris dans le volet mobile. Ce contrôle ne valide pas les destinations,
 la déconnexion ou les droits serveur ; la composition des rubriques n'est pas
 modifiée par cette passe.
 
-## Décisions courantes
+## Historique — synthèse de la grille conservée du 10 octobre 2026
+
+La composition de grille de cette synthèse diverge du menu actuellement livré.
+La section courante du 12 octobre ci-dessus précise le choix confirmé du menu ;
+les dimensions et preuves historiques ci-dessous ne sont pas réattribuées au menu.
 
 Synthèse actualisée le 10 octobre 2026 ; les vérifications de septembre restent
 datées dans l’historique ci-dessous. Composants partagés par les pages privées. Besoin :
@@ -105,7 +167,8 @@ restent celles du thème existant.
 
 Les sections de septembre ci-dessous décrivent les versions examinées alors. Les
 notifications et la recherche complète qui y figurent ont été retirées le 9 octobre.
-Leurs contrôles ne valident pas le périmètre actuel. La synthèse ci-dessus et
+Leurs contrôles ne valident pas le périmètre actuel. La section « État courant —
+revue du 12 octobre 2026 » ci-dessus et
 [NAVIGATION](../../references/NAVIGATION.md) portent les règles courantes.
 
 ## Sélection des sujets pour la grille
@@ -524,7 +587,7 @@ accueil unique, menu au clavier, redimensionnement, recherche et notifications
 simulées : réussis. 62 tests ciblés, TypeScript et lint réussis lors de cette passe.
 Ces interactions du header n’ont pas été rejouées pour le déplacement de la grille.
 
-## Points ouverts courants
+## Suivi des points — actualisé le 12 octobre 2026
 
 Le 10 octobre, pendant les corrections Utilisateurs, le contexte React et le
 suivi de viewport sont extraits des primitives dans
@@ -533,17 +596,23 @@ L'export public `useSidebar` et le seuil mobile de 1 024 px sont conservés.
 Contrôle proportionné Q19/Q27/Q30 : budget d'architecture, tests sidebar, lint,
 types et build réussis ; shell réel observé aux neuf largeurs du
 [banc Utilisateurs](../../audits/AUDIT_UTILISATEURS_2026-10-10.md#validation-des-corrections).
-Cette extraction ne revalide pas les autres parcours de navigation ci-dessous.
+Cette extraction ne revalidait pas les autres parcours de navigation. Le
+[rapport du 12 octobre](../../audits/AUDIT_NAVIGATION_GENERALE_2026-10-12.md)
+décrit leur reprise distincte et ses limites.
 
 | ID | Constat / preuve | Suite et déclencheur | Responsable / état |
 | --- | --- | --- | --- |
 | NAV-01 | `components/ui/sidebar.tsx` dépassait son budget (925/900) ; contexte et suivi de viewport extraits, aucun plafond relevé | Budget, contrats sidebar et build réussis après correction | Clos le 10 octobre 2026 |
-| NAV-02 | Parcours privés réels, sortie avec brouillon et changement de droits non rejoués pendant la cartographie | Exécuter avec des profils isolés avant validation complète de navigation | À attribuer / à vérifier |
-| NAV-03 | La référence décrit des contrôles de header de 40 px sur ordinateur ; le déclencheur de `GlobalSearch.tsx` utilise `lg:h-9`. Écart de code relevé pendant la réconciliation, sans mesure CSS calculée | Vérifier la taille effective et la décision applicable lors de la prochaine retouche du header ; ne pas effacer une décision pour l’aligner silencieusement sur le code | À attribuer / à qualifier |
+| NAV-02 | Parcours privés, brouillon et droits non rejoués pendant l'ancienne cartographie | Dix parcours Next avec vrais comptes isolés et départ accepté/refusé ; piste de long défilement des sections distincte | Clos le 12 octobre au périmètre exercé |
+| NAV-03 | Déclencheur de recherche mesuré à 36 px sur ordinateur contre la règle de 40 px | Hauteur corrigée et mesurée à 40 px dans Chromium ; 44 px sur mobile | Clos le 12 octobre, sur les tailles contrôlées |
+| NAV-04 | Référence décrivant encore la grille historique et un menu compte de 18rem | Menu Rubriques confirmé par l'utilisateur le 12 octobre ; largeur actuelle de 16rem consignée, ancienne grille conservée comme historique | Références réconciliées le 12 octobre |
+| NAV-05 | Après « Rester », contexte de navigation fermé et focus perdu depuis Sidebar/recherche | Menus maintenus jusqu'au départ accepté, focus rétabli ; bancs client et Next réussis | Clos le 12 octobre au périmètre exercé |
+| NAV-06 | Refus HTTP annoncé comme déconnexion réussie ; transport non borné | Identité masquée, résultat non confirmé, délai de 15 s et reprise explicite ; 37 tests ciblés et trois parcours HTTP réussis | Clos le 12 octobre au périmètre exercé |
+| NAV-07 | Contrôle focalisé masqué lors d'un changement de présentation du volet ou des ancêtres | Focus rétabli dans les deux sens des seuils, sans déplacer le focus du contenu | Clos le 12 octobre, banc client vérifié |
 
-## Limites et réexamen
+## Limites de la passe historique et réexamen
 
-- Le banc ne valide ni session/API réelle, ni préchargement Next, ni parcours
+- Le banc historique ne valide ni session/API réelle, ni préchargement Next, ni parcours
   complet d’un formulaire non enregistré ; les protections existantes sont conservées.
 - Lecteur d’écran, Safari/iOS, appareils physiques et zoom natif non vérifiés ;
   aucune déclaration de conformité complète.

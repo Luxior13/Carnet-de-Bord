@@ -1,6 +1,6 @@
 # Navigation — état actuel et cible
 
-Référence réconciliée le 10 octobre 2026. Le catalogue des projets est séparé de la navigation active. Voir la [feuille de route](FEUILLE_DE_ROUTE.md) pour les étapes et la [matrice](../../features/pages/MATRICE_PREPARATION.md) pour les correspondances historiques.
+Référence actualisée pendant la revue du 12 octobre 2026. Le catalogue des projets est séparé de la navigation active. Voir la [feuille de route](FEUILLE_DE_ROUTE.md) pour les étapes et la [matrice](../../features/pages/MATRICE_PREPARATION.md) pour les correspondances historiques.
 
 ## Navigation actuelle
 
@@ -8,7 +8,7 @@ Cinq entrées sont déclarées dans trois pôles. Leur visibilité dépend des a
 
 | Pôle actuel | Entrées actives | Placement |
 | --- | --- | --- |
-| Aujourd’hui | Accueil `/` | Travail personnel |
+| Aujourd’hui | Mon travail `/` | Travail personnel |
 | Membres | Répertoire `/membres/repertoire` | Membres et contacts de la structure |
 | Système | Utilisateurs `/systeme/utilisateurs`, paramètres `/systeme/parametres`, feuille de route `/systeme/feuille-de-route` | Comptes, technique et plan produit |
 
@@ -62,21 +62,24 @@ semi-gras de 15 px (`0.9375rem`), espacement de 12 px après cet emplacement. Le
 offre une cible de 44 px de haut et un focus intérieur. Sur mobile, le bouton de fermeture de 44 px
 est centré dans cette hauteur, à l’écart du nom.
 
-Les pôles accessibles sont regroupés sous le logo, en haut de la sidebar :
-quatre icônes par ligne, donc une ligne avec les trois pôles actuels et deux
-avec les huit pôles cibles. Les pages apparaissent en dessous sur toute la
-largeur, précédées du nom du pôle et des intitulés de groupe. L’ordre reste
-stable, sans pagination ni rubrique future affichée avant sa livraison.
+Les pôles accessibles sont regroupés sous le logo, en haut de la sidebar,
+dans le menu déroulant « Rubriques ». Le menu affiche libellé, icône et état
+courant ; les pages apparaissent en dessous sur toute la largeur avec leurs
+intitulés de groupe. L'ordre reste stable, sans pagination ni rubrique future
+affichée avant sa livraison. L'utilisateur a confirmé le 12 octobre 2026
+qu'il souhaite conserver le menu « Rubriques » actuel. Cette décision remplace
+la grille encore décrite ici avant la revue ; les anciennes décisions et leurs
+preuves restent datées dans l'historique du suivi.
 La sidebar reste ouverte à 264 px sur ordinateur (à partir de 1024 px). Le mode réduit
 et son bouton sont retirés du site depuis le 27 septembre 2026. Les libellés
-restent à 14 px. Sur les écrans bas ou avec davantage de pôles, le bloc d’icônes
-est limité à `min(35svh, 8rem)` et peut défiler ; les pages ont leur propre
-défilement. Leur titre défile avec elles pour préserver l’accès aux liens.
+restent à 14 px. Sur les écrans bas ou avec davantage de pôles, le menu adapte
+sa hauteur à l'espace disponible et défile ; les pages ont leur propre
+défilement pour préserver l'accès aux liens.
 
 Chaque icône de pôle conserve sa couleur sémantique, sans pastille colorée.
-Le pôle courant reçoit un fond bleu discret et un trait inférieur, en plus de
-`aria-current`. Les icônes mesurent 20 px dans des liens de 44 × 44 px ; le nom
-est accessible au clavier et par une infobulle sous la grille. Les icônes des pages restent
+Le pôle courant reçoit un fond discret et une coche, en plus de
+`aria-current`. Les libellés sont visibles dans le menu ; leurs icônes mesurent
+16 px. Les icônes des pages restent
 neutres et mesurent 16 px. La page sélectionnée reçoit le fond bleu et une graisse
 renforcée, également lorsqu’on visite une de ses fiches. Une branche contenant
 la page active reste discrète. Les lignes ont des arrondis de 8 px ; le focus des
@@ -86,7 +89,7 @@ La position de défilement des pages par pôle reste mémorisée. Le shell impos
 l’état ouvert sur ordinateur ; les anciennes préférences de réduction desktop
 et de repli de la liste des pôles sont ignorées, sans purge de stockage.
 
-Sur mobile, le volet conserve la grille de quatre icônes et les pages en dessous dans ses 288 px,
+Sur mobile, le volet conserve le menu Rubriques et les pages en dessous dans ses 288 px,
 limités à la largeur d’écran disponible. Changer de pôle garde le volet ouvert
 pour choisir une page ; choisir une page ferme le volet. Le bouton du header,
 Échap et le bouton de fermeture restent disponibles sur mobile.
@@ -102,7 +105,24 @@ disponible est réduite. La marge inférieure respecte la zone sûre du téléph
 
 Le popover utilisateur utilise une surface ardoise uniforme, des séparateurs
 en retrait et des icônes sans pastille. Le survol ou la sélection colore
-uniquement l’action concernée. Sa largeur de 18rem reste limitée au viewport.
+uniquement l’action concernée. Sa largeur de 16rem reste limitée au viewport,
+avec une marge extérieure de 1rem de chaque côté.
+
+Une navigation protégée par un brouillon garde son menu ou sa palette ouverts
+tant que le départ n'est pas accepté. « Rester » conserve la saisie et ramène
+le focus dans ce contexte ; confirmer ferme le panneau puis exécute une seule
+navigation. Lors d'un changement de présentation mobile/bureau, le focus d'un
+contrôle devenu invisible rejoint un équivalent visible ou le déclencheur.
+Un focus déjà placé dans le contenu ne doit pas être déplacé.
+
+La déconnexion masque immédiatement les informations privées. Son POST est
+borné à quinze secondes ; un refus, une réponse invalide ou un transport perdu
+affiche « Déconnexion non confirmée » avec reprise explicite. Une réponse de
+succès conforme ou le 401 indiquant une session absente permet de rejoindre la
+connexion. Pendant cette intention, le contexte monté ignore les lectures qui
+réafficheraient le compte ; une nouvelle authentification explicite peut la
+remplacer. Ce verrou local n'est ni une révocation serveur ni une garantie
+persistante après rechargement.
 
 Les décisions et vérifications de cette apparence sont consignées dans le
 [suivi de la navigation générale](../qualite/pages/navigation-generale.md).

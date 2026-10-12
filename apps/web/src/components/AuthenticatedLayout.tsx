@@ -18,6 +18,7 @@ import React, {
 
 import { ChangePasswordDialog } from '$components/ChangePasswordDialog';
 import { Header } from '$components/layout/Header';
+import { SessionLogoutState } from '$components/layout/SessionLogoutState';
 import Sidebar from '$components/Sidebar';
 import { isPublicPagePath } from '$constants/security.constants';
 import { useUser } from '$context/UserContext';
@@ -87,8 +88,15 @@ export const PersistentAuthenticatedShell: FC<AuthenticatedShellProps> = ({
 }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { applyUserUpdate, error, isLoading, refreshUser, userData } =
-    useUser();
+  const {
+    applyUserUpdate,
+    error,
+    isLoading,
+    logout,
+    logoutStatus,
+    refreshUser,
+    userData,
+  } = useUser();
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [registeredPageConfig, setRegisteredPageConfig] =
     useState<RegisteredPageConfig>(() => ({
@@ -127,13 +135,19 @@ export const PersistentAuthenticatedShell: FC<AuthenticatedShellProps> = ({
   );
 
   useEffect(() => {
-    if (!isPublicPage && !isLoading && !userData && !error) {
+    if (
+      !isPublicPage &&
+      !isLoading &&
+      !userData &&
+      !error &&
+      (!logoutStatus || logoutStatus === 'idle')
+    ) {
       const returnPath = getSafeReturnPath(
         `${window.location.pathname}${window.location.search}`,
       );
       router.push(`/login?next=${encodeURIComponent(returnPath)}`);
     }
-  }, [error, isLoading, isPublicPage, userData, router]);
+  }, [error, isLoading, isPublicPage, logoutStatus, userData, router]);
 
   useEffect(() => {
     if (requiresMfaSetup) {
@@ -149,6 +163,10 @@ export const PersistentAuthenticatedShell: FC<AuthenticatedShellProps> = ({
   };
 
   if (isPublicPage) return children;
+
+  if (logoutStatus && logoutStatus !== 'idle') {
+    return <SessionLogoutState onRetry={logout} status={logoutStatus} />;
+  }
 
   // Keep the authenticated shell mounted during a silent user refresh. This
   // prevents full-page flashes after profile, contact or password updates.

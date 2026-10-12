@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-12T19:29:40.684Z",
+  "phase": "baseline",
+  "baseCommit": "84a1431",
+  "next": "15.5.23 production",
+  "browser": "149.0.7827.55",
+  "database": "PostgreSQL17/54640/navigation_test/52migrations",
+  "observations": [
+    {
+      "name": "real-authenticated-root-and-header",
+      "result": "passed",
+      "passwordTotpAndSession": true,
+      "searchTriggerHeight": 36
+    },
+    {
+      "name": "six-destinations-through-quick-search",
+      "result": "passed",
+      "destinations": [
+        "/",
+        "/membres/repertoire",
+        "/systeme/utilisateurs",
+        "/systeme/parametres",
+        "/systeme/feuille-de-route",
+        "/mon-compte"
+      ]
+    },
+    {
+      "name": "six-destinations-through-sidebar-and-account",
+      "result": "passed",
+      "destinations": [
+        "/",
+        "/membres/repertoire",
+        "/systeme/utilisateurs",
+        "/systeme/parametres",
+        "/systeme/feuille-de-route",
+        "/mon-compte"
+      ]
+    },
+    {
+      "name": "quick-search-keyboard-local-and-dismissal",
+      "result": "passed",
+      "enterNavigates": true,
+      "clearEnterOnlyClears": true,
+      "escapeRestoresFocus": true,
+      "noSearchApi": true
+    },
+    {
+      "name": "mobile-pole-keeps-drawer-page-closes-it",
+      "result": "passed",
+      "polePreservesDrawer": true,
+      "pageClosesDrawer": true
+    },
+    {
+      "name": "dirty-create-search-cancel-preserves-then-leaves",
+      "result": "passed",
+      "draftPreservedOnCancel": true,
+      "confirmedDestination": "/mon-compte"
+    },
+    {
+      "name": "dirty-create-mobile-sidebar-cancel-preserves-then-leaves",
+      "result": "passed",
+      "draftPreservedOnCancel": true,
+      "confirmedDestination": "/membres/repertoire"
+    },
+    {
+      "name": "breadcrumb-menu-and-native-history-context",
+      "result": "passed",
+      "breadcrumbPreservedFilter": true,
+      "backForwardPreservedContext": true
+    },
+    {
+      "name": "limited-account-visibility-direct-denial-and-revocation",
+      "result": "passed",
+      "realLimitedMfa": true,
+      "usersAndSettingsHidden": true,
+      "directApiStatuses": [
+        403,
+        403,
+        403
+      ],
+      "fixturePermissionRevoked": true,
+      "refreshRemovesDestination": true
+    }
+  ],
+  "browserErrors": []
+}

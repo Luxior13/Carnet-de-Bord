@@ -1,0 +1,399 @@
+{
+  "completedAt": "2026-10-12T19:39:40.646Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 17,
+  "total": 17,
+  "observations": [
+    {
+      "name": "resize-sidebar-focus",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "focus": "Destination bureau, déclencheur mobile, saisie extérieure préservée",
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1410,
+        "mainWidth": 1410,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "resize-ancetres-focus",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "garde-page",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "restored": {
+        "tag": "A",
+        "label": null,
+        "text": "Paramètres système",
+        "visible": true
+      },
+      "target": "/systeme/parametres",
+      "sheetPreservedForSpace": false,
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "garde-compte",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "restored": {
+        "tag": "A",
+        "label": null,
+        "text": "Mon compteProfil, sécurité et activité",
+        "visible": true
+      },
+      "target": "/mon-compte",
+      "sheetPreservedForSpace": false,
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "garde-rubrique",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "restored": {
+        "tag": "A",
+        "label": "Membres",
+        "text": "Membres",
+        "visible": true
+      },
+      "target": "/membres/repertoire",
+      "sheetPreservedForSpace": true,
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "garde-deconnexion",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "restored": {
+        "tag": "DIV",
+        "label": null,
+        "text": "Déconnexion",
+        "visible": true
+      },
+      "target": "/login",
+      "sheetPreservedForSpace": false,
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "mains": 0
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "garde-ancetres",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "restored": {
+        "tag": "A",
+        "label": null,
+        "text": "Accueil",
+        "visible": true
+      },
+      "target": "/",
+      "sheetPreservedForSpace": false,
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "garde-recherche",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "restored": {
+        "tag": "INPUT",
+        "label": "Rechercher une page",
+        "text": "",
+        "visible": true
+      },
+      "target": "/systeme/parametres",
+      "sheetPreservedForSpace": false,
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "composition-320",
+      "width": 320,
+      "height": 900,
+      "status": "pass",
+      "searchHeight": 44,
+      "metrics": {
+        "viewport": 320,
+        "document": 320,
+        "main": 290,
+        "mainWidth": 290,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "composition-390",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "searchHeight": 44,
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "composition-768",
+      "width": 768,
+      "height": 900,
+      "status": "pass",
+      "searchHeight": 44,
+      "metrics": {
+        "viewport": 768,
+        "document": 768,
+        "main": 738,
+        "mainWidth": 738,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "composition-1024",
+      "width": 1024,
+      "height": 900,
+      "status": "pass",
+      "searchHeight": 40,
+      "metrics": {
+        "viewport": 1024,
+        "document": 1024,
+        "main": 730,
+        "mainWidth": 730,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "composition-1440",
+      "width": 1440,
+      "height": 900,
+      "status": "pass",
+      "searchHeight": 40,
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1146,
+        "mainWidth": 1146,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "composition-1920",
+      "width": 1920,
+      "height": 900,
+      "status": "pass",
+      "searchHeight": 40,
+      "metrics": {
+        "viewport": 1920,
+        "document": 1920,
+        "main": 1626,
+        "mainWidth": 1626,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "deconnexion-attente-erreur-reprise-320",
+      "width": 320,
+      "height": 900,
+      "status": "pass",
+      "contextStates": [
+        "pending",
+        "unconfirmed",
+        "pending",
+        "confirmed"
+      ],
+      "note": "États du contexte simulés ; aucune requête POST réelle",
+      "metrics": {
+        "viewport": 320,
+        "document": 320,
+        "main": 320,
+        "mainWidth": 320,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "deconnexion-attente-erreur-reprise-1440",
+      "width": 1440,
+      "height": 900,
+      "status": "pass",
+      "contextStates": [
+        "pending",
+        "unconfirmed",
+        "pending",
+        "confirmed"
+      ],
+      "note": "États du contexte simulés ; aucune requête POST réelle",
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1440,
+        "mainWidth": 1440,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    },
+    {
+      "name": "recherche-clavier-garde-effacement",
+      "width": 1440,
+      "height": 900,
+      "status": "pass",
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1146,
+        "mainWidth": 1146,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/systeme/utilisateurs"
+        }
+      ]
+    }
+  ]
+}

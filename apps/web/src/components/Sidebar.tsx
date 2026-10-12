@@ -110,6 +110,23 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
   const { isMobile, setOpenMobile, state: sidebarState } = useSidebar();
   const isCollapsed = !isMobile && sidebarState === 'collapsed';
   const pendingMobileSpaceHref = useRef<string | null>(null);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+
+  const closeMobileAfterNavigation = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+  ): void => {
+    if (
+      !event.defaultPrevented &&
+      event.button === 0 &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.shiftKey &&
+      !event.altKey
+    ) {
+      setAccountMenuOpen(false);
+      setOpenMobile(false);
+    }
+  };
 
   const visibleSpaces = useMemo(
     () =>
@@ -173,6 +190,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
   }, [activeGroupHref]);
 
   useEffect(() => {
+    setAccountMenuOpen(false);
     if (pendingMobileSpaceHref.current !== pathname) {
       setOpenMobile(false);
     }
@@ -196,7 +214,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               isExactActive ? 'page' : isActive ? 'location' : undefined
             }
             href={item.href}
-            onClick={() => setOpenMobile(false)}
+            onClick={closeMobileAfterNavigation}
           >
             <Icon className="size-4" />
             <span>{item.label}</span>
@@ -246,7 +264,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                       : undefined
                 }
                 href={item.href}
-                onClick={() => setOpenMobile(false)}
+                onClick={closeMobileAfterNavigation}
               >
                 <Icon className="size-4" />
                 <span>{item.label}</span>
@@ -280,7 +298,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               isExactActive ? 'page' : isActive ? 'location' : undefined
             }
             href={item.href}
-            onClick={() => setOpenMobile(false)}
+            onClick={closeMobileAfterNavigation}
           >
             <Icon className="size-4" />
             <span>{item.label}</span>
@@ -296,7 +314,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
         <Link
           href="/"
           aria-label={`${SITE_CONFIG.name} — Accueil`}
-          onClick={() => setOpenMobile(false)}
+          onClick={closeMobileAfterNavigation}
           title={isCollapsed ? SITE_CONFIG.name : undefined}
           className={cn(
             'hover:bg-surface-navigation-hover focus-visible:ring-sidebar-ring flex h-11 w-full min-w-0 items-center gap-3 overflow-hidden rounded-sm px-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset',
@@ -395,7 +413,10 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
       </div>
       <SidebarFooter className="border-sidebar-border/60 shrink-0 border-t pb-[max(0.75rem,env(safe-area-inset-bottom))] group-data-[collapsible=icon]/sidebar:px-1">
         {userData && (
-          <DropdownMenu>
+          <DropdownMenu
+            open={accountMenuOpen}
+            onOpenChange={setAccountMenuOpen}
+          >
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
@@ -477,7 +498,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                     <Link
                       aria-current={accountAriaCurrent}
                       href="/mon-compte"
-                      onClick={() => setOpenMobile(false)}
+                      onClick={closeMobileAfterNavigation}
                       className="min-w-0"
                     >
                       <span
@@ -499,7 +520,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                             isAccountActive && 'text-foreground',
                           )}
                         >
-                          Profil, sécurité et activité
+                          Profil et sécurité
                         </span>
                       </span>
                       <ChevronRight
@@ -514,11 +535,14 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               <DropdownMenuSeparator className="bg-border-content mx-2.5 my-1.5" />
               <div className="pt-1">
                 <DropdownMenuItem
-                  onSelect={() => {
-                    setOpenMobile(false);
-                    if (requestGuardedNavigation('/login', logout)) {
+                  onSelect={(event) => {
+                    const leave = (): void => {
+                      setAccountMenuOpen(false);
+                      setOpenMobile(false);
                       void logout();
-                    }
+                    };
+                    if (requestGuardedNavigation('/login', leave)) leave();
+                    else event.preventDefault();
                   }}
                   className={cn(
                     SIDEBAR_POPOVER_ACTION_BASE_CLASS,

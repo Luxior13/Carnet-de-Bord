@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-12T19:31:11.266Z",
+  "phase": "baseline",
+  "next": "15.5.23 production",
+  "browser": "149.0.7827.55",
+  "database": "PostgreSQL17/54640/navigation_test",
+  "observations": [
+    {
+      "name": "real-csrf-refusal-does-not-end-session",
+      "result": "passed",
+      "status": 403,
+      "actualSessionStatus": 200,
+      "automaticRetries": 0,
+      "baselineFalseSuccessToast": true
+    },
+    {
+      "name": "injected-500-before-handler-does-not-end-session",
+      "result": "passed",
+      "status": 500,
+      "actualSessionStatus": 200,
+      "automaticRetries": 0,
+      "baselineFalseSuccessToast": true
+    },
+    {
+      "name": "committed-logout-response-lost-and-explicit-retry",
+      "result": "passed",
+      "commitStatus": 200,
+      "actualSessionStatus": 401,
+      "currentSessionDeleted": true,
+      "logoutAuditAddedOnce": true,
+      "explicitRetryStatus": null
+    }
+  ]
+}

@@ -180,16 +180,69 @@ function BreadcrumbTrail({
   ...props
 }: BreadcrumbTrailProps): React.ReactNode {
   const [collapsedMenuOpen, setCollapsedMenuOpen] = React.useState(false);
+  const trailRef = React.useRef<HTMLElement | null>(null);
+  const menuRef = React.useRef<HTMLDivElement | null>(null);
+  const triggerRef = React.useRef<HTMLButtonElement | null>(null);
+  const pathKey = JSON.stringify(items);
+
+  React.useEffect(() => {
+    setCollapsedMenuOpen(false);
+  }, [pathKey]);
 
   React.useEffect(() => {
     if (!compactOnMobile) return;
 
     const desktopQuery = window.matchMedia('(min-width: 40rem)');
-    // The compact trigger may disappear when the full path becomes visible.
-    const closeMenu = (): void => setCollapsedMenuOpen(false);
+    let frame = 0;
+    const closeMenu = (): void => {
+      const focused = document.activeElement;
+      const ownsFocus =
+        focused instanceof HTMLElement &&
+        (menuRef.current?.contains(focused) ||
+          trailRef.current?.contains(focused));
+      const href =
+        focused instanceof HTMLElement
+          ? focused.closest('a')?.getAttribute('href')
+          : undefined;
+      setCollapsedMenuOpen(false);
+      if (!ownsFocus) return;
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        frame = window.requestAnimationFrame(() => {
+          const current = document.activeElement;
+          if (
+            current instanceof HTMLElement &&
+            current !== document.body &&
+            current !== focused &&
+            current.getClientRects().length > 0
+          )
+            return;
+          const visible = (element: HTMLElement): boolean =>
+            element.getClientRects().length > 0;
+          const link = Array.from(
+            trailRef.current?.querySelectorAll<HTMLAnchorElement>('a[href]') ??
+              [],
+          ).find(
+            (element) =>
+              element.getAttribute('href') === href && visible(element),
+          );
+          const trigger = triggerRef.current;
+          const fallback =
+            trigger && visible(trigger)
+              ? trigger
+              : trailRef.current?.querySelector<HTMLElement>(
+                  '[aria-current="page"]',
+                );
+          (link ?? fallback)?.focus({ preventScroll: true });
+        });
+      });
+    };
     desktopQuery.addEventListener('change', closeMenu);
 
-    return (): void => desktopQuery.removeEventListener('change', closeMenu);
+    return (): void => {
+      desktopQuery.removeEventListener('change', closeMenu);
+      window.cancelAnimationFrame(frame);
+    };
   }, [compactOnMobile]);
 
   const normalizedItems =
@@ -205,7 +258,7 @@ function BreadcrumbTrail({
       : [];
 
   return (
-    <Breadcrumb className={className} {...props}>
+    <Breadcrumb className={className} {...props} ref={trailRef}>
       <BreadcrumbList>
         {displayItems.map((item, index) => {
           const isCollapsedItem = item === null;
@@ -252,6 +305,7 @@ function BreadcrumbTrail({
                   >
                     <DropdownMenuTrigger asChild>
                       <BreadcrumbEllipsis
+                        ref={triggerRef}
                         className={
                           compactOnMobile
                             ? 'focus-visible:ring-ring size-11 rounded-sm focus-visible:ring-[length:var(--ring-width)] focus-visible:ring-inset sm:size-8'
@@ -260,6 +314,16 @@ function BreadcrumbTrail({
                       />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
+                      ref={menuRef}
+                      onInteractOutside={(event) => {
+                        const target = event.target;
+                        if (
+                          target instanceof Element &&
+                          target.closest('[role="alertdialog"]')
+                        ) {
+                          event.preventDefault();
+                        }
+                      }}
                       align="start"
                       aria-label="Niveaux intermédiaires"
                       className="w-[min(18rem,calc(100vw-2rem))]"
@@ -275,7 +339,10 @@ function BreadcrumbTrail({
                           >
                             <Link
                               href={collapsedItem.href}
-                              onClick={() => setCollapsedMenuOpen(false)}
+                              onClick={(event) => {
+                                if (!event.defaultPrevented)
+                                  setCollapsedMenuOpen(false);
+                              }}
                             >
                               <span className="truncate">
                                 {collapsedItem.label}
@@ -331,6 +398,7 @@ function BreadcrumbTrail({
                   </span>
                 ) : (
                   <BreadcrumbPage
+                    tabIndex={-1}
                     className={cn(
                       'max-w-40 sm:max-w-64 lg:max-w-80',
                       compactOnMobile && 'font-semibold',

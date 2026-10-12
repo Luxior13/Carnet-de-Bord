@@ -18,6 +18,7 @@ import {
   useMobileViewport,
   useSidebar,
 } from './sidebar-context';
+import { useSidebarResponsiveFocus } from './sidebar-focus';
 
 const SIDEBAR_ID = 'app-sidebar';
 const SIDEBAR_WIDTH = '16.5rem';
@@ -233,6 +234,8 @@ function Sidebar({
   const returnFocusRef = React.useRef<HTMLElement | null>(null);
   const openedAtHrefRef = React.useRef<string | null>(null);
 
+  useSidebarResponsiveFocus(id ?? SIDEBAR_ID, collapsible !== 'none');
+
   if (collapsible === 'none') {
     return (
       <div
@@ -252,7 +255,15 @@ function Sidebar({
 
   if (isMobile) {
     return (
-      <Sheet open={openMobile} onOpenChange={setOpenMobile}>
+      <Sheet
+        open={openMobile}
+        onOpenChange={(nextOpen) => {
+          // Explicit dismissal still returns to Menu after selecting a space
+          // while keeping the mobile sheet open on its new destination.
+          if (!nextOpen) openedAtHrefRef.current = window.location.href;
+          setOpenMobile(nextOpen);
+        }}
+      >
         <SheetContent
           onOpenAutoFocus={() => {
             returnFocusRef.current = document.querySelector<HTMLElement>(
@@ -262,7 +273,10 @@ function Sidebar({
           }}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
-            if (openedAtHrefRef.current === window.location.href) {
+            if (
+              openedAtHrefRef.current === window.location.href &&
+              returnFocusRef.current?.getClientRects().length
+            ) {
               returnFocusRef.current?.focus({ preventScroll: true });
             }
           }}

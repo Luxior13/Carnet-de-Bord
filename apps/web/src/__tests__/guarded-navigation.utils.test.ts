@@ -23,10 +23,6 @@ const accountSource = readSourceFile(
 const userDetailSource = readSourceFile(
   '../components/users/UserDetailPage.tsx',
 );
-const quickNavigationSource = readSourceFile(
-  '../components/layout/GlobalSearch.tsx',
-);
-const sidebarSource = readSourceFile('../components/Sidebar.tsx');
 
 describe('guarded programmatic navigation', () => {
   afterEach(() => {
@@ -61,11 +57,7 @@ describe('guarded programmatic navigation', () => {
     expect(capturedAction).toBe(action);
   });
 
-  it('connects quick navigation and logout to every dirty-form guard family', () => {
-    expect(quickNavigationSource).toContain('requestGuardedNavigation(href)');
-    expect(sidebarSource).toContain(
-      "requestGuardedNavigation('/login', logout)",
-    );
+  it('connects the shared event to dirty-form guard families', () => {
     expect(userDetailSource).toContain('useUnsavedNavigationGuard(');
     expect(accountSource).toContain('useUnsavedNavigationGuard(');
     for (const guardSource of [sharedGuardSource]) {

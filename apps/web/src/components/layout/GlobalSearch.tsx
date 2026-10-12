@@ -115,9 +115,20 @@ export const QuickNavigation: FC = () => {
   }, []);
   const navigateToHref = useCallback(
     (href: string): void => {
-      closeSearch();
-      if (href !== pathname && requestGuardedNavigation(href))
+      if (href === pathname) {
+        closeSearch();
+
+        return;
+      }
+      const navigate = (): void => {
+        closeSearch();
         router.push(href);
+      };
+      // A pointer selection may focus cmdk's list. Restore the input before
+      // the guard records its return target, so cancelling resumes the query.
+      searchInputRef.current?.focus({ preventScroll: true });
+      // Keep the palette mounted while the draft guard asks for confirmation.
+      if (requestGuardedNavigation(href, navigate)) navigate();
     },
     [closeSearch, pathname, router],
   );
@@ -144,7 +155,7 @@ export const QuickNavigation: FC = () => {
             <Button
               aria-label="Rechercher une page"
               variant="outline"
-              className="text-muted-foreground data-[state=open]:border-border-strong data-[state=open]:bg-surface-control-focus size-11 gap-2 rounded-sm p-0 font-normal focus-visible:ring-inset has-[>svg]:px-0 lg:h-9 lg:w-56 lg:justify-start lg:px-3 lg:has-[>svg]:px-3 xl:w-64"
+              className="text-muted-foreground data-[state=open]:border-border-strong data-[state=open]:bg-surface-control-focus size-11 gap-2 rounded-sm p-0 font-normal focus-visible:ring-inset has-[>svg]:px-0 lg:h-10 lg:w-56 lg:justify-start lg:px-3 lg:has-[>svg]:px-3 xl:w-64"
               type="button"
             >
               <Search aria-hidden="true" className="size-4" />
