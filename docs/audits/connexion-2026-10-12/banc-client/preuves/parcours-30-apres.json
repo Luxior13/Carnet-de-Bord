@@ -1,0 +1,1215 @@
+{
+  "completedAt": "2026-10-12T16:49:02.862Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 30,
+  "total": 30,
+  "observations": [
+    {
+      "name": "identifiants-responsive-clavier",
+      "width": 320,
+      "status": "pass",
+      "attributes": [
+        {
+          "id": "loginName",
+          "autocomplete": "off",
+          "bitwarden": "true",
+          "onepassword": "true",
+          "lastpass": "true"
+        },
+        {
+          "id": "password",
+          "autocomplete": "off",
+          "bitwarden": "true",
+          "onepassword": "true",
+          "lastpass": "true"
+        }
+      ],
+      "metrics": {
+        "viewport": 320,
+        "document": 320,
+        "body": 320,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        }
+      ]
+    },
+    {
+      "name": "identifiants-responsive-clavier",
+      "width": 390,
+      "status": "pass",
+      "attributes": [
+        {
+          "id": "loginName",
+          "autocomplete": "off",
+          "bitwarden": "true",
+          "onepassword": "true",
+          "lastpass": "true"
+        },
+        {
+          "id": "password",
+          "autocomplete": "off",
+          "bitwarden": "true",
+          "onepassword": "true",
+          "lastpass": "true"
+        }
+      ],
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        }
+      ]
+    },
+    {
+      "name": "identifiants-responsive-clavier",
+      "width": 768,
+      "status": "pass",
+      "attributes": [
+        {
+          "id": "loginName",
+          "autocomplete": "off",
+          "bitwarden": "true",
+          "onepassword": "true",
+          "lastpass": "true"
+        },
+        {
+          "id": "password",
+          "autocomplete": "off",
+          "bitwarden": "true",
+          "onepassword": "true",
+          "lastpass": "true"
+        }
+      ],
+      "metrics": {
+        "viewport": 768,
+        "document": 768,
+        "body": 768,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        }
+      ]
+    },
+    {
+      "name": "identifiants-responsive-clavier",
+      "width": 1024,
+      "status": "pass",
+      "attributes": [
+        {
+          "id": "loginName",
+          "autocomplete": "off",
+          "bitwarden": "true",
+          "onepassword": "true",
+          "lastpass": "true"
+        },
+        {
+          "id": "password",
+          "autocomplete": "off",
+          "bitwarden": "true",
+          "onepassword": "true",
+          "lastpass": "true"
+        }
+      ],
+      "metrics": {
+        "viewport": 1024,
+        "document": 1024,
+        "body": 1024,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        }
+      ]
+    },
+    {
+      "name": "identifiants-responsive-clavier",
+      "width": 1280,
+      "status": "pass",
+      "attributes": [
+        {
+          "id": "loginName",
+          "autocomplete": "off",
+          "bitwarden": "true",
+          "onepassword": "true",
+          "lastpass": "true"
+        },
+        {
+          "id": "password",
+          "autocomplete": "off",
+          "bitwarden": "true",
+          "onepassword": "true",
+          "lastpass": "true"
+        }
+      ],
+      "metrics": {
+        "viewport": 1280,
+        "document": 1280,
+        "body": 1280,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        }
+      ]
+    },
+    {
+      "name": "identifiants-responsive-clavier",
+      "width": 1440,
+      "status": "pass",
+      "attributes": [
+        {
+          "id": "loginName",
+          "autocomplete": "off",
+          "bitwarden": "true",
+          "onepassword": "true",
+          "lastpass": "true"
+        },
+        {
+          "id": "password",
+          "autocomplete": "off",
+          "bitwarden": "true",
+          "onepassword": "true",
+          "lastpass": "true"
+        }
+      ],
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "body": 1440,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        }
+      ]
+    },
+    {
+      "name": "identifiants-responsive-clavier",
+      "width": 1920,
+      "status": "pass",
+      "attributes": [
+        {
+          "id": "loginName",
+          "autocomplete": "off",
+          "bitwarden": "true",
+          "onepassword": "true",
+          "lastpass": "true"
+        },
+        {
+          "id": "password",
+          "autocomplete": "off",
+          "bitwarden": "true",
+          "onepassword": "true",
+          "lastpass": "true"
+        }
+      ],
+      "metrics": {
+        "viewport": 1920,
+        "document": 1920,
+        "body": 1920,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        }
+      ]
+    },
+    {
+      "name": "refus-identifiants-et-mfa-puis-secours",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "refus-identifiants-et-mfa-puis-secours",
+      "width": 1440,
+      "status": "pass",
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "body": 1440,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "soumissions-doubles-et-remember",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": true,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "stockage-bloque-connexion",
+      "width": 320,
+      "status": "pass",
+      "metrics": {
+        "viewport": 320,
+        "document": 320,
+        "body": 320,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "anciens-identifiants-effaces",
+      "width": 768,
+      "status": "pass",
+      "metrics": {
+        "viewport": 768,
+        "document": 768,
+        "body": 768,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        }
+      ]
+    },
+    {
+      "name": "erreurs-reseau-identifiants-reprise",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "expiration-mfa-retour-identifiants",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        },
+        {
+          "path": "/api/auth/mfa/challenge",
+          "method": "DELETE",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "retour-attente-et-reseau-refuse",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/challenge",
+          "method": "DELETE",
+          "keys": []
+        }
+      ]
+    },
+    {
+      "name": "collage-natif-totp-et-secours",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        }
+      ]
+    },
+    {
+      "name": "configuration-complete-copie-et-confirmation",
+      "width": 320,
+      "status": "pass",
+      "metrics": {
+        "viewport": 320,
+        "document": 320,
+        "body": 320,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/setup",
+          "method": "POST",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/mfa/setup",
+          "method": "PUT",
+          "keys": [
+            "code"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "configuration-erreurs-et-reprise",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/setup",
+          "method": "POST",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/mfa/setup",
+          "method": "POST",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/mfa/setup",
+          "method": "PUT",
+          "keys": [
+            "code"
+          ]
+        },
+        {
+          "path": "/api/auth/mfa/setup",
+          "method": "PUT",
+          "keys": [
+            "code"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "configuration-reponse-perdue",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/setup",
+          "method": "POST",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/mfa/setup",
+          "method": "PUT",
+          "keys": [
+            "code"
+          ]
+        },
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        }
+      ]
+    },
+    {
+      "name": "timeouts-identifiants-et-retour",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/challenge",
+          "method": "DELETE",
+          "keys": []
+        }
+      ]
+    },
+    {
+      "name": "reponse-tardive-apres-demontage",
+      "width": 1440,
+      "status": "pass",
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "body": 1440,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        }
+      ]
+    },
+    {
+      "name": "destination-interne",
+      "width": 768,
+      "status": "pass",
+      "metrics": {
+        "viewport": 768,
+        "document": 768,
+        "body": 768,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "destination-externe",
+      "width": 768,
+      "status": "pass",
+      "metrics": {
+        "viewport": 768,
+        "document": 768,
+        "body": 768,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "session-deja-authentifiee",
+      "width": 1024,
+      "status": "pass",
+      "metrics": {
+        "viewport": 1024,
+        "document": 1024,
+        "body": 1024,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        }
+      ]
+    },
+    {
+      "name": "modale-clavier-annulation",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/mfa/challenge",
+          "method": "DELETE",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/mfa/challenge",
+          "method": "DELETE",
+          "keys": []
+        }
+      ]
+    },
+    {
+      "name": "mfa-reponse-perdue-commit-abort",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        },
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        }
+      ]
+    },
+    {
+      "name": "mfa-reponse-perdue-abort",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        },
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/mfa/challenge",
+          "method": "DELETE",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "configuration-timeouts-preparation-confirmation",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/setup",
+          "method": "POST",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/mfa/setup",
+          "method": "POST",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/mfa/setup",
+          "method": "PUT",
+          "keys": [
+            "code"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "modale-obligatoire-configuration-expiree",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": [
+          {
+            "width": 356,
+            "content": 356
+          }
+        ]
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/mfa/setup",
+          "method": "POST",
+          "keys": [
+            "currentPassword"
+          ]
+        },
+        {
+          "path": "/api/auth/mfa/setup",
+          "method": "PUT",
+          "keys": [
+            "code"
+          ]
+        },
+        {
+          "path": "/api/auth/mfa/setup",
+          "method": "POST",
+          "keys": [
+            "currentPassword"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "strictmode-connexion",
+      "width": 1280,
+      "status": "pass",
+      "metrics": {
+        "viewport": 1280,
+        "document": 1280,
+        "body": 1280,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        },
+        {
+          "path": "/api/auth/mfa/verify",
+          "method": "POST",
+          "keys": [
+            "code"
+          ]
+        }
+      ]
+    }
+  ]
+}

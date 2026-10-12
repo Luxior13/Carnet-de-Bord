@@ -314,6 +314,11 @@ export const createSession = async (
       throw new SecurityVersionMismatchError();
     }
 
+    // The conditional write can wait for another transaction's User lock.
+    // Check challenge/source-session deadlines after that wait, not against
+    // the earlier request time, so expired proofs cannot issue a session.
+    const revalidatedAt = new Date();
+
     let sessionExpiresAt = defaultExpiresAt;
     let sessionIdleExpiresAt = defaultIdleExpiresAt;
     let sessionIpAddress = requestContext.ipAddress;
@@ -324,8 +329,8 @@ export const createSession = async (
       const sourceSession = await transaction.session.updateMany({
         data: { lastSeenAt: loginAt },
         where: {
-          expiresAt: { gt: loginAt },
-          idleExpiresAt: { gt: loginAt },
+          expiresAt: { gt: revalidatedAt },
+          idleExpiresAt: { gt: revalidatedAt },
           rememberMe,
           securityVersion: authenticatedSecurityVersion,
           token: securityOptions.sourceSessionToken,
@@ -357,7 +362,7 @@ export const createSession = async (
       sessionUserAgent = sourceSessionState.userAgent;
     }
 
-    await securityOptions.precondition(transaction, loginAt);
+    await securityOptions.precondition(transaction, revalidatedAt);
 
     if (securityOptions.revokeExistingSessions) {
       await transaction.session.deleteMany({ where: { userId } });

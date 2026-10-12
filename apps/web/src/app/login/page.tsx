@@ -52,6 +52,7 @@ function LoginPage(): React.ReactNode {
     error: authError,
     isLoading: authLoading,
     login,
+    refreshUser,
     userData,
     verifyMfa,
   } = useUser();
@@ -67,13 +68,40 @@ function LoginPage(): React.ReactNode {
     null,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [verificationUnknown, setVerificationUnknown] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [returnPath, setReturnPath] = useState('/');
   const [isReturnPathReady, setIsReturnPathReady] = useState(false);
   const submissionRef = useRef(false);
+  const mountedRef = useRef(false);
+  const requestRef = useRef<AbortController | null>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
   const loginInputRef = useRef<HTMLInputElement>(null);
   const mfaInputRef = useRef<HTMLInputElement>(null);
-  const displayedError = error ?? authError;
+  const displayedError = sessionChecked
+    ? (authError ??
+      'Aucune session active n’a été retrouvée. Recommencez la connexion avec un nouveau code.')
+    : (error ?? authError);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return (): void => {
+      mountedRef.current = false;
+      requestRef.current?.abort();
+      requestRef.current = null;
+    };
+  }, []);
+
+  const isCurrentRequest = (request: AbortController): boolean =>
+    mountedRef.current && requestRef.current === request;
+
+  useEffect(() => {
+    if (displayedError && !isSubmitting && !authLoading)
+      errorRef.current?.focus();
+  }, [authLoading, displayedError, isSubmitting, step]);
 
   useEffect(() => {
     if (userData && !authLoading && isReturnPathReady) {
@@ -110,18 +138,38 @@ function LoginPage(): React.ReactNode {
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
-    if (submissionRef.current || !loginName.trim() || !password) return;
+    if (
+      submissionRef.current ||
+      !mountedRef.current ||
+      userData ||
+      !loginName.trim() ||
+      !password
+    )
+      return;
+    const request = new AbortController();
+    requestRef.current = request;
+    const timeout = setTimeout(() => request.abort(), 30_000);
     submissionRef.current = true;
     setError(null);
     setIsSubmitting(true);
 
     try {
       const normalizedLoginName = loginName.trim().toLowerCase();
-      const result = await login({
-        loginName: normalizedLoginName,
-        password,
-        rememberMe,
-      });
+      const result = await login(
+        {
+          loginName: normalizedLoginName,
+          password,
+          rememberMe,
+        },
+        { signal: request.signal },
+      );
+
+      if (!isCurrentRequest(request)) return;
+      if (request.signal.aborted) {
+        setError('La connexion a pris trop de temps. Vous pouvez réessayer.');
+
+        return;
+      }
 
       if (!result) return;
 
@@ -131,13 +179,20 @@ function LoginPage(): React.ReactNode {
       setChallengeExpiresAt(result.challengeExpiresAt);
       setMfaCode('');
       setMfaCodeKind('totp');
+      setVerificationUnknown(false);
+      setSessionChecked(false);
       clearError();
       setStep(result.status === 'mfa_setup_required' ? 'setup' : 'mfa');
     } catch {
+      if (!isCurrentRequest(request)) return;
       setError('Une erreur est survenue');
     } finally {
-      submissionRef.current = false;
-      setIsSubmitting(false);
+      clearTimeout(timeout);
+      if (isCurrentRequest(request)) {
+        requestRef.current = null;
+        submissionRef.current = false;
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -145,51 +200,104 @@ function LoginPage(): React.ReactNode {
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
-    if (submissionRef.current || !isCompleteMfaCode(mfaCode, mfaCodeKind))
+    if (
+      submissionRef.current ||
+      verificationUnknown ||
+      !mountedRef.current ||
+      userData ||
+      !isCompleteMfaCode(mfaCode, mfaCodeKind)
+    )
       return;
+    const request = new AbortController();
+    requestRef.current = request;
+    const timeout = setTimeout(() => request.abort(), 30_000);
     submissionRef.current = true;
 
     setError(null);
     setIsSubmitting(true);
 
     try {
-      const success = await verifyMfa(mfaCode);
+      const success = await verifyMfa(mfaCode, { signal: request.signal });
+      if (!isCurrentRequest(request)) return;
+      if (request.signal.aborted) throw new Error('MFA verification timed out');
 
       if (!success) {
         setMfaCode('');
-        mfaInputRef.current?.focus();
       }
     } catch {
-      setError('Impossible de vérifier le code');
+      if (!isCurrentRequest(request)) return;
+      setVerificationUnknown(true);
+      setError(
+        'La réponse de connexion n’a pas pu être confirmée. Vérifiez si votre session a été ouverte avant de recommencer. Le code utilisé peut déjà avoir été consommé.',
+      );
       setMfaCode('');
     } finally {
-      submissionRef.current = false;
-      setIsSubmitting(false);
+      clearTimeout(timeout);
+      if (isCurrentRequest(request)) {
+        requestRef.current = null;
+        submissionRef.current = false;
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  const handleCheckSession = async (): Promise<void> => {
+    if (submissionRef.current || !mountedRef.current || !verificationUnknown)
+      return;
+    submissionRef.current = true;
+    setIsSubmitting(true);
+    setIsCheckingSession(true);
+    setSessionChecked(false);
+    try {
+      await refreshUser();
+      if (mountedRef.current) setSessionChecked(true);
+    } catch {
+      if (mountedRef.current)
+        setError(
+          'Impossible de vérifier votre session. Vous pouvez réessayer.',
+        );
+    } finally {
+      if (mountedRef.current) {
+        submissionRef.current = false;
+        setIsSubmitting(false);
+        setIsCheckingSession(false);
+      }
     }
   };
 
   const handleBackToCredentials = async (): Promise<void> => {
-    if (submissionRef.current) return;
+    if (submissionRef.current || !mountedRef.current) return;
+    const request = new AbortController();
+    requestRef.current = request;
+    const timeout = setTimeout(() => request.abort(), 30_000);
     submissionRef.current = true;
     setIsSubmitting(true);
 
     try {
-      await cancelMfaChallenge();
+      await cancelMfaChallenge({ signal: request.signal });
     } finally {
-      clearError();
-      setError(null);
-      setPassword('');
-      setMfaCode('');
-      setChallengeExpiresAt(null);
-      setStep('credentials');
-      submissionRef.current = false;
-      setIsSubmitting(false);
+      clearTimeout(timeout);
+      if (isCurrentRequest(request)) {
+        requestRef.current = null;
+        clearError();
+        setError(null);
+        setPassword('');
+        setShowPassword(false);
+        setMfaCode('');
+        setVerificationUnknown(false);
+        setSessionChecked(false);
+        setChallengeExpiresAt(null);
+        setStep('credentials');
+        submissionRef.current = false;
+        setIsSubmitting(false);
+      }
     }
   };
 
   const handleBootstrapComplete = async (
     data: MfaSetupConfirmationData,
   ): Promise<void> => {
+    if (!mountedRef.current) return;
     if (
       data.status !== 'authenticated' ||
       !data.session ||
@@ -301,6 +409,8 @@ function LoginPage(): React.ReactNode {
             >
               {displayedError && (
                 <div
+                  ref={errorRef}
+                  tabIndex={-1}
                   aria-live="assertive"
                   className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
                   role="alert"
@@ -318,7 +428,7 @@ function LoginPage(): React.ReactNode {
                     autoCapitalize="none"
                     autoCorrect="off"
                     className="h-10 pl-10"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !!userData}
                     id="loginName"
                     ref={loginInputRef}
                     maxLength={32}
@@ -340,7 +450,7 @@ function LoginPage(): React.ReactNode {
                   <Lock className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                   <Input
                     className="h-10 px-10"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !!userData}
                     id="password"
                     name="password"
                     onChange={(event) => setPassword(event.target.value)}
@@ -356,7 +466,7 @@ function LoginPage(): React.ReactNode {
                         : 'Afficher le mot de passe'
                     }
                     className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 size-8 -translate-y-1/2"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !!userData}
                     onClick={() => setShowPassword((value) => !value)}
                     size="icon"
                     type="button"
@@ -373,7 +483,7 @@ function LoginPage(): React.ReactNode {
               <div className="flex items-center gap-2">
                 <Checkbox
                   checked={rememberMe}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !!userData}
                   id="rememberMe"
                   onCheckedChange={(checked) => setRememberMe(checked === true)}
                 />
@@ -395,7 +505,9 @@ function LoginPage(): React.ReactNode {
               </p>
               <Button
                 className="h-10 w-full"
-                disabled={isSubmitting || !loginName.trim() || !password}
+                disabled={
+                  isSubmitting || !!userData || !loginName.trim() || !password
+                }
                 type="submit"
               >
                 {isSubmitting ? (
@@ -418,6 +530,8 @@ function LoginPage(): React.ReactNode {
             >
               {displayedError && (
                 <div
+                  ref={errorRef}
+                  tabIndex={-1}
                   aria-live="assertive"
                   className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
                   role="alert"
@@ -430,7 +544,7 @@ function LoginPage(): React.ReactNode {
               </div>
               <MfaCodeInput
                 autoFocus
-                disabled={isSubmitting}
+                disabled={isSubmitting || verificationUnknown || !!userData}
                 id="login-mfa-code"
                 inputRef={mfaInputRef}
                 kind={mfaCodeKind}
@@ -445,13 +559,18 @@ function LoginPage(): React.ReactNode {
               )}
               <Button
                 className="h-auto p-0 text-xs"
-                disabled={isSubmitting}
+                disabled={isSubmitting || verificationUnknown || !!userData}
                 onClick={() => {
                   clearError();
+                  setError(null);
                   setMfaCode('');
                   setMfaCodeKind((kind) =>
                     kind === 'totp' ? 'recovery' : 'totp',
                   );
+                  requestAnimationFrame(() => {
+                    if (mountedRef.current && !submissionRef.current)
+                      mfaInputRef.current?.focus();
+                  });
                 }}
                 type="button"
                 variant="link"
@@ -460,34 +579,62 @@ function LoginPage(): React.ReactNode {
                   ? 'Utiliser un code de secours'
                   : 'Utiliser le code de l’application'}
               </Button>
+              {verificationUnknown && (
+                <div className="space-y-3">
+                  <p className="text-muted-foreground text-sm leading-6">
+                    Si aucune session n’est retrouvée, recommencez avec vos
+                    identifiants puis un nouveau code de l’application ou un
+                    autre code de secours.
+                  </p>
+                  <Button
+                    className="w-full"
+                    disabled={isSubmitting || !!userData}
+                    loading={isCheckingSession}
+                    onClick={() => void handleCheckSession()}
+                    type="button"
+                  >
+                    {isCheckingSession
+                      ? 'Vérification de la session…'
+                      : 'Vérifier la session'}
+                  </Button>
+                </div>
+              )}
               <div className="flex gap-2">
                 <Button
-                  aria-label="Retour à l’identifiant et au mot de passe"
+                  aria-label={
+                    verificationUnknown
+                      ? 'Recommencer la connexion'
+                      : 'Retour à l’identifiant et au mot de passe'
+                  }
                   className="shrink-0"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !!userData}
                   onClick={() => void handleBackToCredentials()}
                   type="button"
                   variant="outline"
                 >
                   <ArrowLeft className="size-4" />
-                  Retour
+                  {verificationUnknown ? 'Recommencer la connexion' : 'Retour'}
                 </Button>
-                <Button
-                  className="flex-1"
-                  disabled={
-                    isSubmitting || !isCompleteMfaCode(mfaCode, mfaCodeKind)
-                  }
-                  type="submit"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      Vérification...
-                    </>
-                  ) : (
-                    'Vérifier et se connecter'
-                  )}
-                </Button>
+                {!verificationUnknown && (
+                  <Button
+                    className="flex-1"
+                    disabled={
+                      isSubmitting ||
+                      !!userData ||
+                      !isCompleteMfaCode(mfaCode, mfaCodeKind)
+                    }
+                    type="submit"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" />
+                        Vérification...
+                      </>
+                    ) : (
+                      'Vérifier et se connecter'
+                    )}
+                  </Button>
+                )}
               </div>
             </form>
           )}

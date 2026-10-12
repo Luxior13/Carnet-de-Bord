@@ -51,6 +51,7 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
     return (): void => {
       mountedRef.current = false;
       requestRef.current?.abort();
+      requestRef.current = null;
       // This counter invalidates promises; it is not a DOM ref.
       // eslint-disable-next-line react-hooks/exhaustive-deps
       copyOperationRef.current++;
@@ -99,7 +100,9 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
         signal: request.signal,
       });
 
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || requestRef.current !== request) return;
+      if (request.signal.aborted)
+        throw new Error('Setup preparation timed out');
       if (!data?.manualKey || !data.qrCodeDataUrl)
         throw new Error('Setup data missing');
       setSetup(data);
@@ -108,16 +111,26 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
       setNewCode('');
       setStep('scan');
     } catch (failure) {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || requestRef.current !== request) return;
+      const uncertain =
+        !(failure instanceof ApiClientError) ||
+        failure.status >= 500 ||
+        failure.code === 'INVALID_RESPONSE';
+      if (uncertain && isReplacing) setCurrentCode('');
       setError(
-        failure instanceof ApiClientError
-          ? failure.message
-          : 'Impossible de préparer la double authentification. Vous pouvez recommencer la préparation.',
+        uncertain && isReplacing
+          ? 'La préparation n’a pas pu être confirmée. Votre application actuelle reste active ; le code utilisé peut déjà avoir été consommé. Recommencez avec un nouveau code.'
+          : failure instanceof ApiClientError
+            ? failure.message
+            : 'Impossible de préparer la double authentification. Vous pouvez recommencer la préparation.',
       );
     } finally {
       clearTimeout(timeout);
-      submissionRef.current = false;
-      if (mountedRef.current) setIsSubmitting(false);
+      if (mountedRef.current && requestRef.current === request) {
+        requestRef.current = null;
+        submissionRef.current = false;
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -150,7 +163,9 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
         },
       );
 
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || requestRef.current !== request) return;
+      if (request.signal.aborted)
+        throw new Error('Setup confirmation timed out');
       if (!data?.user || !data.recoveryCodes?.length)
         throw new Error('Setup confirmation incomplete');
       setCompletion(data);
@@ -159,13 +174,26 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
       setNewCode('');
       setStep('recovery');
     } catch (failure) {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || requestRef.current !== request) return;
       setNewCode('');
       const uncertain =
         !(failure instanceof ApiClientError) ||
         failure.status >= 500 ||
         failure.code === 'INVALID_RESPONSE';
       setConfirmationUnknown(uncertain);
+      if (
+        uncertain ||
+        (failure instanceof ApiClientError && failure.status === 401)
+      ) {
+        copyOperationRef.current++;
+        setSetup(null);
+      }
+      if (failure instanceof ApiClientError && failure.status === 401) {
+        // Expired setup must allow explicit preparation again, even in mandatory mode.
+        setCurrentPassword('');
+        setCurrentCode('');
+        setStep('authorize');
+      }
       setError(
         uncertain
           ? 'La réponse du serveur n’a pas pu être confirmée. La nouvelle application a peut-être été activée et les codes de secours n’ont pas été reçus. Vérifiez votre accès avec la nouvelle application avant de recommencer.'
@@ -173,8 +201,11 @@ export const MfaSetupFlow: FC<MfaSetupFlowProps> = ({
       );
     } finally {
       clearTimeout(timeout);
-      submissionRef.current = false;
-      if (mountedRef.current) setIsSubmitting(false);
+      if (mountedRef.current && requestRef.current === request) {
+        requestRef.current = null;
+        submissionRef.current = false;
+        setIsSubmitting(false);
+      }
     }
   };
 

@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-12",
+  "runtime": "Next production + PostgreSQL 17 + Chromium",
+  "browserVersion": "149.0.7827.55",
+  "scenarios": [
+    {
+      "name": "Entrée anonyme, sept largeurs et destination privée conservée",
+      "result": "passed"
+    },
+    {
+      "name": "Refus publics uniformes et protection CSRF au middleware réel",
+      "result": "passed"
+    },
+    {
+      "name": "Bootstrap superadmin réel : MFA obligatoire, cookies et confiance limitée",
+      "result": "passed"
+    },
+    {
+      "name": "Bootstrap utilisateur, codes uniques, session longue et retour interne filtré",
+      "result": "passed"
+    },
+    {
+      "name": "Code refusé puis TOTP accepté, sans double alerte et avec reprise clavier",
+      "result": "passed"
+    },
+    {
+      "name": "Secours consommé une fois, rejeu refusé puis autre secours accepté",
+      "result": "passed"
+    },
+    {
+      "name": "Défi réellement expiré : refus et retour aux identifiants utilisable",
+      "result": "passed"
+    },
+    {
+      "name": "Annulation supprime le défi sans toucher aux sessions existantes",
+      "result": "passed"
+    },
+    {
+      "name": "Réponse MFA endommagée après commit : session retrouvée sans rejouer le code",
+      "result": "passed"
+    },
+    {
+      "name": "Destination externe rejetée après authentification réelle",
+      "result": "passed"
+    },
+    {
+      "name": "Révocation de sécurité entre mot de passe et MFA refuse la session",
+      "result": "passed"
+    },
+    {
+      "name": "Session périmée : SSR privé et lecture de session refusés",
+      "result": "passed"
+    }
+  ]
+}

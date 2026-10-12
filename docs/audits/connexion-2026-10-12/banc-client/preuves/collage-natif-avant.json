@@ -1,0 +1,40 @@
+{
+  "completedAt": "2026-10-12T16:49:52.460Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "sourceMode": "MfaCodeInput from 0fd674a, current LoginPage/UserProvider",
+  "passed": 0,
+  "total": 1,
+  "observations": [
+    {
+      "name": "collage-natif-totp-et-secours",
+      "width": 390,
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: Le collage natif de six chiffres avec un espace doit garder les six chiffres\n\n5 !== 6\n",
+      "errors": [],
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        }
+      ],
+      "pathname": "/login",
+      "focus": {
+        "tag": "INPUT",
+        "id": "login-mfa-code"
+      }
+    }
+  ]
+}

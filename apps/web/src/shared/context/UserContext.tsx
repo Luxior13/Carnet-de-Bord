@@ -17,7 +17,6 @@ import { Button } from '$components/ui/button';
 import {
   type ApiResponse,
   type ApiSuccessResponse,
-  ErrorCode,
   RoutesApi,
 } from '$types/api.types';
 import {
@@ -37,6 +36,7 @@ const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
 const WARNING_BEFORE_MS = 5 * 60 * 1000;
 const ACTIVITY_TIMER_RESET_THROTTLE_MS = 15 * 1000;
 const SERVER_ACTIVITY_SYNC_INTERVAL_MS = 60 * 1000;
+const SESSION_READ_TIMEOUT_MS = 15_000;
 const SESSION_ACTIVITY_STORAGE_KEY = 'team-control:last-session-activity';
 const ACTIVITY_EVENTS = [
   'mousedown',
@@ -61,22 +61,30 @@ const publishSessionActivity = (activityAt: number): void => {
   }
 };
 
+type AuthenticationRequestOptions = { signal?: AbortSignal };
+
 type ContextType = {
   applyUserUpdate: (user: UserType) => void;
   authorizationRevision: number;
-  cancelMfaChallenge: () => Promise<void>;
+  cancelMfaChallenge: (options?: AuthenticationRequestOptions) => Promise<void>;
   clearError: () => void;
   completeAuthentication: (data: AuthenticatedLoginData) => void;
   error: string | null;
   extendSession: () => Promise<void>;
   isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<LoginResult | null>;
+  login: (
+    credentials: LoginCredentials,
+    options?: AuthenticationRequestOptions,
+  ) => Promise<LoginResult | null>;
   logout: () => Promise<void>;
   mustChangePassword: boolean;
   refreshUser: () => Promise<void>;
   showSessionWarning: boolean;
   userData: UserType | null;
-  verifyMfa: (code: string) => Promise<boolean>;
+  verifyMfa: (
+    code: string,
+    options?: AuthenticationRequestOptions,
+  ) => Promise<boolean>;
 };
 
 const UserContext = createContext<ContextType>({
@@ -130,12 +138,16 @@ export const UserProvider: FC<UserProviderProps> = ({
   const sessionOperationRef = useRef(0);
   const logoutInProgressRef = useRef(false);
   const mountedRef = useRef(true);
+  const sessionReadsRef = useRef(new Set<AbortController>());
   useEffect(() => {
     mountedRef.current = true;
+    const sessionReads = sessionReadsRef.current;
 
     return (): void => {
       mountedRef.current = false;
       sessionOperationRef.current += 1;
+      for (const controller of sessionReads) controller.abort();
+      sessionReads.clear();
     };
   }, []);
 
@@ -212,12 +224,23 @@ export const UserProvider: FC<UserProviderProps> = ({
       const operation = ++sessionOperationRef.current;
       const isCurrent = (): boolean =>
         mountedRef.current && operation === sessionOperationRef.current;
+      const controller = new AbortController();
+      sessionReadsRef.current.add(controller);
+      const timeout = setTimeout(
+        () => controller.abort(),
+        SESSION_READ_TIMEOUT_MS,
+      );
       try {
         if (!silent) setIsLoading(true);
         setError(null);
 
-        const response = await fetch(RoutesApi.me, { cache: 'no-store' });
+        const response = await fetch(RoutesApi.me, {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
         if (!isCurrent()) return;
+        if (controller.signal.aborted)
+          throw new Error('Session check timed out');
         if (response.status === 401 || response.status === 403) {
           clearAuthenticatedUser();
 
@@ -228,6 +251,8 @@ export const UserProvider: FC<UserProviderProps> = ({
           user: UserType;
         }> = await response.json();
         if (!isCurrent()) return;
+        if (controller.signal.aborted)
+          throw new Error('Session check timed out');
 
         if (
           !response.ok &&
@@ -258,6 +283,8 @@ export const UserProvider: FC<UserProviderProps> = ({
         }
         setError('Impossible de vérifier votre session');
       } finally {
+        clearTimeout(timeout);
+        sessionReadsRef.current.delete(controller);
         if (isCurrent()) setIsLoading(false);
       }
     },
@@ -310,10 +337,19 @@ export const UserProvider: FC<UserProviderProps> = ({
     const isCurrent = (): boolean =>
       mountedRef.current && operation === sessionOperationRef.current;
     lastServerActivitySyncRef.current = Date.now();
+    const controller = new AbortController();
+    sessionReadsRef.current.add(controller);
+    const timeout = setTimeout(
+      () => controller.abort(),
+      SESSION_READ_TIMEOUT_MS,
+    );
 
     try {
-      const response = await fetch(RoutesApi.me, { cache: 'no-store' });
-      if (!isCurrent()) return false;
+      const response = await fetch(RoutesApi.me, {
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      if (!isCurrent() || controller.signal.aborted) return false;
 
       if (response.status === 401 || response.status === 403) {
         clearAuthenticatedUser();
@@ -330,7 +366,7 @@ export const UserProvider: FC<UserProviderProps> = ({
         session: AuthSessionResponse | null;
         user: UserType;
       }>;
-      if (!isCurrent()) return false;
+      if (!isCurrent() || controller.signal.aborted) return false;
       if (!data.success || !data.data.user) return false;
 
       const activityAt = Date.now();
@@ -343,11 +379,25 @@ export const UserProvider: FC<UserProviderProps> = ({
       return true;
     } catch {
       return false;
+    } finally {
+      clearTimeout(timeout);
+      sessionReadsRef.current.delete(controller);
     }
   }, [acceptUserSnapshot, clearAuthenticatedUser, router]);
 
   const login = useCallback(
-    async (credentials: LoginCredentials): Promise<LoginResult | null> => {
+    async (
+      credentials: LoginCredentials,
+      { signal }: AuthenticationRequestOptions = {},
+    ): Promise<LoginResult | null> => {
+      if (!mountedRef.current || logoutInProgressRef.current || signal?.aborted)
+        return null;
+      const operation = ++sessionOperationRef.current;
+      const isCurrent = (): boolean =>
+        mountedRef.current &&
+        !logoutInProgressRef.current &&
+        operation === sessionOperationRef.current &&
+        !signal?.aborted;
       try {
         setError(null);
 
@@ -355,33 +405,35 @@ export const UserProvider: FC<UserProviderProps> = ({
           body: JSON.stringify(credentials),
           headers: { 'Content-Type': 'application/json' },
           method: 'POST',
+          ...(signal ? { signal } : {}),
         });
+        if (!isCurrent()) return null;
         const data = (await response.json()) as ApiResponse<LoginResponseData>;
+        if (!isCurrent()) return null;
 
         if (response.ok && data.success) {
+          if (
+            !['mfa_required', 'mfa_setup_required'].includes(
+              data.data.status,
+            ) ||
+            !Number.isFinite(Date.parse(data.data.challengeExpiresAt))
+          )
+            throw new Error('Invalid login response');
+
           return data.data;
         }
 
-        const errorCode = data.success ? undefined : data.error.code;
         const errorMessage = data.success
           ? 'Erreur de connexion'
           : data.error.message || 'Erreur de connexion';
 
         setError(errorMessage);
 
-        if (errorCode === ErrorCode.INVALID_CREDENTIALS) {
-          toast.error('Identifiant ou mot de passe incorrect');
-        } else if (errorCode === ErrorCode.ACCOUNT_DISABLED) {
-          toast.error('Ce compte est désactivé');
-        } else {
-          toast.error(errorMessage);
-        }
-
         return null;
       } catch {
-        const errorMessage = 'Erreur de connexion';
+        if (!isCurrent()) return null;
+        const errorMessage = 'Impossible de confirmer la connexion. Réessayez.';
         setError(errorMessage);
-        toast.error(errorMessage);
 
         return null;
       }
@@ -390,53 +442,81 @@ export const UserProvider: FC<UserProviderProps> = ({
   );
 
   const verifyMfa = useCallback(
-    async (code: string): Promise<boolean> => {
+    async (
+      code: string,
+      { signal }: AuthenticationRequestOptions = {},
+    ): Promise<boolean> => {
+      if (!mountedRef.current || logoutInProgressRef.current || signal?.aborted)
+        return false;
+      const operation = ++sessionOperationRef.current;
+      const isCurrent = (): boolean =>
+        mountedRef.current &&
+        !logoutInProgressRef.current &&
+        operation === sessionOperationRef.current;
       try {
         setError(null);
         const response = await apiFetch(RoutesApi.mfaVerify, {
           body: JSON.stringify({ code }),
           headers: { 'Content-Type': 'application/json' },
           method: 'POST',
+          ...(signal ? { signal } : {}),
         });
+        if (!isCurrent()) return false;
+        if (signal?.aborted) throw new Error('MFA response timed out');
         const data =
           (await response.json()) as ApiResponse<AuthenticatedLoginData>;
+        if (!isCurrent()) return false;
+        if (signal?.aborted || response.status >= 500)
+          throw new Error('MFA result unknown');
 
         if (
           response.ok &&
           data.success &&
-          data.data.status === 'authenticated'
+          data.data.status === 'authenticated' &&
+          data.data.user?.id &&
+          data.data.session &&
+          typeof data.data.mustChangePassword === 'boolean'
         ) {
           completeAuthentication(data.data);
 
           return true;
         }
 
-        setError(
-          data.success
-            ? 'Code incorrect ou expiré'
-            : data.error.message || 'Code incorrect ou expiré',
-        );
+        if (response.ok || data.success || !data.error?.message)
+          throw new Error('Invalid MFA response');
+        setError(data.error.message);
 
         return false;
       } catch {
-        setError('Impossible de vérifier le code');
-
-        return false;
+        if (!isCurrent()) return false;
+        const message =
+          'Le résultat de la connexion n’a pas pu être confirmé. Vérifiez la session ou recommencez la connexion.';
+        if (!signal?.aborted) setError(message);
+        // A TOTP/recovery proof may already be consumed: never invite a blind replay.
+        throw new Error(message);
       }
     },
     [completeAuthentication],
   );
 
-  const cancelMfaChallenge = useCallback(async (): Promise<void> => {
-    setError(null);
+  const cancelMfaChallenge = useCallback(
+    async ({ signal }: AuthenticationRequestOptions = {}): Promise<void> => {
+      if (!mountedRef.current || signal?.aborted) return;
+      sessionOperationRef.current += 1;
+      setError(null);
 
-    try {
-      await apiFetch(RoutesApi.mfaChallenge, { method: 'DELETE' });
-    } catch {
-      // The challenge is deliberately short-lived. Returning to the login
-      // form must remain possible even if its best-effort deletion fails.
-    }
-  }, []);
+      try {
+        await apiFetch(RoutesApi.mfaChallenge, {
+          method: 'DELETE',
+          ...(signal ? { signal } : {}),
+        });
+      } catch {
+        // The challenge is deliberately short-lived. Returning to the login
+        // form must remain possible even if its best-effort deletion fails.
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (initialUser) return;

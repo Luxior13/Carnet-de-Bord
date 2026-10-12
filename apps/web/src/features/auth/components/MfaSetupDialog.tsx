@@ -1,7 +1,7 @@
 'use client';
 
 import { ShieldCheck } from 'lucide-react';
-import React, { type FC } from 'react';
+import React, { type FC, useEffect, useRef } from 'react';
 
 import { RoutesApi } from '$types/api.types';
 import type { MfaSetupConfirmationData } from '$types/auth.types';
@@ -36,13 +36,32 @@ export const MfaSetupDialog: FC<MfaSetupDialogProps> = ({
   onComplete,
   open,
 }) => {
+  const requestRef = useRef<AbortController | null>(null);
+  useEffect(() => {
+    return (): void => {
+      requestRef.current?.abort();
+      requestRef.current = null;
+    };
+  }, [open]);
   const isReplacing = mode === 'replace';
   const handleCancel = async (): Promise<void> => {
-    const response = await apiFetch(RoutesApi.mfaChallenge, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Annulation impossible');
-    onCancel?.();
+    if (requestRef.current || !open) return;
+    const request = new AbortController();
+    requestRef.current = request;
+    const timeout = setTimeout(() => request.abort(), 30_000);
+    try {
+      const response = await apiFetch(RoutesApi.mfaChallenge, {
+        method: 'DELETE',
+        signal: request.signal,
+      });
+      if (requestRef.current !== request) return;
+      if (!response.ok || request.signal.aborted)
+        throw new Error('Annulation impossible');
+      onCancel?.();
+    } finally {
+      clearTimeout(timeout);
+      if (requestRef.current === request) requestRef.current = null;
+    }
   };
 
   return (

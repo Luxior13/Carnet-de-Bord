@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-12",
+  "timezone": "Europe/Paris",
+  "initialHead": "0fd674a",
+  "initialWorktree": "clean",
+  "environment": {
+    "postgresql": 17,
+    "host": "127.0.0.1",
+    "port": 54599,
+    "database": "login_service_test",
+    "appliedMigrations": 52,
+    "fixtureBcryptCost": 4,
+    "databaseFromProjectConfigurationUsed": false,
+    "schemaChanged": false
+  },
+  "beforeFix": {
+    "realLockWaitObserved": true,
+    "cases": [
+      { "challenge": "LOGIN", "expectedStatus": 401, "actualStatus": 200 },
+      { "challenge": "SETUP", "expectedStatus": 401, "actualStatus": 200 }
+    ],
+    "cause": "MFA precondition compared expiry with request time captured before waiting for the conditional User write"
+  },
+  "correction": {
+    "file": "apps/web/src/shared/server/auth.ts",
+    "function": "createSession",
+    "behavior": "Revalidate source-session deadlines and MFA preconditions with a fresh time after the User row lock is acquired",
+    "durationsAndQuotasChanged": false
+  },
+  "afterFix": {
+    "loginStatus": 401,
+    "setupStatus": 401,
+    "expiredChallengeSessionOrSuccessAuditPersisted": false,
+    "sourceSessionExpirationChecksPassed": ["absolute", "idle"],
+    "postgresTests": { "passed": 17, "failed": 0, "skipped": 0 },
+    "existingTargetedTests": { "passed": 69, "failed": 0 },
+    "totalTests": 86,
+    "typecheck": "passed",
+    "targetedLint": "passed"
+  },
+  "limits": [
+    "Next cookies and request headers simulated; no middleware or real cookie transport",
+    "Fixture deadlines shortened, no global clock replacement; PostgreSQL lock waits observed",
+    "Bcrypt fixture cost 4, not a production hashing benchmark",
+    "Two-request races only; no load or multi-process capacity benchmark",
+    "Browser, CSRF, safe-next routing and lost HTTP responses belong to separate integration benches"
+  ]
+}

@@ -1,6 +1,6 @@
 # Suivi — Connexion
 
-## État courant — 11 octobre 2026
+## État courant — 12 octobre 2026
 
 - Route `/login`, entrée publique vers l’espace privé Noctambule.
 - [Page](../../../apps/web/src/app/login/page.tsx) et
@@ -9,8 +9,13 @@
   Utilisateur restent distincts. Le rôle métier ne se déduit pas d’un login.
 - Les règles d’accès appartiennent à [PERMISSIONS](../../references/PERMISSIONS.md)
   et les secrets/configurations à [OPERATIONS](../../references/OPERATIONS.md).
+- Revue complète du 12 octobre : attentes, réponses tardives, reprise MFA,
+  collage et expiration de configuration corrigés. **30 parcours client,
+  17 tests PostgreSQL et 12 parcours HTTP/MFA réels réussis**.
+  Suite web, types, build et budgets vérifiés ;
+  voir le [rapport et ses limites](../../audits/AUDIT_CONNEXION_2026-10-12.md).
 
-## Décisions courantes — 11 octobre 2026
+## Décisions courantes — complétées le 12 octobre 2026
 
 - Surfaces et arrondis alignés sur le design system ; le formulaire public conserve
   sa composition centrée. Focus placé sur l’identifiant à l’entrée de cette étape.
@@ -24,6 +29,29 @@
   même verrou et ignorent leurs réponses après démontage.
 - Les erreurs restent dans l’étape concernée ; une destination externe dans
   `next` ne devient pas une redirection autorisée.
+- Les opérations de connexion, vérification et retour sont limitées à
+  30 secondes ; les lectures de session à 15 secondes. La page annule sa
+  requête au démontage et ignore les réponses anciennes ; le contexte
+  contrôle aussi leur génération avant d'appliquer une session ou une erreur.
+  Cela ne garantit pas l'annulation d'une mutation déjà exécutée au serveur.
+- Un refus focalise son message après réactivation de la saisie ; Tab reprend
+  le champ. Passer du TOTP au code de secours efface la saisie précédente et
+  refocalise le champ. Un code complet collé est normalisé avant la limite
+  native, notamment lorsqu'il contient des espaces.
+- Une vérification MFA incertaine bloque un nouveau POST. « Vérifier la
+  session » effectue seulement un GET ; si aucune session n'est retrouvée,
+  « Recommencer la connexion » reprend les identifiants. Le code précédent
+  peut être consommé : utiliser un nouveau TOTP ou un autre code de secours.
+- Une configuration expirée retire QR, clé et code, puis revient à une
+  préparation explicitement autorisée, y compris sans bouton Annuler. Une
+  confirmation incertaine ne rejoue pas le PUT et retire aussi le secret ;
+  recharger permet de relire l'état du compte.
+- Les secrets et codes restent dans l'étape utile, sans persistance navigateur
+  ajoutée. Copier ou télécharger les codes est explicite ; leur conservation
+  doit être confirmée avant de terminer.
+- Le serveur recontrôle les échéances des défis et de la session source après
+  l'attente du verrou utilisateur. Audit, consommation de preuve et création
+  de session restent transactionnels ; aucun schéma nouveau n'est nécessaire.
 
 ## Questions pour une modification
 
@@ -41,6 +69,13 @@ configuration ou politique change. Un simple libellé garde un contrôle ciblé.
 
 ## Vérifications et limites
 
+La [passe du 12 octobre](../../audits/AUDIT_CONNEXION_2026-10-12.md) distingue
+les composants/contexte réels avec HTTP simulé, les tests ciblés, les routes
+sur PostgreSQL avec cookies/en-têtes simulés, puis les douze parcours avec
+Next, MFA, cookies et base réels. Chaque banc précise ce qu'il prouve ; les
+simulations ne sont pas présentées comme une authentification HTTP réelle.
+Les preuves historiques ci-dessous restent datées.
+
 Lors de la [cartographie du 10 octobre](../../audits/COMPREHENSION_PROJET_2026-10-10.md),
 la page anonyme a répondu 200 sur le serveur local existant : rendu à 1 440 et
 390 pixels, sans erreur JavaScript ni débordement horizontal observé. Les pages
@@ -55,8 +90,9 @@ API simulées : AUTH-01 reste ouvert pour l’authentification réelle.
 
 | ID | Point | Suite / déclencheur | Responsable / état |
 | --- | --- | --- | --- |
-| AUTH-01 | Parcours complet avec compte, MFA et session non exercé lors de la cartographie | Rejouer succès, refus, expiration et reprise avec comptes dédiés avant conclusion d’authentification complète | À attribuer / à vérifier |
+| AUTH-01 | Authentification réelle revue le 12 octobre : douze parcours Next/PostgreSQL avec cookies, MFA, refus, expiration et reprises ; trente client et dix-sept SQL en complément | Rejouer les parcours touchés lors d'une évolution du contrat d'authentification ; limites dans le rapport | Clos au périmètre testé le 12 octobre |
 | AUTH-02 | Lecteur d’écran et appareil mobile physique non vérifiés | Contrôler lors d’une revue d’accessibilité du parcours | À attribuer / à vérifier |
+| AUTH-03 à AUTH-08 | Attentes, résultat MFA incertain, collage, focus, configuration expirée et échéances après verrou corrigés ; preuves et limites détaillées dans le rapport | Rejouer les scénarios touchés lors d'une évolution de page, contexte, composants MFA ou création de session | Clos au périmètre testé le 12 octobre |
 
 ## Modales — revue transverse du 11 octobre 2026
 

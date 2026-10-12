@@ -1,0 +1,39 @@
+{
+  "completedAt": "2026-10-12T16:50:10.421Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "sourceMode": "current working tree",
+  "passed": 1,
+  "total": 1,
+  "observations": [
+    {
+      "name": "collage-natif-totp-et-secours",
+      "width": 390,
+      "status": "pass",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390,
+        "dialog": []
+      },
+      "requests": [
+        {
+          "path": "/api/auth/me",
+          "method": "GET",
+          "keys": []
+        },
+        {
+          "path": "/api/auth/login",
+          "method": "POST",
+          "keys": [
+            "loginName",
+            "password",
+            "rememberMe"
+          ],
+          "rememberMe": false,
+          "normalizedLogin": true
+        }
+      ]
+    }
+  ]
+}

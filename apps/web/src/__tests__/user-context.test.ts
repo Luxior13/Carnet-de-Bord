@@ -241,15 +241,22 @@ class FakeWindow {
 type ContextValue = {
   applyUserUpdate: (user: UserType) => void;
   authorizationRevision: number;
-  cancelMfaChallenge: () => Promise<void>;
+  cancelMfaChallenge: (options?: { signal?: AbortSignal }) => Promise<void>;
+  error: string | null;
   extendSession: () => Promise<void>;
   isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<LoginResult | null>;
+  login: (
+    credentials: LoginCredentials,
+    options?: { signal?: AbortSignal },
+  ) => Promise<LoginResult | null>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   showSessionWarning: boolean;
   userData: UserType | null;
-  verifyMfa: (code: string) => Promise<boolean>;
+  verifyMfa: (
+    code: string,
+    options?: { signal?: AbortSignal },
+  ) => Promise<boolean>;
 };
 
 const NOW = new Date('2026-07-13T10:00:00.000Z');
@@ -408,6 +415,7 @@ describe('UserContext session activity', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch).toHaveBeenCalledWith('/api/auth/me', {
       cache: 'no-store',
+      signal: expect.any(AbortSignal),
     });
 
     vi.advanceTimersByTime(15_000);
@@ -453,6 +461,7 @@ describe('UserContext session activity', () => {
     });
     expect(fetch).toHaveBeenCalledWith('/api/auth/me', {
       cache: 'no-store',
+      signal: expect.any(AbortSignal),
     });
   });
 
@@ -559,6 +568,169 @@ describe('UserContext session activity', () => {
     });
     expect(getContext(runtime).isLoading).toBe(false);
     expect(getContext(runtime).userData).toBeNull();
+  });
+
+  it('releases the initial session check after its deadline and permits a new check', async () => {
+    vi.mocked(fetch).mockImplementationOnce(
+      (_input, init) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener(
+            'abort',
+            () => reject(new Error('Aborted')),
+            { once: true },
+          );
+        }),
+    );
+    runtime.render(() => UserProvider({ children: null }) as ReactElement);
+    await vi.advanceTimersByTimeAsync(15_000);
+    runtime.render();
+    expect(getContext(runtime).isLoading).toBe(false);
+    expect(getContext(runtime).error).toBe(
+      'Impossible de vérifier votre session',
+    );
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(false));
+    await getContext(runtime).refreshUser();
+    runtime.render();
+    expect(getContext(runtime).userData?.id).toBe(user.id);
+  });
+
+  it('ignores a pending login response after its caller aborts', async () => {
+    await mountAnonymousProvider();
+    let resolve!: (response: Response) => void;
+    mocks.apiFetch.mockReturnValueOnce(
+      new Promise<Response>((done) => {
+        resolve = done;
+      }),
+    );
+    const controller = new AbortController();
+    const result = getContext(runtime).login(
+      { loginName: 'agent', password: 'fictive-password', rememberMe: false },
+      { signal: controller.signal },
+    );
+    controller.abort();
+    resolve(
+      apiJsonResponse({
+        data: { challengeExpiresAt: NOW.toISOString(), status: 'mfa_required' },
+        success: true,
+      }),
+    );
+    expect(await result).toBeNull();
+    runtime.render();
+    expect(getContext(runtime).error).toBeNull();
+    expect(getContext(runtime).userData).toBeNull();
+  });
+
+  it('does not authenticate from a verification superseded by cancellation', async () => {
+    await mountAnonymousProvider();
+    let resolve!: (response: Response) => void;
+    mocks.apiFetch.mockReturnValueOnce(
+      new Promise<Response>((done) => {
+        resolve = done;
+      }),
+    );
+    const verification = getContext(runtime).verifyMfa('123456');
+    await getContext(runtime).cancelMfaChallenge();
+    resolve(
+      apiJsonResponse({
+        data: {
+          mustChangePassword: false,
+          session: { rememberMe: false },
+          status: 'authenticated',
+          user,
+        },
+        success: true,
+      }),
+    );
+    expect(await verification).toBe(false);
+    runtime.render();
+    expect(getContext(runtime).userData).toBeNull();
+    expect(mocks.toastSuccess).not.toHaveBeenCalled();
+  });
+
+  it.each(['network', 'server', 'invalid-json', 'aborted'] as const)(
+    'signals an unknown MFA outcome after %s without retrying',
+    async (kind) => {
+      await mountAnonymousProvider();
+      const controller = new AbortController();
+      if (kind === 'network')
+        mocks.apiFetch.mockRejectedValueOnce(new Error('Network failed'));
+      else if (kind === 'server')
+        mocks.apiFetch.mockResolvedValueOnce(
+          apiJsonResponse(
+            { error: { message: 'Failure' }, success: false },
+            500,
+          ),
+        );
+      else if (kind === 'invalid-json')
+        mocks.apiFetch.mockResolvedValueOnce({
+          json: async () => {
+            throw new SyntaxError('Invalid JSON');
+          },
+          ok: true,
+          status: 200,
+        });
+      else
+        mocks.apiFetch.mockImplementationOnce(async () => {
+          controller.abort();
+
+          return apiJsonResponse({
+            data: {
+              mustChangePassword: false,
+              session: { rememberMe: false },
+              status: 'authenticated',
+              user,
+            },
+            success: true,
+          });
+        });
+      await expect(
+        getContext(runtime).verifyMfa('123456', { signal: controller.signal }),
+      ).rejects.toThrow('n’a pas pu être confirmé');
+      runtime.render();
+      expect(getContext(runtime).userData).toBeNull();
+      expect(mocks.apiFetch).toHaveBeenCalledTimes(1);
+      expect(mocks.toastSuccess).not.toHaveBeenCalled();
+    },
+  );
+
+  it('keeps credential and MFA refusals local and retryable', async () => {
+    await mountAnonymousProvider();
+    mocks.apiFetch.mockResolvedValueOnce(
+      apiJsonResponse(
+        {
+          error: {
+            code: 'INVALID_CREDENTIALS',
+            message: 'Identifiant ou mot de passe incorrect',
+          },
+          success: false,
+        },
+        401,
+      ),
+    );
+    expect(
+      await getContext(runtime).login({
+        loginName: 'agent',
+        password: 'fictive-password',
+        rememberMe: false,
+      }),
+    ).toBeNull();
+    runtime.render();
+    expect(getContext(runtime).error).toBe(
+      'Identifiant ou mot de passe incorrect',
+    );
+    expect(mocks.toastError).not.toHaveBeenCalled();
+    mocks.apiFetch.mockResolvedValueOnce(
+      apiJsonResponse(
+        {
+          error: { code: 'UNAUTHORIZED', message: 'Code incorrect ou expiré' },
+          success: false,
+        },
+        401,
+      ),
+    );
+    expect(await getContext(runtime).verifyMfa('123456')).toBe(false);
+    runtime.render();
+    expect(getContext(runtime).error).toBe('Code incorrect ou expiré');
   });
 
   it('keeps the mounted account when a silent refresh temporarily fails', async () => {
@@ -766,6 +938,7 @@ describe('UserContext session activity', () => {
 
     expect(fetch).toHaveBeenCalledWith('/api/auth/me', {
       cache: 'no-store',
+      signal: expect.any(AbortSignal),
     });
     expect(getContext(runtime).showSessionWarning).toBe(false);
   });

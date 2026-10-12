@@ -69,6 +69,16 @@ export const MfaCodeInput: FC<MfaCodeInputProps> = ({
         onChange={(event) =>
           onChange(normalizeMfaCode(event.target.value, kind))
         }
+        onPaste={(event) => {
+          // Normalize a complete pasted code before the browser applies maxLength.
+          const code = normalizeMfaCode(
+            event.clipboardData.getData('text'),
+            kind,
+          );
+          if (!isCompleteMfaCode(code, kind)) return;
+          event.preventDefault();
+          onChange(code);
+        }}
         placeholder={
           isRecoveryCode ? 'XXXX-XXXX-XXXX-XXXX-XXXX-XXXX' : '000000'
         }
