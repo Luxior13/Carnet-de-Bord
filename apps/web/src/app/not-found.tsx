@@ -12,7 +12,7 @@ const NotFoundPage: FC = () => {
       <div aria-hidden="true" className="site-background-column" />
       <Card className="border-border-content bg-surface-panel relative z-10 w-full max-w-md rounded-[10px] text-center">
         <CardContent className="space-y-6 px-6">
-          <ServiceIcon className="mx-auto size-14">
+          <ServiceIcon aria-hidden="true" className="mx-auto size-14">
             <SearchX className="size-7" />
           </ServiceIcon>
           <div className="space-y-2">
@@ -31,7 +31,7 @@ const NotFoundPage: FC = () => {
           </p>
           <Button asChild>
             <Link href="/">
-              <ArrowLeft className="size-4" />
+              <ArrowLeft aria-hidden="true" className="size-4" />
               Retour à l&apos;accueil
             </Link>
           </Button>

@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-12T19:11:53.066Z",
+  "phase": "final",
+  "baseCommit": "9731385",
+  "browser": "149.0.7827.55",
+  "next": "15.5.23 production",
+  "database": "PostgreSQL17/54630/technical_states_test/52migrations",
+  "observations": [
+    {
+      "name": "anonymous-missing-route-stays-private",
+      "result": "passed",
+      "initialStatus": 307,
+      "loginRedirect": true
+    },
+    {
+      "name": "authenticated-real-login-mfa",
+      "result": "passed",
+      "passwordAndTotp": true,
+      "csrfCookie": true
+    },
+    {
+      "name": "authenticated-unmatched-route-404",
+      "result": "passed",
+      "status": 404,
+      "noindex": true,
+      "returnHome": true
+    },
+    {
+      "name": "authenticated-catchall-notfound-and-mobile",
+      "result": "passed",
+      "status": 200,
+      "widths": [
+        320,
+        390,
+        768,
+        1440
+      ]
+    },
+    {
+      "name": "root-layout-database-outage-and-recovery",
+      "result": "passed",
+      "status": 500,
+      "noUiSecret": true,
+      "presentation": {
+        "lang": "fr",
+        "mainCount": 1,
+        "overflow": false,
+        "viewportMeta": "width=device-width, initial-scale=1",
+        "innerWidth": 390,
+        "fontFamily": "Geist, \"Geist Fallback\"",
+        "backgroundColor": "rgb(6, 10, 17)",
+        "loadedFonts": [
+          "Geist",
+          "Geist Mono",
+          "Geist Mono Fallback"
+        ],
+        "focusedHeading": true,
+        "coldNavigation": {
+          "viewportMeta": "width=device-width, initial-scale=1",
+          "innerWidth": 390,
+          "overflow": false,
+          "lang": "fr",
+          "mainCount": 1,
+          "status": 500
+        }
+      },
+      "databaseRestarted": true,
+      "recoveryAttempts": 1,
+      "recovery": "provided-retry-action",
+      "preservedQuery": true
+    }
+  ],
+  "expectedRenderErrors": []
+}

@@ -10,9 +10,10 @@ export default function Loading(): React.JSX.Element {
       role="status"
       aria-label="Chargement de la page"
     >
+      <span className="sr-only">Chargement de la page…</span>
       <PageCanvas contentClassName="space-y-4">
-        <Skeleton className="h-[78px] rounded-[10px]" />
-        <Skeleton className="h-[30rem] rounded-[10px]" />
+        <Skeleton aria-hidden="true" className="h-[78px] rounded-[10px]" />
+        <Skeleton aria-hidden="true" className="h-[30rem] rounded-[10px]" />
       </PageCanvas>
     </PageShell>
   );

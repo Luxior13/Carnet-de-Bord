@@ -151,8 +151,9 @@ ou passage à une autre fenêtre. Aucun système global supplémentaire n’est 
 | --- | --- | --- |
 | Vide, erreur, attente ou avertissement dans le contenu | [ContentState](../../apps/web/src/components/layout/ContentState.tsx) | `kind` et présentation compacte/panneau selon la place ; description et action de reprise utiles. Compose Alert ou Empty. |
 | Page entière indisponible ou accès refusé | [PageState et AccessDeniedState](../../apps/web/src/components/layout/PageState.tsx) | Titre de page, explication et retour ; ne pas présenter un refus comme une liste vide. |
+| Erreur imprévue de rendu ou de cadre racine | [RouteErrorState](../../apps/web/src/components/layout/RouteErrorState.tsx) | Partagé par `error.tsx` et `global-error.tsx`, sans dépendance au routeur ou aux providers. Message générique, digest facultatif, titre focalisé, rechargement GET complet verrouillé dès l'activation et lien accueil natif. `standalone` rend le repère `main` lorsqu'aucun cadre privé ne le fournit. |
 | Alerte ou état vide de composition particulière | [Alert](../../apps/web/src/components/ui/alert.tsx), [Empty](../../apps/web/src/components/ui/empty.tsx) | Primitives de ContentState ; préserver les textes longs et choisir les annonces sans répétition excessive. |
-| Chargement initial | [Skeleton](../../apps/web/src/components/ui/skeleton.tsx), [PageDetailSkeleton](../../apps/web/src/components/layout/PageDetailSkeleton.tsx) | Structure décorative avec un état de chargement nommé. Ne pas simuler une valeur réelle ; une actualisation peut garder les données déjà affichées. |
+| Chargement initial | [Skeleton](../../apps/web/src/components/ui/skeleton.tsx), [PageDetailSkeleton](../../apps/web/src/components/layout/PageDetailSkeleton.tsx) | Structure décorative avec un état de chargement nommé ; le chargement de route global ajoute un texte destiné aux technologies d'assistance. Ne pas simuler une valeur réelle ; une actualisation peut garder les données déjà affichées. |
 | Statut ou métadonnée courte | [Badge](../../apps/web/src/components/ui/badge.tsx) | Texte explicite ; teinte sémantique seulement si elle signifie quelque chose. Ne pas donner l’apparence d’un bouton à une information passive. |
 | Image d’identité et repli | [Avatar](../../apps/web/src/components/ui/avatar.tsx), [DiceBearAvatar](../../apps/web/src/components/ui/dicebear-avatar.tsx) | Image locale déterministe pour DiceBear, repli et nom accessibles. Le module fournit identité et couleur métier. |
 | Icône de section | [ServiceIcon](../../apps/web/src/components/ui/service-icon.tsx) | Contenant visuel neutre ; rendre l’icône décorative quand le texte donne déjà son sens. |
@@ -162,6 +163,15 @@ ou passage à une autre fenêtre. Aucun système global supplémentaire n’est 
 est disponible mais sans consommateur actuel. Ne pas y transférer automatiquement
 les chargements des pages : vérifier d’abord leurs données conservées, erreurs
 d’actualisation, permissions et possibilités de reprise.
+
+`RouteErrorState` répond à une rupture de rendu : il recharge explicitement le
+document et ne connaît ni les brouillons ni le résultat d'une mutation métier.
+Une erreur attendue d'API reste dans son module avec `ContentState`, `PageState`
+ou un retour de formulaire adapté. Ne pas remplacer une reprise locale qui
+préserve la saisie par un rechargement global. Contrat et limites dans le
+[suivi des états techniques](../qualite/pages/etats-techniques.md).
+Le document autonome de `global-error` fournit lui-même langue, styles, polices
+et meta viewport : il ne doit pas les supposer hérités du layout qui a échoué.
 
 ## Avant un nouveau composant
 

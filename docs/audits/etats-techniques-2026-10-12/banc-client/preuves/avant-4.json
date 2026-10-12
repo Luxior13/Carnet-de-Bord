@@ -1,0 +1,65 @@
+{
+  "completedAt": "2026-10-12T18:56:42.831Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 4,
+  "total": 4,
+  "observations": [
+    {
+      "name": "avant-erreur-remplacement-focus-perdu",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "defect": "Le contrôle focalisé disparaît, focus sur body ; seul Réessayer est proposé.",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      }
+    },
+    {
+      "name": "avant-erreur-publique-sans-main",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "defect": "Branche publique du shell : aucun landmark principal autour de l’erreur.",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "mains": 0
+      }
+    },
+    {
+      "name": "avant-chargement-semantique",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "statusText": "",
+      "aria": "- status \"Chargement de la page\"",
+      "note": "Nom accessible présent ; annonce vocale réelle non testée.",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      }
+    },
+    {
+      "name": "avant-longue-reference-petit-ecran",
+      "width": 320,
+      "height": 500,
+      "status": "pass",
+      "note": "Référence longue contenue, message interne absent.",
+      "metrics": {
+        "viewport": 320,
+        "document": 320,
+        "main": 290,
+        "mainWidth": 290,
+        "mains": 1
+      }
+    }
+  ]
+}

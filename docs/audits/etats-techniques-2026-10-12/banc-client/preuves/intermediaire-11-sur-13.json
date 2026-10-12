@@ -1,0 +1,897 @@
+{
+  "completedAt": "2026-10-12T19:01:20.036Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 11,
+  "total": 13,
+  "observations": [
+    {
+      "name": "composition-trois-etats",
+      "width": 320,
+      "height": 900,
+      "status": "pass",
+      "contrasts": [
+        {
+          "kind": "error",
+          "measurements": [
+            {
+              "text": "Une erreur est survenue",
+              "foreground": [
+                243,
+                246,
+                251,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 15.150979314327312,
+              "fontSize": "18px",
+              "fontWeight": "600",
+              "required": 4.5
+            },
+            {
+              "text": "La page n'a pas pu s'afficher. Vous pouvez la recharger",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "16px",
+              "fontWeight": "400",
+              "required": 4.5
+            },
+            {
+              "text": "Référence : audit-reference-123",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "11px",
+              "fontWeight": "400",
+              "required": 4.5
+            }
+          ]
+        },
+        {
+          "kind": "not-found",
+          "measurements": [
+            {
+              "text": "Page introuvable",
+              "foreground": [
+                243,
+                246,
+                251,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 15.150979314327312,
+              "fontSize": "18px",
+              "fontWeight": "600",
+              "required": 4.5
+            },
+            {
+              "text": "La page que vous recherchez n'existe pas ou a été dépla",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "16px",
+              "fontWeight": "400",
+              "required": 4.5
+            }
+          ]
+        }
+      ],
+      "metrics": {
+        "viewport": 320,
+        "document": 320,
+        "main": 290,
+        "mainWidth": 290,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/audit-etat"
+        }
+      ]
+    },
+    {
+      "name": "composition-trois-etats",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "contrasts": [
+        {
+          "kind": "error",
+          "measurements": [
+            {
+              "text": "Une erreur est survenue",
+              "foreground": [
+                243,
+                246,
+                251,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 15.150979314327312,
+              "fontSize": "18px",
+              "fontWeight": "600",
+              "required": 4.5
+            },
+            {
+              "text": "La page n'a pas pu s'afficher. Vous pouvez la recharger",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "16px",
+              "fontWeight": "400",
+              "required": 4.5
+            },
+            {
+              "text": "Référence : audit-reference-123",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "11px",
+              "fontWeight": "400",
+              "required": 4.5
+            }
+          ]
+        },
+        {
+          "kind": "not-found",
+          "measurements": [
+            {
+              "text": "Page introuvable",
+              "foreground": [
+                243,
+                246,
+                251,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 15.150979314327312,
+              "fontSize": "18px",
+              "fontWeight": "600",
+              "required": 4.5
+            },
+            {
+              "text": "La page que vous recherchez n'existe pas ou a été dépla",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "16px",
+              "fontWeight": "400",
+              "required": 4.5
+            }
+          ]
+        }
+      ],
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/audit-etat"
+        }
+      ]
+    },
+    {
+      "name": "composition-trois-etats",
+      "width": 768,
+      "height": 900,
+      "status": "pass",
+      "contrasts": [
+        {
+          "kind": "error",
+          "measurements": [
+            {
+              "text": "Une erreur est survenue",
+              "foreground": [
+                243,
+                246,
+                251,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 15.150979314327312,
+              "fontSize": "22px",
+              "fontWeight": "600",
+              "required": 4.5
+            },
+            {
+              "text": "La page n'a pas pu s'afficher. Vous pouvez la recharger",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "16px",
+              "fontWeight": "400",
+              "required": 4.5
+            },
+            {
+              "text": "Référence : audit-reference-123",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "11px",
+              "fontWeight": "400",
+              "required": 4.5
+            }
+          ]
+        },
+        {
+          "kind": "not-found",
+          "measurements": [
+            {
+              "text": "Page introuvable",
+              "foreground": [
+                243,
+                246,
+                251,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 15.150979314327312,
+              "fontSize": "22px",
+              "fontWeight": "600",
+              "required": 4.5
+            },
+            {
+              "text": "La page que vous recherchez n'existe pas ou a été dépla",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "16px",
+              "fontWeight": "400",
+              "required": 4.5
+            }
+          ]
+        }
+      ],
+      "metrics": {
+        "viewport": 768,
+        "document": 768,
+        "main": 738,
+        "mainWidth": 738,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/audit-etat"
+        }
+      ]
+    },
+    {
+      "name": "composition-trois-etats",
+      "width": 1024,
+      "height": 900,
+      "status": "pass",
+      "contrasts": [
+        {
+          "kind": "error",
+          "measurements": [
+            {
+              "text": "Une erreur est survenue",
+              "foreground": [
+                243,
+                246,
+                251,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 15.150979314327312,
+              "fontSize": "22px",
+              "fontWeight": "600",
+              "required": 4.5
+            },
+            {
+              "text": "La page n'a pas pu s'afficher. Vous pouvez la recharger",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "16px",
+              "fontWeight": "400",
+              "required": 4.5
+            },
+            {
+              "text": "Référence : audit-reference-123",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "11px",
+              "fontWeight": "400",
+              "required": 4.5
+            }
+          ]
+        },
+        {
+          "kind": "not-found",
+          "measurements": [
+            {
+              "text": "Page introuvable",
+              "foreground": [
+                243,
+                246,
+                251,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 15.150979314327312,
+              "fontSize": "22px",
+              "fontWeight": "600",
+              "required": 4.5
+            },
+            {
+              "text": "La page que vous recherchez n'existe pas ou a été dépla",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "16px",
+              "fontWeight": "400",
+              "required": 4.5
+            }
+          ]
+        }
+      ],
+      "metrics": {
+        "viewport": 1024,
+        "document": 1024,
+        "main": 994,
+        "mainWidth": 994,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/audit-etat"
+        }
+      ]
+    },
+    {
+      "name": "composition-trois-etats",
+      "width": 1440,
+      "height": 900,
+      "status": "pass",
+      "contrasts": [
+        {
+          "kind": "error",
+          "measurements": [
+            {
+              "text": "Une erreur est survenue",
+              "foreground": [
+                243,
+                246,
+                251,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 15.150979314327312,
+              "fontSize": "22px",
+              "fontWeight": "600",
+              "required": 4.5
+            },
+            {
+              "text": "La page n'a pas pu s'afficher. Vous pouvez la recharger",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "16px",
+              "fontWeight": "400",
+              "required": 4.5
+            },
+            {
+              "text": "Référence : audit-reference-123",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "11px",
+              "fontWeight": "400",
+              "required": 4.5
+            }
+          ]
+        },
+        {
+          "kind": "not-found",
+          "measurements": [
+            {
+              "text": "Page introuvable",
+              "foreground": [
+                243,
+                246,
+                251,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 15.150979314327312,
+              "fontSize": "22px",
+              "fontWeight": "600",
+              "required": 4.5
+            },
+            {
+              "text": "La page que vous recherchez n'existe pas ou a été dépla",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "16px",
+              "fontWeight": "400",
+              "required": 4.5
+            }
+          ]
+        }
+      ],
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1410,
+        "mainWidth": 1410,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/audit-etat"
+        }
+      ]
+    },
+    {
+      "name": "composition-trois-etats",
+      "width": 1920,
+      "height": 900,
+      "status": "pass",
+      "contrasts": [
+        {
+          "kind": "error",
+          "measurements": [
+            {
+              "text": "Une erreur est survenue",
+              "foreground": [
+                243,
+                246,
+                251,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 15.150979314327312,
+              "fontSize": "22px",
+              "fontWeight": "600",
+              "required": 4.5
+            },
+            {
+              "text": "La page n'a pas pu s'afficher. Vous pouvez la recharger",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "16px",
+              "fontWeight": "400",
+              "required": 4.5
+            },
+            {
+              "text": "Référence : audit-reference-123",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "11px",
+              "fontWeight": "400",
+              "required": 4.5
+            }
+          ]
+        },
+        {
+          "kind": "not-found",
+          "measurements": [
+            {
+              "text": "Page introuvable",
+              "foreground": [
+                243,
+                246,
+                251,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 15.150979314327312,
+              "fontSize": "22px",
+              "fontWeight": "600",
+              "required": 4.5
+            },
+            {
+              "text": "La page que vous recherchez n'existe pas ou a été dépla",
+              "foreground": [
+                142,
+                155,
+                175,
+                255
+              ],
+              "background": [
+                21,
+                32,
+                47,
+                255
+              ],
+              "ratio": 5.828451069352866,
+              "fontSize": "16px",
+              "fontWeight": "400",
+              "required": 4.5
+            }
+          ]
+        }
+      ],
+      "metrics": {
+        "viewport": 1920,
+        "document": 1920,
+        "main": 1890,
+        "mainWidth": 1890,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/audit-etat"
+        }
+      ]
+    },
+    {
+      "name": "erreur-remplacement-focus-clavier-retour",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "focus": {
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "outline": "none"
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/audit-etat"
+        },
+        {
+          "method": "GET",
+          "path": "/"
+        }
+      ]
+    },
+    {
+      "name": "erreur-reessai-reussi",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "note": "Rechargement GET complet observé ; document de remplacement simulé, pas réexécution serveur Next.",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/audit-etat"
+        },
+        {
+          "method": "GET",
+          "path": "/audit-etat"
+        }
+      ]
+    },
+    {
+      "name": "erreur-reessai-persistant",
+      "width": 390,
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n3 !== 2\n",
+      "errors": [],
+      "requests": []
+    },
+    {
+      "name": "publique-landmark-unique-et-navigation",
+      "width": 390,
+      "status": "fail",
+      "error": "Error: expect(locator).toHaveCount(expected) failed\n\nLocator:  locator('main,[role=\"main\"]')\nExpected: 1\nReceived: 0\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.have.count\" with timeout 5000ms\n  - waiting for locator('main,[role=\"main\"]')\n    14 × locator resolved to 0 elements\n       - unexpected value \"0\"\n",
+      "errors": [],
+      "requests": []
+    },
+    {
+      "name": "reference-longue-sans-fuite-viewport-bas",
+      "width": 320,
+      "height": 250,
+      "status": "pass",
+      "metrics": {
+        "viewport": 320,
+        "document": 320,
+        "main": 290,
+        "mainWidth": 290,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/audit-etat"
+        },
+        {
+          "method": "GET",
+          "path": "/"
+        }
+      ]
+    },
+    {
+      "name": "texte-agrandi-et-mouvement-reduit",
+      "width": 768,
+      "height": 900,
+      "status": "pass",
+      "note": "Agrandissement racine à32px : simulation de texte200%, pas zoom natif du navigateur.",
+      "metrics": {
+        "viewport": 768,
+        "document": 768,
+        "main": 738,
+        "mainWidth": 738,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/audit-etat"
+        }
+      ]
+    },
+    {
+      "name": "chargement-nomme-sans-deplacement-focus",
+      "width": 390,
+      "height": 900,
+      "status": "pass",
+      "aria": "- status \"Chargement de la page\": Chargement de la page…",
+      "text": "Chargement de la page…",
+      "note": "Arbre accessible contrôlé, lecteur vocal non exécuté.",
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 360,
+        "mainWidth": 360,
+        "mains": 1
+      },
+      "navigations": [
+        {
+          "method": "GET",
+          "path": "/audit-etat"
+        }
+      ]
+    }
+  ]
+}

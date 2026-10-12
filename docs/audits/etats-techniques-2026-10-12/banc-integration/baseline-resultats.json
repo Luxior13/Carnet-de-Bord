@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-12T19:00:19.374Z",
+  "phase": "baseline",
+  "baseCommit": "9731385",
+  "browser": "149.0.7827.55",
+  "next": "15.5.23 production",
+  "database": "PostgreSQL17/54630/technical_states_test/52migrations",
+  "observations": [
+    {
+      "name": "anonymous-missing-route-stays-private",
+      "result": "passed",
+      "initialStatus": 307,
+      "loginRedirect": true
+    },
+    {
+      "name": "authenticated-real-login-mfa",
+      "result": "passed",
+      "passwordAndTotp": true,
+      "csrfCookie": true
+    },
+    {
+      "name": "authenticated-unmatched-route-404",
+      "result": "passed",
+      "status": 404,
+      "noindex": true,
+      "returnHome": true
+    },
+    {
+      "name": "authenticated-catchall-notfound-and-mobile",
+      "result": "passed",
+      "status": 200,
+      "widths": [
+        320,
+        390,
+        768,
+        1440
+      ]
+    },
+    {
+      "name": "baseline-global-fallback",
+      "result": "observed",
+      "genericEnglishError": true,
+      "actions": [],
+      "links": []
+    },
+    {
+      "name": "root-layout-database-outage-and-recovery",
+      "result": "passed",
+      "status": 500,
+      "noUiSecret": true,
+      "databaseRestarted": true,
+      "recovery": "manual-browser-reload"
+    }
+  ],
+  "expectedRenderErrors": [
+    {
+      "name": "Error",
+      "message": "An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error."
+    }
+  ]
+}

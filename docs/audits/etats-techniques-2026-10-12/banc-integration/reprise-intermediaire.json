@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-12",
+  "environment": "Next 15.5.23 production / PostgreSQL 17 local 54630",
+  "operation": "Restart the isolated PostgreSQL cluster, then reload the root document through the provided UI action",
+  "intermediateRun": {
+    "result": "failed",
+    "attempts": 3,
+    "firstRequestUtc": "2026-10-12T19:11:08.221Z",
+    "lastRequestUtc": "2026-10-12T19:11:08.387Z",
+    "serverErrorCode": "P1017",
+    "serverError": "Server has closed the connection.",
+    "retryButtonAndHomeExitStillAvailable": true,
+    "interpretation": "The three harness clicks occurred within 166 ms. P1017 is compatible with closed pooled connections after restart; the internal pool state was not measured. No application retry was introduced."
+  },
+  "finalProtocol": {
+    "maximumManualActions": 3,
+    "delayBetweenActionsMs": 1000,
+    "observedActionsNeeded": 1,
+    "result": "passed",
+    "productAutomaticallyRetries": false,
+    "businessMutationReplayed": false
+  },
+  "limit": "This proves recovery in the final local run, not a universal database-pool recovery deadline."
+}

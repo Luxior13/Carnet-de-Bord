@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-12T19:08:48.030Z",
+  "next": "15.5.23 production",
+  "isMobile": true,
+  "configuredViewport": 390,
+  "presentation": {
+    "lang": "fr",
+    "mainCount": 1,
+    "overflow": false,
+    "viewportMeta": null,
+    "innerWidth": 390,
+    "fontFamily": "Geist, \"Geist Fallback\"",
+    "backgroundColor": "rgb(6, 10, 17)",
+    "loadedFonts": [
+      "Geist",
+      "Geist Mono",
+      "Geist Mono Fallback"
+    ],
+    "focusedHeading": true
+  }
+}

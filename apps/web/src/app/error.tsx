@@ -1,50 +1,22 @@
 'use client';
 
-import { AlertTriangle, RefreshCw } from 'lucide-react';
-import React, { type FC } from 'react';
+import { usePathname } from 'next/navigation';
+import React from 'react';
 
-import { Button } from '$ui/button';
-import { Card, CardContent } from '$ui/card';
+import { RouteErrorState } from '$components/layout/RouteErrorState';
+import { isPublicPagePath } from '$constants/security.constants';
 
-type ErrorPageProps = {
+export default function ErrorPage({
+  error,
+}: {
   error: Error & { digest?: string };
-  reset: () => void;
-};
+}): React.JSX.Element {
+  const pathname = usePathname();
 
-const ErrorPage: FC<ErrorPageProps> = ({ error, reset }) => {
   return (
-    <div
-      className="route-state relative isolate flex items-center justify-center p-4"
-      role="alert"
-    >
-      <div aria-hidden="true" className="site-background-column" />
-      <Card className="border-border-content bg-surface-panel relative z-10 w-full max-w-md rounded-[10px] text-center">
-        <CardContent className="space-y-5 p-6">
-          <div className="bg-destructive/10 mx-auto flex h-14 w-14 items-center justify-center rounded-lg">
-            <AlertTriangle className="text-destructive h-7 w-7" />
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-xl leading-7 font-semibold sm:text-2xl sm:leading-8">
-              Une erreur est survenue
-            </h1>
-            <p className="text-muted-foreground">
-              Quelque chose s&apos;est mal passé. Veuillez réessayer ou
-              contacter un administrateur si le problème persiste.
-            </p>
-          </div>
-          {error.digest && (
-            <p className="text-muted-foreground font-mono text-xs break-all">
-              Référence : {error.digest}
-            </p>
-          )}
-          <Button onClick={reset} className="gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Réessayer
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+    <RouteErrorState
+      digest={error.digest}
+      standalone={isPublicPagePath(pathname)}
+    />
   );
-};
-
-export default ErrorPage;
+}

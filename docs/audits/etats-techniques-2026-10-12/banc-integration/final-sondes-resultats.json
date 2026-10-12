@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-12T19:10:50.011Z",
+  "phase": "final",
+  "next": "15.5.23 production",
+  "sourceCopy": true,
+  "faultRoutesOnlyInTemporaryCopy": true,
+  "observations": [
+    {
+      "name": "server-boundary-real-render-failure-and-recovery",
+      "result": "passed",
+      "initialStatus": 200,
+      "recovery": "provided-reload-action",
+      "probeMethods": [
+        "GET"
+      ]
+    },
+    {
+      "name": "persistent-server-failure-keeps-a-retry-and-home-exit",
+      "result": "passed",
+      "persistentFault": true,
+      "homeExit": true
+    },
+    {
+      "name": "client-boundary-real-render-failure-and-recovery",
+      "result": "passed",
+      "realClientRenderThrow": true,
+      "recovery": true
+    },
+    {
+      "name": "real-streamed-loading-before-server-response",
+      "result": "passed",
+      "suspendedMilliseconds": 1800,
+      "recovered": true
+    }
+  ],
+  "expectedRenderErrors": []
+}
