@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 import { ChangePasswordDialog } from '$components/ChangePasswordDialog';
 import { MfaActionDialog } from '$features/auth/components/MfaActionDialog';
 import { MfaSetupDialog } from '$features/auth/components/MfaSetupDialog';
-import { type ApiResponse, RoutesApi } from '$types/api.types';
+import { RoutesApi } from '$types/api.types';
 import type {
   MfaSetupConfirmationData,
   MfaStatus,
@@ -44,10 +44,11 @@ import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
 import { Separator } from '$ui/separator';
 import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
-import { apiFetch } from '$utils/api.utils';
+import { ApiClientError } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 
 import { formatRelativeAccountTime } from '../account.utils';
+import { accountSecurityRequest } from '../account-security-request';
 import {
   formatSessionDateTime,
   getSessionTitle,
@@ -64,6 +65,17 @@ type SecuritySectionProps = {
   userData: UserType;
 };
 
+const focusSecurityHeading = (id: string): void => {
+  const heading = document.getElementById(id);
+  if (!heading?.getClientRects().length) return;
+  heading.focus({ preventScroll: true });
+  heading.scrollIntoView({
+    behavior: 'instant',
+    block: 'nearest',
+    inline: 'nearest',
+  });
+};
+
 const SectionTitle: FC<{
   children: React.ReactNode;
   icon: React.ReactNode;
@@ -72,7 +84,7 @@ const SectionTitle: FC<{
   <h3
     id={id}
     tabIndex={-1}
-    className="text-foreground flex items-center gap-2 text-sm font-semibold"
+    className="text-foreground flex scroll-mt-16 items-center gap-2 text-sm font-semibold"
   >
     <ServiceIcon className="size-7">{icon}</ServiceIcon>
     {children}
@@ -124,8 +136,21 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   useEffect(() => {
     const controller = new AbortController();
     lifetimeRef.current = controller;
+    // A later user action owns the focus, even if an earlier retry finishes.
+    const cancelFocus = (): void => {
+      sessionsFocusRef.current = false;
+      mfaFocusRef.current = false;
+    };
+    document.addEventListener('pointerdown', cancelFocus, true);
+    document.addEventListener('keydown', cancelFocus, true);
+    document.addEventListener('wheel', cancelFocus, { passive: true });
 
-    return (): void => controller.abort();
+    return (): void => {
+      controller.abort();
+      document.removeEventListener('pointerdown', cancelFocus, true);
+      document.removeEventListener('keydown', cancelFocus, true);
+      document.removeEventListener('wheel', cancelFocus);
+    };
   }, []);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [mfaStatus, setMfaStatus] = useState<MfaStatus | null>(null);
@@ -138,6 +163,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [sessionsError, setSessionsError] = useState<string | null>(null);
+  const [sessionsNotice, setSessionsNotice] = useState<string | null>(null);
   const [revokingAll, setRevokingAll] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [sessionToRevoke, setSessionToRevoke] = useState<SessionInfo | null>(
@@ -165,26 +191,19 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       }
 
       try {
-        const response = await fetch(RoutesApi.mfa, {
-          cache: 'no-store',
+        const data = await accountSecurityRequest<MfaStatus>(
+          RoutesApi.mfa,
           signal,
-        });
-        if (isCurrent() && (response.status === 401 || response.status === 403))
-          setMfaStatus(null);
-        const data = (await response.json()) as ApiResponse<MfaStatus>;
-
-        if (isCurrent() && response.ok && data.success) {
-          setMfaStatus(data.data);
-        } else if (isCurrent()) {
-          setMfaStatusError(
-            data.success
-              ? 'Impossible de charger la double authentification'
-              : data.error.message ||
-                  'Impossible de charger la double authentification',
-          );
-        }
-      } catch {
+          { cache: 'no-store' },
+        );
+        if (isCurrent()) setMfaStatus(data);
+      } catch (failure) {
         if (isCurrent()) {
+          if (
+            failure instanceof ApiClientError &&
+            [401, 403].includes(failure.status)
+          )
+            setMfaStatus(null);
           setMfaStatusError('Impossible de charger la double authentification');
         }
       } finally {
@@ -214,23 +233,19 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
       }
 
       try {
-        const response = await fetch('/api/auth/sessions', {
-          cache: 'no-store',
+        const data = await accountSecurityRequest<{ sessions: SessionInfo[] }>(
+          '/api/auth/sessions',
           signal,
-        });
-        if (isCurrent() && (response.status === 401 || response.status === 403))
-          setSessions([]);
-        const data = await response.json();
-
-        if (isCurrent() && response.ok && data.success) {
-          setSessions(data.data.sessions);
-        } else if (isCurrent()) {
-          setSessionsError(
-            data.error?.message || 'Impossible de charger les sessions',
-          );
-        }
-      } catch {
+          { cache: 'no-store' },
+        );
+        if (isCurrent()) setSessions(data.sessions);
+      } catch (failure) {
         if (isCurrent()) {
+          if (
+            failure instanceof ApiClientError &&
+            [401, 403].includes(failure.status)
+          )
+            setSessions([]);
           setSessionsError('Impossible de charger les sessions');
         }
       } finally {
@@ -265,92 +280,80 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   useEffect(() => {
     if (!loadingSessions && sessionsFocusRef.current) {
       sessionsFocusRef.current = false;
-      document.getElementById('account-sessions-heading')?.focus();
+      focusSecurityHeading('account-sessions-heading');
     }
   }, [loadingSessions, sessionsError]);
   useEffect(() => {
     if (!loadingMfaStatus && mfaFocusRef.current) {
       mfaFocusRef.current = false;
-      document.getElementById('account-mfa-heading')?.focus();
+      focusSecurityHeading('account-mfa-heading');
     }
   }, [loadingMfaStatus, mfaStatusError]);
 
-  const handleRevokeAllSessions = async (): Promise<void> => {
+  const handleRevokeSession = async (sessionId?: string): Promise<void> => {
     const signal = lifetimeRef.current?.signal;
     if (!canManageSessions || !signal || signal.aborted || revokingRef.current)
       return;
     revokingRef.current = true;
     sessionMutationRef.current = true;
+    let reload = false;
     try {
-      setRevokingAll(true);
-      const response = await apiFetch('/api/auth/sessions', {
-        method: 'DELETE',
+      setSessionsNotice(null);
+      if (sessionId) setRevokingId(sessionId);
+      else setRevokingAll(true);
+      await accountSecurityRequest<null>(
+        sessionId
+          ? `/api/auth/sessions?id=${encodeURIComponent(sessionId)}`
+          : '/api/auth/sessions',
         signal,
-      });
-      const data = await response.json();
-
-      if (signal.aborted) return;
-      if (response.ok && data.success) {
-        toast.success('Toutes les autres sessions ont été déconnectées');
-        sessionsFocusRef.current = true;
-        await fetchSessions();
-      } else {
-        toast.error(data.error?.message || 'Erreur');
-      }
-    } catch {
-      if (!signal.aborted) {
-        toast.error(
-          'La réponse n’a pas pu être confirmée. Vérifiez les sessions restantes avant de recommencer.',
-        );
-        sessionsFocusRef.current = true;
-        await fetchSessions();
-      }
-    } finally {
-      revokingRef.current = false;
-      if (signal.aborted) return;
-      setRevokingAll(false);
-      setShowRevokeDialog(false);
-    }
-  };
-
-  const handleRevokeSession = async (sessionId: string): Promise<void> => {
-    const signal = lifetimeRef.current?.signal;
-    if (!canManageSessions || !signal || signal.aborted || revokingRef.current)
-      return;
-    revokingRef.current = true;
-    sessionMutationRef.current = true;
-    try {
-      setRevokingId(sessionId);
-      const response = await apiFetch(
-        `/api/auth/sessions?id=${encodeURIComponent(sessionId)}`,
-        {
-          method: 'DELETE',
-          signal,
-        },
+        { method: 'DELETE' },
       );
-      const data = await response.json();
-
       if (signal.aborted) return;
-      if (response.ok && data.success) {
-        toast.success('Session déconnectée');
-        sessionsFocusRef.current = true;
-        await fetchSessions();
-      } else {
-        toast.error(data.error?.message || 'Erreur');
-      }
-    } catch {
-      if (!signal.aborted) {
-        toast.error(
+      toast.success(
+        sessionId
+          ? 'Session déconnectée'
+          : 'Toutes les autres sessions ont été déconnectées',
+      );
+      reload = true;
+    } catch (failure) {
+      if (signal.aborted) return;
+      if (
+        failure instanceof ApiClientError &&
+        [401, 403].includes(failure.status)
+      ) {
+        setSessions([]);
+        setSessionsError(
+          'Votre accès aux sessions doit être vérifié. Rechargez la liste avant de continuer.',
+        );
+      } else if (
+        !(failure instanceof ApiClientError) ||
+        failure.status >= 500 ||
+        failure.code === 'INVALID_RESPONSE'
+      ) {
+        setSessionsNotice(
           'La réponse n’a pas pu être confirmée. Vérifiez les sessions restantes avant de recommencer.',
         );
-        sessionsFocusRef.current = true;
-        await fetchSessions();
+        reload = true;
+      } else if (failure.status === 404) {
+        setSessionsNotice(
+          'Cette session n’est plus disponible. Vérifiez les sessions restantes avant de continuer.',
+        );
+        reload = true;
+      } else {
+        toast.error(failure.message);
       }
     } finally {
+      // A completed mutation must not leave its modal locked on a later GET.
+      if (!signal.aborted) {
+        setRevokingAll(false);
+        setRevokingId(null);
+        setShowRevokeDialog(false);
+        setSessionToRevoke(null);
+      }
+      if (!signal.aborted && reload) {
+        await fetchSessions();
+      }
       revokingRef.current = false;
-      if (signal.aborted) return;
-      setRevokingId(null);
-      setSessionToRevoke(null);
     }
   };
 
@@ -638,6 +641,14 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               </SectionTitle>
             </CardHeader>
             <CardContent className="space-y-4 p-3 sm:p-4">
+              {sessionsNotice && (
+                <p
+                  className="border-warning/30 bg-warning/10 text-warning rounded-md border p-3 text-sm leading-6"
+                  role="status"
+                >
+                  {sessionsNotice}
+                </p>
+              )}
               {loadingSessions ? (
                 <div aria-live="polite" className="space-y-2" role="status">
                   <span className="sr-only">
@@ -789,7 +800,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
             if (sessionMutationRef.current) {
               event.preventDefault();
               sessionMutationRef.current = false;
-              document.getElementById('account-sessions-heading')?.focus();
+              focusSecurityHeading('account-sessions-heading');
             }
           }}
         >
@@ -840,7 +851,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
             if (sessionMutationRef.current) {
               event.preventDefault();
               sessionMutationRef.current = false;
-              document.getElementById('account-sessions-heading')?.focus();
+              focusSecurityHeading('account-sessions-heading');
             }
           }}
         >
@@ -866,7 +877,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               <AlertDialogAction
                 onClick={(event) => {
                   event.preventDefault();
-                  void handleRevokeAllSessions();
+                  void handleRevokeSession();
                 }}
                 disabled={revokingAll}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"

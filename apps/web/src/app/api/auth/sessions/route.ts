@@ -146,48 +146,81 @@ export async function DELETE(
     const url = new URL(request.url);
     const sessionId = url.searchParams.get('id');
 
-    if (sessionId) {
-      // Delete a specific session
-      const sessionToDelete = await prisma.session.findFirst({
-        select: {
-          id: true,
-          token: true,
-        },
-        where: {
-          id: sessionId,
-          userId: user.id,
-        },
-      });
-
-      if (!sessionToDelete) {
-        return NextResponse.json(
-          {
-            error: {
-              code: ErrorCode.NOT_FOUND,
-              message: 'Session non trouvée',
-            },
-            success: false,
-          },
-          { status: 404 },
+    return await prisma.$transaction(async (transaction) => {
+      // Serialize with session creation, security rotations and other revocations.
+      // NO KEY UPDATE also permits the foreign-key checks used by audit inserts.
+      const authorizedUsers = await transaction.$queryRaw<{ id: string }[]>`
+        SELECT "id" FROM "User"
+        WHERE "id" = ${user.id}
+          AND "deletedAt" IS NULL
+          AND "isActive" = TRUE
+          AND "securityVersion" = ${currentSession.securityVersion}
+        FOR NO KEY UPDATE
+      `;
+      // Read deadlines after the lock: waiting must not extend authorization.
+      const revalidatedAt = new Date();
+      const sourceSession =
+        authorizedUsers.length === 1
+          ? await transaction.session.findFirst({
+              select: { id: true },
+              where: {
+                expiresAt: { gt: revalidatedAt },
+                idleExpiresAt: { gt: revalidatedAt },
+                securityVersion: currentSession.securityVersion,
+                token: currentSession.token,
+                userId: user.id,
+              },
+            })
+          : null;
+      if (!sourceSession) {
+        return apiError(
+          ErrorCode.UNAUTHORIZED,
+          'Votre session a expiré. Veuillez vous reconnecter.',
+          401,
         );
       }
 
-      // Don't allow deleting current session through this endpoint
-      if (sessionToDelete.token === currentSession?.token) {
-        return NextResponse.json(
-          {
-            error: {
-              code: ErrorCode.FORBIDDEN,
-              message:
-                'Utilisez la déconnexion pour terminer votre session actuelle',
-            },
-            success: false,
+      if (sessionId) {
+        // Delete a specific session
+        const sessionToDelete = await transaction.session.findFirst({
+          select: {
+            id: true,
+            token: true,
           },
-          { status: 403 },
-        );
-      }
+          where: {
+            id: sessionId,
+            userId: user.id,
+          },
+        });
 
-      await prisma.$transaction(async (transaction) => {
+        if (!sessionToDelete) {
+          return NextResponse.json(
+            {
+              error: {
+                code: ErrorCode.NOT_FOUND,
+                message: 'Session non trouvée',
+              },
+              success: false,
+            },
+            { status: 404 },
+          );
+        }
+
+        // Don't allow deleting current session through this endpoint
+        if (sessionToDelete.token === currentSession?.token) {
+          return NextResponse.json(
+            {
+              error: {
+                code: ErrorCode.FORBIDDEN,
+                message:
+                  'Utilisez la déconnexion pour terminer votre session actuelle',
+              },
+              success: false,
+            },
+            { status: 403 },
+          );
+        }
+
         const deleted = await transaction.session.deleteMany({
           where: {
             id: sessionId,
@@ -216,10 +249,8 @@ export async function DELETE(
           },
           { client: transaction, required: true },
         );
-      });
-    } else {
-      // Delete all other sessions (not current)
-      await prisma.$transaction(async (transaction) => {
+      } else {
+        // Delete all other sessions (not current)
         const deleteResult = await transaction.session.deleteMany({
           where: {
             NOT: { token: currentSession.token },
@@ -246,12 +277,12 @@ export async function DELETE(
           },
           { client: transaction, required: true },
         );
-      });
-    }
+      }
 
-    return NextResponse.json({
-      data: null,
-      success: true,
+      return NextResponse.json({
+        data: null,
+        success: true,
+      });
     });
   } catch (error) {
     if (error instanceof SessionNotFoundError) {

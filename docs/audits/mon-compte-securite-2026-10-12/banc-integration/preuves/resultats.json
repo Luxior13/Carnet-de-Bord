@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-12T20:25:32.792Z",
+  "environment": {
+    "next": "15.5.23",
+    "postgres": "17",
+    "nextPort": 3129,
+    "postgresPort": 54660,
+    "database": "account_sessions_test",
+    "chromium": "149.0.7827.55"
+  },
+  "scenarios": [
+    {
+      "name": "Révocation globale annulée, deux sessions réelles conservées",
+      "sessions": 2,
+      "deleteRequests": 0,
+      "auditDelta": 0,
+      "passed": true
+    },
+    {
+      "name": "Révocation globale confirmée, session courante conservée et autre navigateur refusé",
+      "focus": {
+        "focusedId": "account-sessions-heading",
+        "headingTop": 696.171875,
+        "barBottom": 105,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        }
+      },
+      "http": 200,
+      "remainingSessions": 1,
+      "auditDelta": 1,
+      "otherBrowser": 401,
+      "currentBrowser": 200,
+      "passed": true
+    },
+    {
+      "name": "Réponse perdue après commit réel, relecture automatique sans rejeu DELETE et focus mobile visible",
+      "focus": {
+        "focusedId": "account-sessions-heading",
+        "headingTop": 326.390625,
+        "barBottom": 105,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        }
+      },
+      "committedStatus": 200,
+      "deleteRequests": 1,
+      "readsAfterLoss": 1,
+      "remainingSessions": 1,
+      "auditDelta": 1,
+      "otherBrowser": 401,
+      "currentBrowser": 200,
+      "passed": true
+    }
+  ],
+  "passed": 3
+}

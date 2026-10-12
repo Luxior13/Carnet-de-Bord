@@ -625,6 +625,50 @@ describe.skipIf(!target)(
       expect(await auditCount(user)).toBe(2);
     });
 
+    it.each(['all', 'one'] as const)(
+      'refuses %s session revocation from a security snapshot superseded after authentication',
+      async (scope) => {
+        const user = await account();
+        await signIn(user);
+        const rotated = await db.$transaction(async (transaction) => {
+          const updated = await transaction.user.update({
+            data: { securityVersion: { increment: 1 } },
+            where: { id: user.id },
+          });
+          await transaction.session.deleteMany({ where: { userId: user.id } });
+
+          return updated;
+        });
+        const replacement = await session(rotated);
+
+        expect(
+          (await revoke(scope === 'one' ? replacement.id : undefined)).status,
+        ).toBe(401);
+        expect(
+          await db.session.findUnique({ where: { id: replacement.id } }),
+        ).not.toBeNull();
+        expect(await auditCount(user)).toBe(0);
+      },
+    );
+
+    it.each(['all', 'one'] as const)(
+      'refuses %s session revocation if the source session disappeared after authentication',
+      async (scope) => {
+        const user = await account();
+        const current = await signIn(user);
+        const other = await session(user);
+        await db.session.delete({ where: { id: current.id } });
+
+        expect(
+          (await revoke(scope === 'one' ? other.id : undefined)).status,
+        ).toBe(401);
+        expect(
+          await db.session.findUnique({ where: { id: other.id } }),
+        ).not.toBeNull();
+        expect(await auditCount(user)).toBe(0);
+      },
+    );
+
     it('returns one success and one not-found when the same session is revoked concurrently', async () => {
       const user = await account();
       await signIn(user);
@@ -634,6 +678,75 @@ describe.skipIf(!target)(
         200, 404,
       ]);
       expect(await auditCount(user)).toBe(1);
+    });
+
+    it('refuses session revocation if the account is disabled after authentication', async () => {
+      const user = await account();
+      await signIn(user);
+      const other = await session(user);
+      await db.user.update({
+        data: { isActive: false },
+        where: { id: user.id },
+      });
+      expect((await revoke()).status).toBe(401);
+      expect(
+        await db.session.findUnique({ where: { id: other.id } }),
+      ).not.toBeNull();
+      expect(await auditCount(user)).toBe(0);
+    });
+
+    it('rechecks the source deadline after waiting for the account row lock', async () => {
+      const user = await account();
+      const current = await signIn(user);
+      const other = await session(user);
+      const expiresAt = new Date(Date.now() + 700);
+      await db.session.update({
+        data: { idleExpiresAt: expiresAt },
+        where: { id: current.id },
+      });
+      let unlock: () => void = () => undefined;
+      let acquired: () => void = () => undefined;
+      const unlocked = new Promise<void>((resolve) => {
+        unlock = resolve;
+      });
+      const locked = new Promise<void>((resolve) => {
+        acquired = resolve;
+      });
+      const holder = db.$transaction(async (transaction) => {
+        await transaction.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${user.id} FOR UPDATE`;
+        acquired();
+        await unlocked;
+      });
+      await locked;
+      const pending = revoke();
+      try {
+        const until = Date.now() + 2_000;
+        let observedWait = false;
+        while (!observedWait && Date.now() < until) {
+          const waiting = await db.$queryRaw<Array<{ waiting: boolean }>>`
+            SELECT EXISTS (
+              SELECT 1 FROM pg_stat_activity
+              WHERE datname = current_database() AND wait_event_type = 'Lock'
+                AND query LIKE '%FOR NO KEY UPDATE%'
+            ) AS waiting
+          `;
+          observedWait = waiting[0]?.waiting ?? false;
+          if (!observedWait)
+            await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+        expect(observedWait).toBe(true);
+        const remaining = expiresAt.getTime() - Date.now() + 20;
+        if (remaining > 0)
+          await new Promise((resolve) => setTimeout(resolve, remaining));
+      } finally {
+        unlock();
+        await holder;
+      }
+      expect((await pending).status).toBe(401);
+      expect(
+        await db.session.findUnique({ where: { id: other.id } }),
+      ).not.toBeNull();
+      expect(await auditCount(user)).toBe(0);
     });
 
     it('rolls back session revocation if its required audit fails', async () => {

@@ -1,0 +1,422 @@
+{
+  "completedAt": "2026-10-12T20:24:09.851Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "simulation": "AccountPageContent, SecuritySection et cadre réels ; API, identité, routeur et horloge simulés. Dialogues mot de passe et MFA exclus.",
+  "passed": 8,
+  "total": 8,
+  "observations": [
+    {
+      "name": "delete-suspendu-31-secondes",
+      "width": 390,
+      "status": "pass",
+      "elapsedClockMs": 31000,
+      "dialogOpen": 0,
+      "counts": {
+        "get": 2,
+        "del": 1,
+        "aborted": 1
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/mfa",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "hold",
+          "aborted": true
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "succes-delete-relecture-suspendue",
+      "width": 390,
+      "status": "pass",
+      "elapsedClockMs": 31000,
+      "dialogImmediately": 0,
+      "counts": {
+        "get": 3,
+        "del": 1,
+        "aborted": 1
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/mfa",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/auth/sessions",
+          "query": "?id=audit-other-0",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "hold",
+          "aborted": true
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "erreur500-json-resultat-incertain",
+      "width": 1440,
+      "status": "pass",
+      "counts": {
+        "get": 2,
+        "del": 1,
+        "aborted": 0
+      },
+      "alerts": [],
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/mfa",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/auth/sessions",
+          "query": "?id=audit-other-0",
+          "mode": "error",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "focus-titre-apres-revocation",
+      "width": 390,
+      "status": "pass",
+      "initial": {
+        "title": {
+          "top": 79.828125,
+          "bottom": 107.828125,
+          "height": 28
+        },
+        "nav": {
+          "top": 56,
+          "bottom": 105,
+          "height": 49
+        },
+        "main": {
+          "top": 56,
+          "bottom": 900,
+          "height": 844
+        },
+        "scrollTop": 1180,
+        "focus": "",
+        "hiddenByNav": true,
+        "viewport": 390,
+        "documentWidth": 390,
+        "mainWidth": 360,
+        "mainScrollWidth": 360
+      },
+      "final": {
+        "title": {
+          "top": 119.828125,
+          "bottom": 147.828125,
+          "height": 28
+        },
+        "nav": {
+          "top": 56,
+          "bottom": 105,
+          "height": 49
+        },
+        "main": {
+          "top": 56,
+          "bottom": 900,
+          "height": 844
+        },
+        "scrollTop": 1140,
+        "focus": "account-sessions-heading",
+        "hiddenByNav": false,
+        "viewport": 390,
+        "documentWidth": 390,
+        "mainWidth": 360,
+        "mainScrollWidth": 360
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/mfa",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/auth/sessions",
+          "query": "?id=audit-other-0",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "focus-titre-apres-revocation",
+      "width": 1440,
+      "status": "pass",
+      "initial": {
+        "title": {
+          "top": 80.171875,
+          "bottom": 108.171875,
+          "height": 28
+        },
+        "nav": {
+          "top": 56,
+          "bottom": 105,
+          "height": 49
+        },
+        "main": {
+          "top": 56,
+          "bottom": 900,
+          "height": 844
+        },
+        "scrollTop": 1078,
+        "focus": "",
+        "hiddenByNav": true,
+        "viewport": 1440,
+        "documentWidth": 1440,
+        "mainWidth": 1146,
+        "mainScrollWidth": 1146
+      },
+      "final": {
+        "title": {
+          "top": 120.171875,
+          "bottom": 148.171875,
+          "height": 28
+        },
+        "nav": {
+          "top": 56,
+          "bottom": 105,
+          "height": 49
+        },
+        "main": {
+          "top": 56,
+          "bottom": 900,
+          "height": 844
+        },
+        "scrollTop": 1038,
+        "focus": "account-sessions-heading",
+        "hiddenByNav": false,
+        "viewport": 1440,
+        "documentWidth": 1440,
+        "mainWidth": 1146,
+        "mainScrollWidth": 1146
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/mfa",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/auth/sessions",
+          "query": "?id=audit-other-0",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "relecture-ne-vole-pas-focus",
+      "width": 390,
+      "status": "pass",
+      "active": "Profil",
+      "counts": {
+        "get": 2,
+        "del": 1,
+        "aborted": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/mfa",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/auth/sessions",
+          "query": "?id=audit-other-0",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "hold",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "refus403-non-json-purge-liste",
+      "width": 1440,
+      "status": "pass",
+      "counts": {
+        "get": 1,
+        "del": 1,
+        "aborted": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/mfa",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/auth/sessions",
+          "query": "?id=audit-other-0",
+          "mode": "forbidden",
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "name": "lectures-initiales-sessions-mfa-bornees-reprises",
+      "width": 390,
+      "status": "pass",
+      "counts": {
+        "get": 2,
+        "del": 0,
+        "aborted": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "hold",
+          "aborted": true
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/mfa",
+          "query": "",
+          "mode": "hold",
+          "aborted": true
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/mfa",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/sessions",
+          "query": "",
+          "mode": "success",
+          "aborted": false
+        }
+      ]
+    }
+  ]
+}

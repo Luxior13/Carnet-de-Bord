@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-12",
+  "environment": {
+    "postgres": "17",
+    "host": "127.0.0.1",
+    "port": 54660,
+    "database": "account_service_test",
+    "migrations": 52
+  },
+  "before": {
+    "command": "bun run test src/__tests__/account-postgres.test.ts -t 'refuses (all|one) session revocation'",
+    "failedRegressions": 4,
+    "expectedStatus": 401,
+    "actualStatus": 200,
+    "scenarios": [
+      "global revocation after security-version rotation",
+      "individual revocation after security-version rotation",
+      "global revocation after source-session deletion",
+      "individual revocation after source-session deletion"
+    ],
+    "persistedState": "baseline-state.json records zero remaining sessions and one audit for each of the four original fixtures"
+  },
+  "after": {
+    "sqlCommand": "bun run test src/__tests__/account-postgres.test.ts -t 'session revocation|source deadline|revokes owned sessions|session is revoked concurrently'",
+    "sqlPassed": 9,
+    "sqlSkippedOutsideScope": 20,
+    "checks": [
+      "four stale-authorization regressions now return 401, preserve the target and add no audit",
+      "disabled account after authentication returns 401",
+      "source deadline is checked after an observed PostgreSQL lock wait",
+      "owned sessions only, current and foreign sessions preserved",
+      "two concurrent revocations produce 200 and 404, one audit",
+      "required audit failure rolls back revocation"
+    ],
+    "apiCommand": "bun run test src/__tests__/account-security-routes.test.ts",
+    "apiPassed": 39,
+    "targetedLint": "passed"
+  },
+  "limits": [
+    "SQL source authentication, cookies, headers and rate limiter are mocked; mutations, transactions, locks and audits are real PostgreSQL",
+    "rotation is prepared by fixture SQL between the captured authentication snapshot and the handler, not by an HTTP password or MFA flow",
+    "the lock-wait test additionally observes pg_stat_activity.wait_event_type=Lock before allowing the source deadline to expire",
+    "no schema, migration, permission or MFA policy change"
+  ]
+}

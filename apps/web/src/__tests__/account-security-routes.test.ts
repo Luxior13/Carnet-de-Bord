@@ -19,6 +19,7 @@ const mockRecordLoginAttempt = vi.fn();
 const mockReserveSensitiveActionRateLimit = vi.fn();
 
 const mockPrisma = {
+  $queryRaw: vi.fn(),
   $transaction: vi.fn(),
   session: {
     delete: vi.fn(),
@@ -116,6 +117,7 @@ describe('account security routes', () => {
       passwordHash: 'stored-hash',
     });
     mockPrisma.user.updateMany.mockResolvedValue({ count: 1 });
+    mockPrisma.$queryRaw.mockResolvedValue([{ id: 'user-1' }]);
     mockPrisma.session.deleteMany.mockResolvedValue({ count: 0 });
     mockPrisma.session.findMany.mockResolvedValue([]);
     mockVerifyPassword.mockResolvedValue(false);
@@ -1314,11 +1316,16 @@ describe('account security routes', () => {
   });
 
   describe('DELETE /api/auth/sessions', () => {
+    beforeEach(() => {
+      mockPrisma.session.findFirst.mockResolvedValue({ id: 'source-session' });
+    });
     it('returns 404 without an audit when another request already revoked the selected session', async () => {
-      mockPrisma.session.findFirst.mockResolvedValueOnce({
-        id: 'other-session',
-        token: 'other-token',
-      });
+      mockPrisma.session.findFirst
+        .mockResolvedValueOnce({ id: 'source-session' })
+        .mockResolvedValueOnce({
+          id: 'other-session',
+          token: 'other-token',
+        });
       mockPrisma.session.deleteMany.mockResolvedValueOnce({ count: 0 });
       const route = await import('$app/api/auth/sessions/route');
       const response = await route.DELETE(

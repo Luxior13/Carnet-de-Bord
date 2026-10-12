@@ -1,0 +1,45 @@
+﻿{
+    "completedAt":  "2026-10-12T20:23:32.028Z",
+    "source":  "Extrait de la première passe sur le correctif de délai, avant correction du focus tardif",
+    "observations":  [
+                         {
+                             "name":  "relecture-ne-vole-pas-focus",
+                             "width":  390,
+                             "status":  "fail",
+                             "error":  "Error: expect(locator).toBeFocused() failed\n\nLocator:  getByRole(\u0027navigation\u0027, { name: \u0027Navigation du compte\u0027 }).getByRole(\u0027link\u0027, { name: \u0027Profil\u0027, exact: true })\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for getByRole(\u0027navigation\u0027, { name: \u0027Navigation du compte\u0027 }).getByRole(\u0027link\u0027, { name: \u0027Profil\u0027, exact: true })\n    14 × locator resolved to \u003ca href=\"/mon-compte\" data-state=\"closed\" data-slot=\"tooltip-trigger\" data-navigation-guard=\"explicit\" class=\"focus-visible:ring-ring relative inline-flex min-h-12 shrink-0 items-center gap-2 rounded-t-[6px] border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground border-transparent\"\u003e…\u003c/a\u003e\n       - unexpected value \"inactive\"\n",
+                             "errors":  [
+
+                                        ],
+                             "requests":  [
+                                              {
+                                                  "method":  "GET",
+                                                  "path":  "/api/auth/sessions",
+                                                  "query":  "",
+                                                  "mode":  "success",
+                                                  "aborted":  false
+                                              },
+                                              {
+                                                  "method":  "GET",
+                                                  "path":  "/api/auth/mfa",
+                                                  "query":  "",
+                                                  "mode":  "success",
+                                                  "aborted":  false
+                                              },
+                                              {
+                                                  "method":  "DELETE",
+                                                  "path":  "/api/auth/sessions",
+                                                  "query":  "?id=audit-other-0",
+                                                  "mode":  "success",
+                                                  "aborted":  false
+                                              },
+                                              {
+                                                  "method":  "GET",
+                                                  "path":  "/api/auth/sessions",
+                                                  "query":  "",
+                                                  "mode":  "hold",
+                                                  "aborted":  false
+                                              }
+                                          ]
+                         }
+                     ]
+}

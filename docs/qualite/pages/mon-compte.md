@@ -1,5 +1,90 @@
 # Suivi — Mon compte (`/mon-compte`)
 
+## Sécurité : attente et reprise des sessions — complément ciblé du 12 octobre 2026
+
+**Corrigé et vérifié dans le périmètre décrit.** Départ `c61ed03`, arbre propre.
+Cette reprise porte sur les lectures
+de sécurité et les révocations individuelle/globale de sessions, leurs
+confirmations, le retour de focus et l'autorisation au moment de la mutation.
+Elle ne reprend pas l'audit complet du profil, du contact ou de la configuration
+MFA. Les preuves du 11 octobre restent datées et ne couvrent pas ces nouveaux cas.
+
+Sélection de la [revue générale](../REVUE_GENERALE.md) : Q01–Q07, Q09–Q11,
+Q14–Q17, Q19, Q22, Q27–Q28 et Q30 examinés pour l'action sensible, les données de
+session, la concurrence et la reprise. Q12–Q13, Q18 et Q29 hors impact : aucun
+changement de schéma, migration, cache ou format de sauvegarde. Q08, Q20–Q21 et
+Q23–Q26 non applicables : ni notification différée, fichier, transfert de masse,
+automatisation, gouvernance, donnée esport ou engagement financier ajouté.
+
+Décisions de cette reprise :
+
+- Borner chaque lecture et révocation à 30 secondes, corps de réponse compris,
+  et conserver l'annulation au démontage. Un délai dépassé ou une annulation
+  côté navigateur ne prouve jamais l'annulation de l'opération serveur.
+- Séparer le résultat de la mutation de la relecture des sessions : un GET lent
+  après succès ne doit pas maintenir la confirmation de révocation verrouillée.
+  Les chargements et échecs de relecture restent visibles dans la section.
+- Après résultat incertain, effectuer une relecture bornée et permettre une
+  reprise explicite, sans rejouer automatiquement le DELETE. Une notification
+  fugitive ne suffit pas à expliquer durablement cette situation.
+- Rendre le focus à un élément présent et visible sous la barre de sections ;
+  ne pas prendre un titre focalisé mais masqué pour un retour accessible.
+  Si l'utilisateur a interagi ailleurs pendant la relecture, sa nouvelle action
+  conserve le focus : la réponse tardive ne doit pas le reprendre.
+- Vérifier l'autorisation de la session source dans la transaction avant la
+  révocation ; une authentification initiale ne suffit pas si elle est devenue
+  invalide pendant l'attente. Aucun nouveau droit ou mode de révocation ajouté.
+
+| Point | Constat et portée | Correction et clôture du 12 octobre |
+| --- | --- | --- |
+| COMPTE-10 — P1 | Un DELETE sans réponse, ou un DELETE réussi suivi d'un GET bloqué, maintenait la confirmation verrouillée après 31 secondes. Un 500 JSON ne déclenchait pas de relecture et ne laissait pas d'avertissement local persistant. Reproduit avec API/horloge simulées. | **Clos au périmètre testé** : délai par requête, confirmation libérée avant le GET et reprise locale explicite. Le transport perdu après commit réel produit un DELETE, un GET de vérification et un avertissement persistant, sans rejeu. |
+| COMPTE-11 — P1 | Après authentification en version S0, une rotation vers S1 ou la disparition de la session source n'empêchait pas le DELETE individuel/global de supprimer les sessions et de répondre 200. Quatre reproductions serveur avant correction, état SQL et audits contrôlés. | **Clos au périmètre SQL testé** : verrou du compte, contrôle de son état/version et relecture des échéances de la session source après l'attente. Refus 401 sans suppression ni audit de réussite ; suppression autorisée et audit restent dans la même transaction. |
+| COMPTE-12 — P2 | Après révocation, le titre Sessions recevait le focus vers 80 px, derrière la barre située entre 56 et 105 px, à 390 et 1 440 px. Reproduit dans le banc client simulé. | **Clos au périmètre testé** : titre visible vers 120 px aux deux largeurs simulées et focus visible après perte de réponse dans Next réel. Une nouvelle interaction pendant la relecture conserve son focus. |
+
+Preuves de la passe, exécutées le 12 octobre :
+
+[Banc client : huit parcours réussis](../../audits/mon-compte-securite-2026-10-12/banc-client/README.md) :
+confirmations, délai de 30 secondes contrôlé à 31 secondes, 500 JSON, 403 non
+JSON, reprises des lectures sessions/MFA et focus à 390/1 440 px. Le vol de focus
+par une relecture tardive a été relevé puis corrigé pendant cette passe, après
+le premier correctif de délai ; il n'est pas présenté comme un constat de la
+version initiale. API, acteur, horloge et routeur simulés, polices Next absentes
+et police calculée non mesurée ; aucun commit SQL ni traitement serveur annulé
+démontré par ce banc. Les dialogues
+mot de passe et configuration MFA n'y sont pas exercés.
+
+[Banc serveur : neuf scénarios PostgreSQL ciblés réussis](../../audits/mon-compte-securite-2026-10-12/banc-serveur/README.md),
+sur 29 tests du fichier, vingt autres ignorés par le filtre ; 39 tests API voisins
+réussis séparément. Six régressions SQL sont nouvelles : quatre cas de rotation
+ou disparition de la source, compte inactif et expiration après attente du
+verrou réellement observée. L'authentification est simulée dans ce banc ; les
+requêtes, verrous, transactions et audits sont réels. Ce n'est pas une preuve
+HTTP de changement de mot de passe ou de remplacement MFA concurrent.
+
+[Banc Next/PostgreSQL : trois parcours HTTP réussis](../../audits/mon-compte-securite-2026-10-12/banc-integration/README.md) :
+annulation sans DELETE ni audit, révocation globale confirmée et réponse perdue
+après commit réel. La session de l'autre navigateur devient refusée (401), la
+session courante reste valide (200), un seul audit est ajouté. Après perte de
+réponse : un DELETE et un GET, une session restante, avertissement persistant et
+titre focalisé visible. Ce banc vérifie la révocation globale, pas toutes les
+combinaisons individuelles ni les courses SQL du banc précédent.
+
+Contrôles généraux : **1 252 tests réussis, 169 ignorés**, dans 103 fichiers
+réussis et neuf ignorés ; quatre nouveaux tests couvrent délai, corps de réponse,
+annulation et refus HTTP. Les neuf SQL ciblés sont une exécution distincte,
+sans les additionner à ce total. Types, lint globaux et build Next 15.5.23
+réussis ; architecture et budgets réussis sans hausse des plafonds. Mon compte
+mesure 259 200 octets gzip dans le contrôleur de budget du dépôt, sans mesure de
+charge. Aucun schéma, migration, droit ni durée de session modifié.
+
+Limites : Chromium et jeux de données isolés ; Safari/iOS, lecteur d'écran,
+extensions, charge et tous les parcours mot de passe/MFA hors validation de ce
+complément. Le délai client ne garantit pas l'arrêt d'un traitement serveur.
+Nettoyage confirmé : cinq temporaires client supprimés ; Next/PostgreSQL arrêtés,
+ports libres, cluster de deux bases fictives, dossier privé, secrets et marker
+supprimés. Aucune base habituelle utilisée. Les preuves d'intégration détaillent
+ces contrôles ; aucun secret n'est archivé.
+
 ## Barre du profil — 11 octobre 2026
 
 Le profil utilise `SectionActionBar` et un vrai formulaire soumis par Entrée.
@@ -140,19 +225,20 @@ distante ? Une lecture retardée restaure-t-elle le compte après déconnexion ?
 Le serveur a-t-il pu valider malgré la perte de réponse ? Le retour de focus
 cible-t-il encore un élément présent après rafraîchissement ?
 
-## Validation courante et limites
+## Validation du 11 octobre et compléments
 
 - COMPTE-01 — **clos le 11 octobre 2026 pour les parcours décrits** : profil,
   contact, conflit et réponse perdue après commit, connexion/MFA, révocation
   individuelle, mot de passe, codes de secours et droits à chaud ont été exercés
   dans Next/PostgreSQL isolés. Les anciens paragraphes ci-dessous décrivent
   uniquement les limites de leurs passes historiques.
-- La révocation globale et le remplacement MFA sont couverts côté SQL et client
-  simulé ; leurs combinaisons complètes avec perte de réponse dans Next réel ne
-  sont pas revendiquées. Safari/iOS, lecteurs d'écran, extensions et charge
-  restent hors validation de cette passe. Aucun défaut connu laissé ouvert dans
-  le périmètre testé ; appliquer les [contrôles](../CONTROLES.md) proportionnés
-  lors du prochain changement.
+- Au 11 octobre, révocation globale et remplacement MFA étaient couverts côté
+  SQL et client simulé, sans leur combinaison complète avec perte de réponse
+  dans Next réel. Le [complément ciblé du 12 octobre](#sécurité--attente-et-reprise-des-sessions--complément-ciblé-du-12-octobre-2026)
+  vérifie désormais la révocation globale et la réponse perdue après commit ;
+  il ne reprend pas le remplacement MFA. Safari/iOS, lecteurs d'écran,
+  extensions et charge restent hors validation. Appliquer les
+  [contrôles](../CONTROLES.md) proportionnés au prochain changement.
 
 Avant de modifier un champ ou une action : le brouillon reste-t-il conservé
 après un rafraîchissement de contexte ? Quelle version protège l’écriture et

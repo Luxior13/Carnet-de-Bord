@@ -1,0 +1,34 @@
+{
+  "readAt": "2026-10-12T20:23:41.967Z",
+  "scope": "First four fixtures, created by the pre-fix regression run on the exclusively owned service database",
+  "cases": [
+    {
+      "case": 1,
+      "createdAt": "2026-10-12T20:19:55.346Z",
+      "securityVersion": 3,
+      "sessionsRemaining": 0,
+      "audits": 1
+    },
+    {
+      "case": 2,
+      "createdAt": "2026-10-12T20:19:55.382Z",
+      "securityVersion": 3,
+      "sessionsRemaining": 0,
+      "audits": 1
+    },
+    {
+      "case": 3,
+      "createdAt": "2026-10-12T20:19:55.391Z",
+      "securityVersion": 2,
+      "sessionsRemaining": 0,
+      "audits": 1
+    },
+    {
+      "case": 4,
+      "createdAt": "2026-10-12T20:19:55.397Z",
+      "securityVersion": 2,
+      "sessionsRemaining": 0,
+      "audits": 1
+    }
+  ]
+}
