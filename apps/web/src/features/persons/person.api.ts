@@ -82,8 +82,14 @@ export const listPersons = async ({
   });
 };
 
-export const getPerson = (personId: string): Promise<PersonDetail> =>
-  apiFetchJson<PersonDetail>(`/api/personnes/${encodeURIComponent(personId)}`);
+export const getPerson = (
+  personId: string,
+  signal?: AbortSignal,
+): Promise<PersonDetail> =>
+  apiFetchJson<PersonDetail>(`/api/personnes/${encodeURIComponent(personId)}`, {
+    cache: 'no-store',
+    signal,
+  });
 
 export const createPerson = async (
   payload: PersonMutationPayload,
@@ -99,11 +105,12 @@ export const createPerson = async (
 export const updatePerson = async (
   personId: string,
   payload: PersonMutationPayload,
+  signal?: AbortSignal,
 ): Promise<PersonMutationResponse> =>
   toMutationResponse(
     await apiFetchJson<PersonMutationResponse | PersonDetail>(
       `/api/personnes/${encodeURIComponent(personId)}`,
-      jsonRequest('PATCH', payload),
+      jsonRequest('PATCH', payload, { signal }),
     ),
   );
 
@@ -115,12 +122,14 @@ export const mutatePersonChild = async ({
   method,
   payload,
   personId,
+  signal,
 }: {
   childId?: string;
   kind: ChildKind;
   method: 'DELETE' | 'PATCH' | 'POST';
   payload: PersonMutationPayload;
   personId: string;
+  signal?: AbortSignal;
 }): Promise<PersonMutationResponse> => {
   const base = `/api/personnes/${encodeURIComponent(personId)}/${kind}`;
   const url = childId ? `${base}/${encodeURIComponent(childId)}` : base;
@@ -128,7 +137,7 @@ export const mutatePersonChild = async ({
   return toMutationResponse(
     await apiFetchJson<PersonMutationResponse | PersonDetail>(
       url,
-      jsonRequest(method, payload),
+      jsonRequest(method, payload, { signal }),
     ),
   );
 };
@@ -138,28 +147,32 @@ export const getPersonFieldHistory = ({
   personId,
   recordId,
   sectionKey,
+  signal,
 }: {
   fieldKey: string;
   personId: string;
   recordId?: string;
   sectionKey: string;
+  signal?: AbortSignal;
 }): Promise<PersonFieldHistoryResponse> => {
   const params = new URLSearchParams({ fieldKey, sectionKey });
   if (recordId) params.set('recordId', recordId);
 
   return apiFetchJson<PersonFieldHistoryResponse>(
     `/api/personnes/${encodeURIComponent(personId)}/historique-champ?${params}`,
-    { cache: 'no-store' },
+    { cache: 'no-store', signal },
   );
 };
 
 export const deletePerson = async ({
   idempotencyKey,
   personId,
+  signal,
   version,
 }: {
   idempotencyKey: string;
   personId: string;
+  signal?: AbortSignal;
   version: number;
 }): Promise<void> => {
   const response = await apiFetch(
@@ -169,6 +182,7 @@ export const deletePerson = async ({
       { version },
       {
         headers: { 'Idempotency-Key': idempotencyKey },
+        signal,
       },
     ),
   );

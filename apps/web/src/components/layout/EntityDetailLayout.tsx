@@ -2,10 +2,9 @@
 
 import React, { type ReactNode } from 'react';
 
-import type { NavigationSpaceTone } from '$constants/navigation-theme.constants';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 
-import { PageHero } from './PageHero';
+import { PageIdentityHero } from './PageIdentityHero';
 import {
   type PageSection,
   PageSectionNavigation,
@@ -16,15 +15,14 @@ type EntityDetailLayoutProps<SectionId extends string> = {
   afterHero?: ReactNode;
   ariaLiveLabel?: string;
   children: ReactNode;
+  dirtySections?: readonly SectionId[];
   heroActions?: ReactNode;
   heroIcon: ReactNode;
-  heroIconClassName?: string;
   heroMeta?: ReactNode;
   heroTitle: ReactNode;
   navigationAriaLabel: string;
   sectionHref: (section: SectionId) => string;
   sections: readonly PageSection<SectionId>[];
-  tone: NavigationSpaceTone;
 };
 
 /**
@@ -35,33 +33,29 @@ export const EntityDetailLayout = <SectionId extends string>({
   afterHero,
   ariaLiveLabel,
   children,
+  dirtySections = [],
   heroActions,
   heroIcon,
-  heroIconClassName,
   heroMeta,
   heroTitle,
   navigationAriaLabel,
   sectionHref,
   sections,
-  tone,
 }: EntityDetailLayoutProps<SectionId>): React.JSX.Element => (
   <PageShell className="py-0">
     <PageCanvas contentClassName="relative space-y-4">
-      <PageHero
+      <PageIdentityHero
         actions={heroActions}
         compact
-        hasNavigation
         icon={heroIcon}
-        iconClassName={heroIconClassName}
         meta={heroMeta}
         title={heroTitle}
-        tone={tone}
       />
 
       <PageSectionNavigation
         activeSection={activeSection}
         ariaLabel={navigationAriaLabel}
-        dirtySections={[]}
+        dirtySections={dirtySections}
         getSectionHref={sectionHref}
         replace
         sections={sections}

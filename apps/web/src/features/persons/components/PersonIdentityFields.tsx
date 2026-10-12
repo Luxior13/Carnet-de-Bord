@@ -51,7 +51,7 @@ const FieldLabel: FC<{
   label: string;
   provenance?: PersonFieldProvenanceTarget;
 }> = ({ htmlFor, label, provenance }) => (
-  <div className="flex items-center gap-1.5">
+  <div className="flex min-h-6 items-center gap-1.5">
     <Label htmlFor={htmlFor}>{label}</Label>
     <PersonFieldProvenanceHint target={provenance} />
   </div>
@@ -104,7 +104,9 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
           provenance={provenances?.nickname}
         />
         <Input
-          aria-describedby={nickname.describedBy ?? `${nickname.id}-hint`}
+          aria-describedby={
+            nickname.describedBy ?? (!quiet ? `${nickname.id}-hint` : undefined)
+          }
           aria-invalid={Boolean(nickname.error)}
           className={cn(quiet && styles.quietField)}
           disabled={disabled}
@@ -170,7 +172,10 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
             provenance={provenances?.birthDate}
           />
           <Input
-            aria-describedby={birthDate.describedBy ?? `${birthDate.id}-hint`}
+            aria-describedby={
+              birthDate.describedBy ??
+              (!quiet ? `${birthDate.id}-hint` : undefined)
+            }
             aria-invalid={Boolean(birthDate.error)}
             className={cn(quiet && styles.quietField)}
             disabled={disabled}

@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  AlertTriangle,
   Copy,
   ExternalLink,
   Info,
@@ -42,7 +41,6 @@ import { mutatePersonChild } from '../person.api';
 import { getPersonSocialNetwork, PERSON_LIMITS } from '../person.constants';
 import type {
   PersonDetail,
-  PersonDuplicateWarning,
   PersonEmailItem,
   PersonPhoneItem,
   PersonSocialProfileItem,
@@ -64,9 +62,9 @@ type DeleteState = {
 } | null;
 
 type PersonCollectionsSectionProps = {
+  available?: boolean;
   canUpdate: boolean;
   canViewProvenance: boolean;
-  duplicateMatches: NonNullable<PersonDuplicateWarning['matches']>;
   onChange: (person: PersonDetail) => void;
   onReload: () => Promise<PersonDetail>;
   person: PersonDetail;
@@ -146,22 +144,12 @@ const EmptyCollection: FC<{ children: React.ReactNode }> = ({ children }) => (
   </p>
 );
 
-const DuplicateFieldWarning: FC<{ children: React.ReactNode }> = ({
-  children,
-}) => (
-  <p className="text-warning mt-2 flex items-start gap-1.5 text-xs">
-    <AlertTriangle aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
-    <span>{children}</span>
-  </p>
-);
-
 const EmailRow: FC<{
   canUpdate: boolean;
   canViewProvenance: boolean;
-  duplicateWarning: boolean;
   item: PersonEmailItem;
   onEdit: () => void;
-}> = ({ canUpdate, canViewProvenance, duplicateWarning, item, onEdit }) => (
+}> = ({ canUpdate, canViewProvenance, item, onEdit }) => (
   <li className="border-border-divider flex min-w-0 items-center gap-2 border-b py-2.5 last:border-0">
     <div className="min-w-0 flex-1">
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -173,11 +161,6 @@ const EmailRow: FC<{
         </a>
       </div>
       <ItemMetadata isPrimary={item.isPrimary} parts={[item.label]} />
-      {duplicateWarning && (
-        <DuplicateFieldWarning>
-          Cet email existe aussi sur une autre fiche.
-        </DuplicateFieldWarning>
-      )}
     </div>
     <div className="flex shrink-0 items-center gap-1">
       {canViewProvenance && !canUpdate && (
@@ -192,10 +175,9 @@ const EmailRow: FC<{
 const PhoneRow: FC<{
   canUpdate: boolean;
   canViewProvenance: boolean;
-  duplicateWarning: boolean;
   item: PersonPhoneItem;
   onEdit: () => void;
-}> = ({ canUpdate, canViewProvenance, duplicateWarning, item, onEdit }) => (
+}> = ({ canUpdate, canViewProvenance, item, onEdit }) => (
   <li className="border-border-divider flex min-w-0 items-center gap-2 border-b py-2.5 last:border-0">
     <div className="min-w-0 flex-1">
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -207,11 +189,6 @@ const PhoneRow: FC<{
         </a>
       </div>
       <ItemMetadata isPrimary={item.isPrimary} parts={[item.label]} />
-      {duplicateWarning && (
-        <DuplicateFieldWarning>
-          Ce téléphone existe aussi sur une autre fiche.
-        </DuplicateFieldWarning>
-      )}
     </div>
     <div className="flex shrink-0 items-center gap-1">
       {canViewProvenance && !canUpdate && (
@@ -226,10 +203,9 @@ const PhoneRow: FC<{
 const SocialRow: FC<{
   canUpdate: boolean;
   canViewProvenance: boolean;
-  duplicateFieldKeys: string[];
   item: PersonSocialProfileItem;
   onEdit: () => void;
-}> = ({ canUpdate, canViewProvenance, duplicateFieldKeys, item, onEdit }) => {
+}> = ({ canUpdate, canViewProvenance, item, onEdit }) => {
   const network = getPersonSocialNetwork(item.networkKey);
   const visibleValue = item.identifier ?? item.profileUrl ?? 'Profil';
   const copyValue = item.profileUrl ?? item.identifier;
@@ -260,15 +236,6 @@ const SocialRow: FC<{
           isPrimary={item.isPrimary}
           parts={[network?.label ?? item.networkKey, item.label]}
         />
-        {duplicateFieldKeys.length > 0 && (
-          <DuplicateFieldWarning>
-            {duplicateFieldKeys.length > 1
-              ? "L'identifiant et l'URL existent aussi sur une autre fiche."
-              : duplicateFieldKeys[0] === 'identifier'
-                ? "L'identifiant existe aussi sur une autre fiche."
-                : "L'URL existe aussi sur une autre fiche."}
-          </DuplicateFieldWarning>
-        )}
       </div>
       <div className="flex shrink-0 items-center gap-1">
         {canViewProvenance && !canUpdate && (
@@ -287,9 +254,9 @@ const SocialRow: FC<{
 };
 
 const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
+  available = true,
   canUpdate,
   canViewProvenance,
-  duplicateMatches,
   onChange,
   onReload,
   person,
@@ -297,12 +264,14 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
   const [conflict, setConflict] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const operationRef = useRef(false);
+  const requestRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(false);
   useEffect(() => {
     mountedRef.current = true;
 
     return (): void => {
       mountedRef.current = false;
+      requestRef.current?.abort();
     };
   }, []);
   const [deleteState, setDeleteState] = useState<DeleteState>(null);
@@ -341,7 +310,13 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
   };
 
   const handleDelete = async (): Promise<void> => {
-    if (!canUpdate || operationRef.current || !mountedRef.current || conflict)
+    if (
+      !available ||
+      !canUpdate ||
+      operationRef.current ||
+      !mountedRef.current ||
+      conflict
+    )
       return;
     if (!deleteState || (requiresReplacement && !replacementId)) return;
     operationRef.current = true;
@@ -349,6 +324,9 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
     const deletedKind = deleteState.kind;
     setIsDeleting(true);
     setConflict(false);
+    const controller = new AbortController();
+    requestRef.current = controller;
+    const timer = window.setTimeout(() => controller.abort(), 30_000);
     try {
       const kind =
         deleteState.kind === 'email'
@@ -366,6 +344,7 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
           version: deleteState.item.version,
         },
         personId: person.id,
+        signal: controller.signal,
       });
       if (!mountedRef.current) return;
       onChange(result.person);
@@ -385,12 +364,25 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
       if (!mountedRef.current) return;
       if (caught instanceof ApiClientError && caught.status === 409) {
         setConflict(true);
+      } else if (
+        !(caught instanceof ApiClientError) ||
+        caught.status >= 500 ||
+        caught.code === 'INVALID_RESPONSE'
+      ) {
+        setConflict(true);
+        setDeleteError(
+          'Le résultat de la suppression n’a pas pu être confirmé. Actualisez la fiche pour vérifier cette information avant de réessayer.',
+        );
       } else {
+        if ([401, 403, 404, 410].includes(caught.status))
+          void onReload().catch(() => {});
         setDeleteError(
           caught instanceof Error ? caught.message : 'Suppression impossible',
         );
       }
     } finally {
+      window.clearTimeout(timer);
+      if (requestRef.current === controller) requestRef.current = null;
       operationRef.current = false;
       if (mountedRef.current) setIsDeleting(false);
     }
@@ -463,7 +455,9 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
                   <Button
                     ref={addEmailRef}
                     aria-label="Ajouter un email"
-                    disabled={person.emails.length >= PERSON_LIMITS.emails}
+                    disabled={
+                      !available || person.emails.length >= PERSON_LIMITS.emails
+                    }
                     onClick={() => setEditor({ item: null, kind: 'email' })}
                     size="sm"
                     type="button"
@@ -484,11 +478,6 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
                     <EmailRow
                       canUpdate={canUpdate}
                       canViewProvenance={canViewProvenance}
-                      duplicateWarning={duplicateMatches.some(
-                        (match) =>
-                          match.recordId === item.id &&
-                          match.fieldKey === 'email',
-                      )}
                       item={item}
                       key={item.id}
                       onEdit={() => setEditor({ item, kind: 'email' })}
@@ -520,7 +509,9 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
                   <Button
                     ref={addPhoneRef}
                     aria-label="Ajouter un téléphone"
-                    disabled={person.phones.length >= PERSON_LIMITS.phones}
+                    disabled={
+                      !available || person.phones.length >= PERSON_LIMITS.phones
+                    }
                     onClick={() => setEditor({ item: null, kind: 'phone' })}
                     size="sm"
                     type="button"
@@ -541,11 +532,6 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
                     <PhoneRow
                       canUpdate={canUpdate}
                       canViewProvenance={canViewProvenance}
-                      duplicateWarning={duplicateMatches.some(
-                        (match) =>
-                          match.recordId === item.id &&
-                          match.fieldKey === 'phone',
-                      )}
                       item={item}
                       key={item.id}
                       onEdit={() => setEditor({ item, kind: 'phone' })}
@@ -581,6 +567,7 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
                   ref={addSocialRef}
                   aria-label="Ajouter un profil social"
                   disabled={
+                    !available ||
                     person.socialProfiles.length >= PERSON_LIMITS.socialProfiles
                   }
                   onClick={() => setEditor({ item: null, kind: 'social' })}
@@ -603,14 +590,6 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
                   <SocialRow
                     canUpdate={canUpdate}
                     canViewProvenance={canViewProvenance}
-                    duplicateFieldKeys={duplicateMatches
-                      .filter(
-                        (match) =>
-                          match.recordId === item.id &&
-                          (match.fieldKey === 'identifier' ||
-                            match.fieldKey === 'profileUrl'),
-                      )
-                      .map((match) => match.fieldKey)}
                     item={item}
                     key={item.id}
                     onEdit={() => setEditor({ item, kind: 'social' })}
@@ -624,6 +603,7 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
 
       {editor && (
         <PersonChildDialog
+          available={available}
           canEdit={canUpdate}
           canViewProvenance={canViewProvenance}
           defaultPrimary={
@@ -631,13 +611,24 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
               ? person.emails.length === 0
               : editor.kind === 'phone'
                 ? person.phones.length === 0
-                : true
+                : !person.socialProfiles.some(
+                    (profile) => profile.networkKey === 'discord',
+                  )
           }
           item={editor.item}
           kind={editor.kind}
           onDelete={() => {
             if (!editor.item) return;
-            openDelete(editor.kind, editor.item);
+            const collection =
+              editor.kind === 'email'
+                ? person.emails
+                : editor.kind === 'phone'
+                  ? person.phones
+                  : person.socialProfiles;
+            const current = collection.find(
+              (item) => item.id === editor.item?.id,
+            );
+            if (current) openDelete(editor.kind, current);
           }}
           onOpenChange={(open) => {
             if (!open) setEditor(null);
@@ -692,6 +683,7 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
                         : 'phone' in item
                           ? item.phone
                           : ((item as PersonSocialProfileItem).identifier ??
+                            (item as PersonSocialProfileItem).profileUrl ??
                             'Profil social')}
                     </SelectItem>
                   ))}
@@ -722,6 +714,7 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
             <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
             <Button
               disabled={
+                !available ||
                 isDeleting ||
                 conflict ||
                 (requiresReplacement && !replacementId)

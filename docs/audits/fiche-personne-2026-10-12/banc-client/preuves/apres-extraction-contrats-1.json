@@ -1,0 +1,48 @@
+{
+  "completedAt": "2026-10-12T18:27:58.025Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 1,
+  "total": 1,
+  "observations": [
+    {
+      "name": "telephone-social-contrats-entree",
+      "width": 390,
+      "status": "pass",
+      "requests": [
+        {
+          "method": "POST",
+          "path": "/api/personnes/audit-person-a/telephones",
+          "body": {
+            "countryCode": "FR",
+            "isPrimary": false,
+            "label": "Personnel",
+            "phone": "0612345678",
+            "personVersion": 1
+          },
+          "idempotencyKey": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/personnes/audit-person-a/reseaux-sociaux",
+          "body": {
+            "identifier": "audit.nouveau",
+            "isPrimary": false,
+            "label": "Personnel",
+            "networkKey": "discord",
+            "profileUrl": null,
+            "personVersion": 2
+          },
+          "idempotencyKey": null
+        }
+      ],
+      "errors": [],
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    }
+  ]
+}

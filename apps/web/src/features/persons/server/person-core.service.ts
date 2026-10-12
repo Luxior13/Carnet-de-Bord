@@ -208,11 +208,16 @@ const normalizeInitialSocialPrimaries = <
   }));
 };
 
-export const getPerson = async (personId: string): Promise<PersonDetail> => {
-  const person = await requirePersonDetailRecord(prisma, personId);
+export const getPerson = async (personId: string): Promise<PersonDetail> =>
+  prisma.$transaction(
+    async (transaction) => {
+      const person = await requirePersonDetailRecord(transaction, personId);
 
-  return mapPersonDetail(prisma, person);
-};
+      return mapPersonDetail(transaction, person);
+    },
+    // Identity, coordinates and provenance must describe the same version.
+    { isolationLevel: 'RepeatableRead' },
+  );
 
 export const createPerson = async (
   input: CreatePersonInput,

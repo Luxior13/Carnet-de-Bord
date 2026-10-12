@@ -53,6 +53,7 @@ export default async function PersonPage({
     <PersonDetailPage
       activeSection={activeSection}
       initialPerson={initialPerson}
+      initialPersonScope={user?.id}
       personId={id}
       returnHref={getSafePersonReturnHref(query.returnTo)}
     />

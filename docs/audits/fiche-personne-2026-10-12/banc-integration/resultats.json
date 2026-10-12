@@ -1,0 +1,63 @@
+{
+  "checkedAt": "2026-10-12T18:30:16.207Z",
+  "browser": "Chromium 149.0.7827.55",
+  "observations": [
+    {
+      "name": "SSR, retour filtré, formulaire identité et attributs sans remplissage",
+      "result": "passed"
+    },
+    {
+      "name": "Conflit identité : brouillon conservé, champs distants fusionnés",
+      "result": "passed"
+    },
+    {
+      "name": "Réponse identité perdue après commit : vérification avant nouvelle tentative",
+      "result": "passed"
+    },
+    {
+      "name": "Email par Entrée, modification sans changement, focus et doublon légitime",
+      "result": "passed"
+    },
+    {
+      "name": "Conflit coordonnée : valeur locale et libellé distant conservés",
+      "result": "passed"
+    },
+    {
+      "name": "Téléphone et profil social : champs, listes et données enregistrées",
+      "result": "passed"
+    },
+    {
+      "name": "Suppression email principal : remplacement explicite et état SQL",
+      "result": "passed"
+    },
+    {
+      "name": "Provenance réelle et clé d'historique invalide refusée",
+      "result": "passed"
+    },
+    {
+      "name": "Composition responsive, rail collant, absence de débordement",
+      "result": "passed"
+    },
+    {
+      "name": "Lecture seule : SSR autorisé, actions cachées et mutation refusée",
+      "result": "passed"
+    },
+    {
+      "name": "Suppression fiche : conflit, réponse perdue, même clé après réouverture et retour filtré",
+      "result": "passed"
+    },
+    {
+      "name": "Révocation pendant une édition : API refuse et données retirées de la page",
+      "result": "passed"
+    },
+    {
+      "name": "Accès anonyme direct : connexion requise et API 401",
+      "result": "passed"
+    }
+  ],
+  "limitations": [
+    "Base PostgreSQL, comptes et données fictifs isolés ; serveur Next de production local.",
+    "Deux pertes de réponse injectées après commits PostgreSQL réels.",
+    "Dimensions émulées ; pas de lecteur d’écran ni de Safari/iOS réel."
+  ]
+}

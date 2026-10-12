@@ -211,7 +211,7 @@ correspondante n'existe plus. La spécification complète est conservée dans
 | Clé canonique              | Action couverte                                          | Dépend de    | Risque   | USER | ADMIN     | Racine         | Surcharge | Step-up |
 | -------------------------- | -------------------------------------------------------- | ------------ | -------- | ---- | --------- | -------------- | --------- | ------- |
 | `audit:view`               | consulter le journal global et ses détails autorisés     | —            | critique | Non  | Oui, rôle | Oui, implicite | Oui       | Non     |
-| `audit:view_field_history` | voir trois changements d'un champ sur une page autorisée | dynamique    | sensible | Non  | Oui, rôle | Oui, implicite | Oui       | Non     |
+| `audit:view_field_history` | voir deux changements d'un champ sur une page autorisée | dynamique    | sensible | Non  | Oui, rôle | Oui, implicite | Oui       | Non     |
 
 `audit:export` et l'export du journal global ont été retirés le 9 octobre 2026
 avec la page `/systeme/journal-activite`.
@@ -224,6 +224,12 @@ détaillée sans permission métier supplémentaire. Les secrets
 d'authentification ne sont jamais enregistrés. Le droit de consulter l'activité
 d'un utilisateur ne permet jamais de lire l'activité privée du compte racine :
 seul son propriétaire y accède.
+
+Pour la fiche personne, la limite actuelle de l'API est de **deux changements**
+par champ ; l'infobulle affiche seulement la provenance de la dernière entrée.
+La revue du 12 octobre 2026 conserve ce contrat existant et corrige l'ancienne
+mention de trois changements, sans ajouter un écran d'historique complet.
+Voir les [décisions courantes du Répertoire](../qualite/pages/membres-repertoire.md).
 
 ### API actives sans écran d'administration
 

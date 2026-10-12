@@ -42,16 +42,22 @@ const getProvenanceLabel = (action: string): string =>
 export const PersonFieldProvenanceHint: FC<PersonFieldProvenanceHintProps> = ({
   target,
 }) => {
-  const { authorizationRevision } = useUser();
+  const { authorizationRevision, userData } = useUser();
   const [error, setError] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [provenance, setProvenance] = useState<Provenance | null>(null);
   const [resolved, setResolved] = useState(false);
   const requestIdRef = useRef(0);
+  const requestRef = useRef<AbortController | null>(null);
+  const targetRef = useRef(target);
+  const openRef = useRef(false);
+  targetRef.current = target;
 
   const clearCachedProvenance = useCallback((): void => {
     requestIdRef.current += 1;
+    requestRef.current?.abort();
+    requestRef.current = null;
     setError(false);
     setLoading(false);
     setProvenance(null);
@@ -59,13 +65,20 @@ export const PersonFieldProvenanceHint: FC<PersonFieldProvenanceHintProps> = ({
   }, []);
 
   const load = useCallback(async (): Promise<void> => {
-    if (!target) return;
+    const currentTarget = targetRef.current;
+    if (!currentTarget || requestRef.current) return;
 
     const requestId = ++requestIdRef.current;
+    const controller = new AbortController();
+    requestRef.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 15_000);
     setError(false);
     setLoading(true);
     try {
-      const response = await getPersonFieldHistory(target);
+      const response = await getPersonFieldHistory({
+        ...currentTarget,
+        signal: controller.signal,
+      });
       if (requestId !== requestIdRef.current) return;
 
       const latest = response.items[0];
@@ -82,31 +95,45 @@ export const PersonFieldProvenanceHint: FC<PersonFieldProvenanceHintProps> = ({
     } catch {
       if (requestId === requestIdRef.current) setError(true);
     } finally {
+      clearTimeout(timeout);
+      if (requestRef.current === controller) requestRef.current = null;
       if (requestId === requestIdRef.current) setLoading(false);
     }
-  }, [target]);
+  }, []);
 
   useEffect(() => {
     clearCachedProvenance();
+    if (openRef.current) void load();
 
     return (): void => {
       requestIdRef.current += 1;
+      requestRef.current?.abort();
+      requestRef.current = null;
     };
   }, [
     authorizationRevision,
     clearCachedProvenance,
+    load,
     target?.fieldKey,
     target?.personId,
     target?.recordId,
     target?.revision,
     target?.sectionKey,
+    userData?.id,
   ]);
 
   if (!target) return null;
 
   const handleOpenChange = (open: boolean): void => {
+    openRef.current = open;
     setIsOpen(open);
     if (open && !loading && !resolved) void load();
+    if (!open && requestRef.current) {
+      requestIdRef.current += 1;
+      requestRef.current.abort();
+      requestRef.current = null;
+      setLoading(false);
+    }
   };
 
   return (

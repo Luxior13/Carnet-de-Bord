@@ -24,9 +24,11 @@ import {
 } from './PersonIdentityFields';
 
 type PersonIdentitySectionProps = {
+  available?: boolean;
   canUpdate: boolean;
   canViewProvenance: boolean;
   onChange: (person: PersonDetail) => void;
+  onDirtyChange?: (dirty: boolean) => void;
   onReload: () => Promise<PersonDetail>;
   person: PersonDetail;
 };
@@ -44,9 +46,11 @@ const toForm = (person: PersonDetail): PersonIdentityFormValue => ({
  * d'action n'apparait que lorsqu'une valeur a change.
  */
 export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
+  available = true,
   canUpdate,
   canViewProvenance,
   onChange,
+  onDirtyChange,
   onReload,
   person,
 }) => {
@@ -64,6 +68,7 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
   const [actionBarSlot, setActionBarSlot] = useState<HTMLElement | null>(null);
   const mountedRef = useRef(false);
   const operationRef = useRef(false);
+  const requestRef = useRef<AbortController | null>(null);
   const dirtyRef = useRef(false);
   const basePersonRef = useRef(basePerson);
   const latestPersonRef = useRef(person);
@@ -84,13 +89,23 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
     confirmPendingNavigation,
     pendingNavigationHref,
     restoreFocus,
-  } = useUnsavedNavigationGuard(isDirty);
+  } = useUnsavedNavigationGuard(isDirty, () => {
+    mountedRef.current = false;
+    requestRef.current?.abort();
+  });
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+
+    return (): void => onDirtyChange?.(false);
+  }, [isDirty, onDirtyChange]);
 
   useEffect(() => {
     mountedRef.current = true;
 
     return (): void => {
       mountedRef.current = false;
+      requestRef.current?.abort();
     };
   }, []);
 
@@ -133,6 +148,7 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
       operationRef.current ||
       !mountedRef.current ||
       !canUpdate ||
+      !available ||
       conflict ||
       !isDirty
     )
@@ -158,9 +174,21 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
     setErrors({});
     operationRef.current = true;
     setIsSaving(true);
+    const controller = new AbortController();
+    requestRef.current = controller;
+    const timer = window.setTimeout(() => controller.abort(), 30_000);
     try {
-      const result = await updatePerson(person.id, payload);
+      const result = await updatePerson(person.id, payload, controller.signal);
       if (!mountedRef.current || result.person.id !== person.id) return;
+      if (result.person.version < latestPersonRef.current.version) {
+        setConflict(true);
+        setSubmitError(
+          'La fiche a changé pendant cet enregistrement. Actualisez la version pour vérifier votre saisie.',
+        );
+        focusForm('error');
+
+        return;
+      }
       basePersonRef.current = result.person;
       latestPersonRef.current = result.person;
       dirtyRef.current = false;
@@ -173,8 +201,28 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
       if (!mountedRef.current) return;
       if (caught instanceof ApiClientError && caught.status === 409) {
         setConflict(true);
+        setSubmitError(
+          'La fiche a changé. Actualisez la version avant de confirmer votre saisie.',
+        );
+        focusForm('error');
 
         return;
+      }
+      if (
+        !(caught instanceof ApiClientError) ||
+        caught.status >= 500 ||
+        caught.code === 'INVALID_RESPONSE'
+      ) {
+        setConflict(true);
+        setSubmitError(
+          'Le résultat de l’enregistrement n’a pas pu être confirmé. Actualisez la version pour vérifier la fiche avant de réessayer. Votre saisie est conservée.',
+        );
+        focusForm('error');
+
+        return;
+      }
+      if ([401, 403, 404, 410].includes(caught.status)) {
+        void onReload().catch(() => {});
       }
       if (caught instanceof ApiClientError && caught.details) {
         setErrors(
@@ -195,6 +243,8 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
           : "Impossible de modifier l'identité",
       );
     } finally {
+      window.clearTimeout(timer);
+      if (requestRef.current === controller) requestRef.current = null;
       operationRef.current = false;
       if (mountedRef.current) setIsSaving(false);
     }
@@ -372,7 +422,7 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
               </p>
             )}
             <PersonIdentityFields
-              disabled={!canUpdate || isBusy}
+              disabled={!canUpdate || !available || isBusy}
               errors={errors}
               idPrefix="person-detail"
               onChange={(key, nextValue) =>
@@ -386,11 +436,12 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
         </CardContent>
       </section>
 
-      {isDirty &&
+      {(isDirty || conflict) &&
         actionBarSlot &&
         createPortal(
           <SectionActionBar
             conflict={conflict}
+            hasChanges={isDirty}
             isResolvingConflict={isRefreshing}
             isSaving={isSaving}
             onCancel={() => {
@@ -399,11 +450,13 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
               setPendingLocalDiscard(true);
             }}
             onResolveConflict={() => void refreshVersion()}
-            saveDisabled={!canUpdate}
+            saveDisabled={!canUpdate || !available}
             saveDisabledReason={
               !canUpdate
                 ? 'La modification de cette fiche n’est plus autorisée.'
-                : undefined
+                : !available
+                  ? 'Revérifiez la disponibilité du service avant d’enregistrer.'
+                  : undefined
             }
             saveForm="person-identity-form"
             saveType="submit"
@@ -418,13 +471,17 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
         confirmLabel={
           pendingLocalDiscard
             ? 'Abandonner les modifications'
-            : 'Quitter sans enregistrer'
+            : isSaving
+              ? 'Quitter la page'
+              : 'Quitter sans enregistrer'
         }
         contentClassName="sm:max-w-lg"
         description={
           pendingLocalDiscard
             ? 'Les modifications de cette information ne sont pas enregistrées.'
-            : 'Vous avez des modifications en cours sur cette fiche. Quitter la page les annulera.'
+            : isSaving
+              ? 'Un enregistrement est en cours. Quitter la page ne garantit pas son annulation. Vérifiez la fiche à votre retour.'
+              : 'Vous avez des modifications non enregistrées sur cette fiche. Quitter la page abandonnera votre saisie locale.'
         }
         onCancel={() => {
           setPendingLocalDiscard(false);

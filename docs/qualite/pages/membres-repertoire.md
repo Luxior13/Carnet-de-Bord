@@ -28,6 +28,13 @@
   vérifié par régression de rendu serveur et transition HTTP ralentie réelle.
   [Rapport de création et limites](../../audits/AUDIT_CREATION_PERSONNE_2026-10-12.md).
   Les validations de la liste restent distinctes de ces preuves.
+- Revue propre à la fiche du 12 octobre : identité, coordonnées, provenance,
+  droits, versions et suppression. **Trente parcours client simulés, treize
+  parcours HTTP avec connexion/MFA/PostgreSQL et trente scénarios SQL réussis**.
+  REP-D01 à REP-D10 clos ou amélioration vérifiée dans leur portée ; compilation,
+  types, lint et budgets finaux réussis. Cette passe reste distincte des succès
+  précédents de la liste et de la création.
+  [Rapport de fiche et limites](../../audits/AUDIT_FICHE_PERSONNE_2026-10-12.md).
 - Références : intentions historiques `features/pages/vie-interne/membres*.md`,
   `features/pages/bureau-juridique/personnes-contacts.md` ; règles courantes
   `docs/references/NAVIGATION.md`, `docs/references/STRUCTURE.md`, `docs/references/ROLES_ET_PERMISSIONS.md`,
@@ -45,7 +52,10 @@
 - Création et identité utilisent `SectionActionBar` avec soumission native.
   L'identité distingue brouillon et version serveur : relecture d'un conflit sans
   perdre les champs modifiés, erreur persistante, annulation vers la dernière
-  version connue. Les réponses après changement de cible/compte sont ignorées.
+  version connue. Les gardes de réponses tardives avaient été vérifiées dans
+  les scénarios isolés de cette passe ; la revue de fiche du 12 octobre
+  réexamine leur composition avec le préchargement et le changement de compte
+  dans REP-D01, après reproduction d'une ancienne réponse encore appliquée.
 - Preuves et limites : [audit transverse](../../audits/AUDIT_COMPOSANTS_2026-10-11.md).
   API simulées ; ces corrections n'ont pas rejoué la session/base des anciens audits.
 
@@ -214,6 +224,77 @@ lint et budgets d'architecture/performance passent. Voir le
 | REP-N04 — Indisponibilité pendant saisie | Clos côté client : saisie et focus conservés après rétablissement, ancien formulaire retiré après changement de compte ou de droit |
 | REP-N05 — Indices des coordonnées initiales | Clos après échec puis réussite du même scénario SQL : choix du principal social sans réordonner les entrées ; impact API uniquement, formulaire minimal inchangé |
 | REP-N06 — Retour pendant chargement de la fiche | Clos après régression de rendu serveur et transition HTTP ralentie : aucun lien statique dans le squelette, retour filtré correct dès que la fiche est chargée |
+
+### Fiche personne — revue du 12 octobre 2026
+
+La fiche rassemble l'identité et les coordonnées utiles d'une personne ;
+elle ne crée ni compte, ni adhésion, ni rôle. La date de naissance reste
+facultative et civile. Les plafonds actuels sont dix emails, dix téléphones
+et vingt profils sociaux ; le principal se choisit par ensemble, et par
+réseau pour les profils sociaux.
+
+La lecture, la modification, la suppression et la provenance sont des
+capacités distinctes. Le snapshot serveur, les brouillons et les réponses
+doivent appartenir à la même cible, au même compte et aux mêmes droits
+effectifs. Un retrait d'accès purge l'ancien état ; une simple indisponibilité
+du module conserve la saisie et explique les actions possibles.
+La lecture serveur de la fiche et de sa provenance utilise un même instant
+transactionnel, pour ne pas associer une identité ancienne à un audit concurrent
+plus récent. Cette correction REP-D09 a été vérifiée sur PostgreSQL isolé.
+L'infobulle présente la provenance de la dernière modification. L'API conserve
+sa limite existante de deux changements par champ ; la mention de trois dans
+la référence de permissions a été alignée, sans créer de journal complet.
+
+Décisions de composition pour cette passe : conserver les deux sections et
+leurs composants communs, harmoniser le bandeau avec `PageIdentityHero`,
+garder la barre de l'identité portée par la page hors carte, utiliser une
+soumission native dans les dialogues de coordonnées et préserver le contexte
+de retour après suppression. Le mode compact du pseudo et de la naissance ne
+référence plus une aide absente ; les identifiants sont vérifiés au rendu.
+Les lignes de libellé conservent une hauteur commune avec ou sans bouton de
+provenance, pour aligner les champs voisins. Les fonctions locales de brouillon
+sont séparées du dialogue dans `person-child-draft.ts` ; pas de nouveau moteur
+de formulaire ni de dépendance.
+
+Les homonymes et coordonnées communes restent possibles, avec avertissement
+non bloquant pour ces dernières. L'ancien stockage local d'alerte de création
+n'a plus de producteur depuis la création minimale du 12 octobre : son retrait
+sur la fiche ne retire pas les avertissements des mutations de coordonnées.
+Une relecture de conflit doit conserver les champs réellement modifiés et
+adopter les autres données courantes avant nouvelle confirmation.
+Un résultat d'écriture non confirmé conserve la saisie et demande une relecture
+avant reprise, sans rejeu automatique. L'ajout retrouvé après relecture peut
+être terminé sans second POST. Une lecture remplacée ne doit pas publier une
+fausse erreur ni terminer l'attente de celle qui lui succède.
+
+La provenance restée ouverte relit sa donnée après changement de version ;
+la fermeture ou le changement de portée annule l'ancienne requête. Attente
+bornée à quinze secondes pour la provenance, trente secondes pour les autres
+lectures et mutations de la fiche ; les gardes de réponse restent nécessaires
+car interrompre le transport n'annule pas un commit serveur.
+
+La suppression définitive reste distincte d'un archivage. Elle efface la fiche,
+ses coordonnées et l'historique des valeurs, en conservant une trace minimale.
+Aucune restauration depuis l'application, nouvelle preuve de mot de passe
+ou extension d'un mécanisme d'archivage n'est ajoutée. La restauration et la
+purge des sauvegardes restent des sujets d'exploitation à vérifier séparément.
+Après réponse incertaine de suppression, conserver la même clé lors de la
+fermeture et de la réouverture du dialogue. Le succès confirmé ne devient pas
+un échec métier si la navigation échoue : un bouton de retour reste disponible.
+Le retour filtré et la reprise du DELETE sont vérifiés sur serveur réel ; la
+panne propre du routeur après succès n'a pas été injectée dans ce banc.
+
+REP-D01 à REP-D10 sont clos ou vérifiés à la portée décrite dans le rapport.
+Les archives avant correction démontrent six défauts client et un contrôle
+Annuler déjà correct. Après correction : trente scénarios client, deux reprises
+ciblées après extraction, 71 tests serveur dont trente SQL, puis treize parcours
+HTTP réels. Les tests SQL préparent leurs sessions et simulent les en-têtes ;
+le banc HTTP exerce la connexion et la MFA. La suite web réussit 1 240 tests
+(163 ignorés) ; build, lint, types, architecture et budgets réussis après
+les dernières retouches, fiche à 262 957 octets gzip. Les limites de
+restauration, charge, extensions et accessibilité
+humaine restent distinctes de ces succès et sont décrites dans le
+[rapport dédié](../../audits/AUDIT_FICHE_PERSONNE_2026-10-12.md).
 
 ### Création de fiche — contrôle historique du 11 octobre 2026
 

@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-12",
+  "baseCommit": "0027a78",
+  "scope": "Fiche personne : API, données, historique et suppression",
+  "database": {
+    "engine": "PostgreSQL 17",
+    "host": "127.0.0.1",
+    "port": 54620,
+    "name": "person_detail_service_test",
+    "migrations": 52,
+    "disposable": true,
+    "schemaChanges": false
+  },
+  "validation": {
+    "targetedFiles": 5,
+    "targetedPassed": 71,
+    "postgresPassed": 30,
+    "targetedLint": "passed",
+    "typecheck": "passed",
+    "docsCheck": { "files": 238, "links": 1568, "status": "passed" },
+    "globalBuild": "outside-this-bench"
+  },
+  "defects": [
+    {
+      "id": "REP-D06",
+      "cause": "Inherited object properties passed the history section allowlist",
+      "before": {
+        "regressionsFailed": 4,
+        "error": "PERSON_HISTORY_FIELDS[section].has is not a function",
+        "inputs": ["constructor", "__proto__", "toString", "hasOwnProperty"]
+      },
+      "after": {
+        "unitSuitePassed": 8,
+        "guard": "Object.hasOwn",
+        "routeStatus": 400,
+        "readsBeforeRejection": false
+      }
+    },
+    {
+      "id": "REP-D09",
+      "cause": "Identity and last-change provenance were read without a common snapshot",
+      "before": {
+        "regressionsFailed": 1,
+        "personVersion": 1,
+        "concurrentCommittedVersion": 2,
+        "expectedAuditAction": "PERSON_CREATE",
+        "actualAuditAction": "PERSON_UPDATE"
+      },
+      "after": {
+        "isolation": "RepeatableRead",
+        "firstReadVersion": 1,
+        "firstReadAuditAction": "PERSON_CREATE",
+        "nextReadVersion": 2,
+        "nextReadAuditAction": "PERSON_UPDATE",
+        "regressionPassed": true
+      },
+      "testOrdering": "Prisma query extension waits for an actual concurrent PATCH commit immediately before the reader's audit lookup; queries and returned rows are real PostgreSQL operations"
+    }
+  ],
+  "sqlCoverage": [
+    { "group": "anonymous and effective permissions", "scenarios": 3 },
+    { "group": "identity normalization, no-op, versions and concurrent writers", "scenarios": 3 },
+    { "group": "consistent read snapshot", "scenarios": 1 },
+    { "group": "primary contact transitions across three collections", "scenarios": 3 },
+    { "group": "foreign child and parent/child version rejection", "scenarios": 3 },
+    { "group": "concurrent collection capacity", "scenarios": 3 },
+    { "group": "shared contact warning without other-person disclosure", "scenarios": 3 },
+    { "group": "social profile network transfer", "scenarios": 1 },
+    { "group": "invalid history sections", "scenarios": 4 },
+    { "group": "bounded exact history with encrypted storage", "scenarios": 1 },
+    { "group": "AuditLog and AuditFieldChange rollback", "scenarios": 2 },
+    { "group": "versioned deletion, cascade, purge, retry, rollback and reused operation key", "scenarios": 3 }
+  ],
+  "limits": [
+    "Next cookies/headers are simulated; users and authenticated MFA sessions are SQL fixtures",
+    "No HTTP middleware/CSRF or real password/TOTP login proof in this bench",
+    "No prolonged concurrency or volume benchmark",
+    "History retains the existing maximum of two events; UI provenance consumes only the latest",
+    "No production data, project database or browser integration database used"
+  ]
+}

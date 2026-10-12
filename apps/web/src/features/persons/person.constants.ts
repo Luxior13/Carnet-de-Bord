@@ -83,7 +83,7 @@ export const isAllowedPersonHistoryField = (
   fieldKey: string,
   recordId: string | null,
 ): boolean => {
-  if (!(sectionKey in PERSON_HISTORY_FIELDS)) return false;
+  if (!Object.hasOwn(PERSON_HISTORY_FIELDS, sectionKey)) return false;
   const section = sectionKey as keyof typeof PERSON_HISTORY_FIELDS;
   const collectionField = section === 'contacts' || section === 'social';
 

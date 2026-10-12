@@ -489,7 +489,7 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(childDialogSource).toContain("'label',");
     expect(childDialogSource).toContain("'isPrimary',");
     expect(childDialogSource).toContain(
-      'canViewProvenance && item && hasValue',
+      'canViewProvenance && baseItem && hasValue',
     );
     expect(collectionsSource).toContain('canEdit={canUpdate}');
     expect(childDialogSource).toContain('layout="stacked"');
@@ -508,8 +508,11 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(collectionFieldsSource).toContain(
       "disabled={network.status === 'deprecated'}",
     );
-    expect(collectionsSource).toContain('<DuplicateFieldWarning>');
-    expect(collectionsSource).toContain('match.recordId === item.id');
+    // Duplicate feedback belongs to the successful coordinate mutation.
+    expect(childDialogSource).toContain(
+      'result.duplicateWarning?.duplicateFound',
+    );
+    expect(childDialogSource).toContain('Elle a bien été enregistrée ici.');
     expect(collectionsSource).toContain('navigator.clipboard.writeText(value)');
     expect(collectionsSource).toContain('<CopyAction label="Email"');
     expect(collectionsSource).toContain('<CopyAction label="Numéro"');
@@ -624,7 +627,7 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(identityFieldsSource).not.toContain('autoComplete="family-name"');
     expect(identityFieldsSource).not.toContain('autoComplete="nickname"');
     expect(detailPageSource).toContain('<EntityDetailLayout');
-    expect(entityDetailLayoutSource).toContain('<PageHero');
+    expect(entityDetailLayoutSource).toContain('<PageIdentityHero');
     expect(entityDetailLayoutSource).toContain('compact');
     expect(detailPageSource).not.toContain('Fiche du répertoire');
     expect(detailPageSource).not.toContain(
@@ -655,7 +658,7 @@ describe('person short-lived sensitive UX contracts', () => {
 
   it('guards sidebar and breadcrumb links for dirty person identity', () => {
     expect(identitySectionSource).toContain(
-      'useUnsavedNavigationGuard(isDirty)',
+      'useUnsavedNavigationGuard(isDirty,',
     );
     expect(identitySectionSource).toContain('pendingNavigationHref !== null');
     expect(identitySectionSource).toContain('<UnsavedNavigationDialog');
@@ -671,8 +674,8 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(detailPageSource).toContain(
       'operationalFeatureIds.has(FEATURES.persons.id)',
     );
-    expect(detailPageSource).toContain(
-      '!featureAvailabilityLoaded || !featureOperational',
+    expect(detailPageSource).toMatch(
+      /!featureAvailabilityLoaded\s*\|\|\s*!featureOperational/,
     );
     expect(detailPageSource).toContain(
       'title="Répertoire temporairement indisponible"',

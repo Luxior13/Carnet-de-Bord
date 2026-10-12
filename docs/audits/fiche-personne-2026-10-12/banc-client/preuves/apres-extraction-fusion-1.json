@@ -1,0 +1,53 @@
+{
+  "completedAt": "2026-10-12T18:27:30.051Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 1,
+  "total": 1,
+  "observations": [
+    {
+      "name": "email-conflit-fusion-champ-intact",
+      "width": 390,
+      "status": "pass",
+      "requests": [
+        {
+          "method": "PATCH",
+          "path": "/api/personnes/audit-person-a/emails/audit-email-a",
+          "body": {
+            "email": "modifie@example.test",
+            "isPrimary": true,
+            "label": "Personnel",
+            "personVersion": 1,
+            "version": 1
+          },
+          "idempotencyKey": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/personnes/audit-person-a",
+          "body": null,
+          "idempotencyKey": null
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/personnes/audit-person-a/emails/audit-email-a",
+          "body": {
+            "email": "modifie@example.test",
+            "isPrimary": true,
+            "label": "Professionnel",
+            "personVersion": 2,
+            "version": 2
+          },
+          "idempotencyKey": null
+        }
+      ],
+      "errors": [],
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    }
+  ]
+}

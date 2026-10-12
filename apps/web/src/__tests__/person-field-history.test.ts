@@ -34,6 +34,17 @@ describe('person contextual field history', () => {
     mocks.requirePersonDetailRecord.mockResolvedValue({ id: 'person-1' });
   });
 
+  it.each(['constructor', '__proto__', 'toString', 'hasOwnProperty'])(
+    'rejects inherited section %s before accessing stored history',
+    async (sectionKey) => {
+      await expect(
+        getPersonFieldHistory('person-1', { fieldKey: 'nickname', sectionKey }),
+      ).rejects.toThrow('INVALID_PERSON_HISTORY_FIELD');
+      expect(mocks.requirePersonDetailRecord).not.toHaveBeenCalled();
+      expect(mocks.findMany).not.toHaveBeenCalled();
+    },
+  );
+
   it('verifies person visibility and reads at most two exact field events', async () => {
     mocks.findMany.mockResolvedValueOnce([
       {

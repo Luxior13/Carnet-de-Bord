@@ -1,0 +1,85 @@
+{
+  "completedAt": "2026-10-12T18:10:37.024Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 2,
+  "total": 2,
+  "observations": [
+    {
+      "name": "avant-conflit-coordonnee-ecrase-champ-intact",
+      "width": 390,
+      "status": "pass",
+      "defect": "le rechargement actualise les versions sans fusion : libellé serveur Professionnel écrasé par Personnel intact localement",
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/personnes/audit-person-a/historique-champ",
+          "body": null,
+          "idempotencyKey": null
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/personnes/audit-person-a/emails/audit-email-a",
+          "body": {
+            "email": "modifie@example.test",
+            "isPrimary": true,
+            "label": "Personnel",
+            "personVersion": 1,
+            "version": 1
+          },
+          "idempotencyKey": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/personnes/audit-person-a",
+          "body": null,
+          "idempotencyKey": null
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/personnes/audit-person-a/emails/audit-email-a",
+          "body": {
+            "email": "modifie@example.test",
+            "isPrimary": true,
+            "label": "Personnel",
+            "personVersion": 2,
+            "version": 2
+          },
+          "idempotencyKey": null
+        }
+      ],
+      "errors": [],
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "avant-fermeture-coordonnee-focus",
+      "width": 390,
+      "status": "pass",
+      "active": {
+        "tag": "BUTTON",
+        "label": "Modifier cet email"
+      },
+      "triggerFocused": true,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/personnes/audit-person-a/historique-champ",
+          "body": null,
+          "idempotencyKey": null
+        }
+      ],
+      "errors": [],
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "completedAt": "2026-10-12T18:08:34.220Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 5,
+  "total": 5,
+  "observations": [
+    {
+      "name": "avant-ssr-compte-garde-brouillon",
+      "width": 390,
+      "status": "pass",
+      "defect": "snapshot et brouillon compte A restent affichés sous compte B",
+      "requests": [],
+      "errors": [],
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "avant-patch-tardif-compte-change",
+      "width": 390,
+      "status": "pass",
+      "defect": "PATCH ancien accepté après changement de compte",
+      "requests": [
+        {
+          "method": "PATCH",
+          "path": "/api/personnes/audit-person-a",
+          "body": {
+            "birthDate": "2000-01-02",
+            "firstName": "Camille",
+            "lastName": "Exemple",
+            "nickname": "AncienCompteEnregistre",
+            "structureStatus": "IN_STRUCTURE",
+            "version": 1
+          },
+          "idempotencyKey": null
+        }
+      ],
+      "errors": [],
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "avant-readiness-perd-brouillon",
+      "width": 390,
+      "status": "pass",
+      "defect": "brouillon perdu sans snapshot lorsque disponibilité change",
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/personnes/audit-person-a",
+          "body": null,
+          "idempotencyKey": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/personnes/audit-person-a",
+          "body": null,
+          "idempotencyKey": null
+        }
+      ],
+      "errors": [],
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "avant-stockage-bloque",
+      "width": 390,
+      "status": "pass",
+      "defect": "lecture sessionStorage non protégée démonte la page",
+      "requests": [],
+      "errors": [
+        "Stockage fictif refusé"
+      ],
+      "metrics": {
+        "viewport": 390,
+        "document": 390
+      }
+    },
+    {
+      "name": "avant-email-entree-sans-submit",
+      "width": 390,
+      "status": "pass",
+      "defect": "Entrée ne soumet pas le dialogue de coordonnée",
+      "requests": [],
+      "errors": [],
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    }
+  ]
+}
