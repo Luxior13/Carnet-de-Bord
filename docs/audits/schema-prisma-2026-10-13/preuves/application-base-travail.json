@@ -1,0 +1,45 @@
+﻿{
+    "date":  "2026-10-13T17:22:38.407Z",
+    "completed":  true,
+    "target":  "Habitual remote development database; web and database environments agree",
+    "migration":  "20261013120000_system_setting_positive_version",
+    "migrationSha256":  "5559cfb5bef85712e522a228ecbb1a5af4da906d3ac65235381555a68b03cc24",
+    "before":  {
+                   "applied":  52,
+                   "pending":  [
+                                   "20261013120000_system_setting_positive_version"
+                               ],
+                   "invalidVersions":  0
+               },
+    "after":  {
+                  "applied":  53,
+                  "pending":  [
+
+                              ],
+                  "invalidVersions":  0,
+                  "constraint":  [
+                                     {
+                                         "convalidated":  true,
+                                         "definition":  "CHECK ((version \u003e= 1))"
+                                     }
+                                 ]
+              },
+    "existingSettingsUnchanged":  true,
+    "signedV9BackupCreatedAndRetained":  true,
+    "migrationStatusExitCode":  0,
+    "resetPerformed":  false,
+    "backupSigning":  {
+                          "applicationEnvironmentChanged":  false,
+                          "mode":  "Dedicated one-off Ed25519 identity",
+                          "publicVerificationKeyRetainedWithBackup":  true
+                      },
+    "httpVerification":  {
+                             "localPort":  3001,
+                             "endpoints":  [
+                                               "live",
+                                               "ready"
+                                           ],
+                             "result":  "unreachable",
+                             "successClaimed":  false
+                         }
+}

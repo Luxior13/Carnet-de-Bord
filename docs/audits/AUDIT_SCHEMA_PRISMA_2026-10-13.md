@@ -178,3 +178,31 @@ développement n'est pas modifié par cette campagne.
 Nettoyage effectivement terminé : cluster arrêté, port 54664 libre, six bases,
 trois fichiers de sauvegarde, clés et journaux privés supprimés. Seules les
 preuves non sensibles et les scripts de reproduction restent dans le dépôt.
+
+## Application à la base de travail — 13 octobre 2026
+
+À la suite de l'autorisation explicite d'appliquer la migration, la base de
+travail habituelle a reçu `20261013120000_system_setting_positive_version`.
+Cette étape est distincte de la campagne isolée ci-dessus : la cible configurée
+est hébergée à distance, et les configurations web/database désignent la même
+base. Les identifiants de connexion ne sont pas conservés dans les preuves.
+
+Précontrôles : 52 migrations appliquées, checksums conformes, aucun échec non
+résolu et cette seule migration en attente ; aucune version stockée invalide.
+Une sauvegarde complète signée v9 a été créée et conservée avant application.
+La configuration de travail ne fournissant pas de paire de signature complète,
+cette copie utilise une paire Ed25519 dédiée : la clé privée a servi en mémoire,
+et la clé publique correspondante est conservée avec les artefacts dans
+`.codex-tmp/database-backups/`, suffixe `.verification-key.json`. Elle permet
+de vérifier cette copie sans modifier les fichiers d'environnement du site.
+Les clés AES d'origine restent nécessaires à la restauration.
+
+Le wrapper `bun run db:migrate:deploy` a réussi. Le contrôle final relève
+**53 migrations appliquées, aucune en attente**, un CHECK `version >= 1`
+présent et validé, et un contenu de `SystemSetting` inchangé. Aucun reset ni
+réécriture de données. Le [résultat d'application](schema-prisma-2026-10-13/preuves/application-base-travail.json)
+conserve ces constats sans données métier ni secrets.
+
+Les endpoints web locaux `live` et `ready` sur le port 3001 n'étaient pas
+joignables lors du contrôle ; cette étape valide donc l'application SQL et
+son statut, sans annoncer une nouvelle validation HTTP du site.
