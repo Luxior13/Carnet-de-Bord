@@ -1,5 +1,20 @@
 ﻿# Suivi — Navigation générale, sidebar et header
 
+## État courant — clôture du socle du 13 octobre 2026
+
+La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est
+terminée au périmètre livré, pour poursuivre le développement métier. Ses
+preuves et limites ne constituent pas une qualification de déploiement.
+
+Le menu Rubriques confirmé par l’utilisateur reste la règle courante. Le focus
+du fil d’Ariane est conservé lorsqu’un changement de largeur remplace le lien
+par son contrôle compact. Les preuves de navigation, garde de brouillon et
+déconnexion sont réparties entre banc client et parcours réels ; la limite de
+défilement natif Next déjà décrite reste valable.
+
+Les décisions et preuves datées ci-dessous restent conservées. Une nouvelle
+revue répond à un changement, un défaut constaté ou une règle nouvelle.
+
 ## État courant — revue du 12 octobre 2026
 
 Le [rapport courant](../../audits/AUDIT_NAVIGATION_GENERALE_2026-10-12.md)

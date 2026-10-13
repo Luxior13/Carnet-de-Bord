@@ -1,5 +1,19 @@
 # Suivi — Erreur, page introuvable et chargement
 
+## État courant — clôture du socle du 13 octobre 2026
+
+La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est
+terminée au périmètre livré, pour poursuivre le développement métier. Ses
+preuves et limites ne constituent pas une qualification de déploiement.
+
+Les états partagés ont été revérifiés côté client et le panorama réel retrouve
+les refus et la route 404 attendus. Les preuves de panne racine et de reprise du
+12 octobre restent datées ; ce passage n’ajoute aucune promesse de disponibilité
+en déploiement.
+
+Les décisions et preuves datées ci-dessous restent conservées. Une nouvelle
+revue répond à un changement, un défaut constaté ou une règle nouvelle.
+
 ## État courant — 12 octobre 2026
 
 Les états de route doivent expliquer absence, erreur ou attente et proposer

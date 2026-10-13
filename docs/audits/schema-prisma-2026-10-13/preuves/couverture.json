@@ -1,0 +1,5572 @@
+{
+  "generatedAt": "2026-10-13T16:40:04.405Z",
+  "purpose": "Textual inventory coverage only; not a proof of schema correctness, SQL behavior or business reasoning.",
+  "matchingRules": [
+    "Only declaration cells of explicit Markdown table rows are considered, never their justification prose.",
+    "Rows are tied to a schema line, an explicit block heading, or a preceding table row declaring the block; unique enum members may also match an unnumbered row in their assigned document.",
+    "Whitespace and escaped Markdown pipes are normalized. Most rows reproduce the whole declaration.",
+    "Abbreviated rows must explicitly name the field or the mapped index; those matches prove presence only, not that every attribute was reproduced.",
+    "Inline field attributes belong to that field declaration. Block headers, comments and blank/brace lines are counted separately."
+  ],
+  "schema": {
+    "path": "packages/database/prisma/schema.prisma",
+    "sha256": "3dc1b46d9a0da543c9bb502af82545dc87cbb6474d27d1a6d4635fe6b592d13b",
+    "lines": 562
+  },
+  "documents": [
+    {
+      "file": "comptes.md",
+      "path": "docs/audits/schema-prisma-2026-10-13/comptes.md",
+      "exists": true,
+      "sha256": "2361c0aee26abadc5f8dd087668871e77fd9786e4e92f5dea6d8ff3ac1831207",
+      "lines": 374
+    },
+    {
+      "file": "personnes.md",
+      "path": "docs/audits/schema-prisma-2026-10-13/personnes.md",
+      "exists": true,
+      "sha256": "cad651c29c3d1f9d63cd2b3b457bf7ea16f9a466573f3a733d9ddebd8ea5e4c8",
+      "lines": 331
+    },
+    {
+      "file": "audit-technique.md",
+      "path": "docs/audits/schema-prisma-2026-10-13/audit-technique.md",
+      "exists": true,
+      "sha256": "1c4e4069c3a7e57a89111a4af433f8561bb8114d981d6baa4ebdca54c1496e0d",
+      "lines": 555
+    }
+  ],
+  "summary": {
+    "blocks": 33,
+    "declarations": 396,
+    "byKind": {
+      "field": 237,
+      "enum-member": 74,
+      "directive": 82,
+      "configuration": 3
+    },
+    "byDocument": {
+      "comptes.md": {
+        "blocks": 12,
+        "declarations": 125,
+        "covered": 125
+      },
+      "personnes.md": {
+        "blocks": 6,
+        "declarations": 78,
+        "covered": 78
+      },
+      "audit-technique.md": {
+        "blocks": 15,
+        "declarations": 193,
+        "covered": 193
+      }
+    },
+    "covered": 396,
+    "exact": 383,
+    "abbreviated": 13,
+    "missing": 0,
+    "blocksWithoutEvidence": 0,
+    "duplicateAssignments": 0,
+    "parserErrors": 0
+  },
+  "blocks": [
+    {
+      "kind": "generator",
+      "name": "client",
+      "from": 1,
+      "to": 3,
+      "declarations": [
+        {
+          "line": 2,
+          "kind": "configuration",
+          "declaration": "provider = \"prisma-client-js\"",
+          "member": "provider",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 84,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`provider = \"prisma-client-js\"`"
+          }
+        }
+      ],
+      "document": "comptes.md",
+      "blockEvidence": {
+        "line": 83,
+        "method": "explicit-table-row"
+      }
+    },
+    {
+      "kind": "datasource",
+      "name": "db",
+      "from": 5,
+      "to": 8,
+      "declarations": [
+        {
+          "line": 6,
+          "kind": "configuration",
+          "declaration": "provider = \"postgresql\"",
+          "member": "provider",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 86,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`provider = \"postgresql\"`"
+          }
+        },
+        {
+          "line": 7,
+          "kind": "configuration",
+          "declaration": "url = env(\"DATABASE_URL\")",
+          "member": "url",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 87,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`url = env(\"DATABASE_URL\")`"
+          }
+        }
+      ],
+      "document": "comptes.md",
+      "blockEvidence": {
+        "line": 85,
+        "method": "explicit-table-row"
+      }
+    },
+    {
+      "kind": "enum",
+      "name": "UserRole",
+      "from": 10,
+      "to": 13,
+      "declarations": [
+        {
+          "line": 11,
+          "kind": "enum-member",
+          "declaration": "ADMIN",
+          "member": "ADMIN",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 89,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`ADMIN`"
+          }
+        },
+        {
+          "line": 12,
+          "kind": "enum-member",
+          "declaration": "USER",
+          "member": "USER",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 90,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`USER`"
+          }
+        }
+      ],
+      "document": "comptes.md",
+      "blockEvidence": {
+        "line": 88,
+        "method": "explicit-table-row"
+      }
+    },
+    {
+      "kind": "enum",
+      "name": "MfaChallengePurpose",
+      "from": 15,
+      "to": 18,
+      "declarations": [
+        {
+          "line": 16,
+          "kind": "enum-member",
+          "declaration": "LOGIN",
+          "member": "LOGIN",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 92,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`LOGIN`"
+          }
+        },
+        {
+          "line": 17,
+          "kind": "enum-member",
+          "declaration": "SETUP",
+          "member": "SETUP",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 93,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`SETUP`"
+          }
+        }
+      ],
+      "document": "comptes.md",
+      "blockEvidence": {
+        "line": 91,
+        "method": "explicit-table-row"
+      }
+    },
+    {
+      "kind": "enum",
+      "name": "MfaAuthenticationMethod",
+      "from": 20,
+      "to": 23,
+      "declarations": [
+        {
+          "line": 21,
+          "kind": "enum-member",
+          "declaration": "TOTP",
+          "member": "TOTP",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 95,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`TOTP`"
+          }
+        },
+        {
+          "line": 22,
+          "kind": "enum-member",
+          "declaration": "RECOVERY_CODE",
+          "member": "RECOVERY_CODE",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 96,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`RECOVERY_CODE`"
+          }
+        }
+      ],
+      "document": "comptes.md",
+      "blockEvidence": {
+        "line": 94,
+        "method": "explicit-table-row"
+      }
+    },
+    {
+      "kind": "enum",
+      "name": "PersonStructureStatus",
+      "from": 25,
+      "to": 28,
+      "declarations": [
+        {
+          "line": 26,
+          "kind": "enum-member",
+          "declaration": "IN_STRUCTURE",
+          "member": "IN_STRUCTURE",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 75,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`IN_STRUCTURE`"
+          }
+        },
+        {
+          "line": 27,
+          "kind": "enum-member",
+          "declaration": "OUTSIDE_STRUCTURE",
+          "member": "OUTSIDE_STRUCTURE",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 76,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`OUTSIDE_STRUCTURE`"
+          }
+        }
+      ],
+      "document": "personnes.md",
+      "blockEvidence": {
+        "line": 74,
+        "method": "explicit-table-row"
+      }
+    },
+    {
+      "kind": "enum",
+      "name": "AuditFieldChangeType",
+      "from": 30,
+      "to": 34,
+      "declarations": [
+        {
+          "line": 31,
+          "kind": "enum-member",
+          "declaration": "CREATE",
+          "member": "CREATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 74,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`CREATE`"
+          }
+        },
+        {
+          "line": 32,
+          "kind": "enum-member",
+          "declaration": "UPDATE",
+          "member": "UPDATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 75,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`UPDATE`"
+          }
+        },
+        {
+          "line": 33,
+          "kind": "enum-member",
+          "declaration": "DELETE",
+          "member": "DELETE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 76,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`DELETE`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 68,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "enum",
+      "name": "AuditValueStorageMode",
+      "from": 36,
+      "to": 40,
+      "declarations": [
+        {
+          "line": 37,
+          "kind": "enum-member",
+          "declaration": "PLAIN",
+          "member": "PLAIN",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 84,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PLAIN`"
+          }
+        },
+        {
+          "line": 38,
+          "kind": "enum-member",
+          "declaration": "ENCRYPTED",
+          "member": "ENCRYPTED",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 85,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`ENCRYPTED`"
+          }
+        },
+        {
+          "line": 39,
+          "kind": "enum-member",
+          "declaration": "NONE",
+          "member": "NONE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 86,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`NONE`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 78,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "User",
+      "from": 42,
+      "to": 95,
+      "declarations": [
+        {
+          "line": 43,
+          "kind": "field",
+          "declaration": "id String @id @default(cuid())",
+          "member": "id",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 107,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`id String @id @default(cuid())`"
+          }
+        },
+        {
+          "line": 44,
+          "kind": "field",
+          "declaration": "loginName String @unique",
+          "member": "loginName",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 108,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`loginName String @unique`"
+          }
+        },
+        {
+          "line": 45,
+          "kind": "field",
+          "declaration": "contactEmail String?",
+          "member": "contactEmail",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 109,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`contactEmail String?`"
+          }
+        },
+        {
+          "line": 46,
+          "kind": "field",
+          "declaration": "contactEmailVerifiedAt DateTime?",
+          "member": "contactEmailVerifiedAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 110,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`contactEmailVerifiedAt DateTime?`"
+          }
+        },
+        {
+          "line": 47,
+          "kind": "field",
+          "declaration": "passwordHash String",
+          "member": "passwordHash",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 111,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`passwordHash String`"
+          }
+        },
+        {
+          "line": 48,
+          "kind": "field",
+          "declaration": "firstName String",
+          "member": "firstName",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 112,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`firstName String`"
+          }
+        },
+        {
+          "line": 49,
+          "kind": "field",
+          "declaration": "lastName String?",
+          "member": "lastName",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 113,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`lastName String?`"
+          }
+        },
+        {
+          "line": 50,
+          "kind": "field",
+          "declaration": "role UserRole @default(USER)",
+          "member": "role",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 114,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`role UserRole @default(USER)`"
+          }
+        },
+        {
+          "line": 51,
+          "kind": "field",
+          "declaration": "permissions Json?",
+          "member": "permissions",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 115,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`permissions Json?`"
+          }
+        },
+        {
+          "line": 52,
+          "kind": "field",
+          "declaration": "isActive Boolean @default(true)",
+          "member": "isActive",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 116,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`isActive Boolean @default(true)`"
+          }
+        },
+        {
+          "line": 55,
+          "kind": "field",
+          "declaration": "isProtected Boolean @default(false)",
+          "member": "isProtected",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 117,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`isProtected Boolean @default(false)`"
+          }
+        },
+        {
+          "line": 56,
+          "kind": "field",
+          "declaration": "mustChangePassword Boolean @default(false)",
+          "member": "mustChangePassword",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 118,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`mustChangePassword Boolean @default(false)`"
+          }
+        },
+        {
+          "line": 57,
+          "kind": "field",
+          "declaration": "failedLoginAttempts Int @default(0)",
+          "member": "failedLoginAttempts",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 119,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`failedLoginAttempts Int @default(0)`"
+          }
+        },
+        {
+          "line": 58,
+          "kind": "field",
+          "declaration": "lockedUntil DateTime?",
+          "member": "lockedUntil",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 120,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`lockedUntil DateTime?`"
+          }
+        },
+        {
+          "line": 59,
+          "kind": "field",
+          "declaration": "lastLoginAt DateTime?",
+          "member": "lastLoginAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 121,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`lastLoginAt DateTime?`"
+          }
+        },
+        {
+          "line": 60,
+          "kind": "field",
+          "declaration": "passwordChangedAt DateTime?",
+          "member": "passwordChangedAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 122,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`passwordChangedAt DateTime?`"
+          }
+        },
+        {
+          "line": 61,
+          "kind": "field",
+          "declaration": "mfaEnabledAt DateTime?",
+          "member": "mfaEnabledAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 123,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`mfaEnabledAt DateTime?`"
+          }
+        },
+        {
+          "line": 62,
+          "kind": "field",
+          "declaration": "securityVersion Int @default(0)",
+          "member": "securityVersion",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 124,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`securityVersion Int @default(0)`"
+          }
+        },
+        {
+          "line": 65,
+          "kind": "field",
+          "declaration": "deletedAt DateTime?",
+          "member": "deletedAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 125,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`deletedAt DateTime?`"
+          }
+        },
+        {
+          "line": 66,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 126,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 67,
+          "kind": "field",
+          "declaration": "updatedAt DateTime @updatedAt",
+          "member": "updatedAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 127,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedAt DateTime @updatedAt`"
+          }
+        },
+        {
+          "line": 69,
+          "kind": "field",
+          "declaration": "sessions Session[]",
+          "member": "sessions",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 128,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`sessions Session[]`"
+          }
+        },
+        {
+          "line": 70,
+          "kind": "field",
+          "declaration": "auditLogs AuditLog[] @relation(\"AuditActor\")",
+          "member": "auditLogs",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 129,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`auditLogs AuditLog[] @relation(\"AuditActor\")`"
+          }
+        },
+        {
+          "line": 71,
+          "kind": "field",
+          "declaration": "targetedAuditLogs AuditLog[] @relation(\"AuditTarget\")",
+          "member": "targetedAuditLogs",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 130,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`targetedAuditLogs AuditLog[] @relation(\"AuditTarget\")`"
+          }
+        },
+        {
+          "line": 72,
+          "kind": "field",
+          "declaration": "archivedStaffProfile ArchivedStaffProfile?",
+          "member": "archivedStaffProfile",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 131,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`archivedStaffProfile ArchivedStaffProfile?`"
+          }
+        },
+        {
+          "line": 73,
+          "kind": "field",
+          "declaration": "loginNameReservations LoginNameReservation[]",
+          "member": "loginNameReservations",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 132,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`loginNameReservations LoginNameReservation[]`"
+          }
+        },
+        {
+          "line": 74,
+          "kind": "field",
+          "declaration": "totpCredential TotpCredential?",
+          "member": "totpCredential",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 133,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`totpCredential TotpCredential?`"
+          }
+        },
+        {
+          "line": 75,
+          "kind": "field",
+          "declaration": "totpEnrollment TotpEnrollment?",
+          "member": "totpEnrollment",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 134,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`totpEnrollment TotpEnrollment?`"
+          }
+        },
+        {
+          "line": 76,
+          "kind": "field",
+          "declaration": "mfaRecoveryCodes MfaRecoveryCode[]",
+          "member": "mfaRecoveryCodes",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 135,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`mfaRecoveryCodes MfaRecoveryCode[]`"
+          }
+        },
+        {
+          "line": 77,
+          "kind": "field",
+          "declaration": "mfaLoginChallenge MfaLoginChallenge?",
+          "member": "mfaLoginChallenge",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 136,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`mfaLoginChallenge MfaLoginChallenge?`"
+          }
+        },
+        {
+          "line": 78,
+          "kind": "field",
+          "declaration": "internalAnnouncements InternalAnnouncement[] @relation(\"InternalAnnouncementAuthor\")",
+          "member": "internalAnnouncements",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 137,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`internalAnnouncements InternalAnnouncement[] @relation(\"InternalAnnouncementAuthor\")`"
+          }
+        },
+        {
+          "line": 79,
+          "kind": "field",
+          "declaration": "updatedSystemSettings SystemSetting[] @relation(\"SystemSettingUpdater\")",
+          "member": "updatedSystemSettings",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 138,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedSystemSettings SystemSetting[] @relation(\"SystemSettingUpdater\")`"
+          }
+        },
+        {
+          "line": 81,
+          "kind": "directive",
+          "declaration": "@@index([contactEmail])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 139,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([contactEmail])`"
+          }
+        },
+        {
+          "line": 82,
+          "kind": "directive",
+          "declaration": "@@index([role])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 140,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([role])`"
+          }
+        },
+        {
+          "line": 83,
+          "kind": "directive",
+          "declaration": "@@index([deletedAt])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 141,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([deletedAt])`"
+          }
+        },
+        {
+          "line": 84,
+          "kind": "directive",
+          "declaration": "@@index([deletedAt, createdAt])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 142,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([deletedAt, createdAt])`"
+          }
+        },
+        {
+          "line": 85,
+          "kind": "directive",
+          "declaration": "@@index([deletedAt, isActive])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 143,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([deletedAt, isActive])`"
+          }
+        },
+        {
+          "line": 86,
+          "kind": "directive",
+          "declaration": "@@index([deletedAt, lastLoginAt])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 144,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([deletedAt, lastLoginAt])`"
+          }
+        },
+        {
+          "line": 87,
+          "kind": "directive",
+          "declaration": "@@index([deletedAt, lockedUntil])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 145,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([deletedAt, lockedUntil])`"
+          }
+        },
+        {
+          "line": 88,
+          "kind": "directive",
+          "declaration": "@@index([deletedAt, mustChangePassword])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 146,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([deletedAt, mustChangePassword])`"
+          }
+        },
+        {
+          "line": 89,
+          "kind": "directive",
+          "declaration": "@@index([deletedAt, role])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 147,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([deletedAt, role])`"
+          }
+        },
+        {
+          "line": 90,
+          "kind": "directive",
+          "declaration": "@@index([mfaEnabledAt])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 148,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([mfaEnabledAt])`"
+          }
+        },
+        {
+          "line": 91,
+          "kind": "directive",
+          "declaration": "@@index([loginName(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"User_loginName_trgm_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 149,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([loginName(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"User_loginName_trgm_idx\")`"
+          }
+        },
+        {
+          "line": 92,
+          "kind": "directive",
+          "declaration": "@@index([contactEmail(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"User_contactEmail_trgm_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 150,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([contactEmail(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"User_contactEmail_trgm_idx\")`"
+          }
+        },
+        {
+          "line": 93,
+          "kind": "directive",
+          "declaration": "@@index([firstName(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"User_firstName_trgm_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 151,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([firstName(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"User_firstName_trgm_idx\")`"
+          }
+        },
+        {
+          "line": 94,
+          "kind": "directive",
+          "declaration": "@@index([lastName(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"User_lastName_trgm_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 152,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([lastName(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"User_lastName_trgm_idx\")`"
+          }
+        }
+      ],
+      "document": "comptes.md",
+      "blockEvidence": {
+        "line": 98,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "LoginNameReservation",
+      "from": 100,
+      "to": 108,
+      "declarations": [
+        {
+          "line": 101,
+          "kind": "field",
+          "declaration": "loginName String @id",
+          "member": "loginName",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 164,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`loginName String @id`"
+          }
+        },
+        {
+          "line": 102,
+          "kind": "field",
+          "declaration": "userId String",
+          "member": "userId",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 165,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`userId String`"
+          }
+        },
+        {
+          "line": 103,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 166,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 105,
+          "kind": "field",
+          "declaration": "user User @relation(fields: [userId], references: [id], onDelete: Restrict)",
+          "member": "user",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 167,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`user User @relation(fields: [userId], references: [id], onDelete: Restrict)`"
+          }
+        },
+        {
+          "line": 107,
+          "kind": "directive",
+          "declaration": "@@index([userId])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 168,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([userId])`"
+          }
+        }
+      ],
+      "document": "comptes.md",
+      "blockEvidence": {
+        "line": 154,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "Session",
+      "from": 110,
+      "to": 135,
+      "declarations": [
+        {
+          "line": 111,
+          "kind": "field",
+          "declaration": "id String @id @default(cuid())",
+          "member": "id",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 179,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`id String @id @default(cuid())`"
+          }
+        },
+        {
+          "line": 112,
+          "kind": "field",
+          "declaration": "userId String",
+          "member": "userId",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 180,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`userId String`"
+          }
+        },
+        {
+          "line": 113,
+          "kind": "field",
+          "declaration": "securityVersion Int @default(0)",
+          "member": "securityVersion",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 181,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`securityVersion Int @default(0)`"
+          }
+        },
+        {
+          "line": 114,
+          "kind": "field",
+          "declaration": "token String @unique",
+          "member": "token",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 182,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`token String @unique`"
+          }
+        },
+        {
+          "line": 115,
+          "kind": "field",
+          "declaration": "expiresAt DateTime",
+          "member": "expiresAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 183,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`expiresAt DateTime`"
+          }
+        },
+        {
+          "line": 116,
+          "kind": "field",
+          "declaration": "idleExpiresAt DateTime @default(dbgenerated(\"(CURRENT_TIMESTAMP + '00:30:00'::interval)\"))",
+          "member": "idleExpiresAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 184,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`idleExpiresAt DateTime @default(dbgenerated(\"(CURRENT_TIMESTAMP + '00:30:00'::interval)\"))`"
+          }
+        },
+        {
+          "line": 117,
+          "kind": "field",
+          "declaration": "lastSeenAt DateTime @default(now())",
+          "member": "lastSeenAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 185,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`lastSeenAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 118,
+          "kind": "field",
+          "declaration": "rememberMe Boolean @default(false)",
+          "member": "rememberMe",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 186,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`rememberMe Boolean @default(false)`"
+          }
+        },
+        {
+          "line": 119,
+          "kind": "field",
+          "declaration": "passwordReauthenticatedAt DateTime?",
+          "member": "passwordReauthenticatedAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 187,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`passwordReauthenticatedAt DateTime?`"
+          }
+        },
+        {
+          "line": 120,
+          "kind": "field",
+          "declaration": "criticalMfaVerifiedAt DateTime?",
+          "member": "criticalMfaVerifiedAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 188,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`criticalMfaVerifiedAt DateTime?`"
+          }
+        },
+        {
+          "line": 121,
+          "kind": "field",
+          "declaration": "mfaVerifiedAt DateTime",
+          "member": "mfaVerifiedAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 189,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`mfaVerifiedAt DateTime`"
+          }
+        },
+        {
+          "line": 122,
+          "kind": "field",
+          "declaration": "mfaMethod MfaAuthenticationMethod",
+          "member": "mfaMethod",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 190,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`mfaMethod MfaAuthenticationMethod`"
+          }
+        },
+        {
+          "line": 123,
+          "kind": "field",
+          "declaration": "userAgent String?",
+          "member": "userAgent",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 191,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`userAgent String?`"
+          }
+        },
+        {
+          "line": 124,
+          "kind": "field",
+          "declaration": "ipAddress String?",
+          "member": "ipAddress",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 192,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`ipAddress String?`"
+          }
+        },
+        {
+          "line": 126,
+          "kind": "field",
+          "declaration": "user User @relation(fields: [userId], references: [id], onDelete: Cascade)",
+          "member": "user",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 193,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`user User @relation(fields: [userId], references: [id], onDelete: Cascade)`"
+          }
+        },
+        {
+          "line": 128,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 194,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 129,
+          "kind": "field",
+          "declaration": "updatedAt DateTime @updatedAt",
+          "member": "updatedAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 195,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedAt DateTime @updatedAt`"
+          }
+        },
+        {
+          "line": 131,
+          "kind": "directive",
+          "declaration": "@@index([userId])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 196,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([userId])`"
+          }
+        },
+        {
+          "line": 132,
+          "kind": "directive",
+          "declaration": "@@index([userId, expiresAt])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 197,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([userId, expiresAt])`"
+          }
+        },
+        {
+          "line": 133,
+          "kind": "directive",
+          "declaration": "@@index([userId, idleExpiresAt])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 198,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([userId, idleExpiresAt])`"
+          }
+        },
+        {
+          "line": 134,
+          "kind": "directive",
+          "declaration": "@@index([userId, createdAt])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 199,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([userId, createdAt])`"
+          }
+        }
+      ],
+      "document": "comptes.md",
+      "blockEvidence": {
+        "line": 170,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "TotpCredential",
+      "from": 139,
+      "to": 153,
+      "declarations": [
+        {
+          "line": 140,
+          "kind": "field",
+          "declaration": "userId String @id",
+          "member": "userId",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 210,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`userId String @id`"
+          }
+        },
+        {
+          "line": 141,
+          "kind": "field",
+          "declaration": "secretCiphertext String",
+          "member": "secretCiphertext",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 211,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`secretCiphertext String`"
+          }
+        },
+        {
+          "line": 142,
+          "kind": "field",
+          "declaration": "secretIv String",
+          "member": "secretIv",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 212,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`secretIv String`"
+          }
+        },
+        {
+          "line": 143,
+          "kind": "field",
+          "declaration": "secretAuthTag String",
+          "member": "secretAuthTag",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 213,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`secretAuthTag String`"
+          }
+        },
+        {
+          "line": 144,
+          "kind": "field",
+          "declaration": "secretKeyVersion Int @default(1)",
+          "member": "secretKeyVersion",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 214,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`secretKeyVersion Int @default(1)`"
+          }
+        },
+        {
+          "line": 145,
+          "kind": "field",
+          "declaration": "lastUsedTimeStep BigInt?",
+          "member": "lastUsedTimeStep",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 215,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`lastUsedTimeStep BigInt?`"
+          }
+        },
+        {
+          "line": 146,
+          "kind": "field",
+          "declaration": "lastUsedAt DateTime?",
+          "member": "lastUsedAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 216,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`lastUsedAt DateTime?`"
+          }
+        },
+        {
+          "line": 147,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 217,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 148,
+          "kind": "field",
+          "declaration": "updatedAt DateTime @updatedAt",
+          "member": "updatedAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 218,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedAt DateTime @updatedAt`"
+          }
+        },
+        {
+          "line": 150,
+          "kind": "field",
+          "declaration": "user User @relation(fields: [userId], references: [id], onDelete: Cascade)",
+          "member": "user",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 219,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`user User @relation(fields: [userId], references: [id], onDelete: Cascade)`"
+          }
+        },
+        {
+          "line": 152,
+          "kind": "directive",
+          "declaration": "@@index([lastUsedAt])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 220,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([lastUsedAt])`"
+          }
+        }
+      ],
+      "document": "comptes.md",
+      "blockEvidence": {
+        "line": 201,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "TotpEnrollment",
+      "from": 157,
+      "to": 170,
+      "declarations": [
+        {
+          "line": 158,
+          "kind": "field",
+          "declaration": "userId String @id",
+          "member": "userId",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 229,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`userId String @id`"
+          }
+        },
+        {
+          "line": 159,
+          "kind": "field",
+          "declaration": "secretCiphertext String",
+          "member": "secretCiphertext",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 230,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`secretCiphertext String`"
+          }
+        },
+        {
+          "line": 160,
+          "kind": "field",
+          "declaration": "secretIv String",
+          "member": "secretIv",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 231,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`secretIv String`"
+          }
+        },
+        {
+          "line": 161,
+          "kind": "field",
+          "declaration": "secretAuthTag String",
+          "member": "secretAuthTag",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 232,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`secretAuthTag String`"
+          }
+        },
+        {
+          "line": 162,
+          "kind": "field",
+          "declaration": "secretKeyVersion Int @default(1)",
+          "member": "secretKeyVersion",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 233,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`secretKeyVersion Int @default(1)`"
+          }
+        },
+        {
+          "line": 163,
+          "kind": "field",
+          "declaration": "expiresAt DateTime",
+          "member": "expiresAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 234,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`expiresAt DateTime`"
+          }
+        },
+        {
+          "line": 164,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 235,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 165,
+          "kind": "field",
+          "declaration": "updatedAt DateTime @updatedAt",
+          "member": "updatedAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 236,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedAt DateTime @updatedAt`"
+          }
+        },
+        {
+          "line": 167,
+          "kind": "field",
+          "declaration": "user User @relation(fields: [userId], references: [id], onDelete: Cascade)",
+          "member": "user",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 237,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`user User @relation(fields: [userId], references: [id], onDelete: Cascade)`"
+          }
+        },
+        {
+          "line": 169,
+          "kind": "directive",
+          "declaration": "@@index([expiresAt])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 238,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([expiresAt])`"
+          }
+        }
+      ],
+      "document": "comptes.md",
+      "blockEvidence": {
+        "line": 222,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "MfaRecoveryCode",
+      "from": 174,
+      "to": 186,
+      "declarations": [
+        {
+          "line": 175,
+          "kind": "field",
+          "declaration": "id String @id @default(cuid())",
+          "member": "id",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 248,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`id String @id @default(cuid())`"
+          }
+        },
+        {
+          "line": 176,
+          "kind": "field",
+          "declaration": "userId String",
+          "member": "userId",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 249,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`userId String`"
+          }
+        },
+        {
+          "line": 177,
+          "kind": "field",
+          "declaration": "codeHash String",
+          "member": "codeHash",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 250,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`codeHash String`"
+          }
+        },
+        {
+          "line": 178,
+          "kind": "field",
+          "declaration": "salt String",
+          "member": "salt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 251,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`salt String`"
+          }
+        },
+        {
+          "line": 179,
+          "kind": "field",
+          "declaration": "usedAt DateTime?",
+          "member": "usedAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 252,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`usedAt DateTime?`"
+          }
+        },
+        {
+          "line": 180,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 253,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 182,
+          "kind": "field",
+          "declaration": "user User @relation(fields: [userId], references: [id], onDelete: Cascade)",
+          "member": "user",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 254,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`user User @relation(fields: [userId], references: [id], onDelete: Cascade)`"
+          }
+        },
+        {
+          "line": 184,
+          "kind": "directive",
+          "declaration": "@@unique([userId, codeHash])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 255,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@unique([userId, codeHash])`"
+          }
+        },
+        {
+          "line": 185,
+          "kind": "directive",
+          "declaration": "@@index([userId, usedAt])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 256,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([userId, usedAt])`"
+          }
+        }
+      ],
+      "document": "comptes.md",
+      "blockEvidence": {
+        "line": 240,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "MfaLoginChallenge",
+      "from": 190,
+      "to": 207,
+      "declarations": [
+        {
+          "line": 191,
+          "kind": "field",
+          "declaration": "id String @id @default(cuid())",
+          "member": "id",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 266,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`id String @id @default(cuid())`"
+          }
+        },
+        {
+          "line": 192,
+          "kind": "field",
+          "declaration": "userId String @unique",
+          "member": "userId",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 267,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`userId String @unique`"
+          }
+        },
+        {
+          "line": 193,
+          "kind": "field",
+          "declaration": "tokenHash String @unique",
+          "member": "tokenHash",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 268,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`tokenHash String @unique`"
+          }
+        },
+        {
+          "line": 194,
+          "kind": "field",
+          "declaration": "purpose MfaChallengePurpose",
+          "member": "purpose",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 269,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`purpose MfaChallengePurpose`"
+          }
+        },
+        {
+          "line": 195,
+          "kind": "field",
+          "declaration": "securityVersion Int",
+          "member": "securityVersion",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 270,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`securityVersion Int`"
+          }
+        },
+        {
+          "line": 196,
+          "kind": "field",
+          "declaration": "credentialUpdatedAt DateTime?",
+          "member": "credentialUpdatedAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 271,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`credentialUpdatedAt DateTime?`"
+          }
+        },
+        {
+          "line": 197,
+          "kind": "field",
+          "declaration": "rememberMe Boolean @default(false)",
+          "member": "rememberMe",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 272,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`rememberMe Boolean @default(false)`"
+          }
+        },
+        {
+          "line": 198,
+          "kind": "field",
+          "declaration": "attempts Int @default(0)",
+          "member": "attempts",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 273,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`attempts Int @default(0)`"
+          }
+        },
+        {
+          "line": 199,
+          "kind": "field",
+          "declaration": "expiresAt DateTime",
+          "member": "expiresAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 274,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`expiresAt DateTime`"
+          }
+        },
+        {
+          "line": 200,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 275,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 201,
+          "kind": "field",
+          "declaration": "updatedAt DateTime @updatedAt",
+          "member": "updatedAt",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 276,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedAt DateTime @updatedAt`"
+          }
+        },
+        {
+          "line": 203,
+          "kind": "field",
+          "declaration": "user User @relation(fields: [userId], references: [id], onDelete: Cascade)",
+          "member": "user",
+          "evidence": {
+            "document": "comptes.md",
+            "line": 277,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`user User @relation(fields: [userId], references: [id], onDelete: Cascade)`"
+          }
+        },
+        {
+          "line": 205,
+          "kind": "directive",
+          "declaration": "@@index([expiresAt])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 278,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([expiresAt])`"
+          }
+        },
+        {
+          "line": 206,
+          "kind": "directive",
+          "declaration": "@@index([purpose, expiresAt])",
+          "member": null,
+          "evidence": {
+            "document": "comptes.md",
+            "line": 279,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([purpose, expiresAt])`"
+          }
+        }
+      ],
+      "document": "comptes.md",
+      "blockEvidence": {
+        "line": 258,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "enum",
+      "name": "AuditAction",
+      "from": 209,
+      "to": 254,
+      "declarations": [
+        {
+          "line": 210,
+          "kind": "enum-member",
+          "declaration": "LOGIN_SUCCESS",
+          "member": "LOGIN_SUCCESS",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 94,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`LOGIN_SUCCESS`"
+          }
+        },
+        {
+          "line": 211,
+          "kind": "enum-member",
+          "declaration": "LOGIN_FAILED",
+          "member": "LOGIN_FAILED",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 95,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`LOGIN_FAILED`"
+          }
+        },
+        {
+          "line": 212,
+          "kind": "enum-member",
+          "declaration": "LOGOUT",
+          "member": "LOGOUT",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 96,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`LOGOUT`"
+          }
+        },
+        {
+          "line": 213,
+          "kind": "enum-member",
+          "declaration": "PASSWORD_CHANGE",
+          "member": "PASSWORD_CHANGE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 97,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PASSWORD_CHANGE`"
+          }
+        },
+        {
+          "line": 214,
+          "kind": "enum-member",
+          "declaration": "PASSWORD_RESET",
+          "member": "PASSWORD_RESET",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 98,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PASSWORD_RESET`"
+          }
+        },
+        {
+          "line": 215,
+          "kind": "enum-member",
+          "declaration": "ACCOUNT_LOCKED",
+          "member": "ACCOUNT_LOCKED",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 99,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`ACCOUNT_LOCKED`"
+          }
+        },
+        {
+          "line": 216,
+          "kind": "enum-member",
+          "declaration": "SESSION_INVALIDATE",
+          "member": "SESSION_INVALIDATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 100,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`SESSION_INVALIDATE`"
+          }
+        },
+        {
+          "line": 217,
+          "kind": "enum-member",
+          "declaration": "MFA_ENABLED",
+          "member": "MFA_ENABLED",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 101,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`MFA_ENABLED`"
+          }
+        },
+        {
+          "line": 218,
+          "kind": "enum-member",
+          "declaration": "MFA_DISABLED",
+          "member": "MFA_DISABLED",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 102,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`MFA_DISABLED`"
+          }
+        },
+        {
+          "line": 219,
+          "kind": "enum-member",
+          "declaration": "MFA_RECOVERY_CODE_USED",
+          "member": "MFA_RECOVERY_CODE_USED",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 103,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`MFA_RECOVERY_CODE_USED`"
+          }
+        },
+        {
+          "line": 220,
+          "kind": "enum-member",
+          "declaration": "MFA_RECOVERY_CODES_REGENERATED",
+          "member": "MFA_RECOVERY_CODES_REGENERATED",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 104,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`MFA_RECOVERY_CODES_REGENERATED`"
+          }
+        },
+        {
+          "line": 221,
+          "kind": "enum-member",
+          "declaration": "MFA_RESET",
+          "member": "MFA_RESET",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 105,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`MFA_RESET`"
+          }
+        },
+        {
+          "line": 222,
+          "kind": "enum-member",
+          "declaration": "STEP_UP_SUCCESS",
+          "member": "STEP_UP_SUCCESS",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 106,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`STEP_UP_SUCCESS`"
+          }
+        },
+        {
+          "line": 223,
+          "kind": "enum-member",
+          "declaration": "STEP_UP_FAILED",
+          "member": "STEP_UP_FAILED",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 107,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`STEP_UP_FAILED`"
+          }
+        },
+        {
+          "line": 224,
+          "kind": "enum-member",
+          "declaration": "USER_CREATE",
+          "member": "USER_CREATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 108,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`USER_CREATE`"
+          }
+        },
+        {
+          "line": 225,
+          "kind": "enum-member",
+          "declaration": "USER_UPDATE",
+          "member": "USER_UPDATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 109,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`USER_UPDATE`"
+          }
+        },
+        {
+          "line": 226,
+          "kind": "enum-member",
+          "declaration": "USER_DELETE",
+          "member": "USER_DELETE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 110,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`USER_DELETE`"
+          }
+        },
+        {
+          "line": 227,
+          "kind": "enum-member",
+          "declaration": "USER_ACTIVATE",
+          "member": "USER_ACTIVATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 111,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`USER_ACTIVATE`"
+          }
+        },
+        {
+          "line": 228,
+          "kind": "enum-member",
+          "declaration": "USER_DEACTIVATE",
+          "member": "USER_DEACTIVATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 112,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`USER_DEACTIVATE`"
+          }
+        },
+        {
+          "line": 229,
+          "kind": "enum-member",
+          "declaration": "PERMISSION_UPDATE",
+          "member": "PERMISSION_UPDATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 113,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PERMISSION_UPDATE`"
+          }
+        },
+        {
+          "line": 230,
+          "kind": "enum-member",
+          "declaration": "AUDIT_EXPORT",
+          "member": "AUDIT_EXPORT",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 114,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`AUDIT_EXPORT`"
+          }
+        },
+        {
+          "line": 231,
+          "kind": "enum-member",
+          "declaration": "NOTIFICATION_SEND",
+          "member": "NOTIFICATION_SEND",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 115,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`NOTIFICATION_SEND`"
+          }
+        },
+        {
+          "line": 232,
+          "kind": "enum-member",
+          "declaration": "INTERNAL_ANNOUNCEMENT_PUBLISH",
+          "member": "INTERNAL_ANNOUNCEMENT_PUBLISH",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 116,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`INTERNAL_ANNOUNCEMENT_PUBLISH`"
+          }
+        },
+        {
+          "line": 233,
+          "kind": "enum-member",
+          "declaration": "INTERNAL_ANNOUNCEMENT_PIN_UPDATE",
+          "member": "INTERNAL_ANNOUNCEMENT_PIN_UPDATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 117,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`INTERNAL_ANNOUNCEMENT_PIN_UPDATE`"
+          }
+        },
+        {
+          "line": 234,
+          "kind": "enum-member",
+          "declaration": "SYSTEM_SETTING_UPDATE",
+          "member": "SYSTEM_SETTING_UPDATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 118,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`SYSTEM_SETTING_UPDATE`"
+          }
+        },
+        {
+          "line": 235,
+          "kind": "enum-member",
+          "declaration": "BACKGROUND_JOB_UPDATE",
+          "member": "BACKGROUND_JOB_UPDATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 119,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`BACKGROUND_JOB_UPDATE`"
+          }
+        },
+        {
+          "line": 236,
+          "kind": "enum-member",
+          "declaration": "PERSON_CREATE",
+          "member": "PERSON_CREATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 120,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PERSON_CREATE`"
+          }
+        },
+        {
+          "line": 237,
+          "kind": "enum-member",
+          "declaration": "PERSON_UPDATE",
+          "member": "PERSON_UPDATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 121,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PERSON_UPDATE`"
+          }
+        },
+        {
+          "line": 238,
+          "kind": "enum-member",
+          "declaration": "PERSON_DELETE",
+          "member": "PERSON_DELETE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 122,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PERSON_DELETE`"
+          }
+        },
+        {
+          "line": 242,
+          "kind": "enum-member",
+          "declaration": "PARTNER_CREATE",
+          "member": "PARTNER_CREATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 123,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PARTNER_CREATE`"
+          }
+        },
+        {
+          "line": 243,
+          "kind": "enum-member",
+          "declaration": "PARTNER_UPDATE",
+          "member": "PARTNER_UPDATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 124,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PARTNER_UPDATE`"
+          }
+        },
+        {
+          "line": 244,
+          "kind": "enum-member",
+          "declaration": "PARTNER_STATUS_UPDATE",
+          "member": "PARTNER_STATUS_UPDATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 125,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PARTNER_STATUS_UPDATE`"
+          }
+        },
+        {
+          "line": 245,
+          "kind": "enum-member",
+          "declaration": "PARTNER_PERIOD_CREATE",
+          "member": "PARTNER_PERIOD_CREATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 126,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PARTNER_PERIOD_CREATE`"
+          }
+        },
+        {
+          "line": 246,
+          "kind": "enum-member",
+          "declaration": "PARTNER_PERIOD_UPDATE",
+          "member": "PARTNER_PERIOD_UPDATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 127,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PARTNER_PERIOD_UPDATE`"
+          }
+        },
+        {
+          "line": 247,
+          "kind": "enum-member",
+          "declaration": "PARTNER_CONTACTS_UPDATE",
+          "member": "PARTNER_CONTACTS_UPDATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 128,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PARTNER_CONTACTS_UPDATE`"
+          }
+        },
+        {
+          "line": 248,
+          "kind": "enum-member",
+          "declaration": "PARTNER_FOLLOW_UP_CREATE",
+          "member": "PARTNER_FOLLOW_UP_CREATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 129,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PARTNER_FOLLOW_UP_CREATE`"
+          }
+        },
+        {
+          "line": 249,
+          "kind": "enum-member",
+          "declaration": "PARTNER_FOLLOW_UP_UPDATE",
+          "member": "PARTNER_FOLLOW_UP_UPDATE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 130,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PARTNER_FOLLOW_UP_UPDATE`"
+          }
+        },
+        {
+          "line": 250,
+          "kind": "enum-member",
+          "declaration": "PARTNER_FOLLOW_UP_DELETE",
+          "member": "PARTNER_FOLLOW_UP_DELETE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 131,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PARTNER_FOLLOW_UP_DELETE`"
+          }
+        },
+        {
+          "line": 251,
+          "kind": "enum-member",
+          "declaration": "PARTNER_FOLLOW_UP_COMPLETE",
+          "member": "PARTNER_FOLLOW_UP_COMPLETE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 132,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PARTNER_FOLLOW_UP_COMPLETE`"
+          }
+        },
+        {
+          "line": 252,
+          "kind": "enum-member",
+          "declaration": "PARTNER_MERGE",
+          "member": "PARTNER_MERGE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 133,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PARTNER_MERGE`"
+          }
+        },
+        {
+          "line": 253,
+          "kind": "enum-member",
+          "declaration": "PARTNER_DELETE",
+          "member": "PARTNER_DELETE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 134,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PARTNER_DELETE`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 88,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "enum",
+      "name": "AuditCategory",
+      "from": 256,
+      "to": 264,
+      "declarations": [
+        {
+          "line": 257,
+          "kind": "enum-member",
+          "declaration": "AUTH",
+          "member": "AUTH",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 142,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`AUTH`"
+          }
+        },
+        {
+          "line": 258,
+          "kind": "enum-member",
+          "declaration": "USER",
+          "member": "USER",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 143,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`USER`"
+          }
+        },
+        {
+          "line": 259,
+          "kind": "enum-member",
+          "declaration": "PERMISSION",
+          "member": "PERMISSION",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 144,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PERMISSION`"
+          }
+        },
+        {
+          "line": 260,
+          "kind": "enum-member",
+          "declaration": "SYSTEM",
+          "member": "SYSTEM",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 145,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`SYSTEM`"
+          }
+        },
+        {
+          "line": 261,
+          "kind": "enum-member",
+          "declaration": "PERSON",
+          "member": "PERSON",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 146,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PERSON`"
+          }
+        },
+        {
+          "line": 263,
+          "kind": "enum-member",
+          "declaration": "PARTNER",
+          "member": "PARTNER",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 147,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`PARTNER`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 136,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "enum",
+      "name": "AuditEventKind",
+      "from": 266,
+      "to": 269,
+      "declarations": [
+        {
+          "line": 267,
+          "kind": "enum-member",
+          "declaration": "ACTIVITY",
+          "member": "ACTIVITY",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 155,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`ACTIVITY`"
+          }
+        },
+        {
+          "line": 268,
+          "kind": "enum-member",
+          "declaration": "CONNECTION",
+          "member": "CONNECTION",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 156,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`CONNECTION`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 149,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "enum",
+      "name": "AuditStream",
+      "from": 271,
+      "to": 277,
+      "declarations": [
+        {
+          "line": 272,
+          "kind": "enum-member",
+          "declaration": "AUTHENTICATION",
+          "member": "AUTHENTICATION",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 164,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`AUTHENTICATION`"
+          }
+        },
+        {
+          "line": 273,
+          "kind": "enum-member",
+          "declaration": "SECURITY",
+          "member": "SECURITY",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 165,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`SECURITY`"
+          }
+        },
+        {
+          "line": 274,
+          "kind": "enum-member",
+          "declaration": "IDENTITY",
+          "member": "IDENTITY",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 166,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`IDENTITY`"
+          }
+        },
+        {
+          "line": 275,
+          "kind": "enum-member",
+          "declaration": "AUTHORIZATION",
+          "member": "AUTHORIZATION",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 167,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`AUTHORIZATION`"
+          }
+        },
+        {
+          "line": 276,
+          "kind": "enum-member",
+          "declaration": "SYSTEM",
+          "member": "SYSTEM",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 168,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`SYSTEM`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 158,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "enum",
+      "name": "AuditOutcome",
+      "from": 279,
+      "to": 283,
+      "declarations": [
+        {
+          "line": 280,
+          "kind": "enum-member",
+          "declaration": "SUCCESS",
+          "member": "SUCCESS",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 176,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`SUCCESS`"
+          }
+        },
+        {
+          "line": 281,
+          "kind": "enum-member",
+          "declaration": "FAILURE",
+          "member": "FAILURE",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 177,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`FAILURE`"
+          }
+        },
+        {
+          "line": 282,
+          "kind": "enum-member",
+          "declaration": "NEUTRAL",
+          "member": "NEUTRAL",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 178,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`NEUTRAL`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 170,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "enum",
+      "name": "AuditSeverity",
+      "from": 285,
+      "to": 289,
+      "declarations": [
+        {
+          "line": 286,
+          "kind": "enum-member",
+          "declaration": "INFO",
+          "member": "INFO",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 186,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`INFO`"
+          }
+        },
+        {
+          "line": 287,
+          "kind": "enum-member",
+          "declaration": "WARNING",
+          "member": "WARNING",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 187,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`WARNING`"
+          }
+        },
+        {
+          "line": 288,
+          "kind": "enum-member",
+          "declaration": "CRITICAL",
+          "member": "CRITICAL",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 188,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`CRITICAL`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 180,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "AuditLog",
+      "from": 291,
+      "to": 345,
+      "declarations": [
+        {
+          "line": 292,
+          "kind": "field",
+          "declaration": "id String @id @default(cuid())",
+          "member": "id",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 196,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`id String @id @default(cuid())`"
+          }
+        },
+        {
+          "line": 293,
+          "kind": "field",
+          "declaration": "userId String?",
+          "member": "userId",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 197,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`userId String?`"
+          }
+        },
+        {
+          "line": 294,
+          "kind": "field",
+          "declaration": "user User? @relation(\"AuditActor\", fields: [userId], references: [id], onDelete: Restrict)",
+          "member": "user",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 198,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`user User? @relation(\"AuditActor\", fields: [userId], references: [id], onDelete: Restrict)`"
+          }
+        },
+        {
+          "line": 295,
+          "kind": "field",
+          "declaration": "actorDisplayNameSnapshot String?",
+          "member": "actorDisplayNameSnapshot",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 199,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`actorDisplayNameSnapshot String?`"
+          }
+        },
+        {
+          "line": 296,
+          "kind": "field",
+          "declaration": "actorLoginNameSnapshot String?",
+          "member": "actorLoginNameSnapshot",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 200,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`actorLoginNameSnapshot String?`"
+          }
+        },
+        {
+          "line": 297,
+          "kind": "field",
+          "declaration": "actorRoleSnapshot UserRole?",
+          "member": "actorRoleSnapshot",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 201,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`actorRoleSnapshot UserRole?`"
+          }
+        },
+        {
+          "line": 298,
+          "kind": "field",
+          "declaration": "targetUserId String?",
+          "member": "targetUserId",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 202,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`targetUserId String?`"
+          }
+        },
+        {
+          "line": 299,
+          "kind": "field",
+          "declaration": "targetUser User? @relation(\"AuditTarget\", fields: [targetUserId], references: [id], onDelete: Restrict)",
+          "member": "targetUser",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 203,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`targetUser User? @relation(\"AuditTarget\", fields: [targetUserId], references: [id], onDelete: Restrict)`"
+          }
+        },
+        {
+          "line": 300,
+          "kind": "field",
+          "declaration": "targetDisplayNameSnapshot String?",
+          "member": "targetDisplayNameSnapshot",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 204,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`targetDisplayNameSnapshot String?`"
+          }
+        },
+        {
+          "line": 301,
+          "kind": "field",
+          "declaration": "targetLoginNameSnapshot String?",
+          "member": "targetLoginNameSnapshot",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 205,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`targetLoginNameSnapshot String?`"
+          }
+        },
+        {
+          "line": 302,
+          "kind": "field",
+          "declaration": "targetRoleSnapshot UserRole?",
+          "member": "targetRoleSnapshot",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 206,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`targetRoleSnapshot UserRole?`"
+          }
+        },
+        {
+          "line": 303,
+          "kind": "field",
+          "declaration": "action AuditAction",
+          "member": "action",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 207,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`action AuditAction`"
+          }
+        },
+        {
+          "line": 304,
+          "kind": "field",
+          "declaration": "category AuditCategory",
+          "member": "category",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 208,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`category AuditCategory`"
+          }
+        },
+        {
+          "line": 305,
+          "kind": "field",
+          "declaration": "eventKind AuditEventKind @default(ACTIVITY)",
+          "member": "eventKind",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 209,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`eventKind AuditEventKind @default(ACTIVITY)`"
+          }
+        },
+        {
+          "line": 306,
+          "kind": "field",
+          "declaration": "stream AuditStream @default(SYSTEM)",
+          "member": "stream",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 210,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`stream AuditStream @default(SYSTEM)`"
+          }
+        },
+        {
+          "line": 307,
+          "kind": "field",
+          "declaration": "outcome AuditOutcome @default(SUCCESS)",
+          "member": "outcome",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 211,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`outcome AuditOutcome @default(SUCCESS)`"
+          }
+        },
+        {
+          "line": 308,
+          "kind": "field",
+          "declaration": "severity AuditSeverity @default(INFO)",
+          "member": "severity",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 212,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`severity AuditSeverity @default(INFO)`"
+          }
+        },
+        {
+          "line": 309,
+          "kind": "field",
+          "declaration": "eventVersion Int @default(1)",
+          "member": "eventVersion",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 213,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`eventVersion Int @default(1)`"
+          }
+        },
+        {
+          "line": 310,
+          "kind": "field",
+          "declaration": "description String",
+          "member": "description",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 214,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`description String`"
+          }
+        },
+        {
+          "line": 311,
+          "kind": "field",
+          "declaration": "metadata Json?",
+          "member": "metadata",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 215,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`metadata Json?`"
+          }
+        },
+        {
+          "line": 312,
+          "kind": "field",
+          "declaration": "poleKey String?",
+          "member": "poleKey",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 216,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`poleKey String?`"
+          }
+        },
+        {
+          "line": 313,
+          "kind": "field",
+          "declaration": "pageKey String?",
+          "member": "pageKey",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 217,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`pageKey String?`"
+          }
+        },
+        {
+          "line": 314,
+          "kind": "field",
+          "declaration": "tabKey String?",
+          "member": "tabKey",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 218,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`tabKey String?`"
+          }
+        },
+        {
+          "line": 315,
+          "kind": "field",
+          "declaration": "entityType String? @db.VarChar(40)",
+          "member": "entityType",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 219,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`entityType String? @db.VarChar(40)`"
+          }
+        },
+        {
+          "line": 316,
+          "kind": "field",
+          "declaration": "entityId String? @db.VarChar(128)",
+          "member": "entityId",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 220,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`entityId String? @db.VarChar(128)`"
+          }
+        },
+        {
+          "line": 317,
+          "kind": "field",
+          "declaration": "requestId String?",
+          "member": "requestId",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 221,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`requestId String?`"
+          }
+        },
+        {
+          "line": 318,
+          "kind": "field",
+          "declaration": "ipAddress String?",
+          "member": "ipAddress",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 222,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`ipAddress String?`"
+          }
+        },
+        {
+          "line": 319,
+          "kind": "field",
+          "declaration": "userAgent String?",
+          "member": "userAgent",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 223,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`userAgent String?`"
+          }
+        },
+        {
+          "line": 320,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 224,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 322,
+          "kind": "field",
+          "declaration": "fieldChanges AuditFieldChange[]",
+          "member": "fieldChanges",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 225,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`fieldChanges AuditFieldChange[]`"
+          }
+        },
+        {
+          "line": 324,
+          "kind": "directive",
+          "declaration": "@@unique([id, entityType, entityId])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 226,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@unique([id, entityType, entityId])`"
+          }
+        },
+        {
+          "line": 325,
+          "kind": "directive",
+          "declaration": "@@index([userId, action])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 227,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([userId, action])`"
+          }
+        },
+        {
+          "line": 326,
+          "kind": "directive",
+          "declaration": "@@index([userId, createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 228,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([userId, createdAt, id])`"
+          }
+        },
+        {
+          "line": 327,
+          "kind": "directive",
+          "declaration": "@@index([targetUserId, action])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 229,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([targetUserId, action])`"
+          }
+        },
+        {
+          "line": 328,
+          "kind": "directive",
+          "declaration": "@@index([targetUserId, createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 230,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([targetUserId, createdAt, id])`"
+          }
+        },
+        {
+          "line": 329,
+          "kind": "directive",
+          "declaration": "@@index([poleKey, createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 231,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([poleKey, createdAt, id])`"
+          }
+        },
+        {
+          "line": 330,
+          "kind": "directive",
+          "declaration": "@@index([poleKey, pageKey, createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 232,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([poleKey, pageKey, createdAt, id])`"
+          }
+        },
+        {
+          "line": 331,
+          "kind": "directive",
+          "declaration": "@@index([pageKey, createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 233,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([pageKey, createdAt, id])`"
+          }
+        },
+        {
+          "line": 332,
+          "kind": "directive",
+          "declaration": "@@index([eventKind, createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 234,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([eventKind, createdAt, id])`"
+          }
+        },
+        {
+          "line": 333,
+          "kind": "directive",
+          "declaration": "@@index([stream, createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 235,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([stream, createdAt, id])`"
+          }
+        },
+        {
+          "line": 334,
+          "kind": "directive",
+          "declaration": "@@index([outcome, createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 236,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([outcome, createdAt, id])`"
+          }
+        },
+        {
+          "line": 335,
+          "kind": "directive",
+          "declaration": "@@index([severity, createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 237,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([severity, createdAt, id])`"
+          }
+        },
+        {
+          "line": 336,
+          "kind": "directive",
+          "declaration": "@@index([requestId])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 238,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([requestId])`"
+          }
+        },
+        {
+          "line": 337,
+          "kind": "directive",
+          "declaration": "@@index([action, createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 239,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([action, createdAt, id])`"
+          }
+        },
+        {
+          "line": 338,
+          "kind": "directive",
+          "declaration": "@@index([category, createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 240,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([category, createdAt, id])`"
+          }
+        },
+        {
+          "line": 339,
+          "kind": "directive",
+          "declaration": "@@index([entityType, entityId, createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 241,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([entityType, entityId, createdAt, id])`"
+          }
+        },
+        {
+          "line": 340,
+          "kind": "directive",
+          "declaration": "@@index([createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 242,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([createdAt, id])`"
+          }
+        },
+        {
+          "line": 341,
+          "kind": "directive",
+          "declaration": "@@index([actorDisplayNameSnapshot(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"AuditLog_actorDisplayNameSnapshot_trgm_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 243,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([actorDisplayNameSnapshot(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"AuditLog_actorDisplayNameSnapshot_trgm_idx\")`"
+          }
+        },
+        {
+          "line": 342,
+          "kind": "directive",
+          "declaration": "@@index([actorLoginNameSnapshot(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"AuditLog_actorLoginNameSnapshot_trgm_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 244,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([actorLoginNameSnapshot(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"AuditLog_actorLoginNameSnapshot_trgm_idx\")`"
+          }
+        },
+        {
+          "line": 343,
+          "kind": "directive",
+          "declaration": "@@index([targetDisplayNameSnapshot(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"AuditLog_targetDisplayNameSnapshot_trgm_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 245,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([targetDisplayNameSnapshot(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"AuditLog_targetDisplayNameSnapshot_trgm_idx\")`"
+          }
+        },
+        {
+          "line": 344,
+          "kind": "directive",
+          "declaration": "@@index([targetLoginNameSnapshot(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"AuditLog_targetLoginNameSnapshot_trgm_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 246,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([targetLoginNameSnapshot(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"AuditLog_targetLoginNameSnapshot_trgm_idx\")`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 190,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "AuditEncryptionKeyVersion",
+      "from": 347,
+      "to": 353,
+      "declarations": [
+        {
+          "line": 348,
+          "kind": "field",
+          "declaration": "version Int @id",
+          "member": "version",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 254,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`version Int @id`"
+          }
+        },
+        {
+          "line": 349,
+          "kind": "field",
+          "declaration": "algorithm String @default(\"AES-256-GCM\") @db.VarChar(32)",
+          "member": "algorithm",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 255,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`algorithm String @default(\"AES-256-GCM\") @db.VarChar(32)`"
+          }
+        },
+        {
+          "line": 350,
+          "kind": "field",
+          "declaration": "firstUsedAt DateTime @default(now())",
+          "member": "firstUsedAt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 256,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`firstUsedAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 352,
+          "kind": "field",
+          "declaration": "fieldChanges AuditFieldChange[]",
+          "member": "fieldChanges",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 257,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`fieldChanges AuditFieldChange[]`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 248,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "AuditFieldChange",
+      "from": 355,
+      "to": 381,
+      "declarations": [
+        {
+          "line": 356,
+          "kind": "field",
+          "declaration": "id String @id @default(cuid())",
+          "member": "id",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 265,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`id String @id @default(cuid())`"
+          }
+        },
+        {
+          "line": 357,
+          "kind": "field",
+          "declaration": "auditLogId String",
+          "member": "auditLogId",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 266,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`auditLogId String`"
+          }
+        },
+        {
+          "line": 358,
+          "kind": "field",
+          "declaration": "entityType String @db.VarChar(40)",
+          "member": "entityType",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 267,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`entityType String @db.VarChar(40)`"
+          }
+        },
+        {
+          "line": 359,
+          "kind": "field",
+          "declaration": "entityId String @db.VarChar(128)",
+          "member": "entityId",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 268,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`entityId String @db.VarChar(128)`"
+          }
+        },
+        {
+          "line": 360,
+          "kind": "field",
+          "declaration": "sectionKey String @db.VarChar(64)",
+          "member": "sectionKey",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 269,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`sectionKey String @db.VarChar(64)`"
+          }
+        },
+        {
+          "line": 361,
+          "kind": "field",
+          "declaration": "fieldKey String @db.VarChar(100)",
+          "member": "fieldKey",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 270,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`fieldKey String @db.VarChar(100)`"
+          }
+        },
+        {
+          "line": 362,
+          "kind": "field",
+          "declaration": "recordId String? @db.VarChar(128)",
+          "member": "recordId",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 271,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`recordId String? @db.VarChar(128)`"
+          }
+        },
+        {
+          "line": 363,
+          "kind": "field",
+          "declaration": "changeType AuditFieldChangeType",
+          "member": "changeType",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 272,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`changeType AuditFieldChangeType`"
+          }
+        },
+        {
+          "line": 364,
+          "kind": "field",
+          "declaration": "valueMode AuditValueStorageMode",
+          "member": "valueMode",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 273,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`valueMode AuditValueStorageMode`"
+          }
+        },
+        {
+          "line": 365,
+          "kind": "field",
+          "declaration": "beforeValue String? @db.VarChar(512)",
+          "member": "beforeValue",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 274,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`beforeValue String? @db.VarChar(512)`"
+          }
+        },
+        {
+          "line": 366,
+          "kind": "field",
+          "declaration": "afterValue String? @db.VarChar(512)",
+          "member": "afterValue",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 275,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`afterValue String? @db.VarChar(512)`"
+          }
+        },
+        {
+          "line": 367,
+          "kind": "field",
+          "declaration": "valuesCiphertext Bytes?",
+          "member": "valuesCiphertext",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 276,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`valuesCiphertext Bytes?`"
+          }
+        },
+        {
+          "line": 368,
+          "kind": "field",
+          "declaration": "valuesIv Bytes?",
+          "member": "valuesIv",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 277,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`valuesIv Bytes?`"
+          }
+        },
+        {
+          "line": 369,
+          "kind": "field",
+          "declaration": "valuesAuthTag Bytes?",
+          "member": "valuesAuthTag",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 278,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`valuesAuthTag Bytes?`"
+          }
+        },
+        {
+          "line": 370,
+          "kind": "field",
+          "declaration": "valueKeyVersion Int?",
+          "member": "valueKeyVersion",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 279,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`valueKeyVersion Int?`"
+          }
+        },
+        {
+          "line": 371,
+          "kind": "field",
+          "declaration": "beforeHash String? @db.Char(64)",
+          "member": "beforeHash",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 280,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`beforeHash String? @db.Char(64)`"
+          }
+        },
+        {
+          "line": 372,
+          "kind": "field",
+          "declaration": "afterHash String? @db.Char(64)",
+          "member": "afterHash",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 281,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`afterHash String? @db.Char(64)`"
+          }
+        },
+        {
+          "line": 373,
+          "kind": "field",
+          "declaration": "createdAt DateTime",
+          "member": "createdAt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 282,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime`"
+          }
+        },
+        {
+          "line": 375,
+          "kind": "field",
+          "declaration": "auditLog AuditLog @relation(fields: [auditLogId, entityType, entityId], references: [id, entityType, entityId], onDelete: Cascade)",
+          "member": "auditLog",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 283,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`auditLog AuditLog @relation(fields: [auditLogId, entityType, entityId], references: [id, entityType, entityId], onDelete: Cascade)`"
+          }
+        },
+        {
+          "line": 376,
+          "kind": "field",
+          "declaration": "encryptionKeyVersion AuditEncryptionKeyVersion? @relation(fields: [valueKeyVersion], references: [version], onDelete: Restrict)",
+          "member": "encryptionKeyVersion",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 284,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`encryptionKeyVersion AuditEncryptionKeyVersion? @relation(fields: [valueKeyVersion], references: [version], onDelete: Restrict)`"
+          }
+        },
+        {
+          "line": 378,
+          "kind": "directive",
+          "declaration": "@@index([auditLogId])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 285,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([auditLogId])`"
+          }
+        },
+        {
+          "line": 379,
+          "kind": "directive",
+          "declaration": "@@index([entityType, entityId, sectionKey, fieldKey, recordId, createdAt, id], map: \"AuditFieldChange_history_lookup_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 286,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([entityType, entityId, sectionKey, fieldKey, recordId, createdAt, id], map: \"AuditFieldChange_history_lookup_idx\")`"
+          }
+        },
+        {
+          "line": 380,
+          "kind": "directive",
+          "declaration": "@@index([valueKeyVersion])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 287,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([valueKeyVersion])`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 259,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "Person",
+      "from": 386,
+      "to": 417,
+      "declarations": [
+        {
+          "line": 387,
+          "kind": "field",
+          "declaration": "id String @id @default(cuid())",
+          "member": "id",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 97,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`id String @id @default(cuid())`"
+          }
+        },
+        {
+          "line": 388,
+          "kind": "field",
+          "declaration": "nickname String? @db.VarChar(80)",
+          "member": "nickname",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 98,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`nickname String? @db.VarChar(80)`"
+          }
+        },
+        {
+          "line": 389,
+          "kind": "field",
+          "declaration": "normalizedNickname String? @db.VarChar(160)",
+          "member": "normalizedNickname",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 99,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`normalizedNickname String? @db.VarChar(160)`"
+          }
+        },
+        {
+          "line": 390,
+          "kind": "field",
+          "declaration": "firstName String? @db.VarChar(100)",
+          "member": "firstName",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 100,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`firstName String? @db.VarChar(100)`"
+          }
+        },
+        {
+          "line": 391,
+          "kind": "field",
+          "declaration": "normalizedFirstName String? @db.VarChar(200)",
+          "member": "normalizedFirstName",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 101,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`normalizedFirstName String? @db.VarChar(200)`"
+          }
+        },
+        {
+          "line": 392,
+          "kind": "field",
+          "declaration": "lastName String? @db.VarChar(100)",
+          "member": "lastName",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 102,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`lastName String? @db.VarChar(100)`"
+          }
+        },
+        {
+          "line": 393,
+          "kind": "field",
+          "declaration": "normalizedLastName String? @db.VarChar(200)",
+          "member": "normalizedLastName",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 103,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`normalizedLastName String? @db.VarChar(200)`"
+          }
+        },
+        {
+          "line": 394,
+          "kind": "field",
+          "declaration": "sortName String @db.VarChar(401)",
+          "member": "sortName",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 104,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`sortName String @db.VarChar(401)`"
+          }
+        },
+        {
+          "line": 395,
+          "kind": "field",
+          "declaration": "birthDate DateTime? @db.Date",
+          "member": "birthDate",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 105,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`birthDate DateTime? @db.Date`"
+          }
+        },
+        {
+          "line": 396,
+          "kind": "field",
+          "declaration": "structureStatus PersonStructureStatus @default(OUTSIDE_STRUCTURE)",
+          "member": "structureStatus",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 106,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`structureStatus PersonStructureStatus @default(OUTSIDE_STRUCTURE)`"
+          }
+        },
+        {
+          "line": 397,
+          "kind": "field",
+          "declaration": "version Int @default(1)",
+          "member": "version",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 107,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`version Int @default(1)`"
+          }
+        },
+        {
+          "line": 398,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 108,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 399,
+          "kind": "field",
+          "declaration": "updatedAt DateTime @updatedAt",
+          "member": "updatedAt",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 109,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedAt DateTime @updatedAt`"
+          }
+        },
+        {
+          "line": 401,
+          "kind": "field",
+          "declaration": "emails PersonEmail[]",
+          "member": "emails",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 110,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`emails PersonEmail[]`"
+          }
+        },
+        {
+          "line": 402,
+          "kind": "field",
+          "declaration": "phones PersonPhone[]",
+          "member": "phones",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 111,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`phones PersonPhone[]`"
+          }
+        },
+        {
+          "line": 403,
+          "kind": "field",
+          "declaration": "socialProfiles PersonSocialProfile[]",
+          "member": "socialProfiles",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 112,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`socialProfiles PersonSocialProfile[]`"
+          }
+        },
+        {
+          "line": 405,
+          "kind": "directive",
+          "declaration": "@@index([createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 118,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([createdAt, id])`"
+          }
+        },
+        {
+          "line": 406,
+          "kind": "directive",
+          "declaration": "@@index([structureStatus, createdAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 119,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([structureStatus, createdAt, id])`"
+          }
+        },
+        {
+          "line": 407,
+          "kind": "directive",
+          "declaration": "@@index([updatedAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 120,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([updatedAt, id])`"
+          }
+        },
+        {
+          "line": 408,
+          "kind": "directive",
+          "declaration": "@@index([structureStatus, updatedAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 121,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([structureStatus, updatedAt, id])`"
+          }
+        },
+        {
+          "line": 409,
+          "kind": "directive",
+          "declaration": "@@index([sortName, id])",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 122,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([sortName, id])`"
+          }
+        },
+        {
+          "line": 410,
+          "kind": "directive",
+          "declaration": "@@index([structureStatus, sortName, id])",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 123,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([structureStatus, sortName, id])`"
+          }
+        },
+        {
+          "line": 411,
+          "kind": "directive",
+          "declaration": "@@index([normalizedNickname(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"Person_normalizedNickname_trgm_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 124,
+            "method": "explicit-index-name-abbreviated-row",
+            "declarationCell": "`normalizedNickname`, GIN `gin_trgm_ops`, nom `Person_normalizedNickname_trgm_idx`"
+          }
+        },
+        {
+          "line": 412,
+          "kind": "directive",
+          "declaration": "@@index([normalizedFirstName(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"Person_normalizedFirstName_trgm_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 125,
+            "method": "explicit-index-name-abbreviated-row",
+            "declarationCell": "`normalizedFirstName`, GIN `gin_trgm_ops`, nom `Person_normalizedFirstName_trgm_idx`"
+          }
+        },
+        {
+          "line": 413,
+          "kind": "directive",
+          "declaration": "@@index([normalizedLastName(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"Person_normalizedLastName_trgm_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 126,
+            "method": "explicit-index-name-abbreviated-row",
+            "declarationCell": "`normalizedLastName`, GIN `gin_trgm_ops`, nom `Person_normalizedLastName_trgm_idx`"
+          }
+        },
+        {
+          "line": 414,
+          "kind": "directive",
+          "declaration": "@@index([normalizedNickname(ops: raw(\"varchar_pattern_ops\"))], map: \"Person_normalizedNickname_prefix_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 127,
+            "method": "explicit-index-name-abbreviated-row",
+            "declarationCell": "`normalizedNickname`, B-tree `varchar_pattern_ops`, nom `Person_normalizedNickname_prefix_idx`"
+          }
+        },
+        {
+          "line": 415,
+          "kind": "directive",
+          "declaration": "@@index([normalizedFirstName(ops: raw(\"varchar_pattern_ops\"))], map: \"Person_normalizedFirstName_prefix_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 128,
+            "method": "explicit-index-name-abbreviated-row",
+            "declarationCell": "`normalizedFirstName`, B-tree `varchar_pattern_ops`, nom `Person_normalizedFirstName_prefix_idx`"
+          }
+        },
+        {
+          "line": 416,
+          "kind": "directive",
+          "declaration": "@@index([normalizedLastName(ops: raw(\"varchar_pattern_ops\"))], map: \"Person_normalizedLastName_prefix_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 129,
+            "method": "explicit-index-name-abbreviated-row",
+            "declarationCell": "`normalizedLastName`, B-tree `varchar_pattern_ops`, nom `Person_normalizedLastName_prefix_idx`"
+          }
+        }
+      ],
+      "document": "personnes.md",
+      "blockEvidence": {
+        "line": 88,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "PersonEmail",
+      "from": 420,
+      "to": 436,
+      "declarations": [
+        {
+          "line": 421,
+          "kind": "field",
+          "declaration": "id String @id @default(cuid())",
+          "member": "id",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 146,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`id String @id @default(cuid())`"
+          }
+        },
+        {
+          "line": 422,
+          "kind": "field",
+          "declaration": "personId String",
+          "member": "personId",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 147,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`personId String`"
+          }
+        },
+        {
+          "line": 423,
+          "kind": "field",
+          "declaration": "email String @db.VarChar(320)",
+          "member": "email",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 148,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`email String @db.VarChar(320)`"
+          }
+        },
+        {
+          "line": 424,
+          "kind": "field",
+          "declaration": "normalizedEmail String @db.VarChar(320)",
+          "member": "normalizedEmail",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 149,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`normalizedEmail String @db.VarChar(320)`"
+          }
+        },
+        {
+          "line": 425,
+          "kind": "field",
+          "declaration": "label String @db.VarChar(40)",
+          "member": "label",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 150,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`label String @db.VarChar(40)`"
+          }
+        },
+        {
+          "line": 426,
+          "kind": "field",
+          "declaration": "isPrimary Boolean @default(false)",
+          "member": "isPrimary",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 151,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`isPrimary Boolean @default(false)`"
+          }
+        },
+        {
+          "line": 427,
+          "kind": "field",
+          "declaration": "version Int @default(1)",
+          "member": "version",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 152,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`version Int @default(1)`"
+          }
+        },
+        {
+          "line": 428,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 153,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 429,
+          "kind": "field",
+          "declaration": "updatedAt DateTime @updatedAt",
+          "member": "updatedAt",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 154,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedAt DateTime @updatedAt`"
+          }
+        },
+        {
+          "line": 431,
+          "kind": "field",
+          "declaration": "person Person @relation(fields: [personId], references: [id], onDelete: Cascade)",
+          "member": "person",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 155,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`person Person @relation(fields: [personId], references: [id], onDelete: Cascade)`"
+          }
+        },
+        {
+          "line": 433,
+          "kind": "directive",
+          "declaration": "@@unique([personId, normalizedEmail])",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 156,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@unique([personId, normalizedEmail])`"
+          }
+        },
+        {
+          "line": 434,
+          "kind": "directive",
+          "declaration": "@@index([normalizedEmail])",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 157,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([normalizedEmail])`"
+          }
+        },
+        {
+          "line": 435,
+          "kind": "directive",
+          "declaration": "@@index([normalizedEmail(ops: raw(\"varchar_pattern_ops\"))], map: \"PersonEmail_normalizedEmail_prefix_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 158,
+            "method": "explicit-index-name-abbreviated-row",
+            "declarationCell": "index `normalizedEmail` avec `varchar_pattern_ops`, nom `PersonEmail_normalizedEmail_prefix_idx`"
+          }
+        }
+      ],
+      "document": "personnes.md",
+      "blockEvidence": {
+        "line": 142,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "PersonPhone",
+      "from": 439,
+      "to": 455,
+      "declarations": [
+        {
+          "line": 440,
+          "kind": "field",
+          "declaration": "id String @id @default(cuid())",
+          "member": "id",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 164,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`id String @id @default(cuid())`"
+          }
+        },
+        {
+          "line": 441,
+          "kind": "field",
+          "declaration": "personId String",
+          "member": "personId",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 165,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`personId String`"
+          }
+        },
+        {
+          "line": 442,
+          "kind": "field",
+          "declaration": "phone String @db.VarChar(40)",
+          "member": "phone",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 166,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`phone String @db.VarChar(40)`"
+          }
+        },
+        {
+          "line": 443,
+          "kind": "field",
+          "declaration": "normalizedPhone String @db.VarChar(16)",
+          "member": "normalizedPhone",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 167,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`normalizedPhone String @db.VarChar(16)`"
+          }
+        },
+        {
+          "line": 444,
+          "kind": "field",
+          "declaration": "label String @db.VarChar(40)",
+          "member": "label",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 168,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`label String @db.VarChar(40)`"
+          }
+        },
+        {
+          "line": 445,
+          "kind": "field",
+          "declaration": "isPrimary Boolean @default(false)",
+          "member": "isPrimary",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 169,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`isPrimary Boolean @default(false)`"
+          }
+        },
+        {
+          "line": 446,
+          "kind": "field",
+          "declaration": "version Int @default(1)",
+          "member": "version",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 170,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`version Int @default(1)`"
+          }
+        },
+        {
+          "line": 447,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 171,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 448,
+          "kind": "field",
+          "declaration": "updatedAt DateTime @updatedAt",
+          "member": "updatedAt",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 172,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedAt DateTime @updatedAt`"
+          }
+        },
+        {
+          "line": 450,
+          "kind": "field",
+          "declaration": "person Person @relation(fields: [personId], references: [id], onDelete: Cascade)",
+          "member": "person",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 173,
+            "method": "explicit-member-abbreviated-row",
+            "declarationCell": "relation `person`, FK `personId` → `Person.id`, `onDelete: Cascade`"
+          }
+        },
+        {
+          "line": 452,
+          "kind": "directive",
+          "declaration": "@@unique([personId, normalizedPhone])",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 174,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@unique([personId, normalizedPhone])`"
+          }
+        },
+        {
+          "line": 453,
+          "kind": "directive",
+          "declaration": "@@index([normalizedPhone])",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 175,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([normalizedPhone])`"
+          }
+        },
+        {
+          "line": 454,
+          "kind": "directive",
+          "declaration": "@@index([normalizedPhone(ops: raw(\"varchar_pattern_ops\"))], map: \"PersonPhone_normalizedPhone_prefix_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 176,
+            "method": "explicit-index-name-abbreviated-row",
+            "declarationCell": "index `normalizedPhone` avec `varchar_pattern_ops`, nom `PersonPhone_normalizedPhone_prefix_idx`"
+          }
+        }
+      ],
+      "document": "personnes.md",
+      "blockEvidence": {
+        "line": 160,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "PersonSocialProfile",
+      "from": 459,
+      "to": 481,
+      "declarations": [
+        {
+          "line": 460,
+          "kind": "field",
+          "declaration": "id String @id @default(cuid())",
+          "member": "id",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 182,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`id String @id @default(cuid())`"
+          }
+        },
+        {
+          "line": 461,
+          "kind": "field",
+          "declaration": "personId String",
+          "member": "personId",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 183,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`personId String`"
+          }
+        },
+        {
+          "line": 462,
+          "kind": "field",
+          "declaration": "networkKey String @db.VarChar(40)",
+          "member": "networkKey",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 184,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`networkKey String @db.VarChar(40)`"
+          }
+        },
+        {
+          "line": 463,
+          "kind": "field",
+          "declaration": "identifier String? @db.VarChar(100)",
+          "member": "identifier",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 185,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`identifier String? @db.VarChar(100)`"
+          }
+        },
+        {
+          "line": 464,
+          "kind": "field",
+          "declaration": "normalizedIdentifier String? @db.VarChar(100)",
+          "member": "normalizedIdentifier",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 186,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`normalizedIdentifier String? @db.VarChar(100)`"
+          }
+        },
+        {
+          "line": 465,
+          "kind": "field",
+          "declaration": "profileUrl String? @db.VarChar(2048)",
+          "member": "profileUrl",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 187,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`profileUrl String? @db.VarChar(2048)`"
+          }
+        },
+        {
+          "line": 466,
+          "kind": "field",
+          "declaration": "normalizedProfileUrl String? @db.VarChar(2048)",
+          "member": "normalizedProfileUrl",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 188,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`normalizedProfileUrl String? @db.VarChar(2048)`"
+          }
+        },
+        {
+          "line": 467,
+          "kind": "field",
+          "declaration": "normalizedProfileUrlHash String? @db.Char(64)",
+          "member": "normalizedProfileUrlHash",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 189,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`normalizedProfileUrlHash String? @db.Char(64)`"
+          }
+        },
+        {
+          "line": 468,
+          "kind": "field",
+          "declaration": "label String @db.VarChar(40)",
+          "member": "label",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 190,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`label String @db.VarChar(40)`"
+          }
+        },
+        {
+          "line": 469,
+          "kind": "field",
+          "declaration": "isPrimary Boolean @default(false)",
+          "member": "isPrimary",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 191,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`isPrimary Boolean @default(false)`"
+          }
+        },
+        {
+          "line": 470,
+          "kind": "field",
+          "declaration": "version Int @default(1)",
+          "member": "version",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 192,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`version Int @default(1)`"
+          }
+        },
+        {
+          "line": 471,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 193,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 472,
+          "kind": "field",
+          "declaration": "updatedAt DateTime @updatedAt",
+          "member": "updatedAt",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 194,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedAt DateTime @updatedAt`"
+          }
+        },
+        {
+          "line": 474,
+          "kind": "field",
+          "declaration": "person Person @relation(fields: [personId], references: [id], onDelete: Cascade)",
+          "member": "person",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 195,
+            "method": "explicit-member-abbreviated-row",
+            "declarationCell": "relation `person`, FK `personId` → `Person.id`, `onDelete: Cascade`"
+          }
+        },
+        {
+          "line": 476,
+          "kind": "directive",
+          "declaration": "@@unique([personId, networkKey, normalizedIdentifier], map: \"PersonSocialProfile_person_network_identifier_key\")",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 196,
+            "method": "explicit-index-name-abbreviated-row",
+            "declarationCell": "`@@unique([personId, networkKey, normalizedIdentifier])`, nom `PersonSocialProfile_person_network_identifier_key`"
+          }
+        },
+        {
+          "line": 477,
+          "kind": "directive",
+          "declaration": "@@unique([personId, networkKey, normalizedProfileUrlHash], map: \"PersonSocialProfile_person_network_url_hash_key\")",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 197,
+            "method": "explicit-index-name-abbreviated-row",
+            "declarationCell": "`@@unique([personId, networkKey, normalizedProfileUrlHash])`, nom `PersonSocialProfile_person_network_url_hash_key`"
+          }
+        },
+        {
+          "line": 478,
+          "kind": "directive",
+          "declaration": "@@index([normalizedIdentifier])",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 198,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([normalizedIdentifier])`"
+          }
+        },
+        {
+          "line": 479,
+          "kind": "directive",
+          "declaration": "@@index([normalizedIdentifier(ops: raw(\"varchar_pattern_ops\"))], map: \"PersonSocialProfile_normalizedIdentifier_prefix_idx\")",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 199,
+            "method": "explicit-index-name-abbreviated-row",
+            "declarationCell": "index `normalizedIdentifier` avec `varchar_pattern_ops`, nom `PersonSocialProfile_normalizedIdentifier_prefix_idx`"
+          }
+        },
+        {
+          "line": 480,
+          "kind": "directive",
+          "declaration": "@@index([normalizedProfileUrlHash])",
+          "member": null,
+          "evidence": {
+            "document": "personnes.md",
+            "line": 200,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([normalizedProfileUrlHash])`"
+          }
+        }
+      ],
+      "document": "personnes.md",
+      "blockEvidence": {
+        "line": 178,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "PersonDeletionTombstone",
+      "from": 483,
+      "to": 487,
+      "declarations": [
+        {
+          "line": 484,
+          "kind": "field",
+          "declaration": "personId String @id @db.VarChar(128)",
+          "member": "personId",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 206,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`personId String @id @db.VarChar(128)`"
+          }
+        },
+        {
+          "line": 485,
+          "kind": "field",
+          "declaration": "deletionOperationId String @unique @db.VarChar(191)",
+          "member": "deletionOperationId",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 207,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`deletionOperationId String @unique @db.VarChar(191)`"
+          }
+        },
+        {
+          "line": 486,
+          "kind": "field",
+          "declaration": "deletedAt DateTime @default(now())",
+          "member": "deletedAt",
+          "evidence": {
+            "document": "personnes.md",
+            "line": 208,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`deletedAt DateTime @default(now())`"
+          }
+        }
+      ],
+      "document": "personnes.md",
+      "blockEvidence": {
+        "line": 202,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "ArchivedStaffProfile",
+      "from": 492,
+      "to": 512,
+      "declarations": [
+        {
+          "line": 493,
+          "kind": "field",
+          "declaration": "id String @id",
+          "member": "id",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 295,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`id String @id`"
+          }
+        },
+        {
+          "line": 494,
+          "kind": "field",
+          "declaration": "userId String? @unique",
+          "member": "userId",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 296,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`userId String? @unique`"
+          }
+        },
+        {
+          "line": 495,
+          "kind": "field",
+          "declaration": "displayName String?",
+          "member": "displayName",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 297,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`displayName String?`"
+          }
+        },
+        {
+          "line": 496,
+          "kind": "field",
+          "declaration": "jobTitle String?",
+          "member": "jobTitle",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 298,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`jobTitle String?`"
+          }
+        },
+        {
+          "line": 497,
+          "kind": "field",
+          "declaration": "department String?",
+          "member": "department",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 299,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`department String?`"
+          }
+        },
+        {
+          "line": 498,
+          "kind": "field",
+          "declaration": "discordId String?",
+          "member": "discordId",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 300,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`discordId String?`"
+          }
+        },
+        {
+          "line": 499,
+          "kind": "field",
+          "declaration": "phone String?",
+          "member": "phone",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 301,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`phone String?`"
+          }
+        },
+        {
+          "line": 500,
+          "kind": "field",
+          "declaration": "timezone String?",
+          "member": "timezone",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 302,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`timezone String?`"
+          }
+        },
+        {
+          "line": 501,
+          "kind": "field",
+          "declaration": "joinedAt DateTime?",
+          "member": "joinedAt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 303,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`joinedAt DateTime?`"
+          }
+        },
+        {
+          "line": 502,
+          "kind": "field",
+          "declaration": "internalNote String?",
+          "member": "internalNote",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 304,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`internalNote String?`"
+          }
+        },
+        {
+          "line": 503,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 305,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 504,
+          "kind": "field",
+          "declaration": "updatedAt DateTime",
+          "member": "updatedAt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 306,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedAt DateTime`"
+          }
+        },
+        {
+          "line": 506,
+          "kind": "field",
+          "declaration": "user User? @relation(fields: [userId], references: [id], onDelete: SetNull)",
+          "member": "user",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 307,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`user User? @relation(fields: [userId], references: [id], onDelete: SetNull)`"
+          }
+        },
+        {
+          "line": 508,
+          "kind": "directive",
+          "declaration": "@@index([department])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 308,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([department])`"
+          }
+        },
+        {
+          "line": 509,
+          "kind": "directive",
+          "declaration": "@@index([discordId])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 309,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([discordId])`"
+          }
+        },
+        {
+          "line": 510,
+          "kind": "directive",
+          "declaration": "@@index([jobTitle])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 310,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([jobTitle])`"
+          }
+        },
+        {
+          "line": 511,
+          "kind": "directive",
+          "declaration": "@@index([joinedAt])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 311,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([joinedAt])`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 289,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "RateLimit",
+      "from": 514,
+      "to": 524,
+      "declarations": [
+        {
+          "line": 515,
+          "kind": "field",
+          "declaration": "id String @id @default(cuid())",
+          "member": "id",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 319,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`id String @id @default(cuid())`"
+          }
+        },
+        {
+          "line": 516,
+          "kind": "field",
+          "declaration": "key String @unique",
+          "member": "key",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 320,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`key String @unique`"
+          }
+        },
+        {
+          "line": 517,
+          "kind": "field",
+          "declaration": "count Int @default(0)",
+          "member": "count",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 321,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`count Int @default(0)`"
+          }
+        },
+        {
+          "line": 518,
+          "kind": "field",
+          "declaration": "firstAttempt DateTime @default(now())",
+          "member": "firstAttempt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 322,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`firstAttempt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 519,
+          "kind": "field",
+          "declaration": "blockedUntil DateTime?",
+          "member": "blockedUntil",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 323,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`blockedUntil DateTime?`"
+          }
+        },
+        {
+          "line": 520,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 324,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 521,
+          "kind": "field",
+          "declaration": "updatedAt DateTime @updatedAt",
+          "member": "updatedAt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 325,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedAt DateTime @updatedAt`"
+          }
+        },
+        {
+          "line": 523,
+          "kind": "directive",
+          "declaration": "@@index([blockedUntil])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 326,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([blockedUntil])`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 313,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "InternalAnnouncement",
+      "from": 528,
+      "to": 545,
+      "declarations": [
+        {
+          "line": 529,
+          "kind": "field",
+          "declaration": "id String @id @default(cuid())",
+          "member": "id",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 334,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`id String @id @default(cuid())`"
+          }
+        },
+        {
+          "line": 530,
+          "kind": "field",
+          "declaration": "title String @db.VarChar(160)",
+          "member": "title",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 335,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`title String @db.VarChar(160)`"
+          }
+        },
+        {
+          "line": 531,
+          "kind": "field",
+          "declaration": "body String @db.VarChar(2000)",
+          "member": "body",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 336,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`body String @db.VarChar(2000)`"
+          }
+        },
+        {
+          "line": 532,
+          "kind": "field",
+          "declaration": "publishedAt DateTime @default(now())",
+          "member": "publishedAt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 337,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`publishedAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 533,
+          "kind": "field",
+          "declaration": "pinnedAt DateTime?",
+          "member": "pinnedAt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 338,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`pinnedAt DateTime?`"
+          }
+        },
+        {
+          "line": 534,
+          "kind": "field",
+          "declaration": "createdById String?",
+          "member": "createdById",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 339,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdById String?`"
+          }
+        },
+        {
+          "line": 535,
+          "kind": "field",
+          "declaration": "authorDisplayNameSnapshot String @db.VarChar(200)",
+          "member": "authorDisplayNameSnapshot",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 340,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`authorDisplayNameSnapshot String @db.VarChar(200)`"
+          }
+        },
+        {
+          "line": 536,
+          "kind": "field",
+          "declaration": "authorLoginNameSnapshot String @db.VarChar(64)",
+          "member": "authorLoginNameSnapshot",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 341,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`authorLoginNameSnapshot String @db.VarChar(64)`"
+          }
+        },
+        {
+          "line": 537,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 342,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 538,
+          "kind": "field",
+          "declaration": "updatedAt DateTime @updatedAt",
+          "member": "updatedAt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 343,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedAt DateTime @updatedAt`"
+          }
+        },
+        {
+          "line": 540,
+          "kind": "field",
+          "declaration": "createdBy User? @relation(\"InternalAnnouncementAuthor\", fields: [createdById], references: [id], onDelete: SetNull)",
+          "member": "createdBy",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 344,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdBy User? @relation(\"InternalAnnouncementAuthor\", fields: [createdById], references: [id], onDelete: SetNull)`"
+          }
+        },
+        {
+          "line": 542,
+          "kind": "directive",
+          "declaration": "@@index([publishedAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 345,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([publishedAt, id])`"
+          }
+        },
+        {
+          "line": 543,
+          "kind": "directive",
+          "declaration": "@@index([pinnedAt, publishedAt, id])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 346,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([pinnedAt, publishedAt, id])`"
+          }
+        },
+        {
+          "line": 544,
+          "kind": "directive",
+          "declaration": "@@index([createdById])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 347,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([createdById])`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 328,
+        "method": "explicit-heading"
+      }
+    },
+    {
+      "kind": "model",
+      "name": "SystemSetting",
+      "from": 549,
+      "to": 562,
+      "declarations": [
+        {
+          "line": 550,
+          "kind": "field",
+          "declaration": "key String @id",
+          "member": "key",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 355,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`key String @id`"
+          }
+        },
+        {
+          "line": 551,
+          "kind": "field",
+          "declaration": "value Json",
+          "member": "value",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 356,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`value Json`"
+          }
+        },
+        {
+          "line": 552,
+          "kind": "field",
+          "declaration": "description String?",
+          "member": "description",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 357,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`description String?`"
+          }
+        },
+        {
+          "line": 553,
+          "kind": "field",
+          "declaration": "version Int @default(1)",
+          "member": "version",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 358,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`version Int @default(1)`"
+          }
+        },
+        {
+          "line": 554,
+          "kind": "field",
+          "declaration": "updatedById String?",
+          "member": "updatedById",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 359,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedById String?`"
+          }
+        },
+        {
+          "line": 555,
+          "kind": "field",
+          "declaration": "createdAt DateTime @default(now())",
+          "member": "createdAt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 360,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`createdAt DateTime @default(now())`"
+          }
+        },
+        {
+          "line": 556,
+          "kind": "field",
+          "declaration": "updatedAt DateTime @updatedAt",
+          "member": "updatedAt",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 361,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedAt DateTime @updatedAt`"
+          }
+        },
+        {
+          "line": 558,
+          "kind": "field",
+          "declaration": "updatedBy User? @relation(\"SystemSettingUpdater\", fields: [updatedById], references: [id], onDelete: SetNull)",
+          "member": "updatedBy",
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 362,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`updatedBy User? @relation(\"SystemSettingUpdater\", fields: [updatedById], references: [id], onDelete: SetNull)`"
+          }
+        },
+        {
+          "line": 560,
+          "kind": "directive",
+          "declaration": "@@index([updatedAt])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 363,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([updatedAt])`"
+          }
+        },
+        {
+          "line": 561,
+          "kind": "directive",
+          "declaration": "@@index([updatedById])",
+          "member": null,
+          "evidence": {
+            "document": "audit-technique.md",
+            "line": 364,
+            "method": "exact-normalized-declaration",
+            "declarationCell": "`@@index([updatedById])`"
+          }
+        }
+      ],
+      "document": "audit-technique.md",
+      "blockEvidence": {
+        "line": 349,
+        "method": "explicit-heading"
+      }
+    }
+  ],
+  "missing": [],
+  "uncoveredBlocks": [],
+  "abbreviatedRows": [
+    {
+      "block": "Person",
+      "line": 411,
+      "kind": "directive",
+      "declaration": "@@index([normalizedNickname(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"Person_normalizedNickname_trgm_idx\")",
+      "member": null,
+      "evidence": {
+        "document": "personnes.md",
+        "line": 124,
+        "method": "explicit-index-name-abbreviated-row",
+        "declarationCell": "`normalizedNickname`, GIN `gin_trgm_ops`, nom `Person_normalizedNickname_trgm_idx`"
+      }
+    },
+    {
+      "block": "Person",
+      "line": 412,
+      "kind": "directive",
+      "declaration": "@@index([normalizedFirstName(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"Person_normalizedFirstName_trgm_idx\")",
+      "member": null,
+      "evidence": {
+        "document": "personnes.md",
+        "line": 125,
+        "method": "explicit-index-name-abbreviated-row",
+        "declarationCell": "`normalizedFirstName`, GIN `gin_trgm_ops`, nom `Person_normalizedFirstName_trgm_idx`"
+      }
+    },
+    {
+      "block": "Person",
+      "line": 413,
+      "kind": "directive",
+      "declaration": "@@index([normalizedLastName(ops: raw(\"gin_trgm_ops\"))], type: Gin, map: \"Person_normalizedLastName_trgm_idx\")",
+      "member": null,
+      "evidence": {
+        "document": "personnes.md",
+        "line": 126,
+        "method": "explicit-index-name-abbreviated-row",
+        "declarationCell": "`normalizedLastName`, GIN `gin_trgm_ops`, nom `Person_normalizedLastName_trgm_idx`"
+      }
+    },
+    {
+      "block": "Person",
+      "line": 414,
+      "kind": "directive",
+      "declaration": "@@index([normalizedNickname(ops: raw(\"varchar_pattern_ops\"))], map: \"Person_normalizedNickname_prefix_idx\")",
+      "member": null,
+      "evidence": {
+        "document": "personnes.md",
+        "line": 127,
+        "method": "explicit-index-name-abbreviated-row",
+        "declarationCell": "`normalizedNickname`, B-tree `varchar_pattern_ops`, nom `Person_normalizedNickname_prefix_idx`"
+      }
+    },
+    {
+      "block": "Person",
+      "line": 415,
+      "kind": "directive",
+      "declaration": "@@index([normalizedFirstName(ops: raw(\"varchar_pattern_ops\"))], map: \"Person_normalizedFirstName_prefix_idx\")",
+      "member": null,
+      "evidence": {
+        "document": "personnes.md",
+        "line": 128,
+        "method": "explicit-index-name-abbreviated-row",
+        "declarationCell": "`normalizedFirstName`, B-tree `varchar_pattern_ops`, nom `Person_normalizedFirstName_prefix_idx`"
+      }
+    },
+    {
+      "block": "Person",
+      "line": 416,
+      "kind": "directive",
+      "declaration": "@@index([normalizedLastName(ops: raw(\"varchar_pattern_ops\"))], map: \"Person_normalizedLastName_prefix_idx\")",
+      "member": null,
+      "evidence": {
+        "document": "personnes.md",
+        "line": 129,
+        "method": "explicit-index-name-abbreviated-row",
+        "declarationCell": "`normalizedLastName`, B-tree `varchar_pattern_ops`, nom `Person_normalizedLastName_prefix_idx`"
+      }
+    },
+    {
+      "block": "PersonEmail",
+      "line": 435,
+      "kind": "directive",
+      "declaration": "@@index([normalizedEmail(ops: raw(\"varchar_pattern_ops\"))], map: \"PersonEmail_normalizedEmail_prefix_idx\")",
+      "member": null,
+      "evidence": {
+        "document": "personnes.md",
+        "line": 158,
+        "method": "explicit-index-name-abbreviated-row",
+        "declarationCell": "index `normalizedEmail` avec `varchar_pattern_ops`, nom `PersonEmail_normalizedEmail_prefix_idx`"
+      }
+    },
+    {
+      "block": "PersonPhone",
+      "line": 450,
+      "kind": "field",
+      "declaration": "person Person @relation(fields: [personId], references: [id], onDelete: Cascade)",
+      "member": "person",
+      "evidence": {
+        "document": "personnes.md",
+        "line": 173,
+        "method": "explicit-member-abbreviated-row",
+        "declarationCell": "relation `person`, FK `personId` → `Person.id`, `onDelete: Cascade`"
+      }
+    },
+    {
+      "block": "PersonPhone",
+      "line": 454,
+      "kind": "directive",
+      "declaration": "@@index([normalizedPhone(ops: raw(\"varchar_pattern_ops\"))], map: \"PersonPhone_normalizedPhone_prefix_idx\")",
+      "member": null,
+      "evidence": {
+        "document": "personnes.md",
+        "line": 176,
+        "method": "explicit-index-name-abbreviated-row",
+        "declarationCell": "index `normalizedPhone` avec `varchar_pattern_ops`, nom `PersonPhone_normalizedPhone_prefix_idx`"
+      }
+    },
+    {
+      "block": "PersonSocialProfile",
+      "line": 474,
+      "kind": "field",
+      "declaration": "person Person @relation(fields: [personId], references: [id], onDelete: Cascade)",
+      "member": "person",
+      "evidence": {
+        "document": "personnes.md",
+        "line": 195,
+        "method": "explicit-member-abbreviated-row",
+        "declarationCell": "relation `person`, FK `personId` → `Person.id`, `onDelete: Cascade`"
+      }
+    },
+    {
+      "block": "PersonSocialProfile",
+      "line": 476,
+      "kind": "directive",
+      "declaration": "@@unique([personId, networkKey, normalizedIdentifier], map: \"PersonSocialProfile_person_network_identifier_key\")",
+      "member": null,
+      "evidence": {
+        "document": "personnes.md",
+        "line": 196,
+        "method": "explicit-index-name-abbreviated-row",
+        "declarationCell": "`@@unique([personId, networkKey, normalizedIdentifier])`, nom `PersonSocialProfile_person_network_identifier_key`"
+      }
+    },
+    {
+      "block": "PersonSocialProfile",
+      "line": 477,
+      "kind": "directive",
+      "declaration": "@@unique([personId, networkKey, normalizedProfileUrlHash], map: \"PersonSocialProfile_person_network_url_hash_key\")",
+      "member": null,
+      "evidence": {
+        "document": "personnes.md",
+        "line": 197,
+        "method": "explicit-index-name-abbreviated-row",
+        "declarationCell": "`@@unique([personId, networkKey, normalizedProfileUrlHash])`, nom `PersonSocialProfile_person_network_url_hash_key`"
+      }
+    },
+    {
+      "block": "PersonSocialProfile",
+      "line": 479,
+      "kind": "directive",
+      "declaration": "@@index([normalizedIdentifier(ops: raw(\"varchar_pattern_ops\"))], map: \"PersonSocialProfile_normalizedIdentifier_prefix_idx\")",
+      "member": null,
+      "evidence": {
+        "document": "personnes.md",
+        "line": 199,
+        "method": "explicit-index-name-abbreviated-row",
+        "declarationCell": "index `normalizedIdentifier` avec `varchar_pattern_ops`, nom `PersonSocialProfile_normalizedIdentifier_prefix_idx`"
+      }
+    }
+  ],
+  "duplicateAssignments": [],
+  "ignoredSchemaLines": {
+    "blank": [
+      4,
+      9,
+      14,
+      19,
+      24,
+      29,
+      35,
+      41,
+      68,
+      80,
+      96,
+      104,
+      106,
+      109,
+      125,
+      127,
+      130,
+      136,
+      149,
+      151,
+      154,
+      166,
+      168,
+      171,
+      181,
+      183,
+      187,
+      202,
+      204,
+      208,
+      255,
+      265,
+      270,
+      278,
+      284,
+      290,
+      321,
+      323,
+      346,
+      351,
+      354,
+      374,
+      377,
+      382,
+      400,
+      404,
+      418,
+      430,
+      432,
+      437,
+      449,
+      451,
+      456,
+      473,
+      475,
+      482,
+      488,
+      505,
+      507,
+      513,
+      522,
+      525,
+      539,
+      541,
+      546,
+      557,
+      559
+    ],
+    "comment": [
+      53,
+      54,
+      63,
+      64,
+      97,
+      98,
+      99,
+      137,
+      138,
+      155,
+      156,
+      172,
+      173,
+      188,
+      189,
+      239,
+      240,
+      241,
+      262,
+      383,
+      384,
+      385,
+      419,
+      438,
+      457,
+      458,
+      489,
+      490,
+      491,
+      526,
+      527,
+      547,
+      548
+    ],
+    "closingBrace": [
+      3,
+      8,
+      13,
+      18,
+      23,
+      28,
+      34,
+      40,
+      95,
+      108,
+      135,
+      153,
+      170,
+      186,
+      207,
+      254,
+      264,
+      269,
+      277,
+      283,
+      289,
+      345,
+      353,
+      381,
+      417,
+      436,
+      455,
+      481,
+      487,
+      512,
+      524,
+      545,
+      562
+    ]
+  },
+  "parserErrors": []
+}

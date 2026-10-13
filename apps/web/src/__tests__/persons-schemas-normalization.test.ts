@@ -92,6 +92,25 @@ describe('person schemas and stable normalisation', () => {
     }
   });
 
+  it.each(['nickname', 'firstName', 'lastName'] as const)(
+    'rejects an empty normalized %s in creation and editing',
+    (field) => {
+      const values = { nickname: 'Ada', [field]: '\u0301' };
+      for (const result of [
+        createPersonSchema.safeParse(values),
+        updatePersonSchema.safeParse({ ...values, version: 1 }),
+      ]) {
+        expect(result.success).toBe(false);
+        if (!result.success)
+          expect(result.error.issues).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({ path: [field] }),
+            ]),
+          );
+      }
+    },
+  );
+
   it('defaults a new person outside the structure and accepts both status transitions', () => {
     const created = createPersonSchema.parse({ nickname: 'Ada' });
     const baseUpdate = {

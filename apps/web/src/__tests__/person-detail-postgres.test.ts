@@ -285,12 +285,9 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
     const url = new URL(target);
     if (
       !['127.0.0.1', 'localhost'].includes(url.hostname) ||
-      url.port !== '54620' ||
       url.pathname !== '/person_detail_service_test'
     ) {
-      throw new Error(
-        'Only local port 54620/person_detail_service_test is allowed',
-      );
+      throw new Error('Only local person_detail_service_test is allowed');
     }
     db = new PrismaClient({ datasourceUrl: target });
     connection.client = db;
@@ -328,6 +325,168 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
     expect(responses.map((response) => response.status)).toEqual([
       401, 401, 401, 401,
     ]);
+  });
+
+  it.each(
+    ['create', 'identity', 'delete', 'email', 'phone', 'social'].flatMap(
+      (action) =>
+        ['permission', 'session'].map((revoked) => ({ action, revoked })),
+    ),
+  )(
+    'rechecks authority after request preparation ($action / $revoked)',
+    async ({ action, revoked }) => {
+      const actor = await signIn();
+      const person = await fixture();
+      const beforeAudits = await auditCount(person.id);
+      const nickname = 'Refused ' + randomUUID();
+      const payload =
+        action === 'create'
+          ? { nickname }
+          : action === 'identity'
+            ? identity(person, { nickname })
+            : action === 'delete'
+              ? { version: person.version }
+              : action === 'email'
+                ? {
+                    email: 'refused@example.test',
+                    label: 'Personnel',
+                    personVersion: person.version,
+                  }
+                : action === 'phone'
+                  ? {
+                      countryCode: 'FR',
+                      label: 'Mobile',
+                      personVersion: person.version,
+                      phone: '0612345678',
+                    }
+                  : {
+                      identifier: 'refused',
+                      label: 'Personnel',
+                      networkKey: 'discord',
+                      personVersion: person.version,
+                    };
+      const pendingRequest = request(
+        payload,
+        action === 'delete'
+          ? 'DELETE'
+          : action === 'identity'
+            ? 'PATCH'
+            : 'POST',
+        '',
+        randomUUID(),
+      );
+      const stream = pendingRequest.body;
+      if (!stream) throw new Error('The test requires a JSON body');
+      const reader = stream.getReader();
+      const readChunk = reader.read.bind(reader);
+      vi.spyOn(stream, 'getReader').mockReturnValue(reader);
+      const revoke = vi
+        .spyOn(reader, 'read')
+        .mockImplementationOnce(async () => {
+          if (revoked === 'session') {
+            await db.session.deleteMany({ where: { userId: actor.id } });
+          } else {
+            await db.user.update({
+              data: { permissions: { [PERMISSIONS.PERSONS.VIEW]: true } },
+              where: { id: actor.id },
+            });
+          }
+
+          return readChunk();
+        });
+      const response =
+        action === 'create'
+          ? await create(pendingRequest)
+          : action === 'identity'
+            ? await PATCH(pendingRequest, context(person.id))
+            : action === 'delete'
+              ? await DELETE(pendingRequest, context(person.id))
+              : action === 'email'
+                ? await addEmail(pendingRequest, context(person.id))
+                : action === 'phone'
+                  ? await addPhone(pendingRequest, context(person.id))
+                  : await addSocial(pendingRequest, context(person.id));
+      expect(revoke).toHaveBeenCalled();
+      expect(response.status).toBe(revoked === 'session' ? 401 : 403);
+      expect(
+        await db.person.findUnique({ where: { id: person.id } }),
+      ).toMatchObject({ nickname: person.nickname, version: person.version });
+      expect(await db.person.count({ where: { nickname } })).toBe(0);
+      expect(await auditCount(person.id)).toBe(beforeAudits);
+      expect(
+        await db.personEmail.count({ where: { personId: person.id } }),
+      ).toBe(0);
+      expect(
+        await db.personPhone.count({ where: { personId: person.id } }),
+      ).toBe(0);
+      expect(
+        await db.personSocialProfile.count({ where: { personId: person.id } }),
+      ).toBe(0);
+      expect(
+        await db.personDeletionTombstone.count({
+          where: { personId: person.id },
+        }),
+      ).toBe(0);
+    },
+  );
+
+  it('rejects a source expiring while a real person lock blocks the mutation', async () => {
+    const actor = await signIn();
+    const person = await fixture();
+    let release!: () => void;
+    let ready!: () => void;
+    const acquired = new Promise<void>((resolve) => {
+      ready = resolve;
+    });
+    const hold = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const blocker = db.$transaction(async (transaction) => {
+      await transaction.$queryRaw`SELECT "id" FROM "Person" WHERE "id" = ${person.id} FOR UPDATE`;
+      ready();
+      await hold;
+    });
+    await acquired;
+    const expiresAt = new Date(Date.now() + 700);
+    await db.session.updateMany({
+      data: { expiresAt },
+      where: { userId: actor.id },
+    });
+    let pending: Promise<Response> | undefined;
+    try {
+      pending = PATCH(
+        request(identity(person, { nickname: 'Forbidden after lock' })),
+        context(person.id),
+      );
+      const deadline = Date.now() + 2_000;
+      let waiting = false;
+      while (Date.now() < deadline) {
+        const rows = await db.$queryRaw<Array<{ waiting: boolean }>>`
+          SELECT EXISTS (
+            SELECT 1 FROM pg_stat_activity
+            WHERE datname = current_database() AND wait_event_type = 'Lock'
+              AND query LIKE '%Person%' AND pid <> pg_backend_pid()
+          ) AS waiting
+        `;
+        if (rows[0]?.waiting) {
+          waiting = true;
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      expect(waiting).toBe(true);
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.max(0, expiresAt.getTime() - Date.now() + 30)),
+      );
+    } finally {
+      release();
+      await blocker;
+    }
+    expect((await pending)?.status).toBe(401);
+    expect(
+      await db.person.findUnique({ where: { id: person.id } }),
+    ).toMatchObject({ nickname: person.nickname, version: person.version });
+    expect(await auditCount(person.id)).toBe(1);
   });
 
   it('allows a view-only projection but denies all mutations and field values', async () => {

@@ -103,5 +103,12 @@ Un incident rouvre les scénarios concernés. Les revues périodiques ont une ra
 un responsable et une fréquence adaptée ; aucune tâche planifiée n’est créée par
 la seule existence de ce guide.
 
+Pour une clôture globale demandée, fixer une liste finie de pages, de contrats et
+de contrôles essentiels, puis rendre un verdict unique. Une fois ce périmètre
+clos, poursuivre la feuille de route. « Suite » ou « autre » ne demande pas de
+réauditer spontanément une page déjà clôturée : il faut un changement, un défaut
+signalé ou une nouvelle règle pour rouvrir ses contrôles. Une suggestion
+facultative reste distincte d'un défaut et ne prolonge pas la clôture.
+
 Rapports : [index des audits](../audits/README.md). Vérifications disponibles :
 [guide des contrôles](CONTROLES.md).

@@ -1,0 +1,224 @@
+{
+  "bank": "creation-utilisateur-2026-10-11",
+  "runner": "docs/audits/creation-utilisateur-2026-10-11/banc-client/run.cjs",
+  "startedAt": "2026-10-12T21:49:14.796Z",
+  "completedAt": "2026-10-12T21:49:26.966Z",
+  "head": "c54e5d813c40e71acd892e2973bbb303d9c74644",
+  "exitCode": 0,
+  "work": "C:\\Users\\Luxior\\AppData\\Local\\Temp\\noctambule-creation-client-PiU7xz",
+  "filter": null,
+  "passed": 28,
+  "total": 28,
+  "result": [
+    {
+      "name": "responsive-form-success",
+      "width": 320,
+      "pass": true,
+      "detail": {
+        "form": {
+          "viewport": 320,
+          "document": 320,
+          "main": 320,
+          "mainWidth": 320
+        },
+        "success": {
+          "viewport": 320,
+          "document": 320,
+          "main": 320,
+          "mainWidth": 320
+        }
+      }
+    },
+    {
+      "name": "focus-leave-draft",
+      "width": 320,
+      "pass": true
+    },
+    {
+      "name": "focus-reset-secret",
+      "width": 320,
+      "pass": true
+    },
+    {
+      "name": "responsive-form-success",
+      "width": 390,
+      "pass": true,
+      "detail": {
+        "form": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        },
+        "success": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      }
+    },
+    {
+      "name": "focus-leave-draft",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "focus-reset-secret",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "responsive-form-success",
+      "width": 768,
+      "pass": true,
+      "detail": {
+        "form": {
+          "viewport": 768,
+          "document": 768,
+          "main": 768,
+          "mainWidth": 768
+        },
+        "success": {
+          "viewport": 768,
+          "document": 768,
+          "main": 768,
+          "mainWidth": 768
+        }
+      }
+    },
+    {
+      "name": "focus-leave-draft",
+      "width": 768,
+      "pass": true
+    },
+    {
+      "name": "focus-reset-secret",
+      "width": 768,
+      "pass": true
+    },
+    {
+      "name": "responsive-form-success",
+      "width": 1440,
+      "pass": true,
+      "detail": {
+        "form": {
+          "viewport": 1440,
+          "document": 1440,
+          "main": 1200,
+          "mainWidth": 1200
+        },
+        "success": {
+          "viewport": 1440,
+          "document": 1440,
+          "main": 1200,
+          "mainWidth": 1200
+        }
+      }
+    },
+    {
+      "name": "focus-leave-draft",
+      "width": 1440,
+      "pass": true
+    },
+    {
+      "name": "focus-reset-secret",
+      "width": 1440,
+      "pass": true
+    },
+    {
+      "name": "responsive-form-success",
+      "width": 1920,
+      "pass": true,
+      "detail": {
+        "form": {
+          "viewport": 1920,
+          "document": 1920,
+          "main": 1680,
+          "mainWidth": 1680
+        },
+        "success": {
+          "viewport": 1920,
+          "document": 1920,
+          "main": 1680,
+          "mainWidth": 1680
+        }
+      }
+    },
+    {
+      "name": "focus-leave-draft",
+      "width": 1920,
+      "pass": true
+    },
+    {
+      "name": "focus-reset-secret",
+      "width": 1920,
+      "pass": true
+    },
+    {
+      "name": "validation-client-server",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "limited-roles-and-revocation",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "pending-duplicate-navigation",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "recovery-absent-retry",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "recovery-found-and-forbidden",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "copy-acknowledgement-and-return",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "copy-rejection-and-stale-completion",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "admin-stepup-cancel-focus",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "admin-stepup-success-focus",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "late-response-after-permission-loss",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "timeouts-post-verification",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "secret-cleared-on-actor-change",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "external-returnTo-sanitized",
+      "width": 390,
+      "pass": true
+    }
+  ]
+}

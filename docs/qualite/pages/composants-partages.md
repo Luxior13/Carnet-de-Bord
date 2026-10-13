@@ -1,5 +1,20 @@
 # Suivi — Composants partagés
 
+## État courant — clôture du socle du 13 octobre 2026
+
+La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est
+terminée au périmètre livré, pour poursuivre le développement métier. Ses
+preuves et limites ne constituent pas une qualification de déploiement.
+
+Les composants utiles aux pages actuelles restent partagés ; aucune variante ou
+abstraction universelle n’est ajoutée sans besoin. UI-C10 est réconcilié par les
+preuves complémentaires client, SQL et HTTP de la clôture, sans prétendre que
+chaque état de chaque consommateur a été parcouru par HTTP. UI-C11 reste ouvert
+pour les moteurs et aides techniques non exercés.
+
+Les décisions et preuves datées ci-dessous restent conservées. Une nouvelle
+revue répond à un changement, un défaut constaté ou une règle nouvelle.
+
 ## Périmètre et décision courante
 
 Décision utilisateur du 11 octobre 2026 : examiner les composants un par un,
@@ -37,12 +52,12 @@ couverture exacte appartiennent à l'audit, sans certification globale du site.
 
 | ID | État et limite | Prochaine vérification | Responsable |
 | --- | --- | --- | --- |
-| UI-C10 | À vérifier : intégration complète des parcours modifiés avec session et base réelles | Avant livraison de ces parcours, rejouer sauvegarde, conflit, révocation et navigation dans Next avec une base isolée ; les bancs actuels simulent API et contexte | À attribuer |
+| UI-C10 | **Réconcilié le 13 octobre au périmètre livré** : sauvegarde, conflit, révocation et navigation sont éprouvés par des preuves complémentaires client, SQL et HTTP, reliées au rapport de clôture | Lors d'un changement, rejouer les consommateurs touchés ; chaque dialogue et combinaison d'erreur n'est pas déclaré parcouru de bout en bout HTTP | Reprise selon le changement |
 | UI-C11 | À vérifier : autres moteurs et lecteur d'écran | Avant qualification accessibilité étendue, vérifier Safari/iOS, annonces, ordre de lecture et zoom réel ; Chromium clavier/tactile ne suffit pas | À attribuer |
 
-Ces limites ne sont pas des défauts reproduits. Les anciennes preuves
-d'intégration d'autres audits gardent leur date et ne sont pas présentées comme
-rejouées pour cette modification.
+UI-C11 reste une limite de qualification, pas un défaut reproduit. Les anciennes
+preuves d'intégration gardent leur date ; l'état du 13 octobre et le rapport de
+clôture distinguent les contrôles effectivement rejoués des preuves antérieures.
 
 ## Pour la prochaine page
 

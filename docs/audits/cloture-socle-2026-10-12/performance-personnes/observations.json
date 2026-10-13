@@ -1,0 +1,5423 @@
+{
+  "date": "2026-10-12T21:57:26.761Z",
+  "platform": "win32 10.0.26200 x64",
+  "cpu": "13th Gen Intel(R) Core(TM) i7-13700K",
+  "node": "v24.14.0",
+  "prisma": "6.19.3",
+  "connectionLimit": 1,
+  "timezone": "Europe/Paris",
+  "samplesAfterWarmup": 20,
+  "warmupCalls": 2,
+  "limits": [
+    "Synthetic 25/1k/10k people; 10 audits/person.",
+    "Real service and SQL, no HTTP/auth/browser latency.",
+    "Warm cache; initial call is not a cold-disk measurement.",
+    "Single client, no concurrent writers; no 100k production-budget certification."
+  ],
+  "results": [
+    {
+      "size": 25,
+      "audits": 250,
+      "name": "name",
+      "returned": 25,
+      "total": 25,
+      "sqlCalls": 4,
+      "initialMs": 2.417,
+      "medianMs": 1.392,
+      "p95Ms": 2.004,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 1.17
+        },
+        {
+          "kind": "overview",
+          "ms": 0.422
+        },
+        {
+          "kind": "overview",
+          "ms": 0.58
+        },
+        {
+          "kind": "overview",
+          "ms": 1.08
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.391,
+        "planningMs": 0.342,
+        "indexes": [
+          "AuditLog_entityType_entityId_createdAt_id_idx"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 25,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "Person",
+            "rows": 25,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 1,
+            "loops": 25,
+            "removed": 29
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 25,
+            "removed": 10
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 25,
+            "removed": 7
+          }
+        ],
+        "sharedHitBlocks": 152,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.014,
+          "planningMs": 0.051,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 17,
+              "loops": 1,
+              "removed": 8
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.012,
+          "planningMs": 0.05,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 8,
+              "loops": 1,
+              "removed": 17
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.043,
+          "planningMs": 0.232,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 25,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 30,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 10,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 7,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 4,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 25,
+      "audits": 250,
+      "name": "created",
+      "returned": 25,
+      "total": 25,
+      "sqlCalls": 4,
+      "initialMs": 2.242,
+      "medianMs": 1.464,
+      "p95Ms": 2.065,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 1.263
+        },
+        {
+          "kind": "overview",
+          "ms": 0.457
+        },
+        {
+          "kind": "overview",
+          "ms": 0.569
+        },
+        {
+          "kind": "overview",
+          "ms": 0.867
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.27,
+        "planningMs": 0.338,
+        "indexes": [
+          "AuditLog_entityType_entityId_createdAt_id_idx"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 25,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "Person",
+            "rows": 25,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 1,
+            "loops": 25,
+            "removed": 29
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 25,
+            "removed": 10
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 25,
+            "removed": 7
+          }
+        ],
+        "sharedHitBlocks": 152,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.019,
+          "planningMs": 0.095,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 17,
+              "loops": 1,
+              "removed": 8
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.012,
+          "planningMs": 0.047,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 8,
+              "loops": 1,
+              "removed": 17
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.035,
+          "planningMs": 0.203,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 25,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 30,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 10,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 7,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 4,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 25,
+      "audits": 250,
+      "name": "updated",
+      "returned": 25,
+      "total": 25,
+      "sqlCalls": 4,
+      "initialMs": 2.396,
+      "medianMs": 1.346,
+      "p95Ms": 1.718,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 1.312
+        },
+        {
+          "kind": "overview",
+          "ms": 0.455
+        },
+        {
+          "kind": "overview",
+          "ms": 0.596
+        },
+        {
+          "kind": "overview",
+          "ms": 0.952
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.266,
+        "planningMs": 0.413,
+        "indexes": [
+          "AuditLog_entityType_entityId_createdAt_id_idx"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 25,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "Person",
+            "rows": 25,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 1,
+            "loops": 25,
+            "removed": 29
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 25,
+            "removed": 10
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 25,
+            "removed": 7
+          }
+        ],
+        "sharedHitBlocks": 152,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.012,
+          "planningMs": 0.049,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 17,
+              "loops": 1,
+              "removed": 8
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.013,
+          "planningMs": 0.056,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 8,
+              "loops": 1,
+              "removed": 17
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.033,
+          "planningMs": 0.195,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 25,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 30,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 10,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 7,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 4,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 25,
+      "audits": 250,
+      "name": "outside",
+      "returned": 8,
+      "total": 8,
+      "sqlCalls": 4,
+      "initialMs": 2.052,
+      "medianMs": 1.254,
+      "p95Ms": 1.656,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 1.115
+        },
+        {
+          "kind": "overview",
+          "ms": 0.425
+        },
+        {
+          "kind": "overview",
+          "ms": 0.563
+        },
+        {
+          "kind": "overview",
+          "ms": 0.834
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.129,
+        "planningMs": 0.382,
+        "indexes": [
+          "AuditLog_entityType_entityId_createdAt_id_idx"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 8,
+            "loops": 1,
+            "removed": 17
+          },
+          {
+            "relation": "Person",
+            "rows": 8,
+            "loops": 1,
+            "removed": 17
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 1,
+            "loops": 8,
+            "removed": 29
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 8,
+            "removed": 10
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 8,
+            "removed": 7
+          }
+        ],
+        "sharedHitBlocks": 50,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.013,
+          "planningMs": 0.061,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 8,
+              "loops": 1,
+              "removed": 17
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.012,
+          "planningMs": 0.043,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 17,
+              "loops": 1,
+              "removed": 8
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.043,
+          "planningMs": 0.232,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 25,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 30,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 10,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 7,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 4,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 25,
+      "audits": 250,
+      "name": "missing-contacts",
+      "returned": 10,
+      "total": 10,
+      "sqlCalls": 4,
+      "initialMs": 2.563,
+      "medianMs": 1.246,
+      "p95Ms": 2.071,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 1.507
+        },
+        {
+          "kind": "overview",
+          "ms": 0.48
+        },
+        {
+          "kind": "overview",
+          "ms": 0.625
+        },
+        {
+          "kind": "overview",
+          "ms": 0.947
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.206,
+        "planningMs": 0.699,
+        "indexes": [
+          "AuditLog_entityType_entityId_createdAt_id_idx"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 25,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 30,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 10,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 7,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "Person",
+            "rows": 25,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 30,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 10,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 7,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 10,
+            "removed": 30
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 10,
+            "removed": 10
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 10,
+            "removed": 7
+          }
+        ],
+        "sharedHitBlocks": 68,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.013,
+          "planningMs": 0.054,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 17,
+              "loops": 1,
+              "removed": 8
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.015,
+          "planningMs": 0.051,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 8,
+              "loops": 1,
+              "removed": 17
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.04,
+          "planningMs": 0.202,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 25,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 30,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 10,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 7,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 4,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 25,
+      "audits": 250,
+      "name": "broad-identity",
+      "returned": 25,
+      "total": 25,
+      "sqlCalls": 4,
+      "initialMs": 3.412,
+      "medianMs": 1.517,
+      "p95Ms": 2.492,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 2.313
+        },
+        {
+          "kind": "overview",
+          "ms": 0.498
+        },
+        {
+          "kind": "overview",
+          "ms": 0.594
+        },
+        {
+          "kind": "overview",
+          "ms": 0.957
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.406,
+        "planningMs": 0.868,
+        "indexes": [
+          "AuditLog_entityType_entityId_createdAt_id_idx"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 25,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          },
+          {
+            "relation": "Person",
+            "rows": 25,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 1,
+            "loops": 25,
+            "removed": 29
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 25,
+            "removed": 10
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 25,
+            "removed": 7
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 7
+          }
+        ],
+        "sharedHitBlocks": 154,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.013,
+          "planningMs": 0.055,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 17,
+              "loops": 1,
+              "removed": 8
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.012,
+          "planningMs": 0.057,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 8,
+              "loops": 1,
+              "removed": 17
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.044,
+          "planningMs": 0.213,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 25,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 30,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 10,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 7,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 4,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 25,
+      "audits": 250,
+      "name": "multiword-identity",
+      "returned": 1,
+      "total": 1,
+      "sqlCalls": 4,
+      "initialMs": 2.913,
+      "medianMs": 1.184,
+      "p95Ms": 2.429,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 1.91
+        },
+        {
+          "kind": "overview",
+          "ms": 0.353
+        },
+        {
+          "kind": "overview",
+          "ms": 0.445
+        },
+        {
+          "kind": "overview",
+          "ms": 0.744
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.121,
+        "planningMs": 1.214,
+        "indexes": [
+          "AuditLog_entityType_entityId_createdAt_id_idx"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1,
+            "loops": 1,
+            "removed": 24
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 7
+          },
+          {
+            "relation": "Person",
+            "rows": 1,
+            "loops": 1,
+            "removed": 24
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 7
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 2,
+            "loops": 1,
+            "removed": 28
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 1,
+            "loops": 1,
+            "removed": 9
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 1,
+            "loops": 1,
+            "removed": 6
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 7
+          }
+        ],
+        "sharedHitBlocks": 14,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.013,
+          "planningMs": 0.053,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 17,
+              "loops": 1,
+              "removed": 8
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.012,
+          "planningMs": 0.042,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 8,
+              "loops": 1,
+              "removed": 17
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.054,
+          "planningMs": 0.197,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 25,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 30,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 10,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 7,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 4,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 25,
+      "audits": 250,
+      "name": "email",
+      "returned": 1,
+      "total": 1,
+      "sqlCalls": 4,
+      "initialMs": 2.83,
+      "medianMs": 1.227,
+      "p95Ms": 2.423,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 1.86
+        },
+        {
+          "kind": "overview",
+          "ms": 0.423
+        },
+        {
+          "kind": "overview",
+          "ms": 0.566
+        },
+        {
+          "kind": "overview",
+          "ms": 0.853
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.116,
+        "planningMs": 1.282,
+        "indexes": [
+          "AuditLog_entityType_entityId_createdAt_id_idx"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1,
+            "loops": 1,
+            "removed": 24
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 2,
+            "loops": 1,
+            "removed": 28
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 10
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 7
+          },
+          {
+            "relation": "Person",
+            "rows": 1,
+            "loops": 1,
+            "removed": 24
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 2,
+            "loops": 1,
+            "removed": 28
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 10
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 7
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 2,
+            "loops": 1,
+            "removed": 28
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 1,
+            "loops": 1,
+            "removed": 9
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 1,
+            "loops": 1,
+            "removed": 6
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 2,
+            "loops": 1,
+            "removed": 28
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 15,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.012,
+          "planningMs": 0.053,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 8,
+              "loops": 1,
+              "removed": 17
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.013,
+          "planningMs": 0.051,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 17,
+              "loops": 1,
+              "removed": 8
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.041,
+          "planningMs": 0.2,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 25,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 30,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 10,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 7,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 4,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 25,
+      "audits": 250,
+      "name": "phone-prefix",
+      "returned": 10,
+      "total": 10,
+      "sqlCalls": 4,
+      "initialMs": 1.405,
+      "medianMs": 1.302,
+      "p95Ms": 1.365,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 0.646
+        },
+        {
+          "kind": "overview",
+          "ms": 0.313
+        },
+        {
+          "kind": "overview",
+          "ms": 0.406
+        },
+        {
+          "kind": "overview",
+          "ms": 0.662
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.207,
+        "planningMs": 1.034,
+        "indexes": [
+          "AuditLog_entityType_entityId_createdAt_id_idx"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 10,
+            "loops": 1,
+            "removed": 15
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 10,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 7
+          },
+          {
+            "relation": "Person",
+            "rows": 10,
+            "loops": 1,
+            "removed": 15
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 10,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 7
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 2,
+            "loops": 10,
+            "removed": 28
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 1,
+            "loops": 10,
+            "removed": 9
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 10,
+            "removed": 7
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 10,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 70,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.013,
+          "planningMs": 0.077,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 17,
+              "loops": 1,
+              "removed": 8
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.012,
+          "planningMs": 0.05,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 8,
+              "loops": 1,
+              "removed": 17
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.043,
+          "planningMs": 0.212,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 25,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 30,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 10,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 7,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 4,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 25,
+      "audits": 250,
+      "name": "social-identifier",
+      "returned": 1,
+      "total": 1,
+      "sqlCalls": 4,
+      "initialMs": 1.333,
+      "medianMs": 1.134,
+      "p95Ms": 1.365,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 0.496
+        },
+        {
+          "kind": "overview",
+          "ms": 0.319
+        },
+        {
+          "kind": "overview",
+          "ms": 0.424
+        },
+        {
+          "kind": "overview",
+          "ms": 0.711
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.114,
+        "planningMs": 1.218,
+        "indexes": [
+          "AuditLog_entityType_entityId_createdAt_id_idx"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1,
+            "loops": 1,
+            "removed": 24
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 10
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 1,
+            "loops": 1,
+            "removed": 6
+          },
+          {
+            "relation": "Person",
+            "rows": 1,
+            "loops": 1,
+            "removed": 24
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 10
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 1,
+            "loops": 1,
+            "removed": 6
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 2,
+            "loops": 1,
+            "removed": 28
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 1,
+            "loops": 1,
+            "removed": 9
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 1,
+            "loops": 1,
+            "removed": 6
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 10
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 1,
+            "loops": 1,
+            "removed": 6
+          }
+        ],
+        "sharedHitBlocks": 17,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.012,
+          "planningMs": 0.055,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 17,
+              "loops": 1,
+              "removed": 8
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.013,
+          "planningMs": 0.052,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 8,
+              "loops": 1,
+              "removed": 17
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.042,
+          "planningMs": 0.202,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 25,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 30,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 10,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 7,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 4,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 25,
+      "audits": 250,
+      "name": "social-url",
+      "returned": 1,
+      "total": 1,
+      "sqlCalls": 4,
+      "initialMs": 3.321,
+      "medianMs": 1.253,
+      "p95Ms": 2.699,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 2.187
+        },
+        {
+          "kind": "overview",
+          "ms": 0.382
+        },
+        {
+          "kind": "overview",
+          "ms": 0.483
+        },
+        {
+          "kind": "overview",
+          "ms": 0.79
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.147,
+        "planningMs": 1.3,
+        "indexes": [
+          "AuditLog_entityType_entityId_createdAt_id_idx"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1,
+            "loops": 1,
+            "removed": 24
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 10
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 7
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 1,
+            "loops": 1,
+            "removed": 6
+          },
+          {
+            "relation": "Person",
+            "rows": 1,
+            "loops": 1,
+            "removed": 24
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 10
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 7
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 1,
+            "loops": 1,
+            "removed": 6
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 2,
+            "loops": 1,
+            "removed": 28
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 1,
+            "loops": 1,
+            "removed": 9
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 1,
+            "loops": 1,
+            "removed": 6
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 10
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 7
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 1,
+            "loops": 1,
+            "removed": 6
+          }
+        ],
+        "sharedHitBlocks": 20,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.013,
+          "planningMs": 0.048,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 17,
+              "loops": 1,
+              "removed": 8
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.012,
+          "planningMs": 0.043,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 8,
+              "loops": 1,
+              "removed": 17
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.042,
+          "planningMs": 0.188,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 25,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 30,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 10,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 7,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 4,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 25,
+      "audits": 250,
+      "name": "empty",
+      "returned": 0,
+      "total": 0,
+      "sqlCalls": 4,
+      "initialMs": 1.456,
+      "medianMs": 1.044,
+      "p95Ms": 1.331,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 0.476
+        },
+        {
+          "kind": "overview",
+          "ms": 0.347
+        },
+        {
+          "kind": "overview",
+          "ms": 0.553
+        },
+        {
+          "kind": "overview",
+          "ms": 0.884
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.07,
+        "planningMs": 0.924,
+        "indexes": [
+          "AuditLog_entityType_entityId_createdAt_id_idx"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 0,
+            "loops": 1,
+            "removed": 25
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 7
+          },
+          {
+            "relation": "Person",
+            "rows": 0,
+            "loops": 1,
+            "removed": 25
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 1,
+            "removed": 30
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 7
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 6,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.013,
+          "planningMs": 0.052,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 17,
+              "loops": 1,
+              "removed": 8
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.012,
+          "planningMs": 0.042,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 8,
+              "loops": 1,
+              "removed": 17
+            }
+          ],
+          "sharedHitBlocks": 1,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.047,
+          "planningMs": 0.271,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 25,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 30,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 10,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 7,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 4,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 1000,
+      "audits": 10000,
+      "name": "name",
+      "returned": 25,
+      "total": 1000,
+      "sqlCalls": 4,
+      "initialMs": 2.876,
+      "medianMs": 2.647,
+      "p95Ms": 2.782,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 0.994
+        },
+        {
+          "kind": "overview",
+          "ms": 0.597
+        },
+        {
+          "kind": "overview",
+          "ms": 0.9
+        },
+        {
+          "kind": "overview",
+          "ms": 1.681
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.398,
+        "planningMs": 0.224,
+        "indexes": [
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1000,
+            "loops": 1,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 290,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.126,
+          "planningMs": 0.046,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 667,
+              "loops": 1,
+              "removed": 333
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.115,
+          "planningMs": 0.044,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 333,
+              "loops": 1,
+              "removed": 667
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.353,
+          "planningMs": 0.267,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 300,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 1000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 1200,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 400,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 43,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 1000,
+      "audits": 10000,
+      "name": "created",
+      "returned": 25,
+      "total": 1000,
+      "sqlCalls": 4,
+      "initialMs": 3.441,
+      "medianMs": 2.485,
+      "p95Ms": 2.747,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 1.568
+        },
+        {
+          "kind": "overview",
+          "ms": 0.492
+        },
+        {
+          "kind": "overview",
+          "ms": 0.834
+        },
+        {
+          "kind": "overview",
+          "ms": 1.696
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.418,
+        "planningMs": 0.272,
+        "indexes": [
+          "Person_createdAt_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1000,
+            "loops": 1,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 292,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.163,
+          "planningMs": 0.049,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 667,
+              "loops": 1,
+              "removed": 333
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.116,
+          "planningMs": 0.045,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 333,
+              "loops": 1,
+              "removed": 667
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.363,
+          "planningMs": 0.269,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 300,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 1000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 1200,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 400,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 43,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 1000,
+      "audits": 10000,
+      "name": "updated",
+      "returned": 25,
+      "total": 1000,
+      "sqlCalls": 4,
+      "initialMs": 3.147,
+      "medianMs": 2.376,
+      "p95Ms": 2.586,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 1.75
+        },
+        {
+          "kind": "overview",
+          "ms": 0.478
+        },
+        {
+          "kind": "overview",
+          "ms": 0.681
+        },
+        {
+          "kind": "overview",
+          "ms": 1.234
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.394,
+        "planningMs": 0.233,
+        "indexes": [
+          "Person_updatedAt_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1000,
+            "loops": 1,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 293,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.13,
+          "planningMs": 0.048,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 667,
+              "loops": 1,
+              "removed": 333
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.115,
+          "planningMs": 0.042,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 333,
+              "loops": 1,
+              "removed": 667
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.407,
+          "planningMs": 0.286,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 300,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 1000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 1200,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 400,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 43,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 1000,
+      "audits": 10000,
+      "name": "outside",
+      "returned": 25,
+      "total": 333,
+      "sqlCalls": 4,
+      "initialMs": 3.89,
+      "medianMs": 2.395,
+      "p95Ms": 2.607,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 2.054
+        },
+        {
+          "kind": "overview",
+          "ms": 0.659
+        },
+        {
+          "kind": "overview",
+          "ms": 1.382
+        },
+        {
+          "kind": "overview",
+          "ms": 1.646
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.426,
+        "planningMs": 0.278,
+        "indexes": [
+          "Person_structureStatus_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 333,
+            "loops": 1,
+            "removed": 667
+          }
+        ],
+        "sharedHitBlocks": 289,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.128,
+          "planningMs": 0.089,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 667,
+              "loops": 1,
+              "removed": 333
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.35,
+          "planningMs": 0.268,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 300,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 1000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 1200,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 400,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 43,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.115,
+          "planningMs": 0.045,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 333,
+              "loops": 1,
+              "removed": 667
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 1000,
+      "audits": 10000,
+      "name": "missing-contacts",
+      "returned": 25,
+      "total": 400,
+      "sqlCalls": 4,
+      "initialMs": 5.028,
+      "medianMs": 2.673,
+      "p95Ms": 2.835,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 3.198
+        },
+        {
+          "kind": "overview",
+          "ms": 0.783
+        },
+        {
+          "kind": "overview",
+          "ms": 1.021
+        },
+        {
+          "kind": "overview",
+          "ms": 1.593
+        }
+      ],
+      "listPlan": {
+        "executionMs": 1.042,
+        "planningMs": 0.779,
+        "indexes": [
+          "Person_sortName_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_identifier_key",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 300,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "Person",
+            "rows": 1000,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 1200,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 400,
+            "loops": 1,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 551,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.131,
+          "planningMs": 0.071,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 667,
+              "loops": 1,
+              "removed": 333
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.118,
+          "planningMs": 0.043,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 333,
+              "loops": 1,
+              "removed": 667
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.403,
+          "planningMs": 0.347,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 300,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 1000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 1200,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 400,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 43,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 1000,
+      "audits": 10000,
+      "name": "broad-identity",
+      "returned": 25,
+      "total": 1000,
+      "sqlCalls": 4,
+      "initialMs": 4.612,
+      "medianMs": 2.367,
+      "p95Ms": 3.2,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 2.861
+        },
+        {
+          "kind": "overview",
+          "ms": 0.522
+        },
+        {
+          "kind": "overview",
+          "ms": 0.882
+        },
+        {
+          "kind": "overview",
+          "ms": 1.57
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.528,
+        "planningMs": 0.892,
+        "indexes": [
+          "PersonEmail_normalizedEmail_prefix_idx",
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1000,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 300
+          }
+        ],
+        "sharedHitBlocks": 301,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.127,
+          "planningMs": 0.049,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 667,
+              "loops": 1,
+              "removed": 333
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.117,
+          "planningMs": 0.042,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 333,
+              "loops": 1,
+              "removed": 667
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.381,
+          "planningMs": 0.268,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 300,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 1000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 1200,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 400,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 43,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 1000,
+      "audits": 10000,
+      "name": "multiword-identity",
+      "returned": 25,
+      "total": 50,
+      "sqlCalls": 4,
+      "initialMs": 5.722,
+      "medianMs": 3.495,
+      "p95Ms": 4.164,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 4.192
+        },
+        {
+          "kind": "overview",
+          "ms": 0.539
+        },
+        {
+          "kind": "overview",
+          "ms": 0.777
+        },
+        {
+          "kind": "overview",
+          "ms": 1.322
+        }
+      ],
+      "listPlan": {
+        "executionMs": 1.118,
+        "planningMs": 1.205,
+        "indexes": [
+          "PersonEmail_normalizedEmail_prefix_idx",
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 50,
+            "loops": 1,
+            "removed": 950
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 300
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 300
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 300
+          }
+        ],
+        "sharedHitBlocks": 379,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.163,
+          "planningMs": 0.06,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 667,
+              "loops": 1,
+              "removed": 333
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.118,
+          "planningMs": 0.046,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 333,
+              "loops": 1,
+              "removed": 667
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.39,
+          "planningMs": 0.371,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 300,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 1000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 1200,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 400,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 43,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 1000,
+      "audits": 10000,
+      "name": "email",
+      "returned": 1,
+      "total": 1,
+      "sqlCalls": 4,
+      "initialMs": 4.943,
+      "medianMs": 3.085,
+      "p95Ms": 3.856,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 3.554
+        },
+        {
+          "kind": "overview",
+          "ms": 0.496
+        },
+        {
+          "kind": "overview",
+          "ms": 0.716
+        },
+        {
+          "kind": "overview",
+          "ms": 1.274
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.847,
+        "planningMs": 1.094,
+        "indexes": [
+          "PersonEmail_normalizedEmail_prefix_idx",
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1,
+            "loops": 1,
+            "removed": 999
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 400
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 300
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 400
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 300
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 94,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.143,
+          "planningMs": 0.062,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 667,
+              "loops": 1,
+              "removed": 333
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.121,
+          "planningMs": 0.056,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 333,
+              "loops": 1,
+              "removed": 667
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.425,
+          "planningMs": 0.273,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 300,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 1000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 1200,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 400,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 43,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 1000,
+      "audits": 10000,
+      "name": "phone-prefix",
+      "returned": 25,
+      "total": 399,
+      "sqlCalls": 4,
+      "initialMs": 3.727,
+      "medianMs": 3.217,
+      "p95Ms": 3.515,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 2.111
+        },
+        {
+          "kind": "overview",
+          "ms": 0.539
+        },
+        {
+          "kind": "overview",
+          "ms": 0.822
+        },
+        {
+          "kind": "overview",
+          "ms": 1.423
+        }
+      ],
+      "listPlan": {
+        "executionMs": 1.022,
+        "planningMs": 1.019,
+        "indexes": [
+          "PersonEmail_normalizedEmail_prefix_idx",
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 399,
+            "loops": 1,
+            "removed": 601
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 399,
+            "loops": 1,
+            "removed": 1
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 300
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 399,
+            "loops": 1,
+            "removed": 1
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 300
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 399,
+            "loops": 1,
+            "removed": 1
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 353,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.131,
+          "planningMs": 0.067,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 667,
+              "loops": 1,
+              "removed": 333
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.119,
+          "planningMs": 0.059,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 333,
+              "loops": 1,
+              "removed": 667
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.375,
+          "planningMs": 0.286,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 300,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 1000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 1200,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 400,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 43,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 1000,
+      "audits": 10000,
+      "name": "social-identifier",
+      "returned": 1,
+      "total": 1,
+      "sqlCalls": 4,
+      "initialMs": 3.458,
+      "medianMs": 3.142,
+      "p95Ms": 3.359,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 2.035
+        },
+        {
+          "kind": "overview",
+          "ms": 0.491
+        },
+        {
+          "kind": "overview",
+          "ms": 0.723
+        },
+        {
+          "kind": "overview",
+          "ms": 1.309
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.86,
+        "planningMs": 1.062,
+        "indexes": [
+          "PersonEmail_normalizedEmail_prefix_idx",
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1,
+            "loops": 1,
+            "removed": 999
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 400
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 1,
+            "loops": 1,
+            "removed": 299
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 400
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 1,
+            "loops": 1,
+            "removed": 299
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 400
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 1,
+            "loops": 1,
+            "removed": 299
+          }
+        ],
+        "sharedHitBlocks": 102,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.132,
+          "planningMs": 0.054,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 667,
+              "loops": 1,
+              "removed": 333
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.12,
+          "planningMs": 0.052,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 333,
+              "loops": 1,
+              "removed": 667
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.385,
+          "planningMs": 0.275,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 300,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 1000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 1200,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 400,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 43,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 1000,
+      "audits": 10000,
+      "name": "social-url",
+      "returned": 1,
+      "total": 1,
+      "sqlCalls": 4,
+      "initialMs": 5.402,
+      "medianMs": 3.331,
+      "p95Ms": 4.014,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 3.756
+        },
+        {
+          "kind": "overview",
+          "ms": 0.496
+        },
+        {
+          "kind": "overview",
+          "ms": 0.807
+        },
+        {
+          "kind": "overview",
+          "ms": 1.391
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.913,
+        "planningMs": 1.489,
+        "indexes": [
+          "PersonEmail_normalizedEmail_prefix_idx",
+          "PersonSocialProfile_normalizedProfileUrlHash_idx",
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1,
+            "loops": 1,
+            "removed": 999
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 400
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 300
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 400
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 300
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 0,
+            "loops": 1,
+            "removed": 400
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 300
+          }
+        ],
+        "sharedHitBlocks": 111,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.146,
+          "planningMs": 0.069,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 333,
+              "loops": 1,
+              "removed": 667
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.127,
+          "planningMs": 0.046,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 667,
+              "loops": 1,
+              "removed": 333
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.403,
+          "planningMs": 0.285,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 300,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 1000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 1200,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 400,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 43,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 1000,
+      "audits": 10000,
+      "name": "empty",
+      "returned": 0,
+      "total": 0,
+      "sqlCalls": 4,
+      "initialMs": 3.553,
+      "medianMs": 2.74,
+      "p95Ms": 3.101,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 1.973
+        },
+        {
+          "kind": "overview",
+          "ms": 0.648
+        },
+        {
+          "kind": "overview",
+          "ms": 0.931
+        },
+        {
+          "kind": "overview",
+          "ms": 1.443
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.628,
+        "planningMs": 0.885,
+        "indexes": [
+          "PersonEmail_normalizedEmail_prefix_idx",
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 0,
+            "loops": 1,
+            "removed": 1000
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 300
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 1,
+            "removed": 300
+          },
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 0,
+            "loops": 0,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 67,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.119,
+          "planningMs": 0.06,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 333,
+              "loops": 1,
+              "removed": 667
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.126,
+          "planningMs": 0.055,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 667,
+              "loops": 1,
+              "removed": 333
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.37,
+          "planningMs": 0.382,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 300,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 1000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 1200,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 400,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 43,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 1000,
+      "audits": 10000,
+      "name": "second-page",
+      "returned": 25,
+      "total": 1000,
+      "sqlCalls": 4,
+      "initialMs": 3.739,
+      "medianMs": 2.124,
+      "p95Ms": 2.576,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 1.527
+        },
+        {
+          "kind": "overview",
+          "ms": 0.675
+        },
+        {
+          "kind": "overview",
+          "ms": 1.165
+        },
+        {
+          "kind": "overview",
+          "ms": 1.784
+        }
+      ],
+      "listPlan": {
+        "executionMs": 0.49,
+        "planningMs": 0.315,
+        "indexes": [
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1000,
+            "loops": 1,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 291,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 0.141,
+          "planningMs": 0.051,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 667,
+              "loops": 1,
+              "removed": 333
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.117,
+          "planningMs": 0.043,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 333,
+              "loops": 1,
+              "removed": 667
+            }
+          ],
+          "sharedHitBlocks": 19,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 0.413,
+          "planningMs": 0.268,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 300,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 1000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 1200,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 400,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 43,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 10000,
+      "audits": 100000,
+      "name": "name",
+      "returned": 25,
+      "total": 10000,
+      "sqlCalls": 4,
+      "initialMs": 9.21,
+      "medianMs": 8.751,
+      "p95Ms": 9.022,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 2.133
+        },
+        {
+          "kind": "overview",
+          "ms": 1.619
+        },
+        {
+          "kind": "overview",
+          "ms": 3.073
+        },
+        {
+          "kind": "overview",
+          "ms": 6.84
+        }
+      ],
+      "listPlan": {
+        "executionMs": 1.297,
+        "planningMs": 0.42,
+        "indexes": [
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 10000,
+            "loops": 1,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 479,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 1.27,
+          "planningMs": 0.063,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 6667,
+              "loops": 1,
+              "removed": 3333
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 1.112,
+          "planningMs": 0.046,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 3333,
+              "loops": 1,
+              "removed": 6667
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 3.885,
+          "planningMs": 0.276,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 3000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 10000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 12000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 4000,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 410,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 10000,
+      "audits": 100000,
+      "name": "created",
+      "returned": 25,
+      "total": 10000,
+      "sqlCalls": 4,
+      "initialMs": 9.23,
+      "medianMs": 8.49,
+      "p95Ms": 8.811,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 2.022
+        },
+        {
+          "kind": "overview",
+          "ms": 1.677
+        },
+        {
+          "kind": "overview",
+          "ms": 2.996
+        },
+        {
+          "kind": "overview",
+          "ms": 7.018
+        }
+      ],
+      "listPlan": {
+        "executionMs": 1.265,
+        "planningMs": 0.266,
+        "indexes": [
+          "Person_createdAt_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 10000,
+            "loops": 1,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 480,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 1.23,
+          "planningMs": 0.047,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 6667,
+              "loops": 1,
+              "removed": 3333
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 1.165,
+          "planningMs": 0.048,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 3333,
+              "loops": 1,
+              "removed": 6667
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 3.706,
+          "planningMs": 0.265,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 3000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 10000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 12000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 4000,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 410,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 10000,
+      "audits": 100000,
+      "name": "updated",
+      "returned": 25,
+      "total": 10000,
+      "sqlCalls": 4,
+      "initialMs": 9.428,
+      "medianMs": 8.433,
+      "p95Ms": 8.691,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 2.372
+        },
+        {
+          "kind": "overview",
+          "ms": 1.623
+        },
+        {
+          "kind": "overview",
+          "ms": 2.975
+        },
+        {
+          "kind": "overview",
+          "ms": 6.863
+        }
+      ],
+      "listPlan": {
+        "executionMs": 1.327,
+        "planningMs": 0.24,
+        "indexes": [
+          "Person_updatedAt_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 10000,
+            "loops": 1,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 470,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 1.248,
+          "planningMs": 0.049,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 6667,
+              "loops": 1,
+              "removed": 3333
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 1.128,
+          "planningMs": 0.049,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 3333,
+              "loops": 1,
+              "removed": 6667
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 3.847,
+          "planningMs": 0.264,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 3000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 10000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 12000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 4000,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 410,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 10000,
+      "audits": 100000,
+      "name": "outside",
+      "returned": 25,
+      "total": 3333,
+      "sqlCalls": 4,
+      "initialMs": 9.745,
+      "medianMs": 8.961,
+      "p95Ms": 9.489,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 2.674
+        },
+        {
+          "kind": "overview",
+          "ms": 1.731
+        },
+        {
+          "kind": "overview",
+          "ms": 2.961
+        },
+        {
+          "kind": "overview",
+          "ms": 6.875
+        }
+      ],
+      "listPlan": {
+        "executionMs": 1.7,
+        "planningMs": 0.281,
+        "indexes": [
+          "Person_structureStatus_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 3333,
+            "loops": 1,
+            "removed": 6667
+          }
+        ],
+        "sharedHitBlocks": 478,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 1.246,
+          "planningMs": 0.054,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 6667,
+              "loops": 1,
+              "removed": 3333
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 1.167,
+          "planningMs": 0.046,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 3333,
+              "loops": 1,
+              "removed": 6667
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 3.915,
+          "planningMs": 0.269,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 3000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 10000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 12000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 4000,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 410,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 10000,
+      "audits": 100000,
+      "name": "missing-contacts",
+      "returned": 25,
+      "total": 4000,
+      "sqlCalls": 4,
+      "initialMs": 13.396,
+      "medianMs": 11.548,
+      "p95Ms": 11.981,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 6.407
+        },
+        {
+          "kind": "overview",
+          "ms": 1.791
+        },
+        {
+          "kind": "overview",
+          "ms": 5.365
+        },
+        {
+          "kind": "overview",
+          "ms": 6.837
+        }
+      ],
+      "listPlan": {
+        "executionMs": 4.79,
+        "planningMs": 0.676,
+        "indexes": [
+          "Person_sortName_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_identifier_key",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "PersonSocialProfile",
+            "rows": 3000,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "Person",
+            "rows": 10000,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonEmail",
+            "rows": 12000,
+            "loops": 1,
+            "removed": 0
+          },
+          {
+            "relation": "PersonPhone",
+            "rows": 4000,
+            "loops": 1,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 944,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 1.299,
+          "planningMs": 0.065,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 3333,
+              "loops": 1,
+              "removed": 6667
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 3.886,
+          "planningMs": 0.296,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 3000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 10000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 12000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 4000,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 410,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 1.262,
+          "planningMs": 0.065,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 6667,
+              "loops": 1,
+              "removed": 3333
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 10000,
+      "audits": 100000,
+      "name": "broad-identity",
+      "returned": 25,
+      "total": 10000,
+      "sqlCalls": 4,
+      "initialMs": 11.226,
+      "medianMs": 11.329,
+      "p95Ms": 12.005,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 4.17
+        },
+        {
+          "kind": "overview",
+          "ms": 1.632
+        },
+        {
+          "kind": "overview",
+          "ms": 3.071
+        },
+        {
+          "kind": "overview",
+          "ms": 6.84
+        }
+      ],
+      "listPlan": {
+        "executionMs": 1.938,
+        "planningMs": 0.884,
+        "indexes": [
+          "PersonEmail_normalizedEmail_prefix_idx",
+          "PersonSocialProfile_normalizedIdentifier_prefix_idx",
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 10000,
+            "loops": 1,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 487,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 1.12,
+          "planningMs": 0.048,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 3333,
+              "loops": 1,
+              "removed": 6667
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 1.172,
+          "planningMs": 0.056,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 6667,
+              "loops": 1,
+              "removed": 3333
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 3.66,
+          "planningMs": 0.323,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 3000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 10000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 12000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 4000,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 410,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 10000,
+      "audits": 100000,
+      "name": "multiword-identity",
+      "returned": 25,
+      "total": 500,
+      "sqlCalls": 4,
+      "initialMs": 15.344,
+      "medianMs": 19.266,
+      "p95Ms": 19.968,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 7.833
+        },
+        {
+          "kind": "overview",
+          "ms": 2.077
+        },
+        {
+          "kind": "overview",
+          "ms": 3.646
+        },
+        {
+          "kind": "overview",
+          "ms": 7.265
+        }
+      ],
+      "listPlan": {
+        "executionMs": 4.634,
+        "planningMs": 1.103,
+        "indexes": [
+          "PersonEmail_normalizedEmail_prefix_idx",
+          "PersonSocialProfile_normalizedIdentifier_prefix_idx",
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 500,
+            "loops": 1,
+            "removed": 9500
+          }
+        ],
+        "sharedHitBlocks": 559,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 1.335,
+          "planningMs": 0.055,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 6667,
+              "loops": 1,
+              "removed": 3333
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 1.246,
+          "planningMs": 0.047,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 3333,
+              "loops": 1,
+              "removed": 6667
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 3.49,
+          "planningMs": 0.292,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 3000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 10000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 12000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 4000,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 410,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 10000,
+      "audits": 100000,
+      "name": "email",
+      "returned": 1,
+      "total": 1,
+      "sqlCalls": 4,
+      "initialMs": 15.854,
+      "medianMs": 21.328,
+      "p95Ms": 21.84,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 9.148
+        },
+        {
+          "kind": "overview",
+          "ms": 3.782
+        },
+        {
+          "kind": "overview",
+          "ms": 5.258
+        },
+        {
+          "kind": "overview",
+          "ms": 6.506
+        }
+      ],
+      "listPlan": {
+        "executionMs": 6.013,
+        "planningMs": 1.193,
+        "indexes": [
+          "PersonEmail_normalizedEmail_prefix_idx",
+          "PersonPhone_normalizedPhone_prefix_idx",
+          "PersonSocialProfile_normalizedIdentifier_prefix_idx",
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1,
+            "loops": 1,
+            "removed": 9999
+          }
+        ],
+        "sharedHitBlocks": 470,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 3.785,
+          "planningMs": 0.292,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 3000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 10000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 12000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 4000,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 410,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 1.284,
+          "planningMs": 0.057,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 6667,
+              "loops": 1,
+              "removed": 3333
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 1.282,
+          "planningMs": 0.047,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 3333,
+              "loops": 1,
+              "removed": 6667
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 10000,
+      "audits": 100000,
+      "name": "phone-prefix",
+      "returned": 25,
+      "total": 399,
+      "sqlCalls": 4,
+      "initialMs": 18.961,
+      "medianMs": 17.926,
+      "p95Ms": 18.52,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 11.73
+        },
+        {
+          "kind": "overview",
+          "ms": 1.809
+        },
+        {
+          "kind": "overview",
+          "ms": 3.329
+        },
+        {
+          "kind": "overview",
+          "ms": 6.998
+        }
+      ],
+      "listPlan": {
+        "executionMs": 3.721,
+        "planningMs": 0.884,
+        "indexes": [
+          "PersonEmail_normalizedEmail_prefix_idx",
+          "PersonPhone_normalizedPhone_prefix_idx",
+          "PersonSocialProfile_normalizedIdentifier_prefix_idx",
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 399,
+            "loops": 1,
+            "removed": 9601
+          }
+        ],
+        "sharedHitBlocks": 551,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 1.207,
+          "planningMs": 0.056,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 3333,
+              "loops": 1,
+              "removed": 6667
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 1.23,
+          "planningMs": 0.049,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 6667,
+              "loops": 1,
+              "removed": 3333
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 3.83,
+          "planningMs": 0.361,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 3000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 10000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 12000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 4000,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 410,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 10000,
+      "audits": 100000,
+      "name": "social-identifier",
+      "returned": 1,
+      "total": 1,
+      "sqlCalls": 4,
+      "initialMs": 22.896,
+      "medianMs": 22.468,
+      "p95Ms": 23.364,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 15.928
+        },
+        {
+          "kind": "overview",
+          "ms": 1.766
+        },
+        {
+          "kind": "overview",
+          "ms": 3.181
+        },
+        {
+          "kind": "overview",
+          "ms": 6.788
+        }
+      ],
+      "listPlan": {
+        "executionMs": 6.162,
+        "planningMs": 0.893,
+        "indexes": [
+          "PersonEmail_normalizedEmail_prefix_idx",
+          "PersonPhone_normalizedPhone_prefix_idx",
+          "PersonSocialProfile_normalizedIdentifier_prefix_idx",
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1,
+            "loops": 1,
+            "removed": 9999
+          }
+        ],
+        "sharedHitBlocks": 478,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 1.117,
+          "planningMs": 0.065,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 3333,
+              "loops": 1,
+              "removed": 6667
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 1.279,
+          "planningMs": 0.056,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 6667,
+              "loops": 1,
+              "removed": 3333
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 3.854,
+          "planningMs": 0.305,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 3000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 10000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 12000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 4000,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 410,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 10000,
+      "audits": 100000,
+      "name": "social-url",
+      "returned": 1,
+      "total": 1,
+      "sqlCalls": 4,
+      "initialMs": 16.346,
+      "medianMs": 22.106,
+      "p95Ms": 33.232,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 9.266
+        },
+        {
+          "kind": "overview",
+          "ms": 1.846
+        },
+        {
+          "kind": "overview",
+          "ms": 3.148
+        },
+        {
+          "kind": "overview",
+          "ms": 6.864
+        }
+      ],
+      "listPlan": {
+        "executionMs": 6.098,
+        "planningMs": 1.147,
+        "indexes": [
+          "PersonEmail_normalizedEmail_prefix_idx",
+          "PersonPhone_normalizedPhone_prefix_idx",
+          "PersonSocialProfile_normalizedIdentifier_prefix_idx",
+          "PersonSocialProfile_normalizedProfileUrlHash_idx",
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 1,
+            "loops": 1,
+            "removed": 9999
+          }
+        ],
+        "sharedHitBlocks": 484,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 1.179,
+          "planningMs": 0.053,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 6667,
+              "loops": 1,
+              "removed": 3333
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 1.082,
+          "planningMs": 0.049,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 3333,
+              "loops": 1,
+              "removed": 6667
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 3.569,
+          "planningMs": 0.284,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 3000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 10000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 12000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 4000,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 410,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 10000,
+      "audits": 100000,
+      "name": "empty",
+      "returned": 0,
+      "total": 0,
+      "sqlCalls": 4,
+      "initialMs": 18.43,
+      "medianMs": 18.581,
+      "p95Ms": 22.066,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 11.942
+        },
+        {
+          "kind": "overview",
+          "ms": 1.686
+        },
+        {
+          "kind": "overview",
+          "ms": 5.018
+        },
+        {
+          "kind": "overview",
+          "ms": 6.362
+        }
+      ],
+      "listPlan": {
+        "executionMs": 5.377,
+        "planningMs": 0.775,
+        "indexes": [
+          "PersonEmail_normalizedEmail_prefix_idx",
+          "PersonSocialProfile_normalizedIdentifier_prefix_idx",
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 0,
+            "loops": 1,
+            "removed": 10000
+          }
+        ],
+        "sharedHitBlocks": 442,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 1.229,
+          "planningMs": 0.066,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 6667,
+              "loops": 1,
+              "removed": 3333
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 3.788,
+          "planningMs": 0.333,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 3000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 10000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 12000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 4000,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 410,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 1.182,
+          "planningMs": 0.082,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 3333,
+              "loops": 1,
+              "removed": 6667
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    },
+    {
+      "size": 10000,
+      "audits": 100000,
+      "name": "second-page",
+      "returned": 25,
+      "total": 10000,
+      "sqlCalls": 4,
+      "initialMs": 9.281,
+      "medianMs": 8.339,
+      "p95Ms": 8.857,
+      "initialCalls": [
+        {
+          "kind": "list",
+          "ms": 2.494
+        },
+        {
+          "kind": "overview",
+          "ms": 1.664
+        },
+        {
+          "kind": "overview",
+          "ms": 5.087
+        },
+        {
+          "kind": "overview",
+          "ms": 6.531
+        }
+      ],
+      "listPlan": {
+        "executionMs": 1.419,
+        "planningMs": 0.29,
+        "indexes": [
+          "Person_sortName_id_idx",
+          "AuditLog_entityType_entityId_createdAt_id_idx",
+          "PersonEmail_personId_normalizedEmail_key",
+          "PersonPhone_personId_normalizedPhone_key",
+          "PersonSocialProfile_person_network_url_hash_key"
+        ],
+        "seqScans": [
+          {
+            "relation": "Person",
+            "rows": 10000,
+            "loops": 1,
+            "removed": 0
+          }
+        ],
+        "sharedHitBlocks": 480,
+        "sharedReadBlocks": 0,
+        "tempWrittenBlocks": 0
+      },
+      "overviewPlans": [
+        {
+          "executionMs": 1.29,
+          "planningMs": 0.052,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 6667,
+              "loops": 1,
+              "removed": 3333
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 3.702,
+          "planningMs": 0.267,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "PersonSocialProfile",
+              "rows": 3000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "Person",
+              "rows": 10000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonEmail",
+              "rows": 12000,
+              "loops": 1,
+              "removed": 0
+            },
+            {
+              "relation": "PersonPhone",
+              "rows": 4000,
+              "loops": 1,
+              "removed": 0
+            }
+          ],
+          "sharedHitBlocks": 410,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        },
+        {
+          "executionMs": 1.103,
+          "planningMs": 0.057,
+          "indexes": [],
+          "seqScans": [
+            {
+              "relation": "Person",
+              "rows": 3333,
+              "loops": 1,
+              "removed": 6667
+            }
+          ],
+          "sharedHitBlocks": 182,
+          "sharedReadBlocks": 0,
+          "tempWrittenBlocks": 0
+        }
+      ]
+    }
+  ],
+  "postgres": "PostgreSQL 17.10 on x86_64-windows, compiled by msvc-19.44.35226, 64-bit"
+}

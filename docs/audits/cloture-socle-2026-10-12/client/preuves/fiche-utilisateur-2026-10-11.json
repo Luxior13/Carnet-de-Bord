@@ -1,0 +1,499 @@
+{
+  "bank": "fiche-utilisateur-2026-10-11",
+  "runner": "docs/audits/fiche-utilisateur-2026-10-11/banc-client/run.cjs",
+  "startedAt": "2026-10-12T21:57:33.332Z",
+  "completedAt": "2026-10-12T21:58:04.739Z",
+  "head": "c54e5d813c40e71acd892e2973bbb303d9c74644",
+  "exitCode": 0,
+  "work": "C:\\Users\\Luxior\\AppData\\Local\\Temp\\noctambule-detail-client-cvc5jI",
+  "filter": null,
+  "passed": 46,
+  "total": 46,
+  "result": [
+    {
+      "name": "status-actionbar-page-scroll-900",
+      "width": 1440,
+      "pass": true,
+      "detail": {
+        "initial": {
+          "insideCard": false,
+          "position": "sticky",
+          "top": 818,
+          "bottom": 884,
+          "viewportTop": 0,
+          "viewportBottom": 900,
+          "scrollTop": 0,
+          "scrollMax": 858
+        },
+        "middle": {
+          "insideCard": false,
+          "position": "sticky",
+          "top": 818,
+          "bottom": 884,
+          "viewportTop": 0,
+          "viewportBottom": 900,
+          "scrollTop": 343,
+          "scrollMax": 858
+        },
+        "lower": {
+          "insideCard": false,
+          "position": "sticky",
+          "top": 818,
+          "bottom": 884,
+          "viewportTop": 0,
+          "viewportBottom": 900,
+          "scrollTop": 644,
+          "scrollMax": 858
+        },
+        "end": {
+          "insideCard": false,
+          "position": "sticky",
+          "top": 797.703125,
+          "bottom": 863.703125,
+          "viewportTop": 0,
+          "viewportBottom": 900,
+          "scrollTop": 858,
+          "scrollMax": 858
+        },
+        "expectedSticky": true
+      }
+    },
+    {
+      "name": "status-actionbar-page-scroll-844",
+      "width": 390,
+      "pass": true,
+      "detail": {
+        "initial": {
+          "insideCard": false,
+          "position": "static",
+          "top": 2167.046875,
+          "bottom": 2269.046875,
+          "viewportTop": 0,
+          "viewportBottom": 844,
+          "scrollTop": 0,
+          "scrollMax": 1453
+        },
+        "middle": {
+          "insideCard": false,
+          "position": "static",
+          "top": 1586.046875,
+          "bottom": 1688.046875,
+          "viewportTop": 0,
+          "viewportBottom": 844,
+          "scrollTop": 581,
+          "scrollMax": 1453
+        },
+        "lower": {
+          "insideCard": false,
+          "position": "static",
+          "top": 1077.046875,
+          "bottom": 1179.046875,
+          "viewportTop": 0,
+          "viewportBottom": 844,
+          "scrollTop": 1090,
+          "scrollMax": 1453
+        },
+        "end": {
+          "insideCard": false,
+          "position": "static",
+          "top": 714.046875,
+          "bottom": 816.046875,
+          "viewportTop": 0,
+          "viewportBottom": 844,
+          "scrollTop": 1453,
+          "scrollMax": 1453
+        },
+        "expectedSticky": false
+      }
+    },
+    {
+      "name": "status-actionbar-page-scroll-550",
+      "width": 1440,
+      "pass": true,
+      "detail": {
+        "initial": {
+          "insideCard": false,
+          "position": "static",
+          "top": 1655.703125,
+          "bottom": 1721.703125,
+          "viewportTop": 0,
+          "viewportBottom": 550,
+          "scrollTop": 0,
+          "scrollMax": 1208
+        },
+        "middle": {
+          "insideCard": false,
+          "position": "static",
+          "top": 1172.703125,
+          "bottom": 1238.703125,
+          "viewportTop": 0,
+          "viewportBottom": 550,
+          "scrollTop": 483,
+          "scrollMax": 1208
+        },
+        "lower": {
+          "insideCard": false,
+          "position": "static",
+          "top": 749.703125,
+          "bottom": 815.703125,
+          "viewportTop": 0,
+          "viewportBottom": 550,
+          "scrollTop": 906,
+          "scrollMax": 1208
+        },
+        "end": {
+          "insideCard": false,
+          "position": "static",
+          "top": 447.703125,
+          "bottom": 513.703125,
+          "viewportTop": 0,
+          "viewportBottom": 550,
+          "scrollTop": 1208,
+          "scrollMax": 1208
+        },
+        "expectedSticky": false
+      }
+    },
+    {
+      "name": "responsive-profile",
+      "width": 320,
+      "pass": true,
+      "detail": {
+        "viewport": 320,
+        "document": 320,
+        "main": 320,
+        "mainWidth": 320
+      }
+    },
+    {
+      "name": "responsive-access",
+      "width": 320,
+      "pass": true,
+      "detail": {
+        "viewport": 320,
+        "document": 320,
+        "main": 320,
+        "mainWidth": 320
+      }
+    },
+    {
+      "name": "responsive-account",
+      "width": 320,
+      "pass": true,
+      "detail": {
+        "viewport": 320,
+        "document": 320,
+        "main": 320,
+        "mainWidth": 320
+      }
+    },
+    {
+      "name": "responsive-security",
+      "width": 320,
+      "pass": true,
+      "detail": {
+        "viewport": 320,
+        "document": 320,
+        "main": 320,
+        "mainWidth": 320
+      }
+    },
+    {
+      "name": "focus-status-cancel",
+      "width": 320,
+      "pass": true
+    },
+    {
+      "name": "responsive-profile",
+      "width": 390,
+      "pass": true,
+      "detail": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "responsive-access",
+      "width": 390,
+      "pass": true,
+      "detail": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "responsive-account",
+      "width": 390,
+      "pass": true,
+      "detail": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "responsive-security",
+      "width": 390,
+      "pass": true,
+      "detail": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "focus-status-cancel",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "responsive-profile",
+      "width": 768,
+      "pass": true,
+      "detail": {
+        "viewport": 768,
+        "document": 768,
+        "main": 768,
+        "mainWidth": 768
+      }
+    },
+    {
+      "name": "responsive-access",
+      "width": 768,
+      "pass": true,
+      "detail": {
+        "viewport": 768,
+        "document": 768,
+        "main": 768,
+        "mainWidth": 768
+      }
+    },
+    {
+      "name": "responsive-account",
+      "width": 768,
+      "pass": true,
+      "detail": {
+        "viewport": 768,
+        "document": 768,
+        "main": 768,
+        "mainWidth": 768
+      }
+    },
+    {
+      "name": "responsive-security",
+      "width": 768,
+      "pass": true,
+      "detail": {
+        "viewport": 768,
+        "document": 768,
+        "main": 768,
+        "mainWidth": 768
+      }
+    },
+    {
+      "name": "focus-status-cancel",
+      "width": 768,
+      "pass": true
+    },
+    {
+      "name": "responsive-profile",
+      "width": 1440,
+      "pass": true,
+      "detail": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1200,
+        "mainWidth": 1200
+      }
+    },
+    {
+      "name": "responsive-access",
+      "width": 1440,
+      "pass": true,
+      "detail": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1200,
+        "mainWidth": 1200
+      }
+    },
+    {
+      "name": "responsive-account",
+      "width": 1440,
+      "pass": true,
+      "detail": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1200,
+        "mainWidth": 1200
+      }
+    },
+    {
+      "name": "responsive-security",
+      "width": 1440,
+      "pass": true,
+      "detail": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1200,
+        "mainWidth": 1200
+      }
+    },
+    {
+      "name": "focus-status-cancel",
+      "width": 1440,
+      "pass": true
+    },
+    {
+      "name": "responsive-profile",
+      "width": 1920,
+      "pass": true,
+      "detail": {
+        "viewport": 1920,
+        "document": 1920,
+        "main": 1680,
+        "mainWidth": 1680
+      }
+    },
+    {
+      "name": "responsive-access",
+      "width": 1920,
+      "pass": true,
+      "detail": {
+        "viewport": 1920,
+        "document": 1920,
+        "main": 1680,
+        "mainWidth": 1680
+      }
+    },
+    {
+      "name": "responsive-account",
+      "width": 1920,
+      "pass": true,
+      "detail": {
+        "viewport": 1920,
+        "document": 1920,
+        "main": 1680,
+        "mainWidth": 1680
+      }
+    },
+    {
+      "name": "responsive-security",
+      "width": 1920,
+      "pass": true,
+      "detail": {
+        "viewport": 1920,
+        "document": 1920,
+        "main": 1680,
+        "mainWidth": 1680
+      }
+    },
+    {
+      "name": "focus-status-cancel",
+      "width": 1920,
+      "pass": true
+    },
+    {
+      "name": "profile-save-validation-and-contact",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "conflict-refresh-profile",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "conflict-refresh-access",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "conflict-refresh-account",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "conflict-refresh-security",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "session-retry-and-revocation-focus",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "secret-copy-stale-result",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "mfa-reset-error-focus",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "mfa-reset-lost-response-check",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "readonly-profile-and-hidden-fields",
+      "width": 320,
+      "pass": true
+    },
+    {
+      "name": "permissions-configured-blocked-and-scopes",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "role-requires-target-mfa",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "conflict-refresh-failure-retry-focus",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "scope-ssr-actor-return-no-recycled-snapshot",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "scope-unchanged-retains-draft",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "scope-late-patch-after-actor-change",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "forbidden-background-purges-secret",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "name": "self-profile-long-unbroken-name",
+      "width": 320,
+      "pass": true,
+      "detail": {
+        "viewport": 320,
+        "document": 320,
+        "main": 320,
+        "mainWidth": 320
+      }
+    }
+  ]
+}

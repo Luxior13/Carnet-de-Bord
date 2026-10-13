@@ -1,0 +1,11 @@
+﻿{
+    "completedAt":  "2026-10-12T22:06:40.0477184Z",
+    "command":  "bun run test --maxWorkers=1 --reporter=json",
+    "total":  1482,
+    "passed":  1482,
+    "failed":  0,
+    "skipped":  0,
+    "files":  114,
+    "postgresFiles":  10,
+    "postgresTests":  218
+}

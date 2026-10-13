@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-12",
+  "source": "c54e5d8 services and validation restored temporarily; current sources restored in finally",
+  "environment": "isolated PostgreSQL 17, real authentication/session initial check; next/headers and environment fixtures",
+  "discardedFirstAttempt": "Request.json hook was not called by the streaming JSON parser. Initial failures were an invalid test oracle and are not product proof. Corrected hook runs on reader.read and its invocation is asserted.",
+  "failed": 13,
+  "skipped": 46,
+  "cases": [
+    {
+      "scenario": "rejects an identity that disappears during search normalization before SQL",
+      "error": "AssertionError: expected 500 to be 400 // Object.is equality"
+    },
+    {
+      "scenario": "rechecks authority after request preparation ('create' / 'permission')",
+      "error": "AssertionError: expected 201 to be 403 // Object.is equality"
+    },
+    {
+      "scenario": "rechecks authority after request preparation ('create' / 'session')",
+      "error": "AssertionError: expected 201 to be 401 // Object.is equality"
+    },
+    {
+      "scenario": "rechecks authority after request preparation ('identity' / 'permission')",
+      "error": "AssertionError: expected 200 to be 403 // Object.is equality"
+    },
+    {
+      "scenario": "rechecks authority after request preparation ('identity' / 'session')",
+      "error": "AssertionError: expected 200 to be 401 // Object.is equality"
+    },
+    {
+      "scenario": "rechecks authority after request preparation ('delete' / 'permission')",
+      "error": "AssertionError: expected 204 to be 403 // Object.is equality"
+    },
+    {
+      "scenario": "rechecks authority after request preparation ('delete' / 'session')",
+      "error": "AssertionError: expected 204 to be 401 // Object.is equality"
+    },
+    {
+      "scenario": "rechecks authority after request preparation ('email' / 'permission')",
+      "error": "AssertionError: expected 201 to be 403 // Object.is equality"
+    },
+    {
+      "scenario": "rechecks authority after request preparation ('email' / 'session')",
+      "error": "AssertionError: expected 201 to be 401 // Object.is equality"
+    },
+    {
+      "scenario": "rechecks authority after request preparation ('phone' / 'permission')",
+      "error": "AssertionError: expected 201 to be 403 // Object.is equality"
+    },
+    {
+      "scenario": "rechecks authority after request preparation ('phone' / 'session')",
+      "error": "AssertionError: expected 201 to be 401 // Object.is equality"
+    },
+    {
+      "scenario": "rechecks authority after request preparation ('social' / 'permission')",
+      "error": "AssertionError: expected 201 to be 403 // Object.is equality"
+    },
+    {
+      "scenario": "rechecks authority after request preparation ('social' / 'session')",
+      "error": "AssertionError: expected 201 to be 401 // Object.is equality"
+    }
+  ]
+}

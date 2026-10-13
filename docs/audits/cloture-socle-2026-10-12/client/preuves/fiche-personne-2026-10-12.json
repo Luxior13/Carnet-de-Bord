@@ -1,0 +1,775 @@
+{
+  "bank": "fiche-personne-2026-10-12",
+  "runner": "docs/audits/fiche-personne-2026-10-12/banc-client/run.cjs",
+  "startedAt": "2026-10-12T21:47:17.873Z",
+  "completedAt": "2026-10-12T21:47:46.106Z",
+  "head": "c54e5d813c40e71acd892e2973bbb303d9c74644",
+  "exitCode": 0,
+  "work": "C:\\Users\\Luxior\\AppData\\Local\\Temp\\noctambule-person-detail-client-VBL8th",
+  "filter": null,
+  "passed": 30,
+  "total": 30,
+  "result": {
+    "completedAt": "2026-10-12T21:47:46.087Z",
+    "timezone": "Europe/Paris",
+    "browser": "Chromium",
+    "passed": 30,
+    "total": 30,
+    "observations": [
+      {
+        "name": "composition-identite-coordonnees-dialogues",
+        "width": 320,
+        "status": "pass",
+        "requests": [],
+        "errors": [],
+        "metrics": {
+          "viewport": 320,
+          "document": 320,
+          "main": 320,
+          "mainWidth": 320
+        }
+      },
+      {
+        "name": "composition-identite-coordonnees-dialogues",
+        "width": 390,
+        "status": "pass",
+        "requests": [],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "composition-identite-coordonnees-dialogues",
+        "width": 768,
+        "status": "pass",
+        "requests": [],
+        "errors": [],
+        "metrics": {
+          "viewport": 768,
+          "document": 768,
+          "main": 768,
+          "mainWidth": 768
+        }
+      },
+      {
+        "name": "composition-identite-coordonnees-dialogues",
+        "width": 1024,
+        "status": "pass",
+        "requests": [],
+        "errors": [],
+        "metrics": {
+          "viewport": 1024,
+          "document": 1024,
+          "main": 784,
+          "mainWidth": 784
+        }
+      },
+      {
+        "name": "composition-identite-coordonnees-dialogues",
+        "width": 1440,
+        "status": "pass",
+        "requests": [],
+        "errors": [],
+        "metrics": {
+          "viewport": 1440,
+          "document": 1440,
+          "main": 1200,
+          "mainWidth": 1200
+        }
+      },
+      {
+        "name": "composition-identite-coordonnees-dialogues",
+        "width": 1920,
+        "status": "pass",
+        "requests": [],
+        "errors": [],
+        "metrics": {
+          "viewport": 1920,
+          "document": 1920,
+          "main": 1680,
+          "mainWidth": 1680
+        }
+      },
+      {
+        "name": "identite-validation-entree-double-save",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "PATCH",
+            "path": "/api/personnes/audit-person-a",
+            "body": {
+              "birthDate": "2000-01-02",
+              "firstName": "Camille",
+              "lastName": "Exemple",
+              "nickname": "PseudoNouveau",
+              "structureStatus": "IN_STRUCTURE",
+              "version": 1
+            },
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "identite-conflit-fusion-annuler",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "PATCH",
+            "path": "/api/personnes/audit-person-a",
+            "body": {
+              "birthDate": "2000-01-02",
+              "firstName": "Camille",
+              "lastName": "Exemple",
+              "nickname": "PseudoLocal",
+              "structureStatus": "IN_STRUCTURE",
+              "version": 1
+            },
+            "idempotencyKey": null
+          },
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a",
+            "body": null,
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "navigation-dirty-pending-et-retourfocus",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "PATCH",
+            "path": "/api/personnes/audit-person-a",
+            "body": {
+              "birthDate": "2000-01-02",
+              "firstName": "Camille",
+              "lastName": "Exemple",
+              "nickname": "BrouillonLocal",
+              "structureStatus": "IN_STRUCTURE",
+              "version": 1
+            },
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "ssr-compte-a-b-a-snapshot-non-recycle",
+        "width": 390,
+        "status": "pass",
+        "readCount": 2,
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a",
+            "body": null,
+            "idempotencyKey": null
+          },
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a",
+            "body": null,
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "patch-ancien-compte-ignore",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "PATCH",
+            "path": "/api/personnes/audit-person-a",
+            "body": {
+              "birthDate": "2000-01-02",
+              "firstName": "Camille",
+              "lastName": "Exemple",
+              "nickname": "AncienCompteTardif",
+              "structureStatus": "IN_STRUCTURE",
+              "version": 1
+            },
+            "idempotencyKey": null
+          },
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a",
+            "body": null,
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "readiness-identite-dialogue-conserve",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a",
+            "body": null,
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "stockage-refuse-sans-effondrement",
+        "width": 390,
+        "status": "pass",
+        "requests": [],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "email-conflit-fusion-champ-intact",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "PATCH",
+            "path": "/api/personnes/audit-person-a/emails/audit-email-a",
+            "body": {
+              "email": "modifie@example.test",
+              "isPrimary": true,
+              "label": "Personnel",
+              "personVersion": 1,
+              "version": 1
+            },
+            "idempotencyKey": null
+          },
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a",
+            "body": null,
+            "idempotencyKey": null
+          },
+          {
+            "method": "PATCH",
+            "path": "/api/personnes/audit-person-a/emails/audit-email-a",
+            "body": {
+              "email": "modifie@example.test",
+              "isPrimary": true,
+              "label": "Professionnel",
+              "personVersion": 2,
+              "version": 2
+            },
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "email-noop-et-erreurs-focus",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "PATCH",
+            "path": "/api/personnes/audit-person-a/emails/audit-email-a",
+            "body": {
+              "email": "autre-valide@example.test",
+              "isPrimary": true,
+              "label": "Personnel",
+              "personVersion": 1,
+              "version": 1
+            },
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "email-ajout-double-submit-doublon",
+        "width": 320,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "POST",
+            "path": "/api/personnes/audit-person-a/emails",
+            "body": {
+              "email": "partage@example.test",
+              "isPrimary": false,
+              "label": "Personnel",
+              "personVersion": 1
+            },
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 320,
+          "document": 320,
+          "main": 320,
+          "mainWidth": 320
+        }
+      },
+      {
+        "name": "coordonnee-readiness-et-depart-annule",
+        "width": 390,
+        "status": "pass",
+        "requests": [],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "telephone-social-contrats-entree",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "POST",
+            "path": "/api/personnes/audit-person-a/telephones",
+            "body": {
+              "countryCode": "FR",
+              "isPrimary": false,
+              "label": "Personnel",
+              "phone": "0612345678",
+              "personVersion": 1
+            },
+            "idempotencyKey": null
+          },
+          {
+            "method": "POST",
+            "path": "/api/personnes/audit-person-a/reseaux-sociaux",
+            "body": {
+              "identifier": "audit.nouveau",
+              "isPrimary": false,
+              "label": "Personnel",
+              "networkKey": "discord",
+              "profileUrl": null,
+              "personVersion": 2
+            },
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "email-reponse-perdue-verification-sans-second-ajout",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "POST",
+            "path": "/api/personnes/audit-person-a/emails",
+            "body": {
+              "email": "incertain@example.test",
+              "isPrimary": false,
+              "label": "Personnel",
+              "personVersion": 1
+            },
+            "idempotencyKey": null
+          },
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a",
+            "body": null,
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "coordonnee-timeout-relecture-echec-reprise",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "PATCH",
+            "path": "/api/personnes/audit-person-a/emails/audit-email-a",
+            "body": {
+              "email": "timeout@example.test",
+              "isPrimary": true,
+              "label": "Personnel",
+              "personVersion": 1,
+              "version": 1
+            },
+            "idempotencyKey": null
+          },
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a",
+            "body": null,
+            "idempotencyKey": null
+          },
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a",
+            "body": null,
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "coordonnee-disparue-conflit",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "PATCH",
+            "path": "/api/personnes/audit-person-a/emails/audit-email-a",
+            "body": {
+              "email": "modifie@example.test",
+              "isPrimary": true,
+              "label": "Personnel",
+              "personVersion": 1,
+              "version": 1
+            },
+            "idempotencyKey": null
+          },
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a",
+            "body": null,
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "suppression-email-principal-remplacement",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "DELETE",
+            "path": "/api/personnes/audit-person-a/emails/audit-email-a",
+            "body": {
+              "personVersion": 1,
+              "replacementPrimaryId": "audit-email-b",
+              "version": 1
+            },
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "suppression-fiche-reponse-perdue-cle-retour",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "DELETE",
+            "path": "/api/personnes/audit-person-a",
+            "body": {
+              "version": 1
+            },
+            "idempotencyKey": "32cdaece-bef2-43ce-8f98-eeb91c69fe31"
+          },
+          {
+            "method": "DELETE",
+            "path": "/api/personnes/audit-person-a",
+            "body": {
+              "version": 1
+            },
+            "idempotencyKey": "32cdaece-bef2-43ce-8f98-eeb91c69fe31"
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "lecture-seule-copie-coordonnees",
+        "width": 320,
+        "status": "pass",
+        "requests": [],
+        "errors": [],
+        "metrics": {
+          "viewport": 320,
+          "document": 320,
+          "main": 320,
+          "mainWidth": 320
+        }
+      },
+      {
+        "name": "refus-actualisation-purge-donnees-dialogue",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "PATCH",
+            "path": "/api/personnes/audit-person-a/emails/audit-email-a",
+            "body": {
+              "email": "refuse@example.test",
+              "isPrimary": true,
+              "label": "Personnel",
+              "personVersion": 1,
+              "version": 1
+            },
+            "idempotencyKey": null
+          },
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a",
+            "body": null,
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "provenance-ouverte-revision-relecture-timeout",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a/historique-champ",
+            "body": null,
+            "idempotencyKey": null
+          },
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a/historique-champ",
+            "body": null,
+            "idempotencyKey": null
+          },
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a/historique-champ",
+            "body": null,
+            "idempotencyKey": null
+          },
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a/historique-champ",
+            "body": null,
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "identite-conflit-brouillon-revenu-base",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "PATCH",
+            "path": "/api/personnes/audit-person-a",
+            "body": {
+              "birthDate": "2000-01-02",
+              "firstName": "Camille",
+              "lastName": "Exemple",
+              "nickname": "ValeurInconnue",
+              "structureStatus": "IN_STRUCTURE",
+              "version": 1
+            },
+            "idempotencyKey": null
+          },
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a",
+            "body": null,
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "strictmode-lecture-annulee-remplacee",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a",
+            "body": null,
+            "idempotencyKey": null
+          },
+          {
+            "method": "GET",
+            "path": "/api/personnes/audit-person-a",
+            "body": null,
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "coordonnee-retrait-droits-ignore-reponse",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "PATCH",
+            "path": "/api/personnes/audit-person-a/emails/audit-email-a",
+            "body": {
+              "email": "ancienne-autorisation@example.test",
+              "isPrimary": true,
+              "label": "Personnel",
+              "personVersion": 1,
+              "version": 1
+            },
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      },
+      {
+        "name": "coordonnee-succes-retourfocus-modifier",
+        "width": 390,
+        "status": "pass",
+        "requests": [
+          {
+            "method": "PATCH",
+            "path": "/api/personnes/audit-person-a/emails/audit-email-a",
+            "body": {
+              "email": "camille@example.test",
+              "isPrimary": true,
+              "label": "Professionnel",
+              "personVersion": 1,
+              "version": 1
+            },
+            "idempotencyKey": null
+          }
+        ],
+        "errors": [],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390
+        }
+      }
+    ]
+  }
+}

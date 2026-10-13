@@ -199,10 +199,9 @@ describe.skipIf(!target)(
       const url = new URL(target);
       if (
         !['127.0.0.1', 'localhost'].includes(url.hostname) ||
-        url.port !== '54599' ||
         url.pathname !== '/login_service_test'
       )
-        throw new Error('Only local port 54599/login_service_test is allowed');
+        throw new Error('Only local login_service_test is allowed');
       db = new PrismaClient({ datasourceUrl: target });
       connection.client = db;
       const migrations = await db.$queryRaw<Array<{ count: number }>>`
@@ -610,7 +609,9 @@ describe.skipIf(!target)(
           await blocker;
         }
         expect(await replacement).toMatchObject({
-          name: 'SecurityVersionMismatchError',
+          code: 'UNAUTHORIZED',
+          name: 'UserActionAuthorizationError',
+          status: 401,
         });
         expect(await db.session.count({ where: { userId: user.id } })).toBe(1);
         expect(

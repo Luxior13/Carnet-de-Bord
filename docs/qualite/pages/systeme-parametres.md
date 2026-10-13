@@ -1,5 +1,19 @@
 # Suivi de page — Paramètres système
 
+## État courant — clôture du socle du 13 octobre 2026
+
+La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est
+terminée au périmètre livré, pour poursuivre le développement métier. Ses
+preuves et limites ne constituent pas une qualification de déploiement.
+
+Le réglage a été modifié via le vrai serveur : CSRF, conflit de version et audit
+atomique sont contrôlés. La restauration signée a reproduit les 19 tables du
+contrat, dont une ligne SystemSetting. PAR-S-07 est réconcilié dans cette portée
+; exploitation, volumes de purge et qualification des durées restent ouverts.
+
+Les décisions et preuves datées ci-dessous restent conservées. Une nouvelle
+revue répond à un changement, un défaut constaté ou une règle nouvelle.
+
 ## Revue complète du 11 octobre — validations du 12 octobre 2026
 
 La nouvelle passe conserve un seul réglage, ses bornes et son défaut. Elle
@@ -489,9 +503,9 @@ Q20–Q21 et Q24–Q26 non applicables : aucun document, échange ou parcours m�
 
 ## Points restant à qualifier
 
-Les points ci-dessous restent ouverts ou à vérifier selon leur nature ; les
-responsables sont à attribuer. Leur déclencheur définit la reprise, sans date
-de livraison inventée. Les résultats historiques ne les clôturent pas.
+Les points ci-dessous distinguent les limites encore ouvertes des contrôles
+réconciliés. Leur déclencheur définit la reprise, sans date de livraison
+inventée ; les seuls résultats historiques ne valent pas nouveau contrôle.
 
 | Sujet | Limite | Déclencheur / prochaine étape |
 | --- | --- | --- |
@@ -501,14 +515,16 @@ de livraison inventée. Les résultats historiques ne les clôturent pas.
 | PAR-S-04 — Portée du journal | Une seule durée purge aussi les détails de l'historique personne ; catégories insuffisantes pour séparer les finalités | Suivre le classement et les étapes documentés ci-dessus avant d'ajouter plusieurs durées ou de réduire le défaut global |
 | PAR-S-05 — Donnée stockée invalide | **Clos au périmètre testé le 12 octobre** : blocage explicite, durée proposée, réparation protégée même à valeur identique et audit transactionnel | Reproductions avant correction puis contrôles SQL et navigateur réussis ; maintien du diagnostic dans cette page, sans écran d'incident supplémentaire |
 | PAR-S-06 — Historique | Date affichée ; auteur et lien direct vers l'audit non ajoutés | Si nécessaire, réutiliser le journal et ses droits, sans nouvelle collection d'historique |
-| PAR-S-07 — Validation complète | Client simulé, serveur PostgreSQL et onze parcours Next/session réels réussis, dont authentification/MFA, CSRF et commande de maintenance. Lecteur d'écran, mobile physique, restauration et charge non testés | Reprendre les contrôles restants selon le risque et l'environnement cible ; conserver les limites des fixtures et du navigateur, sans assimiler ces preuves à une validation de déploiement |
+| PAR-S-07 — Validation complète | **Réconcilié le 13 octobre au périmètre du socle** : preuves client/SQL/HTTP, mutation réelle avec CSRF/conflit/audit et restauration signée des 19 tables, dont SystemSetting. Lecteur d'écran, mobile physique, charge et recette d'exploitation restent non qualifiés | Reprendre selon le changement et l'environnement cible ; l'égalité des lignes restaurées n'est ni une remise en trafic validée, ni une mesure RPO/RTO, ni une qualification des durées |
 
 Les permissions, preuves, versions et audits sont contrôlés par les tests de
 routes et les transactions réelles du banc serveur. Le CSRF, les cookies et le
 parcours authentifié ont aussi été vérifiés dans l'intégration distincte avec
-Next en production et PostgreSQL isolé. La sauvegarde inclut `SystemSetting` ;
-aucune restauration n'a été exécutée ici. Les réglages de conservation
-n'utilisent aucun cache local.
+Next en production et PostgreSQL isolé. La passe commencée le 11 octobre et
+exécutée le 12 n'avait pas restauré de sauvegarde. Le complément de clôture du
+13 octobre restaure réellement SystemSetting dans une cible vide isolée et
+compare ses lignes à la source, avec les autres tables du contrat. Les réglages
+de conservation n'utilisent aucun cache local.
 
 ## Questions à reprendre lors de chaque évolution
 

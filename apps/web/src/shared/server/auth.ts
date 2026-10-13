@@ -20,6 +20,7 @@ import { cache } from 'react';
 import {
   hasPermission,
   normalizePermissionOverrides,
+  PERMISSIONS,
   type PermissionsData,
 } from '$constants/permissions.constants';
 import { env } from '$env';
@@ -35,6 +36,12 @@ import { logger } from './logger';
 import { prisma } from './prisma';
 import { getClientIp, getRequestId, getUserAgent } from './request-context';
 import { generateTemporaryPassword } from './temporary-password';
+import {
+  assertUserActionProof,
+  authorizeUserAction,
+  type UserActionAuthority,
+  UserActionAuthorizationError,
+} from './user-action-authorization';
 
 export { generateTemporaryPassword } from './temporary-password';
 
@@ -287,6 +294,19 @@ export const createSession = async (
   // Session creation, last-login state and its success audit must either all
   // commit or all roll back because they describe the same authentication.
   const session = await prisma.$transaction(async (transaction) => {
+    if (securityOptions.sourceSessionToken) {
+      await authorizeUserAction(
+        transaction,
+        {
+          actorId: userId,
+          session: {
+            securityVersion: authenticatedSecurityVersion,
+            token: securityOptions.sourceSessionToken,
+          },
+        },
+        PERMISSIONS.ACCOUNT.MANAGE_MFA,
+      );
+    }
     // This conditional write both checks and locks the user row. A concurrent
     // password reset or access change therefore either revokes this session
     // after commit, or makes this transaction fail before issuing it.
@@ -912,6 +932,25 @@ export const updateUserPassword = async (
   const requestContext = options.audit ? await getAuditRequestContext() : null;
 
   await prisma.$transaction(async (transaction) => {
+    try {
+      await authorizeUserAction(
+        transaction,
+        {
+          actorId: userId,
+          session: {
+            securityVersion: options.expectedSecurityVersion,
+            token: options.currentSessionToken,
+          },
+        },
+        PERMISSIONS.ACCOUNT.CHANGE_PASSWORD,
+        userId,
+        { allowPasswordChangeRequired: true },
+      );
+    } catch (error) {
+      if (error instanceof UserActionAuthorizationError && error.status === 401)
+        throw new SecurityVersionMismatchError();
+      throw error;
+    }
     const userUpdate = await transaction.user.updateMany({
       data: {
         mustChangePassword: false,
@@ -976,18 +1015,26 @@ export const updateUserPassword = async (
  */
 export const resetUserPassword = async (
   userId: string,
-  audit?: RequiredAuditLogInput,
+  audit: RequiredAuditLogInput,
   options: {
+    authority: UserActionAuthority;
     expectedRole?: UserRole;
     expectedSecurityVersion?: number;
     expectedUpdatedAt?: Date;
-  } = {},
+  },
 ): Promise<string> => {
   const tempPassword = generateTemporaryPassword();
   const passwordHash = await hashPassword(tempPassword);
   const requestContext = audit ? await getAuditRequestContext() : null;
 
   await prisma.$transaction(async (transaction) => {
+    const authorized = await authorizeUserAction(
+      transaction,
+      options.authority,
+      PERMISSIONS.USERS.RESET_PASSWORD,
+      userId,
+    );
+    assertUserActionProof(authorized, 'sensitive');
     const userUpdate = await transaction.user.updateMany({
       data: {
         failedLoginAttempts: 0,

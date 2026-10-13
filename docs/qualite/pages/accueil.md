@@ -1,5 +1,18 @@
 # Suivi — Accueil / Mon travail
 
+## État courant — clôture du socle du 13 octobre 2026
+
+La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est
+terminée au périmètre livré, pour poursuivre le développement métier. Ses
+preuves et limites ne constituent pas une qualification de déploiement.
+
+L’accueil a été parcouru avec la session réelle aux trois largeurs retenues. Le
+prénom issu du contexte partagé et l’accès à Mon compte restent le comportement
+livré ; aucun tableau de bord métier ou widget futur n’est ajouté.
+
+Les décisions et preuves datées ci-dessous restent conservées. Une nouvelle
+revue répond à un changement, un défaut constaté ou une règle nouvelle.
+
 ## État courant — 12 octobre 2026
 
 - Route `/`, page privée du pôle Aujourd’hui, libellé de navigation « Mon travail ».

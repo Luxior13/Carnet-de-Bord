@@ -63,6 +63,9 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock('server-only', () => ({}));
+vi.mock('$features/persons/server/person-mutation-authorization', () => ({
+  authorizePersonMutation: vi.fn(),
+}));
 
 vi.mock('$server/prisma', () => ({ prisma: mocks.prisma }));
 
@@ -83,6 +86,7 @@ const actor = {
   lastName: 'Admin',
   loginName: 'ada.admin',
   role: 'ADMIN' as const,
+  session: null,
 };
 
 const emailRecord = (

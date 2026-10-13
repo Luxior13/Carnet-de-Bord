@@ -7,6 +7,10 @@ import { apiError, apiErrors, parseJsonBody } from '$server/api-response';
 import { createAuditLogWithHeaders, mapUserToUserType } from '$server/auth';
 import { prisma } from '$server/prisma';
 import {
+  authorizeUserAction,
+  UserActionAuthorizationError,
+} from '$server/user-action-authorization';
+import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
   ErrorCode,
@@ -67,6 +71,9 @@ export async function GET(): Promise<
       success: true,
     });
   } catch (error) {
+    if (error instanceof UserActionAuthorizationError)
+      return apiError(error.code, error.message, error.status);
+
     return apiErrors.internal('ME_GET', error);
   }
 }
@@ -117,13 +124,6 @@ export async function PATCH(
       throw new ProfileConflictError();
     }
 
-    if (nextFirstName === user.firstName && nextLastName === user.lastName) {
-      return NextResponse.json({
-        data: { user },
-        success: true,
-      });
-    }
-
     const beforeValues: Record<string, unknown> = {};
     const afterValues: Record<string, unknown> = {};
     const changes: Record<string, { from: unknown; to: unknown }> = {};
@@ -141,6 +141,24 @@ export async function PATCH(
     }
 
     const updatedUser = await prisma.$transaction(async (transaction) => {
+      await authorizeUserAction(
+        transaction,
+        { actorId: user.id, session: auth.session },
+        PERMISSIONS.ACCOUNT.UPDATE_PROFILE,
+      );
+      const current = await transaction.user.findUnique({
+        where: { id: user.id },
+      });
+      if (
+        !current ||
+        current.updatedAt.getTime() !== expectedUpdatedAt.getTime()
+      )
+        throw new ProfileConflictError();
+      if (
+        nextFirstName === current.firstName &&
+        nextLastName === current.lastName
+      )
+        return current;
       const result = await transaction.user.updateMany({
         data: {
           firstName: nextFirstName,
@@ -184,6 +202,8 @@ export async function PATCH(
       success: true,
     });
   } catch (error) {
+    if (error instanceof UserActionAuthorizationError)
+      return apiError(error.code, error.message, error.status);
     if (error instanceof ProfileConflictError) {
       return apiError(
         ErrorCode.CONFLICT,

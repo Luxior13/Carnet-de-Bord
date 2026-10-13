@@ -63,6 +63,7 @@ export async function expectUserCreationRecovery(page: Page): Promise<void> {
   await page.route(pattern, async (route) => {
     if (route.request().method() !== 'POST') {
       await route.continue();
+
       return;
     }
     const response = await route.fetch();
@@ -81,6 +82,7 @@ export async function expectUserCreationRecovery(page: Page): Promise<void> {
     await expect(page.locator('#newFirstName')).toBeDisabled();
     const lookupResponse = page.waitForResponse((response) => {
       const url = new URL(response.url());
+
       return (
         url.pathname === '/api/users' &&
         url.searchParams.get('loginName') === lostLoginName
@@ -103,7 +105,8 @@ export async function expectUserCreationRecovery(page: Page): Promise<void> {
       .getByRole('link', { exact: true, name: 'Ouvrir la fiche' })
       .click();
     await expect(page).toHaveURL(
-      new RegExp(`/systeme/utilisateurs/${data.data.users[0].id}\\?`),
+      (url) =>
+        url.pathname === `/systeme/utilisateurs/${data.data.users[0].id}`,
     );
   } finally {
     await page.unroute(pattern);

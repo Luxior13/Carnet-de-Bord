@@ -1,0 +1,45 @@
+﻿{
+    "date":  "2026-10-13T16:40:04.2182138Z",
+    "cleanup":  {
+                    "port":  54664,
+                    "databasesRemoved":  6,
+                    "developmentDatabaseTouched":  false,
+                    "postgresStopped":  true,
+                    "backupFilesRemoved":  3,
+                    "privateDirectoryRemoved":  true
+                },
+    "sources":  [
+                    {
+                        "sha256":  "3dc1b46d9a0da543c9bb502af82545dc87cbb6474d27d1a6d4635fe6b592d13b",
+                        "path":  "packages/database/prisma/schema.prisma"
+                    },
+                    {
+                        "sha256":  "5559cfb5bef85712e522a228ecbb1a5af4da906d3ac65235381555a68b03cc24",
+                        "path":  "packages/database/prisma/migrations/20261013120000_system_setting_positive_version/migration.sql"
+                    },
+                    {
+                        "sha256":  "10b5a59bb800bdad00ff6c290f2a5227f094552ee330b4b7ea8eb6bebe21c3b7",
+                        "path":  "packages/database/scripts/database-restore-support.ts"
+                    },
+                    {
+                        "sha256":  "fab168d398afe2caf8299efac66bc5dfbdea8be61de9a16c5b8873a20e5df6b8",
+                        "path":  "packages/database/scripts/restore-database.ts"
+                    },
+                    {
+                        "sha256":  "5907071c7304952d3d3fafe7c3fe16b9abc408806586535b00cbf104162af617",
+                        "path":  "packages/database/test/database-restore-encryption.test.ts"
+                    },
+                    {
+                        "sha256":  "c0fb7a5a4eba837a441b01c17add1b3a6336b1505c0d14665167c9d503144d94",
+                        "path":  "apps/web/src/__tests__/system-settings-postgres.test.ts"
+                    }
+                ],
+    "completed":  true,
+    "checks":  {
+                   "changedSourceLint":  "passed",
+                   "diffCheck":  "passed",
+                   "docsFiles":  268,
+                   "webTypecheck":  "passed",
+                   "databaseTypecheck":  "passed"
+               }
+}

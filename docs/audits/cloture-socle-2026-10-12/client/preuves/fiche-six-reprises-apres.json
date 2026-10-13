@@ -1,0 +1,61 @@
+[
+  {
+    "name": "bounded-detail-delete",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "after31Seconds": "uncertain-result-and-explicit-read",
+      "deleteCount": 1
+    }
+  },
+  {
+    "name": "bounded-detail-patch-profile",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "after31Seconds": "save-released",
+      "read": "explicit",
+      "patchCount": 1
+    }
+  },
+  {
+    "name": "bounded-detail-patch-access",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "after31Seconds": "save-released",
+      "read": "explicit",
+      "patchCount": 1
+    }
+  },
+  {
+    "name": "bounded-detail-patch-account",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "after31Seconds": "save-released",
+      "read": "explicit",
+      "patchCount": 1
+    }
+  },
+  {
+    "name": "bounded-detail-patch-security",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "after31Seconds": "save-released",
+      "read": "explicit",
+      "patchCount": 1
+    }
+  },
+  {
+    "name": "bounded-detail-mfa-recovery",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "after31Seconds": "verification-released",
+      "explicitRetry": "success",
+      "postCount": 1
+    }
+  }
+]

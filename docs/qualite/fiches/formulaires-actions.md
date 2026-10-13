@@ -38,6 +38,10 @@
 - Que devient la saisie après erreur réseau, expiration de session, retour navigateur ou fermeture ?
 - Une seconde personne peut-elle modifier la ressource ? Le conflit protège-t-il contre l’écrasement silencieux ?
 - Le double clic, une nouvelle tentative ou un timeout peuvent-ils exécuter deux fois l’action ?
+- Une requête sans réponse, y compris un corps JSON qui ne finit pas de se lire,
+  laisse-t-elle l'interface bloquée ? Borne-t-on l'attente et propose-t-on une
+  lecture de vérification après un résultat incertain, sans répétition automatique
+  d'une mutation ni perte du brouillon ?
 - L’enregistrement est-il explicite ou automatique ? Quel état indique ce qui est réellement sauvegardé ?
 - L’annulation annule-t-elle une saisie locale, une opération lancée ou seulement la fermeture de l’écran ?
 - Une action dangereuse explique-t-elle son objet, son effet et son caractère récupérable ?

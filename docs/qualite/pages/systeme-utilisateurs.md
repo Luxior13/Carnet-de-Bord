@@ -1,5 +1,20 @@
 # Suivi — Utilisateurs : liste, création et fiche
 
+## État courant — clôture du socle du 13 octobre 2026
+
+La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est
+terminée au périmètre livré, pour poursuivre le développement métier. Ses
+preuves et limites ne constituent pas une qualification de déploiement.
+
+Liste, création et fiche ont été revérifiées. L’autorité de l’acteur et les
+preuves sensibles sont relues dans la transaction ; les sauvegardes, reprises
+MFA et suppressions conservent une attente bornée et une explication durable du
+résultat incertain, sans rejeu automatique de suppression. Les mesures de listes
+restent locales, sans qualification de charge concurrente.
+
+Les décisions et preuves datées ci-dessous restent conservées. Une nouvelle
+revue répond à un changement, un défaut constaté ou une règle nouvelle.
+
 ## Revue approfondie — 11 octobre 2026
 
 Nouvelle passe demandée après celle du Répertoire, en contexte développement.
@@ -537,7 +552,7 @@ trois bases isolées et dossier temporaire supprimés avec le marker,
 l'environnement et les secrets de test. Le scan des treize fichiers texte
 archivés n'a trouvé aucune valeur privée.
 
-Le [garde transactionnel](../../../apps/web/src/features/users/server/user-action-authorization.ts)
+Le [garde transactionnel](../../../apps/web/src/shared/server/user-action-authorization.ts)
 est partagé seulement par la création et les sessions administratives, deux
 consommateurs réels. Il relit acteur, source et permissions après les verrous ;
 la preuve ADMIN reste une règle du service de création, et l'adaptateur sessions

@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer';
-import { createHash } from 'node:crypto';
+import { createDecipheriv, createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import type { FileHandle } from 'node:fs/promises';
 import { TextDecoder } from 'node:util';
@@ -162,11 +162,10 @@ const readPositiveEnvironmentVersion = (
   return version;
 };
 
-const validateBase64Aes256Key = (
+const readBase64Aes256Key = (
   environment: NodeJS.ProcessEnv,
-  version: number,
-): void => {
-  const name = `AUDIT_ENCRYPTION_KEY_V${String(version)}`;
+  name: string,
+): Buffer => {
   // The suffix is a validated positive integer.
   // eslint-disable-next-line security/detect-object-injection
   const value = environment[name];
@@ -178,10 +177,13 @@ const validateBase64Aes256Key = (
     decoded.length !== 32 ||
     decoded.toString('base64') !== value
   ) {
+    decoded?.fill(0);
     throw new Error(
       `${name} must contain exactly 32 bytes encoded as canonical Base64`,
     );
   }
+
+  return decoded;
 };
 
 export const validateRestoreEnvironment = (
@@ -197,6 +199,185 @@ export const validateRestoreEnvironment = (
     ...manifest.requiredAuditEncryptionKeyVersions,
   ]);
   for (const version of requiredAuditVersions) {
-    validateBase64Aes256Key(environment, version);
+    readBase64Aes256Key(
+      environment,
+      `AUDIT_ENCRYPTION_KEY_V${String(version)}`,
+    ).fill(0);
+  }
+};
+
+const readString = (value: unknown): string => {
+  if (typeof value !== 'string' || value.length === 0) {
+    throw new Error('Invalid encrypted backup envelope');
+  }
+
+  return value;
+};
+
+const readBase64 = (value: unknown): Buffer => {
+  const encoded = readString(value);
+  const decoded = Buffer.from(encoded, 'base64');
+  if (decoded.length === 0 || decoded.toString('base64') !== encoded) {
+    throw new Error('Invalid Base64 encrypted backup envelope');
+  }
+
+  return decoded;
+};
+
+const readBytea = (value: unknown): Buffer => {
+  const encoded = readString(value);
+  if (!/^\\x[0-9a-f]+$/u.test(encoded) || encoded.length % 2 !== 0) {
+    throw new Error('Invalid bytea encrypted backup envelope');
+  }
+
+  return Buffer.from(encoded.slice(2), 'hex');
+};
+
+const verifyEncryptedValue = (input: {
+  aad: Buffer;
+  authTag: Buffer;
+  ciphertext: Buffer;
+  iv: Buffer;
+  key: Buffer;
+  validatePlaintext: (plaintext: string) => void;
+}): void => {
+  let prefix: Buffer | undefined;
+  let suffix: Buffer | undefined;
+  let plaintext: Buffer | undefined;
+  try {
+    if (input.iv.length !== 12 || input.authTag.length !== 16) {
+      throw new Error('Invalid AES-GCM envelope');
+    }
+    const decipher = createDecipheriv('aes-256-gcm', input.key, input.iv);
+    decipher.setAAD(input.aad);
+    decipher.setAuthTag(input.authTag);
+    prefix = decipher.update(input.ciphertext);
+    suffix = decipher.final();
+    plaintext = Buffer.concat([prefix, suffix]);
+    input.validatePlaintext(
+      new TextDecoder('utf-8', { fatal: true }).decode(plaintext),
+    );
+  } catch {
+    // Never include ciphertext, clear values or native parser errors in CLI output.
+    throw new Error(
+      'Encrypted backup value cannot be authenticated or decoded with the configured key',
+    );
+  } finally {
+    prefix?.fill(0);
+    suffix?.fill(0);
+    plaintext?.fill(0);
+    input.key.fill(0);
+  }
+};
+
+const validateEncryptedRecord = (
+  record: ParsedBackupRecord,
+  environment: NodeJS.ProcessEnv,
+): void => {
+  if (record.type !== 'row') return;
+  const row = record.value;
+  if (
+    record.property === 'totpCredentials' ||
+    record.property === 'totpEnrollments'
+  ) {
+    if (row.secretKeyVersion !== 1) {
+      throw new Error('Unsupported TOTP encryption key version');
+    }
+    // Match shared/server/mfa.ts: the owner is part of the authenticated data.
+    const aad = Buffer.from(
+      `team-control:totp-secret:v1:${readString(row.userId)}`,
+    );
+    const authTag = readBase64(row.secretAuthTag);
+    const ciphertext = readBase64(row.secretCiphertext);
+    const iv = readBase64(row.secretIv);
+    verifyEncryptedValue({
+      aad,
+      authTag,
+      ciphertext,
+      iv,
+      key: readBase64Aes256Key(environment, 'MFA_ENCRYPTION_KEY_V1'),
+      validatePlaintext: (plaintext) => {
+        if (!/^[A-Z2-7]+$/u.test(plaintext))
+          throw new Error('Invalid TOTP seed');
+      },
+    });
+  } else if (
+    record.property === 'auditFieldChanges' &&
+    row.valueMode === 'ENCRYPTED'
+  ) {
+    const version = row.valueKeyVersion;
+    if (
+      typeof version !== 'number' ||
+      !Number.isSafeInteger(version) ||
+      version < 1
+    ) {
+      throw new Error('Invalid audit encryption key version');
+    }
+    if (
+      row.entityType !== 'PERSON' ||
+      (row.recordId !== null && typeof row.recordId !== 'string')
+    ) {
+      throw new Error('Invalid encrypted audit context');
+    }
+    // Exact canonical key order and fields produced by person-audit.ts.
+    const aad = Buffer.from(
+      JSON.stringify({
+        auditLogId: readString(row.auditLogId),
+        changeType: readString(row.changeType),
+        entityId: readString(row.entityId),
+        entityType: 'PERSON',
+        fieldKey: readString(row.fieldKey),
+        recordId: row.recordId,
+        sectionKey: readString(row.sectionKey),
+      }),
+    );
+    const authTag = readBytea(row.valuesAuthTag);
+    const ciphertext = readBytea(row.valuesCiphertext);
+    const iv = readBytea(row.valuesIv);
+    if (ciphertext.length > 8 * 1024)
+      throw new Error('Encrypted audit value exceeds its storage limit');
+    verifyEncryptedValue({
+      aad,
+      authTag,
+      ciphertext,
+      iv,
+      key: readBase64Aes256Key(
+        environment,
+        `AUDIT_ENCRYPTION_KEY_V${String(version)}`,
+      ),
+      validatePlaintext: (plaintext) => {
+        const parsed: unknown = JSON.parse(plaintext);
+        if (
+          parsed === null ||
+          typeof parsed !== 'object' ||
+          Array.isArray(parsed)
+        ) {
+          throw new Error('Invalid audit values object');
+        }
+      },
+    });
+  }
+};
+
+/** Called only after the initial digest and signature have been verified. */
+export const validateRestoreEncryption = async (
+  source: BackupStreamSource,
+  verifiedArtifact: BackupStreamDigest,
+  environment: NodeJS.ProcessEnv = process.env,
+  formatExpectation: BackupFormatExpectation = 'current-signed',
+): Promise<void> => {
+  validateRestoreEnvironment(verifiedArtifact.summary.manifest, environment);
+  const checked = await readAndValidateBackupStreamWithDigest(
+    source,
+    (record) => validateEncryptedRecord(record, environment),
+    formatExpectation,
+  );
+  if (
+    checked.sha256 !== verifiedArtifact.sha256 ||
+    checked.sizeBytes !== verifiedArtifact.sizeBytes
+  ) {
+    throw new Error(
+      'Backup changed between signature and encryption validation',
+    );
   }
 };

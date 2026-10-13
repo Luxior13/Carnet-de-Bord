@@ -4,13 +4,12 @@ import type { Prisma } from '@prisma/client';
 import type { NextResponse } from 'next/server';
 
 import { apiError } from '$server/api-response';
-import type { ApiErrorResponse } from '$types/api.types';
-import type { SessionType, UserType } from '$types/auth.types';
-
 import {
   authorizeUserAction,
   UserActionAuthorizationError,
-} from './user-action-authorization';
+} from '$server/user-action-authorization';
+import type { ApiErrorResponse } from '$types/api.types';
+import type { SessionType, UserType } from '$types/auth.types';
 
 /** HTTP adapter preserving the managed-session route's refusal contract. */
 export async function authorizeManagedSessions(

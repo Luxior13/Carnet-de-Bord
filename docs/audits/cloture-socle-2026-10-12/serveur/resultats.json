@@ -1,0 +1,416 @@
+﻿{
+  "started": "2026-10-12",
+  "validated": "2026-10-13",
+  "head": "c54e5d8",
+  "environment": {
+    "postgres": "17",
+    "host": "127.0.0.1",
+    "port": 54663,
+    "migrations": 52
+  },
+  "baseline": {
+    "existingSqlPassed": 121,
+    "newAdminFailures": 6,
+    "newSettingSourceFailure": 1,
+    "newMfaWaitFailure": 1,
+    "observedStatus": 200,
+    "expectedStatuses": [401, 403],
+    "authSnapshot": "simulated; SQL mutations and locks real"
+  },
+  "after": {
+    "total": 88,
+    "passed": 88,
+    "failed": 0,
+    "ignored": 0,
+    "files": [
+      {
+        "file": "system-settings-postgres.test.ts",
+        "passed": 18,
+        "scenarios": [
+          {
+            "name": "refuses a setting mutation after its source is revoked following authentication",
+            "status": "passed"
+          },
+          {
+            "name": "refuses a reduction when its password proof expires while waiting for the retention lock",
+            "status": "passed"
+          },
+          {
+            "name": "rejects anonymous requests and USER grants for role-bound settings",
+            "status": "passed"
+          },
+          {
+            "name": "returns the reviewed default and ignores retired or unknown stored keys",
+            "status": "passed"
+          },
+          {
+            "name": "rejects missing versions, malformed bodies and noninteger or out-of-range values",
+            "status": "passed"
+          },
+          {
+            "name": "keeps valid no-ops unchanged and audits actual updates with their versions and actor",
+            "status": "passed"
+          },
+          {
+            "name": "requires only a recent password for reductions, including from the implicit default",
+            "status": "passed"
+          },
+          {
+            "name": "serializes two initial writes and two later writes without losing a version or duplicating an audit",
+            "status": "passed"
+          },
+          {
+            "name": "rolls back both initial creation and update when the required audit fails",
+            "status": "passed"
+          },
+          {
+            "name": "reports invalid storage without presenting the fallback as effective retention",
+            "status": "passed"
+          },
+          {
+            "name": "requires a recent password to repair invalid storage even when restoring the proposed default",
+            "status": "passed"
+          },
+          {
+            "name": "refuses stale expected retention and malformed stored durations without deleting audits",
+            "status": "passed"
+          },
+          {
+            "name": "purges only older events, cascades plain/encrypted field changes and restores its SQL guard context",
+            "status": "passed"
+          },
+          {
+            "name": "rolls back a completed purge and its cascades if a later operation in the same transaction fails",
+            "status": "passed"
+          },
+          {
+            "name": "waits for a retention increase and refuses its old cutoff, with an existing row: false",
+            "status": "passed"
+          },
+          {
+            "name": "waits for a retention increase and refuses its old cutoff, with an existing row: true",
+            "status": "passed"
+          },
+          {
+            "name": "makes a setting change wait for an in-flight purge before saving its new version",
+            "status": "passed"
+          },
+          {
+            "name": "executes the actual maintenance script with its bound SQL parameter and preserves current fixtures",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "file": "user-create-authorization-postgres.test.ts",
+        "passed": 6,
+        "scenarios": [
+          {
+            "name": "refuses creation when source revoked after the authentication snapshot and hashing",
+            "status": "passed"
+          },
+          {
+            "name": "refuses creation when security rotated after the authentication snapshot and hashing",
+            "status": "passed"
+          },
+          {
+            "name": "refuses creation when permission removed after the authentication snapshot and hashing",
+            "status": "passed"
+          },
+          {
+            "name": "refuses creation when actor disabled after the authentication snapshot and hashing",
+            "status": "passed"
+          },
+          {
+            "name": "refuses creation when source expired after the authentication snapshot and hashing",
+            "status": "passed"
+          },
+          {
+            "name": "refuses ADMIN creation when the proof expires during an observed actor lock wait",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "file": "user-create-postgres.test.ts",
+        "passed": 5,
+        "scenarios": [
+          {
+            "name": "persists a complete USER account, reservation and audit with a real bcrypt hash",
+            "status": "passed"
+          },
+          {
+            "name": "persists a complete ADMIN account, reservation and audit with a real bcrypt hash",
+            "status": "passed"
+          },
+          {
+            "name": "commits one complete account for simultaneous attempts at the same login",
+            "status": "passed"
+          },
+          {
+            "name": "rolls back a new account when a renamed identity still owns the login",
+            "status": "passed"
+          },
+          {
+            "name": "rolls back account and reservation on audit insertion failure, then permits retry",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "file": "user-detail-postgres.test.ts",
+        "passed": 36,
+        "scenarios": [
+          {
+            "name": "refuses profile after source revocation following the authentication snapshot",
+            "status": "passed"
+          },
+          {
+            "name": "refuses reset password after source revocation following the authentication snapshot",
+            "status": "passed"
+          },
+          {
+            "name": "refuses delete after source revocation following the authentication snapshot",
+            "status": "passed"
+          },
+          {
+            "name": "refuses administrative MFA reset when the source expires while waiting for the target lock",
+            "status": "passed"
+          },
+          {
+            "name": "refuses profile after its actor permission is removed following authentication",
+            "status": "passed"
+          },
+          {
+            "name": "refuses reset password after its actor permission is removed following authentication",
+            "status": "passed"
+          },
+          {
+            "name": "refuses delete after its actor permission is removed following authentication",
+            "status": "passed"
+          },
+          {
+            "name": "accepts an unchanged authorization snapshot with differently ordered permission keys",
+            "status": "passed"
+          },
+          {
+            "name": "clears an optional last name, preserves the first name and audits the empty value",
+            "status": "passed"
+          },
+          {
+            "name": "requires a client revision for {\"firstName\":\"Modified\"}",
+            "status": "passed"
+          },
+          {
+            "name": "requires a client revision for {\"lastName\":\"\"}",
+            "status": "passed"
+          },
+          {
+            "name": "requires a client revision for {\"isActive\":false}",
+            "status": "passed"
+          },
+          {
+            "name": "commits only one of two edits based on the same revision",
+            "status": "passed"
+          },
+          {
+            "name": "rolls back a rename, reservation and session revocation when auditing fails, then permits retry",
+            "status": "passed"
+          },
+          {
+            "name": "refuses a login still reserved by a renamed identity without altering either account",
+            "status": "passed"
+          },
+          {
+            "name": "clears contact verification while retaining sessions",
+            "status": "passed"
+          },
+          {
+            "name": "preserves sessions for personal policy changes and revokes them for access changes",
+            "status": "passed"
+          },
+          {
+            "name": "returns a verifiable reset secret after atomic hash, lock, session and audit updates",
+            "status": "passed"
+          },
+          {
+            "name": "rolls back a password reset when its audit cannot be persisted",
+            "status": "passed"
+          },
+          {
+            "name": "lists only unexpired sessions matching the current security version",
+            "status": "passed"
+          },
+          {
+            "name": "refuses managed sessions GET after the actor source was revoked",
+            "status": "passed"
+          },
+          {
+            "name": "refuses managed sessions single after the actor source was revoked",
+            "status": "passed"
+          },
+          {
+            "name": "refuses managed sessions all after the actor source was revoked",
+            "status": "passed"
+          },
+          {
+            "name": "refuses managed sessions GET after actor security rotation",
+            "status": "passed"
+          },
+          {
+            "name": "refuses managed sessions single after actor security rotation",
+            "status": "passed"
+          },
+          {
+            "name": "refuses managed sessions all after actor security rotation",
+            "status": "passed"
+          },
+          {
+            "name": "refuses managed sessions GET after the effective permission was removed",
+            "status": "passed"
+          },
+          {
+            "name": "refuses managed sessions single after the effective permission was removed",
+            "status": "passed"
+          },
+          {
+            "name": "refuses managed sessions all after the effective permission was removed",
+            "status": "passed"
+          },
+          {
+            "name": "refuses sessions when its proof expires while waiting for the target lock",
+            "status": "passed"
+          },
+          {
+            "name": "refuses status when its proof expires while waiting for the target lock",
+            "status": "passed"
+          },
+          {
+            "name": "refuses password when its proof expires while waiting for the target lock",
+            "status": "passed"
+          },
+          {
+            "name": "refuses delete when its proof expires while waiting for the target lock",
+            "status": "passed"
+          },
+          {
+            "name": "revokes a single owned session then all others, never a session belonging to another account",
+            "status": "passed"
+          },
+          {
+            "name": "rolls back global session revocation and security version on audit failure",
+            "status": "passed"
+          },
+          {
+            "name": "requires deactivation before permanent anonymization and keeps the reserved login",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "file": "users-list-postgres.test.ts",
+        "passed": 23,
+        "scenarios": [
+          {
+            "name": "matches all identity words in any order: Élodie Martin",
+            "status": "passed"
+          },
+          {
+            "name": "matches all identity words in any order: martin ELODIE",
+            "status": "passed"
+          },
+          {
+            "name": "matches all identity words in any order:   Élo   Mar  ",
+            "status": "passed"
+          },
+          {
+            "name": "matches all identity words in any order: emartin Martin",
+            "status": "passed"
+          },
+          {
+            "name": "handles compound names without inventing concatenations: Jean Pierre Du Pont",
+            "status": "passed"
+          },
+          {
+            "name": "handles compound names without inventing concatenations: Pont Jean",
+            "status": "passed"
+          },
+          {
+            "name": "handles compound names without inventing concatenations: Pierre Dupont",
+            "status": "passed"
+          },
+          {
+            "name": "requires every word, excludes tombstones and treats LIKE symbols literally",
+            "status": "passed"
+          },
+          {
+            "name": "only searches the complete contact query with permission",
+            "status": "passed"
+          },
+          {
+            "name": "never reveals a protected identity through words or contact to a delegated viewer",
+            "status": "passed"
+          },
+          {
+            "name": "returns the global visible statistics with exclusive access categories",
+            "status": "passed"
+          },
+          {
+            "name": "pages deterministically with total preserved and a public root first: name",
+            "status": "passed"
+          },
+          {
+            "name": "pages deterministically with total preserved and a public root first: recent",
+            "status": "passed"
+          },
+          {
+            "name": "pages deterministically with total preserved and a public root first: created",
+            "status": "passed"
+          },
+          {
+            "name": "sorts recent logins before nulls, then creation and stable id for the root viewer",
+            "status": "passed"
+          },
+          {
+            "name": "filters the exclusive SUPERADMIN category",
+            "status": "passed"
+          },
+          {
+            "name": "filters the exclusive ADMIN category",
+            "status": "passed"
+          },
+          {
+            "name": "filters the exclusive USER category",
+            "status": "passed"
+          },
+          {
+            "name": "scopes password counts and pending results to visible security identities",
+            "status": "passed"
+          },
+          {
+            "name": "never resolves private root login to a delegated viewer, role=null",
+            "status": "passed"
+          },
+          {
+            "name": "never resolves private root login to a delegated viewer, role=SUPERADMIN",
+            "status": "passed"
+          },
+          {
+            "name": "combines search and filters while treating attempted SQL syntax literally",
+            "status": "passed"
+          },
+          {
+            "name": "keeps the search inside SQL beyond the former parameter ceiling",
+            "status": "passed"
+          }
+        ]
+      }
+    ]
+  },
+  "limits": [
+    "No usual environment or remote database accessed",
+    "Snapshot authentication is simulated in these SQL suites",
+    "Real HTTP and personal MFA proofs are documented separately",
+    "No claim about all concurrent schedules or production load"
+  ]
+}

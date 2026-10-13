@@ -16,6 +16,12 @@ import {
 } from '$features/users/user-update.schema';
 import { type AuditLogInput, createAuditLogWithHeaders } from '$server/auth';
 import { prisma } from '$server/prisma';
+import {
+  assertUserActionProof,
+  authorizeUserAction,
+  type UserActionAuthority,
+  type UserActionProof,
+} from '$server/user-action-authorization';
 
 import { USER_DETAIL_SELECT } from './user-detail.service';
 
@@ -155,18 +161,22 @@ export const prepareUserUpdate = (
 
 export const updateUserWithAudit = async ({
   actorId,
+  authority,
   effectivelyGrantedPermissionKeys,
   effectivelyRevokedPermissionKeys,
   existingUser,
   expectedUpdatedAt,
   mutation,
+  requiredProof,
 }: {
   actorId: string;
+  authority: UserActionAuthority;
   effectivelyGrantedPermissionKeys: string[];
   effectivelyRevokedPermissionKeys: string[];
   existingUser: UserForUpdate;
   expectedUpdatedAt: Date;
   mutation: ReturnType<typeof prepareUserUpdate>;
+  requiredProof: UserActionProof;
 }): Promise<UserForUpdate> => {
   const {
     afterValues,
@@ -274,6 +284,13 @@ export const updateUserWithAudit = async ({
   }
 
   return prisma.$transaction(async (transaction) => {
+    const authorized = await authorizeUserAction(
+      transaction,
+      authority,
+      null,
+      id,
+    );
+    assertUserActionProof(authorized, requiredProof);
     if (changedKeys.includes('loginName')) {
       const reservation = await transaction.loginNameReservation.findUnique({
         where: { loginName: updatedLoginName },

@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { type Prisma, PrismaClient, type User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { NextRequest } from 'next/server';
+import { generate } from 'otplib';
 import {
   afterAll,
   beforeAll,
@@ -13,6 +14,7 @@ import {
   vi,
 } from 'vitest';
 
+import { POST as resetMfa } from '$app/api/users/[id]/reset-mfa/route';
 import { POST as resetPassword } from '$app/api/users/[id]/reset-password/route';
 import { DELETE, PATCH } from '$app/api/users/[id]/route';
 import {
@@ -20,13 +22,19 @@ import {
   GET as getSessions,
 } from '$app/api/users/[id]/sessions/route';
 import { PERMISSIONS } from '$constants/permissions.constants';
+import { encryptTotpSecret, generateTotpSecret } from '$server/mfa';
 
 const connection = vi.hoisted(() => ({
   client: null as PrismaClient | null,
   session: vi.fn(),
 }));
 vi.mock('server-only', () => ({}));
-vi.mock('$env', () => ({ env: { NODE_ENV: 'test' } }));
+vi.mock('$env', () => ({
+  env: {
+    MFA_ENCRYPTION_KEY_V1: Buffer.alloc(32, 19).toString('base64'),
+    NODE_ENV: 'test',
+  },
+}));
 vi.mock('$server/logger', () => ({ logger: { error: vi.fn() } }));
 vi.mock('$server/prisma', () => ({
   prisma: new Proxy(
@@ -49,7 +57,9 @@ vi.mock('next/headers', () => ({
   headers: vi.fn(async () => new Headers()),
 }));
 vi.mock('$server/rate-limiter', () => ({
+  recordLoginAttempt: vi.fn(async () => undefined),
   reserveAuthenticatedApiRateLimit: vi.fn(async () => ({ allowed: true })),
+  reserveSensitiveActionRateLimit: vi.fn(async () => ({ allowed: true })),
 }));
 vi.mock('$server/auth', async (importOriginal) => ({
   ...(await importOriginal<typeof import('$server/auth')>()),
@@ -178,6 +188,196 @@ describe.skipIf(!target)(
     afterAll(async () => {
       await db?.$disconnect();
       connection.client = null;
+    });
+
+    it.each(['profile', 'reset password', 'delete'] as const)(
+      'refuses %s after source revocation following the authentication snapshot',
+      async (action) => {
+        const user = await account({ isActive: action !== 'delete' });
+        await session(user);
+        const snapshot = await connection.session();
+        await db.session.delete({ where: { id: snapshot.session.id } });
+        const response =
+          action === 'profile'
+            ? await patch(user, { firstName: 'Unauthorized' })
+            : action === 'reset password'
+              ? await resetPassword(
+                  new NextRequest('http://localhost', { method: 'POST' }),
+                  params(user.id),
+                )
+              : await DELETE(
+                  new NextRequest('http://localhost', { method: 'DELETE' }),
+                  params(user.id),
+                );
+        expect(response.status).toBe(401);
+        expect(await response.json()).not.toHaveProperty('data');
+        expect(await db.user.findUnique({ where: { id: user.id } })).toEqual(
+          user,
+        );
+        expect(await db.session.count({ where: { userId: user.id } })).toBe(1);
+        expect(await auditCount(user.id)).toBe(0);
+      },
+    );
+
+    it('refuses administrative MFA reset when the source expires while waiting for the target lock', async () => {
+      const password = 'FictiveRootSecret1!';
+      const secret = generateTotpSecret();
+      await db.user.update({
+        data: {
+          mfaEnabledAt: new Date(),
+          passwordHash: await bcrypt.hash(password, 4),
+        },
+        where: { id: actor.id },
+      });
+      await db.totpCredential.upsert({
+        create: { ...encryptTotpSecret(secret, actor.id), userId: actor.id },
+        update: {
+          ...encryptTotpSecret(secret, actor.id),
+          lastUsedTimeStep: null,
+        },
+        where: { userId: actor.id },
+      });
+      const user = await account({ mfaEnabledAt: new Date() });
+      await db.totpCredential.create({
+        data: {
+          ...encryptTotpSecret(generateTotpSecret(), user.id),
+          userId: user.id,
+        },
+      });
+      const snapshot = await connection.session();
+      const expires = new Date(Date.now() + 1200);
+      await db.session.update({
+        data: { idleExpiresAt: expires },
+        where: { id: snapshot.session.id },
+      });
+      connection.session.mockResolvedValue({
+        ...snapshot,
+        session: { ...snapshot.session, idleExpiresAt: expires },
+      });
+      let unlock: () => void = () => undefined;
+      let acquired: () => void = () => undefined;
+      const unlocked = new Promise<void>((resolve) => {
+        unlock = resolve;
+      });
+      const locked = new Promise<void>((resolve) => {
+        acquired = resolve;
+      });
+      const holder = db.$transaction(async (transaction) => {
+        await transaction.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${user.id} FOR UPDATE`;
+        acquired();
+        await unlocked;
+      });
+      await locked;
+      const pending = resetMfa(
+        new NextRequest('http://localhost', {
+          body: JSON.stringify({
+            currentPassword: password,
+            currentTotpCode: await generate({
+              algorithm: 'sha1',
+              digits: 6,
+              period: 30,
+              secret,
+            }),
+          }),
+          method: 'POST',
+        }),
+        params(user.id),
+      );
+      try {
+        let observed = false;
+        const deadline = Date.now() + 2500;
+        while (!observed && Date.now() < deadline) {
+          const rows = await db.$queryRaw<
+            Array<{ waiting: boolean }>
+          >`SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock') AS waiting`;
+          observed = rows[0]?.waiting ?? false;
+          if (!observed)
+            await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+        expect(observed).toBe(true);
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.max(0, expires.getTime() - Date.now() + 20)),
+        );
+      } finally {
+        unlock();
+        await holder;
+      }
+      expect((await pending).status).toBe(401);
+      expect(await db.user.findUnique({ where: { id: user.id } })).toEqual(
+        user,
+      );
+      expect(
+        await db.totpCredential.count({ where: { userId: user.id } }),
+      ).toBe(1);
+      expect(await auditCount(user.id)).toBe(0);
+    });
+
+    it.each([
+      ['profile', PERMISSIONS.USERS.UPDATE_PROFILE],
+      ['reset password', PERMISSIONS.USERS.RESET_PASSWORD],
+      ['delete', PERMISSIONS.USERS.DELETE_ACCOUNT],
+    ] as const)(
+      'refuses %s after its actor permission is removed following authentication',
+      async (action, permission) => {
+        const delegated = await account({ role: 'ADMIN' });
+        const source = await session(delegated, {
+          criticalMfaVerifiedAt: new Date(),
+          passwordReauthenticatedAt: new Date(),
+        });
+        connection.session.mockResolvedValue({
+          session: source,
+          user: delegated,
+        });
+        const user = await account({ isActive: action !== 'delete' });
+        await session(user);
+        await db.user.update({
+          data: { permissions: { [permission]: false } },
+          where: { id: delegated.id },
+        });
+        const response =
+          action === 'profile'
+            ? await patch(user, { firstName: 'Unauthorized' })
+            : action === 'reset password'
+              ? await resetPassword(
+                  new NextRequest('http://localhost', { method: 'POST' }),
+                  params(user.id),
+                )
+              : await DELETE(
+                  new NextRequest('http://localhost', { method: 'DELETE' }),
+                  params(user.id),
+                );
+        expect(response.status).toBe(403);
+        expect(await response.json()).not.toHaveProperty('data');
+        expect(await db.user.findUnique({ where: { id: user.id } })).toEqual(
+          user,
+        );
+        expect(await db.session.count({ where: { userId: user.id } })).toBe(1);
+        expect(await auditCount(user.id)).toBe(0);
+      },
+    );
+
+    it('accepts an unchanged authorization snapshot with differently ordered permission keys', async () => {
+      const delegated = await account({
+        permissions: {
+          [PERMISSIONS.USERS.UPDATE_PROFILE]: true,
+          [PERMISSIONS.USERS.VIEW]: true,
+        },
+        role: 'ADMIN',
+      });
+      const source = await session(delegated);
+      connection.session.mockResolvedValue({
+        session: source,
+        user: {
+          ...delegated,
+          permissions: {
+            [PERMISSIONS.USERS.VIEW]: true,
+            [PERMISSIONS.USERS.UPDATE_PROFILE]: true,
+          },
+        },
+      });
+      const user = await account();
+      expect((await patch(user, { firstName: 'Authorized' })).status).toBe(200);
+      expect(await auditCount(user.id)).toBe(1);
     });
 
     it('clears an optional last name, preserves the first name and audits the empty value', async () => {
@@ -494,66 +694,93 @@ describe.skipIf(!target)(
       },
     );
 
-    it('refuses managed sessions when the MFA proof expires while waiting for the target lock', async () => {
-      const user = await account();
-      await session(user);
-      const snapshot = await connection.session();
-      const proofDate = new Date(Date.now() - 5 * 60_000 + 1000);
-      await db.session.update({
-        data: { criticalMfaVerifiedAt: proofDate },
-        where: { id: snapshot.session.id },
-      });
-      connection.session.mockResolvedValue({
-        ...snapshot,
-        session: { ...snapshot.session, criticalMfaVerifiedAt: proofDate },
-      });
-      let unlock: () => void = () => undefined;
-      let acquired: () => void = () => undefined;
-      const unlocked = new Promise<void>((resolve) => {
-        unlock = resolve;
-      });
-      const locked = new Promise<void>((resolve) => {
-        acquired = resolve;
-      });
-      const holder = db.$transaction(async (transaction) => {
-        await transaction.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${user.id} FOR UPDATE`;
-        acquired();
-        await unlocked;
-      });
-      await locked;
-      const pending = revokeSessions(
-        new NextRequest(`http://localhost/api/users/${user.id}/sessions`, {
-          method: 'DELETE',
-        }),
-        params(user.id),
-      );
-      try {
-        let observedWait = false;
-        const until = Date.now() + 2000;
-        while (!observedWait && Date.now() < until) {
-          const rows = await db.$queryRaw<
-            Array<{ waiting: boolean }>
-          >`SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock' AND query LIKE '%User%') AS waiting`;
-          observedWait = rows[0]?.waiting ?? false;
-          if (!observedWait)
-            await new Promise((resolve) => setTimeout(resolve, 10));
+    it.each(['sessions', 'status', 'password', 'delete'] as const)(
+      'refuses %s when its proof expires while waiting for the target lock',
+      async (action) => {
+        const user = await account({ isActive: action !== 'delete' });
+        await session(user);
+        const snapshot = await connection.session();
+        const proofDuration = (action === 'delete' ? 30 : 5) * 60_000;
+        const proofDate = new Date(Date.now() - proofDuration + 1000);
+        const proofField =
+          action === 'delete'
+            ? 'passwordReauthenticatedAt'
+            : 'criticalMfaVerifiedAt';
+        await db.session.update({
+          data: { [proofField]: proofDate },
+          where: { id: snapshot.session.id },
+        });
+        connection.session.mockResolvedValue({
+          ...snapshot,
+          session: { ...snapshot.session, [proofField]: proofDate },
+        });
+        let unlock: () => void = () => undefined;
+        let acquired: () => void = () => undefined;
+        const unlocked = new Promise<void>((resolve) => {
+          unlock = resolve;
+        });
+        const locked = new Promise<void>((resolve) => {
+          acquired = resolve;
+        });
+        const holder = db.$transaction(async (transaction) => {
+          await transaction.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${user.id} FOR UPDATE`;
+          acquired();
+          await unlocked;
+        });
+        await locked;
+        const pending =
+          action === 'status'
+            ? patch(user, { isActive: false })
+            : action === 'password'
+              ? resetPassword(
+                  new NextRequest('http://localhost', { method: 'POST' }),
+                  params(user.id),
+                )
+              : action === 'delete'
+                ? DELETE(
+                    new NextRequest('http://localhost', { method: 'DELETE' }),
+                    params(user.id),
+                  )
+                : revokeSessions(
+                    new NextRequest(
+                      `http://localhost/api/users/${user.id}/sessions`,
+                      {
+                        method: 'DELETE',
+                      },
+                    ),
+                    params(user.id),
+                  );
+        try {
+          let observedWait = false;
+          const until = Date.now() + 2000;
+          while (!observedWait && Date.now() < until) {
+            const rows = await db.$queryRaw<
+              Array<{ waiting: boolean }>
+            >`SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock' AND query LIKE '%User%') AS waiting`;
+            observedWait = rows[0]?.waiting ?? false;
+            if (!observedWait)
+              await new Promise((resolve) => setTimeout(resolve, 10));
+          }
+          expect(observedWait).toBe(true);
+          const remaining =
+            proofDate.getTime() + proofDuration - Date.now() + 20;
+          if (remaining > 0)
+            await new Promise((resolve) => setTimeout(resolve, remaining));
+        } finally {
+          unlock();
+          await holder;
         }
-        expect(observedWait).toBe(true);
-        const remaining = proofDate.getTime() + 5 * 60_000 - Date.now() + 20;
-        if (remaining > 0)
-          await new Promise((resolve) => setTimeout(resolve, remaining));
-      } finally {
-        unlock();
-        await holder;
-      }
-      const response = await pending;
-      expect(response.status).toBe(403);
-      expect((await response.json()).error.code).toBe(
-        'REAUTHENTICATION_REQUIRED',
-      );
-      expect(await db.session.count({ where: { userId: user.id } })).toBe(1);
-      expect(await auditCount(user.id)).toBe(0);
-    });
+        const response = await pending;
+        expect(response.status).toBe(403);
+        expect((await response.json()).error.code).toBe(
+          action === 'delete'
+            ? 'PASSWORD_REAUTHENTICATION_REQUIRED'
+            : 'REAUTHENTICATION_REQUIRED',
+        );
+        expect(await db.session.count({ where: { userId: user.id } })).toBe(1);
+        expect(await auditCount(user.id)).toBe(0);
+      },
+    );
 
     it('revokes a single owned session then all others, never a session belonging to another account', async () => {
       const user = await account();

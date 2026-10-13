@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { FEATURES } from '$constants/feature-registry.constants';
 import { requireAuth } from '$server/api-auth';
-import { apiErrors, parseJsonBody } from '$server/api-response';
+import { apiError, apiErrors, parseJsonBody } from '$server/api-response';
 import {
   createAuditLogWithHeaders,
   mapUserToUserType,
@@ -20,6 +20,10 @@ import {
   recordLoginAttempt,
   reserveSensitiveActionRateLimit,
 } from '$server/rate-limiter';
+import {
+  authorizeUserAction,
+  UserActionAuthorizationError,
+} from '$server/user-action-authorization';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -266,9 +270,19 @@ export async function POST(
         ? `${target.firstName} ${target.lastName}`
         : target.loginName;
     const credentialUpdatedAt = root.totpCredential.updatedAt;
-    const authenticatedAt = new Date();
 
     const updatedUser = await prisma.$transaction(async (transaction) => {
+      const authorized = await authorizeUserAction(
+        transaction,
+        {
+          actorId: auth.user.id,
+          authorization: auth.user,
+          session: currentSession,
+        },
+        null,
+        target.id,
+      );
+      const authenticatedAt = authorized.checkedAt;
       // Recheck and lock the exact authenticated session. A concurrently
       // revoked root session cannot authorize this operation.
       const sessionLock = await transaction.session.updateMany({
@@ -367,6 +381,8 @@ export async function POST(
       success: true,
     });
   } catch (error) {
+    if (error instanceof UserActionAuthorizationError)
+      return apiError(error.code, error.message, error.status);
     if (error instanceof TargetMfaStateChangedError) {
       return NextResponse.json(
         {

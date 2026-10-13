@@ -1,0 +1,37 @@
+{
+  "note": "Quatre reproductions PATCH avant correctif ; le cinquième scénario portait déjà le correctif GET et est exclu de cet extrait.",
+  "observations": [
+    {
+      "name": "bounded-detail-patch-profile",
+      "width": 390,
+      "pass": true,
+      "detail": {
+        "after31Seconds": "save-still-locked"
+      }
+    },
+    {
+      "name": "bounded-detail-patch-access",
+      "width": 390,
+      "pass": true,
+      "detail": {
+        "after31Seconds": "save-still-locked"
+      }
+    },
+    {
+      "name": "bounded-detail-patch-account",
+      "width": 390,
+      "pass": true,
+      "detail": {
+        "after31Seconds": "save-still-locked"
+      }
+    },
+    {
+      "name": "bounded-detail-patch-security",
+      "width": 390,
+      "pass": true,
+      "detail": {
+        "after31Seconds": "save-still-locked"
+      }
+    }
+  ]
+}

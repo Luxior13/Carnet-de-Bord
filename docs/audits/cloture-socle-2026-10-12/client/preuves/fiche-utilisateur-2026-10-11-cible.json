@@ -1,0 +1,19 @@
+{
+  "bank": "fiche-utilisateur-2026-10-11",
+  "runner": "docs/audits/fiche-utilisateur-2026-10-11/banc-client/run.cjs",
+  "startedAt": "2026-10-12T21:50:51.050Z",
+  "completedAt": "2026-10-12T21:50:53.066Z",
+  "head": "c54e5d813c40e71acd892e2973bbb303d9c74644",
+  "exitCode": 0,
+  "work": "C:\\Users\\Luxior\\AppData\\Local\\Temp\\noctambule-detail-client-Yf5utq",
+  "filter": "session-retry-and-revocation-focus",
+  "passed": 1,
+  "total": 1,
+  "result": [
+    {
+      "name": "session-retry-and-revocation-focus",
+      "width": 390,
+      "pass": true
+    }
+  ]
+}

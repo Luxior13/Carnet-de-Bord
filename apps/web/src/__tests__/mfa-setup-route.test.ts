@@ -65,6 +65,18 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('server-only', () => ({}));
+// Transaction authorization is exercised by account-postgres; these route tests
+// retain their own payload/proof/audit fixtures.
+vi.mock('$server/user-action-authorization', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('$server/user-action-authorization')
+  >()),
+  authorizeUserAction: vi.fn(async () => {
+    const auth = await mocks.requireAuth.mock.results.at(-1)?.value;
+
+    return { checkedAt: new Date(), session: auth.session, user: auth.user };
+  }),
+}));
 
 vi.mock('$server/api-auth', () => ({
   requireAuth: mocks.requireAuth,

@@ -1,0 +1,12 @@
+[
+  {
+    "name": "bounded-detail-delete",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "after31Seconds": "no-persistent-result",
+      "dialogCount": 1,
+      "deleteCount": 1
+    }
+  }
+]

@@ -1,5 +1,21 @@
 # Suivi — Répertoire des membres (`/membres/repertoire`)
 
+## État courant — clôture du socle du 13 octobre 2026
+
+La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est
+terminée au périmètre livré, pour poursuivre le développement métier. Ses
+preuves et limites ne constituent pas une qualification de déploiement.
+
+Liste, création et fiche restent la référence de composition avec Utilisateurs.
+Les mutations vérifient désormais la source et les droits courants dans leur
+transaction ; une identité vide après normalisation est refusée en 400 avant
+SQL. Les parcours réels et mesures locales jusqu’à 10 000 fiches complètent les
+bancs client, sans qualifier une charge concurrente ni une exploitation à plus
+grand volume.
+
+Les décisions et preuves datées ci-dessous restent conservées. Une nouvelle
+revue répond à un changement, un défaut constaté ou une règle nouvelle.
+
 ## Identité et état
 
 - Route(s) : `/membres/repertoire` (liste), `/membres/repertoire/nouveau`

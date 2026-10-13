@@ -1,4 +1,6 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Page, type Response } from '@playwright/test';
+
+import { browserApi } from './browser-api';
 
 /** Run against an editable, ordinary fixture account with an authenticated admin. */
 export async function expectUserDetailDraftSafety(
@@ -34,6 +36,7 @@ export async function expectUserDetailDraftSafety(
   await page.route(`**${api}`, async (route) => {
     if (route.request().method() !== 'PATCH') {
       await route.continue();
+
       return;
     }
     patchCount++;
@@ -65,11 +68,18 @@ export async function expectUserDetailDraftSafety(
     await page.unroute(`**${api}`);
   }
 
-  const current = await (await page.request.get(api)).json();
+  const current = await (
+    await browserApi<{ data: { user: { loginName: string } } }>(page, api)
+  ).json();
   await page.goto(
     `/systeme/utilisateurs?search=${encodeURIComponent(current.data.user.loginName)}`,
   );
-  await page.locator(`a[href*="${userId}"]`).first().click();
+  await page
+    .getByRole('link', {
+      exact: true,
+      name: `Ouvrir le compte de ${savedName}`,
+    })
+    .click();
   await expect(firstName).toBeEnabled();
   await firstName.fill('Brouillon conservé');
   const security = page.getByRole('link', { exact: true, name: 'Sécurité' });
@@ -102,7 +112,7 @@ export async function expectUserDetailConflictRecovery(
   const other = await page.context().newPage();
   const versionA = `Version A ${Date.now()}`;
   const versionB = `Version B ${Date.now()}`;
-  const waitPatch = (target: Page) =>
+  const waitPatch = (target: Page): Promise<Response> =>
     target.waitForResponse(
       (response) =>
         response.request().method() === 'PATCH' &&
@@ -142,7 +152,10 @@ export async function expectUserDetailConflictRecovery(
       .click();
     expect((await result).status()).toBe(200);
     const saved = await (
-      await other.request.get(`/api/users/${userId}`)
+      await browserApi<{ data: { user: { firstName: string } } }>(
+        other,
+        `/api/users/${userId}`,
+      )
     ).json();
     expect(saved.data.user.firstName).toBe(versionB);
   } finally {

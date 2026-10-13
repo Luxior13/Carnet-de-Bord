@@ -7,6 +7,7 @@ import { Button } from '$ui/button';
 import { Card, CardContent, CardHeader } from '$ui/card';
 
 type UserDeletionCardProps = {
+  blocked?: boolean;
   canEditStatus: boolean;
   hasStatusChanges: boolean;
   isSaving: boolean;
@@ -15,6 +16,7 @@ type UserDeletionCardProps = {
 };
 
 export const UserDeletionCard: FC<UserDeletionCardProps> = ({
+  blocked = false,
   canEditStatus,
   hasStatusChanges,
   isSaving,
@@ -43,13 +45,15 @@ export const UserDeletionCard: FC<UserDeletionCardProps> = ({
           className="text-muted-foreground text-xs"
           id="delete-user-requirement"
         >
-          {userIsActive
-            ? canEditStatus
-              ? 'Désactivez d’abord ce compte et enregistrez ce changement. La suppression sera ensuite disponible.'
-              : 'Ce compte doit d’abord être désactivé par une personne autorisée. La suppression sera ensuite disponible.'
-            : hasStatusChanges
-              ? 'Enregistrez ou annulez le changement d’état en cours avant de supprimer ce compte.'
-              : 'Cette action est irréversible. L’identité sera anonymisée et le compte ne pourra pas être restauré.'}
+          {blocked
+            ? 'Actualisez la fiche pour vérifier le résultat de la suppression avant de recommencer.'
+            : userIsActive
+              ? canEditStatus
+                ? 'Désactivez d’abord ce compte et enregistrez ce changement. La suppression sera ensuite disponible.'
+                : 'Ce compte doit d’abord être désactivé par une personne autorisée. La suppression sera ensuite disponible.'
+              : hasStatusChanges
+                ? 'Enregistrez ou annulez le changement d’état en cours avant de supprimer ce compte.'
+                : 'Cette action est irréversible. L’identité sera anonymisée et le compte ne pourra pas être restauré.'}
         </p>
       </div>
       <Button
@@ -57,7 +61,7 @@ export const UserDeletionCard: FC<UserDeletionCardProps> = ({
         variant="destructive"
         onClick={onDeleteUser}
         aria-describedby="delete-user-requirement"
-        disabled={userIsActive || hasStatusChanges || isSaving}
+        disabled={blocked || userIsActive || hasStatusChanges || isSaving}
         className="shrink-0"
       >
         Supprimer définitivement

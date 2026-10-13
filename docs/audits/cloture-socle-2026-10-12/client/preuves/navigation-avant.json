@@ -1,0 +1,398 @@
+{
+  "note": "Premier rejeu de clôture avant correction du focus desktop vers compact. Extrait du résultat temporaire de cette exécution, aucune archive historique réutilisée.",
+  "head": "c54e5d8",
+  "result": {
+    "completedAt": "2026-10-12T21:51:54.389Z",
+    "timezone": "Europe/Paris",
+    "browser": "Chromium",
+    "passed": 16,
+    "total": 17,
+    "observations": [
+      {
+        "name": "resize-sidebar-focus",
+        "width": 390,
+        "height": 900,
+        "status": "pass",
+        "focus": "Destination bureau, déclencheur mobile, saisie extérieure préservée",
+        "metrics": {
+          "viewport": 1440,
+          "document": 1440,
+          "main": 1410,
+          "mainWidth": 1410,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "resize-ancetres-focus",
+        "width": 390,
+        "status": "fail",
+        "error": "Error: expect(locator).toBeFocused() failed\n\nLocator:  getByRole('button', { name: 'Afficher les niveaux intermédiaires', exact: true })\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 5000ms\n  - waiting for getByRole('button', { name: 'Afficher les niveaux intermédiaires', exact: true })\n    14 × locator resolved to <button type=\"button\" id=\"radix-«rg»\" data-state=\"closed\" aria-haspopup=\"menu\" aria-expanded=\"false\" data-slot=\"dropdown-menu-trigger\" aria-label=\"Afficher les niveaux intermédiaires\" class=\"text-muted-foreground hover:bg-surface-tile-hover hover:text-foreground flex items-center justify-center outline-none focus-visible:ring-ring size-11 rounded-sm focus-visible:ring-[length:var(--ring-width)] focus-visible:ring-inset sm:size-8\">…</button>\n       - unexpected value \"inactive\"\n",
+        "errors": [],
+        "requests": [],
+        "focused": {
+          "tag": "BODY",
+          "label": null,
+          "text": "Aller au contenu principalOuvrir la navigationAccueilSystèmeUtilisateursRechercher une pagePage simulée : UtilisateursBrouillon fictifAucune donnée mé",
+          "html": "<body><div id=\"root\"><div data-slot=\"sidebar-wrapper\" class=\"box-border flex h-svh max-h-svh w-full overflow-hidden\" style=\"--sidebar-width: 16.5rem; --sidebar-width-icon: 3.5rem; --sidebar-width-mobile: 18rem;\"><a href=\"#main-content\" class=\"focus:bg-primary focus:text-primary-foreground focus:ring-ring/50 sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-lg focus:px-4 focus:py-2 focus:ring-2 focus:outline-none\">Aller au contenu principal</a><div data-slot=\"sidebar-inset\" class=\"flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden private-viewport bg-s"
+        }
+      },
+      {
+        "name": "garde-page",
+        "width": 390,
+        "height": 900,
+        "status": "pass",
+        "restored": {
+          "tag": "A",
+          "label": null,
+          "text": "Paramètres système",
+          "visible": true
+        },
+        "target": "/systeme/parametres",
+        "sheetPreservedForSpace": false,
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 360,
+          "mainWidth": 360,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "garde-compte",
+        "width": 390,
+        "height": 900,
+        "status": "pass",
+        "restored": {
+          "tag": "A",
+          "label": null,
+          "text": "Mon compteProfil et sécurité",
+          "visible": true
+        },
+        "target": "/mon-compte",
+        "sheetPreservedForSpace": false,
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 360,
+          "mainWidth": 360,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "garde-rubrique",
+        "width": 390,
+        "height": 900,
+        "status": "pass",
+        "restored": {
+          "tag": "A",
+          "label": "Membres",
+          "text": "Membres",
+          "visible": true
+        },
+        "target": "/membres/repertoire",
+        "sheetPreservedForSpace": true,
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 360,
+          "mainWidth": 360,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "garde-deconnexion",
+        "width": 390,
+        "height": 900,
+        "status": "pass",
+        "restored": {
+          "tag": "DIV",
+          "label": null,
+          "text": "Déconnexion",
+          "visible": true
+        },
+        "target": "/login",
+        "sheetPreservedForSpace": false,
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "mains": 0
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "garde-ancetres",
+        "width": 390,
+        "height": 900,
+        "status": "pass",
+        "restored": {
+          "tag": "A",
+          "label": null,
+          "text": "Accueil",
+          "visible": true
+        },
+        "target": "/",
+        "sheetPreservedForSpace": false,
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 360,
+          "mainWidth": 360,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "garde-recherche",
+        "width": 390,
+        "height": 900,
+        "status": "pass",
+        "restored": {
+          "tag": "INPUT",
+          "label": "Rechercher une page",
+          "text": "",
+          "visible": true
+        },
+        "target": "/systeme/parametres",
+        "sheetPreservedForSpace": false,
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 360,
+          "mainWidth": 360,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "composition-320",
+        "width": 320,
+        "height": 900,
+        "status": "pass",
+        "searchHeight": 44,
+        "metrics": {
+          "viewport": 320,
+          "document": 320,
+          "main": 290,
+          "mainWidth": 290,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "composition-390",
+        "width": 390,
+        "height": 900,
+        "status": "pass",
+        "searchHeight": 44,
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 360,
+          "mainWidth": 360,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "composition-768",
+        "width": 768,
+        "height": 900,
+        "status": "pass",
+        "searchHeight": 44,
+        "metrics": {
+          "viewport": 768,
+          "document": 768,
+          "main": 738,
+          "mainWidth": 738,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "composition-1024",
+        "width": 1024,
+        "height": 900,
+        "status": "pass",
+        "searchHeight": 40,
+        "metrics": {
+          "viewport": 1024,
+          "document": 1024,
+          "main": 730,
+          "mainWidth": 730,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "composition-1440",
+        "width": 1440,
+        "height": 900,
+        "status": "pass",
+        "searchHeight": 40,
+        "metrics": {
+          "viewport": 1440,
+          "document": 1440,
+          "main": 1146,
+          "mainWidth": 1146,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "composition-1920",
+        "width": 1920,
+        "height": 900,
+        "status": "pass",
+        "searchHeight": 40,
+        "metrics": {
+          "viewport": 1920,
+          "document": 1920,
+          "main": 1626,
+          "mainWidth": 1626,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "deconnexion-attente-erreur-reprise-320",
+        "width": 320,
+        "height": 900,
+        "status": "pass",
+        "contextStates": [
+          "pending",
+          "unconfirmed",
+          "pending",
+          "confirmed"
+        ],
+        "note": "États du contexte simulés ; aucune requête POST réelle",
+        "metrics": {
+          "viewport": 320,
+          "document": 320,
+          "main": 320,
+          "mainWidth": 320,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "deconnexion-attente-erreur-reprise-1440",
+        "width": 1440,
+        "height": 900,
+        "status": "pass",
+        "contextStates": [
+          "pending",
+          "unconfirmed",
+          "pending",
+          "confirmed"
+        ],
+        "note": "États du contexte simulés ; aucune requête POST réelle",
+        "metrics": {
+          "viewport": 1440,
+          "document": 1440,
+          "main": 1440,
+          "mainWidth": 1440,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      },
+      {
+        "name": "recherche-clavier-garde-effacement",
+        "width": 1440,
+        "height": 900,
+        "status": "pass",
+        "metrics": {
+          "viewport": 1440,
+          "document": 1440,
+          "main": 1146,
+          "mainWidth": 1146,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      }
+    ]
+  }
+}

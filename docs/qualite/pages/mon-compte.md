@@ -1,5 +1,20 @@
 # Suivi — Mon compte (`/mon-compte`)
 
+## État courant — clôture du socle du 13 octobre 2026
+
+La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est
+terminée au périmètre livré, pour poursuivre le développement métier. Ses
+preuves et limites ne constituent pas une qualification de déploiement.
+
+Le profil personnel et la navigation vers le compte sont rejoués sur serveur
+réel. Profil, contact, mot de passe et opérations MFA bénéficient de la
+relecture transactionnelle de l’acteur, de la source et des preuves applicables.
+Le remplacement MFA combiné à une perte de réponse n’a pas été joué de bout en
+bout HTTP. L’incident Bitwarden déclaré résolu par l’utilisateur reste clos.
+
+Les décisions et preuves datées ci-dessous restent conservées. Une nouvelle
+revue répond à un changement, un défaut constaté ou une règle nouvelle.
+
 ## Sécurité : attente et reprise des sessions — complément ciblé du 12 octobre 2026
 
 **Corrigé et vérifié dans le périmètre décrit.** Départ `c61ed03`, arbre propre.

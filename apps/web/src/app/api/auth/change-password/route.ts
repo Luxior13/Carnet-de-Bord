@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
-import { apiErrors, parseJsonBody } from '$server/api-response';
+import { apiError, apiErrors, parseJsonBody } from '$server/api-response';
 import {
   deleteSessionCookie,
   getAuthSession,
@@ -15,6 +15,7 @@ import {
   recordLoginAttempt,
   reserveSensitiveActionRateLimit,
 } from '$server/rate-limiter';
+import { UserActionAuthorizationError } from '$server/user-action-authorization';
 import { type ApiErrorResponse, ErrorCode } from '$types/api.types';
 import { validatePassword } from '$utils/password.utils';
 
@@ -250,6 +251,8 @@ export async function POST(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof UserActionAuthorizationError)
+      return apiError(error.code, error.message, error.status);
     if (isSecurityVersionMismatchError(error)) {
       await deleteSessionCookie();
 

@@ -1,0 +1,285 @@
+{
+  "reviewDate": "2026-10-12",
+  "executedAt": "2026-10-12T22:02:57.725Z",
+  "sql": {
+    "passed": 52,
+    "failed": 0,
+    "skipped": 0,
+    "personal": 35,
+    "login": 17,
+    "newRegressions": 6
+  },
+  "unit": {
+    "passed": 77,
+    "files": 5,
+    "scope": "Services et routes avec transactions/autorisation simul?es selon le fichier ; compte distinct, inclus dans la suite g?n?rale."
+  },
+  "environment": {
+    "database": "PostgreSQL 17 local, 52 migrations existantes",
+    "personal": "auth snapshot, headers, quotas simul?s ; services, bcrypt, crypto et SQL r?els",
+    "login": "cookies et headers simul?s ; auth, sessions, quotas, crypto et SQL r?els",
+    "http": false
+  },
+  "cases": [
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL refuses personal profile after the source session expires following authentication",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL refuses personal contact after the source session expires following authentication",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL refuses personal password after the source session expires following authentication",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL refuses personal MFA setup after the source session expires following authentication",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL rejects anonymous reads and mutations",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL rechecks a withdrawn password proof before accepting critical MFA",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL rechecks the source deadline after waiting for a session lock during recovery rotation",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL honors profile autonomy while preserving mandatory personal security access despite legacy denies",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL returns only the public personal DTO and session deadlines",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL allows the protected root to change its own contact with a password and current revision",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL lists only sessions with valid dates and the current security version",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL does not delete or disclose a newer session if the security version advances after authentication",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL requires a contact revision before password work or mutation",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL rejects a stale contact dialog including a stale no-op, then accepts explicit reload and removal",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL commits one of two contact changes based on the same revision",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL rolls back contact and its verification flag if the required audit fails",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL clears the optional last name and commits only one concurrent profile update",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL rolls back profile changes when their required audit fails",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL rejects a current password exceeding 72 bytes even when bcrypt accepts its prefix",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL changes a password, preserves only the current session and clears recent proofs without returning secrets",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL allows mandatory password replacement but blocks unrelated personal mutations until it completes",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL rolls back password, version, sessions and audit together on audit failure",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL refuses password mutation from a session revoked after authentication",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL revokes owned sessions while preserving the current session and another account",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL refuses all session revocation from a security snapshot superseded after authentication",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL refuses one session revocation from a security snapshot superseded after authentication",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL refuses all session revocation if the source session disappeared after authentication",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL refuses one session revocation if the source session disappeared after authentication",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL returns one success and one not-found when the same session is revoked concurrently",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL refuses session revocation if the account is disabled after authentication",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL rechecks the source deadline after waiting for the account row lock",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL rolls back session revocation if its required audit fails",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL cancels a staged MFA replacement while retaining the active credential, codes and sessions",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL rolls back MFA replacement on audit failure, then commits once and refuses challenge replay",
+      "status": "passed"
+    },
+    {
+      "file": "account-postgres.test.ts",
+      "name": "personal account on fully migrated PostgreSQL rolls back recovery-code regeneration and TOTP consumption, then rotates once and refuses proof replay",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL keeps unknown, disabled, locked and wrong-password replies indistinguishable",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL atomically counts the fifth bad password, locks the account and denies the sixth request",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL issues a hashed session with the reviewed deadlines, rememberMe=false",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL issues a hashed session with the reviewed deadlines, rememberMe=true",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL keeps the MFA account quota across replacement login challenges",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL allows one concurrent consumption of a TOTP login proof",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL allows one concurrent consumption of a RECOVERY_CODE login proof",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL rolls back challenge consumption, TOTP state, last login and session when the success audit fails",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL completes mandatory setup once with recovery hashes and an MFA-bound session",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL rolls back bootstrap enrollment, credentials and version if its required audit fails",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL rejects a challenge after the account becomes stale: version",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL rejects a challenge after the account becomes stale: disabled",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL cancels the exact pending setup without enabling MFA or creating a session",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL refuses an MFA source-session replacement whose expiresAt expires during the user lock",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL refuses an MFA source-session replacement whose idleExpiresAt expires during the user lock",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL refuses a LOGIN challenge that expires while waiting for the user lock",
+      "status": "passed"
+    },
+    {
+      "file": "login-postgres.test.ts",
+      "name": "login and mandatory MFA on migrated PostgreSQL refuses a SETUP challenge that expires while waiting for the user lock",
+      "status": "passed"
+    }
+  ]
+}

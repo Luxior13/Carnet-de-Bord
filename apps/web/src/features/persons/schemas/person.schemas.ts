@@ -130,7 +130,17 @@ const withMinimumIdentity = <T extends z.ZodRawShape>(shape: T) =>
         ['lastName', identity.lastName, 200],
       ] as const;
       for (const [field, fieldValue, max] of normalizedLimits) {
-        if (fieldValue && normalizePersonSearchValue(fieldValue).length > max) {
+        const normalized = fieldValue
+          ? normalizePersonSearchValue(fieldValue)
+          : null;
+        if (normalized === '') {
+          context.addIssue({
+            code: 'custom',
+            message:
+              'Renseignez au moins un caractère autre qu’un accent isolé',
+            path: [field],
+          });
+        } else if (normalized && normalized.length > max) {
           context.addIssue({
             code: 'custom',
             message: 'Cette valeur contient trop de caractères normalisés',

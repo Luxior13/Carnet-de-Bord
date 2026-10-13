@@ -39,7 +39,13 @@ export async function POST(
     await assertPersonFeatureReady();
 
     return withPrivateNoStore(
-      apiSuccess(await addPersonEmail(id, parsed.data, auth.user), 201),
+      apiSuccess(
+        await addPersonEmail(id, parsed.data, {
+          ...auth.user,
+          session: auth.session,
+        }),
+        201,
+      ),
     );
   } catch (error) {
     return handlePersonApiError('PERSON_EMAIL_CREATE', error, request);

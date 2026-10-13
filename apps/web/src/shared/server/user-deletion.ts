@@ -5,12 +5,19 @@ import { createHash } from 'node:crypto';
 import { Prisma } from '@prisma/client';
 
 import { FEATURES } from '$constants/feature-registry.constants';
+import { PERMISSIONS } from '$constants/permissions.constants';
 import { createAuditLogWithHeaders } from '$server/auth';
 import { prisma } from '$server/prisma';
+import {
+  assertUserActionProof,
+  authorizeUserAction,
+  type UserActionAuthority,
+} from '$server/user-action-authorization';
 
 type DeleteUserPermanentlyOptions = {
   actorId: string;
   actorIsProtected: boolean;
+  authority: UserActionAuthority;
   expectedSecurityVersion: number;
   expectedUpdatedAt: Date;
   userId: string;
@@ -29,6 +36,7 @@ const getDeletedLoginName = (userId: string): string =>
 export const deleteUserPermanently = async ({
   actorId,
   actorIsProtected,
+  authority,
   expectedSecurityVersion,
   expectedUpdatedAt,
   userId,
@@ -37,6 +45,13 @@ export const deleteUserPermanently = async ({
   const deletedLoginName = getDeletedLoginName(userId);
 
   await prisma.$transaction(async (transaction) => {
+    const authorized = await authorizeUserAction(
+      transaction,
+      authority,
+      PERMISSIONS.USERS.DELETE_ACCOUNT,
+      userId,
+    );
+    assertUserActionProof(authorized, 'password');
     // Capture the durable identity snapshot before anonymization. Any
     // concurrent-state failure rolls this audit event back with the mutation.
     await createAuditLogWithHeaders(

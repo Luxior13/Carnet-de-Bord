@@ -1,5 +1,21 @@
 # Suivi transverse — Fenêtres modales
 
+## État courant — clôture du socle du 13 octobre 2026
+
+La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est
+terminée au périmètre livré, pour poursuivre le développement métier. Ses
+preuves et limites ne constituent pas une qualification de déploiement.
+
+Les dialogues restent adaptés à leurs actions et les reprises sensibles sont
+bornées. MOD-INT est réconcilié par les preuves client, SQL et HTTP des parcours
+concernés ; toutes les fenêtres ne sont pas déclarées jouées de bout en bout
+HTTP. MOD-A11Y reste ouvert. L’incident Bitwarden déclaré résolu par
+l’utilisateur n’est pas rouvert ; cela ne garantit pas le comportement universel
+de toute extension.
+
+Les décisions et preuves datées ci-dessous restent conservées. Une nouvelle
+revue répond à un changement, un défaut constaté ou une règle nouvelle.
+
 ## Primitives et reprise — 11 octobre 2026
 
 Les pieds de modales restent adaptés à leur dialogue ; `SectionActionBar` sert
@@ -74,7 +90,7 @@ Sources partagées : [Dialog](../../../apps/web/src/components/ui/dialog.tsx),
 
 | ID | Point | Suite / déclencheur | Responsable / état |
 | --- | --- | --- | --- |
-| MOD-INT | Mutations, authentification, cookies et audit en base non rejoués dans cette passe de modales | Rejouer les scénarios concernés avec session et base isolées avant conclusion d’intégration complète ; conserver les points de chaque page | À attribuer / à vérifier |
+| MOD-INT | **Réconcilié le 13 octobre au périmètre livré** : composants exercés côté client, mutations et autorisations en SQL, parcours ciblés avec authentification/cookies/audit réels | Rejouer les parcours affectés par une modification ; conserver la couverture exacte de chaque banc, sans déclarer chaque dialogue joué de bout en bout HTTP | Reprise selon le changement |
 | MOD-A11Y | Lecteur d’écran, zoom natif, Safari/iOS et clavier virtuel physique non exercés | Contrôle sur appareils dédiés lors de la recette d’accessibilité | À attribuer / à vérifier |
 
 Les anciens succès de page restent datés. Les modales d’actualités appartiennent

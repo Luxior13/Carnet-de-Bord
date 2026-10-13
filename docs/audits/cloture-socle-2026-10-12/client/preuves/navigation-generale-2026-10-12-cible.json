@@ -1,0 +1,40 @@
+{
+  "bank": "navigation-generale-2026-10-12",
+  "runner": "docs/audits/navigation-generale-2026-10-12/banc-client/run.cjs",
+  "startedAt": "2026-10-12T21:55:49.717Z",
+  "completedAt": "2026-10-12T21:55:50.902Z",
+  "head": "c54e5d813c40e71acd892e2973bbb303d9c74644",
+  "exitCode": 0,
+  "work": "C:\\Users\\Luxior\\AppData\\Local\\Temp\\noctambule-navigation-client-DNmdQH",
+  "filter": "resize-ancetres-focus",
+  "passed": 1,
+  "total": 1,
+  "result": {
+    "completedAt": "2026-10-12T21:55:50.887Z",
+    "timezone": "Europe/Paris",
+    "browser": "Chromium",
+    "passed": 1,
+    "total": 1,
+    "observations": [
+      {
+        "name": "resize-ancetres-focus",
+        "width": 390,
+        "height": 900,
+        "status": "pass",
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 360,
+          "mainWidth": 360,
+          "mains": 1
+        },
+        "navigations": [
+          {
+            "method": "GET",
+            "path": "/systeme/utilisateurs"
+          }
+        ]
+      }
+    ]
+  }
+}

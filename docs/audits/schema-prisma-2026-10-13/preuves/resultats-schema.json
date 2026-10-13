@@ -1,0 +1,392 @@
+{
+  "date": "2026-10-13T16:26:12.243Z",
+  "completed": true,
+  "prisma": "6.19.3",
+  "server": [
+    {
+      "version": "PostgreSQL 17.10 on x86_64-windows, compiled by msvc-19.44.35226, 64-bit"
+    }
+  ],
+  "schemaSha256": "3dc1b46d9a0da543c9bb502af82545dc87cbb6474d27d1a6d4635fe6b592d13b",
+  "schemaLines": 562,
+  "migrationCount": 53,
+  "counts": {
+    "columns": 205,
+    "constraints": 70,
+    "indexes": 112,
+    "triggers": 11,
+    "functions": 11,
+    "enums": 74,
+    "extensions": 2
+  },
+  "migrations": [
+    {
+      "migration_name": "20250723121213_init",
+      "checksum": "da5a4b4b4ea2b956e267895b36073f53f05001fec0dc61902d8d86a9f41f2ed5",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260127210816_add_sponsors",
+      "checksum": "c9a0e783c1b4bad7c4ef1e74ec79aa6d5092e355d92a4a620318f3d8b7a71d73",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260128212016_add_structure",
+      "checksum": "c947c3bae9e4c50d4f7a824901a19ca9f2b8f0f60b5b80a69f7f0a959ec86cae",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260129120000_remove_orphaned_models",
+      "checksum": "f22e7112a0306429700001867d5bc258e9c2347948a4187b7f0c936c4e782038",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260202120000_float_to_decimal",
+      "checksum": "cbb46bb7845a5b5889205d111346c83affd59f8d96b3059178d9b802c597f714",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260202130000_add_fiscal_years",
+      "checksum": "2792ef2329b27e6b602df51d9f087357de16bed06f3dbbacf614ca125f31f345",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260204_soft_delete_transactions",
+      "checksum": "877e1bfcda3909b82438a838a0a3fb20b679997b62ea05836e4521cfe1e52398",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260205182305_add_org_transactions",
+      "checksum": "60f13ceb509a86324a544a980055ef5f1dc06902afd5c70e70048c8d36240505",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260206190825_add_tournament_tracking",
+      "checksum": "68dae14fc64844a8846acaaf51b2523ffe9dd228cc54bb9eab39de1ea83aae18",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260208142552_add_composite_indexes",
+      "checksum": "8b67ab74fc336063ec4d0b5088ae2b396614415553822228134a9b62160cd45b",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260209180142_add_expense_reports",
+      "checksum": "ddfead9837035dc37b4513d85df1712f54f12f7865bb5c2d13217742596d6af5",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260611174500_sync_schema_with_current_app",
+      "checksum": "32b56dc0bf614bd97ce31ba21a03eb2c9ff7b9937f50001d59ba8feba9cbc6f2",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260611201500_users_only_schema",
+      "checksum": "82fc01dba22464ae14fd60bd4f9176b514ad5c01c54255c02a5fb039ba20a80b",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260611213000_add_session_remember_me",
+      "checksum": "ec5bd167fd17fa474cb348d26f04ea6106e1769fe682576dfd7edc3bbe8f38e6",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260621140000_add_staff_profiles",
+      "checksum": "f5bec87119e69d039795bc04f416be2d86f68385a113bf9961eec36d627d1d66",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260621150000_rename_staff_profile_discord_id",
+      "checksum": "45d9efda85eec262fb14e4576be648d4731015494038cb8c2685fdcb00443933",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260627161500_add_auditlog_target_user_id",
+      "checksum": "6dbd21bc10d2e458a165d5a8ccb765d35927d734d354a2abcb4a77cbbc914da2",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260630120000_account_audit_indexes",
+      "checksum": "e80c34f32d21b1d30e9d50b7d99a9271d5102760fda287543b43571520cc1a14",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260630123000_users_list_indexes",
+      "checksum": "b1e8745fcb287a5364c8c6ad6e3ce223eb20075cc5e2658f07be00a78a6da83d",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260630133000_dashboard_locked_until_index",
+      "checksum": "84418ca9be2fa4deea70700bf6fdea6eed076638b148fcb3842fa30154d7f46f",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260708181000_system_activity_journal_indexes",
+      "checksum": "b77542cdc6a183abc340faaa6dbd1fcbb85f1c045facf28415aeb801f51666a3",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260708184500_audit_log_location_keys",
+      "checksum": "c3a9355dc746bcfb76f27d263b408c7da528a6e0f97e1214792ea0869923c721",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260708221000_remove_staff_profiles",
+      "checksum": "1a000b6cd0a6983dc1563d95526ba0931634a0226682e42d54740ab0e184da72",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260712120000_reconcile_migration_baseline",
+      "checksum": "5861f6abfd4b1f60ff04c0646cebf0849d217c0061d74aa177eb1bc52bdcc9a3",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260713123000_session_idle_expiration",
+      "checksum": "113065c46004d00bece60bdf282cb54559d2895c94fce2814ab92f6b5aa5983d",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260714120000_split_login_and_contact_email",
+      "checksum": "d2887f4c8a19ec5fd267734588d46c8b7de7d38ee07601d0be13a7a78205883d",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260714133000_single_root_account",
+      "checksum": "85593018ca5a7ca739aa6d998728d13bc7c58a12db612bf7e06087ea0d71f750",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260714193000_totp_mfa",
+      "checksum": "d0f33a4e5625a30333f422c4f4aa5429933e22bd136b93e58f6d324a68c33a92",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260714200000_mfa_audit_actions",
+      "checksum": "7d30dc0aac739662f8f59566b1aab0773a623e3f49a6e5c5defae168e2c90b04",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260715120000_durable_audit_events",
+      "checksum": "69719c1e33cf03c6435bc7191f4c71ed54e1e54992108e1e9574c60480113b5e",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260716120000_scale_audit_journal",
+      "checksum": "22716d8c1c6253cf253e17108f2b9c8d15cef564d7858482a412a34c10ea9508",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260716160000_require_mfa_for_all_accounts",
+      "checksum": "d22545f92cce70dd58c90e850f031853b054cb63394d661e44223cd8dc23096d",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260717190000_foundation_platform",
+      "checksum": "e5ab15a3beac786c9512e3f2140dd74aa6efb8df52f3a05eec45221fa7fda03e",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260718120000_canonical_live_permissions",
+      "checksum": "9d28dc097196d9555d932b5c502d4f02bc22ab0f41739321fff7ba42e2230266",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260718180000_split_access_delegation_permissions",
+      "checksum": "db6c91855bd5288618dd17ade516e9552c8820fb37a86761a2316119bb579711",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260718200000_admin_mode_proof",
+      "checksum": "c2ab9b98cda5059e38799feb0c0f442bf458df9462e61947fb8e553b4b717aa2",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260719120000_irreversible_user_deletion",
+      "checksum": "7c1785d0f0277e13c7a7f974e3964d7bafb79dc940f1513f9ffcaae3c28051e1",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260721120000_person_identity_foundation",
+      "checksum": "399ad047d31a668d7d374583ce7695650aa414bacf3e093b510ef9a7b0f0c4de",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260722120000_remove_background_worker",
+      "checksum": "224d1d81626304f30002e30ad4c3bd4e637e7cd8a7e02ceac87ccf463199c13b",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260722144500_normalize_person_index_names",
+      "checksum": "128efd58fe7a951e6a052cb58e5cb984cda1f4dc93b82c9a909893bfab0e056e",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260722190000_person_directory_sorting",
+      "checksum": "97636df2ba6727ecc7d87b176a616733fe2c497398839bb594362b9cb413dd72",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260723190000_partner_relationships",
+      "checksum": "6c605e3b0645da5cb0e6c8193eb69c39ca9e4fbc95237958d5d23385791d3f98",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260724190000_remove_partner_current_situation",
+      "checksum": "59e7588ca01d60b1366d64630bee79ca30ff192fb5b8b1e63207f46c7845239c",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260724214500_partner_timeline_events",
+      "checksum": "46e3d985ed0a6040db0227937e8e270520f54d833468e43991a82b1682d5b223",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260724230000_protect_partner_timeline_event_deletion",
+      "checksum": "0416314012dd2dc2179c5307ea08e62a62abdf285fd06a551170722fd78db397",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260725120000_partner_contact_coordinates",
+      "checksum": "0b87e0c7e85df67ea9f383446e2d08fb8a5dc4309c90aaa73be61d227231df18",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260726160000_internal_news",
+      "checksum": "3cf6433649ee60856021259febfcbdb8cae4fe5b8b43fcff100bdb8940bcc239",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260921120000_remove_partner_module",
+      "checksum": "9142695597618a057e484ed8d465422adecf2749e080e2989a20eb1d7bdfc963",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20260921180000_drop_redundant_unique_column_indexes",
+      "checksum": "cd2596263dc031f0ad2a5a34c920470ebea0c35d5b877ee3cc87219b5712d94f",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20261009120000_remove_notifications_module",
+      "checksum": "3306842d23a0927ddabffc8318342d8c6e744523685ab60cd03942c1773f0671",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20261010150000_make_user_last_name_optional",
+      "checksum": "1ff1627d01741a0c0ef72662ded58d5cc7ed7ca072c0f0123e19bbc2762ab959",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20261011180000_person_coordinate_ownership",
+      "checksum": "1e7f62f017372e02f654e21aaaddad726afb8e4fc110b158d4b464ec331fd11d",
+      "finished": true,
+      "rolled_back": false
+    },
+    {
+      "migration_name": "20261013120000_system_setting_positive_version",
+      "checksum": "5559cfb5bef85712e522a228ecbb1a5af4da906d3ac65235381555a68b03cc24",
+      "finished": true,
+      "rolled_back": false
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "Previous schema accepts invalid stored version 0 (defect reproduced)",
+      "passed": true
+    },
+    {
+      "name": "Upgrade rejects invalid old data atomically without rewriting it",
+      "passed": true
+    },
+    {
+      "name": "After explicit fixture repair, rolled-back migration can be retried",
+      "passed": true
+    },
+    {
+      "name": "Upgrade preserves every field and timestamp of an existing valid setting",
+      "passed": true
+    },
+    {
+      "name": "INSERT and UPDATE reject setting version 0",
+      "passed": true
+    },
+    {
+      "name": "INSERT and UPDATE reject setting version -1",
+      "passed": true
+    },
+    {
+      "name": "Positive version update succeeds; stale version still conflicts",
+      "passed": true
+    },
+    {
+      "name": "Fresh migration chain and populated upgrade produce identical SQL catalogues",
+      "passed": true
+    },
+    {
+      "name": "Only SQL catalogue change is the positive SystemSetting version check",
+      "passed": true
+    },
+    {
+      "name": "Schema/database diff contains only the six documented varchar_pattern_ops introspection artifacts",
+      "passed": true
+    },
+    {
+      "name": "Replayed migration chain has no Prisma drift against upgraded database",
+      "passed": true
+    },
+    {
+      "name": "Prisma 6.19.3 schema validation succeeds",
+      "passed": true
+    }
+  ]
+}

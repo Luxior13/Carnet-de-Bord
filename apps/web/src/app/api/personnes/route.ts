@@ -70,7 +70,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     await assertPersonFeatureReady();
 
     return withPrivateNoStore(
-      apiSuccess(await createPerson(parsed.data, auth.user), 201),
+      apiSuccess(
+        await createPerson(parsed.data, {
+          ...auth.user,
+          session: auth.session,
+        }),
+        201,
+      ),
     );
   } catch (error) {
     return handlePersonApiError('PERSON_CREATE', error, request);

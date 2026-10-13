@@ -1,0 +1,45 @@
+{
+  "dateUtc": "2026-10-13T16:32:55.596Z",
+  "startedAtUtc": "2026-10-13T16:31:52.737Z",
+  "localDate": "2026-10-13",
+  "scope": "Régression durable SystemSetting.version >= 1 et suite PostgreSQL Paramètres existante",
+  "command": "bun run test src/__tests__/system-settings-postgres.test.ts --maxWorkers=1 --reporter=json",
+  "environment": {
+    "database": "settings_service_test",
+    "host": "127.0.0.1",
+    "port": 54664,
+    "migrations": 53,
+    "data": "Fixtures fictives dédiées ; aucune base applicative habituelle",
+    "databaseAccess": "PostgreSQL réel",
+    "authentication": "Snapshot de session simulé par Vitest ; services et contraintes SQL réels",
+    "http": "Handlers appelés directement ; pas de navigateur ni serveur HTTP dans cette commande"
+  },
+  "result": {
+    "exitCode": 0,
+    "total": 20,
+    "passed": 20,
+    "failed": 0,
+    "pending": 0
+  },
+  "newRegressions": [
+    {
+      "version": 0,
+      "insert": "refus SQL23514, contrainte SystemSetting_version_check",
+      "update": "refus SQL23514 ; ligne valide entière inchangée"
+    },
+    {
+      "version": -1,
+      "insert": "refus SQL23514, contrainte SystemSetting_version_check",
+      "update": "refus SQL23514 ; ligne valide entière inchangée"
+    }
+  ],
+  "existingCoverage": "18 tests existants dont écritures positives, conflit/concurrence optimiste, contrôle des preuves, rollback audit, valeur invalide, rétention et maintenance.",
+  "lint": {
+    "command": "node ../../node_modules/eslint/bin/eslint.js src/__tests__/system-settings-postgres.test.ts",
+    "exitCode": 0
+  },
+  "limits": [
+    "Upgrade et refus de données préexistantes couverts par resultats-schema.json, pas dupliqués dans cette suite.",
+    "Aucun secret ni résultat de ligne métier exporté."
+  ]
+}

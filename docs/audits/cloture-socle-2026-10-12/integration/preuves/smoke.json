@@ -1,0 +1,48 @@
+{
+  "startedAtUtc": "2026-10-12T22:33:01.054Z",
+  "finishedAtUtc": "2026-10-12T22:34:36.096Z",
+  "executionLocalDate": "2026-10-13",
+  "timezone": "Europe/Paris",
+  "result": "passed",
+  "testCount": 1,
+  "passed": 1,
+  "failed": 0,
+  "exitCode": 0,
+  "reportedDuration": "1.0m",
+  "runner": "integration/run.ps1 -Phase Smoke",
+  "test": "apps/web/e2e/admin-smoke.spec.ts: authenticates and reaches the admin surfaces",
+  "browser": "Chromium",
+  "workers": 1,
+  "server": "Next.js production, http://127.0.0.1:3132",
+  "database": "PostgreSQL isolé : socle_e2e_test, données fictives",
+  "realJourneys": [
+    "Connexion de la fixture et première inscription MFA via HTTP ; persistance vérifiée, export de codes contrôlé puis supprimé sans archivage.",
+    "Structure accessible des pages et navigation rapide : boutons Effacer/Fermer au clavier et retour du focus.",
+    "Création utilisateur, réponse perdue après POST réellement exécuté, vérification explicite et ouverture du compte.",
+    "Fiche utilisateur : garde des brouillons, sauvegardes et conflit réel entre deux onglets.",
+    "Mon compte : modification réelle du profil et synchronisation du menu utilisateur sans rechargement.",
+    "Création Personne puis six coordonnées ; détection réelle de doublon sans fuite de la fiche correspondante, changements de coordonnées principales.",
+    "Dialogue de coordonnées : validation, garde de brouillon et annulation ; identité : concurrence, actualisation, conservation de la saisie et sauvegarde.",
+    "Provenance demandée au clavier : lecture réelle de l’historique, auteur visible, fermeture Escape et focus conservé.",
+    "Répertoire : 26 fixtures de liste, pages de 25 puis 1 entrée, retour ; filtre 13 entrées puis réinitialisation 25. Rendu, URL et lectures API réelles vérifiés.",
+    "Suppression Personne : réponse204, tombstone SQL, retour Répertoire, toast et absence de la fiche en base."
+  ],
+  "simulationsAndFixtures": [
+    "Paramètres : réponses GET/PUT interceptées pour conflits, erreur, résultat incertain, relecture explicite et attente ; aucune modification réelle de la conservation par ce bloc.",
+    "Utilisateurs : interception ciblée pour retarder une réponse et couper une réponse après route.fetch ; mutations sous-jacentes exécutées sur le vrai serveur.",
+    "26 lignes Personne de pagination préparées par Prisma dans la seule base E2E.",
+    "Reprises préalables du smoke : seule fixture MFA/source root réinitialisée après vérification par l’agent chargé de la base ; les données métier et audits de test conservés. La passe réussie réalise elle-même la vraie inscription MFA."
+  ],
+  "harnessCorrections": [
+    "Sélecteurs et libellés alignés avec les composants actuels ; contrôles HTTP authentifiés exécutés par fetch navigateur pour les cookies Secure sur loopback.",
+    "Navigation SSR de liste vérifiée par rendu/URL plutôt que par un GET client facultatif ; contrat de pagination contrôlé séparément par API réelle.",
+    "Dernier retour fiche : observation readiness ; en cas429, respect de Retry-After borné≤60s puis Revérifier et exigence200/persons ready ; aucun quota modifié.",
+    "Escape imbriqué : attente de fin des animations réelles avant le second geste ; qualification distincte 390/1280 à deux cycles, sans correction produit."
+  ],
+  "limits": [
+    "Un smoke séquentiel Chromium ; il ne remplace pas le panorama responsive/rôles ni les bancs spécialisés.",
+    "Le bloc Paramètres est une simulation réseau explicitement séparée des parcours réels.",
+    "Aucune capture, trace, clé TOTP, mot de passe temporaire ou code de récupération conservé dans cette preuve.",
+    "Aucune modification de source produit pendant cette adaptation du smoke."
+  ]
+}

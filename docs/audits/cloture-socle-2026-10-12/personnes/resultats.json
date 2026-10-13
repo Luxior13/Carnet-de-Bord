@@ -1,0 +1,352 @@
+{
+  "date": "2026-10-12",
+  "sql": {
+    "passed": 78,
+    "failed": 0,
+    "skipped": 0,
+    "files": [
+      {
+        "file": "person-creation-postgres.test.ts",
+        "passed": 17,
+        "cases": [
+          {
+            "scenario": "rejects anonymous creation before writing any person",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects an identity that disappears during search normalization before SQL",
+            "status": "passed"
+          },
+          {
+            "scenario": "enforces creation and its view dependency with a real session ({\"persons:view\":true})",
+            "status": "passed"
+          },
+          {
+            "scenario": "enforces creation and its view dependency with a real session ({\"persons:create\":true,\"persons:view\":false})",
+            "status": "passed"
+          },
+          {
+            "scenario": "honors withdrawn creation permission on the next request",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects a disabled session for creation",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects a security-version session for creation",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects a temporary-password session for creation",
+            "status": "passed"
+          },
+          {
+            "scenario": "creates a normalized nickname-only person and encrypted audit, without creating an account",
+            "status": "passed"
+          },
+          {
+            "scenario": "accepts civil identity without a nickname and preserves its civil birth date",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects invalid identities, dates, unknown fields and collection limits without a partial person",
+            "status": "passed"
+          },
+          {
+            "scenario": "keeps two intentional homonyms distinct, including a repeated or concurrent submission",
+            "status": "passed"
+          },
+          {
+            "scenario": "normalizes initial contacts, assigns primaries and reports shared coordinates without revealing another person",
+            "status": "passed"
+          },
+          {
+            "scenario": "keeps duplicate warning field indexes aligned with interleaved input networks",
+            "status": "passed"
+          },
+          {
+            "scenario": "rolls back identity, contacts and audit when AuditLog fails, then allows an explicit retry",
+            "status": "passed"
+          },
+          {
+            "scenario": "rolls back identity, contacts and audit when AuditFieldChange fails, then allows an explicit retry",
+            "status": "passed"
+          },
+          {
+            "scenario": "fails closed without the required audit key",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "file": "person-detail-postgres.test.ts",
+        "passed": 43,
+        "cases": [
+          {
+            "scenario": "denies anonymous detail, mutation, history and deletion",
+            "status": "passed"
+          },
+          {
+            "scenario": "rechecks authority after request preparation ('create' / 'permission')",
+            "status": "passed"
+          },
+          {
+            "scenario": "rechecks authority after request preparation ('create' / 'session')",
+            "status": "passed"
+          },
+          {
+            "scenario": "rechecks authority after request preparation ('identity' / 'permission')",
+            "status": "passed"
+          },
+          {
+            "scenario": "rechecks authority after request preparation ('identity' / 'session')",
+            "status": "passed"
+          },
+          {
+            "scenario": "rechecks authority after request preparation ('delete' / 'permission')",
+            "status": "passed"
+          },
+          {
+            "scenario": "rechecks authority after request preparation ('delete' / 'session')",
+            "status": "passed"
+          },
+          {
+            "scenario": "rechecks authority after request preparation ('email' / 'permission')",
+            "status": "passed"
+          },
+          {
+            "scenario": "rechecks authority after request preparation ('email' / 'session')",
+            "status": "passed"
+          },
+          {
+            "scenario": "rechecks authority after request preparation ('phone' / 'permission')",
+            "status": "passed"
+          },
+          {
+            "scenario": "rechecks authority after request preparation ('phone' / 'session')",
+            "status": "passed"
+          },
+          {
+            "scenario": "rechecks authority after request preparation ('social' / 'permission')",
+            "status": "passed"
+          },
+          {
+            "scenario": "rechecks authority after request preparation ('social' / 'session')",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects a source expiring while a real person lock blocks the mutation",
+            "status": "passed"
+          },
+          {
+            "scenario": "allows a view-only projection but denies all mutations and field values",
+            "status": "passed"
+          },
+          {
+            "scenario": "requires current view permission even with mutation/history overrides",
+            "status": "passed"
+          },
+          {
+            "scenario": "clears optional names, audits exact values and leaves a no-op unchanged",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects missing, stale and future identity versions plus unknown payload keys",
+            "status": "passed"
+          },
+          {
+            "scenario": "commits only one identity update from the same version",
+            "status": "passed"
+          },
+          {
+            "scenario": "reads the identity and its last author from the same committed snapshot",
+            "status": "passed"
+          },
+          {
+            "scenario": "keeps exactly one primary and versions every affected 'emails' record",
+            "status": "passed"
+          },
+          {
+            "scenario": "keeps exactly one primary and versions every affected 'phones' record",
+            "status": "passed"
+          },
+          {
+            "scenario": "keeps exactly one primary and versions every affected 'socialProfiles' record",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects foreign children and obsolete child/parent versions for 'emails'",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects foreign children and obsolete child/parent versions for 'phones'",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects foreign children and obsolete child/parent versions for 'socialProfiles'",
+            "status": "passed"
+          },
+          {
+            "scenario": "enforces the 'emails' capacity when two additions race",
+            "status": "passed"
+          },
+          {
+            "scenario": "enforces the 'phones' capacity when two additions race",
+            "status": "passed"
+          },
+          {
+            "scenario": "enforces the 'socialProfiles' capacity when two additions race",
+            "status": "passed"
+          },
+          {
+            "scenario": "allows a shared 'emails' value without disclosing the other person",
+            "status": "passed"
+          },
+          {
+            "scenario": "allows a shared 'phones' value without disclosing the other person",
+            "status": "passed"
+          },
+          {
+            "scenario": "allows a shared 'socialProfiles' value without disclosing the other person",
+            "status": "passed"
+          },
+          {
+            "scenario": "moves a primary social profile between networks and promotes the source replacement",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects invalid history section constructor as 400",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects invalid history section __proto__ as 400",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects invalid history section toString as 400",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects invalid history section unknown as 400",
+            "status": "passed"
+          },
+          {
+            "scenario": "returns only the bounded exact field history and preserves encrypted storage",
+            "status": "passed"
+          },
+          {
+            "scenario": "rolls back identity and primary changes when AuditLog fails",
+            "status": "passed"
+          },
+          {
+            "scenario": "rolls back identity and primary changes when AuditFieldChange fails",
+            "status": "passed"
+          },
+          {
+            "scenario": "deletes the person and children, purges field values, keeps a minimal audit and replays safely",
+            "status": "passed"
+          },
+          {
+            "scenario": "rolls back deletion, field purge and tombstone when the deletion audit fails",
+            "status": "passed"
+          },
+          {
+            "scenario": "refuses a deletion operation key reused for another person without deleting that person",
+            "status": "passed"
+          }
+        ]
+      },
+      {
+        "file": "persons-list-postgres.test.ts",
+        "passed": 18,
+        "cases": [
+          {
+            "scenario": "finds identity words in any order independently of the nickname: Élodie Martin",
+            "status": "passed"
+          },
+          {
+            "scenario": "finds identity words in any order independently of the nickname: martin ELODIE",
+            "status": "passed"
+          },
+          {
+            "scenario": "finds identity words in any order independently of the nickname:   Élo   Mar  ",
+            "status": "passed"
+          },
+          {
+            "scenario": "finds identity words in any order independently of the nickname: Phoenix Martin Élodie",
+            "status": "passed"
+          },
+          {
+            "scenario": "requires all words and treats LIKE wildcards as literal input",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects a cursor when contact search changes from https://example.test/Case to https://example.test/case",
+            "status": "passed"
+          },
+          {
+            "scenario": "rejects a cursor when contact search changes from élan to elan",
+            "status": "passed"
+          },
+          {
+            "scenario": "excludes all three contact kinds, combines filters and keeps totals before cursors",
+            "status": "passed"
+          },
+          {
+            "scenario": "keeps a total of 60 across all pages sorted by name",
+            "status": "passed"
+          },
+          {
+            "scenario": "keeps a total of 60 across all pages sorted by created",
+            "status": "passed"
+          },
+          {
+            "scenario": "keeps a total of 60 across all pages sorted by updated",
+            "status": "passed"
+          },
+          {
+            "scenario": "breaks equal created timestamps by ID across pages",
+            "status": "passed"
+          },
+          {
+            "scenario": "breaks equal updated timestamps by ID across pages",
+            "status": "passed"
+          },
+          {
+            "scenario": "does not include a future record through the database timezone offset",
+            "status": "passed"
+          },
+          {
+            "scenario": "counts only matching status and search terms before the cursor",
+            "status": "passed"
+          },
+          {
+            "scenario": "returns an empty list and zero when nothing matches",
+            "status": "passed"
+          },
+          {
+            "scenario": "finds contact matches without returning contact values and resolves the latest author stably",
+            "status": "passed"
+          },
+          {
+            "scenario": "preserves the remaining filtered total even if the cursor page becomes empty",
+            "status": "passed"
+          }
+        ]
+      }
+    ]
+  },
+  "unitAndMock": {
+    "passed": 150,
+    "files": 12
+  },
+  "lint": "passed targeted sources/tests",
+  "typecheck": "No error in Personnes; concurrent auth-transactions mocks pending in another task at the time of local execution",
+  "schema": "52 existing migrations per isolated database; no schema or migration changed",
+  "limitations": [
+    "No HTTP/browser proof in this bank",
+    "No benchmark/load/restore/legal qualification",
+    "Source expiration after Person lock is observed using pg_stat_activity; complete race space not proven"
+  ]
+}

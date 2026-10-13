@@ -7,11 +7,13 @@ import { ErrorCode } from '$types/api.types';
 const mocks = vi.hoisted(() => {
   const transaction = {
     $queryRaw: vi.fn(),
+    session: { findFirst: vi.fn() },
     systemSetting: {
       create: vi.fn(),
       findUnique: vi.fn(),
       updateMany: vi.fn(),
     },
+    user: { findUnique: vi.fn() },
   };
 
   return {
@@ -45,7 +47,8 @@ vi.mock('$server/logger', () => ({
   logger: { error: vi.fn(), warn: vi.fn() },
 }));
 vi.mock('$server/prisma', () => ({ prisma: mocks.prisma }));
-vi.mock('$server/sensitive-action', () => ({
+vi.mock('$server/sensitive-action', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('$server/sensitive-action')>()),
   requireRecentPasswordReauthentication:
     mocks.requireRecentPasswordReauthentication,
 }));
@@ -53,10 +56,12 @@ vi.mock('$server/sensitive-action', () => ({
 const UPDATED_AT = new Date('2026-07-18T12:00:00.000Z');
 const actor = {
   id: 'admin-1',
+  isActive: true,
   isProtected: false,
   loginName: 'admin.test',
   permissions: null,
   role: 'ADMIN',
+  securityVersion: 0,
 };
 
 const createPutRequest = (
@@ -77,10 +82,18 @@ describe('system settings routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireAuth.mockResolvedValue({
-      session: { passwordReauthenticatedAt: UPDATED_AT },
+      session: {
+        passwordReauthenticatedAt: new Date(),
+        securityVersion: 0,
+        token: 'source',
+      },
       success: true,
       user: actor,
     });
+    mocks.transaction.user.findUnique.mockResolvedValue(actor);
+    mocks.transaction.session.findFirst.mockImplementation(
+      async () => (await mocks.requireAuth()).session,
+    );
     mocks.requirePermission.mockReturnValue({ success: true });
     mocks.requireRecentPasswordReauthentication.mockReturnValue({
       success: true,

@@ -16,6 +16,10 @@
 - Un identifiant deviné ou modifié permet-il d’atteindre une ressource interdite ?
 - Un cache ou une vue agrégée mélange-t-il les résultats de personnes aux droits différents ?
 - Une révocation est-elle prise en compte en session, à l’exécution d’un traitement et à l’ouverture d’un lien ?
+- Pour une mutation, l'acteur, sa session source, les droits et la preuve requise
+  sont-ils encore valides dans la transaction d'écriture, après l'attente de ses
+  verrous ? Tester une révocation et une expiration survenues après le contrôle
+  initial, avec absence d'écriture et d'audit de réussite.
 - Qui peut accorder ou déléguer la capacité, pendant combien de temps, et avec quel audit ?
 - Les dépendances entre droits et restrictions du compte protégé sont-elles respectées ?
 - Une permission retirée reste-t-elle dans des presets, surcharges, API ou anciens liens ?

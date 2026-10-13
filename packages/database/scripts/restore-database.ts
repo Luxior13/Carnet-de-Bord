@@ -23,7 +23,7 @@ import {
 import {
   type BackupStreamDigest,
   readAndValidateBackupStreamWithDigest,
-  validateRestoreEnvironment,
+  validateRestoreEncryption,
 } from './database-restore-support';
 import { getPublicTables } from './database-tools';
 
@@ -313,8 +313,8 @@ try {
   }
   const formatExpectation: BackupFormatExpectation = 'current-signed';
 
-  // Pass one validates the complete closed stream, its authenticated sidecar and
-  // all required external secrets before Prisma is instantiated. It performs no
+  // Pass one validates the complete closed stream and its authenticated sidecar
+  // before Prisma is instantiated. It performs no
   // database connection or write.
   const verifiedArtifact = await readAndValidateBackupStreamWithDigest(
     backupFile,
@@ -359,7 +359,14 @@ try {
     }
   }
 
-  validateRestoreEnvironment(verifiedSummary.manifest);
+  // Authenticate every encrypted row with its external key in a bounded second
+  // pass. A syntactically valid but incorrect key must fail before any DB access.
+  await validateRestoreEncryption(
+    backupFile,
+    verifiedArtifact,
+    process.env,
+    formatExpectation,
+  );
   const prisma = new PrismaClient();
 
   try {
@@ -374,7 +381,7 @@ try {
     const counts = toTableCounts(verifiedSummary);
     if (process.argv.includes('--dry-run')) {
       process.stdout.write(
-        `Backup verified; required keys present; empty target confirmed.\n${JSON.stringify(
+        `Backup verified; encrypted values authenticated; empty target confirmed.\n${JSON.stringify(
           {
             authenticatedBackupSigningKeyVersion:
               verifiedSignature.signingKeyVersion,

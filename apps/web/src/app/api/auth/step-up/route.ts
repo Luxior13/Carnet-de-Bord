@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { requireAuth } from '$server/api-auth';
-import { apiErrors, parseJsonBody } from '$server/api-response';
+import { apiError, apiErrors, parseJsonBody } from '$server/api-response';
 import { createAuditLogWithHeaders, verifyPassword } from '$server/auth';
 import {
   consumeVerifiedMfaProof,
@@ -20,6 +20,11 @@ import {
   getPasswordReauthenticationExpiration,
   requireRecentPasswordReauthentication,
 } from '$server/sensitive-action';
+import {
+  assertUserActionProof,
+  authorizeUserAction,
+  UserActionAuthorizationError,
+} from '$server/user-action-authorization';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -356,20 +361,27 @@ export async function POST(
       }
     }
 
-    const authenticatedAt = new Date();
-    const sessionProofData: {
+    let authenticatedAt = new Date();
+    let sessionProofData: {
       criticalMfaVerifiedAt?: Date;
       lastSeenAt: Date;
       passwordReauthenticatedAt?: Date;
-    } = { lastSeenAt: authenticatedAt };
-    if (verifiesPassword) {
-      sessionProofData.passwordReauthenticatedAt = authenticatedAt;
-    }
-    if (verifiesTotp) {
-      sessionProofData.criticalMfaVerifiedAt = authenticatedAt;
-    }
+    };
 
     await prisma.$transaction(async (transaction) => {
+      const authorized = await authorizeUserAction(
+        transaction,
+        { actorId: auth.user.id, session: currentSession },
+        null,
+      );
+      if (requestedKind === 'critical-mfa')
+        assertUserActionProof(authorized, 'password');
+      authenticatedAt = authorized.checkedAt;
+      sessionProofData = { lastSeenAt: authenticatedAt };
+      if (verifiesPassword)
+        sessionProofData.passwordReauthenticatedAt = authenticatedAt;
+      if (verifiesTotp)
+        sessionProofData.criticalMfaVerifiedAt = authenticatedAt;
       const sessionUpdate = await transaction.session.updateMany({
         data: sessionProofData,
         where: {
@@ -459,6 +471,9 @@ export async function POST(
         { status: 409 },
       );
     }
+
+    if (error instanceof UserActionAuthorizationError)
+      return apiError(error.code, error.message, error.status);
 
     if (error instanceof StepUpSessionChangedError) {
       return NextResponse.json(

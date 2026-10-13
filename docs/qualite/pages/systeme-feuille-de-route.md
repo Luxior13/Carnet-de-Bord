@@ -1,5 +1,19 @@
 # Suivi — Feuille de route
 
+## État courant — clôture du socle du 13 octobre 2026
+
+La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est
+terminée au périmètre livré, pour poursuivre le développement métier. Ses
+preuves et limites ne constituent pas une qualification de déploiement.
+
+La page livrée, son catalogue local et ses composants partagés ont été
+revérifiés, avec parcours réel aux trois largeurs retenues. Aucun chantier futur
+n’est rendu actif par cette clôture et aucun mécanisme de cache ou de
+virtualisation n’est ajouté.
+
+Les décisions et preuves datées ci-dessous restent conservées. Une nouvelle
+revue répond à un changement, un défaut constaté ou une règle nouvelle.
+
 ## État courant — 12 octobre 2026
 
 Route `/systeme/feuille-de-route`, catalogue informatif pour les comptes connectés.

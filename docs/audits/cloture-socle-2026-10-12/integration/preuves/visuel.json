@@ -1,0 +1,21 @@
+{
+    "reviewedAt":  "2026-10-12T22:36:09.7880789Z",
+    "reviewed":  13,
+    "files":  [
+                  "account-1440.png",
+                  "account-320.png",
+                  "home-1440.png",
+                  "person-create-1440.png",
+                  "person-detail-1440.png",
+                  "persons-1440.png",
+                  "persons-320.png",
+                  "roadmap-1440.png",
+                  "settings-1440.png",
+                  "user-create-1440.png",
+                  "user-detail-1440.png",
+                  "user-detail-320.png",
+                  "users-1440.png"
+              ],
+    "result":  "No manifest overlap, unintended clipping or unreadable content in the inspected synthetic-fixture captures",
+    "limits":  "Chromium screenshots only; full interactions, lower scroll positions and assistive technology are not inferred from these images"
+}

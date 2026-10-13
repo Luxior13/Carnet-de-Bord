@@ -43,6 +43,8 @@ import {
   resetPermissionOverridesForKeys,
   selectPermissionOverridesForKeys,
 } from '$components/users/user-detail/user-detail-page.helpers';
+import { requestUserDetailMutation } from '$components/users/user-detail/user-detail-request';
+import { focusUserSecurityElement } from '$components/users/user-detail/user-security-focus';
 import {
   AdminMfaResetDialog,
   AdminStepUpDialog,
@@ -103,7 +105,7 @@ import directoryStyles from '$ui/directory.module.css';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
-import { ApiClientError, apiFetch } from '$utils/api.utils';
+import { ApiClientError } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 import { getSafeCollectionReturnHref } from '$utils/navigation.utils';
 import { securityRequest } from '$utils/security-request.utils';
@@ -121,9 +123,7 @@ type UserDetailPageProps = {
 
 const focusSecuritySessionsHeading = (): void => {
   const heading = document.getElementById('user-security-sessions-heading');
-  if (!heading?.getClientRects().length) return;
-  heading.focus({ preventScroll: true });
-  heading.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+  focusUserSecurityElement(heading);
 };
 
 const DetailSkeleton: FC = () => (
@@ -236,6 +236,7 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     useState(false);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletionUnconfirmed, setDeletionUnconfirmed] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -783,6 +784,11 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
       userAbortControllerRef.current = controller;
       const isBackgroundFetch = options.background === true;
       let unavailable = false;
+      let timedOut = false;
+      const timeout = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, 30_000);
 
       try {
         if (!isBackgroundFetch) {
@@ -815,6 +821,7 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
             mutationAbortControllerRef.current = new AbortController();
           setErrorStatus(null);
           setErrorMessage(null);
+          setDeletionUnconfirmed(false);
           syncUserState(loadedUser);
 
           return loadedUser;
@@ -830,13 +837,18 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
           );
         }
       } catch {
-        if (controller.signal.aborted) return null;
+        if (
+          (controller.signal.aborted && !timedOut) ||
+          userAbortControllerRef.current !== controller
+        )
+          return null;
 
         if (!isBackgroundFetch && !unavailable) {
           setErrorStatus(0);
           setErrorMessage("Impossible de charger l'utilisateur");
         }
       } finally {
+        clearTimeout(timeout);
         if (userAbortControllerRef.current === controller) {
           userAbortControllerRef.current = null;
           setIsLoading(false);
@@ -1154,9 +1166,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
   );
   const { requestNavigation } = navigation;
   useEffect(() => {
-    clearMutationFeedback();
-  }, [activeSection, clearMutationFeedback]);
-  useEffect(() => {
     setActiveSection(requestedSection);
   }, [requestedSection]);
   useEffect(() => {
@@ -1293,7 +1302,9 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     };
     setIsSaving(true);
     try {
-      const response = await apiFetch(`/api/users/${userId}`, {
+      const { data, response } = await requestUserDetailMutation<{
+        user: UserType;
+      }>(`/api/users/${userId}`, requestController.signal, {
         body: JSON.stringify({
           expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
           ...(hasProfileContactChanges
@@ -1316,7 +1327,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
         method: 'PATCH',
         signal: requestController.signal,
       });
-      const data = await response.json();
       if (!mountedRef.current || requestController.signal.aborted) return;
 
       if (response.ok && data.success) {
@@ -1417,13 +1427,14 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     };
     setIsSavingPermissions(true);
     try {
-      const response = await apiFetch(`/api/users/${userId}`, {
+      const { data, response } = await requestUserDetailMutation<{
+        user: UserType;
+      }>(`/api/users/${userId}`, requestController.signal, {
         body: JSON.stringify(payload),
         headers: { 'Content-Type': 'application/json' },
         method: 'PATCH',
         signal: requestController.signal,
       });
-      const data = await response.json();
       if (!mountedRef.current || requestController.signal.aborted) return;
 
       if (response.ok && data.success) {
@@ -1504,7 +1515,9 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     };
     setIsSavingPermissions(true);
     try {
-      const response = await apiFetch(`/api/users/${userId}`, {
+      const { data, response } = await requestUserDetailMutation<{
+        user: UserType;
+      }>(`/api/users/${userId}`, requestController.signal, {
         body: JSON.stringify({
           expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
           permissions: selectPermissionOverridesForKeys(
@@ -1517,7 +1530,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
         method: 'PATCH',
         signal: requestController.signal,
       });
-      const data = await response.json();
       if (!mountedRef.current || requestController.signal.aborted) return;
 
       if (response.ok && data.success) {
@@ -1589,7 +1601,9 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     };
     setIsSaving(true);
     try {
-      const response = await apiFetch(`/api/users/${userId}`, {
+      const { data, response } = await requestUserDetailMutation<{
+        user: UserType;
+      }>(`/api/users/${userId}`, requestController.signal, {
         body: JSON.stringify({
           expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
           isActive: editForm.isActive,
@@ -1598,7 +1612,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
         method: 'PATCH',
         signal: requestController.signal,
       });
-      const data = await response.json();
       if (!mountedRef.current || requestController.signal.aborted) return;
 
       if (response.ok && data.success) {
@@ -1739,6 +1752,7 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
 
   const handleDelete = async (): Promise<void> => {
     if (!mountedRef.current) return;
+    if (deletionUnconfirmed) return;
     if (!user || deleteConfirmation.trim() !== user.loginName) return;
     if (!canRequestDeleteTargetUser) {
       toast.error(
@@ -1759,11 +1773,12 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     const requestController = mutationAbortControllerRef.current;
     setIsDeleting(true);
     try {
-      const response = await apiFetch(`/api/users/${userId}`, {
+      const { data, response } = await requestUserDetailMutation<{
+        user: UserType;
+      }>(`/api/users/${userId}`, requestController.signal, {
         method: 'DELETE',
         signal: requestController.signal,
       });
-      const data = await response.json();
       if (!mountedRef.current || requestController.signal.aborted) return;
 
       if (response.ok && data.success) {
@@ -1784,7 +1799,11 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
       }
     } catch {
       if (!mountedRef.current || requestController.signal.aborted) return;
-      toast.error('Impossible de supprimer ce compte');
+      setDeletionUnconfirmed(true);
+      mutation.report(
+        'security',
+        'La suppression n’a pas pu être confirmée. Le compte a peut-être été supprimé. Actualisez la fiche avant toute nouvelle tentative.',
+      );
     } finally {
       if (requestController !== mutationAbortControllerRef.current) return;
       mutation.finish();
@@ -2066,6 +2085,7 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
               hasStatusChanges={hasSecurityChanges}
               onCancelStatus={handleCancelSecurity}
               canRequestDeleteUser={canRequestDeleteTargetUser}
+              deletionBlocked={deletionUnconfirmed}
               onDeleteUser={() => setShowDeleteConfirm(true)}
               sessions={securitySessions}
               sessionsError={securitySessionsError}
@@ -2523,7 +2543,10 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
                 Annuler
               </AlertDialogCancel>
               <AlertDialogAction
-                onClick={handleDelete}
+                onClick={(event) => {
+                  event.preventDefault();
+                  void handleDelete();
+                }}
                 disabled={
                   isDeleting || deleteConfirmation.trim() !== user.loginName
                 }

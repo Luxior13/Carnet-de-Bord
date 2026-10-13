@@ -89,6 +89,27 @@ vi.mock('$server/prisma', () => ({
   prisma: mockPrisma,
 }));
 
+// This suite exercises route permission policies with an already-authorized
+// request. Transactional authority races use real PostgreSQL in the creation,
+// detail and session suites; do not feed their guard this target-only DB mock.
+vi.mock('$server/user-action-authorization', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('$server/user-action-authorization')>();
+
+  return {
+    ...actual,
+    authorizeUserAction: vi.fn(async () => {
+      const authenticated = await mockRequireAuth.mock.results.at(-1)?.value;
+
+      return {
+        checkedAt: new Date(),
+        session: authenticated.session,
+        user: authenticated.user,
+      };
+    }),
+  };
+});
+
 const buildUser = (
   overrides: Record<string, unknown> = {},
 ): Record<string, unknown> => ({

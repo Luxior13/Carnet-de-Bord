@@ -1,0 +1,4080 @@
+{
+  "columns": [
+    {
+      "table_name": "ArchivedStaffProfile",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "ordinal_position": 2,
+      "column_name": "userId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "ordinal_position": 3,
+      "column_name": "displayName",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "ordinal_position": 4,
+      "column_name": "jobTitle",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "ordinal_position": 5,
+      "column_name": "department",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "ordinal_position": 6,
+      "column_name": "discordId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "ordinal_position": 7,
+      "column_name": "phone",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "ordinal_position": 8,
+      "column_name": "timezone",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "ordinal_position": 9,
+      "column_name": "joinedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "ordinal_position": 10,
+      "column_name": "internalNote",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "ordinal_position": 11,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "ordinal_position": 12,
+      "column_name": "updatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditEncryptionKeyVersion",
+      "ordinal_position": 1,
+      "column_name": "version",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditEncryptionKeyVersion",
+      "ordinal_position": 2,
+      "column_name": "algorithm",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 32,
+      "is_nullable": "NO",
+      "column_default": "'AES-256-GCM'::character varying"
+    },
+    {
+      "table_name": "AuditEncryptionKeyVersion",
+      "ordinal_position": 3,
+      "column_name": "firstUsedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 2,
+      "column_name": "auditLogId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 3,
+      "column_name": "entityType",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 40,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 4,
+      "column_name": "entityId",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 128,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 5,
+      "column_name": "sectionKey",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 64,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 6,
+      "column_name": "fieldKey",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 100,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 7,
+      "column_name": "recordId",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 128,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 8,
+      "column_name": "changeType",
+      "data_type": "USER-DEFINED",
+      "udt_name": "AuditFieldChangeType",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 9,
+      "column_name": "valueMode",
+      "data_type": "USER-DEFINED",
+      "udt_name": "AuditValueStorageMode",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 10,
+      "column_name": "beforeValue",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 512,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 11,
+      "column_name": "afterValue",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 512,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 12,
+      "column_name": "valuesCiphertext",
+      "data_type": "bytea",
+      "udt_name": "bytea",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 13,
+      "column_name": "valuesIv",
+      "data_type": "bytea",
+      "udt_name": "bytea",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 14,
+      "column_name": "valuesAuthTag",
+      "data_type": "bytea",
+      "udt_name": "bytea",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 15,
+      "column_name": "valueKeyVersion",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 16,
+      "column_name": "beforeHash",
+      "data_type": "character",
+      "udt_name": "bpchar",
+      "character_maximum_length": 64,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 17,
+      "column_name": "afterHash",
+      "data_type": "character",
+      "udt_name": "bpchar",
+      "character_maximum_length": 64,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "ordinal_position": 18,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 2,
+      "column_name": "userId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 3,
+      "column_name": "action",
+      "data_type": "USER-DEFINED",
+      "udt_name": "AuditAction",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 4,
+      "column_name": "category",
+      "data_type": "USER-DEFINED",
+      "udt_name": "AuditCategory",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 5,
+      "column_name": "description",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 6,
+      "column_name": "metadata",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 7,
+      "column_name": "ipAddress",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 8,
+      "column_name": "userAgent",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 9,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 10,
+      "column_name": "targetUserId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 11,
+      "column_name": "poleKey",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 12,
+      "column_name": "pageKey",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 13,
+      "column_name": "tabKey",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 14,
+      "column_name": "actorDisplayNameSnapshot",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 15,
+      "column_name": "actorLoginNameSnapshot",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 16,
+      "column_name": "actorRoleSnapshot",
+      "data_type": "USER-DEFINED",
+      "udt_name": "UserRole",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 17,
+      "column_name": "targetDisplayNameSnapshot",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 18,
+      "column_name": "targetLoginNameSnapshot",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 19,
+      "column_name": "targetRoleSnapshot",
+      "data_type": "USER-DEFINED",
+      "udt_name": "UserRole",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 20,
+      "column_name": "eventKind",
+      "data_type": "USER-DEFINED",
+      "udt_name": "AuditEventKind",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "'ACTIVITY'::\"AuditEventKind\""
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 21,
+      "column_name": "stream",
+      "data_type": "USER-DEFINED",
+      "udt_name": "AuditStream",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "'SYSTEM'::\"AuditStream\""
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 22,
+      "column_name": "outcome",
+      "data_type": "USER-DEFINED",
+      "udt_name": "AuditOutcome",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "'SUCCESS'::\"AuditOutcome\""
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 23,
+      "column_name": "severity",
+      "data_type": "USER-DEFINED",
+      "udt_name": "AuditSeverity",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "'INFO'::\"AuditSeverity\""
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 24,
+      "column_name": "eventVersion",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "1"
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 25,
+      "column_name": "requestId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 26,
+      "column_name": "entityType",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 40,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "AuditLog",
+      "ordinal_position": 27,
+      "column_name": "entityId",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 128,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "ordinal_position": 2,
+      "column_name": "title",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 160,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "ordinal_position": 3,
+      "column_name": "body",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 2000,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "ordinal_position": 4,
+      "column_name": "publishedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "ordinal_position": 5,
+      "column_name": "pinnedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "ordinal_position": 6,
+      "column_name": "createdById",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "ordinal_position": 7,
+      "column_name": "authorDisplayNameSnapshot",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 200,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "ordinal_position": 8,
+      "column_name": "authorLoginNameSnapshot",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 64,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "ordinal_position": 9,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "ordinal_position": 10,
+      "column_name": "updatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "LoginNameReservation",
+      "ordinal_position": 1,
+      "column_name": "loginName",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "LoginNameReservation",
+      "ordinal_position": 2,
+      "column_name": "userId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "LoginNameReservation",
+      "ordinal_position": 3,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "ordinal_position": 2,
+      "column_name": "userId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "ordinal_position": 3,
+      "column_name": "tokenHash",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "ordinal_position": 4,
+      "column_name": "purpose",
+      "data_type": "USER-DEFINED",
+      "udt_name": "MfaChallengePurpose",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "ordinal_position": 5,
+      "column_name": "securityVersion",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "ordinal_position": 6,
+      "column_name": "credentialUpdatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "ordinal_position": 7,
+      "column_name": "rememberMe",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "ordinal_position": 8,
+      "column_name": "attempts",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "ordinal_position": 9,
+      "column_name": "expiresAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "ordinal_position": 10,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "ordinal_position": 11,
+      "column_name": "updatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "MfaRecoveryCode",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "MfaRecoveryCode",
+      "ordinal_position": 2,
+      "column_name": "userId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "MfaRecoveryCode",
+      "ordinal_position": 3,
+      "column_name": "codeHash",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "MfaRecoveryCode",
+      "ordinal_position": 4,
+      "column_name": "salt",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "MfaRecoveryCode",
+      "ordinal_position": 5,
+      "column_name": "usedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "MfaRecoveryCode",
+      "ordinal_position": 6,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "Person",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "Person",
+      "ordinal_position": 2,
+      "column_name": "nickname",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 80,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "Person",
+      "ordinal_position": 3,
+      "column_name": "normalizedNickname",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 160,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "Person",
+      "ordinal_position": 4,
+      "column_name": "firstName",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 100,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "Person",
+      "ordinal_position": 5,
+      "column_name": "normalizedFirstName",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 200,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "Person",
+      "ordinal_position": 6,
+      "column_name": "lastName",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 100,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "Person",
+      "ordinal_position": 7,
+      "column_name": "normalizedLastName",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 200,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "Person",
+      "ordinal_position": 8,
+      "column_name": "birthDate",
+      "data_type": "date",
+      "udt_name": "date",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "Person",
+      "ordinal_position": 9,
+      "column_name": "structureStatus",
+      "data_type": "USER-DEFINED",
+      "udt_name": "PersonStructureStatus",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "'OUTSIDE_STRUCTURE'::\"PersonStructureStatus\""
+    },
+    {
+      "table_name": "Person",
+      "ordinal_position": 10,
+      "column_name": "version",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "1"
+    },
+    {
+      "table_name": "Person",
+      "ordinal_position": 11,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "Person",
+      "ordinal_position": 12,
+      "column_name": "updatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "Person",
+      "ordinal_position": 13,
+      "column_name": "sortName",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 401,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonDeletionTombstone",
+      "ordinal_position": 1,
+      "column_name": "personId",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 128,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonDeletionTombstone",
+      "ordinal_position": 2,
+      "column_name": "deletionOperationId",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 191,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonDeletionTombstone",
+      "ordinal_position": 3,
+      "column_name": "deletedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "PersonEmail",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonEmail",
+      "ordinal_position": 2,
+      "column_name": "personId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonEmail",
+      "ordinal_position": 3,
+      "column_name": "email",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 320,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonEmail",
+      "ordinal_position": 4,
+      "column_name": "normalizedEmail",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 320,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonEmail",
+      "ordinal_position": 5,
+      "column_name": "label",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 40,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonEmail",
+      "ordinal_position": 6,
+      "column_name": "isPrimary",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "PersonEmail",
+      "ordinal_position": 7,
+      "column_name": "version",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "1"
+    },
+    {
+      "table_name": "PersonEmail",
+      "ordinal_position": 8,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "PersonEmail",
+      "ordinal_position": 9,
+      "column_name": "updatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonPhone",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonPhone",
+      "ordinal_position": 2,
+      "column_name": "personId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonPhone",
+      "ordinal_position": 3,
+      "column_name": "phone",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 40,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonPhone",
+      "ordinal_position": 4,
+      "column_name": "normalizedPhone",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 16,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonPhone",
+      "ordinal_position": 5,
+      "column_name": "label",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 40,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonPhone",
+      "ordinal_position": 6,
+      "column_name": "isPrimary",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "PersonPhone",
+      "ordinal_position": 7,
+      "column_name": "version",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "1"
+    },
+    {
+      "table_name": "PersonPhone",
+      "ordinal_position": 8,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "PersonPhone",
+      "ordinal_position": 9,
+      "column_name": "updatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "ordinal_position": 2,
+      "column_name": "personId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "ordinal_position": 3,
+      "column_name": "networkKey",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 40,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "ordinal_position": 4,
+      "column_name": "identifier",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 100,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "ordinal_position": 5,
+      "column_name": "normalizedIdentifier",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 100,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "ordinal_position": 6,
+      "column_name": "profileUrl",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 2048,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "ordinal_position": 7,
+      "column_name": "normalizedProfileUrl",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 2048,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "ordinal_position": 8,
+      "column_name": "normalizedProfileUrlHash",
+      "data_type": "character",
+      "udt_name": "bpchar",
+      "character_maximum_length": 64,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "ordinal_position": 9,
+      "column_name": "label",
+      "data_type": "character varying",
+      "udt_name": "varchar",
+      "character_maximum_length": 40,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "ordinal_position": 10,
+      "column_name": "isPrimary",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "ordinal_position": 11,
+      "column_name": "version",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "1"
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "ordinal_position": 12,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "ordinal_position": 13,
+      "column_name": "updatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "RateLimit",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "RateLimit",
+      "ordinal_position": 2,
+      "column_name": "key",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "RateLimit",
+      "ordinal_position": 3,
+      "column_name": "count",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "RateLimit",
+      "ordinal_position": 4,
+      "column_name": "firstAttempt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "RateLimit",
+      "ordinal_position": 5,
+      "column_name": "blockedUntil",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "RateLimit",
+      "ordinal_position": 6,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "RateLimit",
+      "ordinal_position": 7,
+      "column_name": "updatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 2,
+      "column_name": "userId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 3,
+      "column_name": "token",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 4,
+      "column_name": "expiresAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 5,
+      "column_name": "userAgent",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 6,
+      "column_name": "ipAddress",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 7,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 8,
+      "column_name": "updatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 9,
+      "column_name": "rememberMe",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 10,
+      "column_name": "idleExpiresAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "(CURRENT_TIMESTAMP + '00:30:00'::interval)"
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 11,
+      "column_name": "lastSeenAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 12,
+      "column_name": "securityVersion",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 13,
+      "column_name": "mfaVerifiedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 14,
+      "column_name": "mfaMethod",
+      "data_type": "USER-DEFINED",
+      "udt_name": "MfaAuthenticationMethod",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 15,
+      "column_name": "passwordReauthenticatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "Session",
+      "ordinal_position": 16,
+      "column_name": "criticalMfaVerifiedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "SystemSetting",
+      "ordinal_position": 1,
+      "column_name": "key",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "SystemSetting",
+      "ordinal_position": 2,
+      "column_name": "value",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "SystemSetting",
+      "ordinal_position": 3,
+      "column_name": "description",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "SystemSetting",
+      "ordinal_position": 4,
+      "column_name": "version",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "1"
+    },
+    {
+      "table_name": "SystemSetting",
+      "ordinal_position": 5,
+      "column_name": "updatedById",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "SystemSetting",
+      "ordinal_position": 6,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "SystemSetting",
+      "ordinal_position": 7,
+      "column_name": "updatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "TotpCredential",
+      "ordinal_position": 1,
+      "column_name": "userId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "TotpCredential",
+      "ordinal_position": 2,
+      "column_name": "secretCiphertext",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "TotpCredential",
+      "ordinal_position": 3,
+      "column_name": "secretIv",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "TotpCredential",
+      "ordinal_position": 4,
+      "column_name": "secretAuthTag",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "TotpCredential",
+      "ordinal_position": 5,
+      "column_name": "secretKeyVersion",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "1"
+    },
+    {
+      "table_name": "TotpCredential",
+      "ordinal_position": 6,
+      "column_name": "lastUsedTimeStep",
+      "data_type": "bigint",
+      "udt_name": "int8",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "TotpCredential",
+      "ordinal_position": 7,
+      "column_name": "lastUsedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "TotpCredential",
+      "ordinal_position": 8,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "TotpCredential",
+      "ordinal_position": 9,
+      "column_name": "updatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "TotpEnrollment",
+      "ordinal_position": 1,
+      "column_name": "userId",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "TotpEnrollment",
+      "ordinal_position": 2,
+      "column_name": "secretCiphertext",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "TotpEnrollment",
+      "ordinal_position": 3,
+      "column_name": "secretIv",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "TotpEnrollment",
+      "ordinal_position": 4,
+      "column_name": "secretAuthTag",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "TotpEnrollment",
+      "ordinal_position": 5,
+      "column_name": "secretKeyVersion",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "1"
+    },
+    {
+      "table_name": "TotpEnrollment",
+      "ordinal_position": 6,
+      "column_name": "expiresAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "TotpEnrollment",
+      "ordinal_position": 7,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "TotpEnrollment",
+      "ordinal_position": 8,
+      "column_name": "updatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 3,
+      "column_name": "passwordHash",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 4,
+      "column_name": "firstName",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 5,
+      "column_name": "lastName",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 6,
+      "column_name": "role",
+      "data_type": "USER-DEFINED",
+      "udt_name": "UserRole",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "'USER'::\"UserRole\""
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 7,
+      "column_name": "permissions",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 8,
+      "column_name": "isActive",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "true"
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 9,
+      "column_name": "isProtected",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 10,
+      "column_name": "mustChangePassword",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 11,
+      "column_name": "failedLoginAttempts",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 12,
+      "column_name": "lockedUntil",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 13,
+      "column_name": "lastLoginAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 14,
+      "column_name": "passwordChangedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 15,
+      "column_name": "deletedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 16,
+      "column_name": "createdAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "CURRENT_TIMESTAMP"
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 17,
+      "column_name": "updatedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 18,
+      "column_name": "loginName",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 19,
+      "column_name": "contactEmail",
+      "data_type": "text",
+      "udt_name": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 20,
+      "column_name": "contactEmailVerifiedAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 21,
+      "column_name": "securityVersion",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "User",
+      "ordinal_position": 22,
+      "column_name": "mfaEnabledAt",
+      "data_type": "timestamp without time zone",
+      "udt_name": "timestamp",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    }
+  ],
+  "constraints": [
+    {
+      "table_name": "ArchivedStaffProfile",
+      "name": "ArchivedStaffProfile_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "name": "ArchivedStaffProfile_userId_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON UPDATE CASCADE ON DELETE SET NULL"
+    },
+    {
+      "table_name": "AuditEncryptionKeyVersion",
+      "name": "AuditEncryptionKeyVersion_algorithm_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK (((algorithm)::text = 'AES-256-GCM'::text))"
+    },
+    {
+      "table_name": "AuditEncryptionKeyVersion",
+      "name": "AuditEncryptionKeyVersion_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (version)"
+    },
+    {
+      "table_name": "AuditEncryptionKeyVersion",
+      "name": "AuditEncryptionKeyVersion_version_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((version >= 1))"
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "name": "AuditFieldChange_auditLogId_entityType_entityId_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"auditLogId\", \"entityType\", \"entityId\") REFERENCES \"AuditLog\"(id, \"entityType\", \"entityId\") ON UPDATE CASCADE ON DELETE CASCADE"
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "name": "AuditFieldChange_hashes_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((((\"beforeHash\" IS NULL) OR (\"beforeHash\" ~ '^[0-9a-f]{64}$'::text)) AND ((\"afterHash\" IS NULL) OR (\"afterHash\" ~ '^[0-9a-f]{64}$'::text))))"
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "name": "AuditFieldChange_keys_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((((\"entityType\")::text ~ '^[A-Z][A-Z0-9_]{0,39}$'::text) AND ((\"entityId\")::text = btrim((\"entityId\")::text)) AND ((\"entityId\")::text <> ''::text) AND ((\"sectionKey\")::text ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$'::text) AND ((\"fieldKey\")::text ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$'::text) AND ((\"recordId\" IS NULL) OR (((\"recordId\")::text = btrim((\"recordId\")::text)) AND ((\"recordId\")::text <> ''::text)))))"
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "name": "AuditFieldChange_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "name": "AuditFieldChange_storage_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((((\"valueMode\" = 'PLAIN'::\"AuditValueStorageMode\") AND ((\"beforeValue\" IS NOT NULL) OR (\"afterValue\" IS NOT NULL)) AND (\"valuesCiphertext\" IS NULL) AND (\"valuesIv\" IS NULL) AND (\"valuesAuthTag\" IS NULL) AND (\"valueKeyVersion\" IS NULL) AND (\"beforeHash\" IS NULL) AND (\"afterHash\" IS NULL)) OR ((\"valueMode\" = 'ENCRYPTED'::\"AuditValueStorageMode\") AND (\"beforeValue\" IS NULL) AND (\"afterValue\" IS NULL) AND (\"valuesCiphertext\" IS NOT NULL) AND ((octet_length(\"valuesCiphertext\") >= 1) AND (octet_length(\"valuesCiphertext\") <= 8192)) AND (\"valuesIv\" IS NOT NULL) AND (octet_length(\"valuesIv\") = 12) AND (\"valuesAuthTag\" IS NOT NULL) AND (octet_length(\"valuesAuthTag\") = 16) AND (\"valueKeyVersion\" IS NOT NULL) AND (\"beforeHash\" IS NULL) AND (\"afterHash\" IS NULL)) OR ((\"valueMode\" = 'NONE'::\"AuditValueStorageMode\") AND (\"beforeValue\" IS NULL) AND (\"afterValue\" IS NULL) AND (\"valuesCiphertext\" IS NULL) AND (\"valuesIv\" IS NULL) AND (\"valuesAuthTag\" IS NULL) AND (\"valueKeyVersion\" IS NULL))))"
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "name": "AuditFieldChange_valueKeyVersion_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"valueKeyVersion\") REFERENCES \"AuditEncryptionKeyVersion\"(version) ON UPDATE CASCADE ON DELETE RESTRICT"
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_entity_subject_pair_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK (((\"entityType\" IS NULL) = (\"entityId\" IS NULL)))"
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_eventVersion_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((\"eventVersion\" >= 1))"
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_person_event_shape_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK (((((action)::text = ANY (ARRAY['PERSON_CREATE'::text, 'PERSON_UPDATE'::text, 'PERSON_DELETE'::text])) AND ((category)::text = 'PERSON'::text) AND ((stream)::text = 'IDENTITY'::text) AND ((\"entityType\")::text = 'PERSON'::text) AND (\"entityId\" IS NOT NULL)) OR (((action)::text <> ALL (ARRAY['PERSON_CREATE'::text, 'PERSON_UPDATE'::text, 'PERSON_DELETE'::text])) AND ((category)::text <> 'PERSON'::text))))"
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_targetUserId_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"targetUserId\") REFERENCES \"User\"(id) ON UPDATE CASCADE ON DELETE RESTRICT"
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_userId_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON UPDATE CASCADE ON DELETE RESTRICT"
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "name": "InternalAnnouncement_createdById_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"createdById\") REFERENCES \"User\"(id) ON UPDATE CASCADE ON DELETE SET NULL"
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "name": "InternalAnnouncement_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "LoginNameReservation",
+      "name": "LoginNameReservation_loginName_format_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((\"loginName\" ~ '^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$'::text))"
+    },
+    {
+      "table_name": "LoginNameReservation",
+      "name": "LoginNameReservation_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (\"loginName\")"
+    },
+    {
+      "table_name": "LoginNameReservation",
+      "name": "LoginNameReservation_userId_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON UPDATE CASCADE ON DELETE RESTRICT"
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "name": "MfaLoginChallenge_attempts_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((attempts >= 0))"
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "name": "MfaLoginChallenge_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "name": "MfaLoginChallenge_userId_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON UPDATE CASCADE ON DELETE CASCADE"
+    },
+    {
+      "table_name": "MfaRecoveryCode",
+      "name": "MfaRecoveryCode_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "MfaRecoveryCode",
+      "name": "MfaRecoveryCode_userId_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON UPDATE CASCADE ON DELETE CASCADE"
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_first_name_pair_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((((\"firstName\" IS NULL) AND (\"normalizedFirstName\" IS NULL)) OR ((\"firstName\" IS NOT NULL) AND (\"normalizedFirstName\" IS NOT NULL) AND ((\"firstName\")::text = btrim((\"firstName\")::text)) AND ((\"firstName\")::text <> ''::text) AND ((\"normalizedFirstName\")::text = btrim((\"normalizedFirstName\")::text)) AND ((\"normalizedFirstName\")::text <> ''::text))))"
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_last_name_pair_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((((\"lastName\" IS NULL) AND (\"normalizedLastName\" IS NULL)) OR ((\"lastName\" IS NOT NULL) AND (\"normalizedLastName\" IS NOT NULL) AND ((\"lastName\")::text = btrim((\"lastName\")::text)) AND ((\"lastName\")::text <> ''::text) AND ((\"normalizedLastName\")::text = btrim((\"normalizedLastName\")::text)) AND ((\"normalizedLastName\")::text <> ''::text))))"
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_minimum_identity_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK (((nickname IS NOT NULL) OR ((\"firstName\" IS NOT NULL) AND (\"lastName\" IS NOT NULL))))"
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_nickname_pair_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((((nickname IS NULL) AND (\"normalizedNickname\" IS NULL)) OR ((nickname IS NOT NULL) AND (\"normalizedNickname\" IS NOT NULL) AND ((nickname)::text = btrim((nickname)::text)) AND ((nickname)::text <> ''::text) AND ((\"normalizedNickname\")::text = btrim((\"normalizedNickname\")::text)) AND ((\"normalizedNickname\")::text <> ''::text))))"
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_version_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((version >= 1))"
+    },
+    {
+      "table_name": "PersonDeletionTombstone",
+      "name": "PersonDeletionTombstone_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (\"personId\")"
+    },
+    {
+      "table_name": "PersonDeletionTombstone",
+      "name": "PersonDeletionTombstone_values_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((((\"personId\")::text = btrim((\"personId\")::text)) AND ((\"personId\")::text <> ''::text) AND ((\"deletionOperationId\")::text = btrim((\"deletionOperationId\")::text)) AND ((\"deletionOperationId\")::text <> ''::text)))"
+    },
+    {
+      "table_name": "PersonEmail",
+      "name": "PersonEmail_personId_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"personId\") REFERENCES \"Person\"(id) ON UPDATE CASCADE ON DELETE CASCADE"
+    },
+    {
+      "table_name": "PersonEmail",
+      "name": "PersonEmail_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "PersonEmail",
+      "name": "PersonEmail_values_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((((email)::text = btrim((email)::text)) AND ((email)::text <> ''::text) AND ((\"normalizedEmail\")::text = btrim((\"normalizedEmail\")::text)) AND ((\"normalizedEmail\")::text <> ''::text) AND ((label)::text = btrim((label)::text)) AND ((label)::text <> ''::text)))"
+    },
+    {
+      "table_name": "PersonEmail",
+      "name": "PersonEmail_version_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((version >= 1))"
+    },
+    {
+      "table_name": "PersonPhone",
+      "name": "PersonPhone_personId_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"personId\") REFERENCES \"Person\"(id) ON UPDATE CASCADE ON DELETE CASCADE"
+    },
+    {
+      "table_name": "PersonPhone",
+      "name": "PersonPhone_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "PersonPhone",
+      "name": "PersonPhone_values_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((((phone)::text = btrim((phone)::text)) AND ((phone)::text <> ''::text) AND ((\"normalizedPhone\")::text ~ '^\\+[1-9][0-9]{1,14}$'::text) AND ((label)::text = btrim((label)::text)) AND ((label)::text <> ''::text)))"
+    },
+    {
+      "table_name": "PersonPhone",
+      "name": "PersonPhone_version_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((version >= 1))"
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_identifier_or_url_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK (((identifier IS NOT NULL) OR (\"profileUrl\" IS NOT NULL)))"
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_identifier_pair_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((((identifier IS NULL) AND (\"normalizedIdentifier\" IS NULL)) OR ((identifier IS NOT NULL) AND (\"normalizedIdentifier\" IS NOT NULL) AND ((identifier)::text = btrim((identifier)::text)) AND ((identifier)::text <> ''::text) AND ((\"normalizedIdentifier\")::text = btrim((\"normalizedIdentifier\")::text)) AND ((\"normalizedIdentifier\")::text <> ''::text))))"
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_label_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((((label)::text = btrim((label)::text)) AND ((label)::text <> ''::text)))"
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_network_key_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK (((\"networkKey\")::text ~ '^[a-z0-9][a-z0-9_-]{0,39}$'::text))"
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_personId_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"personId\") REFERENCES \"Person\"(id) ON UPDATE CASCADE ON DELETE CASCADE"
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_url_set_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((((\"profileUrl\" IS NULL) AND (\"normalizedProfileUrl\" IS NULL) AND (\"normalizedProfileUrlHash\" IS NULL)) OR ((\"profileUrl\" IS NOT NULL) AND (\"normalizedProfileUrl\" IS NOT NULL) AND (\"normalizedProfileUrlHash\" IS NOT NULL) AND ((\"profileUrl\")::text = btrim((\"profileUrl\")::text)) AND ((\"profileUrl\")::text <> ''::text) AND ((\"normalizedProfileUrl\")::text = btrim((\"normalizedProfileUrl\")::text)) AND ((\"normalizedProfileUrl\")::text <> ''::text) AND (\"normalizedProfileUrlHash\" ~ '^[0-9a-f]{64}$'::text))))"
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_version_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((version >= 1))"
+    },
+    {
+      "table_name": "RateLimit",
+      "name": "RateLimit_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "Session",
+      "name": "Session_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "Session",
+      "name": "Session_userId_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON UPDATE CASCADE ON DELETE CASCADE"
+    },
+    {
+      "table_name": "SystemSetting",
+      "name": "SystemSetting_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (key)"
+    },
+    {
+      "table_name": "SystemSetting",
+      "name": "SystemSetting_updatedById_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"updatedById\") REFERENCES \"User\"(id) ON UPDATE CASCADE ON DELETE SET NULL"
+    },
+    {
+      "table_name": "SystemSetting",
+      "name": "SystemSetting_version_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((version >= 1))"
+    },
+    {
+      "table_name": "TotpCredential",
+      "name": "TotpCredential_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (\"userId\")"
+    },
+    {
+      "table_name": "TotpCredential",
+      "name": "TotpCredential_secret_material_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK (((length(\"secretCiphertext\") > 0) AND (length(\"secretIv\") > 0) AND (length(\"secretAuthTag\") > 0)))"
+    },
+    {
+      "table_name": "TotpCredential",
+      "name": "TotpCredential_userId_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON UPDATE CASCADE ON DELETE CASCADE"
+    },
+    {
+      "table_name": "TotpEnrollment",
+      "name": "TotpEnrollment_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (\"userId\")"
+    },
+    {
+      "table_name": "TotpEnrollment",
+      "name": "TotpEnrollment_secret_material_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK (((length(\"secretCiphertext\") > 0) AND (length(\"secretIv\") > 0) AND (length(\"secretAuthTag\") > 0)))"
+    },
+    {
+      "table_name": "TotpEnrollment",
+      "name": "TotpEnrollment_userId_fkey",
+      "type": "f",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON UPDATE CASCADE ON DELETE CASCADE"
+    },
+    {
+      "table_name": "User",
+      "name": "User_contactEmail_normalized_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK (((\"contactEmail\" IS NULL) OR (\"contactEmail\" = lower(btrim(\"contactEmail\")))))"
+    },
+    {
+      "table_name": "User",
+      "name": "User_contactEmail_verification_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK (((\"contactEmail\" IS NOT NULL) OR (\"contactEmailVerifiedAt\" IS NULL)))"
+    },
+    {
+      "table_name": "User",
+      "name": "User_deleted_tombstone_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK (((\"deletedAt\" IS NULL) OR ((\"contactEmail\" IS NULL) AND (\"contactEmailVerifiedAt\" IS NULL) AND (\"failedLoginAttempts\" = 0) AND (\"firstName\" = 'Compte'::text) AND (\"isActive\" = false) AND (\"isProtected\" = false) AND (\"lastLoginAt\" IS NULL) AND (\"lastName\" = 'supprimé'::text) AND (\"lockedUntil\" IS NULL) AND (\"loginName\" ~ '^deleted:[a-f0-9]{32}$'::text) AND (\"mfaEnabledAt\" IS NULL) AND (\"mustChangePassword\" = false) AND (\"passwordChangedAt\" IS NULL) AND (\"passwordHash\" = ('!'::text || \"loginName\")) AND (permissions IS NULL) AND (role = 'USER'::\"UserRole\"))))"
+    },
+    {
+      "table_name": "User",
+      "name": "User_loginName_format_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK ((((\"deletedAt\" IS NULL) AND (\"loginName\" ~ '^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$'::text)) OR ((\"deletedAt\" IS NOT NULL) AND (\"loginName\" ~ '^deleted:[a-f0-9]{32}$'::text))))"
+    },
+    {
+      "table_name": "User",
+      "name": "User_pkey",
+      "type": "p",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "User",
+      "name": "User_protected_account_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK (((NOT \"isProtected\") OR ((role = 'ADMIN'::\"UserRole\") AND \"isActive\")))"
+    },
+    {
+      "table_name": "User",
+      "name": "User_protected_root_state_check",
+      "type": "c",
+      "deferrable": false,
+      "deferred": false,
+      "validated": true,
+      "definition": "CHECK (((\"isProtected\" = false) OR ((role = 'ADMIN'::\"UserRole\") AND (\"isActive\" = true) AND (\"deletedAt\" IS NULL))))"
+    }
+  ],
+  "indexes": [
+    {
+      "table_name": "ArchivedStaffProfile",
+      "name": "ArchivedStaffProfile_department_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"ArchivedStaffProfile_department_idx\" ON public.\"ArchivedStaffProfile\" USING btree (department)",
+      "predicate": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "name": "ArchivedStaffProfile_discordId_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"ArchivedStaffProfile_discordId_idx\" ON public.\"ArchivedStaffProfile\" USING btree (\"discordId\")",
+      "predicate": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "name": "ArchivedStaffProfile_jobTitle_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"ArchivedStaffProfile_jobTitle_idx\" ON public.\"ArchivedStaffProfile\" USING btree (\"jobTitle\")",
+      "predicate": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "name": "ArchivedStaffProfile_joinedAt_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"ArchivedStaffProfile_joinedAt_idx\" ON public.\"ArchivedStaffProfile\" USING btree (\"joinedAt\")",
+      "predicate": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "name": "ArchivedStaffProfile_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"ArchivedStaffProfile_pkey\" ON public.\"ArchivedStaffProfile\" USING btree (id)",
+      "predicate": null
+    },
+    {
+      "table_name": "ArchivedStaffProfile",
+      "name": "ArchivedStaffProfile_userId_key",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"ArchivedStaffProfile_userId_key\" ON public.\"ArchivedStaffProfile\" USING btree (\"userId\")",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditEncryptionKeyVersion",
+      "name": "AuditEncryptionKeyVersion_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"AuditEncryptionKeyVersion_pkey\" ON public.\"AuditEncryptionKeyVersion\" USING btree (version)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "name": "AuditFieldChange_auditLogId_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditFieldChange_auditLogId_idx\" ON public.\"AuditFieldChange\" USING btree (\"auditLogId\")",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "name": "AuditFieldChange_history_lookup_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditFieldChange_history_lookup_idx\" ON public.\"AuditFieldChange\" USING btree (\"entityType\", \"entityId\", \"sectionKey\", \"fieldKey\", \"recordId\", \"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "name": "AuditFieldChange_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"AuditFieldChange_pkey\" ON public.\"AuditFieldChange\" USING btree (id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "name": "AuditFieldChange_valueKeyVersion_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditFieldChange_valueKeyVersion_idx\" ON public.\"AuditFieldChange\" USING btree (\"valueKeyVersion\")",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_action_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_action_createdAt_id_idx\" ON public.\"AuditLog\" USING btree (action, \"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_actorDisplayNameSnapshot_trgm_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_actorDisplayNameSnapshot_trgm_idx\" ON public.\"AuditLog\" USING gin (\"actorDisplayNameSnapshot\" gin_trgm_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_actorLoginNameSnapshot_trgm_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_actorLoginNameSnapshot_trgm_idx\" ON public.\"AuditLog\" USING gin (\"actorLoginNameSnapshot\" gin_trgm_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_category_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_category_createdAt_id_idx\" ON public.\"AuditLog\" USING btree (category, \"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_createdAt_id_idx\" ON public.\"AuditLog\" USING btree (\"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_entityType_entityId_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_entityType_entityId_createdAt_id_idx\" ON public.\"AuditLog\" USING btree (\"entityType\", \"entityId\", \"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_eventKind_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_eventKind_createdAt_id_idx\" ON public.\"AuditLog\" USING btree (\"eventKind\", \"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_id_entityType_entityId_key",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"AuditLog_id_entityType_entityId_key\" ON public.\"AuditLog\" USING btree (id, \"entityType\", \"entityId\")",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_outcome_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_outcome_createdAt_id_idx\" ON public.\"AuditLog\" USING btree (outcome, \"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_pageKey_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_pageKey_createdAt_id_idx\" ON public.\"AuditLog\" USING btree (\"pageKey\", \"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"AuditLog_pkey\" ON public.\"AuditLog\" USING btree (id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_poleKey_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_poleKey_createdAt_id_idx\" ON public.\"AuditLog\" USING btree (\"poleKey\", \"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_poleKey_pageKey_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_poleKey_pageKey_createdAt_id_idx\" ON public.\"AuditLog\" USING btree (\"poleKey\", \"pageKey\", \"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_requestId_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_requestId_idx\" ON public.\"AuditLog\" USING btree (\"requestId\")",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_severity_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_severity_createdAt_id_idx\" ON public.\"AuditLog\" USING btree (severity, \"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_stream_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_stream_createdAt_id_idx\" ON public.\"AuditLog\" USING btree (stream, \"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_targetDisplayNameSnapshot_trgm_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_targetDisplayNameSnapshot_trgm_idx\" ON public.\"AuditLog\" USING gin (\"targetDisplayNameSnapshot\" gin_trgm_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_targetLoginNameSnapshot_trgm_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_targetLoginNameSnapshot_trgm_idx\" ON public.\"AuditLog\" USING gin (\"targetLoginNameSnapshot\" gin_trgm_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_targetUserId_action_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_targetUserId_action_idx\" ON public.\"AuditLog\" USING btree (\"targetUserId\", action)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_targetUserId_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_targetUserId_createdAt_id_idx\" ON public.\"AuditLog\" USING btree (\"targetUserId\", \"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_userId_action_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_userId_action_idx\" ON public.\"AuditLog\" USING btree (\"userId\", action)",
+      "predicate": null
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_userId_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"AuditLog_userId_createdAt_id_idx\" ON public.\"AuditLog\" USING btree (\"userId\", \"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "name": "InternalAnnouncement_createdById_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"InternalAnnouncement_createdById_idx\" ON public.\"InternalAnnouncement\" USING btree (\"createdById\")",
+      "predicate": null
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "name": "InternalAnnouncement_pinnedAt_publishedAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"InternalAnnouncement_pinnedAt_publishedAt_id_idx\" ON public.\"InternalAnnouncement\" USING btree (\"pinnedAt\", \"publishedAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "name": "InternalAnnouncement_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"InternalAnnouncement_pkey\" ON public.\"InternalAnnouncement\" USING btree (id)",
+      "predicate": null
+    },
+    {
+      "table_name": "InternalAnnouncement",
+      "name": "InternalAnnouncement_publishedAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"InternalAnnouncement_publishedAt_id_idx\" ON public.\"InternalAnnouncement\" USING btree (\"publishedAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "LoginNameReservation",
+      "name": "LoginNameReservation_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"LoginNameReservation_pkey\" ON public.\"LoginNameReservation\" USING btree (\"loginName\")",
+      "predicate": null
+    },
+    {
+      "table_name": "LoginNameReservation",
+      "name": "LoginNameReservation_userId_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"LoginNameReservation_userId_idx\" ON public.\"LoginNameReservation\" USING btree (\"userId\")",
+      "predicate": null
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "name": "MfaLoginChallenge_expiresAt_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"MfaLoginChallenge_expiresAt_idx\" ON public.\"MfaLoginChallenge\" USING btree (\"expiresAt\")",
+      "predicate": null
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "name": "MfaLoginChallenge_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"MfaLoginChallenge_pkey\" ON public.\"MfaLoginChallenge\" USING btree (id)",
+      "predicate": null
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "name": "MfaLoginChallenge_purpose_expiresAt_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"MfaLoginChallenge_purpose_expiresAt_idx\" ON public.\"MfaLoginChallenge\" USING btree (purpose, \"expiresAt\")",
+      "predicate": null
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "name": "MfaLoginChallenge_tokenHash_key",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"MfaLoginChallenge_tokenHash_key\" ON public.\"MfaLoginChallenge\" USING btree (\"tokenHash\")",
+      "predicate": null
+    },
+    {
+      "table_name": "MfaLoginChallenge",
+      "name": "MfaLoginChallenge_userId_key",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"MfaLoginChallenge_userId_key\" ON public.\"MfaLoginChallenge\" USING btree (\"userId\")",
+      "predicate": null
+    },
+    {
+      "table_name": "MfaRecoveryCode",
+      "name": "MfaRecoveryCode_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"MfaRecoveryCode_pkey\" ON public.\"MfaRecoveryCode\" USING btree (id)",
+      "predicate": null
+    },
+    {
+      "table_name": "MfaRecoveryCode",
+      "name": "MfaRecoveryCode_userId_codeHash_key",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"MfaRecoveryCode_userId_codeHash_key\" ON public.\"MfaRecoveryCode\" USING btree (\"userId\", \"codeHash\")",
+      "predicate": null
+    },
+    {
+      "table_name": "MfaRecoveryCode",
+      "name": "MfaRecoveryCode_userId_usedAt_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"MfaRecoveryCode_userId_usedAt_idx\" ON public.\"MfaRecoveryCode\" USING btree (\"userId\", \"usedAt\")",
+      "predicate": null
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Person_createdAt_id_idx\" ON public.\"Person\" USING btree (\"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_normalizedFirstName_prefix_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Person_normalizedFirstName_prefix_idx\" ON public.\"Person\" USING btree (\"normalizedFirstName\" varchar_pattern_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_normalizedFirstName_trgm_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Person_normalizedFirstName_trgm_idx\" ON public.\"Person\" USING gin (\"normalizedFirstName\" gin_trgm_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_normalizedLastName_prefix_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Person_normalizedLastName_prefix_idx\" ON public.\"Person\" USING btree (\"normalizedLastName\" varchar_pattern_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_normalizedLastName_trgm_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Person_normalizedLastName_trgm_idx\" ON public.\"Person\" USING gin (\"normalizedLastName\" gin_trgm_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_normalizedNickname_prefix_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Person_normalizedNickname_prefix_idx\" ON public.\"Person\" USING btree (\"normalizedNickname\" varchar_pattern_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_normalizedNickname_trgm_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Person_normalizedNickname_trgm_idx\" ON public.\"Person\" USING gin (\"normalizedNickname\" gin_trgm_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"Person_pkey\" ON public.\"Person\" USING btree (id)",
+      "predicate": null
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_sortName_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Person_sortName_id_idx\" ON public.\"Person\" USING btree (\"sortName\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_structureStatus_createdAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Person_structureStatus_createdAt_id_idx\" ON public.\"Person\" USING btree (\"structureStatus\", \"createdAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_structureStatus_sortName_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Person_structureStatus_sortName_id_idx\" ON public.\"Person\" USING btree (\"structureStatus\", \"sortName\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_structureStatus_updatedAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Person_structureStatus_updatedAt_id_idx\" ON public.\"Person\" USING btree (\"structureStatus\", \"updatedAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "Person",
+      "name": "Person_updatedAt_id_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Person_updatedAt_id_idx\" ON public.\"Person\" USING btree (\"updatedAt\", id)",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonDeletionTombstone",
+      "name": "PersonDeletionTombstone_deletionOperationId_key",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"PersonDeletionTombstone_deletionOperationId_key\" ON public.\"PersonDeletionTombstone\" USING btree (\"deletionOperationId\")",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonDeletionTombstone",
+      "name": "PersonDeletionTombstone_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"PersonDeletionTombstone_pkey\" ON public.\"PersonDeletionTombstone\" USING btree (\"personId\")",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonEmail",
+      "name": "PersonEmail_normalizedEmail_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"PersonEmail_normalizedEmail_idx\" ON public.\"PersonEmail\" USING btree (\"normalizedEmail\")",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonEmail",
+      "name": "PersonEmail_normalizedEmail_prefix_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"PersonEmail_normalizedEmail_prefix_idx\" ON public.\"PersonEmail\" USING btree (\"normalizedEmail\" varchar_pattern_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonEmail",
+      "name": "PersonEmail_one_primary_per_person_idx",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"PersonEmail_one_primary_per_person_idx\" ON public.\"PersonEmail\" USING btree (\"personId\") WHERE (\"isPrimary\" = true)",
+      "predicate": "(\"isPrimary\" = true)"
+    },
+    {
+      "table_name": "PersonEmail",
+      "name": "PersonEmail_personId_normalizedEmail_key",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"PersonEmail_personId_normalizedEmail_key\" ON public.\"PersonEmail\" USING btree (\"personId\", \"normalizedEmail\")",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonEmail",
+      "name": "PersonEmail_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"PersonEmail_pkey\" ON public.\"PersonEmail\" USING btree (id)",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonPhone",
+      "name": "PersonPhone_normalizedPhone_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"PersonPhone_normalizedPhone_idx\" ON public.\"PersonPhone\" USING btree (\"normalizedPhone\")",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonPhone",
+      "name": "PersonPhone_normalizedPhone_prefix_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"PersonPhone_normalizedPhone_prefix_idx\" ON public.\"PersonPhone\" USING btree (\"normalizedPhone\" varchar_pattern_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonPhone",
+      "name": "PersonPhone_one_primary_per_person_idx",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"PersonPhone_one_primary_per_person_idx\" ON public.\"PersonPhone\" USING btree (\"personId\") WHERE (\"isPrimary\" = true)",
+      "predicate": "(\"isPrimary\" = true)"
+    },
+    {
+      "table_name": "PersonPhone",
+      "name": "PersonPhone_personId_normalizedPhone_key",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"PersonPhone_personId_normalizedPhone_key\" ON public.\"PersonPhone\" USING btree (\"personId\", \"normalizedPhone\")",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonPhone",
+      "name": "PersonPhone_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"PersonPhone_pkey\" ON public.\"PersonPhone\" USING btree (id)",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_normalizedIdentifier_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"PersonSocialProfile_normalizedIdentifier_idx\" ON public.\"PersonSocialProfile\" USING btree (\"normalizedIdentifier\")",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_normalizedIdentifier_prefix_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"PersonSocialProfile_normalizedIdentifier_prefix_idx\" ON public.\"PersonSocialProfile\" USING btree (\"normalizedIdentifier\" varchar_pattern_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_normalizedProfileUrlHash_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"PersonSocialProfile_normalizedProfileUrlHash_idx\" ON public.\"PersonSocialProfile\" USING btree (\"normalizedProfileUrlHash\")",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_one_primary_per_network_idx",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"PersonSocialProfile_one_primary_per_network_idx\" ON public.\"PersonSocialProfile\" USING btree (\"personId\", \"networkKey\") WHERE (\"isPrimary\" = true)",
+      "predicate": "(\"isPrimary\" = true)"
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_person_network_identifier_key",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"PersonSocialProfile_person_network_identifier_key\" ON public.\"PersonSocialProfile\" USING btree (\"personId\", \"networkKey\", \"normalizedIdentifier\")",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_person_network_url_hash_key",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"PersonSocialProfile_person_network_url_hash_key\" ON public.\"PersonSocialProfile\" USING btree (\"personId\", \"networkKey\", \"normalizedProfileUrlHash\")",
+      "predicate": null
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"PersonSocialProfile_pkey\" ON public.\"PersonSocialProfile\" USING btree (id)",
+      "predicate": null
+    },
+    {
+      "table_name": "RateLimit",
+      "name": "RateLimit_blockedUntil_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"RateLimit_blockedUntil_idx\" ON public.\"RateLimit\" USING btree (\"blockedUntil\")",
+      "predicate": null
+    },
+    {
+      "table_name": "RateLimit",
+      "name": "RateLimit_key_key",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"RateLimit_key_key\" ON public.\"RateLimit\" USING btree (key)",
+      "predicate": null
+    },
+    {
+      "table_name": "RateLimit",
+      "name": "RateLimit_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"RateLimit_pkey\" ON public.\"RateLimit\" USING btree (id)",
+      "predicate": null
+    },
+    {
+      "table_name": "Session",
+      "name": "Session_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"Session_pkey\" ON public.\"Session\" USING btree (id)",
+      "predicate": null
+    },
+    {
+      "table_name": "Session",
+      "name": "Session_token_key",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"Session_token_key\" ON public.\"Session\" USING btree (token)",
+      "predicate": null
+    },
+    {
+      "table_name": "Session",
+      "name": "Session_userId_createdAt_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Session_userId_createdAt_idx\" ON public.\"Session\" USING btree (\"userId\", \"createdAt\")",
+      "predicate": null
+    },
+    {
+      "table_name": "Session",
+      "name": "Session_userId_expiresAt_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Session_userId_expiresAt_idx\" ON public.\"Session\" USING btree (\"userId\", \"expiresAt\")",
+      "predicate": null
+    },
+    {
+      "table_name": "Session",
+      "name": "Session_userId_idleExpiresAt_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Session_userId_idleExpiresAt_idx\" ON public.\"Session\" USING btree (\"userId\", \"idleExpiresAt\")",
+      "predicate": null
+    },
+    {
+      "table_name": "Session",
+      "name": "Session_userId_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"Session_userId_idx\" ON public.\"Session\" USING btree (\"userId\")",
+      "predicate": null
+    },
+    {
+      "table_name": "SystemSetting",
+      "name": "SystemSetting_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"SystemSetting_pkey\" ON public.\"SystemSetting\" USING btree (key)",
+      "predicate": null
+    },
+    {
+      "table_name": "SystemSetting",
+      "name": "SystemSetting_updatedAt_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"SystemSetting_updatedAt_idx\" ON public.\"SystemSetting\" USING btree (\"updatedAt\")",
+      "predicate": null
+    },
+    {
+      "table_name": "SystemSetting",
+      "name": "SystemSetting_updatedById_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"SystemSetting_updatedById_idx\" ON public.\"SystemSetting\" USING btree (\"updatedById\")",
+      "predicate": null
+    },
+    {
+      "table_name": "TotpCredential",
+      "name": "TotpCredential_lastUsedAt_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"TotpCredential_lastUsedAt_idx\" ON public.\"TotpCredential\" USING btree (\"lastUsedAt\")",
+      "predicate": null
+    },
+    {
+      "table_name": "TotpCredential",
+      "name": "TotpCredential_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"TotpCredential_pkey\" ON public.\"TotpCredential\" USING btree (\"userId\")",
+      "predicate": null
+    },
+    {
+      "table_name": "TotpEnrollment",
+      "name": "TotpEnrollment_expiresAt_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"TotpEnrollment_expiresAt_idx\" ON public.\"TotpEnrollment\" USING btree (\"expiresAt\")",
+      "predicate": null
+    },
+    {
+      "table_name": "TotpEnrollment",
+      "name": "TotpEnrollment_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"TotpEnrollment_pkey\" ON public.\"TotpEnrollment\" USING btree (\"userId\")",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_contactEmail_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"User_contactEmail_idx\" ON public.\"User\" USING btree (\"contactEmail\")",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_contactEmail_trgm_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"User_contactEmail_trgm_idx\" ON public.\"User\" USING gin (\"contactEmail\" gin_trgm_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_deletedAt_createdAt_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"User_deletedAt_createdAt_idx\" ON public.\"User\" USING btree (\"deletedAt\", \"createdAt\")",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_deletedAt_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"User_deletedAt_idx\" ON public.\"User\" USING btree (\"deletedAt\")",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_deletedAt_isActive_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"User_deletedAt_isActive_idx\" ON public.\"User\" USING btree (\"deletedAt\", \"isActive\")",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_deletedAt_lastLoginAt_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"User_deletedAt_lastLoginAt_idx\" ON public.\"User\" USING btree (\"deletedAt\", \"lastLoginAt\")",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_deletedAt_lockedUntil_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"User_deletedAt_lockedUntil_idx\" ON public.\"User\" USING btree (\"deletedAt\", \"lockedUntil\")",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_deletedAt_mustChangePassword_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"User_deletedAt_mustChangePassword_idx\" ON public.\"User\" USING btree (\"deletedAt\", \"mustChangePassword\")",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_deletedAt_role_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"User_deletedAt_role_idx\" ON public.\"User\" USING btree (\"deletedAt\", role)",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_firstName_trgm_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"User_firstName_trgm_idx\" ON public.\"User\" USING gin (\"firstName\" gin_trgm_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_lastName_trgm_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"User_lastName_trgm_idx\" ON public.\"User\" USING gin (\"lastName\" gin_trgm_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_loginName_key",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"User_loginName_key\" ON public.\"User\" USING btree (\"loginName\")",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_loginName_trgm_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"User_loginName_trgm_idx\" ON public.\"User\" USING gin (\"loginName\" gin_trgm_ops)",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_mfaEnabledAt_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"User_mfaEnabledAt_idx\" ON public.\"User\" USING btree (\"mfaEnabledAt\")",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_pkey",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"User_pkey\" ON public.\"User\" USING btree (id)",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_role_idx",
+      "valid": true,
+      "unique_index": false,
+      "definition": "CREATE INDEX \"User_role_idx\" ON public.\"User\" USING btree (role)",
+      "predicate": null
+    },
+    {
+      "table_name": "User",
+      "name": "User_single_protected_root_key",
+      "valid": true,
+      "unique_index": true,
+      "definition": "CREATE UNIQUE INDEX \"User_single_protected_root_key\" ON public.\"User\" USING btree (\"isProtected\") WHERE (\"isProtected\" = true)",
+      "predicate": "(\"isProtected\" = true)"
+    }
+  ],
+  "triggers": [
+    {
+      "table_name": "AuditEncryptionKeyVersion",
+      "name": "AuditEncryptionKeyVersion_prevent_mutation",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER \"AuditEncryptionKeyVersion_prevent_mutation\" BEFORE DELETE OR UPDATE ON public.\"AuditEncryptionKeyVersion\" FOR EACH ROW EXECUTE FUNCTION prevent_audit_key_version_mutation()"
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "name": "AuditFieldChange_guard_mutation",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER \"AuditFieldChange_guard_mutation\" BEFORE DELETE OR UPDATE ON public.\"AuditFieldChange\" FOR EACH ROW EXECUTE FUNCTION guard_audit_field_change_mutation()"
+    },
+    {
+      "table_name": "AuditFieldChange",
+      "name": "AuditFieldChange_validate_parent",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER \"AuditFieldChange_validate_parent\" BEFORE INSERT ON public.\"AuditFieldChange\" FOR EACH ROW EXECUTE FUNCTION validate_audit_field_change_parent()"
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_guard_mutation",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER \"AuditLog_guard_mutation\" BEFORE DELETE OR UPDATE ON public.\"AuditLog\" FOR EACH ROW EXECUTE FUNCTION guard_audit_log_mutation()"
+    },
+    {
+      "table_name": "AuditLog",
+      "name": "AuditLog_immutable_identity_snapshots",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER \"AuditLog_immutable_identity_snapshots\" BEFORE UPDATE OF \"actorDisplayNameSnapshot\", \"actorLoginNameSnapshot\", \"actorRoleSnapshot\", \"targetDisplayNameSnapshot\", \"targetLoginNameSnapshot\", \"targetRoleSnapshot\" ON public.\"AuditLog\" FOR EACH ROW EXECUTE FUNCTION prevent_audit_snapshot_mutation()"
+    },
+    {
+      "table_name": "PersonDeletionTombstone",
+      "name": "PersonDeletionTombstone_prevent_mutation",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER \"PersonDeletionTombstone_prevent_mutation\" BEFORE DELETE OR UPDATE ON public.\"PersonDeletionTombstone\" FOR EACH ROW EXECUTE FUNCTION prevent_person_tombstone_mutation()"
+    },
+    {
+      "table_name": "PersonEmail",
+      "name": "PersonEmail_prevent_person_reassignment",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER \"PersonEmail_prevent_person_reassignment\" BEFORE UPDATE OF \"personId\" ON public.\"PersonEmail\" FOR EACH ROW EXECUTE FUNCTION prevent_person_coordinate_reassignment()"
+    },
+    {
+      "table_name": "PersonPhone",
+      "name": "PersonPhone_prevent_person_reassignment",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER \"PersonPhone_prevent_person_reassignment\" BEFORE UPDATE OF \"personId\" ON public.\"PersonPhone\" FOR EACH ROW EXECUTE FUNCTION prevent_person_coordinate_reassignment()"
+    },
+    {
+      "table_name": "PersonSocialProfile",
+      "name": "PersonSocialProfile_prevent_person_reassignment",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER \"PersonSocialProfile_prevent_person_reassignment\" BEFORE UPDATE OF \"personId\" ON public.\"PersonSocialProfile\" FOR EACH ROW EXECUTE FUNCTION prevent_person_coordinate_reassignment()"
+    },
+    {
+      "table_name": "User",
+      "name": "User_prevent_deleted_tombstone_mutation",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER \"User_prevent_deleted_tombstone_mutation\" BEFORE DELETE OR UPDATE ON public.\"User\" FOR EACH ROW WHEN ((old.\"deletedAt\" IS NOT NULL)) EXECUTE FUNCTION prevent_deleted_user_mutation()"
+    },
+    {
+      "table_name": "User",
+      "name": "User_protect_root_lifecycle",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER \"User_protect_root_lifecycle\" BEFORE DELETE OR UPDATE ON public.\"User\" FOR EACH ROW WHEN ((old.\"isProtected\" = true)) EXECUTE FUNCTION prevent_protected_root_lifecycle_mutation()"
+    }
+  ],
+  "functions": [
+    {
+      "name": "guard_audit_field_change_mutation",
+      "definition": "CREATE OR REPLACE FUNCTION public.guard_audit_field_change_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE\n    call_context TEXT;\n    delete_context TEXT;\nBEGIN\n    IF TG_OP = 'UPDATE' THEN\n        RAISE EXCEPTION 'Audit field changes are append-only';\n    END IF;\n\n    delete_context := current_setting('app.audit_delete_context', true);\n    GET DIAGNOSTICS call_context = PG_CONTEXT;\n    IF TG_OP = 'DELETE'\n       AND delete_context = 'retention'\n       AND strpos(call_context, 'purge_expired_audit_logs(integer)') > 0 THEN\n        RETURN OLD;\n    END IF;\n    IF TG_OP = 'DELETE'\n       AND OLD.\"entityType\" = 'PERSON'\n       AND delete_context = 'person:' || OLD.\"entityId\"\n       AND strpos(\n           call_context,\n           'purge_person_audit_field_changes(text)'\n       ) > 0 THEN\n        RETURN OLD;\n    END IF;\n\n    RAISE EXCEPTION 'Audit field changes can only be deleted by a controlled purge procedure';\nEND;\n$function$\n"
+    },
+    {
+      "name": "guard_audit_log_mutation",
+      "definition": "CREATE OR REPLACE FUNCTION public.guard_audit_log_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE\n    call_context TEXT;\n    delete_context TEXT;\nBEGIN\n    IF TG_OP = 'UPDATE' THEN\n        RAISE EXCEPTION 'Audit events are append-only';\n    END IF;\n\n    delete_context := current_setting('app.audit_delete_context', true);\n    GET DIAGNOSTICS call_context = PG_CONTEXT;\n    IF TG_OP = 'DELETE'\n       AND delete_context = 'retention'\n       AND strpos(call_context, 'purge_expired_audit_logs(integer)') > 0 THEN\n        RETURN OLD;\n    END IF;\n\n    RAISE EXCEPTION 'Audit events can only be deleted by the retention procedure';\nEND;\n$function$\n"
+    },
+    {
+      "name": "prevent_audit_key_version_mutation",
+      "definition": "CREATE OR REPLACE FUNCTION public.prevent_audit_key_version_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    RAISE EXCEPTION 'Audit encryption key inventory is append-only';\nEND;\n$function$\n"
+    },
+    {
+      "name": "prevent_audit_snapshot_mutation",
+      "definition": "CREATE OR REPLACE FUNCTION public.prevent_audit_snapshot_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    IF OLD.\"actorDisplayNameSnapshot\" IS DISTINCT FROM NEW.\"actorDisplayNameSnapshot\"\n        OR OLD.\"actorLoginNameSnapshot\" IS DISTINCT FROM NEW.\"actorLoginNameSnapshot\"\n        OR OLD.\"actorRoleSnapshot\" IS DISTINCT FROM NEW.\"actorRoleSnapshot\"\n        OR OLD.\"targetDisplayNameSnapshot\" IS DISTINCT FROM NEW.\"targetDisplayNameSnapshot\"\n        OR OLD.\"targetLoginNameSnapshot\" IS DISTINCT FROM NEW.\"targetLoginNameSnapshot\"\n        OR OLD.\"targetRoleSnapshot\" IS DISTINCT FROM NEW.\"targetRoleSnapshot\"\n    THEN\n        RAISE EXCEPTION 'Audit identity snapshots are immutable';\n    END IF;\n\n    RETURN NEW;\nEND;\n$function$\n"
+    },
+    {
+      "name": "prevent_deleted_user_mutation",
+      "definition": "CREATE OR REPLACE FUNCTION public.prevent_deleted_user_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'Deleted user tombstones are immutable';\nEND;\n$function$\n"
+    },
+    {
+      "name": "prevent_person_coordinate_reassignment",
+      "definition": "CREATE OR REPLACE FUNCTION public.prevent_person_coordinate_reassignment()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nBEGIN\n    IF NEW.\"personId\" IS DISTINCT FROM OLD.\"personId\" THEN\n        RAISE EXCEPTION 'A person coordinate cannot be reassigned'\n            USING\n                ERRCODE = '23514',\n                CONSTRAINT = 'PersonCoordinate_personId_immutable';\n    END IF;\n\n    RETURN NEW;\nEND;\n$function$\n"
+    },
+    {
+      "name": "prevent_person_tombstone_mutation",
+      "definition": "CREATE OR REPLACE FUNCTION public.prevent_person_tombstone_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    RAISE EXCEPTION 'Person deletion tombstones are immutable';\nEND;\n$function$\n"
+    },
+    {
+      "name": "prevent_protected_root_lifecycle_mutation",
+      "definition": "CREATE OR REPLACE FUNCTION public.prevent_protected_root_lifecycle_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  IF TG_OP = 'DELETE' THEN\n    RAISE EXCEPTION 'The protected root account cannot be deleted';\n  END IF;\n\n  IF NEW.\"isProtected\" IS DISTINCT FROM true\n    OR NEW.\"role\" <> 'ADMIN'\n    OR NEW.\"isActive\" IS DISTINCT FROM true\n    OR NEW.\"deletedAt\" IS NOT NULL\n  THEN\n    RAISE EXCEPTION 'The protected root lifecycle state is immutable';\n  END IF;\n\n  RETURN NEW;\nEND;\n$function$\n"
+    },
+    {
+      "name": "purge_expired_audit_logs",
+      "definition": "CREATE OR REPLACE FUNCTION public.purge_expired_audit_logs(expected_retention_days integer)\n RETURNS bigint\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE\n    configured_retention_days INTEGER;\n    deleted_count BIGINT;\n    previous_context TEXT;\nBEGIN\n    previous_context := current_setting('app.audit_delete_context', true);\n    -- The matching setting mutation takes the same transaction-level lock,\n    -- including while the first row is being inserted.\n    PERFORM pg_catalog.pg_advisory_xact_lock(\n        pg_catalog.hashtextextended('system-setting:audit.retentionDays', 0)\n    );\n    SELECT CASE\n        WHEN jsonb_typeof(setting.\"value\") = 'number'\n            THEN (setting.\"value\" #>> '{}')::INTEGER\n        ELSE NULL\n    END\n    INTO configured_retention_days\n    FROM \"public\".\"SystemSetting\" setting\n    WHERE setting.\"key\" = 'audit.retentionDays'\n    FOR SHARE;\n\n    IF NOT FOUND THEN\n        configured_retention_days := 1095;\n    END IF;\n\n    IF configured_retention_days IS NULL\n       OR configured_retention_days < 365\n       OR configured_retention_days > 3650 THEN\n        RAISE EXCEPTION 'Stored audit retention is invalid';\n    END IF;\n    IF expected_retention_days IS DISTINCT FROM configured_retention_days THEN\n        RAISE EXCEPTION 'Audit retention changed while cleanup was being prepared';\n    END IF;\n\n    PERFORM set_config('app.audit_delete_context', 'retention', true);\n    DELETE FROM \"public\".\"AuditLog\"\n    WHERE \"createdAt\" < (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')\n      - make_interval(days => configured_retention_days);\n    GET DIAGNOSTICS deleted_count = ROW_COUNT;\n    PERFORM set_config(\n        'app.audit_delete_context',\n        COALESCE(previous_context, ''),\n        true\n    );\n\n    RETURN deleted_count;\nEXCEPTION WHEN OTHERS THEN\n    PERFORM set_config(\n        'app.audit_delete_context',\n        COALESCE(previous_context, ''),\n        true\n    );\n    RAISE;\nEND;\n$function$\n"
+    },
+    {
+      "name": "purge_person_audit_field_changes",
+      "definition": "CREATE OR REPLACE FUNCTION public.purge_person_audit_field_changes(target_person_id text)\n RETURNS bigint\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE\n    deleted_count BIGINT;\n    previous_context TEXT;\nBEGIN\n    previous_context := current_setting('app.audit_delete_context', true);\n    IF target_person_id IS NULL\n       OR target_person_id = ''\n       OR target_person_id <> btrim(target_person_id) THEN\n        RAISE EXCEPTION 'A canonical person identifier is required';\n    END IF;\n    PERFORM 1\n    FROM \"public\".\"Person\" person\n    WHERE person.\"id\" = target_person_id\n    FOR UPDATE;\n    IF NOT FOUND THEN\n        RAISE EXCEPTION 'The person must exist and be locked for deletion';\n    END IF;\n\n    PERFORM set_config(\n        'app.audit_delete_context',\n        'person:' || target_person_id,\n        true\n    );\n    DELETE FROM \"public\".\"AuditFieldChange\"\n    WHERE \"entityType\" = 'PERSON'\n      AND \"entityId\" = target_person_id;\n    GET DIAGNOSTICS deleted_count = ROW_COUNT;\n    PERFORM set_config(\n        'app.audit_delete_context',\n        COALESCE(previous_context, ''),\n        true\n    );\n\n    RETURN deleted_count;\nEXCEPTION WHEN OTHERS THEN\n    PERFORM set_config(\n        'app.audit_delete_context',\n        COALESCE(previous_context, ''),\n        true\n    );\n    RAISE;\nEND;\n$function$\n"
+    },
+    {
+      "name": "validate_audit_field_change_parent",
+      "definition": "CREATE OR REPLACE FUNCTION public.validate_audit_field_change_parent()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n    parent_created_at TIMESTAMP(3);\nBEGIN\n    SELECT \"createdAt\"\n    INTO parent_created_at\n    FROM \"public\".\"AuditLog\"\n    WHERE \"id\" = NEW.\"auditLogId\"\n      AND \"entityType\" = NEW.\"entityType\"\n      AND \"entityId\" = NEW.\"entityId\";\n\n    IF parent_created_at IS NULL OR parent_created_at IS DISTINCT FROM NEW.\"createdAt\" THEN\n        RAISE EXCEPTION 'Audit field change timestamp must match its parent event';\n    END IF;\n\n    RETURN NEW;\nEND;\n$function$\n"
+    }
+  ],
+  "enums": [
+    {
+      "name": "AuditAction",
+      "value": "LOGIN_SUCCESS",
+      "position": 1
+    },
+    {
+      "name": "AuditAction",
+      "value": "LOGIN_FAILED",
+      "position": 2
+    },
+    {
+      "name": "AuditAction",
+      "value": "LOGOUT",
+      "position": 3
+    },
+    {
+      "name": "AuditAction",
+      "value": "PASSWORD_CHANGE",
+      "position": 4
+    },
+    {
+      "name": "AuditAction",
+      "value": "PASSWORD_RESET",
+      "position": 5
+    },
+    {
+      "name": "AuditAction",
+      "value": "ACCOUNT_LOCKED",
+      "position": 6
+    },
+    {
+      "name": "AuditAction",
+      "value": "SESSION_INVALIDATE",
+      "position": 7
+    },
+    {
+      "name": "AuditAction",
+      "value": "USER_CREATE",
+      "position": 8
+    },
+    {
+      "name": "AuditAction",
+      "value": "USER_UPDATE",
+      "position": 9
+    },
+    {
+      "name": "AuditAction",
+      "value": "USER_DELETE",
+      "position": 10
+    },
+    {
+      "name": "AuditAction",
+      "value": "USER_ACTIVATE",
+      "position": 11
+    },
+    {
+      "name": "AuditAction",
+      "value": "USER_DEACTIVATE",
+      "position": 12
+    },
+    {
+      "name": "AuditAction",
+      "value": "PERMISSION_UPDATE",
+      "position": 13
+    },
+    {
+      "name": "AuditAction",
+      "value": "MFA_ENABLED",
+      "position": 14
+    },
+    {
+      "name": "AuditAction",
+      "value": "MFA_DISABLED",
+      "position": 15
+    },
+    {
+      "name": "AuditAction",
+      "value": "MFA_RECOVERY_CODE_USED",
+      "position": 16
+    },
+    {
+      "name": "AuditAction",
+      "value": "MFA_RECOVERY_CODES_REGENERATED",
+      "position": 17
+    },
+    {
+      "name": "AuditAction",
+      "value": "MFA_RESET",
+      "position": 18
+    },
+    {
+      "name": "AuditAction",
+      "value": "AUDIT_EXPORT",
+      "position": 19
+    },
+    {
+      "name": "AuditAction",
+      "value": "STEP_UP_SUCCESS",
+      "position": 20
+    },
+    {
+      "name": "AuditAction",
+      "value": "STEP_UP_FAILED",
+      "position": 21
+    },
+    {
+      "name": "AuditAction",
+      "value": "NOTIFICATION_SEND",
+      "position": 22
+    },
+    {
+      "name": "AuditAction",
+      "value": "SYSTEM_SETTING_UPDATE",
+      "position": 23
+    },
+    {
+      "name": "AuditAction",
+      "value": "BACKGROUND_JOB_UPDATE",
+      "position": 24
+    },
+    {
+      "name": "AuditAction",
+      "value": "PERSON_CREATE",
+      "position": 25
+    },
+    {
+      "name": "AuditAction",
+      "value": "PERSON_UPDATE",
+      "position": 26
+    },
+    {
+      "name": "AuditAction",
+      "value": "PERSON_DELETE",
+      "position": 27
+    },
+    {
+      "name": "AuditAction",
+      "value": "PARTNER_CREATE",
+      "position": 28
+    },
+    {
+      "name": "AuditAction",
+      "value": "PARTNER_UPDATE",
+      "position": 29
+    },
+    {
+      "name": "AuditAction",
+      "value": "PARTNER_STATUS_UPDATE",
+      "position": 30
+    },
+    {
+      "name": "AuditAction",
+      "value": "PARTNER_PERIOD_CREATE",
+      "position": 31
+    },
+    {
+      "name": "AuditAction",
+      "value": "PARTNER_PERIOD_UPDATE",
+      "position": 32
+    },
+    {
+      "name": "AuditAction",
+      "value": "PARTNER_CONTACTS_UPDATE",
+      "position": 33
+    },
+    {
+      "name": "AuditAction",
+      "value": "PARTNER_FOLLOW_UP_CREATE",
+      "position": 34
+    },
+    {
+      "name": "AuditAction",
+      "value": "PARTNER_FOLLOW_UP_UPDATE",
+      "position": 35
+    },
+    {
+      "name": "AuditAction",
+      "value": "PARTNER_FOLLOW_UP_DELETE",
+      "position": 36
+    },
+    {
+      "name": "AuditAction",
+      "value": "PARTNER_FOLLOW_UP_COMPLETE",
+      "position": 37
+    },
+    {
+      "name": "AuditAction",
+      "value": "PARTNER_MERGE",
+      "position": 38
+    },
+    {
+      "name": "AuditAction",
+      "value": "PARTNER_DELETE",
+      "position": 39
+    },
+    {
+      "name": "AuditAction",
+      "value": "INTERNAL_ANNOUNCEMENT_PUBLISH",
+      "position": 40
+    },
+    {
+      "name": "AuditAction",
+      "value": "INTERNAL_ANNOUNCEMENT_PIN_UPDATE",
+      "position": 41
+    },
+    {
+      "name": "AuditCategory",
+      "value": "AUTH",
+      "position": 1
+    },
+    {
+      "name": "AuditCategory",
+      "value": "USER",
+      "position": 2
+    },
+    {
+      "name": "AuditCategory",
+      "value": "PERMISSION",
+      "position": 3
+    },
+    {
+      "name": "AuditCategory",
+      "value": "SYSTEM",
+      "position": 4
+    },
+    {
+      "name": "AuditCategory",
+      "value": "PERSON",
+      "position": 5
+    },
+    {
+      "name": "AuditCategory",
+      "value": "PARTNER",
+      "position": 6
+    },
+    {
+      "name": "AuditEventKind",
+      "value": "ACTIVITY",
+      "position": 1
+    },
+    {
+      "name": "AuditEventKind",
+      "value": "CONNECTION",
+      "position": 2
+    },
+    {
+      "name": "AuditFieldChangeType",
+      "value": "CREATE",
+      "position": 1
+    },
+    {
+      "name": "AuditFieldChangeType",
+      "value": "UPDATE",
+      "position": 2
+    },
+    {
+      "name": "AuditFieldChangeType",
+      "value": "DELETE",
+      "position": 3
+    },
+    {
+      "name": "AuditOutcome",
+      "value": "SUCCESS",
+      "position": 1
+    },
+    {
+      "name": "AuditOutcome",
+      "value": "FAILURE",
+      "position": 2
+    },
+    {
+      "name": "AuditOutcome",
+      "value": "NEUTRAL",
+      "position": 3
+    },
+    {
+      "name": "AuditSeverity",
+      "value": "INFO",
+      "position": 1
+    },
+    {
+      "name": "AuditSeverity",
+      "value": "WARNING",
+      "position": 2
+    },
+    {
+      "name": "AuditSeverity",
+      "value": "CRITICAL",
+      "position": 3
+    },
+    {
+      "name": "AuditStream",
+      "value": "AUTHENTICATION",
+      "position": 1
+    },
+    {
+      "name": "AuditStream",
+      "value": "SECURITY",
+      "position": 2
+    },
+    {
+      "name": "AuditStream",
+      "value": "IDENTITY",
+      "position": 3
+    },
+    {
+      "name": "AuditStream",
+      "value": "AUTHORIZATION",
+      "position": 4
+    },
+    {
+      "name": "AuditStream",
+      "value": "SYSTEM",
+      "position": 5
+    },
+    {
+      "name": "AuditValueStorageMode",
+      "value": "PLAIN",
+      "position": 1
+    },
+    {
+      "name": "AuditValueStorageMode",
+      "value": "ENCRYPTED",
+      "position": 2
+    },
+    {
+      "name": "AuditValueStorageMode",
+      "value": "NONE",
+      "position": 3
+    },
+    {
+      "name": "MfaAuthenticationMethod",
+      "value": "TOTP",
+      "position": 1
+    },
+    {
+      "name": "MfaAuthenticationMethod",
+      "value": "RECOVERY_CODE",
+      "position": 2
+    },
+    {
+      "name": "MfaChallengePurpose",
+      "value": "LOGIN",
+      "position": 1
+    },
+    {
+      "name": "MfaChallengePurpose",
+      "value": "SETUP",
+      "position": 2
+    },
+    {
+      "name": "PersonStructureStatus",
+      "value": "IN_STRUCTURE",
+      "position": 1
+    },
+    {
+      "name": "PersonStructureStatus",
+      "value": "OUTSIDE_STRUCTURE",
+      "position": 2
+    },
+    {
+      "name": "UserRole",
+      "value": "ADMIN",
+      "position": 1
+    },
+    {
+      "name": "UserRole",
+      "value": "USER",
+      "position": 2
+    }
+  ],
+  "extensions": [
+    {
+      "extname": "pg_trgm",
+      "extversion": "1.6"
+    },
+    {
+      "extname": "plpgsql",
+      "extversion": "1.0"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-12T22:36:22.226Z",
+  "format": 9,
+  "expectedScenarios": 4,
+  "completed": true,
+  "scenarios": [
+    {
+      "name": "Signed v9 dry run, public signing key only, no writes",
+      "passed": true
+    },
+    {
+      "name": "Missing verification key rejected before writing",
+      "passed": true,
+      "reason": "DATABASE_BACKUP_SIGNING_PUBLIC_KEY_V1 must contain a valid Ed25519 public key"
+    },
+    {
+      "name": "Real signed restore, every table identical including encrypted values",
+      "passed": true,
+      "counts": {
+        "User": 20,
+        "LoginNameReservation": 20,
+        "Session": 4,
+        "TotpCredential": 2,
+        "TotpEnrollment": 0,
+        "MfaRecoveryCode": 20,
+        "MfaLoginChallenge": 0,
+        "InternalAnnouncement": 0,
+        "SystemSetting": 1,
+        "AuditLog": 164,
+        "AuditEncryptionKeyVersion": 1,
+        "PersonDeletionTombstone": 1,
+        "Person": 120,
+        "PersonEmail": 20,
+        "PersonPhone": 12,
+        "PersonSocialProfile": 12,
+        "AuditFieldChange": 232,
+        "RateLimit": 3,
+        "ArchivedStaffProfile": 0
+      }
+    },
+    {
+      "name": "Nonempty target rejected without overwriting",
+      "passed": true,
+      "reason": "Restore target is not empty: User, LoginNameReservation, Session, TotpCredential, MfaRecoveryCode, SystemSetting, AuditLog, AuditEncryptionKeyVersion, PersonDeletionTombstone, Person, PersonEmail, PersonPhone, PersonSocialProfile, AuditFieldChange, RateLimit"
+    }
+  ]
+}

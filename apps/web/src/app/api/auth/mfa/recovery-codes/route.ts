@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors, parseJsonBody } from '$server/api-response';
+import { apiError, apiErrors, parseJsonBody } from '$server/api-response';
 import {
   createSession,
   generateSessionToken,
@@ -25,6 +25,7 @@ import {
   recordLoginAttempt,
   reserveSensitiveActionRateLimit,
 } from '$server/rate-limiter';
+import { UserActionAuthorizationError } from '$server/user-action-authorization';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -261,6 +262,8 @@ export async function POST(
       success: true,
     });
   } catch (error) {
+    if (error instanceof UserActionAuthorizationError)
+      return apiError(error.code, error.message, error.status);
     if (
       isSecurityVersionMismatchError(error) ||
       error instanceof MfaReplayDetectedError

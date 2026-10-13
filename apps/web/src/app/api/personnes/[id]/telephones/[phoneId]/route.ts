@@ -45,7 +45,12 @@ export async function PATCH(
     await assertPersonFeatureReady();
 
     return withPrivateNoStore(
-      apiSuccess(await updatePersonPhone(id, phoneId, parsed.data, auth.user)),
+      apiSuccess(
+        await updatePersonPhone(id, phoneId, parsed.data, {
+          ...auth.user,
+          session: auth.session,
+        }),
+      ),
     );
   } catch (error) {
     return handlePersonApiError('PERSON_PHONE_UPDATE', error, request);
@@ -76,7 +81,10 @@ export async function DELETE(
 
     return withPrivateNoStore(
       apiSuccess({
-        person: await deletePersonPhone(id, phoneId, parsed.data, auth.user),
+        person: await deletePersonPhone(id, phoneId, parsed.data, {
+          ...auth.user,
+          session: auth.session,
+        }),
       }),
     );
   } catch (error) {

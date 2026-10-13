@@ -11,13 +11,12 @@ import {
 } from '$server/auth';
 import { prisma } from '$server/prisma';
 import { hasRecentSensitiveActionProof } from '$server/sensitive-action';
-import { ErrorCode } from '$types/api.types';
-
 import {
   authorizeUserAction,
   type UserActionAuthority,
   UserActionAuthorizationError,
-} from './user-action-authorization';
+} from '$server/user-action-authorization';
+import { ErrorCode } from '$types/api.types';
 
 /** Creates an account, its permanent login reservation and required audit atomically. */
 export const createUser = async (

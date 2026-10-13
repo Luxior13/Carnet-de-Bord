@@ -32,6 +32,7 @@ import {
   DELETE as revokeSessions,
   GET as getSessions,
 } from '$app/api/auth/sessions/route';
+import { POST as stepUp } from '$app/api/auth/step-up/route';
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { mapUserToUserType } from '$server/auth';
 import {
@@ -290,6 +291,36 @@ describe.skipIf(!target)(
       connection.client = null;
     });
 
+    it.each(['profile', 'contact', 'password', 'MFA setup'] as const)(
+      'refuses personal %s after the source session expires following authentication',
+      async (action) => {
+        const user = await account();
+        const source = await signIn(user);
+        await db.session.update({
+          data: { idleExpiresAt: new Date(Date.now() - 1) },
+          where: { id: source.id },
+        });
+        const response =
+          action === 'profile'
+            ? await profile(user, 'Unauthorized')
+            : action === 'contact'
+              ? await contact(user, 'unauthorized@example.test')
+              : action === 'password'
+                ? await change()
+                : await startMfaSetup(
+                    mfaRequest('setup', { currentPassword: password }),
+                  );
+        expect(response.status).toBe(401);
+        expect(await db.user.findUnique({ where: { id: user.id } })).toEqual(
+          user,
+        );
+        expect(
+          await db.totpEnrollment.count({ where: { userId: user.id } }),
+        ).toBe(0);
+        expect(await auditCount(user)).toBe(0);
+      },
+    );
+
     it('rejects anonymous reads and mutations', async () => {
       connection.session.mockResolvedValue({ session: null, user: null });
       expect((await getMe()).status).toBe(401);
@@ -300,6 +331,105 @@ describe.skipIf(!target)(
         401,
       );
       expect((await revoke()).status).toBe(401);
+    });
+
+    it('rechecks a withdrawn password proof before accepting critical MFA', async () => {
+      const { secret, user } = await mfaAccount();
+      const source = await signIn(user);
+      await db.session.update({
+        data: { passwordReauthenticatedAt: null },
+        where: { id: source.id },
+      });
+      const response = await stepUp(
+        new NextRequest('http://localhost/api/auth/step-up', {
+          body: JSON.stringify({
+            currentTotpCode: await totp(secret),
+            kind: 'critical-mfa',
+          }),
+          method: 'POST',
+        }),
+      );
+      expect(response.status).toBe(403);
+      expect(
+        (await db.session.findUniqueOrThrow({ where: { id: source.id } }))
+          .criticalMfaVerifiedAt,
+      ).toEqual(source.criticalMfaVerifiedAt);
+      expect(
+        (
+          await db.totpCredential.findUniqueOrThrow({
+            where: { userId: user.id },
+          })
+        ).lastUsedTimeStep,
+      ).toBeNull();
+      expect(await auditCount(user)).toBe(0);
+    });
+
+    it('rechecks the source deadline after waiting for a session lock during recovery rotation', async () => {
+      const { secret, user } = await mfaAccount();
+      const source = await signIn(user);
+      const expiresAt = new Date(Date.now() + 1_000);
+      await db.session.update({
+        data: { idleExpiresAt: expiresAt },
+        where: { id: source.id },
+      });
+      let release: () => void = () => undefined;
+      let acquired: () => void = () => undefined;
+      const hold = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const ready = new Promise<void>((resolve) => {
+        acquired = resolve;
+      });
+      const holder = db.$transaction(async (transaction) => {
+        await transaction.$queryRaw`SELECT "id" FROM "Session" WHERE "id" = ${source.id} FOR UPDATE`;
+        acquired();
+        await hold;
+      });
+      await ready;
+      const pending = regenerateCodes(
+        mfaRequest('recovery-codes', {
+          currentPassword: password,
+          currentTotpCode: await totp(secret),
+        }),
+      );
+      try {
+        const deadline = Date.now() + 2_000;
+        let observed = false;
+        while (Date.now() < deadline) {
+          const rows = await db.$queryRaw<Array<{ waiting: boolean }>>`
+            SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname=current_database()
+              AND wait_event_type='Lock' AND query LIKE '%Session%' AND pid<>pg_backend_pid()) AS waiting
+          `;
+          if (rows[0]?.waiting) {
+            observed = true;
+            break;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+        expect(observed).toBe(true);
+        await new Promise((resolve) =>
+          setTimeout(
+            resolve,
+            Math.max(0, expiresAt.getTime() - Date.now() + 30),
+          ),
+        );
+      } finally {
+        release();
+        await holder;
+      }
+      expect((await pending).status).toBe(401);
+      expect(await db.user.findUnique({ where: { id: user.id } })).toEqual(
+        user,
+      );
+      expect(await db.session.count({ where: { userId: user.id } })).toBe(1);
+      expect(
+        (
+          await db.totpCredential.findUniqueOrThrow({
+            where: { userId: user.id },
+          })
+        ).lastUsedTimeStep,
+      ).toBeNull();
+      expect(await auditCount(user)).toBe(0);
     });
 
     it('honors profile autonomy while preserving mandatory personal security access despite legacy denies', async () => {

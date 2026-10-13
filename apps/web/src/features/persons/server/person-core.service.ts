@@ -3,8 +3,8 @@ import 'server-only';
 import type { Prisma, PrismaClient } from '@prisma/client';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
+import { PERMISSIONS } from '$constants/permissions.constants';
 import { prisma } from '$server/prisma';
-import type { UserType } from '$types/auth.types';
 
 import { PERSON_AUDIT_KEYS } from '../person.constants';
 import { calculateCivilAge, serializeCivilDate } from '../person.utils';
@@ -23,6 +23,10 @@ import type {
 import { createPersonAudit, type PersonAuditChange } from './person-audit';
 import { getCreationDuplicateWarnings } from './person-duplicate-detection';
 import { personErrors } from './person-errors';
+import {
+  authorizePersonMutation,
+  type PersonMutationActor,
+} from './person-mutation-authorization';
 import {
   hashPersonNormalizedUrl,
   normalizePersonEmail,
@@ -221,12 +225,17 @@ export const getPerson = async (personId: string): Promise<PersonDetail> =>
 
 export const createPerson = async (
   input: CreatePersonInput,
-  actor: UserType,
+  actor: PersonMutationActor,
 ): Promise<{
   duplicateWarning: PersonDuplicateWarning;
   person: PersonDetail;
 }> =>
   prisma.$transaction(async (transaction) => {
+    await authorizePersonMutation(
+      transaction,
+      actor,
+      PERMISSIONS.PERSONS.CREATE,
+    );
     const emails = normalizeInitialPrimary(input.emails);
     const phones = normalizeInitialPrimary(input.phones);
     const socialProfiles = normalizeInitialSocialPrimaries(
@@ -495,9 +504,15 @@ export const createPerson = async (
 export const updatePerson = async (
   personId: string,
   input: UpdatePersonInput,
-  actor: UserType,
+  actor: PersonMutationActor,
 ): Promise<PersonDetail> =>
   prisma.$transaction(async (transaction) => {
+    await authorizePersonMutation(
+      transaction,
+      actor,
+      PERMISSIONS.PERSONS.UPDATE,
+      personId,
+    );
     const current = await requirePersonDetailRecord(transaction, personId);
     const fields = [
       [

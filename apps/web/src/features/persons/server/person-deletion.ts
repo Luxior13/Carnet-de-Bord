@@ -1,10 +1,14 @@
 import 'server-only';
 
+import { PERMISSIONS } from '$constants/permissions.constants';
 import { prisma } from '$server/prisma';
-import type { UserType } from '$types/auth.types';
 
 import { assertPersonAuditConfigured, createPersonAudit } from './person-audit';
 import { personErrors } from './person-errors';
+import {
+  authorizePersonMutation,
+  type PersonMutationActor,
+} from './person-mutation-authorization';
 import { isPersonEnvironmentConfigured } from './person-readiness';
 
 const PERSON_FEATURE_READY_CACHE_MS = 5_000;
@@ -48,7 +52,7 @@ export const assertPersonFeatureReady = async (): Promise<void> => {
 };
 
 export const deletePerson = async (input: {
-  actor: UserType;
+  actor: PersonMutationActor;
   idempotencyKey: string;
   personId: string;
   version: number;
@@ -56,6 +60,12 @@ export const deletePerson = async (input: {
   await assertPersonFeatureReady();
 
   await prisma.$transaction(async (transaction) => {
+    await authorizePersonMutation(
+      transaction,
+      input.actor,
+      PERMISSIONS.PERSONS.DELETE,
+      input.personId,
+    );
     const tombstone = await transaction.personDeletionTombstone.findUnique({
       select: { personId: true },
       where: { personId: input.personId },

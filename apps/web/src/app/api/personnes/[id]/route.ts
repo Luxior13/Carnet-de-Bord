@@ -69,7 +69,12 @@ export async function PATCH(
     await assertPersonFeatureReady();
 
     return withPrivateNoStore(
-      apiSuccess({ person: await updatePerson(id, parsed.data, auth.user) }),
+      apiSuccess({
+        person: await updatePerson(id, parsed.data, {
+          ...auth.user,
+          session: auth.session,
+        }),
+      }),
     );
   } catch (error) {
     return handlePersonApiError('PERSON_UPDATE', error, request);
@@ -106,7 +111,7 @@ export async function DELETE(
   try {
     await assertPersonFeatureReady();
     await deletePerson({
-      actor: auth.user,
+      actor: { ...auth.user, session: auth.session },
       idempotencyKey,
       personId: id,
       version: parsed.data.version,

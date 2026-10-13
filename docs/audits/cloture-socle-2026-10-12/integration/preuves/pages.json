@@ -1,0 +1,152 @@
+{
+  "date": "2026-10-12T22:34:52.787Z",
+  "server": "Next production + PostgreSQL isolated",
+  "expectedScenarios": 14,
+  "completed": true,
+  "scenarios": [
+    {
+      "name": "Anonymous protection and login at three widths",
+      "widths": [
+        320,
+        768,
+        1440
+      ],
+      "passed": true
+    },
+    {
+      "name": "Real page / at 320, 768 and 1440 px",
+      "readinessWaitSeconds": 12,
+      "widths": [
+        320,
+        768,
+        1440
+      ],
+      "passed": true
+    },
+    {
+      "name": "Real page /mon-compte at 320, 768 and 1440 px",
+      "widths": [
+        320,
+        768,
+        1440
+      ],
+      "passed": true
+    },
+    {
+      "name": "Real page /membres/repertoire at 320, 768 and 1440 px",
+      "widths": [
+        320,
+        768,
+        1440
+      ],
+      "passed": true
+    },
+    {
+      "name": "Real page /membres/repertoire/nouveau at 320, 768 and 1440 px",
+      "widths": [
+        320,
+        768,
+        1440
+      ],
+      "passed": true
+    },
+    {
+      "name": "Real page /membres/repertoire/cmv5ty4bd00oyuw9cgvcrylq6 at 320, 768 and 1440 px",
+      "widths": [
+        320,
+        768,
+        1440
+      ],
+      "passed": true
+    },
+    {
+      "name": "Real page /systeme/utilisateurs at 320, 768 and 1440 px",
+      "widths": [
+        320,
+        768,
+        1440
+      ],
+      "passed": true
+    },
+    {
+      "name": "Real page /systeme/utilisateurs/nouveau at 320, 768 and 1440 px",
+      "widths": [
+        320,
+        768,
+        1440
+      ],
+      "passed": true
+    },
+    {
+      "name": "Real page /systeme/utilisateurs/cmv5txhpy0000uwxgna7c4kcc at 320, 768 and 1440 px",
+      "widths": [
+        320,
+        768,
+        1440
+      ],
+      "passed": true
+    },
+    {
+      "name": "Real page /systeme/parametres at 320, 768 and 1440 px",
+      "widths": [
+        320,
+        768,
+        1440
+      ],
+      "passed": true
+    },
+    {
+      "name": "Real page /systeme/feuille-de-route at 320, 768 and 1440 px",
+      "widths": [
+        320,
+        768,
+        1440
+      ],
+      "passed": true
+    },
+    {
+      "name": "Real setting save, CSRF refusal, version conflict and atomic audit",
+      "http": [
+        403,
+        200,
+        409
+      ],
+      "persistedAndAudited": true,
+      "passed": true
+    },
+    {
+      "name": "Aliases, missing route, missing resources and readiness",
+      "readinessWaitSeconds": 57,
+      "javascriptErrors": [],
+      "passed": true
+    },
+    {
+      "name": "Read-only person user: real MFA, list, forbidden mutations and system APIs",
+      "http": [
+        [
+          "users",
+          403,
+          403
+        ],
+        [
+          "settings",
+          403,
+          403
+        ],
+        [
+          "persons-read",
+          200,
+          200
+        ],
+        [
+          "persons-create",
+          403,
+          403
+        ]
+      ],
+      "revokedDuringSession": true,
+      "passed": true
+    }
+  ],
+  "chromium": "149.0.7827.55"
+}

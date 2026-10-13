@@ -13,6 +13,7 @@ import {
 } from '$constants/system-settings.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import {
+  apiError,
   apiErrors,
   isPrismaUniqueConstraintError,
   parseJsonBody,
@@ -25,6 +26,11 @@ import {
   SystemSettingConflictError,
   updateSystemSetting,
 } from '$server/system-settings';
+import {
+  assertUserActionProof,
+  authorizeUserAction,
+  UserActionAuthorizationError,
+} from '$server/user-action-authorization';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -111,10 +117,10 @@ export async function PUT(
         success: true,
       });
     }
-    if (
+    const requiresPassword =
       isStoredValueInvalid ||
-      requiresPasswordForSystemSettingChange(key, currentValue, numericValue)
-    ) {
+      requiresPasswordForSystemSettingChange(key, currentValue, numericValue);
+    if (requiresPassword) {
       const proof = requireRecentPasswordReauthentication(auth.session);
       if (!proof.success) return proof.response;
     }
@@ -126,6 +132,15 @@ export async function PUT(
           )::text
         `;
       }
+      const authorized = await authorizeUserAction(
+        transaction,
+        {
+          actorId: auth.user.id,
+          session: auth.session,
+        },
+        PERMISSIONS.SETTINGS.UPDATE,
+      );
+      assertUserActionProof(authorized, requiresPassword ? 'password' : 'none');
       let updated: Awaited<ReturnType<typeof createSystemSetting>>;
       if (parsed.data.expectedVersion === 0) {
         try {
@@ -197,6 +212,8 @@ export async function PUT(
       success: true,
     });
   } catch (error) {
+    if (error instanceof UserActionAuthorizationError)
+      return apiError(error.code, error.message, error.status);
     if (error instanceof SystemSettingConflictError) {
       return NextResponse.json(
         {

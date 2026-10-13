@@ -1,0 +1,213 @@
+{
+  "generatedAt": "2026-10-12T22:02:46.945Z",
+  "timezone": "Europe/Paris",
+  "head": "c54e5d813c40e71acd892e2973bbb303d9c74644",
+  "localProductCorrections": true,
+  "simulation": "Real components/CSS; API, user/session, routing and some clocks simulated. No SQL or real authentication.",
+  "banks": [
+    {
+      "bank": "accueil-2026-10-12",
+      "proof": "preuves/accueil-2026-10-12.json",
+      "passed": 8,
+      "total": 8,
+      "startedAt": "2026-10-12T21:46:29.478Z",
+      "completedAt": "2026-10-12T21:46:31.610Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "composants-2026-10-11/banc-primitives",
+      "proof": "preuves/composants-2026-10-11-banc-primitives.json",
+      "passed": 14,
+      "total": 14,
+      "startedAt": "2026-10-12T21:52:21.573Z",
+      "completedAt": "2026-10-12T21:52:27.940Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "connexion-2026-10-12",
+      "proof": "preuves/connexion-2026-10-12.json",
+      "passed": 30,
+      "total": 30,
+      "startedAt": "2026-10-12T21:46:31.610Z",
+      "completedAt": "2026-10-12T21:46:42.145Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "creation-personne-2026-10-12",
+      "proof": "preuves/creation-personne-2026-10-12.json",
+      "passed": 28,
+      "total": 28,
+      "startedAt": "2026-10-12T21:47:08.368Z",
+      "completedAt": "2026-10-12T21:47:17.873Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "creation-utilisateur-2026-10-11",
+      "proof": "preuves/creation-utilisateur-2026-10-11.json",
+      "passed": 28,
+      "total": 28,
+      "startedAt": "2026-10-12T21:49:14.796Z",
+      "completedAt": "2026-10-12T21:49:26.966Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "creation-utilisateur-reprise-2026-10-12",
+      "proof": "preuves/creation-utilisateur-reprise-2026-10-12.json",
+      "passed": 6,
+      "total": 6,
+      "startedAt": "2026-10-12T21:52:17.943Z",
+      "completedAt": "2026-10-12T21:52:21.572Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "etats-techniques-2026-10-12",
+      "proof": "preuves/etats-techniques-2026-10-12.json",
+      "passed": 13,
+      "total": 13,
+      "startedAt": "2026-10-12T21:51:58.020Z",
+      "completedAt": "2026-10-12T21:52:01.285Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "feuille-de-route-2026-10-12",
+      "proof": "preuves/feuille-de-route-2026-10-12.json",
+      "passed": 18,
+      "total": 18,
+      "startedAt": "2026-10-12T21:51:21.652Z",
+      "completedAt": "2026-10-12T21:51:40.409Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "fiche-personne-2026-10-12",
+      "proof": "preuves/fiche-personne-2026-10-12.json",
+      "passed": 30,
+      "total": 30,
+      "startedAt": "2026-10-12T21:47:17.873Z",
+      "completedAt": "2026-10-12T21:47:46.106Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "fiche-utilisateur-2026-10-11",
+      "proof": "preuves/fiche-utilisateur-2026-10-11.json",
+      "passed": 46,
+      "total": 46,
+      "startedAt": "2026-10-12T21:57:33.332Z",
+      "completedAt": "2026-10-12T21:58:04.739Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "mon-compte-2026-10-11",
+      "proof": "preuves/mon-compte-2026-10-11.json",
+      "passed": 23,
+      "total": 23,
+      "startedAt": "2026-10-12T21:49:58.339Z",
+      "completedAt": "2026-10-12T21:50:18.949Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "mon-compte-securite-2026-10-12",
+      "proof": "preuves/mon-compte-securite-2026-10-12.json",
+      "passed": 8,
+      "total": 8,
+      "startedAt": "2026-10-12T21:52:01.286Z",
+      "completedAt": "2026-10-12T21:52:08.406Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "navigation-generale-2026-10-12",
+      "proof": "preuves/navigation-generale-2026-10-12.json",
+      "passed": 17,
+      "total": 17,
+      "startedAt": "2026-10-12T21:58:04.739Z",
+      "completedAt": "2026-10-12T21:58:14.134Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "navigation-sections-2026-10-12",
+      "proof": "preuves/navigation-sections-2026-10-12.json",
+      "passed": 8,
+      "total": 8,
+      "startedAt": "2026-10-12T21:51:54.410Z",
+      "completedAt": "2026-10-12T21:51:58.019Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "parametres-complet-2026-10-11",
+      "proof": "preuves/parametres-complet-2026-10-11.json",
+      "passed": 30,
+      "total": 30,
+      "startedAt": "2026-10-12T21:50:18.949Z",
+      "completedAt": "2026-10-12T21:50:30.779Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "repertoire-2026-10-11",
+      "proof": "preuves/repertoire-2026-10-11.json",
+      "passed": 41,
+      "total": 41,
+      "startedAt": "2026-10-12T21:46:42.145Z",
+      "completedAt": "2026-10-12T21:47:08.367Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "utilisateur-sessions-2026-10-12",
+      "proof": "preuves/utilisateur-sessions-2026-10-12.json",
+      "passed": 11,
+      "total": 11,
+      "startedAt": "2026-10-12T21:58:14.135Z",
+      "completedAt": "2026-10-12T21:58:24.003Z",
+      "exitCode": 0
+    },
+    {
+      "bank": "utilisateurs-2026-10-11",
+      "proof": "preuves/utilisateurs-2026-10-11.json",
+      "passed": 42,
+      "total": 42,
+      "startedAt": "2026-10-12T21:48:46.986Z",
+      "completedAt": "2026-10-12T21:49:14.795Z",
+      "exitCode": 0
+    }
+  ],
+  "passed": 401,
+  "total": 401,
+  "additionalRegressionCases": {
+    "proof": "preuves/fiche-six-reprises-apres.json",
+    "passed": 6,
+    "total": 6
+  },
+  "newUnitTests": {
+    "file": "apps/web/src/__tests__/user-detail-request.test.ts",
+    "passed": 4,
+    "total": 4
+  },
+  "sources": [
+    {
+      "file": "apps/web/src/components/ui/breadcrumb.tsx",
+      "sha256": "775aa3dd2074d6d57f4b7adbee38fd992bd10214fa043c99f922bc5d6087cddb"
+    },
+    {
+      "file": "apps/web/src/components/users/UserDetailPage.tsx",
+      "sha256": "4736f767466e1e115a9950950e04937fbabfd32473403aeb9deb2d22bde93695"
+    },
+    {
+      "file": "apps/web/src/components/users/user-detail/UserSecurityTab.tsx",
+      "sha256": "306ed976039004ac9415d4434211543b71e41dd81cdfc89f8c031818349ceb42"
+    },
+    {
+      "file": "apps/web/src/components/users/user-detail/UserDeletionCard.tsx",
+      "sha256": "07afddf10efe970f36d7bb346c29169c266983bf99fffceeedfeb064b7952896"
+    },
+    {
+      "file": "apps/web/src/components/users/user-detail/user-detail-request.ts",
+      "sha256": "7cf06a902a61ced2a7b1052cef0b17d902654570e4f45d7c8773ee1cde9b5e01"
+    },
+    {
+      "file": "apps/web/src/components/users/user-detail/user-security-focus.ts",
+      "sha256": "868d9de3eb2704fa533a057da9e7debe4d60e1a88827b17313d960528bff1459"
+    },
+    {
+      "file": "apps/web/src/features/persons/schemas/person.schemas.ts",
+      "sha256": "3c714c69e2bb2ab96904029dafbb5152ea65253e448d240d8e0abeacb45d7520"
+    }
+  ]
+}

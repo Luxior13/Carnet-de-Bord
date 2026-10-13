@@ -1,7 +1,7 @@
 import 'server-only';
 
+import { PERMISSIONS } from '$constants/permissions.constants';
 import { prisma } from '$server/prisma';
-import type { UserType } from '$types/auth.types';
 
 import { PERSON_AUDIT_KEYS, PERSON_LIMITS } from '../person.constants';
 import type {
@@ -26,17 +26,27 @@ import {
 } from './person-core.service';
 import { getDuplicateWarning } from './person-duplicate-detection';
 import { personErrors } from './person-errors';
+import {
+  authorizePersonMutation,
+  type PersonMutationActor,
+} from './person-mutation-authorization';
 import { normalizePersonEmail } from './person-normalization';
 
 export const addPersonEmail = async (
   personId: string,
   input: CreatePersonEmailInput,
-  actor: UserType,
+  actor: PersonMutationActor,
 ): Promise<{
   duplicateWarning: PersonDuplicateWarning;
   person: PersonDetail;
 }> =>
   prisma.$transaction(async (transaction) => {
+    await authorizePersonMutation(
+      transaction,
+      actor,
+      PERMISSIONS.PERSONS.UPDATE,
+      personId,
+    );
     const current = await requirePersonDetailRecord(transaction, personId);
     if (current.version !== input.personVersion)
       throw personErrors.versionConflict();
@@ -127,12 +137,18 @@ export const updatePersonEmail = async (
   personId: string,
   emailId: string,
   input: UpdatePersonEmailInput,
-  actor: UserType,
+  actor: PersonMutationActor,
 ): Promise<{
   duplicateWarning: PersonDuplicateWarning;
   person: PersonDetail;
 }> =>
   prisma.$transaction(async (transaction) => {
+    await authorizePersonMutation(
+      transaction,
+      actor,
+      PERMISSIONS.PERSONS.UPDATE,
+      personId,
+    );
     const person = await requirePersonDetailRecord(transaction, personId);
     const current = person.emails.find((email) => email.id === emailId);
     if (!current) throw personErrors.notFound();
@@ -234,9 +250,15 @@ export const deletePersonEmail = async (
   personId: string,
   emailId: string,
   input: DeletePersonChildInput,
-  actor: UserType,
+  actor: PersonMutationActor,
 ): Promise<PersonDetail> =>
   prisma.$transaction(async (transaction) => {
+    await authorizePersonMutation(
+      transaction,
+      actor,
+      PERMISSIONS.PERSONS.UPDATE,
+      personId,
+    );
     const person = await requirePersonDetailRecord(transaction, personId);
     if (person.version !== input.personVersion)
       throw personErrors.versionConflict();
@@ -308,12 +330,18 @@ export const deletePersonEmail = async (
 export const addPersonPhone = async (
   personId: string,
   input: CreatePersonPhoneInput,
-  actor: UserType,
+  actor: PersonMutationActor,
 ): Promise<{
   duplicateWarning: PersonDuplicateWarning;
   person: PersonDetail;
 }> =>
   prisma.$transaction(async (transaction) => {
+    await authorizePersonMutation(
+      transaction,
+      actor,
+      PERMISSIONS.PERSONS.UPDATE,
+      personId,
+    );
     const current = await requirePersonDetailRecord(transaction, personId);
     if (current.version !== input.personVersion)
       throw personErrors.versionConflict();
@@ -403,12 +431,18 @@ export const updatePersonPhone = async (
   personId: string,
   phoneId: string,
   input: UpdatePersonPhoneInput,
-  actor: UserType,
+  actor: PersonMutationActor,
 ): Promise<{
   duplicateWarning: PersonDuplicateWarning;
   person: PersonDetail;
 }> =>
   prisma.$transaction(async (transaction) => {
+    await authorizePersonMutation(
+      transaction,
+      actor,
+      PERMISSIONS.PERSONS.UPDATE,
+      personId,
+    );
     const person = await requirePersonDetailRecord(transaction, personId);
     const current = person.phones.find((phone) => phone.id === phoneId);
     if (!current) throw personErrors.notFound();
@@ -511,9 +545,15 @@ export const deletePersonPhone = async (
   personId: string,
   phoneId: string,
   input: DeletePersonChildInput,
-  actor: UserType,
+  actor: PersonMutationActor,
 ): Promise<PersonDetail> =>
   prisma.$transaction(async (transaction) => {
+    await authorizePersonMutation(
+      transaction,
+      actor,
+      PERMISSIONS.PERSONS.UPDATE,
+      personId,
+    );
     const person = await requirePersonDetailRecord(transaction, personId);
     if (person.version !== input.personVersion)
       throw personErrors.versionConflict();

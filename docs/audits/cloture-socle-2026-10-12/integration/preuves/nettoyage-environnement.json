@@ -1,0 +1,45 @@
+{
+  "completedAt": "2026-10-12T22:38:42.6610502+00:00",
+  "startedOn": "2026-10-12",
+  "validationDateParis": "2026-10-13",
+  "authorization": "Final cleanup after smoke 1/1, panorama 14/14 and restoration 4/4 confirmed by root.",
+  "target": {
+    "host": "127.0.0.1",
+    "postgresPort": 54663,
+    "nextPort": 3132,
+    "temporaryPrefix": "noctambule-cloture-socle-",
+    "databaseCount": 11
+  },
+  "databases": [
+    "account_service_test",
+    "creation_service_test",
+    "login_service_test",
+    "person_creation_service_test",
+    "person_detail_service_test",
+    "repertoire_pagination_test",
+    "settings_service_test",
+    "socle_e2e_test",
+    "socle_restore_test",
+    "user_detail_service_test",
+    "users_list_test"
+  ],
+  "verification": {
+    "absoluteTemporaryPathVerified": true,
+    "reparsePoints": 0,
+    "postgresPidAndDataDirectoryVerified": true,
+    "privateFilesBeforeShutdown": 6373,
+    "nextAlreadyStoppedByRoot": true,
+    "postgresStopped": true,
+    "portsAbsent": [3132, 54663],
+    "workDirectoryDeleted": true,
+    "markerDeleted": true,
+    "envAndPrivateKeysDeleted": true,
+    "privateLogsAndBrowserArtifactsDeleted": true,
+    "usualDevelopmentDatabaseUntouched": true
+  },
+  "limits": [
+    "Only the isolated cluster, its temporary work directory and marker were removed here.",
+    "Backup files and performance temporaries were cleaned by root and have a separate proof.",
+    "No secret or private path is included in this evidence."
+  ]
+}

@@ -1,0 +1,11 @@
+[
+  {
+    "name": "bounded-detail-mfa-recovery",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "after31Seconds": "verification-still-locked",
+      "postCount": 1
+    }
+  }
+]

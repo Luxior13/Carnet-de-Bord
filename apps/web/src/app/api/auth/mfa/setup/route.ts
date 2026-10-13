@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors, parseJsonBody } from '$server/api-response';
+import { apiError, apiErrors, parseJsonBody } from '$server/api-response';
 import {
   createAuditLogWithHeaders,
   createSession,
@@ -39,6 +39,11 @@ import {
   reserveSensitiveActionRateLimit,
 } from '$server/rate-limiter';
 import { getClientIp } from '$server/request-context';
+import {
+  authorizeUserAction,
+  type UserActionAuthority,
+  UserActionAuthorizationError,
+} from '$server/user-action-authorization';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -183,6 +188,7 @@ export async function POST(
     let challengeTokenHash: string;
     let credentialUpdatedAt: Date | null;
     let proof: Awaited<ReturnType<typeof verifyMfaProof>> | null | undefined;
+    let authority: UserActionAuthority | undefined;
 
     if (
       isValidMandatoryBootstrap &&
@@ -207,6 +213,7 @@ export async function POST(
         PERMISSIONS.ACCOUNT.MANAGE_MFA,
       );
       if (!permission.success) return permission.response;
+      authority = { actorId: auth.user.id, session: auth.session };
 
       if (!validation.data.currentPassword) {
         return NextResponse.json(
@@ -328,6 +335,12 @@ export async function POST(
     const provisioning = await createTotpProvisioningData(secret, loginName);
 
     await prisma.$transaction(async (transaction) => {
+      if (authority)
+        await authorizeUserAction(
+          transaction,
+          authority,
+          PERMISSIONS.ACCOUNT.MANAGE_MFA,
+        );
       const lockedUsers = await transaction.$queryRaw<{ id: string }[]>`
         SELECT "id"
         FROM "User"
@@ -459,6 +472,8 @@ export async function POST(
       success: true,
     });
   } catch (error) {
+    if (error instanceof UserActionAuthorizationError)
+      return apiError(error.code, error.message, error.status);
     if (
       error instanceof InvalidMfaChallengeError ||
       error instanceof MfaReplayDetectedError
@@ -772,6 +787,9 @@ export async function PUT(
 
       return invalidChallengeResponse();
     }
+
+    if (error instanceof UserActionAuthorizationError)
+      return apiError(error.code, error.message, error.status);
 
     return apiErrors.internal('MFA_SETUP_CONFIRM', error, request);
   }

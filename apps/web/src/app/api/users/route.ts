@@ -5,7 +5,6 @@ import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGINATION } from '$constants/pagination.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { createUserSchema } from '$features/users/create-user.schema';
-import { UserActionAuthorizationError } from '$features/users/server/user-action-authorization';
 import { createUser } from '$features/users/server/user-create.service';
 import { listUsers } from '$features/users/server/users-list.service';
 import { requireAuth, requirePermission } from '$server/api-auth';
@@ -19,6 +18,7 @@ import {
 import { generateTemporaryPassword, mapUserToUserType } from '$server/auth';
 import { prisma } from '$server/prisma';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
+import { UserActionAuthorizationError } from '$server/user-action-authorization';
 import { protectUserIdentityForActor } from '$server/user-visibility';
 import {
   type ApiErrorResponse,

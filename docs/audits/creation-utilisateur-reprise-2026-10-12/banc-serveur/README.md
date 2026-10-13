@@ -16,7 +16,7 @@ sans compte, réservation, audit ni secret de réponse.
 [createUser](../../../../apps/web/src/features/users/server/user-create.service.ts)
 exige le contexte d’acteur/source. Après bcrypt, dans la transaction et avant
 la première écriture, il utilise
-[authorizeUserAction](../../../../apps/web/src/features/users/server/user-action-authorization.ts).
+[authorizeUserAction](../../../../apps/web/src/shared/server/user-action-authorization.ts).
 Cette garde relit compte, session, droits et échéances sous les verrous déjà
 éprouvés pour les sessions administratives. Le service contrôle ensuite le droit
 du compte racine et la preuve récente pour ADMIN. Une erreur métier typée porte

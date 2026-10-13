@@ -26,6 +26,7 @@ import {
 } from '$features/users/user-update.schema';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import {
+  apiError,
   apiErrors,
   isPrismaUniqueConstraintError,
   parseJsonBody,
@@ -35,6 +36,7 @@ import {
   requireRecentPasswordReauthentication,
   requireRecentSensitiveActionProof,
 } from '$server/sensitive-action';
+import { UserActionAuthorizationError } from '$server/user-action-authorization';
 import {
   deleteUserPermanently,
   UserDeletionStateChangedError,
@@ -519,11 +521,20 @@ export async function PATCH(
 
     const updatedUser = await updateUserWithAudit({
       actorId: auth.user.id,
+      authority: {
+        actorId: auth.user.id,
+        authorization: auth.user,
+        session: auth.session,
+      },
       effectivelyGrantedPermissionKeys,
       effectivelyRevokedPermissionKeys,
       existingUser,
       expectedUpdatedAt,
       mutation,
+      requiredProof:
+        changedKeys.includes('isActive') || changedKeys.includes('loginName')
+          ? 'sensitive'
+          : requiredProofLevel,
     });
 
     return NextResponse.json({
@@ -545,6 +556,9 @@ export async function PATCH(
         { status: 409 },
       );
     }
+
+    if (error instanceof UserActionAuthorizationError)
+      return apiError(error.code, error.message, error.status);
 
     if (isPrismaOptimisticConflict(error)) {
       return NextResponse.json(
@@ -679,6 +693,11 @@ export async function DELETE(
     await deleteUserPermanently({
       actorId: auth.user.id,
       actorIsProtected: auth.user.isProtected,
+      authority: {
+        actorId: auth.user.id,
+        authorization: auth.user,
+        session: auth.session,
+      },
       expectedSecurityVersion: existingUser.securityVersion,
       expectedUpdatedAt: existingUser.updatedAt,
       userId: id,
@@ -702,6 +721,9 @@ export async function DELETE(
         { status: 409 },
       );
     }
+
+    if (error instanceof UserActionAuthorizationError)
+      return apiError(error.code, error.message, error.status);
 
     return apiErrors.internal('USER_DELETE', error);
   }

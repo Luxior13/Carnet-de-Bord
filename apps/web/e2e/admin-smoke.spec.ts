@@ -8,6 +8,7 @@ import type {
   PersonMutationResponse,
   PersonsListResponse,
 } from '../src/features/persons/types/person.types';
+import { browserApi } from './browser-api';
 import { expectSystemSettingsDraftSafety } from './system-settings.checks';
 import { expectUserCreationRecovery } from './user-creation.checks';
 import {
@@ -78,7 +79,8 @@ async function getPersonViaApi(
   page: Page,
   personId: string,
 ): Promise<PersonDetail> {
-  const response = await page.request.get(
+  const response = await browserApi(
+    page,
     `/api/personnes/${encodeURIComponent(personId)}`,
   );
   expect(response.status()).toBe(200);
@@ -90,6 +92,15 @@ async function getPersonViaApi(
 // longer exercise the same first-login precondition. The database harness is
 // deliberately reset once before this stateful smoke test instead.
 test.describe.configure({ retries: 0 });
+test.use({ actionTimeout: 15_000 });
+test.afterEach(async ({ page }) => {
+  // The setup can display one-time secrets. Do not leave its DOM available to
+  // Playwright's automatic error-context snapshot, even when an assertion fails.
+  if (!page.isClosed()) {
+    await page.goto('about:blank');
+    await page.close();
+  }
+});
 test.afterAll(async () => {
   await prisma.$disconnect();
 });
@@ -129,11 +140,11 @@ async function completeRequiredMfaSetup(page: Page): Promise<void> {
   const manualKey = (await manualKeyOutput.innerText())
     .replace(/[\s-]/g, '')
     .toUpperCase();
-  expect(manualKey).toMatch(/^[A-Z2-7]{16,}$/);
+  expect(/^[A-Z2-7]{16,}$/.test(manualKey)).toBe(true);
 
   const code = await generateStableTotp(page, manualKey);
-  expect(code).toMatch(/^\d{6}$/);
-  await page.getByLabel('Code à 6 chiffres', { exact: true }).fill(code);
+  expect(/^\d{6}$/.test(code)).toBe(true);
+  await page.getByRole('textbox', { name: /^Code à 6 chiffres/ }).fill(code);
   await page
     .getByRole('button', { name: 'Activer la double authentification' })
     .click();
@@ -157,10 +168,13 @@ async function completeRequiredMfaSetup(page: Page): Promise<void> {
     page.waitForEvent('download'),
     page.getByRole('button', { name: 'Télécharger' }).click(),
   ]);
-  expect(download.suggestedFilename()).toMatch(
-    /^codes-secours-team-control-\d{4}-\d{2}-\d{2}\.txt$/,
-  );
-  await download.delete();
+  try {
+    expect(download.suggestedFilename()).toMatch(
+      /^codes-secours-noctambule-\d{4}-\d{2}-\d{2}\.txt$/,
+    );
+  } finally {
+    await download.delete();
+  }
 
   const finishButton = page.getByRole('button', { name: 'Terminer' });
   await expect(finishButton).toBeDisabled();
@@ -241,7 +255,7 @@ async function expectSelfProfileSyncWithoutReload(page: Page): Promise<void> {
   const nextDisplayName = `${nextFirstName} ${nextLastName}`;
 
   await page.goto('/mon-compte?section=profile');
-  await page.getByRole('button', { name: "Modifier l'identité" }).click();
+  await expect(page.locator('#edit-firstName')).toBeEnabled();
   await page.locator('#edit-firstName').fill(nextFirstName);
   await page.locator('#edit-lastName').fill(nextLastName);
 
@@ -291,76 +305,59 @@ async function expectPersonsListFilteringAndPagination(
     })),
   });
 
-  const firstPageResponsePromise = page.waitForResponse((response) => {
-    const url = new URL(response.url());
-
-    return (
-      response.request().method() === 'GET' &&
-      url.pathname === '/api/personnes' &&
-      url.searchParams.get('q') === listPrefix &&
-      !url.searchParams.has('cursor') &&
-      !url.searchParams.has('structureStatus')
-    );
-  });
+  // The list accepts SSR data on navigation and may abort a redundant client GET.
+  // Assert the rendered list, and exercise its real API separately.
   await page.goto(`/membres/repertoire?q=${encodeURIComponent(listPrefix)}`);
-  const firstPageResponse = await firstPageResponsePromise;
+  const firstPageResponse = await browserApi(
+    page,
+    `/api/personnes?q=${encodeURIComponent(listPrefix)}`,
+  );
   expect(firstPageResponse.status()).toBe(200);
   const firstPage = await readApiData<PersonsListResponse>(firstPageResponse);
   expect(firstPage.items).toHaveLength(25);
   expect(firstPage.pagination.hasMore).toBe(true);
-  await expect(
-    page.getByText(/Page 1 .* 25 fiches/, { exact: true }),
-  ).toBeVisible();
+  const pagination = page.getByRole('navigation', {
+    name: 'Pagination des membres',
+  });
+  await expect(pagination.locator('p')).toHaveText('Page 1 sur 2');
+  await expect(page.locator('table tbody tr')).toHaveCount(25);
 
   const nextPageButton = page.getByRole('button', { name: /Page suivante/ });
   await expect(nextPageButton).toBeEnabled();
-  const secondPageResponsePromise = page.waitForResponse((response) => {
-    const url = new URL(response.url());
-
-    return (
-      response.request().method() === 'GET' &&
-      url.pathname === '/api/personnes' &&
-      url.searchParams.get('q') === listPrefix &&
-      url.searchParams.has('cursor')
-    );
-  });
   await nextPageButton.click();
-  const secondPageResponse = await secondPageResponsePromise;
+  await expect(pagination.locator('p')).toHaveText('Page 2 sur 2');
+  await expect(page.locator('table tbody tr')).toHaveCount(1);
+  const nextCursor = firstPage.pagination.nextCursor;
+  if (!nextCursor)
+    throw new Error('The first page must expose its next cursor.');
+  const secondPageResponse = await browserApi(
+    page,
+    `/api/personnes?q=${encodeURIComponent(listPrefix)}&cursor=${encodeURIComponent(nextCursor)}`,
+  );
   expect(secondPageResponse.status()).toBe(200);
   const secondPage = await readApiData<PersonsListResponse>(secondPageResponse);
   expect(secondPage.items).toHaveLength(1);
   expect(secondPage.pagination.hasMore).toBe(false);
-  await expect(
-    page.getByText(/Page 2 .* 1 fiche/, { exact: true }),
-  ).toBeVisible();
 
   const previousPageButton = page.getByRole('button', {
     name: /Page pr.c.dente/,
   });
   await expect(previousPageButton).toBeEnabled();
   await previousPageButton.click();
-  await expect(
-    page.getByText(/Page 1 .* 25 fiches/, { exact: true }),
-  ).toBeVisible();
+  await expect(pagination.locator('p')).toHaveText('Page 1 sur 2');
 
   const statusFilter = page.getByRole('combobox', {
-    name: /Filtrer par statut dans la structure/,
+    name: 'Filtrer par statut',
   });
   await statusFilter.click();
-  const filteredResponsePromise = page.waitForResponse((response) => {
-    const url = new URL(response.url());
-
-    return (
-      response.request().method() === 'GET' &&
-      url.pathname === '/api/personnes' &&
-      url.searchParams.get('q') === listPrefix &&
-      url.searchParams.get('structureStatus') === 'IN_STRUCTURE'
-    );
-  });
   await page
     .getByRole('option', { exact: true, name: 'Dans la structure' })
     .click();
-  const filteredResponse = await filteredResponsePromise;
+  await expect(page.locator('table tbody tr')).toHaveCount(13);
+  const filteredResponse = await browserApi(
+    page,
+    `/api/personnes?q=${encodeURIComponent(listPrefix)}&structureStatus=IN_STRUCTURE`,
+  );
   expect(filteredResponse.status()).toBe(200);
   const filtered = await readApiData<PersonsListResponse>(filteredResponse);
   expect(filtered.items).toHaveLength(13);
@@ -374,26 +371,23 @@ async function expectPersonsListFilteringAndPagination(
       url.searchParams.get('structureStatus') === 'IN_STRUCTURE'
     );
   });
-  await expect(
-    page.getByText(/Page 1 .* 13 fiches/, { exact: true }),
-  ).toBeVisible();
+  await expect(pagination.locator('p')).toHaveText('Page 1');
   await expect(nextPageButton).toBeDisabled();
 
   await statusFilter.click();
-  const resetResponsePromise = page.waitForResponse((response) => {
-    const url = new URL(response.url());
-
-    return (
-      response.request().method() === 'GET' &&
-      url.pathname === '/api/personnes' &&
-      url.searchParams.get('q') === listPrefix &&
-      !url.searchParams.has('structureStatus')
-    );
-  });
   await page
     .getByRole('option', { exact: true, name: 'Tous les statuts' })
     .click();
-  expect((await resetResponsePromise).status()).toBe(200);
+  await expect(pagination.locator('p')).toHaveText('Page 1 sur 2');
+  await expect(page.locator('table tbody tr')).toHaveCount(25);
+  const resetResponse = await browserApi(
+    page,
+    `/api/personnes?q=${encodeURIComponent(listPrefix)}`,
+  );
+  expect(resetResponse.status()).toBe(200);
+  expect(
+    (await readApiData<PersonsListResponse>(resetResponse)).items,
+  ).toHaveLength(25);
   await expect(page).toHaveURL((url) => {
     return (
       url.pathname === '/membres/repertoire' &&
@@ -430,7 +424,7 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
   await expect
     .poll(
       async () => {
-        const response = await page.request.get('/api/health/ready');
+        const response = await browserApi(page, '/api/health/ready');
         const payload = (await response.json()) as {
           checks?: { persons?: string };
         };
@@ -442,7 +436,7 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
     .toBe('ready');
 
   const mutationHeaders = await getMutationHeaders(page);
-  const duplicateSourceResponse = await page.request.post('/api/personnes', {
+  const duplicateSourceResponse = await browserApi(page, '/api/personnes', {
     data: {
       birthDate: null,
       emails: [
@@ -460,6 +454,7 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
       structureStatus: 'OUTSIDE_STRUCTURE',
     },
     headers: mutationHeaders,
+    method: 'POST',
   });
   expect(duplicateSourceResponse.status()).toBe(201);
   const duplicateSource = await readApiData<PersonMutationResponse>(
@@ -468,63 +463,9 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
 
   await page.goto('/membres/repertoire/nouveau');
   await expect(
-    page.getByRole('heading', { name: 'Ajouter une personne' }),
+    page.getByRole('heading', { exact: true, name: 'Nouvelle fiche' }),
   ).toBeVisible();
-  await page.getByLabel('Pseudo principal').fill(nickname);
-
-  await page.getByRole('button', { exact: true, name: 'Email' }).click();
-  await page.getByRole('button', { exact: true, name: 'Email' }).click();
-  const emailInputs = page.locator('input[id^="create-email-"][id$="-email"]');
-  const emailLabels = page.locator('input[id^="create-email-"][id$="-label"]');
-  await expect(emailInputs).toHaveCount(2);
-  await emailInputs.nth(0).fill(sharedEmail);
-  await emailLabels.nth(0).fill('Association');
-  await emailInputs.nth(1).fill(primaryEmail);
-  await emailLabels.nth(1).fill('Personnel');
-  const emailPrimaryChoices = page.locator(
-    'input[name="create-email-primary"]',
-  );
-  await emailPrimaryChoices.nth(1).check();
-  await expect(emailPrimaryChoices.nth(1)).toBeChecked();
-  await emailPrimaryChoices.nth(0).check();
-  await expect(emailPrimaryChoices.nth(0)).toBeChecked();
-
-  await page.getByRole('button', { exact: true, name: 'Téléphone' }).click();
-  await page.getByRole('button', { exact: true, name: 'Téléphone' }).click();
-  const phoneInputs = page.locator('input[id^="create-phone-"][id$="-phone"]');
-  const phoneLabels = page.locator('input[id^="create-phone-"][id$="-label"]');
-  await expect(phoneInputs).toHaveCount(2);
-  await phoneInputs.nth(0).fill(sharedPhone);
-  await phoneLabels.nth(0).fill('Association');
-  await phoneInputs.nth(1).fill(primaryPhone);
-  await phoneLabels.nth(1).fill('Personnel');
-  const phonePrimaryChoices = page.locator(
-    'input[name="create-phone-primary"]',
-  );
-  await phonePrimaryChoices.nth(1).check();
-  await expect(phonePrimaryChoices.nth(1)).toBeChecked();
-
-  await page.getByRole('button', { exact: true, name: 'Ajouter' }).click();
-  await page.getByRole('button', { exact: true, name: 'Ajouter' }).click();
-  const socialIdentifiers = page.locator(
-    'input[id^="create-social-"][id$="-identifier"]',
-  );
-  const socialLabels = page.locator(
-    'input[id^="create-social-"][id$="-label"]',
-  );
-  const socialUrls = page.locator('input[id^="create-social-"][id$="-url"]');
-  await expect(socialIdentifiers).toHaveCount(2);
-  await socialIdentifiers.nth(0).fill(sharedDiscord);
-  await socialLabels.nth(0).fill('Secondaire');
-  await socialUrls.nth(0).fill(sharedDiscordUrl);
-  await socialIdentifiers.nth(1).fill(primaryDiscord);
-  await socialLabels.nth(1).fill('Personnel');
-  await socialUrls.nth(1).fill(primaryDiscordUrl);
-  const socialPrimaryChoices = page.locator(
-    'input[name="create-social-primary-discord"]',
-  );
-  await socialPrimaryChoices.nth(1).check();
-  await expect(socialPrimaryChoices.nth(1)).toBeChecked();
+  await page.getByRole('textbox', { name: /^Pseudo principal/ }).fill(nickname);
 
   const [creationResponse] = await Promise.all([
     page.waitForResponse(
@@ -532,87 +473,156 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
         response.request().method() === 'POST' &&
         response.url().endsWith('/api/personnes'),
     ),
-    page.getByRole('button', { name: 'Ajouter la personne' }).click(),
+    page
+      .getByRole('button', { exact: true, name: 'Créer et ouvrir la fiche' })
+      .click(),
   ]);
   expect(creationResponse.status()).toBe(201);
   const creationResult =
     await readApiData<PersonMutationResponse>(creationResponse);
-  expect(creationResult.person.emails).toHaveLength(2);
-  expect(creationResult.person.phones).toHaveLength(2);
-  expect(creationResult.person.socialProfiles).toHaveLength(2);
-  expect(
-    creationResult.person.emails.find((item) => item.email === sharedEmail)
-      ?.isPrimary,
-  ).toBe(true);
-  expect(
-    creationResult.person.phones.find((item) => item.phone === primaryPhone)
-      ?.isPrimary,
-  ).toBe(true);
-  expect(
-    creationResult.person.socialProfiles.find(
-      (item) => item.identifier === primaryDiscord,
-    )?.isPrimary,
-  ).toBe(true);
-  expect(creationResult.duplicateWarning?.duplicateFound).toBe(true);
-  expect(creationResult.duplicateWarning?.fields).toContain('emails.0.email');
-  const duplicateWarningWire = JSON.stringify(
-    creationResult.duplicateWarning ?? {},
-  );
-  expect(duplicateWarningWire).not.toContain(duplicateSource.person.id);
-  expect(duplicateWarningWire).not.toContain(duplicateSourceNickname);
-
-  await expect(page).toHaveURL(/\/membres\/repertoire\/[^/]+$/);
+  expect(creationResult.person.emails).toHaveLength(0);
+  expect(creationResult.person.phones).toHaveLength(0);
+  expect(creationResult.person.socialProfiles).toHaveLength(0);
   const personId = creationResult.person.id;
-  expect(page.url()).toContain(personId);
-  await expect(
-    page
-      .locator('[data-sonner-toast]')
-      .filter({ hasText: /Personne cr..e/ })
-      .last(),
-  ).toBeVisible();
+  await expect(page).toHaveURL(
+    (url) => url.pathname === `/membres/repertoire/${personId}`,
+  );
   await expect(
     page.getByRole('heading', { exact: true, name: nickname }),
   ).toBeVisible();
-  await expect(
-    page.getByText('Correspondance détectée', { exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByText(duplicateSourceNickname, { exact: true }),
-  ).toHaveCount(0);
-  await expect(page.getByText(sharedEmail, { exact: true })).toBeVisible();
-  await expect(page.getByText(primaryPhone, { exact: true })).toBeVisible();
-  await expect(page.getByText(primaryDiscord, { exact: true })).toBeVisible();
+  await page.getByRole('link', { exact: true, name: 'Coordonnées' }).click();
 
-  await page
-    .getByRole('button', { exact: true, name: 'Voir les autres (2)' })
-    .click();
-  await page
-    .getByRole('button', { exact: true, name: 'Voir les autres (1)' })
-    .click();
-  await expect(page.getByText(sharedEmail, { exact: true })).toBeVisible();
-  await expect(page.getByText(sharedPhone, { exact: true })).toBeVisible();
-  await expect(page.getByText(sharedDiscord, { exact: true })).toBeVisible();
+  // Coordinates are now added on the detail page through actual child dialogs.
+  async function addCoordinate(
+    kind: 'email' | 'phone' | 'social',
+    value: string,
+    label: string,
+    primary: boolean,
+    profileUrl?: string,
+  ): Promise<PersonMutationResponse> {
+    const names = {
+      email: 'Ajouter un email',
+      phone: 'Ajouter un téléphone',
+      social: 'Ajouter un profil social',
+    };
+    const paths = {
+      email: 'emails',
+      phone: 'telephones',
+      social: 'reseaux-sociaux',
+    };
+    const primaryNames = {
+      email: 'Email principal',
+      phone: 'Téléphone principal',
+      social: 'Profil principal pour ce réseau',
+    };
+    // These keys are the closed fixture union above, never external input.
+    // eslint-disable-next-line security/detect-object-injection
+    await page.getByRole('button', { exact: true, name: names[kind] }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog
+      .getByRole('textbox', {
+        name:
+          kind === 'email'
+            ? /^Email/
+            : kind === 'phone'
+              ? /^Numéro/
+              : /^Identifiant visible/,
+      })
+      .fill(value);
+    await dialog.getByRole('combobox', { name: /^Libellé/ }).fill(label);
+    if (profileUrl)
+      await dialog
+        .getByLabel('URL du profil', { exact: true })
+        .fill(profileUrl);
+    const primarySwitch = dialog.getByRole('switch', {
+      // eslint-disable-next-line security/detect-object-injection
+      name: primaryNames[kind],
+    });
+    if ((await primarySwitch.getAttribute('aria-checked')) !== String(primary))
+      await primarySwitch.click();
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.request().method() === 'POST' &&
+          new URL(response.url()).pathname ===
+            // eslint-disable-next-line security/detect-object-injection
+            `/api/personnes/${personId}/${paths[kind]}`,
+      ),
+      dialog.getByRole('button', { exact: true, name: 'Enregistrer' }).click(),
+    ]);
+    expect(response.status()).toBe(201);
+    expect(response.request().postDataJSON()).not.toHaveProperty(
+      'normalizedPhone',
+    );
+    const result = await readApiData<PersonMutationResponse>(response);
+    if (result.duplicateWarning?.duplicateFound) {
+      await expect(
+        dialog.getByText(
+          'Cette valeur existe aussi sur une autre fiche. Elle a bien été enregistrée ici.',
+          { exact: true },
+        ),
+      ).toBeVisible();
+      await dialog
+        .getByRole('button', { exact: true, name: 'Terminer' })
+        .click();
+    }
+    await expect(dialog).toBeHidden();
 
-  const duplicateEmailRow = page
-    .getByRole('listitem')
-    .filter({ hasText: sharedEmail });
-  await expect(
-    duplicateEmailRow.getByText('Cet email existe aussi sur une autre fiche.', {
-      exact: true,
-    }),
-  ).toBeVisible();
-  const primaryEmailItem = creationResult.person.emails.find(
+    return result;
+  }
+
+  const emailResult = await addCoordinate(
+    'email',
+    sharedEmail,
+    'Association',
+    true,
+  );
+  expect(emailResult.duplicateWarning?.duplicateFound).toBe(true);
+  expect(emailResult.duplicateWarning?.fields).toContain('email');
+  const duplicateWarningWire = JSON.stringify(emailResult.duplicateWarning);
+  expect(duplicateWarningWire).not.toContain(duplicateSource.person.id);
+  expect(duplicateWarningWire).not.toContain(duplicateSourceNickname);
+  await addCoordinate('email', primaryEmail, 'Personnel', false);
+  await addCoordinate('phone', sharedPhone, 'Association', true);
+  await addCoordinate('phone', primaryPhone, 'Personnel', true);
+  await addCoordinate(
+    'social',
+    sharedDiscord,
+    'Secondaire',
+    true,
+    sharedDiscordUrl,
+  );
+  await addCoordinate(
+    'social',
+    primaryDiscord,
+    'Personnel',
+    true,
+    primaryDiscordUrl,
+  );
+  const populatedPerson = await getPersonViaApi(page, personId);
+  expect(populatedPerson.emails).toHaveLength(2);
+  expect(populatedPerson.phones).toHaveLength(2);
+  expect(populatedPerson.socialProfiles).toHaveLength(2);
+  expect(populatedPerson.emails.filter((item) => item.isPrimary)).toEqual([
+    expect.objectContaining({ email: sharedEmail }),
+  ]);
+  expect(populatedPerson.phones.filter((item) => item.isPrimary)).toEqual([
+    expect.objectContaining({ phone: primaryPhone }),
+  ]);
+  expect(
+    populatedPerson.socialProfiles.filter((item) => item.isPrimary),
+  ).toEqual([expect.objectContaining({ identifier: primaryDiscord })]);
+  const primaryEmailItem = populatedPerson.emails.find(
     (item) => item.email === primaryEmail,
   );
-  const sharedPhoneItem = creationResult.person.phones.find(
+  const sharedPhoneItem = populatedPerson.phones.find(
     (item) => item.phone === sharedPhone,
   );
-  const sharedSocialItem = creationResult.person.socialProfiles.find(
+  const sharedSocialItem = populatedPerson.socialProfiles.find(
     (item) => item.identifier === sharedDiscord,
   );
-  if (!primaryEmailItem || !sharedPhoneItem || !sharedSocialItem) {
+  if (!primaryEmailItem || !sharedPhoneItem || !sharedSocialItem)
     throw new Error('Created secondary Person data is missing.');
-  }
 
   await page
     .getByRole('listitem')
@@ -623,7 +633,7 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
   await expect(
     childDialog.getByRole('switch', { name: 'Email principal' }),
   ).toBeVisible();
-  const childEmailInput = childDialog.getByLabel('Email', { exact: true });
+  const childEmailInput = childDialog.getByRole('textbox', { name: /^Email/ });
   await childEmailInput.fill('adresse-invalide');
   await childDialog
     .getByRole('button', { exact: true, name: 'Enregistrer' })
@@ -632,7 +642,9 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
   await expect(childEmailInput).toBeFocused();
   await childEmailInput.fill(primaryEmail);
 
-  const childEmailLabel = childDialog.getByLabel(/Libell./);
+  const childEmailLabel = childDialog.getByRole('combobox', {
+    name: /^Libellé/,
+  });
   await childEmailLabel.fill('E2E temporaire');
   await page.keyboard.press('Escape');
   const unsavedChildDialog = page.getByRole('alertdialog', {
@@ -642,6 +654,15 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
   await expect(
     unsavedChildDialog.getByRole('button', { name: 'Rester' }),
   ).toBeFocused();
+  // Autofocus precedes the modal layer's effects. Complete its real entrance
+  // animation before injecting a distinct second Escape into the nested dialog.
+  await unsavedChildDialog.evaluate(async (element) => {
+    await Promise.all(
+      element
+        .getAnimations()
+        .map((animation) => animation.finished.catch(() => undefined)),
+    );
+  });
   await page.keyboard.press('Escape');
   await expect(unsavedChildDialog).toBeHidden();
   await expect(childDialog).toBeVisible();
@@ -732,14 +753,14 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
     personAfterPrimaryChanges.socialProfiles.filter((item) => item.isPrimary),
   ).toEqual([expect.objectContaining({ identifier: sharedDiscord })]);
 
+  await page.getByRole('link', { exact: true, name: 'Identité' }).click();
   await page
-    .getByRole('button', { exact: true, name: 'Modifier' })
-    .first()
-    .click();
-  await page.getByLabel('Pseudo principal').fill(updatedNickname);
+    .getByRole('textbox', { name: /^Pseudo principal/ })
+    .fill(updatedNickname);
 
   const currentPerson = await getPersonViaApi(page, personId);
-  const concurrentResponse = await page.request.patch(
+  const concurrentResponse = await browserApi(
+    page,
     `/api/personnes/${encodeURIComponent(personId)}`,
     {
       data: {
@@ -754,6 +775,7 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
         version: currentPerson.version,
       },
       headers: mutationHeaders,
+      method: 'PATCH',
     },
   );
   expect(concurrentResponse.status()).toBe(200);
@@ -769,11 +791,14 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
   ]);
   expect(conflictResponse.status()).toBe(409);
   await expect(
-    page.getByText('Modification concurrente', { exact: true }),
+    page.getByText(
+      'La fiche a changé. Actualisez la version avant de confirmer votre saisie.',
+      { exact: true },
+    ),
   ).toBeVisible();
-  await expect(page.getByLabel('Pseudo principal')).toHaveValue(
-    updatedNickname,
-  );
+  await expect(
+    page.getByRole('textbox', { name: /^Pseudo principal/ }),
+  ).toHaveValue(updatedNickname);
 
   const reloadResponsePromise = page.waitForResponse(
     (response) =>
@@ -784,11 +809,14 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
     .getByRole('button', { exact: true, name: 'Actualiser la version' })
     .click();
   expect((await reloadResponsePromise).status()).toBe(200);
-  await expect(page.getByLabel('Pseudo principal')).toHaveValue(
-    updatedNickname,
-  );
   await expect(
-    page.getByText('Modification concurrente', { exact: true }),
+    page.getByRole('textbox', { name: /^Pseudo principal/ }),
+  ).toHaveValue(updatedNickname);
+  await expect(
+    page.getByText(
+      'La fiche a changé. Actualisez la version avant de confirmer votre saisie.',
+      { exact: true },
+    ),
   ).toBeHidden();
 
   const cancelIdentityButton = page.getByRole('button', {
@@ -807,9 +835,9 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
   ).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(identityDiscardDialog).toBeHidden();
-  await expect(page.getByLabel('Pseudo principal')).toHaveValue(
-    updatedNickname,
-  );
+  await expect(
+    page.getByRole('textbox', { name: /^Pseudo principal/ }),
+  ).toHaveValue(updatedNickname);
   await expect(cancelIdentityButton).toBeFocused();
 
   const [updateResponse] = await Promise.all([
@@ -833,14 +861,21 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
 
   expect(contextualHistoryRequests).toBe(0);
   const historyTrigger = page.getByRole('button', {
-    name: "Afficher l'historique : Pseudo principal",
+    name: "Voir l'origine : Pseudo principal",
   });
+  // The mutation restores the first field on the next frame. Wait for that
+  // completion before starting a new keyboard gesture toward its provenance.
+  const savedNickname = page.getByRole('textbox', {
+    name: /^Pseudo principal/,
+  });
+  await expect(savedNickname).toBeFocused();
   const historyResponsePromise = page.waitForResponse(
     (response) =>
       response.request().method() === 'GET' &&
       response.url().includes(`/api/personnes/${personId}/historique-champ?`),
   );
-  await historyTrigger.click();
+  await savedNickname.press('Shift+Tab');
+  await expect(historyTrigger).toBeFocused();
   const historyResponse = await historyResponsePromise;
   expect(historyResponse.status()).toBe(200);
   const history =
@@ -850,18 +885,38 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
     true,
   );
   await expect.poll(() => contextualHistoryRequests).toBe(1);
-  await expect(
-    page
-      .locator('[data-slot="popover-content"]')
-      .getByText(updatedNickname, { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('tooltip')).toContainText(
+    'Dernière modification',
+  );
+  await expect(page.getByRole('tooltip')).toContainText(
+    history.items[0]?.actor.displayName ?? '',
+  );
   await page.keyboard.press('Escape');
-  await expect(page.locator('[data-slot="popover-content"]')).toBeHidden();
+  await expect(page.getByRole('tooltip')).toBeHidden();
   await expect(historyTrigger).toBeFocused();
   page.off('request', onHistoryRequest);
 
   await expectPersonsListFilteringAndPagination(page, uniqueSuffix);
+  const readinessResponsePromise = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === '/api/health/ready',
+  );
   await page.goto(`/membres/repertoire/${personId}`);
+  let readinessResponse = await readinessResponsePromise;
+  if (readinessResponse.status() === 429) {
+    // Repeated full navigations in this smoke can consume the real readiness
+    // quota. Respect its response instead of changing the limiter or forcing UI.
+    const seconds = Number(readinessResponse.headers()['retry-after']);
+    expect(Number.isFinite(seconds) && seconds > 0 && seconds <= 60).toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, seconds * 1_000));
+    [readinessResponse] = await Promise.all([
+      page.waitForResponse(
+        (response) => new URL(response.url()).pathname === '/api/health/ready',
+      ),
+      page.getByRole('button', { exact: true, name: 'Revérifier' }).click(),
+    ]);
+  }
+  expect(readinessResponse.status()).toBe(200);
+  expect((await readinessResponse.json()).checks.persons).toBe('ready');
   await expect(
     page.getByRole('heading', { exact: true, name: updatedNickname }),
   ).toBeVisible();
@@ -904,7 +959,7 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
 }
 
 test('authenticates and reaches the admin surfaces', async ({ page }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(300_000);
   await login(page);
   await expectPersistedMfaState();
 
@@ -958,9 +1013,10 @@ test('authenticates and reaches the admin surfaces', async ({ page }) => {
   await expectSystemSettingsDraftSafety(page);
   await expectUserCreationRecovery(page);
   const createdUserId = new URL(page.url()).pathname.split('/').at(-1);
-  expect(createdUserId).toBeTruthy();
-  await expectUserDetailDraftSafety(page, createdUserId!);
-  await expectUserDetailConflictRecovery(page, createdUserId!);
+  if (!createdUserId)
+    throw new Error('Created user detail URL is missing its ID.');
+  await expectUserDetailDraftSafety(page, createdUserId);
+  await expectUserDetailConflictRecovery(page, createdUserId);
 
   await expectSelfProfileSyncWithoutReload(page);
   await expectPersonIdentityLifecycle(page);

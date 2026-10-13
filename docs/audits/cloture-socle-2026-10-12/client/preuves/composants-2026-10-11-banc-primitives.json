@@ -1,0 +1,88 @@
+{
+  "bank": "composants-2026-10-11/banc-primitives",
+  "runner": "docs/audits/composants-2026-10-11/banc-primitives/run.cjs",
+  "startedAt": "2026-10-12T21:52:21.573Z",
+  "completedAt": "2026-10-12T21:52:27.940Z",
+  "head": "c54e5d813c40e71acd892e2973bbb303d9c74644",
+  "exitCode": 0,
+  "work": "C:\\Users\\Luxior\\AppData\\Local\\Temp\\noctambule-primitives-audit-a1tNbr",
+  "filter": null,
+  "passed": 14,
+  "total": 14,
+  "result": {
+    "date": "2026-10-11",
+    "environment": "Chromium isolated real primitives and CSS, no API or authentication",
+    "scenarios": [
+      {
+        "name": "focus-and-fields",
+        "width": 320,
+        "result": "passed"
+      },
+      {
+        "name": "actions-and-state",
+        "width": 320,
+        "result": "passed"
+      },
+      {
+        "name": "select-and-command",
+        "width": 320,
+        "result": "passed"
+      },
+      {
+        "name": "focus-and-fields",
+        "width": 390,
+        "result": "passed"
+      },
+      {
+        "name": "actions-and-state",
+        "width": 390,
+        "result": "passed"
+      },
+      {
+        "name": "select-and-command",
+        "width": 390,
+        "result": "passed"
+      },
+      {
+        "name": "focus-and-fields",
+        "width": 768,
+        "result": "passed"
+      },
+      {
+        "name": "actions-and-state",
+        "width": 768,
+        "result": "passed"
+      },
+      {
+        "name": "select-and-command",
+        "width": 768,
+        "result": "passed"
+      },
+      {
+        "name": "focus-and-fields",
+        "width": 1440,
+        "result": "passed"
+      },
+      {
+        "name": "actions-and-state",
+        "width": 1440,
+        "result": "passed"
+      },
+      {
+        "name": "select-and-command",
+        "width": 1440,
+        "result": "passed"
+      },
+      {
+        "name": "forced-colors-and-reduced-motion",
+        "width": 390,
+        "result": "passed"
+      },
+      {
+        "name": "touch-controls",
+        "width": 390,
+        "result": "passed"
+      }
+    ]
+  }
+}

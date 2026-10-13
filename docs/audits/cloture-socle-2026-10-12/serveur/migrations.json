@@ -1,0 +1,51 @@
+﻿{
+  "checkedAt": "2026-10-12T22:02:26.2160560Z",
+  "host": "127.0.0.1",
+  "port": 54663,
+  "databases": [
+    {
+      "database": "socle_e2e_test",
+      "appliedMigrations": 52
+    },
+    {
+      "database": "socle_restore_test",
+      "appliedMigrations": 52
+    },
+    {
+      "database": "creation_service_test",
+      "appliedMigrations": 52
+    },
+    {
+      "database": "user_detail_service_test",
+      "appliedMigrations": 52
+    },
+    {
+      "database": "account_service_test",
+      "appliedMigrations": 52
+    },
+    {
+      "database": "settings_service_test",
+      "appliedMigrations": 52
+    },
+    {
+      "database": "login_service_test",
+      "appliedMigrations": 52
+    },
+    {
+      "database": "users_list_test",
+      "appliedMigrations": 52
+    },
+    {
+      "database": "person_detail_service_test",
+      "appliedMigrations": 52
+    },
+    {
+      "database": "person_creation_service_test",
+      "appliedMigrations": 52
+    },
+    {
+      "database": "repertoire_pagination_test",
+      "appliedMigrations": 52
+    }
+  ]
+}

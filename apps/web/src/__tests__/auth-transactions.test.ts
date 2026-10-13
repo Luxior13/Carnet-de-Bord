@@ -165,7 +165,7 @@ const acceptSessionPrecondition = (): Promise<void> => Promise.resolve();
 
 describe('auth security transactions', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     mocks.bcryptHash.mockImplementation(
       async (password: string) => `hash:${password}`,
     );
@@ -213,6 +213,16 @@ describe('auth security transactions', () => {
         return users.filter((user) => where.id.in.includes(user.id));
       },
     );
+    mocks.transaction.$queryRaw.mockResolvedValue([]);
+    mocks.transaction.user.findUnique.mockResolvedValue({
+      ...SESSION_USER,
+      deletedAt: null,
+    });
+    mocks.transaction.session.findFirst.mockResolvedValue({
+      ...buildStoredSession(),
+      expiresAt: new Date('2099-01-01T00:00:00Z'),
+      idleExpiresAt: new Date('2099-01-01T00:00:00Z'),
+    });
     mocks.transaction.user.update.mockResolvedValue({ id: 'user-1' });
     mocks.transaction.user.updateMany.mockResolvedValue({ count: 1 });
     mocks.prisma.session.deleteMany.mockResolvedValue({ count: 1 });
@@ -638,6 +648,13 @@ describe('auth security transactions', () => {
   });
 
   it('prevents a protected account from importing a remembered source session', async () => {
+    mocks.transaction.user.findUnique.mockResolvedValue({
+      ...SESSION_USER,
+      deletedAt: null,
+      id: 'root-user',
+      isProtected: true,
+      securityVersion: 9,
+    });
     mocks.transaction.session.updateMany.mockResolvedValueOnce({ count: 0 });
 
     await expect(
@@ -1196,10 +1213,29 @@ describe('auth security transactions', () => {
   });
 
   it('resets password and revokes every session in the same transaction', async () => {
-    const temporaryPassword = await resetUserPassword('user-1', {
-      ...audit,
-      action: 'PASSWORD_RESET',
+    mocks.transaction.user.findUnique.mockResolvedValue({
+      ...SESSION_USER,
+      deletedAt: null,
+      role: 'ADMIN',
     });
+    mocks.transaction.session.findFirst.mockResolvedValue({
+      ...buildStoredSession(),
+      criticalMfaVerifiedAt: new Date(),
+      passwordReauthenticatedAt: new Date(),
+    });
+    const temporaryPassword = await resetUserPassword(
+      'user-1',
+      {
+        ...audit,
+        action: 'PASSWORD_RESET',
+      },
+      {
+        authority: {
+          actorId: 'admin-1',
+          session: { securityVersion: 3, token: 'source' },
+        },
+      },
+    );
 
     expect(temporaryPassword).toHaveLength(14);
     expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith(
@@ -1219,14 +1255,33 @@ describe('auth security transactions', () => {
   });
 
   it('refuses a direct administrative password reset of the protected root account', async () => {
+    mocks.transaction.user.findUnique.mockResolvedValue({
+      ...SESSION_USER,
+      deletedAt: null,
+      role: 'ADMIN',
+    });
+    mocks.transaction.session.findFirst.mockResolvedValue({
+      ...buildStoredSession(),
+      criticalMfaVerifiedAt: new Date(),
+      passwordReauthenticatedAt: new Date(),
+    });
     mocks.transaction.user.updateMany.mockResolvedValueOnce({ count: 0 });
 
     await expect(
-      resetUserPassword('root-user', {
-        ...audit,
-        action: 'PASSWORD_RESET',
-        targetUserId: 'root-user',
-      }),
+      resetUserPassword(
+        'root-user',
+        {
+          ...audit,
+          action: 'PASSWORD_RESET',
+          targetUserId: 'root-user',
+        },
+        {
+          authority: {
+            actorId: 'admin-1',
+            session: { securityVersion: 3, token: 'source' },
+          },
+        },
+      ),
     ).rejects.toBeInstanceOf(ProtectedAccountMutationError);
 
     expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith(

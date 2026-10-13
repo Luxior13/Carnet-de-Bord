@@ -1,0 +1,169 @@
+{
+  "bank": "accueil-2026-10-12",
+  "runner": "docs/audits/accueil-2026-10-12/banc-client/run.cjs",
+  "startedAt": "2026-10-12T21:46:29.478Z",
+  "completedAt": "2026-10-12T21:46:31.610Z",
+  "head": "c54e5d813c40e71acd892e2973bbb303d9c74644",
+  "exitCode": 0,
+  "work": "C:\\Users\\Luxior\\AppData\\Local\\Temp\\noctambule-home-client-C8CnKb",
+  "filter": null,
+  "passed": 8,
+  "total": 8,
+  "result": {
+    "completedAt": "2026-10-12T21:46:31.593Z",
+    "timezone": "Europe/Paris",
+    "browser": "Chromium",
+    "passed": 8,
+    "total": 8,
+    "observations": [
+      {
+        "name": "composition-et-lien",
+        "width": 320,
+        "status": "pass",
+        "focusStyle": {
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "outline": "none",
+          "minHeight": "40px"
+        },
+        "metrics": {
+          "viewport": 320,
+          "document": 320,
+          "main": 320,
+          "mainWidth": 320,
+          "hero": 286,
+          "heroWidth": 286
+        }
+      },
+      {
+        "name": "composition-et-lien",
+        "width": 390,
+        "status": "pass",
+        "focusStyle": {
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "outline": "none",
+          "minHeight": "40px"
+        },
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390,
+          "hero": 356,
+          "heroWidth": 356
+        }
+      },
+      {
+        "name": "composition-et-lien",
+        "width": 768,
+        "status": "pass",
+        "focusStyle": {
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "outline": "none",
+          "minHeight": "40px"
+        },
+        "metrics": {
+          "viewport": 768,
+          "document": 768,
+          "main": 768,
+          "mainWidth": 768,
+          "hero": 734,
+          "heroWidth": 734
+        }
+      },
+      {
+        "name": "composition-et-lien",
+        "width": 1024,
+        "status": "pass",
+        "focusStyle": {
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "outline": "none",
+          "minHeight": "40px"
+        },
+        "metrics": {
+          "viewport": 1024,
+          "document": 1024,
+          "main": 784,
+          "mainWidth": 784,
+          "hero": 741,
+          "heroWidth": 741
+        }
+      },
+      {
+        "name": "composition-et-lien",
+        "width": 1440,
+        "status": "pass",
+        "focusStyle": {
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "outline": "none",
+          "minHeight": "40px"
+        },
+        "metrics": {
+          "viewport": 1440,
+          "document": 1440,
+          "main": 1200,
+          "mainWidth": 1200,
+          "hero": 1140,
+          "heroWidth": 1140
+        }
+      },
+      {
+        "name": "composition-et-lien",
+        "width": 1920,
+        "status": "pass",
+        "focusStyle": {
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "outline": "none",
+          "minHeight": "40px"
+        },
+        "metrics": {
+          "viewport": 1920,
+          "document": 1920,
+          "main": 1680,
+          "mainWidth": 1680,
+          "hero": 1150,
+          "heroWidth": 1150
+        }
+      },
+      {
+        "name": "prenom-long-et-repli",
+        "width": 320,
+        "status": "pass",
+        "longNameLength": 100,
+        "longMetrics": {
+          "viewport": 320,
+          "document": 320,
+          "main": 320,
+          "mainWidth": 320,
+          "hero": 286,
+          "heroWidth": 286
+        },
+        "emptyTitle": "Bienvenue",
+        "source": "simulated UserContext update without unmount or server reevaluation",
+        "metrics": {
+          "viewport": 320,
+          "document": 320,
+          "main": 320,
+          "mainWidth": 320,
+          "hero": 286,
+          "heroWidth": 286
+        }
+      },
+      {
+        "name": "prenom-et-compte-actualises-sans-demontage",
+        "width": 390,
+        "status": "pass",
+        "sameHeadingNode": true,
+        "profileAndIdentityChangesAccepted": true,
+        "noServerReevaluation": true,
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390,
+          "hero": 356,
+          "heroWidth": 356
+        }
+      }
+    ]
+  }
+}

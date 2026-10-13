@@ -39,7 +39,13 @@ export async function POST(
     await assertPersonFeatureReady();
 
     return withPrivateNoStore(
-      apiSuccess(await addPersonSocialProfile(id, parsed.data, auth.user), 201),
+      apiSuccess(
+        await addPersonSocialProfile(id, parsed.data, {
+          ...auth.user,
+          session: auth.session,
+        }),
+        201,
+      ),
     );
   } catch (error) {
     return handlePersonApiError('PERSON_SOCIAL_CREATE', error, request);

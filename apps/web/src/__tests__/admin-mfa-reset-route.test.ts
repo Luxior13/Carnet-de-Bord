@@ -5,10 +5,11 @@ const mocks = vi.hoisted(() => {
   class MfaReplayDetectedError extends Error {}
 
   const transaction = {
+    $queryRaw: vi.fn(),
     mfaLoginChallenge: { deleteMany: vi.fn() },
     mfaRecoveryCode: { deleteMany: vi.fn() },
     rateLimit: { deleteMany: vi.fn() },
-    session: { deleteMany: vi.fn(), updateMany: vi.fn() },
+    session: { deleteMany: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn() },
     totpCredential: { deleteMany: vi.fn() },
     totpEnrollment: { deleteMany: vi.fn() },
     user: { findUnique: vi.fn(), updateMany: vi.fn() },
@@ -173,6 +174,14 @@ describe('POST /api/users/[id]/reset-mfa', () => {
     });
     mocks.transaction.rateLimit.deleteMany.mockResolvedValue({ count: 2 });
     mocks.transaction.user.findUnique.mockResolvedValue(UPDATED_TARGET);
+    mocks.transaction.$queryRaw.mockResolvedValue([]);
+    mocks.transaction.session.findFirst.mockImplementation(
+      async () => (await mocks.requireAuth()).session,
+    );
+    mocks.transaction.user.findUnique.mockImplementation(
+      async ({ where }: { where: { id: string } }) =>
+        where.id === ROOT.id ? ROOT : UPDATED_TARGET,
+    );
   });
 
   it('refuses every non-root actor before loading account secrets', async () => {
@@ -236,10 +245,10 @@ describe('POST /api/users/[id]/reset-mfa', () => {
     mocks.prisma.user.findUnique
       .mockResolvedValueOnce(ROOT)
       .mockResolvedValueOnce(adminTarget);
-    mocks.transaction.user.findUnique.mockResolvedValueOnce({
-      ...UPDATED_TARGET,
-      role: 'ADMIN',
-    });
+    mocks.transaction.user.findUnique.mockImplementation(
+      async ({ where }: { where: { id: string } }) =>
+        where.id === ROOT.id ? ROOT : { ...UPDATED_TARGET, role: 'ADMIN' },
+    );
     const { POST } = await import('$app/api/users/[id]/reset-mfa/route');
 
     const response = await POST(

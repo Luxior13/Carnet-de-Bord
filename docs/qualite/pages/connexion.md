@@ -1,5 +1,20 @@
 # Suivi — Connexion
 
+## État courant — clôture du socle du 13 octobre 2026
+
+La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est
+terminée au périmètre livré, pour poursuivre le développement métier. Ses
+preuves et limites ne constituent pas une qualification de déploiement.
+
+La connexion et l’inscription MFA sont incluses dans les parcours réels. Les
+échéances et la validité de la session source sont aussi contrôlées après
+attente des verrous SQL ; les preuves navigateur et serveur gardent leurs
+portées distinctes. AUTH-02 reste une limite de recette sur lecteur d’écran et
+appareil physique.
+
+Les décisions et preuves datées ci-dessous restent conservées. Une nouvelle
+revue répond à un changement, un défaut constaté ou une règle nouvelle.
+
 ## État courant — 12 octobre 2026
 
 - Route `/login`, entrée publique vers l’espace privé Noctambule.

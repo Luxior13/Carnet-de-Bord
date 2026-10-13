@@ -3,13 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiErrors } from '$server/api-response';
+import { apiError, apiErrors } from '$server/api-response';
 import {
   isSecurityVersionMismatchError,
   resetUserPassword,
 } from '$server/auth';
 import { prisma } from '$server/prisma';
 import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
+import { UserActionAuthorizationError } from '$server/user-action-authorization';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -150,6 +151,11 @@ export async function POST(
         userId: auth.user.id,
       },
       {
+        authority: {
+          actorId: auth.user.id,
+          authorization: auth.user,
+          session: auth.session,
+        },
         expectedRole: existingUser.role,
         expectedSecurityVersion: existingUser.securityVersion,
         expectedUpdatedAt: existingUser.updatedAt,
@@ -161,6 +167,8 @@ export async function POST(
       success: true,
     });
   } catch (error) {
+    if (error instanceof UserActionAuthorizationError)
+      return apiError(error.code, error.message, error.status);
     if (isSecurityVersionMismatchError(error)) {
       return NextResponse.json(
         {

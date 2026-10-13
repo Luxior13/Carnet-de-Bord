@@ -87,6 +87,7 @@ export async function expectSystemSettingsDraftSafety(
     url.pathname.startsWith('/api/systeme/parametres/');
   const settings = [
     {
+      isStoredValueInvalid: false,
       key: 'audit.retentionDays',
       updatedAt: new Date(0).toISOString(),
       value: 1_095,
@@ -191,19 +192,28 @@ export async function expectSystemSettingsDraftSafety(
     await expect(save).toBeDisabled();
     await page.getByRole('button', { exact: true, name: 'Actualiser' }).click();
     await expect(input).toHaveCount(0);
-    await expect(
-      page.getByRole('button', { exact: true, name: 'Actualiser' }),
-    ).toBeFocused();
+    await expect(page.getByRole('heading', { level: 2 }).first()).toBeFocused();
     await expect(page.getByRole('alertdialog')).toHaveCount(0);
 
     mode = 'error';
     await edit.click();
     await input.fill('1200');
     await save.click();
-    await expect(auditRow.getByRole('alert')).toHaveText(
-      'Enregistrement indisponible',
-    );
+    await expect(
+      auditRow
+        .getByRole('alert')
+        .filter({ hasText: 'La réponse n’a pas pu être confirmée' }),
+    ).toBeVisible();
     await expect(input).toHaveValue('1200');
+    await expect(save).toBeDisabled();
+    expect(writes).toHaveLength(1);
+    await auditRow
+      .getByRole('button', { name: 'Vérifier la valeur actuelle' })
+      .click();
+    await auditRow.getByRole('button', { name: 'Conserver ma saisie' }).click();
+    await expect(input).toHaveValue('1200');
+    await expect(save).toBeEnabled();
+    expect(writes).toHaveLength(1);
 
     mode = 'conflict';
     failConflictRead = true;

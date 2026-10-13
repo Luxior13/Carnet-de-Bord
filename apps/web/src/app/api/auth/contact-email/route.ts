@@ -15,6 +15,10 @@ import {
   reserveSensitiveActionRateLimit,
 } from '$server/rate-limiter';
 import {
+  authorizeUserAction,
+  UserActionAuthorizationError,
+} from '$server/user-action-authorization';
+import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
   ErrorCode,
@@ -180,14 +184,22 @@ export async function PATCH(
       validation.data.contactEmail,
     );
 
-    if (nextContactEmail === storedUser.contactEmail) {
-      return NextResponse.json({
-        data: { user: mapUserToUserType(storedUser) },
-        success: true,
-      });
-    }
-
     const updatedUser = await prisma.$transaction(async (transaction) => {
+      await authorizeUserAction(
+        transaction,
+        { actorId: auth.user.id, session: auth.session },
+        PERMISSIONS.ACCOUNT.UPDATE_CONTACT,
+      );
+      const current = await transaction.user.findUnique({
+        where: { id: auth.user.id },
+      });
+      if (
+        !current ||
+        current.updatedAt.getTime() !==
+          validation.data.expectedUpdatedAt.getTime()
+      )
+        throw new ContactConflictError();
+      if (nextContactEmail === current.contactEmail) return current;
       const nextUser = await transaction.user.update({
         data: {
           contactEmail: nextContactEmail,
@@ -236,6 +248,8 @@ export async function PATCH(
       success: true,
     });
   } catch (error) {
+    if (error instanceof UserActionAuthorizationError)
+      return apiError(error.code, error.message, error.status);
     if (error instanceof ContactConflictError || isOptimisticConflict(error)) {
       return apiError(
         ErrorCode.CONFLICT,

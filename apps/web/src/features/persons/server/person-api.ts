@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { NextResponse } from 'next/server';
 
 import { apiError, apiErrors, withPrivateNoStore } from '$server/api-response';
+import { UserActionAuthorizationError } from '$server/user-action-authorization';
 import { ErrorCode } from '$types/api.types';
 
 import { PersonDomainError } from './person-errors';
@@ -19,6 +20,9 @@ export const handlePersonApiError = async (
 
     return withPrivateNoStore(response);
   };
+  if (error instanceof UserActionAuthorizationError) {
+    return correlated(apiError(error.code, error.message, error.status));
+  }
   if (error instanceof PersonDomainError) {
     switch (error.code) {
       case 'PERSON_NOT_FOUND':

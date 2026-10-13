@@ -452,6 +452,14 @@ texte d’attente et protège la requête des doubles appels. Pour une navigatio
 `Button asChild` conserve un vrai lien ; `loading` et `disabled` ne sont pas des
 props disponibles dans ce mode.
 
+Une attente doit avoir une issue. Les requêtes interactives bornent aussi la
+lecture du corps de réponse ; les actions sensibles actuelles utilisent une
+borne de 30 secondes. Un délai dépassé ou une réponse perdue ne prouve pas que
+l'écriture a été annulée : afficher un résultat incertain et une vérification
+explicite, conserver le brouillon utile, puis libérer les commandes de reprise.
+Ne pas relancer automatiquement une mutation. Un avertissement de résultat
+incertain reste disponible après changement d'onglet jusqu'à sa résolution.
+
 ---
 
 ## 10. L'inventaire des composants

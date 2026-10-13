@@ -39,6 +39,7 @@ import { Skeleton } from '$ui/skeleton';
 import { Switch } from '$ui/switch';
 import { cn } from '$utils/css.utils';
 
+import { focusUserSecurityElement } from './user-security-focus';
 import { UserDeletionCard } from './UserDeletionCard';
 
 type UserSecurityTabProps = {
@@ -50,6 +51,7 @@ type UserSecurityTabProps = {
   canSaveStatus: boolean;
   canViewSessions: boolean;
   currentUserId: string | undefined;
+  deletionBlocked?: boolean;
   hasStatusChanges: boolean;
   isActive: boolean;
   isLoadingSessions: boolean;
@@ -342,6 +344,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   canSaveStatus,
   canViewSessions,
   currentUserId,
+  deletionBlocked = false,
   hasStatusChanges,
   isActive,
   isLoadingSessions,
@@ -403,13 +406,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
         '#user-security-sessions-heading',
       );
       const target = remainingButton ?? heading;
-      if (!target?.getClientRects().length) return;
-      target.focus({ preventScroll: true });
-      target.scrollIntoView({
-        behavior: 'instant',
-        block: 'nearest',
-        inline: 'nearest',
-      });
+      focusUserSecurityElement(target ?? null);
     });
   };
   const retrySessions = async (): Promise<void> => {
@@ -769,6 +766,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       {canRequestDeleteUser && (
         <UserDeletionCard
           canEditStatus={canEditStatus}
+          blocked={deletionBlocked}
           hasStatusChanges={hasStatusChanges}
           isSaving={isSaving}
           onDeleteUser={onDeleteUser}

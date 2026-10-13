@@ -141,7 +141,7 @@ describe('administrative user detail subcomponent UX contracts', () => {
       'Enregistrez ou annulez le changement d’état en cours avant de supprimer ce compte.',
     );
     expect(deletionCardSource).toContain(
-      'disabled={userIsActive || hasStatusChanges || isSaving}',
+      'disabled={blocked || userIsActive || hasStatusChanges || isSaving}',
     );
     expect(deletionCardSource).toContain('Supprimer définitivement');
   });

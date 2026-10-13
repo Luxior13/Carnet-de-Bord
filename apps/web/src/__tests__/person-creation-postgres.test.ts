@@ -147,12 +147,9 @@ describe.skipIf(!target)('person creation on fully migrated PostgreSQL', () => {
     const url = new URL(target);
     if (
       !['127.0.0.1', 'localhost'].includes(url.hostname) ||
-      url.port !== '54610' ||
       url.pathname !== '/person_creation_service_test'
     ) {
-      throw new Error(
-        'Only local port 54610/person_creation_service_test is allowed',
-      );
+      throw new Error('Only local person_creation_service_test is allowed');
     }
     db = new PrismaClient({ datasourceUrl: target });
     connection.client = db;
@@ -181,6 +178,13 @@ describe.skipIf(!target)('person creation on fully migrated PostgreSQL', () => {
     const response = await POST(request({ nickname }));
     expect(response.status).toBe(401);
     expect(await db.person.count({ where: { nickname } })).toBe(0);
+  });
+
+  it('rejects an identity that disappears during search normalization before SQL', async () => {
+    await signIn();
+    const response = await POST(request({ nickname: '\u0301' }));
+    expect(response.status).toBe(400);
+    expect(await db.person.count({ where: { nickname: '\u0301' } })).toBe(0);
   });
 
   it.each([

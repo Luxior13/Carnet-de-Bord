@@ -194,8 +194,26 @@ function BreadcrumbTrail({
 
     const desktopQuery = window.matchMedia('(min-width: 40rem)');
     let frame = 0;
-    const closeMenu = (): void => {
+    let previousFocus: HTMLElement | null = null;
+    const rememberFocus = (): void => {
       const focused = document.activeElement;
+      if (!(focused instanceof HTMLElement) || focused === document.body)
+        return;
+      previousFocus =
+        menuRef.current?.contains(focused) ||
+        trailRef.current?.contains(focused)
+          ? focused
+          : null;
+    };
+    const forgetFocus = (event: PointerEvent): void => {
+      if (event.target instanceof Node && previousFocus?.contains(event.target))
+        return;
+      previousFocus = null;
+    };
+    const closeMenu = (): void => {
+      rememberFocus();
+      // CSS may hide an ancestor before the media event and move focus to body.
+      const focused = previousFocus;
       const ownsFocus =
         focused instanceof HTMLElement &&
         (menuRef.current?.contains(focused) ||
@@ -237,10 +255,14 @@ function BreadcrumbTrail({
         });
       });
     };
+    document.addEventListener('focusin', rememberFocus);
+    document.addEventListener('pointerdown', forgetFocus, true);
     desktopQuery.addEventListener('change', closeMenu);
 
     return (): void => {
       desktopQuery.removeEventListener('change', closeMenu);
+      document.removeEventListener('focusin', rememberFocus);
+      document.removeEventListener('pointerdown', forgetFocus, true);
       window.cancelAnimationFrame(frame);
     };
   }, [compactOnMobile]);

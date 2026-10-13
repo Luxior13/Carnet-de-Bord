@@ -1,0 +1,32 @@
+{
+  "completedAt": "2026-10-12T22:20:19.540Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 1,
+  "total": 2,
+  "observations": [
+    {
+      "name": "escape-confirmation-0ms",
+      "width": 1280,
+      "status": "fail",
+      "error": "Error: expect(locator).toHaveCount(expected) failed\n\nLocator:  getByRole('alertdialog')\nExpected: 0\nReceived: 1\nTimeout:  5000ms\n\nCall log:\n  - Expect \"to.have.count\" with timeout 5000ms\n  - waiting for getByRole('alertdialog')\n    14 × locator resolved to 1 element\n       - unexpected value \"1\"\n",
+      "errors": []
+    },
+    {
+      "name": "escape-confirmation-300ms",
+      "width": 1280,
+      "status": "pass",
+      "delay": 300,
+      "focusRestored": true,
+      "draftPreserved": true,
+      "requests": [],
+      "errors": [],
+      "metrics": {
+        "viewport": 1280,
+        "document": 1280,
+        "main": 1040,
+        "mainWidth": 1040
+      }
+    }
+  ]
+}

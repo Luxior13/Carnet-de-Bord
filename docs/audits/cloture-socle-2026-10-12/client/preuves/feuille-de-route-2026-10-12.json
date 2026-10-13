@@ -1,0 +1,678 @@
+{
+  "bank": "feuille-de-route-2026-10-12",
+  "runner": "docs/audits/feuille-de-route-2026-10-12/banc-client/run.cjs",
+  "startedAt": "2026-10-12T21:51:21.652Z",
+  "completedAt": "2026-10-12T21:51:40.409Z",
+  "head": "c54e5d813c40e71acd892e2973bbb303d9c74644",
+  "exitCode": 0,
+  "work": "C:\\Users\\Luxior\\AppData\\Local\\Temp\\noctambule-roadmap-client-RMEl8H",
+  "filter": null,
+  "passed": 18,
+  "total": 18,
+  "result": {
+    "completedAt": "2026-10-12T21:51:40.388Z",
+    "timezone": "Europe/Paris",
+    "browser": "Chromium",
+    "passed": 18,
+    "total": 18,
+    "observations": [
+      {
+        "name": "catalogue-complet-responsive",
+        "width": 320,
+        "status": "pass",
+        "count": 39,
+        "attributes": {
+          "autocomplete": "off",
+          "data-bwignore": "true",
+          "data-1p-ignore": "true",
+          "data-lpignore": "true",
+          "maxlength": "200"
+        },
+        "focusStyle": {
+          "border": "rgb(111, 134, 165)",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "outline": "none"
+        },
+        "searchIcon": {
+          "position": "absolute",
+          "insideField": true
+        },
+        "metrics": {
+          "viewport": 320,
+          "document": 320,
+          "main": 320,
+          "mainWidth": 320,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "catalogue-complet-responsive",
+        "width": 390,
+        "status": "pass",
+        "count": 39,
+        "attributes": {
+          "autocomplete": "off",
+          "data-bwignore": "true",
+          "data-1p-ignore": "true",
+          "data-lpignore": "true",
+          "maxlength": "200"
+        },
+        "focusStyle": {
+          "border": "rgb(111, 134, 165)",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "outline": "none"
+        },
+        "searchIcon": {
+          "position": "absolute",
+          "insideField": true
+        },
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "catalogue-complet-responsive",
+        "width": 768,
+        "status": "pass",
+        "count": 39,
+        "attributes": {
+          "autocomplete": "off",
+          "data-bwignore": "true",
+          "data-1p-ignore": "true",
+          "data-lpignore": "true",
+          "maxlength": "200"
+        },
+        "focusStyle": {
+          "border": "rgb(111, 134, 165)",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "outline": "none"
+        },
+        "searchIcon": {
+          "position": "absolute",
+          "insideField": true
+        },
+        "metrics": {
+          "viewport": 768,
+          "document": 768,
+          "main": 768,
+          "mainWidth": 768,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "catalogue-complet-responsive",
+        "width": 1024,
+        "status": "pass",
+        "count": 39,
+        "attributes": {
+          "autocomplete": "off",
+          "data-bwignore": "true",
+          "data-1p-ignore": "true",
+          "data-lpignore": "true",
+          "maxlength": "200"
+        },
+        "focusStyle": {
+          "border": "rgb(111, 134, 165)",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "outline": "none"
+        },
+        "searchIcon": {
+          "position": "absolute",
+          "insideField": true
+        },
+        "metrics": {
+          "viewport": 1024,
+          "document": 1024,
+          "main": 784,
+          "mainWidth": 784,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "catalogue-complet-responsive",
+        "width": 1440,
+        "status": "pass",
+        "count": 39,
+        "attributes": {
+          "autocomplete": "off",
+          "data-bwignore": "true",
+          "data-1p-ignore": "true",
+          "data-lpignore": "true",
+          "maxlength": "200"
+        },
+        "focusStyle": {
+          "border": "rgb(111, 134, 165)",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "outline": "none"
+        },
+        "searchIcon": {
+          "position": "absolute",
+          "insideField": true
+        },
+        "metrics": {
+          "viewport": 1440,
+          "document": 1440,
+          "main": 1200,
+          "mainWidth": 1200,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "catalogue-complet-responsive",
+        "width": 1920,
+        "status": "pass",
+        "count": 39,
+        "attributes": {
+          "autocomplete": "off",
+          "data-bwignore": "true",
+          "data-1p-ignore": "true",
+          "data-lpignore": "true",
+          "maxlength": "200"
+        },
+        "focusStyle": {
+          "border": "rgb(111, 134, 165)",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "outline": "none"
+        },
+        "searchIcon": {
+          "position": "absolute",
+          "insideField": true
+        },
+        "metrics": {
+          "viewport": 1920,
+          "document": 1920,
+          "main": 1680,
+          "mainWidth": 1680,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "filtres-combines-toutes-les-valeurs",
+        "width": 1440,
+        "status": "pass",
+        "combinations": [
+          {
+            "pole": "today",
+            "phase": 1,
+            "count": 0
+          },
+          {
+            "pole": "today",
+            "phase": 2,
+            "count": 0
+          },
+          {
+            "pole": "today",
+            "phase": 3,
+            "count": 3
+          },
+          {
+            "pole": "today",
+            "phase": 4,
+            "count": 0
+          },
+          {
+            "pole": "today",
+            "phase": 5,
+            "count": 0
+          },
+          {
+            "pole": "today",
+            "phase": 6,
+            "count": 0
+          },
+          {
+            "pole": "people",
+            "phase": 1,
+            "count": 0
+          },
+          {
+            "pole": "people",
+            "phase": 2,
+            "count": 1
+          },
+          {
+            "pole": "people",
+            "phase": 3,
+            "count": 2
+          },
+          {
+            "pole": "people",
+            "phase": 4,
+            "count": 0
+          },
+          {
+            "pole": "people",
+            "phase": 5,
+            "count": 0
+          },
+          {
+            "pole": "people",
+            "phase": 6,
+            "count": 0
+          },
+          {
+            "pole": "esport",
+            "phase": 1,
+            "count": 0
+          },
+          {
+            "pole": "esport",
+            "phase": 2,
+            "count": 2
+          },
+          {
+            "pole": "esport",
+            "phase": 3,
+            "count": 1
+          },
+          {
+            "pole": "esport",
+            "phase": 4,
+            "count": 0
+          },
+          {
+            "pole": "esport",
+            "phase": 5,
+            "count": 2
+          },
+          {
+            "pole": "esport",
+            "phase": 6,
+            "count": 0
+          },
+          {
+            "pole": "activity",
+            "phase": 1,
+            "count": 0
+          },
+          {
+            "pole": "activity",
+            "phase": 2,
+            "count": 0
+          },
+          {
+            "pole": "activity",
+            "phase": 3,
+            "count": 5
+          },
+          {
+            "pole": "activity",
+            "phase": 4,
+            "count": 1
+          },
+          {
+            "pole": "activity",
+            "phase": 5,
+            "count": 0
+          },
+          {
+            "pole": "activity",
+            "phase": 6,
+            "count": 1
+          },
+          {
+            "pole": "relations",
+            "phase": 1,
+            "count": 0
+          },
+          {
+            "pole": "relations",
+            "phase": 2,
+            "count": 0
+          },
+          {
+            "pole": "relations",
+            "phase": 3,
+            "count": 0
+          },
+          {
+            "pole": "relations",
+            "phase": 4,
+            "count": 2
+          },
+          {
+            "pole": "relations",
+            "phase": 5,
+            "count": 0
+          },
+          {
+            "pole": "relations",
+            "phase": 6,
+            "count": 0
+          },
+          {
+            "pole": "structure",
+            "phase": 1,
+            "count": 2
+          },
+          {
+            "pole": "structure",
+            "phase": 2,
+            "count": 0
+          },
+          {
+            "pole": "structure",
+            "phase": 3,
+            "count": 3
+          },
+          {
+            "pole": "structure",
+            "phase": 4,
+            "count": 1
+          },
+          {
+            "pole": "structure",
+            "phase": 5,
+            "count": 0
+          },
+          {
+            "pole": "structure",
+            "phase": 6,
+            "count": 0
+          },
+          {
+            "pole": "finance",
+            "phase": 1,
+            "count": 0
+          },
+          {
+            "pole": "finance",
+            "phase": 2,
+            "count": 0
+          },
+          {
+            "pole": "finance",
+            "phase": 3,
+            "count": 0
+          },
+          {
+            "pole": "finance",
+            "phase": 4,
+            "count": 5
+          },
+          {
+            "pole": "finance",
+            "phase": 5,
+            "count": 2
+          },
+          {
+            "pole": "finance",
+            "phase": 6,
+            "count": 0
+          },
+          {
+            "pole": "system",
+            "phase": 1,
+            "count": 1
+          },
+          {
+            "pole": "system",
+            "phase": 2,
+            "count": 0
+          },
+          {
+            "pole": "system",
+            "phase": 3,
+            "count": 1
+          },
+          {
+            "pole": "system",
+            "phase": 4,
+            "count": 1
+          },
+          {
+            "pole": "system",
+            "phase": 5,
+            "count": 1
+          },
+          {
+            "pole": "system",
+            "phase": 6,
+            "count": 2
+          }
+        ],
+        "metrics": {
+          "viewport": 1440,
+          "document": 1440,
+          "main": 1200,
+          "mainWidth": 1200,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "recherche-accents-termes-donewhen",
+        "width": 390,
+        "status": "pass",
+        "matches": [
+          {
+            "q": "ÉQUIPES",
+            "ids": [
+              "access-scopes",
+              "incidents",
+              "internal-news",
+              "sport-teams"
+            ]
+          },
+          {
+            "q": "equipes",
+            "ids": [
+              "access-scopes",
+              "incidents",
+              "internal-news",
+              "sport-teams"
+            ]
+          },
+          {
+            "q": "  identité   historique  ",
+            "ids": [
+              "legal-entities",
+              "person-relationships"
+            ]
+          },
+          {
+            "q": "source destinataire",
+            "ids": [
+              "notifications",
+              "personal-work"
+            ]
+          },
+          {
+            "q": "canal décidé",
+            "ids": [
+              "notifications"
+            ]
+          },
+          {
+            "q": "chaque message a une source",
+            "ids": [
+              "notifications"
+            ]
+          },
+          {
+            "q": "[.*]",
+            "ids": [
+              "access-scopes",
+              "accounts",
+              "activity-journal",
+              "approvals",
+              "automations",
+              "budget",
+              "business-search",
+              "calendar",
+              "communication",
+              "competitions",
+              "compliance",
+              "contracts",
+              "data",
+              "debriefs",
+              "documents",
+              "expenses",
+              "finance-controls",
+              "governance",
+              "incidents",
+              "integrations",
+              "internal-news",
+              "invoices",
+              "legal-entities",
+              "logistics",
+              "meetings",
+              "notifications",
+              "onboarding",
+              "organizations",
+              "partnerships",
+              "payments",
+              "performance",
+              "person-relationships",
+              "personal-work",
+              "preparation",
+              "prizes",
+              "recruitment",
+              "sport-planning",
+              "sport-teams",
+              "tasks"
+            ]
+          },
+          {
+            "q": "inexistantxyz",
+            "ids": []
+          }
+        ],
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "vide-reinitialisation-focus",
+        "width": 320,
+        "status": "pass",
+        "metrics": {
+          "viewport": 320,
+          "document": 320,
+          "main": 320,
+          "mainWidth": 320,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "vide-reinitialisation-focus",
+        "width": 1440,
+        "status": "pass",
+        "metrics": {
+          "viewport": 1440,
+          "document": 1440,
+          "main": 1200,
+          "mainWidth": 1200,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "menus-clavier-disclosures-etapes",
+        "width": 390,
+        "status": "pass",
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "historique-rapide-back-forward",
+        "width": 1440,
+        "status": "pass",
+        "metrics": {
+          "viewport": 1440,
+          "document": 1440,
+          "main": 1200,
+          "mainWidth": 1200,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "effacement-partage-label-et-filtres",
+        "width": 320,
+        "status": "pass",
+        "metrics": {
+          "viewport": 320,
+          "document": 320,
+          "main": 320,
+          "mainWidth": 320,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "url-doublons-hash-parametre-externe",
+        "width": 1024,
+        "status": "pass",
+        "metrics": {
+          "viewport": 1024,
+          "document": 1024,
+          "main": 784,
+          "mainWidth": 784,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "url-invalide-et-bornee",
+        "width": 768,
+        "status": "pass",
+        "metrics": {
+          "viewport": 768,
+          "document": 768,
+          "main": 768,
+          "mainWidth": 768,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "details-toutes-cartes-donnees",
+        "width": 1440,
+        "status": "pass",
+        "openedAndClosed": 39,
+        "futureLinks": 0,
+        "metrics": {
+          "viewport": 1440,
+          "document": 1440,
+          "main": 1200,
+          "mainWidth": 1200,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "couleurs-forcees-et-texte-agrandi",
+        "width": 390,
+        "status": "pass",
+        "textScale": "CSS root font-size 200%, not native browser zoom",
+        "metrics": {
+          "viewport": 390,
+          "document": 390,
+          "main": 390,
+          "mainWidth": 390,
+          "clippedCards": []
+        }
+      },
+      {
+        "name": "strictmode-filtres",
+        "width": 1024,
+        "status": "pass",
+        "metrics": {
+          "viewport": 1024,
+          "document": 1024,
+          "main": 784,
+          "mainWidth": 784,
+          "clippedCards": []
+        }
+      }
+    ]
+  }
+}

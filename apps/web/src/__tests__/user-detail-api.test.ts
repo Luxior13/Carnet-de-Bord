@@ -57,10 +57,12 @@ const actor = (
   extra = {},
 ): Record<string, unknown> => ({
   id: 'actor',
+  isActive: true,
   isProtected: false,
   mustChangePassword: false,
   permissions,
   role: 'USER',
+  securityVersion: 0,
   ...extra,
 });
 const params = { params: Promise.resolve({ id: 'target' }) };
@@ -83,9 +85,18 @@ describe('user detail HTTP boundary with real permissions and projection', () =>
     });
     mocks.find.mockResolvedValue(row);
     mocks.update.mockImplementation(async ({ data }) => ({ ...row, ...data }));
-    mocks.transaction.mockImplementation(async (callback) =>
-      callback({ user: { update: mocks.update } }),
-    );
+    mocks.transaction.mockImplementation(async (callback) => {
+      const snapshot = await mocks.auth();
+
+      return callback({
+        $queryRaw: vi.fn(async () => []),
+        session: { findFirst: vi.fn(async () => snapshot.session) },
+        user: {
+          findUnique: vi.fn(async () => snapshot.user),
+          update: mocks.update,
+        },
+      });
+    });
   });
 
   it('denies anonymous reads and writes before storage', async () => {
@@ -206,7 +217,7 @@ describe('user detail HTTP boundary with real permissions and projection', () =>
 
   it('saves the empty name with real policy checks and an audit', async () => {
     mocks.auth.mockResolvedValue({
-      session: null,
+      session: { securityVersion: 0, token: 'source' },
       user: actor({
         [PERMISSIONS.USERS.VIEW]: true,
         [PERMISSIONS.USERS.UPDATE_PROFILE]: true,

@@ -70,12 +70,24 @@ describe.skipIf(!target)(
   () => {
     let db: PrismaClient;
     let actor: User;
-    const authenticate = (
+    const authenticate = async (
       user = actor,
       passwordReauthenticatedAt: Date | null = new Date(),
-    ): void => {
+    ): Promise<void> => {
+      const source = await db.session.create({
+        data: {
+          expiresAt: new Date(Date.now() + 3600_000),
+          idleExpiresAt: new Date(Date.now() + 1800_000),
+          mfaMethod: 'TOTP',
+          mfaVerifiedAt: new Date(),
+          passwordReauthenticatedAt,
+          securityVersion: user.securityVersion,
+          token: randomUUID(),
+          userId: user.id,
+        },
+      });
       connection.session.mockResolvedValue({
-        session: { passwordReauthenticatedAt },
+        session: source,
         user: mapUserToUserType(user),
       });
     };
@@ -180,7 +192,7 @@ describe.skipIf(!target)(
       const migrations = await db.$queryRaw<
         Array<{ count: number }>
       >`SELECT COUNT(*)::integer AS count FROM "_prisma_migrations" WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL`;
-      expect(migrations[0]?.count).toBeGreaterThanOrEqual(52);
+      expect(migrations[0]?.count).toBeGreaterThanOrEqual(53);
       actor = await db.user.create({
         data: {
           firstName: 'Settings fixture',
@@ -193,18 +205,91 @@ describe.skipIf(!target)(
     beforeEach(async () => {
       // This dedicated database belongs exclusively to this test; no audit rows are reset.
       await db.systemSetting.deleteMany();
-      authenticate();
+      await authenticate();
     });
     afterAll(async () => {
       await db?.$disconnect();
       connection.client = null;
     });
 
+    it.each([0, -1])(
+      'rejects stored version %i on insertion and update without changing the valid setting',
+      async (version) => {
+        const constraintFailure = {
+          code: 'P2010',
+          meta: {
+            code: '23514',
+            message: expect.stringContaining('SystemSetting_version_check'),
+          },
+        };
+        await expect(
+          db.$executeRaw`
+            INSERT INTO "SystemSetting" ("key", "value", "version", "updatedAt")
+            VALUES (${settingKey}, '1095'::jsonb, ${version}, CURRENT_TIMESTAMP)
+          `,
+        ).rejects.toMatchObject(constraintFailure);
+        expect(await stored()).toBeNull();
+
+        const valid = await fixture(1095);
+        await expect(
+          db.$executeRaw`
+            UPDATE "SystemSetting" SET "version" = ${version}
+            WHERE "key" = ${settingKey}
+          `,
+        ).rejects.toMatchObject(constraintFailure);
+        expect(await stored()).toEqual(valid);
+      },
+    );
+
+    it('refuses a setting mutation after its source is revoked following authentication', async () => {
+      const snapshot = await connection.session();
+      await db.session.delete({ where: { id: snapshot.session.id } });
+      const beforeAudits = await auditCount();
+      expect((await put(1460, 0)).status).toBe(401);
+      expect(await stored()).toBeNull();
+      expect(await auditCount()).toBe(beforeAudits);
+    });
+
+    it('refuses a reduction when its password proof expires while waiting for the retention lock', async () => {
+      await fixture(1095);
+      const proof = new Date(Date.now() - 30 * 60_000 + 1000);
+      await authenticate(actor, proof);
+      const beforeAudits = await auditCount();
+      const acquired = gate();
+      const release = gate();
+      const holder = db.$transaction(async (transaction) => {
+        await lockSetting(transaction);
+        acquired.open();
+        await release.promise;
+      });
+      await acquired.promise;
+      const pending = put(365, 1);
+      try {
+        await waitForAdvisoryWaiter();
+        await new Promise((resolve) =>
+          setTimeout(
+            resolve,
+            Math.max(0, proof.getTime() + 30 * 60_000 - Date.now() + 20),
+          ),
+        );
+      } finally {
+        release.open();
+        await holder;
+      }
+      const response = await pending;
+      expect(response.status).toBe(403);
+      expect((await response.json()).error.code).toBe(
+        'PASSWORD_REAUTHENTICATION_REQUIRED',
+      );
+      expect(await stored()).toMatchObject({ value: 1095, version: 1 });
+      expect(await auditCount()).toBe(beforeAudits);
+    });
+
     it('rejects anonymous requests and USER grants for role-bound settings', async () => {
       connection.session.mockResolvedValue({ session: null, user: null });
       expect((await list()).status).toBe(401);
       expect((await put(1460, 0)).status).toBe(401);
-      authenticate({
+      await authenticate({
         ...actor,
         permissions: {
           [PERMISSIONS.SETTINGS.VIEW]: true,
@@ -300,7 +385,7 @@ describe.skipIf(!target)(
     });
 
     it('requires only a recent password for reductions, including from the implicit default', async () => {
-      authenticate(actor, null);
+      await authenticate(actor, null);
       expect((await put(730, 0)).status).toBe(403);
       expect((await put(1460, 0)).status).toBe(200);
       for (const proof of [
@@ -308,10 +393,10 @@ describe.skipIf(!target)(
         new Date(Date.now() - 31 * 60_000),
         new Date(Date.now() + 60_000),
       ]) {
-        authenticate(actor, proof);
+        await authenticate(actor, proof);
         expect((await put(730, 1)).status).toBe(403);
       }
-      authenticate();
+      await authenticate();
       expect((await put(730, 1)).status).toBe(200);
       expect(await stored()).toMatchObject({ value: 730, version: 2 });
     });
@@ -366,9 +451,9 @@ describe.skipIf(!target)(
 
     it('requires a recent password to repair invalid storage even when restoring the proposed default', async () => {
       await fixture('invalid');
-      authenticate(actor, null);
+      await authenticate(actor, null);
       expect((await put(1095, 1)).status).toBe(403);
-      authenticate();
+      await authenticate();
       const before = await auditCount();
       const response = await put(1095, 1);
       expect(response.status).toBe(200);

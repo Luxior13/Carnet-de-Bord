@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-13T16:30:38.390Z",
+  "completed": true,
+  "format": 9,
+  "tableCounts": {
+    "User": 1,
+    "LoginNameReservation": 1,
+    "Session": 1,
+    "TotpCredential": 1,
+    "TotpEnrollment": 1,
+    "MfaRecoveryCode": 1,
+    "MfaLoginChallenge": 1,
+    "InternalAnnouncement": 1,
+    "SystemSetting": 1,
+    "AuditLog": 1,
+    "AuditEncryptionKeyVersion": 1,
+    "PersonDeletionTombstone": 1,
+    "Person": 1,
+    "PersonEmail": 1,
+    "PersonPhone": 1,
+    "PersonSocialProfile": 1,
+    "AuditFieldChange": 1,
+    "RateLimit": 1,
+    "ArchivedStaffProfile": 1
+  },
+  "scenarios": [
+    {
+      "name": "Missing MFA key rejected before writes",
+      "passed": true
+    },
+    {
+      "name": "Wrong MFA key rejected before writes",
+      "passed": true
+    },
+    {
+      "name": "Missing audit key rejected before writes",
+      "passed": true
+    },
+    {
+      "name": "Wrong audit key rejected before writes",
+      "passed": true
+    },
+    {
+      "name": "Valid signed v9 dry run authenticates every ciphertext without writes",
+      "passed": true
+    },
+    {
+      "name": "Valid signed v9 restore preserves every field in all 19 populated tables",
+      "passed": true
+    },
+    {
+      "name": "Nonempty target still refused without changes",
+      "passed": true
+    }
+  ]
+}

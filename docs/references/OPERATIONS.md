@@ -112,6 +112,14 @@ La signature est obligatoire. Les anciens artefacts non signés ne sont pas
 acceptés automatiquement. Après restauration, démarrer le web et attendre une
 readiness saine.
 
+Avant toute connexion à la cible, le précontrôle authentifie aussi les valeurs
+chiffrées du fichier signé avec leurs clés d'origine : clés d'audit des versions
+référencées et `MFA_ENCRYPTION_KEY_V1` pour les secrets TOTP actifs ou en cours
+d'inscription. Une clé présente mais incorrecte est refusée, y compris lors du
+`--dry-run`. Conserver ces clés séparément des trois artefacts ; la signature
+Ed25519 ne remplace pas les clés de déchiffrement. Voir le
+[contrat de restauration](../../packages/database/prisma/README.md#restauration).
+
 Attention : une sauvegarde créée avant la suppression d’une fiche contient
 encore cette fiche et ne connaît pas son tombstone ultérieur. Puisqu’il n’existe
 plus de registre externe de suppression, l’opérateur doit contrôler ce point

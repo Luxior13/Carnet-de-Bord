@@ -563,10 +563,7 @@ async function main() {
       await expect(
         page.getByText("Windows - Chrome", { exact: true }),
       ).toBeVisible();
-      const focused = await page.evaluate(
-        () => document.activeElement?.tagName,
-      );
-      assert.notEqual(focused, "BODY");
+      await expect(page.locator("#user-security-sessions-heading")).toBeFocused();
       await page
         .getByRole("button", {
           name: "Révoquer la session Windows Chrome",
@@ -594,10 +591,7 @@ async function main() {
       await expect(
         page.getByText("Windows - Chrome", { exact: true }),
       ).toHaveCount(0);
-      assert.notEqual(
-        await page.evaluate(() => document.activeElement?.tagName),
-        "BODY",
-      );
+      await expect(page.locator("#user-security-sessions-heading")).toBeFocused();
     },
     { section: "security", sessionsMode: "error" },
   );

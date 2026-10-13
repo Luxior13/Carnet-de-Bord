@@ -1,7 +1,7 @@
 import 'server-only';
 
+import { PERMISSIONS } from '$constants/permissions.constants';
 import { prisma } from '$server/prisma';
-import type { UserType } from '$types/auth.types';
 
 import {
   isSelectablePersonSocialNetwork,
@@ -28,6 +28,10 @@ import {
 } from './person-core.service';
 import { getDuplicateWarning } from './person-duplicate-detection';
 import { personErrors } from './person-errors';
+import {
+  authorizePersonMutation,
+  type PersonMutationActor,
+} from './person-mutation-authorization';
 import {
   hashPersonNormalizedUrl,
   normalizePersonSocialIdentifier,
@@ -61,12 +65,18 @@ const normalizeSocialInput = (input: {
 export const addPersonSocialProfile = async (
   personId: string,
   input: CreatePersonSocialProfileInput,
-  actor: UserType,
+  actor: PersonMutationActor,
 ): Promise<{
   duplicateWarning: PersonDuplicateWarning;
   person: PersonDetail;
 }> =>
   prisma.$transaction(async (transaction) => {
+    await authorizePersonMutation(
+      transaction,
+      actor,
+      PERMISSIONS.PERSONS.UPDATE,
+      personId,
+    );
     const current = await requirePersonDetailRecord(transaction, personId);
     if (current.version !== input.personVersion)
       throw personErrors.versionConflict();
@@ -158,12 +168,18 @@ export const updatePersonSocialProfile = async (
   personId: string,
   profileId: string,
   input: UpdatePersonSocialProfileInput,
-  actor: UserType,
+  actor: PersonMutationActor,
 ): Promise<{
   duplicateWarning: PersonDuplicateWarning;
   person: PersonDetail;
 }> =>
   prisma.$transaction(async (transaction) => {
+    await authorizePersonMutation(
+      transaction,
+      actor,
+      PERMISSIONS.PERSONS.UPDATE,
+      personId,
+    );
     const person = await requirePersonDetailRecord(transaction, personId);
     const current = person.socialProfiles.find(
       (profile) => profile.id === profileId,
@@ -309,9 +325,15 @@ export const deletePersonSocialProfile = async (
   personId: string,
   profileId: string,
   input: DeletePersonChildInput,
-  actor: UserType,
+  actor: PersonMutationActor,
 ): Promise<PersonDetail> =>
   prisma.$transaction(async (transaction) => {
+    await authorizePersonMutation(
+      transaction,
+      actor,
+      PERMISSIONS.PERSONS.UPDATE,
+      personId,
+    );
     const person = await requirePersonDetailRecord(transaction, personId);
     if (person.version !== input.personVersion)
       throw personErrors.versionConflict();

@@ -107,6 +107,26 @@ coordonnées du Répertoire et n'appartiennent pas au domaine partenaire. La
 protection de `PersonSocialProfile` a ensuite été ajoutée séparément, comme
 décrit ci-dessus.
 
+## Revue du schéma courant
+
+La [revue exhaustive du 13 octobre 2026](../../../docs/audits/AUDIT_SCHEMA_PRISMA_2026-10-13.md)
+documente chaque déclaration du schéma et les objets SQL complémentaires.
+Elle distingue les garanties de stockage des règles portées par les services.
+
+`SystemSetting.version` est strictement positive en stockage : `0` désigne
+uniquement l'absence de surcharge dans le contrat de l'API. La migration
+`20261013120000_system_setting_positive_version` ajoute ce CHECK sans réécrire
+les lignes existantes. Une ligne invalide fait échouer la migration : rechercher
+sa provenance et corriger explicitement sa version avant de résoudre l'échec
+et de relancer le déploiement. Les valeurs et historiques valides sont préservés.
+
+Les instants `DateTime` utilisent la convention UTC dans des `TIMESTAMP(3)` ;
+`Person.birthDate` reste une date civile PostgreSQL `DATE`. Les écrivains SQL
+directs doivent transmettre des instants UTC ou fixer `TimeZone` à `UTC` avant
+d'utiliser les défauts `CURRENT_TIMESTAMP`. Le fuseau d'affichage n'est pas un
+fuseau de stockage. Les producteurs applicatifs transmettent leurs dates et la
+purge convertit explicitement son horloge en UTC.
+
 ## Sauvegardes
 
 Créer une sauvegarde signée v9 :
@@ -136,8 +156,23 @@ bun run --filter @repo/database db:restore -- --file="C:\secure\backup.jsonl" --
 ```
 
 Le fichier de signature est obligatoire. La restauration valide le flux fermé,
-le checksum, la signature, les compteurs, les clés AES et l’existence d’un seul
-compte racine valide avant de considérer l’opération terminée.
+le checksum et la signature, puis authentifie chaque valeur chiffrée avant
+toute connexion à la cible, y compris avec `--dry-run`. Il faut conserver :
+
+- `AUDIT_ENCRYPTION_CURRENT_VERSION` et les clés `AUDIT_ENCRYPTION_KEY_V<n>`
+  exigées par le manifeste et les valeurs chiffrées ;
+- `MFA_ENCRYPTION_KEY_V1` dès que la sauvegarde contient un secret TOTP actif
+  ou une inscription TOTP en cours ;
+- la clé publique Ed25519 correspondant à la signature ; la clé privée n'est
+  pas nécessaire pour restaurer.
+
+Une clé AES de longueur correcte mais différente de la clé d'origine est
+refusée. Le contrôle inclut le rattachement de l'enveloppe à son compte ou à
+son événement d'audit ; aucun clair n'est écrit dans la sortie de commande.
+Les compteurs et l'existence d'un seul compte racine valide sont contrôlés
+avant de considérer l'opération terminée. Les trois lectures bornées du fichier
+(signature, déchiffrement, insertion) comparent son empreinte ; aucune copie
+complète du contenu déchiffré n'est conservée. Le format reste v9.
 
 ## Performance Personnes
 

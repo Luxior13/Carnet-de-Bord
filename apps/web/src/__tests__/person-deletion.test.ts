@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { UserType } from '$types/auth.types';
+import type { PersonMutationActor } from '$features/persons/server/person-mutation-authorization';
 
 vi.mock('server-only', () => ({}));
+vi.mock('$features/persons/server/person-mutation-authorization', () => ({
+  authorizePersonMutation: vi.fn(),
+}));
 
 const mocks = vi.hoisted(() => {
   const transaction = {
@@ -45,7 +48,8 @@ const actor = {
   loginName: 'ada',
   permissions: [],
   role: 'ADMIN' as const,
-} as unknown as UserType;
+  session: null,
+} as unknown as PersonMutationActor;
 
 describe('synchronous person deletion', () => {
   beforeEach(() => {

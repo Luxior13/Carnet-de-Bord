@@ -46,7 +46,10 @@ export async function PATCH(
 
     return withPrivateNoStore(
       apiSuccess(
-        await updatePersonSocialProfile(id, profileId, parsed.data, auth.user),
+        await updatePersonSocialProfile(id, profileId, parsed.data, {
+          ...auth.user,
+          session: auth.session,
+        }),
       ),
     );
   } catch (error) {
@@ -78,12 +81,10 @@ export async function DELETE(
 
     return withPrivateNoStore(
       apiSuccess({
-        person: await deletePersonSocialProfile(
-          id,
-          profileId,
-          parsed.data,
-          auth.user,
-        ),
+        person: await deletePersonSocialProfile(id, profileId, parsed.data, {
+          ...auth.user,
+          session: auth.session,
+        }),
       }),
     );
   } catch (error) {

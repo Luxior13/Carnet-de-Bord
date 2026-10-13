@@ -155,24 +155,33 @@ describe('account security routes', () => {
 
   describe('PATCH /api/auth/me', () => {
     const version = '2026-10-11T00:00:00.000Z';
+    const profileRow = {
+      firstName: 'Jean',
+      id: 'user-1',
+      isActive: true,
+      isProtected: false,
+      lastName: 'Dupont',
+      mustChangePassword: false,
+      permissions: null,
+      role: 'USER',
+      securityVersion: 3,
+      updatedAt: new Date(version),
+    };
     beforeEach(() => {
       mockRequireAuth.mockResolvedValue({
-        session: null,
+        session: { securityVersion: 3, token: 'session-hash' },
         success: true,
-        user: {
-          firstName: 'Jean',
-          id: 'user-1',
-          lastName: 'Dupont',
-          updatedAt: version,
-        },
+        user: profileRow,
+      });
+      mockPrisma.session.findFirst.mockResolvedValue({
+        securityVersion: 3,
+        token: 'session-hash',
       });
       mockPrisma.user.updateMany.mockResolvedValue({ count: 1 });
-      mockPrisma.user.findUnique.mockResolvedValue({
-        firstName: 'Jeanne',
-        id: 'user-1',
-        lastName: 'Dupont',
-        updatedAt: version,
-      });
+      mockPrisma.user.findUnique.mockImplementation(async () => ({
+        ...profileRow,
+        ...mockPrisma.user.updateMany.mock.calls.at(-1)?.[0]?.data,
+      }));
     });
 
     it('returns 400 for an invalid JSON body', async () => {
@@ -212,22 +221,6 @@ describe('account security routes', () => {
     });
 
     it('audits profile changes from my account with before and after values', async () => {
-      mockRequireAuth.mockResolvedValueOnce({
-        session: null,
-        success: true,
-        user: {
-          firstName: 'Jean',
-          id: 'user-1',
-          lastName: 'Dupont',
-          updatedAt: version,
-        },
-      });
-      mockPrisma.user.findUnique.mockResolvedValueOnce({
-        firstName: 'Jeanne',
-        id: 'user-1',
-        lastName: 'Dupont',
-      });
-
       const route = await import('$app/api/auth/me/route');
       const response = await route.PATCH(
         new Request('http://localhost/api/auth/me', {
@@ -360,7 +353,7 @@ describe('account security routes', () => {
         }),
       );
       expect(response.status).toBe(409);
-      expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledTimes(2);
       expect(mockCreateAuditLogWithHeaders).not.toHaveBeenCalled();
     });
     it('requires the edited profile version', async () => {
@@ -758,6 +751,14 @@ describe('account security routes', () => {
         'target-1',
         expect.objectContaining({ targetUserId: 'target-1' }),
         {
+          authority: expect.objectContaining({
+            actorId: 'user-1',
+            authorization: expect.objectContaining({ id: 'user-1' }),
+            session: expect.objectContaining({
+              securityVersion: 3,
+              token: 'session-hash',
+            }),
+          }),
           expectedRole: 'USER',
           expectedSecurityVersion: 4,
           expectedUpdatedAt: updatedAt,

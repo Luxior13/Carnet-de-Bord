@@ -1,0 +1,116 @@
+{
+  "date": "2026-10-13",
+  "scope": "Prisma configuration, User/Session/MFA declarations and restore encryption preflight",
+  "catalogue": {
+    "checkedColumns": 74,
+    "tables": [
+      {
+        "name": "User",
+        "columns": 21,
+        "relations": 11,
+        "modelDirectives": 14,
+        "indexes": 17,
+        "constraints": 7,
+        "triggers": 2
+      },
+      {
+        "name": "LoginNameReservation",
+        "columns": 3,
+        "relations": 1,
+        "modelDirectives": 1,
+        "indexes": 2,
+        "constraints": 3,
+        "triggers": 0
+      },
+      {
+        "name": "Session",
+        "columns": 16,
+        "relations": 1,
+        "modelDirectives": 4,
+        "indexes": 6,
+        "constraints": 2,
+        "triggers": 0
+      },
+      {
+        "name": "TotpCredential",
+        "columns": 9,
+        "relations": 1,
+        "modelDirectives": 1,
+        "indexes": 2,
+        "constraints": 3,
+        "triggers": 0
+      },
+      {
+        "name": "TotpEnrollment",
+        "columns": 8,
+        "relations": 1,
+        "modelDirectives": 1,
+        "indexes": 2,
+        "constraints": 3,
+        "triggers": 0
+      },
+      {
+        "name": "MfaRecoveryCode",
+        "columns": 6,
+        "relations": 1,
+        "modelDirectives": 2,
+        "indexes": 3,
+        "constraints": 2,
+        "triggers": 0
+      },
+      {
+        "name": "MfaLoginChallenge",
+        "columns": 11,
+        "relations": 1,
+        "modelDirectives": 2,
+        "indexes": 5,
+        "constraints": 3,
+        "triggers": 0
+      }
+    ],
+    "problems": [],
+    "source": "catalogue-apres.json",
+    "method": "Read-only comparison of all scalar column names, PostgreSQL udt types, nullability and defaults with schema.prisma; relation/index/constraint definitions also reviewed against migrations and consumers. No database access by this check."
+  },
+  "restoration": {
+    "id": "SCH-AUTH-01",
+    "before": {
+      "tests": 8,
+      "passed": 2,
+      "failed": 6,
+      "method": "Real bounded backup-file read and digest followed by the previous validateRestoreEnvironment call, matching the CLI step after signature validation. No Prisma or database involved.",
+      "failures": [
+        "Missing MFA key accepted for active seed",
+        "Wrong well-formed MFA key accepted for pending seed",
+        "Later seed accepted after authenticated owner was changed",
+        "Wrong well-formed audit key accepted",
+        "Encrypted audit value accepted after authenticated context changed",
+        "Authenticated audit payload accepted despite invalid JSON"
+      ],
+      "failureKind": "Each assert.rejects failed with Missing expected rejection; no import or setup failure."
+    },
+    "after": {
+      "cryptoTests": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "databasePackageTests": 33,
+      "databasePackagePassed": 33,
+      "typecheck": "passed",
+      "targetedLint": "passed without warnings",
+      "command": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test test/database-restore-encryption.test.ts",
+      "packageCommand": "bun run test",
+      "additionalChecks": [
+        "Every encrypted row, including later active or pending MFA seeds",
+        "Correct user-bound MFA and field-bound audit additional authenticated data",
+        "Missing, wrong and unsupported keys",
+        "IV, tag, ciphertext and encoded envelope validation",
+        "Consumable Base32 MFA and JSON object audit payload",
+        "Error messages contain no cleartext",
+        "Same FileHandle can be reused; artifact modification between validation passes is refused"
+      ],
+      "realCliProof": "resultats-restauration.json",
+      "limits": "Twelve tests use temporary local backup fixtures and real Node AES-GCM, not database or browser. The separate coordinator CLI proof covers signed v9 and all 19 tables."
+    }
+  }
+}

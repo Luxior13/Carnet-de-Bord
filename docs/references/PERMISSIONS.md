@@ -13,6 +13,13 @@ politiques serveur et les tests concernés.
   un composant React.
 - Le serveur contrôle chaque lecture et mutation. Masquer un bouton ou une
   entrée de navigation n'est jamais une autorisation suffisante.
+- Une mutation revalide son autorité dans la transaction : compte actif,
+  version de sécurité, session source encore présente et non expirée, droits
+  courants et preuve récente exigée par l'action. La date de vérification est
+  prise après les attentes de verrou. Le
+  [garde partagé](../../apps/web/src/shared/server/user-action-authorization.ts)
+  porte ce contrat ; chaque module conserve ses règles de cible et de métier.
+  Un refus ne produit ni mutation partielle ni audit de réussite.
 - Une dépendance manquante rend la permission dépendante inefficace, même si
   une surcharge individuelle la contient à `true`.
 - Les surcharges sont différentielles : elles ajoutent ou retirent uniquement
