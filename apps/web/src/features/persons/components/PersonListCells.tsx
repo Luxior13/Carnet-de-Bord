@@ -1,6 +1,6 @@
 'use client';
 
-import { Mail, Phone, Search, Share2 } from 'lucide-react';
+import { Globe, Mail, Phone, Search, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import React, { type FC } from 'react';
 
@@ -61,7 +61,7 @@ export const PersonContacts: FC<{ person: PersonSummary }> = ({ person }) => {
         />
         <ContactCount
           count={socialProfiles}
-          icon={<Share2 aria-hidden="true" className="size-3" />}
+          icon={<Globe aria-hidden="true" className="size-3" />}
           label={socialProfiles > 1 ? 'profils sociaux' : 'profil social'}
         />
       </span>

@@ -43,6 +43,15 @@ Ne pas créer un rapport complet pour chaque correction de texte.
 | [Répertoire — 10 octobre 2026](AUDIT_REPERTOIRE_2026-10-10.md) | Audit, corrections et quatre améliorations UX ; 112 tests du périmètre, PostgreSQL isolé et navigateur ; session réelle complète non exécutée |
 | [Organisation documentaire — 10 octobre 2026](ORGANISATION_DOCUMENTAIRE_2026-10-10.md) | Corrections, méthode enrichie et validation du corpus ; aucun verdict de fonctionnement global du site |
 | [Compréhension du projet — 10 octobre 2026](COMPREHENSION_PROJET_2026-10-10.md) | Cartographie code/site, contrôles techniques et limites ; état avant la réorganisation documentaire |
+
+## Relevés historiques
+
+Traces antérieures à la série d'audits d'octobre 2026. Plusieurs parcours ou
+chemins cités ont depuis évolué ou été retirés. Ces rapports documentent leur
+passe d'origine uniquement ; ne pas les utiliser comme référence courante.
+
+| Rapport | Périmètre et portée |
+| --- | --- |
 | [Interface Utilisateurs — 26 septembre 2026](AUDIT_UI_UTILISATEURS_2026-09-26.md) | Audit visuel historique, complété depuis par le suivi Utilisateurs |
 | [URL — 24 septembre 2026](AUDIT_URLS_2026-09-24.md) | Relevé historique des routes et redirections |
 | [UX/UI — 24 septembre 2026](UX_UI_AUDIT_2026-09-24.md) | Revue historique ; plusieurs parcours ont évolué ou ont été retirés |

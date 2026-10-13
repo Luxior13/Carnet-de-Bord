@@ -3,7 +3,6 @@
 import { RotateCcw, X } from 'lucide-react';
 import React, { type FC, useRef } from 'react';
 
-import { PAGINATION } from '$constants/pagination.constants';
 import { Button } from '$ui/button';
 import directoryStyles from '$ui/directory.module.css';
 import { ListSearchField } from '$ui/list-search-field';
@@ -27,7 +26,6 @@ import type {
 } from '../types/person.types';
 
 export type StatusFilter = 'ALL' | PersonStructureStatus;
-const PAGE_LIMIT = PAGINATION.DEFAULT_LIMIT;
 const SORT_LABELS = {
   created: 'Ajoutées récemment',
   name: 'Nom (A–Z)',
@@ -156,26 +154,24 @@ export const PersonsListToolbar: FC<Props> = ({
             options={sortOptions}
             value={sort}
           />
-          {hasActiveToolbarFilters ? (
-            <Button
-              aria-label="Réinitialiser les filtres"
-              className={directoryStyles.iconButton}
-              onClick={() => {
-                applyFilters('', 'ALL', 'name', false);
-                focusSearch();
-              }}
-              size="icon"
-              type="button"
-              variant="ghost"
-            >
-              <RotateCcw aria-hidden="true" />
-            </Button>
-          ) : (
-            <span
-              aria-hidden="true"
-              className={cn(directoryStyles.iconButton, 'invisible')}
-            />
-          )}
+          <Button
+            aria-hidden={!hasActiveToolbarFilters || undefined}
+            aria-label="Réinitialiser les filtres"
+            className={cn(
+              directoryStyles.iconButton,
+              !hasActiveToolbarFilters && 'invisible pointer-events-none',
+            )}
+            onClick={() => {
+              applyFilters('', 'ALL', 'name', false);
+              focusSearch();
+            }}
+            size="icon"
+            tabIndex={hasActiveToolbarFilters ? undefined : -1}
+            type="button"
+            variant="ghost"
+          >
+            <RotateCcw aria-hidden="true" />
+          </Button>
         </div>
       </form>
       {missingContacts && (
@@ -201,7 +197,6 @@ export const PersonsListToolbar: FC<Props> = ({
               ? 'Résultats non actualisés'
               : `${total.toLocaleString('fr-FR')} fiche${total !== 1 ? 's' : ''} trouvée${total !== 1 ? 's' : ''}`}
         </p>
-        <span>{PAGE_LIMIT} par page</span>
       </div>
     </div>
   );

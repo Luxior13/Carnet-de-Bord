@@ -58,23 +58,25 @@ type SidebarProps = {
   className?: string;
 };
 
-const SIDEBAR_POPOVER_PANEL_CLASS =
-  'border-border-default bg-surface-panel text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto overscroll-contain border p-1.5';
-const SIDEBAR_POPOVER_SECTION_CLASS = 'space-y-0.5';
-const SIDEBAR_POPOVER_ACTION_BASE_CLASS =
-  'group/menu-action text-foreground flex min-h-10 w-full cursor-pointer items-center gap-2.5 px-2.5 py-2 text-left text-sm font-medium transition-colors duration-150';
-const SIDEBAR_POPOVER_ACTION_CLASS =
-  'hover:bg-surface-navigation-hover hover:text-foreground focus:bg-surface-navigation-hover focus:text-foreground';
-const SIDEBAR_POPOVER_DANGER_ACTION_CLASS =
-  'hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive';
-const SIDEBAR_POPOVER_ICON_BASE_CLASS =
-  'flex size-5 shrink-0 items-center justify-center transition-colors duration-150';
-const SIDEBAR_POPOVER_ICON_ACTION_CLASS =
-  'text-muted-foreground group-hover/menu-action:text-foreground group-focus/menu-action:text-foreground';
-const SIDEBAR_POPOVER_ICON_DANGER_CLASS =
-  'text-muted-foreground group-hover/menu-action:text-destructive group-focus/menu-action:text-destructive';
-const SIDEBAR_POPOVER_CHEVRON_CLASS =
-  'text-muted-foreground size-3.5 shrink-0 transition-[color,opacity,transform] duration-150 group-hover/menu-action:text-foreground';
+const SIDEBAR_POPOVER = {
+  panel:
+    'border-border-default bg-surface-panel text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto overscroll-contain border p-1.5',
+  section: 'space-y-0.5',
+  actionBase:
+    'group/menu-action text-foreground flex min-h-10 w-full cursor-pointer items-center gap-2.5 px-2.5 py-2 text-left text-sm font-medium transition-colors duration-150',
+  action:
+    'hover:bg-surface-navigation-hover hover:text-foreground focus:bg-surface-navigation-hover focus:text-foreground',
+  dangerAction:
+    'hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive',
+  iconBase:
+    'flex size-5 shrink-0 items-center justify-center transition-colors duration-150',
+  iconAction:
+    'text-muted-foreground group-hover/menu-action:text-foreground group-focus/menu-action:text-foreground',
+  iconDanger:
+    'text-muted-foreground group-hover/menu-action:text-destructive group-focus/menu-action:text-destructive',
+  chevron:
+    'text-muted-foreground size-3.5 shrink-0 transition-[color,opacity,transform] duration-150 group-hover/menu-action:text-foreground',
+} as const;
 
 function isActivePath(pathname: string, href: string): boolean {
   return pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
@@ -459,7 +461,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               sideOffset={8}
               collisionPadding={8}
               className={cn(
-                SIDEBAR_POPOVER_PANEL_CLASS,
+                SIDEBAR_POPOVER.panel,
                 'w-[min(16rem,calc(100vw-2rem))] shadow-[var(--shadow-account-popover)]',
               )}
             >
@@ -484,15 +486,15 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
               <div className="py-1">
                 <DropdownMenuGroup
                   aria-label="Accès au compte"
-                  className={SIDEBAR_POPOVER_SECTION_CLASS}
+                  className={SIDEBAR_POPOVER.section}
                 >
                   <DropdownMenuItem
                     asChild
                     className={cn(
-                      SIDEBAR_POPOVER_ACTION_BASE_CLASS,
+                      SIDEBAR_POPOVER.actionBase,
                       isAccountActive
                         ? 'bg-surface-navigation-active text-foreground focus:bg-surface-navigation-active'
-                        : SIDEBAR_POPOVER_ACTION_CLASS,
+                        : SIDEBAR_POPOVER.action,
                     )}
                   >
                     <Link
@@ -503,8 +505,8 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                     >
                       <span
                         className={cn(
-                          SIDEBAR_POPOVER_ICON_BASE_CLASS,
-                          SIDEBAR_POPOVER_ICON_ACTION_CLASS,
+                          SIDEBAR_POPOVER.iconBase,
+                          SIDEBAR_POPOVER.iconAction,
                         )}
                       >
                         <User
@@ -525,7 +527,7 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                       </span>
                       <ChevronRight
                         aria-hidden="true"
-                        className={SIDEBAR_POPOVER_CHEVRON_CLASS}
+                        className={SIDEBAR_POPOVER.chevron}
                       />
                     </Link>
                   </DropdownMenuItem>
@@ -545,14 +547,14 @@ const Sidebar: FC<SidebarProps> = ({ className }) => {
                     else event.preventDefault();
                   }}
                   className={cn(
-                    SIDEBAR_POPOVER_ACTION_BASE_CLASS,
-                    SIDEBAR_POPOVER_DANGER_ACTION_CLASS,
+                    SIDEBAR_POPOVER.actionBase,
+                    SIDEBAR_POPOVER.dangerAction,
                   )}
                 >
                   <span
                     className={cn(
-                      SIDEBAR_POPOVER_ICON_BASE_CLASS,
-                      SIDEBAR_POPOVER_ICON_DANGER_CLASS,
+                      SIDEBAR_POPOVER.iconBase,
+                      SIDEBAR_POPOVER.iconDanger,
                     )}
                   >
                     <LogOut

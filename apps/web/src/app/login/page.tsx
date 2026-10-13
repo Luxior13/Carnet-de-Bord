@@ -2,13 +2,10 @@
 
 import {
   ArrowLeft,
-  CheckCircle2,
   Eye,
   EyeOff,
-  KeyRound,
   Loader2,
   Lock,
-  ShieldCheck,
   UserRound,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -38,6 +35,7 @@ import { Label } from '$ui/label';
 import { getSafeReturnPath } from '$utils/navigation.utils';
 
 const LAST_LOGIN_NAME_STORAGE_KEY = 'team-control:last-login-name';
+// Keys from previous auth flows, removed on mount to prevent shared-device autofill.
 const LEGACY_LAST_LOGIN_EMAIL_STORAGE_KEY = 'team-control:last-login-email';
 const LEGACY_LOGIN_EMAILS_STORAGE_KEY = 'team-control:login-emails';
 
@@ -380,14 +378,6 @@ function LoginPage(): React.ReactNode {
             </div>
           </div>
           <div className="space-y-2">
-            <div className="bg-primary/10 text-primary-emphasis inline-flex items-center gap-2 rounded-md px-2.5 py-1 text-xs font-medium">
-              {step === 'mfa' ? (
-                <KeyRound className="size-4" />
-              ) : (
-                <ShieldCheck className="size-4" />
-              )}
-              Espace privé
-            </div>
             <CardTitle
               as="h1"
               className="text-xl leading-7 tracking-normal sm:text-2xl sm:leading-8"
@@ -494,15 +484,6 @@ function LoginPage(): React.ReactNode {
                   Faire confiance à cet appareil
                 </Label>
               </div>
-              <p className="text-muted-foreground text-xs leading-5">
-                Session de 30 jours maximum, avec 7 jours d’inactivité. Cette
-                option est désactivée pour le compte superadmin et doit être
-                utilisée uniquement sur un appareil personnel.
-              </p>
-              <p className="text-muted-foreground text-xs leading-5">
-                Mot de passe oublié ou accès bloqué&nbsp;? La récupération est
-                gérée par le propriétaire superadmin.
-              </p>
               <Button
                 className="h-10 w-full"
                 disabled={
@@ -519,6 +500,15 @@ function LoginPage(): React.ReactNode {
                   'Se connecter'
                 )}
               </Button>
+              <p className="text-muted-foreground text-xs leading-5">
+                Session de 30 jours maximum, avec 7 jours d’inactivité. Cette
+                option est désactivée pour le compte superadmin et doit être
+                utilisée uniquement sur un appareil personnel.
+              </p>
+              <p className="text-muted-foreground text-xs leading-5">
+                Mot de passe oublié ou accès bloqué&nbsp;? La récupération est
+                gérée par le propriétaire superadmin.
+              </p>
             </form>
           )}
 
@@ -648,17 +638,6 @@ function LoginPage(): React.ReactNode {
           )}
         </CardContent>
 
-        <div className="border-border/65 bg-surface-muted grid grid-cols-3 gap-2 border-t p-3 text-xs sm:p-4">
-          {['Vue globale', 'Comptes', 'Sécurité'].map((item) => (
-            <div
-              className="bg-surface-inset text-muted-foreground flex min-w-0 flex-col items-center justify-center gap-1.5 rounded-md border px-2 py-2 text-center sm:flex-row sm:gap-2 sm:px-3"
-              key={item}
-            >
-              <CheckCircle2 className="text-primary-emphasis size-4" />
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
       </Card>
     </main>
   );

@@ -111,7 +111,9 @@
 }
 
 /* 2. Theme values: the only owner of application colors and geometry.
-   Semantic aliases keep existing components on the same palette. */
+   Semantic aliases keep existing components on the same palette.
+   This application is intentionally dark-only; no light-mode values are defined.
+   The dark custom-variant above is reserved for exceptional component overrides. */
 :root {
   color-scheme: dark;
 
@@ -207,7 +209,6 @@
   --border-control: #6f86a5;
   --input: var(--surface-control);
   --ring: #92acd0;
-  --ring-width: 3px;
   --radius: 0.625rem;
   /* Shell chrome reuses the reference table band (content + separator). */
   --sidebar: var(--surface-content);

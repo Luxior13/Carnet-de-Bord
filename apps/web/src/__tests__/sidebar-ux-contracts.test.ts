@@ -127,9 +127,7 @@ describe('sidebar UX contracts', () => {
     expect(poleNavigationSource).toContain(
       "side={isCollapsed ? 'right' : 'bottom'}",
     );
-    expect(sidebarSource).toContain(
-      "const SIDEBAR_POPOVER_SECTION_CLASS = 'space-y-0.5'",
-    );
+    expect(sidebarSource).toContain("section: 'space-y-0.5'");
     expect(sidebarSource).toContain('hover:bg-surface-navigation-hover');
     expect(sidebarSource).toContain('text-muted-foreground');
     expect(sidebarSource).toContain('text-muted-foreground');

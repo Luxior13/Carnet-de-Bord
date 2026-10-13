@@ -2,18 +2,11 @@
 
 import { Plus, Search, Users } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import React, {
-  type FC,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { type FC, useCallback, useEffect, useRef } from 'react';
 
 import { ContentState } from '$components/layout/ContentState';
 import { PAGINATION } from '$constants/pagination.constants';
-import { PAGE_PATHS, personDetailPath } from '$constants/routes.constants';
+import { personDetailPath } from '$constants/routes.constants';
 import { Button } from '$ui/button';
 import {
   DataTableDesktop,
@@ -31,21 +24,11 @@ import {
   TableHeader,
   TableRow,
 } from '$ui/table';
-import { ApiClientError } from '$utils/api.utils';
 
-import { listPersons } from '../person.api';
 import { formatPersonDateTime, getPersonDisplayName } from '../person.ui';
 import { retainPersonsCursors } from '../person-list-navigation';
-import {
-  haveSamePersonsListRequest,
-  MAX_PERSONS_PAGE,
-  normalizePersonsQuery,
-  personsListHref,
-  type PersonsListRequest,
-  readPersonsListLocation,
-} from '../person-list-state';
+import { MAX_PERSONS_PAGE, type PersonsListRequest } from '../person-list-state';
 import type {
-  PersonListSort,
   PersonOverview,
   PersonsListResponse,
 } from '../types/person.types';
@@ -56,9 +39,10 @@ import {
   PersonLastModified,
 } from './PersonListCells';
 import { PersonsListSkeleton } from './PersonsListSkeleton';
-import { PersonsListToolbar, type StatusFilter } from './PersonsListToolbar';
+import { PersonsListToolbar } from './PersonsListToolbar';
 import { PersonStatusBadge } from './PersonStatusBadge';
 import { usePersonsListNavigation } from './usePersonsListNavigation';
+import { usePersonsListState } from './usePersonsListState';
 
 type PersonsListProps = {
   canCreate: boolean;
@@ -76,8 +60,6 @@ type PersonsListProps = {
 };
 
 const PAGE_LIMIT = PAGINATION.DEFAULT_LIMIT;
-const SEARCH_DEBOUNCE_MS = 300;
-const LIST_PATH = PAGE_PATHS.persons;
 
 const buildPersonHref = (personId: string, returnHref: string): string => {
   const params = new URLSearchParams({ returnTo: returnHref });
@@ -93,70 +75,37 @@ export const PersonsList: FC<PersonsListProps> = ({
   onOverviewChange,
   returnHref,
 }) => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const searchParamsString = searchParams.toString();
-  const location = readPersonsListLocation(
-    new URLSearchParams(searchParamsString),
-  );
-  const effectiveInitialCursor = location.request.cursor;
-  const effectiveInitialPageIndex = location.pageIndex;
-  const matchingInitialState =
-    initialState &&
-    haveSamePersonsListRequest(initialState.request, location.request)
-      ? initialState
-      : undefined;
-  const [appliedQuery, setAppliedQuery] = useState(location.request.q);
-  const [cursorStack, setCursorStack] = useState<
-    Map<number, string | undefined>
-  >(
-    () =>
-      new Map([
-        [0, undefined],
-        [effectiveInitialPageIndex, effectiveInitialCursor],
-      ]),
-  );
-  const [data, setData] = useState<PersonsListResponse | null>(
-    matchingInitialState?.data ?? null,
-  );
-  const [dataRequest, setDataRequest] = useState<PersonsListRequest | null>(
-    matchingInitialState?.request ?? null,
-  );
-  const [dataPageIndex, setDataPageIndex] = useState(effectiveInitialPageIndex);
-  const [draftQuery, setDraftQuery] = useState(appliedQuery);
-  const [error, setError] = useState<Error | null>(null);
-  const [isLoading, setIsLoading] = useState(!matchingInitialState);
-  const [pageIndex, setPageIndex] = useState(effectiveInitialPageIndex);
-  const [sort, setSort] = useState<PersonListSort>(location.request.sort);
-  const [status, setStatus] = useState<StatusFilter>(
-    location.request.structureStatus ?? 'ALL',
-  );
-  const [missingContacts, setMissingContacts] = useState(
-    searchParams.get('contacts') === 'missing',
-  );
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const retryActionRef = useRef<HTMLButtonElement>(null);
-  const retryRequestedRef = useRef(false);
-  const consumedInitialState = useRef<typeof initialState>(undefined);
-  const cursorCriteriaRef = useRef(
-    JSON.stringify([appliedQuery, status, sort, missingContacts]),
-  );
-  const cursor = cursorStack.get(pageIndex);
-  const request: PersonsListRequest = {
-    cursor,
-    q: appliedQuery,
+  // cancelPageChange comes from usePersonsListNavigation but is also needed by
+  // usePersonsListState. A ref breaks the circular dependency: it's initialised
+  // as a no-op and updated to the real function after navigation hook runs.
+  const cancelPageChangeRef = useRef<() => void>(() => {});
+
+  const {
+    appliedQuery,
+    cursorStack,
+    data,
+    dataPageIndex,
+    draftQuery,
+    error,
+    isDataCurrent,
+    isLoading,
+    isUrlInSync,
+    missingContacts,
+    pageIndex,
+    retryRequestedRef,
     sort,
-    ...(status === 'ALL' ? {} : { structureStatus: status }),
-    ...(missingContacts ? { contacts: 'missing' as const } : {}),
-  };
-  const initialStateMatchesRequest = Boolean(
-    initialState && haveSamePersonsListRequest(initialState.request, request),
-  );
-  const isDataCurrent = Boolean(
-    dataRequest &&
-    haveSamePersonsListRequest(dataRequest, request) &&
-    dataPageIndex === pageIndex,
-  );
+    status,
+    applyFilters,
+    load,
+    setCursorStack,
+    setDraftQuery,
+    setPageIndex,
+    updateUrl,
+  } = usePersonsListState({
+    cancelPageChangeRef,
+    initialState,
+    onOverviewChange,
+  });
 
   const {
     cancelPageChange,
@@ -172,18 +121,15 @@ export const PersonsList: FC<PersonsListProps> = ({
       !error &&
       data !== null &&
       isDataCurrent &&
-      haveSamePersonsListRequest(location.request, request) &&
-      location.pageIndex === pageIndex,
+      isUrlInSync,
     restoreCursors: setCursorStack,
     scope: navigationScope,
   });
 
-  useEffect(() => {
-    onOverviewChange?.({
-      isLoading: !data && isLoading,
-      stats: data?.overview ?? null,
-    });
-  }, [data, isLoading, onOverviewChange]);
+  // Keep the ref in sync so usePersonsListState can call cancelPageChange.
+  cancelPageChangeRef.current = cancelPageChange;
+
+  const retryActionRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (isLoading || !retryRequestedRef.current) return;
@@ -192,226 +138,26 @@ export const PersonsList: FC<PersonsListProps> = ({
       cancelPageChange();
       retryActionRef.current?.focus({ preventScroll: true });
     }
-  }, [cancelPageChange, error, isLoading]);
-
-  const updateUrl = useCallback(
-    ({
-      contacts,
-      cursor,
-      mode = 'replace',
-      page,
-      query,
-      sort: nextSort,
-      status: nextStatus,
-    }: {
-      contacts?: boolean;
-      cursor?: string;
-      mode?: 'push' | 'replace';
-      page: number;
-      query: string;
-      sort: PersonListSort;
-      status: StatusFilter;
-    }): void => {
-      const href = personsListHref(
-        {
-          ...(contacts ? { contacts: 'missing' as const } : {}),
-          cursor,
-          q: query,
-          sort: nextSort,
-          ...(nextStatus !== 'ALL' ? { structureStatus: nextStatus } : {}),
-        },
-        page,
-      );
-      if (mode === 'push') router.push(href, { scroll: false });
-      else router.replace(href, { scroll: false });
-    },
-    [router],
-  );
-
-  const applyFilters = useCallback(
-    (
-      nextQuery: string,
-      nextStatus: StatusFilter,
-      nextSort: PersonListSort,
-      nextMissingContacts = missingContacts,
-    ): void => {
-      const normalized = normalizePersonsQuery(nextQuery);
-      retryRequestedRef.current = false;
-      cancelPageChange();
-      cursorCriteriaRef.current = JSON.stringify([
-        normalized,
-        nextStatus,
-        nextSort,
-        nextMissingContacts,
-      ]);
-      setAppliedQuery(normalized);
-      setDraftQuery(normalized);
-      setStatus(nextStatus);
-      setSort(nextSort);
-      setMissingContacts(nextMissingContacts);
-      setCursorStack((current) =>
-        current.size === 1 && current.has(0)
-          ? current
-          : new Map([[0, undefined]]),
-      );
-      setPageIndex(0);
-      updateUrl({
-        contacts: nextMissingContacts,
-        page: 0,
-        query: normalized,
-        sort: nextSort,
-        status: nextStatus,
-      });
-    },
-    [cancelPageChange, missingContacts, updateUrl],
-  );
-
-  useEffect(() => {
-    const params = new URLSearchParams(searchParamsString);
-    const { pageIndex: nextPageIndex, request: nextRequest } =
-      readPersonsListLocation(params);
-    const nextQuery = nextRequest.q;
-    const nextStatus = nextRequest.structureStatus ?? 'ALL';
-    const nextSort = nextRequest.sort;
-    const nextMissingContacts = Boolean(nextRequest.contacts);
-    const nextCursor = nextRequest.cursor;
-    const nextCriteria = JSON.stringify([
-      nextQuery,
-      nextStatus,
-      nextSort,
-      nextMissingContacts,
-    ]);
-    const criteriaChanged = cursorCriteriaRef.current !== nextCriteria;
-    cursorCriteriaRef.current = nextCriteria;
-    if (criteriaChanged) cancelPageChange();
-    if (
-      personsListHref(nextRequest, nextPageIndex) !==
-      `${LIST_PATH}${searchParamsString ? `?${searchParamsString}` : ''}`
-    ) {
-      updateUrl({
-        contacts: nextMissingContacts,
-        cursor: nextCursor,
-        page: nextPageIndex,
-        query: nextQuery,
-        sort: nextSort,
-        status: nextStatus,
-      });
-    }
-    setAppliedQuery(nextQuery);
-    // A local URL update can settle after the user has already typed the next
-    // search. Only external criteria changes replace that newer draft.
-    if (criteriaChanged) setDraftQuery(nextQuery);
-    setStatus(nextStatus);
-    setSort(nextSort);
-    setMissingContacts(nextMissingContacts);
-    setPageIndex(nextPageIndex);
-    setCursorStack((current) => {
-      if (
-        !criteriaChanged &&
-        current.has(nextPageIndex) &&
-        current.get(nextPageIndex) === nextCursor
-      ) {
-        return current;
-      }
-
-      // An unknown cursor may belong to a different snapshot. Keep only the
-      // first-page fallback instead of reusing an unrelated cursor history.
-      return new Map([
-        [0, undefined],
-        [nextPageIndex, nextCursor],
-      ]);
-    });
-  }, [cancelPageChange, searchParamsString, updateUrl]);
-
-  useEffect(() => {
-    const normalized = normalizePersonsQuery(draftQuery);
-    if (normalized === appliedQuery) return;
-    const timer = window.setTimeout(() => {
-      applyFilters(normalized, status, sort);
-    }, SEARCH_DEBOUNCE_MS);
-
-    return (): void => window.clearTimeout(timer);
-  }, [appliedQuery, applyFilters, draftQuery, sort, status]);
-
-  const load = useCallback(async (): Promise<void> => {
-    abortControllerRef.current?.abort();
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-    setError(null);
-    setIsLoading(true);
-    try {
-      const response = await listPersons({
-        cursor,
-        limit: PAGE_LIMIT,
-        q: appliedQuery,
-        signal: controller.signal,
-        sort,
-        ...(status === 'ALL' ? {} : { structureStatus: status }),
-        ...(missingContacts ? { contacts: 'missing' as const } : {}),
-      });
-      if (!controller.signal.aborted) {
-        setData(response);
-        setDataPageIndex(pageIndex);
-        setDataRequest({
-          cursor,
-          q: appliedQuery,
-          sort,
-          ...(status === 'ALL' ? {} : { structureStatus: status }),
-          ...(missingContacts ? { contacts: 'missing' as const } : {}),
-        });
-      }
-    } catch (caught) {
-      if (!controller.signal.aborted) {
-        if (
-          caught instanceof ApiClientError &&
-          (caught.status === 401 || caught.status === 403)
-        ) {
-          setData(null);
-          setDataRequest(null);
-        }
-        setError(
-          caught instanceof Error ? caught : new Error('Erreur inconnue'),
-        );
-      }
-    } finally {
-      if (!controller.signal.aborted) setIsLoading(false);
-    }
-  }, [appliedQuery, cursor, missingContacts, pageIndex, sort, status]);
-
-  useEffect(() => {
-    const isNewInitialState = initialState !== consumedInitialState.current;
-    consumedInitialState.current = initialState;
-    if (initialState && isNewInitialState && initialStateMatchesRequest) {
-      abortControllerRef.current?.abort();
-      setData(initialState.data);
-      setDataPageIndex(pageIndex);
-      setDataRequest(initialState.request);
-      setError(null);
-      setIsLoading(false);
-    } else {
-      void load();
-    }
-
-    return (): void => abortControllerRef.current?.abort();
-  }, [initialState, initialStateMatchesRequest, load, pageIndex]);
+  }, [cancelPageChange, error, isLoading, retryRequestedRef]);
 
   const personHref = useCallback(
     (personId: string) => buildPersonHref(personId, returnHref),
     [returnHref],
   );
-  const isFiltered = Boolean(
-    appliedQuery || status !== 'ALL' || missingContacts,
-  );
+
+  const isFiltered = Boolean(appliedQuery || status !== 'ALL' || missingContacts);
   const isRefreshing = (isLoading || !isDataCurrent) && data !== null && !error;
   const previousCursor = cursorStack.get(pageIndex - 1);
   const canGoPrevious =
     pageIndex === 1 || (pageIndex > 1 && previousCursor !== undefined);
   const total = data?.pagination.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_LIMIT));
+
   const firstPageAction =
     pageIndex > 0 ? (
       <Button
         className="min-h-11 sm:min-h-8"
+        disabled={isLoading}
         onClick={() => {
           applyFilters(appliedQuery, status, sort);
           preparePageChange();
@@ -419,11 +165,11 @@ export const PersonsList: FC<PersonsListProps> = ({
         size="sm"
         type="button"
         variant="outline"
-        disabled={isLoading}
       >
         Première page
       </Button>
     ) : null;
+
   const errorActions = (
     <div className="flex flex-wrap gap-2">
       {firstPageAction}
@@ -483,21 +229,22 @@ export const PersonsList: FC<PersonsListProps> = ({
     />
   );
 
-  if (!data && isLoading) return <PersonsListSkeleton />;
-
-  if (error && !data) {
-    return (
-      <DataTableSection toolbar={toolbar}>
-        <ContentState
-          action={errorActions}
-          description={error.message}
-          icon={<Users aria-hidden="true" className="size-5" />}
-          kind="error"
-          layout="panel"
-          title="Chargement impossible"
-        />
-      </DataTableSection>
-    );
+  if (!data) {
+    if (error) {
+      return (
+        <DataTableSection toolbar={toolbar}>
+          <ContentState
+            action={errorActions}
+            description={error.message}
+            icon={<Users aria-hidden="true" className="size-5" />}
+            kind="error"
+            layout="panel"
+            title="Chargement impossible"
+          />
+        </DataTableSection>
+      );
+    }
+    return <PersonsListSkeleton />;
   }
 
   return (
@@ -547,7 +294,7 @@ export const PersonsList: FC<PersonsListProps> = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data?.items.length === 0 ? (
+                {data.items.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="h-44 text-center">
                       <ContentState
@@ -556,15 +303,13 @@ export const PersonsList: FC<PersonsListProps> = ({
                         icon={<Users aria-hidden="true" className="size-5" />}
                         layout="panel"
                         title={
-                          isFiltered
-                            ? 'Aucune fiche trouvée'
-                            : 'Répertoire vide'
+                          isFiltered ? 'Aucune fiche trouvée' : 'Répertoire vide'
                         }
                       />
                     </TableCell>
                   </TableRow>
                 ) : (
-                  data?.items.map((person) => {
+                  data.items.map((person) => {
                     const href = personHref(person.id);
 
                     return (
@@ -592,7 +337,7 @@ export const PersonsList: FC<PersonsListProps> = ({
             </Table>
           </DataTableDesktop>
           <DataTableMobileList className={directoryStyles.mobileList}>
-            {data?.items.length === 0 ? (
+            {data.items.length === 0 ? (
               <ContentState
                 action={emptyAction}
                 className="min-h-48 border-0 bg-transparent"
@@ -601,7 +346,7 @@ export const PersonsList: FC<PersonsListProps> = ({
                 title={isFiltered ? 'Aucune fiche trouvée' : 'Répertoire vide'}
               />
             ) : (
-              data?.items.map((person) => {
+              data.items.map((person) => {
                 const href = personHref(person.id);
 
                 return (
@@ -632,9 +377,7 @@ export const PersonsList: FC<PersonsListProps> = ({
                                 aria-hidden="true"
                                 className="size-3 shrink-0"
                               />
-                              <span>
-                                Trouvée par email, téléphone ou réseau
-                              </span>
+                              <span>Trouvée par email, téléphone ou réseau</span>
                             </p>
                           )}
                         </div>
@@ -666,31 +409,31 @@ export const PersonsList: FC<PersonsListProps> = ({
         <ListPagination
           ariaLabel="Pagination des membres"
           canNext={Boolean(
-            data?.pagination.hasMore &&
-            data.pagination.nextCursor &&
-            pageIndex + 1 < MAX_PERSONS_PAGE,
+            data.pagination.hasMore &&
+              data.pagination.nextCursor &&
+              pageIndex + 1 < MAX_PERSONS_PAGE,
           )}
           canPrevious={canGoPrevious}
           disabled={Boolean(error) || !isDataCurrent}
           isLoading={isLoading}
           leadingAction={firstPageAction}
           onNext={() => {
-            const cursor = data?.pagination.nextCursor;
-            if (!cursor) return;
+            const nextCursor = data.pagination.nextCursor;
+            if (!nextCursor) return;
             preparePageChange();
             const nextPage = pageIndex + 1;
-            setCursorStack((current) => {
-              return retainPersonsCursors(
+            setCursorStack((current) =>
+              retainPersonsCursors(
                 new Map(
                   [...current].filter(([index]) => index <= pageIndex),
-                ).set(nextPage, cursor),
+                ).set(nextPage, nextCursor),
                 nextPage,
-              );
-            });
+              ),
+            );
             setPageIndex(nextPage);
             updateUrl({
               contacts: missingContacts,
-              cursor,
+              cursor: nextCursor,
               mode: 'push',
               page: nextPage,
               query: appliedQuery,
@@ -702,11 +445,11 @@ export const PersonsList: FC<PersonsListProps> = ({
             if (!canGoPrevious) return;
             preparePageChange();
             const nextPage = pageIndex - 1;
-            const cursor = cursorStack.get(nextPage);
+            const prevCursor = cursorStack.get(nextPage);
             setPageIndex(nextPage);
             updateUrl({
               contacts: missingContacts,
-              cursor,
+              cursor: prevCursor,
               mode: 'push',
               page: nextPage,
               query: appliedQuery,
