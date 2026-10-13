@@ -29,6 +29,9 @@ const sectionRailSource = readSourceFile(
 const userDetailPageSource = readSourceFile(
   '../components/users/UserDetailPage.tsx',
 );
+const userDetailCapabilitiesSource = readSourceFile(
+  '../components/users/user-detail/useUserDetailCapabilities.ts',
+);
 
 describe('/mon-compte UX contracts', () => {
   it('protects an edited profile from accidental tab and page navigation', () => {
@@ -109,7 +112,7 @@ describe('/mon-compte UX contracts', () => {
       '{ href: returnHref, label: FEATURES.users.label }',
     );
     expect(userDetailPageSource).not.toContain('<ArrowLeft');
-    expect(userDetailPageSource).toMatch(
+    expect(userDetailCapabilitiesSource).toMatch(
       /const canEditTargetProfile\s*=\s*!!user\s*&&\s*!isSelf/,
     );
     expect(userDetailPageSource).toMatch(
